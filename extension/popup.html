@@ -75,6 +75,42 @@
         <a class="text-link open-app" href="#">Ouvrir jobA1<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
       </section>
 
+      <!-- ExtAnnonce : envoyer l'annonce de cette page à jobA1 (docs/142 §3). -->
+      <section id="annonce" class="state" hidden>
+        <div id="an-idle" class="stack">
+          <div class="card">
+            <span class="label">Annonce sur cette page</span>
+            <span id="an-title" class="title-md"></span>
+            <span id="an-meta" class="meta"></span>
+          </div>
+          <p class="body">jobA1 lira le texte complet de l’annonce et refera sa note.</p>
+          <p id="an-error" class="error" role="alert" hidden></p>
+          <div class="actions">
+            <button id="an-send" class="primary" type="button">Envoyer à jobA1</button>
+            <p class="foot">Seul le texte de cette annonce est envoyé.</p>
+          </div>
+        </div>
+        <div id="an-confirm" class="stack" hidden>
+          <div class="card gap">
+            <span class="title-sm">C’est bien cette offre ?</span>
+            <span id="an-known" class="body"></span>
+          </div>
+          <p id="an-confirm-error" class="error" role="alert" hidden></p>
+          <div class="actions">
+            <button id="an-yes" class="primary" type="button">Oui, compléter cette offre</button>
+            <button id="an-new" class="secondary" type="button">Ajouter comme nouvelle offre</button>
+          </div>
+        </div>
+        <div id="an-done" class="stack" hidden>
+          <div class="center" role="status">
+            <span class="done-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <span id="an-done-title" class="title-md"></span>
+            <span id="an-done-text" class="body"></span>
+          </div>
+          <a id="an-open" class="text-link" href="#" target="_blank" rel="noopener noreferrer">Ouvrir dans jobA1<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
+        </div>
+      </section>
+
       <!-- Réglages (roue dentée) : l'adresse de la plateforme, relier, délier. -->
       <section id="settings" class="state" hidden>
         <h1 class="title-md">Réglages</h1>
@@ -142,6 +178,7 @@
     </main>
 
     <script src="fill-job-room.js"></script>
+    <script src="annonce.js"></script>
     <script type="module" src="popup.js"></script>
   </body>
 </html>

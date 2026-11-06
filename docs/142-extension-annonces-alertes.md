@@ -45,7 +45,44 @@ ou Microsoft ; « Agenda et extension » devient « Agenda ».
 
 ## 3. Envoyer une annonce (B)
 
-À venir dans la PR B.
+**Ce qui est lu, et quand** (`extension/annonce.js`, une seule fonction passée à l'onglet actif) :
+
+- À l'ouverture de la fenêtre : le titre, l'entreprise et le lieu du `JobPosting` (schema.org) de la page, pour la
+  carte « Annonce sur cette page ». Rien ne part.
+- Au clic sur **Envoyer à jobA1** seulement : la description du `JobPosting`, sinon le texte principal
+  (`main`/`article`) d'une page qui ressemble à une annonce, et l'adresse de la page. Rien d'autre : ni cookies, ni
+  champs de formulaire, ni autres onglets, jamais de lecture en arrière-plan. Permissions : `activeTab` et
+  `scripting`, jamais `<all_urls>`.
+- **LinkedIn** : seulement l'annonce ouverte (`/jobs/view/<id>` ou `?currentJobId=<id>`) : son titre, son
+  entreprise et sa description, par leurs blocs ; jamais un profil, le fil ni la liste des offres. L'adresse envoyée
+  est celle de l'annonce, `https://www.linkedin.com/jobs/view/<id>/`.
+
+**Serveur** (`POST /api/extension/announce`, `jobbot/extension/announce.py`, jeton de l'extension) :
+
+1. Le texte est nettoyé comme un texte collé (`manual_offers.clean_pasted` : espaces resserrés, nom de la personne
+   remplacé par « [nom retiré] », 20 000 caractères au plus). Moins de 200 caractères : « Je ne trouve pas
+   d'annonce sur cette page » (422).
+2. Sans `JobPosting` (titre absent), le titre, l'entreprise et le lieu sont lus par l'IA, comme « Ajouter une
+   offre » (docs/111).
+3. **Même lien** qu'une offre (lien d'alerte, annonce chez l'employeur ou formulaire ; même hôte sans `www`, même
+   chemin) : l'offre est complétée (ses champs vides seulement, `manual_offers.fill`).
+4. Sinon **même poste chez la même entreprise** (`manual_offers.same_offer`) : réponse « à confirmer », avec le
+   poste, l'entreprise, la date d'arrivée et le site de l'alerte. L'extension demande « C'est bien cette offre ? » :
+   **Oui, compléter cette offre** (l'id renvoyé doit être celui retrouvé par le serveur, sinon 409) ou **Ajouter
+   comme nouvelle offre** (empreinte suffixée, l'empreinte étant unique). Jamais de rattachement silencieux.
+5. Sinon : une nouvelle offre (`manual_offers.add`, sa limite de 20 ajouts par 24 heures comprise).
+6. Le texte arrivé, l'offre repasse par le filtre et elle est **renotée tout de suite** (`score_offer`). Sans IA
+   ou au plafond, la note d'avant reste.
+7. **30 envois par jour et par compte** (429, « 30 annonces envoyées aujourd'hui : c'est le maximum. Réessaie
+   demain. »). En mémoire, comme les autres limites (`auth.service.Window`) : un redémarrage la remet à zéro. La
+   réponse à « C'est bien cette offre ? » ne compte pas.
+8. Journal (J-1) : `extension_offer_added`, `extension_offer_filled`, `extension_offer_to_confirm`, avec l'id de
+   l'offre et le chemin suivi, jamais le texte.
+
+**Fenêtre** : « Annonce ajoutée à ton offre » + « Note refaite sur l'annonce complète : 76, Proche. » ; « Offre
+ajoutée » + « Note : 76, Proche. Elle t'attend dans Candidatures › À traiter. » ; « Ouvrir dans jobA1 ↗ » ouvre
+`/candidatures/offres?offre=<id>`. Si l'offre avait déjà son texte : « Offre déjà complète » (absent de la
+maquette).
 
 ## 4. Le formulaire d'alerte (C)
 

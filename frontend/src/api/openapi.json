@@ -1932,6 +1932,47 @@
         }
       }
     },
+    "/api/extension/announce": {
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Announce Offer",
+        "description": "« Envoyer à jobA1 » : compléter l'offre de ce lien, demander pour le même poste chez la\nmême entreprise, sinon ajouter l'offre ; puis la renoter. Le texte n'est jamais journalisé.",
+        "operationId": "extensionAnnounce",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnounceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnounceOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "L'offre à compléter n'est pas celle trouvée"
+          },
+          "422": {
+            "description": "Pas d'annonce lisible"
+          },
+          "429": {
+            "description": "30 envois par jour au plus"
+          }
+        }
+      }
+    },
     "/api/extension-tokens": {
       "get": {
         "tags": [
@@ -10077,6 +10118,160 @@
         ],
         "title": "AlertsPage"
       },
+      "AnnounceIn": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 8,
+            "title": "Url"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 40000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "choice": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fill",
+                  "new"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choice"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "text"
+        ],
+        "title": "AnnounceIn",
+        "description": "Seulement l'annonce : son adresse, le balisage JobPosting s'il existe, et son texte\n(la description du JobPosting, sinon le texte principal de la page)."
+      },
+      "AnnounceOut": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "filled",
+              "added",
+              "confirm"
+            ],
+            "title": "Outcome"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "filled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filled",
+            "default": []
+          },
+          "known": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KnownOffer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome"
+        ],
+        "title": "AnnounceOut"
+      },
       "AnswerOut": {
         "properties": {
           "text": {
@@ -16450,6 +16645,54 @@
           "kind"
         ],
         "title": "KindIn"
+      },
+      "KnownOffer": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "site": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "received_at",
+          "site"
+        ],
+        "title": "KnownOffer"
       },
       "Language": {
         "type": "string",

@@ -46,6 +46,14 @@ seul état à la fois : **Relie l'extension à ton compte** tant qu'elle n'est p
 faire sur cette page** ailleurs, et les états ci-dessous. La roue dentée donne l'adresse de ta
 plateforme et **Délier ce navigateur** ; le jeton se révoque dans Réglages › Connexions de jobA1.
 
+## Envoyer une annonce
+
+Sur la page d'une annonce (balisage JobPosting, annonce LinkedIn ouverte, ou page d'annonce
+d'un employeur) : icône jobA1 → **Envoyer à jobA1**. La page n'est lue qu'à ce moment, et
+seule l'annonce part. jobA1 complète l'offre de ce lien, ou te demande **C'est bien cette
+offre ?** si le même poste chez la même entreprise est déjà là, ou ajoute l'offre ; puis il
+refait sa note. 30 envois par jour.
+
 ## Utiliser
 
 Sur le formulaire de l'employeur (ouvert depuis « Postuler ») : icône jobA1 →

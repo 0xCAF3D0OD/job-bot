@@ -80,6 +80,15 @@ onMounted(async () => {
         <li>Les autres messages des sites (bienvenue, alerte modifiée…) sont gardés 30 jours.</li>
       </ul>
 
+      <h2 id="extension">
+        L'extension du navigateur
+      </h2>
+      <ul data-test="privacy-extension">
+        <li>Elle ne lit une page qu'au clic sur son icône, dans l'onglet ouvert.</li>
+        <li>« Envoyer à jobA1 » : seulement l'annonce et son adresse. Jamais tes cookies, ton profil LinkedIn ni tes autres onglets.</li>
+        <li>Ton nom est retiré du texte. Le journal garde l'offre touchée, jamais le texte.</li>
+      </ul>
+
       <h2 id="ia">
         Ce qui part à l'IA (Anthropic)
       </h2>

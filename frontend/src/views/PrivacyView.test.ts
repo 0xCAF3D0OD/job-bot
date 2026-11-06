@@ -42,6 +42,14 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(shared.find("[data-test=privacy-mailbox]").text()).toContain("que l'exploitant administre");
   });
 
+  it("l'extension : ce qu'elle lit, quand, et ce qu'elle envoie (docs/142)", async () => {
+    const text = (await mountPage("Kevin")).find("[data-test=privacy-extension]").text();
+    expect(text).toContain("qu'au clic sur son icône");
+    expect(text).toContain("seulement l'annonce et son adresse");
+    expect(text).toContain("Jamais tes cookies");
+    expect(text).toContain("Ton nom est retiré");
+  });
+
   it("le paiement de Plus, seulement une fois ouvert (docs/125 §6)", async () => {
     const closed = await mountPage("Kevin");
     expect(closed.find("[data-test=privacy-billing]").exists()).toBe(false);

@@ -22,7 +22,7 @@ function say(id, text) {
 
 // --- Les états de la fenêtre ------------------------------------------------------------
 
-const STATES = ["signin", "linked", "authorize-state", "idle", "settings", "main", "job-room", "codes"];
+const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "settings", "main", "job-room", "codes"];
 // Sans pastille : ces états ne parlent pas de la page ouverte.
 const NO_SITE = new Set(["signin", "linked", "authorize-state", "settings"]);
 let current = null;
@@ -253,19 +253,133 @@ async function start() {
     say("idle-error", offline(error) ? "Plateforme injoignable." : error.message);
     return;
   }
-  if (found.offer) {
+  const ad = await probeAnnonce();
+  const form = (found.offer || found.choices.length) && (await hasForm());
+  // Le formulaire de candidature d'une offre connue l'emporte ; sinon l'annonce de la page.
+  if (found.offer && (form || !ad)) {
     offerId = found.offer.id;
     renderOffer(found.offer);
     $("fill").disabled = false;
     view("main");
     return;
   }
-  if (found.choices.length && (await hasForm())) {
+  if (ad) {
+    showAnnonce(ad);
+    return;
+  }
+  if (found.choices.length && form) {
     renderChoices(found.choices);
     view("main");
     return;
   }
   view("idle");
+}
+
+// --- Envoyer une annonce (docs/142 §3) ---------------------------------------------------
+
+let annonce = null; // l'annonce lue au clic sur « Envoyer », gardée pour « C'est bien cette offre ? »
+let knownId = null;
+
+// À l'ouverture : le titre, l'entreprise et le lieu seulement, pour la carte. Rien ne part.
+async function probeAnnonce() {
+  try {
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: globalThis.jobA1Annonce, args: [false] });
+    return result && typeof result.title === "string" ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+function showAnnonce(ad) {
+  annonce = null;
+  knownId = null;
+  $("an-title").textContent = ad.title || tab.title || "";
+  $("an-meta").textContent = [ad.company, ad.location].filter(Boolean).join(" · ");
+  show("an-meta", Boolean($("an-meta").textContent));
+  show("an-idle");
+  show("an-confirm", false);
+  show("an-done", false);
+  view("annonce");
+}
+
+const text300 = (v) => (typeof v === "string" ? v.slice(0, 300) : "");
+
+// « Envoyer à jobA1 » : seulement maintenant, le texte de l'annonce est lu, puis envoyé.
+async function readAnnonce() {
+  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: globalThis.jobA1Annonce, args: [true] });
+  if (!result || typeof result.text !== "string" || !result.text.trim()) {
+    throw new Error("Je ne trouve pas le texte de l'annonce : ouvre l'annonce elle-même, puis réessaie.");
+  }
+  const page = { url: String(result.url || tab.url).slice(0, 2000), text: result.text.slice(0, 40000) };
+  // Sans balisage, le titre et l'entreprise sont lus par jobA1 dans le texte.
+  if (result.kind !== "text") Object.assign(page, { title: text300(result.title), company: text300(result.company), location: text300(result.location) });
+  return page;
+}
+
+function frenchDay(iso) {
+  const date = new Date(iso);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString("fr-CH", { day: "numeric", month: "long", ...(sameYear ? {} : { year: "numeric" }) });
+}
+
+function noteText(answer) {
+  return answer.score == null ? null : `${answer.score}, ${answer.label}`;
+}
+
+function showDone(answer) {
+  const note = noteText(answer);
+  let title;
+  let text;
+  if (answer.outcome === "added") {
+    title = "Offre ajoutée";
+    text = note
+      ? `Note : ${note}. Elle t’attend dans Candidatures › À traiter.`
+      : "Elle t’attend dans Candidatures › À traiter. Sa note arrive dans un moment.";
+  } else if (answer.filled.includes("description")) {
+    title = "Annonce ajoutée à ton offre";
+    text = note ? `Note refaite sur l’annonce complète : ${note}.` : "Sa note sera refaite dans un moment.";
+  } else {
+    title = "Offre déjà complète";
+    text = note ? `Ton offre avait déjà le texte de l’annonce. Note : ${note}.` : "Ton offre avait déjà le texte de l’annonce.";
+  }
+  $("an-done-title").textContent = title;
+  $("an-done-text").textContent = text;
+  $("an-open").href = `${config.base}/candidatures/offres?offre=${answer.offer_id}`;
+  show("an-idle", false);
+  show("an-confirm", false);
+  show("an-done");
+}
+
+function showConfirm(known) {
+  knownId = known.id;
+  const who = known.company ? `${known.title} chez ${known.company}` : known.title;
+  const from = known.site ? ` par une alerte ${known.site}` : "";
+  $("an-known").textContent = `${who}, reçue le ${frenchDay(known.received_at)}${from}.`;
+  show("an-idle", false);
+  show("an-confirm");
+}
+
+async function sendAnnonce(choice = null) {
+  const button = choice === null ? $("an-send") : choice === "fill" ? $("an-yes") : $("an-new");
+  const errorId = choice === null ? "an-error" : "an-confirm-error";
+  const label = button.textContent;
+  say(errorId, "");
+  for (const b of ["an-send", "an-yes", "an-new"]) $(b).disabled = true;
+  button.textContent = "Envoi…";
+  try {
+    annonce ??= await readAnnonce();
+    const body = { ...annonce, ...(choice ? { choice, offer_id: choice === "fill" ? knownId : null } : {}) };
+    const answer = await (await call("/api/extension/announce", { method: "POST", body: JSON.stringify(body) })).json();
+    if (answer.outcome === "confirm") showConfirm(answer.known);
+    else showDone(answer);
+  } catch (error) {
+    // Plateforme d'avant la 0.60 (docs/71 §5).
+    if (error.status === 404) say(errorId, "Mets ta plateforme jobA1 à jour pour envoyer une annonce.");
+    else say(errorId, offline(error) ? "Plateforme injoignable." : error.message);
+  } finally {
+    for (const b of ["an-send", "an-yes", "an-new"]) $(b).disabled = false;
+    button.textContent = label;
+  }
 }
 
 // --- Candidature -------------------------------------------------------------------------
@@ -627,6 +741,9 @@ $("jr-choices").addEventListener("change", (event) => {
 
 
 $("gear").addEventListener("click", toggleSettings);
+$("an-send").addEventListener("click", () => sendAnnonce());
+$("an-yes").addEventListener("click", () => sendAnnonce("fill"));
+$("an-new").addEventListener("click", () => sendAnnonce("new"));
 $("signin-go").addEventListener("click", signIn);
 $("codes-allow").addEventListener("click", allowCodes);
 $("link").addEventListener("click", linkFromSettings);

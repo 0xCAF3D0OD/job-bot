@@ -1,0 +1,1 @@
+Extension du navigateur : « Envoyer à jobA1 » sur la page d'une annonce (JobPosting, LinkedIn, texte principal), qui complète l'offre de ce lien, demande « C'est bien cette offre ? » pour le même poste chez la même entreprise, ou ajoute l'offre, puis refait sa note ; 30 envois par jour

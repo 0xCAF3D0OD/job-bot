@@ -7,6 +7,7 @@ robots n'est jamais contournée : on propose de coller le texte.
 """
 
 import re
+import secrets
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -337,22 +338,27 @@ async def added_today(session: AsyncSession) -> int:
     return int(count or 0)
 
 
-async def add(runtime: Runtime, draft: Draft) -> int:
+async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
     """L'offre ajoutée, puis le filtre (la note suit au prochain passage du worker). Une offre
-    écartée par les critères est gardée : c'est ton choix, la raison s'affiche (docs/111)."""
+    écartée par les critères est gardée : c'est ton choix, la raison s'affiche (docs/111).
+    `separate` : « Ajouter comme nouvelle offre » (extension, docs/142 §3) ; même poste chez la
+    même entreprise, mais une autre annonce : son empreinte (unique) reçoit un suffixe."""
     now = datetime.now(UTC)
     norm = normalize_offer(draft.title, draft.company, draft.location)
     rate_min, rate_max = norm.rate_min, norm.rate_max
     if rate_min is None and draft.location:
         rate_min, rate_max = parse_rate(draft.location)
     async with runtime.sessionmaker.begin() as session:
-        existing = await same_offer(session, norm)
+        existing = None if separate else await same_offer(session, norm)
         if existing is not None:
             return existing
         if await added_today(session) >= DAILY_LIMIT:
             raise ReadProblem(f"{DAILY_LIMIT} offres ajoutées en 24 heures : c'est le maximum.")
+        fingerprint = norm.fingerprint
+        if separate:
+            fingerprint = f"{fingerprint}:separee-{secrets.token_hex(4)}"
         offer = Offer(
-            fingerprint=norm.fingerprint,
+            fingerprint=fingerprint,
             title=draft.title.strip()[:300],
             company=(draft.company or "").strip()[:300] or None,
             location=(draft.location or "").strip()[:300] or None,
