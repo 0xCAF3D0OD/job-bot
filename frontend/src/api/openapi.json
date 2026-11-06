@@ -3672,6 +3672,106 @@
         }
       }
     },
+    "/api/offers/{offer_id}/read": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read",
+        "operationId": "readOfferText",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferTextOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/description": {
+      "put": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Paste",
+        "operationId": "pasteOfferText",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferTextIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferTextOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/criteria": {
       "get": {
         "tags": [
@@ -18766,6 +18866,76 @@
           "status"
         ],
         "title": "OfferStatusOut"
+      },
+      "OfferTextIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 40000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "OfferTextIn"
+      },
+      "OfferTextOut": {
+        "properties": {
+          "saved": {
+            "type": "boolean",
+            "title": "Saved"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "collé"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "paste": {
+            "type": "boolean",
+            "title": "Paste",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "saved"
+        ],
+        "title": "OfferTextOut"
       },
       "OrpHolder": {
         "properties": {

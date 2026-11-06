@@ -197,6 +197,8 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
           { text: "Pas de Terraform", chunk_ids: [] },
           { text: "Préférence : pas d'astreintes", chunk_ids: [2] },
         ],
+        // Le texte complet est lu : les manques s'affichent (la note n'est pas provisoire).
+        description: "Texte complet de l'annonce.",
       }),
     );
     expect(wrapper.find("[data-test=score-why]").text()).toContain("Ton expérience AWS colle ; il manque Terraform.");

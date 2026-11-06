@@ -1,0 +1,1 @@
+Fiche d'une offre venue d'une alerte : quand la note est provisoire (extrait seulement), un encadré remplace les manques génériques et propose « Lire l'annonce maintenant » (JobPosting puis texte principal, robots.txt respecté) ou « Coller le texte de l'annonce » ; le texte enregistré, l'offre est refiltrée et renotée tout de suite

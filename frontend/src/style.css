@@ -2739,6 +2739,10 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .match-lines .icon { flex: none; width: 1.125rem; height: 1.125rem; }
 .match-lines .ok .icon { color: var(--success); }
 .match-lines .gap .icon { color: var(--score-dig); }
+/* Note provisoire (extrait seulement) : l'encadré qui remplace les manques génériques, ses deux actions. */
+.offer-text-notice { display: grid; gap: var(--space-3); margin: 0; }
+.offer-text-notice > p { margin: 0; }
+.offer-text-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
 .match-detail { margin: 0; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
 .match-detail > .disclosure-row { min-height: var(--target-min); padding: var(--space-3) 0 0; }
 .match-detail .disclosure-body { margin: 0; padding: var(--space-2) 0 0; gap: 0; }

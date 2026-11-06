@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
+from urllib.parse import urlsplit
+from urllib.robotparser import RobotFileParser
 
 import anthropic
 import httpx
@@ -283,3 +285,157 @@ async def add(runtime: Runtime, draft: Draft) -> int:
     await run_filter(runtime)
     log.info("manual_offer_added", offer=offer_id, read_by=draft.read_by)
     return int(offer_id)
+
+
+# --- Compléter une offre déjà reçue -----------------------------------------------------
+# Une offre venue d'une alerte n'a parfois que l'extrait : sa note est provisoire. Sur sa fiche,
+# on lit l'annonce par son lien (balisage JobPosting, puis texte principal), en respectant le
+# robots.txt du site, ou on colle son texte. Rien ne contourne une connexion ou un captcha.
+
+# Texte collé : en dessous, ce n'est pas une annonce complète.
+MIN_PASTED = 200
+# Les liens essayés, au plus (employeur, puis annonces d'origine).
+MAX_LINKS = 3
+ROBOTS_AGENT = "jobA1"
+
+
+async def fetch_robots(url: str) -> str | None:
+    """Le robots.txt du site de `url` ; None s'il n'y en a pas (réponse 4xx). Un site qui ne
+    répond pas (5xx, réseau) est traité comme fermé : ReadProblem."""
+    parts = urlsplit(url)
+    robots = f"https://{parts.hostname}/robots.txt"
+    async with httpx.AsyncClient(
+        timeout=TIMEOUT_SECONDS, follow_redirects=False, headers={"User-Agent": logos.USER_AGENT}
+    ) as client:
+        try:
+            data, _final = await logos._get(client, robots, MAX_PAGE_BYTES)
+        except logos.Refused as exc:
+            raise ReadProblem(f"Lien refusé : {exc}.") from exc
+        except httpx.HTTPStatusError as exc:
+            if 400 <= exc.response.status_code < 500:
+                return None
+            raise ReadProblem(
+                "Le site ne répond pas : colle le texte de l'annonce.", paste=True
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise ReadProblem(
+                "Le site ne répond pas : colle le texte de l'annonce.", paste=True
+            ) from exc
+    return data.decode("utf-8", errors="replace")
+
+
+async def robots_allowed(url: str) -> bool:
+    """Le robots.txt du site permet-il à jobA1 de lire cette page ? (RFC 9309)"""
+    content = await fetch_robots(url)
+    if content is None:
+        return True
+    parser = RobotFileParser()
+    parser.parse(content.splitlines())
+    return parser.can_fetch(ROBOTS_AGENT, url)
+
+
+def main_text(page: str) -> str:
+    """Le texte principal de la page : `<main>` ou `<article>` s'il y en a, sinon le corps."""
+    soup = BeautifulSoup(page, "html.parser")
+    for tag in soup(["script", "style", "nav", "header", "footer", "noscript", "form", "aside"]):
+        tag.decompose()
+    root = soup.find("main") or soup.find("article") or soup.body or soup
+    return " ".join(root.get_text(" ").split())
+
+
+async def read_link(url: str) -> str:
+    """Le texte de l'annonce lu à `url` : la description du JobPosting, sinon le texte
+    principal. Sans IA : l'offre a déjà son titre, son entreprise et son lieu."""
+    if not await robots_allowed(url):
+        raise ReadProblem(
+            "Ce site interdit la lecture par un robot : colle le texte de l'annonce.", paste=True
+        )
+    page = await fetch_page(url)
+    posting = job_posting(page)
+    found = jobposting.text(posting.get("description")) if posting else None
+    if not found or len(found) < MIN_PASTED:
+        found = main_text(page)
+    if len(found) < MIN_PASTED:
+        raise ReadProblem(
+            "Cette page ne montre pas d'annonce lisible (connexion demandée ?) : "
+            "colle le texte de l'annonce.",
+            paste=True,
+        )
+    return found[:MAX_TEXT]
+
+
+def offer_urls(offer: Offer, links: list[str]) -> list[str]:
+    """Les liens à lire, dans l'ordre : l'annonce chez l'employeur, puis celles des alertes."""
+    seen: list[str] = []
+    for url in [offer.employer_url, *links]:
+        if url and url.startswith("https://") and not url.startswith(NO_LINK) and url not in seen:
+            seen.append(url)
+    return seen[:MAX_LINKS]
+
+
+async def clean_pasted(session: AsyncSession, text: str) -> str:
+    """Le texte collé nettoyé comme à l'ajout (espaces resserrés, nom de la personne retiré)."""
+    identity = await load_identity(session)
+    clean = " ".join(text.split())
+    for name in (identity.name or "").split():
+        if len(name) > 2:
+            clean = re.sub(re.escape(name), "[nom retiré]", clean, flags=re.IGNORECASE)
+    return clean[:MAX_TEXT]
+
+
+class OfferNotFound(Exception):
+    """Offre absente pour ce compte (RLS) : 404."""
+
+
+class NoAnnouncement(Exception):
+    """Candidature spontanée : il n'y a pas d'annonce à compléter."""
+
+
+async def _load(session: AsyncSession, offer_id: int) -> tuple[Offer, list[str]]:
+    # L'id vient du client : relu sous la RLS du compte en cours (C-5).
+    offer = await session.get(Offer, offer_id)
+    if offer is None:
+        raise OfferNotFound
+    if offer.spontaneous:
+        raise NoAnnouncement
+    links = list(
+        await session.scalars(
+            select(OfferLink.url).where(OfferLink.offer_id == offer_id).order_by(OfferLink.id)
+        )
+    )
+    return offer, links
+
+
+async def save_description(runtime: Runtime, offer_id: int, text: str, source: str) -> int | None:
+    """Le texte complet enregistré : la note n'est plus partielle. L'offre repasse par le filtre
+    (le texte peut révéler un contrat ou une langue), puis elle est renotée tout de suite.
+    Rend la nouvelle note (None : pas d'IA ou plafond, elle suivra au prochain passage)."""
+    async with runtime.sessionmaker.begin() as session:
+        offer, _links = await _load(session, offer_id)
+        offer.description = text
+        if not offer.snippet:
+            offer.snippet = text[:500]
+    await run_filter(runtime)
+    log.info("offer_description_completed", offer=offer_id, source=source)
+    if not runtime.settings.llm_configured:
+        return None
+    return await scoring_service.score_offer(runtime, offer_id)
+
+
+async def read_offer(runtime: Runtime, offer_id: int) -> int | None:
+    """« Lire l'annonce maintenant » : le premier lien lisible ; sinon ReadProblem."""
+    async with runtime.sessionmaker() as session:
+        offer, links = await _load(session, offer_id)
+        urls = offer_urls(offer, links)
+    if not urls:
+        raise ReadProblem("Cette offre n'a pas de lien : colle le texte de l'annonce.", paste=True)
+    problem: ReadProblem | None = None
+    for url in urls:
+        try:
+            found = await read_link(url)
+        except ReadProblem as exc:
+            problem = exc
+            continue
+        return await save_description(runtime, offer_id, found, "page")
+    assert problem is not None
+    raise problem

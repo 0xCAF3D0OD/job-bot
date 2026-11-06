@@ -14,6 +14,7 @@ import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
+import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
 import ScoreCorrection from "./ScoreCorrection.vue";
@@ -244,7 +245,10 @@ const summaryParts = computed(() =>
   [props.offer.summary_role, props.offer.summary_asks, props.offer.summary_offers].filter((t): t is string => !!t?.trim()),
 );
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
-const gaps = computed(() => (props.offer.gaps ?? []).slice(0, POINTS_MAX));
+// Note provisoire : l'offre n'a que l'extrait de l'alerte (pas de texte complet). Ses manques sont alors
+// génériques (« Exigences », « Données », « Conseil ») : l'encadré « Lire l'annonce » les remplace.
+const partial = computed(() => !props.offer.description && !props.offer.spontaneous);
+const gaps = computed(() => (partial.value ? [] : (props.offer.gaps ?? []).slice(0, POINTS_MAX)));
 // Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
 const otherLinks = computed(() =>
   props.offer.links.filter((link) => props.offer.status === "applied" || link.url !== postLink.value?.url),
@@ -690,6 +694,11 @@ watch(
           <AppIcon :name="line.mark === 'ok' ? 'tick' : 'alert-circle'" /><span><span class="visually-hidden">{{ line.mark === "ok" ? "Point fort : " : "Manque : " }}</span>{{ line.text }}</span>
         </li>
       </ul>
+      <OfferTextNotice
+        v-if="partial"
+        :offer="offer"
+        @changed="emit('changed')"
+      />
       <DisclosureRow
         v-if="noteDetail"
         title="Le détail de la note"
