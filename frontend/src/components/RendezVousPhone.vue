@@ -407,7 +407,7 @@ const last = computed<Meeting | null>(() => {
   display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-tertiary);
   padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; cursor: pointer;
 }
-.rdv-questions-title { flex: 1; min-width: 0; text-align: left; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.rdv-questions-title { flex: 1; min-width: 0; white-space: normal; text-align: left; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
 .rdv-questions-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .rdv-questions-count svg { transition: transform 200ms; }
 .rdv-questions-count svg.open { transform: rotate(180deg); }
@@ -449,6 +449,6 @@ const last = computed<Meeting | null>(() => {
   align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-secondary);
   padding: 0 var(--space-4); font: inherit; text-align: left; cursor: pointer;
 }
-.rdv-log-title { flex: 1; min-width: 0; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.rdv-log-title { flex: 1; min-width: 0; white-space: normal; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
 .rdv-log-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); color: var(--text-secondary); }
 </style>
