@@ -23,7 +23,7 @@ WEEKDAYS = rhythm.Rhythm((0, 1, 2, 3, 4))
 KEYS = (
     "'orp_monthly_target', 'rhythm_days', 'offers_notify_mode', 'offers_notify_hour', "
     "'offers_digest_day', 'notify_score_threshold', 'rhythm_pause_from', 'rhythm_pause_until', "
-    "'rhythm_signal_week'"
+    "'rhythm_signal_week', 'notify_offers', 'notify_follow_ups', 'notify_orp', 'notify_news'"
 )
 
 
@@ -160,6 +160,25 @@ async def test_a_day_without_search_keeps_the_phone_quiet(
     async with rt.sessionmaker() as session:
         kinds = sorted(n.kind for n in await session.scalars(select(Notification)))
     assert kinds == ["follow_up", "orp_due"]  # la cloche garde tout
+
+
+async def test_the_switches_keep_the_phone_quiet(
+    client: AsyncClient, rt: Runtime, sent: list[Message], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Les interrupteurs des Réglages (décision de Kevin du 6.11) : éteint, rien sur le
+    téléphone ; la cloche garde tout, et la remise ORP n'a pas d'interrupteur."""
+    current = (await client.get("/api/settings")).json()
+    assert [current[k] for k in ("notify_offers", "notify_follow_ups", "notify_orp")] == [True] * 3
+    assert current["notify_news"] is False
+    off = {**current, "notify_follow_ups": False, "notify_orp": False}
+    assert (await client.put("/api/settings", json=off)).json()["notify_orp"] is False
+    monkeypatch.setattr(rhythm, "now", lambda: datetime(2026, 10, 22, 10, 0, tzinfo=ZURICH))
+    message = Message(title="Rappel", message="…")
+    for kind in ("follow_up", "contact_follow_up", "orp_target", "orp_due", "interview"):
+        await notify.deliver(rt, message, kind=kind, link="/")
+    assert len(sent) == 2  # orp_due et interview
+    async with rt.sessionmaker() as session:
+        assert len(list(await session.scalars(select(Notification)))) == 5
 
 
 async def test_the_rhythm_settings(client: AsyncClient, rt: Runtime) -> None:

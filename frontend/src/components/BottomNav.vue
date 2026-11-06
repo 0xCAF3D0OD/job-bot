@@ -13,10 +13,10 @@ import CountBadge from "./CountBadge.vue";
 // Bilan, Compte, libellés toujours visibles. L'onglet actif est un rond bleu plein posé dans un creux de la barre
 // (seule exception à la pastille teintée) ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
 // rond loin du texte. Candidatures porte le nombre d'offres à examiner. Les écrans de travail (Préparer, le tri,
-// l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50).
+// l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50), comme les Réglages et les Notifications (Kevin, 6.11).
 // Assistant mène à sa page (étape 11a), seulement quand l'IA est branchée ; la barre attend de le savoir pour se
 // dessiner (AS8). Compte mène à la page Compte (étape 10a) et reste actif sur le Profil et les Réglages.
-const HIDDEN = new Set(["preparation", "welcome", "triage"]);
+const HIDDEN = new Set(["preparation", "welcome", "triage", "settings", "notifications"]);
 
 const route = useRoute();
 const { last: lastJobsPage } = useJobsMemory();

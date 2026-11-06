@@ -7514,6 +7514,26 @@ export interface components {
             rhythm_pause_from?: string | null;
             /** Rhythm Pause Until */
             rhythm_pause_until?: string | null;
+            /**
+             * Notify Offers
+             * @default true
+             */
+            notify_offers: boolean;
+            /**
+             * Notify Follow Ups
+             * @default true
+             */
+            notify_follow_ups: boolean;
+            /**
+             * Notify Orp
+             * @default true
+             */
+            notify_orp: boolean;
+            /**
+             * Notify News
+             * @default false
+             */
+            notify_news: boolean;
         };
         /** SignupIn */
         SignupIn: {

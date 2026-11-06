@@ -74,6 +74,31 @@ describe("SettingsView, notifications", () => {
   });
 });
 
+describe("SettingsView, la page Réglages unique du téléphone (maquette Réglages, Kevin, 6.11)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("Notifications, Affichage et Mes données à la suite ; quatre interrupteurs, le seuil sous Nouvelles offres", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet(false);
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_follow_ups: false } } as never);
+    const { wrapper } = await mountSettings("notifications");
+    expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Notifications", "Affichage", "Mes données"]);
+    const rows = wrapper.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text());
+    expect(rows).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP", "Actualités et formations"]);
+    expect(wrapper.findAll("[data-test=notify-switches] input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([true, true, true, false]);
+    expect(wrapper.find("[data-test=notify-form]").exists()).toBe(false);
+    await wrapper.find("[data-test=switch-notify_follow_ups]").trigger("change");
+    await flushPromises();
+    expect(put.mock.calls.at(-1)?.[1]).toMatchObject({ body: { notify_follow_ups: false } });
+    // Sur ordinateur, une rubrique par page, comme avant.
+    vi.unstubAllGlobals();
+    const desktop = (await mountSettings("notifications")).wrapper;
+    expect(desktop.find("[data-test=notify-switches]").exists()).toBe(false);
+    expect(desktop.find("[data-test=section-affichage]").exists()).toBe(false);
+  });
+});
+
 describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
   function settings(extra: Record<string, unknown> = {}) {
     return { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 5, ...extra };

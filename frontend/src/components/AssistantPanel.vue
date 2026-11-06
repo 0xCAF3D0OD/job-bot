@@ -243,6 +243,8 @@ const { phone } = usePhone();
 // La page Assistant du téléphone (docs/139 Q4, étape 11a) : le même panneau, sur toute la page, au-dessus de la
 // barre du bas ; la discussion reste quand on change d'onglet. Un raccourci « Demander à l'assistant » y mène.
 const page = computed(() => phone.value && route.name === "assistant");
+// Les Réglages et les Notifications du téléphone (maquettes, Kevin, 6.11) : pages sans barre ni bouton flottant.
+const quiet = computed(() => phone.value && ["settings", "notifications"].includes(String(route.name)));
 watch(open, (value) => {
   if (!value || !phone.value) return;
   open.value = false;
@@ -340,7 +342,7 @@ const headItems: MoreMenuItem[] = [
 <template>
   <template v-if="available">
     <button
-      v-if="!open && !page"
+      v-if="!open && !page && !quiet"
       type="button"
       class="assistant-fab"
       aria-label="Ouvrir l'assistant"

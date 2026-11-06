@@ -18,6 +18,8 @@ function makeRouter() {
       { path: "/candidatures/offres/:id/preparer", name: "preparation", component: view },
       { path: "/aujourdhui/tri", name: "triage", component: view },
       { path: "/assistant", name: "assistant", component: view },
+      { path: "/reglages", name: "settings", component: view },
+      { path: "/notifications", name: "notifications", component: view },
       { path: "/:any(.*)*", name: "any", component: view },
     ],
   });
@@ -63,6 +65,12 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     await router.push("/aujourdhui/tri");
     await flushPromises();
     expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
+    // Les Réglages et les Notifications, pages avec leur flèche retour (Kevin, 6.11) : pas de barre.
+    for (const path of ["/reglages", "/notifications"]) {
+      await router.push(path);
+      await flushPromises();
+      expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
+    }
   });
 
   it("Compte reste actif sur le Profil", async () => {

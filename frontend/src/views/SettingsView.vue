@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
@@ -7,6 +7,7 @@ import { useAuth } from "../composables/useAuth";
 import ConnectionsPanel from "../components/ConnectionsPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
+import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
 import { usePageReady } from "../composables/usePageTransition";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
@@ -39,6 +40,10 @@ const DEFAULTS: SettingsModel = {
   offers_notify_hour: 9,
   rhythm_pause_from: null,
   rhythm_pause_until: null,
+  notify_offers: true,
+  notify_follow_ups: true,
+  notify_orp: true,
+  notify_news: false,
 };
 // La saisie (`form`) et la dernière valeur enregistrée (`stored`, 1.6.66) : une valeur refusée reste
 // dans le champ pour la corriger, l'ancienne reste enregistrée.
@@ -86,7 +91,7 @@ async function sendTest(): Promise<void> {
 onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) {
-    form.value = { ...data };
+    form.value = { ...DEFAULTS, ...data };
     stored.value = { ...data };
   }
   loaded.value = true;
@@ -227,6 +232,19 @@ const threshold = computed({
   },
   set: (value: string) => void setThreshold(Number(value)),
 });
+// Les quatre interrupteurs de la maquette Réglages (décision de Kevin du 6.11) : ce qui part sur le téléphone ;
+// la cloche garde tout. « M'avertir dès » se range sous « Nouvelles offres ».
+type SwitchKey = "notify_offers" | "notify_follow_ups" | "notify_orp" | "notify_news";
+const SWITCHES: { key: SwitchKey; title: string; description: string }[] = [
+  { key: "notify_offers", title: "Nouvelles offres", description: "Quand une offre te correspond, selon le seuil ci-dessous" },
+  { key: "notify_follow_ups", title: "Relances", description: "Une candidature attend une réponse depuis 10 jours" },
+  { key: "notify_orp", title: "Objectif ORP", description: "Rappel le 25 du mois, si tu es sous l'objectif" },
+  { key: "notify_news", title: "Actualités et formations", description: "Une fois par semaine au maximum" },
+];
+async function setSwitch(key: SwitchKey, value: boolean): Promise<void> {
+  form.value[key] = value;
+  await persist(key, { [key]: value });
+}
 async function setThreshold(value: number): Promise<void> {
   form.value.notify_score_threshold = value;
   await persist("threshold", { notify_score_threshold: value });
@@ -269,6 +287,10 @@ const SECTIONS = [
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
 const route = useRoute();
+const { phone } = usePhone();
+// Une page Réglages unique sur téléphone (maquette Réglages, décision de Kevin du 6.11) : Notifications,
+// Affichage et Mes données à la suite ; le lien du Compte mène à sa section.
+const GROUPED = new Set<string>(["notifications", "affichage", "donnees"]);
 const sections = computed(() => SECTIONS.filter((s) => s.id !== "plateforme" || owner.value));
 const active = computed<SectionId>(() => {
   const wanted = route.query.rubrique;
@@ -277,7 +299,20 @@ const active = computed<SectionId>(() => {
 
 // Une rubrique par page (décision de Kevin du 2026-11-05, C10) : la page Compte ouvre chacune, et chacune
 // revient au compte. Sans rubrique, l'adresse mène à la page Compte (router.ts).
-const label = computed(() => sections.value.find((s) => s.id === active.value)?.label ?? "Réglages");
+const grouped = computed(() => phone.value && GROUPED.has(active.value));
+const shows = (id: SectionId): boolean => (grouped.value ? GROUPED.has(id) : active.value === id);
+const label = computed(() =>
+  grouped.value ? "Réglages" : (sections.value.find((s) => s.id === active.value)?.label ?? "Réglages"),
+);
+watch(
+  [loaded, active],
+  async () => {
+    if (!grouped.value || !loaded.value || active.value === "notifications") return;
+    await nextTick();
+    document.getElementById(active.value)?.scrollIntoView?.({ block: "start" });
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -293,7 +328,7 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
     </template>
   </PageHero>
   <section class="band">
-    <div class="settings-layout settings-sub">
+    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub']">
       <div class="settings-sections">
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
@@ -551,13 +586,59 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
         </SettingsSection>
 
         <SettingsSection
-          v-if="active === 'notifications'"
+          v-if="shows('notifications')"
           id="notifications"
           title="Notifications"
           cards
         >
           <template v-if="loaded">
-            <SettingCard data-test="notify-form">
+            <SettingCard
+              v-if="phone"
+              data-test="notify-switches"
+            >
+              <template
+                v-for="item in SWITCHES"
+                :key="item.key"
+              >
+                <SettingRow
+                  v-slot="c"
+                  :title="item.title"
+                  :description="item.description"
+                  :saved="savedRow === item.key"
+                  :error="rowErrors[item.key]"
+                  :data-test="`switch-row-${item.key}`"
+                >
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    :checked="form[item.key]"
+                    :aria-labelledby="c.labelledby"
+                    :aria-describedby="c.describedby"
+                    :data-test="`switch-${item.key}`"
+                    @change="setSwitch(item.key, !form[item.key])"
+                  >
+                </SettingRow>
+                <SettingRow
+                  v-if="item.key === 'notify_offers' && form.notify_offers"
+                  title="M'avertir dès"
+                  :saved="savedRow === 'threshold'"
+                  :error="rowErrors.threshold"
+                  class="notify-threshold"
+                  stack
+                >
+                  <SegmentedControl
+                    v-model="threshold"
+                    :options="THRESHOLD_OPTIONS"
+                    label="M'avertir dès"
+                    full
+                  />
+                </SettingRow>
+              </template>
+            </SettingCard>
+            <SettingCard
+              v-else
+              data-test="notify-form"
+            >
               <SettingRow
                 title="M'avertir d'une offre dès"
                 description="Une offre notée sous ce seuil reste dans la liste, sans notification."
@@ -731,7 +812,7 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
         </SettingsSection>
 
         <SettingsSection
-          v-if="active === 'affichage'"
+          v-if="shows('affichage')"
           id="affichage"
           title="Affichage"
           cards
@@ -749,7 +830,7 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
         </SettingsSection>
 
         <SettingsSection
-          v-if="active === 'donnees'"
+          v-if="shows('donnees')"
           id="donnees"
           title="Mes données"
           cards
@@ -790,3 +871,17 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
     </div>
   </section>
 </template>
+
+<style scoped>
+/* La page Réglages unique du téléphone (maquette Réglages) : les titres de section en petites capitales grises. */
+.settings-grouped :deep(.settings-section > .section-title) {
+  margin: 0 var(--space-1) var(--space-2);
+  font-size: var(--font-caption);
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.settings-grouped :deep(.settings-section + .settings-section) { margin-top: var(--space-5); }
+.setting-row.notify-threshold { padding-top: 0; border-top: 0; }
+</style>
