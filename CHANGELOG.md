@@ -420,3 +420,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.206 | Interface : Ma candidature sur téléphone suit la maquette : choix du modèle (Sobre, Moderne, Bandeau, Classique, le même pour CV et lettre), aperçu de la lettre et du CV dans ce modèle, PDF au modèle choisi, « Modifier le texte avec l'Assistant », « J'ai relu le CV », aperçu vide avec « Rédiger la lettre », et étapes de rédaction sans chevauchement. | livrée |
 | 1.6.207 | Offres : l'offre ajoutée à la main reste ouverte, la liste ne l'efface plus aussitôt | livrée |
 | 1.6.208 | Ajouter une offre : compléter une offre déjà là avec le lien de son annonce, et une candidature spontanée signale l'offre déjà là chez la même entreprise | livrée |
+| 1.6.209 | Le personnage de la connexion passe au kit d'illustrations HD (400 px et 800 px pour les écrans 2×), net sur ordinateur | livrée |
