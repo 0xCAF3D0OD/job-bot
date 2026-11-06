@@ -227,6 +227,12 @@ const matchSub = computed(() => {
   const o = props.offer;
   if (!scored.value) return o.score_error ?? "La note arrive dès que l'annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
+  // Note provisoire (maquette OffreProvisoire) : sur combien de lignes de l'alerte elle repose.
+  if (provisional.value) {
+    const lines = (o.snippet ?? "").split("\n").filter((l) => l.trim()).length;
+    const basis = lines ? `${lines} ligne${lines > 1 ? "s" : ""} de l’alerte` : "l’extrait de l’alerte";
+    return `Calculée sur ${basis} : les exigences n’ont pas pu être vérifiées.`;
+  }
   const base = "Selon ton profil et tes préférences";
   return o.summary_partial ? `${base}, sur l'extrait de l'alerte seulement` : base;
 });
@@ -249,6 +255,14 @@ const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_M
 // génériques (« Exigences », « Données », « Conseil ») : l'encadré « Lire l'annonce » les remplace.
 const partial = computed(() => !props.offer.description && !props.offer.spontaneous);
 const gaps = computed(() => (partial.value ? [] : (props.offer.gaps ?? []).slice(0, POINTS_MAX)));
+// Notée sur l'extrait seulement : pastille « Provisoire », anneau pâli, sous-titre qui le dit.
+const provisional = computed(() => partial.value && scored.value);
+// L'annonce lue ou collée : la note est refaite, la fiche le confirme jusqu'à la prochaine offre.
+const redone = ref(false);
+function textSaved(): void {
+  redone.value = true;
+  emit("changed");
+}
 // Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
 const otherLinks = computed(() =>
   props.offer.links.filter((link) => props.offer.status === "applied" || link.url !== postLink.value?.url),
@@ -404,6 +418,7 @@ function saveAddress(): void {
 watch(
   () => props.offer.id,
   () => {
+    redone.value = false;
     editingAddress.value = false;
     proposals.value = [];
     registryMessage.value = "";
@@ -662,17 +677,25 @@ watch(
           v-if="scored"
           :score="offer.score ?? null"
           :stale="offer.score_stale"
+          :provisional="provisional"
           large
           bare
         />
         <div>
-          <h3
-            id="match-title"
-            :class="['match-title', `is-${matchTone}`]"
-            data-test="match-title"
-          >
-            {{ matchTitle }}
-          </h3>
+          <div class="match-title-row">
+            <h3
+              id="match-title"
+              :class="['match-title', `is-${matchTone}`]"
+              data-test="match-title"
+            >
+              {{ matchTitle }}
+            </h3>
+            <span
+              v-if="provisional"
+              class="provisional-pill"
+              data-test="provisional"
+            >Provisoire</span>
+          </div>
           <p
             class="match-sub"
             data-test="match-sub"
@@ -697,8 +720,16 @@ watch(
       <OfferTextNotice
         v-if="partial"
         :offer="offer"
-        @changed="emit('changed')"
+        @changed="textSaved"
       />
+      <p
+        v-else-if="redone"
+        class="redone"
+        role="status"
+        data-test="redone"
+      >
+        <AppIcon name="done" />Note refaite sur l’annonce complète.
+      </p>
       <DisclosureRow
         v-if="noteDetail"
         title="Le détail de la note"
@@ -789,7 +820,15 @@ watch(
           test-id="ad-more"
         />
       </div>
-      <template v-if="summaryParts.length">
+      <!-- Note provisoire : l'extrait de l'alerte, dit comme tel (maquette OffreProvisoire). -->
+      <p
+        v-if="partial"
+        class="post-by"
+        data-test="snippet-by"
+      >
+        Extrait de l’alerte
+      </p>
+      <template v-if="summaryParts.length && !partial">
         <p
           class="post-by"
           data-test="summary-by"
