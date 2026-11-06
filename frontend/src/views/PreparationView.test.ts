@@ -36,6 +36,7 @@ function letter(id: number, version: number, extra: Record<string, unknown> = {}
     id,
     offer_id: 7,
     version,
+    name: `Version ${version}`,
     language: "fr",
     subject: "Candidature au poste d'ingénieur DevOps junior",
     paragraphs: [
@@ -64,7 +65,8 @@ function letter(id: number, version: number, extra: Record<string, unknown> = {}
   };
 }
 
-function mockGet(letters: unknown[]): void {
+const FITS = { fits: true, overflow_lines: 0, adjusted: false, break_paragraph: null, break_word: null };
+function mockGet(letters: unknown[], page: unknown = FITS): void {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
       data:
@@ -72,7 +74,9 @@ function mockGet(letters: unknown[]): void {
           ? offer
           : path === "/api/offers/{offer_id}/letters"
             ? letters
-            : [{ id: 1, title: "Kubernetes" }],
+            : path === "/api/letters/{draft_id}/page"
+              ? page
+              : [{ id: 1, title: "Kubernetes" }],
     }),
   );
 }
@@ -104,7 +108,7 @@ describe("PreparationView", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/letters", {
       params: { path: { offer_id: 7 } },
-      body: { language: "fr", instruction: null, base_draft_id: null },
+      body: { language: "fr", instruction: null, base_draft_id: null, modele: "moderne" },
     });
     const sheet = wrapper.find("[data-test=letter]");
     expect(sheet.text()).toContain("Renens, le 5 octobre 2026");
@@ -113,7 +117,7 @@ describe("PreparationView", () => {
     expect(wrapper.find<HTMLInputElement>("[data-test=subject]").element.value).toBe(
       "Candidature au poste d'ingénieur DevOps junior",
     );
-    expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx");
+    expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx?modele=moderne");
     expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=moderne");
   });
 
@@ -123,7 +127,7 @@ describe("PreparationView", () => {
     const wrapper = await mountView();
     expect(wrapper.findAll("[data-test=version]")).toHaveLength(2);
     // La version affichée est marquée (pastille de sélection, aria-current).
-    expect(wrapper.find(".versions [aria-current=page]").text()).toContain("v1");
+    expect(wrapper.find(".versions [aria-current=page]").text()).toContain("Version 1");
 
     await wrapper.find("[data-test=subject]").setValue("Candidature");
     expect(wrapper.find("[data-test=docx]").exists()).toBe(false);
@@ -135,16 +139,19 @@ describe("PreparationView", () => {
     expect(wrapper.find("[data-test=docx]").exists()).toBe(true);
   });
 
-  it("une consigne longue : six mots pour nom, la consigne entière au-dessus de la lettre, sans « … »", async () => {
+  it("une consigne longue : un nom court, la consigne entière en sous-titre et au-dessus de la lettre, sans « … »", async () => {
     const long = "Insiste davantage sur Kubernetes et Terraform, raccourcis ".repeat(6).trim();
     expect(long.length).toBeGreaterThan(300);
     mockGet([letter(12, 2, { instruction: long }), letter(11, 1)]);
     const wrapper = await mountView();
     const versions = wrapper.findAll("[data-test=version]");
     const named = versions.find((v) => v.text().includes("Insiste"))!;
-    expect(named.find(".grouped-row-title").text()).toBe("Insiste davantage sur Kubernetes et Terraform");
+    expect(named.find(".grouped-row-title").text()).toBe("Version 2");
+    expect(named.find(".grouped-row-description").text()).toBe(long);
     expect(named.text()).not.toContain("…");
-    expect(versions.some((v) => v.find(".grouped-row-title").text() === "Première rédaction")).toBe(true);
+    // Sans consigne : le nom, puis la version, la langue et la date en sous-titre.
+    const first = versions.find((v) => v.find(".grouped-row-title").text() === "Version 1")!;
+    expect(first.find(".grouped-row-description").text()).toContain("v1 · Français");
     // La consigne entière s'affiche aussi au-dessus de la lettre de la version choisie.
     await named.trigger("click");
     expect(wrapper.find("[data-test=version-instruction]").text()).toBe(`Consigne : ${long}`);
@@ -155,14 +162,14 @@ describe("PreparationView", () => {
 
   it("nouvelle version avec consigne : part de la version affichée", async () => {
     mockGet([letter(11, 1)]);
-    POST.mockResolvedValue({ data: letter(12, 2, { instruction: "plus court" }) });
+    POST.mockResolvedValue({ data: letter(12, 2, { instruction: "plus court", name: "Plus courte" }) });
     const wrapper = await mountView();
     await wrapper.find("[data-test=instruction]").setValue("plus court");
     await wrapper.find("[data-test=write]").trigger("click");
     await flushPromises();
     const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
-    expect(opts.body).toEqual({ language: null, instruction: "plus court", base_draft_id: 11 });
-    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus court");
+    expect(opts.body).toEqual({ language: null, instruction: "plus court", base_draft_id: 11, modele: "moderne" });
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus courte");
   });
 
   it("la lettre s'affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
@@ -635,11 +642,11 @@ describe("« Pas vrai » (30.10.2026)", () => {
       expect.objectContaining({ body: { sentence: "J'administre un cluster K3s.", mode: "rewrite" } }),
     );
     expect(POST).toHaveBeenCalledWith("/api/letters/{draft_id}/review", expect.anything());
-    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toContain("Pas vrai");
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-description").text()).toContain("Pas vrai");
     await useUndo().undo();
     await flushPromises();
     expect(DELETE).toHaveBeenCalledWith("/api/forbidden-claims/{claim_id}", { params: { path: { claim_id: 7 } } });
-    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).not.toContain("Pas vrai");
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-description").text()).not.toContain("Pas vrai");
   });
 
   it("téléphone : toucher une phrase la choisit, « Pas vrai » remplace « Rédiger » dans le panneau", async () => {
@@ -660,5 +667,28 @@ describe("« Pas vrai » (30.10.2026)", () => {
     await bar.find("[data-test=false-claim-cancel]").trigger("click");
     expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").exists()).toBe(true);
     expect(wrapper.find("[data-test=letter-card] .doc-language").exists()).toBe(true);
+  });
+  it("une page A4 : « Tient sur une page A4 », ou le débordement, la marque de fin de page et « Raccourcir »", async () => {
+    mockGet([letter(11, 1)]);
+    let wrapper = await mountView();
+    expect(GET).toHaveBeenCalledWith("/api/letters/{draft_id}/page", { params: { path: { draft_id: 11 }, query: { modele: "moderne" } } });
+    expect(wrapper.find("[data-test=page-line]").text()).toBe("Tient sur une page A4.");
+    expect(wrapper.find("[data-test=page-end]").exists()).toBe(false);
+    wrapper.unmount();
+
+    mockGet([letter(11, 1)], { fits: false, overflow_lines: 3, adjusted: true, break_paragraph: 1, break_word: 3 });
+    POST.mockResolvedValue({ data: letter(12, 2, { instruction: "Raccourcir pour tenir sur une page A4", name: "Plus courte" }) });
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=page-line]").text()).toContain("Déborde de 3 lignes :");
+    // La page 1 se termine dans le 2e paragraphe, après « J'administre un cluster ».
+    const marks = wrapper.findAll("[data-test=page-end]");
+    expect(marks).toHaveLength(1);
+    expect(marks[0]!.text()).toBe("Fin de la page A4 dans ce paragraphe, après «\u00a0J'administre un cluster\u00a0».");
+    expect(wrapper.findAll(".letter-paragraph")[1]!.find("[data-test=page-end]").exists()).toBe(true);
+
+    await wrapper.find("[data-test=shorten]").trigger("click");
+    await flushPromises();
+    const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(opts.body).toEqual({ language: null, instruction: "Raccourcir pour tenir sur une page A4", base_draft_id: 11, modele: "moderne" });
   });
 });
