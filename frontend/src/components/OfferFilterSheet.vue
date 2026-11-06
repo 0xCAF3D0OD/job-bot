@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import type { OfferFacets, Source } from "../api/client";
-import { sourceLabel } from "../format";
+import type { OfferFacets } from "../api/client";
 import type { OfferFilters, Sort } from "../composables/useOfferFilters";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 
-// La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02) :
-// la correspondance en mots (D3), le taux minimum (un seul choix, 5e), le tri (C8), « Afficher aussi »
-// (Écartées, Expirées : 5e, à la place de la vue « Toutes ») ; puis les filtres d'avant (télétravail,
-// employeur, offres à vérifier, sites, cantons). Contrat et Distance attendent le
-// serveur (issue 468). Chaque choix s'applique tout de suite ; « Afficher N offres » referme.
+// La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02 ;
+// décisions de Kevin du 2026-11-06) : la correspondance en mots (D3), le taux minimum (un seul choix, 5e),
+// le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
+// Contrat et Distance attendent le serveur (issue 468). Chaque choix s'applique tout de suite ;
+// « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
@@ -44,9 +43,6 @@ const SORTS: { label: string; value: Sort }[] = [
   { label: "Récentes", value: "recent" },
 ];
 
-function toggle<T extends string>(values: T[], value: T): T[] {
-  return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-}
 const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Afficher ${props.total} offres`));
 </script>
 
@@ -54,6 +50,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
   <BottomSheet
     :open="open"
     title="Filtres"
+    class="filters-dialog"
     data-test="filters-sheet"
     @close="emit('close')"
   >
@@ -116,15 +113,13 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         </div>
       </div>
 
-      <!-- « Afficher aussi » (5e) : les deux allumés, c'est l'ancienne vue « Toutes ». -->
-      <GroupedList
-        v-if="filters.view === 'pending'"
-        :level="3"
-        title="Afficher aussi"
-        data-test="sheet-show-also"
-      >
+      <!-- Les offres écartées (Kevin, 6.11) : un interrupteur « Masquer », allumé par défaut, comme la maquette ;
+           Télétravail reste. Sites et cantons se règlent dans Compte (critères de recherche, sites suivis). -->
+      <GroupedList :level="3">
         <GroupedRow
-          title="Écartées"
+          v-if="filters.view === 'pending'"
+          title="Masquer les offres écartées"
+          description="Tu les retrouves dans Suivi"
           label
           data-test="sheet-filtered-out"
         >
@@ -132,27 +127,11 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
             <input
               type="checkbox"
               role="switch"
-              :checked="filters.showFilteredOut"
+              :checked="!filters.showFilteredOut"
               @change="emit('update', { showFilteredOut: !filters.showFilteredOut })"
             >
           </template>
         </GroupedRow>
-        <GroupedRow
-          title="Expirées"
-          label
-          data-test="sheet-expired"
-        >
-          <template #end>
-            <input
-              type="checkbox"
-              role="switch"
-              :checked="filters.showExpired"
-              @change="emit('update', { showExpired: !filters.showExpired })"
-            >
-          </template>
-        </GroupedRow>
-      </GroupedList>
-      <GroupedList :level="3">
         <GroupedRow
           title="Télétravail au moins partiel"
           label
@@ -164,80 +143,6 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
               role="switch"
               :checked="filters.remote !== null"
               @change="emit('update', { remote: filters.remote === null ? 'partial' : null })"
-            >
-          </template>
-        </GroupedRow>
-        <GroupedRow
-          title="Candidature chez l'employeur"
-          label
-          data-test="sheet-external"
-        >
-          <template #end>
-            <input
-              type="checkbox"
-              role="switch"
-              :checked="filters.externalOnly"
-              @change="emit('update', { externalOnly: !filters.externalOnly })"
-            >
-          </template>
-        </GroupedRow>
-        <GroupedRow
-          title="Sans les offres à vérifier"
-          label
-          data-test="sheet-doubtful"
-        >
-          <template #end>
-            <input
-              type="checkbox"
-              role="switch"
-              :checked="filters.hideDoubtful"
-              @change="emit('update', { hideDoubtful: !filters.hideDoubtful })"
-            >
-          </template>
-        </GroupedRow>
-      </GroupedList>
-
-      <GroupedList
-        v-if="facets.sources.length"
-        title="Sites"
-        :level="3"
-      >
-        <GroupedRow
-          v-for="facet in facets.sources"
-          :key="facet.value"
-          :title="sourceLabel[facet.value] ?? facet.value"
-          :value="String(facet.count)"
-          label
-          :data-test="`sheet-source-${facet.value}`"
-        >
-          <template #start>
-            <input
-              type="checkbox"
-              :checked="filters.sources.includes(facet.value as Source)"
-              @change="emit('update', { sources: toggle(filters.sources, facet.value as Source) })"
-            >
-          </template>
-        </GroupedRow>
-      </GroupedList>
-
-      <GroupedList
-        v-if="facets.cantons.length"
-        title="Cantons"
-        :level="3"
-      >
-        <GroupedRow
-          v-for="facet in facets.cantons"
-          :key="facet.value"
-          :title="facet.value"
-          :value="String(facet.count)"
-          label
-          :data-test="`sheet-canton-${facet.value}`"
-        >
-          <template #start>
-            <input
-              type="checkbox"
-              :checked="filters.cantons.includes(facet.value)"
-              @change="emit('update', { cantons: toggle(filters.cantons, facet.value) })"
             >
           </template>
         </GroupedRow>
@@ -255,7 +160,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       </button>
       <button
         type="button"
-        class="primary"
+        class="primary filters-show"
         data-test="sheet-show"
         @click="emit('close')"
       >
@@ -264,3 +169,11 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
     </template>
   </BottomSheet>
 </template>
+
+<style scoped>
+.filters-dialog { max-height: calc(100dvh - 9.625rem); }
+/* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
+.filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
+.filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.filters-show { min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+</style>
