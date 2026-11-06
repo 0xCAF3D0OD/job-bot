@@ -28,6 +28,7 @@ const TermsView = () => import("./views/TermsView.vue");
 const AboutView = () => import("./views/AboutView.vue");
 const DiscoverView = () => import("./views/DiscoverView.vue");
 const ExtensionLinkView = () => import("./views/ExtensionLinkView.vue");
+const GetemallAuthorizeView = () => import("./views/GetemallAuthorizeView.vue");
 const PrivacyView = () => import("./views/PrivacyView.vue");
 const WelcomeView = () => import("./views/WelcomeView.vue");
 const ApplicationsView = () => import("./views/ApplicationsView.vue");
@@ -255,6 +256,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/assistant", name: "assistant", component: { render: () => null } },
   // Relier l'extension du navigateur en un clic, ouverte par l'extension (docs/71 §4).
   { path: "/extension/relier", name: "extension-link", component: ExtensionLinkView },
+  // « Relier Get'emAll à ton compte ? » (docs/140, maquette AutoriserGetemall) : ouverte par Get'emAll, plein écran.
+  { path: "/connexion/getemall", name: "getemall-authorize", component: GetemallAuthorizeView, meta: { bare: true } },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.
@@ -288,7 +291,7 @@ router.beforeEach(async (to) => {
   }
   // Un nouveau compte passe d'abord par l'accueil (docs/66 §4) ; « Plus tard » le laisse aller.
   const { me } = useAuth();
-  if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && !PUBLIC_ROUTES.has(String(to.name))) {
+  if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && to.name !== "getemall-authorize" && !PUBLIC_ROUTES.has(String(to.name))) {
     return { name: "welcome" };
   }
   // L'Assistant : sa présence est connue avant le premier rendu de la barre du bas (AS8).
@@ -343,6 +346,7 @@ const PAGE_TITLES: Record<string, string> = {
   about: "À propos",
   welcome: "Bienvenue",
   "extension-link": "Extension",
+  "getemall-authorize": "Relier Get'emAll",
   "not-found": "Page introuvable",
 };
 

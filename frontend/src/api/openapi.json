@@ -2158,6 +2158,54 @@
         }
       }
     },
+    "/api/partenaires/getemall/refus": {
+      "post": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Refuse",
+        "description": "« Refuser » : retour vers Get'emAll avec `error=access_denied` (RFC 6749 §4.1.2.1).\nL'adresse est comparée à la liste, comme pour « Autoriser » : pas de redirection ouverte.",
+        "operationId": "refuseGetemall",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetemallRefuseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallAuthorizeOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Adresse de retour hors de la liste"
+          },
+          "404": {
+            "description": "Connexion Get'emAll non configurée"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/partenaires/getemall/echange": {
       "post": {
         "tags": [
@@ -14703,6 +14751,26 @@
         "title": "GetemallProfile",
         "description": "Les premiers pas de jobA1 (docs/128) : « Premiers pas : X sur 5 » dans Get'emAll, qui\ntraduit lui-même la clé de la prochaine étape (décision de Kevin du 2026-11-05)."
       },
+      "GetemallRefuseIn": {
+        "properties": {
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Redirect Uri"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~-]{8,200}$",
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_uri",
+          "state"
+        ],
+        "title": "GetemallRefuseIn"
+      },
       "GetemallShare": {
         "properties": {
           "orp": {
@@ -19937,6 +20005,11 @@
           "guest_mailbox": {
             "type": "boolean",
             "title": "Guest Mailbox",
+            "default": false
+          },
+          "getemall": {
+            "type": "boolean",
+            "title": "Getemall",
             "default": false
           }
         },

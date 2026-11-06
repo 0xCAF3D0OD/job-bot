@@ -876,6 +876,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/partenaires/getemall/refus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refuse
+         * @description « Refuser » : retour vers Get'emAll avec `error=access_denied` (RFC 6749 §4.1.2.1).
+         *     L'adresse est comparée à la liste, comme pour « Autoriser » : pas de redirection ouverte.
+         */
+        post: operations["refuseGetemall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/partenaires/getemall/echange": {
         parameters: {
             query?: never;
@@ -5269,6 +5290,13 @@ export interface components {
             /** Prochaine */
             prochaine: ("profile" | "alerts" | "keep" | "prepare" | "sent") | null;
         };
+        /** GetemallRefuseIn */
+        GetemallRefuseIn: {
+            /** Redirect Uri */
+            redirect_uri: string;
+            /** State */
+            state: string;
+        };
         /** GetemallShare */
         GetemallShare: {
             /** Orp */
@@ -6917,6 +6945,11 @@ export interface components {
              * @default false
              */
             guest_mailbox: boolean;
+            /**
+             * Getemall
+             * @default false
+             */
+            getemall: boolean;
         };
         /** PrivacyIn */
         PrivacyIn: {
@@ -9983,6 +10016,53 @@ export interface operations {
             };
             /** @description Réservé aux testeurs invités */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Connexion Get'emAll non configurée */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refuseGetemall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetemallRefuseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallAuthorizeOut"];
+                };
+            };
+            /** @description Adresse de retour hors de la liste */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

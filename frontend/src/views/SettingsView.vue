@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import ConnectionsPanel from "../components/ConnectionsPanel.vue";
+import GetemallPanel from "../components/GetemallPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePhone } from "../composables/usePhone";
@@ -846,6 +847,7 @@ watch(
           cards
         >
           <ConnectionsPanel />
+          <GetemallPanel />
         </SettingsSection>
 
         <SettingsSection

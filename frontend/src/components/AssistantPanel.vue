@@ -28,7 +28,7 @@ type Line = { role: "user" | "assistant"; content: string; error?: boolean; acti
 
 const route = useRoute();
 const router = useRouter();
-const { available, open, focus, fresh, check, setFocus } = useAssistant();
+const { available, open, focus, fresh, pending, check, setFocus } = useAssistant();
 const suggestions = computed(() => suggestionsFor(String(route.name ?? ""), focus.value));
 const lines = ref<Line[]>([]);
 const conversationId = ref<number | null>(null);
@@ -287,6 +287,18 @@ watch(
     if (!value) return;
     if (!lines.value.length) void loadGreeting();
     if (!conversationId.value) void loadRecent();
+  },
+  { immediate: true },
+);
+
+// Une question posée d'ailleurs : envoyée dès que le panneau ou la page Assistant s'affiche.
+watch(
+  [pending, open, page],
+  () => {
+    const question = pending.value;
+    if (!question || busy.value || !(open.value || page.value)) return;
+    pending.value = null;
+    void send(question);
   },
   { immediate: true },
 );

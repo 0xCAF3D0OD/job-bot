@@ -212,6 +212,10 @@ const versionsOpen = ref(false);
 // modèle choisi ; l'aperçu touché ouvre la lettre entière, modifiable.
 const { template } = useDocTemplate();
 const letterOpen = ref(false);
+// La ligne de l'entreprise (maquette Preparer) : « Alpstack · Lausanne », sans le canton.
+function cityOnly(location: string | null | undefined): string {
+  return (location || "").replace(/,\s*[A-Z]{2}$/, "");
+}
 const previewName = computed(() => doc.value?.sender[0] || "Ton nom");
 // « 1020 Renens » devient « Renens » sous le nom.
 const previewSub = computed(() => {
@@ -657,7 +661,7 @@ onMounted(() => void load());
           class="prep-offer-title"
           data-test="prep-offer-title"
         >{{ offer.title }}</span>
-        <span class="prep-offer-sub">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
+        <span class="prep-offer-sub">{{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}</span>
       </p>
       <ScoreRing
         v-if="offer.score !== null && offer.score !== undefined"
@@ -861,7 +865,10 @@ onMounted(() => void load());
             <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
-          <TemplatePicker v-if="phone" />
+          <TemplatePicker
+            v-if="phone"
+            :name="doc?.sender[0]"
+          />
           <!-- La carte de la lettre (maquette Preparer, étape 7b) : le titre et la langue en tête (C3 : choisir
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
                texte » qui ouvre la consigne, puis « J'ai relu la lettre » (C11). -->
