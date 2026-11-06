@@ -1310,6 +1310,8 @@ input[type="checkbox"][role="switch"]:focus-visible { outline: 2px solid var(--a
 input[type="checkbox"][role="switch"]::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); }
 input[type="checkbox"][role="switch"]:checked { background: var(--primary); }
 input[type="checkbox"][role="switch"]:checked::after { transform: translateX(0.9rem); }
+/* 44 px sous le doigt (WCAG 2.5.5), sans changer le dessin : une zone de touche invisible, comme .all-months. */
+input[type="checkbox"][role="switch"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
 /* Un filtre se déplie sous sa ligne, un seul à la fois. */
 button.filter-row[aria-expanded]::after { transition: transform 0.15s; }
 button.filter-row[aria-expanded="true"]::after { transform: rotate(90deg); }
