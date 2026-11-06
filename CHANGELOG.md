@@ -442,3 +442,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.228 | Lettre : elle tient sur une page A4, mesurée sur le PDF du modèle choisi (mise en page resserrée, puis raccourcie par l'IA avec un nombre de mots), avec « Tient sur une page A4 » ou « Déborde de n lignes : Raccourcir » et la marque de fin de page ; les versions ont un nom court et la consigne entière dessous | livrée |
 | 1.6.229 | Le personnage sur la maintenance (câbles, nouvelle tête), « Pas de connexion » (au téléphone) et « Aucune offre avec ces filtres » (à la loupe) ; l'erreur réseau dans la page garde la mascotte qui fait « non » | livrée |
 | 1.6.230 | Lieu ou lien de l'entretien sur la candidature, affiché sur Rendez-vous à la place de l'adresse de l'entreprise | livrée |
+| 1.6.231 | Interrupteurs : une zone de touche de 44 px sur téléphone, sans changer leur dessin. | livré. |
