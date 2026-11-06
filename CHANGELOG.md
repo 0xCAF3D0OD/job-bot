@@ -448,3 +448,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.234 | Le personnage pour l'attente de la première collecte, le rendez-vous sans date, « Entretien décroché », la réponse négative et l'au revoir ; la cloche au-dessus des alertes encore vides | livrée |
 | 1.6.235 | Extension du navigateur : la nouvelle fenêtre (360 × 480, en-tête, pastille du site, réglages derrière la roue dentée, clair et sombre), ses états « Relie l'extension à ton compte » et « Rien à faire sur cette page », et ses jetons dans Réglages › Connexions | livrée en partie (docs/142 : envoyer une annonce et remplir les alertes suivent) |
 | 1.6.236 | Fiche d'une offre, note provisoire : pastille « Provisoire », anneau pâli, bande « Lire l'annonce » ou « Coller le texte » et ses états (maquette OffreProvisoire) | livrée |
+| 1.6.237 | Offres sur ordinateur : un clic dans la liste ouvre bien l'offre cliquée, même arrivé par « Retour à l'offre » | livrée |
