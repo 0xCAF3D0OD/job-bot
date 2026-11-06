@@ -3519,14 +3519,6 @@ main:focus { outline: none; }
 .remind-edit .field-error { flex-basis: 100%; margin: 0; }
 .prep-sent-notice { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
 /* « Candidature notée » (C9) : le visage, la phrase, l'objectif ORP, puis « Offre suivante » et « Annuler ». */
-.prep-sent { display: grid; justify-items: center; gap: var(--space-4); max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-4); text-align: center; }
-.prep-sent .face-state-title { font-size: var(--font-section); font-weight: var(--weight-bold); }
-.prep-sent-orp { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-align: left; text-decoration: none; }
-.prep-sent-orp > span { display: grid; gap: var(--space-1); }
-.prep-sent-orp > span > span { font-size: var(--font-small); color: var(--text-secondary); }
-.prep-sent-actions { display: grid; gap: var(--space-2); justify-items: center; width: 100%; }
-.prep-sent-actions > .button-link { justify-content: center; width: 100%; min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.prep-sent-cancel { min-height: 3rem; font-size: var(--font-body); }
 /* « C'est fait ! » (ObjectifAtteint, B10 à B12) : le feston et le visage, « à faire » barré une fois, la phrase
    manuscrite, puis l'export et l'accueil en bas. La police n'est chargée que si un titre manuscrit s'affiche ; un seul
    sous-ensemble (3,8 Ko) pour « C'est fait ! » et les fins de titre des premiers pas (O3, 11b). */
@@ -3534,9 +3526,7 @@ main:focus { outline: none; }
 .goal-reached { position: relative; display: flex; flex-direction: column; align-items: center; max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-5) var(--space-6); box-sizing: border-box; text-align: center; color: var(--text-tertiary); }
 .goal-reached-close { position: absolute; top: var(--space-3); right: var(--space-2); width: var(--btn-tertiary); height: var(--btn-tertiary); color: var(--text); }
 .goal-reached-close .icon { width: 1.375rem; height: 1.375rem; stroke-width: var(--icon-stroke); }
-.goal-reached-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-8) var(--space-2) 0; }
-.goal-reached-art { position: relative; display: grid; place-items: center; width: var(--mood-box); height: var(--mood-box); }
-.goal-reached-art .confetti { top: 50%; }
+.goal-reached-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-6) var(--space-2) 0; }
 .goal-reached-todo { margin: var(--space-8) 0 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
 .goal-reached-todo > span { position: relative; display: inline-block; white-space: nowrap; }
 .goal-reached-todo s { text-decoration: none; }
@@ -3552,13 +3542,12 @@ main:focus { outline: none; }
 @keyframes goal-write { from { clip-path: inset(-30% 100% -30% -10%); } to { clip-path: inset(-30% -10%); } }
 @media (prefers-reduced-motion: reduce) {
   .goal-reached-todo path, .goal-reached-title { animation: none; }
-  .goal-reached-art .confetti { display: none; }
 }
 /* Sur téléphone, une sous-page : sa propre tête à la place de l'en-tête de l'app, pas de barre d'onglets, et
    une barre du bas fixe avec un seul bouton plein (C6). Les versions et le téléchargement passent dans le
    « ⋯ » de la tête. */
 @media (max-width: 820px) {
-  :root:has(:is(.prep-head, .prep-sent, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
+  :root:has(:is(.prep-head, .sent-screen, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab, .jobs-head) { display: none; }
   .goal-reached { min-height: 100dvh; padding-top: calc(var(--space-8) + env(safe-area-inset-top)); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom)); }
   .goal-reached-close { top: calc(var(--space-3) + env(safe-area-inset-top)); }
   .prep-head { grid-template-columns: auto minmax(0, 1fr) auto; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }

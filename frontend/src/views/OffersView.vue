@@ -2,9 +2,12 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, Teleport, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
+import { api, type FilterKey, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
+import ApplicationSent from "../components/ApplicationSent.vue";
+import GoalReached from "../components/GoalReached.vue";
+import { firstGoal } from "../composables/useGoalMoment";
 import IconButton from "../components/IconButton.vue";
 import OfferActionSheet from "../components/OfferActionSheet.vue";
 import OfferCard from "../components/OfferCard.vue";
@@ -52,6 +55,9 @@ const counts = ref<Record<View, number>>({
 // Aucune offre du tout, ni filtre : un compte neuf (docs/128 §3).
 const noOffersYet = computed(() => counts.value.all === 0 && counts.value.expired === 0 && !activeCount(filters.value));
 const applying = ref<ApplicationFormValue | null>(null);
+// L'écran qui suit « Marquer comme envoyée » (docs/141, 8 et 9), à la place de la page.
+const sentMoment = ref<{ title: string; company: string; count: number | null; target: number | null; followUpOn: string | null } | null>(null);
+const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
 const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0 });
@@ -469,7 +475,11 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   }
   applying.value = null;
   if (data.offer_id) useJobsMemory().sent(data.offer_id);
-  notice.value = `Candidature chez ${data.company} enregistrée.`;
+  // « Candidature envoyée. » ou, si elle atteint l'objectif ORP du mois, « C'est fait ! » (docs/141, 8 et 9).
+  const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
+  if (orp && firstGoal(data.orp_month, orp.count, orp.target)) goalMoment.value = { ...orp, month: data.orp_month };
+  else sentMoment.value = { title: data.job_title, company: data.company, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
+  window.scrollTo?.({ top: 0 });
   await load();
 }
 
@@ -547,7 +557,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="offers-page">
+  <GoalReached
+    v-if="goalMoment"
+    :data="goalMoment"
+    :cancellable="false"
+  />
+  <ApplicationSent
+    v-else-if="sentMoment"
+    v-bind="sentMoment"
+    @leave="sentMoment = null"
+  />
+  <section
+    v-else
+    class="offers-page"
+  >
     <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. Pas sur téléphone :
          le nombre est sur la pastille de « À traiter » (maquette Candidatures, Kevin, 2026-11-05). -->
     <p
