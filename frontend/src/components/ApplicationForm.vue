@@ -27,6 +27,7 @@ const form = ref<ApplicationFormValue>({
   rate_text: props.initial.rate_text ?? "",
   application_url: props.initial.application_url ?? "",
   status_reason: props.initial.status_reason ?? "",
+  interview_place: props.initial.interview_place ?? "",
 });
 // Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à l'envoi,
 // et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
@@ -298,6 +299,23 @@ async function submit(): Promise<void> {
             type="text"
             :aria-describedby="describedby"
             :aria-invalid="invalid"
+          >
+        </FormField>
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          class="wide"
+          label="Lieu ou lien de l'entretien"
+          optional
+          hint="Une adresse, « Visio », ou le lien de la visioconférence."
+        >
+          <input
+            :id="id"
+            v-model="form.interview_place"
+            type="text"
+            maxlength="1000"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
+            data-test="interview-place"
           >
         </FormField>
       </div>

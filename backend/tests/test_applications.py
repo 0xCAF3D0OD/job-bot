@@ -9,7 +9,15 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text, update
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Application, Notification, Offer, OfferStatus, Setting
+from jobbot.db.models import (
+    Application,
+    Draft,
+    Notification,
+    Offer,
+    OfferLink,
+    OfferStatus,
+    Setting,
+)
 from jobbot.notify import service as notify
 from jobbot.notify.service import Message
 from jobbot.runtime import Runtime
@@ -114,6 +122,45 @@ async def test_prefill(
     assert prefill["assigned_by_orp"] is False and prefill["sent_at"]
 
 
+async def test_prefill_too_long_still_applies(api: AsyncClient, rt: Runtime) -> None:
+    """« J'ai postulé » envoie la proposition telle quelle : elle tient toujours dans les limites
+    du formulaire, même avec un lien d'alerte Indeed trop long ou des coordonnées de l'IA hors
+    format (sinon : « Enregistrement impossible pour l'instant »)."""
+    long_link = "https://ch.indeed.com/pagead/clk?mo=r&ad=" + "x" * 1500
+    offer_id = await add_offer(
+        rt,
+        1,
+        apply_url=long_link,
+        employer_url="https://www.academicwork.ch/" + "y" * 1200,
+        company_address="Rue du Marché 1\n" + "1003 Lausanne " * 40,
+    )
+    async with rt.sessionmaker.begin() as session:
+        session.add(
+            OfferLink(offer_id=offer_id, source="indeed", url="https://ch.indeed.com/viewjob?jk=1")
+        )
+        session.add(
+            Draft(
+                offer_id=offer_id,
+                kind="letter",
+                version=1,
+                language="fr",
+                content={
+                    "employer": {"contact_name": ["Mme", "Dupont"], "contact_phone": "0" * 400}
+                },
+            )
+        )
+    response = await api.get(f"/api/offers/{offer_id}/application-prefill")
+    assert response.status_code == 200
+    prefill = response.json()
+    assert prefill["application_url"] == "https://ch.indeed.com/viewjob?jk=1"
+    assert prefill["company_address"].startswith("Rue du Marché 1, 1003 Lausanne")
+    assert len(prefill["company_address"]) == 300 and prefill["company_address"].endswith("…")
+    assert prefill["contact_name"] is None and len(prefill["contact_phone"]) == 300
+    created = await api.post("/api/applications", json=prefill)
+    assert created.status_code == 201
+    assert await offer_status(rt, offer_id) == "applied"
+
+
 async def test_application_lifecycle(api: AsyncClient, rt: Runtime) -> None:
     offer_id = await add_offer(rt, 1)
     body = {
@@ -143,6 +190,19 @@ async def test_application_lifecycle(api: AsyncClient, rt: Runtime) -> None:
         json={**body, "status": "entretien", "interview_at": "2026-10-12T09:30:00+02:00"},
     )
     assert updated.json()["status"] == "entretien" and updated.json()["status_at"]
+    assert updated.json()["interview_place"] is None
+    # Le lieu ou lien de l'entretien : texte libre, nettoyé, borné (E-1).
+    placed = await api.put(
+        f"/api/applications/{app['id']}",
+        json={**body, "status": "entretien", "interview_place": "  Visio Teams  "},
+    )
+    assert placed.json()["interview_place"] == "Visio Teams"
+    blank = await api.put(f"/api/applications/{app['id']}", json={**body, "interview_place": "   "})
+    assert blank.json()["interview_place"] is None
+    too_long = await api.put(
+        f"/api/applications/{app['id']}", json={**body, "interview_place": "x" * 1001}
+    )
+    assert too_long.status_code == 422
 
     assert (await api.delete(f"/api/applications/{app['id']}")).status_code == 204
     assert await offer_status(rt, offer_id) == "preparing"

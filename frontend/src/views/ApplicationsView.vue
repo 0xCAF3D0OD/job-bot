@@ -277,6 +277,7 @@ async function setStatus(application: Application, status: ApplicationStatus): P
       status,
       status_reason: application.status_reason ?? null,
       interview_at: application.interview_at ?? null,
+      interview_place: application.interview_place ?? null,
     },
   });
   celebrateIf(application.id, status, application.company);
