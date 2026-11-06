@@ -127,6 +127,19 @@ const shared = ref<{ url: string | null; text: string | null }>({ url: null, tex
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
+// Les offres « Loin » (note sous 50) cachées sur téléphone (maquette Candidatures, Kevin 2026-11-06) : un lien en
+// bas de liste les montre, avec leur nombre (les tranches de note du serveur, toute la liste). Pas quand un
+// filtre de note est posé : il dit déjà quoi montrer. Une offre sans note reste visible.
+const FAR_BELOW = 50;
+const showFar = ref(false);
+const hidesFar = computed(() => phone.value && filters.value.minScore === null && filters.value.maxScore === null);
+const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
+const shown = computed(() =>
+  hidesFar.value && !showFar.value
+    ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
+    : items.value,
+);
+
 // Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
 // 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
@@ -140,7 +153,7 @@ function groupKey(offer: Offer): string {
 }
 const dayCounts = computed(() => {
   const counts = new Map<string, number>();
-  for (const offer of items.value) {
+  for (const offer of shown.value) {
     if (offer.id === pinnedId.value) continue;
     const key = groupKey(offer);
     counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -149,20 +162,20 @@ const dayCounts = computed(() => {
 });
 type Day = { name: string; count: string; n: number };
 function dayHeader(index: number): Day | null {
-  const offer = items.value[index];
+  const offer = shown.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
   const key = groupKey(offer);
   // Sur téléphone, « En préparation » a toujours son titre de section (Kevin, 2026-11-05) : les cartes
   // n'ont plus d'étiquette.
   if (!byDay.value && !(phone.value && key === "preparing")) return null;
-  const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
+  const previous = shown.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && groupKey(previous) === key) return null;
   const n = dayCounts.value.get(key) ?? 0;
   return { name: key === "preparing" ? "En préparation" : dayName(offer.first_seen_at), count: plural(n, "offre", "offres"), n };
 }
 // Une liste à plat (lignes de jour et offres) pour que chaque offre s'anime seule (docs/60 §3).
 const rows = computed(() =>
-  items.value.flatMap((offer, index) => {
+  shown.value.flatMap((offer, index) => {
     const day = dayHeader(index);
     const card = { key: `offer-${offer.id}`, day: null as Day | null, offer };
     return day ? [{ key: `day-${offer.id}`, day, offer: null }, card] : [card];
@@ -808,7 +821,7 @@ onUnmounted(() => {
           </button>
         </p>
         <FaceState
-          v-else-if="!loading && items.length === 0"
+          v-else-if="!loading && shown.length === 0 && !(hidesFar && farCount)"
           title="Aucune offre"
           data-test="offers-empty"
         >
@@ -853,6 +866,16 @@ onUnmounted(() => {
           test-id="offers-more"
           @update:model-value="loadMore"
         />
+        <button
+          v-if="hidesFar && farCount && !loading && !failed"
+          type="button"
+          class="offers-far"
+          :aria-expanded="showFar"
+          data-test="offers-far"
+          @click="showFar = !showFar"
+        >
+          {{ showFar ? "Masquer les offres loin de ton profil" : `Afficher aussi les offres loin de ton profil (${farCount})` }}
+        </button>
         <p
           v-if="phone && !loading && !failed"
           class="offers-spontaneous"
