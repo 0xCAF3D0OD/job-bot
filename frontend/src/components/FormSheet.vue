@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
+import { usePhone } from "../composables/usePhone";
 import CopyButton from "./CopyButton.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
 // ligne de l'employeur, dans l'ordre habituel de ces formulaires. Une ligne par champ (maquette
@@ -10,6 +12,7 @@ import CopyButton from "./CopyButton.vue";
 const props = defineProps<{ letterText?: string | null }>();
 
 const identity = ref<Identity | null>(null);
+const { phone } = usePhone();
 
 onMounted(async () => {
   const { data } = await api.GET("/api/identity");
@@ -44,6 +47,11 @@ const rows = computed(() => {
   ];
   return all.filter((row): row is [string, string] => Boolean(row[1]?.trim()));
 });
+// Sur téléphone (maquette Preparer, Kevin 2026-11-06) : les cinq champs de presque tous les formulaires
+// d'abord, les autres sous « Autres champs », replié.
+const FIRST = new Set(["Prénom", "Nom", "E-mail", "Téléphone", "Localité"]);
+const shown = computed(() => (phone.value ? rows.value.filter(([label]) => FIRST.has(label)) : rows.value));
+const more = computed(() => (phone.value ? rows.value.filter(([label]) => !FIRST.has(label)) : []));
 
 const missing = computed(() => {
   const who = identity.value;
@@ -59,7 +67,7 @@ const missing = computed(() => {
   >
     <dl>
       <div
-        v-for="[label, value] in rows"
+        v-for="[label, value] in shown"
         :key="label"
         class="form-sheet-row"
       >
@@ -74,6 +82,31 @@ const missing = computed(() => {
         />
       </div>
     </dl>
+    <DisclosureRow
+      v-if="more.length"
+      title="Autres champs"
+      :value="String(more.length)"
+      class="form-sheet-more"
+      data-test="sheet-more"
+    >
+      <dl>
+        <div
+          v-for="[label, value] in more"
+          :key="label"
+          class="form-sheet-row"
+        >
+          <dt>{{ label }}</dt>
+          <dd :class="{ 'form-sheet-long': value.length > 80 }">
+            {{ value }}
+          </dd>
+          <CopyButton
+            :value="value"
+            :text="label"
+            test-id="sheet-copy"
+          />
+        </div>
+      </dl>
+    </DisclosureRow>
     <p
       v-if="missing"
       class="hint"
@@ -88,3 +121,11 @@ const missing = computed(() => {
     </p>
   </div>
 </template>
+
+<style scoped>
+/* « Autres champs » : une ligne de la fiche comme les autres (trait du haut, même hauteur), pas une carte dans la
+   carte ; le titre en gras comme les valeurs. */
+.form-sheet-more { border: 0; border-top: 1px solid var(--line-soft); border-radius: 0; background: none; }
+.form-sheet-more :deep(.disclosure-row) { min-height: 3.25rem; padding: var(--space-1) var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.form-sheet-more :deep(.disclosure-value) { font-weight: var(--weight-regular); color: var(--text-secondary); }
+</style>
