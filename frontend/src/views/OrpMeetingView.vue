@@ -244,6 +244,11 @@ function addQuestion(): void {
   custom.value = "";
 }
 
+// Le « ⋯ » de la carte ORP sur téléphone : les mêmes actions, nommées comme dans la maquette.
+const phoneMeetingItems = computed<MoreMenuItem[]>(() => [
+  { label: "Modifier le rendez-vous", test: "rdv-edit", run: startEditing, icon: "pencil" },
+  { label: "Supprimer", test: "rdv-delete", icon: "trash", run: () => void removeMeeting() },
+]);
 const meetingItems = computed<MoreMenuItem[]>(() => [
   { label: "Modifier", test: "meeting-edit", run: startEditing, icon: "pencil" },
   { label: "Supprimer", test: "meeting-delete", icon: "trash", run: () => void removeMeeting() },
@@ -301,6 +306,7 @@ onMounted(() => void load());
         :applications="applications"
         :sheet-link="sheetLink"
         :noting="noting"
+        :meeting-items="editing ? [] : phoneMeetingItems"
         @toggle="toggle"
         @sheet="openSheet()"
         @prepare="preparing = $event"

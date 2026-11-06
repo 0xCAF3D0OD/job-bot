@@ -15,6 +15,7 @@ import {
   upcomingAppointments,
 } from "../rendezVous";
 import { plural } from "../format";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { timeOfDay } from "../dates";
 
 // Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6.11.2026). Deux parties,
@@ -30,6 +31,8 @@ const props = defineProps<{
   applications: Application[];
   sheetLink: string;
   noting: number | null;
+  // Le « ⋯ » de la carte ORP (C6) : les mêmes actions que celui de la page actuelle.
+  meetingItems?: MoreMenuItem[];
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
@@ -77,6 +80,17 @@ const last = computed<Meeting | null>(() => {
         aria-labelledby="rdv-orp-titre"
         data-test="rdv-orp"
       >
+        <div
+          v-if="meetingItems?.length"
+          class="rdv-more"
+        >
+          <MoreMenu
+            :items="meetingItems"
+            :inline="false"
+            label="Plus d'actions sur le rendez-vous ORP"
+            test-id="rdv-more"
+          />
+        </div>
         <div class="rdv-head">
           <span
             class="rdv-date rdv-date-orp"
@@ -95,7 +109,9 @@ const last = computed<Meeting | null>(() => {
               Rendez-vous ORP
             </h3>
             <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ timeAndPlace(item.at, item.meeting.place) }}</span>
+            <!-- « prête » seulement si la feuille a au moins une ligne ; sinon une pastille neutre. -->
             <span
+              v-if="lines.length"
               class="rdv-ready"
               data-test="rdv-ready"
             >
@@ -111,6 +127,11 @@ const last = computed<Meeting | null>(() => {
                 aria-hidden="true"
               ><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>Ta feuille est prête
             </span>
+            <span
+              v-else
+              class="rdv-ready rdv-todo"
+              data-test="rdv-todo"
+            >Feuille à compléter</span>
           </div>
         </div>
         <ul
@@ -336,7 +357,11 @@ const last = computed<Meeting | null>(() => {
   display: flex; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-card); color: var(--text);
 }
-.rdv-orp { flex-direction: column; }
+.rdv-orp { position: relative; flex-direction: column; }
+/* Le « ⋯ » (C6) : 44 px dans le coin en haut à droite ; le texte de la carte lui laisse la place. */
+.rdv-more { position: absolute; top: var(--space-1); right: var(--space-1); z-index: 1; }
+.rdv-more :deep(.more-button) { width: var(--target-min); height: var(--target-min); }
+.rdv-orp .rdv-kicker, .rdv-orp-title { padding-right: var(--space-6); }
 .rdv-head, .rdv-interview { gap: calc(var(--space-4) - var(--space-1) / 2); }
 .rdv-head { display: flex; }
 .rdv-interview { position: relative; }
@@ -364,6 +389,7 @@ const last = computed<Meeting | null>(() => {
   font-size: var(--label-caps); font-weight: var(--weight-bold);
 }
 .rdv-ready svg { flex: none; }
+.rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
 .rdv-lines { margin: calc(var(--space-4) - var(--space-1) / 2) 0 0; padding: 0; list-style: none; }
 .rdv-lines li {
   display: flex; gap: calc(var(--space-2) + var(--space-1) / 2); padding: calc(var(--space-2) + var(--space-1) / 2) 0;

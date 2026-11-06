@@ -106,6 +106,31 @@ describe("Rendez-vous sur téléphone", () => {
     expect(past.get("[data-test=rdv-log]").text()).toContain("Carnet ORP1 rendez-vous");
   });
 
+  it("« Ta feuille est prête » seulement avec au moins une ligne ; sinon « Feuille à compléter »", async () => {
+    const empty = { ...PREP, blockers: [], missing: [], months: [] };
+    serve({ meeting: MEETING, preparation: empty, past: [], target: 10, trainings: [] });
+    const { wrapper } = await open();
+    expect(wrapper.find("[data-test=rdv-lines]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=rdv-ready]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=rdv-todo]").text()).toBe("Feuille à compléter");
+
+    serve({ meeting: MEETING, preparation: { ...empty, blockers: ["Aucune réponse."] }, past: [], target: 10, trainings: [] });
+    const again = await open();
+    expect(again.wrapper.get("[data-test=rdv-ready]").text()).toBe("Ta feuille est prête");
+    expect(again.wrapper.find("[data-test=rdv-todo]").exists()).toBe(false);
+  });
+
+  it("le « ⋯ » de la carte ORP : modifier le rendez-vous ou le supprimer", async () => {
+    serve({ meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] });
+    const { wrapper } = await open();
+    await wrapper.get("[data-test=rdv-more]").trigger("click");
+    const items = wrapper.findAll("[data-test=rdv-orp] [role=menuitem]").map((i) => i.text());
+    expect(items).toEqual(["Modifier le rendez-vous", "Supprimer"]);
+    await wrapper.get("[data-test=rdv-edit]").trigger("click");
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=rdv-more]").exists()).toBe(false);
+  });
+
   it("les questions au conseiller, repliées, avec les cases existantes", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] });
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] } });
