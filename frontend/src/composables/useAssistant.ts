@@ -20,6 +20,8 @@ const open = ref(false);
 const focus = ref<AssistantFocus | null>(null);
 // Demande venue d'un raccourci : le panneau repart sur une nouvelle discussion.
 const fresh = ref(0);
+// Une question posée d'ailleurs (« Pas de CV à jour ? » des premiers pas) : le panneau l'envoie dès qu'il s'affiche.
+const pending = ref<string | null>(null);
 let checked: Promise<void> | null = null;
 
 export function useAssistant() {
@@ -49,7 +51,14 @@ export function useAssistant() {
     open.value = true;
   }
 
-  return { available, known, open, focus, fresh, check, setFocus, askAbout };
+  function ask(question: string): void {
+    focus.value = null;
+    pending.value = question;
+    fresh.value += 1;
+    open.value = true;
+  }
+
+  return { available, known, open, focus, fresh, pending, check, setFocus, askAbout, ask };
 }
 
 export function focusBody(value: AssistantFocus | null): Record<string, unknown> | null {

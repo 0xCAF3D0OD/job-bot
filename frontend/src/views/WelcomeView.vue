@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
+import cvPerson from "../assets/personnage/perso-03-cv-400.webp";
+import cvPerson2x from "../assets/personnage/perso-03-cv-800.webp";
 import { api, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
@@ -10,6 +12,7 @@ import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import TagInput from "../components/TagInput.vue";
+import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { UNDO_MS } from "../composables/useUndo";
 import { rateText, remoteText } from "../format";
@@ -43,6 +46,7 @@ const TITLES: { lead: string; struck: string; hand: string }[] = [
 
 const router = useRouter();
 const { me } = useAuth();
+const assistant = useAssistant();
 
 const step = ref<Step>(0);
 const loaded = ref(false);
@@ -64,6 +68,8 @@ const skills = computed(() =>
 const roles = ref<string[]>([]);
 const picked = ref<string[]>([]);
 const newRole = ref("");
+// « + Ajouter » (maquette Onboarding) : le champ d'un poste s'ouvre sur demande quand le CV en a déjà proposé.
+const adding = ref(false);
 const places = ref<string[]>([]);
 const orp = ref(true);
 const target = ref(10);
@@ -178,6 +184,11 @@ function confirmCv(): void {
 function toggleRole(role: string): void {
   if (picked.value.includes(role)) picked.value = picked.value.filter((r) => r !== role);
   else if (picked.value.length < MAX_ROLES) picked.value = [...picked.value, role];
+}
+
+function openAdd(): void {
+  adding.value = true;
+  void nextTick(() => document.getElementById("welcome-role")?.focus());
 }
 
 function addRole(): void {
@@ -298,6 +309,16 @@ async function later(): Promise<void> {
   await remember({ postponed: true });
   if (me.value) me.value = { ...me.value, welcome: "postponed" };
   await router.replace("/aujourdhui");
+}
+
+// « Pas de CV à jour ? » (maquette OnboardingC, décision de Kevin du 2026-11-06) : les premiers pas sont mis de
+// côté, comme avec « Passer », et l'Assistant reçoit la demande ; on les reprend depuis l'Accueil.
+const CV_QUESTION = "Je n'ai pas de CV à jour. Aide-moi à en créer un.";
+async function askForCv(): Promise<void> {
+  await remember({ postponed: true });
+  if (me.value) me.value = { ...me.value, welcome: "postponed" };
+  assistant.ask(CV_QUESTION);
+  await router.replace({ name: "assistant" });
 }
 
 async function finish(to: string): Promise<void> {
@@ -443,6 +464,42 @@ async function finish(to: string): Promise<void> {
             >
               {{ cvError }}
             </p>
+            <template v-if="!cvName">
+              <button
+                v-if="assistant.available.value"
+                type="button"
+                class="welcome-no-cv"
+                data-test="cv-assistant"
+                @click="askForCv"
+              >
+                <span><strong>Pas de CV à jour ?</strong><small>L'Assistant t'aide à en créer un</small></span>
+                <AppIcon name="chevron" />
+              </button>
+              <!-- Le personnage du kit avec son CV, le soleil et la colline (maquette OnboardingC, étape 2). -->
+              <div
+                class="welcome-cv-scene"
+                aria-hidden="true"
+                data-test="cv-scene"
+              >
+                <span class="welcome-cv-sun" />
+                <svg
+                  class="welcome-cv-hill"
+                  viewBox="0 0 300 90"
+                  preserveAspectRatio="none"
+                ><path d="M0 90 C 40 20, 120 0, 170 10 C 220 20, 270 50, 300 90 Z" /></svg>
+                <span class="welcome-cv-ground" />
+                <img
+                  class="welcome-cv-person"
+                  :src="cvPerson"
+                  :srcset="`${cvPerson} 1x, ${cvPerson2x} 2x`"
+                  alt=""
+                  width="131"
+                  height="400"
+                  decoding="async"
+                  data-test="cv-person"
+                >
+              </div>
+            </template>
             <p
               class="welcome-privacy"
               data-test="cv-privacy"
@@ -477,8 +534,20 @@ async function finish(to: string): Promise<void> {
                     name="check"
                   />{{ role }}
                 </button>
+                <button
+                  v-if="roles.length && !adding"
+                  type="button"
+                  class="chip welcome-role welcome-role-add"
+                  data-test="role-open"
+                  @click="openAdd"
+                >
+                  <AppIcon name="plus" />Ajouter
+                </button>
               </div>
-              <div class="tag-add">
+              <div
+                v-if="!roles.length || adding"
+                class="tag-add"
+              >
                 <input
                   id="welcome-role"
                   v-model="newRole"
@@ -768,6 +837,18 @@ async function finish(to: string): Promise<void> {
 .welcome-roles { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .welcome-role.chip { min-height: var(--btn-compact); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .welcome-role .icon { width: 16px; height: 16px; }
+.welcome-role-add.chip { border: 1.5px dashed var(--field-border); background: transparent; color: var(--primary-text); }
+/* « Pas de CV à jour ? » et le personnage au CV (maquette OnboardingC, étape 2). */
+.welcome-no-cv { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-4); background: transparent; border: 1.5px solid var(--field-border); border-radius: var(--radius-card); color: var(--text); text-align: left; white-space: normal; }
+.welcome-no-cv > span { flex: 1; display: grid; gap: var(--space-1); }
+.welcome-no-cv strong { font-size: var(--font-body); }
+.welcome-no-cv small { font-size: var(--font-small); color: var(--text-secondary); }
+.welcome-no-cv .icon { flex: none; width: 20px; height: 20px; }
+.welcome-cv-scene { position: relative; flex: none; height: 150px; overflow: hidden; }
+.welcome-cv-sun { position: absolute; right: 40px; top: 10px; width: 76px; height: 76px; border-radius: 50%; background: var(--peach-soft); }
+.welcome-cv-hill { position: absolute; left: 0; bottom: 6px; width: 70%; height: 70px; fill: var(--primary-soft); }
+.welcome-cv-ground { position: absolute; left: var(--space-6); right: var(--space-2); bottom: 0; height: 10px; border-radius: var(--radius-sm); background: var(--surface-muted); }
+.welcome-cv-person { position: absolute; left: 50%; bottom: 4px; width: auto; height: 130px; max-width: none; transform: translateX(-50%); }
 .welcome-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .welcome-orp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .welcome-orp-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3); }

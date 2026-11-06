@@ -34,6 +34,7 @@
 
 - **Pas de note de l'IA** : il n'y a pas d'annonce à comparer à ton profil ; rien n'est dépensé pour elle.
 - Elle **n'apparaît pas** dans « À examiner », dans la recherche de doublons, ni dans les vérifications d'expiration ou d'annonce chez l'employeur (docs/20, 30).
+- **Une offre déjà là chez la même entreprise** (demande de Kevin, 2026-11-05) : à la création, jobA1 ne crée rien et le dit (« Tu as déjà une offre chez SpeciTec SA : « Technicien ». L'ouvrir »), le même poste d'abord, sinon la plus récente. « L'ouvrir » ferme le panneau et ouvre l'offre ; **« Créer quand même »** crée la candidature spontanée.
 - Dans **Offres › En cours**, elle figure avec la mention « Spontanée », pour la retrouver tant qu'elle n'est pas envoyée.
 
 ## 5. Base (migration 0042)

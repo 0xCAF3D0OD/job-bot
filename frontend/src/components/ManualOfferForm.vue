@@ -13,7 +13,9 @@ const { plan } = usePlan();
 // (balisage JobPosting) ou par l'IA ; une fiche à relire ; puis l'offre, filtrée et notée
 // comme les autres. Les exemples suivent le métier de la personne, pas un métier inventé.
 const props = defineProps<{ initialUrl?: string | null; initialText?: string | null }>();
-const emit = defineEmits<{ added: [result: { id: number; existing: boolean; status: string; reasons: string[] }] }>();
+const emit = defineEmits<{
+  added: [result: { id: number; existing: boolean; status: string; reasons: string[]; filled?: string[] }];
+}>();
 
 type Mode = "link" | "text";
 type ReadBy = "page" | "ia" | "main";
@@ -34,6 +36,21 @@ const shown = ref(false);
 const readBy = ref<ReadBy>("main");
 const matchesTrade = ref(true);
 const existingId = ref<number | null>(null);
+// Déjà là, avec des champs vides que cette annonce remplit (son texte, son lien…) : « Compléter
+// l'offre » les ajoute, sans rien remplacer (demande de Kevin, 2026-11-05).
+type Fillable = "company" | "location" | "description" | "url";
+const fillable = ref<Fillable[]>([]);
+const FILLABLE_WORDS: Record<Fillable, string> = {
+  company: "l'entreprise",
+  location: "le lieu",
+  description: "le texte de l'annonce",
+  url: "le lien",
+};
+const completing = computed(() => existingId.value !== null && fillable.value.length > 0);
+const missingWords = computed(() => {
+  const words = fillable.value.map((f) => FILLABLE_WORDS[f]);
+  return words.length > 1 ? `${words.slice(0, -1).join(", ")} et ${words.at(-1)}` : (words[0] ?? "");
+});
 
 onMounted(async () => {
   const { data } = await api.GET("/api/offers/manual");
@@ -122,6 +139,7 @@ async function read(event: Event): Promise<void> {
     readBy.value = d.read_by;
     matchesTrade.value = d.matches_trade;
     existingId.value = d.existing_offer_id ?? null;
+    fillable.value = d.fillable ?? [];
     shown.value = true;
   } finally {
     reading.value = false;
@@ -140,6 +158,7 @@ function byHand(): void {
   readBy.value = "main";
   matchesTrade.value = true;
   existingId.value = null;
+  fillable.value = [];
   problem.value = "";
   shown.value = true;
 }
@@ -162,6 +181,7 @@ async function add(event: Event): Promise<void> {
         description: draft.description.trim() || null,
         url: draft.url.trim() || null,
         read_by: readBy.value,
+        fill: completing.value,
       },
     });
     if (!data) {
@@ -310,7 +330,13 @@ function openExisting(): void {
       class="notice"
       data-test="manual-existing"
     >
-      Cette offre est déjà dans tes offres.
+      <template v-if="completing">
+        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l'offre » les ajoute,
+        sans rien remplacer.
+      </template>
+      <template v-else>
+        Cette offre est déjà dans tes offres.
+      </template>
       <button
         type="button"
         class="link"
@@ -425,10 +451,10 @@ function openExisting(): void {
         type="submit"
         class="primary"
         :busy="saving"
-        busy-label="Ajout…"
+        :busy-label="completing ? 'Ajout des champs…' : 'Ajout…'"
         data-test="manual-add"
       >
-        Ajouter l'offre
+        {{ completing ? "Compléter l'offre" : "Ajouter l'offre" }}
       </BusyButton>
       <button
         type="button"

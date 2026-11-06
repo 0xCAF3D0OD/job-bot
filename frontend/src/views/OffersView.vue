@@ -24,7 +24,7 @@ import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { activeChips, activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -77,6 +77,8 @@ const sentenceEnd = computed(() => {
 const failed = ref(false);
 // Une panne de réseau (planche « Illustrations ») : l'écran « Pas de connexion », qui réessaie seul.
 const offline = ref(false);
+// « Réessayer » après une connexion perdue : le feston d'attente jusqu'à la réponse (maquette ErreurConnexion).
+const retrying = ref(false);
 const firstLoaded = ref(false);
 usePageReady("offers", () => firstLoaded.value);
 const selectedId = ref<number | null>(null);
@@ -125,6 +127,19 @@ const shared = ref<{ url: string | null; text: string | null }>({ url: null, tex
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
+// Les offres « Loin » (note sous 50) cachées sur téléphone (maquette Candidatures, Kevin 2026-11-06) : un lien en
+// bas de liste les montre, avec leur nombre (les tranches de note du serveur, toute la liste). Pas quand un
+// filtre de note est posé : il dit déjà quoi montrer. Une offre sans note reste visible.
+const FAR_BELOW = 50;
+const showFar = ref(false);
+const hidesFar = computed(() => phone.value && filters.value.minScore === null && filters.value.maxScore === null);
+const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
+const shown = computed(() =>
+  hidesFar.value && !showFar.value
+    ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
+    : items.value,
+);
+
 // Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
 // 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
@@ -138,7 +153,7 @@ function groupKey(offer: Offer): string {
 }
 const dayCounts = computed(() => {
   const counts = new Map<string, number>();
-  for (const offer of items.value) {
+  for (const offer of shown.value) {
     if (offer.id === pinnedId.value) continue;
     const key = groupKey(offer);
     counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -147,20 +162,20 @@ const dayCounts = computed(() => {
 });
 type Day = { name: string; count: string; n: number };
 function dayHeader(index: number): Day | null {
-  const offer = items.value[index];
+  const offer = shown.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
   const key = groupKey(offer);
   // Sur téléphone, « En préparation » a toujours son titre de section (Kevin, 2026-11-05) : les cartes
   // n'ont plus d'étiquette.
   if (!byDay.value && !(phone.value && key === "preparing")) return null;
-  const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
+  const previous = shown.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && groupKey(previous) === key) return null;
   const n = dayCounts.value.get(key) ?? 0;
   return { name: key === "preparing" ? "En préparation" : dayName(offer.first_seen_at), count: plural(n, "offre", "offres"), n };
 }
 // Une liste à plat (lignes de jour et offres) pour que chaque offre s'anime seule (docs/60 §3).
 const rows = computed(() =>
-  items.value.flatMap((offer, index) => {
+  shown.value.flatMap((offer, index) => {
     const day = dayHeader(index);
     const card = { key: `offer-${offer.id}`, day: null as Day | null, offer };
     return day ? [{ key: `day-${offer.id}`, day, offer: null }, card] : [card];
@@ -202,7 +217,8 @@ async function openFromQuery(): Promise<void> {
   if (!items.value.some((o) => o.id === id)) {
     const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
     if (!data) return;
-    items.value = [data, ...items.value];
+    // Deux ouvertures en même temps (l'ajout et l'adresse) : l'offre n'est posée qu'une fois.
+    if (!items.value.some((o) => o.id === id)) items.value = [data, ...items.value];
     pinnedId.value = id;
   }
   selectedId.value = id;
@@ -259,16 +275,33 @@ const addItems = computed<MoreMenuItem[]>(() => [
 ]);
 
 // L'offre ajoutée (ou déjà là) s'ouvre ; écartée par les critères, elle est gardée avec la raison.
-async function manualAdded(result: { id: number; existing: boolean; status: string; reasons: string[] }): Promise<void> {
+async function manualAdded(result: {
+  id: number;
+  existing: boolean;
+  status: string;
+  reasons: string[];
+  filled?: string[];
+}): Promise<void> {
   manualOpen.value = false;
   undo.value = null;
-  notice.value = result.existing
-    ? "Cette offre était déjà là : la voici."
-    : result.status === "filtered_out"
-      ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
-      : "Offre ajoutée : sa note arrive dans un instant.";
+  // Complétée : sa note est refaite quand le texte de l'annonce arrive.
+  notice.value = result.filled?.length
+    ? result.filled.includes("description")
+      ? "Offre complétée : sa note est refaite avec le texte de l'annonce."
+      : "Offre complétée."
+    : result.existing
+      ? "Cette offre était déjà là : la voici."
+      : result.status === "filtered_out"
+        ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+        : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
+  await openFromQuery();
+}
+// « L'ouvrir » dans l'avis d'une offre déjà là (candidature spontanée) : le panneau se ferme, l'offre s'ouvre.
+async function openExisting(id: number): Promise<void> {
+  spontaneousOpen.value = false;
+  await router.replace({ query: { ...route.query, offre: String(id) } });
   await openFromQuery();
 }
 let requestId = 0;
@@ -319,6 +352,7 @@ async function load(append = false): Promise<void> {
   } finally {
     if (current === requestId) {
       loading.value = false;
+      retrying.value = false;
       firstLoaded.value = true;
     }
   }
@@ -447,7 +481,12 @@ function onKeydown(event: KeyboardEvent): void {
   else selectedId.value = null;
 }
 
-watch(filters, () => void load(), { deep: true });
+// La liste se recharge quand un filtre change, pas pour ?offre= : l'offre ouverte hors de la liste
+// (ajoutée à la main, ou par un lien) en serait effacée et sa fiche refermée aussitôt.
+watch(
+  () => JSON.stringify(toQuery(filters.value)),
+  () => void load(),
+);
 
 // Filtres affichés (docs/10 §3), enregistrés en base ; tous par défaut.
 const ALL_FILTERS: FilterKey[] = ["score", "sources", "cantons", "rate", "external"];
@@ -667,11 +706,22 @@ onUnmounted(() => {
         />
         <PlanLimit usage="score" />
         <!-- Téléphone (maquette ErreurConnexion, C9) : le visage, la phrase des offres, « Réessayer ». -->
+        <FaceState
+          v-if="retrying && loading"
+          title="Chargement…"
+          animation="attente"
+          role="status"
+          class="network-waiting"
+          data-test="network-waiting"
+        >
+          <p>On récupère tes offres.</p>
+        </FaceState>
         <NetworkError
-          v-if="failed && offline"
+          v-else-if="failed && offline"
+          :class="{ 'network-waiting': phone }"
           :title="phone ? 'Connexion perdue' : undefined"
           :line="phone ? 'Impossible de charger les offres. Vérifie ta connexion, puis réessaie.' : undefined"
-          @retry="load()"
+          @retry="retrying = true; load()"
         />
         <p
           v-else-if="failed"
@@ -771,13 +821,15 @@ onUnmounted(() => {
           </button>
         </p>
         <FaceState
-          v-else-if="!loading && items.length === 0"
+          v-else-if="!loading && shown.length === 0 && !(hidesFar && farCount)"
           title="Aucune offre"
           data-test="offers-empty"
         >
           <p>Rien ne correspond pour l'instant.</p>
         </FaceState>
+        <!-- Connexion perdue ou nouvel essai : l'écran d'erreur seul, sans l'ancienne liste dessous. -->
         <TransitionGroup
+          v-if="!(failed && offline) && !(retrying && loading)"
           tag="ul"
           name="card"
           class="offer-cards"
@@ -814,6 +866,16 @@ onUnmounted(() => {
           test-id="offers-more"
           @update:model-value="loadMore"
         />
+        <button
+          v-if="hidesFar && farCount && !loading && !failed"
+          type="button"
+          class="offers-far"
+          :aria-expanded="showFar"
+          data-test="offers-far"
+          @click="showFar = !showFar"
+        >
+          {{ showFar ? "Masquer les offres loin de ton profil" : `Afficher aussi les offres loin de ton profil (${farCount})` }}
+        </button>
         <p
           v-if="phone && !loading && !failed"
           class="offers-spontaneous"
@@ -871,7 +933,10 @@ onUnmounted(() => {
     title="Candidature spontanée"
     @close="spontaneousOpen = false"
   >
-    <SpontaneousForm @created="load()" />
+    <SpontaneousForm
+      @created="load()"
+      @open="openExisting"
+    />
   </SidePanel>
   <SidePanel
     v-if="manualOpen"
@@ -886,3 +951,15 @@ onUnmounted(() => {
     />
   </SidePanel>
 </template>
+
+<style scoped>
+/* Maquette ErreurConnexion (téléphone) : « Connexion perdue » puis l'attente après « Réessayer », centrés,
+   titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l'échelle les plus proches
+   (gap 14, 800, marge 10 de la maquette n'y sont pas). Ici plutôt que dans NetworkError, pour ne pas
+   peser sur le CSS du premier écran. */
+.network-waiting { gap: var(--space-3); min-height: 60vh; align-content: center; padding: 0 var(--space-4) var(--space-8); }
+.network-waiting :deep(.face-state-title) { font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+.network-waiting :deep(.face-state-line) { font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
+.network-waiting :deep(.face-state-actions) { margin-top: var(--space-2); }
+.network-waiting :deep(button.primary) { min-height: 3.25rem; padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+</style>

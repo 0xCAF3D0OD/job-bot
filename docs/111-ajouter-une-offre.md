@@ -55,6 +55,7 @@ Sans offre, il n'y a **ni note, ni lettre et CV préparés, ni ligne ORP pré-re
 - **La ligne ORP** se remplit avec le lien comme source de l'annonce.
 - **Sur sa carte**, une petite étiquette « Ajoutée par toi » à la place du site d'emploi.
 - **Une offre déjà présente** (même entreprise et même titre, ou même lien) n'est pas ajoutée deux fois : jobA1 ouvre celle qui existe.
+- **Compléter une offre déjà présente** (demande de Kevin, 2026-11-05) : une offre venue de LinkedIn n'a souvent que son titre et son entreprise. On colle le lien de l'annonce : jobA1 reconnaît l'offre (même titre et même entreprise, même si le lieu diffère ou manque) et la fiche dit ce qui lui manque (« sans le texte de l'annonce et le lien »). **« Compléter l'offre »** remplit seulement ses champs vides : l'entreprise, le lieu, le texte, le lien. Rien n'est remplacé ni effacé, et son statut ne change pas. Le texte arrivé, sa note est refaite sur l'annonce complète.
 
 ### 5. Garde-fous
 

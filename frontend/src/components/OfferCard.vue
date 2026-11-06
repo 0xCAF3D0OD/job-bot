@@ -154,3 +154,15 @@ function prepare(): void {
     </template>
   </OfferLine>
 </template>
+
+<style scoped>
+/* Candidatures sur téléphone (maquette Candidatures, décision du 6.11) : la carte garde sa hauteur d'environ
+   100 px. L'entreprise et le lieu tiennent sur une ligne, coupée par « … ». Le titre peut se replier, comme
+   « SRE (Site Reliability Engineer) » dans la maquette (pas de « … » : le lien du titre couvre toute la carte).
+   L'espace entre les colonnes passe à 12 px, l'anneau à 48 px. */
+@media (max-width: 820px) {
+  .offer-line.full { column-gap: var(--space-3); }
+  .offer-line.full :deep(.offer-line-sub) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .offer-line.full :deep(.score-ring) { width: 3rem; height: 3rem; font-size: var(--font-body); }
+}
+</style>

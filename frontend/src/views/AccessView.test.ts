@@ -20,7 +20,7 @@ async function mountAccess() {
     ],
   });
   await router.push("/acces/jba_lien");
-  const wrapper = mount(AccessView, { global: { plugins: [router], stubs: { IllustratedSide: { template: "<div><slot /></div>" } } } });
+  const wrapper = mount(AccessView, { global: { plugins: [router] } });
   await flushPromises();
   return { wrapper, router };
 }

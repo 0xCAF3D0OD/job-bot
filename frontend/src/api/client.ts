@@ -66,7 +66,11 @@ api.use({
   onError({ error }) {
     // Le serveur ne répond pas du tout (redémarrage) : l'erreur suit son cours, la page
     // d'attente s'affiche. Une requête annulée par la page elle-même n'en est pas une.
-    if (!(error instanceof DOMException && error.name === "AbortError")) maintenance();
+    // Hors ligne (le navigateur le sait), ce n'est pas une maintenance : la page montre son erreur
+    // « Connexion perdue » et « Réessayer » (maquette ErreurConnexion, décision du 2026-11-06).
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    if (globalThis.navigator && globalThis.navigator.onLine === false) return;
+    maintenance();
   },
 });
 

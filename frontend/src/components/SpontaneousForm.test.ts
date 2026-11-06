@@ -33,6 +33,7 @@ describe("Candidature spontanée (docs/39)", () => {
       title: "Ingénieur DevOps",
       reason: "Leur plateforme cloud.",
       website: null,
+      force: false,
     });
     // La liste des offres se recharge dès la création, même sans passer par « Préparer ».
     expect(wrapper.emitted("created")).toEqual([[77]]);
@@ -46,5 +47,26 @@ describe("Candidature spontanée (docs/39)", () => {
     await wrapper.find("[data-test=spontaneous-prepare]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.path).toBe("/candidatures/offres/77/preparer");
+  });
+
+  it("une offre chez cette entreprise est déjà là : l'avis l'ouvre, ou « Créer quand même »", async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    POST.mockResolvedValueOnce({ data: { id: null, existing: { id: 12, title: "Technicien", company: "SpeciTec SA", spontaneous: false } } });
+    POST.mockResolvedValueOnce({ data: { id: 78 } });
+    const wrapper = mount(SpontaneousForm, { global: { plugins: [router] } });
+    await wrapper.find("[data-test=spontaneous-company]").setValue("SpeciTec");
+    await wrapper.find("[data-test=spontaneous-title]").setValue("Dessinateur");
+    await wrapper.find("[data-test=spontaneous-reason]").setValue("Leur atelier.");
+    await wrapper.find("[data-test=spontaneous-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=spontaneous-existing]").text()).toContain("Tu as déjà une offre chez SpeciTec SA : « Technicien ».");
+    expect(wrapper.emitted("created")).toBeUndefined();
+    await wrapper.find("[data-test=spontaneous-open-existing]").trigger("click");
+    expect(wrapper.emitted("open")).toEqual([[12]]);
+    expect(wrapper.find("[data-test=spontaneous-create]").text()).toBe("Créer quand même");
+    await wrapper.find("[data-test=spontaneous-form]").trigger("submit");
+    await flushPromises();
+    expect(POST.mock.calls[1]![1].body.force).toBe(true);
+    expect(wrapper.emitted("created")).toEqual([[78]]);
   });
 });

@@ -63,4 +63,27 @@ describe("FormSheet", () => {
     expect(button.text()).toBe("Copié : E-mail");
     expect(button.classes()).toContain("copy-done");
   });
+
+  it("sur téléphone : les cinq champs courants, les autres sous « Autres champs » replié (Kevin, 6.11)", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+    const wrapper = mount(FormSheet, {
+      props: { letterText: "Madame, Monsieur…" },
+      global: { stubs: { RouterLink: RouterLinkStub } },
+    });
+    await flushPromises();
+    const first = wrapper.find(".form-sheet > dl").findAll("dt").map((d) => d.text());
+    expect(first).toEqual(["Prénom", "Nom", "E-mail", "Localité"]); // pas de téléphone dans le profil
+    const more = wrapper.find("[data-test=sheet-more]");
+    expect(more.find(".disclosure-row").text()).toContain("Autres champs");
+    expect(more.find(".disclosure-row").text()).toContain("6");
+    expect(more.find(".disclosure-row").attributes("aria-expanded")).toBe("false");
+    expect(more.findAll("dt").map((d) => d.text())).toEqual([
+      "Rue et numéro",
+      "NPA",
+      "Pays",
+      "LinkedIn",
+      "Prétentions salariales",
+      "Lettre de motivation (texte)",
+    ]);
+  });
 });
