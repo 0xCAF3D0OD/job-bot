@@ -14,7 +14,9 @@ import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
 import SavedStatus from "./SavedStatus.vue";
 import ActionBar from "./ActionBar.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 import DocPreview from "./DocPreview.vue";
+import SegmentedControl from "./SegmentedControl.vue";
 import TemplatePicker from "./TemplatePicker.vue";
 import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import { usePhone } from "../composables/usePhone";
@@ -226,9 +228,26 @@ const previewParagraphs = computed(() => {
 });
 // Le bouton plein du téléphone : préparer le CV, puis la nouvelle version quand une consigne est écrite ;
 // sinon « Continuer vers Postuler ».
+// La langue en FR / DE / EN en tête de la carte (maquette Preparer, Kevin 2026-11-06) : sans choix, celle du CV
+// affiché ; une autre langue propose de préparer le CV à nouveau.
+const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), test: `cv-language-${code}` }));
+const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
+const shownLanguage = computed<string>({
+  get: () => language.value || selected.value?.language || "",
+  set: (value) => {
+    language.value = value as LetterLanguage;
+  },
+});
 const writeLabel = computed(() => {
-  if (!selected.value) return "Préparer le CV";
+  const chosen = language.value;
+  if (!selected.value) return chosen ? `Préparer le CV en ${LANGUAGE_IN[chosen]}` : "Préparer le CV";
+  if (chosen && chosen !== selected.value.language) return `Préparer à nouveau en ${LANGUAGE_IN[chosen]}`;
   return instruction.value.trim() ? "Préparer la nouvelle version" : "";
+});
+// « Blocs du CV » replié sur téléphone (Kevin, 6.11) : le nombre de blocs gardés en résumé.
+const blocksSummary = computed(() => {
+  const blocks = selected.value?.blocks ?? [];
+  return `${blocks.filter((b) => b.selected).length} sur ${blocks.length}`;
 });
 const readBusy = ref(false);
 async function markRead(box: HTMLInputElement): Promise<void> {
@@ -280,9 +299,16 @@ onMounted(() => void load());
           <h2 id="cv-card-title">
             CV adapté
           </h2>
+          <SegmentedControl
+            v-if="phone"
+            v-model="shownLanguage"
+            :options="LANGUAGE_OPTIONS"
+            label="Langue du titre et du résumé"
+            class="doc-language"
+          />
         </div>
         <ul
-          v-if="highlights.length"
+          v-if="highlights.length && !phone"
           class="doc-tags"
           aria-label="Mis en avant pour cette offre"
           data-test="cv-highlights"
@@ -384,21 +410,21 @@ onMounted(() => void load());
             </div>
           </template>
         </article>
-        <!-- Téléphone : la langue en réglage secondaire, puis les deux gestes de la lettre. -->
+        <!-- Téléphone (maquette Preparer) : les mots mis en avant sous l'aperçu, puis les deux gestes de la lettre. -->
         <template v-if="phone">
-          <label class="doc-card-language">Langue du titre et du résumé
-            <select
-              v-model="language"
-              data-test="cv-language"
+          <ul
+            v-if="highlights.length"
+            class="doc-tags"
+            aria-label="Mis en avant pour cette offre"
+            data-test="cv-highlights"
+          >
+            <li
+              v-for="word in highlights"
+              :key="word"
             >
-              <option value="">Celle de l'annonce</option>
-              <option
-                v-for="(label, code) in LANGUAGES"
-                :key="code"
-                :value="code"
-              >{{ label }}</option>
-            </select>
-          </label>
+              {{ word }}
+            </li>
+          </ul>
           <template v-if="selected">
             <button
               v-if="!instructionOpen"
@@ -544,53 +570,60 @@ onMounted(() => void load());
 
       <div
         v-if="selected"
-        class="side-card"
+        :class="phone ? 'cv-blocks-phone' : 'side-card'"
+        data-test="cv-blocks-card"
       >
-        <h2>
+        <h2 v-if="!phone">
           Blocs du CV
         </h2>
-        <ul class="cv-blocks">
-          <template
-            v-for="group in blocksBySection"
-            :key="group.key"
-          >
-            <li class="section-label">
-              {{ group.label }}
-            </li>
-            <li
-              v-for="block in group.blocks"
-              :key="block.id"
-              class="cv-block"
+        <component
+          :is="phone ? DisclosureRow : 'div'"
+          v-bind="phone ? { title: 'Blocs du CV', value: blocksSummary } : {}"
+          :class="{ 'cv-blocks-disclosure': phone }"
+        >
+          <ul class="cv-blocks">
+            <template
+              v-for="group in blocksBySection"
+              :key="group.key"
             >
-              <label>
-                <input
-                  type="checkbox"
-                  :checked="block.selected"
-                  :disabled="saving"
-                  data-test="block-toggle"
-                  @change="void toggle(block.id, ($event.target as HTMLInputElement).checked)"
-                >
-                {{ block.title }}
-              </label>
-              <template v-if="block.selected">
-                <IconButton
-                  icon="arrow-up"
-                  :label="`Monter ${block.title}`"
-                  :disabled="saving || !canMove(block.id, block.section, -1)"
-                  data-test="move-up"
-                  @click="move(block.id, block.section, -1)"
-                />
-                <IconButton
-                  icon="arrow-down"
-                  :label="`Descendre ${block.title}`"
-                  :disabled="saving || !canMove(block.id, block.section, 1)"
-                  data-test="move-down"
-                  @click="move(block.id, block.section, 1)"
-                />
-              </template>
-            </li>
-          </template>
-        </ul>
+              <li class="section-label">
+                {{ group.label }}
+              </li>
+              <li
+                v-for="block in group.blocks"
+                :key="block.id"
+                class="cv-block"
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    :checked="block.selected"
+                    :disabled="saving"
+                    data-test="block-toggle"
+                    @change="void toggle(block.id, ($event.target as HTMLInputElement).checked)"
+                  >
+                  {{ block.title }}
+                </label>
+                <template v-if="block.selected">
+                  <IconButton
+                    icon="arrow-up"
+                    :label="`Monter ${block.title}`"
+                    :disabled="saving || !canMove(block.id, block.section, -1)"
+                    data-test="move-up"
+                    @click="move(block.id, block.section, -1)"
+                  />
+                  <IconButton
+                    icon="arrow-down"
+                    :label="`Descendre ${block.title}`"
+                    :disabled="saving || !canMove(block.id, block.section, 1)"
+                    data-test="move-down"
+                    @click="move(block.id, block.section, 1)"
+                  />
+                </template>
+              </li>
+            </template>
+          </ul>
+        </component>
         <SavedStatus :at="savedAt" />
       </div>
 

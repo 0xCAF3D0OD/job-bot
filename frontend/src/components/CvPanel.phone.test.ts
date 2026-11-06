@@ -90,13 +90,16 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=next-step]").exists()).toBe(false);
   });
 
-  it("avec un CV : l'aperçu, la langue dessous, « J'ai relu le CV » et la suite vers Postuler", async () => {
+  it("avec un CV : FR / DE / EN en tête, l'aperçu, « J'ai relu le CV » et la suite vers Postuler", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     PUT.mockResolvedValue({ data: cv(21, [1, 3], { read_at: "2026-11-05T10:00:00Z" }) });
     const wrapper = await mountPanel();
     expect(wrapper.find("[data-test=doc-preview]").exists()).toBe(true);
     expect(wrapper.find("[data-test=cv]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=cv-language]").exists()).toBe(true);
+    // La langue du CV affiché, choisie dans la tête de la carte (maquette Preparer) ; plus de liste.
+    expect(wrapper.find("[data-test=cv-language]").exists()).toBe(false);
+    const head = wrapper.find("[data-test=cv-card] .doc-card-head");
+    expect(head.find("[data-test=cv-language-fr]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find(".prep-side").text()).not.toContain("Nouvelle version");
     expect(wrapper.find("[data-test=next-step]").text()).toBe("Continuer vers Postuler");
 
@@ -107,6 +110,25 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
 
     await wrapper.find("[data-test=doc-preview]").trigger("click");
     expect(wrapper.find("[data-test=cv]").exists()).toBe(true);
+  });
+
+  it("une autre langue propose de préparer le CV à nouveau ; les mots mis en avant sous l'aperçu ; « Blocs du CV » replié", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
+    const wrapper = await mountPanel();
+    await wrapper.find("[data-test=cv-language-de]").trigger("click");
+    expect(wrapper.find("[data-test=write-cv]").text()).toContain("Préparer à nouveau en allemand");
+    const card = wrapper.find("[data-test=cv-card]").element;
+    const preview = wrapper.find("[data-test=doc-preview]").element;
+    const tags = wrapper.find("[data-test=cv-highlights]");
+    expect(tags.text()).toBe("Terraform");
+    expect(preview.compareDocumentPosition(tags.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(card.contains(preview)).toBe(true);
+    const blocks = wrapper.find("[data-test=cv-blocks-card]");
+    expect(blocks.find("h2").exists()).toBe(false);
+    const row = blocks.find(".disclosure-row");
+    expect(row.text()).toContain("Blocs du CV");
+    expect(row.text()).toContain("2 sur 3");
+    expect(row.attributes("aria-expanded")).toBe("false");
   });
 
   it("« Modifier le texte avec l'Assistant » ouvre la consigne et change le bouton du bas", async () => {
