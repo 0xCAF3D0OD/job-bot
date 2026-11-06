@@ -1,20 +1,5 @@
 <script lang="ts">
-// Le personnage de jobA1 (kit du 6.11.2026, docs/141) : une pose du kit, en 400 px (1×) et 800 px (2×).
-// Il marque un moment ou remplit un écran plein ; jamais sur un écran de travail, jamais avec une petite
-// mascotte d'humeur ni le logo transformé sur le même écran (docs/141 §1, test personnage.test.ts).
-export type Pose =
-  | "debout"
-  | "bonjour"
-  | "cv"
-  | "marche"
-  | "assis"
-  | "perplexe"
-  | "revelation"
-  | "avion"
-  | "cables"
-  | "hors-ligne"
-  | "loupe"
-  | "celebration";
+import type { Pose } from "../personnage";
 
 // Largeur des fichiers -400 (hauteur 400) : sert à fixer width et height, sans saut de mise en page.
 export const POSE_WIDTH: Record<Pose, number> = {
@@ -32,27 +17,6 @@ export const POSE_WIDTH: Record<Pose, number> = {
   celebration: 192,
 };
 
-const NUMBER: Record<Pose, string> = {
-  debout: "01",
-  bonjour: "02",
-  cv: "03",
-  marche: "04",
-  assis: "05",
-  perplexe: "06",
-  revelation: "07",
-  avion: "08",
-  cables: "09",
-  "hors-ligne": "10",
-  loupe: "11",
-  celebration: "12",
-};
-
-const files = import.meta.glob<string>("../assets/personnage/*.webp", { query: "?url", import: "default", eager: true });
-
-export function poseFile(pose: Pose, size: 400 | 800): string {
-  return files[`../assets/personnage/perso-${NUMBER[pose]}-${pose}-${size}.webp`] ?? "";
-}
-
 // Hauteurs permises (consigne du 6.11.2026) : 200 px au plus dans une liste, 240 à 280 px sur un écran
 // plein, 400 px au plus sur ordinateur.
 export const MAX_HEIGHT = { list: 200, full: 280, desktop: 400 } as const;
@@ -60,6 +24,8 @@ export const MAX_HEIGHT = { list: 200, full: 280, desktop: 400 } as const;
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+
+import { poseFile } from "../personnage";
 
 // `height` : la hauteur sur téléphone ; `desktopHeight` : sur ordinateur (dès 821 px), sinon la même.
 // `full` : un écran plein, l'image est chargée tout de suite ; ailleurs, à l'affichage (loading="lazy").

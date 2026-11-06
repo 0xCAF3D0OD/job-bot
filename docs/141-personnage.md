@@ -32,7 +32,7 @@ Les animations de transition entre les pages et les mascottes d'humeur existante
 - Un fondu de 200 ms à l'arrivée, coupé par « réduire les animations ». Aucune autre animation.
 - Hauteur : 200 px au plus dans une liste, 240 à 280 px sur un écran plein, 400 px au plus sur ordinateur
   (`height`, `desktopHeight`, bornés par le composant).
-- Les fichiers : `frontend/src/assets/personnage/perso-NN-nom-400.webp` et `-800.webp`, 12 poses. Plus aucune pose
+- Les fichiers : `frontend/public/personnage/perso-NN-nom-400.webp` (servis tels quels : pas d'adresses hachées dans le code) et `-800.webp`, 12 poses. Plus aucune pose
   sans suffixe. Les accessoires (`assets/accessoires/`) et les fonds (soleil, colline, sol, nuage, en SVG aux
   couleurs du thème) se posent autour, dans l'écran qui les utilise.
 

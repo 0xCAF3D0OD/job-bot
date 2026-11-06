@@ -1,8 +1,9 @@
 <script lang="ts">
-import cables from "../assets/personnage/perso-09-cables-400.webp";
-import cables2x from "../assets/personnage/perso-09-cables-800.webp";
+import { KIT } from "../personnage";
 
-const CABLES_SRCSET = `${cables} 1x, ${cables2x} 2x`;
+// Adresses écrites en clair : la page d'attente est dans le premier écran, sans la table des poses.
+const cables = `/personnage/perso-09-cables-400.webp?v=${KIT}`;
+const CABLES_SRCSET = `${cables} 1x, /personnage/perso-09-cables-800.webp?v=${KIT} 2x`;
 // Le personnage est chargé d'avance au premier moment libre et gardé en mémoire : pendant la
 // maintenance, le serveur ne répond peut-être plus (docs/80 §2).
 let held: HTMLImageElement | null = null;

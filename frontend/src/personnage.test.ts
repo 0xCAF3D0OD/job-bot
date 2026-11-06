@@ -9,7 +9,8 @@ import { join, relative, resolve } from "node:path";
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
-import Illustration, { MAX_HEIGHT, POSE_WIDTH, type Pose } from "./components/Illustration.vue";
+import Illustration, { MAX_HEIGHT, POSE_WIDTH } from "./components/Illustration.vue";
+import type { Pose } from "./personnage";
 
 const SRC = resolve(process.cwd(), "src");
 
@@ -74,8 +75,8 @@ describe("Illustration (docs/141 §2)", () => {
   it("pose l'image 400 px, 800 px pour les écrans 2×, avec sa taille, décorative et chargée à l'affichage", async () => {
     const wrapper = mount(Illustration, { props: { pose: "loupe", height: 200 } });
     const img = wrapper.find("img");
-    expect(img.attributes("src")).toMatch(/perso-11-loupe-400\.webp$/);
-    expect(img.attributes("srcset")).toMatch(/perso-11-loupe-400\.webp 1x, .*perso-11-loupe-800\.webp 2x$/);
+    expect(img.attributes("src")).toMatch(/perso-11-loupe-400\.webp\?v=\d+$/);
+    expect(img.attributes("srcset")).toMatch(/perso-11-loupe-400\.webp\?v=\d+ 1x, .*perso-11-loupe-800\.webp\?v=\d+ 2x$/);
     expect(img.attributes("width")).toBe("100");
     expect(img.attributes("height")).toBe("200");
     expect(img.attributes("alt")).toBe("");
@@ -97,13 +98,13 @@ describe("Illustration (docs/141 §2)", () => {
   });
 
   it("chaque pose a ses deux fichiers ; plus de pose sans suffixe -400 ou -800", () => {
-    const dir = join(SRC, "assets/personnage");
+    const dir = resolve(process.cwd(), "public/personnage");
     const names = readdirSync(dir);
     for (const name of names) expect(name).toMatch(/^perso-\d\d-[a-z-]+-(400|800)\.webp$/);
     for (const pose of Object.keys(POSE_WIDTH) as Pose[]) {
       expect(names.some((n) => n.endsWith(`-${pose}-400.webp`)), pose).toBe(true);
       expect(names.some((n) => n.endsWith(`-${pose}-800.webp`)), pose).toBe(true);
     }
-    expect(existsSync(join(SRC, "assets/personnage/perso-09-cables.webp"))).toBe(false);
+    expect(existsSync(join(SRC, "assets/personnage"))).toBe(false);
   });
 });
