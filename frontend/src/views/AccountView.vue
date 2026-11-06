@@ -190,7 +190,7 @@ onMounted(() => {
           data-test="account-ai"
         />
         <GroupedRow
-          title="Agenda et extension"
+          title="Agenda"
           :to="rubric('outils')"
           data-test="account-tools"
         />
