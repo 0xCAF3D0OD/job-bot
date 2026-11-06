@@ -60,7 +60,7 @@ hachées (48 adresses de moins dans le premier chargement) : 1,4 Ko de moins, le
 | 10 | perso-05-assis + tasse | En attente de la première collecte | (mise en page de AucuneOffre) | 4 |
 | 11 | perso-01-debout, 160 px | Candidatures › Rendez-vous sans rendez-vous prévu | — | 4 |
 | 12 | perso-12-celebration | Entretien décroché (mise en page de l'écran 8) | — | 4 |
-| 13 | perso-02-bonjour | Compte supprimé (au revoir) et refus reçu (encourageant) | — | 4 |
+| 13 | perso-02-bonjour | Compte supprimé (au revoir, sur la connexion) et refus reçu (encourageant) | — | 4 |
 
 Alertes : en-tête et liste vide avec le logo transformé « cloche » (`FaceTransform kind="alerts"`), pas le
 personnage (PR 4).
@@ -85,3 +85,20 @@ personnage (PR 4).
   (la maquette ne l'a pas, mais c'est la seule façon d'annuler). Sur ordinateur, l'en-tête « jobA1 » de l'écran
   laisse la place à celui de l'application.
 - Objectif ORP atteint (PR 3) : le personnage à 240 px remplace le soleil qui saute et les confettis.
+- En attente de la première collecte (PR 4) : le personnage assis à 200 px (plafond d'une liste), la tasse posée au
+  sol à sa droite ; « Créer mes alertes » et « Ajouter une offre » restent.
+- Rendez-vous sans rendez-vous prévu (PR 4) : le personnage debout, 160 px, à la place de `rendez-vous-vide`
+  (retirée). Le même fichier garde le visage de « Pas encore de candidature », dans une branche qui l'exclut :
+  le test du §1 renvoie à celui de la page (`OrpMeetingView.test.ts`).
+- Entretien décroché et refus (PR 4) : un écran plein de même mise en page que l'écran 8 (`MomentScreen.vue`,
+  partagé), qui remplace le Suivi jusqu'à l'action. Entretien : « Préparer l'entretien » ouvre la préparation de la
+  candidature, « Plus tard » revient au Suivi. Refus : « Réponse de <entreprise>. », « Pas pour cette fois. Chaque
+  candidature envoyée te rapproche d'un oui. », « Préparer la prochaine » et « Voir mes candidatures ». Pas de board :
+  textes à valider. Seul le changement de statut dans le Suivi les ouvre ; un refus lu dans un courriel n'en
+  ouvre pas.
+- Au revoir (PR 4) : la page de connexion avec `?au-revoir=1` (le personnage qui salue y est déjà) : « Ton compte
+  est supprimé. » et ce qui est effacé, à la place de « Content de te revoir. ». Une page à part coûtait 0,6 Ko de
+  plus et dépassait les 315 Ko.
+- Alertes (PR 4) : l'en-tête est la transition de page, qui montrait déjà la cloche. La liste vide n'existe pas
+  comme telle : sans recherche en place, la page ouvre l'assistant ; le logo à la cloche se pose au-dessus, avec
+  « Aucune alerte pour l'instant ». Pas de board.

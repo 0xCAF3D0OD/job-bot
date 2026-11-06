@@ -113,7 +113,7 @@ describe("Tes données (docs/65 §6)", () => {
     await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenLastCalledWith("/api/account/delete", { body: { password: "le-bon-mot-de-passe" } });
-    expect(router.currentRoute.value.path).toBe("/connexion");
+    expect(router.currentRoute.value.fullPath).toBe("/connexion?au-revoir=1");
     wrapper.unmount();
   });
 
@@ -172,7 +172,7 @@ describe("Tes données (docs/65 §6)", () => {
     await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/account/delete", { body: { password: "le-bon-mot-de-passe" } });
-    expect(router.currentRoute.value.path).toBe("/connexion");
+    expect(router.currentRoute.value.fullPath).toBe("/connexion?au-revoir=1");
     wrapper.unmount();
   });
 });

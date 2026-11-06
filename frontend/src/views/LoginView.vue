@@ -35,6 +35,9 @@ const providers = ref<Provider[]>([]);
 const oauthError = computed(() =>
   typeof route.query.erreur === "string" ? oauthMessage(route.query.erreur, route.query.fournisseur) : "",
 );
+// Au revoir (docs/141, 13) : après « Supprimer définitivement », la connexion devient la page d'au revoir, le
+// personnage qui salue déjà là. Elle dit ce qui est effacé (les mots de la confirmation), sans regret.
+const goodbye = computed(() => route.query["au-revoir"] === "1");
 const oauthInfo = computed(() => (route.query.info === "demande" ? oauthMessage("demande", route.query.fournisseur) : ""));
 
 function next(): string {
@@ -97,12 +100,29 @@ onMounted(async () => {
       </header>
       <AuthIllustration class="login-art-phone" />
       <main class="login-main">
-        <h1 class="login-title">
-          Content de <span class="login-hand">te revoir.</span>
-        </h1>
-        <p class="login-sub">
-          Tes offres, tes candidatures et tes preuves ORP, au même endroit.
-        </p>
+        <template v-if="goodbye">
+          <h1
+            class="login-title"
+            data-test="goodbye"
+          >
+            Ton compte est supprimé.
+          </h1>
+          <p
+            class="login-goodbye"
+            role="status"
+          >
+            Ton CV, tes candidatures et ton suivi ORP sont effacés. Merci d’avoir fait ce bout de chemin avec jobA1, et
+            bonne suite.
+          </p>
+        </template>
+        <template v-else>
+          <h1 class="login-title">
+            Content de <span class="login-hand">te revoir.</span>
+          </h1>
+          <p class="login-sub">
+            Tes offres, tes candidatures et tes preuves ORP, au même endroit.
+          </p>
+        </template>
         <div
           v-if="me?.setup_needed"
           class="auth-setup"
@@ -246,6 +266,7 @@ onMounted(async () => {
 .login-title { margin: 0; font-size: var(--title-login); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -0.5px; }
 .login-hand { font-family: "Caveat Brush", cursive; font-weight: var(--weight-regular); font-size: 1.45em; letter-spacing: 0; color: var(--primary-graphic); }
 .login-sub { display: none; }
+.login-goodbye { margin: var(--space-2) 0 var(--space-4); font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .login-main .social-signin { margin-top: var(--space-5); }
 .login-alert, .login-field-error { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; color: var(--danger); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-semibold); }
 .login-alert { margin-top: var(--space-5); }
