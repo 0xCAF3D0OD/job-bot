@@ -32,7 +32,7 @@ const title = computed(() => (left.value > 0 ? `${plural(left.value, "recherche"
     />
     <div>
       <h2>{{ title }}</h2>
-      <p>Objectif fixé avec l'ORP. Échéance le {{ deadline }}.</p>
+      <p>Objectif fixé avec ton ORP. Échéance le {{ deadline }}.</p>
     </div>
   </section>
   <section

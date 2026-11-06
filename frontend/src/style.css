@@ -4289,14 +4289,17 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .orp-last h2 span + span { font-weight: var(--weight-semibold); letter-spacing: 0; text-transform: none; }
 .orp-rows, .orp-none { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .orp-none { padding: var(--space-4); color: var(--text-secondary); }
-.orp-row { display: flex; align-items: center; white-space: normal; gap: var(--space-3); width: 100%; min-height: 68px; padding: var(--space-2) var(--space-3); border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.orp-row { display: flex; align-items: center; white-space: normal; gap: var(--space-3); width: 100%; min-height: 5.5rem; padding: var(--space-2) var(--space-3); border: 0; background: none; color: inherit; font: inherit; text-align: left; }
 .orp-rows li + li { border-top: 1px solid var(--line); }
 .orp-day { flex: none; display: grid; justify-items: center; min-width: 2.75rem; font-size: var(--font-caption); color: var(--text-secondary); }
 .orp-day strong { font-size: var(--font-title); font-weight: var(--weight-bold); color: var(--text); }
 .orp-what { flex: 1; min-width: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 .orp-what strong { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
-/* « poste · moyen » sur une ligne (maquette Explorer : des lignes de 68 px). */
-.orp-what > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Poste · canal sur 2 lignes au plus, le canal jamais coupé (Kevin, 6.11) : le canal passe à la ligne quand il ne
+   tient pas à côté du poste ; la ligne grandit au besoin (min-height). */
+.orp-sub { display: flex; flex-wrap: wrap; min-width: 0; }
+.orp-job { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orp-channel { flex: none; white-space: pre; }
 .orp-rows .status-pill { gap: var(--space-1); font-weight: var(--weight-bold); }
 .orp-all { display: flex; align-items: center; justify-content: center; min-height: var(--btn-primary); font-weight: var(--weight-bold); text-decoration: none; }
 /* Le Suivi ORP (docs/139 étape 8b, maquette Orp) : une sous-page du Bilan ; sur téléphone, sa tête remplace
@@ -4308,6 +4311,8 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .orp-page-head .icon-button .icon { width: 1.5rem; height: 1.5rem; }
 .orp-page-month { justify-content: space-between; }
 .orp-page-month strong { font-size: var(--font-title); font-weight: var(--weight-bold); }
+.orp-month-prev .icon { transform: rotate(180deg); }
+.orp-page-month .icon-button:disabled { opacity: 0.35; }
 .orp-export-row { display: flex; align-items: center; gap: var(--space-2); }
 .orp-export-row .orp-export { flex: 1; }
 .orp-month-list h2 { font-size: var(--font-title); letter-spacing: 0; text-transform: none; color: var(--text); }

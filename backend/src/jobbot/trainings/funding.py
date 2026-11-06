@@ -107,7 +107,7 @@ async def notify_funding(runtime: Runtime) -> int:
         await deliver(
             runtime,
             Message(
-                title=f"Relancer ton conseiller ORP pour « {title} » ?",
+                title=f"Relancer ton ORP pour « {title} » ?",
                 message="Pas de réponse depuis deux semaines à ta demande de financement.",
                 tags=["mortar_board"],
             ),

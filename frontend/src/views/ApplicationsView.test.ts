@@ -483,6 +483,16 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     expect(one.find("[data-test=application-panel]").exists()).toBe(true);
   });
 
+  it("sur téléphone, le Suivi ORP sans calendrier ; Ajouter et À déclarer restent (décision de Kevin, 6.11)", async () => {
+    mockApi(() => month({ count: 6, target: 10 }), [application]);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper } = await mountView("/bilan/orp");
+    vi.unstubAllGlobals();
+    expect(wrapper.find("[data-test=suivi-detail]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=add-application]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(true);
+  });
+
   it("le détail replié : la liste du mois dans Envoyées, le calendrier dans le Suivi ORP ; un jour demandé l'ouvre", async () => {
     mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
     const { wrapper } = await mountView();

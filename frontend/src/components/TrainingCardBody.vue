@@ -387,7 +387,7 @@ const stateText = computed(() => {
             <textarea
               v-model="letter"
               rows="10"
-              aria-label="Demande de financement à ton conseiller ORP"
+              aria-label="Demande de financement à ton ORP"
               data-test="funding-letter"
             />
             <div class="training-actions">
