@@ -31,7 +31,7 @@ export const SCREENS: Record<string, string> = {
   "views/NotFoundView.vue": "page introuvable",
   "components/MaintenanceOverlay.vue": "maintenance (mise à jour, annoncée) et pas de connexion",
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
-  "components/ApplicationSent.vue": "candidature envoyée",
+  "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
   "components/GoalReached.vue": "objectif ORP atteint",
   "views/OrpMeetingView.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu",
 };
@@ -79,8 +79,9 @@ describe("Personnage : un seul des trois par écran (docs/141)", () => {
 
   it("aucune page n'affiche à la fois le personnage et une mascotte d'humeur ou le logo transformé", () => {
     for (const file of users) {
-      if (EXCLUSIVE[file.path]) {
-        expect(readFileSync(join(SRC, EXCLUSIVE[file.path]), "utf8"), file.path).toContain("un seul des trois");
+      const pageTest = EXCLUSIVE[file.path];
+      if (pageTest) {
+        expect(readFileSync(join(SRC, pageTest), "utf8"), file.path).toContain("un seul des trois");
         continue;
       }
       expect(template(file.text), file.path).not.toMatch(OTHERS);

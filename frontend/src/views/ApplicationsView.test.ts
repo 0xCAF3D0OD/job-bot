@@ -360,10 +360,38 @@ describe("Suivi en calendrier (docs/22)", () => {
     await panel.find("[data-test=panel-status]").setValue("entretien");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 2 } } }));
-    // Un entretien proposé : une victoire, le visage ravi (docs/123 §2, R).
+    // Un entretien proposé : « Entretien décroché », en écran plein, le personnage qui fête (docs/141, 12).
     const moment = wrapper.find("[data-test=interview-moment]");
-    expect(moment.text()).toContain("Un entretien chez");
-    expect(moment.find(".face-mark").attributes("data-mood")).toBe("ravi");
+    expect(moment.find("h1").text()).toMatch(/^Entretien décroché chez .+\.$/);
+    expect(moment.find("[data-pose=celebration]").exists()).toBe(true);
+    expect(moment.find("[role=status]").exists()).toBe(true);
+    expect(wrapper.find(".jobs-body").exists()).toBe(false);
+    // « Préparer l'entretien » ouvre la préparation de cette candidature.
+    GET.mockResolvedValue({ data: null });
+    await moment.find("[data-test=interview-prepare]").trigger("click");
+    expect(wrapper.find("[data-test=interview-moment]").exists()).toBe(false);
+    expect(wrapper.findComponent({ name: "InterviewPreparation" }).props("application")).toMatchObject({ id: 2 });
+  });
+
+  it("un refus : une réponse qui encourage et propose la suite, jamais triste (docs/141, 13)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
+    const waiting = { ...application, id: 2, sent_at: "2026-10-02", status: "en_attente" };
+    mockApi(() => month(), [waiting]);
+    PUT.mockResolvedValue({ data: waiting });
+    const { wrapper } = await mountView("/bilan/orp");
+    await wrapper.find("[data-test=day-2026-10-02]").trigger("click");
+    await wrapper.find("[data-test=day-panel] [data-test=application-card] [data-test=offer-line-open]").trigger("click");
+    await wrapper.find("[data-test=application-panel] [data-test=panel-status]").setValue("refus");
+    await flushPromises();
+    const moment = wrapper.find("[data-test=refusal-moment]");
+    expect(moment.find("h1").text()).toMatch(/^Réponse de .+\.$/);
+    expect(moment.find("[data-pose=bonjour]").exists()).toBe(true);
+    expect(moment.find("[data-test=refusal-next]").attributes("href")).toBe("/candidatures/offres");
+    expect(moment.find(".face-mark").exists()).toBe(false);
+    await moment.find("[data-test=refusal-close]").trigger("click");
+    expect(wrapper.find("[data-test=refusal-moment]").exists()).toBe(false);
+    expect(wrapper.find(".jobs-body").exists()).toBe(true);
   });
 
   it("relancée : « Sans réponse » proposé 14 jours après la relance, pas avant", async () => {

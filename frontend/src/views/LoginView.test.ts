@@ -39,6 +39,16 @@ describe("LoginView", () => {
     expect(wrapper.find("[data-test=login-form]").exists()).toBe(false);
   });
 
+  it("au revoir, après la suppression du compte : le personnage qui salue, ce qui est effacé (docs/141, 13)", async () => {
+    GET.mockResolvedValue({ data: anonymous });
+    const { wrapper } = await mountLogin("/connexion?au-revoir=1");
+    expect(wrapper.find("[data-test=goodbye]").text()).toBe("Ton compte est supprimé.");
+    expect(wrapper.find("[role=status]").text()).toContain("sont effacés");
+    expect(wrapper.find("[data-pose=bonjour]").exists()).toBe(true);
+    expect(wrapper.text()).not.toContain("Content de");
+    expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
+  });
+
   it("erreur, puis connexion qui ramène à la page demandée", async () => {
     GET.mockResolvedValueOnce({ data: anonymous }).mockResolvedValue({ data: { ...anonymous, authenticated: true, username: "camille" } });
     POST.mockResolvedValueOnce({ response: { ok: false }, error: { detail: "identifiant ou mot de passe incorrect" } }).mockResolvedValue({

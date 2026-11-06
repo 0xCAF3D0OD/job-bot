@@ -35,6 +35,9 @@ const providers = ref<Provider[]>([]);
 const oauthError = computed(() =>
   typeof route.query.erreur === "string" ? oauthMessage(route.query.erreur, route.query.fournisseur) : "",
 );
+// Au revoir (docs/141, 13) : après « Supprimer définitivement », la connexion devient la page d'au revoir, le
+// personnage qui salue déjà là. Elle dit ce qui est effacé (les mots de la confirmation), sans regret.
+const goodbye = computed(() => route.query["au-revoir"] === "1");
 const oauthInfo = computed(() => (route.query.info === "demande" ? oauthMessage("demande", route.query.fournisseur) : ""));
 
 function next(): string {
@@ -97,12 +100,29 @@ onMounted(async () => {
       </header>
       <AuthIllustration class="login-art-phone" />
       <main class="login-main">
-        <h1 class="login-title">
-          Content de <span class="login-hand">te revoir.</span>
-        </h1>
-        <p class="login-sub">
-          Tes offres, tes candidatures et tes preuves ORP, au même endroit.
-        </p>
+        <template v-if="goodbye">
+          <h1
+            class="login-title"
+            data-test="goodbye"
+          >
+            Ton compte est supprimé.
+          </h1>
+          <p
+            class="login-sub"
+            role="status"
+          >
+            Ton CV, tes candidatures et ton suivi ORP sont effacés. Merci d’avoir fait ce bout de chemin avec jobA1, et
+            bonne suite.
+          </p>
+        </template>
+        <template v-else>
+          <h1 class="login-title">
+            Content de <span class="login-hand">te revoir.</span>
+          </h1>
+          <p class="login-sub">
+            Tes offres, tes candidatures et tes preuves ORP, au même endroit.
+          </p>
+        </template>
         <div
           v-if="me?.setup_needed"
           class="auth-setup"
