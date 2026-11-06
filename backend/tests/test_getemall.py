@@ -249,6 +249,22 @@ async def test_unknown_redirect_is_refused(api: AsyncClient) -> None:
     assert other.status_code == 400
 
 
+async def test_refuse_goes_back_with_access_denied(api: AsyncClient) -> None:
+    """« Refuser » : retour vers Get'emAll, sans code ; une adresse hors liste est refusée."""
+    response = await api.post(
+        f"{BASE}/refus", json={"redirect_uri": REDIRECT, "state": "etat-de-test-123"}
+    )
+    assert response.status_code == 200
+    target = urlsplit(response.json()["redirect_to"])
+    assert f"{target.scheme}://{target.netloc}{target.path}" == REDIRECT
+    assert parse_qs(target.query) == {"error": ["access_denied"], "state": ["etat-de-test-123"]}
+    other = await api.post(
+        f"{BASE}/refus",
+        json={"redirect_uri": "https://attaquant.example/", "state": "etat-de-test-123"},
+    )
+    assert other.status_code == 400
+
+
 async def test_plain_pkce_is_refused(api: AsyncClient) -> None:
     verifier, _ = pkce()
     response = await api.post(

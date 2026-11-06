@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import ConnectionsPanel from "../components/ConnectionsPanel.vue";
+import GetemallPanel from "../components/GetemallPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -765,6 +766,7 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
           cards
         >
           <ConnectionsPanel />
+          <GetemallPanel />
         </SettingsSection>
 
         <SettingsSection
