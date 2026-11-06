@@ -4,6 +4,7 @@ Les coordonnées de Kevin ne partent jamais vers l'IA : elles sont ajoutées par
 `letters.document.assemble`, à l'affichage comme dans le Word.
 """
 
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,8 +19,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.api.routes import writing
 from jobbot.db.models import Application, Draft, DraftKind, ForbiddenClaim, Offer
+from jobbot.letters import fit as page_fit
 from jobbot.letters.document import Identity, LetterDocument, Recipient, assemble, to_docx
-from jobbot.letters.pdf import Template, letter_to_pdf
+from jobbot.letters.pdf import TEMPLATES, Template, letter_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import claims as claims_check
 from jobbot.llm import letter as letter_llm
@@ -91,6 +93,8 @@ class LetterOut(BaseModel):
     id: int
     offer_id: int
     version: int
+    # Le nom court de la version (« Version 3 », « Plus courte ») ; la consigne entière est à part.
+    name: str
     language: Language
     subject: str
     paragraphs: list[LetterParagraph]
@@ -114,6 +118,25 @@ class LetterRequest(BaseModel):
     instruction: Annotated[str, Field(max_length=500)] | None = None
     # Version à retravailler ; par défaut la plus récente.
     base_draft_id: int | None = None
+    # Le modèle choisi : la lettre doit tenir sur une page A4 dans ce modèle (letters/fit.py).
+    modele: Template = "sobre"
+
+
+class LetterPageOut(BaseModel):
+    """La lettre tient-elle sur une page A4, dans ce modèle, une fois la mise en page resserrée ?"""
+
+    fits: bool
+    # Les lignes en trop sur la page 2 (0 quand tout tient).
+    overflow_lines: int
+    # La mise en page a été resserrée (espacements, interligne, marges ou taille du texte).
+    adjusted: bool
+    # Où la page 1 se termine, quand ça déborde : le paragraphe du corps (len(paragraphs) : après
+    # le corps) et le nombre de ses mots restés en page 1.
+    break_paragraph: int | None
+    break_word: int | None
+    font_size: float
+    line_height: float
+    side_margin_cm: float
 
 
 class FalseClaimIn(BaseModel):
@@ -156,18 +179,41 @@ async def _recipient(session: AsyncSession, offer: Offer, draft: Draft) -> Recip
     return Recipient(offer.company, address, employer.get("contact_name"))
 
 
-def _document(identity: Identity, recipient: Recipient, draft: Draft) -> LetterDocument:
-    day = (draft.edited_at or draft.created_at).astimezone(LOCAL_TZ).date()
+def _assembled(
+    identity: Identity,
+    recipient: Recipient,
+    language: str,
+    content: dict[str, Any],
+    when: datetime,
+) -> LetterDocument:
     return assemble(
         identity,
         recipient,
-        draft.language,
-        letter_llm.no_dash(draft.content["subject"]),
-        [letter_llm.no_dash(p["text"]) for p in draft.content["paragraphs"]],
-        day,
-        salutation=draft.content.get("salutation"),
-        closing=draft.content.get("closing"),
+        language,
+        letter_llm.no_dash(content["subject"]),
+        [letter_llm.no_dash(p["text"]) for p in content["paragraphs"]],
+        when.astimezone(LOCAL_TZ).date(),
+        salutation=content.get("salutation"),
+        closing=content.get("closing"),
     )
+
+
+def _document(identity: Identity, recipient: Recipient, draft: Draft) -> LetterDocument:
+    return _assembled(
+        identity, recipient, draft.language, draft.content, draft.edited_at or draft.created_at
+    )
+
+
+def _template(content: dict[str, Any]) -> Template:
+    value = content.get("modele")
+    return value if value in TEMPLATES else "sobre"
+
+
+def version_name(version: int, instruction: str | None) -> str:
+    """« Plus courte » pour une consigne de longueur, sinon « Version 3 »."""
+    if page_fit.is_length_request(instruction):
+        return "Plus courte"
+    return f"Version {version}"
 
 
 def _out(draft: Draft, document: LetterDocument) -> LetterOut:
@@ -175,6 +221,7 @@ def _out(draft: Draft, document: LetterDocument) -> LetterOut:
         id=draft.id,
         offer_id=draft.offer_id,
         version=draft.version,
+        name=version_name(draft.version, draft.instruction),
         language=draft.language,
         # Le texte rendu, sans tiret cadratin, même pour une lettre d'avant le garde-fou.
         subject=letter_llm.no_dash(draft.content["subject"]),
@@ -252,6 +299,7 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
         language=body.language,
         base_draft_id=body.base_draft_id,
         instruction=instruction,
+        template=body.modele,
     )
 
 
@@ -263,9 +311,15 @@ async def _write(
     base_draft_id: int | None,
     instruction: str | None,
     saved_instruction: str | None = None,
+    template: Template = "sobre",
 ) -> LetterOut:
     """Une nouvelle version. `saved_instruction` : ce que la version montre comme consigne, quand
-    elle diffère de celle donnée à l'IA (« Pas vrai : … »)."""
+    elle diffère de celle donnée à l'IA (« Pas vrai : … »).
+
+    La version doit tenir sur une page A4 dans le modèle choisi (demande de Kevin du 6.11.2026) :
+    le PDF est construit et ses pages comptées, la mise en page se resserre sans l'IA, puis l'IA
+    raccourcit avec une cible chiffrée (`_fit_page`). Une consigne de longueur (« plus court »,
+    « une page ») part directement avec sa cible chiffrée."""
     settings = runtime.settings
     ctx = await writing.prepare(
         runtime,
@@ -275,6 +329,13 @@ async def _write(
         instruction=instruction,
         estimate_usd=LETTER_ESTIMATE_USD,
     )
+    to_document = await _document_maker(runtime, offer_id)
+    given = instruction
+    if instruction and ctx.previous is not None and page_fit.is_length_request(instruction):
+        language_before = ctx.previous_language or language or "fr"
+        target = page_fit.requested_target(to_document(ctx.previous, language_before), template)
+        given = f"{page_fit.shorten_instruction(target)}\nConsigne de la personne : {instruction}"
+        saved_instruction = saved_instruction or instruction
     params = letter_llm.request_params(
         settings.llm_model,
         settings.llm_writing_effort,
@@ -283,7 +344,7 @@ async def _write(
         language=language,
         assessment=ctx.assessment,
         previous=ctx.previous,
-        instruction=instruction,
+        instruction=given,
         forbidden=ctx.forbidden,
     )
     raw = await writing.call(
@@ -307,6 +368,10 @@ async def _write(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "Cette consigne ne change rien à la lettre : pas de nouvelle version.",
         )
+    content, shortened = await _fit_page(
+        runtime, ctx, content, output.language, template, to_document, offer_id=offer_id
+    )
+    content["modele"] = template
 
     async with runtime.sessionmaker.begin() as session:
         draft = await writing.add_version(
@@ -325,8 +390,106 @@ async def _write(
             offer.company_address = output.employer.address
             offer.company_address_source = "letter"
         out = await _render(session, draft)
-    log.info("letter_written", offer_id=offer_id, version=out.version, language=out.language)
+    log.info(
+        "letter_written",
+        offer_id=offer_id,
+        version=out.version,
+        language=out.language,
+        shortened=shortened,
+    )
     return out
+
+
+DocumentMaker = Callable[[dict[str, Any], str], LetterDocument]
+
+
+async def _document_maker(runtime: Runtime, offer_id: int) -> DocumentMaker:
+    """De quoi assembler une lettre pas encore enregistrée, telle qu'elle sera imprimée."""
+    async with runtime.sessionmaker() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        identity = await load_identity(session)
+        application = await session.scalar(
+            select(Application).where(Application.offer_id == offer_id)
+        )
+        company, address = offer.company, offer.company_address
+    now = datetime.now(UTC)
+
+    def make(content: dict[str, Any], language: str) -> LetterDocument:
+        if application is not None:
+            recipient = Recipient(
+                application.company, application.company_address, application.contact_name
+            )
+        else:
+            employer = content.get("employer") or {}
+            recipient = Recipient(
+                company, address or employer.get("address"), employer.get("contact_name")
+            )
+        return _assembled(identity, recipient, language, content, now)
+
+    return make
+
+
+# Au plus deux raccourcissements par l'IA ; ensuite, la version la plus courte est gardée.
+SHORTEN_TRIES = 2
+
+
+async def _fit_page(
+    runtime: Runtime,
+    ctx: writing.WritingContext,
+    content: dict[str, Any],
+    language: str,
+    template: Template,
+    to_document: DocumentMaker,
+    *,
+    offer_id: int,
+) -> tuple[dict[str, Any], int]:
+    """La lettre sur une page A4 : le PDF construit et ses pages comptées. La mise en page se
+    resserre d'abord sans l'IA (letters/fit.py) ; si la plus serrée déborde encore, l'IA raccourcit
+    à un nombre de mots calculé d'après le débordement mesuré, vérifié à nouveau, deux fois au plus.
+    Sinon, la version la plus courte est gardée (l'aperçu dit de combien elle déborde).
+
+    Rend la lettre retenue et le nombre de raccourcissements demandés à l'IA."""
+    settings = runtime.settings
+    result = page_fit.fit(to_document(content, language), template)
+    best, best_words = content, result.words
+    tries = 0
+    while not result.fits and tries < SHORTEN_TRIES:
+        tries += 1
+        target = max(80, result.words - page_fit.excess_words(result))
+        params = letter_llm.request_params(
+            settings.llm_model,
+            settings.llm_writing_effort,
+            ctx.chunks,
+            ctx.offer,
+            language=language,  # type: ignore[arg-type]
+            assessment=ctx.assessment,
+            previous=content,
+            instruction=page_fit.shorten_instruction(target),
+            forbidden=ctx.forbidden,
+        )
+        raw = await writing.call(
+            runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
+        )
+        try:
+            shorter = letter_llm.parse_output(raw.text, ctx.chunks)
+        except InvalidScore:
+            break
+        if shorter.refusal:
+            break
+        content = {**content, **shorter.model_dump(exclude={"language", "refusal", "employer"})}
+        result = page_fit.fit(to_document(content, language), template)
+        log.info(
+            "letter_shortened",
+            offer_id=offer_id,
+            target=target,
+            words=result.words,
+            fits=result.fits,
+        )
+        if result.fits or result.words < best_words:
+            best, best_words = content, result.words
+    return (content if result.fits else best), tries
 
 
 def _same_letter(previous: dict[str, Any], content: dict[str, Any]) -> bool:
@@ -363,10 +526,14 @@ async def _reviewed(
     offer_id: int,
     language: str,
     instruction: str | None,
+    template: Template,
+    to_document: "DocumentMaker",
     corrected: bool = False,
 ) -> letter_review.Review:
     settings = runtime.settings
     flags = _flags(ctx, letter)
+    measured = page_fit.fit(to_document(letter, language), template)
+    page = letter_review.page_check(measured.fits, measured.overflow_lines)
     params = letter_review.request_params(
         settings.llm_model,
         settings.llm_writing_effort,
@@ -382,7 +549,9 @@ async def _reviewed(
         runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
     )
     try:
-        return letter_review.parse_review(raw.text, letter, corrected=corrected, flags=flags)
+        return letter_review.parse_review(
+            raw.text, letter, corrected=corrected, flags=flags, page=page
+        )
     except InvalidScore:
         raise writing.unusable() from None
 
@@ -409,6 +578,8 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
         draft = await _get_draft(session, draft_id)
         offer_id, language, instruction = draft.offer_id, draft.language, draft.instruction
         letter = {k: v for k, v in draft.content.items() if k != "review"}
+    template = _template(letter)
+    to_document = await _document_maker(runtime, offer_id)
     ctx = await writing.prepare(
         runtime,
         offer_id,
@@ -419,11 +590,19 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
         check_plan=False,
     )
     review = await _reviewed(
-        runtime, ctx, letter, offer_id=offer_id, language=language, instruction=instruction
+        runtime,
+        ctx,
+        letter,
+        offer_id=offer_id,
+        language=language,
+        instruction=instruction,
+        template=template,
+        to_document=to_document,
     )
     letter = letter_review.apply_claims(letter, review)
     fixed_claims = len(review.claims)
-    if not review.all_ok:
+    # La longueur se règle par la mesure du PDF (`_fit_page`), pas par la correction.
+    if any(not c.ok for c in review.criteria if c.key != "longueur"):
         # Une seule correction automatique, puis une nouvelle relecture : jamais de boucle.
         params = letter_llm.request_params(
             settings.llm_model,
@@ -452,6 +631,8 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
                 offer_id=offer_id,
                 language=language,
                 instruction=instruction,
+                template=template,
+                to_document=to_document,
                 corrected=True,
             )
             letter = letter_review.apply_claims(letter, review)
@@ -460,6 +641,23 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
     remaining = _flags(ctx, letter)
     if remaining:
         letter = claims_check.drop(letter, remaining)
+    # Une page A4 : la correction a pu rallonger la lettre.
+    letter, _tries = await _fit_page(
+        runtime, ctx, letter, language, template, to_document, offer_id=offer_id
+    )
+    measured = page_fit.fit(to_document(letter, language), template)
+    review = letter_review.Review(
+        [
+            letter_review.Criterion(
+                c.key, c.label, *letter_review.page_check(measured.fits, measured.overflow_lines)
+            )
+            if c.key == "longueur"
+            else c
+            for c in review.criteria
+        ],
+        review.claims,
+        corrected=review.corrected,
+    )
     if fixed_claims or remaining:
         count = fixed_claims + len(remaining)
         plural = "s" if count > 1 else ""
@@ -613,7 +811,8 @@ async def edit_letter(request: Request, draft_id: int, body: LetterEdit) -> Lett
 
 @router.put("/letters/{draft_id}/read", operation_id="markLetterRead")
 async def mark_letter_read(request: Request, draft_id: int, body: LetterRead) -> LetterOut:
-    """« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil)."""
+    """« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre
+    appareil)."""
     async with _runtime(request).sessionmaker.begin() as session:
         draft = await _get_draft(session, draft_id)
         content = {k: v for k, v in draft.content.items() if k != "read_at"}
@@ -631,7 +830,10 @@ async def mark_letter_read(request: Request, draft_id: int, body: LetterRead) ->
     response_class=Response,
     responses={200: {"content": {DOCX_TYPE: {}}}},
 )
-async def download_letter_docx(request: Request, draft_id: int) -> Response:
+async def download_letter_docx(
+    request: Request, draft_id: int, modele: Annotated[Template | None, Query()] = None
+) -> Response:
+    """Le Word, avec les réglages du PDF dans le modèle choisi (taille, interligne, marges)."""
     async with _runtime(request).sessionmaker() as session:
         draft = await _get_draft(session, draft_id)
         offer = await session.get(Offer, draft.offer_id)
@@ -639,10 +841,11 @@ async def download_letter_docx(request: Request, draft_id: int) -> Response:
         document = _document(
             await load_identity(session), await _recipient(session, offer, draft), draft
         )
+        template = modele or _template(draft.content)
     company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
     filename = f"Lettre - {company.strip()[:60]}.docx"
     return Response(
-        to_docx(document),
+        to_docx(document, page_fit.fit(document, template).layout),
         media_type=DOCX_TYPE,
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
@@ -667,8 +870,35 @@ async def download_letter_pdf(
         )
     company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
     filename = f"Lettre - {company.strip()[:60]}.pdf"
+    layout = page_fit.fit(document, modele).layout
     return Response(
-        letter_to_pdf(document, title=filename[:-4], template=modele),
+        letter_to_pdf(document, title=filename[:-4], template=modele, layout=layout),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
+
+
+@router.get("/letters/{draft_id}/page", operation_id="letterPage")
+async def letter_page(
+    request: Request, draft_id: int, modele: Annotated[Template, Query()] = "sobre"
+) -> LetterPageOut:
+    """Le PDF construit dans ce modèle, ses pages comptées : « Tient sur une page A4 », ou le
+    débordement en lignes et l'endroit où la page 1 se termine (la marque de l'aperçu)."""
+    async with _runtime(request).sessionmaker() as session:
+        draft = await _get_draft(session, draft_id)
+        offer = await session.get(Offer, draft.offer_id)
+        assert offer is not None
+        document = _document(
+            await load_identity(session), await _recipient(session, offer, draft), draft
+        )
+    result = page_fit.fit(document, modele)
+    return LetterPageOut(
+        fits=result.fits,
+        overflow_lines=result.overflow_lines,
+        adjusted=result.adjusted,
+        break_paragraph=result.placement.break_paragraph,
+        break_word=result.placement.break_word,
+        font_size=result.layout.size,
+        line_height=result.layout.leading,
+        side_margin_cm=result.layout.side,
     )

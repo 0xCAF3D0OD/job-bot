@@ -11,6 +11,7 @@ un filet).
 
 import io
 import unicodedata
+from dataclasses import dataclass
 from typing import Literal
 from xml.sax.saxutils import escape
 
@@ -23,7 +24,7 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Flowable, HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 
 from jobbot.letters.cv_document import CvDocument
-from jobbot.letters.document import LetterDocument
+from jobbot.letters.document import DEFAULT_LAYOUT, Layout, LetterDocument
 
 ACCENT = Color(0x3A / 255, 0x33 / 255, 0xC9 / 255)
 # Les couleurs des modèles, celles de la maquette (docs/mobile/tokens.css : primary, peach, ink).
@@ -38,6 +39,20 @@ HEADER = 2.6 * cm  # le bandeau du modèle bandeau
 MUTED = Color(0x55 / 255, 0x55 / 255, 0x66 / 255)
 # Caractères hors de la police standard, remplacés par leur équivalent le plus proche.
 REPLACEMENTS = {"\u2011": "-", "\u2012": "-", "\u2212": "-", "\u00a0": " ", "\u202f": " "}
+
+
+@dataclass
+class Placement:
+    """Ce que la construction du PDF a mesuré : pages, hauteur passée en page 2, coupure."""
+
+    pages: int
+    overflow: float = 0.0  # hauteur du contenu au-delà de la page 1, en points
+    # Le paragraphe du corps où la page 1 se termine (len(paragraphs) : après le corps) et le
+    # nombre de ses mots restés en page 1 ; None quand tout tient.
+    break_paragraph: int | None = None
+    break_word: int | None = None
+    body_lines: int = 0
+    frame_width: float = 0.0
 
 
 def _text(value: str) -> str:
@@ -85,13 +100,29 @@ def _decorate(template: Template):  # type: ignore[no-untyped-def]
     return draw
 
 
+class _Doc(SimpleDocTemplate):  # type: ignore[misc]
+    """Le document qui note la page de chaque bloc placé (pour mesurer le débordement)."""
+
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(*args, **kwargs)
+        self.placed: list[tuple[int, Flowable]] = []
+
+    def afterFlowable(self, flowable: Flowable) -> None:
+        self.placed.append((self.page, flowable))
+
+
 def _build(
-    story: list[Flowable], *, title: str, margins: tuple[float, float], template: Template = "sobre"
+    story: list[Flowable],
+    *,
+    title: str,
+    margins: tuple[float, float],
+    template: Template = "sobre",
+    doc: list[_Doc] | None = None,
 ) -> bytes:
     buffer = io.BytesIO()
     side, top = margins
     draw = _decorate(template)
-    SimpleDocTemplate(
+    built = _Doc(
         buffer,
         pagesize=A4,
         leftMargin=side + (BAND if template == "moderne" else 0),
@@ -101,7 +132,10 @@ def _build(
         title=title,
         author="",
         creator="jobA1",
-    ).build(story, onFirstPage=draw, onLaterPages=draw)
+    )
+    built.build(story, onFirstPage=draw, onLaterPages=draw)
+    if doc is not None:
+        doc.append(built)
     return buffer.getvalue()
 
 
@@ -133,14 +167,28 @@ def _name_block(name: str, sub: str | None, template: Template, size: float) -> 
 
 
 def letter_to_pdf(
-    letter: LetterDocument, title: str = "Lettre", template: Template = "sobre"
+    letter: LetterDocument,
+    title: str = "Lettre",
+    template: Template = "sobre",
+    layout: Layout = DEFAULT_LAYOUT,
 ) -> bytes:
     """Lettre A4, mise en page suisse : destinataire à droite."""
+    return render_letter(letter, title=title, template=template, layout=layout)[0]
+
+
+def render_letter(
+    letter: LetterDocument,
+    *,
+    title: str = "Lettre",
+    template: Template = "sobre",
+    layout: Layout = DEFAULT_LAYOUT,
+) -> tuple[bytes, Placement]:
+    """Le PDF de la lettre et ce que sa construction a mesuré (pages, débordement, coupure)."""
     regular, _bold = _fonts(template)
-    base = ParagraphStyle("base", fontName=regular, fontSize=11, leading=14.5)
+    base = ParagraphStyle("base", fontName=regular, fontSize=layout.size, leading=layout.leading)
     right = ParagraphStyle("right", parent=base, leftIndent=9 * cm)
     # Jamais justifiée (WCAG 1.4.8) : les espaces inégaux gênent la lecture.
-    body = ParagraphStyle("body", parent=base, alignment=TA_LEFT, spaceAfter=10)
+    body = ParagraphStyle("body", parent=base, alignment=TA_LEFT, spaceAfter=layout.gap)
     story: list[Flowable] = []
     if template != "sobre" and letter.sender:
         story += _name_block(letter.sender[0], None, template, 16)
@@ -148,22 +196,72 @@ def letter_to_pdf(
     def block(lines: list[str], style: ParagraphStyle = base, after: float = 18) -> None:
         if lines:
             story.append(Paragraph(_lines(lines), style))
-            story.append(Spacer(1, after))
+            story.append(Spacer(1, layout.space(after)))
 
     block(letter.sender)
     block(letter.recipient, right)
     block([letter.place_date], right, after=24)
     story.append(Paragraph(f"<b>{_text(letter.subject_line)}</b>", base))
-    story.append(Spacer(1, 18))
+    story.append(Spacer(1, layout.space(18)))
     block([letter.salutation], after=12)
-    for text in letter.paragraphs:
-        story.append(Paragraph(_text(text), body))
-    story.append(Spacer(1, 8))
+    paragraphs = [Paragraph(_text(text), body) for text in letter.paragraphs]
+    story += paragraphs
+    story.append(Spacer(1, layout.space(8)))
     block([letter.closing], after=36)
-    block([letter.signature], after=30)
+    # La place de la signature manuscrite : jamais moins de 24 points.
+    if letter.signature:
+        story.append(Paragraph(_lines([letter.signature]), base))
+        story.append(Spacer(1, max(24.0, layout.space(30))))
     block([letter.enclosure], after=0)
     top = 0.9 * cm if template == "bandeau" else 2 * cm
-    return _build(story, title=title, margins=(2.5 * cm, top), template=template)
+    docs: list[_Doc] = []
+    pdf = _build(story, title=title, margins=(layout.side * cm, top), template=template, doc=docs)
+    return pdf, _placement(docs[0], paragraphs, letter.paragraphs)
+
+
+def _placement(doc: _Doc, paragraphs: list[Paragraph], texts: list[str]) -> Placement:
+    pages = max((page for page, _ in doc.placed), default=1)
+    width = doc.width
+    # Les lignes du corps à cette mise en page (pour passer des lignes aux mots).
+    lines = 0
+    for paragraph in paragraphs:
+        probe = Paragraph(paragraph.text, paragraph.style)
+        probe.wrap(width, 10_000)
+        lines += len(probe.blPara.lines)
+    placement = Placement(pages=pages, body_lines=lines, frame_width=width)
+    if pages == 1:
+        return placement
+    later = [(page, f) for page, f in doc.placed if page > 1]
+    placement.overflow = sum(
+        f.height + (f.getSpaceAfter() if isinstance(f, Paragraph) else 0)
+        for _, f in later
+        if hasattr(f, "height")
+    )
+    # La coupure : les paragraphes du corps placés en page 1, entiers ou en partie (le début d'un
+    # paragraphe coupé est un nouveau bloc, d'où le décompte de ses mots ligne par ligne).
+    style = paragraphs[0].style if paragraphs else None
+    by_id = {id(p) for p in paragraphs}
+    first = [
+        f for page, f in doc.placed if page == 1 and isinstance(f, Paragraph) and f.style is style
+    ]
+    body_later = any(isinstance(f, Paragraph) and f.style is style for _, f in later)
+    whole = sum(1 for f in first if id(f) in by_id)
+    if not body_later:
+        placement.break_paragraph, placement.break_word = len(texts), 0
+    elif first and id(first[-1]) not in by_id:
+        placement.break_paragraph, placement.break_word = whole, _words(first[-1])
+    else:
+        placement.break_paragraph, placement.break_word = whole, 0
+    return placement
+
+
+def _words(fragment: Paragraph) -> int:
+    """Les mots d'un morceau de paragraphe (texte simple : une ligne = un espace et ses mots)."""
+    count = 0
+    for line in fragment.blPara.lines:
+        words = line[1] if isinstance(line, tuple) else getattr(line, "words", [])
+        count += len(words)
+    return count
 
 
 def cv_to_pdf(cv: CvDocument, title: str = "CV", template: Template = "sobre") -> bytes:

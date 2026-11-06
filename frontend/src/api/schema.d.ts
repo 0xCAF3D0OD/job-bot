@@ -2112,7 +2112,8 @@ export interface paths {
         get?: never;
         /**
          * Mark Letter Read
-         * @description « J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil).
+         * @description « J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre
+         *     appareil).
          */
         put: operations["markLetterRead"];
         post?: never;
@@ -2129,7 +2130,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download Letter Docx */
+        /**
+         * Download Letter Docx
+         * @description Le Word, avec les réglages du PDF dans le modèle choisi (taille, interligne, marges).
+         */
         get: operations["downloadLetterDocx"];
         put?: never;
         post?: never;
@@ -2151,6 +2155,27 @@ export interface paths {
          * @description La même lettre en PDF (docs/25 §3.4), dans le modèle choisi (sobre par défaut).
          */
         get: operations["downloadLetterPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/letters/{draft_id}/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Letter Page
+         * @description Le PDF construit dans ce modèle, ses pages comptées : « Tient sur une page A4 », ou le
+         *     débordement en lignes et l'endroit où la page 1 se termine (la marque de l'aperçu).
+         */
+        get: operations["letterPage"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5781,6 +5806,8 @@ export interface components {
             offer_id: number;
             /** Version */
             version: number;
+            /** Name */
+            name: string;
             /**
              * Language
              * @enum {string}
@@ -5807,6 +5834,28 @@ export interface components {
             /** Read At */
             read_at?: string | null;
         };
+        /**
+         * LetterPageOut
+         * @description La lettre tient-elle sur une page A4, dans ce modèle, une fois la mise en page resserrée ?
+         */
+        LetterPageOut: {
+            /** Fits */
+            fits: boolean;
+            /** Overflow Lines */
+            overflow_lines: number;
+            /** Adjusted */
+            adjusted: boolean;
+            /** Break Paragraph */
+            break_paragraph: number | null;
+            /** Break Word */
+            break_word: number | null;
+            /** Font Size */
+            font_size: number;
+            /** Line Height */
+            line_height: number;
+            /** Side Margin Cm */
+            side_margin_cm: number;
+        };
         /** LetterParagraph */
         LetterParagraph: {
             /** Text */
@@ -5827,6 +5876,12 @@ export interface components {
             instruction?: string | null;
             /** Base Draft Id */
             base_draft_id?: number | null;
+            /**
+             * Modele
+             * @default sobre
+             * @enum {string}
+             */
+            modele: "sobre" | "moderne" | "bandeau" | "classique";
         };
         /**
          * LinkCreated
@@ -12784,7 +12839,9 @@ export interface operations {
     };
     downloadLetterDocx: {
         parameters: {
-            query?: never;
+            query?: {
+                modele?: ("sobre" | "moderne" | "bandeau" | "classique") | null;
+            };
             header?: never;
             path: {
                 draft_id: number;
@@ -12833,6 +12890,39 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    letterPage: {
+        parameters: {
+            query?: {
+                modele?: "sobre" | "moderne" | "bandeau" | "classique";
+            };
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterPageOut"];
                 };
             };
             /** @description Validation Error */

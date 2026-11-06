@@ -54,7 +54,8 @@ AI_KEYS: tuple[AiKey, ...] = (
     "consigne",
 )
 
-# Une page A4 : en-tête, objet et formules compris, le corps tient en 400 mots environ.
+# Repli sans mesure du PDF (anciens appels) : le corps tient en 400 mots environ. La route mesure
+# désormais le PDF lui-même (letters/fit.py) et passe le résultat à `parse_review`.
 MAX_WORDS = 400
 
 
@@ -162,10 +163,20 @@ def _texts(letter: dict[str, Any]) -> list[str]:
     return [p["text"] for p in letter.get("paragraphs", [])]
 
 
-def deterministic(letter: dict[str, Any]) -> dict[str, tuple[bool, str]]:
-    """Ce que le code vérifie seul : la longueur et le tiret cadratin."""
+def page_check(fits: bool, overflow_lines: int) -> tuple[bool, str]:
+    """La longueur d'après le PDF construit : une page A4, ou le débordement en lignes."""
+    if fits:
+        return True, "Tient sur une page A4."
+    plural = "s" if overflow_lines > 1 else ""
+    return False, f"Déborde de {overflow_lines} ligne{plural} : raccourcis pour tenir sur une page."
+
+
+def deterministic(
+    letter: dict[str, Any], page: tuple[bool, str] | None = None
+) -> dict[str, tuple[bool, str]]:
+    """Ce que le code vérifie seul : la longueur (le PDF mesuré, sinon les mots) et le tiret."""
     words = sum(len(t.split()) for t in _texts(letter))
-    length = (
+    length = page or (
         (True, f"{words} mots : tient sur une page.")
         if words <= MAX_WORDS
         else (False, f"{words} mots : raccourcis sous {MAX_WORDS} pour tenir sur une page.")
@@ -242,6 +253,7 @@ def parse_review(
     *,
     corrected: bool = False,
     flags: list[claims_check.Flag] | None = None,
+    page: tuple[bool, str] | None = None,
 ) -> Review:
     """Les avis de l'IA, complétés par les vérifications du code, dans l'ordre de l'affichage.
     Une phrase signalée par le contrôle sans l'IA met « Aucune invention » à revoir, même si l'IA
@@ -253,7 +265,7 @@ def parse_review(
     seen = {c.key: c for c in ai.criteria}
     if set(AI_KEYS) - set(seen):
         raise InvalidScore("relecture incomplète")
-    checks = deterministic(letter)
+    checks = deterministic(letter, page)
     criteria: list[Criterion] = []
     for key, label in LABELS.items():
         if key == "longueur":
