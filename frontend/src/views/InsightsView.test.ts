@@ -118,6 +118,11 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=insights-period]").exists()).toBe(false);
     expect(wrapper.find(".bilan-period").exists()).toBe(false);
     expect(wrapper.find("[data-test=action-band]").text()).toContain("jobs.ch répond 3 fois sur 5.");
+    // Une ligne dit la période des chiffres, sans contrôle.
+    expect(wrapper.find("[data-test=insights-period-line]").text()).toBe("Sur les 3 derniers mois");
+    serve(report());
+    const month = (await mountView("/candidatures/bilan?mois=2026-10")).wrapper;
+    expect(month.find("[data-test=insights-period-line]").text()).toBe("En octobre 2026");
     vi.unstubAllGlobals();
   });
 

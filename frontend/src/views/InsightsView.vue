@@ -108,6 +108,11 @@ const orpDescription = computed(() => {
   const name = monthName(month.value);
   return `Le résumé ${/^[aeiou]/.test(name) ? "d'" : "de "}${name} à copier`;
 });
+// Sur téléphone, plus de sélecteur : une ligne dit la période des chiffres (Kevin, 6.11).
+const periodLine = computed(() => {
+  if (period.value === "month") return `En ${formatMonth(month.value).toLowerCase()}`;
+  return period.value === "all" ? "Depuis le début" : "Sur les 3 derniers mois";
+});
 const PERIODS: { key: Period; label: string }[] = [
   { key: "month", label: "Un mois" },
   { key: "recent", label: "3 mois" },
@@ -118,6 +123,13 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
 
 <template>
   <section class="jobs-body insights">
+    <p
+      v-if="phone"
+      class="insights-period-line"
+      data-test="insights-period-line"
+    >
+      {{ periodLine }}
+    </p>
     <!-- La phrase (règles §3.2) : l'état général, comparé à la période d'avant. -->
     <p
       v-if="insights && summary && insights.funnel.applications > 0"
@@ -279,6 +291,7 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
 <style scoped>
 /* Bilan › Résultats sur téléphone (maquette Progresser, Kevin 2026-11-06) : la phrase en gras d'un bloc, sans mot
    en bleu ; des tuiles de 72 px (chiffre sans interligne, libellé serré) ; le parcours en lignes de 26 px. */
+.insights-period-line { margin: 0 0 var(--space-2); color: var(--text-secondary); font-size: var(--font-small); }
 @media (max-width: 820px) {
   .bilan-sentence strong { color: inherit; }
   .insights :deep(.bilan-figures strong) { line-height: var(--leading-none); }
