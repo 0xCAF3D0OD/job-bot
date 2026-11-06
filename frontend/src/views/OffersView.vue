@@ -876,6 +876,18 @@ onUnmounted(() => {
         >
           {{ showFar ? "Masquer les offres loin de ton profil" : `Afficher aussi les offres loin de ton profil (${farCount})` }}
         </button>
+        <!-- Les offres expirées sur téléphone (Kevin, 6.11) : la feuille Filtres n'a plus « Expirées » ; un lien au
+             bas de la liste, même filtre qu'avant, seulement s'il y en a. -->
+        <button
+          v-if="phone && filters.view === 'pending' && counts.expired > 0 && !loading && !failed"
+          type="button"
+          class="offers-far"
+          :aria-pressed="filters.showExpired"
+          data-test="offers-expired"
+          @click="update({ showExpired: !filters.showExpired })"
+        >
+          {{ filters.showExpired ? "Masquer les offres expirées" : `Voir les offres expirées (${counts.expired})` }}
+        </button>
         <p
           v-if="phone && !loading && !failed"
           class="offers-spontaneous"
