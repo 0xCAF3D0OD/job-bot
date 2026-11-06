@@ -437,3 +437,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.223 | Réglages : sur téléphone, une seule page (Notifications, Affichage, Mes données) ; sur téléphone et ordinateur, trois interrupteurs (Nouvelles offres avec « M'avertir dès », Relances, Objectif ORP) et « Ce qui part à l'IA » dans Mes données ; Réglages et Notifications sans barre du bas ni bouton Assistant. | livré. |
 | 1.6.224 | Pastille de Candidatures et « Afficher n offres » sur téléphone : sans les offres « Loin » cachées, comme la liste. | livré. |
 | 1.6.225 | Candidatures › Rendez-vous sur téléphone selon la maquette : « À venir » (le rendez-vous ORP et les entretiens d'embauche, par date), la carte ORP avec sa feuille, « Derniers rendez-vous ORP » et le carnet | livrée |
+| 1.6.226 | Postuler sur téléphone : « Modèle Moderne, en français. » sous Lettre.pdf / CV.pdf, avec le modèle et la langue de la lettre choisis. | livré. |
