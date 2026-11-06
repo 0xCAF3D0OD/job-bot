@@ -96,11 +96,19 @@ async def _check_host(url: str) -> None:
             raise Refused(f"adresse non publique : {host}")
 
 
-async def _get(client: httpx.AsyncClient, url: str, limit: int) -> tuple[bytes, str]:
-    """Contenu (tronqué au-delà de la limite : refusé) et adresse finale après redirections."""
+async def _get(
+    client: httpx.AsyncClient,
+    url: str,
+    limit: int,
+    before: Callable[[str], Awaitable[None]] | None = None,
+) -> tuple[bytes, str]:
+    """Contenu (tronqué au-delà de la limite : refusé) et adresse finale après redirections.
+    `before` est appelé avant chaque requête, redirections comprises (robots.txt de l'hôte)."""
     current = url
     for _ in range(4):
         await _check_host(current)
+        if before is not None:
+            await before(current)
         async with client.stream("GET", current) as response:
             if response.is_redirect and response.headers.get("location"):
                 current = urljoin(current, response.headers["location"])

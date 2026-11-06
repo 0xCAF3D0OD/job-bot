@@ -278,6 +278,8 @@ describe("note et résumé", () => {
           strengths: [{ text: "Linux solide", chunk_ids: [1] }],
           gaps: [{ text: "Pas d'Ansible", chunk_ids: [] }],
           scored_at: "2026-10-05T08:00:00Z",
+          // Texte complet lu : la note n'est pas provisoire, ses manques s'affichent.
+          description: "Texte complet de l'annonce.",
         }),
         offer(10, "Pas notée"),
       ]),

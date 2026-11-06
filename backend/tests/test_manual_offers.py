@@ -129,7 +129,7 @@ async def test_private_and_protected_pages(monkeypatch: pytest.MonkeyPatch) -> N
             await manual_offers.fetch_page(url)
         assert refused.value.message.startswith("Lien refusé") and not refused.value.paste
 
-    async def blocked(_client: Any, url: str, _limit: int) -> tuple[bytes, str]:
+    async def blocked(_client: Any, url: str, *_args: Any) -> tuple[bytes, str]:
         request = httpx.Request("GET", url)
         raise httpx.HTTPStatusError("403", request=request, response=httpx.Response(403))
 
