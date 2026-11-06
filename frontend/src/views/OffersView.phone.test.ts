@@ -141,6 +141,34 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
   });
 });
 
+describe("Connexion perdue après un premier chargement (maquette ErreurConnexion, 2026-11-06)", () => {
+  it("l'erreur seule, sans l'ancienne liste ; « Réessayer » montre l'attente jusqu'à la réponse", async () => {
+    const host = await mountAt("/offres", [offer(1, "Développeur")]);
+    expect(host.find(".offer-cards").exists()).toBe(true);
+    const router = (host.vm as unknown as { $router: ReturnType<typeof createRouter> }).$router;
+    GET.mockImplementation((p: string) => (p === "/api/offers" ? Promise.reject(new TypeError("Failed to fetch")) : Promise.resolve({ data: null })));
+    await router.push("/offres?q=dev");
+    await flushPromises();
+    expect(host.find("[data-test=network-error]").exists()).toBe(true);
+    expect(host.find(".offer-cards").exists()).toBe(false);
+    // Le serveur répond lentement : le feston d'attente, ni l'erreur ni la liste.
+    let answer: (value: unknown) => void = () => undefined;
+    GET.mockImplementation((p: string) => (p === "/api/offers" ? new Promise((r) => (answer = r)) : Promise.resolve({ data: null })));
+    await host.find("[data-test=network-retry]").trigger("click");
+    await flushPromises();
+    const waiting = host.find("[data-test=network-waiting]");
+    expect(waiting.find(".face-state-title").text()).toBe("Chargement…");
+    expect(waiting.text()).toContain("On récupère tes offres.");
+    expect(host.find("[data-test=network-error]").exists()).toBe(false);
+    expect(host.find(".offer-cards").exists()).toBe(false);
+    answer({ data: { items: [offer(1, "Développeur")], total: 1, counts, facets } });
+    await flushPromises();
+    expect(host.find("[data-test=network-waiting]").exists()).toBe(false);
+    expect(host.find(".offer-cards").exists()).toBe(true);
+    host.unmount();
+  });
+});
+
 describe("La fiche d'une offre, une sous-page sur téléphone (docs/139 étape 6a, O1)", () => {
   async function mountNamed(path: string, items: unknown[]) {
     GET.mockImplementation((p: string) =>

@@ -77,6 +77,8 @@ const sentenceEnd = computed(() => {
 const failed = ref(false);
 // Une panne de réseau (planche « Illustrations ») : l'écran « Pas de connexion », qui réessaie seul.
 const offline = ref(false);
+// « Réessayer » après une connexion perdue : le feston d'attente jusqu'à la réponse (maquette ErreurConnexion).
+const retrying = ref(false);
 const firstLoaded = ref(false);
 usePageReady("offers", () => firstLoaded.value);
 const selectedId = ref<number | null>(null);
@@ -337,6 +339,7 @@ async function load(append = false): Promise<void> {
   } finally {
     if (current === requestId) {
       loading.value = false;
+      retrying.value = false;
       firstLoaded.value = true;
     }
   }
@@ -690,11 +693,22 @@ onUnmounted(() => {
         />
         <PlanLimit usage="score" />
         <!-- Téléphone (maquette ErreurConnexion, C9) : le visage, la phrase des offres, « Réessayer ». -->
+        <FaceState
+          v-if="retrying && loading"
+          title="Chargement…"
+          animation="attente"
+          role="status"
+          class="network-waiting"
+          data-test="network-waiting"
+        >
+          <p>On récupère tes offres.</p>
+        </FaceState>
         <NetworkError
-          v-if="failed && offline"
+          v-else-if="failed && offline"
+          :class="{ 'network-waiting': phone }"
           :title="phone ? 'Connexion perdue' : undefined"
           :line="phone ? 'Impossible de charger les offres. Vérifie ta connexion, puis réessaie.' : undefined"
-          @retry="load()"
+          @retry="retrying = true; load()"
         />
         <p
           v-else-if="failed"
@@ -800,7 +814,9 @@ onUnmounted(() => {
         >
           <p>Rien ne correspond pour l'instant.</p>
         </FaceState>
+        <!-- Connexion perdue ou nouvel essai : l'écran d'erreur seul, sans l'ancienne liste dessous. -->
         <TransitionGroup
+          v-if="!(failed && offline) && !(retrying && loading)"
           tag="ul"
           name="card"
           class="offer-cards"
@@ -912,3 +928,15 @@ onUnmounted(() => {
     />
   </SidePanel>
 </template>
+
+<style scoped>
+/* Maquette ErreurConnexion (téléphone) : « Connexion perdue » puis l'attente après « Réessayer », centrés,
+   titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l'échelle les plus proches
+   (gap 14, 800, marge 10 de la maquette n'y sont pas). Ici plutôt que dans NetworkError, pour ne pas
+   peser sur le CSS du premier écran. */
+.network-waiting { gap: var(--space-3); min-height: 60vh; align-content: center; padding: 0 var(--space-4) var(--space-8); }
+.network-waiting :deep(.face-state-title) { font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+.network-waiting :deep(.face-state-line) { font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
+.network-waiting :deep(.face-state-actions) { margin-top: var(--space-2); }
+.network-waiting :deep(button.primary) { min-height: 3.25rem; padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+</style>
