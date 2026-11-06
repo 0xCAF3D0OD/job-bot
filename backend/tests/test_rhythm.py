@@ -166,19 +166,22 @@ async def test_the_switches_keep_the_phone_quiet(
     client: AsyncClient, rt: Runtime, sent: list[Message], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Les interrupteurs des Réglages (décision de Kevin du 6.11) : éteint, rien sur le
-    téléphone ; la cloche garde tout, et la remise ORP n'a pas d'interrupteur."""
+    téléphone ; la cloche garde tout. Les rappels d'entretien et la remise des preuves ORP
+    ne dépendent d'aucun interrupteur : toujours envoyés, même tout éteint."""
     current = (await client.get("/api/settings")).json()
     assert [current[k] for k in ("notify_offers", "notify_follow_ups", "notify_orp")] == [True] * 3
     assert current["notify_news"] is False
-    off = {**current, "notify_follow_ups": False, "notify_orp": False}
+    off = {**current, "notify_offers": False, "notify_follow_ups": False, "notify_orp": False}
     assert (await client.put("/api/settings", json=off)).json()["notify_orp"] is False
     monkeypatch.setattr(rhythm, "now", lambda: datetime(2026, 10, 22, 10, 0, tzinfo=ZURICH))
-    message = Message(title="Rappel", message="…")
-    for kind in ("follow_up", "contact_follow_up", "orp_target", "orp_due", "interview"):
-        await notify.deliver(rt, message, kind=kind, link="/")
-    assert len(sent) == 2  # orp_due et interview
+    switched = ("offers", "follow_up", "contact_follow_up", "training_funding", "orp_target")
+    always_sent = ("interview", "orp_due")
+    for kind in (*switched, *always_sent):
+        await notify.deliver(rt, Message(title=kind, message="…"), kind=kind, link="/")
+    assert sorted(m.title for m in sent) == sorted(always_sent)
     async with rt.sessionmaker() as session:
-        assert len(list(await session.scalars(select(Notification)))) == 5
+        bell = list(await session.scalars(select(Notification)))
+    assert len(bell) == len(switched) + len(always_sent)
 
 
 async def test_the_rhythm_settings(client: AsyncClient, rt: Runtime) -> None:

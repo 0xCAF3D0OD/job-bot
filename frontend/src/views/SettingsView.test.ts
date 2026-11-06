@@ -85,16 +85,18 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     const { wrapper } = await mountSettings("notifications");
     expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Notifications", "Affichage", "Mes données"]);
     const rows = wrapper.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text());
-    expect(rows).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP", "Actualités et formations"]);
-    expect(wrapper.findAll("[data-test=notify-switches] input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([true, true, true, false]);
+    expect(rows).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP"]);
+    expect(wrapper.findAll("[data-test=notify-switches] input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([true, true, true]);
+    expect(wrapper.text()).not.toContain("Actualités et formations");
+    expect(wrapper.find("[data-test=ai-data-link]").attributes("href")).toBe("/tes-donnees#ia");
     expect(wrapper.find("[data-test=notify-form]").exists()).toBe(false);
     await wrapper.find("[data-test=switch-notify_follow_ups]").trigger("change");
     await flushPromises();
     expect(put.mock.calls.at(-1)?.[1]).toMatchObject({ body: { notify_follow_ups: false } });
-    // Sur ordinateur, une rubrique par page, comme avant.
+    // Sur ordinateur, une rubrique par page, avec les mêmes interrupteurs.
     vi.unstubAllGlobals();
     const desktop = (await mountSettings("notifications")).wrapper;
-    expect(desktop.find("[data-test=notify-switches]").exists()).toBe(false);
+    expect(desktop.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text())).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP"]);
     expect(desktop.find("[data-test=section-affichage]").exists()).toBe(false);
   });
 });
@@ -170,7 +172,7 @@ describe("SettingsView, une rubrique par page (étape 10b, C10)", () => {
     await router.push({ query: { rubrique: "notifications" } });
     await flushPromises();
     expect(wrapper.find("h1").text()).toBe("Notifications");
-    expect(wrapper.text()).toContain("M'avertir d'une offre dès");
+    expect(wrapper.text()).toContain("M'avertir dès");
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(false);
     expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
     // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
@@ -321,14 +323,14 @@ describe("Des Réglages épurés (docs/106)", () => {
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 85 } } as never);
     const { wrapper } = await mountSettings("notifications");
     expect(wrapper.findAll("[data-test=settings-card]")).toHaveLength(1);
-    const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
+    const choices = wrapper.findAll("[data-test=notify-switches] [role=radio]").map((b) => b.text());
     expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
     expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
 
     await wrapper.find("[data-test=threshold-85]").trigger("click");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 85 }) });
-    expect(wrapper.find("[data-test=notify-form] [data-test=setting-saved]").text()).toContain("Enregistré");
+    expect(wrapper.find("[data-test=threshold-row] [data-test=setting-saved]").text()).toContain("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
     expect(wrapper.find("[data-test=test-notification] .busy-label").text()).toBe("Envoyer");
     // L'interrupteur du téléphone n'est que pour un compte invité ; ici, la ligne de test seule.

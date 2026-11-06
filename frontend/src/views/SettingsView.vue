@@ -233,14 +233,14 @@ const threshold = computed({
   },
   set: (value: string) => void setThreshold(Number(value)),
 });
-// Les quatre interrupteurs de la maquette Réglages (décision de Kevin du 6.11) : ce qui part sur le téléphone ;
-// la cloche garde tout. « M'avertir dès » se range sous « Nouvelles offres ».
-type SwitchKey = "notify_offers" | "notify_follow_ups" | "notify_orp" | "notify_news";
+// Les interrupteurs de la maquette Réglages (décision de Kevin du 6.11), sur téléphone comme sur ordinateur : ce qui
+// part sur le téléphone ; la cloche garde tout. « M'avertir dès » se range sous « Nouvelles offres ». « Actualités et
+// formations » attend qu'un envoi existe (notify_news reste côté serveur).
+type SwitchKey = "notify_offers" | "notify_follow_ups" | "notify_orp";
 const SWITCHES: { key: SwitchKey; title: string; description: string }[] = [
   { key: "notify_offers", title: "Nouvelles offres", description: "Quand une offre te correspond, selon le seuil ci-dessous" },
   { key: "notify_follow_ups", title: "Relances", description: "Une candidature attend une réponse depuis 10 jours" },
   { key: "notify_orp", title: "Objectif ORP", description: "Rappel le 25 du mois, si tu es sous l'objectif" },
-  { key: "notify_news", title: "Actualités et formations", description: "Une fois par semaine au maximum" },
 ];
 async function setSwitch(key: SwitchKey, value: boolean): Promise<void> {
   form.value[key] = value;
@@ -593,10 +593,7 @@ watch(
           cards
         >
           <template v-if="loaded">
-            <SettingCard
-              v-if="phone"
-              data-test="notify-switches"
-            >
+            <SettingCard data-test="notify-switches">
               <template
                 v-for="item in SWITCHES"
                 :key="item.key"
@@ -625,6 +622,7 @@ watch(
                   :saved="savedRow === 'threshold'"
                   :error="rowErrors.threshold"
                   class="notify-threshold"
+                  data-test="threshold-row"
                   stack
                 >
                   <SegmentedControl
@@ -635,25 +633,6 @@ watch(
                   />
                 </SettingRow>
               </template>
-            </SettingCard>
-            <SettingCard
-              v-else
-              data-test="notify-form"
-            >
-              <SettingRow
-                title="M'avertir d'une offre dès"
-                description="Une offre notée sous ce seuil reste dans la liste, sans notification."
-                :saved="savedRow === 'threshold'"
-                :error="rowErrors.threshold"
-                stack
-              >
-                <SegmentedControl
-                  v-model="threshold"
-                  :options="THRESHOLD_OPTIONS"
-                  label="M'avertir d'une offre dès"
-                  full
-                />
-              </SettingRow>
             </SettingCard>
             <SettingCard data-test="notifications">
               <template v-if="notifications?.personal">
@@ -838,6 +817,21 @@ watch(
         >
           <SessionPanel />
           <AccountDataPanel />
+          <!-- « Ce qui part à l'IA » (libellé validé par Kevin, 6.11) : la page publique, à sa section IA. -->
+          <SettingCard data-test="ai-data">
+            <SettingRow
+              title="Ce qui part à l'IA"
+              description="Ce que jobA1 envoie à l'IA, et ce qui n'y part jamais."
+            >
+              <RouterLink
+                :to="{ path: '/tes-donnees', hash: '#ia' }"
+                class="button-link secondary small"
+                data-test="ai-data-link"
+              >
+                Voir
+              </RouterLink>
+            </SettingRow>
+          </SettingCard>
         </SettingsSection>
 
         <SettingsSection
