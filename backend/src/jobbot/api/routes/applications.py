@@ -269,6 +269,32 @@ def _one_line(address: str | None) -> str | None:
     return ", ".join(part.strip() for part in address.splitlines() if part.strip())
 
 
+# Les limites de ApplicationBase : la proposition les respecte toujours, sinon « J'ai postulé »
+# échoue sur une offre dont un champ est trop long (lien d'alerte Indeed, adresse relevée par l'IA).
+SHORT_MAX = 300
+URL_MAX = 1000
+
+
+def _short(value: object, limit: int = SHORT_MAX) -> str | None:
+    """Un texte d'une ligne coupé à la limite du champ ; None s'il est vide ou n'est pas un texte
+    (les coordonnées relevées par l'IA ne sont pas garanties)."""
+    if not isinstance(value, str):
+        return None
+    text = " ".join(value.split())
+    if len(text) <= limit:
+        return text or None
+    return text[: limit - 1].rstrip() + "…"
+
+
+def _text(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _first_url(*urls: str | None) -> str | None:
+    """Le premier lien qui tient dans le champ : un lien coupé ne mènerait nulle part."""
+    return next((url for url in urls if url and len(url) <= URL_MAX), None)
+
+
 @router.get("/offers/{offer_id}/application-prefill", operation_id="getApplicationPrefill")
 async def get_application_prefill(request: Request, offer_id: int) -> ApplicationPrefill:
     """Valeurs proposées pour « Marquer comme envoyée »."""
@@ -287,14 +313,14 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
         sent_at=followups.local_today(),
         # Adresse connue de l'offre (annonce, registre, saisie), sinon celle relevée par l'IA.
         # Champ sur une ligne : « Rue 1, 1003 Lausanne » (l'adresse est gardée sur deux lignes).
-        company_address=_one_line(offer.company_address or employer.get("address")),
-        contact_name=employer.get("contact_name"),
-        contact_phone=employer.get("contact_phone"),
-        company=offer.company or "Entreprise non indiquée",
-        job_title=offer.title,
-        location=offer.location,
+        company_address=_short(_one_line(offer.company_address or _text(employer.get("address")))),
+        contact_name=_short(employer.get("contact_name")),
+        contact_phone=_short(employer.get("contact_phone")),
+        company=_short(offer.company) or "Entreprise non indiquée",
+        job_title=_short(offer.title) or "Poste non indiqué",
+        location=_short(offer.location),
         rate_text=_rate_text(offer),
-        application_url=offer.employer_url or offer.apply_url or first_link or None,
+        application_url=_first_url(offer.employer_url, offer.apply_url, first_link),
     )
 
 
