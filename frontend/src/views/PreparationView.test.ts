@@ -290,6 +290,8 @@ describe("barre de candidature", () => {
     ]);
     expect(steps.find("[data-test=sheet-letter]").text()).toBe("Lettre.pdf");
     expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf?modele=moderne");
+    // Sur ordinateur, pas de ligne « Modèle … » (maquette téléphone seulement).
+    expect(steps.find("[data-test=apply-template-note]").exists()).toBe(false);
     expect(steps.find("[data-test=find-contact]").text()).toBe("Trouver un contact chez Acme SA");
     expect(steps.find("[data-test=find-contact]").attributes("href")).toBe("/candidatures/offres/7#contacts");
     // D'abord le formulaire, seul bouton plein (docs/29 §1.3) ; une fois ouvert, « J'ai postulé » (C8).
@@ -526,6 +528,14 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     await wrapper.find("[data-test=versions-open]").trigger("click");
     expect(wrapper.find("[data-test=versions-sheet] [data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=bandeau");
     await picker.find("[data-test=template-moderne]").trigger("click");
+  });
+
+  it("Postuler, sur téléphone : « Modèle Moderne, en allemand. » sous Lettre.pdf, le vrai modèle et la vraie langue", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1, { language: "de" })]);
+    const wrapper = await mountView("/offres/7/preparer?doc=postuler");
+    const note = wrapper.find("[data-test=apply-where] [data-test=apply-template-note]");
+    expect(note.text()).toBe("Modèle Moderne, en allemand.");
   });
 
   it("sans lettre : l'aperçu vide du modèle à la place de « Aucune lettre »", async () => {

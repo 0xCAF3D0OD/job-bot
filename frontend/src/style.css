@@ -3481,6 +3481,7 @@ main:focus { outline: none; }
 .apply-cards > :is(.button-link, button, .link) { justify-self: start; }
 .apply-cards h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .apply-where-text, .apply-cards .hint { margin: 0; color: var(--text-secondary); }
+.apply-template-note { font-size: var(--label-caps); }
 .apply-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .apply-files > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .apply-files .icon { color: var(--primary-graphic); }
