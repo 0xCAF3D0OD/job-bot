@@ -26,6 +26,7 @@ onUnmounted(() => globalThis.removeEventListener?.("online", back));
     :illustration="props.title ? undefined : 'connexion-perdue'"
     mood="attentif"
     :animation="props.title ? 'hochement' : undefined"
+    :role="props.title ? 'alert' : undefined"
     data-test="network-error"
   >
     <p>{{ props.line ?? "jobA1 réessaie dès que le réseau revient. Ce que tu as saisi est gardé." }}</p>
@@ -36,8 +37,15 @@ onUnmounted(() => globalThis.removeEventListener?.("online", back));
         data-test="network-retry"
         @click="emit('retry')"
       >
-        <span class="with-icon"><AppIcon name="refresh" />Réessayer</span>
+        <template v-if="props.title">
+          Réessayer
+        </template>
+        <span
+          v-else
+          class="with-icon"
+        ><AppIcon name="refresh" />Réessayer</span>
       </button>
     </div>
   </FaceState>
 </template>
+
