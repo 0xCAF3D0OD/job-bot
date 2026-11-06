@@ -5664,7 +5664,7 @@
           "letters"
         ],
         "summary": "Mark Letter Read",
-        "description": "« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil).",
+        "description": "« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre\nappareil).",
         "operationId": "markLetterRead",
         "parameters": [
           {
@@ -5717,6 +5717,7 @@
           "letters"
         ],
         "summary": "Download Letter Docx",
+        "description": "Le Word, avec les réglages du PDF dans le modèle choisi (taille, interligne, marges).",
         "operationId": "downloadLetterDocx",
         "parameters": [
           {
@@ -5726,6 +5727,28 @@
             "schema": {
               "type": "integer",
               "title": "Draft Id"
+            }
+          },
+          {
+            "name": "modele",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sobre",
+                    "moderne",
+                    "bandeau",
+                    "classique"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modele"
             }
           }
         ],
@@ -5789,6 +5812,65 @@
             "description": "Successful Response",
             "content": {
               "application/pdf": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/letters/{draft_id}/page": {
+      "get": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Letter Page",
+        "description": "Le PDF construit dans ce modèle, ses pages comptées : « Tient sur une page A4 », ou le\ndébordement en lignes et l'endroit où la page 1 se termine (la marque de l'aperçu).",
+        "operationId": "letterPage",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "modele",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "sobre",
+                "moderne",
+                "bandeau",
+                "classique"
+              ],
+              "type": "string",
+              "default": "sobre",
+              "title": "Modele"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterPageOut"
+                }
+              }
             }
           },
           "422": {
@@ -16490,6 +16572,10 @@
             "type": "integer",
             "title": "Version"
           },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
           "language": {
             "type": "string",
             "enum": [
@@ -16583,6 +16669,7 @@
           "id",
           "offer_id",
           "version",
+          "name",
           "language",
           "subject",
           "paragraphs",
@@ -16594,6 +16681,69 @@
           "document"
         ],
         "title": "LetterOut"
+      },
+      "LetterPageOut": {
+        "properties": {
+          "fits": {
+            "type": "boolean",
+            "title": "Fits"
+          },
+          "overflow_lines": {
+            "type": "integer",
+            "title": "Overflow Lines"
+          },
+          "adjusted": {
+            "type": "boolean",
+            "title": "Adjusted"
+          },
+          "break_paragraph": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Break Paragraph"
+          },
+          "break_word": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Break Word"
+          },
+          "font_size": {
+            "type": "number",
+            "title": "Font Size"
+          },
+          "line_height": {
+            "type": "number",
+            "title": "Line Height"
+          },
+          "side_margin_cm": {
+            "type": "number",
+            "title": "Side Margin Cm"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fits",
+          "overflow_lines",
+          "adjusted",
+          "break_paragraph",
+          "break_word",
+          "font_size",
+          "line_height",
+          "side_margin_cm"
+        ],
+        "title": "LetterPageOut",
+        "description": "La lettre tient-elle sur une page A4, dans ce modèle, une fois la mise en page resserrée ?"
       },
       "LetterParagraph": {
         "properties": {
@@ -16670,6 +16820,17 @@
               }
             ],
             "title": "Base Draft Id"
+          },
+          "modele": {
+            "type": "string",
+            "enum": [
+              "sobre",
+              "moderne",
+              "bandeau",
+              "classique"
+            ],
+            "title": "Modele",
+            "default": "sobre"
           }
         },
         "type": "object",

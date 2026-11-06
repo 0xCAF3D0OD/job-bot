@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from docx import Document as new_docx
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 from docx.shared import Cm, Pt
 
 MONTHS = {
@@ -87,6 +87,24 @@ class LetterDocument:
     missing_identity: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class Layout:
+    """Les réglages de la lettre, partagés par le PDF et le Word (letters/fit.py les resserre pour
+    tenir sur une page A4). Les valeurs par défaut sont la mise en page d'origine."""
+
+    size: float = 11  # taille du texte, en points
+    leading: float = 14.5  # interligne, en points
+    side: float = 2.5  # marges gauche et droite, en cm
+    gap: float = 10  # espace après chaque paragraphe du corps, en points
+    blocks: float = 1.0  # facteur des espaces entre les blocs (en-tête, objet, formules)
+
+    def space(self, points: float) -> float:
+        return points * self.blocks
+
+
+DEFAULT_LAYOUT = Layout()
+
+
 def format_date(day: date, language: str) -> str:
     month = MONTHS[language][day.month - 1]
     if language == "fr":
@@ -142,40 +160,46 @@ def assemble(
     )
 
 
-def to_docx(letter: LetterDocument) -> bytes:
-    """Lettre A4 au format Word, mise en page suisse : destinataire à droite."""
+def to_docx(letter: LetterDocument, layout: Layout = DEFAULT_LAYOUT) -> bytes:
+    """Lettre A4 au format Word, mise en page suisse : destinataire à droite. Mêmes réglages que
+    le PDF (taille, interligne, marges, espacements), choisis par letters/fit.py."""
     doc = new_docx()
     section = doc.sections[0]
     section.page_height, section.page_width = Cm(29.7), Cm(21)
     for side in ("left_margin", "right_margin"):
-        setattr(section, side, Cm(2.5))
+        setattr(section, side, Cm(layout.side))
     section.top_margin = section.bottom_margin = Cm(2)
     style = doc.styles["Normal"]
     style.font.name = "Arial"
-    style.font.size = Pt(11)
+    style.font.size = Pt(layout.size)
     style.paragraph_format.space_after = Pt(0)
+    style.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+    style.paragraph_format.line_spacing = Pt(layout.leading)
 
-    def block(lines: list[str], *, indent: bool = False, after: int = 18) -> None:
+    def block(lines: list[str], *, indent: bool = False, after: float = 18) -> None:
         if not lines:
             return
         p = doc.add_paragraph("\n".join(lines))
         if indent:
             p.paragraph_format.left_indent = Cm(9)
-        p.paragraph_format.space_after = Pt(after)
+        p.paragraph_format.space_after = Pt(layout.space(after))
 
     block(letter.sender)
     block(letter.recipient, indent=True)
     block([letter.place_date], indent=True, after=24)
     subject = doc.add_paragraph()
     subject.add_run(letter.subject_line).bold = True
-    subject.paragraph_format.space_after = Pt(18)
+    subject.paragraph_format.space_after = Pt(layout.space(18))
     block([letter.salutation], after=12)
-    for text in letter.paragraphs:
+    for index, text in enumerate(letter.paragraphs):
         p = doc.add_paragraph(text)
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT  # jamais justifiée (WCAG 1.4.8)
-        p.paragraph_format.space_after = Pt(10)
+        last = index == len(letter.paragraphs) - 1
+        p.paragraph_format.space_after = Pt(layout.gap + (layout.space(8) if last else 0))
     block([letter.closing], after=36)
-    block([letter.signature], after=30)
+    if letter.signature:
+        p = doc.add_paragraph(letter.signature)
+        p.paragraph_format.space_after = Pt(max(24.0, layout.space(30)))
     block([letter.enclosure], after=0)
     buffer = io.BytesIO()
     doc.save(buffer)
