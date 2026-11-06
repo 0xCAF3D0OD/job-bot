@@ -137,7 +137,9 @@ describe("OffersView", () => {
     mockOffers({ data: { ...page([]).data, counts: none } });
     const wrapper = await mountAt("/offres");
     const empty = wrapper.find("[data-test=offers-none-yet]");
-    expect(empty.text()).toContain("Elles arrivent par tes alertes.");
+    expect(empty.text()).toContain("Tes premières offres arrivent après la prochaine collecte.");
+    expect(empty.find("[data-pose=assis]").exists()).toBe(true);
+    expect(empty.find("[data-test=character-accessory]").exists()).toBe(true);
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
     expect(wrapper.find("[data-test=offers-none-add]").exists()).toBe(true);

@@ -25,6 +25,7 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewForm from "../components/InterviewForm.vue";
 import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
+import MomentScreen from "../components/MomentScreen.vue";
 import OrpGoalCard from "../components/OrpGoalCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -239,13 +240,24 @@ function addManual(): void {
 }
 
 // Une candidature qui passe en Engagement : le moment de fête, par-dessus la page (docs/60).
-// Un entretien proposé : une victoire, le visage ravi (docs/123 §2, R).
+// Un entretien proposé : « Entretien décroché », en écran plein, et « Préparer l'entretien » (docs/141, 12).
+// Un refus : une réponse qui encourage et propose la suite, jamais triste (docs/141, 13 ; règle des émoticônes).
+type Moment = { id: number; company: string };
 const celebrating = ref<string | null>(null);
-const interviewWon = ref<string | null>(null);
-function celebrateIf(id: number | null, status: string | undefined, company: string): void {
-  const before = id === null ? undefined : all.value.find((a) => a.id === id)?.status;
+const interviewWon = ref<Moment | null>(null);
+const refused = ref<Moment | null>(null);
+function celebrateIf(id: number, status: string | undefined, company: string): void {
+  const before = all.value.find((a) => a.id === id)?.status;
   if (status === "engagement" && before !== "engagement") celebrating.value = company;
-  else if (status === "entretien" && before !== "entretien" && before !== "engagement") interviewWon.value = company;
+  else if (status === "entretien" && before !== "entretien" && before !== "engagement") interviewWon.value = { id, company };
+  else if (status === "refus" && before !== "refus") refused.value = { id, company };
+  // L'écran plein prend toute la place : le panneau de la candidature se ferme.
+  if (interviewWon.value || refused.value) openId.value = null;
+}
+// « Préparer l'entretien » ouvre la préparation de cette candidature.
+function prepareWon(): void {
+  preparing.value = all.value.find((a) => a.id === interviewWon.value?.id) ?? null;
+  interviewWon.value = null;
 }
 
 async function save(value: ApplicationFormValue): Promise<void> {
@@ -264,7 +276,7 @@ async function save(value: ApplicationFormValue): Promise<void> {
     error.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l'instant : réessaie.";
     return;
   }
-  celebrateIf(editing.value.id, value.status, value.company);
+  celebrateIf(editing.value.id ?? result.data.id, value.status, value.company);
   editing.value = null;
   await load();
 }
@@ -441,7 +453,61 @@ onUnmounted(() => assistant.setFocus(null));
 </script>
 
 <template>
-  <section :class="['jobs-body', { 'orp-page': orpPage }]">
+  <MomentScreen
+    v-if="interviewWon"
+    pose="celebration"
+    :title="`Entretien décroché chez ${interviewWon.company}.`"
+    line="Ta candidature a retenu l’attention."
+    data-test="interview-moment"
+  >
+    <template #actions>
+      <button
+        type="button"
+        class="button-link primary-link sent-screen-primary"
+        data-test="interview-prepare"
+        @click="prepareWon"
+      >
+        Préparer l’entretien
+      </button>
+      <button
+        type="button"
+        class="link sent-screen-next"
+        data-test="interview-later"
+        @click="interviewWon = null"
+      >
+        Plus tard
+      </button>
+    </template>
+  </MomentScreen>
+  <MomentScreen
+    v-else-if="refused"
+    pose="bonjour"
+    :title="`Réponse de ${refused.company}.`"
+    line="Pas pour cette fois. Chaque candidature envoyée te rapproche d’un oui."
+    data-test="refusal-moment"
+  >
+    <template #actions>
+      <RouterLink
+        to="/candidatures/offres"
+        class="button-link primary-link sent-screen-primary"
+        data-test="refusal-next"
+      >
+        Préparer la prochaine
+      </RouterLink>
+      <button
+        type="button"
+        class="link sent-screen-next"
+        data-test="refusal-close"
+        @click="refused = null"
+      >
+        Voir mes candidatures
+      </button>
+    </template>
+  </MomentScreen>
+  <section
+    v-else
+    :class="['jobs-body', { 'orp-page': orpPage }]"
+  >
     <template v-if="orp">
       <template v-if="orpPage">
         <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
@@ -598,15 +664,6 @@ onUnmounted(() => assistant.setFocus(null));
         :company="celebrating"
         @close="celebrating = null"
       />
-      <SuccessCard
-        v-if="interviewWon"
-        face
-        :title="`Un entretien chez ${interviewWon}`"
-        test-id="interview-moment"
-        @close="interviewWon = null"
-      >
-        <p>Ta candidature a retenu l'attention.</p>
-      </SuccessCard>
       <SuccessCard
         v-if="submitted"
         name="preuves-orp"

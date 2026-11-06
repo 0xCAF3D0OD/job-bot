@@ -127,7 +127,7 @@ async function remove(): Promise<void> {
     password.value = "";
     if (response.ok) {
       expired();
-      await router.replace("/connexion");
+      await router.replace("/connexion?au-revoir=1");
       return;
     }
     error.value = detailOf(failed, "Suppression impossible.");

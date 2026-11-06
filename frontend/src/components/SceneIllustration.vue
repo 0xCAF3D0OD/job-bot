@@ -49,7 +49,6 @@ export type SceneName =
   | "assistant-vide"
   | "preparer-vide"
   | "ia-vide"
-  | "rendez-vous-vide"
   | "formations-vide"
   | "trop-tot";
 </script>
