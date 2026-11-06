@@ -139,6 +139,33 @@ async def authorize(
     return GetemallAuthorizeOut(redirect_to=f"{body.redirect_uri}{separator}{query}")
 
 
+class GetemallRefuseIn(BaseModel):
+    redirect_uri: Annotated[str, Field(max_length=300)]
+    state: Annotated[str, Field(pattern=service.STATE.pattern)]
+
+
+@router.post(
+    "/refus",
+    operation_id="refuseGetemall",
+    responses={
+        400: {"description": "Adresse de retour hors de la liste"},
+        404: {"description": "Connexion Get'emAll non configurée"},
+    },
+)
+async def refuse(request: Request, body: GetemallRefuseIn) -> GetemallAuthorizeOut:
+    """« Refuser » : retour vers Get'emAll avec `error=access_denied` (RFC 6749 §4.1.2.1).
+    L'adresse est comparée à la liste, comme pour « Autoriser » : pas de redirection ouverte."""
+    runtime = _runtime(request)
+    _ready(runtime)
+    if body.redirect_uri not in runtime.settings.getemall_redirect_uris:
+        log.warning("getemall_redirect_refused", account=accounts.current())
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "adresse de retour inconnue")
+    log.info("getemall_refused", account=accounts.current())
+    query = urlencode({"error": "access_denied", "state": body.state})
+    separator = "&" if "?" in body.redirect_uri else "?"
+    return GetemallAuthorizeOut(redirect_to=f"{body.redirect_uri}{separator}{query}")
+
+
 @router.delete("", operation_id="revokeGetemall", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke(request: Request) -> None:
     """« Retirer » dans les Réglages (Connexions) : Get'emAll ne lit plus rien."""

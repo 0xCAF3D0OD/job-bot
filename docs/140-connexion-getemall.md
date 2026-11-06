@@ -103,10 +103,20 @@ champ ORP absent sans la case ; texte de l'offre sans e-mail, téléphone, lien 
 404 (C-4) ; « Retirer » puis reconnexion avec le même `subject` ; révocation par Get'emAll ; sans jeton, 401 ; sans
 configuration, 404 ; export sans empreinte et effacement avec le compte.
 
-## 7. Ce qui reste (lot 2, interface)
+## 7. L'interface (maquettes du 2026-11-06) et ce qui reste
 
-- La page « Autoriser Get'emAll » (case ORP à part, texte clair sur la sensibilité des données ORP) et la ligne
-  « Connexions » des Réglages : d'après les maquettes de Kevin (CLAUDE.md : pas d'écran sans maquette).
-- Get'emAll sur la page Confidentialité (I-4, V-5) : avec la page « Autoriser », avant toute configuration en
-  production. Tant que le secret n'est pas posé, rien ne part.
+Fait, d'après les maquettes `docs/mobile/maquettes/{AutoriserGetemall,ReglagesConnexions,ReglagesRetirer,
+ConfidentialiteGetemall}.dc.html`, qui font foi comme pour docs/139 :
+
+- `/connexion/getemall` : la page « Relier Get'emAll à ton compte ? », case ORP décochée qui ne vaut qu'au clic sur
+  « Autoriser ». « Refuser » passe par `POST /api/partenaires/getemall/refus`, qui compare l'adresse de retour à la
+  liste et rend `error=access_denied` : la page ne redirige jamais vers une adresse qu'elle n'a pas fait vérifier.
+- Réglages › Connexions : la carte Get'emAll (dernière lecture, « Partager mes recherches ORP » enregistré tout de
+  suite, « Retirer l'accès » après confirmation en bleu), « Aucune application reliée » sinon. Sous la carte des
+  comptes Apple, Google ou Microsoft, plus récente que la maquette.
+- Données personnelles : « Get'emAll, si tu le relies » après la section IA, et deux lignes de plus dans « Ce qui est
+  possible » (I-4, V-5), affichées seulement quand la connexion est configurée (`/api/privacy` → `getemall`).
+
+Reste :
+
 - Une limite des lectures en rafale par jeton (X-8), comme pour le reste de l'API (écart connu).
