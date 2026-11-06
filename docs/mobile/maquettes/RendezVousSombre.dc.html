@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1 sombre, Rendez-vous</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+@keyframes navDot{from{transform:translateY(14px) scale(.7);opacity:.3}to{transform:none;opacity:1}}.nav-dot{animation:navDot .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}@media (prefers-reduced-motion: reduce){.nav-dot{animation:none}}
+@keyframes navTab{from{transform:translateY(22px)}to{transform:translateY(0)}}@keyframes navIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.nav-tab{animation:navTab .32s cubic-bezier(.2,0,0,1) both}.nav-in{animation:navIn .3s cubic-bezier(.2,0,0,1) .08s both}@media (prefers-reduced-motion: reduce){.nav-tab,.nav-in{animation:none}}
+@keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}.swap{animation:swap .3s cubic-bezier(.2,0,0,1) both}@media (prefers-reduced-motion: reduce){.swap{animation:none}}
+/*jaMotion*/button,a,input,[role=tab],[role=radio],[role=switch]{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}button:active,a:active{transform:scale(.97)}@media (prefers-reduced-motion: reduce){button,a,input{transition:none}button:active,a:active{transform:none}}
+body{margin:0}
+a{color:#7D95FF}a:hover{color:#AEBDFF}
+@keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion: reduce){.nav-active{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #171411; color: #F3EEE6; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding-left: 4px">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="28" height="28" viewBox="8 8 86 86" role="img" aria-label="jobA1"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="#7D95FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="45" r="10" fill="#7D95FF"></circle><circle cx="76" cy="41" r="10" fill="#E8B48A"></circle><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="#7D95FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><h1 style="margin: 0; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.5px">Candidatures</h1></div>
+<div style="display: flex; align-items: center; gap: 2px"><a href="#alertes" style="height: 44px; padding: 0 12px; border-radius: 22px; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none">Alertes</a>
+<a href="Filtres.dc.html" aria-label="Filtres" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #F3EEE6">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+</a></div>
+</div>
+<div role="group" aria-label="Statut" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #2C2722; border-radius: 14px">
+<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #C7BFB3; cursor: pointer">À traiter</button>
+<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #C7BFB3; cursor: pointer">Envoyées</button>
+<button type="button" aria-pressed="true" style="height: 40px; border: 0; border-radius: 10px; background: #221E1A; box-shadow: 0 1px 2px rgba(0,0,0,.4); font-family: inherit; font-size: 14px; font-weight: 700; color: #F3EEE6; cursor: pointer">Rendez-vous</button>
+</div>
+</header>
+
+<div style="position: relative; flex: 1; min-height: 0; display: flex">
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 16px 80px">
+<h2 style="margin: 6px 4px 0; display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 700">À venir<span style="font-size: 13px; font-weight: 600; color: #ABA398">3 rendez-vous</span></h2>
+<article aria-labelledby="orp-titre" style="display: flex; flex-direction: column; padding: 16px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px">
+<div style="display: flex; gap: 14px">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 58px; border-radius: 14px; background: #3A281E; color: #F2B98E; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1"><span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px">mar.</span><span style="font-size: 22px; font-weight: 800; margin-top: 3px">10</span><span style="font-size: 12px; font-weight: 600; margin-top: 2px">nov.</span></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 700; color: #ABA398">Dans 4 jours</span>
+<h3 id="orp-titre" style="margin: 0; font-size: 18px; line-height: 23px; font-weight: 800">Rendez-vous ORP</h3>
+<span style="font-size: 14px; color: #ABA398">9 h 30 · ORP Renens, rue de Lausanne 35</span>
+<span style="align-self: flex-start; margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #1E3328; color: #7FD3A6; font-size: 13px; font-weight: 700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7FD3A6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 0"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Ta feuille est prête</span>
+</div>
+</div>
+<ul style="margin: 14px 0 0; padding: 0; list-style: none">
+<li style="display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #2C2722"><span aria-hidden="true" style="flex: none; width: 6px; height: 6px; margin: 8px 6px 0 4px; border-radius: 3px; background: #ABA398"></span><span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; font-weight: 700; color: #ABA398">Ton mois</span><span style="font-size: 15px; line-height: 21px">6 recherches sur 10, preuves jointes</span></span></li>
+<li style="display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #2C2722"><span aria-hidden="true" style="flex: none; width: 6px; height: 6px; margin: 8px 6px 0 4px; border-radius: 3px; background: #ABA398"></span><span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; font-weight: 700; color: #ABA398">Ce qui bloque</span><span style="font-size: 15px; line-height: 21px">Formulaires en ligne : 0 réponse sur 9</span></span></li>
+<li style="display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #2C2722"><span aria-hidden="true" style="flex: none; width: 6px; height: 6px; margin: 8px 6px 0 4px; border-radius: 3px; background: #ABA398"></span><span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; font-weight: 700; color: #ABA398">Ce qui te manque</span><span style="font-size: 15px; line-height: 21px">Terraform, demandé dans 14 offres sur 22</span></span></li>
+</ul>
+<div style="border-top: 1px solid #2C2722">
+<button type="button" onClick="{{toggleQ}}" aria-expanded="{{qOpen}}" style="width: 100%; min-height: 48px; padding: 0; border: 0; background: transparent; color: #F3EEE6; font-family: inherit; display: flex; align-items: center; justify-content: space-between; cursor: pointer"><span style="font-size: 15px; font-weight: 700">Tes questions au conseiller</span><span style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #ABA398">{{qCount}}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{qRot}}; transition: transform .2s"><path d="m6 9 6 6 6-6"></path></svg></span></button>
+<sc-if value="{{qOpenB}}" hint-placeholder-val="{{ false }}"><ul style="margin: 0 0 6px; padding: 0; list-style: none">
+<li><label style="display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 8px 0; cursor: pointer"><input type="checkbox" checked="{{q1}}" onChange="{{t1}}" style="flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: #2445C2; cursor: pointer"><span style="font-size: 15px; line-height: 21px">Financer la formation Terraform (demande prête)</span></label></li>
+<li><label style="display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 8px 0; cursor: pointer"><input type="checkbox" checked="{{q2}}" onChange="{{t2}}" style="flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: #2445C2; cursor: pointer"><span style="font-size: 15px; line-height: 21px">Un stage d’essai, faute de réponses depuis 2 mois</span></label></li>
+<li><label style="display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 8px 0; cursor: pointer"><input type="checkbox" checked="{{q3}}" onChange="{{t3}}" style="flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: #2445C2; cursor: pointer"><span style="font-size: 15px; line-height: 21px">Déclarer mon gain intermédiaire d’octobre</span></label></li>
+</ul></sc-if>
+</div>
+<button type="button" style="margin-top: 10px; height: 52px; border: 0; border-radius: 26px; background: #2445C2; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Voir ma feuille</button>
+<button type="button" style="margin-top: 4px; height: 44px; border: 0; background: transparent; color: #AEBDFF; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Imprimer ou télécharger en PDF</button>
+</article>
+<a href="#entretien" style="display: flex; gap: 14px; padding: 16px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; text-decoration: none; color: #F3EEE6">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 58px; border-radius: 14px; background: #232B45; color: #AEBDFF; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1"><span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px">jeu.</span><span style="font-size: 22px; font-weight: 800; margin-top: 3px">12</span><span style="font-size: 12px; font-weight: 600; margin-top: 2px">nov.</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 700; color: #ABA398">Entretien d’embauche</span>
+<span style="font-size: 16px; font-weight: 700; line-height: 21px">DevOps Engineer</span>
+<span style="font-size: 14px; color: #ABA398">Alpstack · 14 h</span>
+<span style="font-size: 14px; color: #ABA398">Visio · lien dans l’invitation</span>
+<span style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: #AEBDFF">Préparer l’entretien<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></span>
+</span>
+</a>
+<a href="#entretien" style="display: flex; gap: 14px; padding: 16px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; text-decoration: none; color: #F3EEE6">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 58px; border-radius: 14px; background: #232B45; color: #AEBDFF; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1"><span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px">lun.</span><span style="font-size: 22px; font-weight: 800; margin-top: 3px">16</span><span style="font-size: 12px; font-weight: 600; margin-top: 2px">nov.</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 700; color: #ABA398">Entretien d’embauche</span>
+<span style="font-size: 16px; font-weight: 700; line-height: 21px">Ingénieur Cloud junior</span>
+<span style="font-size: 14px; color: #ABA398">Romandie Logistique · 10 h</span>
+<span style="font-size: 14px; color: #ABA398">Avenue de la Gare 12, Lausanne</span>
+<span style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: #AEBDFF">Préparer l’entretien<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></span>
+</span>
+</a>
+<h2 style="margin: 6px 4px 0; display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 700">Derniers rendez-vous ORP<span style="font-size: 13px; font-weight: 600; color: #ABA398"></span></h2>
+<article style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px">
+<div style="display: flex; gap: 14px; align-items: center">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 52px; border-radius: 14px; background: #2C2722; color: #C8C0B4; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1"><span style="font-size: 20px; font-weight: 800">13</span><span style="font-size: 12px; font-weight: 600; margin-top: 2px">oct.</span></span>
+<div style="flex: 1; min-width: 0"><h3 style="margin: 0; font-size: 16px; font-weight: 700">Rendez-vous ORP du 13 octobre</h3><span style="font-size: 14px; color: #ABA398">Ce qui a été convenu</span></div>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 15px; line-height: 21px">
+<dt style="color: #ABA398">Objectif</dt><dd style="margin: 0">10 recherches par mois</dd>
+<dt style="color: #ABA398">Mesure</dt><dd style="margin: 0">Cours Terraform, financement accepté</dd>
+<dt style="color: #ABA398">Prochain</dt><dd style="margin: 0">Mardi 10 novembre, 9 h 30</dd>
+</dl>
+</article>
+<a href="#carnet" style="min-height: 52px; padding: 0 16px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #F3EEE6"><span style="font-size: 15px; font-weight: 700">Carnet ORP</span><span style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #ABA398">4 rendez-vous<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></span></a>
+</main>
+</div>
+
+<div aria-hidden="true" style="flex: none; height: 22px"></div>
+<nav aria-label="Navigation principale" style="position: relative; z-index: 5; flex: none; height: 84px; box-sizing: border-box; padding-top: 8px; background: transparent; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start">
+<svg aria-hidden="true" width="390" height="84" viewBox="0 0 390 84" style="position: absolute; left: 0; top: 0; z-index: 0"><path d="M0 0 H69 C81 0 81 40 117 40 C153 40 153 0 165 0 H390 V84 H0 Z" fill="#221E1A"></path><path d="M0 0.5 H69 C81 0.5 81 40.5 117 40.5 C153 40.5 153 0.5 165 0.5 H390" fill="none" stroke="#38322B" stroke-width="1"></path></svg>
+<a href="AccueilSmile.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #ABA398; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"></path></svg></span>Accueil</a>
+<a href="Candidatures.dc.html" aria-current="page" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-height: 56px; text-decoration: none; color: #7D95FF; font-size: 12px; font-weight: 700"><span class="nav-dot" style="width: 56px; height: 56px; margin-top: -30px; border-radius: 28px; background: #2445C2; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(36,69,194,.28)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"></path></svg></span><span style="margin-top: 10px">Candidatures</span></a>
+<a href="Assistant.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #ABA398; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#221E1A"></circle><circle cx="50" cy="50" r="44" fill="none" stroke="#7D95FF" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#7D95FF"></path><path d="M26 45 C 28.5 37, 37.5 37, 40 45" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path><path d="M59 30.5 Q60.84 40.16 70.5 42 Q60.84 43.84 59 53.5 Q57.16 43.84 47.5 42 Q57.16 40.16 59 30.5 Z" fill="#E8B48A"></path><path d="M29 60 C 37 71, 55 71, 63 60" fill="none" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"></path></g></svg></span>Assistant</a>
+<a href="Explorer.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #ABA398; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></span>Progresser</a>
+<a href="Compte.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #ABA398; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg></span>Compte</a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const s = this.state || {};
+const q = [s.q1 !== false, s.q2 !== false, !!s.q3];
+const n = q.filter(Boolean).length;
+const open = !!s.open;
+return {
+q1: q[0], q2: q[1], q3: q[2],
+t1: () => this.setState({ q1: !q[0] }), t2: () => this.setState({ q2: !q[1] }), t3: () => this.setState({ q3: !q[2] }),
+qCount: n + (n > 1 ? ' cochées' : ' cochée'),
+toggleQ: () => this.setState({ open: !open }), qOpen: String(open), qOpenB: open, qRot: open ? 'rotate(180deg)' : 'none'
+};
+}
+}
+</script>
+</body>
+</html>
