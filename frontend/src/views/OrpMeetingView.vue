@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
-import { api } from "../api/client";
+import { api, type Application } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
@@ -21,6 +22,9 @@ import { dateInSentence, meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
+import InterviewPreparation from "../components/InterviewPreparation.vue";
+import RendezVousPhone from "../components/RendezVousPhone.vue";
+import { usePhone } from "../composables/usePhone";
 
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -245,6 +249,38 @@ const meetingItems = computed<MoreMenuItem[]>(() => [
   { label: "Supprimer", test: "meeting-delete", icon: "trash", run: () => void removeMeeting() },
 ]);
 
+// Sur téléphone (maquettes RendezVous et RendezVousSombre, 6.11.2026) : « À venir » (ORP et entretiens d'embauche,
+// par date), puis « Derniers rendez-vous ORP ». « Voir ma feuille » ouvre la page actuelle (?feuille), le carnet
+// ouvert avec ?feuille=carnet. Sans candidature, l'écran reste celui d'avant. L'ordinateur ne change pas.
+const route = useRoute();
+const router = useRouter();
+const { phone } = usePhone();
+// Les tests montent la vue sans routeur : route peut manquer.
+const sheetPart = computed(() => route?.query.feuille);
+const sheetView = computed(() => typeof sheetPart.value === "string");
+const compact = computed(() => phone.value && !!page.value && !noApplications.value && !sheetView.value);
+const applications = ref<Application[]>([]);
+const preparing = ref<Application | null>(null);
+async function loadApplications(): Promise<void> {
+  const { data } = await api.GET("/api/applications");
+  if (Array.isArray(data)) applications.value = data;
+}
+watch(phone, (value) => value && void loadApplications(), { immediate: true });
+function openSheet(part?: "carnet"): void {
+  void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
+}
+// Le carnet ouvert depuis « Carnet ORP » : il descend jusqu'à lui.
+const logRow = ref<{ $el?: HTMLElement } | null>(null);
+watch(
+  () => [sheetPart.value, page.value] as const,
+  async ([part, loaded]) => {
+    if (part !== "carnet" || !loaded) return;
+    await nextTick();
+    logRow.value?.$el?.scrollIntoView?.({ block: "start" });
+  },
+  { immediate: true },
+);
+
 onMounted(() => void load());
 </script>
 
@@ -258,10 +294,21 @@ onMounted(() => void load());
     </p>
     <LoadingBlocks v-else-if="!page" />
     <template v-else>
+      <RendezVousPhone
+        v-if="compact"
+        part="upcoming"
+        :page="page"
+        :applications="applications"
+        :sheet-link="sheetLink"
+        :noting="noting"
+        @toggle="toggle"
+        @sheet="openSheet()"
+        @prepare="preparing = $event"
+      />
       <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
            en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
       <div
-        v-if="conclusion.length"
+        v-if="conclusion.length && !compact"
         class="orp-conclusion"
       >
         <p
@@ -299,7 +346,7 @@ onMounted(() => void load());
            largeur pour que le texte respire : les questions, la feuille. -->
       <!-- Sans candidature, seul le formulaire du rendez-vous reste : pas de titre (1.6.24, comme Figma). -->
       <h2
-        v-if="prep && !noApplications"
+        v-if="prep && !noApplications && !compact"
         ref="prepareTitle"
         class="section-title orp-section"
       >
@@ -307,7 +354,7 @@ onMounted(() => void load());
       </h2>
       <div class="orp-meeting-sheet">
         <div
-          v-if="!meeting || editing || started"
+          v-if="!meeting || editing || (started && !compact)"
           class="form-card"
           data-test="meeting"
         >
@@ -432,7 +479,7 @@ onMounted(() => void load());
             </div>
           </form>
         </div>
-        <template v-if="prep && !noApplications">
+        <template v-if="prep && !noApplications && !compact">
           <section
             class="form-card"
             data-test="sheet-questions"
@@ -601,7 +648,27 @@ onMounted(() => void load());
       </FaceState>
       <!-- Le mois (règles §3.4, décision du 25/10) : une ligne repliable par partie, avec son résumé ;
            « Le mois en bref » ouvert ; une partie vide ne s'affiche pas (docs/131 §B.8). -->
-      <template v-if="(prep && !noApplications) || page.past.length">
+      <RendezVousPhone
+        v-if="compact"
+        part="past"
+        :page="page"
+        :applications="applications"
+        :sheet-link="sheetLink"
+        :noting="noting"
+        @note="noting = $event"
+        @log="openSheet('carnet')"
+      >
+        <template #noting="{ meeting: item }">
+          <OrpOutcomeForm
+            :meeting="item"
+            :target="page.target"
+            :trainings="page.trainings"
+            @saved="outcomeSaved"
+            @cancel="noting = null"
+          />
+        </template>
+      </RendezVousPhone>
+      <template v-if="((prep && !noApplications) || page.past.length) && !compact">
         <h2 class="section-title orp-section">
           Le mois
         </h2>
@@ -703,7 +770,9 @@ onMounted(() => void load());
           <!-- Le carnet, replié (docs/130 §B) : « Modifier » sur la ligne de chaque rendez-vous. -->
           <DisclosureRow
             v-if="page.past.length"
+            ref="logRow"
             class="orp-log"
+            :start-open="sheetPart === 'carnet'"
             title="Le carnet"
             icon="calendar"
             :description="`${plural(page.past.length, 'rendez-vous', 'rendez-vous')}, le dernier ${dateInSentence(page.past[0]!.starts_at)}`"
@@ -767,5 +836,10 @@ onMounted(() => void load());
         </div>
       </template>
     </template>
+    <InterviewPreparation
+      v-if="preparing"
+      :application="preparing"
+      @close="preparing = null"
+    />
   </section>
 </template>

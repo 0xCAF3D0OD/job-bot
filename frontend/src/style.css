@@ -31,6 +31,8 @@
   --spark: #E8B48A;
   --peach: #F3B08A;
   --peach-soft: #FDEDE3;
+  /* Le texte sur --peach-soft : le bloc date du rendez-vous ORP (maquette RendezVous, 6.11.2026). */
+  --peach-text: #8A4A16;
   --scribble: #F09A66;
   /* Les statuts, toujours avec un mot. L'orange (--warning) reste à ce qui demande d'agir (D5) ; « À creuser » est
      en gris chaud (--score-dig). Le rouge, aux erreurs et aux actions destructives. */
@@ -140,6 +142,8 @@
   --weight-regular: 400;
   --weight-semibold: 600;
   --weight-bold: 700;
+  /* Les chiffres des blocs date de Rendez-vous (maquette RendezVous, 6.11.2026). */
+  --weight-heavy: 800;
   --leading-none: 1;
   --leading-tight: 1.3;
   --leading-normal: 1.5;
@@ -173,6 +177,7 @@
     --primary-soft: #232B45;
     --water: #3A4A85;
     --peach-soft: #3A281E;
+    --peach-text: #F2B98E;
     --success: #62D497;
     --success-soft: #1C3527;
     --warning: #F2A766;
@@ -208,6 +213,7 @@
   --primary-soft: #232B45;
   --water: #3A4A85;
   --peach-soft: #3A281E;
+  --peach-text: #F2B98E;
   --success: #62D497;
   --success-soft: #1C3527;
   --warning: #F2A766;
