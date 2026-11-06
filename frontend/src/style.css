@@ -4295,8 +4295,11 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .orp-day strong { font-size: var(--font-title); font-weight: var(--weight-bold); color: var(--text); }
 .orp-what { flex: 1; min-width: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 .orp-what strong { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
-/* « poste · moyen » sur une ligne ; des lignes de 89 px (maquettes Explorer et Orp du 5.11). */
-.orp-what > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Poste · canal sur 2 lignes au plus, le canal jamais coupé (Kevin, 6.11) : le canal passe à la ligne quand il ne
+   tient pas à côté du poste ; la ligne grandit au besoin (min-height). */
+.orp-sub { display: flex; flex-wrap: wrap; min-width: 0; }
+.orp-job { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orp-channel { flex: none; white-space: pre; }
 .orp-rows .status-pill { gap: var(--space-1); font-weight: var(--weight-bold); }
 .orp-all { display: flex; align-items: center; justify-content: center; min-height: var(--btn-primary); font-weight: var(--weight-bold); text-decoration: none; }
 /* Le Suivi ORP (docs/139 étape 8b, maquette Orp) : une sous-page du Bilan ; sur téléphone, sa tête remplace

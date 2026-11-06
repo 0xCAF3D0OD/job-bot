@@ -43,7 +43,7 @@ describe("Bilan › ORP", () => {
     const goal = wrapper.find("[data-test=orp-goal]");
     expect(goal.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("4 recherches sur 10");
     expect(goal.find("h2").text()).toBe("6 recherches à faire");
-    expect(goal.find("p").text()).toBe("Objectif fixé par ta conseillère ORP. Échéance le 31 octobre.");
+    expect(goal.find("p").text()).toBe("Objectif fixé avec ton ORP. Échéance le 31 octobre.");
     const rows = wrapper.findAll("[data-test=orp-rows] li");
     expect(rows.map((r) => r.find(".orp-what strong").text())).toEqual(["Alpstack", "Romandie Logistics", "Léman Data SA"]);
     expect(rows[0]!.text()).toContain("DevOps Engineer · Électronique");
