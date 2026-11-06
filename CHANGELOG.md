@@ -421,3 +421,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.207 | Offres : l'offre ajoutée à la main reste ouverte, la liste ne l'efface plus aussitôt | livrée |
 | 1.6.208 | Ajouter une offre : compléter une offre déjà là avec le lien de son annonce, et une candidature spontanée signale l'offre déjà là chez la même entreprise | livrée |
 | 1.6.209 | Le personnage de la connexion passe au kit d'illustrations HD (400 px et 800 px pour les écrans 2×), net sur ordinateur | livrée |
+| 1.6.210 | Candidatures sur téléphone : une connexion perdue affiche « Connexion perdue » et « Réessayer » dans la page (maquette ErreurConnexion), puis l'attente jusqu'à la réponse ; le plein écran reste pour la maintenance | livrée |
