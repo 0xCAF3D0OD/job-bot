@@ -16,7 +16,7 @@ export interface Page {
   tab: Tab;
   stored: Record<string, string>;
   // Réponses de la plateforme, par début de chemin.
-  api: Record<string, unknown>;
+  api: Record<string, unknown | ((init?: RequestInit) => unknown)>;
   // Ce que rend chaque script injecté dans la page, par nom de fonction.
   scripts: Record<string, Frame[] | ((args: unknown[]) => Frame[])>;
   granted?: boolean;
@@ -61,7 +61,8 @@ export async function openPopup(page: Page): Promise<Document> {
       }),
     },
   };
-  Object.assign(globalThis, { chrome });
+  // Le script de lecture de l'annonce (annonce.js) : seul son nom compte ici.
+  Object.assign(globalThis, { chrome, jobA1Annonce: function jobA1Annonce() {} });
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -70,7 +71,8 @@ export async function openPopup(page: Page): Promise<Document> {
       const key = Object.keys(page.api)
         .sort((a, b) => b.length - a.length)
         .find((k) => path.startsWith(k));
-      const value = key ? page.api[key] : undefined;
+      const entry = key ? page.api[key] : undefined;
+      const value = typeof entry === "function" ? entry(init) : entry;
       if (value instanceof Response) return value;
       if (value === undefined) return new Response(JSON.stringify({ detail: "introuvable" }), { status: 404 });
       return new Response(JSON.stringify(value), { status: 200 });
@@ -142,7 +144,10 @@ describe("fenêtre de l'extension", () => {
     expect(document.querySelector("#idle .title-md")?.textContent).toBe("Rien à faire sur cette page");
     // Seule l'adresse de l'onglet part, et seul le nombre de champs est lu.
     expect(calls.map((c) => c.path)).toEqual(["/api/extension/match?url=https%3A%2F%2Fwww.google.ch%2Fsearch%3Fq%3Demploi"]);
-    expect(injected.map((i) => i.name)).toEqual(["countFields"]);
+    expect(injected).toEqual([
+      { name: "jobA1Annonce", args: [false] },
+      { name: "countFields", args: [] },
+    ]);
   });
 
   it("page du navigateur (about:, boutique) : rien à faire, sans pastille ni appel", async () => {
@@ -188,6 +193,109 @@ describe("fenêtre de l'extension", () => {
     document.getElementById("unlink")!.click();
     await new Promise((r) => setTimeout(r, 0));
     expect(shownState()).toBe("signin");
+  });
+});
+
+const posting = { kind: "posting", url: "https://careers.specitec.com/jobs/7", title: "DevOps Engineer", company: "Sword Services", location: "Genève" };
+const annoncePage = (api: Page["api"]): Page => ({
+  tab: { id: 1, url: "https://careers.specitec.com/jobs/7" },
+  stored: linked,
+  api: { ...nothingHere, ...api },
+  scripts: {
+    jobA1Annonce: (args) => [{ frameId: 0, result: args[0] ? { ...posting, text: "Tu automatises nos déploiements. ".repeat(10) } : posting }],
+    countFields: [{ frameId: 0, result: 0 }],
+  },
+});
+const click = async (id: string) => {
+  document.getElementById(id)!.click();
+  await new Promise((r) => setTimeout(r, 0));
+  await new Promise((r) => setTimeout(r, 0));
+};
+const sentBodies = () => calls.filter((c) => c.init?.method === "POST").map((c) => JSON.parse(String(c.init!.body)));
+
+describe("envoyer une annonce (ExtAnnonce)", () => {
+  it("à l'ouverture : la carte de l'annonce, rien d'envoyé, seul le titre lu", async () => {
+    await openPopup(annoncePage({}));
+    expect(shownState()).toBe("annonce");
+    expect(document.getElementById("site-name")?.textContent).toBe("careers.specitec.com");
+    expect(document.getElementById("an-title")?.textContent).toBe("DevOps Engineer");
+    expect(document.getElementById("an-meta")?.textContent).toBe("Sword Services · Genève");
+    expect(document.getElementById("an-send")?.textContent).toBe("Envoyer à jobA1");
+    expect(document.querySelectorAll("#an-idle button.primary")).toHaveLength(1);
+    expect(injected.filter((i) => i.name === "jobA1Annonce")).toEqual([{ name: "jobA1Annonce", args: [false] }]);
+    expect(sentBodies()).toEqual([]);
+  });
+
+  it("« Envoyer à jobA1 » : l'annonce lue maintenant, envoyée seule ; « Offre ajoutée » et sa note", async () => {
+    await openPopup(annoncePage({ "/api/extension/announce": { outcome: "added", offer_id: 12, score: 76, label: "Proche", filled: [], known: null } }));
+    await click("an-send");
+    expect(injected.filter((i) => i.name === "jobA1Annonce").map((i) => i.args)).toEqual([[false], [true]]);
+    const [body] = sentBodies();
+    expect(Object.keys(body).sort()).toEqual(["company", "location", "text", "title", "url"]);
+    expect(body.url).toBe("https://careers.specitec.com/jobs/7");
+    expect(document.getElementById("an-done")?.hidden).toBe(false);
+    expect(document.querySelector("#an-done [role=status]")).not.toBeNull();
+    expect(document.getElementById("an-done-title")?.textContent).toBe("Offre ajoutée");
+    expect(document.getElementById("an-done-text")?.textContent).toBe("Note : 76, Proche. Elle t’attend dans Candidatures › À traiter.");
+    expect(document.getElementById("an-open")?.getAttribute("href")).toBe(`${linked.base}/candidatures/offres?offre=12`);
+  });
+
+  it("même poste chez la même entreprise : « C'est bien cette offre ? », puis « Oui, compléter cette offre »", async () => {
+    let n = 0;
+    await openPopup(
+      annoncePage({
+        "/api/extension/announce": () =>
+          n++ === 0
+            ? { outcome: "confirm", known: { id: 5, title: "DevOps Engineer", company: "Sword Services", received_at: `${new Date().getFullYear()}-10-30T08:00:00Z`, site: "jobs.ch" }, filled: [] }
+            : { outcome: "filled", offer_id: 5, score: 76, label: "Proche", filled: ["description"], known: null },
+      }),
+    );
+    await click("an-send");
+    expect(document.getElementById("an-confirm")?.hidden).toBe(false);
+    expect(document.getElementById("an-known")?.textContent).toBe("DevOps Engineer chez Sword Services, reçue le 30 octobre par une alerte jobs.ch.");
+    expect(document.getElementById("an-yes")?.textContent).toBe("Oui, compléter cette offre");
+    expect(document.getElementById("an-new")?.textContent).toBe("Ajouter comme nouvelle offre");
+    expect(document.querySelectorAll("#an-confirm button.primary")).toHaveLength(1);
+    await click("an-yes");
+    const bodies = sentBodies();
+    expect(bodies[1]).toMatchObject({ choice: "fill", offer_id: 5 });
+    // La page n'est lue qu'une fois.
+    expect(injected.filter((i) => i.name === "jobA1Annonce" && i.args[0] === true)).toHaveLength(1);
+    expect(document.getElementById("an-done-title")?.textContent).toBe("Annonce ajoutée à ton offre");
+    expect(document.getElementById("an-done-text")?.textContent).toBe("Note refaite sur l’annonce complète : 76, Proche.");
+  });
+
+  it("« Ajouter comme nouvelle offre »", async () => {
+    let n = 0;
+    await openPopup(
+      annoncePage({
+        "/api/extension/announce": () =>
+          n++ === 0
+            ? { outcome: "confirm", known: { id: 5, title: "DevOps Engineer", company: null, received_at: "2025-10-30T08:00:00Z", site: null }, filled: [] }
+            : { outcome: "added", offer_id: 13, score: null, label: null, filled: [], known: null },
+      }),
+    );
+    await click("an-send");
+    expect(document.getElementById("an-known")?.textContent).toBe("DevOps Engineer, reçue le 30 octobre 2025.");
+    await click("an-new");
+    expect(sentBodies()[1]).toMatchObject({ choice: "new", offer_id: null });
+    expect(document.getElementById("an-done-text")?.textContent).toBe("Elle t’attend dans Candidatures › À traiter. Sa note arrive dans un moment.");
+  });
+
+  it("30 envois par jour : le message du serveur", async () => {
+    const limit = () => new Response(JSON.stringify({ detail: "30 annonces envoyées aujourd'hui : c'est le maximum. Réessaie demain." }), { status: 429 });
+    await openPopup(annoncePage({ "/api/extension/announce": limit }));
+    await click("an-send");
+    expect(document.getElementById("an-error")?.textContent).toBe("30 annonces envoyées aujourd'hui : c'est le maximum. Réessaie demain.");
+    expect(document.getElementById("an-error")?.getAttribute("role")).toBe("alert");
+    expect(document.getElementById("an-send")?.hasAttribute("disabled")).toBe(false);
+  });
+
+  it("le formulaire de candidature d'une offre connue l'emporte sur l'annonce", async () => {
+    const page = annoncePage({ "/api/extension/match": { offer: { id: 7, title: "DevOps", company: "Sword", applied: false }, choices: [] } });
+    page.scripts.countFields = [{ frameId: 0, result: 6 }];
+    await openPopup(page);
+    expect(shownState()).toBe("main");
   });
 });
 

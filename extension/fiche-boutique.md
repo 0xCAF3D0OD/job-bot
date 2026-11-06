@@ -21,6 +21,10 @@ jobA1 est une plateforme de recherche d'emploi pour la Suisse, que tu héberges 
 - Les champs remplis sont encadrés en violet ; ceux qui restent à faire, en orange.
 - « J'ai envoyé » enregistre la candidature dans ton Suivi.
 
+**Envoyer une annonce à jobA1**
+- Sur la page d'une annonce, « Envoyer à jobA1 » : jobA1 lit son texte complet, la relie à l'offre déjà reçue (en te demandant si c'est la même) ou l'ajoute, puis refait sa note.
+- Seule l'annonce part : sur LinkedIn, l'annonce ouverte, jamais ton profil ni la liste.
+
 **Sur Job-Room (preuves de recherches d'emploi)**
 - Choisis une candidature de ton Suivi : la saisie se remplit (date, entreprise, adresse, poste, mode, taux, résultat).
 - Tu vérifies et tu sauvegardes toi-même ; « C'est déclaré » la marque dans ton Suivi.
@@ -55,7 +59,10 @@ Autre (et, si proposé : Productivité).
 > - l'adresse de l'onglet ouvert, pour reconnaître la candidature correspondante ;
 > - le texte d'une question libre d'un formulaire, quand tu demandes « Proposer une réponse » ;
 > - l'adresse du formulaire, quand tu cliques sur « J'ai envoyé » ;
-> - la marque « C'est déclaré », sur Job-Room.
+> - la marque « C'est déclaré », sur Job-Room ;
+> - quand tu cliques sur « Envoyer à jobA1 » : le texte de l'annonce de la page (son balisage JobPosting, sinon le texte principal de la page) et son adresse. Sur LinkedIn, seulement l'annonce ouverte. Ta plateforme retire ton nom du texte.
+>
+> **Ce qui est lu sans être envoyé**, à l'ouverture du panneau : le titre, l'entreprise et le lieu de l'annonce de la page, pour les afficher, et le nombre de champs de formulaire.
 >
 > **Ce qui va de ta plateforme à la page**, seulement quand tu cliques sur « Remplir » : tes coordonnées, ta lettre et ton CV, ou les données d'une candidature (Job-Room). Elles sont mises dans les champs du formulaire ; rien n'est envoyé ni enregistré à ta place.
 >
@@ -74,3 +81,4 @@ Autre (et, si proposé : Productivité).
 - Données déclarées : `browsingActivity` (adresse de l'onglet) et `websiteContent` (texte d'une question), vers la plateforme de l'utilisateur seulement.
 - 0.59.0, les codes de vérification (docs/112 §3) : accès facultatif à `https://auth.jobup.ch/*` et `https://auth.jobs.ch/*`, demandé par un bouton du panneau (`permissions.request`). Sur une page de code de ces hôtes, `background.js` appelle la plateforme de l'utilisateur (`/api/extension/codes/expect`, puis `/api/extension/codes?site=…` toutes les 5 s pendant 5 minutes au plus), puis injecte `fillCode` (remplit le champ du code, clique sur le bouton d'envoi du formulaire). Rien n'est lu ni envoyé d'autre depuis ces pages.
 - 0.60.0, la nouvelle fenêtre (docs/142 §1) : seulement l'interface du panneau change. À l'ouverture du panneau, sur l'onglet actif, `countFields` compte les champs de formulaire de la page (pour savoir s'il y a un formulaire à remplir) ; seul ce nombre est lu, et il ne quitte pas le navigateur. La police Figtree est dans le paquet (licence OFL).
+- 0.61.0, envoyer une annonce (docs/142 §3) : `annonce.js` définit une seule fonction, passée à l'onglet actif (`func`) au clic sur l'icône (titre, entreprise, lieu du JobPosting, affichés dans le panneau) et au clic sur « Envoyer à jobA1 » (texte de l'annonce, envoyé à `/api/extension/announce` de la plateforme de l'utilisateur). Aucune nouvelle permission. Sur LinkedIn, seuls les blocs de l'annonce ouverte sont lus.

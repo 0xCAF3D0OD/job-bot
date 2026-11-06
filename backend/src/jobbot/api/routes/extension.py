@@ -6,19 +6,21 @@ Réglages, avec la session habituelle.
 """
 
 from datetime import UTC, date, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
+from jobbot import accounts, manual_offers
 from jobbot.api.routes import applications as application_routes
 from jobbot.api.routes import cvs as cv_routes
 from jobbot.api.routes import letters as letter_routes
 from jobbot.api.routes.orp import application_data
+from jobbot.auth.service import Window
 from jobbot.core.orp import job_room_fill, shift_month
 from jobbot.db.models import Application, DraftKind, ExtensionToken, Offer
-from jobbot.extension import service
+from jobbot.extension import announce, service
 from jobbot.followups.service import local_today
 from jobbot.letters.service import current_draft, load_identity
 from jobbot.mail import site_codes
@@ -46,7 +48,8 @@ class ExtensionMe(BaseModel):
 
 # Formulaires des employeurs (docs/25), Job-Room (docs/70).
 # Les codes des sites (docs/112) : l'extension remplit le code de vérification.
-FEATURES = ["forms", "job-room", "codes"]
+# Envoyer une annonce (docs/142 §3).
+FEATURES = ["forms", "job-room", "codes", "announce"]
 
 
 class OfferBrief(BaseModel):
@@ -394,4 +397,108 @@ async def extension_code(
         return ExtensionCodeOut(code=None)
     return ExtensionCodeOut(
         code=ExtensionCode(site=found.site, code=found.code, received_at=found.received_at)
+    )
+
+
+# --- Envoyer une annonce (docs/142 §3) ----------------------------------------------------
+
+# 30 envois par jour et par compte (en mémoire, comme les autres limites de auth.service).
+ANNOUNCE_LIMIT = 30
+announce_window = Window(limit=ANNOUNCE_LIMIT, period_s=24 * 3600)
+
+
+class AnnounceIn(BaseModel):
+    """Seulement l'annonce : son adresse, le balisage JobPosting s'il existe, et son texte
+    (la description du JobPosting, sinon le texte principal de la page)."""
+
+    url: Annotated[str, Field(min_length=8, max_length=2000)]
+    title: Annotated[str, Field(max_length=300)] | None = None
+    company: Annotated[str, Field(max_length=300)] | None = None
+    location: Annotated[str, Field(max_length=300)] | None = None
+    text: Annotated[str, Field(min_length=1, max_length=manual_offers.MAX_TEXT * 2)]
+    # La réponse à « C'est bien cette offre ? » : « fill » (avec l'id montré) ou « new ».
+    choice: Literal["fill", "new"] | None = None
+    offer_id: int | None = None
+
+    @field_validator("url")
+    @classmethod
+    def _https(cls, value: str) -> str:
+        value = value.strip()
+        if not value.startswith(("https://", "http://")):
+            raise ValueError("adresse de page web attendue")
+        return value
+
+
+class KnownOffer(BaseModel):
+    id: int
+    title: str
+    company: str | None
+    received_at: datetime
+    # Le site de l'alerte qui l'a apportée (« jobs.ch »), s'il y en a une.
+    site: str | None
+
+
+class AnnounceOut(BaseModel):
+    # « filled » : l'offre déjà là est complétée ; « added » : nouvelle offre ;
+    # « confirm » : même poste chez la même entreprise, à confirmer.
+    outcome: Literal["filled", "added", "confirm"]
+    offer_id: int | None = None
+    score: int | None = None
+    # Les mots de la note (« Proche »).
+    label: str | None = None
+    filled: list[str] = []
+    known: KnownOffer | None = None
+
+
+@router.post(
+    "/announce",
+    operation_id="extensionAnnounce",
+    responses={
+        409: {"description": "L'offre à compléter n'est pas celle trouvée"},
+        422: {"description": "Pas d'annonce lisible"},
+        429: {"description": "30 envois par jour au plus"},
+    },
+)
+async def announce_offer(request: Request, body: AnnounceIn) -> AnnounceOut:
+    """« Envoyer à jobA1 » : compléter l'offre de ce lien, demander pour le même poste chez la
+    même entreprise, sinon ajouter l'offre ; puis la renoter. Le texte n'est jamais journalisé."""
+    key = f"announce:{accounts.current()}"
+    # La réponse à « C'est bien cette offre ? » ne compte pas comme un nouvel envoi.
+    if body.choice is None and announce_window.take(key):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            f"{ANNOUNCE_LIMIT} annonces envoyées aujourd'hui : c'est le maximum. Réessaie demain.",
+        )
+    page = announce.Page(
+        url=body.url, text=body.text, title=body.title, company=body.company, location=body.location
+    )
+    try:
+        sent = await announce.send(_runtime(request), page, body.choice, body.offer_id)
+    except announce.ChoiceMismatch:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "ce n'est plus la même offre : renvoie l'annonce"
+        ) from None
+    except announce.SendProblem as exc:
+        code = (
+            status.HTTP_429_TOO_MANY_REQUESTS
+            if exc.limit
+            else status.HTTP_422_UNPROCESSABLE_CONTENT
+        )
+        raise HTTPException(code, exc.message) from None
+    known = sent.known
+    return AnnounceOut(
+        outcome=sent.outcome,
+        offer_id=sent.offer_id,
+        score=sent.score,
+        label=sent.label,
+        filled=sent.filled,
+        known=KnownOffer(
+            id=known.id,
+            title=known.title,
+            company=known.company,
+            received_at=known.received_at,
+            site=known.site,
+        )
+        if known
+        else None,
     )

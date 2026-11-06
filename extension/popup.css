@@ -145,6 +145,13 @@ main {
 .checks svg { flex: none; color: var(--success); }
 .done-mark { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 26px; background: var(--success-soft); color: var(--success); }
 
+.stack { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.card { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.card.gap { gap: 8px; }
+.card .title-md { overflow-wrap: anywhere; }
+.title-sm { font-size: 16px; font-weight: 800; line-height: 21px; }
+.meta { color: var(--text-secondary); }
+
 /* Un seul bouton plein par état, en bas. */
 .actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
 .actions.tight { margin-top: 0; gap: 4px; }

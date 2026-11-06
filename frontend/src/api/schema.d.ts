@@ -798,6 +798,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/announce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Announce Offer
+         * @description « Envoyer à jobA1 » : compléter l'offre de ce lien, demander pour le même poste chez la
+         *     même entreprise, sinon ajouter l'offre ; puis la renoter. Le texte n'est jamais journalisé.
+         */
+        post: operations["extensionAnnounce"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/extension-tokens": {
         parameters: {
             query?: never;
@@ -3740,6 +3761,47 @@ export interface components {
              */
             guest_mailbox: boolean;
         };
+        /**
+         * AnnounceIn
+         * @description Seulement l'annonce : son adresse, le balisage JobPosting s'il existe, et son texte
+         *     (la description du JobPosting, sinon le texte principal de la page).
+         */
+        AnnounceIn: {
+            /** Url */
+            url: string;
+            /** Title */
+            title?: string | null;
+            /** Company */
+            company?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Text */
+            text: string;
+            /** Choice */
+            choice?: ("fill" | "new") | null;
+            /** Offer Id */
+            offer_id?: number | null;
+        };
+        /** AnnounceOut */
+        AnnounceOut: {
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "filled" | "added" | "confirm";
+            /** Offer Id */
+            offer_id?: number | null;
+            /** Score */
+            score?: number | null;
+            /** Label */
+            label?: string | null;
+            /**
+             * Filled
+             * @default []
+             */
+            filled: string[];
+            known?: components["schemas"]["KnownOffer"] | null;
+        };
         /** AnswerOut */
         AnswerOut: {
             /** Text */
@@ -5756,6 +5818,22 @@ export interface components {
         KindIn: {
             /** Kind */
             kind: "certificate" | null;
+        };
+        /** KnownOffer */
+        KnownOffer: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Site */
+            site: string | null;
         };
         /**
          * Language
@@ -9941,6 +10019,51 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    extensionAnnounce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnounceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnounceOut"];
+                };
+            };
+            /** @description L'offre à compléter n'est pas celle trouvée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Pas d'annonce lisible */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 30 envois par jour au plus */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
