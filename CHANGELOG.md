@@ -429,3 +429,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.215 | Candidatures sur téléphone : l'entreprise et le lieu sur une ligne, l'anneau de 48 px ; les offres « Loin » cachées derrière « Afficher aussi les offres loin de ton profil (n) » | livrée |
 | 1.6.216 | Ma candidature, étape CV sur téléphone : FR / DE / EN en tête de la carte (une autre langue propose « Préparer à nouveau en … »), les mots mis en avant sous l'aperçu, « Blocs du CV » replié | livrée |
 | 1.6.217 | Ma candidature, étape Postuler sur téléphone : prénom, nom, e-mail, téléphone et localité à recopier, les autres champs sous « Autres champs », replié | livrée |
+| 1.6.218 | Bilan › Résultats sur téléphone : plus de période (Un mois / 3 mois / Tout), la carte du meilleur site gardée, la phrase sans mot en bleu, tuiles et parcours plus serrés | livrée |
