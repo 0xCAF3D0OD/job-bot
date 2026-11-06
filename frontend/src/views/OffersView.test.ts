@@ -859,3 +859,25 @@ describe("« Afficher aussi » : Écartées et Expirées (docs/139 étapes 5c et
     expect(lastQuery().with_expired).toBeUndefined();
   });
 });
+
+// Vidéo de Kevin (6.11) : sur ordinateur, l'adresse /offres/384?offre=675 (arrivé par « Retour à l'offre ») rouvrait
+// toujours la 384 ; chaque clic dans la liste revenait sur elle.
+describe("Offres, sous-page ouverte sur ordinateur", () => {
+  it("devient ?offre=, et un clic ouvre l'offre cliquée", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/profile-chunks" ? { data: [] } : page([offer(1, "Administrateur"), offer(2, "DevOps Engineer")])),
+    );
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/offres/:id(\\d+)?", name: "offers", component: OffersView }],
+    });
+    await router.push("/offres/1");
+    const wrapper = mount(OffersView, { global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/offres?offre=1");
+    await wrapper.findAll("[data-test=offer]")[1]!.trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/offres?offre=2");
+    expect(wrapper.find("[data-test=offer-detail-title]").text()).toContain("DevOps Engineer");
+  });
+});

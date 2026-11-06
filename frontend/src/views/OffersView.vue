@@ -204,7 +204,8 @@ watch(selected, (offer) => {
 
 // L'offre ouverte dans l'adresse : sur téléphone, la sous-page /candidatures/offres/12 (O1) ; sur ordinateur,
 // ?offre=12 à côté de la liste. Les filtres de la liste restent dans l'adresse.
-const routeOfferId = (): number => Number(route.params.id || route.query.offre);
+// Sur ordinateur, ?offre= passe avant le chemin : sinon /offres/384?offre=675 rouvrait toujours la 384 (Kevin, 6.11).
+const routeOfferId = (): number => Number(phone.value ? route.params.id || route.query.offre : route.query.offre || route.params.id);
 // Fermer la sous-page revient à la liste par l'historique : même défilement, mêmes filtres, et le geste de
 // retour d'iOS fait la même chose. Arrivé directement sur la sous-page, on remplace l'adresse.
 function leaveOffer(): void {
@@ -224,6 +225,11 @@ async function openFromQuery(): Promise<void> {
     void router.replace({ name: "offers", params: { id: String(id) }, query: { ...route.query, offre: undefined } });
     return;
   }
+  // Sur ordinateur, la sous-page (« Retour à l'offre » de la préparation, ou l'écran élargi) devient ?offre=.
+  if (!phone.value && route.params.id) {
+    void router.replace({ name: "offers", params: {}, query: { ...route.query, offre: String(id) } });
+    return;
+  }
   if (!items.value.some((o) => o.id === id)) {
     const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
     if (!data) return;
@@ -236,7 +242,7 @@ async function openFromQuery(): Promise<void> {
 // L'adresse suit l'offre ouverte : « Retour » du navigateur la referme (Nielsen 3, audit du
 // 22.10.2026).
 watch(
-  () => [route.params.id, route.query.offre],
+  () => [route.params.id, route.query.offre, phone.value],
   () => {
     if (routeOfferId()) void openFromQuery();
     else selectedId.value = null;
