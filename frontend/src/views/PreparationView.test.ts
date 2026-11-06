@@ -325,12 +325,16 @@ describe("barre de candidature", () => {
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, sent_at: "2026-10-05", application_url: "https://acme.example/jobs/1" });
 
-    // « Candidature notée » (C9) à la place de la page : l'objectif ORP, « Offre suivante », « Annuler ».
+    // « Candidature envoyée. » (maquette CandidatureEnvoyee, docs/141, 8) à la place de la page : le personnage à
+    // l'avion, ce qui compte pour l'ORP, « Voir mes candidatures », « Préparer la prochaine », « Je n'ai pas postulé ».
     const done = wrapper.find("[data-test=sent-moment]");
-    expect(done.find("h1").text()).toBe("Candidature notée");
-    expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA, postulée chez l'employeur.");
-    expect(done.find("[data-test=sent-orp]").text()).toContain("Encore 1 recherche");
-    expect(done.find("[data-test=sent-orp]").text()).toContain("Objectif ORP d'octobre");
+    expect(done.find("h1").text()).toBe("Candidature envoyée.");
+    expect(done.find("[role=status]").exists()).toBe(true);
+    expect(done.find("[data-illustration=personnage]").attributes("data-pose")).toBe("avion");
+    expect(done.find("[data-mood-animation]").exists()).toBe(false);
+    expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA. Elle compte pour l’ORP : 9 recherches sur 10 ce mois.");
+    expect(done.find("[data-test=sent-follow-up]").exists()).toBe(false);
+    expect(done.find("[data-test=sent-applications]").attributes("href")).toBe("/candidatures/suivi");
     expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
     expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
 
@@ -391,7 +395,7 @@ describe("barre de candidature", () => {
     await again.find("[data-test=already-applied]").trigger("click");
     await flushPromises();
     expect(again.find("[data-test=goal-reached]").exists()).toBe(false);
-    expect(again.find("[data-test=sent-moment] h1").text()).toBe("Candidature notée");
+    expect(again.find("[data-test=sent-moment] h1").text()).toBe("Candidature envoyée.");
     localStorage.clear();
   });
 
@@ -413,8 +417,8 @@ describe("barre de candidature", () => {
     await wrapper.find("[data-test=already-applied]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/applications", { body: expect.objectContaining({ offer_id: 7, sent_at: "2026-10-05" }) });
-    expect(wrapper.find("[data-test=sent-moment] h1").text()).toBe("Candidature notée");
-    expect(wrapper.find("[data-test=sent-orp]").text()).toContain("3 recherches ce mois");
+    expect(wrapper.find("[data-test=sent-moment] h1").text()).toBe("Candidature envoyée.");
+    expect(wrapper.find("[data-test=sent-orp]").text()).toBe("3 recherches");
   });
 
   it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d'étape « Suivre » (Q1)", async () => {

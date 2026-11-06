@@ -17,13 +17,13 @@ import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import ApplicationSent from "../components/ApplicationSent.vue";
 import GoalReached from "../components/GoalReached.vue";
 import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FormField from "../components/FormField.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
-import LiquidCircle from "../components/LiquidCircle.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import HoverNote from "../components/HoverNote.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
@@ -36,7 +36,7 @@ import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { dateInSentence, dateWithTime } from "../dates";
-import { expiredText, ofMonth } from "../format";
+import { expiredText } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
@@ -88,8 +88,8 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 );
 const applyError = ref("");
 const applyBusy = ref(false);
-// L'écran « Candidature notée » (C9) : le poste, où, et ce qui reste pour l'objectif ORP du mois.
-type Sent = { id: number; company: string; title: string; where: string; month: string; count: number | null; target: number | null };
+// L'écran « Candidature envoyée. » (docs/141, 8) : le poste, ce qui compte pour l'ORP, la relance prévue.
+type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null };
 const sent = ref<Sent | null>(null);
 // « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
 const goal = ref<OrpMonth | null>(null);
@@ -113,7 +113,7 @@ async function markApplied(): Promise<void> {
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
     goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
-    sent.value = { id: data.id, company: data.company, title: data.job_title, where: applyLink.value?.where ?? "", month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null };
+    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
@@ -153,14 +153,6 @@ function cancelApplied(): void {
     },
   });
 }
-
-const orpLine = computed(() => {
-  const s = sent.value;
-  if (!s || s.count === null) return "";
-  if (!s.target) return `${s.count} ${s.count === 1 ? "recherche" : "recherches"} ce mois`;
-  const left = s.target - s.count;
-  return left > 0 ? `Encore ${left} ${left === 1 ? "recherche" : "recherches"}` : "Objectif atteint";
-});
 
 const offer = ref<Offer | null>(null);
 // Les étapes (C2) : Lettre, CV, Postuler (Q1 : plus de « Suivre »).
@@ -575,54 +567,17 @@ onMounted(() => void load());
     :data="goal"
     @cancel="cancelApplied"
   />
-  <!-- « Candidature notée » (C9) : un écran entier à la place de la page, comme dans la maquette. -->
-  <section
+  <!-- « Candidature envoyée. » (maquette CandidatureEnvoyee, docs/141, 8) : un écran entier à la place de la page. -->
+  <ApplicationSent
     v-else-if="sent"
-    class="band prep-sent"
-    data-test="sent-moment"
-  >
-    <FaceState
-      title="Candidature notée"
-      heading="h1"
-      mood="ravi"
-      animation="envoyee"
-      role="status"
-    >
-      <p>{{ sent.title }} chez {{ sent.company }}{{ sent.where ? `, postulée ${sent.where}` : "" }}.</p>
-    </FaceState>
-    <RouterLink
-      v-if="orpLine"
-      to="/bilan"
-      class="prep-sent-orp"
-      data-test="sent-orp"
-    >
-      <LiquidCircle
-        v-if="sent.target"
-        :count="sent.count ?? 0"
-        :target="sent.target"
-        :size="64"
-      />
-      <span><strong>{{ orpLine }}</strong><span>Objectif ORP {{ ofMonth(sent.month) }}</span></span>
-      <AppIcon name="chevron" />
-    </RouterLink>
-    <div class="prep-sent-actions">
-      <RouterLink
-        to="/candidatures/offres"
-        class="button-link primary-link"
-        data-test="next-offer"
-      >
-        Offre suivante
-      </RouterLink>
-      <button
-        type="button"
-        class="link prep-sent-cancel"
-        data-test="cancel-applied"
-        @click="cancelApplied"
-      >
-        Je n'ai pas postulé
-      </button>
-    </div>
-  </section>
+    :title="sent.title"
+    :company="sent.company"
+    :count="sent.count"
+    :target="sent.target"
+    :follow-up-on="sent.followUpOn"
+    cancellable
+    @cancel="cancelApplied"
+  />
   <!-- La tête (maquette Preparer, étape 7a) : le retour à l'offre, « Ma candidature », puis l'offre en une
        ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre, D3) et les étapes. -->
   <PageHero

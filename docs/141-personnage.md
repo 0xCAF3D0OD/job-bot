@@ -75,3 +75,8 @@ personnage (PR 4).
   loupe ; l'image n'était plus utilisée).
 - Maintenance et pas de connexion : 250 px sur téléphone (maquette), 290 px sur ordinateur. Les deux poses sont
   chargées d'avance, puisque le réseau peut manquer quand l'écran s'affiche.
+- Candidature envoyée (PR 3) : remplace « Candidature notée » dans Ma candidature et suit aussi « Marquer comme
+  envoyée » (formulaire de la liste des offres). « Je n'ai pas postulé » reste en lien discret dans Ma candidature
+  (la maquette ne l'a pas, mais c'est la seule façon d'annuler). Sur ordinateur, l'en-tête « jobA1 » de l'écran
+  laisse la place à celui de l'application.
+- Objectif ORP atteint (PR 3) : le personnage à 240 px remplace le soleil qui saute et les confettis.
