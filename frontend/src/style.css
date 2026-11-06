@@ -1490,6 +1490,7 @@ button, .button-link { max-width: 100%; }
   .jobs-tools .offers-add-compact { flex: none; min-height: var(--field-h); padding: 0 var(--space-4); border-radius: var(--radius-card); }
   .jobs-segments { margin-bottom: var(--space-2); }
   .offers-spontaneous { margin: var(--space-6) 0 0; text-align: center; }
+  .offers-far { display: block; min-height: 3rem; margin: var(--space-3) auto 0; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: none; color: var(--primary-text); font: inherit; font-weight: var(--weight-bold); white-space: normal; }
   .topbar[data-variant="tab"] .topbar-title { display: block; margin: 0; overflow: hidden; color: var(--text); font-size: var(--title-tab); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: -0.02em; text-overflow: ellipsis; white-space: nowrap; }
   /* Le titre visible est celui de l'en-tête ; le h1 de la page reste pour les lecteurs d'écran. */
   :root:has(.topbar[data-variant="tab"]) main :is(.page-head, .jobs-head, .jobs-title) > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

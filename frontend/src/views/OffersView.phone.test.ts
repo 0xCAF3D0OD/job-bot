@@ -28,11 +28,11 @@ const offer = (id: number, title: string) => ({
   filter_reasons: [],
 });
 const counts = { to_review: 1, pending: 1, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 1 };
-const facets = { sources: [], cantons: [], scores: [], unscored: 0 };
+const facets = { sources: [], cantons: [], scores: [] as number[], unscored: 0 };
 
-async function mountAt(path: string, items: unknown[]) {
+async function mountAt(path: string, items: unknown[], pageFacets: typeof facets = facets) {
   GET.mockImplementation((p: string) =>
-    Promise.resolve(p === "/api/offers" ? { data: { items, total: items.length, counts, facets } } : { data: null }),
+    Promise.resolve(p === "/api/offers" ? { data: { items, total: items.length, counts, facets: pageFacets } } : { data: null }),
   );
   const router = createRouter({
     history: createMemoryHistory(),
@@ -59,6 +59,32 @@ afterEach(() => {
 });
 
 describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
+  it("les offres « Loin » cachées derrière « Afficher aussi les offres loin de ton profil (n) » (Kevin, 6.11)", async () => {
+    const close = { ...offer(1, "DevOps Engineer"), score: 82 };
+    const far = { ...offer(2, "Data Engineer"), score: 41 };
+    const unscored = { ...offer(3, "SRE"), score: null };
+    // Les tranches de 5 points du serveur : 2 offres sous 50 dans toute la liste, 1 au-dessus.
+    const scores = Array.from({ length: 20 }, (_, i) => (i === 8 ? 2 : i === 16 ? 1 : 0));
+    const host = await mountAt("/offres", [close, far, unscored], { ...facets, scores });
+    const titles = () => host.findAll("[data-test=offer] .offer-line-title").map((t) => t.text());
+    expect(titles()).toEqual(["DevOps Engineer", "SRE"]);
+    const toggle = host.find("[data-test=offers-far]");
+    expect(toggle.text()).toBe("Afficher aussi les offres loin de ton profil (2)");
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+    await toggle.trigger("click");
+    expect(titles()).toEqual(["DevOps Engineer", "Data Engineer", "SRE"]);
+    expect(toggle.text()).toBe("Masquer les offres loin de ton profil");
+    expect(toggle.attributes("aria-expanded")).toBe("true");
+  });
+
+  it("un filtre de note posé : les offres « Loin » restent dans la liste, sans le lien", async () => {
+    const far = { ...offer(2, "Data Engineer"), score: 41 };
+    const scores = Array.from({ length: 20 }, (_, i) => (i === 8 ? 1 : 0));
+    const host = await mountAt("/offres?note=0-49", [far], { ...facets, scores });
+    expect(host.findAll("[data-test=offer]")).toHaveLength(1);
+    expect(host.find("[data-test=offers-far]").exists()).toBe(false);
+  });
+
   it("comme la maquette : ni phrase au-dessus de la liste, ni « Il te manque » ; deux initiales sur le carré", async () => {
     const gap = { ...offer(1, "Data Engineer"), company: "Léman Data SA", keywords_asks: [{ text: "Spark", covered: false }] };
     const host = await mountAt("/offres", [gap]);
