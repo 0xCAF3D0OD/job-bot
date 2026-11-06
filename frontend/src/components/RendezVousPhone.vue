@@ -326,7 +326,7 @@ const last = computed<Meeting | null>(() => {
 <style scoped>
 /* Les valeurs de la maquette (RendezVous.dc.html), écrites avec les échelles (scales.test.ts) :
    14 px = --space-4 − 2 px, 10 px = --space-2 + 2 px, 15 px = --font-small + 1 px, 58 px = --btn-primary + 4 px. */
-.rdv-part { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.rdv-part { min-width: 0; display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
 .rdv-title {
   display: flex; align-items: baseline; gap: var(--space-2); margin: calc(var(--space-1) * 1.5) var(--space-1) 0;
   font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-tight);
@@ -373,7 +373,7 @@ const last = computed<Meeting | null>(() => {
   flex: none; width: calc(var(--space-1) * 1.5); height: calc(var(--space-1) * 1.5);
   margin: var(--space-2) calc(var(--space-1) * 1.5) 0 var(--space-1); border-radius: var(--radius-pill); background: var(--text-secondary);
 }
-.rdv-line { display: flex; flex-direction: column; gap: 1px; }
+.rdv-line { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .rdv-line-label { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-line-text, .rdv-questions-list span, .rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
 .rdv-questions { border-top: 1px solid var(--line-soft); }
@@ -381,8 +381,8 @@ const last = computed<Meeting | null>(() => {
   display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-tertiary);
   padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; cursor: pointer;
 }
-.rdv-questions-title { font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
-.rdv-questions-count { display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.rdv-questions-title { flex: 1; min-width: 0; text-align: left; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.rdv-questions-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .rdv-questions-count svg { transition: transform 200ms; }
 .rdv-questions-count svg.open { transform: rotate(180deg); }
 .rdv-questions-list { margin: 0 0 calc(var(--space-1) * 1.5); padding: 0; list-style: none; }
@@ -423,6 +423,6 @@ const last = computed<Meeting | null>(() => {
   align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-secondary);
   padding: 0 var(--space-4); font: inherit; text-align: left; cursor: pointer;
 }
-.rdv-log-title { font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
-.rdv-log-count { display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); color: var(--text-secondary); }
+.rdv-log-title { flex: 1; min-width: 0; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.rdv-log-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); color: var(--text-secondary); }
 </style>
