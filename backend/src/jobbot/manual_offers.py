@@ -8,7 +8,7 @@ robots n'est jamais contournée : on propose de coller le texte.
 
 import re
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
