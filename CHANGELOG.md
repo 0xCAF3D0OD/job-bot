@@ -438,3 +438,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.224 | Pastille de Candidatures et « Afficher n offres » sur téléphone : sans les offres « Loin » cachées, comme la liste. | livré. |
 | 1.6.225 | Candidatures › Rendez-vous sur téléphone selon la maquette : « À venir » (le rendez-vous ORP et les entretiens d'embauche, par date), la carte ORP avec sa feuille, « Derniers rendez-vous ORP » et le carnet | livrée |
 | 1.6.226 | Postuler sur téléphone : « Modèle Moderne, en français. » sous Lettre.pdf / CV.pdf, avec le modèle et la langue de la lettre choisis. | livré. |
+| 1.6.227 | Le personnage du kit sur les premiers pas (étape CV et « Tout est prêt. »), la connexion et la page introuvable, avec la règle « un seul des trois par écran » (docs/141) et son test | livrée |
