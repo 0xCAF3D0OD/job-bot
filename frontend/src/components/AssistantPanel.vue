@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Illustration from "./Illustration.vue";
+import SceneIllustration from "./SceneIllustration.vue";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -477,7 +477,7 @@ const headItems: MoreMenuItem[] = [
         </template>
         <template v-else-if="!lines.length">
           <!-- Avant la première question (planche « Illustrations », règle §4). -->
-          <Illustration
+          <SceneIllustration
             name="assistant-vide"
             class="spot assistant-spot"
             sizes="(max-width: 820px) 260px, 424px"

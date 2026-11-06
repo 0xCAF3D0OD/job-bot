@@ -27,7 +27,7 @@ Chaque fichier explique **pourquoi** une fonction existe, et il n'est plus réé
 | L'assistant | 24, 52, 53 |
 | Comptes, accueil, offre payante | 65, 66, 102, 104, 105, 113, 121, 125, 128 |
 | L'interface (pages, règles, échelles) | 10, 14, 18, 19, 21, 28, 29, 32, 45, 48, 54, 57, 63, 74, 84, 88 à 92, 94, 95, 106, 108 à 110, 118, 119, 126, 129 à 133, 135 |
-| Le téléphone | 33, 34, 36, 51, **139 (nouvelle identité mobile, en cours)** |
+| Le téléphone | 33, 34, 36, 51, **139 (nouvelle identité mobile, en cours)**, 141 (le personnage) |
 | Logo, illustrations, mouvement | 58 à 62, 67, 68, 96 à 101, 103, 107, 123 |
 | Exploitation, sécurité, démo | 71, 72, 77, 78, 79, 80, 82, 117, 136 |
 | Entraînement aux entretiens | 75, 137, 138, 140 (connexion de Get'emAll) |

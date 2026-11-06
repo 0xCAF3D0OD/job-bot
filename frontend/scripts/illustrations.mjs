@@ -3,7 +3,7 @@
 //   node scripts/illustrations.mjs <dossier des images transparentes> [<dossier de la série sombre>]
 //
 // Pour chaque nom de ILLUSTRATIONS, prend l'original (1000 px de large, WebP transparent) et écrit
-// src/assets/illustrations/<nom>-480.webp et <nom>-800.webp : le navigateur prend la plus petite
+// public/illustrations/<nom>-480.webp et <nom>-800.webp : le navigateur prend la plus petite
 // qui reste nette (240 px affichés sur téléphone, jusqu'à 440 px sur ordinateur). Si la série sombre
 // contient la même image, elle est écrite à côté (<nom>-sombre-480.webp…) ; sinon, en sombre, la
 // version claire est simplement assombrie (feuille de style).
@@ -49,7 +49,7 @@ export const ILLUSTRATIONS = {
   introuvable: { source: "002_action_required" },
 };
 
-const OUT = fileURLToPath(new URL("../src/assets/illustrations/", import.meta.url));
+const OUT = fileURLToPath(new URL("../public/illustrations/", import.meta.url));
 
 // Les marges transparentes sont rognées : l'image remplit la place qu'on lui donne.
 async function prepare(file, { efface, entiere }) {

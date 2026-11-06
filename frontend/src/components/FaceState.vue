@@ -12,7 +12,7 @@ import { defineAsyncComponent } from "vue";
 import type { Mood } from "../brandPaths";
 import FaceMark from "./FaceMark.vue";
 import type { MoodKind } from "./MoodAnimation.vue";
-import Illustration, { type IllustrationName } from "./Illustration.vue";
+import SceneIllustration, { type SceneName } from "./SceneIllustration.vue";
 
 // Un état de jobA1 (docs/123 §2, T) : le visage de 120 px au centre, le titre, une ligne. Pour
 // une liste vide et pour une page qui charge (`waiting` : l'œil et la bille pulsent).
@@ -27,7 +27,7 @@ withDefaults(
     mood?: Mood;
     waiting?: boolean;
     heading?: "h1" | "h2" | "p";
-    illustration?: IllustrationName;
+    illustration?: SceneName;
     animation?: MoodKind;
   }>(),
   {
@@ -41,7 +41,7 @@ withDefaults(
 
 <template>
   <div class="face-state">
-    <Illustration
+    <SceneIllustration
       v-if="illustration"
       :name="illustration"
       class="spot"

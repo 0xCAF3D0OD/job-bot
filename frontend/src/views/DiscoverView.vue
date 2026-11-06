@@ -3,7 +3,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 import AppIcon from "../components/AppIcon.vue";
 import DiscoverMock, { type MockKind } from "../components/DiscoverMock.vue";
-import Illustration, { type IllustrationName } from "../components/Illustration.vue";
+import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
 import { useAuth } from "../composables/useAuth";
 
 // La plateforme, pour qui n'est pas connecté (docs/67, compléments) : un parcours façon Duolingo.
@@ -14,7 +14,7 @@ const { loggedIn, me } = useAuth();
 
 // `below` : sur téléphone, le personnage passe sous la maquette, là où il cachait du texte ou une
 // icône (retour du 2026-10-20 : la note « 61 », « Remettre », « soins »).
-const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: string; below?: boolean }[] = [
+const SCENES: { art: SceneName; mock: MockKind; title: string; text: string; below?: boolean }[] = [
   {
     art: "alertes-carte",
     mock: "alerts",
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
     data-test="discover"
   >
     <header class="discover-hero">
-      <Illustration
+      <SceneIllustration
         name="porte-ouverte"
         class="discover-hero-art"
       />
@@ -211,7 +211,7 @@ onBeforeUnmount(() => {
         >
           <div :class="['discover-stage', { below: scene.below }]">
             <DiscoverMock :kind="scene.mock" />
-            <Illustration
+            <SceneIllustration
               :name="scene.art"
               class="discover-character"
             />

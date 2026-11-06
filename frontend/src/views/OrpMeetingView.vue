@@ -8,7 +8,7 @@ import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
-import Illustration from "../components/Illustration.vue";
+import SceneIllustration from "../components/SceneIllustration.vue";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import IconButton from "../components/IconButton.vue";
@@ -366,7 +366,7 @@ onMounted(() => void load());
         >
           <!-- Aucun rendez-vous prévu (planche « Illustrations ») : l'illustration au-dessus du formulaire ; pas
                avec l'écran « Pas encore de candidature », une seule par écran. -->
-          <Illustration
+          <SceneIllustration
             v-if="!meeting && !editing && !noApplications"
             name="rendez-vous-vide"
             class="spot"

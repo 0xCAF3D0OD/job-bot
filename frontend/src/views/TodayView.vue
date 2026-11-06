@@ -11,7 +11,7 @@ import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import Illustration from "../components/Illustration.vue";
+import SceneIllustration from "../components/SceneIllustration.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpMonth from "../components/OrpMonth.vue";
@@ -422,7 +422,7 @@ const { me } = useAuth();
           data-test="triage-done"
         >
           <!-- Le tri fait : l'illustration de la réussite (planche « Illustrations », règle §4). -->
-          <Illustration
+          <SceneIllustration
             v-if="triageDone"
             name="reussite"
             class="spot"
