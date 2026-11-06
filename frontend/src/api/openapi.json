@@ -21931,6 +21931,26 @@
               }
             ],
             "title": "Rhythm Pause Until"
+          },
+          "notify_offers": {
+            "type": "boolean",
+            "title": "Notify Offers",
+            "default": true
+          },
+          "notify_follow_ups": {
+            "type": "boolean",
+            "title": "Notify Follow Ups",
+            "default": true
+          },
+          "notify_orp": {
+            "type": "boolean",
+            "title": "Notify Orp",
+            "default": true
+          },
+          "notify_news": {
+            "type": "boolean",
+            "title": "Notify News",
+            "default": false
           }
         },
         "type": "object",

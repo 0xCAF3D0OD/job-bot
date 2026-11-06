@@ -95,6 +95,11 @@ class SettingsModel(BaseModel):
     # La pause (0.68.1) : du … au …, comprises ; ni dose, ni offres, ni signal de retard.
     rhythm_pause_from: date | None = None
     rhythm_pause_until: date | None = None
+    # Ce qui part sur le téléphone (maquette Réglages, Kevin, 6.11) : la cloche garde tout.
+    notify_offers: bool = True
+    notify_follow_ups: bool = True
+    notify_orp: bool = True
+    notify_news: bool = False
 
     @model_validator(mode="after")
     def _pause(self) -> "SettingsModel":

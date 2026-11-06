@@ -57,6 +57,25 @@ QUIET_KINDS = frozenset(
 )
 
 
+# Les interrupteurs des Réglages (maquette Réglages, Kevin, 6.11) : éteint, rien ne part sur
+# le téléphone, la cloche garde l'alerte. La remise des preuves ORP (date limite) et les alertes
+# techniques n'ont pas d'interrupteur. « Actualités et formations » n'a pas encore d'envoi.
+SWITCHES = {
+    "offers": "notify_offers",
+    "follow_up": "notify_follow_ups",
+    "contact_follow_up": "notify_follow_ups",
+    "training_funding": "notify_follow_ups",
+    "orp_target": "notify_orp",
+}
+
+
+async def switched_off(session: AsyncSession, kind: str) -> bool:
+    key = SWITCHES.get(kind)
+    if key is None:
+        return False
+    return await session.scalar(select(Setting.value).where(Setting.key == key)) is False
+
+
 @dataclass(frozen=True)
 class Message:
     title: str
@@ -118,6 +137,8 @@ async def deliver(
         )
         target = await phone_settings(session, runtime.settings)
         if kind in QUIET_KINDS and not await rhythm.is_research_day(session):
+            target = None
+        if target is not None and await switched_off(session, kind):
             target = None
     if target is None:
         return
