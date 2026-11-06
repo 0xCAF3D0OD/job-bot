@@ -6,7 +6,7 @@ import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from
 import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import TemplatePicker from "../components/TemplatePicker.vue";
-import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
+import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -235,6 +235,14 @@ const shownLanguage = computed<string>({
 // Le bouton plein de la barre (C3) : « Rédiger… » quand il y a quelque chose à rédiger, sinon rien
 // (« Continuer vers le CV » prend la place).
 const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
+// Sous Lettre.pdf / CV.pdf (maquette Preparer) : le modèle choisi et la langue de la lettre, « Modèle Moderne, en
+// français. » ; sans lettre, le modèle seul.
+const templateNote = computed(() => {
+  if (!currentLetterId.value && !currentCvId.value) return "";
+  const name = DOC_TEMPLATES.find((t) => t.value === template.value)?.label ?? "";
+  const language = current(letters.value)?.language;
+  return language ? `Modèle ${name}, en ${LANGUAGE_IN[language]}.` : `Modèle ${name}.`;
+});
 const writeLabel = computed(() => {
   const chosen = language.value;
   if (!selected.value) return chosen ? `Rédiger en ${LANGUAGE_IN[chosen]}` : "Rédiger la lettre";
@@ -374,6 +382,8 @@ async function write(force = false): Promise<void> {
         language: language.value || null,
         instruction: instruction.value.trim() || null,
         base_draft_id: instruction.value.trim() && selectedId.value ? selectedId.value : null,
+        // La lettre doit tenir sur une page A4 dans ce modèle (mesurée sur le PDF par le serveur).
+        modele: template.value,
       },
     });
     // Le compteur de la formule suit ; à la limite, la ligne grise dit pourquoi (docs/125 §4).
@@ -550,14 +560,57 @@ function sources(ids: number[]): string {
     .join(", ");
 }
 
-// Le nom d'une version : les six premiers mots de sa consigne, sans « … » (règle §2) ; la consigne
-// entière au survol et au focus (WCAG 1.4.13). Une ligne courte qui ne déborde jamais de la colonne.
-const NAME_WORDS = 6;
+// Une page A4 (6.11.2026) : le serveur construit le PDF dans le modèle choisi et compte ses pages. La ligne
+// dit « Tient sur une page A4 » ou de combien la lettre déborde, et l'aperçu marque la fin de la page 1.
+type LetterPage = { fits: boolean; overflow_lines: number; break_paragraph: number | null; break_word: number | null };
+const page = ref<LetterPage | null>(null);
+let pageRequest = 0;
+async function loadPage(): Promise<void> {
+  const letter = selected.value;
+  const ticket = ++pageRequest;
+  if (!letter) {
+    page.value = null;
+    return;
+  }
+  try {
+    const { data } = await api.GET("/api/letters/{draft_id}/page", { params: { path: { draft_id: letter.id }, query: { modele: template.value } } });
+    if (ticket === pageRequest) page.value = data ?? null;
+  } catch {
+    if (ticket === pageRequest) page.value = null;
+  }
+}
+watch(() => [selected.value?.id, selected.value?.edited_at, template.value], () => void loadPage());
+const pageLine = computed(() => {
+  const value = page.value;
+  if (!value || dirty.value) return "";
+  if (value.fits) return "Tient sur une page A4.";
+  return `Déborde de ${value.overflow_lines} ligne${value.overflow_lines > 1 ? "s" : ""} :`;
+});
+// La marque de fin de page : après le paragraphe où la page 1 se termine (-1 : avant le premier).
+const pageEnd = computed<{ after: number; text: string } | null>(() => {
+  const value = page.value;
+  if (!value || value.fits || dirty.value || value.break_paragraph === null || !draft.value) return null;
+  const paragraphs = draft.value.paragraphs;
+  const index = value.break_paragraph;
+  if (index >= paragraphs.length) return { after: paragraphs.length - 1, text: "Fin de la page A4 : la suite passe en page 2." };
+  const words = paragraphs[index]?.text.split(/\s+/).filter(Boolean) ?? [];
+  const kept = value.break_word ?? 0;
+  if (kept <= 0) return { after: index - 1, text: "Fin de la page A4 : la suite passe en page 2." };
+  const last = words.slice(Math.max(0, kept - 4), kept).join(" ");
+  return { after: index, text: `Fin de la page A4 dans ce paragraphe, après «\u00a0${last}\u00a0».` };
+});
+function shorten(): void {
+  instruction.value = "Raccourcir pour tenir sur une page A4";
+  void write();
+}
+
+// Le nom d'une version : un nom court donné par le serveur (« Version 3 », « Plus courte » pour une
+// consigne de longueur) ; la consigne entière en sous-titre, jamais coupée au milieu d'un mot (6.11.2026).
 function versionName(letter: Letter): string {
-  const words = (letter.instruction ?? "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return "Première rédaction";
-  const name = words.slice(0, NAME_WORDS).join(" ").replace(/[,;:.]+$/, "");
-  return name.charAt(0).toUpperCase() + name.slice(1);
+  return letter.name;
+}
+function versionDescription(letter: Letter): string {
+  return letter.instruction?.trim() || versionMeta(letter);
 }
 function versionMeta(letter: Letter): string {
   // L'heure compte : plusieurs versions le même jour (« modifiée aujourd'hui à 14 h 05 »).
@@ -761,6 +814,13 @@ onMounted(() => void load());
                 data-test="sheet-cv"
               ><AppIcon name="file" />CV.pdf</a>
             </PrepCertificates>
+            <p
+              v-if="phone && templateNote"
+              class="apply-where-text apply-template-note"
+              data-test="apply-template-note"
+            >
+              {{ templateNote }}
+            </p>
           </section>
           <section
             class="doc-card apply-copy"
@@ -973,6 +1033,13 @@ onMounted(() => void load());
                 <span class="print-only">{{ draft.subject }}</span>
               </p>
               <p>{{ doc.salutation }}</p>
+              <p
+                v-if="pageEnd?.after === -1"
+                class="page-end screen-only"
+                data-test="page-end"
+              >
+                {{ pageEnd.text }}
+              </p>
               <div
                 v-for="(paragraph, index) in draft.paragraphs"
                 :key="index"
@@ -1007,6 +1074,13 @@ onMounted(() => void load());
                   v-if="sources(paragraph.chunk_ids)"
                   class="chunk-refs screen-only"
                 >Blocs : {{ sources(paragraph.chunk_ids) }}</span>
+                <p
+                  v-if="pageEnd && pageEnd.after === index"
+                  class="page-end screen-only"
+                  data-test="page-end"
+                >
+                  {{ pageEnd.text }}
+                </p>
               </div>
               <p>{{ doc.closing }}</p>
               <p class="letter-signature">
@@ -1024,6 +1098,24 @@ onMounted(() => void load());
               data-test="review-line"
             >
               {{ reviewLine }}
+            </p>
+            <p
+              v-if="pageLine"
+              class="page-line"
+              aria-live="polite"
+              data-test="page-line"
+            >
+              <span>{{ pageLine }}</span>
+              <button
+                v-if="page && !page.fits"
+                type="button"
+                class="link"
+                data-test="shorten"
+                :aria-disabled="writing ? 'true' : undefined"
+                @click="!writing && shorten()"
+              >
+                Raccourcir
+              </button>
             </p>
             <DisclosureRow
               v-if="selected?.review"
@@ -1190,7 +1282,7 @@ onMounted(() => void load());
               ><span class="with-icon"><AppIcon name="download" />PDF</span></a>
               <a
                 class="secondary"
-                :href="`/api/letters/${selected.id}/docx`"
+                :href="pdfHref(`/api/letters/${selected.id}/docx`, template)"
                 download
                 data-test="docx"
               ><span class="with-icon"><AppIcon name="download" />Word</span></a>
@@ -1209,7 +1301,7 @@ onMounted(() => void load());
                 v-for="letter in letters"
                 :key="letter.id"
                 :title="versionName(letter)"
-                :description="versionMeta(letter)"
+                :description="versionDescription(letter)"
                 button
                 :chevron="false"
                 :current="letter.id === selectedId"
@@ -1316,12 +1408,13 @@ onMounted(() => void load());
           <GroupedList
             title="Versions"
             :level="3"
+            class="versions"
           >
             <GroupedRow
               v-for="letter in letters"
               :key="letter.id"
               :title="versionName(letter)"
-              :description="versionMeta(letter)"
+              :description="versionDescription(letter)"
               button
               :current="letter.id === selectedId"
               data-test="sheet-version"
@@ -1354,7 +1447,7 @@ onMounted(() => void load());
               ><span class="with-icon"><AppIcon name="download" />Lettre (PDF)</span></a>
               <a
                 class="button-link prep-download"
-                :href="`/api/letters/${selected.id}/docx`"
+                :href="pdfHref(`/api/letters/${selected.id}/docx`, template)"
                 download
                 data-test="docx"
               ><span class="with-icon"><AppIcon name="download" />Lettre (Word)</span></a>
