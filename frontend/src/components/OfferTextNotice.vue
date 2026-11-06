@@ -112,7 +112,7 @@ watch(
     aria-labelledby="offer-text-title"
     data-test="partial-notice"
   >
-    <div class="offer-text-head">
+    <div>
       <span class="offer-text-icon"><AppIcon name="file" /></span>
       <div>
         <h4
@@ -161,12 +161,13 @@ watch(
       data-test="paste-sheet"
       @close="pasting = false"
     >
-      <p class="offer-text-how">
+      <p class="hint">
         Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici. jobA1 refait la note tout de suite.
       </p>
-      <label class="offer-text-field">Texte de l’annonce
+      <label class="form-field form-field-label">Texte de l’annonce
         <textarea
           v-model="text"
+          class="offer-text-paste"
           rows="7"
           maxlength="40000"
           aria-describedby="offer-text-count"
@@ -174,13 +175,13 @@ watch(
         /></label>
       <span
         id="offer-text-count"
-        class="offer-text-count"
+        class="hint"
         aria-live="polite"
         data-test="paste-count"
       >{{ counter }}</span>
       <p
         v-if="error"
-        class="offer-text-error"
+        class="field-error"
         role="alert"
         data-test="paste-error"
       >
