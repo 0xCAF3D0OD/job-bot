@@ -1,7 +1,8 @@
 import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it } from "vitest";
 
-import ApplicationForm from "./ApplicationForm.vue";
+import { applicationUpdateBody } from "../applicationBody";
+import ApplicationForm, { type ApplicationFormValue } from "./ApplicationForm.vue";
 
 const initial = { sent_at: "", method: "electronique", company: "", job_title: "", assigned_by_orp: false } as never;
 
@@ -45,6 +46,20 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
     expect(wrapper.emitted("submit")).toBeUndefined();
     // Pas de message global à la place des messages sous les champs.
     expect(wrapper.find(".notice.error").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("candidature enregistrée : le lieu ou lien de l'entretien part avec le reste", async () => {
+    const saved = { ...(initial as object), sent_at: "2026-11-02", company: "Banque Exemple", job_title: "Ingénieur", status: "entretien", interview_at: "2026-11-16T09:00:00Z" } as never;
+    const wrapper = mount(ApplicationForm, { props: { title: "Modifier", initial: saved, withStatus: true }, attachTo: document.body });
+    await wrapper.get("[data-test=interview-place]").setValue("  Visio Teams  ");
+    await wrapper.get("form").trigger("submit");
+    const value = wrapper.emitted("submit")![0]![0] as ApplicationFormValue;
+    expect(applicationUpdateBody(value)).toMatchObject({ interview_at: "2026-11-16T09:00:00Z", interview_place: "  Visio Teams  " });
+    // Vide : rien d'enregistré (et pas une chaîne vide).
+    await wrapper.get("[data-test=interview-place]").setValue("");
+    await wrapper.get("form").trigger("submit");
+    expect(applicationUpdateBody(wrapper.emitted("submit")![1]![0] as ApplicationFormValue).interview_place).toBeNull();
     wrapper.unmount();
   });
 

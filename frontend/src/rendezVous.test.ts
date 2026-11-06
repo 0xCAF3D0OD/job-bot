@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Application } from "./api/client";
-import { agreedLines, countdown, dateBlock, dateText, pastTitle, sheetLines, upcomingAppointments } from "./rendezVous";
+import { agreedLines, countdown, dateBlock, dateText, interviewPlace, pastTitle, sheetLines, upcomingAppointments } from "./rendezVous";
 
 // Candidatures › Rendez-vous sur téléphone (maquette RendezVous, 6.11.2026).
 const NOW = new Date("2026-11-06T09:00:00Z");
@@ -64,6 +64,12 @@ describe("les textes de la carte", () => {
       { label: "Ce qui te manque", text: "Terraform, demandé dans 14 offres sur 22" },
     ]);
     expect(sheetLines({ ...prep, blockers: [], missing: [], months: [] })).toEqual([]);
+  });
+
+  it("le lieu de l'entretien : le lieu ou lien saisi, sinon l'adresse de l'entreprise", () => {
+    expect(interviewPlace({ interview_place: "Visio", company_address: "Rue du Port 1, Lausanne" })).toBe("Visio");
+    expect(interviewPlace({ interview_place: "  ", company_address: "Rue du Port 1, Lausanne" })).toBe("Rue du Port 1, Lausanne");
+    expect(interviewPlace({ interview_place: null, company_address: null })).toBeNull();
   });
 
   it("ce qui a été convenu : objectif, mesure, prochain", () => {

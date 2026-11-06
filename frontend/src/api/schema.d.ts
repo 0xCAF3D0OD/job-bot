@@ -3828,6 +3828,8 @@ export interface components {
             status_at?: string | null;
             /** Interview At */
             interview_at?: string | null;
+            /** Interview Place */
+            interview_place?: string | null;
             /** Id */
             id: number;
             /** Offer Id */
@@ -3952,6 +3954,8 @@ export interface components {
             status_at?: string | null;
             /** Interview At */
             interview_at?: string | null;
+            /** Interview Place */
+            interview_place?: string | null;
         };
         /** AskKeywordOut */
         AskKeywordOut: {
@@ -4679,7 +4683,7 @@ export interface components {
         /** CvRequest */
         CvRequest: {
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -5771,7 +5775,7 @@ export interface components {
             /** Paragraphs */
             paragraphs: components["schemas"]["LetterParagraph"][];
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
         };
         /** LetterOut */
         LetterOut: {
@@ -5822,7 +5826,7 @@ export interface components {
         /** LetterRequest */
         LetterRequest: {
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */

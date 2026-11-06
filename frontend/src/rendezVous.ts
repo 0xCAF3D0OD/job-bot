@@ -55,6 +55,11 @@ export function timeAndPlace(iso: string, place: string | null | undefined): str
   return [timeOfDay(iso), place?.trim()].filter(Boolean).join(" · ");
 }
 
+/** Où a lieu l'entretien : le lieu ou le lien saisi sur la candidature, sinon l'adresse de l'entreprise. */
+export function interviewPlace(application: Pick<Application, "interview_place" | "company_address">): string | null {
+  return application.interview_place?.trim() || application.company_address?.trim() || null;
+}
+
 /** Les trois lignes de la carte ORP, tirées de la feuille (docs/83) ; une partie vide ne s'affiche pas. */
 export function sheetLines(prep: Preparation): { label: string; text: string }[] {
   const lines: { label: string; text: string }[] = [];

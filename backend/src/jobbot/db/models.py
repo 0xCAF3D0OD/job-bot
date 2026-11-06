@@ -559,6 +559,8 @@ class Application(Base):
     # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
     follow_up_on: Mapped[date | None] = mapped_column(Date)
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Lieu ou lien de l'entretien (texte libre) ; affiché à la place de l'adresse de l'entreprise.
+    interview_place: Mapped[str | None] = mapped_column(Text)
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)
     # Saisie dans Job-Room le … (docs/70 §6) : par l'extension ou « Marquer comme déclarée ».

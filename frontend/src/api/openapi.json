@@ -10383,6 +10383,18 @@
             ],
             "title": "Interview At"
           },
+          "interview_place": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview Place"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -10807,6 +10819,18 @@
               }
             ],
             "title": "Interview At"
+          },
+          "interview_place": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview Place"
           }
         },
         "type": "object",
@@ -13036,8 +13060,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {
@@ -16458,8 +16482,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {
@@ -16638,8 +16662,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {

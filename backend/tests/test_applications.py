@@ -143,6 +143,19 @@ async def test_application_lifecycle(api: AsyncClient, rt: Runtime) -> None:
         json={**body, "status": "entretien", "interview_at": "2026-10-12T09:30:00+02:00"},
     )
     assert updated.json()["status"] == "entretien" and updated.json()["status_at"]
+    assert updated.json()["interview_place"] is None
+    # Le lieu ou lien de l'entretien : texte libre, nettoyé, borné (E-1).
+    placed = await api.put(
+        f"/api/applications/{app['id']}",
+        json={**body, "status": "entretien", "interview_place": "  Visio Teams  "},
+    )
+    assert placed.json()["interview_place"] == "Visio Teams"
+    blank = await api.put(f"/api/applications/{app['id']}", json={**body, "interview_place": "   "})
+    assert blank.json()["interview_place"] is None
+    too_long = await api.put(
+        f"/api/applications/{app['id']}", json={**body, "interview_place": "x" * 1001}
+    )
+    assert too_long.status_code == 422
 
     assert (await api.delete(f"/api/applications/{app['id']}")).status_code == 204
     assert await offer_status(rt, offer_id) == "preparing"
