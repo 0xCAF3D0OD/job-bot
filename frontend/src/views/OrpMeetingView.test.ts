@@ -106,6 +106,27 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
   });
 
+  it("aucun rendez-vous prévu : le personnage debout, 160 px ; un seul des trois par écran (docs/141)", async () => {
+    GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    const person = wrapper.find("[data-test=meeting-person]");
+    expect(person.attributes("data-pose")).toBe("debout");
+    expect(person.attributes("height")).toBe("160");
+    expect(wrapper.find(".face-state").exists()).toBe(false);
+    // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le personnage.
+    GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
+    const none = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(none.find("[data-test=sheet-none-yet]").exists()).toBe(true);
+    expect(none.find("[data-illustration=personnage]").exists()).toBe(false);
+    // Un rendez-vous prévu : pas de personnage.
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE } });
+    const planned = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(planned.find("[data-illustration=personnage]").exists()).toBe(false);
+  });
+
   it("sans date : le formulaire, et les questions attendent la date", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });

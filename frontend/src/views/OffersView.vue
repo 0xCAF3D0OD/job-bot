@@ -24,6 +24,7 @@ import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
 import CharacterState from "../components/CharacterState.vue";
+import cup from "../assets/accessoires/accessoire-tasse.webp";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
@@ -761,12 +762,15 @@ onUnmounted(() => {
           :heights="['4.5rem', '4.5rem', '4.5rem']"
         />
         <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
-        <FaceState
+        <!-- En attente de la première collecte (docs/141 §3, écran 10) : le personnage assis, sa tasse. -->
+        <CharacterState
           v-else-if="!loading && items.length === 0 && noOffersYet"
+          pose="assis"
+          :accessory="cup"
           title="Pas encore d'offre"
           data-test="offers-none-yet"
         >
-          <p>Elles arrivent par tes alertes.</p>
+          <p>Tes premières offres arrivent après la prochaine collecte.</p>
           <div class="face-state-actions">
             <RouterLink
               to="/candidatures/alertes"
@@ -783,7 +787,7 @@ onUnmounted(() => {
               <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
             </button>
           </div>
-        </FaceState>
+        </CharacterState>
         <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
         <FaceState
           v-else-if="!loading && items.length === 0 && allReviewed"

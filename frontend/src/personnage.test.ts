@@ -33,6 +33,13 @@ export const SCREENS: Record<string, string> = {
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
   "components/ApplicationSent.vue": "candidature envoyée",
   "components/GoalReached.vue": "objectif ORP atteint",
+  "views/OrpMeetingView.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu",
+};
+
+// Les écrans où le personnage et un autre des trois sont dans des branches qui s'excluent : le fichier
+// contient les deux, la page jamais. Chacun a son test sur la page affichée (le fichier cité).
+const EXCLUSIVE: Record<string, string> = {
+  "views/OrpMeetingView.vue": "views/OrpMeetingView.test.ts",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
@@ -71,7 +78,13 @@ describe("Personnage : un seul des trois par écran (docs/141)", () => {
   });
 
   it("aucune page n'affiche à la fois le personnage et une mascotte d'humeur ou le logo transformé", () => {
-    for (const file of users) expect(template(file.text), file.path).not.toMatch(OTHERS);
+    for (const file of users) {
+      if (EXCLUSIVE[file.path]) {
+        expect(readFileSync(join(SRC, EXCLUSIVE[file.path]), "utf8"), file.path).toContain("un seul des trois");
+        continue;
+      }
+      expect(template(file.text), file.path).not.toMatch(OTHERS);
+    }
   });
 });
 
