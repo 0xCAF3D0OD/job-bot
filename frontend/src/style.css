@@ -2373,6 +2373,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-meeting { display: grid; gap: var(--space-4); }
 .orp-meeting h2 { margin: 0 0 var(--space-2); font-size: var(--font-body); }
 .orp-meeting-when { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.orp-meeting-person { display: block; margin: 0 auto var(--space-4); }
 .orp-meeting-when h2 { margin: 0; }
 .orp-meeting-form { display: grid; gap: var(--space-3); grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; margin-top: var(--space-3); }
 .orp-meeting-form .form-actions { grid-column: 1 / -1; }

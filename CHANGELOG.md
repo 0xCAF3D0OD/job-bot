@@ -445,3 +445,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.231 | Interrupteurs : une zone de touche de 44 px sur téléphone, sans changer leur dessin. | livré. |
 | 1.6.232 | « J'ai postulé » et « J'ai déjà postulé » enregistrent aussi une offre au lien d'alerte ou aux coordonnées trop longs | livrée |
 | 1.6.233 | « Candidature envoyée. » avec le personnage à l'avion, après « J'ai postulé » ou « Marquer comme envoyée », et le personnage qui fête sur « C'est fait ! » (objectif ORP atteint) | livrée |
+| 1.6.234 | Le personnage pour l'attente de la première collecte, le rendez-vous sans date, « Entretien décroché », la réponse négative et l'au revoir ; la cloche au-dessus des alertes encore vides | livrée |

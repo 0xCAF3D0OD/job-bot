@@ -11,6 +11,7 @@ import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import AppIcon from "../components/AppIcon.vue";
+import FaceTransform from "../components/FaceTransform.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import FormField from "../components/FormField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -184,6 +185,24 @@ onMounted(async () => {
       />
 
       <template v-if="view === 'wizard'">
+        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : le logo transformé « cloche » au-dessus de
+             l'assistant, pas le personnage. -->
+        <div
+          v-if="nothingYet && !focus"
+          class="face-state alerts-empty"
+          data-test="alerts-empty"
+        >
+          <FaceTransform
+            kind="alerts"
+            :size="96"
+          />
+          <h2 class="face-state-title">
+            Aucune alerte pour l’instant
+          </h2>
+          <p class="face-state-line">
+            Trois étapes pour recevoir les nouvelles offres ici.
+          </p>
+        </div>
         <button
           v-if="focus"
           type="button"

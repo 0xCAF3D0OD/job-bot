@@ -41,7 +41,6 @@ export const ILLUSTRATIONS = {
   "assistant-vide": { source: "008_chatting" },
   "preparer-vide": { source: "004_ai_generated_document_8im" },
   "ia-vide": { source: "005_artificial_intelligence" },
-  "rendez-vous-vide": { source: "006_booking" },
   "formations-vide": { source: "007_certification" },
   "trop-tot": { source: "001_absorbed" },
 };
