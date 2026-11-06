@@ -22564,6 +22564,11 @@
             "title": "Pending",
             "default": 0
           },
+          "pending_near": {
+            "type": "integer",
+            "title": "Pending Near",
+            "default": 0
+          },
           "month": {
             "type": "string",
             "title": "Month"

@@ -14,6 +14,7 @@ vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), PATCH: (...a: unknown[]) => PATCH(...a), PUT: vi.fn(), POST: vi.fn() },
 }));
 
+import OfferFilterSheet from "../components/OfferFilterSheet.vue";
 import OffersView from "./OffersView.vue";
 
 const offer = (id: number, title: string) => ({
@@ -73,8 +74,12 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     const toggle = host.find("[data-test=offers-far]");
     expect(toggle.text()).toBe("Afficher aussi les offres loin de ton profil (2)");
     expect(toggle.attributes("aria-expanded")).toBe("false");
+    // « Afficher n offres » du tri compte la liste montrée : 3 au total, moins les 2 « Loin » cachées.
+    const sheetTotal = () => host.findComponent(OfferFilterSheet).props("total");
+    expect(sheetTotal()).toBe(1);
     await toggle.trigger("click");
     expect(titles()).toEqual(["DevOps Engineer", "Data Engineer", "SRE"]);
+    expect(sheetTotal()).toBe(3);
     expect(toggle.text()).toBe("Masquer les offres loin de ton profil");
     expect(toggle.attributes("aria-expanded")).toBe("true");
   });

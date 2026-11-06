@@ -314,6 +314,10 @@ async def test_score_range_and_curve(api: AsyncClient, runtime: Runtime) -> None
     assert len(curve) == 20 and sum(curve) == 5  # tout, sans le filtre de note
     assert curve[8] == 1 and curve[12] == 2 and curve[17] == 1 and curve[19] == 1
     assert body["facets"]["unscored"] == 1
+    # La pastille de la barre du bas ne compte pas les offres « Loin » (sous 50) que le
+    # téléphone cache ; une offre sans note reste comptée (Kevin, 6.11).
+    today = (await api.get("/api/today")).json()
+    assert (today["pending"], today["pending_near"]) == (6, 5)
 
 
 async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Runtime) -> None:

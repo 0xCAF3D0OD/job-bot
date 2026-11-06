@@ -72,7 +72,7 @@ const sentenceEnd = computed(() => {
   const f = filters.value;
   const mixed = f.view === "pending" && (f.showFilteredOut || f.showExpired);
   const [one, many] = mixed ? [" affichée", " affichées"] : (VIEW_END[f.view] ?? ["", ""]);
-  return `${total.value > 1 ? many : one}${activeCount(f) ? " avec ces filtres" : ""}`;
+  return `${shownTotal.value > 1 ? many : one}${activeCount(f) ? " avec ces filtres" : ""}`;
 });
 const failed = ref(false);
 // Une panne de réseau (planche « Illustrations ») : l'écran « Pas de connexion », qui réessaie seul.
@@ -134,6 +134,8 @@ const FAR_BELOW = 50;
 const showFar = ref(false);
 const hidesFar = computed(() => phone.value && filters.value.minScore === null && filters.value.maxScore === null);
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
+// Le nombre que disent la phrase et « Afficher n offres » : la liste montrée, sans les offres « Loin » cachées.
+const shownTotal = computed(() => (hidesFar.value && !showFar.value ? Math.max(0, total.value - farCount.value) : total.value));
 const shown = computed(() =>
   hidesFar.value && !showFar.value
     ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
@@ -552,7 +554,7 @@ onUnmounted(() => {
       class="offers-sentence"
       data-test="offers-sentence"
     >
-      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}{{ "." }}
+      <strong v-if="shownTotal">{{ plural(shownTotal, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}{{ "." }}
     </p>
     <!-- La barre d'outils (1.6.55, planche « Barre d'outils Offres ») : la recherche qui prend la ligne
          (ordinateur), « Filtrer » et « + Ajouter » ; les filtres actifs en pastilles dessous. La liste a
@@ -609,7 +611,7 @@ onUnmounted(() => {
             :open="filtersOpen"
             :filters="filters"
             :facets="facets"
-            :total="total"
+            :total="shownTotal"
             @update="update"
             @reset="reset"
             @close="closeFilters"
@@ -644,7 +646,7 @@ onUnmounted(() => {
                 :counts="counts"
                 :facets="facets"
                 :visible="visibleFilters"
-                :total="total"
+                :total="shownTotal"
                 @update="update"
                 @reset="reset"
                 @visibility="setVisibility"

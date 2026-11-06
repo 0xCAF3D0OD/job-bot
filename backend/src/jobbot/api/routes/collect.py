@@ -526,15 +526,33 @@ def _view_condition(
     return or_(live, Offer.status.in_(IN_PROGRESS))
 
 
+# Les offres « Loin » (note sous 50) : cachées de la liste sur téléphone tant qu'aucun filtre
+# de note n'est posé (maquette Candidatures, Kevin 2026-11-06). Une offre sans note n'est pas
+# « Loin ».
+FAR_BELOW = 50
+
+
 async def count_pending(
-    session: AsyncSession, conditions: Sequence[ColumnElement[bool]] = ()
+    session: AsyncSession, conditions: Sequence[ColumnElement[bool]] = (), *, near: bool = False
 ) -> int:
     """« À traiter » (docs/139, C2) : à examiner, plus tard et en préparation.
 
     Le seul calcul de ce nombre : la phrase de la liste et la pastille du segment le lisent ici.
+    `near` : sans les offres « Loin », comme la liste du téléphone (la pastille de la barre du bas).
     """
     pending = _view_condition("pending")
     query = select(func.count()).select_from(Offer).where(Offer.duplicate_of.is_(None), *conditions)
+    if near:
+        far = (
+            select(Evaluation.id)
+            .where(
+                Evaluation.offer_id == Offer.id,
+                Evaluation.scored_at.is_not(None),
+                Evaluation.score < FAR_BELOW,
+            )
+            .exists()
+        )
+        query = query.where(~far)
     return int(await session.scalar(query.where(pending) if pending is not None else query) or 0)
 
 
