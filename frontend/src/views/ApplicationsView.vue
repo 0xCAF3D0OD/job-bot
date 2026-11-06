@@ -251,6 +251,8 @@ function celebrateIf(id: number, status: string | undefined, company: string): v
   if (status === "engagement" && before !== "engagement") celebrating.value = company;
   else if (status === "entretien" && before !== "entretien" && before !== "engagement") interviewWon.value = { id, company };
   else if (status === "refus" && before !== "refus") refused.value = { id, company };
+  // L'écran plein prend toute la place : le panneau de la candidature se ferme.
+  if (interviewWon.value || refused.value) openId.value = null;
 }
 // « Préparer l'entretien » ouvre la préparation de cette candidature.
 function prepareWon(): void {

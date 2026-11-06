@@ -108,7 +108,7 @@ onMounted(async () => {
             Ton compte est supprimé.
           </h1>
           <p
-            class="login-sub"
+            class="login-goodbye"
             role="status"
           >
             Ton CV, tes candidatures et ton suivi ORP sont effacés. Merci d’avoir fait ce bout de chemin avec jobA1, et
@@ -266,6 +266,7 @@ onMounted(async () => {
 .login-title { margin: 0; font-size: var(--title-login); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -0.5px; }
 .login-hand { font-family: "Caveat Brush", cursive; font-weight: var(--weight-regular); font-size: 1.45em; letter-spacing: 0; color: var(--primary-graphic); }
 .login-sub { display: none; }
+.login-goodbye { margin: var(--space-2) 0 var(--space-4); font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .login-main .social-signin { margin-top: var(--space-5); }
 .login-alert, .login-field-error { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; color: var(--danger); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-semibold); }
 .login-alert { margin-top: var(--space-5); }

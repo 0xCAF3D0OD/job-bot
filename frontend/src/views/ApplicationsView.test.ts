@@ -387,6 +387,7 @@ describe("Suivi en calendrier (docs/22)", () => {
     const moment = wrapper.find("[data-test=refusal-moment]");
     expect(moment.find("h1").text()).toMatch(/^Réponse de .+\.$/);
     expect(moment.find("[data-pose=bonjour]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
     expect(moment.find("[data-test=refusal-next]").attributes("href")).toBe("/candidatures/offres");
     expect(moment.find(".face-mark").exists()).toBe(false);
     await moment.find("[data-test=refusal-close]").trigger("click");
