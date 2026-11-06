@@ -3704,6 +3704,9 @@
           "404": {
             "description": "Offre inconnue"
           },
+          "429": {
+            "description": "Trop de lectures : « Réessaie dans n minutes »"
+          },
           "422": {
             "description": "Validation Error",
             "content": {

@@ -148,6 +148,12 @@ class Window:
     period_s: float
     hits: dict[str, list[float]] = field(default_factory=dict)
 
+    def wait(self, key: str) -> int:
+        """Les secondes à attendre avant la prochaine demande, sans la compter (0 : elle passe)."""
+        now = time.monotonic()
+        recent = [t for t in self.hits.get(key, []) if now - t < self.period_s]
+        return int(recent[0] + self.period_s - now) + 1 if len(recent) >= self.limit else 0
+
     def take(self, key: str) -> int:
         """Compte une demande ; 0 si elle passe, sinon les secondes à attendre."""
         now = time.monotonic()

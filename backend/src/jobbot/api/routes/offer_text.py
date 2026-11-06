@@ -11,12 +11,28 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 
-from jobbot import manual_offers
+from jobbot import accounts, manual_offers
+from jobbot.auth.service import Window
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/offers", tags=["offers"])
 
 NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"description": "Offre inconnue"}}
+READ_RESPONSES: dict[int | str, dict[str, Any]] = {
+    **NOT_FOUND,
+    429: {"description": "Trop de lectures : « Réessaie dans n minutes »"},
+}
+
+# « Lire l'annonce maintenant » charge une page chez un tiers : 1 lecture par offre toutes les
+# 5 minutes, 20 par heure par compte (en mémoire, comme les autres limites de auth.service).
+per_offer = Window(limit=1, period_s=300)
+per_account = Window(limit=20, period_s=3600)
+
+
+def _later(seconds: int) -> HTTPException:
+    minutes = max(1, -(-seconds // 60))
+    word = "minute" if minutes == 1 else "minutes"
+    return HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, f"Réessaie dans {minutes} {word}.")
 
 
 def _runtime(request: Request) -> Runtime:
@@ -54,10 +70,22 @@ def _refused(exc: Exception) -> HTTPException:
     return HTTPException(status.HTTP_404_NOT_FOUND, "offre inconnue")
 
 
-@router.post("/{offer_id}/read", operation_id="readOfferText", responses=NOT_FOUND)
+@router.post("/{offer_id}/read", operation_id="readOfferText", responses=READ_RESPONSES)
 async def read(request: Request, offer_id: int) -> OfferTextOut:
+    runtime = _runtime(request)
     try:
-        score = await manual_offers.read_offer(_runtime(request), offer_id)
+        # L'offre d'abord (404 pour un autre compte, C-4), puis les limites.
+        await manual_offers.check_offer(runtime, offer_id)
+    except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
+        raise _refused(exc) from None
+    account = f"compte-{accounts.current()}"
+    offer_key = f"{account}:{offer_id}"
+    if wait := max(per_offer.wait(offer_key), per_account.wait(account)):
+        raise _later(wait)
+    per_offer.take(offer_key)
+    per_account.take(account)
+    try:
+        score = await manual_offers.read_offer(runtime, offer_id)
     except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
         raise _refused(exc) from None
     except manual_offers.ReadProblem as exc:

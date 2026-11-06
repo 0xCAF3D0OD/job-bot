@@ -89,6 +89,16 @@ describe("OfferDetail, note provisoire (offre venue d'une alerte)", () => {
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
 
+  it("trop de lectures (429) : « Réessaie dans n minutes » dans l'encadré", async () => {
+    POST.mockResolvedValueOnce({ data: undefined, error: { detail: "Réessaie dans 4 minutes." }, response: { status: 429 } });
+    const wrapper = await mountDetail(offer());
+    await wrapper.find("[data-test=read-offer-text]").trigger("click");
+    await flushPromises();
+    const problem = wrapper.find("[data-test=partial-notice] [data-test=read-problem]");
+    expect(problem.text()).toBe("Réessaie dans 4 minutes.");
+    expect(wrapper.emitted("changed")).toBeUndefined();
+  });
+
   it("texte collé : trop court refusé, puis enregistré", async () => {
     PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 72, problem: null, paste: false } });
     const wrapper = await mountDetail(offer());

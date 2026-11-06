@@ -27,12 +27,14 @@ async function readNow(): Promise<void> {
   reading.value = true;
   problem.value = "";
   try {
-    const { data } = await api.POST("/api/offers/{offer_id}/read", { params: { path: { offer_id: props.offer.id } } });
+    const { data, error } = await api.POST("/api/offers/{offer_id}/read", { params: { path: { offer_id: props.offer.id } } });
     if (data?.saved) {
       emit("changed");
       return;
     }
-    problem.value = data?.problem ?? "Lecture impossible : colle le texte de l'annonce.";
+    // Trop de lectures (429) : le serveur dit quand réessayer (« Réessaie dans 5 minutes. »).
+    const detail = (error as { detail?: unknown } | undefined)?.detail;
+    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l'annonce.");
   } catch {
     problem.value = "API injoignable : réessaie dans un moment.";
   } finally {

@@ -7,6 +7,7 @@ robots n'est jamais contournée : on propose de coller le texte.
 """
 
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -99,14 +100,22 @@ def draft_from_posting(posting: dict[str, Any], url: str) -> Draft | None:
 # --- Lire une page, ou un texte par l'IA ------------------------------------------------
 
 
-async def fetch_page(url: str) -> str:
+# Remplaçable en test (pas de réseau).
+TRANSPORT: httpx.AsyncBaseTransport | None = None
+
+
+async def fetch_page(url: str, before: Callable[[str], Awaitable[None]] | None = None) -> str:
     """La page publique de l'annonce, une fois : https, jamais une adresse privée, 2 Mo et
-    10 secondes au plus (les règles des logos, docs/exploitation)."""
+    10 secondes au plus (les règles des logos, docs/exploitation). `before` : appelé avant
+    chaque requête, redirections comprises."""
     async with httpx.AsyncClient(
-        timeout=TIMEOUT_SECONDS, follow_redirects=False, headers={"User-Agent": logos.USER_AGENT}
+        timeout=TIMEOUT_SECONDS,
+        follow_redirects=False,
+        headers={"User-Agent": logos.USER_AGENT},
+        transport=TRANSPORT,
     ) as client:
         try:
-            data, _final = await logos._get(client, url, MAX_PAGE_BYTES)
+            data, _final = await logos._get(client, url, MAX_PAGE_BYTES, before)
         except logos.Refused as exc:
             raise ReadProblem(f"Lien refusé : {exc}.") from exc
         except httpx.HTTPStatusError as exc:
@@ -324,9 +333,16 @@ async def fetch_robots(url: str) -> str | None:
     return data.decode("utf-8", errors="replace")
 
 
-async def robots_allowed(url: str) -> bool:
-    """Le robots.txt du site permet-il à jobA1 de lire cette page ? (RFC 9309)"""
-    content = await fetch_robots(url)
+async def robots_allowed(url: str, cache: dict[str, str | None] | None = None) -> bool:
+    """Le robots.txt du site permet-il à jobA1 de lire cette page ? (RFC 9309) `cache` :
+    les robots.txt déjà lus pendant cette lecture, par hôte."""
+    host = urlsplit(url).hostname or ""
+    if cache is not None and host in cache:
+        content = cache[host]
+    else:
+        content = await fetch_robots(url)
+        if cache is not None:
+            cache[host] = content
     if content is None:
         return True
     parser = RobotFileParser()
@@ -343,14 +359,22 @@ def main_text(page: str) -> str:
     return " ".join(root.get_text(" ").split())
 
 
+ROBOTS_REFUSED = "Ce site interdit la lecture par un robot : colle le texte de l'annonce."
+
+
 async def read_link(url: str) -> str:
     """Le texte de l'annonce lu à `url` : la description du JobPosting, sinon le texte
-    principal. Sans IA : l'offre a déjà son titre, son entreprise et son lieu."""
-    if not await robots_allowed(url):
-        raise ReadProblem(
-            "Ce site interdit la lecture par un robot : colle le texte de l'annonce.", paste=True
-        )
-    page = await fetch_page(url)
+    principal. Sans IA : l'offre a déjà son titre, son entreprise et son lieu. Le robots.txt
+    est lu pour chaque hôte rencontré, redirections comprises, avant d'y charger une page."""
+    robots: dict[str, str | None] = {}
+
+    async def robots_first(hop: str) -> None:
+        # Chaque adresse est vérifiée : une redirection peut mener à un autre hôte, ou à un
+        # chemin que le robots.txt du même hôte interdit.
+        if not await robots_allowed(hop, robots):
+            raise ReadProblem(ROBOTS_REFUSED, paste=True)
+
+    page = await fetch_page(url, robots_first)
     posting = job_posting(page)
     found = jobposting.text(posting.get("description")) if posting else None
     if not found or len(found) < MIN_PASTED:
@@ -420,6 +444,12 @@ async def save_description(runtime: Runtime, offer_id: int, text: str, source: s
     if not runtime.settings.llm_configured:
         return None
     return await scoring_service.score_offer(runtime, offer_id)
+
+
+async def check_offer(runtime: Runtime, offer_id: int) -> None:
+    """L'offre existe pour ce compte et a une annonce ; sinon OfferNotFound ou NoAnnouncement."""
+    async with runtime.sessionmaker() as session:
+        await _load(session, offer_id)
 
 
 async def read_offer(runtime: Runtime, offer_id: int) -> int | None:

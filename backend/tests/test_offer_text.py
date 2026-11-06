@@ -1,6 +1,6 @@
 """Compléter une offre venue d'une alerte : lire son annonce, ou coller son texte (fiche)."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from jobbot import manual_offers
 from jobbot.api.app import create_app
+from jobbot.api.routes import offer_text
 from jobbot.db.models import Offer, OfferLink
 from jobbot.logos import service as logos
 from jobbot.runtime import Runtime
@@ -17,6 +18,8 @@ from jobbot.scoring import service
 
 from .test_scoring import FakeClient, add_offer, ai, evaluation, fake  # noqa: F401
 
+# Le vrai chargement (conftest le coupe pour tous les tests), pour suivre une redirection.
+REAL_GET = logos._get
 LINK = "https://www.exemple-emplois.ch/jobs/view/42"
 LONG = "Tu administres nos serveurs Linux et automatises les déploiements avec Ansible. " * 5
 POSTING_PAGE = (
@@ -24,6 +27,12 @@ POSTING_PAGE = (
     '{"@type": "JobPosting", "title": "Offre 1", "description": "' + LONG + '"}'
     "</script></head><body>Connexion</body></html>"
 )
+
+
+@pytest.fixture(autouse=True)
+def fresh_limits() -> None:
+    offer_text.per_offer.hits.clear()
+    offer_text.per_account.hits.clear()
 
 
 @pytest.fixture
@@ -52,7 +61,9 @@ def site(
     async def fetch_robots(_url: str) -> str | None:
         return robots
 
-    async def fetch_page(url: str) -> str:
+    async def fetch_page(url: str, before: Callable[[str], Awaitable[None]] | None = None) -> str:
+        if before is not None:
+            await before(url)
         fetched.append(url)
         return page
 
@@ -198,3 +209,71 @@ async def test_unknown_offer_and_spontaneous_application(
     assert gone.status_code == 404
     spontaneous = await add_offer(ai, 2, spontaneous=True)
     assert (await api.post(f"/api/offers/{spontaneous}/read")).status_code == 409
+
+
+async def test_redirect_to_a_host_whose_robots_forbids_is_never_loaded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A (robots OK) redirige vers B, dont le robots.txt interdit jobA1 : B n'est jamais chargé."""
+    requested: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(str(request.url))
+        if request.url.host == "a.exemple-emplois.ch":
+            return httpx.Response(302, headers={"location": "https://b.exemple-jobs.ch/annonce/42"})
+        return httpx.Response(200, text=POSTING_PAGE)
+
+    robots = {
+        "a.exemple-emplois.ch": "User-agent: *\nAllow: /\n",
+        "b.exemple-jobs.ch": "User-agent: jobA1\nDisallow: /\n",
+    }
+
+    async def fetch_robots(url: str) -> str | None:
+        return robots[httpx.URL(url).host]
+
+    async def public(_url: str) -> None:
+        return None
+
+    monkeypatch.setattr(manual_offers, "TRANSPORT", httpx.MockTransport(handler))
+    monkeypatch.setattr(manual_offers, "fetch_robots", fetch_robots)
+    monkeypatch.setattr(logos, "_check_host", public)
+    monkeypatch.setattr(logos, "_get", REAL_GET)
+
+    with pytest.raises(manual_offers.ReadProblem) as refused:
+        await manual_offers.read_link("https://a.exemple-emplois.ch/jobs/42")
+
+    assert refused.value.paste and "interdit" in refused.value.message
+    assert requested == ["https://a.exemple-emplois.ch/jobs/42"]
+
+    # Même chaîne, B ouvert : la page est lue au bout de la redirection.
+    robots["b.exemple-jobs.ch"] = "User-agent: *\nAllow: /\n"
+    text = await manual_offers.read_link("https://a.exemple-emplois.ch/jobs/42")
+    assert text.startswith("Tu administres nos serveurs")
+
+
+async def test_read_now_is_limited_per_offer_and_per_account(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    fetched = site(monkeypatch, "User-agent: *\nDisallow: /\n")
+
+    first = await api.post(f"/api/offers/{offer_id}/read")
+    assert first.status_code == 200 and first.json()["saved"] is False
+    again = await api.post(f"/api/offers/{offer_id}/read")
+    assert again.status_code == 429
+    assert again.json()["detail"] == "Réessaie dans 5 minutes."
+    assert fetched == []
+
+    # 20 lectures par heure pour le compte, toutes offres confondues.
+    offer_text.per_offer.hits.clear()
+    offer_text.per_account.hits.clear()
+    others = [await add_offer(ai, 10 + n) for n in range(20)]
+    for other in others:
+        assert (await api.post(f"/api/offers/{other}/read")).status_code == 200
+    over = await api.post(f"/api/offers/{offer_id}/read")
+    assert over.status_code == 429 and over.json()["detail"].startswith("Réessaie dans ")
+    # Une offre inconnue reste un 404, même à la limite.
+    assert (await api.post("/api/offers/999999/read")).status_code == 404
