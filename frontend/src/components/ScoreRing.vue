@@ -9,7 +9,16 @@ import { scoreWord } from "../format";
 // `worded` : le mot dessous. Le chiffre est toujours au centre, pour qu'on lise d'emblée une note (2026-11-05, Kevin).
 // Sans note : pas d'anneau, « Pas encore notée » en texte (la raison au survol et pour les lecteurs d'écran).
 // `bare` : l'anneau et son chiffre, sans le mot, quand le mot est écrit à côté (fiche d'une offre, étape 6b).
-const props = defineProps<{ score: number | null; pending?: string; stale?: boolean; large?: boolean; worded?: boolean; bare?: boolean }>();
+// `provisional` : notée sur l'extrait de l'alerte seulement, l'arc à 45 % (maquette OffreProvisoire).
+const props = defineProps<{
+  score: number | null;
+  pending?: string;
+  stale?: boolean;
+  large?: boolean;
+  worded?: boolean;
+  bare?: boolean;
+  provisional?: boolean;
+}>();
 
 const value = computed(() =>
   props.score === null ? null : Math.max(0, Math.min(100, Math.round(props.score))),
@@ -18,7 +27,7 @@ const word = computed(() => (value.value === null ? null : scoreWord(value.value
 const label = computed(() =>
   value.value === null
     ? (props.pending ?? "Pas encore notée")
-    : `${word.value?.word} : ${value.value} sur 100${props.stale ? ", calculée avec un ancien profil" : ""}`,
+    : `${word.value?.word} : ${value.value} sur 100${props.provisional ? ", note provisoire" : ""}${props.stale ? ", calculée avec un ancien profil" : ""}`,
 );
 // Le cercle de rayon 42 (viewBox 100) : 2π × 42.
 const CIRCUMFERENCE = 263.89;
@@ -37,7 +46,7 @@ const dash = computed(() => `${(((value.value ?? 0) * CIRCUMFERENCE) / 100).toFi
   > : {{ label }}</span></span>
   <span
     v-else
-    :class="['score-ring-wrap', word.tone, { 'score-ring-worded': worded, stale }]"
+    :class="['score-ring-wrap', word.tone, { 'score-ring-worded': worded, stale, provisional }]"
     role="img"
     :aria-label="label"
     :title="label"
