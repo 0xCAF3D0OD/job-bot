@@ -55,6 +55,7 @@ describe("les textes de la carte", () => {
       offers: 22,
       questions: [],
       obligations: [],
+      has_applications: true,
       months: [{ month: "2026-11", count: 6, target: 10, answered: 0, interviews: 0 }],
     };
     expect(sheetLines(prep)).toEqual([
