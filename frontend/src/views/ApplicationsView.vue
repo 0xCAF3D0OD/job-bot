@@ -45,7 +45,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
-import { useNarrow } from "../composables/usePhone";
+import { useNarrow, usePhone } from "../composables/usePhone";
 
 // Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
 // - Candidatures › Envoyées (docs/22) : la phrase des relances, la ligne « Objectif ORP : n sur N » vers
@@ -54,6 +54,7 @@ import { useNarrow } from "../composables/usePhone";
 //   l'export, les recherches du mois, puis « Ajouter », « À déclarer » et le calendrier.
 const TODO_ROWS = 3;
 const { phone: narrow } = useNarrow();
+const { phone } = usePhone();
 
 const route = useRoute();
 const router = useRouter();
@@ -454,17 +455,20 @@ onUnmounted(() => assistant.setFocus(null));
           </RouterLink>
           <h1>Suivi ORP</h1>
         </header>
+        <!-- Les chevrons ‹ › de la maquette Orp ; pas de mois suivant après le mois en cours. -->
         <div class="month-nav orp-page-month">
           <IconButton
-            icon="arrow-left"
+            icon="chevron"
             label="Mois précédent"
+            class="orp-month-prev"
             data-test="prev-month"
             @click="go(-1)"
           />
           <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
           <IconButton
-            icon="arrow-right"
+            icon="chevron"
             label="Mois suivant"
+            :disabled="orp.month >= today().slice(0, 7)"
             data-test="next-month"
             @click="go(1)"
           />
@@ -732,7 +736,9 @@ onUnmounted(() => assistant.setFocus(null));
 
         <!-- Le détail replié (règles §3.4) : le calendrier et la liste du mois, deux lignes à la
              place du sélecteur « Calendrier · Liste » (§2 : pas de troisième niveau). -->
+        <!-- Sur téléphone, le Suivi ORP s'arrête à « À déclarer » (Kevin, 6.11) : plus de calendrier. -->
         <section
+          v-if="!orpPage || !phone"
           class="bilan-detail suivi-detail"
           data-test="suivi-detail"
         >
