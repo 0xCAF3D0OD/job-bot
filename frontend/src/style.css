@@ -1987,7 +1987,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
    dépasse pas 82 % de la largeur en hauteur, pour que toutes paraissent de la même taille. */
 /* Chaque usage fixe sa largeur (pages vides, moments, accueil, La plateforme, voile). */
 .illu { display: block; flex: none; width: 300px; max-width: 100%; margin: 0 auto; line-height: 0; container-type: inline-size; }
-.illu picture { display: block; }
 .illu img { display: block; width: 100%; height: auto; max-height: 82cqw; object-fit: contain; opacity: 0; }
 .illu.loaded img { animation: illu-in 500ms var(--ease-out) both; }
 @keyframes illu-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

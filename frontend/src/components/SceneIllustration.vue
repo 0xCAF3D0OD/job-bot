@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 
-import { useTheme } from "../composables/useTheme";
-
 // L'ancienne série d'illustrations (docs/67), à retirer écran par écran (docs/141 §4) : une image générée, préparée par
 // scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
-// fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
+// fondu, quand elle est là.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
 // `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
 const props = withDefaults(defineProps<{ name: SceneName; label?: string; sizes?: string }>(), {
@@ -13,19 +11,11 @@ const props = withDefaults(defineProps<{ name: SceneName; label?: string; sizes?
   sizes: "(max-width: 820px) 240px, 440px",
 });
 
-const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
-
-function srcset(name: string): string {
-  return [480, 800]
-    .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
-    .filter(([url]) => url)
-    .map(([url, width]) => `${url} ${width}w`)
-    .join(", ");
-}
-
-const light = computed(() => srcset(props.name));
-const dark = computed(() => srcset(`${props.name}-sombre`));
-const { theme } = useTheme();
+// Servies telles quelles depuis public/illustrations/, comme le personnage : pas d'adresses hachées dans le
+// code (48 adresses de moins dans le budget de poids, docs/117). Pas de série sombre : la claire, assombrie
+// par la feuille de style.
+const file = (width: number) => `/illustrations/${props.name}-${width}.webp`;
+const srcset = computed(() => `${file(480)} 480w, ${file(800)} 800w`);
 const loaded = ref(false);
 const img = ref<HTMLImageElement | null>(null);
 watch(
@@ -69,30 +59,22 @@ export type SceneName =
 
 <template>
   <span
-    :class="['illu', { loaded, 'no-dark': !dark }]"
+    :class="['illu', 'no-dark', { loaded }]"
     :role="label ? 'img' : undefined"
     :aria-label="label || undefined"
     :aria-hidden="label ? undefined : 'true'"
     :data-illustration="name"
   >
-    <picture :key="name">
-      <!-- L'apparence choisie dans les Réglages prime sur celle du système (Clair, Sombre, Auto). -->
-      <source
-        v-if="dark && theme !== 'light'"
-        :media="theme === 'dark' ? 'all' : '(prefers-color-scheme: dark)'"
-        :srcset="dark"
-        :sizes="sizes"
-      >
-      <img
-        ref="img"
-        :src="files[`../assets/illustrations/${name}-480.webp`]"
-        :srcset="light"
-        :sizes="sizes"
-        alt=""
-        loading="lazy"
-        decoding="async"
-        @load="loaded = true"
-      >
-    </picture>
+    <img
+      ref="img"
+      :key="name"
+      :src="file(480)"
+      :srcset="srcset"
+      :sizes="sizes"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      @load="loaded = true"
+    >
   </span>
 </template>

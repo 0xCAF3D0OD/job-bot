@@ -39,6 +39,11 @@ Les animations de transition entre les pages et les mascottes d'humeur existante
 L'ancienne série d'illustrations (docs/67, `illustrations_transparentes.zip`) s'appelle désormais
 `SceneIllustration.vue`. Elle disparaît écran par écran (§4).
 
+Budget de poids (docs/117, limite 315 Ko depuis la PR 543) : le personnage ajoute environ 1 Ko de code. En
+compensation, l'ancienne série est servie elle aussi depuis `frontend/public/illustrations/`, sans adresses
+hachées (48 adresses de moins dans le premier chargement) : 1,4 Ko de moins, le total passe de 314,2 Ko
+(main) à 313,8 Ko.
+
 ## 3. Où (pose du kit → écran)
 
 | # | Pose | Écran | Board | PR |
