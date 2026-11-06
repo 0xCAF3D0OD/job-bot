@@ -15,6 +15,8 @@ const contact = ref<string | null>(null);
 const guestMailbox = ref(false);
 // Le paiement de Plus est ouvert (docs/125 §6).
 const billing = ref(false);
+// La connexion Get'emAll est ouverte (docs/140) : ce qui lui part, si on la relie.
+const getemall = ref(false);
 
 onMounted(async () => {
   await load();
@@ -22,6 +24,7 @@ onMounted(async () => {
   contact.value = data?.contact ?? null;
   guestMailbox.value = data?.guest_mailbox ?? false;
   billing.value = data?.billing ?? false;
+  getemall.value = data?.getemall ?? false;
 });
 </script>
 
@@ -97,6 +100,40 @@ onMounted(async () => {
         seulement le numéro de ton compte chez lui et ton e-mail, tant que le lien existe (Réglages, Connexions).
       </p>
 
+      <section
+        v-if="getemall"
+        class="privacy-partner"
+        aria-labelledby="getemall"
+        data-test="privacy-getemall"
+      >
+        <h2 id="getemall">
+          Get'emAll, si tu le relies
+        </h2>
+        <p>
+          Get'emAll est une app d'entraînement aux entretiens, du même exploitant, hébergée en Suisse. Elle ne reçoit
+          <strong>rien</strong> tant que tu ne l'as pas autorisée.
+        </p>
+        <h3>Ce qui part</h3>
+        <ul>
+          <li>Tes premiers pas : combien sont faits sur 5, et le suivant.</li>
+          <li>Tes candidatures : poste, entreprise, statut, date d'entretien.</li>
+          <li>Le texte d'une offre quand tu t'entraînes pour elle, sans les contacts.</li>
+          <li>Le nombre de recherches ORP du mois et l'objectif, <strong>seulement si tu l'as coché</strong>.</li>
+        </ul>
+        <h3>Ce qui ne part jamais</h3>
+        <ul>
+          <li>Ton nom, tes coordonnées, ton numéro AVS.</li>
+          <li>Ton CV, tes lettres, tes documents, tes preuves ORP.</li>
+          <li>Les contacts des offres et l'identifiant de ton compte jobA1.</li>
+        </ul>
+        <h3>Comment</h3>
+        <ul>
+          <li>Get'emAll lit ton suivi quand tu l'ouvres, sans en garder de copie. Seule l'offre choisie pour t'entraîner y est gardée.</li>
+          <li>Il ne peut rien changer dans jobA1.</li>
+          <li>jobA1 garde la date de la dernière lecture, visible dans Réglages.</li>
+        </ul>
+      </section>
+
       <template v-if="billing">
         <h2>Le paiement de Plus (Payrexx)</h2>
         <ul data-test="privacy-billing">
@@ -113,7 +150,15 @@ onMounted(async () => {
       <p>Dans Réglages, rubrique Compte :</p>
       <ul>
         <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte des 90 derniers jours.</li>
-        <li><strong>Fermer</strong> ton compte : tout est effacé, fichiers compris. Aussi depuis le menu de ton compte.</li>
+        <li
+          v-if="getemall"
+          data-test="privacy-revoke"
+        >
+          <strong>Retirer l'accès</strong> d'une app reliée : Réglages › Connexions. Ce qu'elle a gardé s'efface depuis l'app.
+        </li>
+        <li>
+          <strong>Fermer</strong> ton compte : tout est effacé, fichiers compris{{ getemall ? ", et l'accès des apps reliées est retiré" : "" }}. Aussi depuis le menu de ton compte.
+        </li>
       </ul>
       <p v-if="loggedIn">
         <RouterLink
@@ -122,6 +167,15 @@ onMounted(async () => {
           data-test="privacy-settings"
         >
           Ouvrir Réglages, rubrique Compte
+        </RouterLink>
+      </p>
+      <p v-if="loggedIn && getemall">
+        <RouterLink
+          :to="{ path: '/reglages', query: { rubrique: 'connexions' } }"
+          class="link"
+          data-test="privacy-connections"
+        >
+          Ouvrir Réglages › Connexions
         </RouterLink>
       </p>
 
@@ -154,3 +208,12 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<style>
+/* Maquette ConfidentialiteGetemall (390 px) : la section Get'emAll dans une carte, après celle de l'IA. */
+.privacy-partner { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-6) 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.privacy-page .privacy-partner h2 { margin: 0; }
+.privacy-page .privacy-partner h3 { margin: var(--space-1) 0 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.privacy-partner p, .privacy-partner ul { margin: 0; }
+.privacy-page .privacy-partner ul { display: flex; flex-direction: column; gap: var(--space-2); padding-left: var(--space-5); }
+</style>

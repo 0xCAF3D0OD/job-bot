@@ -1,0 +1,1 @@
+Candidatures sur téléphone : une connexion perdue affiche « Connexion perdue » et « Réessayer » dans la page (maquette ErreurConnexion), puis l'attente jusqu'à la réponse ; le plein écran reste pour la maintenance

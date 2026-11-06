@@ -1,0 +1,1 @@
+Page introuvable et écrans de maintenance aux maquettes du 5.11 : le personnage du kit HD, « Cette page s’est perdue », et trois écrans (mise à jour, maintenance annoncée, pas de connexion) avec « Réessayer maintenant » en bas

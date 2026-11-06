@@ -280,6 +280,8 @@ describe("barre de candidature", () => {
     expect(wrapper.find("[data-test=back-to-offer]").attributes("href")).toBe("/candidatures/offres/7");
     expect(wrapper.find("h1").text()).toBe("Ma candidature");
     expect(wrapper.find("[data-test=prep-offer-title]").text()).toBe(offer.title);
+    // La ligne de l'entreprise, sans le canton (maquette : « Alpstack · Lausanne »).
+    expect(wrapper.find(".prep-offer-sub").text()).toMatch(/· Lausanne$/);
     const steps = wrapper.find("[data-test=apply-steps]");
     // Postuler (C7) : où l'annonce se postule, les pièces, ce qu'on recopie, puis un contact dans la fiche.
     expect(steps.findAll("h2").map((h) => h.text())).toEqual([
@@ -509,7 +511,9 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     const wrapper = await mountView();
     const picker = wrapper.find("[data-test=template-picker]");
     expect(picker.text()).toContain("Le même pour CV et lettre");
-    expect(picker.findAll("[role=radio]").map((r) => r.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
+    expect(picker.findAll("[role=radio] .tpl-card-label").map((r) => r.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
+    // La vignette Classique porte les initiales de l'expéditeur, comme la maquette (« K D »).
+    expect(picker.find("[data-test=template-classique] .tpl-thumb-initials").text()).toMatch(/^\p{Lu} \p{Lu}$/u);
     const preview = () => wrapper.find("[data-test=letter-card] [data-test=doc-preview]");
     expect(preview().attributes("data-template")).toBe("moderne");
     await picker.find("[data-test=template-bandeau]").trigger("click");

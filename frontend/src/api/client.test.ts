@@ -76,6 +76,17 @@ describe("maintenance (docs/79)", () => {
     window.removeEventListener(MAINTENANCE_EVENT, listener);
     expect(heard).toEqual(["Dix minutes", null, null]);
   });
+
+  it("hors ligne, pas de page d'attente : la page montre « Connexion perdue » (maquette ErreurConnexion)", async () => {
+    const heard: (string | null)[] = [];
+    const listener = (event: Event) => heard.push((event as CustomEvent<string | null>).detail);
+    window.addEventListener(MAINTENANCE_EVENT, listener);
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    await expect(api.GET("/api/orp", { fetch: () => Promise.reject(new TypeError("Failed to fetch")) })).rejects.toThrow();
+    online.mockRestore();
+    window.removeEventListener(MAINTENANCE_EVENT, listener);
+    expect(heard).toEqual([]);
+  });
 });
 
 describe("maintenance en lecture seule (docs/80)", () => {

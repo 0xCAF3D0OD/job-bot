@@ -421,3 +421,9 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.207 | Offres : l'offre ajoutée à la main reste ouverte, la liste ne l'efface plus aussitôt | livrée |
 | 1.6.208 | Ajouter une offre : compléter une offre déjà là avec le lien de son annonce, et une candidature spontanée signale l'offre déjà là chez la même entreprise | livrée |
 | 1.6.209 | Le personnage de la connexion passe au kit d'illustrations HD (400 px et 800 px pour les écrans 2×), net sur ordinateur | livrée |
+| 1.6.210 | Candidatures sur téléphone : une connexion perdue affiche « Connexion perdue » et « Réessayer » dans la page (maquette ErreurConnexion), puis l'attente jusqu'à la réponse ; le plein écran reste pour la maintenance | livrée |
+| 1.6.211 | Page introuvable et écrans de maintenance aux maquettes du 5.11 : le personnage du kit HD, « Cette page s’est perdue », et trois écrans (mise à jour, maintenance annoncée, pas de connexion) avec « Réessayer maintenant » en bas | livrée |
+| 1.6.212 | Premiers pas : le personnage au CV et « Pas de CV à jour ? » (l'Assistant reçoit la demande) à l'étape 2, les postes du CV en puces avec « + Ajouter » à l'étape 3 | livrée en partie ; le rayon 15/30/50 km autour d'un lieu attend la liste des localités avec leurs coordonnées |
+| 1.6.213 | Ma candidature : l'aperçu de la lettre et du CV n'est plus coupé à droite, les vignettes et l'aperçu suivent la maquette (en sombre aussi), FR/DE/EN en pilule bleue, « J'ai relu » en case blanche, le bouton inactif gris bleuté, l'entreprise sans le canton | livrée |
+| 1.6.214 | Get'emAll : la page « Relier Get'emAll », la carte des Réglages › Connexions et la section des Données personnelles | livrée |
+| 1.6.215 | Candidatures sur téléphone : l'entreprise et le lieu sur une ligne, l'anneau de 48 px ; les offres « Loin » cachées derrière « Afficher aussi les offres loin de ton profil (n) » | livrée |

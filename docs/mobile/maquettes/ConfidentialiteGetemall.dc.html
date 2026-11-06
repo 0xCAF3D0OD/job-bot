@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, données personnelles, Get'emAll</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+/*jaMotion*/button,a,input,[role=tab],[role=radio],[role=switch]{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}button:active,a:active{transform:scale(.97)}@media (prefers-reduced-motion: reduce){button,a,input{transition:none}button:active,a:active{transform:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+@keyframes dlgIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+<header style="flex: none; display: flex; align-items: center; gap: 4px; padding: 12px 8px 4px">
+<a href="ReglagesConnexions.dc.html" aria-label="Retour" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #1B1F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">Données personnelles</h1>
+</header>
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 28px">
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #596070">… Ce qui part à l'IA (Anthropic)</p>
+<section aria-labelledby="p-gea" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px">
+<h2 id="p-gea" style="margin: 0; font-size: 19px; line-height: 25px; font-weight: 700">Get'emAll, si tu le relies</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px; color: #1B1F2A">Get'emAll est une app d'entraînement aux entretiens, du même exploitant, hébergée en Suisse. Elle ne reçoit <strong>rien</strong> tant que tu ne l'as pas autorisée.</p>
+<h3 style="margin: 4px 0 0; font-size: 16px; font-weight: 700">Ce qui part</h3>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px"><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Tes premiers pas : combien sont faits sur 5, et le suivant.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Tes candidatures : poste, entreprise, statut, date d'entretien.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Le texte d'une offre quand tu t'entraînes pour elle, sans les contacts.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Le nombre de recherches ORP du mois et l'objectif, <strong>seulement si tu l'as coché</strong>.</li></ul>
+<h3 style="margin: 4px 0 0; font-size: 16px; font-weight: 700">Ce qui ne part jamais</h3>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px"><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Ton nom, tes coordonnées, ton numéro AVS.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Ton CV, tes lettres, tes documents, tes preuves ORP.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Les contacts des offres et l'identifiant de ton compte jobA1.</li></ul>
+<h3 style="margin: 4px 0 0; font-size: 16px; font-weight: 700">Comment</h3>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px"><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Get'emAll lit ton suivi quand tu l'ouvres, sans en garder de copie. Seule l'offre choisie pour t'entraîner y est gardée.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">Il ne peut rien changer dans jobA1.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A">jobA1 garde la date de la dernière lecture, visible dans Réglages.</li></ul>
+</section>
+<section aria-labelledby="p-poss" style="display: flex; flex-direction: column; gap: 12px">
+<h2 id="p-poss" style="margin: 0; font-size: 19px; line-height: 25px; font-weight: 700">Ce qui est possible</h2>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px"><li style="font-size: 15px; line-height: 22px; color: #1B1F2A"><strong>Exporter</strong> tout.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A"><strong>Retirer l'accès</strong> d'une app reliée : Réglages › Connexions. Ce qu'elle a gardé s'efface depuis l'app.</li><li style="font-size: 15px; line-height: 22px; color: #1B1F2A"><strong>Fermer</strong> ton compte : tout est effacé, et l'accès des apps reliées est retiré.</li></ul>
+<a href="ReglagesConnexions.dc.html" style="align-self: flex-start; min-height: 44px; display: flex; align-items: center; font-size: 16px; font-weight: 600; color: #1A3496">Ouvrir Réglages › Connexions</a>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
