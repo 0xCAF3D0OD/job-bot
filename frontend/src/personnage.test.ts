@@ -31,6 +31,8 @@ export const SCREENS: Record<string, string> = {
   "views/NotFoundView.vue": "page introuvable",
   "components/MaintenanceOverlay.vue": "maintenance (mise à jour, annoncée) et pas de connexion",
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
+  "components/ApplicationSent.vue": "candidature envoyée",
+  "components/GoalReached.vue": "objectif ORP atteint",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).

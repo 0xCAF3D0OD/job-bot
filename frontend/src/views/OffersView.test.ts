@@ -373,7 +373,7 @@ describe("tri et candidature", () => {
             : page([offer(1, "Ingénieur système")]),
       ),
     );
-    POST.mockResolvedValue({ data: { id: 9, company: "Acme SA" } });
+    POST.mockResolvedValue({ data: { id: 9, company: "Acme SA", job_title: "Ingénieur système", orp_month: "2026-10", follow_up_on: "2026-10-16" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
     await wrapper.find("[data-test=more]").trigger("click");
@@ -384,7 +384,15 @@ describe("tri et candidature", () => {
     const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 1, company: "Acme SA", rate_text: "plein temps ou temps partiel (80-100 %)" });
-    expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée.");
+    // « Candidature envoyée. » à la place de la page (docs/141, 8), avec la relance prévue.
+    const done = wrapper.find("[data-test=sent-moment]");
+    expect(done.find("h1").text()).toBe("Candidature envoyée.");
+    expect(done.text()).toContain("Ingénieur système chez Acme SA.");
+    expect(done.find("[data-test=sent-follow-up]").text()).toMatch(/^Relance prévue le 16 octobre( 2026)? si pas de réponse\.$/);
+    expect(done.find("[data-test=cancel-applied]").exists()).toBe(false);
+    // « Préparer la prochaine » referme l'écran : la liste revient.
+    await done.find("[data-test=next-offer]").trigger("click");
+    expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
   });
 });
 
