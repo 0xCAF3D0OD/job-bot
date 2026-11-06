@@ -30,9 +30,11 @@ const offer = (id: number, title: string) => ({
 const counts = { to_review: 1, pending: 1, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 1 };
 const facets = { sources: [], cantons: [], scores: [] as number[], unscored: 0 };
 
-async function mountAt(path: string, items: unknown[], pageFacets: typeof facets = facets) {
+async function mountAt(path: string, items: unknown[], pageFacets: typeof facets = facets, pageCounts: typeof counts = counts) {
   GET.mockImplementation((p: string) =>
-    Promise.resolve(p === "/api/offers" ? { data: { items, total: items.length, counts, facets: pageFacets } } : { data: null }),
+    Promise.resolve(
+      p === "/api/offers" ? { data: { items, total: items.length, counts: pageCounts, facets: pageFacets } } : { data: null },
+    ),
   );
   const router = createRouter({
     history: createMemoryHistory(),
@@ -75,6 +77,19 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(titles()).toEqual(["DevOps Engineer", "Data Engineer", "SRE"]);
     expect(toggle.text()).toBe("Masquer les offres loin de ton profil");
     expect(toggle.attributes("aria-expanded")).toBe("true");
+  });
+
+  it("les offres expirées : « Voir les offres expirées (n) » au bas de la liste, seulement s'il y en a (Kevin, 6.11)", async () => {
+    const none = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
+    expect(none.find("[data-test=offers-expired]").exists()).toBe(false);
+    document.body.innerHTML = "";
+    const host = await mountAt("/offres", [offer(1, "DevOps Engineer")], facets, { ...counts, expired: 3 });
+    const link = host.find("[data-test=offers-expired]");
+    expect(link.text()).toBe("Voir les offres expirées (3)");
+    await link.trigger("click");
+    await flushPromises();
+    expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { with_expired: true } } });
+    expect(host.find("[data-test=offers-expired]").text()).toBe("Masquer les offres expirées");
   });
 
   it("un filtre de note posé : les offres « Loin » restent dans la liste, sans le lien", async () => {

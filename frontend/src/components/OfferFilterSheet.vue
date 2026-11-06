@@ -119,7 +119,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         <GroupedRow
           v-if="filters.view === 'pending'"
           title="Masquer les offres écartées"
-          description="Tu les retrouves dans Suivi"
+          description="Éteins ce réglage pour les voir dans la liste"
           label
           data-test="sheet-filtered-out"
         >

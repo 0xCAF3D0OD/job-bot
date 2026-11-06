@@ -23,10 +23,10 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(rates.findAll("[role=radio]").map((b) => b.text())).toEqual(["Tous", "60 %", "80 %", "100 %"]);
     expect(rates.find("[data-test=sheet-rate-all]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find("[data-test=sheet-sort-day]").attributes("aria-pressed")).toBe("true");
-    // Les écartées (Kevin, 6.11) : « Masquer », allumé par défaut, « Tu les retrouves dans Suivi » dessous.
+    // Les écartées (Kevin, 6.11) : « Masquer », allumé par défaut, « Éteins ce réglage pour les voir dans la liste » dessous.
     const hide = wrapper.find("[data-test=sheet-filtered-out]");
     expect(hide.text()).toContain("Masquer les offres écartées");
-    expect(hide.text()).toContain("Tu les retrouves dans Suivi");
+    expect(hide.text()).toContain("Éteins ce réglage pour les voir dans la liste");
     expect((hide.find("input[role=switch]").element as HTMLInputElement).checked).toBe(true);
     expect(wrapper.find("[data-test=sheet-remote]").exists()).toBe(true);
     // Plus d'« Afficher aussi », d'expirées, de sites ni de cantons : sites et cantons se règlent dans Compte.
