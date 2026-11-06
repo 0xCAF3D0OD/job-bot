@@ -430,3 +430,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.216 | Ma candidature, étape CV sur téléphone : FR / DE / EN en tête de la carte (une autre langue propose « Préparer à nouveau en … »), les mots mis en avant sous l'aperçu, « Blocs du CV » replié | livrée |
 | 1.6.217 | Ma candidature, étape Postuler sur téléphone : prénom, nom, e-mail, téléphone et localité à recopier, les autres champs sous « Autres champs », replié | livrée |
 | 1.6.218 | Bilan › Résultats sur téléphone : plus de période (Un mois / 3 mois / Tout), la carte du meilleur site gardée, la phrase sans mot en bleu, tuiles et parcours plus serrés | livrée |
+| 1.6.219 | Filtres sur téléphone : « Masquer les offres écartées » (allumé par défaut, « Tu les retrouves dans Suivi ») à la place d'« Afficher aussi » ; Trier et Télétravail gardés ; sites et cantons se règlent dans Compte ; la feuille s'arrête sous les onglets, « Afficher N offres » en pilule | livrée |
