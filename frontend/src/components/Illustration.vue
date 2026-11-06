@@ -1,35 +1,84 @@
+<script lang="ts">
+// Le personnage de jobA1 (kit du 6.11.2026, docs/141) : une pose du kit, en 400 px (1×) et 800 px (2×).
+// Il marque un moment ou remplit un écran plein ; jamais sur un écran de travail, jamais avec une petite
+// mascotte d'humeur ni le logo transformé sur le même écran (docs/141 §1, test personnage.test.ts).
+export type Pose =
+  | "debout"
+  | "bonjour"
+  | "cv"
+  | "marche"
+  | "assis"
+  | "perplexe"
+  | "revelation"
+  | "avion"
+  | "cables"
+  | "hors-ligne"
+  | "loupe"
+  | "celebration";
+
+// Largeur des fichiers -400 (hauteur 400) : sert à fixer width et height, sans saut de mise en page.
+export const POSE_WIDTH: Record<Pose, number> = {
+  debout: 129,
+  bonjour: 150,
+  cv: 131,
+  marche: 231,
+  assis: 285,
+  perplexe: 146,
+  revelation: 196,
+  avion: 275,
+  cables: 198,
+  "hors-ligne": 167,
+  loupe: 200,
+  celebration: 192,
+};
+
+const NUMBER: Record<Pose, string> = {
+  debout: "01",
+  bonjour: "02",
+  cv: "03",
+  marche: "04",
+  assis: "05",
+  perplexe: "06",
+  revelation: "07",
+  avion: "08",
+  cables: "09",
+  "hors-ligne": "10",
+  loupe: "11",
+  celebration: "12",
+};
+
+const files = import.meta.glob<string>("../assets/personnage/*.webp", { query: "?url", import: "default", eager: true });
+
+export function poseFile(pose: Pose, size: 400 | 800): string {
+  return files[`../assets/personnage/perso-${NUMBER[pose]}-${pose}-${size}.webp`] ?? "";
+}
+
+// Hauteurs permises (consigne du 6.11.2026) : 200 px au plus dans une liste, 240 à 280 px sur un écran
+// plein, 400 px au plus sur ordinateur.
+export const MAX_HEIGHT = { list: 200, full: 280, desktop: 400 } as const;
+</script>
+
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 
-import { useTheme } from "../composables/useTheme";
-
-// Illustration de jobA1 (docs/67) : une image générée pour la plateforme, préparée par
-// scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
-// fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
-// Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
-// `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
-const props = withDefaults(defineProps<{ name: IllustrationName; label?: string; sizes?: string }>(), {
-  label: "",
-  sizes: "(max-width: 820px) 240px, 440px",
+// `height` : la hauteur sur téléphone ; `desktopHeight` : sur ordinateur (dès 821 px), sinon la même.
+// `full` : un écran plein, l'image est chargée tout de suite ; ailleurs, à l'affichage (loading="lazy").
+// Décoratif (alt vide, aria-hidden) ; un fondu de 200 ms à l'arrivée, coupé par « réduire les animations ».
+const props = withDefaults(defineProps<{ pose: Pose; height: number; desktopHeight?: number; full?: boolean }>(), {
+  desktopHeight: undefined,
+  full: false,
 });
 
-const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
+const phoneHeight = computed(() => Math.min(props.height, props.full ? MAX_HEIGHT.full : MAX_HEIGHT.list));
+const wideHeight = computed(() => Math.min(props.desktopHeight ?? phoneHeight.value, MAX_HEIGHT.desktop));
+const width = computed(() => Math.round((POSE_WIDTH[props.pose] * phoneHeight.value) / 400));
+const src = computed(() => poseFile(props.pose, 400));
+const srcset = computed(() => `${src.value} 1x, ${poseFile(props.pose, 800)} 2x`);
 
-function srcset(name: string): string {
-  return [480, 800]
-    .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
-    .filter(([url]) => url)
-    .map(([url, width]) => `${url} ${width}w`)
-    .join(", ");
-}
-
-const light = computed(() => srcset(props.name));
-const dark = computed(() => srcset(`${props.name}-sombre`));
-const { theme } = useTheme();
 const loaded = ref(false);
 const img = ref<HTMLImageElement | null>(null);
 watch(
-  () => props.name,
+  () => props.pose,
   () => (loaded.value = false),
 );
 // Une image déjà en cache peut être prête avant que la page écoute son chargement.
@@ -38,61 +87,28 @@ onMounted(() => {
 });
 </script>
 
-<script lang="ts">
-export type IllustrationName =
-  | "accueil-reseau"
-  | "actualites-video"
-  | "alertes-carte"
-  | "aucune-offre"
-  | "bilan"
-  | "emails-tries"
-  | "formations"
-  | "lecture-calme"
-  | "lieux-carte"
-  | "messager"
-  | "offres-profils"
-  | "porte-ouverte"
-  | "preuves-orp"
-  | "suivi-envoi"
-  | "tableau-de-bord"
-  // Série du 27.10 (règle §4) : écrans vides, premiers pas, réussites, erreurs.
-  | "reussite"
-  | "connexion-perdue"
-  | "assistant-vide"
-  | "preparer-vide"
-  | "ia-vide"
-  | "rendez-vous-vide"
-  | "formations-vide"
-  | "trop-tot"
-  | "introuvable";
-</script>
-
 <template>
-  <span
-    :class="['illu', { loaded, 'no-dark': !dark }]"
-    :role="label ? 'img' : undefined"
-    :aria-label="label || undefined"
-    :aria-hidden="label ? undefined : 'true'"
-    :data-illustration="name"
+  <img
+    ref="img"
+    :class="['personnage', { loaded }]"
+    :src="src"
+    :srcset="srcset"
+    :width="width"
+    :height="phoneHeight"
+    :style="{ '--perso-h': `${phoneHeight}px`, '--perso-h-wide': `${wideHeight}px` }"
+    alt=""
+    aria-hidden="true"
+    :loading="full ? 'eager' : 'lazy'"
+    decoding="async"
+    :data-pose="pose"
+    data-illustration="personnage"
+    @load="loaded = true"
   >
-    <picture :key="name">
-      <!-- L'apparence choisie dans les Réglages prime sur celle du système (Clair, Sombre, Auto). -->
-      <source
-        v-if="dark && theme !== 'light'"
-        :media="theme === 'dark' ? 'all' : '(prefers-color-scheme: dark)'"
-        :srcset="dark"
-        :sizes="sizes"
-      >
-      <img
-        ref="img"
-        :src="files[`../assets/illustrations/${name}-480.webp`]"
-        :srcset="light"
-        :sizes="sizes"
-        alt=""
-        loading="lazy"
-        decoding="async"
-        @load="loaded = true"
-      >
-    </picture>
-  </span>
 </template>
+
+<style scoped>
+.personnage { display: block; flex: none; width: auto; height: var(--perso-h); max-width: none; opacity: 0; transition: opacity 200ms ease-out; }
+.personnage.loaded { opacity: 1; }
+@media (min-width: 821px) { .personnage { height: var(--perso-h-wide); } }
+@media (prefers-reduced-motion: reduce) { .personnage { transition: none; } }
+</style>

@@ -1,0 +1,98 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from "vue";
+
+import { useTheme } from "../composables/useTheme";
+
+// L'ancienne série d'illustrations (docs/67), à retirer écran par écran (docs/141 §4) : une image générée, préparée par
+// scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
+// fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
+// Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
+// `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
+const props = withDefaults(defineProps<{ name: SceneName; label?: string; sizes?: string }>(), {
+  label: "",
+  sizes: "(max-width: 820px) 240px, 440px",
+});
+
+const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
+
+function srcset(name: string): string {
+  return [480, 800]
+    .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
+    .filter(([url]) => url)
+    .map(([url, width]) => `${url} ${width}w`)
+    .join(", ");
+}
+
+const light = computed(() => srcset(props.name));
+const dark = computed(() => srcset(`${props.name}-sombre`));
+const { theme } = useTheme();
+const loaded = ref(false);
+const img = ref<HTMLImageElement | null>(null);
+watch(
+  () => props.name,
+  () => (loaded.value = false),
+);
+// Une image déjà en cache peut être prête avant que la page écoute son chargement.
+onMounted(() => {
+  if (img.value?.complete && img.value.naturalWidth) loaded.value = true;
+});
+</script>
+
+<script lang="ts">
+export type SceneName =
+  | "accueil-reseau"
+  | "actualites-video"
+  | "alertes-carte"
+  | "aucune-offre"
+  | "bilan"
+  | "emails-tries"
+  | "formations"
+  | "lecture-calme"
+  | "lieux-carte"
+  | "messager"
+  | "offres-profils"
+  | "porte-ouverte"
+  | "preuves-orp"
+  | "suivi-envoi"
+  | "tableau-de-bord"
+  // Série du 27.10 (règle §4) : écrans vides, premiers pas, réussites, erreurs.
+  | "reussite"
+  | "connexion-perdue"
+  | "assistant-vide"
+  | "preparer-vide"
+  | "ia-vide"
+  | "rendez-vous-vide"
+  | "formations-vide"
+  | "trop-tot"
+  | "introuvable";
+</script>
+
+<template>
+  <span
+    :class="['illu', { loaded, 'no-dark': !dark }]"
+    :role="label ? 'img' : undefined"
+    :aria-label="label || undefined"
+    :aria-hidden="label ? undefined : 'true'"
+    :data-illustration="name"
+  >
+    <picture :key="name">
+      <!-- L'apparence choisie dans les Réglages prime sur celle du système (Clair, Sombre, Auto). -->
+      <source
+        v-if="dark && theme !== 'light'"
+        :media="theme === 'dark' ? 'all' : '(prefers-color-scheme: dark)'"
+        :srcset="dark"
+        :sizes="sizes"
+      >
+      <img
+        ref="img"
+        :src="files[`../assets/illustrations/${name}-480.webp`]"
+        :srcset="light"
+        :sizes="sizes"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        @load="loaded = true"
+      >
+    </picture>
+  </span>
+</template>

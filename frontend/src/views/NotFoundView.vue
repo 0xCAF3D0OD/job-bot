@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import sign from "../assets/accessoires/accessoire-panneau.webp";
-import lost from "../assets/personnage/perso-06-perplexe-400.webp";
-import lost2x from "../assets/personnage/perso-06-perplexe-800.webp";
 import BrandMark from "../components/BrandMark.vue";
+import Illustration from "../components/Illustration.vue";
 
 // Page introuvable (docs/59 §5 ; maquette PageIntrouvable du 2026-11-05) : une adresse qui ne mène nulle
 // part le dit, au lieu de renvoyer sans un mot vers l'accueil. Le logo et « jobA1 » en haut, sans barre ;
-// le personnage perplexe du kit (400 px, 800 px pour les écrans 2×, 200 px de haut au plus sur téléphone)
-// devant le panneau, les nuages et le sol ; « Retour à l'accueil » en bas, pleine largeur.
+// le personnage perplexe (Illustration, docs/141 : écran plein, 280 px sur téléphone au lieu des 290 de la
+// maquette, 290 sur ordinateur) devant le panneau, les nuages et le sol ; « Retour à l'accueil » en bas, pleine largeur.
 </script>
 
 <template>
@@ -38,16 +37,14 @@ import BrandMark from "../components/BrandMark.vue";
           height="337"
           decoding="async"
         >
-        <img
+        <Illustration
+          pose="perplexe"
+          :height="280"
+          :desktop-height="290"
+          full
           class="lost-person"
-          :src="lost"
-          :srcset="`${lost} 1x, ${lost2x} 2x`"
-          alt=""
-          width="146"
-          height="400"
-          decoding="async"
           data-test="not-found-person"
-        >
+        />
         <span class="lost-ground" />
       </div>
       <h1 class="lost-title">
@@ -70,16 +67,16 @@ import BrandMark from "../components/BrandMark.vue";
 </template>
 
 <style scoped>
-/* Valeurs de la maquette PageIntrouvable (390 px), ramenées aux échelles ; le personnage à 200 px (règle du kit). */
+/* Valeurs de la maquette PageIntrouvable (390 px), ramenées aux échelles ; le personnage à 280 px (docs/141). */
 .lost-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
 .lost-brand { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-5) 0; font-size: var(--font-section); font-weight: var(--weight-bold); }
 .lost-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: 0 var(--space-6); text-align: center; }
-.lost-scene { position: relative; flex: none; width: 340px; max-width: 100%; height: 240px; }
+.lost-scene { position: relative; flex: none; width: 340px; max-width: 100%; height: 320px; }
 .lost-scene svg { position: absolute; display: block; fill: var(--primary-soft); }
-.lost-cloud { left: 14px; top: 0; width: 130px; height: 65px; }
+.lost-cloud { left: 14px; top: 20px; width: 130px; height: 65px; }
 .lost-cloud-small { top: auto; left: 4px; bottom: 16px; width: 84px; height: 46px; }
-.lost-sign { position: absolute; right: 24px; bottom: 10px; width: auto; height: 110px; }
-.lost-person { position: absolute; left: 50%; bottom: 12px; width: auto; height: 200px; max-width: none; transform: translateX(-50%); }
+.lost-sign { position: absolute; right: 10px; bottom: 10px; width: auto; height: 136px; }
+.lost-person { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); }
 .lost-ground { position: absolute; left: 5px; right: 5px; bottom: 2px; height: 16px; border-radius: var(--radius-sm); background: var(--surface-muted); }
 .lost-title { margin: var(--space-2) 0 0; font-size: var(--font-figure); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -0.3px; }
 .lost-line { margin: 0; max-width: 310px; font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
@@ -92,7 +89,5 @@ import BrandMark from "../components/BrandMark.vue";
 .lost-home:hover { background: var(--primary-soft); color: var(--primary-text); }
 @media (min-width: 821px) {
   .lost-scene { height: 340px; }
-  .lost-person { height: 290px; }
-  .lost-sign { height: 136px; }
 }
 </style>

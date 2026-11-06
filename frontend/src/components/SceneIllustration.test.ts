@@ -1,11 +1,11 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
-import Illustration from "./Illustration.vue";
+import SceneIllustration from "./SceneIllustration.vue";
 
-describe("Illustration (docs/67)", () => {
+describe("SceneIllustration (docs/67)", () => {
   it("pose l'image réduite, chargée à l'affichage, décorative par défaut", async () => {
-    const plain = mount(Illustration, { props: { name: "bilan" } });
+    const plain = mount(SceneIllustration, { props: { name: "bilan" } });
     const img = plain.find("img");
     expect(img.attributes("srcset")).toMatch(/bilan-480\.webp 480w, .*bilan-800\.webp 800w$/);
     expect(img.attributes("loading")).toBe("lazy");
@@ -19,7 +19,7 @@ describe("Illustration (docs/67)", () => {
     await img.trigger("load");
     expect(plain.classes()).toContain("loaded");
 
-    const told = mount(Illustration, { props: { name: "bilan", label: "Bilan" } });
+    const told = mount(SceneIllustration, { props: { name: "bilan", label: "Bilan" } });
     expect(told.attributes("role")).toBe("img");
     expect(told.attributes("aria-label")).toBe("Bilan");
   });

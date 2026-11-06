@@ -2,13 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
-import cvPerson from "../assets/personnage/perso-03-cv-400.webp";
-import cvPerson2x from "../assets/personnage/perso-03-cv-800.webp";
+import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
 import { api, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
+import Illustration from "../components/Illustration.vue";
 import IconButton from "../components/IconButton.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import TagInput from "../components/TagInput.vue";
@@ -488,16 +488,12 @@ async function finish(to: string): Promise<void> {
                   preserveAspectRatio="none"
                 ><path d="M0 90 C 40 20, 120 0, 170 10 C 220 20, 270 50, 300 90 Z" /></svg>
                 <span class="welcome-cv-ground" />
-                <img
+                <Illustration
+                  pose="cv"
+                  :height="122"
                   class="welcome-cv-person"
-                  :src="cvPerson"
-                  :srcset="`${cvPerson} 1x, ${cvPerson2x} 2x`"
-                  alt=""
-                  width="131"
-                  height="400"
-                  decoding="async"
                   data-test="cv-person"
-                >
+                />
               </div>
             </template>
             <p
@@ -677,7 +673,28 @@ async function finish(to: string): Promise<void> {
               role="status"
               data-test="welcome-ready"
             >
-              <span class="welcome-ready-check"><AppIcon name="check" /></span>
+              <!-- Le personnage de la révélation à la place de la coche (maquette OnboardingC, fin du tri). -->
+              <div
+                class="welcome-ready-scene"
+                aria-hidden="true"
+                data-test="welcome-ready-scene"
+              >
+                <span class="welcome-ready-sun" />
+                <img
+                  class="welcome-ready-sparkles"
+                  :src="sparkles"
+                  alt=""
+                  width="52"
+                  height="52"
+                  decoding="async"
+                >
+                <Illustration
+                  pose="revelation"
+                  :height="186"
+                  full
+                  class="welcome-ready-person"
+                />
+              </div>
               <strong>Tout est prêt.</strong>
               <p
                 v-if="sortSummary"
@@ -823,7 +840,7 @@ async function finish(to: string): Promise<void> {
 .welcome-cv { display: grid; gap: var(--space-4); padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .welcome-cv-file { display: flex; align-items: center; gap: var(--space-3); }
 .welcome-cv-file > span:nth-child(2) { flex: 1; min-width: 0; display: grid; gap: calc(var(--space-1) / 2); overflow-wrap: anywhere; }
-.welcome-cv-check, .welcome-ready-check { flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); }
+.welcome-cv-check { flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); }
 .welcome-cv-change { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); cursor: pointer; }
 .welcome-skills { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
 .welcome-skills p, .welcome-label, .welcome-field legend { margin: 0; padding: 0; font-weight: var(--weight-bold); }
@@ -848,7 +865,7 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-sun { position: absolute; right: 40px; top: 10px; width: 76px; height: 76px; border-radius: 50%; background: var(--peach-soft); }
 .welcome-cv-hill { position: absolute; left: 0; bottom: 6px; width: 70%; height: 70px; fill: var(--primary-soft); }
 .welcome-cv-ground { position: absolute; left: var(--space-6); right: var(--space-2); bottom: 0; height: 10px; border-radius: var(--radius-sm); background: var(--surface-muted); }
-.welcome-cv-person { position: absolute; left: 50%; bottom: 4px; width: auto; height: 130px; max-width: none; transform: translateX(-50%); }
+.welcome-cv-person { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
 .welcome-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .welcome-orp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .welcome-orp-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3); }
@@ -865,7 +882,11 @@ async function finish(to: string): Promise<void> {
 .welcome-offer-why { margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-soft); font-size: var(--font-small); line-height: var(--leading-normal); }
 .welcome-count { margin: 0; text-align: center; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .welcome-ready { display: grid; justify-items: center; gap: var(--space-3); padding: var(--space-6) var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); text-align: center; }
-.welcome-ready-check { width: 64px; height: 64px; border-radius: var(--radius-pill); }
+/* « Tout est prêt. » (maquette OnboardingC) : le rond pêche de 170 px, les étincelles, le personnage de 186 px. */
+.welcome-ready-scene { position: relative; width: 100%; height: 190px; }
+.welcome-ready-sun { position: absolute; left: 50%; top: 6px; width: 170px; height: 170px; border-radius: 50%; background: var(--peach-soft); transform: translateX(-50%); }
+.welcome-ready-sparkles { position: absolute; left: 28px; top: 14px; width: auto; height: 52px; }
+.welcome-ready-person { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
 .welcome-ready > strong { font-size: var(--font-figure); font-weight: var(--weight-bold); }
 .welcome-ready p { margin: 0; color: var(--text-secondary); }
 .welcome-ready .link { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--font-body); }

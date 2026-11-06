@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 
 import IconButton from "./IconButton.vue";
 import FaceMark from "./FaceMark.vue";
-import Illustration, { type IllustrationName } from "./Illustration.vue";
+import SceneIllustration, { type SceneName } from "./SceneIllustration.vue";
 
 // Une réussite (docs/61 §1) : une carte qui vient devant, de manière souple, la page grisée
 // derrière ; l'illustration est posée au-dessus de la carte, à cheval sur son bord, pas dedans.
@@ -12,7 +12,7 @@ import Illustration, { type IllustrationName } from "./Illustration.vue";
 // visage ravi à la place de l'illustration, de petites bulles autour, une fois ; `wink` pour
 // l'objectif atteint. `keepFocus` : ouverte sans geste de la personne (au chargement d'une page),
 // la carte ne prend pas le focus ; elle reste annoncée (`role="status"`).
-const props = withDefaults(defineProps<{ name?: IllustrationName; face?: boolean; wink?: boolean; title: string; closeAfterMs?: number; testId?: string; keepFocus?: boolean }>(), {
+const props = withDefaults(defineProps<{ name?: SceneName; face?: boolean; wink?: boolean; title: string; closeAfterMs?: number; testId?: string; keepFocus?: boolean }>(), {
   name: undefined,
   closeAfterMs: 4000,
   testId: "success-card",
@@ -73,7 +73,7 @@ onUnmounted(() => {
             :wink="wink"
           />
         </span>
-        <Illustration
+        <SceneIllustration
           v-else-if="name"
           :name="name"
           class="success-art"
