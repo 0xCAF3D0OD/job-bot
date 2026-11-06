@@ -57,6 +57,8 @@ class ManualDraft(BaseModel):
     trade: str | None
     matches_trade: bool
     existing_offer_id: int | None
+    # Les champs vides de l'offre déjà là que cette annonce peut remplir.
+    fillable: list[Literal["company", "location", "description", "url"]] = []
 
 
 class ManualReadOut(BaseModel):
@@ -73,6 +75,8 @@ class ManualAddIn(BaseModel):
     description: Annotated[str, Field(max_length=manual_offers.MAX_TEXT)] | None = None
     url: Annotated[str, Field(max_length=2000)] | None = None
     read_by: Literal["page", "ia", "main"] = "main"
+    # Déjà là : compléter ses champs vides avec cette fiche, sans rien remplacer.
+    fill: bool = False
 
     @field_validator("url")
     @classmethod
@@ -94,6 +98,8 @@ class ManualAddOut(BaseModel):
     status: str
     # La raison, quand les critères l'écartent (elle est gardée quand même).
     reasons: list[str]
+    # Les champs de l'offre déjà là remplis par cette fiche.
+    filled: list[str] = []
 
 
 @router.get("", operation_id="getManualOfferContext")
@@ -121,6 +127,7 @@ async def read(request: Request, body: ManualReadIn) -> ManualReadOut:
             trade=draft.trade,
             matches_trade=draft.matches_trade,
             existing_offer_id=draft.existing_offer_id,
+            fillable=draft.fillable,
         )
     )
 
@@ -136,6 +143,7 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
         url=body.url,
         read_by=body.read_by,
     )
+    filled: list[str] = []
     async with runtime.sessionmaker() as session:
         existing = (await manual_offers._complete(session, draft)).existing_offer_id
     if existing is None:
@@ -145,6 +153,8 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, exc.message) from exc
     else:
         offer_id = existing
+        if body.fill:
+            filled = await manual_offers.fill(runtime, existing, draft)
     async with runtime.sessionmaker() as session:
         offer = await session.get(Offer, offer_id)
         found = await session.scalar(
@@ -158,4 +168,5 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
             existing=existing is not None,
             status=offer.status if offer is not None else "new",
             reasons=reasons,
+            filled=filled,
         )

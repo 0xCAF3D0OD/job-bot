@@ -65,6 +65,7 @@ describe("Ajouter une offre (docs/111)", () => {
       description: "Tu fabriques nos meubles.",
       url: "https://bois.ch/emplois/1",
       read_by: "page",
+      fill: false,
     });
     expect(wrapper.emitted("added")).toEqual([[{ id: 9, existing: false, status: "to_review", reasons: [] }]]);
   });
@@ -104,6 +105,24 @@ describe("Ajouter une offre (docs/111)", () => {
     await flushPromises();
     await wrapper.find("[data-test=manual-existing] button").trigger("click");
     expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "", reasons: [] }]]);
+  });
+
+  // Une offre de LinkedIn sans texte : la page de l'annonce la complète, sans rien remplacer.
+  it("déjà là sans texte ni lien : « Compléter l'offre » les ajoute", async () => {
+    const wrapper = await mountForm();
+    POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4, fillable: ["description", "url"] }) } });
+    await wrapper.find("[data-test=manual-url]").setValue("https://bois.ch/emplois/1");
+    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=manual-existing]").text()).toContain(
+      "sans le texte de l'annonce et le lien : « Compléter l'offre » les ajoute, sans rien remplacer.",
+    );
+    expect(wrapper.find("[data-test=manual-add]").text()).toMatch(/^Compléter l'offre/);
+    POST.mockResolvedValueOnce({ data: { id: 4, existing: true, status: "to_review", reasons: [], filled: ["description", "url"] } });
+    await wrapper.find("[data-test=manual-draft]").trigger("submit");
+    await flushPromises();
+    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: true, description: "Tu fabriques nos meubles." });
+    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "to_review", reasons: [], filled: ["description", "url"] }]]);
   });
 
   it("au maximum du jour, la lecture est fermée", async () => {

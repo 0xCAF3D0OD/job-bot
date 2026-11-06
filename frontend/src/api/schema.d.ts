@@ -4763,6 +4763,17 @@ export interface components {
             /** Contact Phone */
             contact_phone?: string | null;
         };
+        /** ExistingOffer */
+        ExistingOffer: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Spontaneous */
+            spontaneous: boolean;
+        };
         /** ExpectCodeOut */
         ExpectCodeOut: {
             /** Queued */
@@ -5833,6 +5844,11 @@ export interface components {
              * @enum {string}
              */
             read_by: "page" | "ia" | "main";
+            /**
+             * Fill
+             * @default false
+             */
+            fill: boolean;
         };
         /** ManualAddOut */
         ManualAddOut: {
@@ -5844,6 +5860,11 @@ export interface components {
             status: string;
             /** Reasons */
             reasons: string[];
+            /**
+             * Filled
+             * @default []
+             */
+            filled: string[];
         };
         /** ManualContext */
         ManualContext: {
@@ -5877,6 +5898,11 @@ export interface components {
             matches_trade: boolean;
             /** Existing Offer Id */
             existing_offer_id: number | null;
+            /**
+             * Fillable
+             * @default []
+             */
+            fillable: ("company" | "location" | "description" | "url")[];
         };
         /** ManualReadIn */
         ManualReadIn: {
@@ -7629,11 +7655,17 @@ export interface components {
             reason: string;
             /** Website */
             website?: string | null;
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
         };
         /** SpontaneousOut */
         SpontaneousOut: {
             /** Id */
-            id: number;
+            id: number | null;
+            existing?: components["schemas"]["ExistingOffer"] | null;
         };
         /** StatusResponse */
         StatusResponse: {

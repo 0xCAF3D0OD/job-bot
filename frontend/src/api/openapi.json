@@ -13278,6 +13278,41 @@
         "type": "object",
         "title": "EmployerOut"
       },
+      "ExistingOffer": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "spontaneous": {
+            "type": "boolean",
+            "title": "Spontaneous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "spontaneous"
+        ],
+        "title": "ExistingOffer"
+      },
       "ExpectCodeOut": {
         "properties": {
           "queued": {
@@ -16698,6 +16733,11 @@
             ],
             "title": "Read By",
             "default": "main"
+          },
+          "fill": {
+            "type": "boolean",
+            "title": "Fill",
+            "default": false
           }
         },
         "type": "object",
@@ -16726,6 +16766,14 @@
             },
             "type": "array",
             "title": "Reasons"
+          },
+          "filled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filled",
+            "default": []
           }
         },
         "type": "object",
@@ -16850,6 +16898,20 @@
               }
             ],
             "title": "Existing Offer Id"
+          },
+          "fillable": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "company",
+                "location",
+                "description",
+                "url"
+              ]
+            },
+            "type": "array",
+            "title": "Fillable",
+            "default": []
           }
         },
         "type": "object",
@@ -22008,6 +22070,11 @@
               }
             ],
             "title": "Website"
+          },
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "default": false
           }
         },
         "type": "object",
@@ -22021,8 +22088,25 @@
       "SpontaneousOut": {
         "properties": {
           "id": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Id"
+          },
+          "existing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExistingOffer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

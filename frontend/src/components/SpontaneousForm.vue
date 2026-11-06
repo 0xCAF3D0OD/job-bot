@@ -12,11 +12,19 @@ import FormField from "./FormField.vue";
 const router = useRouter();
 // L'offre existe dès « Créer la candidature » : la liste des offres se recharge pour la montrer, même si
 // le panneau est fermé sans passer par « Préparer ».
-const emit = defineEmits<{ created: [id: number] }>();
+const emit = defineEmits<{ created: [id: number]; open: [id: number] }>();
 const form = reactive({ company: "", title: "", website: "", reason: "" });
 const saving = ref(false);
 const error = ref("");
 const offerId = ref<number | null>(null);
+// Une offre chez cette entreprise est déjà là (demande de Kevin, 2026-11-05) : l'avis la nomme et
+// l'ouvre ; « Créer quand même » crée la candidature spontanée. Changer l'entreprise ou le poste
+// retire l'avis.
+type Existing = { id: number; title: string; company: string | null; spontaneous: boolean };
+const existing = ref<Existing | null>(null);
+function forget(): void {
+  existing.value = null;
+}
 
 type Candidate = { uid: string; name: string; address: string; canton: string | null };
 const searching = ref(false);
@@ -56,10 +64,20 @@ async function create(event: Event): Promise<void> {
   error.value = "";
   try {
     const { data } = await api.POST("/api/offers/spontaneous", {
-      body: { company: form.company, title: form.title, reason: form.reason, website: form.website || null },
+      body: {
+        company: form.company,
+        title: form.title,
+        reason: form.reason,
+        website: form.website || null,
+        force: existing.value !== null,
+      },
     });
     if (!data) {
       error.value = "Création impossible pour l'instant : réessaie.";
+      return;
+    }
+    if (data.id === null || data.id === undefined) {
+      existing.value = data.existing ?? null;
       return;
     }
     offerId.value = data.id;
@@ -128,7 +146,7 @@ function prepare(): void {
         :aria-invalid="invalid"
         data-test="spontaneous-company"
         @blur="check('company')"
-        @input="clearIfFixed('company')"
+        @input="clearIfFixed('company'); forget()"
       >
     </FormField>
     <FormField
@@ -147,7 +165,7 @@ function prepare(): void {
         :aria-invalid="invalid"
         data-test="spontaneous-title"
         @blur="check('title')"
-        @input="clearIfFixed('title')"
+        @input="clearIfFixed('title'); forget()"
       >
     </FormField>
     <FormField
@@ -187,6 +205,23 @@ function prepare(): void {
       />
     </FormField>
     <p
+      v-if="existing"
+      class="notice"
+      role="status"
+      data-test="spontaneous-existing"
+    >
+      {{ existing.spontaneous ? "Tu as déjà une candidature spontanée" : "Tu as déjà une offre" }} chez
+      {{ existing.company }} : « {{ existing.title }} ».
+      <button
+        type="button"
+        class="link"
+        data-test="spontaneous-open-existing"
+        @click="emit('open', existing.id)"
+      >
+        L'ouvrir
+      </button>
+    </p>
+    <p
       v-if="error"
       class="notice error"
       role="alert"
@@ -199,7 +234,7 @@ function prepare(): void {
       :disabled="saving"
       data-test="spontaneous-create"
     >
-      Créer la candidature
+      {{ existing ? "Créer quand même" : "Créer la candidature" }}
     </button>
   </form>
 
