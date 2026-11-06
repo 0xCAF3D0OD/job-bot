@@ -27,5 +27,6 @@ export function applicationUpdateBody(value: ApplicationFormValue) {
     status_reason: value.status_reason || null,
     status_at: value.status_at ?? null,
     interview_at: value.interview_at ?? null,
+    interview_place: value.interview_place || null,
   };
 }

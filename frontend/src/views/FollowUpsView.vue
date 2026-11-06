@@ -81,6 +81,7 @@ function archive(): void {
           status: "sans_reponse",
           status_reason: a.status_reason ?? null,
           interview_at: a.interview_at ?? null,
+          interview_place: a.interview_place ?? null,
         },
         keepalive,
       });

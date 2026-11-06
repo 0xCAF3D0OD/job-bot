@@ -206,6 +206,13 @@ class ApplicationUpdate(ApplicationBase):
     status_reason: ShortText | None = None
     status_at: date | None = None
     interview_at: datetime | None = None
+    # Lieu ou lien de l'entretien (texte libre : adresse, « Visio », lien Teams…).
+    interview_place: Annotated[str, Field(max_length=1000)] | None = None
+
+    @field_validator("interview_place")
+    @classmethod
+    def _strip_place(cls, value: str | None) -> str | None:
+        return _clean(value)
 
 
 class ApplicationOut(ApplicationUpdate):

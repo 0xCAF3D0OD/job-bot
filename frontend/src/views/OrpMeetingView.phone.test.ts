@@ -173,6 +173,17 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
   });
 
+  it("le lieu ou lien de l'entretien, quand il est saisi, remplace l'adresse de l'entreprise", async () => {
+    const link = "https://meet.example.ch/entretien-7-avec-un-lien-tres-long";
+    serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] }, [
+      { ...interview(7, "2099-11-16T09:00:00Z"), interview_place: link },
+    ]);
+    const { wrapper } = await open();
+    const card = wrapper.get("[data-test=rdv-interview-7]");
+    expect(card.get("[data-test=rdv-place]").text()).toBe(link);
+    expect(card.text()).not.toContain("Avenue de la Gare 12");
+  });
+
   it("le rendez-vous passé : noter ce qui a été convenu, avec le formulaire existant", async () => {
     const started = { ...MEETING, starts_at: "2026-10-13T08:00:00Z" };
     serve({ meeting: started, preparation: PREP, past: [], target: 10, trainings: [] });

@@ -88,7 +88,8 @@ drafts        id, offer_id, kind (letter|cv), version, language, content JSONB,
 applications  id, offer_id UNIQUE, sent_at, method (electronique|ecrit|telephone|personnel),
               assigned_by_orp, company, company_address?, contact_name?, contact_phone?,
               job_title, rate_text?, status (en_attente|relancee|entretien|refus|engagement|sans_reponse),
-              status_reason?, status_at?, interview_at?, letter_draft_id?, cv_draft_id?,
+              status_reason?, status_at?, interview_at?, interview_place? (lieu ou lien, texte libre),
+              letter_draft_id?, cv_draft_id?,
               reminded_at?, orp_month (AAAA-MM)
 settings      + coordonnées : identity_name, identity_street, identity_postcode, identity_city, identity_phone, identity_email
 ```
