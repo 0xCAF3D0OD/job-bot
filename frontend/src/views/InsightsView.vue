@@ -19,6 +19,7 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
 import IconButton from "../components/IconButton.vue";
 import { usePageReady } from "../composables/usePageTransition";
+import { usePhone } from "../composables/usePhone";
 import {
   bestComparison,
   bestSite,
@@ -37,6 +38,7 @@ type Period = "recent" | "month" | "all";
 const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
+const { phone } = usePhone();
 const error = ref("");
 const offline = ref(false);
 usePageReady("insights", () => !!insights.value || !!error.value);
@@ -155,8 +157,13 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
           :action="`Cibler ${site.label} dans mes alertes`"
           to="/candidatures/alertes"
         />
-        <div class="insights-head">
-          <!-- La période en contrôle segmenté (D4, 2026-11-03), au-dessus des chiffres. -->
+        <!-- La période en contrôle segmenté (D4, 2026-11-03), au-dessus des chiffres. Sur téléphone, plus de
+             période (maquette Progresser, Kevin 2026-11-06) : les chiffres des 3 derniers mois, sauf adresse avec un mois. -->
+        <div
+          v-if="!phone"
+          class="insights-head"
+          data-test="insights-period"
+        >
           <SegmentedControl
             :model-value="period"
             :options="periodSegments"
@@ -268,3 +275,15 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
     </div>
   </section>
 </template>
+
+<style scoped>
+/* Bilan › Résultats sur téléphone (maquette Progresser, Kevin 2026-11-06) : la phrase en gras d'un bloc, sans mot
+   en bleu ; des tuiles de 72 px (chiffre sans interligne, libellé serré) ; le parcours en lignes de 26 px. */
+@media (max-width: 820px) {
+  .bilan-sentence strong { color: inherit; }
+  .insights :deep(.bilan-figures strong) { line-height: var(--leading-none); }
+  .insights :deep(.bilan-figures span) { line-height: var(--leading-tight); }
+  .insights :deep(.bilan-funnel ul) { gap: var(--space-2); }
+  .insights :deep(.bilan-funnel li) { line-height: var(--leading-tight); }
+}
+</style>
