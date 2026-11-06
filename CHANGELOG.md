@@ -427,3 +427,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.213 | Ma candidature : l'aperçu de la lettre et du CV n'est plus coupé à droite, les vignettes et l'aperçu suivent la maquette (en sombre aussi), FR/DE/EN en pilule bleue, « J'ai relu » en case blanche, le bouton inactif gris bleuté, l'entreprise sans le canton | livrée |
 | 1.6.214 | Get'emAll : la page « Relier Get'emAll », la carte des Réglages › Connexions et la section des Données personnelles | livrée |
 | 1.6.215 | Candidatures sur téléphone : l'entreprise et le lieu sur une ligne, l'anneau de 48 px ; les offres « Loin » cachées derrière « Afficher aussi les offres loin de ton profil (n) » | livrée |
+| 1.6.216 | Ma candidature, étape CV sur téléphone : FR / DE / EN en tête de la carte (une autre langue propose « Préparer à nouveau en … »), les mots mis en avant sous l'aperçu, « Blocs du CV » replié | livrée |
