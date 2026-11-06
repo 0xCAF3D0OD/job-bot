@@ -4,11 +4,15 @@ import { describe, expect, it, vi } from "vitest";
 import { isNetworkError } from "../network";
 import NetworkError from "./NetworkError.vue";
 
-describe("Pas de connexion (planche « Illustrations »)", () => {
-  it("l'illustration, le titre, la promesse tenue : « Réessayer » et le retour du réseau relancent", async () => {
+describe("Pas de connexion, erreur dans la page (docs/141)", () => {
+  it("la mascotte qui dit « non », le titre, la promesse tenue : « Réessayer » et le retour du réseau relancent", async () => {
     const wrapper = mount(NetworkError);
-    expect(wrapper.find(".illu").exists()).toBe(true);
-    expect(wrapper.find(".face-mark").exists()).toBe(false);
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    // Plus l'ancienne illustration de la baie de serveurs, ni le personnage.
+    expect(wrapper.find(".illu").exists()).toBe(false);
+    expect(wrapper.find("[data-illustration=personnage]").exists()).toBe(false);
+    expect(wrapper.find("[data-mood-animation=hochement]").exists()).toBe(true);
     expect(wrapper.find(".face-state-title").text()).toBe("Pas de connexion");
     expect(wrapper.text()).toContain("jobA1 réessaie dès que le réseau revient.");
     await wrapper.find("[data-test=network-retry]").trigger("click");

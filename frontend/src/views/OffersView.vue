@@ -20,6 +20,7 @@ import OfferFilterSheet from "../components/OfferFilterSheet.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
+import CharacterState from "../components/CharacterState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
@@ -786,12 +787,12 @@ onUnmounted(() => {
             </RouterLink>
           </div>
         </FaceState>
-        <!-- Téléphone (maquette AucuneOffre, C9) : ce qui filtre, en mots, et « Modifier les filtres ». -->
-        <FaceState
+        <!-- Téléphone (maquette AucuneOffre du 6.11, C9) : le personnage à la loupe (docs/141, 7), ce qui filtre,
+             en mots, et « Modifier les filtres ». -->
+        <CharacterState
           v-else-if="!loading && items.length === 0 && activeCount(filters) && phone"
+          pose="loupe"
           title="Aucune offre avec ces filtres"
-          mood="neutre"
-          animation="loupe"
           data-test="offers-empty"
         >
           <p>{{ emptyFiltersLine }}</p>
@@ -805,7 +806,7 @@ onUnmounted(() => {
               Modifier les filtres
             </button>
           </div>
-        </FaceState>
+        </CharacterState>
         <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
         <p
           v-else-if="!loading && items.length === 0 && activeCount(filters)"

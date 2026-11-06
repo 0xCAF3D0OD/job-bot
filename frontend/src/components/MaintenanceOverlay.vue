@@ -1,18 +1,18 @@
 <script lang="ts">
-import { KIT } from "../personnage";
+import { poseFile } from "../personnage";
 
-// Adresses écrites en clair : la page d'attente est dans le premier écran, sans la table des poses.
-const cables = `/personnage/perso-09-cables-400.webp?v=${KIT}`;
-const CABLES_SRCSET = `${cables} 1x, /personnage/perso-09-cables-800.webp?v=${KIT} 2x`;
-// Le personnage est chargé d'avance au premier moment libre et gardé en mémoire : pendant la
-// maintenance, le serveur ne répond peut-être plus (docs/80 §2).
-let held: HTMLImageElement | null = null;
+// Les deux poses sont chargées d'avance au premier moment libre et gardées en mémoire : pendant la
+// maintenance, le serveur ne répond peut-être plus ; hors ligne, plus rien n'arrive (docs/80 §2).
+const held: HTMLImageElement[] = [];
 const idle = globalThis.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1500));
 if (typeof Image !== "undefined") {
   idle(() => {
-    held = new Image();
-    held.srcset = CABLES_SRCSET;
-    held.src = cables;
+    for (const pose of ["cables", "hors-ligne"] as const) {
+      const img = new Image();
+      img.srcset = `${poseFile(pose, 400)} 1x, ${poseFile(pose, 800)} 2x`;
+      img.src = poseFile(pose, 400);
+      held.push(img);
+    }
   });
 }
 </script>
@@ -20,9 +20,13 @@ if (typeof Image !== "undefined") {
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
+import Illustration from "./Illustration.vue";
+
 // La page d'attente (docs/79) : par-dessus tout, sans recharger ; le reste de l'écran est
 // inerte tant qu'elle est là, et retrouvé tel quel ensuite. Mise en page (maquettes MaintenanceMaj,
-// MaintenanceAnnoncee et MaintenanceHorsLigne du 2026-11-05) : le personnage aux câbles du kit, un titre
+// MaintenanceAnnoncee et MaintenanceHorsLigne du 2026-11-06) : le personnage aux câbles (nouvelle tête) pour
+// la mise à jour et la maintenance annoncée, le personnage au téléphone quand le réseau manque (docs/141, 5 et
+// 6), 250 px ; un titre
 // selon le cas, ce qui se passe, puis en bas le prochain essai et « Réessayer maintenant ».
 // Trois cas : hors ligne (le navigateur le sait), une maintenance annoncée avec son message, sinon
 // une mise à jour.
@@ -107,16 +111,14 @@ async function retry(): Promise<void> {
       data-test="maintenance"
     >
       <div class="maintenance-body">
-        <img
+        <Illustration
+          :pose="offline ? 'hors-ligne' : 'cables'"
+          :height="250"
+          :desktop-height="290"
+          full
           class="maintenance-person"
-          :src="cables"
-          :srcset="CABLES_SRCSET"
-          alt=""
-          aria-hidden="true"
-          width="203"
-          height="400"
           data-test="maintenance-person"
-        >
+        />
         <h1 id="maintenance-title">
           {{ title }}
         </h1>

@@ -120,11 +120,12 @@ describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05
     await flushPromises();
     expect(wrapper.emitted("retry")).toHaveLength(1);
     expect(next()?.trim()).toBe("Nouvel essai en cours…");
-    // Le personnage aux câbles du kit : 400 px, 800 px en 2×, décoratif ; pas d'en-tête.
+    // Le personnage aux câbles (docs/141, 5) : 400 px, 800 px en 2×, 250 px, décoratif ; pas d'en-tête.
     const person = document.querySelector("[data-test=maintenance-person]");
     expect(person?.getAttribute("src")).toContain("perso-09-cables-400");
     expect(person?.getAttribute("srcset")).toContain("perso-09-cables-800");
     expect(person?.getAttribute("alt")).toBe("");
+    expect(person?.getAttribute("height")).toBe("250");
     expect(document.querySelector(".maintenance header")).toBeNull();
     wrapper.unmount();
   });
@@ -136,10 +137,14 @@ describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05
     const title = () => document.querySelector("[data-test=maintenance] h1")?.textContent?.trim();
     expect(title()).toBe("Pas de connexion");
     expect(document.querySelector("[data-test=maintenance]")?.textContent).toContain("Vérifie le Wi‑Fi ou les données mobiles.");
+    // Le personnage au téléphone, distinct de la maintenance (docs/141, 6).
+    const pose = () => document.querySelector("[data-test=maintenance-person]")?.getAttribute("data-pose");
+    expect(pose()).toBe("hors-ligne");
     online.mockReturnValue(true);
     window.dispatchEvent(new Event("online"));
     await flushPromises();
     expect(title()).toBe("jobA1 se met à jour");
+    expect(pose()).toBe("cables");
     online.mockRestore();
     wrapper.unmount();
   });

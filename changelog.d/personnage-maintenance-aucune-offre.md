@@ -1,0 +1,1 @@
+Le personnage sur la maintenance (câbles, nouvelle tête), « Pas de connexion » (au téléphone) et « Aucune offre avec ces filtres » (à la loupe) ; l'erreur réseau dans la page garde la mascotte qui fait « non »

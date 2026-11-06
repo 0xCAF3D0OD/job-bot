@@ -736,11 +736,12 @@ onMounted(() => void load());
     class="band"
   >
     <div class="container">
-      <!-- Offre introuvable (planche « Illustrations ») : retirée par l'employeur, peut-être. -->
+      <!-- Offre introuvable : retirée par l'employeur, peut-être. Un écran de travail : le visage, jamais le
+           personnage (docs/141 §1). -->
       <FaceState
         v-if="notFound"
         title="Offre introuvable"
-        illustration="introuvable"
+        mood="attentif"
         data-test="offer-not-found"
       >
         <p>Elle a peut-être été retirée par l'employeur.</p>

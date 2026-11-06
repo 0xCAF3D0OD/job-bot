@@ -23,7 +23,6 @@ export const ILLUSTRATIONS = {
   "accueil-reseau": { source: "15_Reseau" },
   "actualites-video": { source: "Actualites_C_Videos" },
   "alertes-carte": { source: "02_Alertes" },
-  "aucune-offre": { source: "03_Offres_Aucune_Offre" },
   bilan: { source: "06_Bilan" },
   "emails-tries": { source: "00_Accueil_Banniere" },
   formations: { source: "06_Formations" },
@@ -39,14 +38,12 @@ export const ILLUSTRATIONS = {
   // La série de l'archive illustrations_transparentes.zip (série du 27.10, règle §4) : seulement les
   // écrans vides, les premiers pas, les réussites et les erreurs ; une par écran.
   reussite: { source: "009_completed" },
-  "connexion-perdue": { source: "010_connection_lost" },
   "assistant-vide": { source: "008_chatting" },
   "preparer-vide": { source: "004_ai_generated_document_8im" },
   "ia-vide": { source: "005_artificial_intelligence" },
   "rendez-vous-vide": { source: "006_booking" },
   "formations-vide": { source: "007_certification" },
   "trop-tot": { source: "001_absorbed" },
-  introuvable: { source: "002_action_required" },
 };
 
 const OUT = fileURLToPath(new URL("../public/illustrations/", import.meta.url));

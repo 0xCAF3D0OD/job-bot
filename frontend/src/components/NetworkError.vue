@@ -8,7 +8,8 @@ import FaceState from "./FaceState.vue";
 // échoue pour une raison de réseau. jobA1 réessaie de lui-même dès que le réseau revient (l'événement
 // « online » du navigateur) : la phrase le promet parce que c'est vrai ; « Réessayer » le fait tout de
 // suite. Rien de ce qui est saisi n'est effacé.
-// `title` et `line` (téléphone, maquette ErreurConnexion) : le visage au lieu de l'illustration, une phrase
+// Une erreur dans la page : la petite mascotte d'humeur qui fait « non » (docs/141 §1), plus l'ancienne
+// illustration de la baie de serveurs. `title` et `line` (téléphone, maquette ErreurConnexion) : une phrase
 // propre à la page, et « Réessayer » en bouton principal.
 const props = defineProps<{ title?: string; line?: string }>();
 const emit = defineEmits<{ retry: [] }>();
@@ -23,9 +24,8 @@ onUnmounted(() => globalThis.removeEventListener?.("online", back));
 <template>
   <FaceState
     :title="props.title ?? 'Pas de connexion'"
-    :illustration="props.title ? undefined : 'connexion-perdue'"
     mood="attentif"
-    :animation="props.title ? 'hochement' : undefined"
+    animation="hochement"
     :role="props.title ? 'alert' : undefined"
     data-test="network-error"
   >

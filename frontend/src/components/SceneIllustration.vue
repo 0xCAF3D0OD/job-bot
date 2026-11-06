@@ -33,7 +33,6 @@ export type SceneName =
   | "accueil-reseau"
   | "actualites-video"
   | "alertes-carte"
-  | "aucune-offre"
   | "bilan"
   | "emails-tries"
   | "formations"
@@ -47,14 +46,12 @@ export type SceneName =
   | "tableau-de-bord"
   // Série du 27.10 (règle §4) : écrans vides, premiers pas, réussites, erreurs.
   | "reussite"
-  | "connexion-perdue"
   | "assistant-vide"
   | "preparer-vide"
   | "ia-vide"
   | "rendez-vous-vide"
   | "formations-vide"
-  | "trop-tot"
-  | "introuvable";
+  | "trop-tot";
 </script>
 
 <template>
