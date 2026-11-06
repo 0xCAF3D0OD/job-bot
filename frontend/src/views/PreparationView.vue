@@ -6,7 +6,7 @@ import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from
 import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import TemplatePicker from "../components/TemplatePicker.vue";
-import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
+import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -235,6 +235,14 @@ const shownLanguage = computed<string>({
 // Le bouton plein de la barre (C3) : « Rédiger… » quand il y a quelque chose à rédiger, sinon rien
 // (« Continuer vers le CV » prend la place).
 const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
+// Sous Lettre.pdf / CV.pdf (maquette Preparer) : le modèle choisi et la langue de la lettre, « Modèle Moderne, en
+// français. » ; sans lettre, le modèle seul.
+const templateNote = computed(() => {
+  if (!currentLetterId.value && !currentCvId.value) return "";
+  const name = DOC_TEMPLATES.find((t) => t.value === template.value)?.label ?? "";
+  const language = current(letters.value)?.language;
+  return language ? `Modèle ${name}, en ${LANGUAGE_IN[language]}.` : `Modèle ${name}.`;
+});
 const writeLabel = computed(() => {
   const chosen = language.value;
   if (!selected.value) return chosen ? `Rédiger en ${LANGUAGE_IN[chosen]}` : "Rédiger la lettre";
@@ -760,6 +768,13 @@ onMounted(() => void load());
                 data-test="sheet-cv"
               ><AppIcon name="file" />CV.pdf</a>
             </PrepCertificates>
+            <p
+              v-if="phone && templateNote"
+              class="apply-where-text apply-template-note"
+              data-test="apply-template-note"
+            >
+              {{ templateNote }}
+            </p>
           </section>
           <section
             class="doc-card apply-copy"
