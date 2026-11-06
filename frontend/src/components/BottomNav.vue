@@ -53,8 +53,8 @@ const notch = computed(() => {
 async function refresh(): Promise<void> {
   try {
     const { data } = await api.GET("/api/today");
-    // Le nombre du segment « À traiter » (docs/139, C2).
-    toReview.value = data?.pending ?? 0;
+    // Le nombre du segment « À traiter » (docs/139, C2), sans les offres « Loin » que la liste du téléphone cache.
+    toReview.value = data?.pending_near ?? 0;
   } catch {
     // Silencieux : le nombre n'est qu'un repère.
   }

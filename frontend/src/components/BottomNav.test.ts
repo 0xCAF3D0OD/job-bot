@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-vi.mock("../api/client", () => ({ api: { GET: () => Promise.resolve({ data: { to_review: 2, pending: 4 } }) } }));
+vi.mock("../api/client", () => ({ api: { GET: () => Promise.resolve({ data: { to_review: 2, pending: 7, pending_near: 4 } }) } }));
 vi.mock("../composables/useJobsMemory", () => ({ useJobsMemory: () => ({ last: ref("/candidatures/suivi") }) }));
 const assistant = { available: ref(true), known: ref(true) };
 vi.mock("../composables/useAssistant", () => ({ useAssistant: () => assistant }));

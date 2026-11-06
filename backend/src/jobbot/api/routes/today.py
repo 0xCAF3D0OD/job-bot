@@ -119,6 +119,9 @@ class TodayOut(BaseModel):
     to_review: int
     # « À traiter » (docs/139, C2) : à examiner, plus tard, en préparation ; le calcul de la liste.
     pending: int = 0
+    # Le même, sans les offres « Loin » (note sous 50) que la liste du téléphone cache : la
+    # pastille de la barre du bas (Kevin, 6.11).
+    pending_near: int = 0
     month: str
     month_count: int
     month_target: int | None
@@ -215,6 +218,7 @@ async def get_today(request: Request) -> TodayOut:
             )
         )
         pending = await count_pending(session)
+        pending_near = await count_pending(session, near=True)
         month_count = await count(
             select(func.count()).select_from(Application).where(Application.orp_month == month)
         )
@@ -335,6 +339,7 @@ async def get_today(request: Request) -> TodayOut:
         first_steps_finished=steps.just_finished,
         to_review=to_review,
         pending=pending,
+        pending_near=pending_near,
         month=month,
         month_count=month_count,
         month_target=int(target) if target else None,
