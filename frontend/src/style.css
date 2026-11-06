@@ -16,6 +16,7 @@
   --text: #1B1F2A;
   --text-secondary: #596070;
   --text-tertiary: #474C59;
+  --btn-disabled: #D9DCE6;
   /* Le bleu : --primary pour les boutons pleins (texte --on-primary), --primary-graphic pour les traits, anneaux et
      icônes, --primary-text pour les liens et boutons texte ; en sombre, les trois diffèrent. */
   --primary: #2445C2;
@@ -165,6 +166,7 @@
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
+    --btn-disabled: #36312B;
     --primary: #2445C2;
     --primary-graphic: #7D95FF;
     --primary-text: #AEBDFF;
@@ -199,6 +201,7 @@
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
+  --btn-disabled: #36312B;
   --primary: #2445C2;
   --primary-graphic: #7D95FF;
   --primary-text: #AEBDFF;
@@ -3448,7 +3451,9 @@ main:focus { outline: none; }
 .doc-card { display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .doc-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
 .doc-card-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.doc-language > button { min-inline-size: 2.75rem; padding-inline: var(--space-3); }
+.doc-language { border-radius: var(--radius-pill); background: var(--bg); }
+.doc-language > button { min-inline-size: 2.75rem; min-height: 2.25rem; padding-inline: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-caption); font-weight: var(--weight-bold); }
+.doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--primary); color: var(--on-primary); box-shadow: none; }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
 .doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
@@ -3541,7 +3546,7 @@ main:focus { outline: none; }
     padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
     background: var(--surface); border-top: 1px solid var(--line); border-radius: 0; box-shadow: none;
   }
-  .prep-bar > .prep-bar-waiting { border: 0; background: var(--surface-muted); color: var(--text-tertiary); cursor: default; box-shadow: none; }
+  .prep-bar > .prep-bar-waiting { border: 0; background: var(--btn-disabled); color: var(--text-tertiary); cursor: default; box-shadow: none; }
   .prep-bar > .prep-bar-hint { text-align: center; color: var(--text-secondary); }
   .doc-card { padding: var(--space-3); }
   .doc-card > :is(.letter-sheet, .cv-sheet) { padding: var(--space-5) var(--space-4); }
@@ -4187,6 +4192,9 @@ html.search-open { overflow: hidden; }
 :root input[type="radio"]:checked { border-width: 2px; background: radial-gradient(circle, var(--accent) 0 0.3rem, var(--field-bg) calc(0.3rem + 0.5px)); }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):disabled { border-color: var(--border); background: var(--panel); cursor: not-allowed; }
+/* « J'ai relu la lettre » (maquette Preparer) : la case de 24 px, blanche à bord foncé, en clair comme en sombre. */
+:root .doc-card-read input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
+:root .doc-card-read input[type="checkbox"]:not(:checked, :disabled) { border-color: #474C59; background: #fff; }
 /* Réglages sous 600 px : la sous-page a son titre en haut de page, la section ne le répète pas. */
 .settings-sub .settings-section > .section-title { display: none; }
 
@@ -4479,45 +4487,3 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-delete-text { color: var(--text-secondary); font-size: var(--font-small); }
 button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
 
-/* Le modèle de la lettre et du CV (maquette Preparer, Kevin 2026-11-05) : quatre vignettes, puis l'aperçu
-   de la page dans le modèle choisi. */
-.tpl-picker { display: grid; gap: var(--space-2); }
-.tpl-picker-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: 0 var(--space-1); }
-.tpl-picker-head h2 { margin: 0; font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
-.tpl-picker-head span { font-size: var(--label-caps); color: var(--text-secondary); }
-.tpl-picker-row { display: flex; gap: var(--space-3); overflow-x: auto; margin: 0 calc(var(--space-4) * -1); padding: var(--space-1) var(--space-4); scrollbar-width: none; }
-.tpl-card { flex: none; display: grid; justify-items: center; gap: var(--space-2); min-width: 96px; padding: var(--space-2) var(--space-2) var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-bold); }
-.tpl-card.selected { border: 2.5px solid var(--primary); background: var(--primary-soft); }
-.tpl-thumb { position: relative; display: grid; align-content: start; gap: var(--space-2); width: 74px; height: 96px; padding: var(--space-2); border-radius: var(--radius-sm); background: #fff; box-shadow: 0 1px 4px rgb(27 31 42 / 14%); overflow: hidden; }
-.tpl-thumb i { display: block; height: 3px; border-radius: var(--radius-pill); background: #D9DCE6; }
-.tpl-thumb-head, .tpl-thumb-lines { display: grid; gap: var(--space-1); }
-.tpl-thumb-head i:first-child { width: 60%; height: 5px; background: #1B1F2A; }
-.tpl-thumb-head i:last-child { width: 35%; }
-.tpl-thumb-lines i:nth-child(2) { width: 80%; }
-.tpl-thumb-lines i:nth-child(3) { width: 65%; }
-.tpl-thumb.tpl-moderne { padding-left: var(--space-8); }
-.tpl-thumb.tpl-moderne::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 22px; background: #2445C2; }
-.tpl-thumb.tpl-moderne .tpl-thumb-head i:first-child { background: #2445C2; }
-.tpl-thumb.tpl-bandeau { padding-top: 0; }
-.tpl-thumb.tpl-bandeau .tpl-thumb-head { margin: 0 calc(var(--space-2) * -1); padding: var(--space-2); background: #F3B08A; }
-.tpl-thumb.tpl-classique { background: #FFFDF8; }
-.tpl-thumb.tpl-classique .tpl-thumb-head { justify-items: center; padding-bottom: var(--space-1); border-bottom: 1px solid #1B1F2A; }
-
-.doc-preview { display: block; width: 100%; height: 13rem; padding: var(--space-3) var(--space-5) 0; border: 0; border-radius: var(--radius-card); background: var(--surface-muted); text-align: left; font: inherit; overflow: hidden; cursor: pointer; }
-.doc-preview-page { display: grid; align-content: start; height: 100%; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: #fff; color: #1B1F2A; box-shadow: 0 2px 8px rgb(27 31 42 / 12%); overflow: hidden; transition: background-color var(--t-state); }
-.doc-preview-head { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4) var(--space-2); }
-.doc-preview-head strong { font-size: var(--font-body); font-weight: var(--weight-bold); }
-.doc-preview-head span { font-size: var(--font-caption); }
-.doc-preview-body { display: grid; gap: var(--space-2); padding: var(--space-2) var(--space-4) var(--space-4); font-size: var(--font-caption); line-height: var(--leading-normal); color: #3D4250; }
-.doc-preview-empty { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
-.doc-preview-empty i { display: block; height: 6px; border-radius: var(--radius-pill); background: #E4E6EC; }
-.doc-preview-empty i:nth-child(2) { width: 90%; }
-.doc-preview-empty i:nth-child(3) { width: 75%; }
-.doc-preview-empty i:nth-child(4) { width: 55%; }
-.doc-preview-page.tpl-moderne { border-left: 14px solid #2445C2; }
-.doc-preview-page.tpl-moderne .doc-preview-head { color: #2445C2; }
-.doc-preview-page.tpl-bandeau .doc-preview-head { background: #F3B08A; }
-.doc-preview-page.tpl-classique { background: #FFFDF8; font-family: Georgia, "Times New Roman", serif; }
-.doc-preview-page.tpl-classique .doc-preview-head { justify-items: center; margin: 0 var(--space-4); padding-inline: 0; border-bottom: 1px solid #1B1F2A; }
-.doc-preview-page.tpl-classique .doc-preview-head strong { font-weight: var(--weight-semibold); }
-.doc-preview-page.tpl-sobre .doc-preview-head span { color: #596070; }

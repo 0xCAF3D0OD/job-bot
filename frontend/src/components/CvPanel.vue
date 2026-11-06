@@ -265,7 +265,10 @@ onMounted(() => void load());
         En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
-      <TemplatePicker v-if="phone" />
+      <TemplatePicker
+        v-if="phone"
+        :name="doc?.name"
+      />
       <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
            l'adaptation a mis en avant (ses mots-clés). -->
       <section
