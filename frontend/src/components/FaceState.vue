@@ -1,3 +1,11 @@
+<script lang="ts">
+const loadMood = () => import("./MoodAnimation.vue");
+// Chargé d'avance au premier moment libre, une fois pour toutes : hors ligne, le geste « Connexion
+// perdue » ne pourrait plus venir du serveur (maquette ErreurConnexion).
+const idle = globalThis.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1500));
+idle(() => void loadMood().catch(() => undefined));
+</script>
+
 <script setup lang="ts">
 import { defineAsyncComponent } from "vue";
 
@@ -12,7 +20,7 @@ import Illustration, { type IllustrationName } from "./Illustration.vue";
 // écran vide, des premiers pas, une réussite ou une erreur ; jamais les deux à la fois.
 // `animation` (docs/139 étape 12, maquette Animations) : le visage dans sa forme d'humeur, avec son geste,
 // chargé à part pour ne pas alourdir le premier écran.
-const MoodAnimation = defineAsyncComponent(() => import("./MoodAnimation.vue"));
+const MoodAnimation = defineAsyncComponent(loadMood);
 withDefaults(
   defineProps<{
     title: string;

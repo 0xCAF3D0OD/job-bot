@@ -8,12 +8,12 @@ const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 afterEach(() => vi.resetAllMocks());
 
-async function mountPage(contact: string | null, guestMailbox = false, billing = false) {
+async function mountPage(contact: string | null, guestMailbox = false, billing = false, getemall = false) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
       data:
         path === "/api/privacy"
-          ? { contact, guest_mailbox: guestMailbox, billing }
+          ? { contact, guest_mailbox: guestMailbox, billing, getemall }
           : { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false },
     }),
   );
@@ -50,6 +50,22 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(text).toContain("Payrexx, un prestataire suisse");
     expect(text).toContain("10 ans");
     expect(open.find("[data-test=privacy-billing] a").attributes("href")).toBe("/conditions");
+  });
+
+  it("Get'emAll, seulement une fois la connexion ouverte (docs/140)", async () => {
+    const closed = await mountPage("Kevin, Lausanne");
+    expect(closed.find("[data-test=privacy-getemall]").exists()).toBe(false);
+    expect(closed.find("[data-test=privacy-revoke]").exists()).toBe(false);
+    expect(closed.text()).not.toContain("apps reliées");
+    const open = await mountPage("Kevin, Lausanne", false, false, true);
+    const text = open.find("[data-test=privacy-getemall]").text();
+    expect(text).toContain("seulement si tu l'as coché");
+    expect(text).toContain("l'identifiant de ton compte jobA1");
+    expect(open.find("[data-test=privacy-revoke]").text()).toContain("Réglages › Connexions");
+    expect(open.text()).toContain("et l'accès des apps reliées est retiré");
+    // La section vient juste après celle de l'IA.
+    const titles = open.findAll("h2").map((h) => h.text());
+    expect(titles[titles.indexOf("Ce qui part à l'IA (Anthropic)") + 1]).toBe("Get'emAll, si tu le relies");
   });
 
   it("sans mentions : le dit", async () => {

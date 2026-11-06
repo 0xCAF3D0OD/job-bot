@@ -72,6 +72,8 @@ class Privacy(BaseModel):
     # La boîte des invités est en place (docs/113) : les e-mails des sites n'arrivent plus
     # dans la boîte de l'exploitant.
     guest_mailbox: bool = False
+    # Get'emAll est configuré (docs/140) : la page dit ce qui lui part, si on le relie (I-4).
+    getemall: bool = False
 
 
 class DeleteIn(BaseModel):
@@ -350,6 +352,7 @@ async def get_privacy(request: Request) -> Privacy:
         contact=str(contact) if contact else None,
         guest_mailbox=_runtime(request).settings.guest_imap_configured,
         billing=_runtime(request).settings.billing_ready,
+        getemall=_runtime(request).settings.getemall_ready,
     )
 
 
