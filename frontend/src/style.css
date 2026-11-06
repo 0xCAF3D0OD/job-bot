@@ -769,7 +769,17 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .side-card button { justify-content: center; }
 .side-card .hint { margin: 0; font-size: var(--font-small); }
 .version-instruction { margin: 0; overflow-wrap: anywhere; }
-.versions .grouped-row-title { overflow-wrap: anywhere; }
+/* Les versions (6.11.2026) : un nom court, la consigne entière dessous, coupée entre deux mots seulement. La ligne
+   choisie est une pastille en retrait de 4 px, au rayon de la carte moins 4 px (comme le segment sur son rail) :
+   son fond suit les coins de la carte, qui découpe aussi son contenu. */
+.versions .grouped-card { overflow: hidden; }
+.versions :is(.grouped-row-title, .grouped-row-description) { overflow-wrap: break-word; word-break: normal; hyphens: manual; }
+.versions .grouped-row-current, .versions .grouped-row-current:hover { position: relative; isolation: isolate; background: none; }
+.versions .grouped-row-current::before { content: ""; position: absolute; inset: var(--space-1); z-index: -1; border-radius: calc(var(--radius) - var(--space-1)); background: var(--accent-soft); }
+/* Une page A4 : la ligne sous la relecture, et la marque de fin de page dans la lettre. */
+.page-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0; color: var(--muted); }
+.page-line .link { min-height: 2.75rem; }
+.page-end { margin: var(--space-2) 0; padding-top: var(--space-1); border-top: 1px dashed var(--field-border); font-size: var(--font-caption); color: var(--muted); }
 /* La relecture de la lettre : la ligne, puis un critère par ligne, sa pastille au bout. */
 .review-line { margin: 0; color: var(--muted); }
 .review-criteria { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
@@ -3479,6 +3489,7 @@ main:focus { outline: none; }
 .apply-cards > :is(.button-link, button, .link) { justify-self: start; }
 .apply-cards h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .apply-where-text, .apply-cards .hint { margin: 0; color: var(--text-secondary); }
+.apply-template-note { font-size: var(--label-caps); }
 .apply-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .apply-files > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .apply-files .icon { color: var(--primary-graphic); }

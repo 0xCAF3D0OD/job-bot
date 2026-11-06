@@ -1,0 +1,1 @@
+Lettre : elle tient sur une page A4, mesurée sur le PDF du modèle choisi (mise en page resserrée, puis raccourcie par l'IA avec un nombre de mots), avec « Tient sur une page A4 » ou « Déborde de n lignes : Raccourcir » et la marque de fin de page ; les versions ont un nom court et la consigne entière dessous
