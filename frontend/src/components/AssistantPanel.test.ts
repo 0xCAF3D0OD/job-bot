@@ -261,6 +261,20 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
   });
 });
 
+describe("Une question posée d'ailleurs (« Pas de CV à jour ? », 2026-11-06)", () => {
+  it("le panneau l'envoie dès qu'il s'affiche, une seule fois", async () => {
+    const fetch = vi.fn(() => Promise.resolve(stream(["delta", { text: "Commençons par ton parcours." }], ["done", { conversation_id: 3 }])));
+    vi.stubGlobal("fetch", fetch);
+    useAssistant().ask("Je n'ai pas de CV à jour. Aide-moi à en créer un.");
+    const wrapper = await mountPanel();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const body = JSON.parse((fetch.mock.calls[0] as unknown as [string, { body: string }])[1].body) as { message?: string; content?: string };
+    expect(JSON.stringify(body)).toContain("Aide-moi à en créer un.");
+    expect(wrapper.find(".assistant-line.user").text()).toContain("Je n'ai pas de CV à jour.");
+    expect(useAssistant().pending.value).toBeNull();
+  });
+});
+
 describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2026-11-05)", () => {
   const phoneMedia = (query: string) =>
     ({ matches: query.includes("820px") || query.includes("640px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
