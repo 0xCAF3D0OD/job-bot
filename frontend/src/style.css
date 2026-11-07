@@ -4391,7 +4391,9 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 /* --- Candidatures sur ordinateur, ≥ 1 024 px (maquettes CandidaturesOrdinateur et RendezVousOrdinateur, 7.11.2026) ---
    Une seule rangée : le titre, les trois vues, puis les outils de la vue à droite (recherche de 340 px, « Filtrer »,
    « Ajouter »). Dessous, deux colonnes qui défilent chacune : la liste de 560 px et la fiche dans une carte blanche.
-   Valeurs du HTML : marges 20/32/16, titre 28 px, vues de 40 px aux coins de 20, boutons de 44 px en pilule. */
+   Valeurs du HTML : marges 20/32/16, titre 28 px, vues de 40 px aux coins de 20 (48 px avec leur fond), boutons en
+   pilule. Le HTML donne 44 px aux boutons ; ils prennent 48 px comme les vues, une rangée ayant une seule hauteur
+   (docs/94, audit-controles). */
 @media (min-width: 1024px) {
   .jobs-head, .jobs-head.wide {
     --jobs-h1: 28px; --jobs-seg-pad: 18px; --jobs-seg-radius: 24px; --jobs-btn-text: 15px;
@@ -4405,11 +4407,11 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   .jobs-tools .offers-toolbar { margin: 0; gap: var(--space-3); }
   .jobs-tools .offers-toolbar-search { flex: none; width: 340px; }
   .jobs-tools .offers-toolbar .filters-search {
-    height: var(--target-min); padding-left: var(--space-8); border: 1.5px solid color-mix(in srgb, var(--line) 75%, var(--text-secondary));
+    height: var(--field-h); padding-left: var(--space-8); border: 1.5px solid color-mix(in srgb, var(--line) 75%, var(--text-secondary));
     border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-body);
   }
   .jobs-tools :is(.offers-toolbar-button, .more-trigger) {
-    min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid color-mix(in srgb, var(--line) 70%, var(--text-secondary));
+    min-height: var(--field-h); padding: 0 var(--space-4); border: 1.5px solid color-mix(in srgb, var(--line) 70%, var(--text-secondary));
     border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--jobs-btn-text); font-weight: var(--weight-bold);
   }
   .jobs-tools .offers-toolbar-button[aria-expanded="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); }
