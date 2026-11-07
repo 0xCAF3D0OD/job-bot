@@ -1,0 +1,1 @@
+Candidatures sur ordinateur selon la maquette CandidaturesOrdinateur : liste de 560 px et fiche qui défilent chacune, carte d'offre unique (ordinateur et téléphone), panneau Filtres en pastilles, barres de défilement fines

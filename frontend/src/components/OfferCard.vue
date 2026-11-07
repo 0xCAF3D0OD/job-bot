@@ -1,150 +1,78 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
-import { cityOnly, rateText, remoteText } from "../format";
-import AppIcon from "./AppIcon.vue";
-import OfferLine from "./OfferLine.vue";
+import { rateText, remoteText } from "../format";
+import ListCard from "./ListCard.vue";
 import ScoreRing from "./ScoreRing.vue";
-import StatusPill from "./StatusPill.vue";
 import { usePlan } from "../composables/usePlan";
 import { usePhone } from "../composables/usePhone";
 
-// Une offre dans la liste d'Offres : la Ligne d'offre complète (planche « Ligne d'offre », 1.6.7x) ;
-// le détail s'ouvre à droite. Toute la ligne sélectionne l'offre ; pas de mot d'action sur une offre
-// nouvelle (choix de Kevin), « Préparer » seulement sur une offre gardée. La date n'y est que hors du
-// tri « Par jour », où la ligne du jour la donne.
+// Une offre dans À traiter (maquettes CandidaturesOrdinateur et Candidatures, 7.11.2026) : la carte de liste
+// commune, avec l'anneau et son mot à droite. Ce qui demande attention (écartée, à vérifier, retirée) et la note
+// provisoire deviennent des puces ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
+// « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par jour », où le titre du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
-defineEmits<{ select: []; more: [] }>();
-// Téléphone (C6, Kevin 2026-11-05) : le « ⋯ » de 44 px dans le coin en haut à droite ouvre ses actions ;
-// « Préparer » n'est plus sur la carte : la fiche l'a (« Reprendre la lettre »).
+defineEmits<{ select: [] }>();
 const { phone } = usePhone();
-const router = useRouter();
+const route = useRoute();
 
-const expired = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
-// Une seule ligne sous le lieu, la plus utile pour décider : écartée, douteuse, retirée, puis ce qui
-// manque (en gris : il explique la note ; l'orange dit d'agir, docs/121 §C.5).
-const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>(() => {
+// Le lien de la carte : la sous-page sur téléphone, ?offre= à côté de la liste sur ordinateur (filtres gardés).
+const to = computed(() =>
+  phone.value
+    ? { path: `${route.path.replace(/\/\d+$/, "")}/${props.offer.id}`, query: route.query }
+    : { path: route.path, query: { ...route.query, offre: String(props.offer.id) } },
+);
+
+type Chip = { text: string; tone?: "peach" | "blue" | "warn"; title?: string };
+const chips = computed<Chip[]>(() => {
   const o = props.offer;
-  if (o.filter_reasons?.length) return { text: o.filter_reasons[0]!, kind: "warn" };
-  if (o.doubts?.length) {
-    const scam = o.doubts.some((d) => d.kind === "scam");
-    return { text: scam ? "Arnaque possible" : "À vérifier", kind: "danger" };
-  }
-  if (expired.value) return { text: "Retirée", kind: "warn" };
-  const missing = (o.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text);
-  // Sur téléphone, la carte reste celle de la maquette : ce qui manque est dans la fiche (Kevin, 2026-11-05).
-  if (missing.length && !phone.value) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "gap" };
-  if (o.remote_from_switzerland === false) return { text: "Télétravail fermé depuis la Suisse", kind: "warn" };
-  return null;
+  const out: Chip[] = [];
+  if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
+  else if (o.doubts?.length)
+    out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
+  else if (o.expired_at && o.status !== "applied") out.push({ text: "Retirée", tone: "warn" });
+  if (!o.description && !o.spontaneous && o.score !== null && o.score !== undefined) out.push({ text: "Provisoire", tone: "peach" });
+  const rate = rateText(o.rate_min, o.rate_max);
+  if (rate) out.push({ text: rate });
+  out.push({ text: o.employment_type || "Contrat non précisé" });
+  const remote = remoteText(o, phone.value);
+  if (remote) out.push({ text: remote });
+  if (o.status === "later") out.push({ text: "Plus tard" });
+  if (o.spontaneous) out.push({ text: "Spontanée", tone: "blue" });
+  else if (o.added_by_you) out.push({ text: "Ajoutée par toi", tone: "blue" });
+  if (props.showDate) out.push({ text: `Reçue ${dateInList(o.first_seen_at)}` });
+  return out;
 });
-// Les faits de l'offre en pastilles, comme sur l'Accueil (docs/139, étape 5b).
-const facts = computed(() =>
-  [rateText(props.offer.rate_min, props.offer.rate_max), props.offer.employment_type ?? "", remoteText(props.offer, phone.value) ?? ""].filter(Boolean),
-);
-// À traiter mêle trois statuts (C2) : la carte dit quand elle est en préparation ou gardée pour plus tard.
-// Sur téléphone, « En préparation » est le titre de la section, pas une étiquette (Kevin, 2026-11-05).
-const statusTag = computed(() =>
-  props.offer.status === "preparing" && !phone.value ? "En préparation" : props.offer.status === "later" ? "Plus tard" : null,
-);
-const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
-const location = computed(() =>
-  [phone.value ? cityOnly(props.offer.location) : props.offer.location, props.showDate ? dateInList(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
-);
 
 // La limite de la formule (docs/125) explique une offre sans note.
 const { reached } = usePlan();
-
-function prepare(): void {
-  void router.push(`/candidatures/offres/${props.offer.id}/preparer`);
-}
 </script>
 
 <template>
-  <OfferLine
-    variant="full"
-    :class="{ expired }"
+  <ListCard
     :title="offer.title"
     :company="offer.company ?? 'Entreprise non indiquée'"
-    :location="location"
+    :location="offer.location"
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
-    :note="alert?.text ?? null"
-    :alert="!!alert && alert.kind !== 'gap'"
-    :action="offer.status === 'preparing' && !phone ? 'Préparer' : null"
+    :to="to"
     :selected="selected"
+    :class="{ expired: offer.expired_at && offer.status !== 'applied' }"
     data-test="offer"
     @select="$emit('select')"
-    @action="prepare"
   >
-    <template #badges>
-      <StatusPill
-        v-if="statusTag"
-        :dot="false"
-        :class="['offer-status-tag', offer.status]"
-        data-test="status-tag"
-      >
-        {{ statusTag }}
-      </StatusPill>
-      <!-- Des étiquettes sans état : sans point, neutres (règle §4). -->
-      <StatusPill
-        v-if="offer.spontaneous"
-        :dot="false"
-        data-test="spontaneous-badge"
-      >
-        Spontanée
-      </StatusPill>
-      <StatusPill
-        v-else-if="offer.added_by_you"
-        :dot="false"
-        data-test="added-badge"
-      >
-        Ajoutée par toi
-      </StatusPill>
-    </template>
-    <template
-      v-if="alert"
-      #note
-    >
+    <template #chips>
       <span
-        :title="alert.kind === 'danger' ? doubtText : undefined"
-        data-test="offer-alert"
-      >{{ alert.text }}<span
-        v-if="alert.kind === 'danger' && doubtText"
-        class="visually-hidden"
-      > : {{ doubtText }}</span></span>
+        v-for="chip in chips"
+        :key="chip.text"
+        :class="chip.tone"
+        :title="chip.title"
+        data-test="offer-chip"
+      >{{ chip.text }}</span>
     </template>
-    <template
-      v-if="facts.length"
-      #facts
-    >
-      <span
-        class="offer-facts"
-        data-test="offer-facts"
-      >
-        <span
-          v-for="fact in facts"
-          :key="fact"
-        >{{ fact }}</span>
-      </span>
-    </template>
-    <!-- D3 (C7) : l'anneau sans chiffre, le mot dessous ; le chiffre pour les lecteurs d'écran. -->
-    <template
-      v-if="phone"
-      #corner
-    >
-      <button
-        type="button"
-        class="offer-more"
-        :aria-label="`Actions pour ${offer.title}`"
-        data-test="offer-more"
-        @click="$emit('more')"
-      >
-        <AppIcon name="more" />
-      </button>
-    </template>
-    <template #verdict>
+    <template #end>
       <ScoreRing
         worded
         :score="offer.score ?? null"
@@ -152,20 +80,13 @@ function prepare(): void {
         :stale="offer.score_stale"
       />
     </template>
-  </OfferLine>
+  </ListCard>
 </template>
 
-<style scoped>
-/* Candidatures sur téléphone (maquette Candidatures, décision du 6.11) : la carte garde sa hauteur d'environ
-   100 px. L'entreprise et le lieu tiennent sur une ligne, coupée par « … ». Le titre peut se replier, comme
-   « SRE (Site Reliability Engineer) » dans la maquette (pas de « … » : le lien du titre couvre toute la carte).
-   L'espace entre les colonnes passe à 12 px, l'anneau à 48 px. */
-@media (max-width: 820px) {
-  .offer-line.full { column-gap: var(--space-3); }
-  /* Seule l'entreprise se coupe : le lieu garde sa largeur, la ville n'est jamais coupée (Kevin, 6.11). */
-  .offer-line.full :deep(.offer-line-sub) { display: flex; min-width: 0; white-space: nowrap; }
-  .offer-line.full :deep(.offer-line-company) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .offer-line.full :deep(.offer-line-place) { flex: none; white-space: pre; }
-  .offer-line.full :deep(.score-ring) { width: 3rem; height: 3rem; font-size: var(--font-body); }
-}
+<style>
+/* L'anneau de 48 px et son mot en 12 px gras (maquette) ; sans note, « Pas encore notée » sur deux lignes. */
+.list-card-end .score-ring { width: 3rem; height: 3rem; font-size: var(--font-body); }
+.list-card-end .score-ring-worded { gap: var(--card-2); }
+.list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--faint); }
+.list-card.expired { opacity: 0.6; }
 </style>

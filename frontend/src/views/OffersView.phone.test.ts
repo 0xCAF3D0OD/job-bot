@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 vi.mock("../composables/usePhone", () => ({
   PHONE_QUERY: "",
-  usePhone: () => ({ phone: ref(true) }),
+  usePhone: (media?: string) => ({ phone: ref(!media?.includes("min-width")) }),
   useNarrow: () => ({ phone: ref(true) }),
 }));
 const GET = vi.fn();
@@ -69,7 +69,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     // Les tranches de 5 points du serveur : 2 offres sous 50 dans toute la liste, 1 au-dessus.
     const scores = Array.from({ length: 20 }, (_, i) => (i === 8 ? 2 : i === 16 ? 1 : 0));
     const host = await mountAt("/offres", [close, far, unscored], { ...facets, scores });
-    const titles = () => host.findAll("[data-test=offer] .offer-line-title").map((t) => t.text());
+    const titles = () => host.findAll("[data-test=offer] [data-test=list-card-title]").map((t) => t.text());
     expect(titles()).toEqual(["DevOps Engineer", "SRE"]);
     const toggle = host.find("[data-test=offers-far]");
     expect(toggle.text()).toBe("Afficher aussi les offres loin de ton profil (2)");
@@ -109,56 +109,27 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     const gap = { ...offer(1, "Data Engineer"), company: "Léman Data SA", keywords_asks: [{ text: "Spark", covered: false }] };
     const host = await mountAt("/offres", [gap]);
     expect(host.find("[data-test=offers-sentence]").exists()).toBe(false);
-    expect(host.find("[data-test=offer-alert]").exists()).toBe(false);
-    expect(host.find("[data-test=offer] .logo").text()).toBe("LD");
+    expect(host.find("[data-test=offer]").text()).not.toContain("Spark");
+    expect(host.find("[data-test=offer] .list-card-logo").text()).toBe("LD");
   });
 
-  it("les offres en préparation sous leur titre de section, sans étiquette ni « Préparer » ; la ville sans canton", async () => {
+  it("les offres en préparation sous leur titre de section, sans étiquette, « Préparer » ni « ⋯ » ; la ville sans canton", async () => {
     const preparing = { ...offer(1, "Senior Platform Engineer"), status: "preparing" };
     const host = await mountAt("/offres?tri=score", [preparing, offer(2, "Data Engineer")]);
     const days = host.findAll("[data-test=offer-day]");
     expect(days).toHaveLength(1);
     expect(days[0]!.text()).toContain("En préparation");
-    expect(host.find("[data-test=status-tag]").exists()).toBe(false);
-    expect(host.find("[data-test=offer] .offer-line-action").exists()).toBe(false);
-    expect(host.findAll("[data-test=offer] [data-test=offer-more]")).toHaveLength(2);
-    expect(host.find("[data-test=offer] .offer-line-sub").text()).toContain("Acme SA · Lausanne");
-    expect(host.find("[data-test=offer] .offer-line-sub").text()).not.toContain("VD");
-    // Deux morceaux : seule l'entreprise se coupe, le lieu (« · Lausanne ») garde sa largeur.
-    expect(host.find("[data-test=offer] .offer-line-company").text()).toBe("Acme SA");
-    expect(host.find("[data-test=offer] .offer-line-place").text()).toMatch(/^· Lausanne/);
+    // La carte commune (maquette du 7.11.2026) : ni « Préparer » ni « ⋯ », rien d'autre que les puces et l'anneau.
+    expect(host.findAll("[data-test=offer] button")).toHaveLength(0);
+    expect(host.find("[data-test=offer]").text()).not.toContain("En préparation");
+    expect(host.find("[data-test=offer] .list-card-sub").text()).toBe("Acme SA · Lausanne");
   });
 
   it("un logo qui ne charge pas : les initiales colorées à la place", async () => {
     const host = await mountAt("/offres", [{ ...offer(1, "Data Engineer"), company: "Léman Data SA", has_logo: true }]);
-    await host.find("[data-test=offer] .logo img").trigger("error");
-    expect(host.find("[data-test=offer] .logo img").exists()).toBe(false);
-    expect(host.find("[data-test=offer] .logo").text()).toBe("LD");
-  });
-
-  it("le « ⋯ » de la carte ouvre ses actions ; « Écarter l'offre » garde « Annuler » 6 s", async () => {
-    const wrapper = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
-    const more = wrapper.find("[data-test=offer] [data-test=offer-more]");
-    expect(more.attributes("aria-label")).toBe("Actions pour DevOps Engineer");
-    await more.trigger("click");
-    await flushPromises();
-    const sheet = wrapper.find("[data-test=offer-actions]");
-    expect(sheet.find(".sheet-title").text()).toBe("DevOps Engineer");
-    expect(sheet.findAll(".grouped-row-title").map((t) => t.text())).toEqual(["Écarter l'offre", "Marquer comme envoyée"]);
-    // Le « ⋯ » n'ouvre pas la fiche.
-    expect(wrapper.find("[data-test=offer-detail-title]").exists()).toBe(false);
-
-    vi.useFakeTimers();
-    PATCH.mockResolvedValue({ data: {} });
-    await wrapper.find("[data-test=offer-action-discard] button").trigger("click");
-    await flushPromises();
-    expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 1 } }, body: { status: "ignored" } });
-    expect(wrapper.find("[data-test=undo-status]").exists()).toBe(true);
-    expect(wrapper.text()).toContain("Offre écartée.");
-    vi.advanceTimersByTime(6000);
-    await flushPromises();
-    expect(wrapper.find("[data-test=undo-status]").exists()).toBe(false);
-    wrapper.unmount();
+    await host.find("[data-test=offer] .list-card-logo img").trigger("error");
+    expect(host.find("[data-test=offer] .list-card-logo img").exists()).toBe(false);
+    expect(host.find("[data-test=offer] .list-card-logo").text()).toBe("LD");
   });
 
   it("aucune offre avec des filtres : ce qui filtre, en mots, et « Modifier les filtres »", async () => {
@@ -244,7 +215,7 @@ describe("La fiche d'une offre, une sous-page sur téléphone (docs/139 étape 6
 
   it("ouvrir une offre mène à /candidatures/offres/12 avec les filtres ; le retour ramène à la liste", async () => {
     const { host, router } = await mountNamed("/candidatures/offres?tri=score", [offer(12, "DevOps Engineer")]);
-    await host.find("[data-test=offer] [data-test=offer-line-open]").trigger("click");
+    await host.find("[data-test=offer]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres/12?tri=score");
     expect(host.find("[data-test=offer-subhead]").exists()).toBe(true);
