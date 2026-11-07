@@ -86,7 +86,28 @@ maquette).
 
 ## 4. Le formulaire d'alerte (C)
 
-À venir dans la PR C.
+- **Accès** : `host_permissions` limitées à `www.jobup.ch`, `jobup.ch`, `www.jobs.ch`, `jobs.ch` et
+  `www.linkedin.com` (rien d'autre ; ni `*.jobup.ch`, qui donnerait sans accord les pages de code `auth.jobup.ch` de
+  docs/112). Rien n'y est lu en arrière-plan : seulement à l'ouverture du panneau, dans l'onglet actif.
+- **Sélecteurs** : un seul fichier, `extension/alert-selectors.js` (où est le formulaire, son champ e-mail, les mots
+  qui disent « alerte »), et un test par site sur une page type (`extension/fixtures/alertes/`,
+  `frontend/src/extensionAlerte.test.ts`). Les pages types sont **reconstituées**, pas relevées sur les sites :
+  à vérifier sur les vrais formulaires, et à corriger dans ce seul fichier.
+- **Remplir** (`extension/alertes.js`) : quand la fenêtre « Créer une alerte » est ouverte, le champ e-mail reçoit
+  l'adresse jobA1 du compte (`GET /api/extension/alerts`, celle de la page Alertes), comme au clavier (setter natif,
+  événements `input` et `change`). Le bouton d'envoi du site n'est **jamais** touché, aucune case n'est cochée : la
+  personne valide elle-même. Un simple bouton « Créer une alerte » dans la page ne suffit pas : il faut une fenêtre
+  ou un formulaire ouvert qui parle d'alerte.
+- **Repli** : formulaire ouvert mais champ e-mail introuvable (sélecteurs cassés) → « Copie ton adresse jobA1 »,
+  l'adresse avec **Copier**, et la phrase de la maquette (« Le champ n'a pas été rempli ? … »).
+- **LinkedIn** : par défaut, rien n'est rempli ; l'adresse est copiée (« Adresse jobA1 copiée »). Le remplissage se
+  choisit dans les réglages de l'extension (« Remplir aussi l'adresse dans les alertes LinkedIn », gardé dans le
+  navigateur).
+- **J'ai créé l'alerte** → `PUT /api/extension/alerts/<site>` : la même fonction que le bouton de l'assistant des
+  alertes (`alerts.service.mark_created`), pour les recherches suivies encore à faire sur ce site. Le jeton de
+  l'extension ne donne pas accès aux routes de l'assistant (`/api/alert-searches/…`) : la route est sous
+  `/api/extension/`, le code est partagé. Confirmation « Alerte jobup enregistrée ». Journal : le site et le nombre
+  de recherches, jamais l'adresse.
 
 ## 5. Transfert Gmail (D)
 

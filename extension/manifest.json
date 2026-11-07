@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "jobA1 — remplir mes candidatures",
   "short_name": "jobA1",
-  "version": "0.61.0",
+  "version": "0.62.0",
   "description": "Remplit tes candidatures, Job-Room et les codes de jobup avec tes données jobA1. N'envoie jamais de candidature à ta place.",
   "action": {
     "default_popup": "popup.html",
@@ -28,6 +28,13 @@
     "activeTab",
     "scripting",
     "storage"
+  ],
+  "host_permissions": [
+    "https://www.jobup.ch/*",
+    "https://jobup.ch/*",
+    "https://www.jobs.ch/*",
+    "https://jobs.ch/*",
+    "https://www.linkedin.com/*"
   ],
   "optional_host_permissions": [
     "https://*/*",

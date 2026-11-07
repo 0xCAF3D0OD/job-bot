@@ -117,7 +117,7 @@ check-openapi: openapi ## échoue si les types du frontend ne correspondent plus
 
 # Seulement ce que l'extension utilise : ni le relevé de Job-Room, ni le script de relevé, ni
 # les textes de la boutique (docs/71 §6).
-EXTENSION_FILES := manifest.json background.js popup.html popup.css popup.js fill.js fill-job-room.js annonce.js figtree.woff2 icons
+EXTENSION_FILES := manifest.json background.js popup.html popup.css popup.js fill.js fill-job-room.js annonce.js alert-selectors.js alertes.js figtree.woff2 icons
 
 extension: ## paquet de l'extension pour la boutique de Mozilla (extension/web-ext-artifacts/)
 	cd extension && mkdir -p web-ext-artifacts \

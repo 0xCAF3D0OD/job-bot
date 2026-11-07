@@ -54,6 +54,14 @@ seule l'annonce part. jobA1 complète l'offre de ce lien, ou te demande **C'est 
 offre ?** si le même poste chez la même entreprise est déjà là, ou ajoute l'offre ; puis il
 refait sa note. 30 envois par jour.
 
+## Remplir une alerte (jobup, jobs.ch, LinkedIn)
+
+Ouvre la fenêtre **Créer une alerte** du site, puis l'icône jobA1 : ton adresse jobA1 est mise
+dans le champ e-mail. Vérifie, valide sur le site, puis **J'ai créé l'alerte**. Sur LinkedIn,
+par défaut, l'adresse est copiée (le remplissage se choisit dans la roue dentée). Si un site
+change sa page et que le champ n'est plus trouvé : **Copier**, puis colle-la ; les sélecteurs
+sont dans `alert-selectors.js`, chacun testé sur une page type (`fixtures/alertes/`).
+
 ## Utiliser
 
 Sur le formulaire de l'employeur (ouvert depuis « Postuler ») : icône jobA1 →
@@ -100,6 +108,9 @@ l'extension utilise. Les textes de la fiche et la politique de confidentialité 
 - Page de fond (`background.js`) : ouvrir l'onglet d'accueil à l'installation, et lire le jeton
   dans l'onglet de liaison qu'elle a ouvert, sur l'adresse autorisée.
 - Accès à ta plateforme : demandé au moment de relier, pour cette seule adresse.
+- Accès à `www.jobup.ch`, `jobup.ch`, `www.jobs.ch`, `jobs.ch` et `www.linkedin.com` : y remplir
+  le champ e-mail du formulaire « Créer une alerte », quand tu ouvres le panneau ; rien n'y est lu
+  en arrière-plan.
 - Accès aux pages de connexion de jobup et jobs.ch (facultatif) : demandé par « Remplir mes codes
   tout seul », pour y remplir le code de vérification ; rien d'autre n'y est lu.
 

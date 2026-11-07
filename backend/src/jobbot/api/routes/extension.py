@@ -13,18 +13,23 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 from jobbot import accounts, manual_offers
+from jobbot.alerts import service as alert_service
 from jobbot.api.routes import applications as application_routes
 from jobbot.api.routes import cvs as cv_routes
 from jobbot.api.routes import letters as letter_routes
 from jobbot.api.routes.orp import application_data
 from jobbot.auth.service import Window
 from jobbot.core.orp import job_room_fill, shift_month
-from jobbot.db.models import Application, DraftKind, ExtensionToken, Offer
+from jobbot.db.models import AlertSearch, Application, DraftKind, ExtensionToken, Offer, Site
 from jobbot.extension import announce, service
 from jobbot.followups.service import local_today
 from jobbot.letters.service import current_draft, load_identity
-from jobbot.mail import site_codes
+from jobbot.log import get_logger
+from jobbot.mail import addresses, site_codes
 from jobbot.runtime import Runtime
+from jobbot.sources.sites import followed
+
+log = get_logger(__name__)
 
 router = APIRouter(prefix="/api/extension", tags=["extension"])
 tokens_router = APIRouter(prefix="/api/extension-tokens", tags=["extension"])
@@ -49,7 +54,8 @@ class ExtensionMe(BaseModel):
 # Formulaires des employeurs (docs/25), Job-Room (docs/70).
 # Les codes des sites (docs/112) : l'extension remplit le code de vérification.
 # Envoyer une annonce (docs/142 §3).
-FEATURES = ["forms", "job-room", "codes", "announce"]
+# Le formulaire d'alerte des sites (docs/142 §4).
+FEATURES = ["forms", "job-room", "codes", "announce", "alerts"]
 
 
 class OfferBrief(BaseModel):
@@ -502,3 +508,63 @@ async def announce_offer(request: Request, body: AnnounceIn) -> AnnounceOut:
         if known
         else None,
     )
+
+
+# --- Le formulaire « Créer une alerte » des sites (docs/142 §4) ------------------------------
+
+# Les sites dont l'extension remplit le formulaire d'alerte.
+ALERT_SITES = ("jobup", "jobsch", "linkedin")
+
+
+class AlertAddressOut(BaseModel):
+    # L'adresse jobA1 à donner aux sites (None : pas de boîte configurée).
+    address: str | None
+    # Les recherches suivies qui n'ont pas encore d'alerte, par site.
+    todo: dict[str, int]
+
+
+class AlertCreatedOut(BaseModel):
+    site: str
+    # Les recherches marquées « créée » sur ce site.
+    marked: int
+
+
+@router.get("/alerts", operation_id="extensionAlertAddress")
+async def alert_address(request: Request) -> AlertAddressOut:
+    """L'adresse jobA1 du compte, à mettre dans le champ e-mail du formulaire d'alerte."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
+        address = await addresses.account_address(session, runtime.settings)
+        sites = list(
+            await session.scalars(select(Site).where(followed(), Site.slug.in_(ALERT_SITES)))
+        )
+        todo = dict.fromkeys((s.slug for s in sites), 0)
+        for search in await session.scalars(
+            select(AlertSearch).where(AlertSearch.active.is_(True))
+        ):
+            for cell in await alert_service.cells(session, search, sites):
+                if cell.status == "todo":
+                    todo[cell.site] += 1
+    return AlertAddressOut(address=address, todo=todo)
+
+
+@router.put(
+    "/alerts/{site}",
+    operation_id="extensionAlertCreated",
+    responses={404: {"description": "Site inconnu"}},
+)
+async def alert_created(request: Request, site: str) -> AlertCreatedOut:
+    """« J'ai créé l'alerte » depuis l'extension : comme le bouton de l'assistant des alertes
+    (`alerts.service.mark_created`), pour les recherches suivies encore à faire sur ce site."""
+    if site not in ALERT_SITES:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu")
+    async with _runtime(request).sessionmaker.begin() as session:
+        searches = list(
+            await session.scalars(select(AlertSearch.id).where(AlertSearch.active.is_(True)))
+        )
+        try:
+            marked = await alert_service.mark_created(session, searches, site)
+        except alert_service.UnknownSite:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu") from None
+    log.info("extension_alert_created", site=site, searches=len(marked))
+    return AlertCreatedOut(site=site, marked=len(marked))

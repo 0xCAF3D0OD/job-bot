@@ -819,6 +819,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Alert Address
+         * @description L'adresse jobA1 du compte, à mettre dans le champ e-mail du formulaire d'alerte.
+         */
+        get: operations["extensionAlertAddress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/alerts/{site}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Alert Created
+         * @description « J'ai créé l'alerte » depuis l'extension : comme le bouton de l'assistant des alertes
+         *     (`alerts.service.mark_created`), pour les recherches suivies encore à faire sur ce site.
+         */
+        put: operations["extensionAlertCreated"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/extension-tokens": {
         parameters: {
             query?: never;
@@ -3672,6 +3713,15 @@ export interface components {
             /** Advice Text */
             advice_text: string;
         };
+        /** AlertAddressOut */
+        AlertAddressOut: {
+            /** Address */
+            address: string | null;
+            /** Todo */
+            todo: {
+                [key: string]: number;
+            };
+        };
         /** AlertCell */
         AlertCell: {
             /** Site */
@@ -3689,6 +3739,13 @@ export interface components {
             created_at: string | null;
             /** Remote Url */
             remote_url?: string | null;
+        };
+        /** AlertCreatedOut */
+        AlertCreatedOut: {
+            /** Site */
+            site: string;
+            /** Marked */
+            marked: number;
         };
         /** AlertSearchIn */
         AlertSearchIn: {
@@ -10064,6 +10121,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    extensionAlertAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertAddressOut"];
+                };
+            };
+        };
+    };
+    extensionAlertCreated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertCreatedOut"];
+                };
+            };
+            /** @description Site inconnu */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

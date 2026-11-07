@@ -9,6 +9,8 @@ const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => ($(id).hidden = !on);
 
 let config = { base: "", token: "" };
+// Réglage : remplir aussi le formulaire d'alerte de LinkedIn (sinon l'adresse est copiée).
+let fillLinkedIn = false;
 let tab = null;
 let offerId = null;
 let frameQuestions = []; // { frameId, key, label }
@@ -22,7 +24,7 @@ function say(id, text) {
 
 // --- Les états de la fenêtre ------------------------------------------------------------
 
-const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "settings", "main", "job-room", "codes"];
+const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "alerte", "settings", "main", "job-room", "codes"];
 // Sans pastille : ces états ne parlent pas de la page ouverte.
 const NO_SITE = new Set(["signin", "linked", "authorize-state", "settings"]);
 let current = null;
@@ -68,6 +70,8 @@ function openSettings() {
   show("fields", !linked);
   show("link", !linked);
   show("unlink", linked);
+  show("linkedin-row", linked);
+  $("linkedin-fill").checked = fillLinkedIn;
   say("linked-to", linked ? `Reliée à ${config.base}.` : "");
   view("settings");
 }
@@ -245,6 +249,8 @@ async function start() {
     view("idle");
     return;
   }
+  const alertSite = alertSiteOf(tab.url);
+  if (alertSite && (await startAlert(alertSite))) return;
   let found;
   try {
     found = await (await call(`/api/extension/match?url=${encodeURIComponent(tab.url)}`)).json();
@@ -273,6 +279,118 @@ async function start() {
     return;
   }
   view("idle");
+}
+
+// --- Le formulaire « Créer une alerte » (docs/142 §4) -------------------------------------
+
+let alertSlug = null;
+let alertAddress = null;
+// Le libellé de la pastille : « jobup.ch · Créer une alerte ».
+const ALERT_PILL = { jobup: "jobup.ch", jobsch: "jobs.ch", linkedin: "linkedin.com" };
+
+function alertSiteOf(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol !== "https:") return null;
+    const rules = globalThis.jobA1AlertSelectors || {};
+    return Object.keys(rules).find((slug) => rules[slug].hosts.includes(hostname)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function alertForm(rules, address) {
+  try {
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: globalThis.jobA1AlertForm, args: [rules, address] });
+    return { form: result?.form === true, filled: result?.filled === true };
+  } catch {
+    return { form: false, filled: false };
+  }
+}
+
+async function copyAddress() {
+  try {
+    await navigator.clipboard.writeText(alertAddress);
+    $("al-copy").textContent = "Copiée";
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function alertText(title, text) {
+  $("al-title").textContent = title;
+  $("al-text").textContent = text;
+}
+
+// Le formulaire est ouvert : l'adresse jobA1 dans son champ e-mail (sauf LinkedIn, par défaut),
+// sinon le repli « Copier ». Faux : pas de formulaire d'alerte, on continue.
+async function startAlert(slug) {
+  const rules = globalThis.jobA1AlertSelectors[slug];
+  if (!(await alertForm(rules, null)).form) return false;
+  alertSlug = slug;
+  setSite(tab.url, `${ALERT_PILL[slug]} · Créer une alerte`);
+  show("al-todo");
+  show("al-done", false);
+  $("al-copy").textContent = "Copier";
+  view("alerte");
+  try {
+    ({ address: alertAddress } = await (await call("/api/extension/alerts")).json());
+  } catch (error) {
+    if (error.status === 404) say("al-error", "Mets ta plateforme jobA1 à jour pour remplir les alertes.");
+    else say("al-error", offline(error) ? "Plateforme injoignable." : error.message);
+    alertText("Adresse jobA1", "");
+    show("al-mark", false);
+    show("al-row", false);
+    show("al-hint", false);
+    return true;
+  }
+  if (!alertAddress) {
+    alertText("Pas encore d’adresse jobA1", "Ouvre Alertes dans jobA1 : ton adresse y est créée.");
+    show("al-mark", false);
+    show("al-row", false);
+    show("al-hint", false);
+    return true;
+  }
+  $("al-address").textContent = alertAddress;
+  show("al-row");
+  const allowed = slug !== "linkedin" || fillLinkedIn;
+  const { filled } = allowed ? await alertForm(rules, alertAddress) : { filled: false };
+  // La coche seulement quand c'est fait (rempli ou copié).
+  show("al-mark", filled);
+  if (filled) {
+    alertText("Adresse jobA1 remplie", `Vérifie le formulaire sur ${rules.name}, puis valide-le toi-même.`);
+    show("al-hint");
+  } else if (!allowed) {
+    // LinkedIn, par défaut : l'adresse copiée, à coller.
+    const copied = await copyAddress();
+    show("al-mark", copied);
+    alertText(
+      copied ? "Adresse jobA1 copiée" : "Copie ton adresse jobA1",
+      `Colle-la dans le champ e-mail du formulaire ${rules.name}, puis valide-le toi-même.`,
+    );
+    show("al-hint", false);
+  } else {
+    alertText("Copie ton adresse jobA1", `Le champ e-mail du formulaire ${rules.name} n’a pas été trouvé.`);
+    show("al-hint");
+  }
+  return true;
+}
+
+// « J'ai créé l'alerte » : comme le bouton de l'assistant des alertes.
+async function alertCreated() {
+  say("al-error", "");
+  $("al-created").disabled = true;
+  try {
+    await call(`/api/extension/alerts/${alertSlug}`, { method: "PUT" });
+    $("al-done-title").textContent = `Alerte ${globalThis.jobA1AlertSelectors[alertSlug].name} enregistrée`;
+    show("al-todo", false);
+    show("al-done");
+  } catch (error) {
+    say("al-error", offline(error) ? "Plateforme injoignable." : error.message);
+  } finally {
+    $("al-created").disabled = false;
+  }
 }
 
 // --- Envoyer une annonce (docs/142 §3) ---------------------------------------------------
@@ -742,6 +860,12 @@ $("jr-choices").addEventListener("change", (event) => {
 
 $("gear").addEventListener("click", toggleSettings);
 $("an-send").addEventListener("click", () => sendAnnonce());
+$("al-copy").addEventListener("click", copyAddress);
+$("al-created").addEventListener("click", alertCreated);
+$("linkedin-fill").addEventListener("change", (event) => {
+  fillLinkedIn = event.target.checked;
+  chrome.storage.local.set({ fillLinkedIn });
+});
 $("an-yes").addEventListener("click", () => sendAnnonce("fill"));
 $("an-new").addEventListener("click", () => sendAnnonce("new"));
 $("signin-go").addEventListener("click", signIn);
@@ -769,8 +893,9 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
 
 if (welcomeTab) document.documentElement.classList.add("accueil");
 
-export const ready = chrome.storage.local.get(["base", "token"]).then(async (stored) => {
+export const ready = chrome.storage.local.get(["base", "token", "fillLinkedIn"]).then(async (stored) => {
   config = { base: stored.base || "", token: stored.token || "" };
+  fillLinkedIn = stored.fillLinkedIn === true;
   if (welcomeTab) view(config.token ? "linked" : "signin");
   else await start();
 });

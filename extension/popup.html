@@ -111,6 +111,30 @@
         </div>
       </section>
 
+      <!-- ExtAlerte : le formulaire « Créer une alerte » de jobup, jobs.ch ou LinkedIn (docs/142 §4). -->
+      <section id="alerte" class="state" hidden>
+        <div id="al-todo" class="stack">
+          <div class="lead">
+            <span id="al-mark" class="lead-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <div class="lead-text"><span id="al-title" class="title-lead"></span><span id="al-text" class="body"></span></div>
+          </div>
+          <div id="al-row" class="address-row">
+            <span id="al-address" class="address"></span>
+            <button id="al-copy" class="copy" type="button">Copier</button>
+          </div>
+          <p id="al-hint" class="note">Le champ n’a pas été rempli ? Copie l’adresse et colle-la dans le champ e-mail du formulaire.</p>
+          <p id="al-error" class="error" role="alert" hidden></p>
+          <div class="actions">
+            <button id="al-created" class="primary" type="button">J’ai créé l’alerte</button>
+          </div>
+        </div>
+        <div id="al-done" class="center" role="status" hidden>
+          <span class="done-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span id="al-done-title" class="title-md"></span>
+          <span class="body">jobA1 triera les offres dès le premier e-mail d’alerte.</span>
+        </div>
+      </section>
+
       <!-- Réglages (roue dentée) : l'adresse de la plateforme, relier, délier. -->
       <section id="settings" class="state" hidden>
         <h1 class="title-md">Réglages</h1>
@@ -127,6 +151,10 @@
           </details>
         </div>
         <p id="linked-to" class="note" hidden></p>
+        <label id="linkedin-row" class="check" hidden>
+          <input id="linkedin-fill" type="checkbox">
+          <span>Remplir aussi l’adresse dans les alertes LinkedIn<span class="note">Sinon l’adresse est copiée, à coller toi-même.</span></span>
+        </label>
         <p id="setup-message" class="note" role="status" hidden></p>
         <p id="setup-error" class="error" role="alert" hidden></p>
         <div class="actions">
@@ -179,6 +207,8 @@
 
     <script src="fill-job-room.js"></script>
     <script src="annonce.js"></script>
+    <script src="alert-selectors.js"></script>
+    <script src="alertes.js"></script>
     <script type="module" src="popup.js"></script>
   </body>
 </html>
