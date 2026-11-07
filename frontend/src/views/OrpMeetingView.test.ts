@@ -106,13 +106,14 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous prévu : le personnage debout, 160 px ; un seul des trois par écran (docs/141)", async () => {
+  it("aucun rendez-vous prévu : le personnage debout, 186 px ; un seul des trois par écran (docs/141)", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     const person = wrapper.find("[data-test=meeting-person]");
     expect(person.attributes("data-pose")).toBe("debout");
-    expect(person.attributes("height")).toBe("160");
+    expect(person.attributes("height")).toBe("186");
+    expect(wrapper.find("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous prévu");
     expect(wrapper.find(".face-state").exists()).toBe(false);
     // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le personnage.
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
@@ -137,7 +138,8 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=sheet-missing]").text()).toContain("12 offres bien notées");
     expect(wrapper.find("[data-test='question-funding:3']").attributes("disabled")).toBeDefined();
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE } });
-    await wrapper.find("[data-test=meeting-at]").setValue("2026-10-22T09:30");
+    await wrapper.find("[data-test=meeting-date]").setValue("2026-10-22");
+    await wrapper.find("[data-test=meeting-time]").setValue("09:30");
     await wrapper.find("[data-test=meeting-form]").trigger("submit");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting", {
@@ -180,21 +182,24 @@ describe("Rendez-vous ORP (docs/83)", () => {
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     await wrapper.find("[data-test=meeting-outcome]").trigger("click");
-    expect((wrapper.find("[data-test=outcome-target]").element as HTMLInputElement).value).toBe("12");
-    await wrapper.find("[data-test=outcome-target]").setValue(10);
-    await wrapper.find("[data-test=outcome-training-3]").setValue(true);
-    await wrapper.find("textarea").setValue("Cours de CV\n ");
-    await wrapper.find("[data-test=outcome-note]").setValue("Viser aussi l'anglais.");
-    await wrapper.find("[data-test=outcome-form]").trigger("submit");
+    // La feuille « Ce qui a été convenu » : le compteur part de l'objectif du mois (12), la formation accordée
+    // est gardée telle quelle, la mesure libre et la remarque se saisissent.
+    const sheet = wrapper.get("[data-test=outcome-sheet]");
+    expect(sheet.text()).toContain("Rendez-vous ORP du");
+    expect(sheet.get("[data-test=outcome-target]").text()).toBe("12");
+    await sheet.get("[data-test=outcome-less]").trigger("click");
+    await sheet.get("[data-test=outcome-less]").trigger("click");
+    expect(sheet.get("[data-test=outcome-target]").text()).toBe("10");
+    expect(sheet.text()).toContain("12 le mois dernier");
+    await sheet.get("[data-test=outcome-measures]").setValue("Cours de CV ");
+    await sheet.get("[data-test=outcome-note]").setValue("Viser aussi l'anglais.");
+    await sheet.get("[data-test=outcome-form]").trigger("submit");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/{meeting_id}/convenu", {
       params: { path: { meeting_id: 1 } },
       body: {
         target: 10,
-        measures: [
-          { text: "Terraform Associate", training_id: 3 },
-          { text: "Cours de CV", training_id: null },
-        ],
+        measures: [{ text: "Cours de CV", training_id: null }],
         assignments: "",
         note: "Viser aussi l'anglais.",
         next_starts_at: null,

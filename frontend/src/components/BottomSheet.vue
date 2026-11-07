@@ -8,7 +8,7 @@ import AppIcon from "./AppIcon.vue";
 // <dialog> modale : le focus reste dedans, Échap et un toucher sur le voile la ferment, la page
 // derrière est inerte. Sur ordinateur, elle s'ouvre au centre. `full` : en plein écran sur téléphone
 // (la cloche).
-const props = withDefaults(defineProps<{ open: boolean; title: string; full?: boolean }>(), { full: false });
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean }>(), { subtitle: "", full: false });
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null);
 const titleId = useId();
@@ -51,12 +51,20 @@ function onClick(event: MouseEvent): void {
   >
     <div class="sheet-inner">
       <header class="sheet-head">
-        <h2
-          :id="titleId"
-          class="sheet-title"
-        >
-          {{ title }}
-        </h2>
+        <div class="sheet-heading">
+          <h2
+            :id="titleId"
+            class="sheet-title"
+          >
+            {{ title }}
+          </h2>
+          <p
+            v-if="subtitle"
+            class="sheet-subtitle"
+          >
+            {{ subtitle }}
+          </p>
+        </div>
         <button
           type="button"
           class="sheet-close"

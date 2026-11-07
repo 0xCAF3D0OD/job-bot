@@ -64,7 +64,7 @@ async function open(query = "") {
     routes: [{ path: "/candidatures/rendez-vous-orp", component: OrpMeetingView }],
   });
   await router.push(`/candidatures/rendez-vous-orp${query}`);
-  const wrapper = mount(OrpMeetingView, { global: { plugins: [router], stubs: { InterviewPreparation: true, OrpOutcomeForm: true } } });
+  const wrapper = mount(OrpMeetingView, { global: { plugins: [router], stubs: { InterviewPreparation: true } } });
   await flushPromises();
   return { wrapper, router };
 }
@@ -163,7 +163,8 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-past]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
-    expect(wrapper.text()).toContain("Aucun rendez-vous ORP prévu");
+    expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous prévu");
+    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(true);
   });
 
   it("un entretien sans rendez-vous ORP : l'entretien à venir, puis le formulaire du rendez-vous", async () => {
@@ -184,13 +185,15 @@ describe("Rendez-vous sur téléphone", () => {
     expect(card.text()).not.toContain("Avenue de la Gare 12");
   });
 
-  it("le rendez-vous passé : noter ce qui a été convenu, avec le formulaire existant", async () => {
+  it("le rendez-vous passé : « À noter », la feuille « Ce qui a été convenu »", async () => {
     const started = { ...MEETING, starts_at: "2026-10-13T08:00:00Z" };
     serve({ meeting: started, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=rdv-to-note]").exists()).toBe(true);
+    expect(wrapper.findComponent({ name: "OrpOutcomeSheet" }).props("meeting")).toBeNull();
     await wrapper.get("[data-test=rdv-note]").trigger("click");
-    expect(wrapper.findComponent({ name: "OrpOutcomeForm" }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: "OrpOutcomeSheet" }).props("meeting")).toMatchObject({ id: 1 });
   });
 
   it("pas encore de candidature : l'écran d'avant", async () => {

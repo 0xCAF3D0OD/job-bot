@@ -1,0 +1,1 @@
+- Rendez-vous : l'état vide avec le personnage et le formulaire (date, heure, lieu), « À noter » pour un rendez-vous ORP passé, la feuille « Ce qui a été convenu » (le prochain rendez-vous saisi s'ajoute à « À venir »), et deux colonnes sur ordinateur (maquettes RendezVous et RendezVousOrdinateur du 7.11.2026).

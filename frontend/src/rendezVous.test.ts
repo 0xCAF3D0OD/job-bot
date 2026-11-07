@@ -1,12 +1,28 @@
 import { describe, expect, it } from "vitest";
 
 import type { Application } from "./api/client";
-import { agreedLines, countdown, dateBlock, dateText, interviewPlace, pastTitle, sheetLines, upcomingAppointments } from "./rendezVous";
+import type { components } from "./api/schema";
+import {
+  agreedLines,
+  countdown,
+  dateBlock,
+  dateText,
+  interviewPlace,
+  meetingsToNote,
+  notedMeetings,
+  notedSummary,
+  pastTitle,
+  sheetLines,
+  splitLine,
+  upcomingAppointments,
+} from "./rendezVous";
+
+type Meeting = components["schemas"]["MeetingOut"];
 
 // Candidatures › Rendez-vous sur téléphone (maquette RendezVous, 6.11.2026).
 const NOW = new Date("2026-11-06T09:00:00Z");
 const EMPTY = { outcome_at: null, agreed_target: null, measures: [], assignments: null, note: null, asked: [], next_starts_at: null, sheet_text: null };
-const meeting = (starts_at: string) => ({ id: 1, starts_at, place: "ORP Renens", advisor: null, ...EMPTY });
+const meeting = (starts_at: string): Meeting => ({ id: 1, starts_at, place: "ORP Renens", advisor: null, ...EMPTY });
 const application = (id: number, interview_at: string | null, status = "entretien") =>
   ({ id, company: `Entreprise ${id}`, job_title: `Poste ${id}`, status, interview_at, company_address: null }) as unknown as Application;
 
@@ -86,5 +102,32 @@ describe("les textes de la carte", () => {
       { label: "Mesure", text: "Cours Terraform, financement accepté" },
       { label: "Prochain", text: "Mardi 10 novembre, 9 h 30" },
     ]);
+  });
+});
+
+describe("« À noter » et « Derniers rendez-vous ORP » (maquettes du 7.11.2026)", () => {
+  const page = (current: Meeting | null, past: Meeting[]) =>
+    ({ meeting: current, past, preparation: null, target: 10, trainings: [] }) as never;
+
+  it("un rendez-vous passé sans rien de noté est « à noter » ; noté, il passe dans les derniers", () => {
+    const held = meeting("2026-10-13T08:00:00Z");
+    const noted = { ...meeting("2026-09-15T08:00:00Z"), id: 2, outcome_at: "2026-09-15T10:00:00Z", agreed_target: 8 };
+    expect(meetingsToNote(page(held, [noted]), NOW).map((m) => m.id)).toEqual([1]);
+    expect(notedMeetings(page(held, [noted]), NOW).map((m) => m.id)).toEqual([2]);
+  });
+
+  it("un rendez-vous à venir n'est pas à noter", () => {
+    expect(meetingsToNote(page(meeting("2026-11-10T08:30:00Z"), []), NOW)).toEqual([]);
+  });
+
+  it("le résumé d'un rendez-vous noté", () => {
+    const noted = { ...meeting("2026-09-15T08:00:00Z"), agreed_target: 8, measures: [{ text: "Financement Terraform", training_id: null }] };
+    expect(notedSummary(noted)).toBe("Objectif 8 par mois · financement Terraform");
+    expect(notedSummary(meeting("2026-09-15T08:00:00Z"))).toBe("Rien de particulier");
+  });
+
+  it("une ligne de la feuille en titre et précision", () => {
+    expect(splitLine("Formulaires en ligne : 0 réponse sur 9.")).toEqual({ main: "Formulaires en ligne", sub: "0 réponse sur 9." });
+    expect(splitLine("Terraform")).toEqual({ main: "Terraform", sub: "" });
   });
 });

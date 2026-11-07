@@ -58,7 +58,7 @@ hachées (48 adresses de moins dans le premier chargement) : 1,4 Ko de moins, le
 | 8 | perso-08-avion | Candidature envoyée (nouvel écran) | CandidatureEnvoyee | 3 |
 | 9 | perso-12-celebration | Objectif ORP atteint (à la place du logo ravi et du soleil) | ObjectifAtteint | 3 |
 | 10 | perso-05-assis + tasse | En attente de la première collecte | (mise en page de AucuneOffre) | 4 |
-| 11 | perso-01-debout, 160 px | Candidatures › Rendez-vous sans rendez-vous prévu | — | 4 |
+| 11 | perso-01-debout, 186 px | Candidatures › Rendez-vous sans rendez-vous prévu | — | 4 |
 | 12 | perso-12-celebration | Entretien décroché (mise en page de l'écran 8) | — | 4 |
 | 13 | perso-02-bonjour | Compte supprimé (au revoir, sur la connexion) et refus reçu (encourageant) | — | 4 |
 
@@ -88,8 +88,8 @@ personnage (PR 4).
 - En attente de la première collecte (PR 4) : le personnage assis à 200 px (plafond d'une liste), la tasse posée au
   sol à sa droite ; « Créer mes alertes » et « Ajouter une offre » restent.
 - Rendez-vous sans rendez-vous prévu (PR 4) : le personnage debout, 160 px, à la place de `rendez-vous-vide`
-  (retirée). Le même fichier garde le visage de « Pas encore de candidature », dans une branche qui l'exclut :
-  le test du §1 renvoie à celui de la page (`OrpMeetingView.test.ts`).
+  (retirée). Depuis la maquette RendezVous du 7.11.2026, 186 px, dans `OrpMeetingEmpty.vue` avec le formulaire
+  du rendez-vous : la page n'a plus le personnage dans son propre fichier.
 - Entretien décroché et refus (PR 4) : un écran plein de même mise en page que l'écran 8 (`MomentScreen.vue`,
   partagé), qui remplace le Suivi jusqu'à l'action. Entretien : « Préparer l'entretien » ouvre la préparation de la
   candidature, « Plus tard » revient au Suivi. Refus : « Réponse de <entreprise>. », « Pas pour cette fois. Chaque
