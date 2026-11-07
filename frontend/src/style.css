@@ -4442,4 +4442,4 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .sent-goal-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary-graphic); }
 .sent-goal-left { font-size: var(--label-caps); color: var(--text-secondary); }
 .sent-words { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0 var(--space-1) var(--space-2); font-size: var(--font-small); }
-@media (min-width: 1024px) { .jobs-body > :is(.sent-goal, .sent-list, .sent-words) { max-width: 560px; } }
+@media (min-width: 1024px) { .sent-goal, .sent-list, .sent-words { max-width: 560px; } }
