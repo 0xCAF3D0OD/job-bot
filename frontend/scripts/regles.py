@@ -31,7 +31,7 @@ from explore import states
 
 # La police manuscrite (Caveat Brush) est réduite aux seuls caractères des titres qui l'utilisent
 # (docs/139 étapes 8c et 11b) : les fins de titre des premiers pas, « C'est fait ! » et « te revoir. »
-# de la connexion (2026-11-05). Un titre
+# de la connexion (2026-11-05), les fins du titre d'Aujourd'hui sur ordinateur (maquette du 8 novembre). Un titre
 # changé sans refaire le sous-ensemble s'afficherait avec une lettre dans une autre police.
 FRONTEND = Path(__file__).resolve().parent.parent
 HAND_FONT = FRONTEND / "src/assets/fonts/caveat-brush-titres.woff2"
@@ -43,9 +43,11 @@ def hand_titles() -> list[str]:
     welcome = (FRONTEND / "src/views/WelcomeView.vue").read_text("utf-8")
     goal = (FRONTEND / "src/components/GoalReached.vue").read_text("utf-8")
     login = (FRONTEND / "src/views/LoginView.vue").read_text("utf-8")
+    today = (FRONTEND / "src/views/TodayView.vue").read_text("utf-8")
     titles = re.findall(r'hand: "([^"]+)"', welcome)
     titles += [t.strip() for t in re.findall(r'class="goal-reached-title">([^<]+)<', goal)]
     titles += [t.strip() for t in re.findall(r'class="login-hand">([^<]+)<', login)]
+    titles += re.findall(r'hand: "([^"]+)"', today)
     return titles
 
 

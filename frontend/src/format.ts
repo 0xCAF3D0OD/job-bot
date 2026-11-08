@@ -243,3 +243,18 @@ export function orpPace(count: number, target: number | null | undefined, month:
     line: `Il reste ${left} ${left === 1 ? "candidature" : "candidatures"} en ${days}.`,
   };
 }
+
+/** Le rythme du jour pour tenir l'objectif ORP (maquette du 8 novembre, Aujourd'hui) : ce qui reste du mois, réparti
+ * sur les jours ouvrables qui restent, aujourd'hui compris, arrondi vers le haut. 0 quand l'objectif est atteint ;
+ * null sans objectif. */
+export function dailyPace(count: number, target: number | null | undefined, month: string, now = new Date()): number | null {
+  if (!target) return null;
+  const left = target - count;
+  if (left <= 0) return 0;
+  const [year, monthNumber] = month.split("-").map(Number);
+  const first = new Date(year!, monthNumber! - 1, 1);
+  const last = new Date(year!, monthNumber!, 0);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (today > last) return left;
+  return Math.ceil(left / Math.max(1, workdays(today < first ? first : today, last)));
+}

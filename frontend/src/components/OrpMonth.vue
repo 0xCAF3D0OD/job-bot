@@ -12,19 +12,58 @@ import FaceTile from "./FaceTile.vue";
 // segments et le mot.
 // `noFace` (1.6.51) : sans la tuile du visage, quand le mois doit prendre toute la place
 // (« Mois ORP. » d'Aujourd'hui).
-const props = defineProps<{ title: string; count: number; target: number | null; month: string; sub?: string; compact?: boolean; noFace?: boolean }>();
+// `band` (maquette du 8 novembre, Aujourd'hui sur ordinateur) : dans la carte à cheval sur la bande, « Mois ORP ·
+// novembre » et « 4 sur 13 » sur une ligne, une barre continue, puis ce qui reste et le mot du rythme. Décoratif :
+// la carte entière porte la phrase lue.
+const props = defineProps<{
+  title: string;
+  count: number;
+  target: number | null;
+  month: string;
+  sub?: string;
+  compact?: boolean;
+  noFace?: boolean;
+  band?: boolean;
+}>();
 
 const SEGMENTS_MAX = 15;
 const pace = computed(() => orpPace(props.count, props.target, props.month));
 const segments = computed(() => (props.target && props.target <= SEGMENTS_MAX ? props.target : 0));
 const share = computed(() => (props.target ? Math.min(100, Math.round((props.count / props.target) * 100)) : 0));
+const bandLine = computed(() => {
+  const p = pace.value;
+  if (!p) return "";
+  return `${p.line.replace(/\.$/, "")} · ${p.word.replace(/\.$/, "").toLowerCase()}`;
+});
 // Le clin d'œil, une fois par visite, quand l'objectif est atteint.
 const wink = pace.value?.state === "reached" && firstTime("orp-wink");
 </script>
 
 <template>
   <div
-    v-if="compact"
+    v-if="band"
+    class="orp-month-band"
+    data-test="orp-month-band"
+  >
+    <div class="orp-month-band-head">
+      <strong>{{ title }}</strong>
+      <strong data-test="month-count">{{ target ? `${count} sur ${target}` : count }}</strong>
+    </div>
+    <div
+      v-if="target"
+      class="orp-month-band-bar"
+      aria-hidden="true"
+    >
+      <span :style="{ width: `${share}%` }" />
+    </div>
+    <span
+      v-if="bandLine"
+      class="orp-month-band-line"
+      data-test="month-left"
+    >{{ bandLine }}</span>
+  </div>
+  <div
+    v-else-if="compact"
     class="orp-month compact"
   >
     <FaceTile
