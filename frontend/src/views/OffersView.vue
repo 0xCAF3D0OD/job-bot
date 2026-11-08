@@ -2,14 +2,12 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, Teleport, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type FilterKey, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
+import { api, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationSent from "../components/ApplicationSent.vue";
 import GoalReached from "../components/GoalReached.vue";
 import { firstGoal } from "../composables/useGoalMoment";
-import IconButton from "../components/IconButton.vue";
-import OfferActionSheet from "../components/OfferActionSheet.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import ShowMore from "../components/ShowMore.vue";
@@ -20,7 +18,7 @@ import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
-import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
+import OfferFilterPopover from "../components/OfferFilterPopover.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
 import CharacterState from "../components/CharacterState.vue";
@@ -93,6 +91,9 @@ const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 const { phone } = usePhone();
+// Ordinateur à partir de 1 024 px (maquette CandidaturesOrdinateur, 7.11.2026) : la barre d'outils monte dans
+// l'en-tête, à côté des vues ; la liste (560 px) et la fiche défilent chacune dans sa colonne.
+const { phone: wide } = usePhone("(min-width: 1024px)");
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
 const chips = computed(() => activeChips(filters.value));
@@ -175,9 +176,9 @@ function dayHeader(index: number): Day | null {
   const offer = shown.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
   const key = groupKey(offer);
-  // Sur téléphone, « En préparation » a toujours son titre de section (Kevin, 2026-11-05) : les cartes
-  // n'ont plus d'étiquette.
-  if (!byDay.value && !(phone.value && key === "preparing")) return null;
+  // « En préparation » a toujours son titre de section (Kevin, 2026-11-05, et maquette CandidaturesOrdinateur) :
+  // les cartes n'ont pas d'étiquette.
+  if (!byDay.value && key !== "preparing") return null;
   const previous = shown.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && groupKey(previous) === key) return null;
   const n = dayCounts.value.get(key) ?? 0;
@@ -194,6 +195,25 @@ const rows = computed(() =>
 const route = useRoute();
 const router = useRouter();
 const assistant = useAssistant();
+
+// Ordinateur (≥ 1 024 px) : les deux colonnes tiennent dans la fenêtre, sous l'en-tête ; la hauteur part du haut
+// de la grille, relu au chargement et au redimensionnement (bandeau de démo, pastilles de filtres).
+const grid = ref<HTMLElement | null>(null);
+const gridTop = ref(0);
+function measureGrid(): void {
+  if (grid.value) gridTop.value = Math.round(grid.value.getBoundingClientRect().top + window.scrollY);
+}
+// Sur ordinateur, une offre est toujours ouverte à droite (maquette) : sans ?offre=, la première de la liste.
+// L'adresse est remplacée, pas empilée : le retour arrière ne repasse pas par elle.
+watch(wide, () => void nextTick(() => {
+  measureGrid();
+  selectFirst();
+}));
+function selectFirst(): void {
+  if (!wide.value || routeOfferId() || failed.value) return;
+  const first = shown.value[0];
+  if (first) void router.replace({ query: { ...route.query, offre: String(first.id) } });
+}
 
 // L'offre ouverte est l'élément dont parle l'assistant (docs/24 §2.2).
 watch(selected, (offer) => {
@@ -370,6 +390,10 @@ async function load(append = false): Promise<void> {
       loading.value = false;
       retrying.value = false;
       firstLoaded.value = true;
+      void nextTick(() => {
+        measureGrid();
+        selectFirst();
+      });
     }
   }
 }
@@ -409,17 +433,6 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   await load();
 }
 let undoTimer: ReturnType<typeof setTimeout> | undefined;
-
-// La feuille d'actions d'une carte (téléphone, C6) : l'offre dont on a touché le « ⋯ ».
-const actionsOffer = ref<Offer | null>(null);
-function discardFromSheet(offer: Offer): void {
-  actionsOffer.value = null;
-  void setStatus("ignored", offer);
-}
-function sentFromSheet(offer: Offer): void {
-  actionsOffer.value = null;
-  void openApplication(offer);
-}
 
 const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
 const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
@@ -508,33 +521,6 @@ watch(
   () => void load(),
 );
 
-// Filtres affichés (docs/10 §3), enregistrés en base ; tous par défaut.
-const ALL_FILTERS: FilterKey[] = ["score", "sources", "cantons", "rate", "external"];
-const visibleFilters = ref<FilterKey[]>([...ALL_FILTERS]);
-
-async function loadVisibility(): Promise<void> {
-  try {
-    const { data } = await api.GET("/api/offer-filters");
-    if (Array.isArray(data?.visible)) visibleFilters.value = data.visible;
-  } catch {
-    // Panneau complet si l'API ne répond pas.
-  }
-}
-
-async function setVisibility(visible: FilterKey[]): Promise<void> {
-  visibleFilters.value = visible;
-  // Un filtre masqué ne doit pas cacher d'offres sans qu'on le voie : il est remis à zéro.
-  const hidden = ALL_FILTERS.filter((key) => !visible.includes(key));
-  const patch: Partial<typeof filters.value> = {};
-  if (hidden.includes("score") && filters.value.minScore !== null) patch.minScore = null;
-  if (hidden.includes("sources") && filters.value.sources.length) patch.sources = [];
-  if (hidden.includes("cantons") && filters.value.cantons.length) patch.cantons = [];
-  if (hidden.includes("rate") && filters.value.minRate !== null) patch.minRate = null;
-  if (hidden.includes("external") && filters.value.externalOnly) patch.externalOnly = false;
-  if (Object.keys(patch).length) update(patch);
-  await api.PUT("/api/offer-filters", { body: { visible } });
-}
-
 async function loadChunkTitles(): Promise<void> {
   try {
     const { data } = await api.GET("/api/profile-chunks");
@@ -546,11 +532,11 @@ async function loadChunkTitles(): Promise<void> {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
+  window.addEventListener("resize", measureGrid);
   document.addEventListener("pointerdown", onPointerDown);
   void load().then(openFromQuery);
   openShared();
   void loadChunkTitles();
-  void loadVisibility();
 });
 useDataChanged(() => {
   void load();
@@ -558,6 +544,7 @@ useDataChanged(() => {
 onUnmounted(() => {
   clearTimeout(undoTimer);
   window.removeEventListener("keydown", onKeydown);
+  window.removeEventListener("resize", measureGrid);
   document.removeEventListener("pointerdown", onPointerDown);
   assistant.setFocus(null);
 });
@@ -581,7 +568,7 @@ onUnmounted(() => {
     <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. Pas sur téléphone :
          le nombre est sur la pastille de « À traiter » (maquette Candidatures, Kevin, 2026-11-05). -->
     <p
-      v-if="!phone && !failed && (!loading || items.length)"
+      v-if="!phone && !wide && !failed && (!loading || items.length)"
       class="offers-sentence"
       data-test="offers-sentence"
     >
@@ -593,8 +580,8 @@ onUnmounted(() => {
     <!-- Téléphone (docs/139 étape 5a, maquette Candidatures) : la recherche et « Ajouter » montent au-dessus
          des vues (#jobs-tools), le bouton des filtres dans l'en-tête, à côté d'« Alertes ». -->
     <component
-      :is="phone ? Teleport : 'div'"
-      v-bind="phone ? { to: '#jobs-tools', defer: true } : { class: 'in-place' }"
+      :is="phone || wide ? Teleport : 'div'"
+      v-bind="phone || wide ? { to: '#jobs-tools', defer: true } : { class: 'in-place' }"
     >
       <div
         class="offers-toolbar"
@@ -651,39 +638,16 @@ onUnmounted(() => {
             v-else
             class="offers-filters-anchor"
           >
-            <section
+            <OfferFilterPopover
               v-if="filtersOpen"
-              id="offers-filters"
-              class="offers-filters"
               :style="{ '--filters-room': filtersRoom }"
-              role="dialog"
-              aria-labelledby="offers-filters-title"
-              data-test="filters-dialog"
-            >
-              <div class="offers-filters-head">
-                <h2 id="offers-filters-title">
-                  Filtres
-                </h2>
-                <IconButton
-                  icon="close"
-                  label="Fermer les filtres"
-                  class="close"
-                  data-test="close-filters"
-                  @click="closeFilters"
-                />
-              </div>
-              <OfferFiltersPanel
-                :filters="filters"
-                :counts="counts"
-                :facets="facets"
-                :visible="visibleFilters"
-                :total="shownTotal"
-                @update="update"
-                @reset="reset"
-                @visibility="setVisibility"
-                @done="closeFilters"
-              />
-            </section>
+              :filters="filters"
+              :counts="counts"
+              :total="shownTotal"
+              @update="update"
+              @reset="reset"
+              @close="closeFilters"
+            />
           </div>
         </div>
         <!-- Téléphone (C10) : « Ajouter » compact, à côté de la recherche ; « Postuler spontanément » est un
@@ -714,7 +678,11 @@ onUnmounted(() => {
       @reset="reset"
     />
 
-    <div :class="['offers-grid', { 'has-selection': selected }]">
+    <div
+      ref="grid"
+      :class="['offers-grid', { 'has-selection': selected }]"
+      :style="wide ? { '--offers-top': `${gridTop}px` } : undefined"
+    >
       <div class="offers-list">
         <p
           v-if="notice"
@@ -890,7 +858,6 @@ onUnmounted(() => {
               :selected="row.offer.id === selectedId"
               :show-date="!byDay || row.offer.id === pinnedId"
               @select="selectOffer(row.offer.id)"
-              @more="actionsOffer = row.offer"
             />
           </li>
         </TransitionGroup>
@@ -967,13 +934,6 @@ onUnmounted(() => {
     :error="applyError"
     @submit="saveApplication"
     @close="applying = null"
-  />
-  <OfferActionSheet
-    v-if="phone"
-    :offer="actionsOffer"
-    @close="actionsOffer = null"
-    @discard="discardFromSheet"
-    @sent="sentFromSheet"
   />
   <SidePanel
     v-if="spontaneousOpen"

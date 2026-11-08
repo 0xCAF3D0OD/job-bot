@@ -15,6 +15,7 @@ import { usePhone } from "../composables/usePhone";
 // sont un contrôle segmenté ; la vue ouverte y pose ses outils (#jobs-tools : recherche, « Ajouter »).
 const route = useRoute();
 const { phone } = usePhone();
+const { phone: wide } = usePhone("(min-width: 1024px)");
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 
@@ -31,8 +32,8 @@ const segments = computed<SegmentOption[]>(() =>
     label: item.label,
     to: link(item.path),
     test: `jobs-tab-${item.key}`,
-    // La maquette téléphone n'a pas de nombre dans les segments ; l'ordinateur garde le sien.
-    count: phone.value ? undefined : badge(item.key),
+    // Les maquettes (téléphone, et ordinateur dès 1 024 px) n'ont pas de nombre dans les segments.
+    count: phone.value || wide.value ? undefined : badge(item.key),
     hint: `${badge(item.key)} ${item.hint}`,
   })),
 );

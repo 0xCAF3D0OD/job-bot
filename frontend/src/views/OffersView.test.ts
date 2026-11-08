@@ -188,35 +188,38 @@ describe("OffersView", () => {
     });
   });
 
+  // Le panneau de la maquette CandidaturesOrdinateur (7.11.2026) : des pastilles aria-pressed, appliquées tout de suite.
   it("un clic sur un filtre met à jour l'adresse et recharge", async () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
-    // Cartes (docs/27) : la ligne déplie le choix dessous ; un autre filtre le replie.
-    expect(wrapper.find("[data-test=row-view]").text()).toContain("À traiter");
-    // Les filtres secondaires sont repliés dans « Plus de filtres » (docs/73 §6).
-    expect(wrapper.find("[data-test=row-cantons]").exists()).toBe(false);
-    await wrapper.find("[data-test=more-filters]").trigger("click");
-    await wrapper.find("[data-test=row-cantons]").trigger("click");
-    await wrapper.find("[data-test=canton-VD]").trigger("change");
+    expect(wrapper.find("[data-test=pop-view-pending]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=pop-view-pending]").text()).toMatch(/^À traiter · \d+$/);
+    await wrapper.find("[data-test=pop-score-75]").trigger("click");
     await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ canton: ["VD"] });
-    expect(lastQuery()).toMatchObject({ cantons: ["VD"] });
-    expect(wrapper.find("[data-test=row-cantons]").text()).toContain("VD");
-    expect(wrapper.find("[data-test=more-filters]").text()).toBe("Moins de filtres (1)");
+    expect(router.currentRoute.value.query).toEqual({ note: "75" });
+    expect(lastQuery()).toMatchObject({ min_score: 75 });
+    expect(wrapper.find("[data-test=pop-score-75]").attributes("aria-pressed")).toBe("true");
+    await wrapper.find("[data-test=pop-rate-80]").trigger("click");
+    await wrapper.find("[data-test=pop-view-to_review]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({ note: "75", taux: "80", statut: "to_review" });
+    expect(wrapper.find("[data-test=filters-reset]").text()).toBe("Tout effacer");
+    await wrapper.find("[data-test=filters-reset]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({ statut: "to_review" });
+  });
 
-    await wrapper.find("[data-test=row-sources]").trigger("click");
-    expect(wrapper.find("[data-test=canton-VD]").exists()).toBe(false); // un seul ouvert
-    await wrapper.find("[data-test=source-indeed]").trigger("change");
-    await wrapper.find("[data-test=row-view]").trigger("click");
-    expect(wrapper.find("[data-test=view-filtered_out]").text()).toContain("2");
-    await wrapper.find("[data-test=view-all]").trigger("click");
+  it("le panneau : un seul conteneur, le milieu défile, le pied reste", async () => {
+    const wrapper = await mountAt("/offres");
+    await openFilters(wrapper);
+    const dialog = wrapper.find("[data-test=filters-dialog]");
+    expect(dialog.findAll(".filter-popover-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Taux minimum"]);
+    expect(dialog.findAll("[aria-pressed]").length).toBe(14);
+    expect(dialog.find(".filter-popover-body [data-test=filters-done]").exists()).toBe(false);
+    expect(dialog.find(".filter-popover-foot [data-test=filters-done]").exists()).toBe(true);
+    await wrapper.find("[data-test=pop-filtered-out]").trigger("change");
     await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ canton: ["VD"], site: ["indeed"], statut: "all" });
-    expect(wrapper.find("[data-test=reset]").text()).toBe("Tout effacer");
-
-    await wrapper.find("[data-test=reset]").trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ statut: "all" });
+    expect(router.currentRoute.value.query).toEqual({ ecartees: "montrer" });
   });
 
   it("la recherche attend la fin de la frappe", async () => {
@@ -250,8 +253,9 @@ describe("OffersView", () => {
     expect(cards[0]?.text()).not.toContain("chez l'employeur");
     // Pas encore notée : pas d'anneau, le texte, et la raison au survol (docs/76 §3).
     expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
-    expect(cards[0]?.find("[data-test=offer-alert]").exists()).toBe(false);
-    expect(cards[1]?.find("[data-test=offer-alert]").text()).toBe("Type : stage (« stage »)");
+    expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["80–100 %", "Temporaire"]);
+    expect(cards[1]?.find("[data-test=offer-chip]").text()).toBe("Type : stage (« stage »)");
+    expect(cards[1]?.find("[data-test=offer-chip]").classes()).toContain("warn");
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
@@ -297,7 +301,7 @@ describe("note et résumé", () => {
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
-    expect(scored?.find(".offer-line-sub").text()).toMatch(/ · \d{1,2} \S+$/);
+    expect(scored?.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+$|^Reçue (aujourd'hui|hier)$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
     expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
 
@@ -323,6 +327,9 @@ describe("tri et candidature", () => {
     await flushPromises();
     expect(router.currentRoute.value.query.offre).toBe("1");
     expect(document.activeElement?.getAttribute("data-test")).toBe("offer-detail-title");
+    // La carte ouverte (maquette CandidaturesOrdinateur) : aria-current="true", un lien vers ?offre=.
+    expect(wrapper.find("[data-test=offer]").attributes("aria-current")).toBe("true");
+    expect(wrapper.find("[data-test=offer]").attributes("href")).toBe("/offres?offre=1");
     router.back();
     await flushPromises();
     await new Promise((r) => setTimeout(r, 0));
@@ -405,39 +412,8 @@ describe("offres expirées", () => {
     );
     const wrapper = await mountAt("/offres?statut=expired");
     expect(lastQuery().view).toBe("expired");
-    await openFilters(wrapper);
-    expect(wrapper.find("[data-test=row-view]").text()).toContain("Expirées");
-    await wrapper.find("[data-test=close-filters]").trigger("click");
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=expired]").text()).toContain("Probablement expirée");
-  });
-});
-
-describe("filtres au choix", () => {
-  it("affiche les filtres enregistrés, masque et remet à zéro un filtre actif", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve(
-        path === "/api/offer-filters"
-          ? { data: { visible: ["sources", "rate"] } }
-          : path === "/api/profile-chunks"
-            ? { data: [] }
-            : page([offer(1, "Ingénieur système")]),
-      ),
-    );
-    PUT.mockResolvedValue({ data: { visible: ["sources"] } });
-    const wrapper = await mountAt("/offres?taux=80");
-    await openFilters(wrapper);
-    const panel = wrapper.find("[data-test=filters]");
-    expect(panel.text()).toContain("Sites");
-    expect(panel.text()).not.toContain("Cantons");
-    expect(panel.text()).toContain("Taux minimum");
-
-    await wrapper.find("[data-test=customize]").trigger("click");
-    await wrapper.find("[data-test=show-rate]").setValue(false);
-    await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/offer-filters", { body: { visible: ["sources"] } });
-    expect(router.currentRoute.value.query.taux).toBeUndefined();
-    expect(wrapper.find("[data-test=filters]").text()).not.toContain("Les offres sans taux indiqué");
   });
 });
 
@@ -543,7 +519,8 @@ describe("adresse par le registre IDE", () => {
 });
 
 describe("étiquettes en mots-clés", () => {
-  it("une seule alerte : ce que ton profil ne couvre pas (docs/73 §4)", async () => {
+  // Maquette du 7.11.2026 : rien d'autre que les puces dans la carte ; ce qui manque est dans la fiche.
+  it("ni mots-clés ni « Il te manque » sur la carte (docs/73 §4, maquette du 7.11)", async () => {
     mockOffers(
       page([
         offer(1, "Ingénieur DevOps", {
@@ -562,9 +539,8 @@ describe("étiquettes en mots-clés", () => {
     const wrapper = await mountAt("/offres");
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[0]!.find("[data-test=keywords]").exists()).toBe(false);
-    expect(cards[0]!.find("[data-test=offer-alert]").text()).toBe("Il te manque : allemand B2");
+    expect(cards[0]!.text()).not.toContain("Il te manque");
     expect(cards[0]!.text()).not.toContain("80-100 %");
-    expect(cards[1]!.find("[data-test=offer-alert]").exists()).toBe(false);
   });
 });
 
@@ -573,14 +549,13 @@ describe("tri « Dernière action »", () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.text()).not.toContain("Dernière action");
     await openFilters(wrapper);
-    await wrapper.find("[data-test=row-view]").trigger("click");
-    await wrapper.find("[data-test=view-in_progress]").trigger("click");
+    await wrapper.find("[data-test=pop-view-in_progress]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toMatchObject({ statut: "in_progress", tri: "activity" });
     expect(lastQuery().sort).toBe("activity");
-    expect(wrapper.find("[data-test=row-sort]").text()).toContain("Dernière action");
+    expect(wrapper.find("[data-test=pop-sort-activity]").attributes("aria-pressed")).toBe("true");
 
-    await wrapper.find("[data-test=view-to_review]").trigger("click");
+    await wrapper.find("[data-test=pop-view-to_review]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query.tri).toBeUndefined();
   });
@@ -641,7 +616,7 @@ describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
     const first = wrapper.findAll("[data-test=offer]")[0]!;
     expect(first.text()).toContain("En préparation");
     // Sans ligne de jour au-dessus, elle garde sa date.
-    expect(first.find(".offer-line-sub").text()).toMatch(/ · \d{1,2} \S+$/);
+    expect(first.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+/);
     expect(wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text())).toEqual([
       dayName(ago(2)),
       dayName(ago(20)),
@@ -701,33 +676,8 @@ describe("Offres, ajouter une offre (docs/111)", () => {
   it("l'étiquette « Ajoutée par toi » sur la carte", async () => {
     mockOffers(page([offer(1, "Une", { added_by_you: true, links: [] })]));
     const wrapper = await mountAt("/offres");
-    expect(wrapper.find("[data-test=added-badge]").text()).toBe("Ajoutée par toi");
-  });
-});
-
-describe("Offres, la note en ligne (1.6.47)", () => {
-  it("une ligne « Note minimale · Toutes » comme Statut et Tri, ses quatre choix dépliés dessous", async () => {
-    mockOffers(page([offer(1, "Une")]));
-    const wrapper = await mountAt("/offres");
-    await openFilters(wrapper);
-    const row = wrapper.find("[data-test=row-score]");
-    expect(row.find(".with-icon").text()).toBe("Note minimale");
-    expect(row.find(".filter-row-value").text()).toBe("Toutes");
-    expect(row.attributes("aria-expanded")).toBe("false");
-    await row.trigger("click");
-    expect(wrapper.findAll("[data-test^=score-choice-]").map((c) => c.text())).toEqual([
-      "Toutes",
-      "À creuser et plus",
-      "Proche et plus",
-      "Très proche",
-    ]);
-    await wrapper.find("[data-test=score-choice-70]").trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.query.note).toBe("70");
-    // Une adresse d'avant (?note=60-90) : la ligne dit les bornes.
-    const old = await mountAt("/offres?note=60-90");
-    await openFilters(old);
-    expect(old.find("[data-test=row-score] .filter-row-value").text()).toBe("60–90");
+    const chip = wrapper.findAll("[data-test=offer-chip]").find((c) => c.text() === "Ajoutée par toi");
+    expect(chip?.classes()).toContain("blue");
   });
 });
 
@@ -817,7 +767,7 @@ describe("Offres, illustrations (planche « Illustrations »)", () => {
 });
 
 describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
-  it("en préparation d'abord, sous son titre ; l'étiquette sur la carte ; les faits en pastilles", async () => {
+  it("en préparation d'abord, sous son titre ; « Plus tard » et les faits en puces", async () => {
     const now = new Date().toISOString();
     mockOffers(
       page([
@@ -831,18 +781,17 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     const titles = wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text());
     expect(titles).toEqual(["En préparation", "Aujourd'hui"]);
     const cards = wrapper.findAll("[data-test=offer]");
-    expect(cards.map((c) => c.find("[data-test=status-tag]").exists() && c.find("[data-test=status-tag]").text())).toEqual([
-      "En préparation",
-      "Plus tard",
-      false,
-    ]);
-    expect(cards[1]!.findAll("[data-test=offer-facts] span").map((s) => s.text())).toEqual(["80–100 %", "CDI"]);
+    expect(cards[0]!.text()).not.toContain("En préparation");
+    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["80–100 %", "CDI", "Plus tard"]);
+    // La carte de la maquette : logo, poste, « entreprise · lieu », puces, anneau ; rien d'autre.
+    expect(cards[0]!.findAll("button")).toHaveLength(0);
+    expect(cards[0]!.element.tagName).toBe("A");
   });
 
-  it("hors du tri par jour, une liste à plat", async () => {
+  it("hors du tri par jour, une liste à plat sous « En préparation »", async () => {
     mockOffers(page([offer(1, "Lettre en cours", { status: "preparing" }), offer(2, "Nouvelle")]));
     const wrapper = await mountAt("/offres?tri=score");
-    expect(wrapper.find("[data-test=offer-day]").exists()).toBe(false);
+    expect(wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text())).toEqual(["En préparation"]);
   });
 });
 
