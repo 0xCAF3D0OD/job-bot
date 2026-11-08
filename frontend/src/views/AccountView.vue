@@ -3,12 +3,15 @@ import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import AvatarPicker from "../components/AvatarPicker.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
 import PageHero from "../components/PageHero.vue";
+import ProfileImage from "../components/ProfileImage.vue";
 import { useAuth } from "../composables/useAuth";
 import { useCollect } from "../composables/useCollect";
 import { usePlan } from "../composables/usePlan";
+import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
 import { useTheme } from "../composables/useTheme";
 
@@ -23,6 +26,8 @@ const { list, current, load, choose } = useProfiles();
 const { running, message: collectMessage, collectNow } = useCollect();
 
 const name = ref("");
+const image = useProfileImage();
+const picking = ref(false);
 const cvCount = ref<number | null>(null);
 const operatorContact = ref<string | null>(null);
 
@@ -81,6 +86,7 @@ onMounted(() => {
   void loadCvCount();
   void loadContact();
   void load();
+  void image.load();
 });
 </script>
 
@@ -91,30 +97,50 @@ onMounted(() => {
       class="container account-page"
       data-test="account-page"
     >
-      <RouterLink
-        to="/profil"
-        class="account-card"
-        data-test="account-profile-card"
-      >
-        <span
-          class="account-avatar"
-          aria-hidden="true"
+      <!-- Maquette du 8 novembre (Compte, CompteImage) : l'image de profil avec sa pastille crayon ; un toucher ouvre
+           « Ton image » (AvatarPicker). Le bouton est posé à côté du lien de la carte, pas dedans. -->
+      <div class="account-card-wrap">
+        <RouterLink
+          to="/profil"
+          class="account-card"
+          data-test="account-profile-card"
         >
-          <template v-if="initials">{{ initials }}</template>
-          <AppIcon
-            v-else
-            name="user"
+          <span
+            class="account-image-slot"
+            aria-hidden="true"
           />
-        </span>
-        <span class="account-card-text">
-          <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
-          <span class="account-card-line">CV, compétences, postes recherchés</span>
-        </span>
-        <AppIcon
-          name="chevron"
-          class="grouped-chevron"
-        />
-      </RouterLink>
+          <span class="account-card-text">
+            <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
+            <span class="account-card-line">CV, compétences, postes recherchés</span>
+          </span>
+          <AppIcon
+            name="chevron"
+            class="grouped-chevron"
+          />
+        </RouterLink>
+        <button
+          type="button"
+          class="account-image-button"
+          aria-label="Changer ton image"
+          aria-haspopup="dialog"
+          data-test="account-image"
+          @click="picking = true"
+        >
+          <ProfileImage
+            :choice="image.choice.value"
+            :initials="initials || image.initials.value"
+            :size="52"
+          />
+          <span
+            class="account-image-badge"
+            aria-hidden="true"
+          ><AppIcon name="pencil" /></span>
+        </button>
+      </div>
+      <AvatarPicker
+        :open="picking"
+        @close="picking = false"
+      />
 
       <!-- Les profils d'essai de l'exploitant (docs/65), venus du menu du compte (C2) : seulement s'il y en a. -->
       <label

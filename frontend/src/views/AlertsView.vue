@@ -38,6 +38,10 @@ const page = ref<AlertsPage | null>(null);
 const { phone } = usePhone();
 const { phone: wideQuery } = usePhone("(min-width: 1024px)");
 const wide = computed(() => wideQuery.value && !phone.value);
+// Téléphone (maquette du 8 novembre, AlertesTel) : une page à elle aussi, avec le retour aux candidatures, le titre
+// « Alertes e-mail », la phrase, le bandeau pêche et la même liste qu'à l'ordinateur ; « + Ajouter » à côté de
+// « Recherches suivies ».
+const listed = computed(() => wide.value || phone.value);
 usePageReady("alerts", () => !!page.value);
 const mode = ref<"auto" | "wizard" | "manage">("auto");
 // « Créer » sur une ligne : le pas à pas de ce site, pour cette recherche.
@@ -203,7 +207,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section :class="['jobs-body', 'alerts-page', { 'alerts-wide': wide }]">
+  <section :class="['jobs-body', 'alerts-page', { 'alerts-wide': listed, 'alerts-phone': phone }]">
     <header
       v-if="wide && page"
       class="alerts-head-wide"
@@ -224,10 +228,31 @@ onMounted(async () => {
         + Ajouter une recherche
       </button>
     </header>
+    <header
+      v-if="phone && page"
+      class="alerts-head-phone"
+    >
+      <RouterLink
+        to="/candidatures"
+        class="icon-button icon-only"
+        aria-label="Retour aux candidatures"
+        data-test="alerts-back"
+      >
+        <AppIcon name="arrow-left" />
+      </RouterLink>
+      <h1>Alertes e-mail</h1>
+    </header>
     <template v-if="page">
+      <p
+        v-if="phone && view === 'summary'"
+        class="alerts-sentence-phone"
+        data-test="alerts-sentence"
+      >
+        {{ deskSentence }}
+      </p>
       <!-- La conclusion d'abord (règles §3.2), puis une seule bande d'action (§3). -->
       <div
-        v-if="wide && view === 'summary' && band"
+        v-if="listed && view === 'summary' && band"
         class="alerts-banner"
         role="status"
         data-test="alerts-banner"
@@ -247,14 +272,14 @@ onMounted(async () => {
         </button>
       </div>
       <p
-        v-if="!wide && view === 'summary' && sentence"
+        v-if="!listed && view === 'summary' && sentence"
         class="offers-sentence alerts-sentence"
         data-test="alerts-sentence"
       >
         <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
       </p>
       <ActionBand
-        v-if="!wide && view === 'summary' && band"
+        v-if="!listed && view === 'summary' && band"
         :title="band.title"
         :summary="band.summary"
         :action="band.action"
@@ -309,11 +334,22 @@ onMounted(async () => {
       </template>
       <template v-else>
         <section
-          v-if="wide"
+          v-if="listed"
           class="alerts-section alerts-list-wide"
           data-test="alert-searches"
         >
-          <h2>Recherches suivies</h2>
+          <div class="alerts-list-head">
+            <h2>Recherches suivies</h2>
+            <button
+              v-if="phone"
+              type="button"
+              class="secondary"
+              data-test="add-search"
+              @click="adding = true"
+            >
+              + Ajouter
+            </button>
+          </div>
           <ul class="alerts-rows">
             <li
               v-for="row in rows"
@@ -333,7 +369,7 @@ onMounted(async () => {
                 :data-test="`create-${row.site.slug}`"
                 @click="create(row.site.slug, row.group.terms)"
               >
-                Créer l’alerte
+                {{ phone ? "Créer" : "Créer l’alerte" }}
               </button>
               <span
                 v-else-if="row.site.state.kind === 'quiet'"

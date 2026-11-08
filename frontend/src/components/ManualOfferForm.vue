@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, reactive, ref } from "vue";
 
 import { api } from "../api/client";
 import { plural } from "../format";
+import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
 import BusyButton from "./BusyButton.vue";
 import Composer from "./Composer.vue";
@@ -214,6 +215,8 @@ async function add(event: Event): Promise<void> {
 function openExisting(): void {
   if (existingId.value !== null) emit("added", { id: existingId.value, existing: true, status: "", reasons: [] });
 }
+// Maquette du 8 novembre (LISEZMOI, Composer) : 3 lignes sur ordinateur, 4 sur téléphone (AjouterOffreTel).
+const { phone } = usePhone();
 </script>
 
 <template>
@@ -226,7 +229,7 @@ function openExisting(): void {
   >
     <Composer
       v-model="entry"
-      :rows="3"
+      :rows="phone ? 4 : 3"
       placeholder="Lien ou texte de l'annonce"
       send-label="Ajouter l'offre"
       :busy="reading || full"

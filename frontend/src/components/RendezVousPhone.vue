@@ -7,7 +7,6 @@ import {
   agreedLines,
   checkedCount,
   countdown,
-  dateBlock,
   dateText,
   interviewPlace,
   meetingsToNote,
@@ -18,6 +17,7 @@ import {
   upcomingAppointments,
 } from "../rendezVous";
 import { plural } from "../format";
+import CalendarDate from "./CalendarDate.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { timeOfDay } from "../dates";
 
@@ -54,6 +54,11 @@ const questionsOpen = ref(false);
 // À noter, puis le dernier rendez-vous ORP noté.
 const toNote = computed(() => meetingsToNote(props.page, now));
 const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ?? null);
+// Maquette du 8 novembre (D26) : la date dans l'icône calendrier de 48 px (CalendarDate), plus de carré coloré.
+function cal(iso: string): { day: number; month: number } {
+  const d = new Date(iso);
+  return { day: d.getDate(), month: d.getMonth() + 1 };
+}
 </script>
 
 <template>
@@ -91,14 +96,11 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
           />
         </div>
         <div class="rdv-head">
-          <span
-            class="rdv-date rdv-date-orp"
-            aria-hidden="true"
-          >
-            <span class="rdv-date-day-name">{{ dateBlock(item.at).weekday }}</span>
-            <span class="rdv-date-number">{{ dateBlock(item.at).day }}</span>
-            <span class="rdv-date-month">{{ dateBlock(item.at).month }}</span>
-          </span>
+          <CalendarDate
+            class="rdv-date"
+            v-bind="cal(item.at)"
+            tone="orp"
+          />
           <div class="rdv-body">
             <span class="rdv-kicker">{{ countdown(item.at, now) }}</span>
             <h3
@@ -219,14 +221,11 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
         class="rdv-card rdv-interview"
         :data-test="`rdv-interview-${item.application.id}`"
       >
-        <span
-          class="rdv-date rdv-date-interview"
-          aria-hidden="true"
-        >
-          <span class="rdv-date-day-name">{{ dateBlock(item.at).weekday }}</span>
-          <span class="rdv-date-number">{{ dateBlock(item.at).day }}</span>
-          <span class="rdv-date-month">{{ dateBlock(item.at).month }}</span>
-        </span>
+        <CalendarDate
+          class="rdv-date"
+          v-bind="cal(item.at)"
+          tone="blue"
+        />
         <div class="rdv-body">
           <span class="rdv-kicker">Entretien d’embauche</span>
           <h3 class="rdv-interview-title">
@@ -283,13 +282,11 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
         :data-test="`rdv-to-note-${item.id}`"
       >
         <div class="rdv-last-head">
-          <span
-            class="rdv-date rdv-date-past rdv-date-due"
-            aria-hidden="true"
-          >
-            <span class="rdv-date-number">{{ dateBlock(item.starts_at).day }}</span>
-            <span class="rdv-date-month">{{ dateBlock(item.starts_at).month }}</span>
-          </span>
+          <CalendarDate
+            class="rdv-date"
+            v-bind="cal(item.starts_at)"
+            tone="orp"
+          />
           <div class="rdv-body">
             <h3 class="rdv-last-title">
               {{ pastTitle(item.starts_at, now) }}
@@ -324,13 +321,11 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
         class="rdv-card rdv-last"
       >
         <div class="rdv-last-head">
-          <span
-            class="rdv-date rdv-date-past"
-            aria-hidden="true"
-          >
-            <span class="rdv-date-number">{{ dateBlock(last.starts_at).day }}</span>
-            <span class="rdv-date-month">{{ dateBlock(last.starts_at).month }}</span>
-          </span>
+          <CalendarDate
+            class="rdv-date"
+            v-bind="cal(last.starts_at)"
+            tone="past"
+          />
           <div class="rdv-body">
             <h3 class="rdv-last-title">
               {{ pastTitle(last.starts_at, now) }}
@@ -405,18 +400,7 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
 .rdv-head, .rdv-interview { gap: calc(var(--space-4) - var(--space-1) / 2); }
 .rdv-head { display: flex; }
 .rdv-interview { position: relative; }
-.rdv-date {
-  flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: var(--btn-secondary); height: calc(var(--btn-primary) + var(--space-1));
-  border-radius: calc(var(--radius-card) - var(--space-1)); line-height: var(--leading-none);
-}
-.rdv-date-orp { background: var(--peach-soft); color: var(--peach-text); }
-.rdv-date-interview { background: var(--primary-soft); color: var(--primary-text); }
-.rdv-date-past { height: var(--btn-secondary); background: var(--surface-muted); color: var(--text-tertiary); }
-.rdv-date-day-name { font-size: var(--font-caption); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.4px; }
-.rdv-date-number { margin-top: calc(var(--space-1) - 1px); font-size: var(--title-sub); font-weight: var(--weight-heavy); }
-.rdv-date-past .rdv-date-number { margin-top: 0; font-size: calc(var(--font-body) * 1.25); }
-.rdv-date-month { margin-top: calc(var(--space-1) / 2); font-size: var(--font-caption); font-weight: var(--weight-semibold); }
+.rdv-date { flex: none; }
 .rdv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .rdv-kicker { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-orp-title { margin: 0; font-size: var(--font-title); line-height: 1.28em; font-weight: var(--weight-heavy); }
@@ -488,7 +472,6 @@ const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ??
   min-height: var(--btn-secondary); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft);
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
 }
-.rdv-date-due { background: var(--peach-soft); color: var(--peach-text); }
 .rdv-edit-note {
   align-self: flex-start; min-height: var(--target-min); padding: 0; border: 0; border-radius: 0; background: transparent;
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;

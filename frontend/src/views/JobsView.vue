@@ -83,9 +83,10 @@ onMounted(() => void refresh());
 </script>
 
 <template>
-  <!-- Mes alertes e-mail, sur ordinateur (maquette du 8 novembre, AlertesOrdinateur) : une page à elle, sans les vues. -->
+  <!-- Mes alertes e-mail, sur ordinateur et sur téléphone (maquette du 8 novembre, AlertesOrdinateur et AlertesTel) :
+       une page à elle, sans les vues. -->
   <div
-    v-if="!(wide && !phone && tab === 'alertes')"
+    v-if="!((wide || phone) && tab === 'alertes')"
     :class="['jobs-head', { wide: tab === 'offres' }]"
   >
     <div class="jobs-title">

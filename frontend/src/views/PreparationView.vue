@@ -1117,6 +1117,13 @@ onMounted(() => void load());
                 class="prep-revise"
                 data-test="prep-revise"
               >
+                <!-- Téléphone (maquette Preparer du 8 novembre) : la section « Retoucher la lettre », « Que changer ? ». -->
+                <p
+                  v-if="phone"
+                  class="prep-revise-title"
+                >
+                  Retoucher la lettre
+                </p>
                 <SuggestionChips
                   :items="suggestions"
                   label="Retouches proposées"
@@ -1124,7 +1131,7 @@ onMounted(() => void load());
                 />
                 <Composer
                   v-model="revision"
-                  placeholder="Demander une modification de la lettre"
+                  :placeholder="phone ? 'Que changer ?' : 'Demander une modification de la lettre'"
                   send-label="Envoyer la demande"
                   :busy="writing"
                   @send="revise"

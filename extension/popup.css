@@ -143,7 +143,8 @@ main {
 .checks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; color: var(--text-tertiary); }
 .checks li { display: flex; gap: 8px; }
 .checks svg { flex: none; color: var(--success); }
-.done-mark { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 26px; background: var(--success-soft); color: var(--success); }
+/* Maquette du 8 novembre (ExtAnnonce, ExtAlerte) : la coche de 30 px, sans fond. */
+.done-mark { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; color: var(--success); }
 
 .stack { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
 .card { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
@@ -153,7 +154,7 @@ main {
 .meta { color: var(--text-secondary); }
 
 .lead { display: flex; gap: 12px; align-items: flex-start; }
-.lead-mark { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 20px; background: var(--success-soft); color: var(--success); }
+.lead-mark { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: var(--success); }
 .lead-text { display: flex; flex-direction: column; gap: 3px; }
 .title-lead { font-size: 17px; font-weight: 800; line-height: 22px; }
 .address-row { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }

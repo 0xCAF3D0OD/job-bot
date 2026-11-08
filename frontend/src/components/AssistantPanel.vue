@@ -452,7 +452,7 @@ const headItems: MoreMenuItem[] = [
             data-test="assistant-greeting"
           >
             <AssistantMascot
-              :size="32"
+              :size="28"
               class="assistant-line-mascot"
             />
             <div class="assistant-bubble">
@@ -538,10 +538,10 @@ const headItems: MoreMenuItem[] = [
           class="assistant-line"
           :class="[line.role, { error: line.error }]"
         >
-          <!-- La mascotte devant chaque réponse (docs/97). -->
+          <!-- La mascotte devant chaque réponse (docs/97), sans cercle, 28 px (LISEZMOI du 8 novembre). -->
           <AssistantMascot
             v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
-            :size="page ? 32 : 28"
+            :size="28"
             :mood="lineMood(line)"
             class="assistant-line-mascot"
           />

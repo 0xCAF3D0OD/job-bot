@@ -47,7 +47,12 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");
     expect(card.attributes("href")).toBe("/profil");
-    expect(card.get(".account-avatar").text()).toBe("KD");
+    // L'image de profil et sa pastille crayon, à côté du lien (pas dedans) : un toucher ouvre « Ton image ».
+    expect(card.find("button").exists()).toBe(false);
+    const image = wrapper.get("[data-test=account-image]");
+    expect(image.attributes("aria-label")).toBe("Changer ton image");
+    expect(image.get("[data-test=profile-image]").text()).toBe("KD");
+    expect(image.find(".account-image-badge .icon").exists()).toBe(true);
     expect(card.text()).toContain("Kevin Di Nocera");
     expect(card.text()).toContain("CV, compétences, postes recherchés");
     expect(wrapper.findAll(".grouped-title").map((t) => t.text())).toEqual([
@@ -73,13 +78,24 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     expect(collectNow).toHaveBeenCalled();
   });
 
+  it("toucher l'image ouvre la feuille « Ton image » (grille de 5 colonnes, AvatarPicker)", async () => {
+    const wrapper = await mountPage();
+    const picker = wrapper.findComponent({ name: "AvatarPicker" });
+    expect(picker.props("open")).toBe(false);
+    await wrapper.get("[data-test=account-image]").trigger("click");
+    await flushPromises();
+    expect(picker.props("open")).toBe(true);
+    expect(wrapper.get("[data-test=avatar-grid]").classes()).toContain("avatar-grid");
+    wrapper.unmount();
+  });
+
   it("sans nom ni contact : « Ton profil », l'aide mène à À propos ; la démo ne collecte pas", async () => {
     DATA["/api/identity"] = { name: "" };
     DATA["/api/privacy"] = { contact: null };
     me.value = { username: "demo", auth_enabled: false, demo: true };
     const wrapper = await mountPage();
     expect(wrapper.get("[data-test=account-profile-card]").text()).toContain("Ton profil");
-    expect(wrapper.find(".account-avatar .icon").exists()).toBe(true);
+    expect(wrapper.find("[data-test=account-image] [data-test=profile-image]").exists()).toBe(true);
     expect(href(wrapper, "account-help")).toBe("/a-propos");
     expect(wrapper.find("[data-test=account-collect]").exists()).toBe(false);
   });

@@ -141,24 +141,27 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     const sheet = wrapper.find("[data-test=paste-sheet]");
     expect(sheet.text()).toContain("Coller le texte de l’annonce");
     expect(sheet.text()).toContain("Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici.");
-    await wrapper.find("[data-test=paste-text]").setValue("Trop court.");
-    const count = wrapper.find("[data-test=paste-count]");
-    expect(count.text()).toBe("11 caractères, 200 au moins");
+    // Maquette du 8 novembre : le Composer de 5 lignes, sans +, la flèche enregistre (désactivée sous 200).
+    const area = wrapper.find("[data-test=paste-text] [data-test=composer-input]");
+    expect(area.attributes("rows")).toBe("5");
+    expect(wrapper.find("[data-test=paste-text] [data-test=composer-plus]").exists()).toBe(false);
+    await area.setValue("Trop court.");
+    const count = wrapper.find("[data-test=paste-text] [data-test=composer-counter]");
+    expect(count.text()).toBe("11 caractères, 200 au moins · la flèche enregistre et refait la note");
     expect(count.attributes("aria-live")).toBe("polite");
-    const save = wrapper.find("[data-test=paste-save]");
-    expect(save.text()).toContain("Enregistrer et refaire la note");
-    expect(save.classes()).toContain("primary");
+    const save = wrapper.find("[data-test=paste-text] [data-test=composer-send]");
+    expect(save.attributes("aria-label")).toBe("Enregistrer et refaire la note");
     expect(save.attributes("disabled")).toBeDefined();
     await save.trigger("click");
     expect(PUT).not.toHaveBeenCalled();
 
     const text = "Tu administres nos serveurs Linux. ".repeat(8);
-    await wrapper.find("[data-test=paste-text]").setValue(text);
-    expect(wrapper.find("[data-test=paste-count]").text()).toBe(`${text.trim().length} caractères`);
-    expect(wrapper.find("[data-test=paste-save]").attributes("disabled")).toBeUndefined();
-    await wrapper.find("[data-test=paste-save]").trigger("click");
+    await area.setValue(text);
+    expect(wrapper.find("[data-test=paste-text] [data-test=composer-counter]").text()).toBe(`${text.trim().length} caractères · la flèche enregistre et refait la note`);
+    expect(wrapper.find("[data-test=paste-text] [data-test=composer-send]").attributes("disabled")).toBeUndefined();
+    await wrapper.find("[data-test=paste-text] [data-test=composer-send]").trigger("click");
     await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/offers/{offer_id}/description", { params: { path: { offer_id: 7 } }, body: { text } });
+    expect(PUT).toHaveBeenCalledWith("/api/offers/{offer_id}/description", { params: { path: { offer_id: 7 } }, body: { text: text } });
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
 

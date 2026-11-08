@@ -281,7 +281,7 @@ defineExpose({ focus: () => area.value?.focus() });
       aria-live="polite"
       data-test="composer-counter"
     >
-      {{ length }} caractères, {{ minChars }} au moins{{ counterHint ? ` · ${counterHint}` : "" }}
+      {{ length < minChars ? `${length} caractères, ${minChars} au moins` : `${length} caractères` }}{{ counterHint ? ` · ${counterHint}` : "" }}
     </p>
   </div>
 </template>
