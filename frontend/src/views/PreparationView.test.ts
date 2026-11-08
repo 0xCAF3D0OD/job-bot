@@ -155,21 +155,37 @@ describe("PreparationView", () => {
     // La consigne entière s'affiche aussi au-dessus de la lettre de la version choisie.
     await named.trigger("click");
     expect(wrapper.find("[data-test=version-instruction]").text()).toBe(`Consigne : ${long}`);
-    // La consigne a son libellé (FormField), le bouton dit ce qu'il fait.
-    expect(wrapper.find("label[for]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=write]").text()).toContain("Rédiger la nouvelle version");
+    // La consigne passe par la zone de saisie commune sous la lettre (maquette du 8 novembre).
+    expect(wrapper.find("[data-test=prep-revise] [data-test=composer-input]").attributes("placeholder")).toBe("Demander une modification de la lettre");
   });
 
   it("nouvelle version avec consigne : part de la version affichée", async () => {
     mockGet([letter(11, 1)]);
     POST.mockResolvedValue({ data: letter(12, 2, { instruction: "plus court", name: "Plus courte" }) });
     const wrapper = await mountView();
-    await wrapper.find("[data-test=instruction]").setValue("plus court");
-    await wrapper.find("[data-test=write]").trigger("click");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-input]").setValue("plus court");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-send]").trigger("click");
     await flushPromises();
     const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(opts.body).toEqual({ language: null, instruction: "plus court", base_draft_id: 11, modele: "moderne" });
     expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus courte");
+  });
+
+  it("les retouches proposées (maquette du 8 novembre) : « Plus court » part en consigne, « En allemand » en langue", async () => {
+    mockGet([letter(11, 1)]);
+    POST.mockResolvedValue({ data: letter(12, 2, { instruction: "Plus court" }) });
+    const wrapper = await mountView();
+    const chips = () => wrapper.findAll("[data-test=prep-revise] .suggestion-chips button");
+    await chips().find((b) => b.text() === "Plus court")!.trigger("click");
+    await flushPromises();
+    let [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(opts.body).toMatchObject({ instruction: "Plus court", base_draft_id: 11 });
+    POST.mockClear();
+    POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
+    await chips().find((b) => b.text() === "En allemand")!.trigger("click");
+    await flushPromises();
+    [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(opts.body).toMatchObject({ language: "de", instruction: null });
   });
 
   it("la lettre s'affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
@@ -192,8 +208,8 @@ describe("PreparationView", () => {
         : Promise.resolve({ data: letter(12, 2, { instruction: "plus court" }) }),
     );
     const wrapper = await mountView();
-    await wrapper.find("[data-test=instruction]").setValue("plus court");
-    await wrapper.find("[data-test=write]").trigger("click");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-input]").setValue("plus court");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-send]").trigger("click");
     await flushPromises();
     // Pendant la relecture, le bouton le dit.
     expect(wrapper.find("[data-test=write]").text()).toContain("Relecture…");
@@ -217,13 +233,13 @@ describe("PreparationView", () => {
       response: { status: 422 },
     });
     const wrapper = await mountView();
-    await wrapper.find("[data-test=instruction]").setValue("change mon téléphone");
-    await wrapper.find("[data-test=write]").trigger("click");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-input]").setValue("change mon téléphone");
+    await wrapper.find("[data-test=prep-revise] [data-test=composer-send]").trigger("click");
     await flushPromises();
     const note = wrapper.find("[data-test=instruction-note]");
     expect(note.attributes("aria-live")).toBe("polite");
     expect(note.text()).toBe("Je ne peux pas modifier tes coordonnées ici : va dans Profil.");
-    expect(wrapper.find<HTMLTextAreaElement>("[data-test=instruction]").element.value).toBe("change mon téléphone");
+    expect(wrapper.find<HTMLTextAreaElement>("[data-test=prep-revise] [data-test=composer-input]").element.value).toBe("change mon téléphone");
     expect(wrapper.findAll("[data-test=version]")).toHaveLength(0);
   });
 
@@ -470,10 +486,10 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     const pills = card.findAll("[data-test^=language-][role=radio]");
     expect(pills.map((b) => b.text())).toEqual(["FR", "DE", "EN"]);
     expect(pills.map((b) => b.attributes("aria-label"))).toEqual(["Français", "Deutsch", "English"]);
-    // « Modifier le texte » ouvre la consigne dans la carte (C4).
-    expect(card.find("[data-test=instruction]").exists()).toBe(false);
-    await card.find("[data-test=edit-text]").trigger("click");
-    expect(wrapper.find("[data-test=letter-card] [data-test=instruction]").exists()).toBe(true);
+    // Sous la lettre, les retouches proposées et la zone de saisie (maquette du 8 novembre) ; plus de bouton
+    // « Modifier le texte avec l'Assistant ».
+    expect(card.find("[data-test=edit-text]").exists()).toBe(false);
+    expect(card.findAll("[data-test=prep-revise] .suggestion-chips button").map((b) => b.text())).toEqual(["Plus court", "Plus formel", "En allemand"]);
     // Les cartes de côté laissent place au « ⋯ » de la tête (versions et téléchargement).
     expect(wrapper.find("[data-test=download-card]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
@@ -535,7 +551,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     await picker.find("[data-test=template-bandeau]").trigger("click");
     expect(picker.find("[data-test=template-bandeau]").attributes("aria-checked")).toBe("true");
     expect(preview().attributes("data-template")).toBe("bandeau");
-    expect(wrapper.find("[data-test=edit-text]").text()).toBe("Modifier le texte avec l'Assistant");
+    expect(wrapper.find("[data-test=edit-text]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
     expect(wrapper.find("[data-test=versions-sheet] [data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=bandeau");
     await picker.find("[data-test=template-moderne]").trigger("click");

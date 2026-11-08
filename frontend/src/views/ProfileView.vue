@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import AppIcon from "../components/AppIcon.vue";
+import AvatarPicker from "../components/AvatarPicker.vue";
+import ProfileImage from "../components/ProfileImage.vue";
+import { useProfileImage } from "../composables/useProfileImage";
 import CriteriaForm from "../components/CriteriaForm.vue";
 import IdentityForm from "../components/IdentityForm.vue";
 import PageHero from "../components/PageHero.vue";
@@ -31,24 +34,66 @@ const tab = computed<Tab>(() => {
   const wanted = route.query.onglet;
   return TABS.find((t) => t.key === wanted)?.key ?? "recherche";
 });
+// Ordinateur (maquette du 8 novembre, ProfilOrdinateur) : en tête, l'image de 72 px avec sa pastille crayon, le nom
+// en titre et la ville ; « Changer d'image » ouvre la grille (AvatarPicker), « Modifier » les coordonnées.
+const router = useRouter();
+const image = useProfileImage();
+const picking = ref(false);
+onMounted(() => void image.load());
 // Un sous-titre pour les trois onglets (docs/43 n° 25) : ce que chaque onglet contient est
 // dit dans l'onglet lui-même.
 </script>
 
 <template>
-  <PageHero
-    title="Profil"
+  <header
+    v-if="!narrow"
+    class="jobs-head profile-head"
+    data-test="profile-head"
   >
-    <!-- Sous 600 px (planche « Structure téléphone ») : un contrôle segmenté sur toute la largeur. -->
-    <SegmentedControl
-      v-if="narrow"
-      :model-value="tab"
-      :options="segments"
-      label="Profil"
-      full
-    />
+    <div class="profile-head-main">
+      <button
+        type="button"
+        class="profile-head-image"
+        aria-label="Changer d'image"
+        data-test="profile-image-edit"
+        @click="picking = true"
+      >
+        <ProfileImage
+          :choice="image.choice.value"
+          :initials="image.initials.value"
+          :size="72"
+        />
+        <span
+          class="profile-head-pencil"
+          aria-hidden="true"
+        ><AppIcon name="pencil" /></span>
+      </button>
+      <div class="profile-head-text">
+        <h1>{{ image.name.value || "Profil" }}</h1>
+        <p v-if="image.city.value">
+          {{ image.city.value }}
+        </p>
+      </div>
+      <div class="profile-head-actions">
+        <button
+          type="button"
+          class="secondary"
+          data-test="change-image"
+          @click="picking = true"
+        >
+          Changer d'image
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          data-test="profile-edit"
+          @click="router.push({ query: { onglet: 'coordonnees' } })"
+        >
+          Modifier
+        </button>
+      </div>
+    </div>
     <nav
-      v-else
       class="prep-tabs"
       aria-label="Profil"
     >
@@ -66,6 +111,22 @@ const tab = computed<Tab>(() => {
         </span>
       </RouterLink>
     </nav>
+  </header>
+  <AvatarPicker
+    :open="picking"
+    @close="picking = false"
+  />
+  <PageHero
+    v-if="narrow"
+    title="Profil"
+  >
+    <!-- Sous 600 px (planche « Structure téléphone ») : un contrôle segmenté sur toute la largeur. -->
+    <SegmentedControl
+      :model-value="tab"
+      :options="segments"
+      label="Profil"
+      full
+    />
   </PageHero>
   <section class="band profile-page">
     <div class="container">

@@ -408,7 +408,16 @@ watch(
   () => route.query.mois,
   () => void load(),
 );
-onMounted(() => void load());
+// « Ajouter une recherche » depuis le Bilan (maquette du 8 novembre) : /bilan/orp?ajouter=1 ouvre le formulaire.
+onMounted(() => {
+  void load();
+  if (route.query.ajouter === "1") {
+    addManual();
+    const query = { ...route.query };
+    delete query.ajouter;
+    void router.replace({ query });
+  }
+});
 useDataChanged(load);
 
 // Le mois affiché et le jour choisi : ce dont parle l'assistant (docs/24 §2.2).

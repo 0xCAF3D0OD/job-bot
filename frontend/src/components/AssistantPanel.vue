@@ -255,7 +255,8 @@ const { phone } = usePhone();
 // barre du bas ; la discussion reste quand on change d'onglet. Un raccourci « Demander à l'assistant » y mène.
 const page = computed(() => phone.value && route.name === "assistant");
 // Les Réglages et les Notifications du téléphone (maquettes, Kevin, 6.11) : pages sans barre ni bouton flottant.
-const quiet = computed(() => phone.value && ["settings", "notifications"].includes(String(route.name)));
+// Préparer (maquette du 8 novembre) : la lettre se retouche dans sa propre zone de saisie, le bouton reste masqué.
+const quiet = computed(() => (phone.value && ["settings", "notifications"].includes(String(route.name))) || route.name === "preparation");
 watch(open, (value) => {
   if (!value || !phone.value) return;
   open.value = false;

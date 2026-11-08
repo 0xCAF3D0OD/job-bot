@@ -19,6 +19,8 @@ const photo = ref<string | null>(readPhoto());
 const fullName = ref<string | null>(null);
 // L'e-mail de la fiche d'identité, montré à l'utilisateur seul (en-tête du panneau du compte) ; jamais envoyé ailleurs.
 const email = ref<string | null>(null);
+// La ville de la fiche d'identité : sous le nom, en tête du Profil (maquette ProfilOrdinateur).
+const city = ref<string | null>(null);
 let loading: Promise<void> | null = null;
 
 function readPhoto(): string | null {
@@ -82,6 +84,7 @@ export function useProfileImage() {
       avatar.value = image.data?.avatar ?? null;
       fullName.value = identity.data?.name ?? null;
       email.value = identity.data?.email?.trim() || null;
+      city.value = identity.data?.city?.trim() || null;
     })();
     return loading;
   }
@@ -95,5 +98,5 @@ export function useProfileImage() {
     writePhoto(photo.value);
   }
 
-  return { choice, initials, name, firstName, email, avatar, photo, load, save };
+  return { choice, initials, name, firstName, email, city, avatar, photo, load, save };
 }
