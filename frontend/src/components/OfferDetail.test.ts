@@ -310,3 +310,33 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 });
+
+describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
+  const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("la note et le poste à gauche ; « L'offre en bref » à droite, en <dl>, avec le lien vers l'annonce", async () => {
+    desktop();
+    const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
+    const main = wrapper.find("[data-test=detail-columns-main]");
+    expect(main.find("[data-test=section-for-you]").exists()).toBe(true);
+    expect(main.find("[data-test=section-ad]").exists()).toBe(true);
+    // Le bandeau « Il manque l'annonce complète » reste dans la note.
+    expect(main.find("[data-test=section-for-you] [data-test=partial-notice]").exists()).toBe(true);
+    const aside = wrapper.find("aside[data-test=detail-columns-aside]");
+    expect(aside.attributes("aria-label")).toBe("L’offre en bref");
+    const rows = aside.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
+    expect(rows.map((r) => r[0])).toEqual(["Lieu", "Contrat", "Taux d’activité", "Reçue"]);
+    expect(rows[1]![1]).toBe("Non précisé");
+    expect(rows[3]![1]).toMatch(/, par une alerte e-mail$/);
+    expect(aside.find("[data-test=brief-link]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    // Les étiquettes du haut restent.
+    expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
+  });
+
+  it("sous 1 024 px, une seule colonne", async () => {
+    const wrapper = await mountDetail(offer());
+    expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=offer-brief]").exists()).toBe(false);
+  });
+});

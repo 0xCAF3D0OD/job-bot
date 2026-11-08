@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
@@ -12,6 +12,7 @@ import BottomSheet from "./BottomSheet.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
+import DetailTwoColumns from "./DetailTwoColumns.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
@@ -294,6 +295,32 @@ const scoreNote = computed(() => {
 // dessinées, dans leur ordre (ouvrir l'annonce, garder pour plus tard, détail de la note, copier le lien, puis
 // « Signaler une erreur dans l'offre » après un trait) ; les autres actions de la fiche suivent (docs/143, écarts).
 const { phone: wide } = usePhone("(min-width: 1024px)");
+// À traiter sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.1) : la note et le poste à gauche, « L'offre en
+// bref » à droite (gabarit DetailTwoColumns). Sous 1 024 px, la fiche garde une colonne, dans le même ordre.
+const columns = computed(() => wide.value && !sub.value);
+const Flat: FunctionalComponent = (_props, { slots }) => [slots.main?.(), slots.aside?.()];
+const layout = computed(() => (columns.value ? DetailTwoColumns : Flat));
+const layoutProps = computed(() => (columns.value ? { asideLabel: "L’offre en bref" } : {}));
+function upperFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+// « Hier, par une alerte e-mail » ; une offre ajoutée à la main le dit.
+const receivedText = computed(() => {
+  const o = props.offer;
+  if (!o.first_seen_at) return "Non précisé";
+  const day = dateInList(o.first_seen_at);
+  const when = upperFirst(/^\d/.test(day) ? dateInSentence(o.first_seen_at) : day);
+  return `${when}, ${o.added_by_you ? "ajoutée par toi" : "par une alerte e-mail"}`;
+});
+const brief = computed(() => {
+  const o = props.offer;
+  return [
+    { label: "Lieu", value: o.location || "Non précisé", test: "brief-place" },
+    { label: "Contrat", value: o.employment_type || "Non précisé", test: "brief-contract" },
+    { label: "Taux d’activité", value: rateText(o.rate_min, o.rate_max) || "Non précisé", test: "brief-rate" },
+    { label: "Reçue", value: receivedText.value, test: "brief-received" },
+  ];
+});
 function showNoteDetail(): void {
   const row = document.querySelector<HTMLElement>("[data-test=note-detail]");
   const toggle = row?.querySelector<HTMLButtonElement>("button[aria-expanded]");
@@ -473,7 +500,7 @@ watch(
 
 <template>
   <article
-    class="detail-panel"
+    :class="['detail-panel', { 'offer-cols': columns }]"
     data-test="offer-detail"
   >
     <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
@@ -711,382 +738,443 @@ watch(
     <!-- La correspondance (O3, O4) : l'anneau sans chiffre (D3), le mot en titre, « 92 sur 100 » dessous
          (docs/121) ; une ligne par point fort (coche) et par manque (gris chaud, D5 : un manque n'est pas une
          action) ; le détail de la note replié. -->
-    <section
-      class="detail-card match-card"
-      aria-labelledby="match-title"
-      data-test="section-for-you"
+    <component
+      :is="layout"
+      v-bind="layoutProps"
     >
-      <div class="match-head">
-        <ScoreRing
-          v-if="scored"
-          :score="offer.score ?? null"
-          :stale="offer.score_stale"
-          :provisional="provisional"
-          large
-          bare
-        />
-        <div>
-          <div class="match-title-row">
-            <h3
-              id="match-title"
-              :class="['match-title', `is-${matchTone}`]"
-              data-test="match-title"
-            >
-              {{ matchTitle }}
-            </h3>
-            <span
-              v-if="provisional"
-              class="provisional-pill"
-              data-test="provisional"
-            >Provisoire</span>
-          </div>
-          <p
-            class="match-sub"
-            data-test="match-sub"
-          >
-            {{ matchSub }}
-          </p>
-        </div>
-      </div>
-      <ul
-        v-if="matchLines.length"
-        class="match-lines"
-        data-test="match-lines"
-      >
-        <li
-          v-for="line in matchLines"
-          :key="line.mark + line.text"
-          :class="line.mark"
+      <template #main>
+        <section
+          :class="['detail-card', 'match-card', { 'detail-section': columns }]"
+          aria-labelledby="match-title"
+          data-test="section-for-you"
         >
-          <AppIcon :name="line.mark === 'ok' ? 'tick' : 'alert-circle'" /><span><span class="visually-hidden">{{ line.mark === "ok" ? "Point fort : " : "Manque : " }}</span>{{ line.text }}</span>
-        </li>
-      </ul>
-      <OfferTextNotice
-        v-if="partial"
-        :offer="offer"
-        @changed="textSaved"
-      />
-      <p
-        v-else-if="redone"
-        class="redone"
-        role="status"
-        data-test="redone"
-      >
-        <AppIcon name="done" />Note refaite sur l’annonce complète.
-      </p>
-      <DisclosureRow
-        v-if="noteDetail"
-        title="Le détail de la note"
-        class="match-detail"
-        data-test="note-detail"
-      >
-        <p
-          v-if="offer.why"
-          data-test="score-why"
-        >
-          {{ offer.why }}
-        </p>
-        <p
-          v-if="offer.level"
-          class="level-line"
-          data-test="score-level"
-        >
-          <HoverNote :text="offer.level_detail ?? ''">
-            {{ offer.level === "above" ? "Niveau au-dessus" : "Niveau en dessous" }}
-          </HoverNote>
-        </p>
-        <template v-if="strengths.length">
-          <h4>Points forts</h4>
-          <ul data-test="strengths">
-            <li
-              v-for="point in strengths"
-              :key="point.text"
-            >
-              <strong v-if="pointParts(point.text).key">{{ pointParts(point.text).key }} :</strong>
-              {{ pointParts(point.text).rest }}
-            </li>
-          </ul>
-        </template>
-        <template v-if="gaps.length">
-          <h4>Manques</h4>
-          <ul
-            class="gaps"
-            data-test="gaps"
-          >
-            <li
-              v-for="point in gaps"
-              :key="point.text"
-            >
-              <strong v-if="pointParts(point.text).key">{{ pointParts(point.text).key }} :</strong>
-              {{ pointParts(point.text).rest }}
-              <!-- Une exigence absente du profil (aucun bloc cité) : « Je l'ai » (docs/121 §C.3). -->
-              <GapFill
-                v-if="!point.chunk_ids.length && gapSkill(point.text)"
-                :offer-id="offer.id"
-                :gap="point.text"
-                @added="emit('changed')"
-              />
-            </li>
-          </ul>
-        </template>
-        <p
-          v-if="scoreNote"
-          class="hint score-note"
-          data-test="score-note"
-        >
-          {{ scoreNote }}
-        </p>
-        <!-- « Cette note ne me correspond pas » (docs/114) ; sur téléphone, dans la feuille « ⋯ ». -->
-        <ScoreCorrection
-          v-if="scored && !sub"
-          :offer-id="offer.id"
-          @changed="emit('changed')"
-        />
-      </DisclosureRow>
-    </section>
-
-    <!-- Le poste (O6) : le résumé rédigé par jobA1, dit comme tel ; l'annonce complète se déplie sur place ;
-         « Postuler chez l'employeur » à côté (O7) ; les réserves sur l'annonce dessous. -->
-    <section
-      class="detail-post"
-      aria-labelledby="post-title"
-      data-test="section-ad"
-    >
-      <div class="detail-post-head">
-        <h3 id="post-title">
-          Le poste
-        </h3>
-        <MoreMenu
-          v-if="announceItems.length"
-          class="section-more"
-          :items="announceItems"
-          label="Plus d'actions sur l'annonce"
-          test-id="ad-more"
-        />
-      </div>
-      <!-- Note provisoire : l'extrait de l'alerte, dit comme tel (maquette OffreProvisoire). -->
-      <p
-        v-if="partial"
-        class="post-by"
-        data-test="snippet-by"
-      >
-        Extrait de l’alerte
-      </p>
-      <template v-if="summaryParts.length && !partial">
-        <p
-          class="post-by"
-          data-test="summary-by"
-        >
-          Résumé par jobA1
-        </p>
-        <p
-          v-for="part in summaryParts"
-          :key="part"
-          class="post-summary"
-          data-test="summary"
-        >
-          {{ part }}
-        </p>
-      </template>
-      <p
-        v-else-if="!offer.description"
-        class="detail-snippet"
-      >
-        {{ offer.snippet || "Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site." }}
-      </p>
-      <div
-        v-if="offer.description && (textOpen || !summaryParts.length)"
-        ref="textEl"
-        :class="['full-text', { folded: !textOpen && offer.description.length > LONG_TEXT }]"
-        :style="textOpen && textHeight ? { maxHeight: textHeight } : undefined"
-        data-test="description"
-      >
-        {{ offer.description }}
-      </div>
-      <div class="post-links">
-        <button
-          v-if="offer.description && !textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"
-          type="button"
-          class="link read-more"
-          data-test="read-more"
-          @click="openText"
-        >
-          Voir l'annonce complète
-        </button>
-        <a
-          v-if="postLink && offer.status !== 'applied'"
-          :href="postLink.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="link"
-          :data-test="offer.employer_url ? 'employer' : 'apply'"
-        ><span class="with-icon">{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
-      </div>
-      <ul
-        v-if="facts.length"
-        class="offer-facts"
-        data-test="facts"
-      >
-        <li
-          v-for="fact in facts"
-          :key="fact.mark + fact.text"
-          :class="[fact.mark, { scam: fact.scam }]"
-        >
-          <span
-            class="fact-mark"
-            :data-mark="fact.mark"
-          ><AppIcon :name="MARKS[fact.mark]" /></span>
-          <span>
-            {{ fact.text }}
-            <q v-if="fact.excerpt">{{ fact.excerpt }}</q>
-          </span>
-        </li>
-      </ul>
-    </section>
-
-    <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
-    <div class="detail-more-rows disclosure-list">
-      <DisclosureRow
-        title="Entreprise"
-        :value="offer.company ?? ''"
-        class="detail-disclosure"
-        data-test="company-section"
-      >
-        <template
-          v-if="companyItems.length"
-          #actions
-        >
-          <MoreMenu
-            class="section-more"
-            :items="companyItems"
-            label="Plus d'actions sur l'entreprise"
-            test-id="company-more"
-          />
-        </template>
-        <dl class="detail-rows">
-          <div data-test="address">
-            <dt>Adresse</dt>
-            <dd v-if="editingAddress">
-              <form
-                class="address-form"
-                @submit.prevent="saveAddress"
+          <div class="match-head">
+            <ScoreRing
+              v-if="scored"
+              :score="offer.score ?? null"
+              :stale="offer.score_stale"
+              :provisional="provisional"
+              large
+              bare
+            />
+            <div>
+              <div class="match-title-row">
+                <h3
+                  id="match-title"
+                  :class="['match-title', `is-${matchTone}`]"
+                  data-test="match-title"
+                >
+                  {{ matchTitle }}
+                </h3>
+                <span
+                  v-if="provisional"
+                  class="provisional-pill"
+                  data-test="provisional"
+                >Provisoire</span>
+              </div>
+              <p
+                class="match-sub"
+                data-test="match-sub"
               >
-                <textarea
-                  v-model="addressDraft"
-                  rows="2"
-                  placeholder="Rue et numéro&#10;NPA localité"
-                  aria-label="Adresse de l'entreprise"
-                  data-test="address-input"
-                />
-                <div>
-                  <button
-                    type="submit"
-                    class="secondary small"
-                    data-test="save-address"
+                {{ matchSub }}
+              </p>
+            </div>
+          </div>
+          <ul
+            v-if="matchLines.length"
+            class="match-lines"
+            data-test="match-lines"
+          >
+            <li
+              v-for="line in matchLines"
+              :key="line.mark + line.text"
+              :class="line.mark"
+            >
+              <AppIcon :name="line.mark === 'ok' ? 'tick' : 'alert-circle'" /><span><span class="visually-hidden">{{ line.mark === "ok" ? "Point fort : " : "Manque : " }}</span>{{ line.text }}</span>
+            </li>
+          </ul>
+          <OfferTextNotice
+            v-if="partial"
+            :offer="offer"
+            @changed="textSaved"
+          />
+          <p
+            v-else-if="redone"
+            class="redone"
+            role="status"
+            data-test="redone"
+          >
+            <AppIcon name="done" />Note refaite sur l’annonce complète.
+          </p>
+          <DisclosureRow
+            v-if="noteDetail"
+            title="Le détail de la note"
+            class="match-detail"
+            data-test="note-detail"
+          >
+            <p
+              v-if="offer.why"
+              data-test="score-why"
+            >
+              {{ offer.why }}
+            </p>
+            <p
+              v-if="offer.level"
+              class="level-line"
+              data-test="score-level"
+            >
+              <HoverNote :text="offer.level_detail ?? ''">
+                {{ offer.level === "above" ? "Niveau au-dessus" : "Niveau en dessous" }}
+              </HoverNote>
+            </p>
+            <template v-if="strengths.length">
+              <h4>Points forts</h4>
+              <ul data-test="strengths">
+                <li
+                  v-for="point in strengths"
+                  :key="point.text"
+                >
+                  <strong v-if="pointParts(point.text).key">{{ pointParts(point.text).key }} :</strong>
+                  {{ pointParts(point.text).rest }}
+                </li>
+              </ul>
+            </template>
+            <template v-if="gaps.length">
+              <h4>Manques</h4>
+              <ul
+                class="gaps"
+                data-test="gaps"
+              >
+                <li
+                  v-for="point in gaps"
+                  :key="point.text"
+                >
+                  <strong v-if="pointParts(point.text).key">{{ pointParts(point.text).key }} :</strong>
+                  {{ pointParts(point.text).rest }}
+                  <!-- Une exigence absente du profil (aucun bloc cité) : « Je l'ai » (docs/121 §C.3). -->
+                  <GapFill
+                    v-if="!point.chunk_ids.length && gapSkill(point.text)"
+                    :offer-id="offer.id"
+                    :gap="point.text"
+                    @added="emit('changed')"
+                  />
+                </li>
+              </ul>
+            </template>
+            <p
+              v-if="scoreNote"
+              class="hint score-note"
+              data-test="score-note"
+            >
+              {{ scoreNote }}
+            </p>
+            <!-- « Cette note ne me correspond pas » (docs/114) ; sur téléphone, dans la feuille « ⋯ ». -->
+            <ScoreCorrection
+              v-if="scored && !sub"
+              :offer-id="offer.id"
+              @changed="emit('changed')"
+            />
+          </DisclosureRow>
+        </section>
+
+        <!-- Le poste (O6) : le résumé rédigé par jobA1, dit comme tel ; l'annonce complète se déplie sur place ;
+         « Postuler chez l'employeur » à côté (O7) ; les réserves sur l'annonce dessous. -->
+        <section
+          :class="['detail-post', { 'detail-section': columns }]"
+          aria-labelledby="post-title"
+          data-test="section-ad"
+        >
+          <div class="detail-post-head">
+            <h3 id="post-title">
+              Le poste
+            </h3>
+            <MoreMenu
+              v-if="announceItems.length"
+              class="section-more"
+              :items="announceItems"
+              label="Plus d'actions sur l'annonce"
+              test-id="ad-more"
+            />
+          </div>
+          <!-- Note provisoire : l'extrait de l'alerte, dit comme tel (maquette OffreProvisoire). -->
+          <p
+            v-if="partial"
+            class="post-by"
+            data-test="snippet-by"
+          >
+            Extrait de l’alerte
+          </p>
+          <template v-if="summaryParts.length && !partial">
+            <p
+              class="post-by"
+              data-test="summary-by"
+            >
+              Résumé par jobA1
+            </p>
+            <p
+              v-for="part in summaryParts"
+              :key="part"
+              class="post-summary"
+              data-test="summary"
+            >
+              {{ part }}
+            </p>
+          </template>
+          <p
+            v-else-if="!offer.description"
+            class="detail-snippet"
+          >
+            {{ offer.snippet || "Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site." }}
+          </p>
+          <div
+            v-if="offer.description && (textOpen || !summaryParts.length)"
+            ref="textEl"
+            :class="['full-text', { folded: !textOpen && offer.description.length > LONG_TEXT }]"
+            :style="textOpen && textHeight ? { maxHeight: textHeight } : undefined"
+            data-test="description"
+          >
+            {{ offer.description }}
+          </div>
+          <div class="post-links">
+            <button
+              v-if="offer.description && !textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"
+              type="button"
+              class="link read-more"
+              data-test="read-more"
+              @click="openText"
+            >
+              Voir l'annonce complète
+            </button>
+            <a
+              v-if="postLink && offer.status !== 'applied'"
+              :href="postLink.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link"
+              :data-test="offer.employer_url ? 'employer' : 'apply'"
+            ><span class="with-icon">{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+          </div>
+          <ul
+            v-if="facts.length"
+            class="offer-facts"
+            data-test="facts"
+          >
+            <li
+              v-for="fact in facts"
+              :key="fact.mark + fact.text"
+              :class="[fact.mark, { scam: fact.scam }]"
+            >
+              <span
+                class="fact-mark"
+                :data-mark="fact.mark"
+              ><AppIcon :name="MARKS[fact.mark]" /></span>
+              <span>
+                {{ fact.text }}
+                <q v-if="fact.excerpt">{{ fact.excerpt }}</q>
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
+        <div :class="['detail-more-rows', 'disclosure-list', { 'detail-section': columns }]">
+          <DisclosureRow
+            title="Entreprise"
+            :value="offer.company ?? ''"
+            class="detail-disclosure"
+            data-test="company-section"
+          >
+            <template
+              v-if="companyItems.length"
+              #actions
+            >
+              <MoreMenu
+                class="section-more"
+                :items="companyItems"
+                label="Plus d'actions sur l'entreprise"
+                test-id="company-more"
+              />
+            </template>
+            <dl class="detail-rows">
+              <div data-test="address">
+                <dt>Adresse</dt>
+                <dd v-if="editingAddress">
+                  <form
+                    class="address-form"
+                    @submit.prevent="saveAddress"
                   >
-                    Enregistrer
-                  </button>
-                  <button
+                    <textarea
+                      v-model="addressDraft"
+                      rows="2"
+                      placeholder="Rue et numéro&#10;NPA localité"
+                      aria-label="Adresse de l'entreprise"
+                      data-test="address-input"
+                    />
+                    <div>
+                      <button
+                        type="submit"
+                        class="secondary small"
+                        data-test="save-address"
+                      >
+                        Enregistrer
+                      </button>
+                      <button
+                        type="button"
+                        class="link"
+                        @click="editingAddress = false"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </form>
+                </dd>
+                <dd v-else-if="offer.company_address">
+                  {{ offer.company_address.split("\n").join(", ") }}
+                  <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
+                </dd>
+                <dd v-else>
+                  Adresse inconnue · <button
                     type="button"
                     class="link"
-                    @click="editingAddress = false"
+                    data-test="add-address"
+                    @click="startAddress"
                   >
-                    Annuler
+                    Ajouter
                   </button>
-                </div>
-              </form>
-            </dd>
-            <dd v-else-if="offer.company_address">
-              {{ offer.company_address.split("\n").join(", ") }}
-              <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
-            </dd>
-            <dd v-else>
-              Adresse inconnue · <button
-                type="button"
-                class="link"
-                data-test="add-address"
-                @click="startAddress"
-              >
-                Ajouter
-              </button>
-            </dd>
-          </div>
-        </dl>
-        <p
-          v-if="searching"
-          class="hint"
-          role="status"
-        >
-          Recherche dans le registre IDE…
-        </p>
-        <div
-          v-if="registryMessage || proposals.length"
-          class="registry-proposals"
-          data-test="registry"
-        >
-          <p
-            v-if="registryMessage"
-            class="hint"
-          >
-            {{ registryMessage }}
-          </p>
-          <ul v-if="proposals.length">
-            <li
-              v-for="proposal in proposals"
-              :key="proposal.uid"
+                </dd>
+              </div>
+            </dl>
+            <p
+              v-if="searching"
+              class="hint"
+              role="status"
             >
-              <span>
-                <strong>{{ proposal.name }}</strong><br>
-                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-              </span>
-              <button
-                type="button"
-                class="secondary small"
-                data-test="choose-registry"
-                @click="chooseRegistry(proposal.uid)"
+              Recherche dans le registre IDE…
+            </p>
+            <div
+              v-if="registryMessage || proposals.length"
+              class="registry-proposals"
+              data-test="registry"
+            >
+              <p
+                v-if="registryMessage"
+                class="hint"
               >
-                Choisir
-              </button>
-            </li>
-          </ul>
+                {{ registryMessage }}
+              </p>
+              <ul v-if="proposals.length">
+                <li
+                  v-for="proposal in proposals"
+                  :key="proposal.uid"
+                >
+                  <span>
+                    <strong>{{ proposal.name }}</strong><br>
+                    <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+                  </span>
+                  <button
+                    type="button"
+                    class="secondary small"
+                    data-test="choose-registry"
+                    @click="chooseRegistry(proposal.uid)"
+                  >
+                    Choisir
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <p
+              v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
+              class="hint employer-line"
+              data-test="employer-line"
+            >
+              <span
+                v-if="employerBusy"
+                role="status"
+              >Recherche chez l'employeur en cours (jusqu'à 30 s)…</span>
+              <span
+                v-else-if="offer.employer_url && offer.employer_checked_at"
+              >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+                {{ dateInSentence(offer.employer_checked_at) }}.</span>
+              <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
+              <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
+              <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
+              <span
+                v-if="employerMessage"
+                role="status"
+              >{{ employerMessage }}</span>
+            </p>
+          </DisclosureRow>
+          <DisclosureRow
+            v-if="offer.company"
+            id="contacts"
+            title="Contacts"
+            :value="contactsCount ? String(contactsCount) : ''"
+            :start-open="toContacts"
+            class="detail-disclosure"
+            data-test="contacts-section"
+          >
+            <ContactsPanel
+              :key="offer.id"
+              :offer-id="offer.id"
+              @count="contactsCount = $event"
+            />
+          </DisclosureRow>
         </div>
-        <p
-          v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
-          class="hint employer-line"
-          data-test="employer-line"
+      </template>
+      <template #aside>
+        <section
+          v-if="columns"
+          class="detail-section"
+          data-test="offer-brief"
         >
-          <span
-            v-if="employerBusy"
-            role="status"
-          >Recherche chez l'employeur en cours (jusqu'à 30 s)…</span>
-          <span
-            v-else-if="offer.employer_url && offer.employer_checked_at"
-          >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
-            {{ dateInSentence(offer.employer_checked_at) }}.</span>
-          <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
-          <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
-          <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
-          <span
-            v-if="employerMessage"
-            role="status"
-          >{{ employerMessage }}</span>
-        </p>
-      </DisclosureRow>
-      <DisclosureRow
-        v-if="offer.company"
-        id="contacts"
-        title="Contacts"
-        :value="contactsCount ? String(contactsCount) : ''"
-        :start-open="toContacts"
-        class="detail-disclosure"
-        data-test="contacts-section"
-      >
-        <ContactsPanel
-          :key="offer.id"
-          :offer-id="offer.id"
-          @count="contactsCount = $event"
-        />
-      </DisclosureRow>
-    </div>
+          <h3>L’offre en bref</h3>
+          <dl class="detail-list">
+            <div
+              v-for="row in brief"
+              :key="row.test"
+              :data-test="row.test"
+            >
+              <dt>{{ row.label }}</dt>
+              <dd>{{ row.value }}</dd>
+            </div>
+          </dl>
+          <a
+            v-if="shareUrl"
+            :href="shareUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="detail-link strong offer-brief-link"
+            data-test="brief-link"
+          >Voir l’annonce sur le site<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+        </section>
+      </template>
+    </component>
   </article>
 </template>
+
+<style>
+/* À traiter sur ordinateur, deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 13.1 ; HTML de
+   CandidaturesOrdinateurB, onglet À traiter) : la note sans carte, l'anneau de 64 et le verdict, les critères en ligne
+   (12 × 24), le bandeau pêche en bloc (18/20, boutons de 44 à 10 d'écart), « Le détail de la note » à 16 dessous ;
+   « Le poste » en 15/23 ; « L'offre en bref » en <dl>, puis le lien vers l'annonce, 12 dessous. */
+.offer-cols { --cols-match-gap: 16px; --cols-lines-gap: 12px 24px; --cols-band-pad: 18px 20px; --cols-band-gap: 14px; --cols-band-btn: 10px; --cols-text: 23px; --cols-48: 48px; --cols-2: 2px; }
+.offer-cols .match-card.detail-section { display: block; padding: var(--cols-pad-top) 0 var(--cols-pad-bottom); background: none; border: 0; border-radius: 0; }
+.offer-cols .match-card .match-head { gap: var(--space-4); padding-bottom: var(--space-4); }
+.offer-cols .match-card .match-lines { display: flex; flex-wrap: wrap; gap: var(--cols-lines-gap); padding-bottom: var(--space-6); font-size: var(--font-label); }
+.offer-cols .match-card .match-lines li { gap: var(--space-2); }
+.offer-cols .offer-text-band { gap: var(--cols-band-gap); margin: 0; padding: var(--cols-band-pad); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--radius-card); }
+.offer-cols .offer-text-band .offer-text-icon { display: none; }
+.offer-cols .offer-text-band h4 { font-size: var(--font-label); }
+.offer-cols .offer-text-band p { margin-top: var(--cols-2); font-size: var(--font-small); color: var(--text-tertiary); }
+.offer-cols .offer-text-actions { gap: var(--cols-band-btn); }
+.offer-cols .offer-text-actions button { flex: none; min-width: 0; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-small); }
+.offer-cols .offer-text-actions button + button { border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
+.offer-cols .match-card .match-detail { margin-top: var(--space-4); border-top: 0; }
+.offer-cols .match-card .match-detail > .disclosure-row { min-height: var(--cols-48); padding: 0; }
+.offer-cols .detail-post.detail-section { display: grid; gap: var(--space-3); padding-bottom: var(--space-2); }
+.offer-cols .detail-post :is(.post-summary, .detail-snippet, .full-text) { font-size: var(--font-label); line-height: var(--cols-text); color: var(--text-tertiary); }
+.offer-cols .detail-more-rows.detail-section { padding-bottom: var(--space-2); }
+.offer-brief-link { margin-top: var(--space-3); }
+/* La colonne principale est plus étroite : « Écrire à » et « Canal » des contacts passent l’un sous l’autre. */
+.offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
+</style>
