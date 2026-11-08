@@ -1981,6 +1981,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile Image */
+        get: operations["getProfileImage"];
+        /** Put Profile Image */
+        put: operations["saveProfileImage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/follow-up/draft": {
         parameters: {
             query?: never;
@@ -4119,6 +4137,11 @@ export interface components {
         AuthProviders: {
             /** Providers */
             providers: ("apple" | "google" | "microsoft")[];
+        };
+        /** AvatarChoice */
+        AvatarChoice: {
+            /** Avatar */
+            avatar?: number | null;
         };
         /**
          * BackupOut
@@ -12666,6 +12689,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Identity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarChoice"];
+                };
+            };
+        };
+    };
+    saveProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AvatarChoice"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarChoice"];
                 };
             };
             /** @description Validation Error */

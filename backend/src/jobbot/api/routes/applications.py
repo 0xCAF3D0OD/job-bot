@@ -603,6 +603,36 @@ async def put_identity(request: Request, body: Identity) -> Identity:
     return body
 
 
+# --- L'image de profil (maquette du 8 novembre, docs/143 §6) ---------------------------------
+# Seul le numéro de l'avatar choisi (1 à 8) est gardé, comme les coordonnées : dans les réglages
+# du compte, donc exporté et effacé avec lui. Une photo importée reste dans le navigateur.
+
+AVATAR_KEY = "profile_avatar"
+
+
+class AvatarChoice(BaseModel):
+    avatar: Annotated[int, Field(ge=1, le=8)] | None = None
+
+
+@router.get("/profile-image", operation_id="getProfileImage")
+async def get_profile_image(request: Request) -> AvatarChoice:
+    async with _runtime(request).sessionmaker() as session:
+        value = await session.scalar(select(Setting.value).where(Setting.key == AVATAR_KEY))
+    return AvatarChoice(avatar=value if isinstance(value, int) and 1 <= value <= 8 else None)
+
+
+@router.put("/profile-image", operation_id="saveProfileImage")
+async def put_profile_image(request: Request, body: AvatarChoice) -> AvatarChoice:
+    value = body.avatar
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key=AVATAR_KEY, value=value)
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
+        )
+    return body
+
+
 # --- Relancer une candidature (docs/38) ----------------------------------------------------
 
 
