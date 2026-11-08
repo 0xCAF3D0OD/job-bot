@@ -155,7 +155,7 @@ const facts = computed(() => [
           <div class="outcome-inline-actions">
             <button
               type="submit"
-              class="primary"
+              class="primary action-1"
               :disabled="busy"
               data-test="outcome-save"
             >
