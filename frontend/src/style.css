@@ -13,6 +13,16 @@
   --surface-muted: #ECE9E1;
   --line: #E5E2D9;
   --line-soft: #EFECE5;
+  /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
+     1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
+  --line-strong: #D8D4CA;
+  --field-border: #8C8478;
+  --text-disabled: #B8B3A8;
+  /* Les ombres de la maquette du 8 novembre : panneaux latéraux, menus, carte à cheval sur la bande, Composer. */
+  --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+  --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+  --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+  --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
   --text: #1B1F2A;
   --text-secondary: #596070;
   --text-tertiary: #474C59;
@@ -60,7 +70,6 @@
   /* Champs (planche « Champs ») : fond distinct de la carte, bordure à 3:1 au moins sur le champ et sur la carte
      (WCAG 1.4.11). */
   --field-bg: var(--bg);
-  --field-border: #857E73;
   --field-border-hover: #5C564D;
   --field-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23596070' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --divider: var(--line-soft);
@@ -167,6 +176,13 @@
     --surface-muted: #2C2722;
     --line: #38322B;
     --line-soft: #2C2722;
+    --line-strong: #4E473E;
+    --field-border: #8C8478;
+    --text-disabled: #5E574F;
+    --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+    --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+    --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+    --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
@@ -190,7 +206,6 @@
     --danger-line: #6B3329;
     --faint: #7D766C;
     --field-bg: var(--surface-muted);
-    --field-border: #857D72;
     --field-border-hover: #B5AC9F;
     --field-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ABA398' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     --accent-band: var(--primary-soft);
@@ -203,6 +218,13 @@
   --surface-muted: #2C2722;
   --line: #38322B;
   --line-soft: #2C2722;
+  --line-strong: #4E473E;
+  --field-border: #8C8478;
+  --text-disabled: #5E574F;
+  --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+  --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+  --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+  --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
@@ -226,7 +248,6 @@
   --danger-line: #6B3329;
   --faint: #7D766C;
   --field-bg: var(--surface-muted);
-  --field-border: #857D72;
   --field-border-hover: #B5AC9F;
   --field-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ABA398' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --accent-band: var(--primary-soft);
@@ -1843,6 +1864,15 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --t-state: var(--t-standard);
   --t-enter: var(--t-party);
   --lift: 0 6px 16px rgb(27 31 42 / 8%);
+}
+/* La couche transparente sous un panneau ou un menu ouvert (useDismissLayer, docs/143 D24) : sous l'en-tête. */
+.dismiss-layer { position: fixed; inset: 0; z-index: 35; background: transparent; }
+/* Les mouvements de la maquette du 8 novembre (docs/143) : panneau latéral depuis la droite, filtres et sélecteur de
+   date depuis la gauche, menu depuis le coin de son bouton. Seulement si l'appareil accepte les animations. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ja-slide-r { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes ja-slide-l { from { transform: translateX(-16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes ja-pop { from { transform: scale(.96) translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
 }
 @media (prefers-reduced-motion: reduce) { :root { --t-fast: 0ms; --t-standard: 0ms; --t-joy: 0ms; --t-party: 0ms; } }
 /* Pop « Joie » (maquette Animations, règle 10 Mouvement) : une coche ou un signet qui s'active rebondit une fois. */

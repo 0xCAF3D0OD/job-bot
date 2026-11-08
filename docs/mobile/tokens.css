@@ -10,6 +10,16 @@
   --surface-muted: #ECE9E1; /* onglets segmentés, puces */
   --line: #E5E2D9;          /* contours, séparateurs */
   --line-soft: #EFECE5;
+  /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
+     1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
+  --line-strong: #D8D4CA;
+  --field-border: #8C8478;
+  --text-disabled: #B8B3A8;
+  /* Les ombres de la maquette du 8 novembre : panneaux latéraux, menus, carte à cheval sur la bande, Composer. */
+  --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+  --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+  --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+  --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
 
   /* Texte */
   --text: #1B1F2A;
@@ -92,6 +102,13 @@
     --surface-muted: #2C2722;
     --line: #38322B;
     --line-soft: #2C2722;
+    --line-strong: #4E473E;
+    --field-border: #8C8478;
+    --text-disabled: #5E574F;
+    --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+    --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+    --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+    --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
@@ -120,6 +137,13 @@
   --surface-muted: #2C2722;
   --line: #38322B;
   --line-soft: #2C2722;
+  --line-strong: #4E473E;
+  --field-border: #8C8478;
+  --text-disabled: #5E574F;
+  --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
+  --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
+  --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
+  --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
