@@ -74,7 +74,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 - **§2, la dictée** : « Écris ou dicte ta question… » dans l'assistant, « Ta réponse, écrite ou dictée… » dans l'entraînement à l'entretien, sur téléphone seulement. Pas de phrase d'aide en plus (docs/interface.md, titres et textes 5).
 - **CSS porté à 49 Ko (premier écran) et 65,5 Ko (tout)** (2026-11-08, maquette du 8 novembre, lot 2, en attente de l'accord de Kevin) : les composants partagés (Composer, SuggestionChips, CalendarDate, DateTimeField, DateTimePanel, ProfileImage, AvatarPicker) ajoutent 0,8 Ko au CSS du premier écran (48,8 Ko) et 1,6 Ko à tout le CSS (65,1 Ko). Les lots suivants relèvent les limites dans `scripts/poids.mjs`, chacun dans sa PR.
 - **CSS du premier écran porté à 53,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 11, en attente de l'accord de Kevin) : les lots 17 et 11 (une seule pilule dans la zone de saisie, champs de formulaire uniques, en-tête, trois points de l'Assistant, niveaux d'action D30) mettent le CSS du premier écran à 53,2 Ko.
-- **Tout le CSS porté à 72 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 12, en attente de l'accord de Kevin) : le gabarit deux colonnes (`DetailTwoColumns`) et le détail d'Envoyées ajoutent environ 1,3 Ko au CSS des pages. Les lots suivants relèveront encore cette limite.
+- **Tout le CSS porté à 72,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 12, en attente de l'accord de Kevin) : le gabarit deux colonnes (`DetailTwoColumns`) et le détail d'Envoyées ajoutent environ 1,3 Ko au CSS des pages. Les lots suivants relèveront encore cette limite.
 
 ## Vérifié (0.88.0)
 

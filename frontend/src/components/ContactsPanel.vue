@@ -304,7 +304,7 @@ onMounted(() => void load());
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"
-              :class="columns ? 'secondary contact-write-wide' : 'secondary small'"
+              :class="columns ? 'secondary action-2 contact-write-wide' : 'secondary small'"
               :busy="writing"
               busy-label="Rédaction…"
               data-test="contact-write"
@@ -575,7 +575,7 @@ onMounted(() => void load());
 .contacts-columns.contacts-section > .contacts-block:not(.detail-section) { padding: 0; border: 0; }
 .contacts-columns .contact-writer-stacked { grid-template-columns: minmax(0, 1fr); gap: var(--contacts-20); --label-gap: var(--space-2); }
 .contacts-columns .contact-writer-stacked .form-field-label { font-weight: var(--weight-bold); }
-.contacts-columns .contact-write-wide { min-height: var(--contacts-48); margin-top: var(--space-1); padding: 0 var(--contacts-22); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.contacts-columns .contact-write-wide { min-height: var(--contacts-48); margin-top: var(--space-1); padding: 0 var(--contacts-22); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .contacts-columns .contact-write-wide .icon { width: 18px; height: 18px; }
 .contacts-columns .contacts-empty { margin: 0 0 var(--space-3); font-size: var(--font-label); color: var(--text-secondary); }
 .contacts-columns .contacts-list { margin-bottom: var(--space-3); }

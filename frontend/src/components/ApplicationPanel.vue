@@ -614,4 +614,7 @@ const onStatus = (event: Event): void =>
 .application-panel-columns .panel-line { margin-top: var(--space-5); }
 /* Tous les boutons du détail sont ronds : plus de bouton rectangulaire à 8 px. */
 .application-panel-columns button:is(.primary, .secondary) { border-radius: var(--radius-pill); }
+/* Niveaux d'action D30 dans le détail en deux colonnes (§2.7) : plein pour l'action principale, contour bleu sinon. */
+.application-panel-columns button.primary:not(:disabled) { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.application-panel-columns button.secondary { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
 </style>
