@@ -72,6 +72,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 - **Résultat** : 0 défaut grave, 0 défaut mineur, parcours au clavier sans blocage.
 - **La page « Accessibilité »** (`/accessibilite`, publique) : il n'y a pas de pied de page ; elle est liée depuis Données personnelles.
 - **§2, la dictée** : « Écris ou dicte ta question… » dans l'assistant, « Ta réponse, écrite ou dictée… » dans l'entraînement à l'entretien, sur téléphone seulement. Pas de phrase d'aide en plus (docs/interface.md, titres et textes 5).
+- **CSS porté à 49 Ko (premier écran) et 65,5 Ko (tout)** (2026-11-08, maquette du 8 novembre, lot 2, en attente de l'accord de Kevin) : les composants partagés (Composer, SuggestionChips, CalendarDate, DateTimeField, DateTimePanel, ProfileImage, AvatarPicker) ajoutent 0,8 Ko au CSS du premier écran (48,8 Ko) et 1,6 Ko à tout le CSS (65,1 Ko). Les lots suivants relèvent les limites dans `scripts/poids.mjs`, chacun dans sa PR.
 
 ## Vérifié (0.88.0)
 
