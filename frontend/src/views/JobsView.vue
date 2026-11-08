@@ -83,7 +83,11 @@ onMounted(() => void refresh());
 </script>
 
 <template>
-  <div :class="['jobs-head', { wide: tab === 'offres' }]">
+  <!-- Mes alertes e-mail, sur ordinateur (maquette du 8 novembre, AlertesOrdinateur) : une page à elle, sans les vues. -->
+  <div
+    v-if="!(wide && !phone && tab === 'alertes')"
+    :class="['jobs-head', { wide: tab === 'offres' }]"
+  >
     <div class="jobs-title">
       <h1>Candidatures</h1>
       <!-- Sur téléphone, le lien monte dans l'en-tête, à côté du titre (maquette Candidatures). -->

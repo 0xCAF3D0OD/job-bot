@@ -21,8 +21,8 @@ const VIEWS: Record<string, string> = {
 // Les pages de présentation gardent leurs phrases : la connexion, la présentation, l'accueil.
 const PRESENTATION = ["LoginView", "DiscoverView", "WelcomeView"];
 const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
-// Les intertitres imposés par la maquette du 8 novembre (docs/143, D24 : le panneau du compte).
-const MAQUETTE = new Set(["./components/AccountMenu.vue : Mon compte"]);
+// Titres repris tels quels des maquettes qui font foi (Mon compte ; Mes alertes e-mail, maquette du 8 novembre).
+const MAQUETTE = new Set(["./components/AccountMenu.vue : Mon compte", "./views/AlertsView.vue : Mes alertes e-mail"]);
 
 function template(source: string): string {
   return source.slice(source.indexOf("<template>"));

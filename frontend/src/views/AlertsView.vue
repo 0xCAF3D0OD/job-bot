@@ -18,9 +18,13 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ReceivedAlerts from "../components/ReceivedAlerts.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SiteMail from "../components/SiteMail.vue";
+import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
+import StatusPill from "../components/StatusPill.vue";
 import { usePageReady } from "../composables/usePageTransition";
+import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { dateInSentence } from "../dates";
+import type { SiteState } from "../alertsState";
 import { plural } from "../format";
 
 // Onglet Alertes (planche « 6. Alertes », 1.6.70, structure inspirée des pages des CFF) : la
@@ -28,6 +32,12 @@ import { plural } from "../format";
 // ligne par site), les messages des sites et les alertes reçues, chacun en trois lignes avec « Tout
 // voir » (divulgation progressive). L'assistant reste l'entrée tant que rien n'est en place.
 const page = ref<AlertsPage | null>(null);
+// Ordinateur dès 1 024 px (maquette du 8 novembre, AlertesOrdinateur) : une page à elle, sur 880 px. Le titre « Mes
+// alertes e-mail », la phrase et « + Ajouter une recherche » ; la bande en bandeau pêche ; « Recherches suivies » en
+// une liste, une ligne par recherche et par site (les mots, les lieux · le site, l'état, « … »).
+const { phone } = usePhone();
+const { phone: wideQuery } = usePhone("(min-width: 1024px)");
+const wide = computed(() => wideQuery.value && !phone.value);
 usePageReady("alerts", () => !!page.value);
 const mode = ref<"auto" | "wizard" | "manage">("auto");
 // « Créer » sur une ligne : le pas à pas de ce site, pour cette recherche.
@@ -74,9 +84,36 @@ const sentence = computed(() => {
   };
 });
 
+// La phrase sous le titre, sur ordinateur : « 5 recherches suivies. Dernière alerte reçue le 7 novembre. »
+const deskSentence = computed(() => {
+  if (!page.value) return "";
+  const { active, lastReceived } = alertsDigest(page.value);
+  if (!active) return "Aucune recherche suivie pour l'instant.";
+  const count = `${plural(active, "recherche", "recherches")} ${active > 1 ? "suivies" : "suivie"}.`;
+  return `${count} ${lastReceived ? `Dernière alerte reçue ${dateInSentence(lastReceived)}.` : "Aucune alerte reçue pour l'instant."}`;
+});
+
 const now = ref(new Date());
 const groups = computed<SearchGroup[]>(() => (page.value ? searchGroups(page.value, now.value) : []));
 const band = computed(() => (page.value ? alertsBand(page.value, now.value) : null));
+// Les lignes de la liste sur ordinateur : une par recherche et par site.
+const SITE_TONE: Record<SiteState["kind"], "neutral" | "todo" | "ok"> = { received: "ok", quiet: "neutral", waiting: "neutral", silent: "todo", todo: "todo" };
+const rows = computed(() =>
+  groups.value.flatMap((group) =>
+    group.sites.map((site) => ({
+      key: `${group.terms}-${site.slug}`,
+      group,
+      site,
+      place: `${group.locations.join(", ") || "Toute la Suisse"} · ${site.name}`,
+    })),
+  ),
+);
+function rowMenu(group: SearchGroup): MoreMenuItem[] {
+  return [
+    { label: "Modifier la recherche", test: "search-manage", icon: "pencil", run: () => (mode.value = "manage") },
+    { label: "Supprimer la recherche", test: "search-remove", icon: "trash", danger: true, run: () => void remove(group) },
+  ];
+}
 
 async function bandAction(): Promise<void> {
   const current = band.value;
@@ -166,18 +203,58 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="jobs-body alerts-page">
+  <section :class="['jobs-body', 'alerts-page', { 'alerts-wide': wide }]">
+    <header
+      v-if="wide && page"
+      class="alerts-head-wide"
+    >
+      <div>
+        <h1>Mes alertes e-mail</h1>
+        <p data-test="alerts-sentence">
+          {{ deskSentence }}
+        </p>
+      </div>
+      <button
+        v-if="view === 'summary'"
+        type="button"
+        class="secondary"
+        data-test="add-search"
+        @click="adding = true"
+      >
+        + Ajouter une recherche
+      </button>
+    </header>
     <template v-if="page">
       <!-- La conclusion d'abord (règles §3.2), puis une seule bande d'action (§3). -->
+      <div
+        v-if="wide && view === 'summary' && band"
+        class="alerts-banner"
+        role="status"
+        data-test="alerts-banner"
+      >
+        <AppIcon name="alert" />
+        <div class="alerts-banner-text">
+          <strong>{{ band.title }}</strong>
+          <span>{{ band.summary }}</span>
+        </div>
+        <button
+          type="button"
+          class="alerts-tonal"
+          data-test="action-band-button"
+          @click="bandAction"
+        >
+          {{ band.action }}
+        </button>
+      </div>
       <p
-        v-if="view === 'summary' && sentence"
+        v-if="!wide && view === 'summary' && sentence"
         class="offers-sentence alerts-sentence"
         data-test="alerts-sentence"
       >
         <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
       </p>
       <ActionBand
-        v-if="view === 'summary' && band"
+        v-if="!wide && view === 'summary' && band"
         :title="band.title"
         :summary="band.summary"
         :action="band.action"
@@ -232,6 +309,56 @@ onMounted(async () => {
       </template>
       <template v-else>
         <section
+          v-if="wide"
+          class="alerts-section alerts-list-wide"
+          data-test="alert-searches"
+        >
+          <h2>Recherches suivies</h2>
+          <ul class="alerts-rows">
+            <li
+              v-for="row in rows"
+              :key="row.key"
+              :class="['alerts-row', { highlighted: highlighted === row.group.terms }]"
+              :data-test="`alert-row-${row.group.ids[0]}-${row.site.slug}`"
+            >
+              <div class="alerts-row-text">
+                <strong>{{ row.group.terms }}</strong>
+                <span>{{ row.place }}</span>
+              </div>
+              <button
+                v-if="row.site.state.kind === 'todo'"
+                type="button"
+                class="secondary"
+                :aria-label="`Créer l'alerte « ${row.group.terms} » sur ${row.site.name}`"
+                :data-test="`create-${row.site.slug}`"
+                @click="create(row.site.slug, row.group.terms)"
+              >
+                Créer l’alerte
+              </button>
+              <span
+                v-else-if="row.site.state.kind === 'quiet'"
+                class="alert-quiet"
+              >{{ row.site.state.label }}</span>
+              <StatusPill
+                v-else
+                :tone="SITE_TONE[row.site.state.kind]"
+              >
+                {{ row.site.state.label }}
+              </StatusPill>
+              <MoreMenu
+                :items="rowMenu(row.group)"
+                :label="`Actions pour la recherche « ${row.group.terms} »`"
+                :test-id="`search-more-${row.group.ids[0]}-${row.site.slug}`"
+              />
+            </li>
+          </ul>
+          <AlertsForward
+            v-if="page.personal_address && page.mailbox"
+            :address="page.mailbox"
+          />
+        </section>
+        <section
+          v-else
           class="alerts-section"
           data-test="alert-searches"
         >

@@ -8,6 +8,7 @@ import MoodAnimation from "../components/MoodAnimation.vue";
 import NotificationRow from "../components/NotificationRow.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
 import { useInbox } from "../composables/useInbox";
+import { usePhone } from "../composables/usePhone";
 import { dayGroup } from "../dates";
 
 // La page Notifications (maquette Notifications, docs/139 étape 9a ; décisions de Kevin du 2026-11-04) :
@@ -15,10 +16,19 @@ import { dayGroup } from "../dates";
 // jour, chaque groupe dans une carte, puis « Choisir mes notifications ».
 const { inbox, unread, refresh, markRead, readAll } = useInbox();
 const filter = ref<"all" | "unread">("all");
+// Ordinateur dès 1 024 px (maquette du 8 novembre, NotificationsOrdinateur) : le titre et les onglets sur une ligne,
+// « Tout marquer comme lu », les jours en titres, les lignes sans icône.
+const { phone } = usePhone();
+const { phone: wideQuery } = usePhone("(min-width: 1024px)");
+const wide = computed(() => wideQuery.value && !phone.value);
 
 const options = computed(() => [
   { value: "all", label: "Toutes", test: "filter-all" },
-  { value: "unread", label: unread.value ? `Non lues (${unread.value})` : "Non lues", test: "filter-unread" },
+  {
+    value: "unread",
+    label: unread.value ? (wide.value ? `Non lues · ${unread.value}` : `Non lues (${unread.value})`) : "Non lues",
+    test: "filter-unread",
+  },
 ]);
 const shown = computed(() => inbox.value.items.filter((item) => filter.value === "all" || !item.read_at));
 const groups = computed(() => {
@@ -38,10 +48,33 @@ onMounted(() => void refresh());
 <template>
   <section class="band">
     <div
-      class="container notifications-page"
+      :class="['container', 'notifications-page', { 'notifications-wide': wide }]"
       data-test="notifications"
     >
-      <header class="notifications-head">
+      <header
+        v-if="wide"
+        class="notifications-head-wide"
+      >
+        <h1>Notifications</h1>
+        <SegmentedControl
+          v-model="filter"
+          :options="options"
+          label="Vue"
+        />
+        <button
+          type="button"
+          class="notifications-read-all"
+          :disabled="!unread"
+          data-test="read-all"
+          @click="readAll"
+        >
+          Tout marquer comme lu
+        </button>
+      </header>
+      <header
+        v-else
+        class="notifications-head"
+      >
         <RouterLink
           to="/"
           class="icon-button icon-only"
@@ -62,6 +95,7 @@ onMounted(() => void refresh());
         </button>
       </header>
       <SegmentedControl
+        v-if="!wide"
         v-model="filter"
         :options="options"
         label="Afficher"
@@ -81,6 +115,7 @@ onMounted(() => void refresh());
             >
               <NotificationRow
                 :item="item"
+                :plain="wide"
                 @open="markRead"
               />
             </li>
@@ -91,7 +126,10 @@ onMounted(() => void refresh());
           class="notifications-settings"
           data-test="notifications-settings"
         >
-          Choisir mes notifications
+          Choisir mes notifications<AppIcon
+            v-if="wide"
+            name="chevron"
+          />
         </RouterLink>
       </template>
       <div
