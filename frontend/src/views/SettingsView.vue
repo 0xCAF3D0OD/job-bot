@@ -292,6 +292,12 @@ const { phone } = usePhone();
 // Une page Réglages unique sur téléphone (maquette Réglages, décision de Kevin du 6.11) : Notifications,
 // Affichage et Mes données à la suite ; le lien du Compte mène à sa section.
 const GROUPED = new Set<string>(["notifications", "affichage", "donnees"]);
+// Sur ordinateur dès 1 024 px (maquette du 8 novembre, ReglagesOrdinateur) : la même page unique, sur 880 px, avec
+// Connexions entre Affichage et Mes données ; le titre « Réglages » sans bandeau.
+const WIDE_GROUPED = new Set<string>(["notifications", "affichage", "connexions", "donnees"]);
+const { phone: wideQuery } = usePhone("(min-width: 1024px)");
+const wide = computed(() => wideQuery.value && !phone.value);
+const groupSet = computed(() => (wide.value ? WIDE_GROUPED : GROUPED));
 const sections = computed(() => SECTIONS.filter((s) => s.id !== "plateforme" || owner.value));
 const active = computed<SectionId>(() => {
   const wanted = route.query.rubrique;
@@ -300,8 +306,8 @@ const active = computed<SectionId>(() => {
 
 // Une rubrique par page (décision de Kevin du 2026-11-05, C10) : la page Compte ouvre chacune, et chacune
 // revient au compte. Sans rubrique, l'adresse mène à la page Compte (router.ts).
-const grouped = computed(() => phone.value && GROUPED.has(active.value));
-const shows = (id: SectionId): boolean => (grouped.value ? GROUPED.has(id) : active.value === id);
+const grouped = computed(() => (phone.value || wide.value) && groupSet.value.has(active.value));
+const shows = (id: SectionId): boolean => (grouped.value ? groupSet.value.has(id) : active.value === id);
 const label = computed(() =>
   grouped.value ? "Réglages" : (sections.value.find((s) => s.id === active.value)?.label ?? "Réglages"),
 );
@@ -317,7 +323,10 @@ watch(
 </script>
 
 <template>
-  <PageHero :title="label">
+  <PageHero
+    v-if="!(wide && grouped)"
+    :title="label"
+  >
     <template #back>
       <RouterLink
         to="/compte"
@@ -329,7 +338,14 @@ watch(
     </template>
   </PageHero>
   <section class="band">
-    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub']">
+    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped }]">
+      <h1
+        v-if="wide && grouped"
+        class="settings-wide-title"
+        data-test="settings-title"
+      >
+        Réglages
+      </h1>
       <div class="settings-sections">
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
@@ -835,7 +851,7 @@ watch(
         </SettingsSection>
 
         <SettingsSection
-          v-if="active === 'connexions'"
+          v-if="shows('connexions')"
           id="connexions"
           title="Connexions"
           cards
@@ -879,5 +895,18 @@ watch(
   letter-spacing: 0.05em;
 }
 .settings-grouped :deep(.settings-section + .settings-section) { margin-top: var(--space-5); }
+/* Ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : les titres de section en 18 gras, une carte par section
+   aux lignes séparées d'un filet (D22) ; Connexions avant Mes données. */
+.settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); }
+.settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
+.settings-wide :deep(#donnees) { order: 1; }
+.settings-wide :deep(.settings-section > .section-title) {
+  margin: 0 var(--space-1) var(--settings-10);
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+}
 .setting-row.notify-threshold { padding-top: 0; border-top: 0; }
 </style>
