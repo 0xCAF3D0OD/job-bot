@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ref } from "vue";
 
 import ManualOfferForm from "./ManualOfferForm.vue";
 
@@ -8,7 +9,12 @@ const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a) },
 }));
-afterEach(() => vi.resetAllMocks());
+const phone = ref(false);
+vi.mock("../composables/usePhone", () => ({ PHONE_QUERY: "", usePhone: () => ({ phone }) }));
+afterEach(() => {
+  vi.resetAllMocks();
+  phone.value = false;
+});
 
 const draft = (extra: Record<string, unknown> = {}) => ({
   title: "Menuisière CFC",
@@ -39,6 +45,12 @@ describe("Ajouter une offre (docs/111)", () => {
     // Pas d'import de fichier : rien ne part à l'IA sans règle (I-1, E-5).
     expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-count]").text()).toBe("2 offres ajoutées sur 20 ces 24 heures.");
+  });
+
+  it("4 lignes sur téléphone (maquette AjouterOffreTel)", async () => {
+    phone.value = true;
+    const wrapper = await mountForm();
+    expect(wrapper.find("[data-test=composer-input]").attributes("rows")).toBe("4");
   });
 
   it("un texte collé est lu comme un texte", async () => {

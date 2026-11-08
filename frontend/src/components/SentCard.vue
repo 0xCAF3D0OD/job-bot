@@ -51,9 +51,10 @@ const status = computed(() => sentStatus(props.application, props.section));
 
 <style>
 /* Le rond de 44 px, l'icône de 20 au trait de 2,2, le mot en 12 gras (maquette Envoyees). */
-.sent-status { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-bold); white-space: nowrap; }
-.sent-status-icon { display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: 50%; }
-.sent-status-icon .icon { width: 20px; height: 20px; stroke-width: 2.2; }
+.sent-status { --sent-6: 6px; --sent-15: 15px; display: flex; flex-direction: column; align-items: center; gap: var(--sent-6); line-height: var(--sent-15); font-size: var(--font-caption); font-weight: var(--weight-bold); white-space: nowrap; }
+/* Maquette Envoyees (8.11) : l'icône seule, sans fond (D23), 26 px dans une case de 44 × 32. */
+.sent-status-icon { display: grid; place-items: center; width: var(--target-min); height: 32px; }
+.sent-status-icon .icon { width: 26px; height: 26px; stroke-width: 2; }
 .sent-status.peach { color: var(--peach-text); }
 .sent-status.green { color: var(--success); }
 .sent-status.grey { color: var(--text-tertiary); }

@@ -4,13 +4,16 @@ import { computed, ref, watch } from "vue";
 import { api, type Offer } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
-import BusyButton from "./BusyButton.vue";
+import Composer from "./Composer.vue";
 
 // Note provisoire (offre venue d'une alerte, extrait seulement), maquette OffreProvisoire (6.11.2026) : une bande
 // pêche en pleine largeur dans la carte de la note, entre les points forts et « Le détail de la note ». Lire
 // l'annonce par son lien, ou coller son texte. Le serveur respecte le robots.txt du site et ne contourne aucune
 // connexion. Le contenu de la bande change d'un état à l'autre (rien ne s'empile) : lecture, refus du site (« Coller
 // le texte » seul, en pleine largeur, et le lien pour ouvrir l'annonce), pas de lien lisible (« Coller le texte » seul).
+// Maquette du 8 novembre (D25) : la feuille « Coller le texte » prend le Composer de 5 lignes ; Envoyer = « Enregistrer
+// et refaire la note », désactivé sous 200 caractères ; le compteur sous la zone. Pas de + : aucun fichier ne part à
+// l'IA sans règle (I-1, E-5).
 // Le texte enregistré, l'offre est renotée et la fiche rechargée : la bande disparaît (`changed`).
 const props = defineProps<{ offer: Offer }>();
 const emit = defineEmits<{ changed: [] }>();
@@ -64,10 +67,7 @@ const pasting = ref(false);
 const text = ref("");
 const error = ref("");
 const saving = ref(false);
-const length = computed(() => text.value.split(/\s+/).filter(Boolean).join(" ").length);
-const counter = computed(() =>
-  length.value < MIN_TEXT ? `${length.value} caractères, ${MIN_TEXT} au moins` : `${length.value} caractères`,
-);
+const length = computed(() => text.value.trim().length);
 function openPaste(): void {
   error.value = "";
   pasting.value = true;
@@ -164,21 +164,17 @@ watch(
       <p class="hint">
         Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici. jobA1 refait la note tout de suite.
       </p>
-      <label class="form-field form-field-label">Texte de l’annonce
-        <textarea
-          v-model="text"
-          class="offer-text-paste"
-          rows="7"
-          maxlength="40000"
-          aria-describedby="offer-text-count"
-          data-test="paste-text"
-        /></label>
-      <span
-        id="offer-text-count"
-        class="hint"
-        aria-live="polite"
-        data-test="paste-count"
-      >{{ counter }}</span>
+      <Composer
+        v-model="text"
+        placeholder="Colle ici le texte de l’annonce"
+        :rows="5"
+        :min-chars="MIN_TEXT"
+        send-label="Enregistrer et refaire la note"
+        :busy="saving"
+        counter-hint="la flèche enregistre et refait la note"
+        data-test="paste-text"
+        @send="save"
+      />
       <p
         v-if="error"
         class="field-error"
@@ -187,18 +183,6 @@ watch(
       >
         {{ error }}
       </p>
-      <template #actions>
-        <BusyButton
-          class="primary"
-          :busy="saving"
-          busy-label="Enregistrement…"
-          :disabled="length < MIN_TEXT"
-          data-test="paste-save"
-          @click="save"
-        >
-          Enregistrer et refaire la note
-        </BusyButton>
-      </template>
     </BottomSheet>
   </div>
 </template>

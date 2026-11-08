@@ -414,3 +414,16 @@ describe("couleurs de la fenêtre", () => {
     expect(css).toMatch(/width: 360px;\s*height: 480px;/);
   });
 });
+
+describe("icônes (maquette du 8 novembre, ExtAnnonce et ExtAlerte)", () => {
+  it("les coches de 30 px, sans fond", () => {
+    for (const mark of ["done-mark", "lead-mark"]) {
+      const rule = css.match(new RegExp(`\\.${mark} \\{([^}]*)\\}`))![1]!;
+      expect(rule).not.toContain("background");
+      expect(rule).not.toContain("border-radius");
+    }
+    const marks = [...html.matchAll(/class="(?:done|lead)-mark"><svg width="(\d+)"/g)].map((m) => m[1]);
+    expect(marks.length).toBeGreaterThan(0);
+    expect(new Set(marks)).toEqual(new Set(["30"]));
+  });
+});
