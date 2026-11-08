@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import ApplicationCard from "./ApplicationCard.vue";
 import ApplicationPanel from "./ApplicationPanel.vue";
 import InterviewForm from "./InterviewForm.vue";
+import { pickDate } from "./DateField.testing";
 
 describe("InterviewForm (docs/23 §2)", () => {
   it("ressenti obligatoire, questions proposées, réponse salaire, suite datée", async () => {
@@ -27,7 +28,7 @@ describe("InterviewForm (docs/23 §2)", () => {
     await wrapper.find("[data-test=salary-answer]").setValue("95 000 CHF");
     await wrapper.find("[data-test=went-well]").setValue("Démo réussie");
     await wrapper.find("[data-test=next-step]").setValue("reponse");
-    await wrapper.find("[data-test=next-step-at]").setValue("2026-10-20");
+    await pickDate(wrapper, "next-step-at", "2026-10-20");
     await wrapper.find("[data-test=interview-form]").trigger("submit");
     const [value] = wrapper.emitted("submit")![0] as [Record<string, unknown>];
     expect(value).toMatchObject({

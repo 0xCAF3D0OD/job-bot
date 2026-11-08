@@ -3,9 +3,11 @@ import { computed, reactive, ref } from "vue";
 
 import { api, type Training } from "../api/client";
 import { onDay } from "../format";
+import { todayDay } from "../dates";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
+import DateField from "./DateField.vue";
 import BusyButton from "./BusyButton.vue";
 import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
@@ -175,6 +177,8 @@ const stateText = computed(() => {
         : null;
   return detail ? `${STATUSES[mark.status]} · ${detail}` : (STATUSES[mark.status] ?? "");
 });
+// Les dates passées seulement (DateField, lot 10).
+const today = todayDay();
 </script>
 
 <template>
@@ -344,13 +348,16 @@ const stateText = computed(() => {
         v-if="training.mark?.status === 'done'"
         class="training-field"
       >
-        <label>Terminée le
-          <input
-            type="date"
-            :value="training.mark.done_at ?? ''"
-            @change="emit('mark', 'done', { done_at: inputValue($event) || null })"
-          >
-        </label>
+        <DateField
+          :model-value="training.mark.done_at ?? null"
+          label="Terminée le"
+          title="Formation terminée le"
+          :min="null"
+          :max="today"
+          optional
+          data-test="done-at"
+          @update:model-value="emit('mark', 'done', { done_at: $event })"
+        />
         <label class="check">
           <input
             type="checkbox"

@@ -32,7 +32,12 @@ watch(
   },
   { immediate: true },
 );
-onBeforeUnmount(() => returnTo?.focus?.());
+// Retirée encore ouverte (v-if) : la fermer d'abord, sinon la page reste inerte et le focus ne revient pas.
+onBeforeUnmount(() => {
+  const el = dialog.value;
+  if (el?.open && typeof el.close === "function") el.close();
+  returnTo?.focus?.();
+});
 
 // Un toucher sur le voile (hors du contenu) ferme la feuille.
 function onClick(event: MouseEvent): void {

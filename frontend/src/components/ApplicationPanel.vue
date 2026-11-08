@@ -8,6 +8,7 @@ import { dateInList, dateInSentence, meetingDate } from "../dates";
 import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
 import AppIcon from "./AppIcon.vue";
+import DateField from "./DateField.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -253,18 +254,15 @@ const onStatus = (event: Event): void =>
         data-test="panel-remind"
         @submit.prevent="saveRemind"
       >
-        <label>
-          <span>Relance le</span>
-          <input
-            v-model="remindDraft"
-            type="date"
-            :min="shift(application.sent_at, MIN_DAYS)"
-            :max="shift(application.sent_at, MAX_DAYS)"
-            :aria-invalid="remindError ? 'true' : undefined"
-            :aria-describedby="remindError ? 'remind-error' : undefined"
-            data-test="remind-date"
-          >
-        </label>
+        <DateField
+          :model-value="remindDraft"
+          label="Relance le"
+          :min="shift(application.sent_at, MIN_DAYS)"
+          :max="shift(application.sent_at, MAX_DAYS)"
+          :invalid="!!remindError"
+          data-test="remind-date"
+          @update:model-value="remindDraft = $event ?? ''"
+        />
         <button
           type="submit"
           class="primary small"

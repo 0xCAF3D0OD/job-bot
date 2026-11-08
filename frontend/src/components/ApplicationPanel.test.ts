@@ -3,6 +3,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ApplicationPanel from "./ApplicationPanel.vue";
+import { pickDate } from "./DateField.testing";
 
 const PATCH = vi.fn();
 vi.mock("../api/client", () => ({ api: { PATCH: (...a: unknown[]) => PATCH(...a), GET: vi.fn().mockResolvedValue({ data: [] }) } }));
@@ -48,21 +49,24 @@ describe("La relance dans la fiche candidature", () => {
     const line = () => wrapper.find("[data-test=panel-remind]");
     expect(line().text()).toMatch(/^Relance : le 12 octobre( 2026)? ·\s+Changer le jour de la relance$/);
     await wrapper.find("[data-test=remind-change]").trigger("click");
-    const input = wrapper.find<HTMLInputElement>("[data-test=remind-date]");
-    expect(input.element.value).toBe("2026-10-12");
-    expect(input.attributes("min")).toBe("2026-10-07");
-    expect(input.attributes("max")).toBe("2026-11-01");
+    // La pilule de date (DateField, lot 10) : le jour proposé, et le sélecteur borné entre 5 et 30 jours.
+    const pill = () => wrapper.find("[data-test=remind-date] [data-test=dt-date]");
+    expect(pill().attributes("aria-label")).toContain("12 octobre");
+    await pill().trigger("click");
+    const days = wrapper.findAll("[data-test=remind-date] .dt-day");
+    const enabled = days.filter((d) => d.attributes("disabled") === undefined).map((d) => d.attributes("data-day"));
+    expect(enabled[0]).toBe("2026-10-07");
+    await wrapper.find("[data-test=remind-date] [data-test=dt-back]").trigger("click");
 
-    // Hors limites : le serveur refuse, le message le dit.
+    // Le serveur refuse (le jour a changé entre-temps) : le message le dit.
     PATCH.mockResolvedValueOnce({ data: undefined, error: { detail: "entre 5 et 30 jours après l'envoi" } });
-    await input.setValue("2026-12-01");
     await wrapper.find("form").trigger("submit");
     await flushPromises();
     expect(wrapper.find("[role=alert]").text()).toBe("Choisis un jour entre 5 et 30 jours après l'envoi.");
-    expect(input.attributes("aria-invalid")).toBe("true");
+    expect(wrapper.find("[data-test=remind-date] .dt-field").attributes("aria-invalid")).toBe("true");
 
     PATCH.mockResolvedValueOnce({ data: { ...application, follow_up_on: "2026-10-20" } });
-    await input.setValue("2026-10-20");
+    await pickDate(wrapper, "remind-date", "2026-10-20");
     await wrapper.find("form").trigger("submit");
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/applications/{application_id}/follow-up-date", {
