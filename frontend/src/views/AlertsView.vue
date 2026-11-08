@@ -20,6 +20,7 @@ import SidePanel from "../components/SidePanel.vue";
 import SiteMail from "../components/SiteMail.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import StatusPill from "../components/StatusPill.vue";
+import { useJobsMemory } from "../composables/useJobsMemory";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
@@ -31,6 +32,7 @@ import { plural } from "../format";
 // conclusion, une seule bande d'action (§3), puis « Mes recherches » (une carte par recherche, une
 // ligne par site), les messages des sites et les alertes reçues, chacun en trois lignes avec « Tout
 // voir » (divulgation progressive). L'assistant reste l'entrée tant que rien n'est en place.
+const { last: lastJobsPage } = useJobsMemory();
 const page = ref<AlertsPage | null>(null);
 // Ordinateur dès 1 024 px (maquette du 8 novembre, AlertesOrdinateur) : une page à elle, sur 880 px. Le titre « Mes
 // alertes e-mail », la phrase et « + Ajouter une recherche » ; la bande en bandeau pêche ; « Recherches suivies » en
@@ -208,6 +210,15 @@ onMounted(async () => {
 
 <template>
   <section :class="['jobs-body', 'alerts-page', { 'alerts-wide': listed, 'alerts-phone': phone }]">
+    <!-- Ordinateur (lot 11.4) : le retour à la liste de Candidatures, sur l'onglet qui était ouvert. -->
+    <RouterLink
+      v-if="wide && page"
+      :to="lastJobsPage"
+      class="alerts-back-wide"
+      data-test="alerts-back-wide"
+    >
+      <AppIcon name="chevron-left" />Candidatures
+    </RouterLink>
     <header
       v-if="wide && page"
       class="alerts-head-wide"
@@ -361,15 +372,21 @@ onMounted(async () => {
                 <strong>{{ row.group.terms }}</strong>
                 <span>{{ row.place }}</span>
               </div>
+              <!-- Ordinateur : un libellé suivi de « › » ; « + Ajouter une recherche » reste le seul bouton à contour. -->
               <button
                 v-if="row.site.state.kind === 'todo'"
                 type="button"
-                class="secondary"
+                :class="phone ? 'secondary' : 'alerts-create'"
                 :aria-label="`Créer l'alerte « ${row.group.terms} » sur ${row.site.name}`"
                 :data-test="`create-${row.site.slug}`"
                 @click="create(row.site.slug, row.group.terms)"
               >
-                {{ phone ? "Créer" : "Créer l’alerte" }}
+                <template v-if="phone">
+                  Créer
+                </template>
+                <template v-else>
+                  Créer l’alerte<AppIcon name="chevron" />
+                </template>
               </button>
               <span
                 v-else-if="row.site.state.kind === 'quiet'"

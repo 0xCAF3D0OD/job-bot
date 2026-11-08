@@ -19,3 +19,13 @@ describe("retour à la candidature commencée", () => {
     expect(memory.last.value).toBe("/candidatures/preuves?mois=2026-09");
   });
 });
+
+describe("Mes alertes e-mail (lot 11.4)", () => {
+  it("n'est jamais retenue : le menu ramène à l'onglet ouvert avant", () => {
+    const memory = useJobsMemory();
+    memory.remember("/candidatures/suivi");
+    memory.remember("/candidatures/alertes");
+    memory.remember("/candidatures/alertes?ajouter=1");
+    expect(memory.last.value).toBe("/candidatures/suivi");
+  });
+});

@@ -556,15 +556,18 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .check input { margin: 0; }
 .check small { margin-top: var(--space-1); }
 .inline-field { display: flex; gap: var(--space-2); align-items: center; color: var(--muted); }
-/* Champs (planche « Champs », règles §4) : une seule forme partout, 48 px, rayon des cartes, texte 16 px.
-   États : survol (bordure plus foncée), focus (bordure 2 px accent + halo accent-soft 3 px, à la souris
-   comme au clavier, WCAG 2.4.7), erreur (2 px rouge), désactivé, lecture seule (pointillés). */
-:root { --field-h: 3rem; }
+/* Champs (maquette du 8 novembre, lot 11.1, téléphone aussi) : une seule forme partout, 48 px, bordure 1,5 px
+   --text-secondary (3:1 au moins en clair et en sombre, WCAG 1.4.11), fond de carte, rayon 8 px (D7), texte 16 px
+   (pas de zoom sur iOS), 14 px de marge intérieure. États : survol (bordure plus foncée), focus (bordure accent +
+   halo accent-soft, à la souris comme au clavier, WCAG 2.4.7), erreur (rouge), désactivé, lecture seule (pointillés). */
+:root { --field-h: 48px; --field-pad-x: 14px; --field-pad-y: 12px; --field-line: 1.5px; }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea) {
-  box-sizing: border-box; min-height: var(--field-h); padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--field-border); border-radius: var(--radius); background-color: var(--field-bg);
+  box-sizing: border-box; min-height: var(--field-h); padding: 0 var(--field-pad-x);
+  border: var(--field-line) solid var(--text-secondary); border-radius: var(--radius-sm); background-color: var(--surface);
   color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--leading-normal);
 }
+:is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select) { height: var(--field-h); }
+textarea { padding: var(--field-pad-y) var(--field-pad-x); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):hover:not(:disabled, [readonly], :focus) { border-color: var(--field-border-hover); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px var(--accent-soft); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea)[aria-invalid="true"] { border-color: var(--down-text); box-shadow: 0 0 0 1px var(--down-text); }
@@ -1241,7 +1244,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-plain { white-space: pre-wrap; }
 .assistant-copy { margin: 0 0 var(--space-2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); padding: var(--space-2) var(--space-3); }
 .assistant-copy pre { margin: 0 0 var(--space-1); white-space: pre-wrap; font-family: inherit; font-size: var(--font-small); }
-.assistant-status { font-size: var(--font-small); display: flex; align-items: center; gap: var(--space-2); }
 .assistant-form { display: flex; gap: var(--space-2); align-items: flex-end; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--divider); }
 .assistant-form textarea { flex: 1; resize: none; font: inherit; font-size: var(--font-small); }
 @media (max-width: 640px) { .assistant-fab { right: 0.9rem; bottom: 0.9rem; } }
@@ -3351,6 +3353,19 @@ main:focus { outline: none; }
   .header-round.bell-button.has-unread { position: relative; padding: 0; background: transparent; color: var(--text); }
   .bell-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border: 2px solid var(--bg); border-radius: var(--radius-pill); background: var(--primary); }
 }
+/* Ordinateur (maquette du 8 novembre, lot 11.2) : recherche, cloche et avatar dans un seul groupe, 16 px entre eux,
+   chacun de 44 × 44 px. Cloche sans nouvelle : un rond de carte à bordure fine, icône 20 px ; avec des nouvelles : la
+   capsule pêche, icône 18 px et le compte. Seule la largeur de la capsule change d'un état à l'autre. */
+@media (min-width: 821px) {
+  .topbar-actions { gap: var(--space-4); }
+  .header-round { min-width: var(--target-min); height: var(--target-min); }
+  .header-round.bell-button { --bell-gap: 6px; border: 1.5px solid var(--line-strong); background: var(--surface); }
+  .header-round.bell-button:hover { background: var(--band); }
+  .header-round.bell-button.has-unread { gap: var(--bell-gap); padding: 0 var(--field-pad-x); border-color: transparent; background: var(--peach-soft); color: var(--peach-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+  .header-round.bell-button.has-unread:hover { background: color-mix(in srgb, var(--peach-text) 10%, var(--peach-soft)); }
+  .header-round.bell-button.has-unread > .icon { width: 18px; height: 18px; }
+  .header-round.account-trigger { width: var(--target-min); }
+}
 /* La légende au survol et au focus (WCAG 1.4.13) : le nom du bouton, sous lui. */
 .header-round::after {
   content: attr(data-label); position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 60;
@@ -4644,6 +4659,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .profile-image { flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); box-shadow: 0 0 0 1px var(--line); font-weight: var(--weight-bold); }
 .profile-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .profile-image-40 { width: 40px; height: 40px; font-size: var(--font-body); }
+.profile-image-44 { width: 44px; height: 44px; font-size: var(--font-label); font-weight: var(--weight-bold); }
 .profile-image-48 { width: 48px; height: 48px; font-size: var(--font-title); }
 .profile-image-52 { width: 52px; height: 52px; font-size: var(--font-title); }
 .profile-image-64 { width: 64px; height: 64px; font-size: var(--font-section); }
@@ -4708,6 +4724,15 @@ a.panel-row:hover { background: var(--band); }
 .side-panel-modeless .assistant-line.assistant > .assistant-line-mascot { grid-row: auto; align-self: end; margin-top: 0; }
 .side-panel-modeless .assistant-bubble { justify-self: start; padding: var(--space-3) var(--space-4); background: var(--panel); border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--space-1); }
 .side-panel-modeless .assistant-line.user { max-width: 85%; padding: var(--space-3) var(--space-4); background: var(--primary); color: var(--on-primary); border-radius: var(--radius-card) var(--radius-card) var(--space-1) var(--radius-card); }
+/* L'Assistant écrit (lot 11.3, keyframes ja-dot de la maquette AssistantOrdinateur) : trois points de 8 px, 6 px entre
+   eux, dans une bulle de 46 px (48 sur téléphone) de la forme d'une réponse. Mouvement réduit : points fixes. */
+.assistant-dots { --dots-h: 46px; --dot: 8px; --dot-gap: 6px; display: inline-flex; align-items: center; gap: var(--dot-gap); box-sizing: border-box; height: var(--dots-h); padding-block: 0; }
+.assistant-page .assistant-dots { --dots-h: 48px; }
+.assistant-dots > span { width: var(--dot); height: var(--dot); border-radius: var(--radius-pill); background: var(--text-secondary); animation: ja-dot 1.2s ease-in-out infinite; }
+.assistant-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.assistant-dots > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ja-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .assistant-dots > span { animation: none; opacity: 0.6; } }
 .side-panel-modeless .assistant-form { padding: var(--space-3) var(--space-4) 0; border-top: 0; }
 .side-panel-modeless .assistant-disclaimer { padding: var(--space-2) var(--space-4) var(--space-3); }
 .assistant-form > .composer { flex: 1 1 auto; min-width: 0; }
@@ -4780,6 +4805,10 @@ a.panel-row:hover { background: var(--band); }
    « + Ajouter une recherche » ; le bandeau pêche au bouton tonal ; la liste des recherches suivies, sans cadre par
    recherche : une carte, des lignes de 72 px séparées d'un filet. */
 .jobs-band > .jobs-body.alerts-wide { display: grid; margin-inline: auto; grid-template-columns: minmax(0, 1fr); box-sizing: content-box; padding-inline: var(--space-6); --alerts-34: 34px; --alerts-40: 40px; --alerts-17: 17px; --alerts-26: 26px; --alerts-10: 10px; --alerts-72: 72px; --alerts-3: 3px; --alerts-16: 16px; max-width: 880px; margin-inline: auto; gap: var(--space-8); padding-top: var(--space-6); padding-bottom: var(--space-12); }
+.alerts-back-wide { --back-gap: 6px; --back-pull: 28px; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--back-gap); min-height: var(--target-min); margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--back-pull)) calc(-1 * var(--space-1)); padding: 0 var(--space-1); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.alerts-back-wide .icon { width: 18px; height: 18px; }
+.alerts-create { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0 var(--space-2); border: 0; background: transparent; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); white-space: nowrap; }
+.alerts-create .icon { width: 18px; height: 18px; }
 .alerts-head-wide { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
 .alerts-head-wide h1 { margin: 0; font-size: var(--alerts-34); line-height: var(--alerts-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
@@ -4794,8 +4823,9 @@ a.panel-row:hover { background: var(--band); }
 .alerts-list-wide { display: grid; gap: var(--alerts-10); }
 .alerts-list-head { display: flex; align-items: center; justify-content: space-between; margin: 0 var(--space-1); }
 .alerts-list-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
-.alerts-rows { margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
-.alerts-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--alerts-72); box-sizing: border-box; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5); }
+/* La liste des recherches suivies sans cadre (lot 11.4, téléphone aussi) : un trait en haut, en bas et entre les lignes. */
+.alerts-rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.alerts-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--alerts-72); box-sizing: border-box; padding: var(--space-3) 0 var(--space-3) var(--space-1); }
 .alerts-row + .alerts-row { border-top: 1px solid var(--line-soft); }
 .alerts-row.highlighted { background: var(--primary-soft); }
 /* Le ⋯ de la ligne : 44 px comme « Créer l’alerte » (maquette AlertesOrdinateur). */
@@ -4819,7 +4849,7 @@ a.panel-row:hover { background: var(--band); }
 .alerts-sentence-phone { margin: 0 var(--space-1); font-size: var(--font-body); line-height: var(--alerts-23); color: var(--text-secondary); }
 .alerts-phone .alerts-banner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
 .alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }
-.alerts-phone .alerts-row { gap: var(--space-2); min-height: var(--alerts-68); padding: var(--space-2) var(--space-1) var(--space-2) var(--space-4); }
+.alerts-phone .alerts-row { --alerts-10: 10px; gap: var(--alerts-10); min-height: var(--alerts-68); padding: var(--alerts-10) 0 var(--alerts-10) var(--space-1); }
 .alerts-phone .alerts-row-text span { font-size: var(--label-caps); }
 .alerts-phone button.secondary { min-height: var(--alerts-40); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-bold); }
 /* « Créer » à 44 px comme le ⋯ de 40 × 44 à côté : une rangée de contrôles a une seule hauteur (docs/94) et la cible

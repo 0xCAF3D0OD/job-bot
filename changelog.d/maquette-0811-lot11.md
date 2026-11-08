@@ -1,0 +1,1 @@
+Maquette du 8 novembre, lot 11 : champs de formulaire uniques, cloche et avatar de 44 px espacés, trois points pendant que l'Assistant écrit, retour depuis Mes alertes e-mail, nouveau rendez-vous sans carte dans la carte

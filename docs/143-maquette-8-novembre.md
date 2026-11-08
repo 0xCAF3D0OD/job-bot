@@ -8,12 +8,14 @@
 
 Dans l'ordre, de la plus forte à la plus faible :
 
-1. `docs/mobile/PROMPT_CLAUDE_CODE.md`, en particulier les décisions D18 à D27 (§3 ci-dessous) ;
-2. `docs/mobile/LISEZMOI.md` ;
-3. les captures `docs/mobile/captures/` et `docs/mobile/captures/etats/` (le rendu) ;
-4. le HTML de `docs/mobile/maquettes/*.dc.html` (textes, tailles, espacements) ;
-5. `docs/mobile/tokens.css` et `frontend/src/style.css` (jetons) ;
-6. `docs/regles-ui-ergonomie.md` et les docs existantes.
+1. `docs/mobile/MODIFICATIONS_8_NOVEMBRE_SOIR.md` (lots 11 à 15, envoyé par Kevin le 8 novembre au soir) : il l'emporte
+   sur la consigne en cas de conflit ;
+2. `docs/mobile/PROMPT_CLAUDE_CODE.md`, en particulier les décisions D18 à D27 (§3 ci-dessous) ;
+3. `docs/mobile/LISEZMOI.md` ;
+4. les captures `docs/mobile/captures/` et `docs/mobile/captures/etats/` (le rendu) ;
+5. le HTML de `docs/mobile/maquettes/*.dc.html` (textes, tailles, espacements) ;
+6. `docs/mobile/tokens.css` et `frontend/src/style.css` (jetons) ;
+7. `docs/regles-ui-ergonomie.md` et les docs existantes.
 
 Les maquettes Get'emAll (`AutoriserGetemall`, `ConfidentialiteGetemall`, `ReglagesConnexions`, `ReglagesRetirer`)
 restent dans `docs/mobile/maquettes/` : elles ne sont pas dans le paquet du 8 novembre et restent la référence de
@@ -37,6 +39,11 @@ fusionnés : on fusionne dans l'ordre 0, 1, 2… et chaque PR ne montre plus que
 | 8 | Pages d'état, Connexion, Premiers pas sur ordinateur. |
 | 9 | Téléphone : éléments partagés (Assistant, Préparer, Offre provisoire, Ajouter une offre, Envoyées, Rendez-vous, Compte, Alertes, Réglages, Bilan, Extension). |
 | 10 | Vérification finale et « Écarts connus ». |
+| 11 | Corrections (MODIFICATIONS §3) : champs de formulaire, en-tête de l'ordinateur, Assistant qui écrit, Mes alertes e-mail, nouveau rendez-vous dans le panneau de détail. |
+| 12 | Envoyées : détail en deux colonnes (`DetailTwoColumns`). |
+| 13 | À traiter : détail en deux colonnes ; lignes de « Ce que je cherche ». |
+| 14 | Rendez-vous ORP : sans pastilles « Noté », formulaire en trois parties, colonne « Le rendez-vous ». |
+| 15 | Préparer sur ordinateur ; « J'ai déjà postulé ». |
 
 ## 3. Les décisions D18 à D27
 
@@ -110,3 +117,6 @@ Ce qui ne suit pas la maquette, avec la raison. Rempli au fil des lots, complét
 | Couleurs en dur | Restent : les feuilles de lettre et de CV (papier blanc, encre #1a1a1a), les logos Google et Microsoft, le fond blanc des logos d'employeur, l'encre foncée du logo pêche des cartes (#1B1F2A dans les deux thèmes), la case à cocher blanche des documents lus (#474C59), la pastille de l'icône IA (#f4a261) et une bulle de la victoire (#a8e6d2). | Papier et logos tiers sont hors du §3 ; aucun jeton ne garde une encre foncée en sombre ; les deux dernières couleurs ne sont pas dans la table du §3. Question posée à Kevin dans la PR du lot 10. | 10 |
 | Icônes sur fond | Restent sur fond : les icônes des formations et du financement (maquette Explorer) et la pastille des lignes repliables du Suivi ORP. | Les deux premières sont dessinées ainsi ; la troisième est hors des maquettes du 8 novembre. | 10 |
 | Mouvement réduit | Seul reste le fondu lié au défilement de la barre du haut (ordinateur), qui suit la position de la page et non le temps. | Ce n'est pas une animation qui joue seule. | 10 |
+| Champs de formulaire | Coins de 8 px. | Champs : 12 px dans l'ancienne maquette, 8 px (D7). | 11 |
+| Assistant qui écrit | La ligne « Je consulte tes candidatures… » (outil lu par l'Assistant) disparaît avec l'élément « … » : seuls les trois points restent jusqu'au premier mot. | MODIFICATIONS 11.3 supprime l'élément sous la liste des messages et ne dessine que les trois points. | 11 |
+| Mes alertes e-mail (ordinateur) | Le « › » après « Créer l'alerte » est l'icône chevron de 18 px, pas un caractère. | docs/101 : aucun caractère ne sert d'icône (test `iconography`). | 11 |

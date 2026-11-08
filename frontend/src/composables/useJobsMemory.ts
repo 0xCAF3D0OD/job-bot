@@ -7,11 +7,13 @@ import { api } from "../api/client";
 const KEY = "jobbot-candidatures";
 const DEFAULT = "/candidatures/offres";
 const PREPARATION = /^\/candidatures\/offres\/(\d+)\/preparer/;
+// Mes alertes e-mail n'est jamais retenue (lot 11.4) : le menu ramène toujours à la liste, avec l'onglet ouvert.
+const SKIPPED = /^\/candidatures\/alertes(?:[/?#]|$)/;
 
 function read(): string {
   try {
     const stored = localStorage.getItem(KEY);
-    return stored?.startsWith("/candidatures/") ? stored : DEFAULT;
+    return stored?.startsWith("/candidatures/") && !SKIPPED.test(stored) ? stored : DEFAULT;
   } catch {
     return DEFAULT;
   }
@@ -30,7 +32,7 @@ function write(path: string): void {
 
 export function useJobsMemory() {
   function remember(fullPath: string): void {
-    if (fullPath.startsWith("/candidatures/")) write(fullPath);
+    if (fullPath.startsWith("/candidatures/") && !SKIPPED.test(fullPath)) write(fullPath);
   }
 
   // Candidature envoyée : plus rien à reprendre, le menu ramène au suivi.
