@@ -1,1 +1,811 @@
-{"v": 3, "createdOnFiles": {"v": 1, "at": "2026-10-30T18:55:00Z"}, "title": "jobA1 mobile", "launch": {"view": "canvas"}, "pages": [], "boards": {"Candidatures.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "2. Candidatures", "is_interactive": true, "radius": 28}, "Offre.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "3. D\u00e9tail d'une offre", "is_interactive": true, "radius": 28}, "Orp.dc.html": {"x": 1410, "y": 0, "w": 390, "h": 844, "title": "4. Suivi ORP", "is_interactive": true, "radius": 28}, "Compte.dc.html": {"x": 1880, "y": 0, "w": 390, "h": 844, "title": "5. Compte", "is_interactive": true, "radius": 28}, "Cercles.dc.html": {"x": 0, "y": 964, "w": 1280, "h": 820, "title": "Cercles de comp\u00e9tence, variantes", "is_interactive": true}, "Onboarding1.dc.html": {"x": 1360, "y": 964, "w": 390, "h": 844, "title": "Onboarding 1. Bienvenue", "is_interactive": true, "radius": 28}, "Onboarding2.dc.html": {"x": 1830, "y": 964, "w": 390, "h": 844, "title": "Onboarding 2. Ton CV", "is_interactive": true, "radius": 28}, "Onboarding3.dc.html": {"x": 2300, "y": 964, "w": 390, "h": 844, "title": "Onboarding 3. Ce que tu cherches", "is_interactive": true, "radius": 28}, "OnboardingB.dc.html": {"x": 2850, "y": 964, "w": 390, "h": 844, "title": "Onboarding B, couleurs et premier tri", "is_interactive": true, "radius": 28}, "OnboardingC.dc.html": {"x": 3320, "y": 964, "w": 390, "h": 844, "title": "Onboarding C, hybride (recommand\u00e9)", "is_interactive": true, "radius": 28}, "Reglages.dc.html": {"x": 0, "y": 2100, "w": 390, "h": 844, "title": "R\u00e9glages", "is_interactive": true, "radius": 28}, "Filtres.dc.html": {"x": 470, "y": 2100, "w": 390, "h": 844, "title": "Filtres (bottom sheet)", "is_interactive": true, "radius": 28}, "ActionsOffre.dc.html": {"x": 940, "y": 2100, "w": 390, "h": 844, "title": "Actions sur une offre", "is_interactive": true, "radius": 28}, "AccueilSmile.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "1. Accueil", "is_interactive": true, "radius": 28}, "Systeme.dc.html": {"x": 1880, "y": 2100, "w": 1360, "h": 1800, "title": "Syst\u00e8me jobA1, r\u00e8gles communes"}, "Assistant.dc.html": {"x": 2350, "y": 0, "w": 390, "h": 844, "title": "6. Assistant", "is_interactive": true, "radius": 28}, "ObjectifAtteint.dc.html": {"x": 3320, "y": 2100, "w": 390, "h": 844, "title": "Objectif ORP atteint (logo ravi)", "is_interactive": true, "radius": 28}, "AucuneOffre.dc.html": {"x": 3790, "y": 2100, "w": 390, "h": 844, "title": "\u00c9cran vide (logo attentif)", "is_interactive": true, "radius": 28}, "ErreurConnexion.dc.html": {"x": 4260, "y": 2100, "w": 390, "h": 844, "title": "Erreur (triangle) et attente (feston)", "is_interactive": true, "radius": 28}, "Preparer.dc.html": {"x": 2820, "y": 0, "w": 390, "h": 844, "title": "7. Pr\u00e9parer ma candidature", "is_interactive": true, "radius": 28}, "Emoticones.dc.html": {"x": 1880, "y": 3620, "w": 1360, "h": 980, "title": "Syst\u00e8me 9. \u00c9motic\u00f4nes jobA1", "is_interactive": true}, "Explorer.dc.html": {"x": 3290, "y": 0, "w": 390, "h": 844, "title": "Progresser : ORP, bilan, formations", "is_interactive": true, "radius": 28}, "Notifications.dc.html": {"x": 3760, "y": 0, "w": 390, "h": 844, "title": "Notifications", "is_interactive": true, "radius": 28}, "Animations.dc.html": {"x": 3320, "y": 3620, "w": 1360, "h": 1910, "title": "Syst\u00e8me 11. Animations du logo, isol\u00e9es", "is_interactive": true}, "AccueilSombre.dc.html": {"x": 0, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Accueil", "is_interactive": true, "radius": 28}, "CandidaturesSombre.dc.html": {"x": 470, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Candidatures", "is_interactive": true, "radius": 28}, "OffreSombre.dc.html": {"x": 940, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Offre", "is_interactive": true, "radius": 28}, "PreparerSombre.dc.html": {"x": 1410, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Ma candidature", "is_interactive": true, "radius": 28}, "ProgresserSombre.dc.html": {"x": 1880, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Progresser", "is_interactive": true, "radius": 28}, "NotificationsSombre.dc.html": {"x": 2350, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Notifications", "is_interactive": true, "radius": 28}, "CompteSombre.dc.html": {"x": 2820, "y": 5800, "w": 390, "h": 844, "title": "Sombre \u00b7 Compte", "is_interactive": true, "radius": 28}, "ModeSombre.dc.html": {"x": 3320, "y": 5800, "w": 1360, "h": 1080, "title": "Syst\u00e8me 12. Mode sombre", "is_interactive": true}}, "order": ["Candidatures.dc.html", "Offre.dc.html", "Orp.dc.html", "Compte.dc.html", "Assistant.dc.html", "Preparer.dc.html", "Cercles.dc.html", "Onboarding1.dc.html", "Onboarding2.dc.html", "Onboarding3.dc.html", "OnboardingB.dc.html", "OnboardingC.dc.html", "Reglages.dc.html", "Filtres.dc.html", "ActionsOffre.dc.html", "AccueilSmile.dc.html", "Systeme.dc.html", "ObjectifAtteint.dc.html", "AucuneOffre.dc.html", "ErreurConnexion.dc.html", "Emoticones.dc.html", "Explorer.dc.html", "Notifications.dc.html", "Animations.dc.html", "AccueilSombre.dc.html", "CandidaturesSombre.dc.html", "OffreSombre.dc.html", "PreparerSombre.dc.html", "ProgresserSombre.dc.html", "NotificationsSombre.dc.html", "CompteSombre.dc.html", "ModeSombre.dc.html"], "notes": {"t1": {"x": 0, "y": -300, "text": "jobA1 mobile, parcours principal", "kind": "title1", "maxW": 3210}, "t2": {"x": 0, "y": 1850, "text": "R\u00e9glages et gestion des \u00e9l\u00e9ments", "kind": "title1", "maxW": 4650}}, "designSystems": []}
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AccueilSmile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Accueil",
+      "w": 390,
+      "x": 0,
+      "y": 250
+    },
+    "AccueilSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Accueil",
+      "w": 390,
+      "x": 0,
+      "y": 4042
+    },
+    "ActionsOffre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Actions sur une offre",
+      "w": 390,
+      "x": 4230,
+      "y": 1214
+    },
+    "AjouterOffreTel.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Ajouter une offre",
+      "w": 390,
+      "x": 1880,
+      "y": 250
+    },
+    "AlertesOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Mes alertes e-mail",
+      "w": 1440,
+      "x": 4560,
+      "y": 7526
+    },
+    "AlertesTel.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Alertes e-mail",
+      "w": 390,
+      "x": 2820,
+      "y": 1214
+    },
+    "Animations.dc.html": {
+      "h": 1910,
+      "is_interactive": true,
+      "title": "Système · Animations du logo",
+      "w": 1360,
+      "x": 2880,
+      "y": 11486
+    },
+    "Assistant.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Assistant",
+      "w": 390,
+      "x": 3760,
+      "y": 250
+    },
+    "AssistantOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Assistant (panneau)",
+      "w": 1440,
+      "x": 0,
+      "y": 7526
+    },
+    "AucuneOffre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Aucune offre",
+      "w": 390,
+      "x": 1880,
+      "y": 2628
+    },
+    "AucuneOffreOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Aucune offre",
+      "w": 1440,
+      "x": 0,
+      "y": 10016
+    },
+    "AujourdhuiOrdinateurReposD.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Aujourd'hui, jour de repos",
+      "w": 1440,
+      "x": 1520,
+      "y": 6506
+    },
+    "AujourdhuiOrdinateurTravailD.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Aujourd'hui, jour de travail",
+      "w": 1440,
+      "x": 0,
+      "y": 6506
+    },
+    "AutoriserGetemall.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 1. Autoriser",
+      "w": 390,
+      "x": 0,
+      "y": 13966
+    },
+    "BilanOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Bilan (ORP, résultats, formations)",
+      "w": 1440,
+      "x": 4560,
+      "y": 6506
+    },
+    "BilanResultats.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Bilan, résultats",
+      "w": 390,
+      "x": 940,
+      "y": 1214
+    },
+    "CandidatureEnvoyee.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Candidature envoyée",
+      "w": 390,
+      "x": 940,
+      "y": 2628
+    },
+    "CandidatureEnvoyeeOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Candidature envoyée",
+      "w": 1440,
+      "x": 3040,
+      "y": 8996
+    },
+    "Candidatures.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Candidatures, à traiter",
+      "w": 390,
+      "x": 470,
+      "y": 250
+    },
+    "CandidaturesOrdinateurB.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Candidatures (à traiter, envoyées, rendez-vous)",
+      "w": 1440,
+      "x": 3040,
+      "y": 6506
+    },
+    "CandidaturesSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Candidatures",
+      "w": 390,
+      "x": 470,
+      "y": 4042
+    },
+    "Compte.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Compte",
+      "w": 390,
+      "x": 1880,
+      "y": 1214
+    },
+    "CompteImage.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Compte, choisir son image",
+      "w": 390,
+      "x": 2350,
+      "y": 1214
+    },
+    "CompteSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Compte",
+      "w": 390,
+      "x": 3760,
+      "y": 4042
+    },
+    "ConfidentialiteGetemall.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 4. Données personnelles",
+      "w": 390,
+      "x": 1410,
+      "y": 13966
+    },
+    "Connexion.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Connexion",
+      "w": 390,
+      "x": 470,
+      "y": 2628
+    },
+    "ConnexionOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Connexion",
+      "w": 1440,
+      "x": 0,
+      "y": 8996
+    },
+    "ConnexionSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Connexion",
+      "w": 390,
+      "x": 4230,
+      "y": 4042
+    },
+    "Emoticones.dc.html": {
+      "h": 980,
+      "is_interactive": true,
+      "title": "Système · Émoticônes",
+      "w": 1360,
+      "x": 1440,
+      "y": 11486
+    },
+    "Envoyees.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Candidatures, envoyées",
+      "w": 390,
+      "x": 2350,
+      "y": 250
+    },
+    "EnvoyeesSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Envoyées",
+      "w": 390,
+      "x": 1410,
+      "y": 4042
+    },
+    "ErreurConnexion.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Erreur et attente",
+      "w": 390,
+      "x": 2350,
+      "y": 2628
+    },
+    "Explorer.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Progresser : ORP, bilan, formations",
+      "w": 390,
+      "x": 470,
+      "y": 1214
+    },
+    "ExtAlerte.dc.html": {
+      "h": 480,
+      "is_interactive": true,
+      "radius": 12,
+      "title": "Extension · Formulaire d'alerte rempli",
+      "w": 360,
+      "x": 440,
+      "y": 5456
+    },
+    "ExtAnnonce.dc.html": {
+      "h": 480,
+      "is_interactive": true,
+      "radius": 12,
+      "title": "Extension · Envoyer une annonce",
+      "w": 360,
+      "x": 0,
+      "y": 5456
+    },
+    "ExtAutreSite.dc.html": {
+      "h": 480,
+      "is_interactive": true,
+      "radius": 12,
+      "title": "Extension · Autre site",
+      "w": 360,
+      "x": 880,
+      "y": 5456
+    },
+    "ExtNonConnecte.dc.html": {
+      "h": 480,
+      "is_interactive": true,
+      "radius": 12,
+      "title": "Extension · Non connectée",
+      "w": 360,
+      "x": 1320,
+      "y": 5456
+    },
+    "Filtres.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Filtres (feuille du bas)",
+      "w": 390,
+      "x": 3760,
+      "y": 1214
+    },
+    "HorsLigneOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Pas de connexion",
+      "w": 1440,
+      "x": 4560,
+      "y": 10016
+    },
+    "MaintenanceAnnoncee.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Maintenance annoncée",
+      "w": 390,
+      "x": 3290,
+      "y": 2628
+    },
+    "MaintenanceHorsLigne.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Pas de connexion",
+      "w": 390,
+      "x": 3760,
+      "y": 2628
+    },
+    "MaintenanceMaj.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Maintenance, mise à jour",
+      "w": 390,
+      "x": 2820,
+      "y": 2628
+    },
+    "MaintenanceOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Maintenance",
+      "w": 1440,
+      "x": 3040,
+      "y": 10016
+    },
+    "MaintenanceSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Maintenance",
+      "w": 390,
+      "x": 4700,
+      "y": 4042
+    },
+    "ModeSombre.dc.html": {
+      "h": 1080,
+      "is_interactive": true,
+      "title": "Système · Mode sombre",
+      "w": 1360,
+      "x": 4320,
+      "y": 11486
+    },
+    "Notifications.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Notifications",
+      "w": 390,
+      "x": 1410,
+      "y": 1214
+    },
+    "NotificationsOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Toutes les notifications",
+      "w": 1440,
+      "x": 3040,
+      "y": 7526
+    },
+    "NotificationsSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Notifications",
+      "w": 390,
+      "x": 3290,
+      "y": 4042
+    },
+    "ObjectifAtteint.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Objectif ORP atteint",
+      "w": 390,
+      "x": 1410,
+      "y": 2628
+    },
+    "ObjectifAtteintOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Objectif ORP atteint",
+      "w": 1440,
+      "x": 4560,
+      "y": 8996
+    },
+    "Offre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Détail d'une offre",
+      "w": 390,
+      "x": 940,
+      "y": 250
+    },
+    "OffreProvisoire.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Offre provisoire (lire ou coller l'annonce)",
+      "w": 390,
+      "x": 1410,
+      "y": 250
+    },
+    "OffreSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Offre",
+      "w": 390,
+      "x": 940,
+      "y": 4042
+    },
+    "OnboardingC.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Premiers pas",
+      "w": 390,
+      "x": 0,
+      "y": 2628
+    },
+    "OnboardingOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Premiers pas",
+      "w": 1440,
+      "x": 1520,
+      "y": 8996
+    },
+    "Orp.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Suivi ORP",
+      "w": 390,
+      "x": 0,
+      "y": 1214
+    },
+    "PageIntrouvable.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Page introuvable",
+      "w": 390,
+      "x": 4230,
+      "y": 2628
+    },
+    "PageIntrouvableOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Page introuvable",
+      "w": 1440,
+      "x": 1520,
+      "y": 10016
+    },
+    "PageIntrouvableSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Page introuvable",
+      "w": 390,
+      "x": 5170,
+      "y": 4042
+    },
+    "Preparer.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Préparer ma candidature",
+      "w": 390,
+      "x": 3290,
+      "y": 250
+    },
+    "PreparerOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Préparer ma candidature",
+      "w": 1440,
+      "x": 6080,
+      "y": 6506
+    },
+    "PreparerSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Préparer",
+      "w": 390,
+      "x": 2350,
+      "y": 4042
+    },
+    "ProfilOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Mon profil et mon CV",
+      "w": 1440,
+      "x": 1520,
+      "y": 7526
+    },
+    "ProgresserSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Progresser",
+      "w": 390,
+      "x": 2820,
+      "y": 4042
+    },
+    "Reglages.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Réglages",
+      "w": 390,
+      "x": 3290,
+      "y": 1214
+    },
+    "ReglagesConnexions.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 2. Réglages, connexions",
+      "w": 390,
+      "x": 470,
+      "y": 13966
+    },
+    "ReglagesOrdinateur.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Ordinateur · Réglages",
+      "w": 1440,
+      "x": 6080,
+      "y": 7526
+    },
+    "ReglagesRetirer.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 3. Retirer l'accès",
+      "w": 390,
+      "x": 940,
+      "y": 13966
+    },
+    "RelierFermee.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 6. Connexion pas ouverte",
+      "w": 390,
+      "x": 2350,
+      "y": 13966
+    },
+    "RelierLienInvalide.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 7. Lien invalide ou expiré",
+      "w": 390,
+      "x": 2820,
+      "y": 13966
+    },
+    "RelierPasTesteur.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Get'emAll · 5. Compte pas testeur",
+      "w": 390,
+      "x": 1880,
+      "y": 13966
+    },
+    "RendezVous.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Candidatures, rendez-vous",
+      "w": 390,
+      "x": 2820,
+      "y": 250
+    },
+    "RendezVousSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Rendez-vous",
+      "w": 390,
+      "x": 1880,
+      "y": 4042
+    },
+    "Systeme.dc.html": {
+      "h": 1800,
+      "title": "Système · Règles communes",
+      "w": 1360,
+      "x": 0,
+      "y": 11486
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-30T18:55:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "n1",
+    "n2",
+    "n3",
+    "n4",
+    "n5",
+    "n6",
+    "n7",
+    "n8"
+  ],
+  "notes": {
+    "n1": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Téléphone, parcours principal",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "n2": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Téléphone, premiers pas et états",
+      "w": 240,
+      "x": 0,
+      "y": 2378
+    },
+    "n3": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Téléphone, mode sombre",
+      "w": 240,
+      "x": 0,
+      "y": 3792
+    },
+    "n4": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Extension navigateur",
+      "w": 240,
+      "x": 0,
+      "y": 5206
+    },
+    "n5": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Ordinateur, pages principales",
+      "w": 240,
+      "x": 0,
+      "y": 6256
+    },
+    "n6": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Ordinateur, premiers pas et états",
+      "w": 240,
+      "x": 0,
+      "y": 8746
+    },
+    "n7": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Système jobA1",
+      "w": 240,
+      "x": 0,
+      "y": 11236
+    },
+    "n8": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Connexion Get'emAll (job-bot #512)",
+      "w": 240,
+      "x": 0,
+      "y": 13716
+    }
+  },
+  "order": [
+    "AccueilSmile.dc.html",
+    "Candidatures.dc.html",
+    "Offre.dc.html",
+    "OffreProvisoire.dc.html",
+    "AjouterOffreTel.dc.html",
+    "Envoyees.dc.html",
+    "RendezVous.dc.html",
+    "Preparer.dc.html",
+    "Assistant.dc.html",
+    "Orp.dc.html",
+    "Explorer.dc.html",
+    "BilanResultats.dc.html",
+    "Notifications.dc.html",
+    "Compte.dc.html",
+    "CompteImage.dc.html",
+    "AlertesTel.dc.html",
+    "Reglages.dc.html",
+    "Filtres.dc.html",
+    "ActionsOffre.dc.html",
+    "OnboardingC.dc.html",
+    "Connexion.dc.html",
+    "CandidatureEnvoyee.dc.html",
+    "ObjectifAtteint.dc.html",
+    "AucuneOffre.dc.html",
+    "ErreurConnexion.dc.html",
+    "MaintenanceMaj.dc.html",
+    "MaintenanceAnnoncee.dc.html",
+    "MaintenanceHorsLigne.dc.html",
+    "PageIntrouvable.dc.html",
+    "AccueilSombre.dc.html",
+    "CandidaturesSombre.dc.html",
+    "OffreSombre.dc.html",
+    "EnvoyeesSombre.dc.html",
+    "RendezVousSombre.dc.html",
+    "PreparerSombre.dc.html",
+    "ProgresserSombre.dc.html",
+    "NotificationsSombre.dc.html",
+    "CompteSombre.dc.html",
+    "ConnexionSombre.dc.html",
+    "MaintenanceSombre.dc.html",
+    "PageIntrouvableSombre.dc.html",
+    "ExtAnnonce.dc.html",
+    "ExtAlerte.dc.html",
+    "ExtAutreSite.dc.html",
+    "ExtNonConnecte.dc.html",
+    "AujourdhuiOrdinateurTravailD.dc.html",
+    "AujourdhuiOrdinateurReposD.dc.html",
+    "CandidaturesOrdinateurB.dc.html",
+    "BilanOrdinateur.dc.html",
+    "PreparerOrdinateur.dc.html",
+    "AssistantOrdinateur.dc.html",
+    "ProfilOrdinateur.dc.html",
+    "NotificationsOrdinateur.dc.html",
+    "AlertesOrdinateur.dc.html",
+    "ReglagesOrdinateur.dc.html",
+    "ConnexionOrdinateur.dc.html",
+    "OnboardingOrdinateur.dc.html",
+    "CandidatureEnvoyeeOrdinateur.dc.html",
+    "ObjectifAtteintOrdinateur.dc.html",
+    "AucuneOffreOrdinateur.dc.html",
+    "PageIntrouvableOrdinateur.dc.html",
+    "MaintenanceOrdinateur.dc.html",
+    "HorsLigneOrdinateur.dc.html",
+    "Systeme.dc.html",
+    "Emoticones.dc.html",
+    "Animations.dc.html",
+    "ModeSombre.dc.html",
+    "AutoriserGetemall.dc.html",
+    "ReglagesConnexions.dc.html",
+    "ReglagesRetirer.dc.html",
+    "ConfidentialiteGetemall.dc.html",
+    "RelierPasTesteur.dc.html",
+    "RelierFermee.dc.html",
+    "RelierLienInvalide.dc.html"
+  ],
+  "pages": [],
+  "title": "jobA1"
+}
