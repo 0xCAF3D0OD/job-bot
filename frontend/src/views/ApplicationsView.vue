@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -20,7 +20,6 @@ import OfferLine from "../components/OfferLine.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
-import ApplicationsTable from "../components/ApplicationsTable.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewForm from "../components/InterviewForm.vue";
 import InterviewPractice from "../components/InterviewPractice.vue";
@@ -37,7 +36,6 @@ import EngagementMoment from "../components/EngagementMoment.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
-import { followUpList } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence } from "../dates";
 import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
@@ -45,16 +43,16 @@ import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
-import SegmentedControl from "../components/SegmentedControl.vue";
-import { useNarrow, usePhone } from "../composables/usePhone";
+import SentCard from "../components/SentCard.vue";
+import { usePhone } from "../composables/usePhone";
+import { sentSections } from "../sentList";
 
 // Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
-// - Candidatures › Envoyées (docs/22) : la phrase des relances, la ligne « Objectif ORP : n sur N » vers
-//   Bilan › ORP, « À relancer », puis la liste des candidatures, repliée (règles §3.4) ;
+// - Candidatures › Envoyées (maquette Envoyees, 7.11.2026) : l'objectif ORP du mois et sa barre, puis les
+//   candidatures en rubriques (À relancer, Entretiens, Cette semaine, Plus tôt), avec la carte d'À traiter ;
 // - le Suivi ORP (/bilan/orp, maquette Orp) : le mois, l'objectif, le bandeau de la remise quand il est utile,
 //   l'export, les recherches du mois, puis « Ajouter », « À déclarer » et le calendrier.
 const TODO_ROWS = 3;
-const { phone: narrow } = useNarrow();
 const { phone } = usePhone();
 
 const route = useRoute();
@@ -63,8 +61,6 @@ const orpPage = route.name === "orp-month";
 const orp = ref<OrpMonth | null>(null);
 usePageReady(orpPage ? "orp-month" : "applications", () => !!orp.value);
 const all = ref<Application[]>([]);
-const allMonths = ref(false);
-const monthScope = computed({ get: () => (allMonths.value ? "tout" : "mois"), set: (v: string) => (allMonths.value = v === "tout") });
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
 const error = ref("");
 const loaded = ref(false);
@@ -84,15 +80,19 @@ function matches(a: Application): boolean {
   const text = plain(`${a.job_title} ${a.company} ${a.location ?? ""}`);
   return wanted.value.every((w) => text.includes(w));
 }
-const items = computed(() => {
-  if (wanted.value.length) return all.value.filter(matches);
-  return allMonths.value ? all.value : monthItems.value;
-});
-// Venu de la recherche globale avec des mots : la liste filtrée, ouverte, à l'écran.
-watch(loaded, async (done) => {
-  if (!done || !wanted.value.length) return;
-  await nextTick();
-  document.querySelector<HTMLElement>("[data-test=detail-list]")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+// Les rubriques d'Envoyées ; venues de la recherche globale avec des mots, seulement ce qui correspond.
+const sections = computed(() => sentSections(wanted.value.length ? all.value.filter(matches) : all.value));
+// L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici la fin du mois.
+const LONG_DAY = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const goal = computed(() => {
+  const data = orp.value;
+  if (!data?.target) return null;
+  const [year, m] = data.month.split("-").map(Number);
+  const left = data.target - data.count;
+  return {
+    percent: Math.min(100, Math.round((data.count / data.target) * 100)),
+    left: left > 0 ? `Encore ${left} d’ici le ${LONG_DAY.format(new Date(year!, m!, 0))}` : "Objectif du mois atteint",
+  };
 });
 let wordsTimer: ReturnType<typeof setTimeout> | undefined;
 watch(words, (value) => {
@@ -148,19 +148,6 @@ const calendarLine = computed(() => {
   const days = new Set(monthItems.value.map((a) => a.sent_at)).size;
   return days ? `${plural(days, "jour", "jours")} avec au moins une candidature` : "Aucune candidature ce mois-ci";
 });
-const listLine = computed(() => {
-  if (wanted.value.length) return `${plural(items.value.length, "candidature trouvée", "candidatures trouvées")}, tous mois confondus`;
-  const list = monthItems.value;
-  if (!list.length) return "Aucune candidature ce mois-ci";
-  const waiting = list.filter((a) => a.status === "en_attente" || a.status === "relancee").length;
-  const interviews = list.filter((a) => a.status === "entretien").length;
-  const parts = [plural(list.length, "candidature", "candidatures")];
-  if (waiting) parts.push(`${waiting} en attente de réponse`);
-  if (interviews) parts.push(plural(interviews, "entretien", "entretiens"));
-  return parts.join(", ");
-});
-// À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours.
-const toFollowUp = computed(() => followUpList(all.value));
 // Cartes du jour choisi : envoyées ce jour-là ou entretien ce jour-là.
 const dayCards = computed(() => {
   const day = selectedDay.value;
@@ -173,18 +160,8 @@ const dayCards = computed(() => {
   );
 });
 
-// La conclusion d'Envoyées (règles §3.2) : les relances à faire, le nombre en accent. « À déclarer » est
-// dans le Suivi ORP.
-const sentence = computed<{ text: string; strong?: boolean }[]>(() => {
-  const follow = toFollowUp.value.length;
-  if (!follow) return [{ text: "Rien à relancer." }];
-  return [{ text: plural(follow, "relance", "relances"), strong: true }, { text: " à faire." }];
-});
-// À relancer, puis à déclarer dans Job-Room (docs/133 §1) : deux listes l'une sous l'autre (1.6.27 ;
-// le sélecteur faisait un troisième niveau d'onglets, règles §2), trois lignes, « Afficher plus » pour le reste.
-const showAllFollow = ref(false);
+// À déclarer dans Job-Room (docs/133 §1) : trois lignes, « Afficher plus » pour le reste.
 const showAllDeclare = ref(false);
-const followShown = computed(() => (showAllFollow.value ? toFollowUp.value : toFollowUp.value.slice(0, TODO_ROWS)));
 const declareShown = computed(() => (showAllDeclare.value ? toDeclare.value : toDeclare.value.slice(0, TODO_ROWS)));
 // Le calendrier replié s'ouvre de lui-même quand un jour est demandé (lien « fais le point »,
 // assistant) : la clé le recrée, ouvert.
@@ -634,28 +611,26 @@ onUnmounted(() => assistant.setFocus(null));
         </button>
       </template>
       <template v-else>
-        <!-- La conclusion d'abord (règles §3.2 ; annexe de l'audit : Suivi trop chargé). -->
-        <p
-          v-if="loaded && all.length"
-          class="offers-sentence suivi-sentence"
-          data-test="suivi-sentence"
-        >
-          <component
-            :is="part.strong ? 'strong' : 'span'"
-            v-for="(part, index) in sentence"
-            :key="index"
-          >
-            {{ part.text }}
-          </component>
-        </p>
-        <!-- L'objectif du mois, une ligne vers Bilan › ORP (B7). -->
+        <!-- L'objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. -->
         <RouterLink
-          to="/bilan"
-          class="orp-goal-line"
+          :to="goal ? '/bilan/orp' : { path: '/reglages', query: { rubrique: 'recherche' } }"
+          class="sent-goal"
           data-test="goal"
         >
-          <span>Objectif ORP : <strong>{{ orp.target ? `${orp.count} sur ${orp.target}` : "à indiquer" }}</strong></span>
-          <AppIcon name="chevron" />
+          <span class="sent-goal-head">
+            <span>Objectif ORP {{ ofMonth(orp.month) }}</span>
+            <span data-test="goal-count">{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}</span>
+          </span>
+          <span
+            v-if="goal"
+            role="progressbar"
+            :aria-valuenow="orp.count"
+            aria-valuemin="0"
+            :aria-valuemax="orp.target ?? 0"
+            aria-label="Objectif ORP"
+            class="sent-goal-bar"
+          ><span :style="{ width: `${goal.percent}%` }" /></span>
+          <span class="sent-goal-left">{{ goal ? goal.left : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
         </RouterLink>
       </template>
 
@@ -693,58 +668,54 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
       </FaceState>
       <template v-else-if="loaded">
-        <!-- L'essentiel : à relancer, puis à déclarer, trois lignes chacune (règles §2 et §3). -->
-        <section
-          v-if="!orpPage"
-          class="dash-card suivi-todo"
-          data-test="todo"
-        >
-          <CardHead
-            title="À relancer"
-            :count="toFollowUp.length || undefined"
-          />
+        <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
+        <template v-if="!orpPage">
           <p
-            v-if="!toFollowUp.length"
-            class="hint"
+            v-if="wanted.length"
+            class="sent-words"
+            data-test="sent-words"
           >
-            Rien à relancer.
+            {{ sections.length ? `Candidatures « ${words.trim()} »` : `Aucune candidature pour « ${words.trim()} ».` }}
+            <button
+              type="button"
+              class="link"
+              data-test="sent-words-clear"
+              @click="words = ''"
+            >
+              Tout afficher
+            </button>
           </p>
           <ul
-            v-else
-            class="today-rows"
+            class="offer-cards sent-list"
+            data-test="sent-list"
           >
-            <li
-              v-for="application in followShown"
-              :key="application.id"
+            <template
+              v-for="section in sections"
+              :key="section.key"
             >
-              <ApplicationCard
-                :application="application"
-                :orp-row="rowsById.get(application.id) ?? null"
-                @open="openId = $event.id"
-                @status="setStatus"
-                @edit="edit"
-                @interview="openInterview"
-                @prepare="preparing = $event"
-                @changed="load"
-              />
-            </li>
+              <li
+                class="offer-day"
+                :data-test="`sent-section-${section.key}`"
+              >
+                <h2 class="offer-day-title">
+                  <span class="offer-day-name">{{ section.title }}</span>
+                  <span class="offer-day-count">{{ plural(section.items.length, "candidature", "candidatures") }}</span>
+                </h2>
+              </li>
+              <li
+                v-for="application in section.items"
+                :key="application.id"
+              >
+                <SentCard
+                  :application="application"
+                  :section="section.key"
+                  :selected="openId === application.id"
+                  @select="openId = application.id"
+                />
+              </li>
+            </template>
           </ul>
-          <ShowMore
-            v-if="toFollowUp.length > TODO_ROWS"
-            v-model="showAllFollow"
-            :hidden="toFollowUp.length - TODO_ROWS"
-            test-id="todo-all"
-          />
-          <!-- Sur téléphone, les relances une à une (planche « Tri et panneau de commande »). -->
-          <RouterLink
-            v-if="narrow && toFollowUp.length"
-            to="/candidatures/relances"
-            class="button-link follow-ups-start"
-            data-test="follow-ups-start"
-          >
-            <span class="with-icon"><AppIcon name="reply" />Relancer une à une</span>
-          </RouterLink>
-        </section>
+        </template>
         <section
           v-if="orpPage && orp.count"
           class="dash-card suivi-todo suivi-declare"
@@ -792,22 +763,14 @@ onUnmounted(() => assistant.setFocus(null));
           />
         </section>
 
-        <!-- Le détail replié (règles §3.4) : le calendrier et la liste du mois, deux lignes à la
-             place du sélecteur « Calendrier · Liste » (§2 : pas de troisième niveau). -->
-        <!-- Sur téléphone, le Suivi ORP s'arrête à « À déclarer » (Kevin, 6.11) : plus de calendrier. -->
+        <!-- Le calendrier replié (règles §3.4), dans le Suivi ORP ; sur téléphone, le Suivi ORP s'arrête à
+             « À déclarer » (Kevin, 6.11). -->
         <section
-          v-if="!orpPage || !phone"
+          v-if="orpPage && !phone"
           class="bilan-detail suivi-detail"
           data-test="suivi-detail"
         >
-          <h2
-            v-if="!orpPage"
-            class="section-title first"
-          >
-            Le détail
-          </h2>
           <DisclosureRow
-            v-if="orpPage"
             :key="calendarKey"
             :title="`Calendrier ${ofMonth(orp.month)}`"
             icon="calendar"
@@ -865,54 +828,6 @@ onUnmounted(() => assistant.setFocus(null));
                 </li>
               </ul>
             </section>
-          </DisclosureRow>
-          <DisclosureRow
-            v-else
-            :title="wanted.length ? `Candidatures « ${words.trim()} »` : `Toutes les candidatures ${ofMonth(orp.month)}`"
-            icon="list-check"
-            :description="listLine"
-            :start-open="wanted.length > 0"
-            class="suivi-list"
-            data-test="detail-list"
-          >
-            <!-- Le filtre par mots : le poste ou l'entreprise, dans tous les mois. -->
-            <div class="suivi-list-tools">
-              <span class="filters-search-wrap suivi-search">
-                <AppIcon name="search" />
-                <input
-                  v-model="words"
-                  class="field-compact filters-search"
-                  type="search"
-                  aria-label="Filtrer par mots"
-                  placeholder="Poste, entreprise"
-                  data-test="suivi-search"
-                >
-              </span>
-              <!-- Deux choix qui changent l'affichage tout de suite : un contrôle segmenté (règles §4, « Choisir »). -->
-              <SegmentedControl
-                v-if="!wanted.length"
-                v-model="monthScope"
-                class="all-months"
-                label="Période"
-                :options="[{ value: 'mois', label: 'Ce mois' }, { value: 'tout', label: 'Tous les mois', test: 'all-months' }]"
-              />
-            </div>
-            <p
-              v-if="!items.length"
-              class="hint"
-              data-test="applications-empty"
-            >
-              {{ wanted.length ? `Aucune candidature pour « ${words.trim()} ».` : `Aucune candidature en ${formatMonth(orp.month)}.` }}
-            </p>
-            <ApplicationsTable
-              v-else
-              :items="items"
-              :show-month="allMonths || wanted.length > 0"
-              @open="openId = $event.id"
-              @edit="edit"
-              @status="setStatus"
-              @remove="remove"
-            />
           </DisclosureRow>
         </section>
       </template>

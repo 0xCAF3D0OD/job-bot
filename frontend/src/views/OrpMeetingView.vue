@@ -8,7 +8,6 @@ import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
-import Illustration from "../components/Illustration.vue";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import IconButton from "../components/IconButton.vue";
@@ -16,7 +15,10 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
-import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
+import OrpMeetingEmpty from "../components/OrpMeetingEmpty.vue";
+import OrpMeetingForm from "../components/OrpMeetingForm.vue";
+import OrpOutcomeSheet from "../components/OrpOutcomeSheet.vue";
+import RendezVousDesktop from "../components/RendezVousDesktop.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { dateInSentence, meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
@@ -41,9 +43,6 @@ const page = ref<Page | null>(null);
 usePageReady("orp-meeting", () => !!page.value);
 const failed = ref(false);
 const editing = ref(false);
-const when = ref("");
-const place = ref("");
-const advisor = ref("");
 const custom = ref("");
 const name = ref("");
 const message = ref("");
@@ -136,6 +135,12 @@ function agreed(item: Meeting): { label: string; text: string }[] {
   return lines;
 }
 
+// Le rendez-vous ouvert dans la feuille « Ce qui a été convenu » (maquette du 7.11).
+const notingMeeting = computed<Meeting | null>(() => {
+  const id = noting.value;
+  if (id === null || !page.value) return null;
+  return [page.value.meeting, ...page.value.past].find((m) => m?.id === id) ?? null;
+});
 function outcomeSaved(data: Page): void {
   page.value = data;
   noting.value = null;
@@ -158,18 +163,7 @@ const sheetLink = computed(() => {
   return `/api/orp-meeting/feuille.pdf${who ? `?name=${encodeURIComponent(who)}` : ""}`;
 });
 
-// <input type="datetime-local"> : l'heure de l'ordinateur, sans fuseau.
-function localInput(iso: string): string {
-  const at = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}`;
-}
-
 function startEditing(): void {
-  when.value = meeting.value ? localInput(meeting.value.starts_at) : "";
-  place.value = meeting.value?.place ?? "";
-  advisor.value = meeting.value?.advisor ?? "";
-  whenError.value = "";
   editing.value = true;
 }
 
@@ -179,28 +173,9 @@ async function load(): Promise<void> {
   else failed.value = true;
 }
 
-// Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
-// l'envoi, et dit quoi faire ; à l'envoi, le curseur va dans le champ.
-const whenError = ref("");
-function checkWhen(): void {
-  whenError.value = when.value ? "" : "Indique la date et l'heure du rendez-vous.";
-}
-
-async function saveMeeting(event: Event): Promise<void> {
-  const formEl = event.currentTarget as HTMLElement | null;
-  checkWhen();
-  if (whenError.value) {
-    await nextTick();
-    formEl?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
-    return;
-  }
-  const { data } = await api.PUT("/api/orp-meeting", {
-    body: { starts_at: new Date(when.value).toISOString(), place: place.value, advisor: advisor.value },
-  });
-  if (data) {
-    page.value = data;
-    editing.value = false;
-  }
+function meetingSaved(data: Page): void {
+  page.value = data;
+  editing.value = false;
 }
 
 // Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1, règles §4 : pas de rouge dans « ⋯ »).
@@ -237,8 +212,7 @@ function toggle(question: Question, checked: boolean): void {
   void saveQuestions(prep.value.questions.map((q) => (q.key === question.key ? { ...q, checked } : q)));
 }
 
-function addQuestion(): void {
-  const text = custom.value.trim();
+function addQuestion(text = custom.value.trim()): void {
   if (!text || !prep.value) return;
   void saveQuestions([...prep.value.questions, { key: `custom:${Date.now()}`, text, checked: true }]);
   custom.value = "";
@@ -256,21 +230,24 @@ const meetingItems = computed<MoreMenuItem[]>(() => [
 
 // Sur téléphone (maquettes RendezVous et RendezVousSombre, 6.11.2026) : « À venir » (ORP et entretiens d'embauche,
 // par date), puis « Derniers rendez-vous ORP ». « Voir ma feuille » ouvre la page actuelle (?feuille), le carnet
-// ouvert avec ?feuille=carnet. Sans candidature, l'écran reste celui d'avant. L'ordinateur ne change pas.
+// ouvert avec ?feuille=carnet. Sans candidature, l'écran reste celui d'avant. Dès 1 024 px, RendezVousDesktop.
 const route = useRoute();
 const router = useRouter();
 const { phone } = usePhone();
+// Dès 1 024 px (maquette RendezVousOrdinateur) : la liste et le détail, côte à côte.
+const { phone: wide } = usePhone("(min-width: 1024px)");
 // Les tests montent la vue sans routeur : route peut manquer.
 const sheetPart = computed(() => route?.query.feuille);
 const sheetView = computed(() => typeof sheetPart.value === "string");
 const compact = computed(() => phone.value && !!page.value && !noApplications.value && !sheetView.value);
+const wideView = computed(() => wide.value && !phone.value && !!page.value && !noApplications.value && !sheetView.value);
 const applications = ref<Application[]>([]);
 const preparing = ref<Application | null>(null);
 async function loadApplications(): Promise<void> {
   const { data } = await api.GET("/api/applications");
   if (Array.isArray(data)) applications.value = data;
 }
-watch(phone, (value) => value && void loadApplications(), { immediate: true });
+watch(() => phone.value || wide.value, (value) => value && void loadApplications(), { immediate: true });
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
@@ -298,6 +275,21 @@ onMounted(() => void load());
       Impossible de préparer le rendez-vous pour l'instant.
     </p>
     <LoadingBlocks v-else-if="!page" />
+    <RendezVousDesktop
+      v-else-if="wideView"
+      :page="page"
+      :applications="applications"
+      :sheet-link="sheetLink"
+      :meeting-items="editing ? [] : meetingItems"
+      :editing="editing"
+      @toggle="toggle"
+      @question="addQuestion"
+      @sheet="openSheet()"
+      @prepare="preparing = $event"
+      @note="noting = $event"
+      @saved="meetingSaved"
+      @cancel="editing = false"
+    />
     <template v-else>
       <RendezVousPhone
         v-if="compact"
@@ -305,7 +297,6 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
-        :noting="noting"
         :meeting-items="editing ? [] : phoneMeetingItems"
         @toggle="toggle"
         @sheet="openSheet()"
@@ -359,132 +350,49 @@ onMounted(() => void load());
         Préparer
       </h2>
       <div class="orp-meeting-sheet">
+        <!-- Aucun rendez-vous prévu (maquette RendezVous, état `vide`) : le personnage, le formulaire compact ;
+             pas avec l'écran « Pas encore de candidature », un seul des trois par écran. -->
+        <OrpMeetingEmpty
+          v-if="!meeting && !editing && !noApplications"
+          @saved="meetingSaved"
+        />
+        <OrpMeetingForm
+          v-else-if="!meeting || editing"
+          :meeting="editing ? meeting : null"
+          @saved="meetingSaved"
+          @cancel="editing = false"
+        />
         <div
-          v-if="!meeting || editing || (started && !compact)"
+          v-else-if="started && !compact"
           class="form-card"
           data-test="meeting"
         >
-          <!-- Aucun rendez-vous prévu (docs/141 §3, écran 11) : le personnage debout, petit, au-dessus du
-               formulaire ; pas avec l'écran « Pas encore de candidature », un seul des trois par écran. -->
-          <Illustration
-            v-if="!meeting && !editing && !noApplications"
-            pose="debout"
-            :height="160"
-            class="orp-meeting-person"
-            data-test="meeting-person"
-          />
           <div class="orp-meeting-when">
-            <h2>{{ meeting && started && !editing ? "Ce qui a été convenu" : meeting || editing ? "Le prochain rendez-vous" : "Aucun rendez-vous ORP prévu" }}</h2>
+            <h2>Ce qui a été convenu</h2>
           </div>
-          <template v-if="meeting && started && !editing">
-            <OrpOutcomeForm
-              v-if="noting === meeting.id"
-              :meeting="meeting"
-              :target="page.target"
-              :trainings="page.trainings"
-              @saved="outcomeSaved"
-              @cancel="noting = null"
-            />
-            <template v-else>
-              <dl
-                v-if="meeting.outcome_at"
-                class="orp-agreed"
-                data-test="meeting-agreed"
-              >
-                <template
-                  v-for="line in agreed(meeting)"
-                  :key="line.label"
-                >
-                  <dt>{{ line.label }}</dt>
-                  <dd>{{ line.text }}</dd>
-                </template>
-              </dl>
-              <div class="form-actions">
-                <button
-                  type="button"
-                  :class="{ secondary: !!meeting.outcome_at }"
-                  data-test="meeting-outcome"
-                  @click="noting = meeting.id"
-                >
-                  {{ meeting.outcome_at ? "Modifier ce qui a été convenu" : "Noter ce qui a été convenu" }}
-                </button>
-              </div>
-            </template>
-          </template>
-          <form
-            v-else-if="editing || !meeting"
-            class="orp-meeting-form"
-            data-test="meeting-form"
-            novalidate
-            @submit.prevent="saveMeeting"
+          <dl
+            v-if="meeting.outcome_at"
+            class="orp-agreed"
+            data-test="meeting-agreed"
           >
-            <FormField
-              v-slot="{ id, describedby, invalid }"
-              label="Date et heure"
-              :error="whenError"
+            <template
+              v-for="line in agreed(meeting)"
+              :key="line.label"
             >
-              <input
-                :id="id"
-                v-model="when"
-                type="datetime-local"
-                required
-                :aria-describedby="describedby"
-                :aria-invalid="invalid"
-                data-test="meeting-at"
-                @blur="checkWhen"
-                @input="whenError && checkWhen()"
-              >
-            </FormField>
-            <FormField
-              v-slot="{ id, describedby, invalid }"
-              label="Lieu"
-              optional
-              :width="30"
+              <dt>{{ line.label }}</dt>
+              <dd>{{ line.text }}</dd>
+            </template>
+          </dl>
+          <div class="form-actions">
+            <button
+              type="button"
+              :class="{ secondary: !!meeting.outcome_at }"
+              data-test="meeting-outcome"
+              @click="noting = meeting.id"
             >
-              <input
-                :id="id"
-                v-model="place"
-                type="text"
-                maxlength="200"
-                placeholder="ORP de Lausanne, ou visio"
-                :aria-describedby="describedby"
-                :aria-invalid="invalid"
-              >
-            </FormField>
-            <FormField
-              v-slot="{ id, describedby, invalid }"
-              label="Conseiller"
-              optional
-              :width="20"
-            >
-              <input
-                :id="id"
-                v-model="advisor"
-                type="text"
-                maxlength="120"
-                :aria-describedby="describedby"
-                :aria-invalid="invalid"
-              >
-            </FormField>
-            <div class="form-actions">
-              <!-- La seule action principale de l'écran (règles §3.3). -->
-              <button
-                type="submit"
-                class="primary"
-                data-test="meeting-save"
-              >
-                Enregistrer le rendez-vous
-              </button>
-              <button
-                v-if="editing"
-                type="button"
-                class="secondary"
-                @click="editing = false"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
+              {{ meeting.outcome_at ? "Modifier ce qui a été convenu" : "Noter ce qui a été convenu" }}
+            </button>
+          </div>
         </div>
         <template v-if="prep && !noApplications && !compact">
           <section
@@ -524,7 +432,7 @@ onMounted(() => void load());
             >
               <form
                 class="inline-field"
-                @submit.prevent="addQuestion"
+                @submit.prevent="addQuestion()"
               >
                 <input
                   :id="id"
@@ -661,20 +569,9 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
-        :noting="noting"
         @note="noting = $event"
         @log="openSheet('carnet')"
-      >
-        <template #noting="{ meeting: item }">
-          <OrpOutcomeForm
-            :meeting="item"
-            :target="page.target"
-            :trainings="page.trainings"
-            @saved="outcomeSaved"
-            @cancel="noting = null"
-          />
-        </template>
-      </RendezVousPhone>
+      />
       <template v-if="((prep && !noApplications) || page.past.length) && !compact">
         <h2 class="section-title orp-section">
           Le mois
@@ -793,7 +690,7 @@ onMounted(() => void load());
                 <div class="orp-log-head">
                   <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
                   <button
-                    v-if="item.outcome_at && noting !== item.id"
+                    v-if="item.outcome_at"
                     type="button"
                     class="link"
                     :data-test="`log-outcome-${item.id}`"
@@ -802,47 +699,44 @@ onMounted(() => void load());
                     Modifier
                   </button>
                 </div>
-                <OrpOutcomeForm
-                  v-if="noting === item.id"
-                  :meeting="item"
-                  :target="page.target"
-                  :trainings="page.trainings"
-                  @saved="outcomeSaved"
-                  @cancel="noting = null"
-                />
-                <template v-else>
-                  <dl
-                    v-if="item.outcome_at"
-                    class="orp-agreed"
+                <dl
+                  v-if="item.outcome_at"
+                  class="orp-agreed"
+                >
+                  <template v-if="item.asked.length">
+                    <dt>Questions</dt>
+                    <dd>{{ item.asked.join(" · ") }}</dd>
+                  </template>
+                  <template
+                    v-for="line in agreed(item)"
+                    :key="line.label"
                   >
-                    <template v-if="item.asked.length">
-                      <dt>Questions</dt>
-                      <dd>{{ item.asked.join(" · ") }}</dd>
-                    </template>
-                    <template
-                      v-for="line in agreed(item)"
-                      :key="line.label"
-                    >
-                      <dt>{{ line.label }}</dt>
-                      <dd>{{ line.text }}</dd>
-                    </template>
-                  </dl>
-                  <button
-                    v-if="!item.outcome_at"
-                    type="button"
-                    class="secondary small"
-                    :data-test="`log-outcome-${item.id}`"
-                    @click="noting = item.id"
-                  >
-                    Noter ce qui a été convenu
-                  </button>
-                </template>
+                    <dt>{{ line.label }}</dt>
+                    <dd>{{ line.text }}</dd>
+                  </template>
+                </dl>
+                <button
+                  v-if="!item.outcome_at"
+                  type="button"
+                  class="secondary small"
+                  :data-test="`log-outcome-${item.id}`"
+                  @click="noting = item.id"
+                >
+                  Noter ce qui a été convenu
+                </button>
               </li>
             </ul>
           </DisclosureRow>
         </div>
       </template>
     </template>
+    <OrpOutcomeSheet
+      v-if="page"
+      :meeting="notingMeeting"
+      :target="page.target"
+      @saved="outcomeSaved"
+      @close="noting = null"
+    />
     <InterviewPreparation
       v-if="preparing"
       :application="preparing"

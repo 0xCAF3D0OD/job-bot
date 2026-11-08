@@ -991,7 +991,6 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .profile-banner span { color: var(--muted); }
 
 /* Candidatures et preuves ORP réunies (docs/18 §2) */
-.all-months { display: inline-flex; margin: 0 0 var(--space-3); font-size: var(--font-small); }
 
 /* Connexion (docs/18 §1) */
 .container.narrow { max-width: 30rem; }
@@ -1142,7 +1141,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
    panneau, l'action à droite fait l'étape du moment. */
 /* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
 /* « À faire » d'abord (1.6.20), puis le détail replié ; le jour choisi sous le calendrier. */
-.suivi-sentence { margin-bottom: var(--space-6); }
 .suivi-todo { margin-bottom: var(--space-8); }
 .suivi-todo .today-rows { margin: 0; }
 .suivi-day { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
@@ -1159,7 +1157,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* « ⋯ » centré sur la première ligne du texte, même quand il passe à la ligne (docs/74). */
 .application-panel-head .more-menu { margin-top: calc((1lh - var(--control-h)) / 2); }
 .application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: var(--font-small); }
-.table-open { font-weight: var(--weight-semibold); text-align: left; }
 .card-status { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
 .card-missing { margin: 0; font-size: var(--font-small); }
 .card-job-room { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--font-small); }
@@ -1265,7 +1262,7 @@ input[type="checkbox"][role="switch"]:focus-visible { outline: 2px solid var(--a
 input[type="checkbox"][role="switch"]::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); }
 input[type="checkbox"][role="switch"]:checked { background: var(--primary); }
 input[type="checkbox"][role="switch"]:checked::after { transform: translateX(0.9rem); }
-/* 44 px sous le doigt (WCAG 2.5.5), sans changer le dessin : une zone de touche invisible, comme .all-months. */
+/* 44 px sous le doigt (WCAG 2.5.5), sans changer le dessin : une zone de touche invisible. */
 input[type="checkbox"][role="switch"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
 /* Un filtre se déplie sous sa ligne, un seul à la fois. */
 
@@ -1533,13 +1530,6 @@ html.side-open { overflow: hidden; }
 
   .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-  /* Suivi : le mois, puis l'objectif, puis « Ajouter » et le « ⋯ » (1.6.20, comme Figma). */
-  /* La liste du mois dans son repliable : la date, l'entreprise, le statut ; le poste, le mode et le « ⋯ »
-     sont dans le panneau, qu'ouvre le nom de l'entreprise. */
-  .suivi-detail .runs :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(6)) { display: none; }
-  .suivi-detail .disclosure .runs { display: table; table-layout: auto; }
-  .suivi-detail .disclosure .runs :is(th, td) { padding-inline: var(--space-2); white-space: normal; }
-  .suivi-detail .runs .table-open { white-space: normal; overflow-wrap: break-word; }
 }
 
 /* Formation terminée vers Mon parcours (docs/37 §1) */
@@ -2321,10 +2311,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-meeting { display: grid; gap: var(--space-4); }
 .orp-meeting h2 { margin: 0 0 var(--space-2); font-size: var(--font-body); }
 .orp-meeting-when { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.orp-meeting-person { display: block; margin: 0 auto var(--space-4); }
 .orp-meeting-when h2 { margin: 0; }
-.orp-meeting-form { display: grid; gap: var(--space-3); grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; margin-top: var(--space-3); }
-.orp-meeting-form .form-actions { grid-column: 1 / -1; }
 .orp-meeting-sheet { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
 /* Le Rendez-vous en parties (docs/130 §B) : « Préparer » (ce qu'on modifie), « Le mois » (ce
    qu'on consulte, une carte grise en quatre parties), le carnet replié. */
@@ -2359,11 +2346,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-question-new { margin-top: var(--space-3); }
 /* L'aide sous le champ, détachée de lui (docs/132) : 0,5 rem au moins. */
 .orp-question-new + .hint, .orp-question-new + .notice + .hint { margin-top: var(--space-2); }
-.orp-outcome { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--space-3); }
-.orp-outcome label { display: grid; gap: var(--space-1); }
-.orp-outcome fieldset { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
-.orp-outcome .orp-outcome-check { display: flex; gap: var(--space-2); align-items: center; }
-.orp-outcome .form-actions, .orp-outcome .notice { grid-column: 1 / -1; }
 .orp-agreed { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: var(--space-3) 0; }
 .orp-agreed dt { color: var(--muted); }
 .orp-agreed dd { margin: 0; white-space: pre-line; }
@@ -2373,7 +2355,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-log h3 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); }
 .orp-log h3::first-letter { text-transform: uppercase; }
 @media (max-width: 820px) {
-  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome { grid-template-columns: minmax(0, 1fr); }
+  .orp-meeting-sheet { grid-template-columns: minmax(0, 1fr); }
   .orp-conclusion { flex-direction: column; }
   .orp-sheet-actions > :is(a, button) { min-height: var(--control-h); }
   .orp-agreed { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
@@ -3245,9 +3227,6 @@ main:focus { outline: none; }
   .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
   /* Les champs du premier rendez-vous passent à la ligne dans la colonne (1.6.30) : la date à sa taille, le lieu
      30 caractères, le conseiller 20. */
-  .orp-meeting-form { display: flex; flex-wrap: wrap; align-items: flex-end; }
-  .orp-meeting-form > .form-field { width: var(--field-w, max-content); }
-  .orp-meeting-form > .form-actions { flex-basis: 100%; }
   input[type="number"] { width: var(--field-5); }
 }
 
@@ -3302,13 +3281,6 @@ main:focus { outline: none; }
 /* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
 .segmented-label { white-space: nowrap; }
 .segmented .tab-count { margin: 0; }
-/* Dans une rangée de contrôles (docs/94 : une rangée, une hauteur), le rail prend la hauteur de la rangée
-   (--control-h) ; chaque segment garde une zone de clic de 44 px, invisible (WCAG 2.5.8). */
-.segmented.all-months { height: var(--control-h); align-items: center; }
-.segmented.all-months > :is(a, button) { position: relative; min-height: 0; height: var(--control-inner-h); }
-.segmented.all-months > :is(a, button)::before {
-  content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .segmented > :is(a, button) { transition: none; }
@@ -3424,7 +3396,7 @@ main:focus { outline: none; }
 .doc-card-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .doc-language { border-radius: var(--radius-pill); background: var(--bg); }
 .doc-language > button { position: relative; min-inline-size: 2.75rem; min-height: 2.25rem; padding-inline: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-caption); font-weight: var(--weight-bold); }
-/* 36 px visibles, 44 px sous le doigt (Kevin, 6.11) : la zone de touche invisible, comme .all-months. */
+/* 36 px visibles, 44 px sous le doigt (Kevin, 6.11) : la zone de touche invisible. */
 .doc-language > button::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
 .doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--primary); color: var(--on-primary); box-shadow: none; }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
@@ -3591,7 +3563,6 @@ main:focus { outline: none; }
 .pick-card > .state-pill { justify-self: start; }
 /* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
 @media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
-.suivi-todo > .follow-ups-start { align-self: flex-start; }
 
 /* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
    Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */
@@ -3900,21 +3871,6 @@ html.search-open { overflow: hidden; }
 .offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }
 .offer-actions-discard .grouped-row, .offer-actions-discard .grouped-icon { color: var(--danger); }
 @media (prefers-reduced-motion: reduce) { .offer-line { transition: none; } }
-/* --- Suivi, le filtre par mots (décision de Kevin, 27.10) --- le champ et « Tous les mois » sur une ligne. */
-.suivi-list-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-4); }
-.suivi-list-tools .all-months { margin: 0; }
-.suivi-search { flex: 1 1 16rem; max-width: 24rem; }
-.suivi-search .filters-search { height: var(--control-h); padding-left: var(--space-8); border-radius: var(--radius-sm); }
-
-/* Venu de la recherche globale, la liste s'arrête sous l'en-tête collant. La date ne se coupe pas ; sur
-   téléphone, le mois ORP (presque toujours celui de la date) laisse la place. */
-.suivi-list { scroll-margin-top: 6rem; }
-.app-date { white-space: nowrap; }
-@media (max-width: 820px) {
-  .app-date .hint { display: none; }
-  .suivi-detail .disclosure .runs :is(td.app-date, th:first-child) { white-space: nowrap; }
-}
-
 /* --- Tête de carte, Copier et « ⋯ » (règles §4) --- */
 /* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); box-sizing: border-box; height: var(--control-h); }
@@ -4026,7 +3982,9 @@ html.search-open { overflow: hidden; }
 .sheet::backdrop { background: rgb(17 17 31 / 45%); }
 .sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); max-height: inherit; padding: var(--space-4); box-sizing: border-box; }
 .sheet-head { display: flex; align-items: center; gap: var(--space-3); }
-.sheet-title { flex: 1 1 auto; margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-heading { flex: 1 1 auto; min-width: 0; }
+.sheet-title { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-subtitle { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
 .sheet-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: 50%; background: var(--panel); color: var(--text); }
 .sheet-close:hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
 .sheet-close .icon { width: 1.1rem; height: 1.1rem; }
@@ -4215,7 +4173,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .orp-page :is(.add-application, .suivi-todo, .suivi-detail, .applications-banner) { margin: 0; }
 .orp-page .add-application { justify-self: start; }
 .orp-rows button.orp-row:hover { background: var(--accent-soft); }
-.orp-goal-line { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--target-min); margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
 @media (max-width: 820px) { :root:has(.orp-page-head) .topbar { display: none; } }
 .home-block-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-3) 0 var(--space-5); }
 .home-block-head a { display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); font-weight: var(--weight-bold); text-decoration: none; }
@@ -4416,6 +4373,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   }
   .jobs-tools .offers-toolbar-button[aria-expanded="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); }
   .jobs-band > .offers-page { max-width: none; padding: 0 var(--space-8); }
+  .jobs-band > .jobs-body:not(.orp-page) { max-width: none; margin: 0; padding: 0 var(--space-8) var(--space-12); }
   .offers-grid, .offers-grid.has-selection {
     --detail-pad: 28px; --detail-radius: 24px;
     display: flex; align-items: stretch; gap: var(--space-6); height: calc(100dvh - var(--offers-top, 0px) - var(--space-6)); min-height: 20rem;
@@ -4462,3 +4420,17 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   ::-webkit-scrollbar-thumb { border-radius: var(--radius-pill); background: var(--scrollbar-thumb); }
   ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 }
+
+/* --- Envoyées (maquette Envoyees, 7.11.2026) : l'objectif ORP et sa barre de 8 px, puis les rubriques de cartes.
+   Sur ordinateur, la colonne de la liste d'À traiter (560 px). --- */
+.sent-goal {
+  --goal-10: 10px; --goal-14: 14px; --goal-15: 15px; --goal-bar: 8px;
+  display: flex; flex-direction: column; gap: var(--goal-10); margin-bottom: var(--goal-10); padding: var(--goal-14) var(--space-4);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none;
+}
+.sent-goal-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); font-size: var(--goal-15); font-weight: var(--weight-bold); }
+.sent-goal-bar { display: block; height: var(--goal-bar); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); overflow: hidden; }
+.sent-goal-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary-graphic); }
+.sent-goal-left { font-size: var(--label-caps); color: var(--text-secondary); }
+.sent-words { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0 var(--space-1) var(--space-2); font-size: var(--font-small); }
+@media (min-width: 1024px) { .sent-goal, .sent-list, .sent-words { max-width: 560px; } }
