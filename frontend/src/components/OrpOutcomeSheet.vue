@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import { usePhone } from "../composables/usePhone";
 import { dateText } from "../rendezVous";
 import BottomSheet from "./BottomSheet.vue";
+import DateTimeField from "./DateTimeField.vue";
+import DateTimePanel from "./DateTimePanel.vue";
 
 // Ce qui a été convenu au rendez-vous ORP (docs/83 §1 ; maquettes RendezVous et RendezVousOrdinateur, état
 // `noter`, 7.11.2026) : une feuille du bas sur téléphone, un dialogue au centre sur ordinateur. Les recherches
@@ -26,6 +28,22 @@ const nextTime = ref("");
 const note = ref("");
 const message = ref("");
 const busy = ref(false);
+// Maquette du 8 novembre (D26) : les pilules date et heure ; le sélecteur prend la place du formulaire.
+const picking = ref<"" | "date" | "time">("");
+function focusPill(which: "date" | "time"): void {
+  void nextTick(() => document.querySelector<HTMLElement>(`#orp-outcome [data-test=dt-${which}]`)?.focus());
+}
+function picked(value: { date: string; time: string }): void {
+  nextDay.value = value.date;
+  nextTime.value = value.time;
+  picking.value = "";
+  focusPill("date");
+}
+function cancelPick(): void {
+  const which = picking.value || "date";
+  picking.value = "";
+  focusPill(which);
+}
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -46,6 +64,7 @@ watch(
     nextTime.value = next ? `${pad(next.getHours())}:${pad(next.getMinutes())}` : "";
     note.value = meeting.note ?? "";
     message.value = "";
+    picking.value = "";
   },
   { immediate: true },
 );
@@ -96,7 +115,17 @@ async function save(): Promise<void> {
     data-test="outcome-sheet"
     @close="emit('close')"
   >
+    <DateTimePanel
+      v-if="picking"
+      :date="nextDay"
+      :time="nextTime || '09:00'"
+      title="Prochain rendez-vous"
+      :full="phone"
+      @confirm="picked"
+      @cancel="cancelPick"
+    />
     <form
+      v-else
       id="orp-outcome"
       class="outcome-form"
       data-test="outcome-form"
@@ -142,23 +171,20 @@ async function save(): Promise<void> {
           data-test="outcome-measures"
         >
       </label>
-      <div class="outcome-next">
-        <label class="outcome-field">
-          <span>Prochain rendez-vous</span>
-          <input
-            v-model="nextDay"
-            type="date"
-            data-test="outcome-next"
-          >
-        </label>
-        <label class="outcome-field">
-          <span>Heure</span>
-          <input
-            v-model="nextTime"
-            type="time"
-            data-test="outcome-next-time"
-          >
-        </label>
+      <div
+        class="outcome-field outcome-next"
+        role="group"
+        aria-labelledby="outcome-next-label"
+        data-test="outcome-next"
+      >
+        <span id="outcome-next-label">Prochain rendez-vous</span>
+        <DateTimeField
+          :date="nextDay"
+          :time="nextTime"
+          :open="picking"
+          :compact="phone"
+          @open="picking = $event"
+        />
         <small>jobA1 le met dans tes Rendez-vous.</small>
       </div>
       <label class="outcome-field">
@@ -179,7 +205,10 @@ async function save(): Promise<void> {
         {{ message }}
       </p>
     </form>
-    <template #actions>
+    <template
+      v-if="!picking"
+      #actions
+    >
       <button
         v-if="!phone"
         type="button"
@@ -226,8 +255,7 @@ async function save(): Promise<void> {
 }
 .outcome-counter > span { min-width: 2.25rem; text-align: center; font-size: var(--out-24); font-weight: var(--weight-heavy); }
 .outcome-counter small, .outcome-next small { font-size: var(--font-small); color: var(--text-secondary); }
-.outcome-next { display: grid; grid-template-columns: 1fr 1fr; gap: var(--out-6) var(--space-3); }
-.outcome-next small { grid-column: 1 / -1; }
+.outcome-next { display: grid; gap: var(--out-6); }
 .outcome-sheet .sheet-actions { justify-content: flex-end; margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4) 0; border-top: 1px solid var(--line); }
 .outcome-sheet .sheet-actions > button { min-height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 </style>

@@ -90,8 +90,11 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(sheet.props("meeting")).toMatchObject({ id: 1 });
     // Le prochain rendez-vous saisi part avec ce qui a été convenu : le serveur crée l'entrée « À venir ».
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, past: [{ ...held, outcome_at: "2026-10-13T10:00:00Z" }], target: 10, trainings: [] } });
-    await sheet.get("[data-test=outcome-next]").setValue("2099-11-10");
-    await sheet.get("[data-test=outcome-next-time]").setValue("09:30");
+    // Maquette du 8 novembre : la pilule ouvre le sélecteur, qui prend la place du formulaire.
+    await sheet.get("[data-test=outcome-next] [data-test=dt-date]").trigger("click");
+    expect(sheet.find("[data-test=outcome-form]").exists()).toBe(false);
+    sheet.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2099-11-10", time: "09:30" });
+    await flushPromises();
     await sheet.get("[data-test=outcome-form]").trigger("submit");
     await flushPromises();
     const [path, options] = PUT.mock.calls[0] as [string, { body: { target: number; next_starts_at: string } }];
@@ -102,12 +105,14 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
 
-  it("aucun rendez-vous : le personnage debout et le formulaire dans le détail", async () => {
+  it("aucun rendez-vous : une ligne et « Ajouter » en tête de liste, le formulaire dans le détail, sans personnage", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
+    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
+    expect(wrapper.find("[data-test=rdv-add]").text()).toBe("Ajouter");
     const detail = wrapper.get("[data-test=rdv-detail]");
-    expect(detail.find("[data-test=meeting-empty]").exists()).toBe(true);
-    expect(detail.find("[data-test=meeting-person]").exists()).toBe(true);
+    expect(detail.find("[data-test=meeting-person]").exists()).toBe(false);
     expect(detail.find("[data-test=meeting-form]").exists()).toBe(true);
+    expect(detail.find("input[type=date], input[type=time]").exists()).toBe(false);
   });
 });

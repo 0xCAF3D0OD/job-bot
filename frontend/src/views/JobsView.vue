@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import type { JobsTab } from "../router";
+import AppIcon from "../components/AppIcon.vue";
 import CountBadge from "../components/CountBadge.vue";
 import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
+import { plural } from "../format";
 import { usePhone } from "../composables/usePhone";
 
 // Rubrique Candidatures (docs/19 §2, docs/83, docs/126 §1 ; docs/139 étape 5a, C1 validé le 2026-11-02) :
@@ -13,7 +15,11 @@ import { usePhone } from "../composables/usePhone";
 // lien à côté du titre. Les adresses restent (/candidatures/offres, /suivi, /alertes, /rendez-vous-orp).
 // Sur téléphone (maquette Candidatures) : « Alertes » monte dans l'en-tête, à côté du titre, et les vues
 // sont un contrôle segmenté ; la vue ouverte y pose ses outils (#jobs-tools : recherche, « Ajouter »).
+// Ordinateur dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB) : à droite des vues, « Mes alertes
+// e-mail » et le nombre de recherches suivies, puis « + Ajouter une offre », qui ouvre le dialogue d'ajout.
 const route = useRoute();
+const router = useRouter();
+const followed = ref<number | null>(null);
 const { phone } = usePhone();
 const { phone: wide } = usePhone("(min-width: 1024px)");
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
@@ -48,7 +54,12 @@ function badge(key: JobsTab): number {
 }
 
 async function refresh(): Promise<void> {
-  const [today, orp] = await Promise.all([api.GET("/api/today"), api.GET("/api/orp")]);
+  const [today, orp, searches] = await Promise.all([
+    api.GET("/api/today"),
+    api.GET("/api/orp"),
+    api.GET("/api/alert-searches").catch(() => ({ data: undefined })),
+  ]);
+  followed.value = searches.data?.searches ? searches.data.searches.filter((search) => search.active).length : null;
   counts.value = {
     // « À traiter » : le nombre de la phrase de la liste, calculé au même endroit (docs/139, C2).
     offres: today.data?.pending ?? 0,
@@ -57,6 +68,10 @@ async function refresh(): Promise<void> {
     alertes: today.data?.alerts_waiting ?? 0,
     "rendez-vous": 0,
   };
+}
+
+function addOffer(): void {
+  void router.push({ path: "/candidatures/offres", query: { ajouter: "1" } });
 }
 
 // Pastilles relues à chaque changement d'onglet (une offre traitée, une candidature ajoutée…).
@@ -73,6 +88,7 @@ onMounted(() => void refresh());
       <h1>Candidatures</h1>
       <!-- Sur téléphone, le lien monte dans l'en-tête, à côté du titre (maquette Candidatures). -->
       <Teleport
+        v-if="phone || !wide"
         to="#topbar-page-tools"
         :disabled="!phone"
         defer
@@ -106,6 +122,32 @@ onMounted(() => void refresh());
       :full="phone"
       class="jobs-segments"
     />
+    <div
+      v-if="wide && !phone"
+      class="jobs-actions"
+    >
+      <RouterLink
+        to="/candidatures/alertes"
+        class="jobs-alerts-link"
+        :aria-current="tab === 'alertes' ? 'page' : undefined"
+        data-test="jobs-alerts"
+      >
+        <AppIcon name="mail" />Mes alertes e-mail
+      </RouterLink>
+      <span
+        v-if="followed !== null"
+        class="jobs-alerts-count"
+        data-test="jobs-alerts-count"
+      >{{ followed ? plural(followed, "recherche suivie", "recherches suivies") : "Aucune recherche suivie" }}</span>
+      <button
+        type="button"
+        class="secondary jobs-add"
+        data-test="manual-open"
+        @click="addOffer"
+      >
+        <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
+      </button>
+    </div>
   </div>
   <section class="band jobs-band">
     <RouterView />

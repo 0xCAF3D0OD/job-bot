@@ -38,6 +38,9 @@ export const ICONS = {
   globe: circle(12, 12, 9) + path("M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"),
   rate: circle(12, 12, 9) + path("M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"),
   tag: path("M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z") + circle(8, 8, 1.3),
+  // Signaler une erreur (menu de la fiche, maquette du 8 novembre).
+  flag: path("M5.5 21V4.5M5.5 4.5h11l-2 4 2 4h-11"),
+  link: path("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1") + path("M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"),
   eye: path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3),
   // Le mot de passe affiché (maquette Connexion) : l'œil barré.
   "eye-off": path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3) + path("M3 3l18 18"),

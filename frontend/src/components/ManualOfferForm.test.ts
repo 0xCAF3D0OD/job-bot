@@ -31,25 +31,31 @@ async function mountForm(props: Record<string, unknown> = {}, trade: string | nu
 }
 
 describe("Ajouter une offre (docs/111)", () => {
-  it("des exemples tirés du métier, et le compte du jour", async () => {
+  it("la zone de saisie commune (maquette du 8 novembre), et le compte du jour", async () => {
     const wrapper = await mountForm();
-    expect(wrapper.find("[data-test=manual-url]").attributes("placeholder")).toBe("https://entreprise.ch/emplois/menuisier");
+    expect(wrapper.find("[data-test=composer-input]").attributes("placeholder")).toBe("Lien ou texte de l'annonce");
+    expect(wrapper.find("[data-test=composer-input]").attributes("rows")).toBe("3");
+    expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Ajouter l'offre");
+    // Pas d'import de fichier : rien ne part à l'IA sans règle (I-1, E-5).
+    expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-count]").text()).toBe("2 offres ajoutées sur 20 ces 24 heures.");
-    await wrapper.find("[data-test=manual-mode-text]").trigger("click");
-    expect(wrapper.find("[data-test=manual-text]").attributes("placeholder")).toContain("« Menuisier (80-100 %)");
   });
 
-  it("sans métier connu, des exemples neutres", async () => {
-    const wrapper = await mountForm({}, null);
-    expect(wrapper.find("[data-test=manual-url]").attributes("placeholder")).toBe("https://entreprise.ch/emplois/poste");
+  it("un texte collé est lu comme un texte", async () => {
+    const wrapper = await mountForm();
+    POST.mockResolvedValueOnce({ data: { draft: draft({ read_by: "ia" }) } });
+    await wrapper.find("[data-test=composer-input]").setValue("Menuisier à Sion, 100 %");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
+    await flushPromises();
+    expect(POST.mock.calls[0]).toEqual(["/api/offers/manual/read", { body: { text: "Menuisier à Sion, 100 %" } }]);
   });
 
   it("lit le lien, montre la fiche, puis ajoute l'offre corrigée", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({ data: { draft: draft(), problem: null, paste: false } });
     POST.mockResolvedValueOnce({ data: { id: 9, existing: false, status: "to_review", reasons: [] } });
-    await wrapper.find("[data-test=manual-url]").setValue("https://bois.ch/emplois/1");
-    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("https://bois.ch/emplois/1");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(POST.mock.calls[0]).toEqual(["/api/offers/manual/read", { body: { url: "https://bois.ch/emplois/1" } }]);
     expect(wrapper.find("[data-test=manual-draft]").text()).toContain("Lue sur la page de l'annonce.");
@@ -73,8 +79,8 @@ describe("Ajouter une offre (docs/111)", () => {
   it("une annonce hors du métier : la fiche le dit, sans bloquer", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({ data: { draft: draft({ title: "Comptable", matches_trade: false, read_by: "ia" }) } });
-    await wrapper.find("[data-test=manual-url]").setValue("https://x.ch/a");
-    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("https://x.ch/a");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=manual-off-trade]").text()).toContain("ne parle pas de « Menuisier »");
     expect(wrapper.find("[data-test=manual-draft]").text()).toContain("Lue par l'IA.");
@@ -86,11 +92,11 @@ describe("Ajouter une offre (docs/111)", () => {
     POST.mockResolvedValueOnce({
       data: { draft: null, problem: "Ce site ne se laisse pas lire par un robot : colle le texte de l'annonce.", paste: true },
     });
-    await wrapper.find("[data-test=manual-url]").setValue("https://ch.indeed.com/viewjob?jk=1");
-    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("https://ch.indeed.com/viewjob?jk=1");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=manual-problem]").text()).toContain("colle le texte");
-    expect(wrapper.find("[data-test=manual-text]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=manual-text-hint]").exists()).toBe(true);
 
     await wrapper.find("[data-test=manual-by-hand]").trigger("click");
     expect((wrapper.find("[data-test=manual-draft-url]").element as HTMLInputElement).value).toBe("https://ch.indeed.com/viewjob?jk=1");
@@ -100,8 +106,8 @@ describe("Ajouter une offre (docs/111)", () => {
   it("déjà dans les offres : propose de l'ouvrir", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4 }) } });
-    await wrapper.find("[data-test=manual-url]").setValue("https://bois.ch/emplois/1");
-    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("https://bois.ch/emplois/1");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     await wrapper.find("[data-test=manual-existing] button").trigger("click");
     expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "", reasons: [] }]]);
@@ -111,8 +117,8 @@ describe("Ajouter une offre (docs/111)", () => {
   it("déjà là sans texte ni lien : « Compléter l'offre » les ajoute", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4, fillable: ["description", "url"] }) } });
-    await wrapper.find("[data-test=manual-url]").setValue("https://bois.ch/emplois/1");
-    await wrapper.find("[data-test=manual-form]").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("https://bois.ch/emplois/1");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=manual-existing]").text()).toContain(
       "sans le texte de l'annonce et le lien : « Compléter l'offre » les ajoute, sans rien remplacer.",
@@ -127,12 +133,12 @@ describe("Ajouter une offre (docs/111)", () => {
 
   it("au maximum du jour, la lecture est fermée", async () => {
     const wrapper = await mountForm({}, "Menuisier", 20);
-    expect(wrapper.find<HTMLButtonElement>("[data-test=manual-read]").element.disabled).toBe(true);
+    expect(wrapper.find<HTMLButtonElement>("[data-test=composer-send]").element.disabled).toBe(true);
     expect(wrapper.find("[data-test=manual-count]").text()).toContain("c'est le maximum");
   });
 
-  it("partagé depuis Android : le texte seul ouvre l'onglet Texte", async () => {
+  it("partagé depuis Android : le texte est déjà dans la zone de saisie", async () => {
     const wrapper = await mountForm({ initialText: "Menuisier à Sion, 100 %" });
-    expect((wrapper.find("[data-test=manual-text]").element as HTMLTextAreaElement).value).toBe("Menuisier à Sion, 100 %");
+    expect((wrapper.find("[data-test=composer-input]").element as HTMLTextAreaElement).value).toBe("Menuisier à Sion, 100 %");
   });
 });

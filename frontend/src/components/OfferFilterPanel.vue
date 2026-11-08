@@ -2,10 +2,11 @@
 import { computed } from "vue";
 
 import { DEFAULT_FILTERS, type OfferFilters, type Sort, type View } from "../composables/useOfferFilters";
-import IconButton from "./IconButton.vue";
+import AppIcon from "./AppIcon.vue";
 
-// Le panneau « Filtres » de l'ordinateur (maquette CandidaturesOrdinateur, état `f`, 7.11.2026) : un seul conteneur,
-// sans carte dedans. Statut, Trier, Correspondance minimale et Taux minimum en pastilles (aria-pressed), puis le
+// Le panneau « Filtres » de l'ordinateur (maquette du 8 novembre, CandidaturesOrdinateurB état « filtres », docs/143,
+// D24) : il remplace la colonne liste (même largeur, toute la hauteur, entrée ja-slide-l), le détail reste à droite.
+// En tête, « ‹ Retour à la liste » et le titre. Les choix restent si on le ferme d'un clic à l'extérieur. Statut, Trier, Correspondance minimale et Taux minimum en pastilles (aria-pressed), puis le
 // télétravail et les offres écartées. Seul le milieu défile ; le pied reste en bas avec « Tout effacer » et
 // « Afficher n offres », qui referme. Chaque choix s'applique tout de suite (comme la feuille du téléphone).
 const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>; total: number }>();
@@ -49,25 +50,29 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
 <template>
   <section
     id="offers-filters"
-    class="filter-popover"
-    role="dialog"
+    class="filter-panel"
     aria-labelledby="offers-filters-title"
     data-test="filters-dialog"
   >
-    <div class="filter-popover-head">
-      <h2 id="offers-filters-title">
-        Filtres
-      </h2>
-      <IconButton
-        icon="close"
-        label="Fermer les filtres"
+    <div class="filter-panel-head">
+      <button
+        type="button"
+        class="link filter-panel-back"
         data-test="close-filters"
         @click="emit('close')"
-      />
+      >
+        <AppIcon name="chevron-left" />Retour à la liste
+      </button>
+      <h2
+        id="offers-filters-title"
+        tabindex="-1"
+      >
+        Filtres
+      </h2>
     </div>
-    <div class="filter-popover-body">
+    <div class="filter-panel-body">
       <div
-        class="filter-popover-group"
+        class="filter-panel-group"
         role="group"
         aria-labelledby="pop-view"
       >
@@ -87,7 +92,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       </div>
       <hr>
       <div
-        class="filter-popover-group"
+        class="filter-panel-group"
         role="group"
         aria-labelledby="pop-sort"
       >
@@ -107,7 +112,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       </div>
       <hr>
       <div
-        class="filter-popover-group"
+        class="filter-panel-group"
         role="group"
         aria-labelledby="pop-score"
       >
@@ -127,7 +132,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       </div>
       <hr>
       <div
-        class="filter-popover-group"
+        class="filter-panel-group"
         role="group"
         aria-labelledby="pop-rate"
       >
@@ -146,7 +151,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         </div>
       </div>
       <hr>
-      <label class="filter-popover-switch">Télétravail au moins partiel<input
+      <label class="filter-panel-switch">Télétravail au moins partiel<input
         type="checkbox"
         role="switch"
         :checked="filters.remote !== null"
@@ -155,7 +160,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       ></label>
       <label
         v-if="filters.view === 'pending'"
-        class="filter-popover-switch"
+        class="filter-panel-switch"
       ><span>Masquer les offres écartées<small>Éteins ce réglage pour les voir</small></span><input
         type="checkbox"
         role="switch"
@@ -164,7 +169,7 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         @change="emit('update', { showFilteredOut: !filters.showFilteredOut })"
       ></label>
     </div>
-    <div class="filter-popover-foot">
+    <div class="filter-panel-foot">
       <button
         type="button"
         class="link"
@@ -186,35 +191,37 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
 </template>
 
 <style>
-/* Valeurs du HTML de la maquette : 400 px de large, 620 au plus, coins de 20, ombre 0 12 32 ; pastilles de 36 px
-   aux bords de 1,5 px ; pied de 14/24/18 sous un filet. */
-.filter-popover {
-  --pop-pill: 36px; --pop-14: 14px; --pop-6: 6px; --pop-15: 15px; --pop-18: 18px; --pop-2: 2px; --pop-20: 20px;
-  position: absolute; right: 0; top: 100%; z-index: 30; box-sizing: border-box; display: flex; flex-direction: column;
-  width: 400px; max-width: calc(100vw - 2 * var(--space-4)); max-height: min(620px, var(--filters-room, 70vh)); overflow: hidden;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--pop-20); box-shadow: 0 12px 32px rgb(27 31 42 / 16%);
+/* Valeurs du HTML de la maquette : la colonne liste (560 px), toute la hauteur, coins --radius-card ; pastilles de
+   36 px aux bords de 1,5 px ; pied de 14/24/18 sous un filet. */
+.filter-panel {
+  --pop-pill: 36px; --pop-14: 14px; --pop-6: 6px; --pop-15: 15px; --pop-18: 18px; --pop-2: 2px;
+  box-sizing: border-box; display: flex; flex-direction: column; flex: 1 1 auto; width: 100%; height: 100%; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card);
 }
-.filter-popover-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--pop-18) var(--space-4) var(--space-2) var(--space-6); }
-.filter-popover-head h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-heavy); }
-.filter-popover-body {
+@media (prefers-reduced-motion: no-preference) { .filter-panel { animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); } }
+.filter-panel-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: 0 var(--space-6); padding: var(--pop-18) 0 var(--space-3); border-bottom: 1px solid var(--line-soft); }
+.filter-panel-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-heavy); outline: none; }
+.filter-panel-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; font-size: var(--pop-15); font-weight: var(--weight-bold); }
+.filter-panel-back .icon { width: 18px; height: 18px; }
+.filter-panel-body {
   flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--pop-14);
   padding: var(--space-2) var(--space-6) var(--space-4); margin-right: var(--space-1);
 }
-.filter-popover-body hr { margin: 0; border: 0; border-top: 1px solid var(--line-soft); }
-.filter-popover-group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) 0 var(--pop-2); }
-.filter-popover-group > span { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.filter-popover-group > div { display: flex; flex-wrap: wrap; gap: var(--pop-6); }
-.filter-popover-group button {
+.filter-panel-body hr { margin: 0; border: 0; border-top: 1px solid var(--line-soft); }
+.filter-panel-group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) 0 var(--pop-2); }
+.filter-panel-group > span { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.filter-panel-group > div { display: flex; flex-wrap: wrap; gap: var(--pop-6); }
+.filter-panel-group button {
   height: var(--pop-pill); min-height: 0; padding: 0 var(--pop-14); border: 1.5px solid color-mix(in srgb, var(--line) 90%, var(--text-secondary));
   border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold);
 }
-.filter-popover-group button[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
-.filter-popover-switch {
+.filter-panel-group button[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
+.filter-panel-switch {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--btn-tertiary);
   font-size: var(--pop-15); font-weight: var(--weight-semibold);
 }
-.filter-popover-switch small { display: block; font-size: var(--label-caps); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.filter-popover-foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--pop-14) var(--space-6) var(--pop-18); border-top: 1px solid var(--line); }
-.filter-popover-foot .link { min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--pop-15); font-weight: var(--weight-bold); }
-.filter-popover-foot .primary { min-height: var(--btn-tertiary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.filter-panel-switch small { display: block; font-size: var(--label-caps); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.filter-panel-foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--pop-14) var(--space-6) var(--pop-18); border-top: 1px solid var(--line); }
+.filter-panel-foot .link { min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--pop-15); font-weight: var(--weight-bold); }
+.filter-panel-foot .primary { min-height: var(--btn-tertiary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>

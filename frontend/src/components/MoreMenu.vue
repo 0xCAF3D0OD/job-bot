@@ -23,6 +23,8 @@ export type MoreMenuItem = {
   disabled?: boolean;
   danger?: boolean;
   icon?: IconName;
+  /** Un trait avant cette entrée (maquette du 8 novembre : « Signaler une erreur dans l'offre »). */
+  separator?: boolean;
 };
 
 function iconOf(item: MoreMenuItem): IconName | null {
@@ -99,6 +101,7 @@ function choose(item: MoreMenuItem): void {
 }
 
 function separated(index: number, items: MoreMenuItem[]): boolean {
+  if (index > 0 && items[index]?.separator) return true;
   return Boolean(items[index]?.danger) && index > 0 && !items[index - 1]?.danger;
 }
 

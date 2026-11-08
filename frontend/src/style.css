@@ -4639,3 +4639,39 @@ a.panel-row:hover { background: var(--band); }
 .side-panel-modeless .assistant-form { padding: var(--space-3) var(--space-4) 0; border-top: 0; }
 .side-panel-modeless .assistant-disclaimer { padding: var(--space-2) var(--space-4) var(--space-3); }
 .assistant-form > .composer { flex: 1 1 auto; min-width: 0; }
+/* --- Candidatures sur ordinateur, maquette du 8 novembre (CandidaturesOrdinateurB, docs/143) ---
+   Rangée de tête : le titre, les vues, puis à droite « Mes alertes e-mail · n recherches suivies » et « + Ajouter une
+   offre ». Dans la colonne liste : « Filtrer par titre ou entreprise » et « Plus de filtres », qui remplace la colonne.
+   Le tout tient dans 1 280 px. */
+@media (min-width: 1024px) {
+  .jobs-head, .jobs-head.wide { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
+  .jobs-band > .offers-page, .jobs-band > .jobs-body:not(.orp-page) { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
+  .jobs-head .jobs-segments { order: 2; }
+  .jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+  .jobs-actions .jobs-alerts-link { gap: var(--space-2); font-size: var(--font-label); color: var(--primary-text); }
+  .jobs-actions .jobs-alerts-link .icon { width: 18px; height: 18px; }
+  .jobs-alerts-count { margin-right: var(--space-6); font-size: var(--font-label); color: var(--text-secondary); }
+  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+  .jobs-head .jobs-tools { display: none; }
+  .offers-list-tools .offers-toolbar { display: flex; flex-wrap: nowrap; gap: var(--space-2); margin: 0 0 var(--space-5); }
+  .offers-list-tools .offers-toolbar-search { flex: 1 1 auto; min-width: 0; }
+  .offers-list-tools .offers-toolbar .filters-search { height: var(--field-h); padding-left: calc(var(--space-8) + var(--space-2)); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-label); }
+  .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
+  .offers-list-tools .offers-toolbar-button { min-height: var(--field-h); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
+  .offers-grid .offers-list { width: 480px; }
+}
+@media (min-width: 1024px) {
+  /* Le menu « ⋯ » de la fiche (maquette du 8 novembre) : 280 px, ombre --shadow-menu, ja-pop depuis le coin haut droit. */
+  .offers-grid .detail-top-actions .more-menu .menu { width: 280px; padding: var(--space-1) 0; border-color: var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); transform-origin: top right; animation: none; }
+  @media (prefers-reduced-motion: no-preference) { .offers-grid .detail-top-actions .more-menu .menu { animation: ja-pop 150ms ease-out; } }
+}
+@media (min-width: 1024px) {
+  /* Envoyées (maquette du 8 novembre) : la liste de 480 px à gauche, la candidature dans une carte blanche à droite. */
+  .jobs-band > .jobs-body.sent-columns { display: grid; grid-template-columns: 480px minmax(0, 1fr); column-gap: var(--space-6); align-items: start; }
+  .sent-columns > :not(.sent-detail) { grid-column: 1; }
+  .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding: var(--space-6) var(--space-6); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+  .sent-columns :is(.sent-goal, .sent-list, .sent-words) { max-width: none; }
+}
+.sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
+.sent-goal-chevron { width: 16px; height: 16px; color: var(--text-secondary); }

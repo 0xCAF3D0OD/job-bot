@@ -5,13 +5,17 @@ import { api } from "../api/client";
 import { plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import BusyButton from "./BusyButton.vue";
+import Composer from "./Composer.vue";
 import FormField from "./FormField.vue";
 
 const { plan } = usePlan();
 
 // Ajouter une offre trouvée ailleurs (docs/111) : un lien ou un texte, lu par la page
 // (balisage JobPosting) ou par l'IA ; une fiche à relire ; puis l'offre, filtrée et notée
-// comme les autres. Les exemples suivent le métier de la personne, pas un métier inventé.
+// comme les autres. Les exemples suivent le métier de la personne, pas un métier inventé. Maquette du 8 novembre
+// (docs/143, D25) : la zone de saisie commune de 3 lignes, « Lien ou texte de l'annonce » ; un lien seul est lu comme
+// un lien, tout le reste comme un texte. Pas d'import de PDF ou de capture : aucun fichier ne part à l'IA sans règle
+// (I-1, E-5).
 const props = defineProps<{ initialUrl?: string | null; initialText?: string | null }>();
 const emit = defineEmits<{
   added: [result: { id: number; existing: boolean; status: string; reasons: string[]; filled?: string[] }];
@@ -22,6 +26,10 @@ type ReadBy = "page" | "ia" | "main";
 const mode = ref<Mode>(props.initialText && !props.initialUrl ? "text" : "link");
 const url = ref(props.initialUrl ?? "");
 const text = ref(props.initialText ?? "");
+// Ce que la personne colle : un lien ou le texte de l'annonce.
+const entry = ref(props.initialUrl || props.initialText || "");
+const entryError = ref("");
+const LINK = /^https?:\/\/\S+$/i;
 const reading = ref(false);
 const saving = ref(false);
 const problem = ref("");
@@ -71,11 +79,6 @@ const slug = computed(() =>
     .replace(/^-|-$/g, ""),
 );
 const linkExample = computed(() => `https://entreprise.ch/emplois/${slug.value}`);
-const textExample = computed(() =>
-  tradeName.value
-    ? `Colle ici le texte de l'annonce, par exemple : « ${tradeName.value} (80-100 %), Entreprise SA, Lausanne. Tes missions… »`
-    : "Colle ici le texte de l'annonce : poste, entreprise, lieu, missions…",
-);
 const full = computed(() => addedToday.value >= limit.value);
 const textHint = computed(
   () => `${plan.value?.unlimited ? "Lu par l'IA, environ 0,01 $, compté dans ton plafond." : "Lu par l'IA."} Tes coordonnées ne partent pas.`,
@@ -110,8 +113,21 @@ async function valid(form: EventTarget | null, field: Field): Promise<boolean> {
   return false;
 }
 
-async function read(event: Event): Promise<void> {
-  if (!(await valid(event.currentTarget, mode.value === "link" ? "url" : "text"))) return;
+async function read(value: string = entry.value): Promise<void> {
+  const typed = value.trim();
+  if (!typed) {
+    entryError.value = "Colle le lien ou le texte de l'annonce.";
+    return;
+  }
+  entryError.value = "";
+  // Après une page illisible, le texte collé s'ajoute au lien gardé.
+  if (LINK.test(typed)) {
+    mode.value = "link";
+    url.value = typed;
+  } else {
+    mode.value = "text";
+    text.value = typed;
+  }
   problem.value = "";
   error.value = "";
   reading.value = true;
@@ -206,78 +222,39 @@ function openExisting(): void {
     class="manual-form"
     data-test="manual-form"
     novalidate
-    @submit.prevent="read"
+    @submit.prevent="read()"
   >
-    <p class="setting-desc">
-      Une annonce vue ailleurs : jobA1 la lit, tu la relis, elle rejoint tes offres.
+    <Composer
+      v-model="entry"
+      :rows="3"
+      placeholder="Lien ou texte de l'annonce"
+      send-label="Ajouter l'offre"
+      :busy="reading || full"
+      data-test="manual-entry"
+      @send="read"
+    />
+    <p
+      v-if="entryError"
+      class="field-error"
+      role="alert"
+      data-test="manual-entry-error"
+    >
+      {{ entryError }}
     </p>
-    <div
-      class="segmented"
-      role="radiogroup"
-      aria-label="Ce que tu ajoutes"
+    <p
+      v-if="reading"
+      class="hint"
+      role="status"
     >
-      <button
-        type="button"
-        role="radio"
-        :aria-checked="mode === 'link'"
-        data-test="manual-mode-link"
-        @click="mode = 'link'"
-      >
-        Un lien
-      </button>
-      <button
-        type="button"
-        role="radio"
-        :aria-checked="mode === 'text'"
-        data-test="manual-mode-text"
-        @click="mode = 'text'"
-      >
-        Un texte
-      </button>
-    </div>
-    <FormField
-      v-if="mode === 'link'"
-      v-slot="{ id, describedby, invalid }"
-      label="Lien de l'annonce"
-      hint="Une offre vue dans Google Jobs : son bouton « Postuler » mène à la page à copier."
-      :error="errors.url"
+      Lecture de l'annonce…
+    </p>
+    <p
+      v-else-if="mode === 'text'"
+      class="hint"
+      data-test="manual-text-hint"
     >
-      <input
-        :id="id"
-        v-model="url"
-        type="url"
-        inputmode="url"
-        maxlength="2000"
-        required
-        :placeholder="linkExample"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-url"
-        @blur="check('url')"
-        @input="clearIfFixed('url')"
-      >
-    </FormField>
-    <FormField
-      v-else
-      v-slot="{ id, describedby, invalid }"
-      label="Texte de l'annonce"
-      :hint="textHint"
-      :error="errors.text"
-    >
-      <textarea
-        :id="id"
-        v-model="text"
-        rows="7"
-        maxlength="20000"
-        required
-        :placeholder="textExample"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-text"
-        @blur="check('text')"
-        @input="clearIfFixed('text')"
-      />
-    </FormField>
+      {{ textHint }}
+    </p>
     <p
       v-if="problem"
       class="notice"
@@ -294,18 +271,6 @@ function openExisting(): void {
         Remplir la fiche à la main
       </button>
     </p>
-    <div class="form-actions">
-      <BusyButton
-        type="submit"
-        class="primary"
-        :busy="reading"
-        busy-label="Lecture…"
-        :disabled="full"
-        data-test="manual-read"
-      >
-        Lire l'annonce
-      </BusyButton>
-    </div>
     <p
       class="hint"
       data-test="manual-count"
@@ -313,7 +278,6 @@ function openExisting(): void {
       {{ full ? `${limit} offres ajoutées en 24 heures : c'est le maximum, reviens demain.` : `${plural(addedToday, "offre ajoutée", "offres ajoutées")} sur ${limit} ces 24 heures.` }}
     </p>
   </form>
-
   <form
     v-else
     class="manual-form"
