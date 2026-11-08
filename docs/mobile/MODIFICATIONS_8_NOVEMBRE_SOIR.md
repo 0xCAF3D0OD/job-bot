@@ -155,6 +155,16 @@ Utilisé par les lots 12, 13.1 et 14. Crée **un seul composant** `DetailTwoColu
 - Le panneau de détail reste **une seule carte** : pas de blocs D28 à l'intérieur. Les boutons y suivent le §2.2.
 - Sur téléphone, le gabarit ne s'applique pas : une seule colonne.
 
+### 2.8 Écrans étroits (320, 360, 390 px)
+
+Les maquettes téléphone sont dessinées dans un cadre fixe de 390 px : elles ne montrent **pas** le rendu à 320 et 360 px. Le contrôle CI « Téléphone (320, 360, 390 px) » (`overflow.test.ts`) fait foi.
+
+- Aucun élément ne dépasse la largeur de l'écran à 320 px (WCAG 1.4.10, redistribution).
+- Dans une ligne en `flex` ou en `grid`, la partie texte a `min-width: 0` et se coupe avec « … » ; les boutons et les étiquettes gardent leur taille (`flex: none`).
+- Une colonne de liste a `max-width: 100%` et `box-sizing: border-box` : jamais de largeur fixe, ni de largeur égale à 100 % plus une marge.
+- Un en-tête de liste avec un bouton (« Recherches suivies » + « + Ajouter ») passe le bouton sous le titre si la place manque (`flex-wrap: wrap`).
+- Chaque PR qui touche un écran téléphone passe ce contrôle **avant** qu'une autre PR soit empilée dessus.
+
 ---
 
 ## 3. Lot 17 : bug de la zone de saisie (urgent)
@@ -227,6 +237,7 @@ Constaté en production le 8 novembre (Assistant, téléphone, sombre) : dans la
   3. Liste des recherches suivies sans cadre : trait `var(--line-soft)` en haut, en bas et entre les lignes.
   4. « Créer l'alerte » devient un libellé `var(--primary-text)`, 15 px, 700, suivi de « › », cible de 44 px.
   5. « + Ajouter une recherche » : niveau 2 (contour bleu).
+  6. À 320 px, la liste, les « ⋯ » et « + Ajouter » restent dans l'écran (§2.8).
 
 ### 11.5 Nouveau rendez-vous sur ordinateur
 
@@ -458,6 +469,6 @@ Référence visuelle : le détail d'un trajet sur sbb.ch. Règles : §2.1 à §2
 4. Clavier : chaque ligne D29 et chaque carte de tâche est un seul arrêt de tabulation ; dans les détails en deux colonnes, la tabulation parcourt la colonne principale puis la colonne d'appui ; focus visible partout ; le Composer montre un seul anneau, sur la pilule.
 5. Lecteur d'écran : chaque `<aside>` a son nom ; chaque `<fieldset>` annonce son `<legend>` ; une ligne D29 annonce titre, statut et lignes secondaires une seule fois ; « L'Assistant écrit… » annoncé une fois ; « Copié » annoncé après une copie.
 6. Contrastes (WCAG 1.4.3, 1.4.11) : texte bleu sur `--surface` et `--row-blocks` d'au moins 4,5:1 ; contours, cercles et flèches d'au moins 3:1 ; `--on-action` sur `--action` d'au moins 4,5:1, en clair et en sombre.
-7. Entre 821 et 1327 px : les grilles ne débordent pas ; les colonnes d'appui gardent leur largeur, la colonne principale rétrécit.
+7. À 320, 360 et 390 px : le contrôle « Téléphone » de la CI passe sans défaut (§2.8). Entre 821 et 1327 px : les grilles ne débordent pas ; les colonnes d'appui gardent leur largeur, la colonne principale rétrécit.
 8. `prefers-reduced-motion: reduce` : aucune animation.
 9. Tests verts (§0.7 de `PROMPT_CLAUDE_CODE.md`), plus : `DetailTwoColumns.vue` (ordre du DOM, nom de l'aside), ligne d'attente de l'Assistant (aucune bulle vide), Composer (un seul anneau au focus), jetons `--action`, `--on-action`, `--page-blocks`, `--row-blocks`.
