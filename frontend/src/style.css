@@ -4822,6 +4822,10 @@ a.panel-row:hover { background: var(--band); }
 .alerts-phone .alerts-row { gap: var(--space-2); min-height: var(--alerts-68); padding: var(--space-2) var(--space-1) var(--space-2) var(--space-4); }
 .alerts-phone .alerts-row-text span { font-size: var(--label-caps); }
 .alerts-phone button.secondary { min-height: var(--alerts-40); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-bold); }
+/* « Créer » à 44 px comme le ⋯ de 40 × 44 à côté : une rangée de contrôles a une seule hauteur (docs/94) et la cible
+   reste à 44 px ; la maquette dessine la pilule à 40 px (écart, docs/143 §4). */
+.alerts-phone .alerts-row button.secondary { min-height: var(--target-min); }
+.alerts-phone .alerts-row .more-button { width: var(--alerts-40); min-width: var(--alerts-40); height: var(--target-min); min-height: var(--target-min); }
 
 /* Réglages sur ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : 880 px, le titre de 34 sans bandeau, une
    carte par section, ses réglages en lignes séparées d'un filet (D22). */
