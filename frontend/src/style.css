@@ -4845,10 +4845,10 @@ a.panel-row:hover { background: var(--band); }
 .alerts-tonal { flex: none; min-height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); white-space: nowrap; }
 .alerts-tonal:hover { background: color-mix(in srgb, var(--primary-soft) 80%, var(--water)); }
 .alerts-list-wide { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--alerts-10); }
-.alerts-list-head { display: flex; align-items: center; justify-content: space-between; margin: 0 var(--space-1); }
+.alerts-list-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin: 0 var(--space-1); }
 .alerts-list-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
 /* La liste des recherches suivies sans cadre (lot 11.4, téléphone aussi) : un trait en haut, en bas et entre les lignes. */
-.alerts-rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.alerts-rows { box-sizing: border-box; max-width: 100%; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
 .alerts-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--alerts-72); box-sizing: border-box; padding: var(--space-3) 0 var(--space-3) var(--space-1); }
 .alerts-row + .alerts-row { border-top: 1px solid var(--line-soft); }
 .alerts-row.highlighted { background: var(--primary-soft); }
@@ -4875,6 +4875,9 @@ a.panel-row:hover { background: var(--band); }
 .alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }
 .alerts-phone .alerts-row { --alerts-10: 10px; gap: var(--alerts-10); min-height: var(--alerts-68); padding: var(--alerts-10) 0 var(--alerts-10) var(--space-1); }
 .alerts-phone .alerts-row-text span { font-size: var(--label-caps); }
+/* §2.8 (écrans étroits) : le texte de la ligne se coupe avec « … », les boutons et l'étiquette gardent leur taille. */
+.alerts-phone .alerts-row-text strong, .alerts-phone .alerts-row-text span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.alerts-phone .alerts-row > :not(.alerts-row-text) { flex: none; }
 .alerts-phone button.secondary { min-height: var(--alerts-40); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-bold); }
 /* « Créer » à 44 px comme le ⋯ de 40 × 44 à côté : une rangée de contrôles a une seule hauteur (docs/94) et la cible
    reste à 44 px ; la maquette dessine la pilule à 40 px (écart, docs/143 §4). */
