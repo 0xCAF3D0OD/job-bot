@@ -232,7 +232,7 @@ onMounted(async () => {
       <button
         v-if="view === 'summary'"
         type="button"
-        class="secondary"
+        class="secondary action-2"
         data-test="add-search"
         @click="adding = true"
       >
