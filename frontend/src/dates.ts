@@ -109,3 +109,25 @@ export function timeInList(value: string | Date, now: Date = new Date()): string
   if (days === 1) return "Hier";
   return dateInList(value, now);
 }
+
+const weekday = new Intl.DateTimeFormat("fr-CH", { weekday: "long", timeZone: ZONE });
+const weekdayShort = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "short", timeZone: ZONE });
+
+/** Les jours de calendrier (à Zurich) écoulés depuis une date. */
+export function daysSince(value: string | Date, now: Date = new Date()): number {
+  return calendarDays(toDate(value), now);
+}
+
+/** Le jour d'un envoi dans une carte (maquette Envoyees) : « aujourd'hui », « hier », « lundi » dans la semaine, sinon « le 21 oct. ». */
+export function sentDay(value: string | Date, now: Date = new Date()): string {
+  const days = calendarDays(toDate(value), now);
+  if (days < 2) return dateInList(value, now);
+  if (days < 7) return weekday.format(toDate(value));
+  return `le ${dateInList(value, now)}`;
+}
+
+/** Un entretien dans une puce (maquette Envoyees) : « Jeudi 12 nov., 14 h ». */
+export function meetingChip(value: string | Date): string {
+  const text = clean(weekdayShort.format(toDate(value)));
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}, ${timeOfDay(value)}`;
+}

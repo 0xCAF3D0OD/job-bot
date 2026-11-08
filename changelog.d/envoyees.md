@@ -1,0 +1,1 @@
+- Envoyées : l'objectif ORP du mois avec sa barre, les candidatures en rubriques (À relancer, Entretiens, Cette semaine, Plus tôt) avec la carte d'À traiter et le statut à droite (maquette Envoyees du 7.11.2026).

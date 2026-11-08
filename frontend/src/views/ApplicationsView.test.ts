@@ -109,43 +109,7 @@ async function mountView(path = "/candidatures/suivi") {
   return { wrapper, router };
 }
 
-describe("Candidatures, page réunie", () => {
-  it("en-tête commun, à relancer, tous les mois", async () => {
-    const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08" };
-    mockApi(() => month(), [application, old]);
-    const { wrapper } = await mountView();
-    // La remise des preuves est dans le Suivi ORP (B8).
-    expect(wrapper.find("[data-test=state]").exists()).toBe(false);
-    expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
-    await wrapper.find("[data-test=all-months]").trigger("click");
-    expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
-  });
-
-});
-
 describe("Candidatures, onglet Suivi", () => {
-  it("liste les candidatures du mois et le compteur ORP", async () => {
-    mockApi(() => month({ count: 1, target: 20 }), [application]);
-    const { wrapper } = await mountView();
-    expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
-    expect(wrapper.text()).toContain("Acme SA");
-    // Un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
-    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
-    // L'objectif, une ligne vers Bilan › ORP (B7).
-    expect(wrapper.find("[data-test=goal]").text()).toBe("Objectif ORP : 1 sur 20");
-    expect(wrapper.find("[data-test=goal]").attributes("href")).toBe("/bilan");
-    expect(wrapper.find("[data-test=month]").exists()).toBe(false);
-  });
-
-  it("sans objectif : invite à le saisir", async () => {
-    mockApi(() => month({ count: 0, target: null }), []);
-    const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=goal]").text()).toBe("Objectif ORP : à indiquer");
-    // Un compte sans aucune candidature : ce qui remplit le Suivi (docs/128 §3).
-    expect(wrapper.text()).toContain("Pas encore de candidature");
-    expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
-  });
-
   it("changer de mois recharge la liste", async () => {
     mockApi(() => month({ count: 0 }), []);
     const { wrapper } = await mountView("/bilan/orp");
@@ -153,18 +117,6 @@ describe("Candidatures, onglet Suivi", () => {
     await flushPromises();
     expect(GET).toHaveBeenLastCalledWith("/api/applications");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: "2026-09" } } });
-  });
-
-  it("changer le statut garde la date d'entretien", async () => {
-    mockApi(() => month({ count: 1, target: 20 }), [application]);
-    PUT.mockResolvedValue({ data: { ...application, status: "entretien" } });
-    const { wrapper } = await mountView();
-    await wrapper.find("[data-test=status-select]").setValue("entretien");
-    await flushPromises();
-    const [path, opts] = PUT.mock.calls[0] as [string, { body: Record<string, unknown> }];
-    expect(path).toBe("/api/applications/{application_id}");
-    expect(opts.body.status).toBe("entretien");
-    expect(opts.body.interview_at).toBe(application.interview_at);
   });
 
   it("ajout manuel : crée une candidature sans offre", async () => {
@@ -308,20 +260,6 @@ describe("Suivi en calendrier (docs/22)", () => {
   // quel que soit le jour où le test tourne. Les minuteries restent réelles.
   afterEach(() => vi.useRealTimers());
 
-  it("sur téléphone seulement : « Relancer une à une » sous « À relancer »", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
-    const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08", interview_at: null };
-    mockApi(() => month(), [old]);
-    const desktop = (await mountView()).wrapper;
-    expect(desktop.find("[data-test=follow-ups-start]").exists()).toBe(false);
-    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
-    const phone = (await mountView()).wrapper;
-    expect(phone.find("[data-test=follow-ups-start]").attributes("href")).toBe("/candidatures/relances");
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
-  });
-
   it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
@@ -329,11 +267,6 @@ describe("Suivi en calendrier (docs/22)", () => {
     const sent = { ...application, id: 2, sent_at: "2026-10-02", interview_at: "2026-10-20T09:00:00Z" };
     mockApi(() => month(), [sent, old]);
     PUT.mockResolvedValue({ data: sent });
-    const { wrapper: sentPage } = await mountView();
-    // Envoyées : « À relancer » d'abord ; le calendrier est dans le Suivi ORP (B8).
-    expect(sentPage.find("[data-test=todo]").text()).toContain("À relancer");
-    expect(sentPage.find("[data-test=todo]").text()).toContain("Ancienne SA");
-    expect(sentPage.find("[data-test=detail-calendar]").exists()).toBe(false);
     const { wrapper } = await mountView("/bilan/orp");
     expect(wrapper.find("[data-test=todo]").exists()).toBe(false);
     expect(wrapper.find("[data-test=detail-calendar] .disclosure-row").attributes("aria-expanded")).toBe("false");
@@ -395,103 +328,17 @@ describe("Suivi en calendrier (docs/22)", () => {
     expect(wrapper.find(".jobs-body").exists()).toBe(true);
   });
 
-  it("relancée : « Sans réponse » proposé 14 jours après la relance, pas avant", async () => {
-    const ago = (days: number): string => {
-      const d = new Date();
-      d.setDate(d.getDate() - days);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    };
-    const base = { ...application, status: "relancee", sent_at: ago(30), interview_at: null };
-    const silent = { ...base, id: 4, company: "Muette SA", followed_up_at: ago(14) };
-    const recent = { ...base, id: 5, company: "Récente SA", followed_up_at: ago(13) };
-    mockApi(() => month(), [silent, recent]);
-    const { wrapper } = await mountView();
-    const panel = wrapper.find("[data-test=todo]");
-    expect(panel.text()).toContain("Muette SA");
-    expect(panel.text()).not.toContain("Récente SA");
-    expect(panel.find("[data-test=card-step-no-answer]").exists()).toBe(true);
-    expect(panel.find("[data-test=card-step-follow-up]").exists()).toBe(false);
-    // « Sans réponse › » passe la candidature en Sans réponse.
-    PUT.mockResolvedValue({ data: silent });
-    await panel.find("[data-test=card-step-no-answer]").trigger("click");
-    await flushPromises();
-    expect(PUT).toHaveBeenCalledWith(
-      "/api/applications/{application_id}",
-      expect.objectContaining({ body: expect.objectContaining({ status: "sans_reponse" }) }),
-    );
-  });
-});
-
-describe("Suivi, une carte et un panneau (docs/46)", () => {
-  it("la prochaine étape suit l'ordre : relance, puis ORP, sinon Gérer ; la liste ouvre le panneau", async () => {
-    // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
-    const ago = (days: number): string => {
-      const d = new Date(`${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}T12:00:00Z`);
-      d.setUTCDate(d.getUTCDate() - days);
-      return d.toISOString().slice(0, 10);
-    };
-    const late = { ...application, id: 2, company: "Lente SA", sent_at: ago(12), interview_at: null };
-    mockApi(() => month(), [late]);
-    const { wrapper } = await mountView();
-    const card = wrapper.find("[data-test=todo] [data-test=application-card]");
-    // Le vrai nombre de jours depuis l'envoi (1.6.27).
-    expect(card.find("[data-test=offer-line-state]").text()).toContain("Sans réponse depuis 12 jours");
-    await card.find("[data-test=card-step-follow-up]").trigger("click");
-    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
-    expect(wrapper.text()).toContain("Relancer Lente SA");
-
-    await wrapper.find("[data-test=detail-list] [data-test=table-open]").trigger("click");
-    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(true);
-    await wrapper.find("[data-test=panel-more]").trigger("click");
-    await wrapper.find("[data-test=panel-edit]").trigger("click");
-    // Le formulaire prend la place du panneau.
-    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
-    expect(wrapper.find("form.application-form").exists()).toBe(true);
-  });
 });
 
 describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop chargé)", () => {
-  it("à relancer et à déclarer : trois lignes chacune, « Afficher plus »", async () => {
+  it("à déclarer : dans le Suivi ORP seulement, sans « Afficher plus » sous trois lignes", async () => {
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
-    const { wrapper } = await mountView();
-    const todo = wrapper.find("[data-test=todo]");
-    expect(todo.find("h2").text()).toBe("À relancer · 7");
-    // Pas de sélecteur au-dessus des listes à faire (plus de troisième niveau d'onglets) ; « Ce mois · Tous les mois »
-    // ne filtre que la liste complète, plus bas.
-    expect(todo.find(".segmented").exists()).toBe(false);
-    expect(wrapper.find(".segmented").element.compareDocumentPosition(todo.element) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
-    expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
-    expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher plus (4)");
-    await todo.find("[data-test=todo-all]").trigger("click");
-    expect(todo.findAll("[data-test=application-card]")).toHaveLength(7);
-    expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher moins");
-    // La liste à déclarer, dessous, avec ses deux lignes (moins de trois : pas de « Afficher plus »).
     // La liste à déclarer est dans le Suivi ORP, avec ses deux lignes (moins de trois : pas de « Afficher plus »).
-    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
+    expect((await mountView()).wrapper.find("[data-test=declare]").exists()).toBe(false);
     const declare = (await mountView("/bilan/orp")).wrapper.find("[data-test=declare]");
     expect(declare.findAll("li")).toHaveLength(2);
     expect(declare.find("[data-test=declare-all]").exists()).toBe(false);
-  });
-
-  it("la conclusion en haut : les relances à faire, le nombre en accent", async () => {
-    // Le jour figé : envoyée le 20 octobre, la candidature n'est pas encore à relancer le 25 (10 jours).
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-10-25T08:00:00Z"));
-    const many = [1, 2].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
-    mockApi(() => month(), many);
-    const { wrapper } = await mountView();
-    const sentence = wrapper.find("[data-test=suivi-sentence]");
-    expect(sentence.text()).toBe("2 relances à faire.");
-    expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["2 relances"]);
-    // Elle vient avant l'objectif.
-    const html = wrapper.html();
-    expect(html.indexOf("suivi-sentence")).toBeLessThan(html.indexOf('data-test="goal"'));
-
-    mockApi(() => month({ count: 0, rows: [] }), [{ ...application, sent_at: "2026-10-20" }]);
-    const { wrapper: calm } = await mountView();
-    expect(calm.find("[data-test=suivi-sentence]").text()).toBe("Rien à relancer.");
-    vi.useRealTimers();
   });
 
   it("le Suivi ORP : retour, mois, objectif, bandeau, export, recherches, puis Ajouter, À déclarer, calendrier (B8)", async () => {
@@ -522,14 +369,10 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     expect(wrapper.find("[data-test=declare]").exists()).toBe(true);
   });
 
-  it("le détail replié : la liste du mois dans Envoyées, le calendrier dans le Suivi ORP ; un jour demandé l'ouvre", async () => {
+  it("le calendrier replié dans le Suivi ORP, pas dans Envoyées ; un jour demandé l'ouvre", async () => {
     mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
     const { wrapper } = await mountView();
-    const detail = wrapper.find("[data-test=suivi-detail]");
-    expect(detail.findAll(".disclosure-title").map((d) => d.text())).toEqual(["Toutes les candidatures d'octobre"]);
-    // Comme les repliables du Bilan (règles §3) : une icône et une phrase, visibles replié.
-    expect(detail.findAll(".disclosure-icon")).toHaveLength(1);
-    expect(detail.find("[data-test=detail-list] [data-test=disclosure-description]").text()).toMatch(/^1 candidature\b/);
+    expect(wrapper.find("[data-test=suivi-detail]").exists()).toBe(false);
     const orpPage = (await mountView("/bilan/orp")).wrapper;
     expect(orpPage.find("[data-test=detail-calendar] [data-test=disclosure-description]").text()).not.toBe("");
     expect(wrapper.find("[data-test=layout-calendar]").exists()).toBe(false);
@@ -552,31 +395,98 @@ describe("Suivi ORP, le bandeau des preuves (docs/134)", () => {
   });
 });
 
-describe("Suivi, le filtre par mots (décision de Kevin, 27.10)", () => {
-  it("?q= ouvre la liste filtrée, dans tous les mois, sans accents ni casse", async () => {
-    const others = [
-      { ...application, id: 11, company: "Témoin Industrie SA", job_title: "Ingénieur DevOps", orp_month: "2026-09" },
-      { ...application, id: 12, company: "Banque Exemple", job_title: "Comptable", orp_month: "2026-10" },
+
+describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
+  afterEach(() => vi.useRealTimers());
+  const at = (sent_at: string, extra: Record<string, unknown> = {}) => ({ ...application, sent_at, interview_at: null, ...extra });
+
+  it("l'objectif ORP et sa barre, vers le Suivi ORP", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
+    mockApi(() => month({ month: "2026-11", count: 6, target: 10 }), [at("2026-11-06")]);
+    const { wrapper } = await mountView();
+    const goal = wrapper.find("[data-test=goal]");
+    expect(goal.attributes("href")).toBe("/bilan/orp");
+    expect(goal.text()).toContain("Objectif ORP de novembre");
+    expect(goal.find("[data-test=goal-count]").text()).toBe("6 sur 10");
+    const bar = goal.find("[role=progressbar]");
+    expect([bar.attributes("aria-valuenow"), bar.attributes("aria-valuemax")]).toEqual(["6", "10"]);
+    expect(bar.find("span").attributes("style")).toContain("width: 60%");
+    expect(goal.text()).toContain("Encore 4 d’ici le 30 novembre");
+    // Plus de phrase des relances ni de liste repliée (maquette).
+    expect(wrapper.find("[data-test=suivi-sentence]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=suivi-detail]").exists()).toBe(false);
+  });
+
+  it("sans objectif : l'invite à l'indiquer ; sans candidature : ce qui remplit la page", async () => {
+    mockApi(() => month({ count: 0, target: null }), []);
+    const { wrapper } = await mountView();
+    expect(wrapper.find("[data-test=goal-count]").text()).toBe("À indiquer");
+    expect(wrapper.find("[data-test=goal]").attributes("href")).toBe("/reglages?rubrique=recherche");
+    expect(wrapper.find("[role=progressbar]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
+  });
+
+  it("les rubriques : à relancer, entretiens, cette semaine, plus tôt ; la carte commune et son statut", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
+    const list = [
+      at("2026-10-26", { id: 1, company: "Muette SA" }),
+      at("2026-10-28", { id: 2, company: "Alpstack", status: "entretien", interview_at: "2026-11-12T13:00:00Z" }),
+      at("2026-11-02", { id: 3, company: "Infomaniak", application_url: null }),
+      at("2026-11-03", { id: 4, company: "Romandie", application_url: "https://exemple.ch/postuler" }),
+      at("2026-10-21", { id: 5, company: "EPFL", status: "refus" }),
+      at("2026-11-05", { id: 6, company: "Récente SA", status: "relancee", followed_up_at: "2026-11-06" }),
     ];
-    mockApi(undefined, [application, ...others]);
+    mockApi(() => month({ month: "2026-11" }), list);
+    const { wrapper } = await mountView();
+    const titles = wrapper.findAll(".offer-day").map((d) => d.text());
+    expect(titles).toEqual(["À relancer1 candidature", "Entretiens1 candidature", "Cette semaine3 candidatures", "Plus tôt1 candidature"]);
+    const cards = wrapper.findAll("[data-test=application]");
+    const read = (i: number) => [
+      cards[i]!.find("[data-test=list-card-title]").exists(),
+      cards[i]!.findAll("[data-test=sent-chip]").map((c) => c.text()),
+      cards[i]!.find("[data-test=sent-status]").text(),
+    ];
+    expect(read(0)).toEqual([true, ["Envoyée il y a 12 jours"], "Sans réponse"]);
+    expect(read(1)).toEqual([true, ["Jeudi 12 nov., 14 h"], "Entretien"]);
+    expect(cards[1]!.find("[data-test=sent-chip]").classes()).toContain("green");
+    // Cette semaine, la plus récente d'abord, avec le canal.
+    expect(read(2)).toEqual([true, ["Envoyée jeudi", "Par e-mail"], "Relancée"]);
+    expect(read(3)).toEqual([true, ["Envoyée mardi", "Formulaire en ligne"], "Envoyée"]);
+    expect(read(4)).toEqual([true, ["Envoyée lundi", "Par e-mail"], "Envoyée"]);
+    expect(read(5)).toEqual([true, ["Envoyée le 21 oct."], "Refusée"]);
+    // Rien d'autre dans la carte : ni action, ni « ⋯ ».
+    expect(cards[0]!.findAll("button")).toHaveLength(0);
+  });
+
+  it("une carte ouvre le panneau de la candidature et se marque", async () => {
+    mockApi(() => month(), [at("2026-10-02", { company: "Lente SA" })]);
+    const { wrapper } = await mountView();
+    const card = wrapper.find("[data-test=application]");
+    expect(card.attributes("href")).toBe("/candidatures/suivi?candidature=3");
+    await card.trigger("click", { button: 0 });
+    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=application]").attributes("aria-current")).toBe("true");
+  });
+
+  it("?q= (recherche globale) : seulement ce qui correspond, sans accents ni casse ; « Tout afficher »", async () => {
+    const others = [
+      at("2026-09-10", { id: 11, company: "Témoin Industrie SA", job_title: "Ingénieur DevOps" }),
+      at("2026-09-11", { id: 12, company: "Banque Exemple", job_title: "Comptable" }),
+    ];
+    mockApi(undefined, others);
     const { wrapper, router } = await mountView("/candidatures/suivi?q=temoin%20INGENIEUR");
-    const list = wrapper.find("[data-test=detail-list]");
-    expect(list.find(".disclosure-row").attributes("aria-expanded")).toBe("true");
-    expect(list.find(".disclosure-title").text()).toBe("Candidatures « temoin INGENIEUR »");
-    expect((list.find("[data-test=suivi-search]").element as HTMLInputElement).value).toBe("temoin INGENIEUR");
-    expect(list.text()).toContain("Témoin Industrie SA");
-    expect(list.text()).not.toContain("Banque Exemple");
-    // Effacer les mots : la liste du mois revient, l'adresse aussi.
-    await list.find("[data-test=suivi-search]").setValue("");
+    expect(wrapper.find("[data-test=sent-words]").text()).toContain("Candidatures « temoin INGENIEUR »");
+    expect(wrapper.find("[data-test=sent-list]").text()).toContain("Témoin Industrie SA");
+    expect(wrapper.find("[data-test=sent-list]").text()).not.toContain("Banque Exemple");
+    await wrapper.find("[data-test=sent-words-clear]").trigger("click");
     await new Promise((resolve) => setTimeout(resolve, 350));
     await flushPromises();
     expect(router.currentRoute.value.query.q).toBeUndefined();
-    expect(wrapper.find("[data-test=all-months]").exists()).toBe(true);
-  });
+    expect(wrapper.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
 
-  it("aucun résultat : la phrase le dit", async () => {
-    mockApi();
-    const { wrapper } = await mountView("/candidatures/suivi?q=boulanger");
-    expect(wrapper.find("[data-test=applications-empty]").text()).toBe("Aucune candidature pour « boulanger ».");
+    const { wrapper: none } = await mountView("/candidatures/suivi?q=boulanger");
+    expect(none.find("[data-test=sent-words]").text()).toContain("Aucune candidature pour « boulanger ».");
   });
 });
