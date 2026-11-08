@@ -138,8 +138,9 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=sheet-missing]").text()).toContain("12 offres bien notées");
     expect(wrapper.find("[data-test='question-funding:3']").attributes("disabled")).toBeDefined();
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE } });
-    await wrapper.find("[data-test=meeting-date]").setValue("2026-10-22");
-    await wrapper.find("[data-test=meeting-time]").setValue("09:30");
+    await wrapper.find("[data-test=meeting-form] [data-test=dt-date]").trigger("click");
+    wrapper.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2026-10-22", time: "09:30" });
+    await flushPromises();
     await wrapper.find("[data-test=meeting-form]").trigger("submit");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting", {

@@ -9,7 +9,6 @@ import { plural } from "../format";
 import {
   agreedLines,
   countdown,
-  dateBlock,
   dateText,
   interviewPlace,
   lastAgreed,
@@ -23,14 +22,15 @@ import {
   upcomingAppointments,
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
+import CalendarDate from "./CalendarDate.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import OrpMeetingEmpty from "./OrpMeetingEmpty.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
 
-// Rendez-vous sur ordinateur, dès 1 024 px (maquette RendezVousOrdinateur, 7.11.2026) : la liste de 560 px à
-// gauche (À venir, À noter, Derniers rendez-vous ORP, en cartes de 104 px), le détail de ce qui est choisi à
+// Rendez-vous sur ordinateur, dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB, onglet Rendez-vous) :
+// la liste de 480 px à gauche (À venir, À noter, Passés, en cartes de 104 px), le détail de ce qui est choisi à
 // droite ; les deux colonnes défilent seules. Le choix est dans l'adresse (?rdv=orp, entretien-12, passe-3).
-// Sans rendez-vous ORP prévu, le détail montre le formulaire (état `vide` du téléphone).
+// Les dates sont dans l'icône calendrier (CalendarDate, D26). Sans rendez-vous ORP prévu, une ligne de texte et
+// « Ajouter » en tête de liste, sans carte (D22) ; le détail montre le formulaire.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -87,6 +87,11 @@ const selectedInterview = computed(() => {
 });
 const selectedPast = computed(() => noted.value.find((m) => pastKey(m) === selected.value) ?? null);
 const lastNoted = computed(() => noted.value[0] ?? null);
+// Le jour et le mois de l'icône calendrier.
+function cal(iso: string): { day: number; month: number } {
+  const d = new Date(iso);
+  return { day: d.getDate(), month: d.getMonth() + 1 };
+}
 
 // « + Ajouter une question » ouvre un champ sur place.
 const adding = ref(false);
@@ -124,6 +129,24 @@ watch(() => props.page, () => void nextTick(measure));
       aria-label="Liste des rendez-vous"
       role="region"
     >
+      <div
+        v-if="!nextOrp"
+        class="rdv-list-empty"
+        data-test="rdv-list-empty"
+      >
+        <div>
+          <strong>Aucun rendez-vous à venir</strong>
+          <span>Ajoute le prochain : jobA1 prépare ta feuille la veille.</span>
+        </div>
+        <button
+          type="button"
+          class="secondary"
+          data-test="rdv-add"
+          @click="select('nouveau')"
+        >
+          Ajouter
+        </button>
+      </div>
       <template v-if="upcoming.length">
         <h2 class="rdv-list-title">
           À venir<span>{{ plural(upcoming.length, "rendez-vous", "rendez-vous") }}</span>
@@ -137,12 +160,11 @@ watch(() => props.page, () => void nextTick(measure));
           :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
           @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
         >
-          <span
-            :class="['rdv-block', item.kind === 'orp' ? 'peach' : 'blue']"
-            aria-hidden="true"
-          >
-            <small>{{ dateBlock(item.at).weekday }}</small><strong>{{ dateBlock(item.at).day }}</strong><span>{{ dateBlock(item.at).month }}</span>
-          </span>
+          <CalendarDate
+            v-bind="cal(item.at)"
+            :tone="item.kind === 'orp' ? 'orp' : 'blue'"
+            :size="44"
+          />
           <span class="rdv-item-text">
             <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
             <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
@@ -170,10 +192,11 @@ watch(() => props.page, () => void nextTick(measure));
           class="rdv-item"
           :data-test="`rdv-to-note-${item.id}`"
         >
-          <span
-            class="rdv-block peach"
-            aria-hidden="true"
-          ><strong>{{ dateBlock(item.starts_at).day }}</strong><span>{{ dateBlock(item.starts_at).month }}</span></span>
+          <CalendarDate
+            v-bind="cal(item.starts_at)"
+            tone="orp"
+            :size="44"
+          />
           <span class="rdv-item-text">
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">Pas encore noté · 1 minute</span>
@@ -190,7 +213,7 @@ watch(() => props.page, () => void nextTick(measure));
       </template>
       <template v-if="noted.length">
         <h2 class="rdv-list-title">
-          Derniers rendez-vous ORP
+          Passés<span>{{ noted.length }}</span>
         </h2>
         <button
           v-for="item in noted"
@@ -201,14 +224,15 @@ watch(() => props.page, () => void nextTick(measure));
           :data-test="`rdv-item-passe-${item.id}`"
           @click="select(pastKey(item))"
         >
-          <span
-            class="rdv-block grey"
-            aria-hidden="true"
-          ><strong>{{ dateBlock(item.starts_at).day }}</strong><span>{{ dateBlock(item.starts_at).month }}</span></span>
+          <CalendarDate
+            v-bind="cal(item.starts_at)"
+            tone="past"
+            :size="44"
+          />
           <span class="rdv-item-text">
-            <span class="rdv-item-kicker">Noté</span>
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
+            <span class="list-card-chips"><span class="green">Noté</span></span>
           </span>
         </button>
       </template>
@@ -226,12 +250,11 @@ watch(() => props.page, () => void nextTick(measure));
         data-test="rdv-detail-orp"
       >
         <div class="rdv-detail-head">
-          <span
-            class="rdv-block peach large"
-            aria-hidden="true"
-          >
-            <small>{{ dateBlock(nextOrp.at).weekday }}</small><strong>{{ dateBlock(nextOrp.at).day }}</strong><span>{{ dateBlock(nextOrp.at).month }}</span>
-          </span>
+          <CalendarDate
+            v-bind="cal(nextOrp.at)"
+            tone="orp"
+            :size="56"
+          />
           <div>
             <span class="rdv-detail-kicker">{{ countdown(nextOrp.at, now) }}</span>
             <h1 id="rdv-detail-title">
@@ -367,12 +390,10 @@ watch(() => props.page, () => void nextTick(measure));
         data-test="rdv-detail-interview"
       >
         <div class="rdv-detail-head">
-          <span
-            class="rdv-block blue large"
-            aria-hidden="true"
-          >
-            <small>{{ dateBlock(selectedInterview.at).weekday }}</small><strong>{{ dateBlock(selectedInterview.at).day }}</strong><span>{{ dateBlock(selectedInterview.at).month }}</span>
-          </span>
+          <CalendarDate
+            v-bind="cal(selectedInterview.at)"
+            :size="56"
+          />
           <div>
             <span class="rdv-detail-kicker">Entretien d’embauche · {{ countdown(selectedInterview.at, now).toLowerCase() }}</span>
             <h1 id="rdv-detail-title">
@@ -404,10 +425,11 @@ watch(() => props.page, () => void nextTick(measure));
         data-test="rdv-detail-past"
       >
         <div class="rdv-detail-head">
-          <span
-            class="rdv-block grey large"
-            aria-hidden="true"
-          ><strong>{{ dateBlock(selectedPast.starts_at).day }}</strong><span>{{ dateBlock(selectedPast.starts_at).month }}</span></span>
+          <CalendarDate
+            v-bind="cal(selectedPast.starts_at)"
+            tone="past"
+            :size="56"
+          />
           <div>
             <span class="rdv-detail-kicker">Noté</span>
             <h1 id="rdv-detail-title">
@@ -450,7 +472,7 @@ watch(() => props.page, () => void nextTick(measure));
         @saved="emit('saved', $event)"
         @cancel="emit('cancel')"
       />
-      <OrpMeetingEmpty
+      <OrpMeetingForm
         v-else
         @saved="emit('saved', $event)"
       />
@@ -459,13 +481,13 @@ watch(() => props.page, () => void nextTick(measure));
 </template>
 
 <style>
-/* Valeurs de la maquette RendezVousOrdinateur : liste de 560, écart 24 ; cartes de 104 aux marges 14/16, écart 14 ;
-   bloc date de 52 × 60 (64 × 72 dans le détail), coins de 14 ; détail blanc aux coins de 24, marges 24/28. */
+/* Valeurs de la maquette (CandidaturesOrdinateurB, onglet Rendez-vous) : liste de 480, écart 24 ; cartes de 104 aux
+   marges 14/16, écart 14 ; icône calendrier de 44 (56 dans le détail) ; détail blanc aux coins de 24, marges 24/28. */
 .rdv-grid {
   --rdv-3: 3px; --rdv-11: 11px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
   display: flex; gap: var(--space-6); height: calc(100dvh - var(--rdv-top, 0px) - var(--space-6)); min-height: 20rem;
 }
-.rdv-list { flex: none; width: 560px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-2) var(--space-4) 0; }
+.rdv-list { flex: none; width: 480px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-2) var(--space-4) 0; }
 .rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) var(--space-1); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-item {
@@ -478,17 +500,6 @@ button.rdv-item:hover { border-color: var(--field-border); }
   padding: calc(var(--rdv-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
   background: color-mix(in srgb, var(--primary-soft) 45%, var(--surface));
 }
-.rdv-block {
-  flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 52px; height: 60px;
-  border-radius: var(--rdv-14); line-height: var(--leading-none);
-}
-.rdv-block small { font-size: var(--rdv-11); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.4px; }
-.rdv-block strong { margin-top: var(--rdv-3); font-size: var(--rdv-22); font-weight: var(--weight-heavy); }
-.rdv-block span { margin-top: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-semibold); }
-.rdv-block.large { width: 64px; height: 72px; }
-.rdv-block.peach { background: var(--peach-soft); color: var(--peach-text); }
-.rdv-block.blue { background: var(--primary-soft); color: var(--primary-text); }
-.rdv-block.grey { background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-tertiary); }
 .rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-3); }
 .rdv-item-kicker { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-item-title, .rdv-item-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -539,5 +550,11 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-detail-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); margin: 0; font-size: var(--rdv-15); }
 .rdv-detail-agreed dt { color: var(--text-secondary); }
 .rdv-detail-agreed dd { margin: 0; }
-.rdv-detail .rdv-empty, .rdv-detail .rdv-form { max-width: 560px; }
+.rdv-detail .rdv-form { max-width: 560px; }
+/* Aucun rendez-vous à venir : une ligne de texte et « Ajouter » (44 px, en pilule), un trait dessous, sans carte. */
+.rdv-list-empty { flex: none; display: flex; align-items: center; gap: var(--rdv-14); padding: var(--space-1) var(--space-1) var(--space-2); border-bottom: 1px solid var(--line); }
+.rdv-list-empty > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rdv-list-empty strong { font-size: var(--rdv-15); }
+.rdv-list-empty span { font-size: var(--font-caption); color: var(--text-secondary); }
+.rdv-list-empty button { flex: none; height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
 </style>

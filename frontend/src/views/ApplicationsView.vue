@@ -54,6 +54,10 @@ import { sentSections } from "../sentList";
 //   l'export, les recherches du mois, puis « Ajouter », « À déclarer » et le calendrier.
 const TODO_ROWS = 3;
 const { phone } = usePhone();
+// Ordinateur dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB état « Envoyées ») : deux colonnes, la
+// liste et la candidature choisie à droite, jamais vide (la première par défaut).
+const { phone: wideQuery } = usePhone("(min-width: 1024px)");
+const twoColumns = computed(() => wideQuery.value && !phone.value && !orpPage);
 
 const route = useRoute();
 const router = useRouter();
@@ -306,6 +310,9 @@ watch(
   { immediate: true },
 );
 const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
+const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
+// À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
+const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
   return (...args: T) => {
     openId.value = null;
@@ -483,8 +490,26 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <section
     v-else
-    :class="['jobs-body', { 'orp-page': orpPage }]"
+    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns }]"
   >
+    <aside
+      v-if="shown"
+      class="sent-detail"
+      :aria-label="shown.company"
+      data-test="sent-detail"
+    >
+      <ApplicationPanel
+        :application="shown"
+        :orp-row="rowsById.get(shown.id) ?? null"
+        @status="setStatus"
+        @edit="editFromPanel"
+        @remove="removeFromPanel"
+        @interview="interviewFromPanel"
+        @prepare="prepareFromPanel"
+        @practice="practiceFromPanel"
+        @changed="load"
+      />
+    </aside>
     <template v-if="orp">
       <template v-if="orpPage">
         <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
@@ -619,7 +644,13 @@ onUnmounted(() => assistant.setFocus(null));
         >
           <span class="sent-goal-head">
             <span>Objectif ORP {{ ofMonth(orp.month) }}</span>
-            <span data-test="goal-count">{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}</span>
+            <span
+              class="sent-goal-count"
+              data-test="goal-count"
+            >{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}<AppIcon
+              name="chevron"
+              class="sent-goal-chevron"
+            /></span>
           </span>
           <span
             v-if="goal"
@@ -630,7 +661,7 @@ onUnmounted(() => assistant.setFocus(null));
             aria-label="Objectif ORP"
             class="sent-goal-bar"
           ><span :style="{ width: `${goal.percent}%` }" /></span>
-          <span class="sent-goal-left">{{ goal ? goal.left : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
+          <span class="sent-goal-left">{{ goal ? `${goal.left} · voir le bilan` : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
         </RouterLink>
       </template>
 
@@ -709,7 +740,7 @@ onUnmounted(() => assistant.setFocus(null));
                 <SentCard
                   :application="application"
                   :section="section.key"
-                  :selected="openId === application.id"
+                  :selected="(shown?.id ?? openId) === application.id"
                   @select="openId = application.id"
                 />
               </li>
@@ -843,7 +874,7 @@ onUnmounted(() => assistant.setFocus(null));
   </section>
 
   <SidePanel
-    v-if="opened"
+    v-if="opened && !twoColumns"
     open
     :title="opened.company"
     @close="openId = null"

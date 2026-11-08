@@ -55,10 +55,7 @@ const status = computed(() => sentStatus(props.application, props.section));
 .sent-status-icon { display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: 50%; }
 .sent-status-icon .icon { width: 20px; height: 20px; stroke-width: 2.2; }
 .sent-status.peach { color: var(--peach-text); }
-.sent-status.peach .sent-status-icon { background: var(--peach-soft); }
 .sent-status.green { color: var(--success); }
-.sent-status.green .sent-status-icon { background: var(--success-soft); }
 .sent-status.grey { color: var(--text-tertiary); }
 .sent-status.muted { color: var(--text-secondary); }
-.sent-status.grey .sent-status-icon, .sent-status.muted .sent-status-icon { background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); }
 </style>

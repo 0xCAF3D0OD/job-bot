@@ -18,7 +18,8 @@ import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
-import OfferFilterPopover from "../components/OfferFilterPopover.vue";
+import OfferFilterPanel from "../components/OfferFilterPanel.vue";
+import BottomSheet from "../components/BottomSheet.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
 import CharacterState from "../components/CharacterState.vue";
@@ -110,12 +111,11 @@ const filterLabel = computed(() => {
 });
 const filterAnchor = ref<HTMLElement | null>(null);
 const filterToggle = ref<HTMLButtonElement | null>(null);
-// Le panneau tient sous le bouton, dans la fenêtre ; au-delà, il défile et garde son pied en bas.
-const filtersRoom = ref("");
+const filterPanel = ref<HTMLElement | null>(null);
+// Ordinateur (maquette du 8 novembre, D24) : le panneau des filtres remplace la colonne liste ; le titre prend le focus.
 function openFilters(): void {
-  const bottom = filterToggle.value?.getBoundingClientRect().bottom ?? 0;
-  filtersRoom.value = `${Math.max(240, window.innerHeight - bottom - 24)}px`;
   filtersOpen.value = true;
+  void nextTick(() => document.getElementById("offers-filters-title")?.focus({ preventScroll: true }));
 }
 function closeFilters(): void {
   filtersOpen.value = false;
@@ -124,7 +124,7 @@ function closeFilters(): void {
 // Un clic hors du panneau le referme (ordinateur) ; sur téléphone, c'est le voile.
 function onPointerDown(event: PointerEvent): void {
   if (!filtersOpen.value || phone.value) return;
-  if (event.target instanceof Node && filterAnchor.value?.contains(event.target)) return;
+  if (event.target instanceof Node && (filterAnchor.value?.contains(event.target) || filterPanel.value?.contains(event.target))) return;
   filtersOpen.value = false;
 }
 // Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
@@ -581,7 +581,7 @@ onUnmounted(() => {
          des vues (#jobs-tools), le bouton des filtres dans l'en-tête, à côté d'« Alertes ». -->
     <component
       :is="phone || wide ? Teleport : 'div'"
-      v-bind="phone || wide ? { to: '#jobs-tools', defer: true } : { class: 'in-place' }"
+      v-bind="phone || wide ? { to: phone ? '#jobs-tools' : '#offers-list-tools', defer: true } : { class: 'in-place' }"
     >
       <div
         class="offers-toolbar"
@@ -590,7 +590,8 @@ onUnmounted(() => {
         <OfferSearch
           class="offers-toolbar-search"
           :value="filters.q"
-          :placeholder="phone ? 'Poste, entreprise, lieu' : undefined"
+          :placeholder="phone ? 'Poste, entreprise, lieu' : wide ? 'Filtrer par titre ou entreprise' : undefined"
+          :icon="wide && !phone ? 'filter' : undefined"
           @search="(q) => update({ q })"
         />
         <div
@@ -613,7 +614,7 @@ onUnmounted(() => {
               data-test="filters-toggle"
               @click="filtersOpen ? closeFilters() : openFilters()"
             >
-              <span class="with-icon"><AppIcon :name="phone ? 'settings' : 'filter'" /><template v-if="!phone">Filtrer</template></span>
+              <span class="with-icon"><AppIcon :name="phone || wide ? 'settings' : 'filter'" /><template v-if="wide && !phone">Plus de filtres</template><template v-else-if="!phone">Filtrer</template></span>
               <CountBadge
                 v-if="chips.length"
                 aria-hidden="true"
@@ -634,21 +635,6 @@ onUnmounted(() => {
             @reset="reset"
             @close="closeFilters"
           />
-          <div
-            v-else
-            class="offers-filters-anchor"
-          >
-            <OfferFilterPopover
-              v-if="filtersOpen"
-              :style="{ '--filters-room': filtersRoom }"
-              :filters="filters"
-              :counts="counts"
-              :total="shownTotal"
-              @update="update"
-              @reset="reset"
-              @close="closeFilters"
-            />
-          </div>
         </div>
         <!-- Téléphone (C10) : « Ajouter » compact, à côté de la recherche ; « Postuler spontanément » est un
              lien au bas de la liste. Ordinateur : un seul « + Ajouter » et son menu (1.6.47). -->
@@ -662,7 +648,7 @@ onUnmounted(() => {
           <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
         </button>
         <MoreMenu
-          v-else
+          v-else-if="!wide"
           class="offers-add"
           :items="addItems"
           trigger="Ajouter"
@@ -683,7 +669,30 @@ onUnmounted(() => {
       :class="['offers-grid', { 'has-selection': selected }]"
       :style="wide ? { '--offers-top': `${gridTop}px` } : undefined"
     >
-      <div class="offers-list">
+      <!-- Ordinateur : « Plus de filtres » remplace la colonne liste ; la liste reste montée, ses choix gardés. -->
+      <div
+        v-if="!phone && filtersOpen"
+        ref="filterPanel"
+        class="offers-filter-column"
+      >
+        <OfferFilterPanel
+          :filters="filters"
+          :counts="counts"
+          :total="shownTotal"
+          @update="update"
+          @reset="reset"
+          @close="closeFilters"
+        />
+      </div>
+      <div
+        v-show="!(!phone && filtersOpen)"
+        class="offers-list"
+      >
+        <div
+          v-if="wide && !phone"
+          id="offers-list-tools"
+          class="offers-list-tools"
+        />
         <p
           v-if="notice"
           class="notice"
@@ -892,7 +901,7 @@ onUnmounted(() => {
           {{ filters.showExpired ? "Masquer les offres expirées" : `Voir les offres expirées (${counts.expired})` }}
         </button>
         <p
-          v-if="phone && !loading && !failed"
+          v-if="(phone || wide) && !loading && !failed"
           class="offers-spontaneous"
         >
           <button
@@ -946,10 +955,12 @@ onUnmounted(() => {
       @open="openExisting"
     />
   </SidePanel>
-  <SidePanel
+  <BottomSheet
     v-if="manualOpen"
     open
     title="Ajouter une offre"
+    subtitle="Colle le lien ou le texte de l'annonce. jobA1 la lit et la note."
+    class="manual-sheet"
     @close="manualOpen = false"
   >
     <ManualOfferForm
@@ -957,7 +968,7 @@ onUnmounted(() => {
       :initial-text="shared.text"
       @added="manualAdded"
     />
-  </SidePanel>
+  </BottomSheet>
 </template>
 
 <style scoped>

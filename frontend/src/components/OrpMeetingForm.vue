@@ -3,10 +3,14 @@ import { nextTick, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import DateTimeField from "./DateTimeField.vue";
+import DateTimePanel from "./DateTimePanel.vue";
 import FormField from "./FormField.vue";
+import { usePhone } from "../composables/usePhone";
 
 // Le prochain rendez-vous ORP (maquette RendezVous, état `vide`, 7.11.2026) : la date et l'heure côte à côte,
-// le lieu ou le lien, facultatif. En modification, le conseiller en plus (docs/83).
+// le lieu ou le lien, facultatif. En modification, le conseiller en plus (docs/83). Maquette du 8 novembre (D26) : les
+// pilules date et heure (DateTimeField) ; un clic ouvre le sélecteur (DateTimePanel), qui prend la place du formulaire.
 type Page = components["schemas"]["MeetingPage"];
 type Meeting = components["schemas"]["MeetingOut"];
 
@@ -24,6 +28,22 @@ const advisor = ref(props.meeting?.advisor ?? "");
 const dayError = ref("");
 const timeError = ref("");
 const message = ref("");
+const picking = ref<"" | "date" | "time">("");
+const { phone } = usePhone();
+const form = ref<HTMLFormElement | null>(null);
+function picked(value: { date: string; time: string }): void {
+  day.value = value.date;
+  time.value = value.time;
+  picking.value = "";
+  checkDay();
+  checkTime();
+  void nextTick(() => form.value?.querySelector<HTMLElement>("[data-test=dt-date]")?.focus());
+}
+function cancelPick(): void {
+  const which = picking.value;
+  picking.value = "";
+  void nextTick(() => form.value?.querySelector<HTMLElement>(`[data-test=dt-${which || "date"}]`)?.focus());
+}
 
 // Règles §4 (Formulaire) : l'erreur sous le champ, en le quittant puis à l'envoi ; à l'envoi, le curseur y va.
 function checkDay(): void {
@@ -33,13 +53,12 @@ function checkTime(): void {
   timeError.value = time.value ? "" : "Indique l'heure.";
 }
 
-async function save(event: Event): Promise<void> {
-  const form = event.currentTarget as HTMLElement | null;
+async function save(): Promise<void> {
   checkDay();
   checkTime();
   if (dayError.value || timeError.value) {
     await nextTick();
-    form?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+    form.value?.querySelector<HTMLElement>(dayError.value ? "[data-test=dt-date]" : "[data-test=dt-time]")?.focus();
     return;
   }
   const { data, error } = await api.PUT("/api/orp-meeting", {
@@ -51,7 +70,18 @@ async function save(event: Event): Promise<void> {
 </script>
 
 <template>
+  <DateTimePanel
+    v-if="picking"
+    :date="day"
+    :time="time"
+    title="Prochain rendez-vous ORP"
+    :full="phone"
+    @confirm="picked"
+    @cancel="cancelPick"
+  />
   <form
+    v-else
+    ref="form"
     class="rdv-form"
     aria-labelledby="rdv-form-title"
     data-test="meeting-form"
@@ -62,40 +92,22 @@ async function save(event: Event): Promise<void> {
       {{ meeting ? "Le prochain rendez-vous" : "Prochain rendez-vous ORP" }}
     </h3>
     <div class="rdv-form-when">
-      <FormField
-        v-slot="{ id, describedby, invalid }"
-        label="Date"
-        :error="dayError"
+      <DateTimeField
+        :date="day"
+        :time="time"
+        :open="picking"
+        :compact="phone"
+        :aria-invalid="dayError || timeError ? 'true' : undefined"
+        @open="picking = $event"
+      />
+      <p
+        v-if="dayError || timeError"
+        class="field-error"
+        role="alert"
+        data-test="meeting-when-error"
       >
-        <input
-          :id="id"
-          v-model="day"
-          type="date"
-          required
-          :aria-describedby="describedby"
-          :aria-invalid="invalid"
-          data-test="meeting-date"
-          @blur="checkDay"
-          @input="dayError && checkDay()"
-        >
-      </FormField>
-      <FormField
-        v-slot="{ id, describedby, invalid }"
-        label="Heure"
-        :error="timeError"
-      >
-        <input
-          :id="id"
-          v-model="time"
-          type="time"
-          required
-          :aria-describedby="describedby"
-          :aria-invalid="invalid"
-          data-test="meeting-time"
-          @blur="checkTime"
-          @input="timeError && checkTime()"
-        >
-      </FormField>
+        {{ dayError || timeError }}
+      </p>
     </div>
     <FormField
       v-slot="{ id, describedby, invalid }"
@@ -162,7 +174,7 @@ async function save(event: Event): Promise<void> {
   border: 1px solid var(--line); border-radius: var(--radius-card);
 }
 .rdv-form h3 { margin: 0; font-size: var(--form-17); font-weight: var(--weight-bold); }
-.rdv-form-when { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-2); }
+.rdv-form-when { display: grid; gap: var(--space-2); }
 .rdv-form .form-field { margin: 0; min-width: 0; }
 .rdv-form input { box-sizing: border-box; width: 100%; min-width: 0; height: var(--btn-secondary); border: 1.5px solid var(--field-border); border-radius: var(--radius-sm); font-size: var(--font-body); }
 .rdv-form button { min-height: var(--form-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }

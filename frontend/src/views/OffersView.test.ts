@@ -213,10 +213,10 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const dialog = wrapper.find("[data-test=filters-dialog]");
-    expect(dialog.findAll(".filter-popover-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Taux minimum"]);
+    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Taux minimum"]);
     expect(dialog.findAll("[aria-pressed]").length).toBe(14);
-    expect(dialog.find(".filter-popover-body [data-test=filters-done]").exists()).toBe(false);
-    expect(dialog.find(".filter-popover-foot [data-test=filters-done]").exists()).toBe(true);
+    expect(dialog.find(".filter-panel-body [data-test=filters-done]").exists()).toBe(false);
+    expect(dialog.find(".filter-panel-foot [data-test=filters-done]").exists()).toBe(true);
     await wrapper.find("[data-test=pop-filtered-out]").trigger("change");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ ecartees: "montrer" });
@@ -638,7 +638,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     );
     const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
     expect(wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]").exists()).toBe(true);
-    const input = wrapper.find("[data-test=manual-url]").element as HTMLInputElement;
+    const input = wrapper.find("[data-test=composer-input]").element as HTMLTextAreaElement;
     expect(input.value).toBe("https://bois.ch/emplois/1");
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
   });

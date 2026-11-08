@@ -290,7 +290,51 @@ const scoreNote = computed(() => {
     .filter(Boolean)
     .join(" ");
 });
+// Ordinateur dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB état « actions ») : d'abord les entrées
+// dessinées, dans leur ordre (ouvrir l'annonce, garder pour plus tard, détail de la note, copier le lien, puis
+// « Signaler une erreur dans l'offre » après un trait) ; les autres actions de la fiche suivent (docs/143, écarts).
+const { phone: wide } = usePhone("(min-width: 1024px)");
+function showNoteDetail(): void {
+  const row = document.querySelector<HTMLElement>("[data-test=note-detail]");
+  const toggle = row?.querySelector<HTMLButtonElement>("button[aria-expanded]");
+  if (toggle?.getAttribute("aria-expanded") === "false") toggle.click();
+  row?.scrollIntoView?.({ block: "nearest" });
+  toggle?.focus({ preventScroll: true });
+}
+async function copyLink(): Promise<void> {
+  const url = shareUrl.value;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    saidAloud.value = "Lien copié.";
+  } catch {
+    saidAloud.value = "Copie impossible.";
+  }
+}
+const desktopItems = computed<MoreMenuItem[]>(() => {
+  const o = props.offer;
+  const items: MoreMenuItem[] = [];
+  if (shareUrl.value) items.push({ label: "Ouvrir l'annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
+  if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+  else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
+  if (noteDetail.value) items.push({ label: "Voir le détail de la note", test: "show-note-detail", icon: "eye", run: showNoteDetail });
+  if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
+  if (withBar.value && scored.value) {
+    items.push({ label: "Signaler une erreur dans l'offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
+  }
+  if (o.status !== "applied") {
+    items.push({ label: "J'ai postulé", test: "mark-applied", icon: "check-circle", separator: true, run: () => emit("applied") });
+    items.push(
+      o.expired_at
+        ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
+    );
+  }
+  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  return items;
+});
 const menuItems = computed<MoreMenuItem[]>(() => {
+  if (wide.value) return desktopItems.value;
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status !== "applied") {
