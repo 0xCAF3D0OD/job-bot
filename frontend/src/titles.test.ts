@@ -21,8 +21,13 @@ const VIEWS: Record<string, string> = {
 // Les pages de présentation gardent leurs phrases : la connexion, la présentation, l'accueil.
 const PRESENTATION = ["LoginView", "DiscoverView", "WelcomeView"];
 const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
-// Titres repris tels quels des maquettes qui font foi (Mon compte ; Mes alertes e-mail, maquette du 8 novembre).
-const MAQUETTE = new Set(["./components/AccountMenu.vue : Mon compte", "./views/AlertsView.vue : Mes alertes e-mail"]);
+// Titres repris tels quels des maquettes qui font foi (Mon compte ; Mes alertes e-mail, maquette du 8 novembre ;
+// Mon parcours, maquette Compte, déjà là avant le lot 18 : le sur-titre est passé de GroupedList à un h2).
+const MAQUETTE = new Set([
+  "./components/AccountMenu.vue : Mon compte",
+  "./views/AlertsView.vue : Mes alertes e-mail",
+  "./views/AccountView.vue : Mon parcours",
+]);
 
 function template(source: string): string {
   return source.slice(source.indexOf("<template>"));

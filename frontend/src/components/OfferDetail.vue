@@ -405,6 +405,8 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     );
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
+  // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
+  if (shareUrl.value) items.push({ label: "Partager l'annonce", test: "share", icon: "upload", run: () => void share() });
   if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
@@ -500,7 +502,7 @@ watch(
 
 <template>
   <article
-    :class="['detail-panel', { 'offer-cols': columns }]"
+    :class="['detail-panel', { 'offer-cols': columns, 'offer-blocks': sub }]"
     data-test="offer-detail"
   >
     <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
@@ -533,13 +535,6 @@ watch(
           label="Plus d'actions sur l'offre"
           data-test="detail-more"
           @click="sheetOpen = true"
-        />
-        <IconButton
-          v-if="shareUrl"
-          icon="upload"
-          label="Partager l'annonce"
-          data-test="offer-share"
-          @click="share"
         />
       </div>
       <p
@@ -718,11 +713,11 @@ watch(
       <button
         v-if="offer.status !== 'ignored'"
         type="button"
-        class="offer-bar-discard"
+        class="secondary action-2 offer-bar-discard"
         data-test="offer-discard"
         @click="emit('status', 'ignored')"
       >
-        Écarter
+        Ignorer
       </button>
       <RouterLink
         v-if="offer.expired_at && offer.status !== 'preparing'"
@@ -738,10 +733,7 @@ watch(
         class="button-link primary-link offer-bar-main"
         data-test="prepare"
       >
-        <span class="with-icon"><AppIcon
-          name="spark"
-          class="offer-bar-spark"
-        />{{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}</span>
+        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
       </RouterLink>
     </div>
 
@@ -1190,4 +1182,57 @@ watch(
 .offer-brief-link { margin-top: var(--space-3); }
 /* La colonne principale est plus étroite : « Écrire à » et « Canal » des contacts passent l’un sous l’autre. */
 .offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
+/* Le détail d'une offre sur téléphone en blocs (MODIFICATIONS du 8 novembre au soir, lot 18, §10.1 ; HTML des maquettes
+   Offre et OffreSombre) : en-tête sur --page-blocks, trois blocs blancs sans bordure à 12 des bords et 8 entre eux
+   (22/20 dedans) ; logo de 52 à côté du poste (22/800) ; étiquettes grises ; anneau de 56, verdict 18/700, raisons
+   15/21 ; « Le poste » en 15/23 ; liens en 15/700 --primary-text ; barre du bas sur --bg : « Ignorer » à contour (48),
+   « Préparer ma candidature » plein (52). */
+@media (max-width: 820px) {
+  .offers-grid > .detail-column:not(.placeholder):has(.offer-blocks) { z-index: 39; background: var(--page-blocks); }
+  .offer-blocks {
+    --ob-8: 8px; --ob-12: 12px; --ob-14: 14px; --ob-22: 22px; --ob-20: 20px; --ob-28: 28px; --ob-52: 52px; --ob-56: 56px; --ob-48: 48px;
+    --ob-2: 2px; --ob-21: 21px; --ob-23: 23px; --ob-24: 24px; --ob-13: 13px;
+  }
+  .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { padding-left: var(--ob-12); padding-right: var(--ob-12); }
+  .offer-blocks .offer-subhead { margin: 0 calc(-1 * var(--ob-12)); padding-left: var(--space-2); padding-right: var(--space-2); background: var(--page-blocks); }
+  .offer-blocks .offer-subhead .icon-button { width: var(--target-min); height: var(--target-min); color: var(--primary-text); }
+  .offer-blocks > .detail-offer, .offer-blocks .match-card, .offer-blocks .detail-post, .offer-blocks .detail-more-rows {
+    margin: var(--ob-8) 0 0; padding: var(--ob-22) var(--ob-20); background: var(--surface); border: 0; border-radius: var(--radius-card); box-shadow: none;
+  }
+  .offer-blocks > .detail-offer { display: grid; grid-template-columns: var(--ob-52) minmax(0, 1fr); column-gap: var(--ob-14); row-gap: 0; align-items: center; }
+  .offer-blocks > .detail-offer > :not(.detail-head, .detail-title) { grid-column: 1 / -1; }
+  .offer-blocks .detail-head { display: contents; }
+  .offer-blocks .detail-top-actions { display: none; }
+  .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { gap: 0; background: var(--page-blocks); }
+  .offer-blocks .detail-head > .logo.large { width: var(--ob-52); height: var(--ob-52); border-radius: var(--radius-sm); }
+  .offer-blocks .detail-title { gap: 0; }
+  .offer-blocks .detail-title h2 { font-size: var(--font-section); line-height: var(--ob-28); font-weight: var(--weight-heavy); letter-spacing: 0; }
+  .offer-blocks .detail-title .detail-sub { margin: var(--ob-2) 0 0; font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
+  .offer-blocks .offer-tags { margin-top: var(--ob-14); }
+  .offer-blocks .offer-tags li { padding: var(--space-1) var(--space-3); background: var(--surface-muted); border: 0; border-radius: var(--radius-sm); font-size: var(--ob-13); color: var(--text-tertiary); }
+  .offer-blocks .detail-offer .status-line, .offer-blocks .detail-offer .expired-notice { margin-top: var(--ob-14); }
+  .offer-blocks .match-card { display: block; }
+  .offer-blocks .match-head { gap: var(--ob-14); padding: 0; }
+  .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
+  .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }
+  .offer-blocks .match-sub { margin-top: var(--ob-2); font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
+  .offer-blocks .match-lines { gap: 0; margin-top: var(--ob-14); padding: 0; border: 0; }
+  .offer-blocks .match-lines li { gap: var(--space-3); padding: var(--ob-8) 0; font-size: var(--font-label); line-height: var(--ob-21); }
+  /* « Le détail de la note › » : un lien dans le bloc (§2.2, niveau texte) ; il se déplie sur place. */
+  .offer-blocks .match-detail.disclosure { margin-top: var(--ob-8); background: none; border: 0; border-radius: 0; }
+  .offer-blocks .match-detail > .disclosure-row { display: inline-flex; gap: 0; width: auto; min-height: var(--target-min); padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offer-blocks .match-detail > .disclosure-row .disclosure-title { font-weight: inherit; }
+  .offer-blocks .match-detail > .disclosure-row .disclosure-chevron { display: none; }
+  .offer-blocks .match-detail > .disclosure-row::after { content: " ›"; white-space: pre; }
+  .offer-blocks .match-detail > .disclosure-panel { padding: 0; }
+  .offer-blocks .detail-post { display: block; }
+  .offer-blocks .detail-post-head h3 { font-size: var(--font-title); line-height: var(--ob-24); }
+  .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-2) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
+  .offer-blocks .post-links { margin-top: var(--ob-8); }
+  .offer-blocks .post-links .link { color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offer-blocks .detail-more-rows { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+  .offer-blocks .offer-bar { z-index: 40; gap: var(--space-3); padding: var(--ob-12) var(--ob-12) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+  .offer-blocks .offer-bar-discard { min-height: var(--ob-48); padding: 0 var(--ob-20); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offer-blocks .offer-bar-main { min-height: var(--ob-52); background: var(--action); border-color: var(--action); color: var(--on-action); }
+}
 </style>

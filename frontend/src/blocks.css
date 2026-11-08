@@ -1,0 +1,46 @@
+/* Le style « blocs » (MODIFICATIONS du 8 novembre au soir, §2.1 à §2.4, lot 18) : une page de lecture est une pile de
+   blocs sans bordure ni ombre sur le fond --page-blocks (D28) ; une ligne à flèche est cliquable en entier (D29) ;
+   un champ à recopier a son libellé au-dessus et un bouton copier (D32). Importé par les écrans qui l'utilisent,
+   pour ne pas peser sur le premier écran. Valeurs du HTML des maquettes Offre, Orp, OrpFiche et Compte. */
+.blocks-page {
+  --block-gap: 8px; --block-pad-y: 22px; --block-pad-x: 20px; --block-gutter: 12px;
+  --block-cap: 13px; --block-cap-lh: 18px; --block-cap-gap: 10px; --block-title-lh: 24px; --block-help-lh: 21px; --block-help-gap: 6px;
+  --row-72: 72px; --row-56: 56px; --row-pad: 14px 12px 14px 16px; --row-gap: 10px; --row-title-lh: 22px; --row-line-lh: 20px;
+  --field-pad: 14px; --field-label-lh: 18px; --field-value-lh: 22px; --field-tick: 12px; --field-tick-pad: 3px 8px;
+  background: var(--page-blocks);
+}
+@media (min-width: 821px) { .blocks-page { --block-gap: 16px; --block-pad-y: 24px; --block-pad-x: 24px; } }
+
+.block { margin: 0; padding: var(--block-pad-y) var(--block-pad-x); background: var(--surface); border: 0; border-radius: var(--radius-card); box-shadow: none; }
+.block + .block { margin-top: var(--block-gap); }
+.block-cap { margin: 0 0 var(--block-cap-gap); font-size: var(--block-cap); line-height: var(--block-cap-lh); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.block-title { margin: 0; font-size: var(--font-title); line-height: var(--block-title-lh); font-weight: var(--weight-bold); }
+.block-help { margin: var(--block-help-gap) 0 0; font-size: var(--font-small); line-height: var(--block-help-lh); color: var(--text-secondary); }
+.block-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin-top: var(--space-2); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
+.block-link:hover { text-decoration: underline; }
+.block-link .icon { width: 16px; height: 16px; }
+.block-action { display: flex; align-items: center; justify-content: center; gap: var(--space-2); width: 100%; min-height: 48px; margin-top: var(--space-4); padding-left: var(--space-3); padding-right: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
+
+/* D29 : la ligne entière est le lien ; le cercle est décoratif. */
+.block-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--row-72); margin: var(--row-gap) 0 0; padding: var(--row-pad); background: var(--row-blocks); border: 0; border-radius: var(--radius-sm); color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.block-row.small { min-height: var(--row-56); }
+.block-row:first-child { margin-top: 0; }
+.block-row-text { display: grid; flex: 1; min-width: 0; }
+.block-row-title { font-size: var(--font-body); line-height: var(--row-title-lh); font-weight: var(--weight-bold); }
+.block-row-line { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--row-line-lh); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* D31 : le statut, un mot coloré juste après le titre. */
+.block-status { margin-left: var(--space-2); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.block-status.ok { color: var(--success); }
+.block-status.todo { color: var(--warning); }
+
+/* D32 : libellé au-dessus de la valeur, bouton copier à droite, trait entre les champs. */
+.block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
+.block-cap + .block-field { padding-top: var(--space-1); border-top: 0; }
+.block-field-text { flex: 1; min-width: 0; }
+.block-field-label { font-size: var(--block-cap); line-height: var(--field-label-lh); color: var(--text-secondary); }
+.block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.block-field-value.empty { font-weight: var(--weight-regular); color: var(--text-secondary); }
+.block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.block-field .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-graphic); }
+a.block-action.action-2 { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
+a.block-action.action-2:hover { background: var(--primary-soft); }

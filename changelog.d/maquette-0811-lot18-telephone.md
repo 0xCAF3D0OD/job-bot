@@ -1,0 +1,1 @@
+Maquette du 8 novembre, lot 18 (téléphone) : le style « blocs » sur l'offre, le suivi ORP et Compte ; la nouvelle fiche « Pour l'ORP » avec les champs de Job-Room à copier et « Marquer comme déclarée » ; l'en-tête de l'application ne recouvre plus l'offre ouverte sur téléphone

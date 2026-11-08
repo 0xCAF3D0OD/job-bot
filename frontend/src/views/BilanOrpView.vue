@@ -8,7 +8,7 @@ import AppIcon from "../components/AppIcon.vue";
 import CalendarDate from "../components/CalendarDate.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
-import OrpGoalCard from "../components/OrpGoalCard.vue";
+import OrpBlocks from "../components/OrpBlocks.vue";
 import OrpMonthBar from "../components/OrpMonth.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -33,7 +33,6 @@ const error = ref(false);
 const offline = ref(false);
 usePageReady("bilan-orp", () => !!orp.value || error.value);
 
-const LAST = 3;
 const LAST_WIDE = 4;
 const monthName = computed(() => (orp.value ? formatMonth(orp.value.month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase()) : ""));
 const left = computed(() => Math.max(0, (orp.value?.target ?? 0) - (orp.value?.count ?? 0)));
@@ -66,6 +65,10 @@ function cal(iso: string): { day: number; month: number } {
   return { day: d.getDate(), month: d.getMonth() + 1 };
 }
 const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
+// Une recherche du mois : sa ligne dans le Suivi ORP du mois.
+function openSearch(id: number): void {
+  if (orp.value) void router.push({ path: "/bilan/orp", query: { mois: orp.value.month, candidature: id } });
+}
 
 async function load(): Promise<void> {
   error.value = false;
@@ -87,7 +90,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section :class="phone ? 'band' : 'bilan-orp-page'">
+  <section :class="phone ? 'band blocks-page bilan-orp-blocks' : 'bilan-orp-page'">
     <div :class="phone ? 'container bilan-orp' : 'bilan-orp-wide'">
       <NetworkError
         v-if="error && offline"
@@ -233,48 +236,17 @@ onMounted(() => void load());
         </section>
       </template>
       <template v-else>
-        <OrpGoalCard :data="orp" />
-        <button
-          type="button"
-          class="secondary orp-export"
-          data-test="orp-export"
-          @click="sheet?.printPdf()"
-        >
-          <AppIcon name="download" />Exporter le formulaire (PDF)
-        </button>
+        <!-- Téléphone (lot 18, §10.2 ; onglet ORP de la maquette Explorer) : les blocs du Suivi ORP. -->
+        <OrpBlocks
+          :data="orp"
+          @open="openSearch"
+          @export="sheet?.printPdf()"
+        />
         <OrpSheet
           ref="sheet"
           :data="orp"
           @reload="load"
         />
-
-        <section
-          class="orp-last"
-          aria-labelledby="orp-last-title"
-        >
-          <h2 id="orp-last-title">
-            <span>Dernières recherches</span>
-            <span>{{ orp.count }} ce mois</span>
-          </h2>
-          <p
-            class="orp-proof-note"
-            data-test="orp-proof-note"
-          >
-            L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.
-          </p>
-          <OrpSearchRows
-            :rows="orp.rows"
-            :limit="LAST"
-          />
-        </section>
-
-        <RouterLink
-          :to="{ path: '/bilan/orp', query: { mois: orp.month } }"
-          class="orp-all"
-          data-test="orp-all"
-        >
-          Voir tout le mois et les justificatifs
-        </RouterLink>
       </template>
     </div>
   </section>

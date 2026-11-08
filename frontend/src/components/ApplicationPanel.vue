@@ -4,6 +4,7 @@ import { computed, ref, type FunctionalComponent } from "vue";
 import { api, type Application, type ApplicationStatus, type Interview, type OrpRow } from "../api/client";
 import { noAnswerText, followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
+import { usePhone } from "../composables/usePhone";
 import { dateInList, dateInSentence, meetingDate } from "../dates";
 import { applicationStatusLabel, colorIndex, initials } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
@@ -29,6 +30,12 @@ const Flat: FunctionalComponent = (_props, { slots }) => [slots.main?.(), slots.
 const layout = computed(() => (props.columns ? DetailTwoColumns : Flat));
 const layoutProps = computed(() => (props.columns ? { asideLabel: "Documents et contacts" } : {}));
 const company = computed(() => props.application.company || props.application.job_title);
+const { phone } = usePhone();
+// La fiche « Pour l'ORP » du mois de la candidature (« 02.11.2026 » donne 2026-11).
+const ficheTo = computed(() => {
+  const [, m, y] = (props.orpRow?.date ?? "").split(".");
+  return { path: `/bilan/orp/candidature/${props.application.id}`, query: m && y ? { mois: `${y}-${m}` } : {} };
+});
 // Les étiquettes sous le titre (maquette CandidaturesOrdinateurB, onglet Envoyées).
 const headChips = computed(() => {
   const chips: { text: string; tone: "peach" | "green" | ""; test: string }[] = [];
@@ -457,14 +464,23 @@ const onStatus = (event: Event): void =>
           >
             Employeur à l'étranger ? Vérifie le contrat et les assurances avec ton conseiller.
           </p>
+          <!-- Téléphone (lot 18, §10.3) : les champs à recopier sont dans la fiche « Pour l'ORP ». -->
+          <RouterLink
+            v-if="orpRow && phone"
+            :to="ficheTo"
+            class="orp-fiche-link"
+            data-test="orp-fiche-link"
+          >
+            Pour l’ORP ›
+          </RouterLink>
           <JobRoomDeclared
-            v-if="orpRow"
+            v-if="orpRow && (!phone || orpRow.declared_at)"
             :application-id="application.id"
             :declared-at="orpRow.declared_at"
             @changed="emit('changed')"
           />
           <dl
-            v-if="orpRow"
+            v-if="orpRow && !phone"
             class="card-job-room"
             data-test="card-job-room-fields"
           >
@@ -617,4 +633,7 @@ const onStatus = (event: Event): void =>
 /* Niveaux d'action D30 dans le détail en deux colonnes (§2.7) : plein pour l'action principale, contour bleu sinon. */
 .application-panel-columns button.primary:not(:disabled) { background: var(--action); border-color: var(--action); color: var(--on-action); }
 .application-panel-columns button.secondary { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
+/* Lot 18 (§2.2, niveau « texte ») : le lien vers la fiche « Pour l'ORP », sur téléphone. */
+.orp-fiche-link { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
+.orp-fiche-link:hover { text-decoration: underline; }
 </style>

@@ -36,31 +36,38 @@ function mountView(target: number | null) {
   });
 }
 
-describe("Bilan › ORP", () => {
-  it("l'objectif, l'export, les trois dernières recherches et le lien, sans carte Semaine (A5 annulé)", async () => {
+describe("Bilan › ORP sur téléphone, en blocs (lot 18, §10.2)", () => {
+  it("l'objectif et la date de remise, « À déclarer à l'ORP » vers la fiche, « Recherches du mois » et l'export", async () => {
     const wrapper = mountView(10);
     await flushPromises();
     const goal = wrapper.find("[data-test=orp-goal]");
     expect(goal.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("4 recherches sur 10");
+    expect(goal.find(".block-cap").text()).toBe("Octobre");
     expect(goal.find("h2").text()).toBe("6 recherches à faire");
-    expect(goal.find("p").text()).toBe("Objectif fixé avec ton ORP. Échéance le 31 octobre.");
-    const rows = wrapper.findAll("[data-test=orp-rows] li");
-    expect(rows.map((r) => r.find(".orp-what strong").text())).toEqual(["Alpstack", "Romandie Logistics", "Léman Data SA"]);
-    expect(rows[0]!.text()).toContain("DevOps Engineer · En ligne");
-    expect(rows.map((r) => r.find(".status-pill").text())).toEqual(["justificatif joint", "justificatif à joindre", "justificatif joint"]);
-    // Lot 16.4 : la phrase sous le titre de la liste.
-    expect(wrapper.find("[data-test=orp-proof-note]").text()).toBe("L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.");
-    // L'ordre de la page (B6).
-    expect(wrapper.find("[data-test=rhythm]").exists()).toBe(false);
-    expect(GET).not.toHaveBeenCalledWith("/api/today");
-    const order = ["orp-goal", "orp-export", "orp-rows", "orp-all"].map((t) => wrapper.html().indexOf(`data-test="${t}"`));
-    expect(order).toEqual([...order].sort((a, b) => a - b));
+    // Sans date du serveur, le 5 du mois suivant (ORP_DEADLINE_DAY).
+    expect(goal.find("[data-test=orp-deadline]").text()).toBe("Objectif fixé par ta conseillère. À remettre avant le 5 novembre.");
+    // Aucune n'est déclarée : quatre à déclarer, trois montrées, « Afficher l'autre ».
+    const declare = wrapper.find("[data-test=orp-to-declare]");
+    expect(declare.find("h2").text()).toBe("À déclarer à l’ORP · 4");
+    const rows = declare.findAll(".block-row");
+    expect(rows).toHaveLength(3);
+    expect(rows[0]!.find(".block-row-title").text()).toBe("Vaud Network");
+    expect(rows[0]!.findAll(".block-row-line").map((l) => l.text())).toEqual([", DevOps Engineer · En ligne", ", Envoyée le 17 octobre"]);
+    expect(rows[2]!.find(".block-status").text()).toBe(", infos à compléter");
+    expect(rows[0]!.find(".arrow-circle").attributes("aria-hidden")).toBe("true");
+    await declare.find("[data-test=orp-declare-more]").trigger("click");
+    expect(declare.findAll(".block-row")).toHaveLength(4);
+    const searches = wrapper.find("[data-test=orp-searches]");
+    expect(searches.find("h2").text()).toBe("Recherches du mois · 0");
+    expect(searches.find("[data-test=orp-proof-note]").text()).toBe("L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.");
+    expect(searches.find("[data-test=orp-export]").text()).toBe("Exporter le formulaire (PDF)");
+    expect(searches.find("[data-test=orp-export]").classes()).toContain("action-2");
   });
 
-  it("sans objectif saisi : la carte « Indique ton objectif ORP », pas de « 0 sur 0 »", async () => {
+  it("sans objectif saisi : « Indique ton objectif ORP », pas de « 0 sur 0 »", async () => {
     const wrapper = mountView(null);
     await flushPromises();
     expect(wrapper.find("[data-test=liquid-circle]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=orp-goal-missing] h2").text()).toBe("Indique ton objectif ORP");
+    expect(wrapper.find("[data-test=orp-goal] h2").text()).toBe("Indique ton objectif ORP");
   });
 });

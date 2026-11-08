@@ -366,7 +366,10 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     vi.unstubAllGlobals();
     expect(wrapper.find("[data-test=suivi-detail]").exists()).toBe(false);
     expect(wrapper.find("[data-test=add-application]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=declare]").exists()).toBe(true);
+    // Lot 18 (§10.2) : les blocs du Suivi ORP remplacent l'ancienne liste « À déclarer » et la liste du mois.
+    expect(wrapper.find("[data-test=orp-blocks]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
+    expect(wrapper.find("#orp-month-title").text()).toContain("Recherches du mois");
   });
 
   it("le calendrier replié dans le Suivi ORP, pas dans Envoyées ; un jour demandé l'ouvre", async () => {

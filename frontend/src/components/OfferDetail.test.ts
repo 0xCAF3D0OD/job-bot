@@ -231,7 +231,7 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
 describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 étape 6a)", () => {
   const phone = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px") || media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
 
-  it("en-tête retour, Sauvegarder, « ⋯ », Partager ; en bas « Écarter » et « Préparer ma candidature »", async () => {
+  it("en-tête retour, Sauvegarder, « ⋯ » (lot 18 : Partager passe dans la feuille) ; en bas « Ignorer » et « Préparer ma candidature »", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "Kubernetes, Terraform et CI/CD : dans ton profil.", summary_role: "x" }));
     expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
@@ -244,10 +244,11 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(save.attributes("aria-pressed")).toBe("false");
     await save.trigger("click");
     expect(wrapper.emitted("status")?.[0]).toEqual(["later"]);
-    // Partager : le lien de l'annonce, jamais l'adresse jobA1.
-    expect(head.find("[data-test=offer-share]").exists()).toBe(true);
+    // Lot 18 (maquette Offre) : l'en-tête n'a plus Partager.
+    expect(head.find("[data-test=offer-share]").exists()).toBe(false);
     const bar = wrapper.find("[data-test=offer-bar]");
-    expect(bar.find("[data-test=offer-discard]").text()).toBe("Écarter");
+    expect(bar.find("[data-test=offer-discard]").text()).toBe("Ignorer");
+    expect(bar.find("[data-test=offer-discard]").classes()).toContain("action-2");
     expect(bar.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
     await bar.find("[data-test=offer-discard]").trigger("click");
     expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
@@ -267,16 +268,20 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("partage le lien public par la feuille du téléphone, sinon le copie", async () => {
+  it("« Partager l'annonce » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
     phone();
     const shareFn = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, share: shareFn });
     const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/poste" }));
-    await wrapper.find("[data-test=offer-share]").trigger("click");
+    const share = async () => {
+      await wrapper.find("[data-test=detail-more]").trigger("click");
+      await wrapper.find("[data-test=offer-action-share] button").trigger("click");
+    };
+    await share();
     expect(shareFn).toHaveBeenCalledWith(expect.objectContaining({ url: "https://exemple.ch/poste" }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, share: undefined, clipboard: { writeText } });
-    await wrapper.find("[data-test=offer-share]").trigger("click");
+    await share();
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("https://exemple.ch/poste");
     expect(wrapper.find("[data-test=offer-said]").text()).toBe("Lien copié.");
