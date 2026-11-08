@@ -19,6 +19,7 @@ const emit = defineEmits<{ saved: [page: Page] }>();
       <Illustration
         pose="debout"
         :height="186"
+        :bust-height="120"
         class="rdv-empty-person"
         data-test="meeting-person"
       />
@@ -42,5 +43,7 @@ const emit = defineEmits<{ saved: [page: Page] }>();
 .rdv-empty-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-1) 0; }
 .rdv-empty-head h2 { margin: 0; font-size: var(--empty-20); font-weight: var(--weight-heavy); line-height: var(--empty-lh-title); }
 .rdv-empty-head p { margin: var(--space-1) 0 0; font-size: var(--empty-15); line-height: var(--empty-lh-text); color: var(--text-tertiary); }
+/* Lot 16.3 : sur téléphone, le buste (72 px de large) posé en bas de l'en-tête. */
+.rdv-empty-person[data-bust] { align-self: flex-end; }
 .rdv-empty-note { margin: 0 var(--space-1); font-size: var(--font-small); line-height: var(--empty-lh-note); color: var(--text-secondary); }
 </style>

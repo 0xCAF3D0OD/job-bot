@@ -6,10 +6,10 @@ import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 
 // Les recherches du mois (maquettes Explorer et Orp) : le jour, l'entreprise, « poste · moyen » et l'étiquette
-// « Preuve » ou « À joindre ». Les plus récentes d'abord ; `limit` pour les dernières seulement. Avec `open`,
+// « justificatif joint » ou « justificatif à joindre ». Les plus récentes d'abord ; `limit` pour les dernières seulement. Avec `open`,
 // chaque ligne ouvre sa candidature.
 // `link` (maquette du 8 novembre, Bilan sur ordinateur) : chaque ligne mène à sa candidature dans le Suivi ORP du
-// mois ; l'icône calendrier de 36 px, « Preuve » en vert ou « À joindre » en pêche, puis « › ».
+// mois ; l'icône calendrier de 36 px, « justificatif joint » en vert ou « justificatif à joindre » en pêche, puis « › ».
 const props = defineProps<{ rows: OrpMonth["rows"]; limit?: number; open?: boolean; link?: string }>();
 defineEmits<{ open: [id: number] }>();
 
@@ -25,7 +25,8 @@ const shown = computed(() =>
     .sort((a, b) => b.time - a.time)
     .slice(0, props.limit),
 );
-const how = (method: string) => method.charAt(0).toUpperCase() + method.slice(1);
+// « Électronique » se dit « En ligne » (lot 16.4).
+const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En ligne" : method.charAt(0).toUpperCase() + method.slice(1));
 </script>
 
 <template>
@@ -49,8 +50,8 @@ const how = (method: string) => method.charAt(0).toUpperCase() + method.slice(1)
           tone="past"
           :size="36"
         />
-        <span class="orp-what"><strong>{{ row.company }}</strong><span class="orp-sub"><span class="orp-job">{{ row.job_title }}</span><span class="orp-channel"> · {{ row.method }}</span></span></span>
-        <span :class="['orp-row-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "À joindre" : "Preuve" }}</span>
+        <span class="orp-what"><strong>{{ row.company }}</strong><span class="orp-sub"><span class="orp-job">{{ row.job_title }}</span><span class="orp-channel"> · {{ how(row.method) }}</span></span></span>
+        <span :class="['orp-row-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "justificatif à joindre" : "justificatif joint" }}</span>
         <AppIcon
           name="chevron"
           class="orp-row-chevron"
@@ -80,11 +81,11 @@ const how = (method: string) => method.charAt(0).toUpperCase() + method.slice(1)
         <span
           v-if="row.missing.length"
           class="status-pill expired"
-        ><AppIcon name="bang" />À joindre</span>
+        ><AppIcon name="bang" />justificatif à joindre</span>
         <span
           v-else
           class="status-pill applied"
-        ><AppIcon name="tick" />Preuve</span>
+        ><AppIcon name="tick" />justificatif joint</span>
       </component>
     </li>
   </ul>

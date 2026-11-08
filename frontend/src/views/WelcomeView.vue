@@ -551,6 +551,7 @@ async function finish(to: string): Promise<void> {
                 <Illustration
                   pose="cv"
                   :height="122"
+                  :bust-height="100"
                   class="welcome-cv-person"
                   data-test="cv-person"
                 />
@@ -751,6 +752,7 @@ async function finish(to: string): Promise<void> {
                 <Illustration
                   pose="revelation"
                   :height="186"
+                  :bust-height="150"
                   full
                   class="welcome-ready-person"
                 />

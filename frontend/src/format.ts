@@ -105,7 +105,7 @@ export function scoreWord(score: number): { word: string; mood: "ravi" | "conten
 }
 
 export const methodLabel: Record<"electronique" | "ecrit" | "telephone" | "personnel", string> = {
-  electronique: "Électronique",
+  electronique: "En ligne",
   ecrit: "Écrit (courrier)",
   telephone: "Téléphone",
   personnel: "En personne",

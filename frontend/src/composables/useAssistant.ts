@@ -86,6 +86,17 @@ export function greetingText(name: string, offers: number, followUps: number): s
 // Trois suggestions selon la page et l'élément choisi (docs/24 §1).
 const HOW_IT_WORKS = "Comment ça marche ici ?";
 
+// Le nom d'entreprise dans une pastille de l'Assistant (MODIFICATIONS du 8 novembre au soir, lot 16.1) : la partie
+// après « - » s'il y en a une (« Comité international de la Croix-Rouge - ICRC » donne « ICRC ») ; sinon coupé à 24
+// caractères avec « … ». Le nom complet reste dans l'aria-label de la pastille.
+export function shortCompany(name: string): string {
+  const full = name.trim();
+  const at = full.lastIndexOf(" - ");
+  const tail = at >= 0 ? full.slice(at + 3).trim() : "";
+  if (tail) return tail;
+  return full.length > 24 ? `${full.slice(0, 24).trimEnd()}…` : full;
+}
+
 export function suggestionsFor(page: string, value: AssistantFocus | null): string[] {
   if (value?.offerId) {
     if (page === "preparation") {

@@ -25,26 +25,35 @@ export const MAX_HEIGHT = { list: 200, full: 280, desktop: 400 } as const;
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 
-import { poseFile } from "../personnage";
+import { BUST, bustFile, poseFile } from "../personnage";
+import { usePhone } from "../composables/usePhone";
 
 // `height` : la hauteur sur téléphone ; `desktopHeight` : sur ordinateur (dès 821 px), sinon la même.
 // `full` : un écran plein, l'image est chargée tout de suite ; ailleurs, à l'affichage (loading="lazy").
 // Décoratif (alt vide, aria-hidden) ; un fondu de 200 ms à l'arrivée, coupé par « réduire les animations ».
-const props = withDefaults(defineProps<{ pose: Pose; height: number; desktopHeight?: number; full?: boolean }>(), {
+// `bustHeight` : sur téléphone, le buste de la pose à cette hauteur au lieu du personnage en pied (lot 16.3) ;
+// sur ordinateur, toujours en pied.
+const props = withDefaults(defineProps<{ pose: Pose; height: number; desktopHeight?: number; full?: boolean; bustHeight?: number }>(), {
   desktopHeight: undefined,
   full: false,
+  bustHeight: undefined,
 });
 
-const phoneHeight = computed(() => Math.min(props.height, props.full ? MAX_HEIGHT.full : MAX_HEIGHT.list));
+const { phone } = usePhone();
+const bust = computed(() => (props.bustHeight && phone.value ? BUST[props.pose] : undefined));
+const phoneHeight = computed(() => (bust.value && props.bustHeight ? props.bustHeight : Math.min(props.height, props.full ? MAX_HEIGHT.full : MAX_HEIGHT.list)));
 const wideHeight = computed(() => Math.min(props.desktopHeight ?? phoneHeight.value, MAX_HEIGHT.desktop));
-const width = computed(() => Math.round((POSE_WIDTH[props.pose] * phoneHeight.value) / 400));
-const src = computed(() => poseFile(props.pose, 400));
-const srcset = computed(() => `${src.value} 1x, ${poseFile(props.pose, 800)} 2x`);
+const width = computed(() =>
+  bust.value ? Math.round((bust.value.width * phoneHeight.value) / bust.value.height) : Math.round((POSE_WIDTH[props.pose] * phoneHeight.value) / 400),
+);
+const file = (size: 400 | 800) => (bust.value ? bustFile(props.pose, size) : poseFile(props.pose, size));
+const src = computed(() => file(400));
+const srcset = computed(() => `${src.value} 1x, ${file(800)} 2x`);
 
 const loaded = ref(false);
 const img = ref<HTMLImageElement | null>(null);
 watch(
-  () => props.pose,
+  () => src.value,
   () => (loaded.value = false),
 );
 // Une image déjà en cache peut être prête avant que la page écoute son chargement.
@@ -67,6 +76,7 @@ onMounted(() => {
     :loading="full ? 'eager' : 'lazy'"
     decoding="async"
     :data-pose="pose"
+    :data-bust="bust ? '' : undefined"
     data-illustration="personnage"
     @load="loaded = true"
   >

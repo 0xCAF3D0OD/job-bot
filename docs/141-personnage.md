@@ -61,6 +61,15 @@ hachées (48 adresses de moins dans le premier chargement) : 1,4 Ko de moins, le
 | 11 | perso-01-debout, 186 px | Candidatures › Rendez-vous sans rendez-vous prévu | — | 4 |
 | 12 | perso-12-celebration | Entretien décroché (mise en page de l'écran 8) | — | 4 |
 | 13 | perso-02-bonjour | Compte supprimé (au revoir, sur la connexion) et refus reçu (encourageant) | — | 4 |
+| 14 | perso-01-buste, 72 px de large | Téléphone : Candidatures › Rendez-vous vide (buste posé en bas de l'en-tête) | RendezVous | lot 16 |
+| 15 | perso-02-bonjour-buste, 118 px | Téléphone : Connexion, clair et sombre (au lieu du personnage en pied de 140 px) | Connexion, ConnexionSombre | lot 16 |
+| 16 | perso-03-cv-buste, 100 px | Téléphone : Premiers pas, étape « Ton CV » (au lieu de 122 px) | OnboardingC | lot 16 |
+| 17 | perso-07-revelation-buste, 150 px | Téléphone : Premiers pas, dernière étape (au lieu de 186 px) | OnboardingC | lot 16 |
+
+Bustes (MODIFICATIONS du 8 novembre au soir, lot 16.3) : quand le personnage partage l'écran du téléphone avec un
+formulaire, seul le haut du corps reste, fondu en bas (le fondu est dans le fichier), posé sur la ligne de sol du
+décor. Restent en pied : les pages d'état plein écran et toutes les pages ordinateur. `Illustration` prend le buste
+avec `bust-height`, sur téléphone seulement.
 
 Alertes : en-tête et liste vide avec le logo transformé « cloche » (`FaceTransform kind="alerts"`), pas le
 personnage (PR 4).

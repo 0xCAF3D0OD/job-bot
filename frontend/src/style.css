@@ -1252,7 +1252,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-body { flex: 1; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 .assistant-intro { font-size: var(--font-small); }
 .assistant-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.assistant-suggestions .chip { text-align: left; }
+.assistant-suggestions .chip { --reply-48: 48px; --reply-pad: 10px 20px; --reply-lh: 21px; min-height: var(--reply-48); padding: var(--reply-pad); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--reply-lh); text-align: left; }
 .assistant-label { margin: var(--space-2) 0 var(--space-1); font-size: var(--font-caption); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .assistant-recent { display: grid; gap: var(--space-1); }
 .assistant-recent-item { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font-size: var(--font-small); cursor: pointer; color: var(--text); }
@@ -1351,7 +1351,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
     transform: translate(-50%, -50%);
   }
-  .chip, .suggestions .chip, .assistant-suggestions .chip { min-height: 2.75rem; }
+  .chip, .suggestions .chip { min-height: 2.75rem; }
   .assistant-head-actions { gap: var(--space-5); }
   .more-button { min-width: 2.75rem; min-height: 2.75rem; }
   :root input[type="checkbox"][role="switch"] { width: 2.75rem; height: 1.6rem; }
@@ -1549,7 +1549,8 @@ html.side-open { overflow: hidden; }
 .assistant-page .assistant-bubble { justify-self: start; max-width: 18rem; padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-sm); }
 .assistant-page .assistant-line.user { max-width: 17rem; padding: var(--space-3) var(--space-4); background: var(--primary); color: var(--on-primary); border-radius: var(--radius-card) var(--radius-card) var(--radius-sm) var(--radius-card); }
 .assistant-replies { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); padding-left: var(--target-min); }
-.assistant-reply { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font: inherit; font-weight: var(--weight-semibold); text-align: left; cursor: pointer; }
+/* Lot 16.1 : 48 px au moins, 10 × 20 de marge, texte à gauche sur 21 px, contour bleu (niveau 2). */
+.assistant-reply { --reply-48: 48px; --reply-pad: 10px 20px; --reply-lh: 21px; display: inline-flex; align-items: center; min-height: var(--reply-48); padding: var(--reply-pad); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--reply-lh); text-align: left; cursor: pointer; }
 /* Lot 17 : sur la page, le formulaire n'est qu'un emplacement ; la seule pilule est celle du Composer. */
 .assistant-page .assistant-form { margin: var(--space-2) var(--space-4) var(--space-1); padding: 0; border: 0; }
 .assistant-page .assistant-send { display: inline-grid; place-items: center; flex: none; width: var(--target-min); height: var(--target-min); padding: 0; border-radius: var(--radius-pill); }
@@ -4259,6 +4260,7 @@ html.search-open { overflow: hidden; }
 button.orp-export { justify-content: center; min-height: var(--btn-primary); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .orp-last h2 { display: flex; justify-content: space-between; margin: var(--space-2) var(--space-1) var(--space-2); font-size: var(--label-caps); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .orp-last h2 span + span { font-weight: var(--weight-semibold); letter-spacing: 0; text-transform: none; }
+.orp-proof-note { margin: 0 var(--space-1) var(--space-2); font-size: var(--font-small); color: var(--text-secondary); }
 .orp-rows, .orp-none { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .orp-none { padding: var(--space-4); color: var(--text-secondary); }
 .orp-row { display: flex; align-items: center; white-space: normal; gap: var(--space-3); width: 100%; min-height: 5.5rem; padding: var(--space-2) var(--space-3); border: 0; background: none; color: inherit; font: inherit; text-align: left; }
