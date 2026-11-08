@@ -21,7 +21,6 @@ import ApplicationSent from "../components/ApplicationSent.vue";
 import GoalReached from "../components/GoalReached.vue";
 import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import FormField from "../components/FormField.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -34,6 +33,8 @@ import StepTabs, { type Step } from "../components/StepTabs.vue";
 import { firstGoal, forgetGoal } from "../composables/useGoalMoment";
 import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
+import Composer from "../components/Composer.vue";
+import SuggestionChips from "../components/SuggestionChips.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { dateInSentence, dateWithTime } from "../dates";
 import { expiredText } from "../format";
@@ -242,16 +243,32 @@ const writeLabel = computed(() => {
   if (instruction.value.trim()) return "Rédiger la nouvelle version";
   return "";
 });
-// « Modifier le texte » (C4) : la consigne s'ouvre dans la carte (téléphone) ou prend le focus à côté.
-const instructionOpen = ref(false);
-const instructionEl = ref<HTMLInputElement | null>(null);
-function openInstruction(): void {
-  if (!phone.value) {
-    document.querySelector<HTMLTextAreaElement>(".side-instruction")?.focus();
-    return;
+// Retoucher la lettre (maquette du 8 novembre, PreparerOrdinateur) : des pastilles de suggestion, puis la zone de
+// saisie commune d'une ligne, « Demander une modification de la lettre ». Le bouton « Modifier le texte avec
+// l'Assistant » disparaît. « Insister sur … » prend la première compétence du profil citée par l'annonce (les points
+// forts de la note) ; sans elle, trois pastilles seulement.
+const revision = ref("");
+const insist = computed(() => {
+  const first = offer.value?.strengths?.[0];
+  const key = first ? /^([^:]{1,40}?)\s?:\s+/.exec(first.text.trim())?.[1] : undefined;
+  return key ? `Insister sur ${key}` : "";
+});
+const suggestions = computed(() => {
+  const list = ["Plus court", "Plus formel"];
+  if (insist.value) list.push(insist.value);
+  if (selected.value?.language !== "de") list.push("En allemand");
+  return list;
+});
+function revise(text: string): void {
+  const asked = text.trim();
+  if (!asked || writing.value) return;
+  if (asked === "En allemand") {
+    language.value = "de";
+    instruction.value = "";
+  } else {
+    instruction.value = asked;
   }
-  instructionOpen.value = true;
-  void nextTick(() => instructionEl.value?.focus());
+  void write();
 }
 // « J'ai relu la lettre » (C11) : gardé avec la version, pour un autre appareil.
 const readBusy = ref(false);
@@ -391,7 +408,7 @@ async function write(force = false): Promise<void> {
     const reviewed = await reviewLetter(data);
     letters.value = [reviewed, ...letters.value];
     instruction.value = "";
-    instructionOpen.value = false;
+    revision.value = "";
     select(reviewed);
     fresh.value = true;
     setTimeout(() => (fresh.value = false), 1000);
@@ -1096,29 +1113,22 @@ onMounted(() => void load());
               </ul>
             </DisclosureRow>
             <template v-if="selected && !claim">
-              <button
-                v-if="!instructionOpen"
-                type="button"
-                class="secondary doc-card-edit"
-                data-test="edit-text"
-                @click="openInstruction"
-              >
-                {{ phone ? "Modifier le texte avec l'Assistant" : "Modifier le texte" }}
-              </button>
               <div
-                v-else-if="phone"
-                class="doc-card-instruction"
+                class="prep-revise"
+                data-test="prep-revise"
               >
-                <input
-                  ref="instructionEl"
-                  v-model="instruction"
-                  class="prep-instruction-line"
-                  maxlength="500"
-                  aria-label="Consigne pour la nouvelle version"
-                  placeholder="Consigne : plus court, insiste sur Kubernetes"
-                  data-test="instruction"
-                  @input="instructionNote = ''"
-                >
+                <SuggestionChips
+                  :items="suggestions"
+                  label="Retouches proposées"
+                  @pick="revise"
+                />
+                <Composer
+                  v-model="revision"
+                  placeholder="Demander une modification de la lettre"
+                  send-label="Envoyer la demande"
+                  :busy="writing"
+                  @send="revise"
+                />
                 <p
                   v-if="instructionNote"
                   class="hint"
@@ -1151,31 +1161,6 @@ onMounted(() => void load());
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
             </h2>
-            <FormField
-              v-if="selected"
-              v-slot="field"
-              label="Consigne"
-              optional
-            >
-              <textarea
-                :id="field.id"
-                v-model="instruction"
-                rows="2"
-                maxlength="500"
-                placeholder="plus court, insiste sur Kubernetes"
-                :aria-describedby="field.describedby"
-                class="side-instruction"
-                data-test="instruction"
-                @input="instructionNote = ''"
-              />
-            </FormField>
-            <p
-              class="hint instruction-note"
-              aria-live="polite"
-              data-test="instruction-note"
-            >
-              {{ instructionNote }}
-            </p>
             <div class="mobile-dock">
               <BusyButton
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"

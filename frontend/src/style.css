@@ -3637,6 +3637,46 @@ main:focus { outline: none; }
 .today-task-action { flex: none; display: flex; align-items: center; gap: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
 .today-task-action svg { width: 16px; height: 16px; }
 .today-page .today-welcome, .today-page .first-steps { margin: 0; }
+/* --- Bilan sur ordinateur (maquette du 8 novembre, BilanOrdinateur) ---
+   La bande d'Aujourd'hui : « Bilan » à gauche, les onglets à droite ; la carte du mois à cheval ; des sections en
+   lignes séparées par un trait, dans une carte blanche ; écart 32 entre les blocs. */
+.bilan-band { padding-bottom: calc(var(--space-8) + var(--space-12)); }
+.bilan-band-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.bilan-band-inner h1 { margin: 0; font-size: var(--font-page); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
+.bilan-page { max-width: 880px; margin: 0 auto; padding: 0 var(--space-6) var(--space-12); box-sizing: content-box; }
+.bilan-page-resultats, .bilan-page-formations { padding-top: var(--space-6); }
+.bilan-orp-wide { display: flex; flex-direction: column; gap: var(--space-8); }
+.bilan-orp-card { grid-template-columns: minmax(0, 1fr) auto; }
+@media screen { .bilan-orp-wide > .orp-sheet-tab:not(:has(.notice)) { display: none; } }
+.bilan-band.flat { padding-bottom: var(--space-6); }
+.bilan-orp-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: calc(-1 * var(--space-2)); }
+.bilan-orp-actions button { min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+.bilan-section { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.bilan-section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 var(--space-1); }
+.bilan-section-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
+.bilan-section-head span { font-size: var(--font-small); color: var(--text-secondary); }
+.orp-rows-link { overflow: hidden; }
+.orp-rows-link .orp-row { min-height: 56px; gap: var(--space-3); padding: var(--space-3) var(--space-5); color: var(--text); text-decoration: none; }
+.orp-rows-link .orp-row:hover { background: var(--surface-muted); }
+.orp-rows-link .orp-what { flex: 1; min-width: 0; font-size: var(--font-label); }
+.orp-row-state { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text); }
+.orp-row-state.ok { color: var(--success); }
+.orp-row-state.todo { color: var(--peach-text); }
+.orp-row-chevron { flex: none; width: 16px; height: 16px; color: var(--text-secondary); }
+.bilan-row-more { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 var(--space-5); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.bilan-row-more svg { width: 16px; height: 16px; }
+/* Profil sur ordinateur (maquette ProfilOrdinateur) : l'image de 72 px et sa pastille crayon de 28 px, le nom en 34
+   très gras, la ville en 17 ; « Changer d'image » et « Modifier » à droite, en pilule de 44 px. */
+.jobs-head.profile-head { --profile-17: 17px; --profile-34: 34px; max-width: 880px; box-sizing: content-box; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); }
+.profile-head-main { display: flex; align-items: center; gap: var(--space-5); width: 100%; }
+.profile-head-image { position: relative; flex: none; padding: 0; border: 0; border-radius: var(--radius-pill); background: none; cursor: pointer; }
+.profile-head-pencil { position: absolute; right: calc(-1 * var(--space-1)); bottom: calc(-1 * var(--space-1)); display: grid; place-items: center; width: 28px; height: 28px; box-sizing: border-box; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); }
+.profile-head-pencil svg { width: 14px; height: 14px; }
+.profile-head-text { flex: 1; min-width: 0; }
+.profile-head-text h1 { margin: 0; font-size: var(--profile-34); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
+.profile-head-text p { margin: var(--space-1) 0 0; font-size: var(--profile-17); color: var(--text-secondary); }
+.profile-head-actions { flex: none; display: flex; gap: var(--space-3); }
+.profile-head-actions button { min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
 
 /* --- Offres, barre d'outils (1.6.55, planche « Barre d'outils Offres ») ---
    Ordinateur : la recherche prend la ligne, puis « Filtrer » et « + Ajouter », boutons secondaires à la
@@ -4697,3 +4737,4 @@ a.panel-row:hover { background: var(--band); }
 }
 .sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
 .sent-goal-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
+.prep-revise { display: grid; gap: var(--space-3); }

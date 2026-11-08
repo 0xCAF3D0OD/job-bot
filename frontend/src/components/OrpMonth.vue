@@ -24,6 +24,8 @@ const props = defineProps<{
   compact?: boolean;
   noFace?: boolean;
   band?: boolean;
+  /** `band` : la phrase sous la barre, à la place de celle du rythme (le Bilan y met l'échéance). */
+  line?: string;
 }>();
 
 const SEGMENTS_MAX = 15;
@@ -31,6 +33,7 @@ const pace = computed(() => orpPace(props.count, props.target, props.month));
 const segments = computed(() => (props.target && props.target <= SEGMENTS_MAX ? props.target : 0));
 const share = computed(() => (props.target ? Math.min(100, Math.round((props.count / props.target) * 100)) : 0));
 const bandLine = computed(() => {
+  if (props.line) return props.line;
   const p = pace.value;
   if (!p) return "";
   return `${p.line.replace(/\.$/, "")} · ${p.word.replace(/\.$/, "").toLowerCase()}`;

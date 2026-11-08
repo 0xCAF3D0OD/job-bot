@@ -3,11 +3,14 @@ import { computed } from "vue";
 
 import type { OrpMonth } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import CalendarDate from "./CalendarDate.vue";
 
 // Les recherches du mois (maquettes Explorer et Orp) : le jour, l'entreprise, « poste · moyen » et l'étiquette
 // « Preuve » ou « À joindre ». Les plus récentes d'abord ; `limit` pour les dernières seulement. Avec `open`,
 // chaque ligne ouvre sa candidature.
-const props = defineProps<{ rows: OrpMonth["rows"]; limit?: number; open?: boolean }>();
+// `link` (maquette du 8 novembre, Bilan sur ordinateur) : chaque ligne mène à sa candidature dans le Suivi ORP du
+// mois ; l'icône calendrier de 36 px, « Preuve » en vert ou « À joindre » en pêche, puis « › ».
+const props = defineProps<{ rows: OrpMonth["rows"]; limit?: number; open?: boolean; link?: string }>();
 defineEmits<{ open: [id: number] }>();
 
 const SHORT_MONTH = new Intl.DateTimeFormat("fr-CH", { month: "short" });
@@ -17,7 +20,7 @@ const shown = computed(() =>
     .map((row) => {
       const [day, month, year] = row.date.split(".").map(Number);
       const date = new Date(year!, month! - 1, day!);
-      return { ...row, day, month: SHORT_MONTH.format(date), time: date.getTime() };
+      return { ...row, day, monthNumber: month!, month: SHORT_MONTH.format(date), time: date.getTime() };
     })
     .sort((a, b) => b.time - a.time)
     .slice(0, props.limit),
@@ -27,7 +30,37 @@ const how = (method: string) => method.charAt(0).toUpperCase() + method.slice(1)
 
 <template>
   <ul
-    v-if="shown.length"
+    v-if="shown.length && link"
+    class="orp-rows orp-rows-link"
+    data-test="orp-rows"
+  >
+    <li
+      v-for="row in shown"
+      :key="row.application_id"
+    >
+      <RouterLink
+        :to="{ path: '/bilan/orp', query: { mois: link, candidature: row.application_id } }"
+        class="orp-row"
+        :data-test="`orp-row-${row.application_id}`"
+      >
+        <CalendarDate
+          :day="row.day!"
+          :month="row.monthNumber"
+          tone="past"
+          :size="36"
+        />
+        <span class="orp-what"><strong>{{ row.company }}</strong><span class="orp-sub"><span class="orp-job">{{ row.job_title }}</span><span class="orp-channel"> · {{ row.method }}</span></span></span>
+        <span :class="['orp-row-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "À joindre" : "Preuve" }}</span>
+        <AppIcon
+          name="chevron"
+          class="orp-row-chevron"
+        />
+      </RouterLink>
+    </li>
+    <slot name="last" />
+  </ul>
+  <ul
+    v-else-if="shown.length"
     class="orp-rows"
     data-test="orp-rows"
   >

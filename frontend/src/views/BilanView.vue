@@ -28,7 +28,31 @@ const segments = computed<SegmentOption[]>(() => [
 </script>
 
 <template>
-  <PageHero title="Bilan">
+  <!-- Ordinateur (maquette du 8 novembre, BilanOrdinateur) : la même bande bleu pâle qu'Aujourd'hui, le titre à
+       gauche et les onglets à droite, sur 880 px ; le contenu dessous, sur la même colonne. -->
+  <template v-if="!phone">
+    <section
+      :class="['today-band bilan-band', { flat: tab !== 'orp' }]"
+      data-test="bilan-band"
+    >
+      <div class="today-band-inner bilan-band-inner">
+        <h1>Bilan</h1>
+        <SegmentedControl
+          :model-value="tab"
+          :options="segments"
+          label="Bilan"
+          class="bilan-segments"
+        />
+      </div>
+    </section>
+    <div :class="['bilan-page', `bilan-page-${tab}`]">
+      <RouterView />
+    </div>
+  </template>
+  <PageHero
+    v-else
+    title="Bilan"
+  >
     <SegmentedControl
       :model-value="tab"
       :options="segments"
@@ -38,11 +62,13 @@ const segments = computed<SegmentOption[]>(() => [
     />
   </PageHero>
   <!-- Résultats sur la bande grise, comme Candidatures (1.6.62, planche « 3 et 4. Bilan »). -->
-  <section
-    v-if="tab === 'resultats'"
-    class="band jobs-band"
-  >
-    <RouterView />
-  </section>
-  <RouterView v-else />
+  <template v-if="phone">
+    <section
+      v-if="tab === 'resultats'"
+      class="band jobs-band"
+    >
+      <RouterView />
+    </section>
+    <RouterView v-else />
+  </template>
 </template>
