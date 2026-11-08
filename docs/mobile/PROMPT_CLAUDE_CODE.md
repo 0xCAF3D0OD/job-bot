@@ -56,14 +56,14 @@ La maquette se lit corrigée par ces décisions. Elles sont validées par Kevin 
 
 | N° | Décision | Remplace |
 |---|---|---|
-| D18 | **Seuil unique 820 px (D8 reste).** Les mentions « < 600 px » et « >= 1024 px » de l'ancien LISEZMOI sont fausses. Téléphone : largeur <= 820 px. Ordinateur : > 820 px. Entre 821 et 1327 px, les conteneurs de 1280 et 880 px prennent `max-width` avec 24 px de marge de chaque côté. | — |
-| D19 | **Rayons D7 (8, 18, 34, 999) restent.** Traduction des rayons de la maquette dans le §4. | — |
-| D20 | **Couleurs** : traduction obligatoire par le tableau du §3, avec 3 jetons nouveaux et 4 ombres nouvelles. | — |
-| D21 | **Barre du bas du téléphone** : elle s'appelle « Bilan », pas « Progresser » (D2 reste), et « Accueil » (D1 reste). Les maquettes affichent encore « Progresser » : ignorer ce mot. | — |
+| D18 | **Seuil unique 820 px (D8 reste).** Les mentions « < 600 px » et « >= 1024 px » de l'ancien LISEZMOI sont fausses. Téléphone : largeur <= 820 px. Ordinateur : > 820 px. Entre 821 et 1327 px, les conteneurs de 1280 et 880 px prennent `max-width` avec 24 px de marge de chaque côté. | aucun |
+| D19 | **Rayons D7 (8, 18, 34, 999) restent.** Traduction des rayons de la maquette dans le §4. | aucun |
+| D20 | **Couleurs** : traduction obligatoire par le tableau du §3, avec 3 jetons nouveaux et 4 ombres nouvelles. | aucun |
+| D21 | **Barre du bas du téléphone** : elle s'appelle « Bilan », pas « Progresser » (D2 reste), et « Accueil » (D1 reste). Les maquettes affichent encore « Progresser » : ignorer ce mot. | aucun |
 | D22 | **Carte = cliquable.** Une carte (fond `--surface` + bordure) est toujours entièrement cliquable. Une information seule n'a pas de cadre : lignes séparées par `--line-soft`. Dans une carte cliquable, jamais de bouton ni de pastille d'action : un libellé coloré (couleur du ton, 15 px, 700) suivi de « › ». | §4 (cartes), en partie |
-| D23 | **Icônes sans fond.** Aucune pastille ou rond coloré derrière une icône décorative, sur téléphone et sur ordinateur. Exception : l'icône Assistant de la barre du bas du téléphone garde son cercle. | — |
+| D23 | **Icônes sans fond.** Aucune pastille ou rond coloré derrière une icône décorative, sur téléphone et sur ordinateur. Exception : l'icône Assistant de la barre du bas du téléphone garde son cercle. | aucun |
 | D24 | **Panneaux latéraux non modaux** (cloche, compte, Assistant) sur ordinateur : 420 px (Assistant 480 px), sans voile. Un clic à l'extérieur ferme tout. Les filtres de Candidatures **remplacent la colonne liste** au lieu de s'ouvrir en popover. | docs/32 §2.2 (voile), maquette CandidaturesOrdinateur état `f` |
-| D25 | **Zone de saisie unique (Composer)** pour tout message libre envoyé tel quel. Les champs de formulaire restent des champs de formulaire. | — |
+| D25 | **Zone de saisie unique (Composer)** pour tout message libre envoyé tel quel. Les champs de formulaire restent des champs de formulaire. | aucun |
 | D26 | **Date et heure** : déclencheurs en pilule, sélecteur qui prend la place du formulaire (plein écran sur téléphone), icône calendrier qui contient la date (CalendarDate) au lieu des carrés colorés. Remplace les `<input type="date">` et `<input type="time">` natifs (`OrpMeetingForm.vue` l. ~90, `OrpOutcomeSheet.vue` l. ~158). | docs/22 en partie |
 | D27 | **Personnage sur ordinateur** : 240 px de haut sur les pages d'état, 360 px aux premiers pas. La note « 290 px sur ordinateur » de docs/141 §4 est remplacée. Liste fermée de docs/141 §3 inchangée. | docs/141 §4 |
 
@@ -84,23 +84,23 @@ Toute couleur hexadécimale d'une maquette se remplace par le jeton de cette tab
 | #EFECE5, #ECE9E1 (traits) | #2C2722 | `--line-soft` | traits entre lignes |
 | #D8D4CA, #CFCBC1 | #4E473E | **nouveau `--line-strong`** (clair #D8D4CA, sombre #4E473E) | bordure de la bulle de recherche, des champs au repos |
 | #8C8478 | #8C8478 | **nouveau `--field-border`** (clair et sombre #8C8478) | bordure 1,5 px des pilules date et heure ; ton « passé » de CalendarDate |
-| #B8B3A8 | — | **nouveau `--text-disabled`** (clair #B8B3A8, sombre #5E574F) | jours passés désactivés du calendrier, texte désactivé (exempté de contraste, WCAG 1.4.3) |
+| #B8B3A8 | aucun | **nouveau `--text-disabled`** (clair #B8B3A8, sombre #5E574F) | jours passés désactivés du calendrier, texte désactivé (exempté de contraste, WCAG 1.4.3) |
 | #1B1F2A | #F3EEE6 | `--text` | |
 | #3D4250 | #D6CFC4, #D9D2C7, #C8C0B4 | `--text-tertiary` | texte et icônes gris foncé |
 | #596070 | #ABA398 | `--text-secondary` | |
-| #6B6157 | — | `--score-dig` | libellé « Provisoire » |
+| #6B6157 | aucun | `--score-dig` | libellé « Provisoire » |
 | #2445C2 | #7D95FF (graphique) | `--primary` (fond de bouton) / `--primary-graphic` (icône, trait, anneau) | |
 | #1D3B91, #1A3496 | #AEBDFF | `--primary-text` | liens, survol d'un bouton plein |
 | #E8ECFB, #F5F7FE | #232B45 | `--primary-soft` | bande bleu pâle, sélection, encadré « Valider » |
-| #D5DCF5 | — | `--water` | bordure de la carte Mois ORP sur la bande |
+| #D5DCF5 | aucun | `--water` | bordure de la carte Mois ORP sur la bande |
 | #8A4A16, #8F4710 | #F2B98E | `--peach-text` (déjà dans `style.css`) | ton « en retard » |
 | #B4631F | #F2B98E | `--warning` | ton « orp » de CalendarDate (ORP ou à noter) |
 | #FDEDE3, #FBF4EE | #3A281E | `--peach-soft` | bandeau pêche (alerte Indeed, note provisoire) |
-| #F3D3BF | — | `--peach` | bordure du bandeau pêche |
+| #F3D3BF | aucun | `--peach` | bordure du bandeau pêche |
 | #17734A | #62D497, #7FD3A6 | `--success` | |
 | #B4371F | #FF8A73 | `--danger` | « Se déconnecter », destructif seulement |
-| #C9C5BA / #A9A397 | — | `--scrollbar-thumb` / `--scrollbar-thumb-hover` (déjà dans `style.css`) | |
-| #D9DCE6 / #36312B | — | `--btn-disabled` (déjà dans `style.css`) | |
+| #C9C5BA / #A9A397 | aucun | `--scrollbar-thumb` / `--scrollbar-thumb-hover` (déjà dans `style.css`) | |
+| #D9DCE6 / #36312B | aucun | `--btn-disabled` (déjà dans `style.css`) | |
 
 Restent en valeurs fixes : logos de marque tiers (Google, Microsoft, Indeed…) et intérieur des illustrations (personnage, confettis d'Objectif atteint).
 
@@ -352,7 +352,7 @@ Ce lot remplace ce que les PR #559 et #561 ont codé d'après l'ancienne maquett
 | 9 | Réglages | `captures/Reglages.png` | `SettingsView.vue`, `SettingRow.vue` | Icônes sans fond, 1,5 fois plus grandes qu'avant (taille exacte dans le HTML). |
 | 10 | Bilan, résultats | `captures/BilanResultats.png` | `BilanView.vue`, `components/bilan/*` | Sections en lignes séparées par un trait, plus de points ; bouton tonal pleine largeur dans « Le carnet ». Vérifie d'abord : si c'est déjà en production, ne touche à rien et écris-le. |
 | 11 | Extension | `captures/ExtAnnonce.png`, `captures/ExtAlerte.png` | `extension/` (`popup`, `annonce.js`, `alertes.js`) | Icônes sans fond, 1,5 fois plus grandes. |
-| 12 | Accueil | `captures/AccueilSmile.png` | — | Déjà conforme : ne rien changer. |
+| 12 | Accueil | `captures/AccueilSmile.png` | aucun | Déjà conforme : ne rien changer. |
 
 ### Lot 10 : vérification finale
 
@@ -390,3 +390,13 @@ Ce lot remplace ce que les PR #559 et #561 ont codé d'après l'ancienne maquett
 - Garder un popover de filtres, un champ date ou heure natif, ou un carré de date coloré.
 - Créer un composant qui existe déjà : réutilise `SidePanel`, `BottomSheet`, `MoreMenu`, `SegmentedControl`, `useAutoGrow`, `useOfferFilters`, `dates.ts`.
 - Recréer une maquette abandonnée (liste du §1, point 10).
+
+---
+
+## 8. Lots 11 à 18 (8 novembre au soir)
+
+Tout est dans `MODIFICATIONS_8_NOVEMBRE_SOIR.md`, version finale et sans contradiction. Lis-le en entier.
+
+- Ordre des PR : son §1.2 (lot 17 d'abord, puis 11 à 15, puis 16, puis 18).
+- Ses règles du §2 (D28 à D34) **remplacent** D22 « carte = cliquable » et la règle du §7 de ce document sur les cartes. En cas de doute, ce fichier prime sur ce document.
+- Code les lots 11 à 16 directement avec ces règles finales.
