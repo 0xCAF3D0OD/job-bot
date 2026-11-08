@@ -47,7 +47,10 @@ const { me, loggedIn, load, expired } = useAuth();
 // Le pied de page (docs/126 §4) : sur téléphone connecté, les maquettes n'en ont pas ; il reste en bas du
 // Compte, à un onglet de chaque page (nLPD : facile à trouver).
 const { phone } = usePhone();
-const footer = computed(() => !route.meta.bare && (!phone.value || !loggedIn.value || route.path === "/compte"));
+// Page introuvable sur ordinateur, connecté (maquette du 8 novembre, PageIntrouvableOrdinateur) : l'en-tête complet.
+const { phone: wide } = usePhone("(min-width: 1024px)");
+const bare = computed(() => !!route.meta.bare && !(route.name === "not-found" && wide.value && !phone.value && loggedIn.value));
+const footer = computed(() => !bare.value && (!phone.value || !loggedIn.value || route.path === "/compte"));
 const { check: checkJobsPage } = useJobsMemory();
 // Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
 watch(loggedIn, (now) => now && void checkJobsPage().catch(() => undefined), { immediate: true });
@@ -91,7 +94,7 @@ onUnmounted(() => {
     data-test="skip-link"
     @click.prevent="skipToContent"
   >Aller au contenu</a>
-  <AppHeader v-if="!route.meta.bare" />
+  <AppHeader v-if="!bare" />
   <div
     v-if="loggedIn && profile && !profile.is_main"
     class="profile-banner"
@@ -111,7 +114,7 @@ onUnmounted(() => {
     </button>
   </div>
   <div
-    v-if="me?.demo && !route.meta.bare"
+    v-if="me?.demo && !bare"
     class="demo-banner"
     role="region"
     aria-label="Démo"
@@ -177,5 +180,5 @@ onUnmounted(() => {
   />
   <DismissLayer />
   <PageTransition />
-  <AssistantPanel v-if="loggedIn && !route.meta.bare" />
+  <AssistantPanel v-if="loggedIn && !bare" />
 </template>

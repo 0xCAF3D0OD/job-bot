@@ -14,6 +14,7 @@ import ScoreRing from "../components/ScoreRing.vue";
 import TagInput from "../components/TagInput.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
+import { usePhone } from "../composables/usePhone";
 import { UNDO_MS } from "../composables/useUndo";
 import { rateText, remoteText } from "../format";
 import { whyLine } from "../whyLine";
@@ -43,6 +44,18 @@ const TITLES: { lead: string; struck: string; hand: string }[] = [
   { lead: "", struck: "Toutes les offres", hand: "Juste les tiennes." },
   { lead: "Lire", struck: "312 offres", hand: "En trier 3." },
 ];
+
+// Ordinateur dès 1 024 px (maquette du 8 novembre, OnboardingOrdinateur, D27) : trois étapes sur le fond clair, sans
+// la page bleue ; en haut, le logo, trois points et « Passer » ; « Étape N sur 3 » au-dessus du titre ; la première
+// réunit l'accueil et le CV, avec le personnage de 360 px à droite ; « Retour » et « Continuer » en bas.
+const { phone } = usePhone();
+const { phone: wideQuery } = usePhone("(min-width: 1024px)");
+const desk = computed(() => wideQuery.value && !phone.value);
+const DESK_TITLES: Record<number, { lead: string; hand: string }> = {
+  1: { lead: "Moins chercher,", hand: "plus vivre." },
+  2: { lead: "Ce que tu cherches", hand: "" },
+  3: { lead: "312 offres lues. En trier 3.", hand: "" },
+};
 
 const router = useRouter();
 const { me } = useAuth();
@@ -111,6 +124,8 @@ onMounted(async () => {
     // Reprendre là où on s'était arrêté, sans revenir au tri (il se recharge à l'étape 3).
     if (state.data.status !== "done") step.value = Math.max(0, Math.min(state.data.step - 1, 2)) as Step;
   }
+  // Sur ordinateur, la page bleue n'existe pas : on commence au CV.
+  if (desk.value && step.value === 0) step.value = 1;
   loaded.value = true;
 });
 
@@ -331,19 +346,35 @@ async function finish(to: string): Promise<void> {
 <template>
   <section
     v-if="loaded"
-    :class="['welcome', { 'welcome-blue': step === 0 }]"
+    :class="['welcome', { 'welcome-blue': step === 0 && !desk, 'welcome-desk': desk }]"
     data-test="welcome"
   >
     <div class="welcome-column">
       <header class="welcome-top">
         <IconButton
-          v-if="step > 0"
+          v-if="step > 0 && !desk"
           icon="arrow-left"
           label="Étape précédente"
           data-test="welcome-back"
           @click="go((step - 1) as Step)"
         />
         <span class="welcome-brand"><BrandMark :size="30" />jobA1</span>
+        <span
+          v-if="desk"
+          class="welcome-dots"
+          role="progressbar"
+          :aria-label="`Étape ${step} sur 3`"
+          aria-valuemin="1"
+          aria-valuemax="3"
+          :aria-valuenow="step"
+          data-test="welcome-dots"
+        >
+          <span
+            v-for="i in 3"
+            :key="i"
+            :class="{ on: i <= step, current: i === step }"
+          />
+        </span>
         <button
           v-if="!(step === 3 && !sorting)"
           type="button"
@@ -355,6 +386,7 @@ async function finish(to: string): Promise<void> {
         </button>
       </header>
       <div
+        v-if="!desk"
         class="welcome-progress"
         role="progressbar"
         :aria-label="`Étape ${step + 1} sur 4`"
@@ -379,7 +411,25 @@ async function finish(to: string): Promise<void> {
           class="welcome-screen"
           :data-test="`welcome-step-${step + 1}`"
         >
-          <h1 class="welcome-title">
+          <p
+            v-if="desk"
+            class="welcome-eyebrow"
+            data-test="welcome-eyebrow"
+          >
+            Étape {{ step }} sur 3
+          </p>
+          <h1
+            v-if="desk && DESK_TITLES[step]"
+            class="welcome-title"
+          >
+            {{ DESK_TITLES[step]!.lead }}<template v-if="DESK_TITLES[step]!.hand">
+              {{ " " }}<span class="welcome-hand">{{ DESK_TITLES[step]!.hand }}</span>
+            </template>
+          </h1>
+          <h1
+            v-else
+            class="welcome-title"
+          >
             <template v-if="TITLES[step]!.lead">
               {{ `${TITLES[step]!.lead} ` }}
             </template>
@@ -402,8 +452,17 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 1">
             <p class="welcome-lead">
-              jobA1 en tire tes compétences pour noter chaque offre.
+              {{ desk ? "jobA1 trie les offres, prépare tes lettres et tient ton suivi ORP. Ton CV suffit pour commencer." : "jobA1 en tire tes compétences pour noter chaque offre." }}
             </p>
+            <Illustration
+              v-if="desk"
+              pose="bonjour"
+              :height="280"
+              :desktop-height="360"
+              full
+              class="welcome-desk-person"
+              data-test="welcome-desk-person"
+            />
             <div
               v-if="cvName"
               class="welcome-cv"
@@ -477,6 +536,7 @@ async function finish(to: string): Promise<void> {
               </button>
               <!-- Le personnage du kit avec son CV, le soleil et la colline (maquette OnboardingC, étape 2). -->
               <div
+                v-if="!desk"
                 class="welcome-cv-scene"
                 aria-hidden="true"
                 data-test="cv-scene"
@@ -740,6 +800,15 @@ async function finish(to: string): Promise<void> {
 
       <footer class="welcome-actions">
         <button
+          v-if="desk && step > 1 && !(step === 3 && !sorting)"
+          type="button"
+          class="secondary welcome-desk-back"
+          data-test="welcome-back"
+          @click="go((step - 1) as Step)"
+        >
+          Retour
+        </button>
+        <button
           v-if="step === 0"
           type="button"
           class="welcome-cta welcome-start"
@@ -896,6 +965,35 @@ async function finish(to: string): Promise<void> {
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* Ordinateur (maquette du 8 novembre, OnboardingOrdinateur, D27) : 880 px sur le fond clair ; le logo à gauche, trois
+   points et « Passer » à droite ; « Étape N sur 3 », le titre de 34, la phrase de 17 ; à la première étape, le personnage
+   de 360 px à droite ; « Retour » et « Continuer » en bas, de part et d'autre. */
+.welcome-desk { --wd-300: 300px; --wd-34: 34px; --wd-40: 40px; --wd-17: 17px; --wd-28: 28px; --wd-360: 360px; --wd-24: 24px; }
+.welcome-desk .welcome-column { min-height: 0; max-width: none; padding: 0; }
+.welcome-desk .welcome-screen { flex: none; gap: 0; }
+.welcome-desk .welcome-screen > * + * { margin-top: var(--space-4); }
+.welcome-desk .welcome-screen > .welcome-title { margin-top: 0; }
+.welcome-desk .welcome-top { gap: var(--space-4); padding: var(--space-5) max(var(--space-6), calc((100vw - var(--header-max)) / 2 + var(--space-6))) 0; }
+.welcome-desk .welcome-brand { flex: 1; }
+.welcome-dots { display: inline-flex; align-items: center; gap: var(--space-1); }
+.welcome-dots span { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--line); transition: width 0.3s; }
+.welcome-dots span.on { background: var(--primary-graphic); }
+.welcome-dots span.current { width: var(--wd-28); }
+.welcome-desk .welcome-later { padding: 0 var(--space-3); color: var(--primary-text); font-weight: var(--weight-bold); }
+.welcome-desk .welcome-screen { position: relative; box-sizing: border-box; width: 100%; max-width: 880px; margin: 0 auto; padding: var(--space-8) 0 0; }
+.welcome-desk .welcome-screen[data-test="welcome-step-2"] { padding-right: var(--wd-300); }
+.welcome-eyebrow { margin: 0 0 var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
+.welcome-desk .welcome-title { font-size: var(--wd-34); line-height: var(--wd-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
+.welcome-desk .welcome-hand { margin-top: 0; font-size: 1.45em; line-height: var(--leading-none); color: var(--primary-graphic); transform: none; }
+.welcome-desk .welcome-screen > .welcome-lead { margin-top: var(--space-3); font-size: var(--wd-17); line-height: var(--wd-28); color: var(--text-secondary); }
+.welcome-desk-person { position: absolute; top: var(--wd-24); right: 60px; }
+.welcome-desk .welcome-actions { position: static; display: flex; justify-content: space-between; gap: var(--space-3); box-sizing: border-box; width: 100%; max-width: 880px; margin: var(--wd-24) auto var(--space-12); padding: 0; background: none; }
+.welcome-desk .welcome-actions > .welcome-cta { width: auto; min-height: var(--target-min); margin-left: auto; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); }
+.welcome-desk .welcome-actions > .welcome-cta .icon { display: none; }
+.welcome-desk .welcome-desk-back { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
+.welcome-desk .welcome-sort { display: flex; gap: var(--space-3); margin-left: auto; }
+.welcome-desk .welcome-sort button { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
+.welcome-desk .welcome-sort .icon { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .welcome-progress span { transition: none; }
   .welcome-struck path, .welcome-hand { animation: none; }

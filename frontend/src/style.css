@@ -4802,3 +4802,29 @@ a.panel-row:hover { background: var(--band); }
 .settings-wide .setting-card { border: 0; border-radius: 0; }
 .settings-wide .setting-card + .setting-card { border-top: 1px solid var(--line-soft); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
+
+/* Pages d'état sur ordinateur (maquette du 8 novembre, lot 8 : PageIntrouvable, Maintenance, HorsLigne,
+   CandidatureEnvoyee, ObjectifAtteint) : centrées sur 880 px, le personnage de 240, le titre de 34/42 en 800, la
+   phrase de 18/28, les boutons de 44 côte à côte, en pilule. Le logo seul en haut quand l'en-tête manque. */
+@media (min-width: 1024px) {
+  :root { --state-34: 34px; --state-42: 42px; --state-18: 18px; --state-28: 28px; --state-28-gap: 28px; --state-10: 10px; }
+  .maintenance-brand { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-5) max(var(--space-6), calc((100vw - var(--header-max)) / 2 + var(--space-6))) 0; font-size: var(--font-section); font-weight: var(--weight-bold); }
+  .maintenance-body h1, .goal-reached-title { margin: var(--space-6) 0 0; font-family: inherit; font-size: var(--state-34); line-height: var(--state-42); font-weight: var(--weight-heavy); letter-spacing: normal; color: var(--text); transform: none; animation: none; }
+  .maintenance-message, .goal-reached-line { max-width: 560px; margin: var(--space-3) 0 0; font-size: var(--state-18); line-height: var(--state-28); color: var(--text-secondary); }
+  .maintenance { align-items: stretch; }
+  .maintenance-body { flex: 0 0 auto; gap: 0; margin-top: auto; padding: 0 0 0; }
+  .maintenance-status { flex: 0 0 auto; gap: 0; margin-bottom: auto; padding: var(--space-4) 0 var(--space-12); }
+  .maintenance-next { font-size: var(--font-small); color: var(--text-secondary); }
+  .maintenance-retry { width: auto; max-width: none; margin-top: var(--state-28-gap); }
+  .maintenance-retry { min-height: var(--target-min); padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .maintenance-retry:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
+  .goal-reached-actions > .goal-reached-cancel { order: 3; flex-basis: 100%; }
+  .goal-reached-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
+  .goal-reached { max-width: 880px; padding-top: var(--space-6); color: var(--text-secondary); }
+  .goal-reached-close, .goal-reached-todo { display: none; }
+  .goal-reached-body { flex: 0 0 auto; padding: 0; }
+  .goal-reached-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--state-10); width: auto; margin-top: var(--state-28-gap); }
+  .goal-reached-actions > .primary { order: 2; min-height: var(--target-min); padding: 0 var(--space-5); font-size: var(--font-label); }
+  .goal-reached-actions > .primary .icon { display: none; }
+  .goal-reached-actions > .goal-reached-home { order: 1; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+}

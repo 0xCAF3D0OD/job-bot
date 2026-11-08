@@ -122,9 +122,12 @@ def test_un_trait_qui_remonte_au_bout_est_trouve_et_un_trait_droit_non(page: Pag
 
 
 def test_police_manuscrite_contient_chaque_caractere_des_titres():
-    """Caveat Brush (11b) : chaque caractère des 4 fins de titre, de « C'est fait ! » et de « te revoir. »
-    (connexion, 2026-11-05) est dans la table cmap du sous-ensemble ; un caractère absent est bien signalé."""
+    """Caveat Brush (11b) : chaque caractère des 4 fins de titre, de « fait ! », de « te revoir. » (connexion,
+    2026-11-05), des fins du titre d'Aujourd'hui et de « envoyée. » (maquette du 8 novembre) est dans la table cmap du sous-ensemble ; un caractère absent est bien signalé."""
     titles = hand_titles()
-    assert titles == ["plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "En trier 3.", "C'est fait !", "te revoir."]
+    assert titles == [
+        "plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "En trier 3.", "fait !", "te revoir.",
+        "pause.", "repos.", "à envoyer.", "à jour.", "à jour.", "envoyée.",
+    ]
     assert missing_glyphs() == []
-    assert missing_glyphs(texts=["Zoé"]) == ["Z", "é"]
+    assert missing_glyphs(texts=["Zoë"]) == ["Z", "ë"]

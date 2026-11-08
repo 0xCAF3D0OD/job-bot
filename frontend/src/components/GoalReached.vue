@@ -43,6 +43,7 @@ const SCRIBBLE =
       <Illustration
         pose="celebration"
         :height="240"
+        :desktop-height="240"
         full
         class="goal-reached-art"
       />
@@ -60,7 +61,7 @@ const SCRIBBLE =
         </span>
       </p>
       <h1 class="goal-reached-title">
-        C'est fait !
+        C'est <span class="goal-reached-hand">fait !</span>
       </h1>
       <p class="goal-reached-line">
         Objectif ORP {{ ofMonth(data.month) }} atteint, {{ data.count }} recherches sur {{ data.target }}.
