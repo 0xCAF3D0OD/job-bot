@@ -89,6 +89,10 @@ describe("CriteriaForm, déjà saisis", () => {
       ["Taux d'activité", "80 % au moins"],
       ["Types d'offres exclus", "Stages"],
     ]);
+    // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
+    for (const row of summary.findAll("button.criteria-row")) {
+      expect(row.find(".arrow-circle.small").attributes("aria-hidden")).toBe("true");
+    }
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
     await wrapper.find("[data-test=criteria-row-taux]").trigger("click");
     await flushPromises();

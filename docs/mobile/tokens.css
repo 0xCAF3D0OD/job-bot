@@ -29,6 +29,10 @@
   /* Bleu de marque */
   --primary: #2445C2;          /* boutons pleins (texte blanc) */
   --primary-graphic: #2445C2;  /* logo, anneaux, icônes, contours */
+  --action: #2445C2;
+  --on-action: #FFFFFF;
+  --page-blocks: var(--surface-muted);
+  --row-blocks: var(--bg);
   --primary-text: #1A3496;     /* liens, boutons texte */
   --primary-soft: #E8ECFB;     /* sélection, arche Content, bloc ORP */
   --water: #C9D3F6;            /* cercle liquide ORP */
@@ -114,6 +118,10 @@
     --text-tertiary: #C7BFB3;
     --primary: #2445C2;
     --primary-graphic: #7D95FF;
+    --action: #7D95FF;
+    --on-action: #171411;
+    --page-blocks: var(--bg);
+    --row-blocks: var(--surface-muted);
     --primary-text: #AEBDFF;
     --primary-soft: #232B45;
     --water: #3A4A85;
@@ -149,6 +157,10 @@
   --text-tertiary: #C7BFB3;
   --primary: #2445C2;
   --primary-graphic: #7D95FF;
+  --action: #7D95FF;
+  --on-action: #171411;
+  --page-blocks: var(--bg);
+  --row-blocks: var(--surface-muted);
   --primary-text: #AEBDFF;
   --primary-soft: #232B45;
   --water: #3A4A85;
