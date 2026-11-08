@@ -510,6 +510,7 @@ onUnmounted(() => assistant.setFocus(null));
       <ApplicationPanel
         :application="shown"
         :orp-row="rowsById.get(shown.id) ?? null"
+        columns
         @status="setStatus"
         @edit="editFromPanel"
         @remove="removeFromPanel"

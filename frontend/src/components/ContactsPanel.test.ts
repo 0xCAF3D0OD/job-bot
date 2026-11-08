@@ -173,3 +173,20 @@ describe("ContactsPanel", () => {
     expect(wrapper.find("[data-test=contact-error]").attributes("role")).toBe("alert");
   });
 });
+
+describe("ContactsPanel en deux colonnes (lot 12)", () => {
+  it("find : seulement « Trouver quelqu'un », libellé sans parenthèse ; follow : le premier message et les prises de contact", async () => {
+    const data = page([]);
+    data.data.searches[1]!.label = "L'équipe du poste (DevOps Engineer)";
+    GET.mockResolvedValue(data);
+    const find = mount(ContactsPanel, { props: { applicationId: 3, part: "find" } });
+    const follow = mount(ContactsPanel, { props: { applicationId: 3, part: "follow" } });
+    await flushPromises();
+    expect(find.find(".detail-overline").text()).toBe("Trouver quelqu'un");
+    expect(find.findAll("[data-test=contact-search]")[1]!.text()).toBe("L'équipe du poste (nouvel onglet)");
+    expect(find.find("[data-test=contact-writer]").exists()).toBe(false);
+    expect(follow.find("[data-test=contact-search]").exists()).toBe(false);
+    expect(follow.findAll(".detail-section .detail-overline").map((p) => p.text())).toEqual(["Premier message", "Prises de contact"]);
+    expect(follow.find("[data-test=contact-add]").text()).toBe("J'ai contacté quelqu'un");
+  });
+});
