@@ -1168,7 +1168,10 @@ watch(
 .offer-cols .offer-text-band p { margin-top: var(--cols-2); font-size: var(--font-small); color: var(--text-tertiary); }
 .offer-cols .offer-text-actions { gap: var(--cols-band-btn); }
 .offer-cols .offer-text-actions button { flex: none; min-width: 0; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-small); }
-.offer-cols .offer-text-actions button + button { border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
+/* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter », « Lire l'annonce » et « Coller le
+   texte » à contour bleu. */
+.offer-cols .offer-text-actions button, .offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
+.offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }
 .offer-cols .match-card .match-detail { margin-top: var(--space-4); border-top: 0; }
 .offer-cols .match-card .match-detail > .disclosure-row { min-height: var(--cols-48); padding: 0; }
 .offer-cols .detail-post.detail-section { display: grid; gap: var(--space-3); padding-bottom: var(--space-2); }

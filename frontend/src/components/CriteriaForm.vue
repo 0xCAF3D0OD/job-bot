@@ -263,7 +263,10 @@ onMounted(() => void load());
                 <span class="criteria-row-label">{{ row.label }}</span>
                 <span class="criteria-row-value">{{ sentence(row.value) }}</span>
               </span>
-              <AppIcon name="chevron" />
+              <span
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
             </button>
           </li>
         </ul>
@@ -454,7 +457,7 @@ onMounted(() => void load());
 <style>
 /* Profil › Critères sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.2 ; HTML de ProfilOrdinateur) : carte
    blanche aux coins de 18, lignes de 68 (12/20), libellé de 14 en --text-secondary au-dessus de la valeur de 16 en
-   700, 2 px entre eux, chevron de 16 à droite, trait entre les lignes. */
+   700, 2 px entre eux, cercle D29 de 36 à droite (version finale), trait entre les lignes. */
 .criteria-rows { --crit-68: 68px; --crit-14: 14px; --crit-20: 20px; --crit-22: 22px; --crit-2: 2px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .narrow-block:has(.criteria-rows) { max-width: none; }
 .criteria-rows > li + li { border-top: 1px solid var(--surface-muted); }
@@ -463,5 +466,4 @@ onMounted(() => void load());
 .criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
 .criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
-.criteria-row > .icon { flex: none; width: 16px; height: 16px; color: var(--text-secondary); }
 </style>
