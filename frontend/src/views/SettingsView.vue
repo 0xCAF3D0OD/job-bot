@@ -18,6 +18,7 @@ import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
+import DateField from "../components/DateField.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsSection from "../components/SettingsSection.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
@@ -499,26 +500,21 @@ watch(
                   :aria-labelledby="c.labelledby"
                   :aria-describedby="c.describedby"
                 >
-                  <label>
-                    Du
-                    <input
-                      v-model="form.rhythm_pause_from"
-                      type="date"
-                      data-test="pause-from"
-                      @change="savePause"
-                    >
-                  </label>
-                  <label>
-                    Jusqu'au
-                    <input
-                      v-model="form.rhythm_pause_until"
-                      type="date"
-                      :min="form.rhythm_pause_from ?? undefined"
-                      :aria-invalid="c.invalid"
-                      data-test="pause-until"
-                      @change="savePause"
-                    >
-                  </label>
+                  <DateField
+                    :model-value="form.rhythm_pause_from ?? null"
+                    label="Du"
+                    title="Pause à partir du"
+                    data-test="pause-from"
+                    @update:model-value="form.rhythm_pause_from = $event; void savePause()"
+                  />
+                  <DateField
+                    :model-value="form.rhythm_pause_until ?? null"
+                    label="Jusqu'au"
+                    title="Pause jusqu'au"
+                    :min="form.rhythm_pause_from ?? undefined"
+                    data-test="pause-until"
+                    @update:model-value="form.rhythm_pause_until = $event; void savePause()"
+                  />
                   <button
                     v-if="form.rhythm_pause_from"
                     type="button"

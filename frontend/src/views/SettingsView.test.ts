@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import SettingsView from "./SettingsView.vue";
+import { pickDate } from "../components/DateField.testing";
 
 const GET = vi.fn();
 const POST = vi.fn();
@@ -301,10 +302,10 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
     expect(last().offers_notify_hour).toBe(8);
     expect(last().offers_notify_mode).toBe("daily");
     // Une pause, puis la terminer.
-    await wrapper.find("[data-test=pause-from]").setValue("2026-10-26");
-    await wrapper.find("[data-test=pause-until]").setValue("2026-11-01");
+    await pickDate(wrapper, "pause-from", "2099-10-26");
+    await pickDate(wrapper, "pause-until", "2099-11-01");
     await flushPromises();
-    expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2026-10-26", "2026-11-01"]);
+    expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2099-10-26", "2099-11-01"]);
     await wrapper.find("[data-test=pause-end]").trigger("click");
     await flushPromises();
     expect(last().rhythm_pause_from).toBeNull();

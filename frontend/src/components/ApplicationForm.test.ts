@@ -42,7 +42,7 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
       "Indique la date d'envoi.",
       "Indique le poste.",
     ]);
-    expect(document.activeElement).toBe(wrapper.find("[data-test=sent-at]").element);
+    expect(document.activeElement).toBe(wrapper.find("[data-test=sent-at] [data-test=dt-date]").element);
     expect(wrapper.emitted("submit")).toBeUndefined();
     // Pas de message global à la place des messages sous les champs.
     expect(wrapper.find(".notice.error").exists()).toBe(false);

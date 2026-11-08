@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { Interview, InterviewIn } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import FormField from "./FormField.vue";
+import DateField from "./DateField.vue";
 import IconButton from "./IconButton.vue";
 import {
   DURATIONS,
@@ -127,20 +128,14 @@ function submit(): void {
           </button>
         </div>
         <div class="form-grid">
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+          <DateField
+            v-model="form.held_at"
             label="Date"
+            title="Date de l'entretien"
+            :min="null"
             optional
-            :width="10"
-          >
-            <input
-              :id="id"
-              v-model="form.held_at"
-              type="date"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-          </FormField>
+            data-test="held-at"
+          />
           <FormField
             v-slot="{ id, describedby, invalid }"
             label="Format"
@@ -519,22 +514,15 @@ function submit(): void {
               </option>
             </select>
           </FormField>
-          <FormField
+          <DateField
             v-if="form.next_step && form.next_step !== 'rien'"
-            v-slot="{ id, describedby, invalid }"
+            v-model="form.next_step_at"
             label="Avant le"
+            title="Prochaine étape avant le"
+            :min="null"
             optional
-            :width="10"
-          >
-            <input
-              :id="id"
-              v-model="form.next_step_at"
-              type="date"
-              data-test="next-step-at"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-          </FormField>
+            data-test="next-step-at"
+          />
           <FormField
             v-slot="{ id, describedby, invalid }"
             label="Remerciement"

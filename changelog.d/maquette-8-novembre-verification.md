@@ -1,0 +1,1 @@
+Vérification finale de la maquette du 8 novembre (lot 10) : les derniers champs de date (date d'envoi, entretien, contact, relance, formation, pause) prennent la pilule et le sélecteur de la maquette, bornés aux jours possibles ; une feuille du bas fermée au clavier rend de nouveau le curseur au bouton qui l'a ouverte ; l'icône de la note provisoire perd son fond.

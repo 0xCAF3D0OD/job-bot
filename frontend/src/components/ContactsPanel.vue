@@ -8,6 +8,7 @@ import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
 import CopyButton from "./CopyButton.vue";
 import FormField from "./FormField.vue";
+import DateField from "./DateField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
@@ -488,20 +489,15 @@ onMounted(() => void load());
               </option>
             </select>
           </FormField>
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+          <DateField
+            :model-value="draft.contacted_on"
             label="Date"
-            :width="10"
-          >
-            <input
-              :id="id"
-              v-model="draft.contacted_on"
-              type="date"
-              :max="isoDay()"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-          </FormField>
+            title="Date du contact"
+            :min="null"
+            :max="isoDay()"
+            data-test="contacted-on"
+            @update:model-value="draft.contacted_on = $event ?? isoDay()"
+          />
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"

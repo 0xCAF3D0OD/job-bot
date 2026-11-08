@@ -2,9 +2,11 @@
 import { nextTick, ref } from "vue";
 
 import type { ApplicationStatus, ApplicationUpdate } from "../api/client";
+import { todayDay } from "../dates";
 import { applicationStatusLabel, methodLabel } from "../format";
 import { email, useChecks, type Check } from "../validators";
 import FormField from "./FormField.vue";
+import DateField from "./DateField.vue";
 
 export type ApplicationFormValue = ApplicationUpdate & { offer_id?: number | null };
 
@@ -54,8 +56,12 @@ async function submit(): Promise<void> {
     return;
   }
   await nextTick();
-  formEl.value?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+  const invalid = formEl.value?.querySelector<HTMLElement>("[aria-invalid='true']");
+  // La date est une pilule (DateField) : le curseur va sur son bouton.
+  (invalid?.matches(".dt-field") ? invalid.querySelector<HTMLElement>("button") : invalid)?.focus();
 }
+// Les dates passées seulement (DateField, lot 10).
+const today = todayDay();
 </script>
 
 <template>
@@ -74,24 +80,15 @@ async function submit(): Promise<void> {
         {{ title }}
       </h3>
       <div class="form-grid">
-        <FormField
-          v-slot="{ id, describedby, invalid }"
+        <DateField
+          :model-value="form.sent_at"
           label="Date d'envoi"
-          :width="10"
+          :min="null"
+          :max="today"
           :error="errors.sent_at"
-        >
-          <input
-            :id="id"
-            v-model="form.sent_at"
-            type="date"
-            required
-            :aria-describedby="describedby"
-            :aria-invalid="invalid"
-            data-test="sent-at"
-            @blur="check('sent_at')"
-            @input="clearIfFixed('sent_at')"
-          >
-        </FormField>
+          data-test="sent-at"
+          @update:model-value="form.sent_at = $event ?? ''; clearIfFixed('sent_at')"
+        />
         <FormField
           v-slot="{ id, describedby, invalid }"
           label="Mode"

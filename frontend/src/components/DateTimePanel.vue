@@ -23,16 +23,25 @@ import {
 // collé en bas. Raccourcis, grille de 6 semaines (lundi en premier), jours passés désactivés, saisie jj.mm.aaaa ;
 // créneaux de 30 min de 8 h à 16 h et saisie hh:mm. Clavier : flèches pour les jours, Page haut et Page bas pour les
 // mois, Entrée valide, Échap annule.
+// Lot 10 : les bornes `min` et `max` (jj ISO) pour les dates passées (date d'envoi, contact, formation) ; sans `min`,
+// les jours passés restent désactivés. Les raccourcis hors des bornes ne s'affichent pas (aucun raccourci ajouté).
 const props = withDefaults(
-  defineProps<{ date: string; time: string; title: string; full?: boolean; today?: string; withTime?: boolean }>(),
-  { full: false, today: "", withTime: true },
+  defineProps<{ date: string; time: string; title: string; full?: boolean; today?: string; withTime?: boolean; min?: string | null; max?: string }>(),
+  { full: false, today: "", withTime: true, min: undefined, max: "" },
 );
 const emit = defineEmits<{ confirm: [value: { date: string; time: string }]; cancel: [] }>();
 
 const now = computed(() => props.today || todayDay());
+const low = computed(() => (props.min === undefined ? now.value : props.min ?? ""));
+const out = (day: string) => (!!low.value && day < low.value) || (!!props.max && day > props.max);
+function clamp(day: string): string {
+  if (low.value && day < low.value) return low.value;
+  if (props.max && day > props.max) return props.max;
+  return day;
+}
 const picked = ref(props.date || "");
 const time = ref(props.time || "");
-const focusDay = ref(props.date && props.date >= now.value ? props.date : now.value);
+const focusDay = ref(clamp(props.date || now.value));
 const view = ref(firstOfMonth(focusDay.value));
 const typedDate = ref(picked.value ? typedDay(picked.value) : "");
 const typedTime = ref(time.value);
@@ -67,7 +76,7 @@ const days = computed(() => {
       day,
       number: Number(day.slice(8)),
       outside: day.slice(0, 7) !== view.value.slice(0, 7),
-      past: day < now.value,
+      past: out(day),
       today: day === now.value,
       picked: day === picked.value,
       weekend: [0, 6].includes(dayToDate(day).getUTCDay()),
@@ -84,7 +93,7 @@ const shortcuts = computed(() => {
     { label: "Lundi prochain", day: addDays(today, toMonday) },
     { label: "Dans 2 semaines", day: addDays(today, 14) },
     { label: "Dans 1 mois", day: addMonths(today, 1) },
-  ];
+  ].filter((shortcut) => !out(shortcut.day));
 });
 
 const summaryDate = computed(() => (picked.value ? (props.full ? shortDate(picked.value) : longDate(picked.value)) : ""));
@@ -95,7 +104,7 @@ const summary = computed(() => {
 const canConfirm = computed(() => !!picked.value && (!props.withTime || !!time.value));
 
 function choose(day: string): void {
-  if (day < now.value) return;
+  if (out(day)) return;
   picked.value = day;
   focusDay.value = day;
   typedDate.value = typedDay(day);
@@ -113,7 +122,8 @@ function onTypedDate(): void {
   if (!typedDate.value.trim()) return;
   const day = parseTypedDay(typedDate.value);
   if (!day) dateError.value = "Écris la date comme ceci : 10.11.2026.";
-  else if (day < now.value) dateError.value = "Ce jour est déjà passé.";
+  else if (low.value && day < low.value) dateError.value = low.value === now.value ? "Ce jour est déjà passé." : `Choisis un jour à partir du ${longDate(low.value)}.`;
+  else if (props.max && day > props.max) dateError.value = props.max === now.value ? "Ce jour n'est pas encore arrivé." : `Choisis un jour jusqu'au ${longDate(props.max)}.`;
   else choose(day);
 }
 
@@ -126,12 +136,11 @@ function onTypedTime(): void {
 
 function month(delta: number): void {
   view.value = addMonths(view.value, delta);
-  focusDay.value = addMonths(focusDay.value, delta);
-  if (focusDay.value < now.value) focusDay.value = now.value;
+  focusDay.value = clamp(addMonths(focusDay.value, delta));
 }
 
 async function moveFocus(day: string): Promise<void> {
-  focusDay.value = day < now.value ? now.value : day;
+  focusDay.value = clamp(day);
   if (focusDay.value.slice(0, 7) !== view.value.slice(0, 7)) view.value = firstOfMonth(focusDay.value);
   await nextTick();
   grid.value?.querySelector<HTMLButtonElement>(`[data-day="${focusDay.value}"]`)?.focus();
@@ -201,6 +210,7 @@ onUnmounted(() => {
     <div class="dt-panel-body">
       <div class="dt-calendar">
         <div
+          v-if="shortcuts.length"
           class="dt-shortcuts"
           role="group"
           aria-label="Raccourcis"
@@ -223,7 +233,7 @@ onUnmounted(() => {
               type="button"
               class="dt-month-step"
               aria-label="Mois précédent"
-              :disabled="view <= `${now.slice(0, 7)}-01`"
+              :disabled="!!low && view <= `${low.slice(0, 7)}-01`"
               data-test="dt-prev"
               @click="month(-1)"
             >
@@ -234,6 +244,7 @@ onUnmounted(() => {
               type="button"
               class="dt-month-step"
               aria-label="Mois suivant"
+              :disabled="!!max && view >= `${max.slice(0, 7)}-01`"
               data-test="dt-next"
               @click="month(1)"
             >
