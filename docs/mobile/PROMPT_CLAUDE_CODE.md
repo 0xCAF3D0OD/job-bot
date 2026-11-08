@@ -56,14 +56,14 @@ La maquette se lit corrigée par ces décisions. Elles sont validées par Kevin 
 
 | N° | Décision | Remplace |
 |---|---|---|
-| D18 | **Seuil unique 820 px (D8 reste).** Les mentions « < 600 px » et « >= 1024 px » de l'ancien LISEZMOI sont fausses. Téléphone : largeur <= 820 px. Ordinateur : > 820 px. Entre 821 et 1327 px, les conteneurs de 1280 et 880 px prennent `max-width` avec 24 px de marge de chaque côté. | — |
-| D19 | **Rayons D7 (8, 18, 34, 999) restent.** Traduction des rayons de la maquette dans le §4. | — |
-| D20 | **Couleurs** : traduction obligatoire par le tableau du §3, avec 3 jetons nouveaux et 4 ombres nouvelles. | — |
-| D21 | **Barre du bas du téléphone** : elle s'appelle « Bilan », pas « Progresser » (D2 reste), et « Accueil » (D1 reste). Les maquettes affichent encore « Progresser » : ignorer ce mot. | — |
+| D18 | **Seuil unique 820 px (D8 reste).** Les mentions « < 600 px » et « >= 1024 px » de l'ancien LISEZMOI sont fausses. Téléphone : largeur <= 820 px. Ordinateur : > 820 px. Entre 821 et 1327 px, les conteneurs de 1280 et 880 px prennent `max-width` avec 24 px de marge de chaque côté. | aucun |
+| D19 | **Rayons D7 (8, 18, 34, 999) restent.** Traduction des rayons de la maquette dans le §4. | aucun |
+| D20 | **Couleurs** : traduction obligatoire par le tableau du §3, avec 3 jetons nouveaux et 4 ombres nouvelles. | aucun |
+| D21 | **Barre du bas du téléphone** : elle s'appelle « Bilan », pas « Progresser » (D2 reste), et « Accueil » (D1 reste). Les maquettes affichent encore « Progresser » : ignorer ce mot. | aucun |
 | D22 | **Carte = cliquable.** Une carte (fond `--surface` + bordure) est toujours entièrement cliquable. Une information seule n'a pas de cadre : lignes séparées par `--line-soft`. Dans une carte cliquable, jamais de bouton ni de pastille d'action : un libellé coloré (couleur du ton, 15 px, 700) suivi de « › ». | §4 (cartes), en partie |
-| D23 | **Icônes sans fond.** Aucune pastille ou rond coloré derrière une icône décorative, sur téléphone et sur ordinateur. Exception : l'icône Assistant de la barre du bas du téléphone garde son cercle. | — |
+| D23 | **Icônes sans fond.** Aucune pastille ou rond coloré derrière une icône décorative, sur téléphone et sur ordinateur. Exception : l'icône Assistant de la barre du bas du téléphone garde son cercle. | aucun |
 | D24 | **Panneaux latéraux non modaux** (cloche, compte, Assistant) sur ordinateur : 420 px (Assistant 480 px), sans voile. Un clic à l'extérieur ferme tout. Les filtres de Candidatures **remplacent la colonne liste** au lieu de s'ouvrir en popover. | docs/32 §2.2 (voile), maquette CandidaturesOrdinateur état `f` |
-| D25 | **Zone de saisie unique (Composer)** pour tout message libre envoyé tel quel. Les champs de formulaire restent des champs de formulaire. | — |
+| D25 | **Zone de saisie unique (Composer)** pour tout message libre envoyé tel quel. Les champs de formulaire restent des champs de formulaire. | aucun |
 | D26 | **Date et heure** : déclencheurs en pilule, sélecteur qui prend la place du formulaire (plein écran sur téléphone), icône calendrier qui contient la date (CalendarDate) au lieu des carrés colorés. Remplace les `<input type="date">` et `<input type="time">` natifs (`OrpMeetingForm.vue` l. ~90, `OrpOutcomeSheet.vue` l. ~158). | docs/22 en partie |
 | D27 | **Personnage sur ordinateur** : 240 px de haut sur les pages d'état, 360 px aux premiers pas. La note « 290 px sur ordinateur » de docs/141 §4 est remplacée. Liste fermée de docs/141 §3 inchangée. | docs/141 §4 |
 
@@ -84,23 +84,23 @@ Toute couleur hexadécimale d'une maquette se remplace par le jeton de cette tab
 | #EFECE5, #ECE9E1 (traits) | #2C2722 | `--line-soft` | traits entre lignes |
 | #D8D4CA, #CFCBC1 | #4E473E | **nouveau `--line-strong`** (clair #D8D4CA, sombre #4E473E) | bordure de la bulle de recherche, des champs au repos |
 | #8C8478 | #8C8478 | **nouveau `--field-border`** (clair et sombre #8C8478) | bordure 1,5 px des pilules date et heure ; ton « passé » de CalendarDate |
-| #B8B3A8 | — | **nouveau `--text-disabled`** (clair #B8B3A8, sombre #5E574F) | jours passés désactivés du calendrier, texte désactivé (exempté de contraste, WCAG 1.4.3) |
+| #B8B3A8 | aucun | **nouveau `--text-disabled`** (clair #B8B3A8, sombre #5E574F) | jours passés désactivés du calendrier, texte désactivé (exempté de contraste, WCAG 1.4.3) |
 | #1B1F2A | #F3EEE6 | `--text` | |
 | #3D4250 | #D6CFC4, #D9D2C7, #C8C0B4 | `--text-tertiary` | texte et icônes gris foncé |
 | #596070 | #ABA398 | `--text-secondary` | |
-| #6B6157 | — | `--score-dig` | libellé « Provisoire » |
+| #6B6157 | aucun | `--score-dig` | libellé « Provisoire » |
 | #2445C2 | #7D95FF (graphique) | `--primary` (fond de bouton) / `--primary-graphic` (icône, trait, anneau) | |
 | #1D3B91, #1A3496 | #AEBDFF | `--primary-text` | liens, survol d'un bouton plein |
 | #E8ECFB, #F5F7FE | #232B45 | `--primary-soft` | bande bleu pâle, sélection, encadré « Valider » |
-| #D5DCF5 | — | `--water` | bordure de la carte Mois ORP sur la bande |
+| #D5DCF5 | aucun | `--water` | bordure de la carte Mois ORP sur la bande |
 | #8A4A16, #8F4710 | #F2B98E | `--peach-text` (déjà dans `style.css`) | ton « en retard » |
 | #B4631F | #F2B98E | `--warning` | ton « orp » de CalendarDate (ORP ou à noter) |
 | #FDEDE3, #FBF4EE | #3A281E | `--peach-soft` | bandeau pêche (alerte Indeed, note provisoire) |
-| #F3D3BF | — | `--peach` | bordure du bandeau pêche |
+| #F3D3BF | aucun | `--peach` | bordure du bandeau pêche |
 | #17734A | #62D497, #7FD3A6 | `--success` | |
 | #B4371F | #FF8A73 | `--danger` | « Se déconnecter », destructif seulement |
-| #C9C5BA / #A9A397 | — | `--scrollbar-thumb` / `--scrollbar-thumb-hover` (déjà dans `style.css`) | |
-| #D9DCE6 / #36312B | — | `--btn-disabled` (déjà dans `style.css`) | |
+| #C9C5BA / #A9A397 | aucun | `--scrollbar-thumb` / `--scrollbar-thumb-hover` (déjà dans `style.css`) | |
+| #D9DCE6 / #36312B | aucun | `--btn-disabled` (déjà dans `style.css`) | |
 
 Restent en valeurs fixes : logos de marque tiers (Google, Microsoft, Indeed…) et intérieur des illustrations (personnage, confettis d'Objectif atteint).
 
@@ -352,7 +352,7 @@ Ce lot remplace ce que les PR #559 et #561 ont codé d'après l'ancienne maquett
 | 9 | Réglages | `captures/Reglages.png` | `SettingsView.vue`, `SettingRow.vue` | Icônes sans fond, 1,5 fois plus grandes qu'avant (taille exacte dans le HTML). |
 | 10 | Bilan, résultats | `captures/BilanResultats.png` | `BilanView.vue`, `components/bilan/*` | Sections en lignes séparées par un trait, plus de points ; bouton tonal pleine largeur dans « Le carnet ». Vérifie d'abord : si c'est déjà en production, ne touche à rien et écris-le. |
 | 11 | Extension | `captures/ExtAnnonce.png`, `captures/ExtAlerte.png` | `extension/` (`popup`, `annonce.js`, `alertes.js`) | Icônes sans fond, 1,5 fois plus grandes. |
-| 12 | Accueil | `captures/AccueilSmile.png` | — | Déjà conforme : ne rien changer. |
+| 12 | Accueil | `captures/AccueilSmile.png` | aucun | Déjà conforme : ne rien changer. |
 
 ### Lot 10 : vérification finale
 
@@ -393,153 +393,10 @@ Ce lot remplace ce que les PR #559 et #561 ont codé d'après l'ancienne maquett
 
 ---
 
-## 8. Lot 11 : corrections du 8 novembre au soir (une PR)
+## 8. Lots 11 à 18 (8 novembre au soir)
 
-Validé par Kevin le 2026-11-08. Les maquettes et les captures du zip sont déjà corrigées.
+Tout est dans `MODIFICATIONS_8_NOVEMBRE_SOIR.md`, version finale et sans contradiction. Lis-le en entier.
 
-1. **Champs de formulaire**
-   - **Voir** : `captures/etats/CandidaturesOrdinateurB--tab-rv-ajouter.png`.
-   - **Où** : la règle de base des champs dans `style.css` (vers la ligne 563).
-   - **Quoi** : hauteur 48 px, bordure 1,5 px `var(--text-secondary)`, fond `var(--surface)`, rayon `var(--radius-sm)`. Une seule règle pour tous les formulaires, Coordonnées compris. Le focus garde l'anneau existant. Le Composer n'est pas un champ de formulaire.
-   - Ajoute dans « Écarts connus » : « Champs : 12 px dans l'ancienne maquette, 8 px (D7). »
-2. **En-tête ordinateur**
-   - **Voir** : `captures/etats/CandidaturesOrdinateurB--cloche-sans-nouvelle.png`, `captures/CandidaturesOrdinateurB.png`.
-   - **Où** : `AppHeader.vue`, `NotificationBell.vue`, `GlobalSearch.vue`, `AccountMenu.vue`.
-   - **Quoi** :
-     - recherche, cloche et avatar dans un seul groupe, écart 16 px ; les 32 px restent entre logo, menu et ce groupe ;
-     - les trois éléments font 44 px ;
-     - cloche sans notification : rond `var(--surface)`, bordure 1,5 px `var(--line-strong)`, nom accessible « Notifications, aucune nouvelle » ;
-     - cloche avec notifications : capsule pêche, 44 px de haut.
-3. **Assistant qui écrit**
-   - **Voir** : `captures/etats/AssistantOrdinateur--attente.png`, `captures/etats/Assistant--ecrit.png`.
-   - **Où** : `AssistantPanel.vue` et le composant de message.
-   - **Quoi** :
-     - aucune bulle tant qu'aucun texte n'est arrivé ;
-     - à la place : le logo sans cercle (28 px) + une bulle de 46 px de haut avec 3 points de 8 px `var(--text-secondary)`, animation `ja-dot` 1,2 s décalée de 0,15 s (keyframes dans `AssistantOrdinateur.dc.html`) ;
-     - `role="status"`, `aria-live="polite"`, texte masqué « L'Assistant écrit… » ;
-     - au premier morceau de texte, la bulle de réponse remplace les points ; supprime l'élément « … » sous la liste ;
-     - avec `prefers-reduced-motion`, points fixes à 60 % d'opacité ;
-     - la feuille d'étapes « Je rédige ta lettre… » (`AiWriting`) reste pour les tâches longues.
-4. **Mes alertes e-mail**
-   - **Voir** : `captures/AlertesOrdinateur.png`, `captures/AlertesTel.png`.
-   - **Où** : `AlertsView.vue`, `AlertsPanel.vue`, `AlertSearchCard.vue`, le routeur ou le composable qui retient la dernière page de Candidatures.
-   - **Quoi** :
-     - `/candidatures/alertes` n'est plus retenue comme dernière page ;
-     - sur ordinateur, lien « ‹ Candidatures » au-dessus du H1 (44 px, `var(--primary-text)`), qui ramène à la liste avec l'onglet gardé ;
-     - liste des recherches sans cadre, lignes séparées par `var(--line-soft)` ;
-     - « Créer l'alerte » devient un libellé `var(--primary-text)`, 15 px, gras, suivi de « › » ;
-     - « + Ajouter une recherche » reste le seul bouton à contour.
-5. **Nouveau rendez-vous sur ordinateur**
-   - **Voir** : `captures/etats/CandidaturesOrdinateurB--tab-rv-ajouter.png`.
-   - **Où** : `RendezVousDesktop.vue`, `OrpMeetingForm.vue`.
-   - **Quoi** :
-     - « Ajouter » ouvre le formulaire dans le panneau de détail, **sans carte autour** (pas de fond, de bordure ni de rayon propres) ;
-     - contenu : titre « Prochain rendez-vous ORP » (26 px, 800), phrase d'aide, DateTimeField (Date, Heure), « Lieu ou lien (facultatif) », « Ajouter le rendez-vous » (bouton plein, 52 px) et « Annuler » (texte) ;
-     - sur téléphone, la carte reste.
-
-Captures avant et après de chaque point, en clair et en sombre, à 1440 et 390 px.
-
----
-
-## 9. Lot 12 : détail d'Envoyées en deux colonnes (ordinateur)
-
-Validé par Kevin le 2026-11-08. Le contenu ne change pas, seule la disposition change.
-
-- **Voir** : `captures/etats/CandidaturesOrdinateurB--tab-en.png` (haut du panneau) et `--tab-en-bas.png` (bas du panneau, après défilement).
-- **Où** : `OfferDetail.vue` ou le composant du détail d'une candidature envoyée (celui qui affiche Statut, Documents, Contacts, Premier message, Prises de contact), seulement au-dessus de 820 px.
-- **Quoi**
-  1. En-tête inchangé : logo de l'entreprise, titre H2 **gras 24 px en `var(--text)`** (aujourd'hui gris clair et fin en production : à corriger), entreprise et lieu, étiquettes, menu « … ».
-  2. Sous l'en-tête, un trait `var(--line-soft)`, puis une grille : `grid-template-columns: minmax(0, 1fr) 240px`, `column-gap: 48px`.
-  3. Colonne de gauche, dans cet ordre :
-     - **Statut** : liste déroulante de 200 px, puis « Sans réponse depuis n jours. Relancer › » et « Relance à faire · Changer » ;
-     - **Premier message** : « Écrire à » puis « Canal », **l'un sous l'autre**, en pleine largeur (formulaire d'une colonne), puis le bouton à contour « Rédiger un message » (48 px, `--radius-pill`, icône crayon) ;
-     - **Prises de contact** : « Aucun contact pour l'instant. » puis « J'ai contacté quelqu'un › ».
-  4. Colonne de droite, `<aside aria-label="Documents et contacts">`, `padding-left: 40px`, trait à gauche `var(--line-soft)` :
-     - **Documents** : « Lettre (Word) » avec l'icône de téléchargement ;
-     - **Contacts** : sous-titre « Trouver quelqu'un », puis les liens Recrutement, L'équipe du poste, Anciens de 42 Lausanne, chacun avec l'icône de lien externe et une cible de 44 px. Raccourcis le libellé en « L'équipe du poste », sans l'intitulé entre parenthèses.
-  5. **Espacements** : 32 px au-dessus et 36 px sous chaque section, séparées par un trait `var(--line-soft)` ; 16 px sous chaque titre ; 20 px entre les champs ; 24 px au-dessus de « Rédiger un message ».
-  6. **Ordre du DOM** : la colonne de gauche entière, puis la colonne de droite (lecture et tabulation, WCAG 1.3.2).
-  7. Les boutons du détail ont tous des bords ronds (`--radius-pill`) : plus de bouton rectangulaire à 8 px.
-  8. Sur téléphone (820 px et moins), rien ne change : une seule colonne, dans l'ordre Statut, Documents, Contacts, Premier message, Prises de contact.
-
-Captures avant et après, en clair et en sombre, à 1440 px, en haut et en bas du panneau.
-
----
-
-## 10. Lot 13 : À traiter en deux colonnes, rendez-vous à 560 px, Profil (ordinateur)
-
-Validé par Kevin le 2026-11-08. Même logique que le lot 12, au-dessus de 820 px seulement.
-
-1. **Détail d'une offre à traiter**
-   - **Voir** : `captures/CandidaturesOrdinateurB.png`, `captures/etats/CandidaturesOrdinateurB--tab-tr-bas.png`.
-   - **Où** : `OfferDetail.vue` (détail d'une offre de l'onglet À traiter), `OfferTextNotice.vue`.
-   - **Quoi** :
-     - au-dessus des colonnes, inchangés : logo, titre H2, entreprise, étiquettes, « Préparer ma candidature » et « Écarter » ;
-     - grille `minmax(0, 1fr) 240px`, `column-gap: 48px`, trait `var(--line-soft)` au-dessus ;
-     - **à gauche** : la note (anneau, verdict, explication, critères en ligne qui passent à la ligne si besoin), le bandeau « Il manque l'annonce complète » en **bloc** `var(--peach-soft)`, bordure `var(--peach)`, `--radius-card`, avec le texte au-dessus et les boutons (44 px) en dessous, puis « Le détail de la note › » ; ensuite la section « Le poste » ;
-     - **à droite** : `<aside aria-label="L'offre en bref">`, `padding-left: 40px`, trait à gauche ; titre « L'offre en bref », puis une liste `<dl>` : Lieu, Contrat, Taux d'activité, Reçue, avec le libellé (14 px, `var(--text-secondary)`) **au-dessus** de la valeur (16 px, 700) et un trait entre les lignes ; puis le lien « Voir l'annonce sur le site » avec l'icône de lien externe ;
-     - une donnée absente s'écrit « Non précisé », jamais une ligne vide ;
-     - espacements du lot 12 (32 px au-dessus et 36 px sous chaque section, 16 px sous les titres) ;
-     - ordre du DOM : gauche puis droite.
-2. **Formulaires de rendez-vous** (« Ce qui a été convenu » et « Prochain rendez-vous ORP ») : `max-width: 560px` dans le panneau de détail. Pas de deuxième colonne.
-3. **« Ce que je cherche »** (Profil et Premiers pas, ordinateur) : dans chaque ligne, le libellé (14 px, `var(--text-secondary)`) **au-dessus** de la valeur (16 px, 700), à gauche ; hauteur 68 px ; chevron à droite. La valeur n'est plus collée au bord droit (Laws of UX, proximité). Sur téléphone, rien ne change.
-
-Captures avant et après, en clair et en sombre, à 1440 px.
-
----
-
-## 11. Lot 14 : rendez-vous ORP structuré (ordinateur)
-
-Validé par Kevin le 2026-11-08.
-
-- **Voir** : `captures/etats/CandidaturesOrdinateurB--tab-rv.png` (haut) et `--tab-rv-bas.png` (bas du panneau).
-- **Où** : `RendezVousDesktop.vue`, `OrpMeetingForm.vue`, `OrpOutcomeSheet.vue` (version ordinateur), cartes de la liste des rendez-vous.
-- **Quoi**
-  1. **Supprime les pastilles « Noté » et « Pas encore noté »**, dans la liste et dans le détail, sur ordinateur et sur téléphone. Les groupes « À noter » et « Passés » donnent déjà l'information. Garde le nom accessible du groupe.
-  2. En-tête du détail inchangé : CalendarDate 56 px, titre H2, date, heure et lieu, menu « … ». Aucune ligne vide sous l'en-tête.
-  3. Grille sous un trait `var(--line-soft)` : `grid-template-columns: minmax(0, 560px) 240px`, `justify-content: space-between`, `column-gap: 48px`.
-  4. **À gauche**, le formulaire :
-     - sur-titre « Ce qui a été convenu » (13 px, capitales, `var(--text-secondary)`) ;
-     - trois `<fieldset>`, chacun avec un `<legend>` (18 px, 700), une phrase d'aide (14 px, `var(--text-secondary)`), puis le contrôle :
-       1. « Objectif de recherches » : « Le nombre de recherches que l'ORP te demande chaque mois. », puis le compteur − 13 + et « Comme le mois dernier » ;
-       2. « Mesures décidées (facultatif) » : « Un cours, un stage ou un programme proposé par ta conseillère. », puis le champ ;
-       3. « Prochain rendez-vous (facultatif) » : « jobA1 prépare ta feuille la veille et te le rappelle le matin. », puis DateTimeField avec les libellés « Date » et « Heure » ;
-     - fieldsets séparés par un trait, 28 px au-dessus et 32 px en dessous ;
-     - « Enregistrer » en bas, bouton plein de 52 px.
-  5. **À droite**, `<aside aria-label="Le rendez-vous">`, `padding-left: 40px`, trait à gauche : titre « Le rendez-vous », puis `<dl>` Date, Heure, Lieu, Objectif jusqu'ici (libellé au-dessus de la valeur, comme « L'offre en bref »).
-  6. **Date dans la pilule** : format court « Mar. 10 nov. 2026 » dès que la pilule fait moins de 280 px, jamais sur deux lignes (`white-space: nowrap`). Le format long reste dans le sélecteur et dans « Le rendez-vous ».
-  7. Sur téléphone : seulement le point 1. Le reste ne change pas.
-
-Captures avant et après, en clair et en sombre, à 1440 px, en haut et en bas du panneau.
-
----
-
-## 12. Lot 15 : Préparer (ordinateur) et « J'ai déjà postulé »
-
-Validé par Kevin le 2026-11-08. **La disposition de la production est gardée** (lettre à gauche, colonne d'aide à droite) : la maquette PreparerOrdinateur a été refaite dans ce sens et remplace l'ancienne (réglages à gauche).
-
-1. **En-tête de Préparer**
-   - **Voir** : `captures/PreparerOrdinateur.png`.
-   - **Où** : `PreparationView.vue`.
-   - **Quoi** :
-     - une seule ligne de 64 px, tout centré verticalement (`align-items: center`) : « ‹ Retour à l'offre », trait vertical, logo 44 px, **H1 = intitulé du poste** (24 px, 800) avec l'entreprise et le lieu dessous, l'anneau de la note, les étapes « 1. Lettre », « 2. CV », « 3. Postuler » ;
-     - supprime le texte « Ma candidature » à l'écran ; garde-le dans le `<title>` de la page (« Ma candidature, DevOps Engineer, jobA1 ») ;
-     - **anneau** 48 px, le chiffre au centre (D12), et à sa droite le verdict (Proche, À creuser, Loin) dans la couleur du verdict (D5), avec « de ton profil » dessous.
-2. **Colonne de droite** : `grid-template-columns: minmax(0, 1fr) 360px`, `gap: 24px`. Trois cartes, dans cet ordre :
-   1. **Mise en page** : « Le modèle s'applique à la lettre et au CV. », pastilles Sobre, Moderne, Bandeau, Classique (`aria-pressed`), puis « Tient sur une page A4 · n mots ». Visible aux étapes Lettre **et** CV. Les modèles existent déjà dans le code du téléphone : réutilise-les, mêmes noms (« Classique » partout).
-   2. **Pour cette offre** :
-      - sous le titre, « n points forts · n à vérifier » ;
-      - **plus de verdict ici**, ni l'ancien onglet « À creuser » souligné : il est dans l'en-tête ;
-      - deux groupes titrés : « Points forts (n) » avec une coche `var(--success)`, et « À vérifier (n) » avec un point d'attention `var(--peach-text)` ;
-      - chaque élément : le sujet en gras (15 px), le détail dessous (14 px, `var(--text-tertiary)`), 10 px au-dessus et en dessous ;
-      - la couleur n'est jamais le seul repère (WCAG 1.4.1) ;
-      - plus de « Afficher moins » : la colonne défile.
-   3. **Nouvelle version** : « Repartir de zéro avec l'annonce et ton CV. », bouton à contour « Rédiger la nouvelle version » (48 px, `--radius-pill`), puis le lien « Ce qui part à l'IA › ».
-3. **Lettre** : carte avec l'en-tête « Lettre de motivation » et le SegmentedControl FR, DE, EN à droite ; l'aperçu sur fond `var(--surface-muted)`. La ligne « Consigne : Plus court » disparaît : la consigne passe par les suggestions et la zone de saisie.
-4. **Bas de page** : suggestions + Composer sous la lettre ; « J'ai relu la lettre » (bouton plein, 52 px) aligné à droite sous la colonne d'aide.
-5. **« J'ai déjà postulé » dans À traiter**
-   - **Voir** : `captures/CandidaturesOrdinateurB.png`.
-   - **Où** : le détail d'une offre (`OfferDetail.vue`) sur ordinateur, et la même action dans le détail d'une offre sur téléphone (`Offre`), à côté de « Ignorer ».
-   - **Quoi** : bouton à contour « J'ai déjà postulé » à droite de « Écarter ». Au clic, réutilise le parcours existant de « Marquer comme envoyée » : écran `ApplicationSent`, puis l'offre passe dans Envoyées avec la date du jour, modifiable. « Préparer ma candidature » reste le seul bouton plein.
-
-Captures avant et après, en clair et en sombre, à 1440 px, aux étapes Lettre et CV.
+- Ordre des PR : son §1.2 (lot 17 d'abord, puis 11 à 15, puis 16, puis 18).
+- Ses règles du §2 (D28 à D34) **remplacent** D22 « carte = cliquable » et la règle du §7 de ce document sur les cartes. En cas de doute, ce fichier prime sur ce document.
+- Code les lots 11 à 16 directement avec ces règles finales.

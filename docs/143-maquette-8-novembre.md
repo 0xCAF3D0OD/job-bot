@@ -8,9 +8,9 @@
 
 Dans l'ordre, de la plus forte à la plus faible :
 
-1. `docs/mobile/MODIFICATIONS_8_NOVEMBRE_SOIR.md` (lots 11 à 15, envoyé par Kevin le 8 novembre au soir) : il l'emporte
-   sur la consigne en cas de conflit ;
-2. `docs/mobile/PROMPT_CLAUDE_CODE.md`, en particulier les décisions D18 à D27 (§3 ci-dessous) ;
+1. pour les lots 11 à 18 : `docs/mobile/MODIFICATIONS_8_NOVEMBRE_SOIR.md` (version finale du 8 novembre au soir), qui remplace les
+   anciens §8 à §14 de la consigne et prime en cas de doute ; ses règles D28 à D34 sont dans `regles-ui-ergonomie.md` ;
+2. `docs/mobile/PROMPT_CLAUDE_CODE.md` §0 à §7, en particulier les décisions D18 à D27 (§3 ci-dessous) ;
 3. `docs/mobile/LISEZMOI.md` ;
 4. les captures `docs/mobile/captures/` et `docs/mobile/captures/etats/` (le rendu) ;
 5. le HTML de `docs/mobile/maquettes/*.dc.html` (textes, tailles, espacements) ;
@@ -39,11 +39,20 @@ fusionnés : on fusionne dans l'ordre 0, 1, 2… et chaque PR ne montre plus que
 | 8 | Pages d'état, Connexion, Premiers pas sur ordinateur. |
 | 9 | Téléphone : éléments partagés (Assistant, Préparer, Offre provisoire, Ajouter une offre, Envoyées, Rendez-vous, Compte, Alertes, Réglages, Bilan, Extension). |
 | 10 | Vérification finale et « Écarts connus ». |
-| 11 | Corrections (MODIFICATIONS §3) : champs de formulaire, en-tête de l'ordinateur, Assistant qui écrit, Mes alertes e-mail, nouveau rendez-vous dans le panneau de détail. |
-| 12 | Envoyées : détail en deux colonnes (`DetailTwoColumns`). |
-| 13 | À traiter : détail en deux colonnes ; lignes de « Ce que je cherche ». |
-| 14 | Rendez-vous ORP : sans pastilles « Noté », formulaire en trois parties, colonne « Le rendez-vous ». |
-| 15 | Préparer sur ordinateur ; « J'ai déjà postulé ». |
+
+Lots 11 à 18 (`MODIFICATIONS_8_NOVEMBRE_SOIR.md`, version finale), dans l'ordre des PR de son §1.2 : 17, puis 11 à 15,
+puis 16, puis 18 (téléphone, puis ordinateur). Les lots 11 à 16 suivent directement les règles finales D28 à D34.
+
+| Lot | Contenu |
+|---|---|
+| 17 | Bug de la zone de saisie (production) : une seule pilule, un seul anneau de focus ; même focus pour le filtre « Filtrer par titre ou entreprise » ; Envoyer en niveau 1. Mise en place du paquet final dans `docs/mobile/`, jetons du §2.6, D28 à D34. |
+| 11 | Corrections : champs de formulaire, en-tête de l'ordinateur, Assistant qui écrit, Mes alertes e-mail, nouveau rendez-vous sans carte. |
+| 12 | Envoyées, détail en deux colonnes (ordinateur), composant `DetailTwoColumns`. |
+| 13 | À traiter en deux colonnes (ordinateur) ; « Ce que je cherche » libellé au-dessus de la valeur. |
+| 14 | Rendez-vous ORP (ordinateur) : sans pastille « Noté », « Ce qui a été convenu » en trois parties. |
+| 15 | Préparer (ordinateur) ; « J'ai déjà postulé ». |
+| 16 | Retours sur le téléphone : pastilles de suggestion, pantalon du personnage, bustes, justificatifs ORP. |
+| 18 | Style « blocs » : téléphone (Offre, Suivi ORP, Pour l'ORP, Compte), puis ordinateur (pages de lecture). |
 
 ## 3. Les décisions D18 à D27
 
@@ -117,6 +126,8 @@ Ce qui ne suit pas la maquette, avec la raison. Rempli au fil des lots, complét
 | Couleurs en dur | Restent : les feuilles de lettre et de CV (papier blanc, encre #1a1a1a), les logos Google et Microsoft, le fond blanc des logos d'employeur, l'encre foncée du logo pêche des cartes (#1B1F2A dans les deux thèmes), la case à cocher blanche des documents lus (#474C59), la pastille de l'icône IA (#f4a261) et une bulle de la victoire (#a8e6d2). | Papier et logos tiers sont hors du §3 ; aucun jeton ne garde une encre foncée en sombre ; les deux dernières couleurs ne sont pas dans la table du §3. Question posée à Kevin dans la PR du lot 10. | 10 |
 | Icônes sur fond | Restent sur fond : les icônes des formations et du financement (maquette Explorer) et la pastille des lignes repliables du Suivi ORP. | Les deux premières sont dessinées ainsi ; la troisième est hors des maquettes du 8 novembre. | 10 |
 | Mouvement réduit | Seul reste le fondu lié au défilement de la barre du haut (ordinateur), qui suit la position de la page et non le temps. | Ce n'est pas une animation qui joue seule. | 10 |
+| `docs/mobile/` | Le paquet final a été copié par-dessus `docs/mobile/` sans effacer ce qu'il ne contient pas : `tokens.css` (source de vérité des couleurs, où le §2.6 demande d'ajouter les jetons), les maquettes et captures Get'emAll et Réglages des connexions (docs/140), `calendrier-date.html` et `logo_svg_calques/`. | Les effacer aurait retiré la source des jetons et les références d'autres chantiers. | 17 |
+| Zone de saisie de l'Assistant | Toujours pas de « + » ni de micro (point 3 du lot 17). | Micro : la dictée du navigateur envoie l'audio à son éditeur, service tiers absent de la page Confidentialité (O-4) : il reste caché, comme le demande le §6 de la consigne. « + » : « Importer un fichier » n'a pas de règle qui couvre l'envoi d'un fichier à l'IA (I-1, E-5) ; « Joindre mon CV » et « Joindre une offre de ma liste » demandent au serveur de l'Assistant de recevoir une pièce jointe (il ne reçoit que du texte) et un sélecteur d'offre qui n'est pas dessiné. Question posée à Kevin dans la PR du lot 17. | 17 |
 | Champs de formulaire | Coins de 8 px. | Champs : 12 px dans l'ancienne maquette, 8 px (D7). | 11 |
 | Assistant qui écrit | La ligne « Je consulte tes candidatures… » (outil lu par l'Assistant) disparaît avec l'élément « … » : seuls les trois points restent jusqu'au premier mot. | MODIFICATIONS 11.3 supprime l'élément sous la liste des messages et ne dessine que les trois points. | 11 |
 | Mes alertes e-mail (ordinateur) | Le « › » après « Créer l'alerte » est l'icône chevron de 18 px, pas un caractère. | docs/101 : aucun caractère ne sert d'icône (test `iconography`). | 11 |
