@@ -9,7 +9,10 @@ import { dateInSentence } from "../dates";
 type Week = components["schemas"]["RhythmWeek"];
 // `nested` : dans la carte Mois ORP d'Aujourd'hui (docs/95 §4), sans cadre, un sous-titre.
 // `monthBehind` : le mois ORP est en retard ; « Semaine faite » se tait alors (1.6.27).
-const props = defineProps<{ week: Week; nested?: boolean; monthBehind?: boolean }>();
+// `band` (maquette du 8 novembre, Aujourd'hui sur ordinateur) : à droite du mois dans la carte à cheval sur la bande,
+// « Cette semaine », le compte (« 4 sur 4, faite » en vert), puis les 7 ronds de 34 px. Décoratif : la carte porte la
+// phrase lue.
+const props = defineProps<{ week: Week; nested?: boolean; monthBehind?: boolean; band?: boolean }>();
 
 const LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 const NAMES = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
@@ -47,7 +50,38 @@ function dayLabel(day: Week["days"][number], index: number): string {
 </script>
 
 <template>
+  <div
+    v-if="band"
+    :class="['rhythm-band', { done }]"
+    data-test="rhythm"
+  >
+    <div class="rhythm-band-text">
+      <strong>Cette semaine</strong>
+      <span
+        v-if="week.pause_until"
+        data-test="rhythm-count"
+      >En pause</span>
+      <span
+        v-else-if="week.target !== null"
+        data-test="rhythm-count"
+      >{{ week.count }} sur {{ week.target }}{{ done ? ", faite" : "" }}</span>
+    </div>
+    <ol
+      class="rhythm-band-days"
+      aria-hidden="true"
+    >
+      <li
+        v-for="(day, index) in week.days"
+        :key="day.day"
+        :class="{ rest: !day.research || day.paused, sent: day.sent > 0, today: day.day === todayIso }"
+      >
+        <span class="rhythm-band-dot">{{ day.sent > 0 ? day.sent : "" }}</span>
+        <span>{{ LETTERS[index] }}</span>
+      </li>
+    </ol>
+  </div>
   <section
+    v-else
     :class="[nested ? 'rhythm-nested' : 'dash-card', 'rhythm-card', { done }]"
     data-test="rhythm"
   >

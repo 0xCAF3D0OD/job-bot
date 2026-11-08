@@ -127,6 +127,8 @@
   --title-hand-step: 56px;
   --leading-hand: 52px;
   --label-caps: 13px;
+  /* L'écriture manuscrite (tokens.css) : moments de marque seulement, un seul accent par écran. */
+  --font-hand: "Caveat Brush", cursive;
   --font-page: 2rem;
   /* Les rayons (D7) : 8 (boutons non pilule, logos d'entreprise), 18 (cartes, champs), 34 (blocs de rubrique de
      l'accueil), pilule. --radius, l'ancien rayon des cartes (12 px), est l'alias de --radius-card. */
@@ -3580,41 +3582,61 @@ main:focus { outline: none; }
 /* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
 @media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
 
-/* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
-   Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */
-.band:has(> .today) { background: var(--bg); }
-.today .action-band-card {
-  box-shadow: var(--lift), 0 6px 0 -3px var(--surface), 0 12px 0 -6px var(--surface);
+/* --- Aujourd'hui sur ordinateur (maquette du 8 novembre, AujourdhuiOrdinateurTravailD et ReposD) ---
+   Bande --primary-soft sous l'en-tête (date 13 en capitales, titre 32/40 très gras, fin manuscrite à 1,45 em,
+   phrase 18/28) ; la carte du mois à cheval sur son bord bas ; colonne de 880, écart 40 ; cartes de tâche de 88 px. */
+.today-band { --today-17: 17px; --today-40: calc(var(--space-8) + var(--space-2)); --today-lh-title: 1.25; --today-lh-sub: 1.55; --today-lh-hand: 0;
+  background: var(--primary-soft); padding: var(--space-6) var(--space-6) calc(var(--space-8) + var(--space-12)); }
+.today-band-inner { max-width: 880px; margin: 0 auto; }
+.today-eyebrow { margin: 0; font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.today-title { margin: var(--space-2) 0 0; font-size: var(--font-page); font-weight: var(--weight-heavy); line-height: var(--today-lh-title); letter-spacing: -0.4px; color: var(--text); }
+.today-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: var(--today-lh-hand); letter-spacing: 0; color: var(--primary-graphic); }
+.today-band-sub { margin: var(--space-3) 0 0; font-size: var(--font-title); line-height: var(--today-lh-sub); color: var(--text-tertiary); }
+.today-page { --today-17: 17px; --today-28: 28px; display: flex; flex-direction: column; gap: calc(var(--space-8) + var(--space-2)); max-width: 880px; margin: 0 auto; padding: 0 var(--space-6) var(--space-12); box-sizing: content-box; }
+.today-orp-card {
+  margin-top: calc(-1 * var(--space-12)); display: grid; grid-template-columns: minmax(0, 1fr) 1px auto auto; align-items: center; gap: var(--today-28);
+  padding: var(--space-4) var(--space-6); background: var(--surface); border: 1px solid var(--water); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-band-card); color: var(--text); text-decoration: none;
 }
-.today-triage-preview { margin-top: var(--space-1); }
-.today-triage-done { display: grid; gap: var(--space-2); padding: var(--space-6); border-radius: var(--radius); background: var(--band); }
-.today-triage-done h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-semibold); }
-.today-triage-done p { margin: 0; color: var(--muted); }
-.today-section { display: grid; gap: var(--space-4); }
-.today-section > h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
-.today-tasks { list-style: none; margin: 0; padding: var(--space-1) var(--space-3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.today-tasks li + li { border-top: 1px solid var(--divider); }
+.today-orp-card:hover { border-color: var(--primary-graphic); }
+.today-orp-rule { width: 1px; height: 64px; background: var(--surface-muted); }
+.today-orp-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
+.today-orp-card:not(:has(.today-orp-rule)) { grid-template-columns: minmax(0, 1fr) auto; }
+.orp-month-band { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.orp-month-band-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); font-size: var(--font-label); }
+.orp-month-band-bar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
+.orp-month-band-bar span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); }
+.orp-month-band-line { font-size: var(--label-caps); color: var(--text-secondary); }
+.rhythm-band { display: flex; align-items: center; gap: var(--space-4); }
+.rhythm-band-text { display: flex; flex-direction: column; }
+.rhythm-band-text strong { font-size: var(--font-label); }
+.rhythm-band-text span { font-size: var(--label-caps); color: var(--text-secondary); }
+.rhythm-band.done .rhythm-band-text span { color: var(--success); font-weight: var(--weight-bold); }
+.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: calc(var(--space-1) * 1.5); text-align: center; }
+.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.rhythm-band-days li.today { font-weight: var(--weight-heavy); color: var(--text); }
+.rhythm-band-dot { display: grid; place-items: center; width: 34px; height: 34px; box-sizing: border-box; border: 2px solid var(--field-border); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.rhythm-band-days li.rest .rhythm-band-dot { border-style: dashed; }
+.rhythm-band-days li.sent .rhythm-band-dot { background: var(--primary-graphic); border-color: var(--primary-graphic); color: var(--on-primary); }
+.today-page .today-section { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.today-page .today-section > h2 { margin: 0 var(--space-1); font-size: var(--font-title); font-weight: var(--weight-bold); }
+.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
 .today-task {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-4);
-  padding: var(--space-4) var(--space-3); color: var(--text); text-decoration: none; border-radius: var(--radius-sm);
+  --tone: var(--primary-graphic); --tone-text: var(--primary-text);
+  display: flex; align-items: center; gap: var(--space-4); min-height: 88px; box-sizing: border-box; padding: var(--space-4) var(--space-5);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none;
 }
-.today-task-icon { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-pill); background: var(--band); color: var(--text); }
-.today-task-main { display: grid; gap: var(--space-1); min-width: 0; line-height: var(--leading-normal); }
-.today-task-main strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-.today-task-main span { color: var(--muted); font-size: var(--font-small); overflow-wrap: anywhere; }
-.today-task-action { min-height: var(--control-h); white-space: nowrap; }
-.today-task:hover strong, .today-task:hover .today-task-action { color: var(--accent); }
-.today-task:hover .today-task-action { border-color: var(--accent); }
-.today-orp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--space-6); }
-.today-orp .orp-month.compact { display: grid; justify-items: center; gap: var(--space-3); }
-/* Sans la tuile du visage (1.6.51), le mois prend la place : titre plus grand, barre sur toute la colonne. */
-.today-orp .orp-month.compact h2 { font-size: var(--font-section); }
-.today-orp .orp-month.compact .orp-month-bar { justify-self: stretch; height: var(--space-2); }
-.today-orp .orp-month-word { font-size: var(--font-body); }
-.today-orp .rhythm-nested { margin: 0; padding: 0 0 0 var(--space-6); border-top: 0; border-left: 1px solid var(--divider); justify-items: center; }
-.today-retain { display: grid; justify-items: start; gap: var(--space-4); padding: var(--space-8); border-radius: var(--radius); background: var(--band); }
-.today-retain p { margin: 0; line-height: var(--leading-normal); }
-.today-retain .today-retain-word { font-size: calc(var(--font-page) * 1.5); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.today-task:hover { border-color: var(--field-border); }
+.today-task.tone-late { --tone: var(--peach-text); --tone-text: var(--peach-text); }
+.today-task.tone-interview { --tone: var(--success); --tone-text: var(--success); }
+.today-task-icon { flex: none; width: 24px; height: 24px; margin: 0 calc(var(--space-1) / 2); color: var(--tone); }
+.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(var(--space-1) / 2); }
+.today-task-main strong { font-size: var(--today-17); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.today-task-main span { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
+.today-task.tone-late .today-task-main span { color: var(--peach-text); font-weight: var(--weight-semibold); }
+.today-task-action { flex: none; display: flex; align-items: center; gap: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
+.today-task-action svg { width: 16px; height: 16px; }
+.today-page .today-welcome, .today-page .first-steps { margin: 0; }
 
 /* --- Offres, barre d'outils (1.6.55, planche « Barre d'outils Offres ») ---
    Ordinateur : la recherche prend la ligne, puis « Filtrer » et « + Ajouter », boutons secondaires à la
@@ -3865,7 +3887,7 @@ html.search-open { overflow: hidden; }
 .offer-line.expired { opacity: 0.6; }
 /* Les lignes d'un même jour (Offres) tiennent dans une seule carte, séparées d'un filet. */
 /* Dans une carte (Suivi, Tri du jour) : la ligne s'aligne sur le titre de la carte. */
-.today-rows .offer-line, .today-triage-preview .offer-line { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
+.today-rows .offer-line { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
 @media (max-width: 820px) {
   .offer-line { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "logo text verdict" ". action action"; column-gap: var(--space-3); }
   .offer-line:not(.has-action) { grid-template-areas: "logo text verdict"; }
