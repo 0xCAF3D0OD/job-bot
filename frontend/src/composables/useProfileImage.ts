@@ -17,6 +17,8 @@ export type ImageChoice = { kind: "initials" } | { kind: "avatar"; avatar: numbe
 const avatar = ref<number | null>(null);
 const photo = ref<string | null>(readPhoto());
 const fullName = ref<string | null>(null);
+// L'e-mail de la fiche d'identité, montré à l'utilisateur seul (en-tête du panneau du compte) ; jamais envoyé ailleurs.
+const email = ref<string | null>(null);
 let loading: Promise<void> | null = null;
 
 function readPhoto(): string | null {
@@ -79,6 +81,7 @@ export function useProfileImage() {
       ]);
       avatar.value = image.data?.avatar ?? null;
       fullName.value = identity.data?.name ?? null;
+      email.value = identity.data?.email?.trim() || null;
     })();
     return loading;
   }
@@ -92,5 +95,5 @@ export function useProfileImage() {
     writePhoto(photo.value);
   }
 
-  return { choice, initials, name, firstName, avatar, photo, load, save };
+  return { choice, initials, name, firstName, email, avatar, photo, load, save };
 }

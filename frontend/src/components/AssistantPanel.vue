@@ -10,9 +10,11 @@ import { blocks, readEvents } from "../assistantText";
 import { focusBody, greetingText, suggestionsFor, useAssistant } from "../composables/useAssistant";
 import { useDailyDose } from "../composables/useDailyDose";
 import { announceDataChanged } from "../composables/useDataChanged";
+import { pickerOpen, useDismissLayer, openLayerKind } from "../composables/useDismissLayer";
 import { usePhone } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
 import BrandMark from "./BrandMark.vue";
+import Composer from "./Composer.vue";
 import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
 import InlineConfirm from "./InlineConfirm.vue";
@@ -37,7 +39,8 @@ const draft = ref("");
 const busy = ref(false);
 const reading = ref<string | null>(null);
 const scroller = ref<HTMLElement | null>(null);
-const input = ref<HTMLTextAreaElement | null>(null);
+const input = ref<{ focus: () => void } | null>(null);
+const fab = ref<HTMLButtonElement | null>(null);
 let controller: AbortController | null = null;
 
 // Les visages de la mascotte (docs/99) : elle réfléchit pendant la réponse, puis « a trouvé »
@@ -59,6 +62,22 @@ function showFound(reply: Line): void {
   clearTimeout(headTimer);
   headTimer = setTimeout(() => (headFound.value = false), 2000);
 }
+
+// Ordinateur (maquette du 8 novembre, docs/143, D24) : le panneau latéral non modal de 480 px passe par la couche
+// commune : un seul panneau à la fois, clic à l'extérieur et Échap le ferment, le focus revient au bouton flottant.
+// Le bouton flottant se cache quand un autre panneau, les filtres ou le sélecteur de date sont ouverts.
+const layer = useDismissLayer("assistant", () => (open.value = false));
+watch(open, (value) => {
+  if (value && !phone.value) layer.show(fab.value);
+  else if (!value) layer.hide(false);
+});
+const fabHidden = computed(() => (openLayerKind.value !== null && openLayerKind.value !== "assistant") || pickerOpen.value > 0);
+// Sous l'en-tête : le haut du panneau suit le bas de l'en-tête.
+const panelTop = ref(0);
+watch(open, (value) => {
+  if (!value) return;
+  panelTop.value = Math.max(0, document.querySelector<HTMLElement>("[data-test=app-header]")?.getBoundingClientRect().bottom ?? 0);
+});
 
 onMounted(() => void check());
 onBeforeUnmount(() => clearTimeout(headTimer));
@@ -93,9 +112,9 @@ watch(() => lines.value.length, scrollDown);
 
 function onKey(event: KeyboardEvent): void {
   if (event.key !== "Escape" || page.value) return;
-  // Ne ferme que le panneau, pas l'offre ouverte derrière.
+  // Ne ferme que le panneau, pas l'offre ouverte derrière ; le focus revient au bouton flottant.
   event.stopPropagation();
-  open.value = false;
+  layer.hide(true);
 }
 
 async function resume(conversation: Conversation): Promise<void> {
@@ -229,15 +248,7 @@ async function send(text: string = draft.value): Promise<void> {
   }
 }
 
-function onEnter(event: KeyboardEvent): void {
-  if (event.shiftKey || event.isComposing) return;
-  event.preventDefault();
-  void send();
-}
-
-// Téléphone (retour du 2026-10-15) : pas de bouton « Envoyer », la touche Entrée du clavier
-// envoie (étiquetée « Envoyer » grâce à enterkeyhint). Certains claviers Android ne
-// signalent pas la touche : le retour à la ligne demandé est alors intercepté ici.
+// Entrée envoie, Maj + Entrée passe à la ligne : le Composer s'en charge.
 const { phone } = usePhone();
 
 // La page Assistant du téléphone (docs/139 Q4, étape 11a) : le même panneau, sur toute la page, au-dessus de la
@@ -303,13 +314,6 @@ watch(
   { immediate: true },
 );
 
-function onBeforeInput(event: InputEvent): void {
-  if (!phone.value) return; // ordinateur : Maj+Entrée va à la ligne
-  if (event.inputType !== "insertLineBreak" && event.inputType !== "insertParagraph") return;
-  event.preventDefault();
-  void send();
-}
-
 // « Confirmer », « Non merci », « Annuler » : seul un clic change quelque chose (docs/52).
 const deciding = ref<number | null>(null);
 const celebrated = ref<number | null>(null);
@@ -354,7 +358,8 @@ const headItems: MoreMenuItem[] = [
 <template>
   <template v-if="available">
     <button
-      v-if="!open && !page && !quiet"
+      v-if="!open && !page && !quiet && !fabHidden"
+      ref="fab"
       type="button"
       class="assistant-fab"
       aria-label="Ouvrir l'assistant"
@@ -366,9 +371,11 @@ const headItems: MoreMenuItem[] = [
     </button>
     <div
       v-if="open || page"
-      :class="['assistant-panel', { 'assistant-page': page }]"
-      :role="page ? 'region' : 'dialog'"
-      aria-label="Assistant"
+      :class="['assistant-panel', page ? 'assistant-page' : 'side-panel-modeless side-panel-480']"
+      :role="page ? 'region' : 'complementary'"
+      :aria-label="page ? 'Assistant' : undefined"
+      :aria-labelledby="page ? undefined : 'assistant-title'"
+      :style="page ? undefined : { top: `${panelTop}px` }"
       data-test="assistant-panel"
       @keydown="onKey"
     >
@@ -380,13 +387,16 @@ const headItems: MoreMenuItem[] = [
         >
           <BrandMark :size="28" />Assistant
         </h1>
-        <strong
+        <h2
           v-else
+          id="assistant-title"
           class="assistant-title"
-        ><AssistantMascot
-          :size="26"
-          :mood="headMood"
-        />Assistant</strong>
+        >
+          <AssistantMascot
+            :size="32"
+            :mood="headMood"
+          />Assistant
+        </h2>
         <div class="assistant-head-actions">
           <IconButton
             v-if="page"
@@ -398,11 +408,12 @@ const headItems: MoreMenuItem[] = [
           <button
             v-else-if="lines.length"
             type="button"
-            class="link"
+            class="link side-panel-action"
+            aria-label="Nouvelle discussion"
             data-test="assistant-new"
             @click="startOver"
           >
-            Nouvelle discussion
+            Nouvelle
           </button>
           <MoreMenu
             v-if="lines.length"
@@ -415,7 +426,7 @@ const headItems: MoreMenuItem[] = [
             icon="close"
             label="Fermer l'assistant"
             data-test="assistant-close"
-            @click="open = false"
+            @click="layer.hide(true)"
           />
         </div>
       </header>
@@ -529,7 +540,7 @@ const headItems: MoreMenuItem[] = [
           <!-- La mascotte devant chaque réponse (docs/97). -->
           <AssistantMascot
             v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
-            :size="page ? 32 : 24"
+            :size="page ? 32 : 28"
             :mood="lineMood(line)"
             class="assistant-line-mascot"
           />
@@ -721,44 +732,25 @@ const headItems: MoreMenuItem[] = [
         Écris ta question.
       </p>
       <PlanLimit usage="chat" />
-      <form
-        class="assistant-form"
-        @submit.prevent="send()"
-      >
-        <textarea
+      <!-- La zone de saisie commune (Composer, D25) : une ligne, sans « + » (pas de pièce jointe à l'IA sans règle,
+           I-1 et E-5) ni micro (dictée masquée, O-4). -->
+      <div class="assistant-form">
+        <Composer
           ref="input"
           v-model="draft"
-          rows="2"
-          maxlength="4000"
-          :placeholder="page ? 'Demande quelque chose…' : phone ? 'Écris ou dicte ta question…' : 'Écris ta question…'"
-          aria-label="Ta demande à l'Assistant"
-          enterkeyhint="send"
+          :placeholder="page ? 'Demande quelque chose…' : 'Demander à l\'Assistant'"
+          send-label="Envoyer"
+          :busy="busy || reached('chat')"
           data-test="assistant-input"
-          @keydown.enter="onEnter"
-          @beforeinput="onBeforeInput"
+          @send="send"
         />
-        <button
-          type="submit"
-          class="primary small assistant-send"
-          :disabled="busy || reached('chat')"
-          :aria-label="page ? 'Envoyer' : undefined"
-          data-test="assistant-send"
-        >
-          <AppIcon
-            v-if="page"
-            name="arrow-up"
-          />
-          <template v-else>
-            Envoyer
-          </template>
-        </button>
-      </form>
+      </div>
       <!-- AS7 : sous le champ, sur la page comme dans le panneau. -->
       <p
         class="assistant-disclaimer"
         data-test="assistant-disclaimer"
       >
-        L'Assistant peut se tromper. Vérifie avant de confirmer.
+        L'Assistant peut se tromper. Relis toujours avant d'envoyer.
       </p>
     </div>
   </template>

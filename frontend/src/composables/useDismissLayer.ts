@@ -16,6 +16,8 @@ const current = shallowRef<Layer | null>(null);
 /** Le genre du panneau ou du menu ouvert (« compte », « notifications », « filtres »…), ou null. */
 export const openLayerKind = computed(() => current.value?.kind ?? null);
 export const anyLayerOpen = computed(() => current.value !== null);
+/** Le nombre de sélecteurs de date ouverts (DateTimePanel) : le bouton de l'Assistant se cache pendant ce temps. */
+export const pickerOpen = ref(0);
 
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== "Escape" || !current.value) return;

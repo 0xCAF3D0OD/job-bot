@@ -62,3 +62,9 @@ Ce qui ne suit pas la maquette, avec la raison. Rempli au fil des lots, complét
 
 | Écran ou élément | Écart | Raison | Lot |
 |---|---|---|---|
+| En-tête de l'ordinateur | Le menu principal reste centré ; la maquette le place à gauche, après le logo. | §7 de la consigne : ne pas changer le menu principal. Question posée à Kevin dans la PR du lot 3. | 3 |
+| Assistant (ordinateur) | Pas de « + » ni de micro dans la zone de saisie, donc pas de pièce jointe (CV) dans la conversation. | Aucun fichier ne part à l'IA sans règle (I-1, E-5) et la dictée est masquée (O-4) ; le serveur de l'Assistant ne reçoit pas de fichier. | 3 |
+| Assistant (ordinateur) | La bulle de l'Assistant prend `--panel` au lieu de #F1EFE9. | #F1EFE9 n'est pas un jeton de tokens.css. | 3 |
+| Assistant (ordinateur) | Le panneau garde son propre gabarit (classes du SidePanel non modal) au lieu du composant SidePanel. | Le panneau de l'Assistant est aussi la page Assistant du téléphone ; le découper aurait recréé le composant. | 3 |
+| Panneau du compte | Les icônes « Réglages » et la roue de la maquette : on garde l'icône Réglages de jobA1 (curseurs). | Iconographie docs/101 : pas de nouvelle icône pour un sens qui en a déjà une. | 3 |
+| Titres des panneaux | 20 px dans la maquette, `--font-section` (22 px) ; intertitres 13 px, `--label-caps`. | Échelle de jetons (docs/135). | 3 |

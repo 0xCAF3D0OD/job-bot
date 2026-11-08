@@ -32,6 +32,9 @@ export const ICONS = {
   building: path("M5 20.5V5.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15") + path("M15 9.5h3a1 1 0 0 1 1 1v10M3.5 20.5h17M8.5 8.5h3M8.5 12h3M8.5 15.5h3"),
   home: path("M4 11l8-6.5 8 6.5") + path("M6 9.5V19.5h12V9.5M10 19.5v-5h4v5"),
   clock: circle(12, 12, 8.5) + path("M12 7.5V12l3 2"),
+  // Le mode sombre et l'aide (panneau du compte, maquette du 8 novembre).
+  moon: path("M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"),
+  help: circle(12, 12, 8.5) + path("M9.6 9.5a2.5 2.5 0 0 1 4.8 1c0 1.6-2.4 2-2.4 3.5M12 17v.5"),
   globe: circle(12, 12, 9) + path("M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"),
   rate: circle(12, 12, 9) + path("M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"),
   tag: path("M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z") + circle(8, 8, 1.3),

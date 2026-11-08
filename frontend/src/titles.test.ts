@@ -21,6 +21,8 @@ const VIEWS: Record<string, string> = {
 // Les pages de présentation gardent leurs phrases : la connexion, la présentation, l'accueil.
 const PRESENTATION = ["LoginView", "DiscoverView", "WelcomeView"];
 const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
+// Les intertitres imposés par la maquette du 8 novembre (docs/143, D24 : le panneau du compte).
+const MAQUETTE = new Set(["./components/AccountMenu.vue : Mon compte"]);
 
 function template(source: string): string {
   return source.slice(source.indexOf("<template>"));
@@ -54,7 +56,7 @@ describe("titres (docs/88)", () => {
         ...html.matchAll(/<(PageHero|SidePanel)\b[^>]*?\stitle="([^"]+)"/g),
       ];
       for (const match of headings) {
-        if (POSSESSIVE.test(match[2]!)) found.push(`${path} : ${match[2]}`);
+        if (POSSESSIVE.test(match[2]!) && !MAQUETTE.has(`${path} : ${match[2]}`)) found.push(`${path} : ${match[2]}`);
       }
     }
     expect(found).toEqual([]);
