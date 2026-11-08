@@ -291,7 +291,8 @@ function cal(iso: string): { day: number; month: number } {
             <h3 class="rdv-last-title">
               {{ pastTitle(item.starts_at, now) }}
             </h3>
-            <span class="rdv-meta">Pas encore noté · 1 minute</span>
+            <!-- Plus de « Pas encore noté » (lot 14) : le groupe « À noter » le dit déjà. -->
+            <span class="rdv-meta">{{ `${dateText(item.starts_at)}, ${timeAndPlace(item.starts_at, item.place)}` }}</span>
           </div>
         </div>
         <button

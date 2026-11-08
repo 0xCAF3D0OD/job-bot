@@ -79,23 +79,34 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-detail-past]").exists()).toBe(true);
   });
 
-  it("un rendez-vous passé et non noté : « À noter » ouvre le dialogue « Ce qui a été convenu »", async () => {
+  it("un rendez-vous passé et non noté : « À noter » ouvre ce qui a été convenu dans le détail, en deux colonnes (lot 14)", async () => {
     const held = { ...MEETING, starts_at: "2026-10-13T08:00:00Z" };
     serve({ meeting: held, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
-    expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(true);
-    const sheet = wrapper.findComponent({ name: "OrpOutcomeSheet" });
-    expect(sheet.props("meeting")).toBeNull();
-    await wrapper.get("[data-test=rdv-note]").trigger("click");
-    expect(sheet.props("meeting")).toMatchObject({ id: 1 });
+    const item = wrapper.get("[data-test=rdv-to-note-1]");
+    // Sans pastille « Pas encore noté » : le groupe « À noter » le dit.
+    expect(item.text()).not.toContain("noté");
+    // Sans rendez-vous à venir, le premier à noter est choisi.
+    expect(item.attributes("aria-current")).toBe("true");
+    const detail = wrapper.get("[data-test=rdv-detail-past]");
+    expect(detail.get("h2").text()).toMatch(/^Rendez-vous ORP du 13 octobre/);
+    const inline = detail.get("[data-test=outcome-inline]");
+    expect(inline.findAll("fieldset legend").map((l) => l.text())).toEqual([
+      "Objectif de recherches",
+      "Mesures décidées (facultatif)",
+      "Prochain rendez-vous (facultatif)",
+    ]);
+    expect(inline.get("aside").attributes("aria-label")).toBe("Le rendez-vous");
+    expect(inline.findAll("aside dt").map((d) => d.text())).toEqual(["Date", "Heure", "Lieu", "Objectif jusqu’ici"]);
+    expect(inline.get("[data-test=fact-target] dd").text()).toBe("10 recherches par mois");
     // Le prochain rendez-vous saisi part avec ce qui a été convenu : le serveur crée l'entrée « À venir ».
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, past: [{ ...held, outcome_at: "2026-10-13T10:00:00Z" }], target: 10, trainings: [] } });
-    // Maquette du 8 novembre : la pilule ouvre le sélecteur, qui prend la place du formulaire.
-    await sheet.get("[data-test=outcome-next] [data-test=dt-date]").trigger("click");
-    expect(sheet.find("[data-test=outcome-form]").exists()).toBe(false);
-    sheet.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2099-11-10", time: "09:30" });
+    // Le sélecteur prend toute la place sous l'en-tête.
+    await inline.get("[data-test=outcome-next] [data-test=dt-date]").trigger("click");
+    expect(wrapper.find("[data-test=outcome-inline-form]").exists()).toBe(false);
+    wrapper.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2099-11-10", time: "09:30" });
     await flushPromises();
-    await sheet.get("[data-test=outcome-form]").trigger("submit");
+    await wrapper.get("[data-test=outcome-inline-form]").trigger("submit");
     await flushPromises();
     const [path, options] = PUT.mock.calls[0] as [string, { body: { target: number; next_starts_at: string } }];
     expect(path).toBe("/api/orp-meeting/{meeting_id}/convenu");
