@@ -140,7 +140,7 @@ watch(() => props.page, () => void nextTick(measure));
         </div>
         <button
           type="button"
-          class="secondary"
+          class="secondary action-2"
           data-test="rdv-add"
           :aria-expanded="selected === 'nouveau'"
           @click="select('nouveau')"

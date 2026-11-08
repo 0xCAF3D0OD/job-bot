@@ -489,6 +489,33 @@
       "x": 0,
       "y": 1214
     },
+    "OrpFiche.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Pour l’ORP (une candidature)",
+      "w": 390,
+      "x": 4700,
+      "y": 1214
+    },
+    "OrpFicheSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Pour l’ORP",
+      "w": 390,
+      "x": 6110,
+      "y": 4042
+    },
+    "OrpSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Suivi ORP",
+      "w": 390,
+      "x": 5640,
+      "y": 4042
+    },
     "PageIntrouvable.dc.html": {
       "h": 844,
       "is_interactive": true,
@@ -804,7 +831,10 @@
     "ConfidentialiteGetemall.dc.html",
     "RelierPasTesteur.dc.html",
     "RelierFermee.dc.html",
-    "RelierLienInvalide.dc.html"
+    "RelierLienInvalide.dc.html",
+    "OrpFiche.dc.html",
+    "OrpSombre.dc.html",
+    "OrpFicheSombre.dc.html"
   ],
   "pages": [],
   "title": "jobA1"

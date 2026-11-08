@@ -163,7 +163,7 @@ async function save(): Promise<void> {
     <div :class="{ 'rdv-form-actions': inline }">
       <button
         type="submit"
-        class="primary"
+        class="primary action-1"
         data-test="meeting-save"
       >
         {{ meeting ? "Enregistrer le rendez-vous" : "Ajouter le rendez-vous" }}

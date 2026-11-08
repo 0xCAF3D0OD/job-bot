@@ -319,3 +319,22 @@ maquette du 8 novembre fait foi pour le téléphone et pour l'ordinateur (except
 | D27 | **Personnage sur ordinateur** : 240 px de haut sur les pages d'état, 360 px aux premiers pas. La note « 290 px sur ordinateur » de docs/141 §4 est remplacée. Liste fermée de docs/141 §3 inchangée. | docs/141 §4 |
 
 D12, D13, D14, D15, D16 et D17 restent valables.
+
+### Décisions du 8 novembre 2026 au soir : le style « blocs » (Kevin, D28 à D34)
+
+Validées par Kevin le 2026-11-08 (`docs/mobile/MODIFICATIONS_8_NOVEMBRE_SOIR.md` §2, version finale). Elles valent
+pour les lots 11 à 18 (docs/143) et partout où ce fichier ne dit pas autre chose.
+
+| N° | Décision | Remplace |
+|---|---|---|
+| D28 | **Un bloc est une section, jamais cliquable en entier.** Une page de lecture est une pile de blocs `--surface`, sans bordure ni ombre, rayon `--radius-card`, sur le fond `--page-blocks`. Écart entre blocs : 8 px (téléphone), 16 px (ordinateur). Marge intérieure : 22 px en haut et en bas, 20 px sur les côtés (téléphone) ; 24 px (ordinateur). Sur-titre 13 px 700 en capitales ; titre 18/24 700 ; phrase d'aide 14/21 `--text-secondary`. | D22 « carte = cliquable » |
+| D29 | **Une ligne à flèche est cliquable en entier.** Fond `--row-blocks`, rayon `--radius-sm`, 72 px (56 px sur une ligne), `padding: 14px 12px 14px 16px`, 10 px entre deux lignes. À droite, un cercle à contour de 40 px (36 px dans les réglages sur ordinateur), flèche → `--primary-text`, décoratif. Un seul arrêt de tabulation. | D22, en partie |
+| D30 | **Hiérarchie des actions.** Tout ce qui est cliquable est bleu, d'autant plus intense que l'action compte : niveau 1 plein (`--action`, texte `--on-action`), niveau 2 à contour (`--surface`, contour 1,5 px `--primary-graphic`, texte `--primary-text`), niveau 3 cercle (lignes D29), lien texte (`--primary-text`, 15 px, 700). Plus aucun contour gris sur un bouton. L'orange n'est jamais une couleur d'action. | — |
+| D31 | **Statut = un mot coloré après le titre** (14 px, 700, 8 px après, couleur de ton). Plus de pastille de statut à droite sur téléphone ; sur ordinateur, dans les listes à traits, le statut reste à droite en texte coloré, suivi du cercle D29. | — |
+| D32 | **Champs à recopier** : libellé 13 px au-dessus de la valeur 16 px 700, bouton copier de 44 px (niveau 2) nommé « Copier <libellé> », annonce « Copié ». Case à cocher externe : étiquette grise « ☐ case à cocher dans Job-Room ». Valeur absente : « Non renseigné ». | — |
+| D33 | **Mode sombre** : ce qui est devant est plus clair. Fond des écrans en blocs `--bg`, blocs `--surface`, lignes `--surface-muted` ; éléments pleins interactifs en `--action` / `--on-action`. Les logos, points non lus, barres de progression, miniatures, pastilles de compte et bulle de l'utilisateur gardent `--primary`. | — |
+| D34 | **Au plus un bouton plein visible par écran**, en plus du bouton central de la barre du bas et du bouton Envoyer du Composer. Un second bouton plein passe au niveau 2. | — |
+
+Jetons ajoutés (§2.6) : `--action`, `--on-action`, `--page-blocks`, `--row-blocks`, dans `docs/mobile/tokens.css` et
+`frontend/src/style.css`. Les numéros D33 et D34 suivent l'ordre du §2 (le texte de Kevin nomme D28 à D34 sans
+numéroter le mode sombre).
