@@ -365,7 +365,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status !== "applied") {
-    items.push({ label: "J'ai postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
+    items.push({ label: "J'ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
       items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
@@ -673,6 +673,15 @@ watch(
         >
           Écarter
         </button>
+        <!-- Lot 15.2 : le parcours « Marquer comme envoyée », en niveau 2 à droite de « Écarter ». -->
+        <button
+          type="button"
+          class="secondary"
+          data-test="offer-already-applied"
+          @click="emit('applied')"
+        >
+          J'ai déjà postulé
+        </button>
       </div>
     </section>
 
@@ -694,6 +703,7 @@ watch(
       v-if="sub"
       :offer="sheetOpen ? offer : null"
       :extra="sheetExtra"
+      sent-title="J'ai déjà postulé"
       @close="sheetOpen = false"
       @discard="sheetOpen = false; emit('status', 'ignored')"
       @sent="sheetOpen = false; emit('applied')"

@@ -1742,12 +1742,6 @@ html.side-open { overflow: hidden; }
 
 /* Préparer une candidature (docs/47) : trois onglets numérotés, l'offre à côté, Postuler à part. */
 .step-number { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-right: var(--space-1); border-radius: 50%; border: 1px solid currentColor; font-size: var(--font-caption); font-weight: var(--weight-semibold); }
-.offer-brief-head { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--font-small); }
-.offer-brief-points ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); font-size: var(--font-small); }
-.offer-brief-points li.ok::marker { color: var(--ok-text); }
-.offer-brief-points li.gap::marker { color: var(--orange-text); }
-.offer-brief-points.folded li:nth-child(n + 4) { display: none; }
-.offer-brief-more { justify-self: start; }
 .download-actions { flex-wrap: nowrap; }
 .download-actions a { white-space: nowrap; }
 

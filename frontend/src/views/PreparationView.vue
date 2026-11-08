@@ -8,6 +8,7 @@ import DocPreview from "../components/DocPreview.vue";
 import TemplatePicker from "../components/TemplatePicker.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
+import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
@@ -37,7 +38,7 @@ import Composer from "../components/Composer.vue";
 import SuggestionChips from "../components/SuggestionChips.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { dateInSentence, dateWithTime } from "../dates";
-import { expiredText } from "../format";
+import { expiredText, scoreWord } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
@@ -589,6 +590,36 @@ async function loadPage(): Promise<void> {
   }
 }
 watch(() => [selected.value?.id, selected.value?.edited_at, template.value], () => void loadPage());
+// Sur ordinateur (lot 15.1), la ligne de la page va dans « Mise en page » : « Tient sur une page A4 · 248 mots ».
+const words = computed(() => (draft.value?.paragraphs ?? []).reduce((n, p) => n + (p.text.match(/\S+/g)?.length ?? 0), 0));
+const layoutNote = computed(() => {
+  const value = page.value;
+  if (!value || dirty.value || !draft.value) return "";
+  const count = `${words.value} mot${words.value > 1 ? "s" : ""}`;
+  return value.fits ? `Tient sur une page A4 · ${count}` : `Déborde de ${value.overflow_lines} ligne${value.overflow_lines > 1 ? "s" : ""} · ${count}`;
+});
+// Le verdict à côté de l'anneau de l'en-tête (D5 : Proche --success, À creuser --score-dig, Loin --neutral).
+const verdict = computed(() => (offer.value?.score === null || offer.value?.score === undefined ? null : scoreWord(Math.round(offer.value.score))));
+// « Ma candidature » ne s'affiche plus sur ordinateur ; il reste dans le titre de l'onglet (lot 15.1).
+watch([offer, () => route.fullPath], ([o]) => {
+  if (o) void nextTick(() => (document.title = `Ma candidature, ${o.title}, jobA1`));
+});
+// « J'ai relu la lettre » sur ordinateur : un bouton plein (lot 15.1). Il note la relecture, puis passe au CV.
+async function readThenNext(): Promise<void> {
+  const letter = selected.value;
+  if (!letter || writing.value || readBusy.value) return;
+  if (!letter.read_at) {
+    readBusy.value = true;
+    try {
+      const { data } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: true } });
+      if (data) letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
+      else return;
+    } finally {
+      readBusy.value = false;
+    }
+  }
+  await router.push({ query: { doc: "cv" } });
+}
 const pageLine = computed(() => {
   const value = page.value;
   if (!value || dirty.value) return "";
@@ -651,7 +682,7 @@ onMounted(() => void load());
   <!-- La tête (maquette Preparer, étape 7a) : le retour à l'offre, « Ma candidature », puis l'offre en une
        ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre, D3) et les étapes. -->
   <PageHero
-    v-else
+    v-else-if="phone"
     class="prep-head"
     :title="notFound ? 'Offre introuvable' : 'Ma candidature'"
   >
@@ -702,10 +733,65 @@ onMounted(() => void load());
       label="Étapes de la candidature"
     />
   </PageHero>
+  <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
+       H1 avec l'entreprise et le lieu, l'anneau de 48 avec le verdict, puis les étapes. « Ma candidature » ne reste
+       que dans le titre de l'onglet. -->
+  <header
+    v-else
+    class="container prep-desk-head"
+    data-test="prep-desk-head"
+  >
+    <RouterLink
+      :to="`/candidatures/offres/${offerId}`"
+      class="prep-desk-back"
+      data-test="back-to-offer"
+      @click="backToOffer"
+    >
+      <AppIcon name="chevron-left" />Retour à l’offre
+    </RouterLink>
+    <span
+      class="prep-desk-rule"
+      aria-hidden="true"
+    />
+    <CompanyLogo
+      v-if="offer"
+      :offer="offer"
+    />
+    <div class="prep-desk-title">
+      <h1 data-test="prep-offer-title">
+        {{ notFound ? "Offre introuvable" : offer?.title ?? "" }}
+      </h1>
+      <p v-if="offer">
+        {{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}
+      </p>
+    </div>
+    <div
+      v-if="offer && verdict && offer.score !== null && offer.score !== undefined"
+      class="prep-desk-score"
+      data-test="prep-score"
+    >
+      <ScoreRing
+        :score="offer.score"
+        :stale="offer.score_stale"
+        bare
+      />
+      <p>
+        <span :class="['prep-verdict', verdict.tone]">{{ verdict.word }}</span>
+        <span>de ton profil</span>
+      </p>
+    </div>
+    <StepTabs
+      v-if="offer"
+      :steps="steps"
+      :current="tab"
+      label="Étapes de la candidature"
+      numbered
+    />
+  </header>
 
   <section
     v-if="!sent"
-    class="band"
+    :class="['band', { 'prep-desk-band': !phone }]"
   >
     <div class="container">
       <!-- Offre introuvable : retirée par l'employeur, peut-être. Un écran de travail : le visage, jamais le
@@ -879,7 +965,7 @@ onMounted(() => void load());
 
       <div
         v-else-if="offer"
-        class="prep-layout"
+        :class="['prep-layout', { 'prep-desk': !phone }]"
       >
         <div class="prep-main">
           <p
@@ -946,7 +1032,7 @@ onMounted(() => void load());
 
             <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
             <p
-              v-if="selected?.instruction"
+              v-if="phone && selected?.instruction"
               class="hint version-instruction screen-only"
               data-test="version-instruction"
             >
@@ -1072,7 +1158,7 @@ onMounted(() => void load());
               {{ reviewLine }}
             </p>
             <p
-              v-if="pageLine"
+              v-if="phone && pageLine"
               class="page-line"
               aria-live="polite"
               data-test="page-line"
@@ -1112,7 +1198,7 @@ onMounted(() => void load());
                 </li>
               </ul>
             </DisclosureRow>
-            <template v-if="selected && !claim">
+            <template v-if="phone && selected && !claim">
               <div
                 class="prep-revise"
                 data-test="prep-revise"
@@ -1163,14 +1249,32 @@ onMounted(() => void load());
           v-if="!phone"
           class="prep-side"
         >
+          <LayoutCard :note="layoutNote">
+            <button
+              v-if="page && !page.fits && !dirty"
+              type="button"
+              class="link"
+              data-test="shorten"
+              :aria-disabled="writing ? 'true' : undefined"
+              @click="!writing && shorten()"
+            >
+              Raccourcir
+            </button>
+          </LayoutCard>
           <OfferBrief :offer="offer" />
-          <div class="side-card">
+          <div class="side-card prep-new-version">
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
             </h2>
+            <p
+              v-if="selected"
+              class="prep-new-version-help"
+            >
+              Repartir de zéro avec l’annonce et ton CV.
+            </p>
             <div class="mobile-dock">
               <BusyButton
-                :class="nextStep === 'letter' ? 'primary' : 'secondary'"
+                :class="nextStep === 'letter' && !selected ? 'primary action-1' : 'secondary action-2'"
                 :busy="writing"
                 :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
                 :disabled="reached('letter')"
@@ -1178,10 +1282,17 @@ onMounted(() => void load());
                 @click="write()"
               >
                 <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ writeLabel || (selected ? "Rédiger la nouvelle version" : "Rédiger la lettre") }}</span>
+                  <span class="with-icon"><AppIcon :name="selected ? 'pencil' : 'ai'" />{{ writeLabel || (selected ? "Rédiger la nouvelle version" : "Rédiger la lettre") }}</span>
                 </HoverNote>
               </BusyButton>
             </div>
+            <RouterLink
+              :to="{ path: '/tes-donnees', hash: '#ia' }"
+              class="prep-ai-link"
+              data-test="prep-ai-link"
+            >
+              Ce qui part à l’IA<AppIcon name="chevron" />
+            </RouterLink>
             <PlanLimit usage="letter" />
             <InlineConfirm
               v-if="choosingWrite"
@@ -1258,6 +1369,48 @@ onMounted(() => void load());
             </GroupedList>
           </div>
         </section>
+        <!-- Bas de page sur ordinateur (lot 15.1) : à gauche les retouches proposées et la zone de saisie, à droite
+             « J'ai relu la lettre », l'action principale de l'étape. La barre reste en bas de l'écran. -->
+        <div
+          v-if="!phone && selected && !claim"
+          class="prep-desk-bottom"
+          data-test="prep-desk-bottom"
+        >
+          <div
+            class="prep-revise"
+            data-test="prep-revise"
+          >
+            <SuggestionChips
+              :items="suggestions"
+              label="Retouches proposées"
+              @pick="revise"
+            />
+            <Composer
+              v-model="revision"
+              placeholder="Demander une modification de la lettre"
+              send-label="Envoyer la demande"
+              :busy="writing"
+              @send="revise"
+            />
+            <p
+              v-if="instructionNote"
+              class="hint"
+              aria-live="polite"
+              data-test="instruction-note"
+            >
+              {{ instructionNote }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="primary action-1 prep-read"
+            :disabled="writing || readBusy"
+            data-test="letter-read"
+            @click="readThenNext"
+          >
+            J’ai relu la lettre
+          </button>
+        </div>
         <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
         <ActionBar
@@ -1416,3 +1569,51 @@ onMounted(() => void load());
     @confirm="confirmClaim"
   />
 </template>
+
+<style>
+/* Conteneur de 1280 (D18), 24 de marge entre 821 et 1327 px. */
+.prep-desk-head.container, .prep-desk-band > .container { --prep-max: 1280px; max-width: calc(var(--prep-max) + 2 * var(--space-6)); }
+/* Préparer sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 15.1 ; captures PreparerOrdinateur et
+   --colonne-bas) : en-tête de 64 px, grille 1fr + 360 à 24 d'écart, colonne de droite qui défile seule, cartes de
+   20/24, lettre sur --surface-muted, bas de page en grille qui reste en bas de l'écran. */
+.prep-desk-head { --prep-20: 20px; --prep-32: 32px; --prep-44: 44px; --prep-48: 48px; --prep-64: 64px; --prep-24: 24px; display: flex; align-items: center; gap: var(--prep-20); min-height: var(--prep-64); padding-top: var(--space-4); padding-bottom: var(--space-2); }
+.prep-desk-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--prep-44); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; white-space: nowrap; }
+.prep-desk-back:hover { text-decoration: underline; }
+.prep-desk-back .icon { width: 18px; height: 18px; }
+.prep-desk-rule { flex: none; width: 1px; height: var(--prep-32); background: var(--line); }
+.prep-desk-head > .logo { flex: none; width: var(--prep-44); height: var(--prep-44); }
+.prep-desk-title { flex: 1; min-width: 0; }
+.prep-desk-title h1 { margin: 0; font-size: var(--prep-24); font-weight: var(--weight-heavy); line-height: var(--leading-tight); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prep-desk-title p { margin: 0; font-size: var(--font-label); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prep-desk-score { flex: none; display: flex; align-items: center; gap: var(--space-3); }
+.prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
+.prep-desk-score p { display: grid; margin: 0; font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-tight); }
+.prep-verdict { font-size: var(--font-label); font-weight: var(--weight-bold); }
+.prep-verdict:is(.very-close, .close) { color: var(--success); }
+.prep-verdict.dig { color: var(--score-dig); }
+.prep-verdict.far { color: var(--neutral); }
+.prep-desk-head > .step-tabs { flex: none; width: auto; }
+
+.prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; --prep-sheet: 520px; --prep-bottom: 150px; --prep-side-top: 5.5rem; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
+.prep-desk .prep-side { gap: var(--space-4); max-height: calc(100dvh - var(--prep-side-top) - var(--prep-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+.prep-desk .side-card { gap: var(--space-1); padding: var(--prep-20) var(--prep-24); }
+.prep-desk .layout-card-pills { margin-top: var(--space-4); }
+.prep-desk .layout-card-note { margin-top: var(--space-4); }
+.prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
+.prep-new-version .mobile-dock { justify-self: start; margin-top: var(--space-4); }
+.prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
+.prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
+.prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+.prep-desk .doc-card-head h2 { font-size: var(--font-title); }
+.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
+.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
+.prep-desk .doc-card > .review-line:empty { display: none; }
+.prep-new-version-help { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
+.prep-new-version .mobile-dock button { min-height: var(--prep-48); padding: 0 var(--prep-20); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
+.prep-ai-link:hover { text-decoration: underline; }
+.prep-ai-link .icon { width: 14px; height: 14px; }
+.prep-desk-bottom { grid-column: 1 / -1; position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); align-items: end; padding: var(--space-4) 0 var(--space-6); background: var(--bg); }
+.prep-desk-bottom .prep-revise { gap: var(--space-3); }
+.prep-read { justify-self: end; min-height: var(--prep-52); padding: 0 var(--prep-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+</style>

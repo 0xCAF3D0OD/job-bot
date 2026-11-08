@@ -3,23 +3,26 @@ import { describe, expect, it } from "vitest";
 
 import OfferBrief from "./OfferBrief.vue";
 
-describe("OfferBrief, l'offre à côté de la lettre (docs/47 §2)", () => {
-  it("note, nombre de points forts et de manques, repliés à 3 lignes", async () => {
+describe("OfferBrief, « Pour cette offre » (lot 15.1)", () => {
+  it("points forts et à vérifier, le sujet avant les deux-points en gras, tout montré", () => {
     const offer = {
       summary_role: "Architecte cloud",
       score: 88,
-      strengths: [{ text: "Kubernetes" }, { text: "Terraform" }, { text: "AWS" }],
-      gaps: [{ text: "Allemand" }],
+      strengths: [{ text: "Kubernetes : plateforme de 40 services" }, { text: "Terraform" }],
+      gaps: [{ text: "Allemand : niveau B2 demandé" }],
     };
     const wrapper = mount(OfferBrief, { props: { offer: offer as never } });
-    // La note en mot, le chiffre pour les lecteurs d'écran et au survol (docs/131 §A.4).
-    expect(wrapper.find("[data-test=score]").attributes("aria-label")).toBe("Très proche : 88 sur 100");
-    expect(wrapper.text()).toContain("3 points forts · 1 manque");
-    // Le mot seul, sans le visage devant (Kevin, 2026-11-05).
-    expect(wrapper.find("[data-test=score] svg").exists()).toBe(false);
-    expect(wrapper.find("[data-test=offer-brief-points]").classes()).toContain("folded");
-    await wrapper.find("[data-test=offer-brief-more]").trigger("click");
-    expect(wrapper.find("[data-test=offer-brief-points]").classes()).not.toContain("folded");
+    expect(wrapper.find("[data-test=offer-brief-head]").text()).toBe("2 points forts · 1 à vérifier");
+    // Plus de verdict ni de « Afficher moins ».
+    expect(wrapper.find("[data-test=score]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=offer-brief-more]").exists()).toBe(false);
+    const ok = wrapper.find("[data-test=offer-brief-ok]");
+    expect(ok.find("h3").text()).toBe("Points forts (2)");
+    expect(ok.findAll("strong").map((s) => s.text())).toEqual(["Kubernetes", "Terraform"]);
+    expect(ok.find(".offer-brief-detail").text()).toBe("Plateforme de 40 services");
+    const gap = wrapper.find("[data-test=offer-brief-gap]");
+    expect(gap.find("h3").text()).toBe("À vérifier (1)");
+    expect(gap.find("strong").text()).toBe("Allemand");
   });
 
   it("rien sans résumé de l'IA", () => {

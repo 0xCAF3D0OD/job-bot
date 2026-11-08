@@ -10,7 +10,8 @@ import AppIcon from "./AppIcon.vue";
 
 export type Step = { key: string; label: string; to: RouteLocationRaw; done?: boolean; test?: string };
 
-defineProps<{ steps: Step[]; current: string; label: string }>();
+// `numbered` (Préparer sur ordinateur, lot 15.1) : « 1. Lettre », « 2. CV », « 3. Postuler », sans pastille.
+defineProps<{ steps: Step[]; current: string; label: string; numbered?: boolean }>();
 </script>
 
 <template>
@@ -26,13 +27,14 @@ defineProps<{ steps: Step[]; current: string; label: string }>();
       :data-test="step.test ?? `step-${step.key}`"
     >
       <span
+        v-if="!numbered"
         :class="['step-dot', { done: step.done }]"
         aria-hidden="true"
       ><AppIcon
         v-if="step.done"
         name="check"
       /><template v-else>{{ index + 1 }}</template></span>
-      <span class="segmented-label">{{ step.label }}</span><span
+      <span class="segmented-label">{{ numbered ? `${index + 1}. ${step.label}` : step.label }}</span><span
         v-if="step.done"
         class="visually-hidden"
         data-test="step-done"
