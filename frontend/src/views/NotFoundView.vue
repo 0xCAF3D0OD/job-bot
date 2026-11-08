@@ -7,6 +7,8 @@ import Illustration from "../components/Illustration.vue";
 // part le dit, au lieu de renvoyer sans un mot vers l'accueil. Le logo et « jobA1 » en haut, sans barre ;
 // le personnage perplexe (Illustration, docs/141 : écran plein, 280 px sur téléphone au lieu des 290 de la
 // maquette, 290 sur ordinateur) devant le panneau, les nuages et le sol ; « Retour à l'accueil » en bas, pleine largeur.
+// Ordinateur dès 1 024 px (maquette du 8 novembre, PageIntrouvableOrdinateur) : l'en-tête complet quand on est
+// connecté (App.vue), le personnage seul à 240 px, le titre de 34 et « Retour à l'accueil » en bouton plein dessous.
 </script>
 
 <template>
@@ -40,7 +42,7 @@ import Illustration from "../components/Illustration.vue";
         <Illustration
           pose="perplexe"
           :height="280"
-          :desktop-height="290"
+          :desktop-height="240"
           full
           class="lost-person"
           data-test="not-found-person"
@@ -89,5 +91,21 @@ import Illustration from "../components/Illustration.vue";
 .lost-home:hover { background: var(--primary-soft); color: var(--primary-text); }
 @media (min-width: 821px) {
   .lost-scene { height: 340px; }
+}
+/* Ordinateur (maquette du 8 novembre, PageIntrouvableOrdinateur) : le personnage seul, 240 px ; le titre de 34/42 en
+   800, la phrase de 18/28, le bouton plein de 44 dessous. */
+@media (min-width: 1024px) {
+  .lost-page { --lost-34: 34px; --lost-42: 42px; --lost-18: 18px; --lost-28: 28px; min-height: calc(100dvh - 12rem); flex: 1; justify-content: center; }
+  :root:has(.topbar) .lost-brand { display: none; }
+  .lost-brand { padding: var(--space-5) max(var(--space-6), calc((100vw - var(--header-max)) / 2 + var(--space-6))) 0; }
+  .lost-main { flex: 0 0 auto; max-width: 880px; margin-inline: auto; gap: 0; padding: var(--space-6) 0 0; }
+  .lost-scene { width: auto; height: auto; }
+  .lost-scene :is(svg, .lost-sign, .lost-ground) { display: none; }
+  .lost-person { position: static; transform: none; }
+  .lost-title { margin: var(--space-6) 0 0; font-size: var(--lost-34); line-height: var(--lost-42); font-weight: var(--weight-heavy); letter-spacing: normal; }
+  .lost-line { max-width: 560px; margin: var(--space-3) 0 0; font-size: var(--lost-18); line-height: var(--lost-28); color: var(--text-secondary); }
+  .lost-actions { padding: var(--lost-28) 0 var(--space-12); }
+  .lost-home { width: auto; max-width: none; min-height: var(--target-min); padding: 0 var(--space-5); border: 0; background: var(--primary); color: var(--on-primary); font-size: var(--font-label); }
+  .lost-home:hover { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
 }
 </style>

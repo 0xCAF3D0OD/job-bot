@@ -120,7 +120,8 @@ describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05
     await flushPromises();
     expect(wrapper.emitted("retry")).toHaveLength(1);
     expect(next()?.trim()).toBe("Nouvel essai en cours…");
-    // Le personnage aux câbles (docs/141, 5) : 400 px, 800 px en 2×, 250 px, décoratif ; pas d'en-tête.
+    // Le personnage aux câbles (docs/141, 5) : 400 px, 800 px en 2×, 250 px, décoratif ; pas d'en-tête sur
+    // téléphone (le logo seul n'apparaît que sur ordinateur, maquette du 8 novembre).
     const person = document.querySelector("[data-test=maintenance-person]");
     expect(person?.getAttribute("src")).toContain("perso-09-cables-400");
     expect(person?.getAttribute("srcset")).toContain("perso-09-cables-800");

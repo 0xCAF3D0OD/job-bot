@@ -33,7 +33,8 @@ const searches = computed(() => {
 <template>
   <MomentScreen
     pose="avion"
-    title="Candidature envoyée."
+    title="Candidature"
+    hand="envoyée."
     data-test="sent-moment"
   >
     <p>

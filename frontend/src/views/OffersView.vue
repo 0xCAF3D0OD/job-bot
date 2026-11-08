@@ -799,14 +799,28 @@ onUnmounted(() => {
         </FaceState>
         <!-- Téléphone (maquette AucuneOffre du 6.11, C9) : le personnage à la loupe (docs/141, 7), ce qui filtre,
              en mots, et « Modifier les filtres ». -->
+        <!-- Ordinateur (maquette du 8 novembre, AucuneOffreOrdinateur) : le même écran, le personnage à 240 px,
+             « Tout effacer » puis « Modifier les filtres ». -->
         <CharacterState
-          v-else-if="!loading && items.length === 0 && activeCount(filters) && phone"
+          v-else-if="!loading && items.length === 0 && activeCount(filters) && (phone || wide)"
           pose="loupe"
           title="Aucune offre avec ces filtres"
+          :desktop-height="240"
+          :full="wide && !phone"
+          :class="{ 'character-state-wide': wide && !phone }"
           data-test="offers-empty"
         >
           <p>{{ emptyFiltersLine }}</p>
           <div class="face-state-actions">
+            <button
+              v-if="wide && !phone"
+              type="button"
+              class="secondary"
+              data-test="offers-reset"
+              @click="reset"
+            >
+              Tout effacer
+            </button>
             <button
               type="button"
               class="primary"

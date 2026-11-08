@@ -8,7 +8,13 @@ import Illustration from "./Illustration.vue";
 // Sert à « Candidature envoyée. », « Entretien décroché », à la réponse négative et à l'au revoir.
 // Les actions viennent de la vue (`#actions`) : `sent-screen-primary` pour le bouton plein, `sent-screen-next`
 // pour le lien dessous.
-withDefaults(defineProps<{ pose: Pose; title: string; line?: string; height?: number }>(), { line: "", height: 280 });
+// `hand` : la fin du titre, manuscrite sur ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) ; le
+// personnage y fait 240 px, et les actions se rangent côte à côte sous le texte.
+withDefaults(defineProps<{ pose: Pose; title: string; hand?: string; line?: string; height?: number }>(), {
+  hand: "",
+  line: "",
+  height: 280,
+});
 </script>
 
 <template>
@@ -24,10 +30,13 @@ withDefaults(defineProps<{ pose: Pose; title: string; line?: string; height?: nu
       <Illustration
         :pose="pose"
         :height="height"
+        :desktop-height="240"
         full
       />
       <h1 class="sent-screen-title">
-        {{ title }}
+        {{ title }}<template v-if="hand">
+          {{ " " }}<span class="sent-screen-hand">{{ hand }}</span>
+        </template>
       </h1>
       <p v-if="line">
         {{ line }}
@@ -54,4 +63,18 @@ withDefaults(defineProps<{ pose: Pose; title: string; line?: string; height?: nu
 .sent-screen-actions :slotted(.sent-screen-next) { display: flex; font-size: var(--font-body); align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .sent-screen-actions :slotted(.sent-screen-cancel) { justify-self: center; min-height: var(--target-min); color: var(--text-secondary); font-weight: var(--weight-regular); }
 @media (min-width: 821px) { .sent-screen { min-height: 0; padding-block: var(--space-8); } .sent-screen-brand { display: none; } }
+/* Ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) : 880 px, le personnage de 240, le titre de 34/42
+   en 800 et sa fin manuscrite, la phrase de 18/28 ; les deux boutons de 44 côte à côte, le contour puis le plein. */
+@media (min-width: 1024px) {
+  .sent-screen { --sent-34: 34px; --sent-42: 42px; --sent-18: 18px; --sent-28: 28px; --sent-10: 10px; max-width: 880px; padding-top: var(--space-6); }
+  .sent-screen-body { flex: 0 0 auto; gap: 0; padding: 0; }
+  .sent-screen-title { margin: var(--space-6) 0 0; font-size: var(--sent-34); line-height: var(--sent-42); font-weight: var(--weight-heavy); letter-spacing: normal; }
+  .sent-screen-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
+  .sent-screen-body :slotted(p) { max-width: 560px; margin: var(--space-3) 0 0; font-size: var(--sent-18); line-height: var(--sent-28); color: var(--text-secondary); }
+  .sent-screen-body :slotted(.sent-screen-small) { margin-top: 0; font-size: var(--sent-18); }
+  .sent-screen-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sent-10); padding: var(--sent-28) 0 var(--space-12); }
+  .sent-screen-actions :slotted(.sent-screen-primary) { order: 1; width: auto; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--field-border); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+  .sent-screen-actions :slotted(.goal-reached-home) { order: 2; min-height: var(--target-min); padding: 0 var(--space-5); border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-size: var(--font-label); }
+  .sent-screen-actions :slotted(.sent-screen-cancel) { order: 3; flex-basis: 100%; }
+}
 </style>

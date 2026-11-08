@@ -20,7 +20,9 @@ if (typeof Image !== "undefined") {
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
+import BrandMark from "./BrandMark.vue";
 import Illustration from "./Illustration.vue";
+import { usePhone } from "../composables/usePhone";
 
 // La page d'attente (docs/79) : par-dessus tout, sans recharger ; le reste de l'écran est
 // inerte tant qu'elle est là, et retrouvé tel quel ensuite. Mise en page (maquettes MaintenanceMaj,
@@ -31,6 +33,9 @@ import Illustration from "./Illustration.vue";
 // Trois cas : hors ligne (le navigateur le sait), une maintenance annoncée avec son message, sinon
 // une mise à jour.
 const props = defineProps<{ waiting: boolean; message: string | null; nextAt?: number | null }>();
+// Ordinateur dès 1 024 px (maquettes du 8 novembre, MaintenanceOrdinateur et HorsLigneOrdinateur) : le logo seul en
+// haut, le personnage à 240 px, le titre de 34, le prochain essai en toutes lettres et le bouton plein dessous.
+const { phone: wide } = usePhone("(min-width: 1024px)");
 const emit = defineEmits<{ retry: [] }>();
 const panel = ref<HTMLElement | null>(null);
 const now = ref(Date.now());
@@ -51,7 +56,11 @@ const title = computed(() => {
   return props.message ? "Maintenance en cours" : "jobA1 se met à jour";
 });
 const line = computed(() => {
-  if (offline.value) return "Vérifie le Wi‑Fi ou les données mobiles. Ce que tu écrivais est gardé.";
+  if (offline.value) {
+    return wide.value
+      ? "Vérifie le Wi‑Fi ou le câble réseau. Ce que tu écrivais est gardé."
+      : "Vérifie le Wi‑Fi ou les données mobiles. Ce que tu écrivais est gardé.";
+  }
   return props.message || "Ça revient dans un instant. Ce que tu écrivais est gardé.";
 });
 
@@ -87,7 +96,8 @@ onUnmounted(() => clearInterval(clock));
 const seconds = computed(() => (props.nextAt ? Math.max(0, Math.ceil((props.nextAt - now.value) / 1000)) : null));
 const status = computed(() => {
   if (retrying.value || seconds.value === null) return "Nouvel essai en cours…";
-  return `Nouvel essai dans ${Math.max(1, seconds.value)} s`;
+  const left = Math.max(1, seconds.value);
+  return wide.value ? `Nouvel essai automatique dans ${left} ${left > 1 ? "secondes" : "seconde"}` : `Nouvel essai dans ${left} s`;
 });
 
 async function retry(): Promise<void> {
@@ -110,11 +120,18 @@ async function retry(): Promise<void> {
       tabindex="-1"
       data-test="maintenance"
     >
+      <header
+        v-if="wide"
+        class="maintenance-brand"
+      >
+        <BrandMark :size="30" />
+        <span>jobA1</span>
+      </header>
       <div class="maintenance-body">
         <Illustration
           :pose="offline ? 'hors-ligne' : 'cables'"
           :height="250"
-          :desktop-height="290"
+          :desktop-height="240"
           full
           class="maintenance-person"
           data-test="maintenance-person"
