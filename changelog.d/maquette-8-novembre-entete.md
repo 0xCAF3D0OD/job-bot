@@ -1,0 +1,1 @@
+L'en-tête de l'ordinateur selon la maquette du 8 novembre (lot 3) : la cloche et le compte ouvrent un panneau latéral de 420 px sans voile (un seul à la fois, clic à côté ou Échap pour fermer), le compte montre ton image, tes rubriques et le mode sombre, la recherche devient une bulle qui s'élargit, et l'Assistant s'ouvre dans un panneau de 480 px avec la zone de saisie commune.

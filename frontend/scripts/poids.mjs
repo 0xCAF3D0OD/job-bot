@@ -9,7 +9,8 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST = new URL("../dist/", import.meta.url).pathname;
-export const LIMITS = { premier: 120_000, total: 319_000, "css-premier": 49_000, css: 65_500 };
+// Relevé pour la maquette du 8 novembre (docs/143, lot 3 : panneaux de l'en-tête, image de profil, Composer).
+export const LIMITS = { premier: 120_000, total: 324_000, "css-premier": 50_500, css: 67_000 };
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const size = (file) => gzipSync(readFileSync(join(DIST, file))).length;

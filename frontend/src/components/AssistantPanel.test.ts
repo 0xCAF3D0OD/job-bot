@@ -79,8 +79,8 @@ describe("AssistantPanel, propositions (docs/52)", () => {
     const changed = vi.fn();
     globalThis.addEventListener(DATA_CHANGED_EVENT, changed);
     const wrapper = await mountPanel();
-    await wrapper.find("[data-test=assistant-input]").setValue("Trie mes offres");
-    await wrapper.find("form.assistant-form").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("Trie mes offres");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     // Le flux se lit en plusieurs tours de boucle.
     for (let i = 0; i < 50 && !wrapper.find("[data-test=assistant-action]").exists(); i++) {
       await new Promise((resolve) => setTimeout(resolve, 5));
@@ -217,8 +217,8 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     const wrapper = await mountPanel();
     expect(mood(wrapper, ".assistant-head")).toBe("listening");
 
-    await wrapper.find("[data-test=assistant-input]").setValue("Où en est ma semaine ?");
-    await wrapper.find("form.assistant-form").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("Où en est ma semaine ?");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(mood(wrapper, ".assistant-head")).toBe("thinking");
     expect(mood(wrapper, "[data-test=assistant-status]")).toBe("thinking");
@@ -241,8 +241,8 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     expect(mood(wrapper, ".assistant-line.assistant")).toBe("found");
 
     // À la question suivante, la réponse précédente repasse à l'écoute.
-    await wrapper.find("[data-test=assistant-input]").setValue("Et la suivante ?");
-    await wrapper.find("form.assistant-form").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("Et la suivante ?");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(mood(wrapper, ".assistant-line.assistant")).toBe("listening");
     second.end();
@@ -252,8 +252,8 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
   it("une erreur reste à l'écoute", async () => {
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({ detail: "Indisponible" }) })));
     const wrapper = await mountPanel();
-    await wrapper.find("[data-test=assistant-input]").setValue("Bonjour");
-    await wrapper.find("form.assistant-form").trigger("submit");
+    await wrapper.find("[data-test=composer-input]").setValue("Bonjour");
+    await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(wrapper.find(".assistant-line.assistant").text()).toContain("Indisponible");
     expect(mood(wrapper, ".assistant-line.assistant")).toBe("listening");
@@ -326,9 +326,10 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
     expect(replies.map((r) => r.text())).toEqual(["Préparer la lettre pour Alpstack", "Préparer les relances", "Préparer mon rendez-vous ORP"]);
     expect(replies[0]!.attributes("href")).toBe("/candidatures/offres/12/preparer");
     expect(replies[1]!.element.tagName).toBe("BUTTON");
-    expect(wrapper.find("[data-test=assistant-input]").attributes("placeholder")).toBe("Demande quelque chose…");
-    expect(wrapper.find("[data-test=assistant-send]").attributes("aria-label")).toBe("Envoyer");
-    expect(wrapper.find("[data-test=assistant-disclaimer]").text()).toBe("L'Assistant peut se tromper. Vérifie avant de confirmer.");
+    expect(wrapper.find("[data-test=composer-input]").attributes("placeholder")).toBe("Demande quelque chose…");
+    expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Envoyer");
+    // Maquette du 8 novembre (D25) : la zone de saisie commune, et la mention sous elle.
+    expect(wrapper.find("[data-test=assistant-disclaimer]").text()).toBe("L'Assistant peut se tromper. Relis toujours avant d'envoyer.");
     expect(GET).not.toHaveBeenCalledWith("/api/assistant/messages", expect.anything());
   });
 

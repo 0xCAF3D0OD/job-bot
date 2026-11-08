@@ -14,7 +14,8 @@ import AppIcon from "./AppIcon.vue";
 // tes candidatures et tes entreprises (NN/g : une recherche visible sur ordinateur, dans ses propres
 // données). Ordinateur : un champ dans l'en-tête, les résultats dans un panneau dessous. Téléphone (et
 // écran étroit) : la loupe, puis la recherche en plein écran. Clavier : flèches, Entrée, Échap (W3C APG,
-// combobox). En bas, « Suivre cette recherche » : un clic crée la recherche d'alerte, sans étape avant ;
+// combobox). Maquette du 8 novembre (docs/143, D24) : sur ordinateur, une bulle de 44 px qui s'élargit à 380 px
+// au clic (220 ms, sans transition si l'utilisateur réduit les animations), avec Fermer ; Échap la referme. En bas, « Suivre cette recherche » : un clic crée la recherche d'alerte, sans étape avant ;
 // la confirmation dit ce qui reste à faire, et ne dit jamais « suivie » tant qu'une alerte reste à créer.
 type Results = components["schemas"]["GlobalSearchOut"];
 type Follow = components["schemas"]["FollowOut"];
@@ -40,6 +41,9 @@ const busy = ref(false);
 const undoLeft = ref(0);
 let undoTimer: ReturnType<typeof setInterval> | undefined;
 const input = ref<HTMLInputElement | null>(null);
+const opener = ref<HTMLButtonElement | null>(null);
+// Ordinateur : la bulle ouverte (le champ) ou fermée (la loupe seule).
+const expanded = ref(false);
 const root = ref<HTMLElement | null>(null);
 
 const terms = computed(() => q.value.trim());
@@ -110,7 +114,8 @@ function onKeydown(event: KeyboardEvent): void {
     choose(options.value[active.value]);
   } else if (event.key === "Escape") {
     event.preventDefault();
-    close();
+    if (compact.value) close();
+    else collapse(true);
   }
 }
 
@@ -158,12 +163,24 @@ function close(): void {
   open.value = false;
   active.value = -1;
 }
+function expand(): void {
+  expanded.value = true;
+  void nextTick(() => input.value?.focus());
+}
+// Fermer la bulle : le texte s'efface et le focus revient à la loupe.
+function collapse(returnFocus = false): void {
+  close();
+  q.value = "";
+  expanded.value = false;
+  if (returnFocus) void nextTick(() => opener.value?.focus());
+}
 
 // Un clic hors de la recherche la referme (ordinateur).
 function onPointerDown(event: PointerEvent): void {
   if (!open.value || compact.value) return;
   if (event.target instanceof Node && root.value?.contains(event.target)) return;
   close();
+  if (!terms.value) expanded.value = false;
 }
 watch([open, compact], ([isOpen, isCompact]) => {
   document.documentElement.classList.toggle("search-open", isOpen && isCompact);
@@ -207,9 +224,21 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
     >
       <div
         v-if="!compact || open"
-        :class="['global-search-box', { sheet: compact }]"
+        :class="['global-search-box', { sheet: compact, expanded: !compact && expanded }]"
       >
         <div class="global-search-field">
+          <button
+            v-if="!compact && !expanded"
+            ref="opener"
+            type="button"
+            class="header-round gs-open"
+            aria-label="Rechercher"
+            data-label="Rechercher"
+            data-test="search-open"
+            @click="expand"
+          >
+            <AppIcon name="search" />
+          </button>
           <label
             for="global-search-input"
             class="visually-hidden"
@@ -228,8 +257,9 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
               aria-controls="global-search-results"
               :aria-expanded="panelVisible"
               :aria-activedescendant="activeId"
+              :tabindex="compact || expanded ? undefined : -1"
               data-test="search-input"
-              @focus="open = true"
+              @focus="open = true; expanded = true"
               @keydown="onKeydown"
             >
           </span>
@@ -241,6 +271,16 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
             @click="close"
           >
             Fermer
+          </button>
+          <button
+            v-else-if="expanded"
+            type="button"
+            class="gs-close"
+            aria-label="Fermer la recherche"
+            data-test="search-close"
+            @click="collapse(true)"
+          >
+            <AppIcon name="close" />
           </button>
         </div>
         <div

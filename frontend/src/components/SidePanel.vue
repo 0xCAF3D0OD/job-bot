@@ -1,13 +1,29 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, ref, useId, watch } from "vue";
 
 import AppIcon from "./AppIcon.vue";
 
 // Panneau latéral (docs/32 §2.2) : le contenu long et secondaire glisse depuis la droite,
 // la page dessous ne bouge pas. Fermeture par la croix, Échap ou clic à côté. Le contenu reste
 // monté une fois la page ouverte (comptes, formulaires en cours).
-const props = defineProps<{ open: boolean; title: string }>();
+// `modeless` (maquette du 8 novembre, docs/143, D24) : les panneaux de l'en-tête sur ordinateur (cloche, compte,
+// Assistant). Sans voile, sous l'en-tête, coin haut gauche arrondi, ombre --shadow-panel, entrée ja-slide-r ; la page
+// reste utilisable. Focus sur le titre à l'ouverture ; la fermeture (croix, Échap, clic à l'extérieur) passe par
+// useDismissLayer, qui rend le focus au déclencheur. `role="complementary"`.
+const props = withDefaults(defineProps<{ open: boolean; title: string; modeless?: boolean; width?: 420 | 480; closeLabel?: string }>(), {
+  modeless: false,
+  width: 420,
+  closeLabel: "Fermer",
+});
 const emit = defineEmits<{ close: [] }>();
+const titleId = useId();
+const heading = ref<HTMLElement | null>(null);
+// Sous l'en-tête : le haut du panneau suit le bas de l'en-tête (et du bandeau de la démo, s'il est là).
+const top = ref(0);
+function measureTop(): void {
+  const header = document.querySelector<HTMLElement>("[data-test=app-header]");
+  top.value = Math.max(0, header?.getBoundingClientRect().bottom ?? 0);
+}
 
 const closeButton = ref<HTMLButtonElement | null>(null);
 const aside = ref<HTMLElement | null>(null);
@@ -65,6 +81,14 @@ function restoreFocus(): void {
 watch(
   () => props.open,
   async (open) => {
+    if (props.modeless) {
+      if (open) {
+        measureTop();
+        await nextTick();
+        (heading.value ?? aside.value?.querySelector<HTMLElement>("h2"))?.focus({ preventScroll: true });
+      }
+      return;
+    }
     lockPage(open);
     if (open) {
       returnTo = document.activeElement as HTMLElement | null;
@@ -80,6 +104,7 @@ watch(
 );
 // Panneau monté avec `v-if … open` puis démonté : le focus revient aussi à son point de départ.
 onBeforeUnmount(() => {
+  if (props.modeless) return;
   document.removeEventListener("keydown", onKey);
   lockPage(false);
   restoreFocus();
@@ -92,7 +117,59 @@ const openStack: symbol[] = [];
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport
+    v-if="modeless"
+    to="body"
+  >
+    <section
+      v-if="open"
+      ref="aside"
+      :class="['side-panel-modeless', `side-panel-${width}`]"
+      role="complementary"
+      :aria-labelledby="titleId"
+      :style="{ top: `${top}px` }"
+      data-test="side-panel"
+    >
+      <header class="side-panel-modeless-head">
+        <slot
+          name="head"
+          :title-id="titleId"
+        >
+          <h2
+            :id="titleId"
+            ref="heading"
+            tabindex="-1"
+          >
+            {{ title }}
+          </h2>
+        </slot>
+        <slot name="head-actions" />
+        <button
+          type="button"
+          class="icon-button icon-only side-panel-close"
+          :aria-label="closeLabel"
+          :data-label="closeLabel"
+          data-test="side-close"
+          @click="emit('close')"
+        >
+          <AppIcon name="close" />
+        </button>
+      </header>
+      <div class="side-panel-modeless-body">
+        <slot />
+      </div>
+      <footer
+        v-if="$slots.footer"
+        class="side-panel-modeless-foot"
+      >
+        <slot name="footer" />
+      </footer>
+    </section>
+  </Teleport>
+  <Teleport
+    v-else
+    to="body"
+  >
     <Transition
       name="side-fade"
       appear

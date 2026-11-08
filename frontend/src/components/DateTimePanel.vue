@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, useId } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, useId } from "vue";
 
 import AppIcon from "./AppIcon.vue";
+import { pickerOpen } from "../composables/useDismissLayer";
 import {
   addDays,
   addMonths,
@@ -166,7 +167,11 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+  pickerOpen.value += 1;
   void moveFocus(focusDay.value);
+});
+onUnmounted(() => {
+  pickerOpen.value -= 1;
 });
 </script>
 

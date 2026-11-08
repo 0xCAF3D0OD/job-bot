@@ -45,6 +45,11 @@ describe("NotificationBell", () => {
 
     await bell.trigger("click");
     await flushPromises();
+    // Maquette du 8 novembre (D24) : un panneau latéral non modal, « Nouvelles » puis « Plus tôt ».
+    expect(wrapper.find("[data-test=side-panel]").attributes("role")).toBe("complementary");
+    expect(wrapper.findAll(".panel-eyebrow").map((h) => h.text())).toEqual(["Nouvelles", "Plus tôt"]);
+    expect(wrapper.find("[data-test=read-all]").text()).toBe("Tout marquer comme lu");
+    expect(wrapper.find("[data-test=bell-all]").text()).toBe("Voir toutes les notifications");
     const rows = wrapper.findAll("[data-test=notification]");
     expect(rows).toHaveLength(2);
     expect(rows[0]!.classes()).toContain("unread");
