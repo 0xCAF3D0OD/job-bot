@@ -23,6 +23,8 @@
   --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
   --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
   --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
+  /* Le libellé d'action d'une carte cliquable (D22 : couleur du ton, 15 px, 700) et les textes de 15 px des maquettes. */
+  --font-label: 0.9375rem;
   --text: #1B1F2A;
   --text-secondary: #596070;
   --text-tertiary: #474C59;
@@ -4464,3 +4466,127 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .sent-goal-left { font-size: var(--label-caps); color: var(--text-secondary); }
 .sent-words { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0 var(--space-1) var(--space-2); font-size: var(--font-small); }
 @media (min-width: 1024px) { .sent-goal, .sent-list, .sent-words { max-width: 560px; } }
+
+/* ---- Composants partagés de la maquette du 8 novembre (docs/143, lot 2) ---- */
+
+/* Composer (D25) : la pilule d'une ligne, ou la zone haute de plusieurs lignes. */
+.composer { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-composer); color: var(--text); }
+.composer-pill { min-height: 56px; border-radius: var(--radius-pill); padding: var(--space-1); }
+.composer-pill:has(.composer-files) { border-radius: var(--radius-card); }
+.composer-multi { border-radius: var(--radius-card); }
+.composer-drag { border-color: var(--primary-graphic); }
+.composer-row { display: flex; align-items: flex-end; gap: var(--space-1); }
+.composer .composer-input { flex: 1 1 auto; min-width: 0; min-height: 44px; max-height: calc(6lh + var(--space-5)); margin: 0; padding: var(--space-3) var(--space-2); border: 0; outline: 0; resize: none; background: transparent; color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--leading-normal); field-sizing: content; overflow-y: auto; }
+.composer .composer-input:is(:hover, :focus) { border: 0; box-shadow: none; border-radius: 0; }
+.composer .composer-input { border-radius: 0; box-shadow: none; }
+.composer:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
+.composer.composer-multi .composer-input { padding: var(--space-3) var(--space-4) var(--space-1); }
+.composer-bar { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2) var(--space-2); }
+.composer-spacer { flex: 1; }
+.composer-icon, .composer-send { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); }
+.composer-icon[aria-expanded="true"] { background: var(--surface-muted); }
+.composer-icon .icon, .composer-send .icon { width: 22px; height: 22px; }
+.composer-send { background: var(--primary); color: var(--on-primary); }
+.composer-send:disabled { background: var(--btn-disabled); color: var(--text-secondary); }
+.composer-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-2) 0; list-style: none; }
+.composer-file { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 40px; padding: 0 var(--space-1) 0 var(--space-3); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.composer-file .icon { color: var(--primary-graphic); }
+.composer-file-remove { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); }
+.composer-menu { position: absolute; left: 0; z-index: 40; width: min(320px, 100%); padding: var(--space-1) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); animation: ja-pop 150ms ease-out; }
+.composer-menu-up { bottom: 100%; margin-bottom: var(--space-2); transform-origin: bottom left; }
+.composer-menu-down { top: 100%; margin-top: var(--space-2); transform-origin: top left; }
+.composer-menu-item { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 52px; padding: var(--space-2) var(--space-4); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; }
+.composer-menu-item:hover, .composer-menu-item:focus-visible { background: var(--surface-muted); }
+.composer-menu-item .icon { width: 20px; height: 20px; flex: none; }
+.composer-menu-label { display: block; font-size: var(--font-label); font-weight: var(--weight-semibold); }
+.composer-menu-hint { display: block; font-size: var(--label-caps); color: var(--text-secondary); }
+.composer-counter { margin: var(--space-2) var(--space-1) 0; font-size: var(--label-caps); color: var(--text-secondary); }
+.composer-multi .composer-counter { position: absolute; top: 100%; left: 0; }
+
+/* Pastilles de suggestions au-dessus du Composer. */
+.suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.suggestion-chip { justify-content: center; min-height: 40px; padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.suggestion-chip:hover { border-color: var(--primary-graphic); }
+
+/* CalendarDate (D26) : l'icône calendrier qui contient la date. */
+.calendar-date { flex: none; --cal-tone: var(--primary-graphic); --cal-day: var(--text); }
+.calendar-date-orp { --cal-tone: var(--warning); }
+.calendar-date-past { --cal-tone: var(--field-border); --cal-day: var(--text-secondary); }
+.calendar-date-frame { fill: var(--surface); stroke: var(--cal-tone); }
+.calendar-date-line { stroke: var(--cal-tone); fill: none; }
+.calendar-date-month { fill: var(--cal-tone); font-family: inherit; }
+.calendar-date-day { fill: var(--cal-day); font-family: inherit; }
+
+/* DateTimeField : les pilules date et heure. */
+.dt-field { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.dt-field-part { display: flex; flex-direction: column; gap: var(--label-gap); min-width: 0; }
+.dt-field-date { flex: 1 1 auto; }
+.dt-field-label { font-size: var(--font-small); font-weight: var(--weight-bold); }
+.dt-pill { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 52px; height: 52px; padding: 0 var(--space-4); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-regular); text-align: left; white-space: nowrap; }
+.dt-pill > .icon:first-child { width: 20px; height: 20px; color: var(--primary-graphic); }
+.dt-pill > .icon:last-child:not(:first-child) { margin-left: auto; width: 18px; height: 18px; color: var(--text-secondary); }
+.dt-pill-value { flex: 1 1 auto; }
+.dt-pill-empty .dt-pill-value { color: var(--text-secondary); }
+.dt-pill-open, .dt-pill:hover { border: 2px solid var(--primary-graphic); }
+
+/* DateTimePanel : le sélecteur, à la place du formulaire ; plein écran sur téléphone. */
+.dt-panel { display: flex; flex-direction: column; gap: var(--space-4); animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); }
+.dt-panel-head { display: flex; align-items: center; gap: var(--space-1); margin-left: calc(var(--space-3) * -1); }
+.dt-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); }
+.dt-back .icon { width: 18px; height: 18px; }
+.dt-panel-title { margin: 0 0 0 auto; font-size: var(--font-title); font-weight: var(--weight-bold); }
+.dt-panel-body { display: grid; grid-template-columns: 340px 1fr; grid-template-areas: "cal time" "cal confirm"; column-gap: var(--space-6); padding-top: var(--space-1); border-top: 1px solid var(--line-soft); }
+.dt-calendar { grid-area: cal; }
+.dt-time { grid-area: time; display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-3); }
+.dt-confirm { grid-area: confirm; align-self: end; display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-4); padding: var(--space-4); border-radius: var(--radius-card); background: var(--primary-soft); }
+.dt-confirm-label { font-size: var(--font-small); color: var(--text-secondary); }
+.dt-confirm strong { font-size: var(--font-title); }
+.dt-confirm-button { justify-content: center; }
+.dt-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line-soft); }
+.dt-shortcut { justify-content: center; min-height: 34px; height: 34px; padding: 0 var(--space-3); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--label-caps); font-weight: var(--weight-semibold); white-space: nowrap; }
+.dt-shortcut[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
+.dt-month { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0 var(--space-2); }
+.dt-month strong { font-size: var(--font-body); }
+.dt-month-step { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; min-height: 36px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); }
+.dt-month-step:disabled { color: var(--text-disabled); }
+.dt-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: var(--space-1); }
+.dt-weekday { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); text-align: center; text-decoration: none; }
+.dt-day { justify-content: center; width: 40px; height: 40px; min-height: 40px; margin: 0 auto; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; font-size: var(--font-label); }
+.dt-day-weekend, .dt-day-outside { color: var(--text-secondary); }
+.dt-day:disabled { color: var(--text-disabled); cursor: default; }
+.dt-day:hover:not(:disabled) { background: var(--surface-muted); }
+.dt-day-today { box-shadow: inset 0 0 0 2px var(--primary-graphic); color: var(--primary-text); font-weight: var(--weight-bold); }
+.dt-day-picked, .dt-day-picked:hover:not(:disabled) { background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); box-shadow: none; }
+.dt-typed { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
+.dt-typed label { font-size: var(--label-caps); color: var(--text-secondary); white-space: nowrap; }
+.dt-typed .dt-typed-input { flex: 1; min-width: 0; height: 36px; min-height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); font-size: var(--font-label); }
+.dt-time-title { font-size: var(--font-small); font-weight: var(--weight-bold); }
+.dt-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+.dt-slot { justify-content: center; height: 40px; min-height: 40px; padding: 0; border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.dt-slot[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
+.dt-panel-full { position: fixed; inset: 0; z-index: 60; overflow-y: auto; padding: var(--space-4) var(--space-4) 0; background: var(--bg); }
+.dt-panel-full .dt-panel-head { margin-left: calc(var(--space-2) * -1); }
+.dt-panel-full .dt-panel-body { display: flex; flex-direction: column; gap: var(--space-4); border-top: 0; }
+.dt-panel-full .dt-shortcuts { flex-wrap: nowrap; overflow-x: auto; border-bottom: 0; padding: 0; scrollbar-width: none; }
+.dt-panel-full .dt-calendar { display: flex; flex-direction: column; gap: var(--space-4); }
+.dt-panel-full .dt-calendar-card { padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); }
+.dt-panel-full .dt-confirm { align-self: stretch; position: sticky; bottom: 0; flex-direction: row; align-items: center; margin: 0 calc(var(--space-4) * -1); padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)); border-radius: 0; border-top: 1px solid var(--line); background: var(--surface); }
+.dt-panel-full .dt-confirm-label { display: none; }
+.dt-confirm-value { display: flex; flex-direction: column; flex: 1; font-size: var(--font-small); color: var(--text-secondary); }
+.dt-confirm-value strong { color: var(--text); font-size: var(--font-body); }
+.dt-panel-full .dt-confirm-button { min-width: 108px; }
+@media (max-width: 820px) { .dt-panel-body { grid-template-columns: 1fr; grid-template-areas: "cal" "time" "confirm"; } }
+
+/* ProfileImage et AvatarPicker. */
+.profile-image { flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); box-shadow: 0 0 0 1px var(--line); font-weight: var(--weight-bold); }
+.profile-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.profile-image-40 { width: 40px; height: 40px; font-size: var(--font-body); }
+.profile-image-48 { width: 48px; height: 48px; font-size: var(--font-title); }
+.profile-image-64 { width: 64px; height: 64px; font-size: var(--font-section); }
+.profile-image-72 { width: 72px; height: 72px; font-size: var(--font-figure); }
+.avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4) var(--space-2); margin: 0; padding: 0; list-style: none; }
+.avatar-option { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: var(--space-1) 0; border: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--label-caps); font-weight: var(--weight-semibold); }
+.avatar-option > .profile-image, .avatar-option > .avatar-upload { outline: 3px solid transparent; outline-offset: 3px; }
+.avatar-option[aria-pressed="true"] > .profile-image, .avatar-option[aria-pressed="true"] > .avatar-upload { outline-color: var(--primary-graphic); }
+.avatar-upload { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border: 1.5px dashed var(--field-border); border-radius: 50%; color: var(--primary-graphic); }
+.avatar-hint { margin: 0; font-size: var(--label-caps); color: var(--text-secondary); }

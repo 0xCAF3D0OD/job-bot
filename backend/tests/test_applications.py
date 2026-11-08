@@ -289,6 +289,16 @@ async def test_identity_rejects_bad_postcode(api: AsyncClient) -> None:
     assert (await api.put("/api/identity", json={"website": "pas une adresse"})).status_code == 422
 
 
+async def test_profile_image_keeps_only_the_avatar_number(api: AsyncClient) -> None:
+    # Maquette du 8 novembre (docs/143 §6) : le numéro de l'avatar, 1 à 8, rien d'autre.
+    assert (await api.get("/api/profile-image")).json() == {"avatar": None}
+    assert (await api.put("/api/profile-image", json={"avatar": 3})).json() == {"avatar": 3}
+    assert (await api.get("/api/profile-image")).json() == {"avatar": 3}
+    assert (await api.put("/api/profile-image", json={"avatar": 9})).status_code == 422
+    assert (await api.put("/api/profile-image", json={"avatar": None})).json() == {"avatar": None}
+    assert (await api.get("/api/profile-image")).json() == {"avatar": None}
+
+
 # --- Relances ------------------------------------------------------------------------
 
 

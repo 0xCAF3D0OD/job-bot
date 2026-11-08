@@ -5311,6 +5311,66 @@
         }
       }
     },
+    "/api/profile-image": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get Profile Image",
+        "operationId": "getProfileImage",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarChoice"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Put Profile Image",
+        "operationId": "saveProfileImage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarChoice"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/follow-up/draft": {
       "post": {
         "tags": [
@@ -11294,6 +11354,25 @@
           "providers"
         ],
         "title": "AuthProviders"
+      },
+      "AvatarChoice": {
+        "properties": {
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar"
+          }
+        },
+        "type": "object",
+        "title": "AvatarChoice"
       },
       "BackupOut": {
         "properties": {
