@@ -455,3 +455,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.241 | - Envoyées : l'objectif ORP du mois avec sa barre, les candidatures en rubriques (À relancer, Entretiens, Cette semaine, Plus tôt) avec la carte d'À traiter et le statut à droite (maquette Envoyees du 7.11.2026). | livrée |
 | 1.6.242 | - Rendez-vous : l'état vide avec le personnage et le formulaire (date, heure, lieu), « À noter » pour un rendez-vous ORP passé, la feuille « Ce qui a été convenu » (le prochain rendez-vous saisi s'ajoute à « À venir »), et deux colonnes sur ordinateur (maquettes RendezVous et RendezVousOrdinateur du 7.11.2026). | livrée |
 | 1.6.243 | La maquette du 8 novembre (lot 0) : maquettes, captures, avatars et décisions D18 à D27 dans le dépôt (docs/143) | livrée |
+| 1.6.244 | Les jetons et la mécanique commune de la maquette du 8 novembre (lot 1) : 3 jetons, 4 ombres, mouvements des panneaux et un seul panneau ouvert à la fois | livrée |
