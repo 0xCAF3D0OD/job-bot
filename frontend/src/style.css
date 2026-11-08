@@ -4751,7 +4751,7 @@ a.panel-row:hover { background: var(--band); }
 .notifications-wide { --notif-34: 34px; --notif-40: 40px; --notif-14: 14px; --notif-10: 10px; --notif-3: 3px; --notif-6: 6px; --notif-500: 500; max-width: 880px; gap: var(--space-8); padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .notifications-head-wide { display: flex; align-items: flex-end; gap: var(--space-3); }
 .notifications-head-wide h1 { flex: 1; margin: 0; font-size: var(--notif-34); line-height: var(--notif-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.notifications-head-wide .notifications-read-all { padding: 0 var(--space-1); font-size: var(--font-label); }
+.notifications-head-wide .notifications-read-all { align-self: stretch; padding: 0 var(--space-1); font-size: var(--font-label); }
 .notifications-wide .notifications-group { gap: var(--notif-10); }
 .notifications-wide .notifications-group h2 { padding: 0 var(--space-1); font-size: var(--font-title); letter-spacing: normal; text-transform: none; color: var(--text); }
 .notif-row.notif-row-plain { display: flex; gap: var(--notif-14); padding: var(--space-4) var(--space-5); background: var(--surface); }
@@ -4793,6 +4793,8 @@ a.panel-row:hover { background: var(--band); }
 .alerts-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--alerts-72); box-sizing: border-box; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5); }
 .alerts-row + .alerts-row { border-top: 1px solid var(--line-soft); }
 .alerts-row.highlighted { background: var(--primary-soft); }
+/* Le ⋯ de la ligne : 44 px comme « Créer l’alerte » (maquette AlertesOrdinateur). */
+.alerts-row .more-button { width: var(--target-min); min-width: var(--target-min); height: var(--target-min); min-height: var(--target-min); }
 .alerts-row-text { display: grid; flex: 1; min-width: 0; }
 .alerts-row-text strong { font-size: var(--font-body); }
 .alerts-wide button.secondary { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
