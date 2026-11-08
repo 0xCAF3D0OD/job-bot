@@ -2311,10 +2311,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-meeting { display: grid; gap: var(--space-4); }
 .orp-meeting h2 { margin: 0 0 var(--space-2); font-size: var(--font-body); }
 .orp-meeting-when { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.orp-meeting-person { display: block; margin: 0 auto var(--space-4); }
 .orp-meeting-when h2 { margin: 0; }
-.orp-meeting-form { display: grid; gap: var(--space-3); grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; margin-top: var(--space-3); }
-.orp-meeting-form .form-actions { grid-column: 1 / -1; }
 .orp-meeting-sheet { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
 /* Le Rendez-vous en parties (docs/130 §B) : « Préparer » (ce qu'on modifie), « Le mois » (ce
    qu'on consulte, une carte grise en quatre parties), le carnet replié. */
@@ -2349,11 +2346,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-question-new { margin-top: var(--space-3); }
 /* L'aide sous le champ, détachée de lui (docs/132) : 0,5 rem au moins. */
 .orp-question-new + .hint, .orp-question-new + .notice + .hint { margin-top: var(--space-2); }
-.orp-outcome { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--space-3); }
-.orp-outcome label { display: grid; gap: var(--space-1); }
-.orp-outcome fieldset { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
-.orp-outcome .orp-outcome-check { display: flex; gap: var(--space-2); align-items: center; }
-.orp-outcome .form-actions, .orp-outcome .notice { grid-column: 1 / -1; }
 .orp-agreed { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: var(--space-3) 0; }
 .orp-agreed dt { color: var(--muted); }
 .orp-agreed dd { margin: 0; white-space: pre-line; }
@@ -2363,7 +2355,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-log h3 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); }
 .orp-log h3::first-letter { text-transform: uppercase; }
 @media (max-width: 820px) {
-  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome { grid-template-columns: minmax(0, 1fr); }
+  .orp-meeting-sheet { grid-template-columns: minmax(0, 1fr); }
   .orp-conclusion { flex-direction: column; }
   .orp-sheet-actions > :is(a, button) { min-height: var(--control-h); }
   .orp-agreed { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
@@ -3235,9 +3227,6 @@ main:focus { outline: none; }
   .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
   /* Les champs du premier rendez-vous passent à la ligne dans la colonne (1.6.30) : la date à sa taille, le lieu
      30 caractères, le conseiller 20. */
-  .orp-meeting-form { display: flex; flex-wrap: wrap; align-items: flex-end; }
-  .orp-meeting-form > .form-field { width: var(--field-w, max-content); }
-  .orp-meeting-form > .form-actions { flex-basis: 100%; }
   input[type="number"] { width: var(--field-5); }
 }
 
@@ -3993,7 +3982,9 @@ html.search-open { overflow: hidden; }
 .sheet::backdrop { background: rgb(17 17 31 / 45%); }
 .sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); max-height: inherit; padding: var(--space-4); box-sizing: border-box; }
 .sheet-head { display: flex; align-items: center; gap: var(--space-3); }
-.sheet-title { flex: 1 1 auto; margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-heading { flex: 1 1 auto; min-width: 0; }
+.sheet-title { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-subtitle { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
 .sheet-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: 50%; background: var(--panel); color: var(--text); }
 .sheet-close:hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
 .sheet-close .icon { width: 1.1rem; height: 1.1rem; }

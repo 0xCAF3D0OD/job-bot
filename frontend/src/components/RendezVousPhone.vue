@@ -10,6 +10,8 @@ import {
   dateBlock,
   dateText,
   interviewPlace,
+  meetingsToNote,
+  notedMeetings,
   pastTitle,
   sheetLines,
   timeAndPlace,
@@ -19,9 +21,9 @@ import { plural } from "../format";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { timeOfDay } from "../dates";
 
-// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6.11.2026). Deux parties,
-// posées par OrpMeetingView autour de ses états existants (aucun rendez-vous, noter ce qui a été convenu) :
-// « À venir » (le prochain rendez-vous ORP et les entretiens, par date), puis « Derniers rendez-vous ORP ».
+// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Deux parties,
+// posées par OrpMeetingView autour de l'état « aucun rendez-vous » : « À venir » (le prochain rendez-vous ORP et les
+// entretiens, par date), puis « À noter » et « Derniers rendez-vous ORP » ; « Noter » ouvre la feuille de la vue.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -31,7 +33,6 @@ const props = defineProps<{
   page: Page;
   applications: Application[];
   sheetLink: string;
-  noting: number | null;
   // Le « ⋯ » de la carte ORP (C6) : les mêmes actions que celui de la page actuelle.
   meetingItems?: MoreMenuItem[];
 }>();
@@ -50,12 +51,9 @@ const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
 const questionsOpen = ref(false);
 
-// Le dernier rendez-vous ORP : celui qui vient d'avoir lieu, sinon le premier du carnet.
-const last = computed<Meeting | null>(() => {
-  const meeting = props.page.meeting;
-  if (meeting && Date.parse(meeting.starts_at) <= now.getTime()) return meeting;
-  return props.page.past[0] ?? null;
-});
+// À noter, puis le dernier rendez-vous ORP noté.
+const toNote = computed(() => meetingsToNote(props.page, now));
+const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ?? null);
 </script>
 
 <template>
@@ -264,41 +262,82 @@ const last = computed<Meeting | null>(() => {
     </template>
   </section>
 
-  <section
-    v-else-if="part === 'past' && last"
-    class="rdv-part"
-    aria-labelledby="rdv-derniers"
-    data-test="rdv-past"
-  >
-    <h2
-      id="rdv-derniers"
-      class="rdv-title"
+  <template v-else-if="part === 'past'">
+    <!-- À noter (maquette du 7.11) : un rendez-vous ORP passé dont rien n'est noté ; « Noter » ouvre la feuille. -->
+    <section
+      v-if="toNote.length"
+      class="rdv-part"
+      aria-labelledby="rdv-a-noter"
+      data-test="rdv-to-note"
     >
-      Derniers rendez-vous ORP
-    </h2>
-    <article class="rdv-card rdv-last">
-      <div class="rdv-last-head">
-        <span
-          class="rdv-date rdv-date-past"
-          aria-hidden="true"
-        >
-          <span class="rdv-date-number">{{ dateBlock(last.starts_at).day }}</span>
-          <span class="rdv-date-month">{{ dateBlock(last.starts_at).month }}</span>
-        </span>
-        <div class="rdv-body">
-          <h3 class="rdv-last-title">
-            {{ pastTitle(last.starts_at, now) }}
-          </h3>
-          <span class="rdv-meta">Ce qui a été convenu</span>
+      <h2
+        id="rdv-a-noter"
+        class="rdv-title"
+      >
+        À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
+      </h2>
+      <article
+        v-for="item in toNote"
+        :key="item.id"
+        class="rdv-card rdv-last"
+        :data-test="`rdv-to-note-${item.id}`"
+      >
+        <div class="rdv-last-head">
+          <span
+            class="rdv-date rdv-date-past rdv-date-due"
+            aria-hidden="true"
+          >
+            <span class="rdv-date-number">{{ dateBlock(item.starts_at).day }}</span>
+            <span class="rdv-date-month">{{ dateBlock(item.starts_at).month }}</span>
+          </span>
+          <div class="rdv-body">
+            <h3 class="rdv-last-title">
+              {{ pastTitle(item.starts_at, now) }}
+            </h3>
+            <span class="rdv-meta">Pas encore noté · 1 minute</span>
+          </div>
         </div>
-      </div>
-      <!-- Ce qui a été convenu, à noter ou à modifier : le formulaire existant (OrpOutcomeForm), posé par la vue. -->
-      <slot
-        v-if="noting === last.id"
-        name="noting"
-        :meeting="last"
-      />
-      <template v-else-if="last.outcome_at">
+        <button
+          type="button"
+          class="rdv-note"
+          data-test="rdv-note"
+          @click="emit('note', item.id)"
+        >
+          Noter ce qui a été convenu
+        </button>
+      </article>
+    </section>
+    <section
+      v-if="last || page.past.length"
+      class="rdv-part"
+      aria-labelledby="rdv-derniers"
+      data-test="rdv-past"
+    >
+      <h2
+        id="rdv-derniers"
+        class="rdv-title"
+      >
+        Derniers rendez-vous ORP
+      </h2>
+      <article
+        v-if="last"
+        class="rdv-card rdv-last"
+      >
+        <div class="rdv-last-head">
+          <span
+            class="rdv-date rdv-date-past"
+            aria-hidden="true"
+          >
+            <span class="rdv-date-number">{{ dateBlock(last.starts_at).day }}</span>
+            <span class="rdv-date-month">{{ dateBlock(last.starts_at).month }}</span>
+          </span>
+          <div class="rdv-body">
+            <h3 class="rdv-last-title">
+              {{ pastTitle(last.starts_at, now) }}
+            </h3>
+            <span class="rdv-meta">Ce qui a été convenu</span>
+          </div>
+        </div>
         <dl
           v-if="agreedLines(last).length"
           class="rdv-agreed"
@@ -312,38 +351,37 @@ const last = computed<Meeting | null>(() => {
             <dd>{{ line.text }}</dd>
           </template>
         </dl>
-      </template>
+        <button
+          type="button"
+          class="rdv-edit-note"
+          :data-test="`rdv-edit-note-${last.id}`"
+          @click="emit('note', last.id)"
+        >
+          Modifier
+        </button>
+      </article>
       <button
-        v-else
+        v-if="page.past.length"
         type="button"
-        class="rdv-note"
-        data-test="rdv-note"
-        @click="emit('note', last.id)"
+        class="rdv-card rdv-log"
+        data-test="rdv-log"
+        @click="emit('log')"
       >
-        Noter ce qui a été convenu
+        <span class="rdv-log-title">Carnet ORP</span>
+        <span class="rdv-log-count">{{ plural(page.past.length, "rendez-vous", "rendez-vous") }}<svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        ><path d="m9 6 6 6-6 6" /></svg></span>
       </button>
-    </article>
-    <button
-      v-if="page.past.length"
-      type="button"
-      class="rdv-card rdv-log"
-      data-test="rdv-log"
-      @click="emit('log')"
-    >
-      <span class="rdv-log-title">Carnet ORP</span>
-      <span class="rdv-log-count">{{ plural(page.past.length, "rendez-vous", "rendez-vous") }}<svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      ><path d="m9 6 6 6-6 6" /></svg></span>
-    </button>
-  </section>
+    </section>
+  </template>
 </template>
 
 <style scoped>
@@ -445,7 +483,13 @@ const last = computed<Meeting | null>(() => {
 .rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--space-1) * 1.5) var(--space-3); margin: 0; }
 .rdv-agreed dt { color: var(--text-secondary); }
 .rdv-agreed dd { margin: 0; }
+/* « Noter ce qui a été convenu » : 48 px, en pilule bleu pâle (maquette du 7.11). */
 .rdv-note {
+  min-height: var(--btn-secondary); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft);
+  color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
+}
+.rdv-date-due { background: var(--peach-soft); color: var(--peach-text); }
+.rdv-edit-note {
   align-self: flex-start; min-height: var(--target-min); padding: 0; border: 0; border-radius: 0; background: transparent;
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
 }

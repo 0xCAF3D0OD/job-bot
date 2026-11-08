@@ -101,3 +101,47 @@ export function agreedLines(meeting: Meeting): { label: string; text: string }[]
   }
   return lines;
 }
+
+type Page = components["schemas"]["MeetingPage"];
+
+// Maquettes RendezVous et RendezVousOrdinateur du 7.11.2026 : « À noter » (un rendez-vous ORP passé dont rien
+// n'est noté) et « Derniers rendez-vous ORP » (ceux qui sont notés).
+function pastMeetings(page: Page, now: Date): Meeting[] {
+  const meeting = page.meeting;
+  const started = meeting && Date.parse(meeting.starts_at) <= now.getTime() ? [meeting] : [];
+  return [...started, ...page.past.filter((m) => m.id !== meeting?.id)];
+}
+
+/** Les rendez-vous ORP passés sans rien de noté, du plus récent au plus ancien. */
+export function meetingsToNote(page: Page, now: Date = new Date()): Meeting[] {
+  return pastMeetings(page, now).filter((m) => !m.outcome_at);
+}
+
+/** Les rendez-vous ORP passés où ce qui a été convenu est noté, du plus récent au plus ancien. */
+export function notedMeetings(page: Page, now: Date = new Date()): Meeting[] {
+  return pastMeetings(page, now).filter((m) => !!m.outcome_at);
+}
+
+/** Une ligne sous le titre d'un rendez-vous noté : « Objectif 8 par mois · financement Terraform ». */
+export function notedSummary(meeting: Meeting): string {
+  const parts = [meeting.agreed_target ? `Objectif ${meeting.agreed_target} par mois` : ""];
+  for (const m of meeting.measures) parts.push(m.text.charAt(0).toLowerCase() + m.text.slice(1));
+  return parts.filter(Boolean).join(" · ") || "Rien de particulier";
+}
+
+/** « 15 septembre : 8 recherches par mois, demander le financement Terraform. » */
+export function lastAgreed(meeting: Meeting, now: Date = new Date()): string {
+  const parts = [meeting.agreed_target ? `${meeting.agreed_target} recherches par mois` : ""];
+  for (const m of meeting.measures) parts.push(m.text.charAt(0).toLowerCase() + m.text.slice(1));
+  if (meeting.note) parts.push(meeting.note.charAt(0).toLowerCase() + meeting.note.slice(1).replace(/\.$/, ""));
+  const said = parts.filter(Boolean).join(", ");
+  return `${dateInSentence(meeting.starts_at, now).replace(/^le /, "")} : ${said || "rien de particulier"}.`;
+}
+
+/** Une ligne de la feuille en titre et précision (« Formulaires en ligne » / « 0 réponse sur 9 »). */
+export function splitLine(text: string): { main: string; sub: string } {
+  const at = text.search(/ : |, /);
+  if (at < 0) return { main: text, sub: "" };
+  const sub = text.slice(at + 2).trim();
+  return { main: text.slice(0, at), sub: sub.charAt(0).toUpperCase() + sub.slice(1) };
+}

@@ -33,14 +33,12 @@ export const SCREENS: Record<string, string> = {
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
   "components/GoalReached.vue": "objectif ORP atteint",
-  "views/OrpMeetingView.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu",
+  "components/OrpMeetingEmpty.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu",
 };
 
 // Les écrans où le personnage et un autre des trois sont dans des branches qui s'excluent : le fichier
 // contient les deux, la page jamais. Chacun a son test sur la page affichée (le fichier cité).
-const EXCLUSIVE: Record<string, string> = {
-  "views/OrpMeetingView.vue": "views/OrpMeetingView.test.ts",
-};
+const EXCLUSIVE: Record<string, string> = {};
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
 const WORK = [
@@ -53,7 +51,8 @@ const WORK = [
   "components/IdentityForm.vue",
   "components/InterviewForm.vue",
   "components/ManualOfferForm.vue",
-  "components/OrpOutcomeForm.vue",
+  "components/OrpOutcomeSheet.vue",
+  "components/OrpMeetingForm.vue",
   "components/SpontaneousForm.vue",
   "components/FormSheet.vue",
 ];
