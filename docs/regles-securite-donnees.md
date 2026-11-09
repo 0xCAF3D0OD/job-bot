@@ -80,6 +80,8 @@ Les données ORP et de recherche d'emploi touchent à l'aide sociale : on les tr
 
 **A-6.** Un message d'erreur de connexion ne dit pas si l'identifiant existe. *Réf. : ASVS « Authentication », CWE-204.*
 
+**A-7.** Après la déconnexion (ou une session expirée), rien du compte ne reste à l'écran ni en mémoire : la page est rechargée sur la connexion, pas seulement changée de route, et une page ressortie du cache par le bouton Retour est rechargée. Toute réponse de l'API lue avec une session porte `Cache-Control: no-store`, sauf une route qui fixe elle-même son cache. *Réf. : ASVS « Session Management » (terminaison), CS « Session Management », CWE-524, CWE-613. Ajoutée après l'incident du 2026-11-09.*
+
 ## 5. Les entrées, les sorties et l'interface
 
 **E-1.** Toute entrée est validée côté serveur par un schéma (Pydantic) : type, longueur maximale, format. La validation du frontend n'est qu'un confort. *Réf. : ASVS « Validation and Business Logic », Top 10 A05.*

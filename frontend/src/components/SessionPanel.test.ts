@@ -3,7 +3,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { useAuth } from "../composables/useAuth";
+import { LOGIN_PATH, leave, useAuth } from "../composables/useAuth";
 import SessionPanel from "./SessionPanel.vue";
 
 const PUT = vi.fn();
@@ -49,14 +49,16 @@ describe("SessionPanel", () => {
 
   it("se déconnecter partout : confirmé sous la ligne, puis la page de connexion", async () => {
     POST.mockResolvedValue({});
-    const { wrapper, router } = await mountPanel();
+    const to = vi.spyOn(leave, "to").mockImplementation(() => undefined);
+    const { wrapper } = await mountPanel();
     await wrapper.find("[data-test=logout-all]").trigger("click");
     expect(wrapper.find("[data-test=logout-all]").exists()).toBe(false);
     expect(wrapper.find(".setting-row-form [data-test=inline-confirm]").exists()).toBe(true);
     await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/auth/logout-all");
-    expect(router.currentRoute.value.name).toBe("login");
+    // La page est rechargée sur la connexion : rien du compte ne reste en mémoire (incident du 2026-11-09).
+    expect(to).toHaveBeenCalledWith(LOGIN_PATH);
     wrapper.unmount();
   });
 

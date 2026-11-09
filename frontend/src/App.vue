@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
 import AppFooter from "./components/AppFooter.vue";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
@@ -15,7 +15,7 @@ import PageTransition from "./components/PageTransition.vue";
 import DismissLayer from "./components/DismissLayer.vue";
 import { closeAllLayers } from "./composables/useDismissLayer";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
-import { useAuth } from "./composables/useAuth";
+import { LOGIN_PATH, leave, useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useCollect } from "./composables/useCollect";
 import { useAutoGrow } from "./composables/useAutoGrow";
@@ -42,7 +42,6 @@ const route = useRoute();
 // Fichiers préparés : le retour sur le lien lui-même (docs/59 §4).
 useFileDownloads();
 useAutoGrow();
-const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 // Le pied de page (docs/126 §4) : sur téléphone connecté, les maquettes n'en ont pas ; il reste en bas du
 // Compte, à un onglet de chaque page (nLPD : facile à trouver).
@@ -60,11 +59,19 @@ function skipToContent(): void {
   document.getElementById("contenu")?.focus();
 }
 
+// Session finie (expirée, ou fermée depuis un autre onglet) : la page est rechargée sur la connexion, pour que
+// rien du compte ne reste en mémoire ni à l'écran (incident du 2026-11-09).
 function onUnauthorized(): void {
   expired();
   if (!PUBLIC_ROUTES.has(String(route.name))) {
-    void router.push({ name: "login", query: { suite: route.fullPath } });
+    leave.to(`${LOGIN_PATH}?suite=${encodeURIComponent(route.fullPath)}`);
   }
+}
+
+// Le bouton Retour du navigateur peut ressortir la page d'avant la déconnexion de son cache (bfcache), avec les
+// données affichées : elle est rechargée, et le routeur demande de nouveau la session.
+function onPageShow(event: PageTransitionEvent): void {
+  if (event.persisted) window.location.reload();
 }
 
 
@@ -77,11 +84,13 @@ function onDemoRefused(event: Event): void {
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.addEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
+  window.addEventListener("pageshow", onPageShow);
   await load();
 });
 onUnmounted(() => {
   window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.removeEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
+  window.removeEventListener("pageshow", onPageShow);
 });
 </script>
 

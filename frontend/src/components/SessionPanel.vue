@@ -25,7 +25,6 @@ const confirming = ref(false);
 async function everywhere(): Promise<void> {
   confirming.value = false;
   await logout(true);
-  await router.push({ name: "login" });
 }
 </script>
 
