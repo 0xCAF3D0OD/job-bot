@@ -86,6 +86,8 @@ SCREENS: list[tuple[str, str | None]] = [
 DESK_SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
+    ("candidatures/offres/{offer}/preparer?doc=postuler", None),
+    ("candidatures/offres/{offer}/preparer?doc=postuler", "[data-test=contacts-open]"),
 ]
 
 
