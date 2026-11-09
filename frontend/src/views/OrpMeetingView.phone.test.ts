@@ -90,7 +90,10 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.get(".rdv-date").attributes("aria-hidden")).toBe("true");
     expect(orp.text()).toContain("Mardi 10 novembre, 9 h 30 · ORP Renens");
     expect(orp.text()).toContain("Ta feuille est prête");
-    expect(orp.findAll("[data-test=rdv-lines] li").map((li) => li.text())).toEqual([
+    // §10.7 (9 novembre) : la carte garde « Préparer le rendez-vous », qui ouvre la feuille avec « Où tu en es ».
+    expect(orp.get("[data-test=rdv-prep-open]").text()).toBe("Préparer le rendez-vous");
+    expect(orp.find("[data-test=rdv-pdf]").exists()).toBe(false);
+    expect(wrapper.findAll("[data-test=rdv-prep-lines] li").map((li) => li.text())).toEqual([
       "Ton mois6 recherches sur 10",
       "Ce qui bloqueFormulaires en ligne : 0 réponse sur 9",
       "Ce qui te manqueTerraform, demandé dans 14 offres sur 22",
@@ -110,7 +113,7 @@ describe("Rendez-vous sur téléphone", () => {
     const empty = { ...PREP, blockers: [], missing: [], months: [] };
     serve({ meeting: MEETING, preparation: empty, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
-    expect(wrapper.find("[data-test=rdv-lines]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=rdv-prep-lines]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-ready]").exists()).toBe(false);
     expect(wrapper.get("[data-test=rdv-todo]").text()).toBe("Feuille à compléter");
 
@@ -131,22 +134,24 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.find("[data-test=rdv-more]").exists()).toBe(false);
   });
 
-  it("les questions au conseiller, repliées, avec les cases existantes", async () => {
+  it("la feuille « Préparer le rendez-vous » : rappel, questions au conseiller avec les cases existantes, PDF", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] });
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] } });
     const { wrapper } = await open();
-    const toggle = wrapper.get("[data-test=rdv-questions]");
-    expect(toggle.attributes("aria-expanded")).toBe("false");
-    expect(toggle.text()).toContain("1 cochée");
-    await toggle.trigger("click");
-    expect(toggle.attributes("aria-expanded")).toBe("true");
+    const sheet = wrapper.findComponent({ name: "MeetingPrepSheet" });
+    expect(sheet.props("open")).toBe(false);
+    await wrapper.get("[data-test=rdv-prep-open]").trigger("click");
+    expect(sheet.props("open")).toBe(true);
+    expect(sheet.text()).toContain("Mardi 10 novembre, 9 h 30 · ORP Renens");
+    expect(wrapper.get("[data-test=rdv-prep-questions] h3").text()).toBe("Tes questions au conseiller · 1 cochée");
     await wrapper.get("[data-test=rdv-question-intermediate]").setValue(true);
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/questions", {
       body: { questions: [PREP.questions[0], { ...PREP.questions[1], checked: true }] },
     });
+    expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
   });
 
-  it("« Voir ma feuille » ouvre la feuille actuelle ; « Imprimer » télécharge le PDF", async () => {
+  it("« Voir ma feuille » ouvre la feuille actuelle", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [PAST], target: 10, trainings: [] });
     const { wrapper, router } = await open();
     expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");

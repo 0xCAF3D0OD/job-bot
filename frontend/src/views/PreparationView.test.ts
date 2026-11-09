@@ -557,12 +557,19 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").attributes("aria-disabled")).toBe("true");
   });
 
-  it("le modèle (Kevin, 2026-11-05) : l'aperçu de la lettre dans le modèle choisi, le PDF aussi", async () => {
+  it("le modèle (Kevin, 2026-11-05 ; feuille « Mise en page » du 9 novembre, §10.7) : l'aperçu de la lettre et le PDF dans le modèle choisi", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     const wrapper = await mountView();
-    const picker = wrapper.find("[data-test=template-picker]");
-    expect(picker.text()).toContain("Le même pour CV et lettre");
+    // Une carte « Mise en page · CV et lettre » ouvre la feuille ; plus de vignettes en haut de l'écran.
+    const row = wrapper.get("[data-test=template-row]");
+    expect(row.text()).toBe("Mise en page · CV et lettreModerne");
+    expect(row.attributes("aria-haspopup")).toBe("dialog");
+    await row.trigger("click");
+    const picker = wrapper.find("[data-test=template-sheet] [data-test=template-picker]");
+    expect(wrapper.get("[data-test=template-sheet]").text()).toContain("Le même modèle s’applique à ta lettre et à ton CV.");
+    expect(wrapper.get("[data-test=template-sheet]").text()).toContain("Tient sur une page A4.");
+    expect(picker.classes()).toContain("tpl-picker-grid");
     expect(picker.findAll("[role=radio] .tpl-card-label").map((r) => r.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
     // La vignette Classique porte les initiales de l'expéditeur, comme la maquette (« K D »).
     expect(picker.find("[data-test=template-classique] .tpl-thumb-initials").text()).toMatch(/^\p{Lu} \p{Lu}$/u);
@@ -571,6 +578,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     await picker.find("[data-test=template-bandeau]").trigger("click");
     expect(picker.find("[data-test=template-bandeau]").attributes("aria-checked")).toBe("true");
     expect(preview().attributes("data-template")).toBe("bandeau");
+    expect(wrapper.get("[data-test=template-current]").text()).toBe("Bandeau");
     expect(wrapper.find("[data-test=edit-text]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
     expect(wrapper.find("[data-test=versions-sheet] [data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=bandeau");

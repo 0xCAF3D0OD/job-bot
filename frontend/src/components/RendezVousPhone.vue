@@ -5,7 +5,6 @@ import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import {
   agreedLines,
-  checkedCount,
   countdown,
   dateText,
   interviewPlace,
@@ -17,7 +16,9 @@ import {
   upcomingAppointments,
 } from "../rendezVous";
 import { plural } from "../format";
+import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
+import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { timeOfDay } from "../dates";
 
@@ -49,7 +50,7 @@ const items = computed(() => upcomingAppointments(props.page.meeting ?? null, pr
 const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
-const questionsOpen = ref(false);
+const prepOpen = ref(false);
 
 // À noter, puis le dernier rendez-vous ORP noté.
 const toNote = computed(() => meetingsToNote(props.page, now));
@@ -135,72 +136,17 @@ function cal(iso: string): { day: number; month: number } {
             >Feuille à compléter</span>
           </div>
         </div>
-        <ul
-          v-if="lines.length"
-          class="rdv-lines"
-          data-test="rdv-lines"
+        <!-- §10.7 (9 novembre) : ce qui préparait le rendez-vous passe dans une feuille du bas ; la carte garde une
+             ligne pour l'ouvrir, sur la ligne du texte (48 + 16). -->
+        <button
+          type="button"
+          class="rdv-prep-open"
+          aria-haspopup="dialog"
+          data-test="rdv-prep-open"
+          @click="prepOpen = true"
         >
-          <li
-            v-for="line in lines"
-            :key="line.label"
-          >
-            <span
-              class="rdv-dot"
-              aria-hidden="true"
-            />
-            <span class="rdv-line">
-              <span class="rdv-line-label">{{ line.label }}</span>
-              <span class="rdv-line-text">{{ line.text }}</span>
-            </span>
-          </li>
-        </ul>
-        <div
-          v-if="prep.questions.length"
-          class="rdv-questions"
-        >
-          <button
-            type="button"
-            class="rdv-questions-toggle"
-            :aria-expanded="questionsOpen"
-            aria-controls="rdv-questions-list"
-            data-test="rdv-questions"
-            @click="questionsOpen = !questionsOpen"
-          >
-            <span class="rdv-questions-title">Tes questions au conseiller</span>
-            <span class="rdv-questions-count">{{ checkedCount(checked) }}<svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-              :class="{ open: questionsOpen }"
-            ><path d="m6 9 6 6 6-6" /></svg></span>
-          </button>
-          <ul
-            v-show="questionsOpen"
-            id="rdv-questions-list"
-            class="rdv-questions-list"
-          >
-            <li
-              v-for="question in prep.questions"
-              :key="question.key"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                  :checked="question.checked"
-                  :data-test="`rdv-question-${question.key}`"
-                  @change="emit('toggle', question, ($event.target as HTMLInputElement).checked)"
-                >
-                <span>{{ question.text }}</span>
-              </label>
-            </li>
-          </ul>
-        </div>
+          Préparer le rendez-vous<AppIcon name="chevron" />
+        </button>
         <button
           type="button"
           class="rdv-sheet"
@@ -209,13 +155,19 @@ function cal(iso: string): { day: number; month: number } {
         >
           Voir ma feuille
         </button>
-        <a
-          class="rdv-pdf"
-          :href="sheetLink"
-          download
-          data-test="rdv-pdf"
-        >Imprimer ou télécharger en PDF</a>
       </article>
+      <MeetingPrepSheet
+        v-if="item.kind === 'orp'"
+        :open="prepOpen"
+        :at="item.at"
+        :place="item.meeting.place"
+        :lines="lines"
+        :questions="prep.questions"
+        :checked="checked"
+        :pdf="sheetLink"
+        @close="prepOpen = false"
+        @toggle="(question, value) => emit('toggle', question, value)"
+      />
       <article
         v-else
         class="rdv-card rdv-interview"
@@ -381,16 +333,17 @@ function cal(iso: string): { day: number; month: number } {
 </template>
 
 <style scoped>
-/* Les valeurs de la maquette (RendezVous.dc.html), écrites avec les échelles (scales.test.ts) :
-   14 px = --space-4 − 2 px, 10 px = --space-2 + 2 px, 15 px = --font-small + 1 px, 58 px = --btn-primary + 4 px. */
-.rdv-part { min-width: 0; display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+/* Les valeurs de la maquette (RendezVous.dc.html), écrites avec les échelles (scales.test.ts) ; mises sur la grille de 4
+   le 9 novembre (§2.9, audit-grille.js) : 14 → 16 entre le calendrier et le texte, 10 → 8 entre deux cartes, 6 → 8
+   entre une icône et son mot ; « Préparer l'entretien » a 44 px de haut. 15 px = --font-small + 1 px. */
+.rdv-part { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .rdv-title {
-  display: flex; align-items: baseline; gap: var(--space-2); margin: calc(var(--space-1) * 1.5) var(--space-1) 0;
+  display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) 0;
   font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-tight);
 }
 .rdv-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-card {
-  display: flex; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line);
+  display: flex; padding: var(--space-5); background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-card); color: var(--text);
 }
 .rdv-orp { position: relative; flex-direction: column; }
@@ -398,7 +351,7 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-more { position: absolute; top: var(--space-1); right: var(--space-1); z-index: 1; }
 .rdv-more :deep(.more-button) { width: var(--target-min); height: var(--target-min); }
 .rdv-orp .rdv-kicker, .rdv-orp-title { padding-right: var(--space-6); }
-.rdv-head, .rdv-interview { gap: calc(var(--space-4) - var(--space-1) / 2); }
+.rdv-head, .rdv-interview { gap: var(--space-4); }
 .rdv-head { display: flex; }
 .rdv-interview { position: relative; }
 .rdv-date { flex: none; }
@@ -410,52 +363,31 @@ function cal(iso: string): { day: number; month: number } {
 /* Un lien de visioconférence est un long mot : il passe à la ligne où il faut. */
 .rdv-place { overflow-wrap: anywhere; }
 .rdv-ready {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: calc(var(--space-1) * 1.5);
-  margin-top: calc(var(--space-1) * 1.5); padding: var(--space-1) calc(var(--space-2) + var(--space-1) / 2);
+  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-2);
+  margin-top: var(--space-2); padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill); background: var(--success-soft); color: var(--success);
   font-size: var(--label-caps); font-weight: var(--weight-bold);
 }
 .rdv-ready svg { flex: none; }
 .rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
-.rdv-lines { margin: calc(var(--space-4) - var(--space-1) / 2) 0 0; padding: 0; list-style: none; }
-.rdv-lines li {
-  display: flex; gap: calc(var(--space-2) + var(--space-1) / 2); padding: calc(var(--space-2) + var(--space-1) / 2) 0;
-  border-top: 1px solid var(--line-soft);
+.rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
+/* « Préparer le rendez-vous › » (maquette RendezVous) : 56 px, traits --line au-dessus et en dessous, le texte sur la
+   ligne du titre (calendrier de 48 + 16), chevron de 24 au bord ; 16 px avant « Voir ma feuille ». */
+.rdv-prep-open {
+  --rdv-text: calc(var(--space-12) + var(--space-4)); --rdv-row: 56px;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--rdv-row);
+  margin-top: var(--space-4); padding: 0 0 0 var(--rdv-text); border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  border-radius: 0; background: transparent; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
 }
-.rdv-dot {
-  flex: none; width: calc(var(--space-1) * 1.5); height: calc(var(--space-1) * 1.5);
-  margin: var(--space-2) calc(var(--space-1) * 1.5) 0 var(--space-1); border-radius: var(--radius-pill); background: var(--text-secondary);
-}
-.rdv-line { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.rdv-line-label { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.rdv-line-text, .rdv-questions-list span, .rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
-.rdv-questions { border-top: 1px solid var(--line-soft); }
-.rdv-questions-toggle {
-  display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-tertiary);
-  padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; cursor: pointer;
-}
-.rdv-questions-title { flex: 1; min-width: 0; white-space: normal; text-align: left; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
-.rdv-questions-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.rdv-questions-count svg { transition: transform 200ms; }
-.rdv-questions-count svg.open { transform: rotate(180deg); }
-.rdv-questions-list { margin: 0 0 calc(var(--space-1) * 1.5); padding: 0; list-style: none; }
-.rdv-questions-list label {
-  display: flex; align-items: flex-start; gap: var(--space-3); min-height: var(--target-min); padding: var(--space-2) 0; cursor: pointer;
-}
-.rdv-questions-list input { flex: none; width: calc(var(--space-5) + 2px); height: calc(var(--space-5) + 2px); margin: 1px 0 0; accent-color: var(--primary); cursor: pointer; }
+.rdv-prep-open > .icon { flex: none; width: var(--space-6); height: var(--space-6); }
 .rdv-sheet {
-  display: flex; align-items: center; justify-content: center; margin-top: calc(var(--space-2) + var(--space-1) / 2); min-height: var(--btn-secondary); padding: 0 var(--space-4);
+  display: flex; align-items: center; justify-content: center; margin-top: var(--space-4); min-height: var(--btn-secondary); padding: 0 var(--space-4);
   border: 0; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary);
   font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer;
 }
-.rdv-pdf {
-  display: flex; align-items: center; justify-content: center; margin-top: var(--space-1); min-height: var(--target-min);
-  color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); text-decoration: none;
-}
-.rdv-pdf:hover { text-decoration: underline; }
 .rdv-prepare {
-  display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); align-self: flex-start;
-  margin-top: calc(var(--space-1) * 1.5); padding: 0; border: 0; border-radius: 0; background: transparent;
+  display: flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: var(--target-min);
+  margin-top: 0; padding: 0; border: 0; border-radius: 0; background: transparent;
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
 }
 /* La carte entière est la cible (maquette : un lien sur toute la carte). */
@@ -463,9 +395,9 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-prepare:focus-visible { outline: none; }
 .rdv-prepare:focus-visible::after { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }
 .rdv-last { flex-direction: column; gap: var(--space-3); }
-.rdv-last-head { display: flex; align-items: center; gap: calc(var(--space-4) - var(--space-1) / 2); }
+.rdv-last-head { display: flex; align-items: center; gap: var(--space-4); }
 .rdv-last-title { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
-.rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--space-1) * 1.5) var(--space-3); margin: 0; }
+.rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-3); margin: 0; }
 .rdv-agreed dt { color: var(--text-secondary); }
 .rdv-agreed dd { margin: 0; }
 /* « Noter ce qui a été convenu » : 48 px, en pilule bleu pâle (maquette du 7.11). */
@@ -482,5 +414,5 @@ function cal(iso: string): { day: number; month: number } {
   padding: 0 var(--space-4); font: inherit; text-align: left; cursor: pointer;
 }
 .rdv-log-title { flex: 1; min-width: 0; white-space: normal; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
-.rdv-log-count { flex: none; display: flex; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-small); color: var(--text-secondary); }
+.rdv-log-count { flex: none; display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); color: var(--text-secondary); }
 </style>

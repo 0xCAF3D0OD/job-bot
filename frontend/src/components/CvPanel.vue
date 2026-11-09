@@ -18,7 +18,7 @@ import ActionBar from "./ActionBar.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import DocPreview from "./DocPreview.vue";
 import SegmentedControl from "./SegmentedControl.vue";
-import TemplatePicker from "./TemplatePicker.vue";
+import TemplateSheetRow from "./TemplateSheetRow.vue";
 import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import { usePhone } from "../composables/usePhone";
 
@@ -292,7 +292,7 @@ onMounted(() => void load());
         En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
-      <TemplatePicker
+      <TemplateSheetRow
         v-if="phone"
         :name="doc?.name"
       />
