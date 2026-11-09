@@ -718,7 +718,7 @@ watch(
       @sent="sheetOpen = false; emit('applied')"
     />
     <OfferCompatSheet
-      v-if="sub && scored"
+      v-if="(sub || columns) && scored"
       :open="compatOpen"
       :score="offer.score ?? null"
       :provisional="provisional"
@@ -778,7 +778,7 @@ watch(
           aria-labelledby="match-title"
           data-test="section-for-you"
         >
-          <div class="match-head">
+          <div :class="['match-head', { 'match-head-alone': columns && !scored }]">
             <ScoreRing
               v-if="scored"
               :score="offer.score ?? null"
@@ -811,7 +811,7 @@ watch(
             </div>
           </div>
           <ul
-            v-if="matchLines.length && !sub"
+            v-if="matchLines.length && !sub && !columns"
             class="match-lines"
             data-test="match-lines"
           >
@@ -836,10 +836,10 @@ watch(
           >
             <AppIcon name="done" />Note refaite sur l’annonce complète.
           </p>
-          <!-- Téléphone (§10.1) : une seule ligne cliquable, « Voir la compatibilité », sur la ligne de texte du
-               verdict ; le détail est dans la feuille. -->
+          <!-- Téléphone (§10.1) et ordinateur (MODIFICATIONS du 9 novembre, §2.1) : une seule ligne cliquable, « Voir la
+               compatibilité », sur la ligne de texte du verdict ; le détail est dans le panneau. -->
           <button
-            v-if="sub && scored"
+            v-if="(sub || columns) && scored"
             type="button"
             class="compat-open"
             aria-haspopup="dialog"
@@ -850,7 +850,7 @@ watch(
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
-            v-if="noteDetail && !sub"
+            v-if="noteDetail && !sub && !columns"
             title="Le détail de la note"
             class="match-detail"
             data-test="note-detail"
@@ -1215,6 +1215,23 @@ watch(
    texte » à contour bleu. */
 .offer-cols .offer-text-actions button, .offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 .offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }
+/* La note en carte d'information (MODIFICATIONS du 9 novembre, §2.1 ; HTML de CandidaturesOrdinateurB) : fond --bg sur le
+   blanc du détail, trait de 1,5 px --card-line, rayon 18, 18,5 dedans ; anneau de 64, verdict 18 ; puis, 16 px dessous et
+   après un trait --line, « Voir la compatibilité » 15/700 sur 56 px, calé sur le texte du verdict (18,5 + 64 + 16), chevron
+   de 24. Le bandeau pêche vient 16 px sous la carte. La tête et la ligne forment la carte, sans enveloppe en plus. */
+.offer-cols .match-card.detail-section { --cols-info-pad: 18.5px; --cols-info-text: 98.5px; --cols-56: 56px; --cols-24: 24px; display: flex; flex-direction: column; gap: 0; }
+.offer-cols .match-card .match-head { order: 1; padding: var(--cols-info-pad) var(--cols-info-pad) var(--space-4); background: var(--bg); border: 1.5px solid var(--card-line); border-bottom: 0; border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.offer-cols .match-card .match-head:only-child, .offer-cols .match-card .match-head.match-head-alone { padding-bottom: var(--cols-info-pad); border-bottom: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.offer-cols .match-card .match-title { font-size: var(--font-title); }
+.offer-cols .match-card .match-sub { font-size: var(--font-small); color: var(--text-secondary); }
+.offer-cols .match-card .compat-open {
+  order: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; max-width: none; min-height: var(--cols-56); margin: 0; padding: 0 var(--cols-info-pad) 0 var(--cols-info-text);
+  background: var(--bg); border: 1.5px solid var(--card-line); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius-card) var(--radius-card);
+  color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
+}
+.offer-cols .match-card .compat-open:hover { text-decoration: underline; }
+.offer-cols .match-card .compat-open > .icon { flex: none; width: var(--cols-24); height: var(--cols-24); }
+.offer-cols .match-card > :not(.match-head, .compat-open) { order: 3; margin-top: var(--space-4); }
 .offer-cols .match-card .match-detail { margin-top: var(--space-4); border-top: 0; }
 .offer-cols .match-card .match-detail > .disclosure-row { min-height: var(--cols-48); padding: 0; }
 .offer-cols .detail-post.detail-section { display: grid; gap: var(--space-3); padding-bottom: var(--space-2); }

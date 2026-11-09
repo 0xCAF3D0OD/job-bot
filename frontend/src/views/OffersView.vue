@@ -12,9 +12,9 @@ import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
-import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
@@ -303,12 +303,23 @@ const allReviewed = computed(
   () => !noOffersYet.value && filters.value.view === "pending" && counts.value.pending === 0 && !activeCount(filters.value),
 );
 
-// Le menu de « + Ajouter » (1.6.47) : « Ajouter une offre » attend une liste ; un compte neuf la trouve
-// dans l'écran vide.
-const addItems = computed<MoreMenuItem[]>(() => [
-  ...(noOffersYet.value ? [] : [{ label: "Ajouter une offre", test: "manual-open", icon: "briefcase" as const, run: openManual }]),
-  { label: "Postuler spontanément", test: "spontaneous-open", icon: "send" as const, run: () => (spontaneousOpen.value = true) },
-]);
+// « + Ajouter » sur ordinateur (MODIFICATIONS du 9 novembre, §2.6 ; maquettes CandidaturesOrdinateurAjouter et
+// CandidaturesOrdinateurSpontanee) : un seul panneau, deux onglets, « Une offre » et « Candidature spontanée ».
+const ADD_TABS = [
+  { value: "offer", label: "Une offre", test: "add-tab-offer" },
+  { value: "spontaneous", label: "Candidature spontanée", test: "add-tab-spontaneous" },
+];
+const addTab = computed<string>({
+  get: () => (spontaneousOpen.value ? "spontaneous" : "offer"),
+  set: (value) => {
+    spontaneousOpen.value = value === "spontaneous";
+    manualOpen.value = value !== "spontaneous";
+  },
+});
+function closeAdd(): void {
+  manualOpen.value = false;
+  spontaneousOpen.value = false;
+}
 
 // L'offre ajoutée (ou déjà là) s'ouvre ; écartée par les critères, elle est gardée avec la raison.
 async function manualAdded(result: {
@@ -648,15 +659,15 @@ onUnmounted(() => {
         >
           <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
         </button>
-        <MoreMenu
+        <button
           v-else-if="!wide"
-          class="offers-add"
-          :items="addItems"
-          trigger="Ajouter"
-          trigger-icon="plus"
-          test-id="add-menu"
-          :inline="false"
-        />
+          type="button"
+          class="secondary offers-add"
+          data-test="add-open"
+          @click="openManual"
+        >
+          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+        </button>
       </div>
     </component>
     <OfferFilterChips
@@ -833,6 +844,21 @@ onUnmounted(() => {
               Modifier les filtres
             </button>
           </div>
+          <!-- Sous un trait de 420 px (§2.7, AucuneOffreOrdinateur) : la candidature spontanée, qui ouvre « Ajouter ». -->
+          <div
+            v-if="wide && !phone"
+            class="offers-empty-spontaneous"
+          >
+            <p>Tu vises une entreprise précise, même sans offre ?</p>
+            <button
+              type="button"
+              class="link"
+              data-test="empty-spontaneous"
+              @click="spontaneousOpen = true"
+            >
+              Faire une candidature spontanée<AppIcon name="chevron" />
+            </button>
+          </div>
         </CharacterState>
         <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
         <p
@@ -918,7 +944,7 @@ onUnmounted(() => {
           {{ filters.showExpired ? "Masquer les offres expirées" : `Voir les offres expirées (${counts.expired})` }}
         </button>
         <p
-          v-if="(phone || wide) && !loading && !failed"
+          v-if="phone && !loading && !failed"
           class="offers-spontaneous"
         >
           <button
@@ -961,8 +987,39 @@ onUnmounted(() => {
     @submit="saveApplication"
     @close="applying = null"
   />
+  <BottomSheet
+    v-if="!phone && (manualOpen || spontaneousOpen)"
+    open
+    title="Ajouter"
+    class="add-sheet"
+    data-test="add-sheet"
+    @close="closeAdd"
+  >
+    <SegmentedControl
+      v-model="addTab"
+      :options="ADD_TABS"
+      label="Ce que tu ajoutes"
+      class="add-tabs"
+      full
+    />
+    <template v-if="manualOpen">
+      <p class="add-sheet-lead">
+        Colle le lien ou le texte de l’annonce. jobA1 la lit et la note.
+      </p>
+      <ManualOfferForm
+        :initial-url="shared.url"
+        :initial-text="shared.text"
+        @added="manualAdded"
+      />
+    </template>
+    <SpontaneousForm
+      v-else
+      @created="load()"
+      @open="openExisting"
+    />
+  </BottomSheet>
   <SidePanel
-    v-if="spontaneousOpen"
+    v-if="phone && spontaneousOpen"
     open
     title="Candidature spontanée"
     @close="spontaneousOpen = false"
@@ -973,7 +1030,7 @@ onUnmounted(() => {
     />
   </SidePanel>
   <BottomSheet
-    v-if="manualOpen"
+    v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
     subtitle="Colle le lien ou le texte de l'annonce. jobA1 la lit et la note."
@@ -1009,4 +1066,11 @@ onUnmounted(() => {
 .network-waiting :deep(.face-state-line) { font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .network-waiting :deep(.face-state-actions) { margin-top: var(--space-2); }
 .network-waiting :deep(button.primary) { min-height: 3.25rem; padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* Aucune offre (§2.7, AucuneOffreOrdinateur) : trait de 420 px à 32 px sous les boutons, phrase 15 grise à 32 dessous,
+   lien 15/700 de 44 px. Le panneau « Ajouter » (§2.6) : les onglets, puis la phrase 15 à 24 dessous. */
+.offers-empty-spontaneous { --empty-420: 420px; --empty-15: 15px; display: grid; justify-items: center; gap: var(--space-1); width: min(var(--empty-420), 100%); margin: var(--space-8) auto 0; padding-top: var(--space-8); border-top: 1px solid var(--line); }
+.offers-empty-spontaneous p { margin: 0; font-size: var(--empty-15); color: var(--text-secondary); }
+.offers-empty-spontaneous .link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--empty-15); font-weight: var(--weight-bold); color: var(--primary-text); }
+.add-tabs { margin-bottom: var(--space-6); }
+.add-sheet-lead { --add-15: 15px; margin: 0 0 var(--space-4); font-size: var(--add-15); }
 </style>
