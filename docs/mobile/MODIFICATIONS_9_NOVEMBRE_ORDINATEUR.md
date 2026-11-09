@@ -251,3 +251,10 @@ Maquettes : AujourdhuiOrdinateurTravailDSombre, CandidaturesOrdinateurBSombre (o
 - Fichiers : `illustrations/scenes/connexion-perdue-480.webp`, `-800.webp`, `connexion-perdue.svg`. Ordinateur débranché, Wi-Fi barré, prise à côté, plante et tasse.
 - Utilisée dans OnboardingOrdinateurCoupure (à la place de `lecture-calme` en gris).
 - Version provisoire sans personnage : une version finale avec personnage sera faite dans Recraft ; garder le même nom de fichier.
+
+## 14. Préparer ordinateur : étape CV quand le CV est prêt (validée le 9 novembre au soir)
+Maquettes : PreparerOrdinateurCVPret, PreparerOrdinateurCVChangements (panneau). PreparerOrdinateurCV reste l'état d'échec.
+- Même structure que l'étape Lettre : CV en page A4 à gauche, carte « Mise en page » à droite (« Même modèle que la lettre · 1 page »), retouche en bas (puces « Plus court », « Mettre Kubernetes en avant », « Tenir sur une page »), bouton « J’ai relu, continuer » vers Postuler.
+- **Sélecteur FR / DE / EN** en haut du CV (aria-label « Langue du CV ») : par défaut la langue de la lettre, modifiable à part.
+- **Carte « Ce CV »** (remplace « Ta candidature ») : « Adapté pour cette offre · n changements, à vérifier » (ouvre le panneau), « Versions · n », « CV d’origine » (ne change pas, sert de base).
+- **Panneau « Adapté pour cette offre »** (SidePanel) : phrase « rien n’est inventé, tout vient de ton CV d’origine », puis un bloc par changement (rubrique, « Avant : … », « Maintenant : … », lien « Annuler ce changement »), et « Ton CV d’origine ne change pas. Ces changements valent pour cette candidature seulement. »

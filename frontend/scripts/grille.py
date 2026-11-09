@@ -91,6 +91,9 @@ SCREENS: list[tuple[str, str | None]] = [
 DESK_SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
+    ("candidatures/offres/{offer}/preparer?doc=cv", None),
+    ("candidatures/offres/{offer}/preparer?doc=cv", "[data-test=cv-changes-open]"),
+    ("candidatures/offres/{offer}/preparer?doc=cv", "[data-test=cv-versions-open]"),
     ("candidatures/offres/{offer}/preparer?doc=postuler", None),
     ("candidatures/offres/{offer}/preparer?doc=postuler", "[data-test=contacts-open]"),
     # Envoyées (PR 5, §8.1) : le détail seul ; la liste, partagée avec À traiter, garde les valeurs de la maquette.

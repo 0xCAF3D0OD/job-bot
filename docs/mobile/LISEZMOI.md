@@ -71,6 +71,7 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Candidatures (à traiter, envoyées, rendez-vous) | CandidaturesOrdinateurB | tab = tr, en, rv ; q ; menu = compte, notif, actions, filtres, ajouter ; ajt = of, sp ; cmp ; ec ; dp = cal |
 | Envoyées, statut mis à jour par e-mail | CandidaturesOrdinateurStatut | |
 | Sombre (ligne artistique) : Aujourd’hui, Candidatures, Préparer, Bilan | AujourdhuiOrdinateurTravailDSombre, CandidaturesOrdinateurBSombre, PreparerOrdinateurSombre, BilanOrdinateurSombre | les autres écrans suivent la même table de couleurs (MODIFICATIONS_9 §12) |
+| Préparer, CV prêt et panneau des changements | PreparerOrdinateurCVPret, PreparerOrdinateurCVChangements | §14 |
 | Ajouter (panneau : une offre / candidature spontanée) | CandidaturesOrdinateurAjouter, CandidaturesOrdinateurSpontanee | |
 | Préparer, lettre générée | PreparerOrdinateur | |
 | Préparer, lettre et CV en cours d’écriture | PreparerOrdinateurGeneration | |

@@ -93,37 +93,84 @@ describe("CvPanel", () => {
     const item = wrapper.find("[data-test=cv-item]");
     expect(item.find("p").text()).toBe("Infrastructure Terraform sur AWS.");
     expect(item.find(".kw").text()).toBe("Terraform");
-    // La carte « CV adapté », avec ce que l'adaptation met en avant (étape 7b, C5).
+    // La carte « CV adapté » (§14) : FR / DE / EN en tête, plus de puces de mots-clés sur ordinateur.
     const card = wrapper.find("[data-test=cv-card]");
     expect(card.find("h2").text()).toBe("CV adapté");
-    expect(card.findAll("[data-test=cv-highlights] li").map((li) => li.text())).toEqual(["Terraform"]);
+    expect(card.find("[role=radiogroup], [aria-label='Langue du CV']").exists()).toBe(true);
+    expect(card.find("[data-test=cv-highlights]").exists()).toBe(false);
     expect(wrapper.find("[data-test=cv-docx]").attributes("href")).toBe("/api/cvs/21/docx");
   });
 
-  it("cocher un bloc et le monter enregistrent aussitôt", async () => {
-    GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
-    PUT.mockResolvedValueOnce({ data: cv(21, [1, 3, 2]) }).mockResolvedValueOnce({ data: cv(21, [2, 3, 1]) });
-    const wrapper = await mountPanel();
-    const toggles = wrapper.findAll("[data-test=block-toggle]");
-    // Ordre de la liste : Stage DevOps, Stage web (non coché), Kubernetes.
-    await toggles[1]!.setValue(true);
+  it("sans langue choisie, le CV prend celle de la lettre (§14)", async () => {
+    GET.mockResolvedValue({ data: [] });
+    POST.mockResolvedValue({ data: cv(21, [1, 3]) });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    const wrapper = mount(CvPanel, { props: { offer: offer as never, letterLanguage: "de" }, global: { plugins: [router] } });
     await flushPromises();
-    expect((PUT.mock.calls[0]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([1, 3, 2]);
-
-    const up = wrapper.findAll("[data-test=move-up]");
-    // « Stage web » est le deuxième de sa rubrique : on peut le monter.
-    await up[1]!.trigger("click");
+    await wrapper.find("[data-test=write-cv]").trigger("click");
     await flushPromises();
-    expect((PUT.mock.calls[1]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([2, 3, 1]);
+    expect((POST.mock.calls[0]![1] as { body: { language: string } }).body.language).toBe("de");
   });
 
-  it("refuse de décocher le dernier bloc", async () => {
-    GET.mockResolvedValue({ data: [cv(21, [1])] });
+  it("« Ce CV » : les changements à vérifier, et « Annuler ce changement » remet l'ordre d'origine", async () => {
+    // L'adaptation a mis « Stage web » avant « Stage DevOps ».
+    GET.mockResolvedValue({ data: [cv(21, [2, 1, 3], { origin_ids: [1, 2, 3] })] });
+    PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
     const wrapper = await mountPanel();
-    await wrapper.findAll("[data-test=block-toggle]")[0]!.setValue(false);
+    const file = wrapper.find("[data-test=cv-file]");
+    expect(file.find("h2").text()).toBe("Ce CV");
+    expect(file.find("[data-test=cv-changes-open]").text()).toContain("2 changements, à vérifier");
+    expect(file.find("[data-test=cv-versions-open]").text()).toContain("Versions · 1");
+    expect(file.find("[data-test=cv-origin]").text()).toContain("Ne change pas, sert de base");
+    const changes = wrapper.find("[data-test=cv-changes]");
+    expect(changes.text()).toContain("pour l’annonce d’Acme SA");
+    const items = changes.findAll("[data-test=cv-change]");
+    expect(items.map((li) => li.find("b").text())).toEqual(["Profil", "Expériences"]);
+    expect(items[1]!.text()).toContain("Avant : « Stage web » venait en 2e position.");
+    // Le résumé n'a pas d'« avant » gardé : il ne s'annule pas.
+    expect(items[0]!.find("[data-test=cv-change-undo]").exists()).toBe(false);
+    await items[1]!.find("[data-test=cv-change-undo]").trigger("click");
     await flushPromises();
-    expect(PUT).not.toHaveBeenCalled();
-    expect(wrapper.find("[role=alert]").text()).toContain("au moins un bloc");
+    expect((PUT.mock.calls[0]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([1, 2, 3]);
+    expect(wrapper.findAll("[data-test=cv-change]")).toHaveLength(1);
+  });
+
+  it("un bloc retiré revient à sa place d'origine", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [2, 3], { origin_ids: [1, 2, 3] })] });
+    PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
+    const wrapper = await mountPanel();
+    const removed = wrapper.findAll("[data-test=cv-change]").find((li) => li.find("b").text() === "Stage DevOps")!;
+    expect(removed.text()).toContain("Maintenant : retiré pour cette offre.");
+    await removed.find("[data-test=cv-change-undo]").trigger("click");
+    await flushPromises();
+    expect((PUT.mock.calls[0]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([1, 2, 3]);
+  });
+
+  it("« J’ai relu, continuer » note la relecture puis passe à Postuler", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
+    PUT.mockResolvedValue({ data: cv(21, [1, 3], { read_at: "2026-11-09T20:00:00Z" }) });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    const wrapper = mount(CvPanel, { props: { offer: offer as never }, global: { plugins: [router] } });
+    await flushPromises();
+    await wrapper.find("[data-test=cv-read-next]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/cvs/{draft_id}/read", { params: { path: { draft_id: 21 } }, body: { read: true } });
+    expect(router.currentRoute.value.query.doc).toBe("postuler");
+  });
+
+  it("une autre langue remplace le bouton par « Préparer à nouveau » ; une puce de retouche prépare une version", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
+    POST.mockResolvedValue({ data: cv(22, [1, 3], { version: 2, instruction: "Plus court" }) });
+    const wrapper = await mountPanel();
+    expect(wrapper.find("[data-test=cv-desk-bottom]").text()).toContain("Mettre Terraform en avant");
+    await wrapper.find("[data-test=cv-language-en]").trigger("click");
+    expect(wrapper.find("[data-test=write-cv]").text()).toContain("Préparer à nouveau en anglais");
+    expect(wrapper.find("[data-test=cv-read-next]").exists()).toBe(false);
+    await wrapper.find("[data-test=cv-language-fr]").trigger("click");
+    const chip = wrapper.findAll("[data-test=cv-desk-bottom] button").find((b) => b.text() === "Plus court")!;
+    await chip.trigger("click");
+    await flushPromises();
+    expect((POST.mock.calls[0]![1] as { body: { instruction: string; base_draft_id: number } }).body).toMatchObject({ instruction: "Plus court", base_draft_id: 21 });
   });
 
   it("titre et résumé modifiés : enregistrement explicite", async () => {

@@ -387,7 +387,8 @@ async function prepareCv(): Promise<void> {
   try {
     const { data } = await api.POST("/api/offers/{offer_id}/cvs", {
       params: { path: { offer_id: offerId } },
-      body: { language: null, instruction: null, base_draft_id: null },
+      // Le CV prend la langue de la lettre (§14) ; elle se change à part, à l'étape CV.
+      body: { language: current(letters.value)?.language ?? null, instruction: null, base_draft_id: null },
     });
     await refreshPlan();
     cvState.value = data ? "" : "failed";
@@ -1188,6 +1189,7 @@ onMounted(() => void load());
         :primary="nextStep === 'cv'"
         :preparing="cvState === 'busy'"
         :failed="cvState === 'failed'"
+        :letter-language="current(letters)?.language ?? null"
         @current="currentCvId = $event"
       />
 
@@ -1977,9 +1979,39 @@ onMounted(() => void load());
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
-.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
+.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
 .prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
+/* Le CV prêt (§14, PreparerOrdinateurCVPret) : une page A4 de 560 px sur le fond grisé, à 32 px du haut et 40 du bas ;
+   nom 20/800, titre 12/700 bleu, coordonnées 10,5, rubriques 10 en capitales bleues soulignées, texte 10,5/15. */
+.prep-desk .doc-card > .cv-sheet {
+  --cv-page: 560px; --cv-pad: 56px; --cv-32: 32px; --cv-40: 40px; --cv-20: 20px; --cv-12: 12px; --cv-10-5: 10.5px; --cv-10: 10px; --cv-11-5: 11.5px; --cv-15: 15px;
+  /* La page reste blanche en sombre : ses couleurs sont celles du papier (maquette), pas celles du thème. */
+  --cv-accent: #2445C2; --cv-rule: #E5E2D9; --cv-muted: #596070; --cv-ink: #1B1F2A;
+  color: var(--cv-ink);
+  width: min(var(--cv-page), calc(100% - 2 * var(--prep-24))); max-width: none; margin: var(--cv-32) auto var(--cv-40); padding: var(--cv-pad); box-sizing: border-box;
+  border: 0; border-radius: 0; background: var(--logo-paper); font-size: var(--cv-10-5); line-height: var(--cv-15);
+}
+.prep-desk .cv-sheet .cv-name { font-size: var(--cv-20); font-weight: var(--weight-heavy); line-height: var(--space-6); }
+.prep-desk .cv-sheet .cv-headline { font-size: var(--cv-12); font-weight: var(--weight-bold); color: var(--cv-accent); padding: 0; margin: 0; min-height: var(--space-6); }
+.prep-desk .cv-sheet .cv-contacts { color: var(--cv-muted); font-size: var(--cv-10-5); margin: 0 0 var(--space-4); }
+.prep-desk .cv-sheet h3 { margin: var(--space-4) 0 var(--space-2); padding-bottom: var(--space-1); font-size: var(--cv-10); font-weight: var(--weight-heavy); letter-spacing: .08em; color: var(--cv-accent); border-bottom-color: var(--cv-rule); }
+.prep-desk .cv-sheet .cv-item { margin-bottom: var(--space-2); }
+.prep-desk .cv-sheet .cv-item-title { font-size: var(--cv-11-5); }
+.prep-desk .cv-sheet :is(input, textarea) { min-height: 0; padding: 0; border: 1px dashed transparent; border-radius: var(--space-1); background: transparent; color: inherit; box-shadow: none; }
+.prep-desk .cv-sheet .cv-headline { height: var(--space-6); }
+.prep-desk .cv-sheet .kw { padding: 0; border: 0; background: none; color: inherit; font-size: inherit; font-weight: var(--weight-bold); }
+/* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
+   (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
+.cv-changes-intro, .cv-changes { --cv-22: 22px; }
+.cv-changes-intro { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--cv-22); color: var(--text-secondary); }
+.cv-changes { list-style: none; margin: 0; padding: 0; }
+.cv-changes > li { display: flex; flex-direction: column; align-items: flex-start; padding: var(--space-4) 0; border-top: 1px solid var(--line-soft); }
+.cv-changes b { font-size: var(--font-body); line-height: var(--cv-22); }
+.cv-change-before { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.cv-change-now { font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
+.cv-change-undo { min-height: var(--target-min); margin-top: var(--space-1); padding: 0; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
+.cv-changes-note { margin: var(--space-6) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .prep-ai-link:hover { text-decoration: underline; }
 .prep-ai-link .icon { width: 14px; height: 14px; }

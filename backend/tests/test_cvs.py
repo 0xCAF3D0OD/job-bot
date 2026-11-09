@@ -114,6 +114,10 @@ async def test_write_cv(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None
     assert cv["keywords"] == ["Terraform", "Kubernetes"]
     assert [(b["id"], b["selected"]) for b in cv["blocks"]][-1] == (ids["web"], False)
     assert all(b["id"] != ids["pref"] for b in cv["blocks"])
+    # L'ordre du CV d'origine, sans la préférence : de quoi dire ce que la version a changé (§14).
+    assert ids["pref"] not in cv["origin_ids"]
+    assert sorted(cv["origin_ids"]) == cv["origin_ids"]
+    assert set(cv["origin_ids"]) == {b["id"] for b in cv["blocks"]}
 
     doc = cv["document"]
     assert doc["name"] == "Jean Exemple"
