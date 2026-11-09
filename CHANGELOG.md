@@ -485,3 +485,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.271 | Téléphone, §10.8 (9 novembre) : alertes e-mail rangées par famille (À confirmer, Actives, À créer), une carte par recherche et par site, feuille « Alerte » pour confirmer, créer ou agir | livrée |
 | 1.6.272 | Téléphone, §10.9 (9 novembre) : notifications en familles Aujourd'hui, Hier, Plus tôt, une carte par notification avec son icône et « Non lue », personnage assis quand tout est lu ; textes sans consigne dans la cloche | livrée |
 | 1.6.273 | « justificatif » à la place de « preuve » partout (lot 16.4) : interface, rappels, agenda, feuille du rendez-vous, Assistant et fichier CSV | livrée |
+| 1.6.274 | Composants communs du 9 novembre : flèches grises, trait des cartes #CFCBC1, mots d'état, panneau à droite sur ordinateur, champs en pilule, bouton copier, snackbar sombre | livrée |
+| 1.6.275 | Ordinateur sombre du 9 novembre : carrés aux initiales inversés, page A4 blanche avec ombre marquée, carte sélectionnée #232B45, plus de bande bleue sur Bilan | livrée |
