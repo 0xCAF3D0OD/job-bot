@@ -220,8 +220,9 @@ describe("les lignes repliables (1.6.24)", () => {
 });
 
 describe("revue sur ordinateur (1.6.27)", () => {
-  it("« en dessous » des semaines en gris ; le lien en bouton a le bord des boutons secondaires", () => {
-    expect(css).toMatch(/\.button-link \{[^}]*border: 1px solid var\(--faint\)/);
+  it("« en dessous » des semaines en gris ; le lien en bouton a le bord des boutons secondaires (niveau 2 depuis le lot 18)", () => {
+    expect(css).toMatch(/\.button-link \{[^}]*border: var\(--action-line\) solid var\(--primary-graphic\)/);
+    expect(css).toMatch(/button:where\(\.secondary\) \{ border: var\(--action-line\) solid var\(--primary-graphic\)/);
   });
   it("le bouton « Assistant » laisse sa place en bas de la page", () => {
     expect(css).toMatch(/:root:has\(\.assistant-fab\) \.app-footer \{ padding-bottom: calc\(/);

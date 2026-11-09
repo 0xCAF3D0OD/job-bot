@@ -46,7 +46,7 @@ onMounted(() => void refresh());
 </script>
 
 <template>
-  <section class="band">
+  <section class="band page-blocks-wide">
     <div
       :class="['container', 'notifications-page', { 'notifications-wide': wide }]"
       data-test="notifications"
