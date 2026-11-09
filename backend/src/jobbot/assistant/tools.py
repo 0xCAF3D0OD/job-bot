@@ -34,7 +34,7 @@ from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due, remind_on
 from jobbot.insights import service as insight_service
 from jobbot.interviews import service as interview_service
 from jobbot.notify import interviews as interview_reminders
-from jobbot.orp.service import load_due_day, load_target, month_counts
+from jobbot.orp.service import load_canton, load_due_day, load_target, month_counts
 from jobbot.rhythm import service as rhythm
 from jobbot.scoring.service import active_profile
 from jobbot.sources.sites import followed
@@ -411,12 +411,13 @@ async def _orp(session: AsyncSession, _profile: int, params: dict[str, Any]) -> 
     counts = await month_counts(session, month)
     state = await session.get(OrpMonth, month)
     due_day = await load_due_day(session)
+    canton = await load_canton(session)
     return {
         "mois": month,
         "candidatures": counts.count,
         "objectif": await load_target(session),
         "lignes_a_completer": counts.incomplete,
-        "a_remettre_avant": _day(due_date(month, due_day)),
+        "a_remettre_avant": _day(due_date(month, due_day, canton)),
         "remis_le": _day(state.submitted_at) if state else None,
         "modifie_apres_remise": bool(state and state.changed_after_submit),
         "mois_precedent": shift_month(month, -1),

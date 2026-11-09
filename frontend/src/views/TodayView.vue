@@ -18,7 +18,7 @@ import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpPace, plural } from "../format";
+import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpLeftLine, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
@@ -268,8 +268,7 @@ const starterTasks = computed<DeskTask[]>(() => {
 const orpLine = computed(() => {
   const t = today.value;
   if (!t || !starting.value || !t.month_target || t.month_count >= t.month_target) return undefined;
-  const [year, month] = t.month.split("-").map(Number);
-  return `Encore ${t.month_target - t.month_count} d'ici ${dateInSentence(new Date(year!, month!, 0))}`;
+  return orpLeftLine(t.month_count, t.month_target, t.month, t.month_due_date);
 });
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
@@ -403,6 +402,7 @@ const { me } = useAuth();
     :month="today.month"
     :count="today.month_count"
     :target="today.month_target ?? null"
+    :due="today.month_due_date ?? null"
     :offers="dose"
     :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
     :todos="todos"
@@ -471,6 +471,7 @@ const { me } = useAuth();
             :target="today.month_target ?? null"
             :month="today.month"
             :line="orpLine"
+            :due="today.month_due_date ?? null"
             band
           />
           <template v-if="today.rhythm && !starting">

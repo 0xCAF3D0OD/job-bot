@@ -46,11 +46,9 @@ const segments = computed<SegmentOption[]>(() => [
         />
       </div>
     </section>
-    <!-- Lot 18 (§10.5) : le fond des blocs sous la bande. -->
-    <div class="today-page-bg">
-      <div :class="['bilan-page', `bilan-page-${tab}`]">
-        <RouterView />
-      </div>
+    <!-- Maquette du 9 novembre (BilanOrdinateur) : le fond crème de la page, sans bande grise sous le titre. -->
+    <div :class="['bilan-page', `bilan-page-${tab}`]">
+      <RouterView />
     </div>
   </template>
   <PageHero

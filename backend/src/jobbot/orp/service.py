@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.core.holidays import DEFAULT_CANTON, canton_of_postcode
 from jobbot.core.orp import DEFAULT_DUE_DAY
 from jobbot.db.models import Application, Setting
 
@@ -13,6 +14,12 @@ async def load_due_day(session: AsyncSession) -> int:
     """Jour de remise du mois suivant (Réglages, 5 par défaut)."""
     value = await session.scalar(select(Setting.value).where(Setting.key == "orp_due_day"))
     return int(value) if value else DEFAULT_DUE_DAY
+
+
+async def load_canton(session: AsyncSession) -> str:
+    """Le canton de l'ORP : celui du NPA du domicile (coordonnées), Vaud par défaut (§11)."""
+    postcode = await session.scalar(select(Setting.value).where(Setting.key == "identity_postcode"))
+    return canton_of_postcode(postcode) or DEFAULT_CANTON
 
 
 async def load_target(session: AsyncSession) -> int | None:

@@ -114,15 +114,16 @@ async def test_due_mentions_job_room_only_when_used(rt: Runtime, sent: list[Mess
 
 async def test_due_day_setting_and_no_ntfy(rt: Runtime, sent: list[Message]) -> None:
     async with rt.sessionmaker.begin() as session:
-        session.add(Setting(key="orp_due_day", value=10))
+        session.add(Setting(key="orp_due_day", value=9))
     await add(rt, date(2026, 9, 3))
     await notify_orp(rt, date(2026, 10, 1))
-    assert sent[0].title.endswith("avant le 10 octobre")
+    # Le vendredi 9 octobre 2026 est ouvrable (un samedi 10 serait reporté au lundi 12).
+    assert sent[0].title.endswith("avant le 9 octobre")
 
     # Sans ntfy : la veille de la date limite, l'alerte est dans la cloche seulement.
     silent = Runtime.create(make_settings())
     try:
-        assert await notify_orp(silent, date(2026, 10, 9)) == 1
+        assert await notify_orp(silent, date(2026, 10, 8)) == 1
     finally:
         await silent.dispose()
     assert len(sent) == 1
@@ -137,3 +138,14 @@ def test_justificatifs_elision() -> None:
 
     assert _of("octobre") == "d'octobre"
     assert _of("septembre") == "de septembre"
+
+
+async def test_deadline_moves_to_working_day_of_home_canton(
+    rt: Runtime, sent: list[Message]
+) -> None:
+    """Le 5 septembre 2024 est le Jeûne genevois : à Genève, l'échéance passe au vendredi 6."""
+    async with rt.sessionmaker.begin() as session:
+        session.add(Setting(key="identity_postcode", value="1204"))
+    await add(rt, date(2024, 8, 12))
+    await notify_orp(rt, date(2024, 9, 1))
+    assert sent[0].title.endswith("avant le 6 septembre")
