@@ -9976,6 +9976,18 @@
             },
             "type": "object",
             "title": "Todo"
+          },
+          "filter_warning_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter Warning At"
           }
         },
         "type": "object",

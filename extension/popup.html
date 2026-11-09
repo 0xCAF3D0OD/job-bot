@@ -136,6 +136,82 @@
       </section>
 
       <!-- Réglages (roue dentée) : l'adresse de la plateforme, relier, délier. -->
+      <!-- Transfert Gmail (docs/142 §5) : un filtre pour les seules alertes, jamais tout le courrier. -->
+      <section id="gmail" class="state" hidden>
+        <div id="gm-start" class="stack">
+          <div class="lead">
+            <span class="lead-mark info"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <div class="lead-text"><span class="title-lead">Transférer tes alertes Gmail</span><span class="body">Tes alertes jobup, jobs.ch et LinkedIn arrivent déjà sur Gmail ? Transfère-les à jobA1.</span></div>
+          </div>
+          <ul class="checks">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Seulement les e-mails de ces trois sites, grâce à un filtre.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Jamais tout ton courrier.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>jobA1 supprime sans le lire tout autre e-mail.</li>
+          </ul>
+          <div class="actions">
+            <button id="gm-begin" class="primary" type="button">Commencer</button>
+          </div>
+        </div>
+        <div id="gm-address" class="stack" hidden>
+          <p class="step">Étape 1 sur 3</p>
+          <h1 class="title-md">Ajoute l’adresse de transfert</h1>
+          <p class="body">Dans les réglages Gmail, « Transfert et POP/IMAP », puis « Ajouter une adresse de transfert » :</p>
+          <div class="address-row">
+            <span id="gm-address-value" class="address"></span>
+            <button id="gm-copy-address" class="copy" type="button">Copier</button>
+          </div>
+          <p class="note">Laisse « Désactiver le transfert » coché : le filtre s’en charge.</p>
+          <p id="gm-error" class="error" role="alert" hidden></p>
+          <div class="actions tight-link">
+            <a id="gm-open-settings" class="text-link" href="https://mail.google.com/mail/u/0/#settings/fwdandpop" target="_blank" rel="noopener">Ouvrir les réglages Gmail ↗</a>
+            <button id="gm-added" class="primary" type="button">J’ai ajouté l’adresse</button>
+          </div>
+        </div>
+        <div id="gm-code" class="stack" hidden>
+          <p class="step">Étape 2 sur 3</p>
+          <h1 id="gm-code-title" class="title-md">Le code de Gmail</h1>
+          <p id="gm-code-text" class="body">Gmail envoie un code de confirmation à ton adresse jobA1. Il s’affichera ici.</p>
+          <div id="gm-wait" class="address-row"><span class="wait"><span class="spin" aria-hidden="true"></span>En attente du code de Gmail…</span></div>
+          <div id="gm-code-row" class="address-row" role="status" hidden>
+            <span id="gm-code-value" class="address code"></span>
+            <button id="gm-copy-code" class="copy" type="button">Copier</button>
+          </div>
+          <p id="gm-code-note" class="note">Rien après deux minutes ? Vérifie l’adresse collée à l’étape 1.</p>
+          <div class="actions">
+            <button id="gm-validated" class="primary" type="button" disabled>Code validé dans Gmail</button>
+          </div>
+        </div>
+        <div id="gm-filter" class="stack" hidden>
+          <p class="step">Étape 3 sur 3</p>
+          <h1 class="title-md">Crée le filtre</h1>
+          <p class="body">Dans Gmail, « Créer un filtre », colle dans « De » :</p>
+          <div class="address-row">
+            <span id="gm-query" class="address wrap">jobup.ch OR jobs.ch OR linkedin.com</span>
+            <button id="gm-copy-query" class="copy" type="button">Copier</button>
+          </div>
+          <p class="note">Puis « Créer un filtre », coche « Transférer à » et choisis <span id="gm-forward-to"></span>.</p>
+          <div class="actions tight-link">
+            <a id="gm-open-filters" class="text-link" href="https://mail.google.com/mail/u/0/#settings/filters" target="_blank" rel="noopener">Ouvrir le filtre dans Gmail ↗</a>
+            <button id="gm-filtered" class="primary" type="button">J’ai créé le filtre</button>
+          </div>
+        </div>
+        <div id="gm-ready" class="center" role="status" hidden>
+          <span class="done-mark"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="title-md">Transfert prêt</span>
+          <span class="body">jobA1 triera tes alertes dès le prochain e-mail. Tout autre e-mail est supprimé sans être lu.</span>
+        </div>
+        <div id="gm-warning" class="stack" role="alert" hidden>
+          <div class="lead">
+            <span class="lead-mark warn"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/></svg></span>
+            <div class="lead-text"><span class="title-lead">Vérifie ton filtre Gmail</span><span class="body">Un e-mail qui n’est pas une alerte est arrivé : vérifie ton filtre Gmail.</span></div>
+          </div>
+          <p class="note">Il a été supprimé sans être lu. Le filtre ne doit transférer que les e-mails de jobup.ch, jobs.ch et linkedin.com.</p>
+          <div class="actions">
+            <button id="gm-review" class="primary" type="button">Revoir le filtre</button>
+          </div>
+        </div>
+      </section>
+
       <section id="settings" class="state" hidden>
         <h1 class="title-md">Réglages</h1>
         <div id="fields" class="fields">
@@ -155,6 +231,7 @@
           <input id="linkedin-fill" type="checkbox">
           <span>Remplir aussi l’adresse dans les alertes LinkedIn<span class="note">Sinon l’adresse est copiée, à coller toi-même.</span></span>
         </label>
+        <button id="gmail-row" class="text-link start" type="button" hidden>Transférer tes alertes Gmail</button>
         <p id="setup-message" class="note" role="status" hidden></p>
         <p id="setup-error" class="error" role="alert" hidden></p>
         <div class="actions">

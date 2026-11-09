@@ -247,3 +247,16 @@ html.accueil body { border-radius: var(--radius-card); box-shadow: 0 6px 24px rg
 @media (prefers-reduced-motion: reduce) { button { transition: none; } }
 /* « hidden » l'emporte sur les display ci-dessus. */
 [hidden] { display: none !important; }
+
+/* Transfert Gmail (docs/142 §5). */
+.step { margin: 0; font-size: 13px; font-weight: 700; color: var(--primary-text); }
+.lead-mark.info { color: var(--primary-text); }
+.lead-mark.warn { color: var(--warning); }
+.address.wrap { white-space: normal; }
+.address.code { font-size: 22px; letter-spacing: 3px; font-weight: 800; }
+.wait { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); }
+.spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--primary-graphic); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.actions.tight-link { gap: 2px; }
+.text-link.start { align-self: flex-start; }

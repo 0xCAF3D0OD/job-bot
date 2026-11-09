@@ -111,4 +111,36 @@ maquette).
 
 ## 5. Transfert Gmail (D)
 
-Pas d'écran dans la maquette : à dessiner et à faire valider avant le code.
+Pas d'écran dans la maquette : 7 écrans dessinés dans le style de la fenêtre, validés par Kevin le 9.11.2026
+(captures dans le dossier du projet, `extension/dessin-d-gmail/`).
+
+**Le parcours** (état `gmail` de la fenêtre) : sur `mail.google.com`, ou par « Transférer tes alertes Gmail » dans la
+roue dentée. Jamais de transfert de tout le courrier : d'abord l'adresse de transfert, puis un filtre.
+1. Présentation : seulement les e-mails de jobup, jobs.ch et LinkedIn, grâce à un filtre ; jamais tout le courrier.
+2. Étape 1 sur 3 : l'adresse jobA1 à copier (`GET /api/extension/alerts`) et le lien vers les réglages « Transfert et
+   POP/IMAP » de Gmail. « Désactiver le transfert » reste coché : c'est le filtre qui transfère.
+3. Étape 2 sur 3 : le code de confirmation de Gmail. L'extension demande le relevé rapide
+   (`POST /api/extension/codes/expect`), puis le code (`GET /api/extension/codes?site=gmail`) toutes les 5 s tant que
+   la fenêtre est ouverte. Après deux minutes, « Code validé dans Gmail » s'active quand même.
+4. Étape 3 sur 3 : le filtre `jobup.ch OR jobs.ch OR linkedin.com` à coller dans « De », puis « Transférer à »
+   l'adresse jobA1.
+5. « Transfert prêt ».
+6. « Vérifie ton filtre Gmail » (en `role="alert"`) quand le serveur a supprimé un e-mail transféré qui n'était pas une
+   alerte ; « Revoir le filtre » ramène à l'étape 3. Montré une fois par avertissement.
+
+L'extension ne lit rien dans Gmail et ne demande aucun accès à `mail.google.com` : elle ouvre ses réglages dans un
+onglet, et la personne fait chaque étape elle-même. L'étape en cours est gardée dans le navigateur.
+
+**Le serveur** (`collect.service.ingest_email`) :
+- Un e-mail d'un expéditeur qui n'est aucune source d'alerte connue n'est pas lu : ni son corps (pas de recherche de
+  code), ni son objet, ni sa copie ne sont gardés. Seul son Message-ID reste, pour ne pas le relire. Dans la boîte des
+  invités, il est ensuite effacé avec les autres e-mails déjà traités (docs/113). La boîte de l'exploitant reste en
+  lecture seule.
+- Seule exception : le code de confirmation de transfert de Gmail, de `forwarding-noreply@google.com`, montré dans la
+  cloche et dans l'extension (docs/116 §1). Un autre e-mail de Google avec un code n'est pas lu.
+- Un e-mail transféré (en-têtes `X-Forwarded-To` ou `X-Forwarded-For`) qui n'est pas une alerte fait prévenir la
+  personne, une fois par jour au plus : « Un e-mail qui n'est pas une alerte est arrivé : vérifie ton filtre Gmail. »
+  (cloche et téléphone, genre `gmail_filter`). Ni l'expéditeur ni l'objet ne sont dits, ni dans le message ni dans le
+  journal (`gmail_filter_warning`, sans champ).
+- `GET /api/extension/alerts` donne `filter_warning_at`, le dernier avertissement des 7 derniers jours.
+- Tests : `backend/tests/test_gmail_transfer.py`.

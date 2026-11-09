@@ -24,6 +24,7 @@ from jobbot.db.models import (
     IGNORED_KIND,
     PUBLIC_SEARCH_PREFIX,
     EnrichStatus,
+    Notification,
     Offer,
     OfferLink,
     OfferSighting,
@@ -101,8 +102,13 @@ def _since(settings: Settings) -> date:
     return (datetime.now(UTC) - timedelta(days=settings.imap_backfill_days)).date()
 
 
-# Gmail, qui confirme un transfert vers l'adresse jobA1 par un code (docs/116 §1).
-GMAIL_DOMAINS = ("google.com", "gmail.com")
+# Gmail, qui confirme un transfert vers l'adresse jobA1 par un code (docs/116 §1, docs/142 §5) :
+# le seul expéditeur qui n'est pas un site dont l'e-mail est lu.
+GMAIL_SENDERS = ("forwarding-noreply@google.com",)
+# « Vérifie ton filtre Gmail » (docs/142 §5) : au plus une fois par jour.
+FILTER_WARNING_KIND = "gmail_filter"
+FILTER_WARNING_EVERY = timedelta(days=1)
+FILTER_WARNING = "Un e-mail qui n'est pas une alerte est arrivé : vérifie ton filtre Gmail."
 
 
 async def _known_message_ids(runtime: Runtime, ids: set[str]) -> set[str]:
@@ -239,10 +245,14 @@ async def ingest_email(
     async with runtime.sessionmaker() as session:
         sites = await load_sites(session)
     source, status, version, alert, error = await _analyse(runtime, email, sites)
+    # Un expéditeur qui n'est aucun site (Stripe, une banque, un e-mail transféré par erreur) :
+    # son contenu n'est pas lu (docs/142 §5). Seule exception : le code de Gmail qui confirme
+    # un transfert vers l'adresse jobA1 (docs/116 §1).
+    gmail = email.sender in GMAIL_SENDERS
+    readable = source != Source.UNKNOWN or gmail
     # Un code de vérification (docs/112) : montré au compte le temps de le recopier.
-    found = find_code(email) if status != ParseStatus.PARSED else None
-    # Le code de Gmail qui confirme un transfert vers l'adresse jobA1 (docs/116 §1).
-    if found is not None and email.sender_domain in GMAIL_DOMAINS:
+    found = find_code(email) if readable and status != ParseStatus.PARSED else None
+    if found is not None and gmail:
         source = "gmail"
     no_offer = status == ParseStatus.EMPTY or (status == ParseStatus.UNRECOGNIZED and not error)
     # Un expéditeur qui n'est aucun site (Stripe, une banque…) et ne donne pas de code : la
@@ -334,6 +344,8 @@ async def ingest_email(
             kind="first_alert",
             link="/candidatures/offres",
         )
+    if ignored and email.forwarded:
+        await _warn_filter(runtime)
     if found is not None:
         fallback = "Gmail" if source == "gmail" else source
         name = next((site.name for site in sites if site.slug == source), fallback)
@@ -347,6 +359,27 @@ async def ingest_email(
         new_offers=search.new_offers_count,
     )
     return search
+
+
+async def _warn_filter(runtime: Runtime) -> None:
+    """Un e-mail transféré par Gmail qui n'est pas une alerte : le filtre transfère trop. La
+    personne est prévenue, une fois par jour au plus ; ni l'expéditeur ni l'objet ne sont dits."""
+    since = datetime.now(UTC) - FILTER_WARNING_EVERY
+    async with runtime.sessionmaker() as session:
+        recent = await session.scalar(
+            select(Notification.id)
+            .where(Notification.kind == FILTER_WARNING_KIND, Notification.created_at >= since)
+            .limit(1)
+        )
+    if recent is not None:
+        return
+    await notify.deliver(
+        runtime,
+        notify.Message(title="Vérifie ton filtre Gmail", message=FILTER_WARNING, tags=["warning"]),
+        kind=FILTER_WARNING_KIND,
+        link="/candidatures/alertes",
+    )
+    log.info("gmail_filter_warning")
 
 
 # Les e-mails sans compte (adresse inconnue, compte supprimé) quittent la boîte des invités

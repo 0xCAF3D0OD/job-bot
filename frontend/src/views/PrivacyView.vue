@@ -88,6 +88,7 @@ onMounted(async () => {
         <li>« Envoyer à jobA1 » : seulement l'annonce et son adresse. Jamais tes cookies, ton profil LinkedIn ni tes autres onglets.</li>
         <li>Ton nom est retiré du texte. Le journal garde l'offre touchée, jamais le texte.</li>
         <li>Sur jobup, jobs.ch et LinkedIn, elle met ton adresse jobA1 dans « Créer une alerte », sans rien valider.</li>
+        <li>Transfert Gmail : seules les alertes des sites sont lues ; tout autre e-mail transféré est supprimé sans être lu.</li>
       </ul>
 
       <h2 id="ia">

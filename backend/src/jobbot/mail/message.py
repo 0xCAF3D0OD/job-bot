@@ -19,6 +19,8 @@ class ParsedEmail:
     text: str | None
     # Adresses de destination (To, Cc, Delivered-To…), pour ranger l'e-mail par compte.
     recipients: tuple[str, ...] = ()
+    # Transféré par un filtre Gmail (en-têtes X-Forwarded-To / X-Forwarded-For, docs/142 §5).
+    forwarded: bool = False
 
 
 def _body(msg: EmailMessage, subtype: str) -> str | None:
@@ -44,6 +46,9 @@ def _header(msg: EmailMessage, name: str) -> str | None:
 # X-Forwarded-To : un e-mail transféré par la boîte de la personne (Gmail, docs/116 §1) garde
 # son destinataire d'origine dans To ; l'adresse jobA1 est là.
 RECIPIENT_HEADERS = ("Delivered-To", "X-Original-To", "X-Forwarded-To", "To", "Cc")
+
+
+FORWARD_HEADERS = ("X-Forwarded-To", "X-Forwarded-For")
 
 
 def _recipients(msg: EmailMessage) -> tuple[str, ...]:
@@ -79,4 +84,5 @@ def parse_email(raw: bytes, *, fallback_received: datetime) -> ParsedEmail:
         html=_body(msg, "html"),
         text=_body(msg, "plain"),
         recipients=_recipients(msg),
+        forwarded=any(_header(msg, name) for name in FORWARD_HEADERS),
     )

@@ -15,6 +15,7 @@ const KINDS: Record<string, { shape: NotificationShape; action: string }> = {
   training_funding: { shape: "orp", action: "Voir la formation" },
   budget: { shape: "warning", action: "Voir le budget" },
   collect_failed: { shape: "warning", action: "Voir" },
+  gmail_filter: { shape: "warning", action: "Voir" },
   backup_failed: { shape: "warning", action: "Voir" },
 };
 
