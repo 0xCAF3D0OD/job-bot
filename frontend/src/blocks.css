@@ -50,3 +50,29 @@
 .block-field .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-graphic); }
 a.block-action.action-2 { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 a.block-action.action-2:hover { background: var(--primary-soft); }
+
+/* Version du 9 novembre (MODIFICATIONS §2.1, §2.5, §2.9 ; maquettes Orp, OrpFiche, Compte, Offre), téléphone seulement :
+   l'ordinateur (§10.5) garde les blocs jusqu'à sa propre série.
+   - D28 : une section n'est pas une carte : posée sur le fond --bg, séparée de la suivante par un trait --line et
+     24 px au-dessus et en dessous ; pas de trait au-dessus de la première (12 px) ; 20 px de marge latérale (§2.9).
+   - D29 : une carte (cliquable) est blanche avec un trait de 1,5 px --line-strong sur la page ; 20 px de marge
+     intérieure trait compris (18,5 + 1,5), 16 px entre l'image ou le texte et le cercle, 8 px entre deux cartes.
+   - D35 : une carte d'information (`.block.info`) a la même couleur, le rayon --radius-card, 20 px de marge intérieure
+     et 12 px au-dessus ; la section qui la suit n'a pas de trait (20 px). */
+@media (max-width: 820px) {
+  .blocks-page {
+    --block-gutter: 0px; --block-gap: 0px; --block-pad-x: 0px; --block-margin-x: 20px; --block-pad-y: 24px; --block-first-top: 12px; --block-cap-gap: 8px; --block-help-gap: 4px;
+    --row-pad: 18.5px; --row-gap: 8px; --row-inner-gap: 16px; --info-pad: 18.5px; --info-top: 12px; --after-info: 20px;
+    background: var(--bg);
+  }
+  .blocks-page .block { margin: 0 var(--block-margin-x); padding: var(--block-pad-y) 0; background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+  .blocks-page .block + .block { margin-top: 0; }
+  .blocks-page .block:not(.info):first-of-type { border-top: 0; padding-top: var(--block-first-top); }
+  .blocks-page .block.info { margin: var(--info-top) var(--block-margin-x) 0; padding: var(--info-pad); background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--radius-card); }
+  .blocks-page .block.info + .block:not(.info) { border-top: 0; padding-top: var(--after-info); }
+  .blocks-page .block-row { gap: var(--row-inner-gap); padding: var(--row-pad); background: var(--surface); border: 1.5px solid var(--line-strong); }
+  .blocks-page .block-row.small { min-height: var(--row-56); }
+  /* D32, maquette OrpFiche : 16 px au-dessus et en dessous de chaque champ (4 px au-dessus du premier) ; étiquette
+     « case à cocher » en 4 et 8 px. */
+  .blocks-page { --field-pad: 16px; --field-tick-pad: 4px 8px; }
+}

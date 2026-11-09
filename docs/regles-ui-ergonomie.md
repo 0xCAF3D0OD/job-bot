@@ -338,3 +338,32 @@ pour les lots 11 à 18 (docs/143) et partout où ce fichier ne dit pas autre cho
 Jetons ajoutés (§2.6) : `--action`, `--on-action`, `--page-blocks`, `--row-blocks`, dans `docs/mobile/tokens.css` et
 `frontend/src/style.css`. Les numéros D33 et D34 suivent l'ordre du §2 (le texte de Kevin nomme D28 à D34 sans
 numéroter le mode sombre).
+
+### Décisions du 9 novembre 2026 : sections et cartes, grille, cascade (Kevin, D28 et D29 revus, D35)
+
+Validées par Kevin le 2026-11-09 pour le **téléphone** (`docs/mobile/MODIFICATIONS_8_NOVEMBRE_SOIR.md` §2.1, §2.9,
+§2.10, paquet du 9 novembre ; `docs/mobile/PROMPT_TELEPHONE_9_NOVEMBRE.md`). Sur ordinateur, D28 et D29 du 8 novembre
+restent en place jusqu'à la série ordinateur (§10.5).
+
+Règle de Kevin : **une carte est l'élément avec lequel on interagit, ou une information importante à mettre en
+évidence. Il n'y a jamais de carte dans une carte.**
+
+| N° | Décision | Remplace |
+|---|---|---|
+| D28 (revu) | **Une section n'est pas une carte.** Posée directement sur le fond `--bg` (le même partout : en-tête, page, barre du bas), sans fond, cadre ni ombre. Deux sections sont séparées par un trait `--line` et 24 px au-dessus et en dessous ; pas de trait au-dessus de la première (12 px). Sur-titre 13 px 700 en capitales, 8 px dessous ; titre 18/24 700 ; phrase d'aide 14/21, 4 px sous le titre. | D28 du 8 novembre (blocs blancs sur `--page-blocks`), sur téléphone |
+| D29 (revu) | **Une carte est cliquable en entier.** Sur la page : `--surface` et trait 1,5 px `--line-strong` ; sur un fond blanc : `--bg` sans trait (sombre : `--surface-muted`). Rayon `--radius-sm`, 72 px (56 px sur une ligne), 20 px de marge intérieure trait compris, 16 px avant le cercle, 8 px entre deux cartes. Cercle à contour de 40 px, décoratif. | D29 du 8 novembre (fond `--row-blocks`), sur téléphone |
+| D35 | **Une information importante est aussi dans une carte** : résumé du mois ORP (Suivi ORP, onglet ORP de Bilan), en-tête d'une offre et note d'une offre (détail d'une offre sur téléphone). Rien d'autre sans l'accord de Kevin. Même couleur qu'une carte, rayon `--radius-card`, 20 px de marge intérieure, 12 px au-dessus, **pas de cercle à flèche** ; la section qui suit n'a pas de trait (20 px). Jamais de carte cliquable dedans. | — |
+
+Grille et alignement (§2.9) : espaces en multiples de 4 px (un trait de 1 ou 1,5 px compte dans la marge) ; marge
+de l'écran **20 px** sur téléphone ; ligne simple 56 px, ligne à deux niveaux 72 px ; icône de liste 24 px ; image,
+logo ou anneau 56 px, 16 px avant le texte ; icône de fin à 20 px du bord ; cible tactile de 44 × 44 px (un lien dans
+une phrase en est exempté ; un lien seul agrandit sa zone sans changer l'affichage) ; on ne réduit jamais le texte
+(16, 14, 13 px au minimum). Les valeurs « Choix jobA1 » (axe de la note, cascade, espaces verticaux 8 / 4 / 8 et 12 px)
+sont voulues et ne se remplacent pas par celles de Material 3.
+
+Cascade (§2.10, choix jobA1) : au plus 2 niveaux sur téléphone ; niveau 1 : l'icône dans la colonne de l'élément de
+tête, calée contre son bord droit, le texte sur la ligne du texte du parent ; niveau 2 : l'icône sous le texte du
+parent ; 12 px au-dessus et en dessous de chaque ligne, 16 px entre icône et texte.
+
+Contrôle : `docs/mobile/outils/audit-grille.js`, lancé par `frontend/scripts/grille.py` (`make audit-grille`, CI
+« Audit téléphone ») sur les écrans téléphone du lot 18, en clair et en sombre : 0 écart exigé.

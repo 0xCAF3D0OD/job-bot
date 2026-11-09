@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -89,6 +89,9 @@ test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au b
 
 audit-telephone: ## l'audit téléphone sur la démo (320, 360, 390 px ; DEMO_URL, par défaut http://localhost:5200)
 	cd backend && uv run --with playwright python ../frontend/scripts/telephone.py $(or $(DEMO_URL),http://localhost:5200)
+
+audit-grille: ## grille de 4, alignements et cibles de 44 px sur les écrans téléphone du lot 18 (audit-grille.js, 390 px ; DEMO_URL)
+	cd backend && uv run --with playwright python ../frontend/scripts/grille.py $(or $(DEMO_URL),http://localhost:5200)
 
 audit-controles: ## rangées de contrôles de même hauteur et listes dont le texte ne passe pas sous le chevron (1440, 320, 360, 390 px ; DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/controles.py $(or $(DEMO_URL),http://localhost:5200)
