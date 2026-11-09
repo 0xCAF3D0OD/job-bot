@@ -1,0 +1,1 @@
+Préparer sur ordinateur, étape Lettre (9 novembre, §2.2) : vignettes de modèle, carte « Ta candidature » (Relecture, Versions, CV adapté) avec « J'ai relu, continuer », panneaux Relecture, Versions et Compatibilité, page A4 « Pas encore de lettre », retouche collée sous la lettre ; contrôle de la grille à 1440 px.

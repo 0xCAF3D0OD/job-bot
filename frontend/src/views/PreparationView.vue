@@ -8,6 +8,7 @@ import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
+import OfferCompatSheet from "../components/OfferCompatSheet.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -37,6 +38,7 @@ import { useAssistant } from "../composables/useAssistant";
 import Composer from "../components/Composer.vue";
 import SuggestionChips from "../components/SuggestionChips.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
+import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInSentence, dateWithTime } from "../dates";
 import { expiredText, scoreWord } from "../format";
 import StatusPill from "../components/StatusPill.vue";
@@ -358,6 +360,31 @@ async function reviewLetter(letter: Letter): Promise<Letter> {
   }
 }
 // « Relue : 6/7. À renforcer : précision, conclusion. »
+// La carte « Ta candidature » et le panneau Relecture sur ordinateur (§2.2) : « 7 sur 7, rien à renforcer » en vert ;
+// sinon « 6 sur 7, 1 point à renforcer », sans le ton erreur (comme les pastilles « À revoir »).
+const reviewOpen = ref(false);
+const reviewSummary = computed(() => {
+  const review = selected.value?.review;
+  if (!review) return { text: "", tone: "" };
+  const passed = review.criteria.filter((c) => c.ok).length;
+  const weak = review.criteria.length - passed;
+  const head = `${passed} sur ${review.criteria.length}`;
+  return weak ? { text: `${head}, ${weak} point${weak > 1 ? "s" : ""} à renforcer`, tone: "todo" } : { text: `${head}, rien à renforcer`, tone: "ok" };
+});
+const reviewGroups = computed(() => {
+  const criteria = selected.value?.review?.criteria ?? [];
+  return [
+    { key: "weak", title: "À renforcer", ok: false, items: criteria.filter((c) => !c.ok) },
+    { key: "ok", title: "Vérifié", ok: true, items: criteria.filter((c) => c.ok) },
+  ].filter((g) => g.items.length);
+});
+// « Actuelle : plus courte, 9 nov. 14 h 02 » : la consigne de la version (ou son nom) et son heure.
+const currentVersionLine = computed(() => {
+  const letter = selected.value;
+  if (!letter) return "";
+  const what = letter.instruction?.trim() || letter.name;
+  return `${what}, ${dateWithTime(letter.edited_at ?? letter.created_at)}`;
+});
 const reviewLine = computed(() => {
   const review = selected.value?.review;
   if (!review) return "";
@@ -591,6 +618,20 @@ const layoutNote = computed(() => {
   const count = `${words.value} mot${words.value > 1 ? "s" : ""}`;
   return value.fits ? `Tient sur une page A4 · ${count}` : `Déborde de ${value.overflow_lines} ligne${value.overflow_lines > 1 ? "s" : ""} · ${count}`;
 });
+// Le panneau Compatibilité depuis la note de l'en-tête (§2.2) : les mêmes familles que la fiche de l'offre.
+const compatOpen = ref(false);
+const compat = computed(() => {
+  const o = offer.value;
+  const point = (text: string) => {
+    const parts = pointParts(text);
+    return { key: parts.key, value: parts.rest };
+  };
+  return {
+    strengths: (o?.strengths ?? []).map((p) => point(p.text)),
+    gaps: [...(o?.gaps ?? []).map((p) => point(p.text)), ...(o?.level && o.level_detail ? [{ key: "Niveau", value: o.level_detail }] : [])],
+    how: [o?.why].filter((t): t is string => !!t?.trim()),
+  };
+});
 // Le verdict à côté de l'anneau de l'en-tête (D5 : Proche --success, À creuser --score-dig, Loin --neutral).
 const verdict = computed(() => (offer.value?.score === null || offer.value?.score === undefined ? null : scoreWord(Math.round(offer.value.score))));
 // « Ma candidature » ne s'affiche plus sur ordinateur ; il reste dans le titre de l'onglet (lot 15.1).
@@ -757,21 +798,25 @@ onMounted(() => void load());
         {{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}
       </p>
     </div>
-    <div
+    <!-- La note (§2.2) : l'anneau, « Proche de ton profil » puis « Voir la compatibilité › », qui ouvre le panneau. -->
+    <button
       v-if="offer && verdict && offer.score !== null && offer.score !== undefined"
+      type="button"
       class="prep-desk-score"
+      aria-haspopup="dialog"
       data-test="prep-score"
+      @click="compatOpen = true"
     >
       <ScoreRing
         :score="offer.score"
         :stale="offer.score_stale"
         bare
       />
-      <p>
-        <span :class="['prep-verdict', verdict.tone]">{{ verdict.word }}</span>
-        <span>de ton profil</span>
-      </p>
-    </div>
+      <span class="prep-desk-score-text">
+        <span :class="['prep-verdict', verdict.tone]">{{ MATCH_TITLE[verdict.tone] }}</span>
+        <span class="prep-desk-compat">Voir la compatibilité<AppIcon name="chevron" /></span>
+      </span>
+    </button>
     <StepTabs
       v-if="offer"
       :steps="steps"
@@ -1023,10 +1068,49 @@ onMounted(() => void load());
             />
             <div
               v-else-if="!selected && !writing"
-              class="empty-detail prep-empty"
+              class="prep-empty-page"
               data-test="no-letter"
             >
-              <p>Aucune lettre pour cette offre.</p>
+              <!-- Pas encore de lettre (§2.2) : la page A4 en lignes grisées, et au centre la carte avec le bouton plein,
+                   visible sans défiler. -->
+              <div
+                class="prep-empty-sheet"
+                aria-hidden="true"
+              >
+                <i
+                  v-for="(w, i) in [45, 96, 92, 94, 60, 0, 95, 90, 93, 88, 40, 0, 70]"
+                  :key="i"
+                  :style="{ width: `${w}%` }"
+                />
+              </div>
+              <div class="prep-empty-card">
+                <p class="prep-empty-title">
+                  Pas encore de lettre pour cette offre
+                </p>
+                <p class="prep-empty-text">
+                  jobA1 l’écrit avec ton CV et l’annonce, dans le modèle choisi. Tu la relis avant qu’elle parte.
+                </p>
+                <PlanLimit usage="letter" />
+                <BusyButton
+                  class="primary"
+                  :busy="writing"
+                  busy-label="Rédaction…"
+                  :disabled="reached('letter')"
+                  data-test="write"
+                  @click="write()"
+                >
+                  <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
+                    <span class="with-icon"><AppIcon name="ai" />{{ writeLabel === "Rédiger la lettre" ? "Générer la lettre" : writeLabel }}</span>
+                  </HoverNote>
+                </BusyButton>
+                <RouterLink
+                  :to="{ path: '/tes-donnees', hash: '#ia' }"
+                  class="prep-ai-link"
+                  data-test="prep-ai-link"
+                >
+                  Ce qui part à l’IA<AppIcon name="chevron" />
+                </RouterLink>
+              </div>
             </div>
             <AiWriting
               v-else-if="writing && !selected"
@@ -1187,8 +1271,10 @@ onMounted(() => void load());
             </article>
             <!-- La relecture (décision de Kevin) : une ligne, puis le détail repliable, un critère par
                ligne avec sa pastille (« Réussi » ou « À revoir », jamais le ton erreur). -->
+            <!-- Sur ordinateur, la relecture est dans la carte « Ta candidature » (§2.2) ; la ligne reste pour les lecteurs
+                 d'écran. -->
             <p
-              class="review-line"
+              :class="['review-line', { 'visually-hidden': !phone }]"
               aria-live="polite"
               data-test="review-line"
             >
@@ -1213,7 +1299,7 @@ onMounted(() => void load());
               </button>
             </p>
             <DisclosureRow
-              v-if="selected?.review"
+              v-if="phone && selected?.review"
               title="Détail de la relecture"
               :value="selected.review.corrected ? 'corrigée une fois' : ''"
               class="review-detail"
@@ -1236,11 +1322,48 @@ onMounted(() => void load());
               </ul>
             </DisclosureRow>
           </section>
+          <!-- Retoucher, sur ordinateur (§2.2) : les puces et la zone de saisie collées en bas de la colonne gauche ; pas de
+               « + » (on modifie, on ne joint rien). -->
+          <div
+            v-if="!phone && selected && !claim"
+            class="prep-desk-bottom"
+            data-test="prep-desk-bottom"
+          >
+            <div
+              class="prep-revise"
+              data-test="prep-revise"
+            >
+              <SuggestionChips
+                :items="suggestions"
+                label="Retouches proposées"
+                @pick="revise"
+              />
+              <Composer
+                v-model="revision"
+                placeholder="Demander une modification de la lettre"
+                send-label="Envoyer la demande"
+                :busy="writing"
+                @send="revise"
+              />
+              <p
+                v-if="instructionNote"
+                class="hint"
+                aria-live="polite"
+                data-test="instruction-note"
+              >
+                {{ instructionNote }}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <section
+        <!-- Colonne de droite sur ordinateur (MODIFICATIONS du 9 novembre, §2.2 et §7.2 ; maquette PreparerOrdinateur) :
+             la mise en page, la carte « Ta candidature » (Relecture, Versions, CV adapté, chaque ligne ouvre un panneau
+             ou l'étape), puis le seul bouton plein. Elle reste en place quand la page défile. -->
+        <aside
           v-if="!phone"
-          class="prep-side"
+          class="prep-side prep-aside"
+          data-test="prep-aside"
         >
           <LayoutCard :note="layoutNote">
             <button
@@ -1254,156 +1377,107 @@ onMounted(() => void load());
               Raccourcir
             </button>
           </LayoutCard>
-          <OfferBrief :offer="offer" />
-          <div class="side-card prep-new-version">
-            <h2>
-              {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
-            </h2>
-            <p
-              v-if="selected"
-              class="prep-new-version-help"
-            >
-              Repartir de zéro avec l’annonce et ton CV.
-            </p>
-            <div class="mobile-dock">
-              <BusyButton
-                :class="nextStep === 'letter' && !selected ? 'primary action-1' : 'secondary action-2'"
-                :busy="writing"
-                :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
-                :disabled="reached('letter')"
-                data-test="write"
-                @click="write()"
-              >
-                <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
-                  <span class="with-icon"><AppIcon :name="selected ? 'pencil' : 'ai'" />{{ writeLabel || (selected ? "Rédiger la nouvelle version" : "Rédiger la lettre") }}</span>
-                </HoverNote>
-              </BusyButton>
-            </div>
-            <RouterLink
-              :to="{ path: '/tes-donnees', hash: '#ia' }"
-              class="prep-ai-link"
-              data-test="prep-ai-link"
-            >
-              Ce qui part à l’IA<AppIcon name="chevron" />
-            </RouterLink>
-            <PlanLimit usage="letter" />
-            <InlineConfirm
-              v-if="choosingWrite"
-              message="Tu as des modifications non enregistrées dans cette version."
-              confirm-label="Enregistrer, puis rédiger"
-              alt-label="Rédiger sans enregistrer"
-              cancel-label="Garder"
-              :danger="false"
-              :busy="writing"
-              @confirm="saveThenWrite"
-              @alt="write(true)"
-              @cancel="choosingWrite = false"
-            />
-          </div>
-
-          <div
+          <section
             v-if="selected"
-            class="side-card"
-            data-test="download-card"
+            class="side-card prep-file"
+            aria-labelledby="prep-file-title"
+            data-test="prep-file"
           >
-            <h2>Télécharger</h2>
-            <template v-if="dirty">
-              <button
-                type="button"
-                class="secondary"
-                :disabled="saving"
-                data-test="save-letter"
-                @click="save"
-              >
-                Enregistrer mes modifications
-              </button>
-              <p class="hint">
-                Enregistre d'abord tes modifications pour les télécharger.
-              </p>
-            </template>
-            <div
-              v-else
-              class="actions download-actions"
+            <h2 id="prep-file-title">
+              Ta candidature
+            </h2>
+            <button
+              v-if="selected.review"
+              type="button"
+              class="prep-file-row"
+              aria-haspopup="dialog"
+              data-test="review-open"
+              @click="reviewOpen = true"
             >
-              <a
-                class="secondary"
-                :href="pdfHref(`/api/letters/${selected.id}/pdf`, template)"
-                download
-                data-test="pdf"
-              ><span class="with-icon"><AppIcon name="download" />PDF</span></a>
-              <a
-                class="secondary"
-                :href="pdfHref(`/api/letters/${selected.id}/docx`, template)"
-                download
-                data-test="docx"
-              ><span class="with-icon"><AppIcon name="download" />Word</span></a>
-            </div>
-          </div>
-
-          <div
-            v-if="letters.length > 1"
-          >
-            <GroupedList
-              title="Versions"
-              :level="2"
-              class="versions"
+              <span class="prep-file-text">
+                <b>Relecture</b>
+                <span :class="['prep-file-sub', reviewSummary.tone]">{{ reviewSummary.text }}</span>
+              </span>
+              <AppIcon name="chevron" />
+            </button>
+            <button
+              type="button"
+              class="prep-file-row"
+              aria-haspopup="dialog"
+              data-test="versions-open"
+              @click="versionsOpen = true"
             >
-              <GroupedRow
-                v-for="letter in letters"
-                :key="letter.id"
-                :title="versionName(letter)"
-                :description="versionDescription(letter)"
-                button
-                :chevron="false"
-                :current="letter.id === selectedId"
-                data-test="version"
-                @click="select(letter)"
-              />
-            </GroupedList>
-          </div>
-        </section>
-        <!-- Bas de page sur ordinateur (lot 15.1) : à gauche les retouches proposées et la zone de saisie, à droite
-             « J'ai relu la lettre », l'action principale de l'étape. La barre reste en bas de l'écran. -->
-        <div
-          v-if="!phone && selected && !claim"
-          class="prep-desk-bottom"
-          data-test="prep-desk-bottom"
-        >
-          <div
-            class="prep-revise"
-            data-test="prep-revise"
-          >
-            <SuggestionChips
-              :items="suggestions"
-              label="Retouches proposées"
-              @pick="revise"
-            />
-            <Composer
-              v-model="revision"
-              placeholder="Demander une modification de la lettre"
-              send-label="Envoyer la demande"
-              :busy="writing"
-              @send="revise"
-            />
-            <p
-              v-if="instructionNote"
-              class="hint"
-              aria-live="polite"
-              data-test="instruction-note"
+              <span class="prep-file-text">
+                <b>Versions · {{ letters.length }}</b>
+                <span class="prep-file-sub">Actuelle : {{ currentVersionLine }}</span>
+              </span>
+              <AppIcon name="chevron" />
+            </button>
+            <button
+              type="button"
+              class="prep-file-row"
+              data-test="cv-row"
+              @click="router.push({ query: { doc: 'cv' } })"
             >
-              {{ instructionNote }}
-            </p>
-          </div>
+              <span class="prep-file-text">
+                <b>CV adapté</b>
+                <span :class="['prep-file-sub', { ok: currentCvId }]">{{ currentCvId ? "Prêt, à relire à l’étape 2" : "À préparer à l’étape 2" }}</span>
+              </span>
+              <AppIcon name="chevron" />
+            </button>
+          </section>
+          <InlineConfirm
+            v-if="choosingWrite"
+            message="Tu as des modifications non enregistrées dans cette version."
+            confirm-label="Enregistrer, puis rédiger"
+            alt-label="Rédiger sans enregistrer"
+            cancel-label="Garder"
+            :danger="false"
+            :busy="writing"
+            @confirm="saveThenWrite"
+            @alt="write(true)"
+            @cancel="choosingWrite = false"
+          />
+          <!-- Des corrections à la main : les enregistrer avant de télécharger ou de passer à la suite. -->
           <button
+            v-if="selected && dirty"
             type="button"
-            class="primary action-1 prep-read"
-            :disabled="writing || readBusy"
-            data-test="letter-read"
-            @click="readThenNext"
+            class="secondary prep-aside-main"
+            :disabled="saving"
+            data-test="save-letter"
+            @click="save"
           >
-            J’ai relu la lettre
+            Enregistrer mes modifications
           </button>
-        </div>
+          <template v-if="selected && !claim">
+            <PlanLimit
+              v-if="writeLabel"
+              usage="letter"
+            />
+            <!-- Une langue choisie ou une consigne écrite change le bouton en « Rédiger… » (C3) ; sinon la relecture. -->
+            <BusyButton
+              v-if="writeLabel || writing"
+              class="primary prep-aside-main"
+              :busy="writing"
+              :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
+              :disabled="reached('letter')"
+              data-test="write"
+              @click="write()"
+            >
+              <span class="with-icon"><AppIcon name="ai" />{{ writeLabel }}</span>
+            </BusyButton>
+            <button
+              v-else
+              type="button"
+              class="primary prep-aside-main"
+              :disabled="readBusy"
+              data-test="letter-read"
+              @click="readThenNext"
+            >
+              J’ai relu, continuer
+            </button>
+          </template>
+        </aside>
         <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
         <ActionBar
@@ -1476,7 +1550,7 @@ onMounted(() => void load());
           </button>
         </ActionBar>
         <BottomSheet
-          v-if="phone && selected"
+          v-if="selected"
           :open="versionsOpen"
           title="Versions et téléchargement"
           data-test="versions-sheet"
@@ -1531,10 +1605,60 @@ onMounted(() => void load());
             </template>
           </template>
         </BottomSheet>
+        <!-- Le panneau Relecture (§2.2, maquette PreparerOrdinateurRelecture) : le résultat, puis chaque critère, son
+             libellé au-dessus de ce que la relecture a vu, avec un cercle de 24 px (coche verte ou point à renforcer). -->
+        <BottomSheet
+          v-if="!phone && selected?.review"
+          :open="reviewOpen"
+          title="Relecture"
+          data-test="review-sheet"
+          @close="reviewOpen = false"
+        >
+          <div class="review-sum">
+            <b :class="reviewSummary.tone">{{ reviewSummary.text }}</b>
+            <span>Relue {{ dateWithTime(selected.created_at) }}{{ selected.review.corrected ? ", corrigée une fois" : "" }}</span>
+          </div>
+          <section
+            v-for="group in reviewGroups"
+            :key="group.key"
+            class="review-group"
+          >
+            <h3>{{ group.title }} · {{ group.items.length }}</h3>
+            <ul>
+              <li
+                v-for="criterion in group.items"
+                :key="criterion.key"
+                :data-test="`review-${criterion.key}`"
+              >
+                <AppIcon
+                  :name="group.ok ? 'check-circle' : 'alert-circle'"
+                  :class="group.ok ? 'ok' : 'todo'"
+                />
+                <span>
+                  <span class="review-k">{{ criterion.label }}</span>
+                  <span class="review-v">{{ criterion.reason }}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
+        </BottomSheet>
       </div>
     </div>
   </section>
 
+  <OfferCompatSheet
+    v-if="offer && !phone && verdict"
+    :open="compatOpen"
+    :score="offer.score ?? null"
+    :stale="offer.score_stale"
+    :verdict="MATCH_TITLE[verdict.tone] ?? ''"
+    :tone="verdict.tone"
+    :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
+    :strengths="compat.strengths"
+    :gaps="compat.gaps"
+    :how="compat.how"
+    @close="compatOpen = false"
+  />
   <FalseClaimSheet
     v-if="selected && claim"
     :open="claimOpen"
@@ -1553,7 +1677,7 @@ onMounted(() => void load());
 /* Préparer sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 15.1 ; captures PreparerOrdinateur et
    --colonne-bas) : en-tête de 64 px, grille 1fr + 360 à 24 d'écart, colonne de droite qui défile seule, cartes de
    20/24, lettre sur --surface-muted, bas de page en grille qui reste en bas de l'écran. */
-.prep-desk-head { --prep-20: 20px; --prep-32: 32px; --prep-44: 44px; --prep-48: 48px; --prep-64: 64px; --prep-24: 24px; display: flex; align-items: center; gap: var(--prep-20); min-height: var(--prep-64); padding-top: var(--space-4); padding-bottom: var(--space-2); }
+.prep-desk-head { --prep-22: 22px; --prep-20: 20px; --prep-32: 32px; --prep-44: 44px; --prep-48: 48px; --prep-64: 64px; --prep-24: 24px; display: flex; align-items: center; gap: var(--prep-20); min-height: var(--prep-64); padding-top: var(--space-4); padding-bottom: var(--space-2); }
 .prep-desk-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--prep-44); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; white-space: nowrap; }
 .prep-desk-back:hover { text-decoration: underline; }
 .prep-desk-back .icon { width: 18px; height: 18px; }
@@ -1562,9 +1686,14 @@ onMounted(() => void load());
 .prep-desk-title { flex: 1; min-width: 0; }
 .prep-desk-title h1 { margin: 0; font-size: var(--prep-24); font-weight: var(--weight-heavy); line-height: var(--leading-tight); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prep-desk-title p { margin: 0; font-size: var(--font-label); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.prep-desk-score { flex: none; display: flex; align-items: center; gap: var(--space-3); }
+/* La note (§2.2) : anneau de 48, 12 px, puis le verdict 15/20 700 et, 6 px dessous, « Voir la compatibilité » 14/20 700
+   (ici 4 px et une ligne de 22, même hauteur, grille de 4). */
+.prep-desk-score { flex: none; display: flex; align-items: center; gap: var(--space-3); min-height: var(--prep-48); padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
-.prep-desk-score p { display: grid; margin: 0; font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-tight); }
+.prep-desk-score-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); line-height: var(--space-5); }
+.prep-desk-compat { display: inline-flex; align-items: center; gap: var(--space-1); line-height: var(--prep-22); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--primary-text); }
+.prep-desk-compat .icon { width: 14px; height: 14px; }
+.prep-desk-score:hover .prep-desk-compat { text-decoration: underline; }
 .prep-verdict { font-size: var(--font-label); font-weight: var(--weight-bold); }
 .prep-verdict:is(.very-close, .close) { color: var(--success); }
 .prep-verdict.dig { color: var(--score-dig); }
@@ -1572,12 +1701,10 @@ onMounted(() => void load());
 .prep-desk-head > .step-tabs { flex: none; width: auto; }
 
 .prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; --prep-sheet: 520px; --prep-bottom: 150px; --prep-side-top: 5.5rem; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
-.prep-desk .prep-side { gap: var(--space-4); max-height: calc(100dvh - var(--prep-side-top) - var(--prep-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+/* Une seule zone défile, la page (§1) : la colonne de droite reste en place, sans défilement à elle. */
+.prep-desk .prep-side { gap: var(--space-4); }
 .prep-desk .side-card { gap: var(--space-1); padding: var(--prep-20) var(--prep-24); }
-.prep-desk .layout-card-pills { margin-top: var(--space-4); }
-.prep-desk .layout-card-note { margin-top: var(--space-4); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
-.prep-new-version .mobile-dock { justify-self: start; margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
@@ -1585,12 +1712,59 @@ onMounted(() => void load());
 .prep-desk .doc-card > :not(.doc-card-head, .letter-sheet) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
 .prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
-.prep-new-version-help { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
-.prep-new-version .mobile-dock button { min-height: var(--prep-48); padding: 0 var(--prep-20); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .prep-ai-link:hover { text-decoration: underline; }
 .prep-ai-link .icon { width: 14px; height: 14px; }
-.prep-desk-bottom { grid-column: 1 / -1; position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); align-items: end; padding: var(--space-4) 0 var(--space-6); background: var(--bg); }
+/* Retoucher (§2.2) : collé en bas de la colonne gauche, 16 au-dessus et 20 dessous, sur un fondu vers le fond. */
+.prep-desk-bottom { position: sticky; bottom: 0; z-index: 5; padding: var(--space-4) 0 var(--space-5); background: linear-gradient(transparent, var(--bg) var(--prep-24)); }
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
-.prep-read { justify-self: end; min-height: var(--prep-52); padding: 0 var(--prep-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+/* « Ta candidature » (§2.2, §7.2) : titre 18/24 et 12 px dessous ; lignes de 56 px pleine largeur, trait --line au-dessus,
+   libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
+.prep-desk .prep-file { --prep-15: 15px; --prep-56: 56px; gap: 0; padding-bottom: 0; }
+.prep-file > h2 { margin: 0 0 var(--space-3); line-height: var(--prep-24); }
+.prep-file-row {
+  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-56); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-2) var(--prep-24); box-sizing: border-box;
+  border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+.prep-file-row:hover { background: var(--selected-bg); }
+.prep-file-row:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
+.prep-file-row > .icon { flex: none; width: var(--space-5); height: var(--space-5); color: var(--primary-text); }
+.prep-file-text { flex: 1; min-width: 0; }
+.prep-file-text b { display: block; font-size: var(--prep-15); line-height: var(--space-5); }
+.prep-file-sub { display: block; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.prep-file-sub:is(.ok, .todo) { font-weight: var(--weight-bold); }
+.prep-file-sub.ok { color: var(--success); }
+.prep-file-sub.todo { color: var(--peach-text); }
+.prep-aside-main { display: inline-flex; justify-content: center; width: 100%; min-height: var(--prep-48); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+/* Pas encore de lettre (§2.2) : la page A4 de 560 en lignes grisées, la carte au centre, à 32 px des bords. */
+.prep-empty-page { --prep-150: 150px; --prep-56: 56px; --prep-10: 10px; --prep-32: 32px; --prep-22: 22px; --prep-sheet-h: 36rem; --prep-sk: #E5E2D9; position: relative; width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; }
+.prep-empty-sheet { display: grid; gap: var(--prep-10); min-height: var(--prep-sheet-h); padding: var(--prep-56); background: var(--logo-paper); box-shadow: var(--paper-shadow); }
+.prep-empty-sheet i { display: block; height: var(--space-2); border-radius: var(--radius-pill); background: var(--prep-sk); }
+/* La page reste blanche en sombre (§12) : ses lignes grisées aussi. */
+.prep-empty-card {
+  position: absolute; left: var(--prep-32); right: var(--prep-32); top: var(--prep-150); display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  padding: var(--prep-28) var(--prep-24); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-menu); text-align: center;
+}
+.prep-empty-title { margin: 0; font-size: var(--font-title); line-height: var(--prep-24); font-weight: var(--weight-bold); }
+.prep-empty-text { margin: 0; font-size: var(--font-label); line-height: var(--prep-22); color: var(--text-secondary); }
+.prep-empty-card .primary { margin-top: var(--space-2); }
+.prep-empty-card .prep-ai-link { justify-self: center; }
+/* Les versions dans le panneau : 4 px entre le nom et sa ligne (grille de 4). */
+.sheet .versions .grouped-text { gap: var(--space-1); }
+/* Le panneau Relecture (PreparerOrdinateurRelecture) : résultat 18/24, date 14/20 ; familles en capitales 13/16 ;
+   critères en cascade, cercle de 24 puis 16 px, libellé 13/16 gris au-dessus de la valeur 15/20 700. */
+.review-sum { display: grid; gap: var(--space-1); padding-bottom: var(--space-5); border-bottom: 1px solid var(--line); }
+.review-sum b { font-size: var(--font-title); line-height: var(--space-6); }
+.review-sum b.ok { color: var(--success); }
+.review-sum b.todo { color: var(--peach-text); }
+.review-sum span { font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.review-group { padding-top: var(--space-5); }
+.review-group h3 { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.review-group ul { margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.review-group li { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.review-group li > .icon { flex: none; width: var(--space-6); height: var(--space-6); margin-top: var(--space-2); }
+.review-group li > .icon.ok { color: var(--success); }
+.review-group li > .icon.todo { color: var(--peach-text); }
+.review-k { display: block; font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
+.review-v { display: block; margin-top: var(--space-1); font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
 </style>

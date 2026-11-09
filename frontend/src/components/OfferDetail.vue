@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
+import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInList, dateInSentence } from "../dates";
 import { cityOnly, expiredText, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
@@ -201,10 +202,6 @@ const facts = computed<Fact[]>(() => {
 });
 // Points forts et manques (planche) : trois au plus, le mot clé en gras en tête (« Kubernetes : … »).
 const POINTS_MAX = 3;
-function pointParts(text: string): { key: string; rest: string } {
-  const match = /^([^:]{1,40}?)\s?:\s+(.+)$/.exec(text.trim());
-  return match ? { key: match[1]!, rest: match[2]! } : { key: "", rest: text };
-}
 // Sur téléphone (sous 820 px), la fiche est une sous-page (maquette Offre, docs/139 étape 6a) : en-tête
 // « retour » avec Sauvegarder, « ⋯ » et Partager ; en bas, « Écarter » et « Préparer ma candidature ».
 // « Cette note ne me correspond pas » passe dans la feuille « ⋯ » et s'ouvre dans une feuille du bas.
@@ -213,12 +210,6 @@ const withBar = computed(() => sub.value && props.offer.status !== "applied");
 const scored = computed(() => props.offer.score !== null && props.offer.score !== undefined);
 const correcting = ref(false);
 // La carte de correspondance (O3, O4) : le mot en titre, le chiffre dans l'anneau (D12), les lignes ✓ et (!).
-const MATCH_TITLE: Record<string, string> = {
-  "very-close": "Très proche de ton profil",
-  close: "Proche de ton profil",
-  dig: "À creuser",
-  far: "Loin de ton profil",
-};
 const matchWord = computed(() => (scored.value ? scoreWord(props.offer.score!) : null));
 const matchTone = computed(() => matchWord.value?.tone ?? "none");
 const matchTitle = computed(() => {
