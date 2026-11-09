@@ -23176,6 +23176,17 @@
             "title": "First Steps Finished",
             "default": false
           },
+          "search_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search Url"
+          },
           "to_review": {
             "type": "integer",
             "title": "To Review"

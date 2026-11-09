@@ -59,6 +59,33 @@ def remote_search_url(site: Site, terms: str) -> str | None:
     return REMOTE_SEARCH_URLS[site.slug] + urlencode(query)
 
 
+# Google Emplois (docs/144) : la personne ouvre elle-même la liste d'offres que Google réunit
+# (jobup, jobs.ch, Jooble…), choisit une annonce et l'ajoute par son lien. jobA1 ne lit pas
+# Google : ses conditions interdisent les recherches automatiques.
+GOOGLE_JOBS_URL = "https://www.google.com/search?"
+
+
+def google_jobs_url(terms: str, location: str | None) -> str:
+    words = f"{terms} emploi {location}" if location else f"{terms} emploi"
+    return GOOGLE_JOBS_URL + urlencode({"q": words, "udm": "8"})
+
+
+async def first_search(session: AsyncSession) -> str | None:
+    """La recherche Google Emplois d'un compte qui démarre : la première alerte active, sinon la
+    première recherche du métier avec le premier lieu ; None sans métier ni alerte."""
+    search = await session.scalar(
+        select(AlertSearch).where(AlertSearch.active.is_(True)).order_by(AlertSearch.id).limit(1)
+    )
+    if search is not None:
+        return google_jobs_url(search.terms, search.location)
+    terms = await trades.searches_for(session)
+    if not terms:
+        return None
+    criteria = await load_criteria(session)
+    places = [loc for loc in criteria.locations if not is_canton(loc)]
+    return google_jobs_url(terms[0], places[0] if places else None)
+
+
 def is_canton(value: str) -> bool:
     """« VD », « GE » : un code de canton n'est pas un lieu de recherche utile sur les sites."""
     return len(value) == 2 and value.isalpha() and value.isupper()

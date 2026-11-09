@@ -116,6 +116,8 @@ class TodayOut(BaseModel):
     first_steps_offer_id: int | None = None
     # Les cinq étapes faites, la réussite pas encore montrée : la carte de réussite.
     first_steps_finished: bool = False
+    # Tant qu'aucune offre n'est arrivée (docs/144) : la recherche du métier sur Google Emplois.
+    search_url: str | None = None
     to_review: int
     # « À traiter » (docs/139, C2) : à examiner, plus tard, en préparation ; le calcul de la liste.
     pending: int = 0
@@ -322,6 +324,7 @@ async def get_today(request: Request) -> TodayOut:
     async with runtime.sessionmaker.begin() as session:
         steps = await first_steps_service.load(session)
     async with runtime.sessionmaker() as session:
+        search_url = None if steps.has_offers else await alert_service.first_search(session)
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
     soon = meeting is not None and (
@@ -337,6 +340,7 @@ async def get_today(request: Request) -> TodayOut:
         has_offers=steps.has_offers,
         first_steps_offer_id=steps.offer_id,
         first_steps_finished=steps.just_finished,
+        search_url=search_url,
         to_review=to_review,
         pending=pending,
         pending_near=pending_near,

@@ -192,3 +192,17 @@ async def test_read_only_demo_reads_without_writing(fresh: Runtime) -> None:
     async with admin_engine().connect() as conn:
         stored = await conn.scalar(text(f"SELECT count(*) FROM settings WHERE key IN {KEYS}"))
     assert stored == 0
+
+
+async def test_search_url_until_the_first_offer(client: AsyncClient, fresh: Runtime) -> None:
+    """Sans offre (docs/144) : la recherche Google Emplois de la première alerte ; plus rien
+    dès qu'une offre arrive."""
+    assert (await client.get("/api/today")).json()["search_url"] is None  # ni métier ni alerte
+    async with fresh.sessionmaker.begin() as session:
+        session.add(AlertSearch(terms="Comptable", location="Sion"))
+    page = (await client.get("/api/today")).json()
+    assert page["search_url"] == "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8"
+    async with fresh.sessionmaker.begin() as session:
+        now = datetime.now(UTC)
+        session.add(Offer(fingerprint="g1", title="Comptable", first_seen_at=now, last_seen_at=now))
+    assert (await client.get("/api/today")).json()["search_url"] is None

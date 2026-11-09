@@ -566,5 +566,8 @@ async def alert_created(request: Request, site: str) -> AlertCreatedOut:
             marked = await alert_service.mark_created(session, searches, site)
         except alert_service.UnknownSite:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu") from None
+    if marked:
+        # Comme le bouton de l'assistant : le relevé rapide (docs/144).
+        await site_codes.expect(_runtime(request))
     log.info("extension_alert_created", site=site, searches=len(marked))
     return AlertCreatedOut(site=site, marked=len(marked))

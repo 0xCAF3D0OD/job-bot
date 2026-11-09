@@ -8062,6 +8062,8 @@ export interface components {
              * @default false
              */
             first_steps_finished: boolean;
+            /** Search Url */
+            search_url?: string | null;
             /** To Review */
             to_review: number;
             /**

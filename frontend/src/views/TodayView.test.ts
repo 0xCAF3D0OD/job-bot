@@ -115,6 +115,36 @@ describe("Les premiers pas (docs/128)", () => {
     expect(wrapper.find("[data-test=orp-month]").exists()).toBe(true);
   });
 
+  it("aucune offre encore : des offres dès maintenant, sans « en retard » (docs/144)", async () => {
+    const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/today" ? starting(1, { has_offers: false, search_url: url, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+    );
+    const wrapper = await mountView();
+    const group = wrapper.find("[data-test=today-start]");
+    expect(group.find("h2").text()).toBe("Des offres dès maintenant");
+    const google = group.find("[data-test=start-google]");
+    expect(google.attributes("href")).toBe(url);
+    expect(google.attributes("target")).toBe("_blank");
+    expect(google.attributes("rel")).toBe("noopener noreferrer");
+    expect(group.find("[data-test=start-add]").attributes("href")).toBe("/ajouter-une-offre");
+    expect(group.find("[data-test=start-forward]").attributes("href")).toBe("/candidatures/alertes");
+    expect(wrapper.find("[data-test=orp-month]").text()).toContain("Encore 10 d'ici le 30 novembre");
+    expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("retard");
+  });
+
+  it("alertes prêtes : pas de second « Ajouter », et plus rien dès la première offre", async () => {
+    mockGet(starting(2, { has_offers: false, search_url: null }));
+    let wrapper = await mountView();
+    const group = wrapper.find("[data-test=today-start]");
+    expect(group.find("[data-test=start-google]").exists()).toBe(false);
+    expect(group.find("[data-test=start-add]").exists()).toBe(false);
+    expect(group.find("[data-test=start-forward]").exists()).toBe(true);
+    mockGet(starting(2, { has_offers: true, search_url: null }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-start]").exists()).toBe(false);
+  });
+
   it("garder une offre : le bouton ouvre l'écran de tri", async () => {
     mockGet(starting(2));
     const wrapper = await mountView();
