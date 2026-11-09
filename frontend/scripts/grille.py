@@ -88,7 +88,12 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
     ("candidatures/offres/{offer}/preparer?doc=postuler", None),
     ("candidatures/offres/{offer}/preparer?doc=postuler", "[data-test=contacts-open]"),
+    # Envoyées (PR 5, §8.1) : le détail seul ; la liste, partagée avec À traiter, garde les valeurs de la maquette.
+    ("candidatures/suivi", None),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card"),
 ]
+# Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
+SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
 
 
 async def main() -> int:
@@ -115,7 +120,7 @@ async def main() -> int:
                 for step in opener.split(" && ") if opener else []:
                     await page.click(step)
                     await page.wait_for_timeout(600)
-                await page.evaluate(PRELUDE, MAPPING)
+                await page.evaluate(PRELUDE, {**MAPPING, "scroll": SCOPES.get(path, MAPPING["scroll"])})
                 faults = await page.evaluate(audit)
                 where = f"/{url}" + (f" ({opener})" if opener else "")
                 for fault in faults:

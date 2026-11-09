@@ -100,28 +100,7 @@ describe("La relance dans la fiche candidature", () => {
   });
 });
 
-describe("Le détail d'Envoyées en deux colonnes (lot 12)", () => {
-  function mountColumns(overrides: Record<string, unknown> = {}) {
-    return mount(ApplicationPanel, {
-      props: { application: { ...application, ...overrides } as never, columns: true, orpRow: { declared_at: "2026-10-03", missing: [], job_room: [] } as never },
-      global: { stubs: { teleport: true, ContactsPanel: true, JobRoomDeclared: true } },
-    });
-  }
-
-  it("le titre en H2, puis Statut et le premier message à gauche, Documents et Contacts dans l'appui nommé", () => {
-    const wrapper = mountColumns({ letter_draft_id: 4, location: "Lausanne" });
-    expect(wrapper.find("[data-test=panel-title]").element.tagName).toBe("H2");
-    expect(wrapper.find(".application-panel-title p").text()).toBe("Exemple SA · Lausanne");
-    expect(wrapper.find("[data-test=head-declared]").text()).toBe("Déclarée à l’ORP");
-    const main = wrapper.find("[data-test=detail-columns-main]");
-    const aside = wrapper.find("aside[data-test=detail-columns-aside]");
-    expect(aside.attributes("aria-label")).toBe("Documents et contacts");
-    expect(main.find("[data-test=section-status]").exists()).toBe(true);
-    expect(main.find("contacts-panel-stub").attributes("part")).toBe("follow");
-    expect(aside.find("[data-test=section-documents] [data-test=panel-letter]").text()).toBe("Lettre (Word)");
-    expect(aside.find("[data-test=section-contacts] contacts-panel-stub").attributes("part")).toBe("find");
-  });
-
+describe("Le panneau d'une candidature (téléphone et écrans moyens)", () => {
   it("sans colonnes (téléphone), l'ordre reste : Statut, Documents, Contacts", () => {
     const wrapper = mountPanel({ letter_draft_id: 4 });
     expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);
@@ -134,7 +113,7 @@ describe("Le détail d'Envoyées en deux colonnes (lot 12)", () => {
 describe("« Pour l'ORP » sur ordinateur (lot 18, §10.3)", () => {
   it("le lien ouvre la fiche dans un panneau latéral de 480 px, du mois de la candidature", async () => {
     const wrapper = mount(ApplicationPanel, {
-      props: { application: application as never, columns: true, orpRow: { date: "02.10.2026", declared_at: null, missing: [], job_room: [] } as never },
+      props: { application: application as never, orpRow: { date: "02.10.2026", declared_at: null, missing: [], job_room: [] } as never },
       global: { stubs: { teleport: true, ContactsPanel: true, JobRoomDeclared: true, OrpFiche: true } },
     });
     expect(wrapper.find("orp-fiche-stub").exists()).toBe(false);

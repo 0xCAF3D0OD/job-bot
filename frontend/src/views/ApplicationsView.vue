@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -45,6 +45,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import SentCard from "../components/SentCard.vue";
+import SentDetail from "../components/SentDetail.vue";
 import { usePhone } from "../composables/usePhone";
 import { sentSections } from "../sentList";
 
@@ -314,6 +315,28 @@ const opened = computed(() => (openId.value === null ? null : (all.value.find((a
 const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
 // À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
 const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
+// Le trait bleu de la carte choisie (§8.1) : au centre vertical de la carte, mesuré dans la section.
+const body = ref<HTMLElement | null>(null);
+const linkTop = ref<number | null>(null);
+function placeLink(): void {
+  const root = body.value;
+  const card = root?.querySelector<HTMLElement>(".sent-list .list-card[aria-current='true']");
+  if (!root || !card || !twoColumns.value) {
+    linkTop.value = null;
+    return;
+  }
+  const a = root.getBoundingClientRect();
+  const b = card.getBoundingClientRect();
+  // Le trait fait 2 px : son bord haut est 1 px au-dessus du centre.
+  linkTop.value = Math.round(b.top - a.top + b.height / 2) - 1;
+}
+const linkObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => placeLink());
+watch(body, (el, old) => {
+  if (old) linkObserver?.unobserve(old);
+  if (el) linkObserver?.observe(el);
+});
+watch([shown, twoColumns], () => void nextTick(placeLink), { flush: "post" });
+onUnmounted(() => linkObserver?.disconnect());
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
   return (...args: T) => {
     openId.value = null;
@@ -500,18 +523,32 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <section
     v-else
+    ref="body"
     :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns, 'blocks-page orp-page-blocks': orpPage && phone }]"
   >
+    <!-- Trait entre la liste et le détail, et le lien vers la carte choisie (§8.1) : décoratifs, la sélection est
+         portée par aria-current. -->
+    <span
+      v-if="twoColumns"
+      class="sent-divider"
+      aria-hidden="true"
+    />
+    <span
+      v-if="twoColumns && linkTop !== null"
+      class="sent-link"
+      :style="{ top: `${linkTop}px` }"
+      aria-hidden="true"
+      data-test="sent-link"
+    />
     <aside
       v-if="shown"
       class="sent-detail"
       :aria-label="shown.company"
       data-test="sent-detail"
     >
-      <ApplicationPanel
+      <SentDetail
         :application="shown"
         :orp-row="rowsById.get(shown.id) ?? null"
-        columns
         @status="setStatus"
         @edit="editFromPanel"
         @remove="removeFromPanel"
