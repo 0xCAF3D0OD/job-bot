@@ -1,0 +1,1 @@
+Préparer sur téléphone (9 novembre, §9) : plus d'anneau de note ; « Moderne · Français » et « Changer » ouvrent la feuille « Mise en page et langue » ; aperçu de 384 px ; puces de retouche seulement en écrivant ; un seul bouton « J'ai relu, continuer » ; la tête de Préparer s'affiche de nouveau sur téléphone.

@@ -43,6 +43,10 @@ defineEmits<{ open: [] }>();
 /* L'aperçu (maquette Preparer) : une page réduite de 168 px, le texte replié à la largeur de la page. Le bouton
    ne garde pas le « nowrap » des boutons : sans ça, chaque paragraphe tenait sur une ligne coupée à droite. */
 .doc-preview { display: block; width: 100%; height: 10.5rem; padding: var(--space-3) var(--space-5) 0; border: 0; border-radius: var(--radius-card); background: var(--surface-muted); text-align: left; white-space: normal; font: inherit; overflow: hidden; cursor: pointer; }
+/* Préparer sur téléphone (MODIFICATIONS du 9 novembre, §9) : 384 px pour relire avant « J’ai relu, continuer » ; 300 px
+   quand la zone de saisie a le focus et que les puces de retouche apparaissent. */
+.doc-preview.doc-preview-tall { --doc-preview-h: 384px; height: var(--doc-preview-h); transition: height var(--t-state); }
+.doc-preview.doc-preview-tall.doc-preview-composing { --doc-preview-h: 300px; }
 /* Le papier en clair, puis en sombre (PreparerSombre : la page brune, le bleu éclairci du Moderne). */
 .doc-preview-page { --paper: #fff; --ink: #1B1F2A; --ink-body: #3D4250; --ink-sub: #596070; --blue: #2445C2; --serif-paper: #FFFDF8; }
 :root[data-theme="dark"] .doc-preview-page { --paper: var(--surface); --ink: var(--text); --ink-body: #D6CFC4; --ink-sub: var(--text-secondary); --blue: var(--primary-graphic); --serif-paper: #26211C; }

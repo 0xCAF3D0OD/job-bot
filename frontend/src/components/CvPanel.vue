@@ -17,8 +17,7 @@ import SavedStatus from "./SavedStatus.vue";
 import ActionBar from "./ActionBar.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import DocPreview from "./DocPreview.vue";
-import SegmentedControl from "./SegmentedControl.vue";
-import TemplateSheetRow from "./TemplateSheetRow.vue";
+import LayoutSheetLink from "./LayoutSheetLink.vue";
 import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import { usePhone } from "../composables/usePhone";
 
@@ -232,6 +231,7 @@ const previewParagraphs = computed(() => {
 // La langue en FR / DE / EN en tête de la carte (maquette Preparer, Kevin 2026-11-06) : sans choix, celle du CV
 // affiché ; une autre langue propose de préparer le CV à nouveau.
 const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), name: LANGUAGES[code], test: `cv-language-${code}` }));
+const SHEET_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.map((option) => ({ ...option, label: option.name }));
 const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
 const shownLanguage = computed<string>({
   get: () => language.value || selected.value?.language || "",
@@ -292,10 +292,6 @@ onMounted(() => void load());
         En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
-      <TemplateSheetRow
-        v-if="phone"
-        :name="doc?.name"
-      />
       <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
            l'adaptation a mis en avant (ses mots-clés). -->
       <section
@@ -303,17 +299,24 @@ onMounted(() => void load());
         aria-labelledby="cv-card-title"
         data-test="cv-card"
       >
-        <div class="doc-card-head">
+        <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille « Mise en page
+             et langue » ; plus de FR / DE / EN sur l'écran. -->
+        <LayoutSheetLink
+          v-if="phone"
+          v-model="shownLanguage"
+          title="CV adapté"
+          title-id="cv-card-title"
+          :name="doc?.name"
+          :options="SHEET_LANGUAGE_OPTIONS"
+          language-label="Langue du titre et du résumé"
+        />
+        <div
+          v-else
+          class="doc-card-head"
+        >
           <h2 id="cv-card-title">
             CV adapté
           </h2>
-          <SegmentedControl
-            v-if="phone"
-            v-model="shownLanguage"
-            :options="LANGUAGE_OPTIONS"
-            label="Langue du titre et du résumé"
-            class="doc-language"
-          />
         </div>
         <ul
           v-if="highlights.length && !phone"
@@ -334,6 +337,7 @@ onMounted(() => void load());
           name="Ton nom"
           :paragraphs="[]"
           label="Aperçu vide du CV"
+          class="doc-preview-tall"
           data-test="no-cv"
         />
         <div
@@ -355,6 +359,7 @@ onMounted(() => void load());
           :sub="previewSub"
           :paragraphs="previewParagraphs"
           label="Ouvrir le CV entier pour le modifier"
+          class="doc-preview-tall"
           @open="cvOpen = true"
         />
         <article

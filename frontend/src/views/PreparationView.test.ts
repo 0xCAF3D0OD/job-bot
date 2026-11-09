@@ -171,21 +171,16 @@ describe("PreparationView", () => {
     expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus courte");
   });
 
-  it("les retouches proposées (maquette du 8 novembre) : « Plus court » part en consigne, « En allemand » en langue", async () => {
+  it("les retouches proposées : « Plus court » part en consigne ; plus de puce « En allemand » (9 novembre, §2.2 et §9)", async () => {
     mockGet([letter(11, 1)]);
     POST.mockResolvedValue({ data: letter(12, 2, { instruction: "Plus court" }) });
     const wrapper = await mountView();
     const chips = () => wrapper.findAll("[data-test=prep-revise] .suggestion-chips button");
     await chips().find((b) => b.text() === "Plus court")!.trigger("click");
     await flushPromises();
-    let [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(opts.body).toMatchObject({ instruction: "Plus court", base_draft_id: 11 });
-    POST.mockClear();
-    POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
-    await chips().find((b) => b.text() === "En allemand")!.trigger("click");
-    await flushPromises();
-    [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
-    expect(opts.body).toMatchObject({ language: "de", instruction: null });
+    expect(chips().map((b) => b.text())).not.toContain("En allemand");
   });
 
   it("la lettre s'affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
@@ -471,36 +466,43 @@ describe("barre de candidature", () => {
 describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("un seul bouton plein en bas ; la langue choisie le change en « Rédiger à nouveau en allemand » (C3, C6)", async () => {
+  it("un seul bouton plein en bas ; la langue choisie dans la feuille le change en « Rédiger à nouveau en allemand » (C3, §9)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court", read_at: "2026-10-05T09:00:00Z" })]);
     POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
     const wrapper = await mountView();
     const bar = wrapper.find("[data-test=action-bar]");
-    // Rien à rédiger et la lettre relue : la prochaine étape.
-    expect(bar.find("[data-test=next-step]").text()).toBe("Continuer vers le CV");
+    // Rien à rédiger : un seul bouton, « J'ai relu, continuer ».
+    expect(bar.find("[data-test=next-step]").text()).toBe("J’ai relu, continuer");
     expect(bar.find("[data-test=write]").exists()).toBe(false);
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
-    // La carte de la lettre : son titre, la langue de la lettre cochée en tête (C3).
+    // En-tête : plus d'anneau de note (§9).
+    expect(wrapper.find("[data-test=prep-offer] .score-ring").exists()).toBe(false);
+    // La carte de la lettre : le titre, « Moderne · Français » dessous et « Changer » ; plus de FR / DE / EN à l'écran.
     const card = wrapper.find("[data-test=letter-card]");
     expect(card.find("h2").text()).toBe("Lettre de motivation");
-    expect(card.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
-    const pills = card.findAll("[data-test^=language-][role=radio]");
-    expect(pills.map((b) => b.text())).toEqual(["FR", "DE", "EN"]);
-    expect(pills.map((b) => b.attributes("aria-label"))).toEqual(["Français", "Deutsch", "English"]);
-    // Sous la lettre, les retouches proposées et la zone de saisie (maquette du 8 novembre) ; plus de bouton
-    // « Modifier le texte avec l'Assistant ».
+    expect(card.get("[data-test=layout-summary]").text()).toBe("Moderne · Français");
+    expect(card.find(".doc-language").exists()).toBe(false);
+    expect(wrapper.find("[data-test=template-row]").exists()).toBe(false);
+    const change = card.get("[data-test=layout-change]");
+    expect(change.text()).toBe("Changer");
+    expect(change.attributes("aria-haspopup")).toBe("dialog");
     expect(card.find("[data-test=edit-text]").exists()).toBe(false);
-    expect(card.findAll("[data-test=prep-revise] .suggestion-chips button").map((b) => b.text())).toEqual(["Plus court", "Plus formel", "En allemand"]);
     // Les cartes de côté laissent place au « ⋯ » de la tête (versions et téléchargement).
     expect(wrapper.find("[data-test=download-card]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
-    const sheet = wrapper.find("[data-test=versions-sheet]");
-    expect(sheet.findAll("[data-test=sheet-version]")).toHaveLength(2);
-    expect(sheet.find("[data-test=pdf]").text()).toContain("Lettre (PDF)");
-    // Choisir une langue ne rédige rien ; le bouton plein le propose, et part dans cette langue.
-    await card.find("[data-test=language-de]").trigger("click");
+    const versions = wrapper.find("[data-test=versions-sheet]");
+    expect(versions.findAll("[data-test=sheet-version]")).toHaveLength(2);
+    expect(versions.find("[data-test=pdf]").text()).toContain("Lettre (PDF)");
+    // La feuille : la langue en trois boutons en toutes lettres. Choisir ne rédige rien ; le bouton plein le propose.
+    await change.trigger("click");
+    const sheet = wrapper.get("[data-test=layout-sheet]");
+    const pills = sheet.findAll("[data-test^=language-][role=radio]");
+    expect(pills.map((b) => b.text())).toEqual(["Français", "Deutsch", "English"]);
+    expect(sheet.get("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
+    await sheet.get("[data-test=language-de]").trigger("click");
     expect(POST).not.toHaveBeenCalled();
+    expect(card.get("[data-test=layout-summary]").text()).toBe("Moderne · Deutsch");
     expect(bar.find("[data-test=write]").text()).toContain("Rédiger à nouveau en allemand");
     await bar.find("[data-test=write]").trigger("click");
     await flushPromises();
@@ -508,22 +510,37 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(opts.body).toMatchObject({ language: "de" });
   });
 
-  it("« J'ai relu la lettre » : sans elle, « Continuer » est inactif et dit pourquoi ; cochée, l'étape est faite (C11)", async () => {
+  it("les puces de retouche n'apparaissent qu'avec le focus dans la zone de saisie ; l'aperçu passe de 384 à 300 px (§9)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView();
+    const revise = wrapper.get("[data-test=prep-revise]");
+    const preview = () => wrapper.get("[data-test=letter-card] [data-test=doc-preview]");
+    expect(revise.text()).not.toContain("Retoucher la lettre");
+    expect(revise.find(".suggestion-chips").exists()).toBe(false);
+    expect(preview().classes()).toContain("doc-preview-tall");
+    expect(preview().classes()).not.toContain("doc-preview-composing");
+    await revise.get("[data-test=composer-input]").trigger("focusin");
+    expect(revise.findAll(".suggestion-chips button").map((b) => b.text())).toEqual(["Plus court", "Plus formel"]);
+    expect(preview().classes()).toContain("doc-preview-composing");
+    await revise.get("[data-test=composer-input]").trigger("focusout", { relatedTarget: null });
+    expect(revise.find(".suggestion-chips").exists()).toBe(false);
+  });
+
+  it("« J'ai relu, continuer » : plus de case ; le bouton note la relecture et passe au CV (§9, C11)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     PUT.mockResolvedValue({ data: letter(11, 1, { read_at: "2026-10-05T09:00:00Z" }) });
     const wrapper = await mountView();
-    const next = () => wrapper.find("[data-test=action-bar] [data-test=next-step]");
-    expect(next().attributes("aria-disabled")).toBe("true");
-    expect(wrapper.find("[data-test=next-step-hint]").text()).toBe("Relis la lettre pour continuer.");
+    expect(wrapper.find("[data-test=letter-read]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=next-step-hint]").exists()).toBe(false);
     expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(false);
-    // L'étape CV reste ouverte : seul le bouton attend.
+    // L'étape CV reste ouverte.
     expect(wrapper.find("[data-test=tab-cv]").attributes("href")).toContain("doc=cv");
-    await wrapper.find("[data-test=letter-read]").setValue(true);
+    await wrapper.get("[data-test=action-bar] [data-test=next-step]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/letters/{draft_id}/read", { params: { path: { draft_id: 11 } }, body: { read: true } });
-    expect(next().attributes("href")).toContain("doc=cv");
-    expect(wrapper.find("[data-test=next-step-hint]").exists()).toBe(false);
+    expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
     expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
   });
 
@@ -545,30 +562,29 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
   });
 
-  it("« J'ai relu la lettre » refusé (démo) : la case se décoche", async () => {
+  it("« J'ai relu, continuer » refusé (démo) : le refus s'affiche et l'on reste sur la lettre", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     PUT.mockResolvedValue({ error: { detail: "Dans la démo, rien n'est enregistré." } });
     const wrapper = await mountView();
-    const box = wrapper.find("[data-test=letter-read]");
-    await box.setValue(true);
+    await wrapper.get("[data-test=action-bar] [data-test=next-step]").trigger("click");
     await flushPromises();
-    expect((box.element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").attributes("aria-disabled")).toBe("true");
+    expect(wrapper.get("[role=alert]").text()).toBe("Dans la démo, rien n'est enregistré.");
+    expect(wrapper.vm.$router.currentRoute.value.query.doc).toBeUndefined();
   });
 
-  it("le modèle (Kevin, 2026-11-05 ; feuille « Mise en page » du 9 novembre, §10.7) : l'aperçu de la lettre et le PDF dans le modèle choisi", async () => {
+  it("le modèle (Kevin, 2026-11-05 ; feuille « Mise en page et langue », §9) : l'aperçu de la lettre et le PDF dans le modèle choisi", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     const wrapper = await mountView();
-    // Une carte « Mise en page · CV et lettre » ouvre la feuille ; plus de vignettes en haut de l'écran.
-    const row = wrapper.get("[data-test=template-row]");
-    expect(row.text()).toBe("Mise en page · CV et lettreModerne");
-    expect(row.attributes("aria-haspopup")).toBe("dialog");
-    await row.trigger("click");
-    const picker = wrapper.find("[data-test=template-sheet] [data-test=template-picker]");
-    expect(wrapper.get("[data-test=template-sheet]").text()).toContain("Le même modèle s’applique à ta lettre et à ton CV.");
-    expect(wrapper.get("[data-test=template-sheet]").text()).toContain("Tient sur une page A4.");
+    // « Changer » ouvre la feuille ; plus de vignettes ni de carte « Mise en page » sur l'écran.
+    await wrapper.get("[data-test=layout-change]").trigger("click");
+    const sheet = wrapper.get("[data-test=layout-sheet]");
+    const picker = sheet.find("[data-test=template-picker]");
+    expect(sheet.text()).toContain("Mise en page et langue");
+    expect(sheet.text()).toContain("Le même modèle s’applique à ta lettre et à ton CV.");
+    expect(sheet.text()).toContain("Tient sur une page A4.");
+    expect(sheet.text()).toContain("Langue de la lettre");
     expect(picker.classes()).toContain("tpl-picker-grid");
     expect(picker.findAll("[role=radio] .tpl-card-label").map((r) => r.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
     // La vignette Classique porte les initiales de l'expéditeur, comme la maquette (« K D »).
@@ -578,7 +594,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     await picker.find("[data-test=template-bandeau]").trigger("click");
     expect(picker.find("[data-test=template-bandeau]").attributes("aria-checked")).toBe("true");
     expect(preview().attributes("data-template")).toBe("bandeau");
-    expect(wrapper.get("[data-test=template-current]").text()).toBe("Bandeau");
+    expect(wrapper.get("[data-test=layout-summary]").text()).toBe("Bandeau · Français");
     expect(wrapper.find("[data-test=edit-text]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
     expect(wrapper.find("[data-test=versions-sheet] [data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=bandeau");
@@ -711,10 +727,10 @@ describe("« Pas vrai » (30.10.2026)", () => {
     expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J'administre un cluster K3s. »");
     expect(bar.find("[data-test=next-step]").exists()).toBe(false);
     // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
-    expect(wrapper.find("[data-test=letter-card] .doc-language").exists()).toBe(false);
+    expect(wrapper.find("[data-test=prep-revise]").exists()).toBe(false);
     await bar.find("[data-test=false-claim-cancel]").trigger("click");
     expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=letter-card] .doc-language").exists()).toBe(true);
+    expect(wrapper.find("[data-test=prep-revise]").exists()).toBe(true);
   });
   it("une page A4 : « Tient sur une page A4 », ou le débordement, la marque de fin de page et « Raccourcir »", async () => {
     mockGet([letter(11, 1)]);
