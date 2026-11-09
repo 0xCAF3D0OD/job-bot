@@ -7,7 +7,6 @@ import type { components } from "../api/schema";
 import { timeOfDay } from "../dates";
 import { plural } from "../format";
 import {
-  agreedLines,
   countdown,
   dateText,
   interviewPlace,
@@ -25,6 +24,7 @@ import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
+import OrpOutcomeInline from "./OrpOutcomeInline.vue";
 
 // Rendez-vous sur ordinateur, dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB, onglet Rendez-vous) :
 // la liste de 480 px à gauche (À venir, À noter, Passés, en cartes de 104 px), le détail de ce qui est choisi à
@@ -68,13 +68,15 @@ function pastKey(m: Meeting): string {
 }
 const keys = computed(() => [
   ...upcoming.value.map((u) => (u.kind === "orp" ? "orp" : `entretien-${u.application.id}`)),
+  ...toNote.value.map(pastKey),
   ...noted.value.map(pastKey),
 ]);
-// Sans rendez-vous ORP prévu, « nouveau » (le formulaire) vient d'abord.
+// Sans rendez-vous ORP prévu : le premier rendez-vous à noter (lot 14), sinon « nouveau » (le formulaire).
 const selected = computed(() => {
   const asked = route.query.rdv;
   if (typeof asked === "string" && (keys.value.includes(asked) || asked === "nouveau")) return asked;
-  return nextOrp.value ? "orp" : "nouveau";
+  if (nextOrp.value) return "orp";
+  return toNote.value[0] ? pastKey(toNote.value[0]) : "nouveau";
 });
 function select(key: string): void {
   void router.replace({ query: { ...route.query, rdv: key } });
@@ -85,7 +87,12 @@ const selectedInterview = computed(() => {
   const found = upcoming.value.find((u) => u.kind === "entretien" && `entretien-${u.application.id}` === key);
   return found?.kind === "entretien" ? found : null;
 });
-const selectedPast = computed(() => noted.value.find((m) => pastKey(m) === selected.value) ?? null);
+// Un rendez-vous passé, à noter ou noté : son détail est le formulaire de ce qui a été convenu (lot 14).
+const selectedPast = computed(() => [...toNote.value, ...noted.value].find((m) => pastKey(m) === selected.value) ?? null);
+// « Vendredi 30 octobre, 11 h · EPFL ».
+function pastLine(m: Meeting): string {
+  return `${dateText(m.starts_at)}, ${timeAndPlace(m.starts_at, m.place)}`;
+}
 const lastNoted = computed(() => noted.value[0] ?? null);
 // Le jour et le mois de l'icône calendrier.
 function cal(iso: string): { day: number; month: number } {
@@ -187,11 +194,14 @@ watch(() => props.page, () => void nextTick(measure));
         <h2 class="rdv-list-title">
           À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
         </h2>
-        <div
+        <button
           v-for="item in toNote"
           :key="item.id"
+          type="button"
           class="rdv-item"
+          :aria-current="selected === pastKey(item) ? 'true' : undefined"
           :data-test="`rdv-to-note-${item.id}`"
+          @click="select(pastKey(item))"
         >
           <CalendarDate
             v-bind="cal(item.starts_at)"
@@ -200,17 +210,9 @@ watch(() => props.page, () => void nextTick(measure));
           />
           <span class="rdv-item-text">
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
-            <span class="rdv-item-sub">Pas encore noté · 1 minute</span>
+            <span class="rdv-item-sub">{{ pastLine(item) }}</span>
           </span>
-          <button
-            type="button"
-            class="rdv-item-note"
-            data-test="rdv-note"
-            @click="emit('note', item.id)"
-          >
-            Noter<span class="visually-hidden"> le {{ pastTitle(item.starts_at, now) }}</span>
-          </button>
-        </div>
+        </button>
       </template>
       <template v-if="noted.length">
         <h2 class="rdv-list-title">
@@ -233,7 +235,6 @@ watch(() => props.page, () => void nextTick(measure));
           <span class="rdv-item-text">
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
-            <span class="list-card-chips"><span class="green">Noté</span></span>
           </span>
         </button>
       </template>
@@ -418,52 +419,32 @@ watch(() => props.page, () => void nextTick(measure));
         </div>
       </article>
 
-      <!-- Un rendez-vous ORP noté : ce qui a été convenu, modifiable. -->
+      <!-- Un rendez-vous ORP passé, à noter ou noté (lot 14) : l'en-tête, puis ce qui a été convenu en deux colonnes. -->
       <article
         v-else-if="selectedPast"
         aria-labelledby="rdv-detail-title"
-        class="rdv-detail-body"
+        class="rdv-detail-body rdv-detail-past"
         data-test="rdv-detail-past"
       >
         <div class="rdv-detail-head">
           <CalendarDate
             v-bind="cal(selectedPast.starts_at)"
-            tone="past"
+            :tone="selectedPast.outcome_at ? 'past' : 'orp'"
             :size="56"
           />
           <div>
-            <span class="rdv-detail-kicker">Noté</span>
-            <h1 id="rdv-detail-title">
+            <h2 id="rdv-detail-title">
               {{ pastTitle(selectedPast.starts_at, now) }}
-            </h1>
-            <p v-if="selectedPast.place">
-              {{ selectedPast.place }}
-            </p>
+            </h2>
+            <p>{{ pastLine(selectedPast) }}</p>
           </div>
         </div>
-        <dl class="rdv-detail-agreed">
-          <template
-            v-for="line in agreedLines(selectedPast)"
-            :key="line.label"
-          >
-            <dt>{{ line.label }}</dt>
-            <dd>{{ line.text }}</dd>
-          </template>
-          <template v-if="selectedPast.note">
-            <dt>À retenir</dt>
-            <dd>{{ selectedPast.note }}</dd>
-          </template>
-        </dl>
-        <div class="rdv-detail-actions">
-          <button
-            type="button"
-            class="secondary"
-            :data-test="`rdv-edit-note-${selectedPast.id}`"
-            @click="emit('note', selectedPast.id)"
-          >
-            Modifier ce qui a été convenu
-          </button>
-        </div>
+        <OrpOutcomeInline
+          :key="selectedPast.id"
+          :meeting="selectedPast"
+          :target="page.target"
+          @saved="emit('saved', $event)"
+        />
       </article>
 
       <!-- Modifier le rendez-vous prévu, ou en ajouter un. -->
@@ -532,6 +513,11 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-detail-kicker { font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-detail-head h1 { margin: var(--space-1) 0 0; font-size: var(--rdv-26); line-height: var(--rdv-lh-title); font-weight: var(--weight-heavy); }
 .rdv-detail-head p { margin: var(--space-1) 0 0; font-size: var(--font-body); color: var(--text-secondary); overflow-wrap: anywhere; }
+/* Un rendez-vous passé (lot 14, gabarit §2) : calendrier de 56, H2 de 24 en 800, la ligne de 15 dessous, rien d'autre. */
+.rdv-detail-past { --rdv-24: 24px; --rdv-30: 30px; gap: var(--rdv-18); }
+.rdv-detail-past .rdv-detail-head { gap: var(--space-4); }
+.rdv-detail-past .rdv-detail-head h2 { margin: 0; font-size: var(--rdv-24); line-height: var(--rdv-30); font-weight: var(--weight-heavy); color: var(--text); }
+.rdv-detail-past .rdv-detail-head p { font-size: var(--font-label); }
 .rdv-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .rdv-detail-actions :is(button, a) { min-height: var(--btn-secondary); padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-detail-ready { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--success); }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, toRef, watch } from "vue";
 
-import { api } from "../api/client";
 import type { components } from "../api/schema";
 import { usePhone } from "../composables/usePhone";
+import { useOrpOutcome } from "../composables/useOrpOutcome";
 import { dateText } from "../rendezVous";
 import BottomSheet from "./BottomSheet.vue";
 import DateTimeField from "./DateTimeField.vue";
@@ -12,8 +12,7 @@ import DateTimePanel from "./DateTimePanel.vue";
 // Ce qui a été convenu au rendez-vous ORP (docs/83 §1 ; maquettes RendezVous et RendezVousOrdinateur, état
 // `noter`, 7.11.2026) : une feuille du bas sur téléphone, un dialogue au centre sur ordinateur. Les recherches
 // demandées en compteur, les mesures, le prochain rendez-vous (jobA1 le crée dans « À venir ») et une remarque.
-// En l'enregistrant, le serveur met à jour l'objectif du mois et crée le rendez-vous suivant (0.67.2).
-// Les formations accordées et les assignations d'avant sont gardées telles quelles : le dialogue ne les montre plus.
+// Les champs et l'enregistrement : useOrpOutcome.
 type Page = components["schemas"]["MeetingPage"];
 type Meeting = components["schemas"]["MeetingOut"];
 
@@ -21,15 +20,17 @@ const props = defineProps<{ meeting: Meeting | null; target: number | null }>();
 const emit = defineEmits<{ saved: [page: Page]; close: [] }>();
 const { phone } = usePhone();
 
-const count = ref(10);
-const measures = ref("");
-const nextDay = ref("");
-const nextTime = ref("");
-const note = ref("");
-const message = ref("");
-const busy = ref(false);
+const { count, measures, nextDay, nextTime, note, message, busy, before, step, save } = useOrpOutcome(
+  toRef(props, "meeting"),
+  toRef(props, "target"),
+  (page) => emit("saved", page),
+);
 // Maquette du 8 novembre (D26) : les pilules date et heure ; le sélecteur prend la place du formulaire.
 const picking = ref<"" | "date" | "time">("");
+watch(
+  () => props.meeting,
+  () => (picking.value = ""),
+);
 function focusPill(which: "date" | "time"): void {
   void nextTick(() => document.querySelector<HTMLElement>(`#orp-outcome [data-test=dt-${which}]`)?.focus());
 }
@@ -45,65 +46,7 @@ function cancelPick(): void {
   focusPill(which);
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-// Les champs repartent de ce qui est noté, à chaque ouverture.
-watch(
-  () => props.meeting,
-  (meeting) => {
-    if (!meeting) return;
-    count.value = meeting.agreed_target ?? props.target ?? 10;
-    measures.value = meeting.measures
-      .filter((m) => m.training_id == null)
-      .map((m) => m.text)
-      .join(", ");
-    const next = meeting.next_starts_at ? new Date(meeting.next_starts_at) : null;
-    nextDay.value = next ? `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}` : "";
-    nextTime.value = next ? `${pad(next.getHours())}:${pad(next.getMinutes())}` : "";
-    note.value = meeting.note ?? "";
-    message.value = "";
-    picking.value = "";
-  },
-  { immediate: true },
-);
-
 const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(props.meeting.starts_at).toLowerCase()}` : ""));
-// À côté du compteur : ce qui était demandé jusqu'ici.
-const before = computed(() => {
-  if (!props.target) return "";
-  return count.value === props.target ? "Comme le mois dernier" : `${props.target} le mois dernier`;
-});
-
-function step(delta: number): void {
-  count.value = Math.min(100, Math.max(1, count.value + delta));
-}
-
-async function save(): Promise<void> {
-  const meeting = props.meeting;
-  if (!meeting || busy.value) return;
-  const kept = meeting.measures.filter((m) => m.training_id != null).map((m) => ({ text: m.text, training_id: m.training_id ?? null }));
-  const text = measures.value.trim();
-  const next = nextDay.value ? new Date(`${nextDay.value}T${nextTime.value || "09:00"}`) : null;
-  busy.value = true;
-  try {
-    const { data, error } = await api.PUT("/api/orp-meeting/{meeting_id}/convenu", {
-      params: { path: { meeting_id: meeting.id } },
-      body: {
-        target: count.value,
-        measures: [...kept, ...(text ? [{ text, training_id: null }] : [])],
-        assignments: meeting.assignments ?? "",
-        note: note.value,
-        next_starts_at: next ? next.toISOString() : null,
-      },
-    });
-    if (data) emit("saved", data);
-    else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
-  } finally {
-    busy.value = false;
-  }
-}
 </script>
 
 <template>

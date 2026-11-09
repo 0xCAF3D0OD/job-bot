@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import AppIcon from "./AppIcon.vue";
 import { clockLabel, longDate, shortDate } from "../dates";
@@ -21,12 +21,38 @@ const props = withDefaults(
 );
 const emit = defineEmits<{ open: [which: "date" | "time"] }>();
 
-const dateText = computed(() => (props.date ? (props.compact ? shortDate(props.date) : longDate(props.date)) : "Choisir une date"));
+// Lot 14 (MODIFICATIONS du 8 novembre au soir) : la date abrégée dès que la pilule a moins de 280 px, jamais sur deux
+// lignes. On mesure la place offerte (le champ moins la pilule de l'heure), pas la pilule elle-même, dont la largeur
+// suit son texte : sinon la date passerait sans fin d'une forme à l'autre.
+const SHORT_BELOW = 280;
+const field = ref<HTMLElement | null>(null);
+const timePart = ref<HTMLElement | null>(null);
+const narrow = ref(false);
+function measure(): void {
+  const el = field.value;
+  if (!el) return;
+  const time = props.withTime ? (timePart.value?.getBoundingClientRect().width ?? 0) : 0;
+  const gap = props.withTime ? parseFloat(getComputedStyle(el).columnGap) || 0 : 0;
+  const room = el.getBoundingClientRect().width - time - gap;
+  narrow.value = room > 0 && room < SHORT_BELOW;
+}
+let observer: ResizeObserver | null = null;
+onMounted(() => {
+  if (typeof ResizeObserver === "undefined" || !field.value) return;
+  observer = new ResizeObserver(measure);
+  observer.observe(field.value);
+  measure();
+});
+onUnmounted(() => observer?.disconnect());
+const dateText = computed(() =>
+  props.date ? (props.compact || narrow.value ? shortDate(props.date) : longDate(props.date)) : "Choisir une date",
+);
 const timeText = computed(() => (props.time ? clockLabel(props.time) : "Choisir une heure"));
 </script>
 
 <template>
   <div
+    ref="field"
     class="dt-field"
     data-test="date-time-field"
   >
@@ -54,6 +80,7 @@ const timeText = computed(() => (props.time ? clockLabel(props.time) : "Choisir 
     </div>
     <div
       v-if="withTime"
+      ref="timePart"
       class="dt-field-part dt-field-time"
     >
       <span
