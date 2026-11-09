@@ -17,6 +17,9 @@ import { useTheme } from "../composables/useTheme";
 import { plural } from "../format";
 import "../blocks.css";
 
+// Prompt du 9 novembre, PR 8 (maquettes Compte et CompteSombre) : une carte par groupe (profil ; Mon parcours ;
+// Préférences ; Confidentialité et aide ; Se déconnecter), lignes séparées par un trait fin, comme Réglages ; plus de
+// trait entre les groupes, 12 px au-dessus et au-dessous de chacun.
 // La page Compte (maquette Compte, docs/139 étape 10a ; décisions de Kevin du 2026-11-05) : le sommaire de tout ce
 // qui te concerne, sur téléphone comme sur ordinateur. La carte du profil, puis Mon parcours, Préférences,
 // Recherche et outils (absent de la maquette, C8), Confidentialité et aide. Chaque ligne ouvre sa page ou sa
@@ -109,42 +112,44 @@ onMounted(() => {
       <!-- Maquette du 8 novembre (Compte, CompteImage) : l'image de profil avec sa pastille crayon ; un toucher ouvre
            « Ton image » (AvatarPicker). Le bouton est posé à côté du lien de la carte, pas dedans. -->
       <section class="block account-card-wrap">
-        <RouterLink
-          to="/profil"
-          class="block-row account-card"
-          data-test="account-profile-card"
-        >
-          <span
-            class="account-image-slot"
-            aria-hidden="true"
-          />
-          <span class="account-card-text">
-            <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
-            <span class="account-card-line">CV, compétences, postes recherchés</span>
-          </span>
-          <span
-            class="arrow-circle"
-            aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
-        </RouterLink>
-        <button
-          type="button"
-          class="account-image-button"
-          aria-label="Changer ton image"
-          aria-haspopup="dialog"
-          data-test="account-image"
-          @click="picking = true"
-        >
-          <ProfileImage
-            :choice="image.choice.value"
-            :initials="initials || image.initials.value"
-            :size="52"
-          />
-          <span
-            class="account-image-badge"
-            aria-hidden="true"
-          ><AppIcon name="pencil" /></span>
-        </button>
+        <div class="account-group account-profile-group">
+          <RouterLink
+            to="/profil"
+            class="block-row account-card"
+            data-test="account-profile-card"
+          >
+            <span
+              class="account-image-slot"
+              aria-hidden="true"
+            />
+            <span class="account-card-text">
+              <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
+              <span class="account-card-line">CV, compétences, postes recherchés</span>
+            </span>
+            <span
+              class="arrow-circle"
+              aria-hidden="true"
+            ><AppIcon name="arrow-right" /></span>
+          </RouterLink>
+          <button
+            type="button"
+            class="account-image-button"
+            aria-label="Changer ton image"
+            aria-haspopup="dialog"
+            data-test="account-image"
+            @click="picking = true"
+          >
+            <ProfileImage
+              :choice="image.choice.value"
+              :initials="initials || image.initials.value"
+              :size="52"
+            />
+            <span
+              class="account-image-badge"
+              aria-hidden="true"
+            ><AppIcon name="pencil" /></span>
+          </button>
+        </div>
       </section>
       <AvatarPicker
         :open="picking"
@@ -185,17 +190,19 @@ onMounted(() => {
         >
           Mon parcours
         </h2>
-        <BlockRow
-          title="Formations"
-          to="/bilan/formations"
-          data-test="account-trainings"
-        />
-        <BlockRow
-          title="CV et lettres"
-          :lines="cvCount === null ? [] : [plural(cvCount, 'document', 'documents')]"
-          :to="{ path: '/profil', query: { onglet: 'parcours' } }"
-          data-test="account-cv"
-        />
+        <div class="account-group">
+          <BlockRow
+            title="Formations"
+            to="/bilan/formations"
+            data-test="account-trainings"
+          />
+          <BlockRow
+            title="CV et lettres"
+            :lines="cvCount === null ? [] : [plural(cvCount, 'document', 'documents')]"
+            :to="{ path: '/profil', query: { onglet: 'parcours' } }"
+            data-test="account-cv"
+          />
+        </div>
       </section>
 
       <section
@@ -208,23 +215,25 @@ onMounted(() => {
         >
           Préférences
         </h2>
-        <BlockRow
-          title="Critères de recherche"
-          :lines="['Postes, lieux, taux d’activité']"
-          to="/profil"
-          data-test="account-criteria"
-        />
-        <BlockRow
-          title="Notifications"
-          :to="rubric('notifications')"
-          data-test="account-notifications"
-        />
-        <BlockRow
-          title="Apparence"
-          :lines="[THEME_LABEL[theme]]"
-          :to="rubric('affichage')"
-          data-test="account-appearance"
-        />
+        <div class="account-group">
+          <BlockRow
+            title="Critères de recherche"
+            :lines="['Postes, lieux, taux d’activité']"
+            to="/profil"
+            data-test="account-criteria"
+          />
+          <BlockRow
+            title="Notifications"
+            :to="rubric('notifications')"
+            data-test="account-notifications"
+          />
+          <BlockRow
+            title="Apparence"
+            :lines="[THEME_LABEL[theme]]"
+            :to="rubric('affichage')"
+            data-test="account-appearance"
+          />
+        </div>
       </section>
 
       <section
@@ -237,48 +246,50 @@ onMounted(() => {
         >
           Recherche et outils
         </h2>
-        <BlockRow
-          title="Objectif ORP et sites"
-          :to="rubric('recherche')"
-          data-test="account-orp"
-        />
-        <BlockRow
-          title="Rythme"
-          :to="rubric('rythme')"
-          data-test="account-rhythm"
-        />
-        <BlockRow
-          title="IA"
-          :to="rubric('ia')"
-          data-test="account-ai"
-        />
-        <BlockRow
-          title="Agenda"
-          :to="rubric('outils')"
-          data-test="account-tools"
-        />
-        <BlockRow
-          title="Formule"
-          :lines="[planName]"
-          :to="rubric('formule')"
-          data-test="account-plan"
-        />
-        <BlockRow
-          v-if="owner"
-          title="Administration"
-          :to="rubric('plateforme')"
-          data-test="account-admin"
-        />
-        <!-- Venu du menu du compte (C2). La démo ne collecte rien (docs/72). -->
-        <BlockRow
-          v-if="me && !me.demo"
-          title="Collecter maintenant"
-          :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
-          :aria-busy="running || undefined"
-          :aria-disabled="running || undefined"
-          data-test="account-collect"
-          @click="running || collectNow()"
-        />
+        <div class="account-group">
+          <BlockRow
+            title="Objectif ORP et sites"
+            :to="rubric('recherche')"
+            data-test="account-orp"
+          />
+          <BlockRow
+            title="Rythme"
+            :to="rubric('rythme')"
+            data-test="account-rhythm"
+          />
+          <BlockRow
+            title="IA"
+            :to="rubric('ia')"
+            data-test="account-ai"
+          />
+          <BlockRow
+            title="Agenda"
+            :to="rubric('outils')"
+            data-test="account-tools"
+          />
+          <BlockRow
+            title="Formule"
+            :lines="[planName]"
+            :to="rubric('formule')"
+            data-test="account-plan"
+          />
+          <BlockRow
+            v-if="owner"
+            title="Administration"
+            :to="rubric('plateforme')"
+            data-test="account-admin"
+          />
+          <!-- Venu du menu du compte (C2). La démo ne collecte rien (docs/72). -->
+          <BlockRow
+            v-if="me && !me.demo"
+            title="Collecter maintenant"
+            :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
+            :aria-busy="running || undefined"
+            :aria-disabled="running || undefined"
+            data-test="account-collect"
+            @click="running || collectNow()"
+          />
+        </div>
       </section>
       <!-- L'état de la collecte, dit aux lecteurs d'écran ; la ligne le montre à l'écran. -->
       <p
@@ -300,57 +311,75 @@ onMounted(() => {
         >
           Confidentialité et aide
         </h2>
-        <BlockRow
-          title="Mes données"
-          :to="rubric('donnees')"
-          data-test="account-data"
-        />
-        <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
-        <BlockRow
-          v-if="me?.auth_enabled && !me.demo"
-          title="Connexions"
-          :to="rubric('connexions')"
-          data-test="account-connections"
-        />
-        <BlockRow
-          title="Ce qui part à l'IA"
-          :to="{ path: '/tes-donnees', hash: '#ia' }"
-          data-test="account-ai-data"
-        />
-        <a
-          v-if="operatorEmail"
-          :href="`mailto:${operatorEmail}`"
-          class="block-row small"
-          data-test="account-help"
-        >
-          <span class="block-row-text"><span class="block-row-title">Aide et contact</span></span>
-          <span
-            class="arrow-circle"
-            aria-hidden="true"
-          ><AppIcon name="external" /></span>
-        </a>
-        <BlockRow
-          v-else
-          title="Aide et contact"
-          to="/a-propos"
-          data-test="account-help"
-        />
-        <BlockRow
-          v-if="showDiagnostic"
-          title="État du service"
-          to="/reglages/diagnostic"
-          data-test="account-diagnostic"
-        />
+        <div class="account-group">
+          <BlockRow
+            title="Mes données"
+            :to="rubric('donnees')"
+            data-test="account-data"
+          />
+          <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
+          <BlockRow
+            v-if="me?.auth_enabled && !me.demo"
+            title="Connexions"
+            :to="rubric('connexions')"
+            data-test="account-connections"
+          />
+          <BlockRow
+            title="Ce qui part à l'IA"
+            :to="{ path: '/tes-donnees', hash: '#ia' }"
+            data-test="account-ai-data"
+          />
+          <a
+            v-if="operatorEmail"
+            :href="`mailto:${operatorEmail}`"
+            class="block-row small"
+            data-test="account-help"
+          >
+            <span class="block-row-text"><span class="block-row-title">Aide et contact</span></span>
+            <span
+              class="arrow-circle"
+              aria-hidden="true"
+            ><AppIcon name="external" /></span>
+          </a>
+          <BlockRow
+            v-else
+            title="Aide et contact"
+            to="/a-propos"
+            data-test="account-help"
+          />
+          <BlockRow
+            v-if="showDiagnostic"
+            title="État du service"
+            to="/reglages/diagnostic"
+            data-test="account-diagnostic"
+          />
+        </div>
       </section>
-      <button
+      <!-- Prompt du 9 novembre, PR 8 (Compte, CompteSombre) : « Se déconnecter » dans sa propre carte, en rouge, avec
+           l'adresse e-mail dessous. -->
+      <section
         v-if="me?.auth_enabled"
-        type="button"
-        class="account-logout account-page-logout"
-        data-test="logout"
-        @click="signOut"
+        class="block account-block account-logout-block"
       >
-        <AppIcon name="logout" />Se déconnecter
-      </button>
+        <div class="account-group">
+          <button
+            type="button"
+            class="block-row small account-logout-row"
+            data-test="logout"
+            @click="signOut"
+          >
+            <AppIcon name="logout" />
+            <span class="block-row-text">
+              <span class="block-row-title">Se déconnecter</span>
+              <span
+                v-if="image.email.value"
+                class="block-row-line"
+                data-test="logout-email"
+              >{{ image.email.value }}</span>
+            </span>
+          </button>
+        </div>
+      </section>
     </div>
   </section>
 </template>

@@ -20,7 +20,7 @@ vi.mock("../composables/useProfiles", () => ({
 }));
 
 const DATA: Record<string, unknown> = {
-  "/api/identity": { name: "Kevin Di Nocera" },
+  "/api/identity": { name: "Kevin Di Nocera", email: "kevin@example.ch" },
   "/api/documents": [{ id: 1, kind: null }, { id: 2, kind: "certificate" }, { id: 3, kind: null }],
   "/api/privacy": { contact: "Kevin, aide@example.ch" },
 };
@@ -44,17 +44,27 @@ afterEach(() => {
 });
 
 describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", () => {
-  it("« Se déconnecter » sous les blocs, en rouge ; pas sans connexion (§10.4, 9 novembre)", async () => {
+  it("« Se déconnecter » dans sa carte, en rouge, l'adresse dessous ; pas sans connexion (§10.4, PR 8 du 9 novembre)", async () => {
     const wrapper = await mountPage();
     const button = wrapper.get("[data-test=logout]");
-    expect(button.text()).toBe("Se déconnecter");
-    expect(button.classes()).toContain("account-logout");
+    expect(button.find(".block-row-title").text()).toBe("Se déconnecter");
+    expect(button.get("[data-test=logout-email]").text()).toBe("kevin@example.ch");
+    expect(button.classes()).toContain("account-logout-row");
+    expect(button.element.closest(".account-group")).not.toBeNull();
     await button.trigger("click");
     await flushPromises();
     expect(logout).toHaveBeenCalledTimes(1);
     me.value = { ...me.value, auth_enabled: false };
     await wrapper.vm.$nextTick();
     expect(wrapper.find("[data-test=logout]").exists()).toBe(false);
+  });
+
+  it("une carte par groupe (PR 8 du 9 novembre)", async () => {
+    const wrapper = await mountPage();
+    const groups = wrapper.findAll(".account-group");
+    // Profil, Mon parcours, Préférences, Recherche et outils, Confidentialité et aide, Se déconnecter.
+    expect(groups).toHaveLength(6);
+    expect(groups[1]!.findAll(".block-row").map((r) => r.find(".block-row-name").text())).toEqual(["Formations", "CV et lettres"]);
   });
 
   it("la carte du profil, puis les quatre groupes et leurs liens", async () => {
