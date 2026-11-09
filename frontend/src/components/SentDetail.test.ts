@@ -139,3 +139,45 @@ describe("Le détail d'Envoyées en cartes (§8.1)", () => {
     expect(wrapper.emitted("status")?.[0]?.[1]).toBe("entretien");
   });
 });
+
+describe("Le détail d'Envoyées sur téléphone (§8.3)", () => {
+  function mountPhone(overrides: Record<string, unknown> = {}) {
+    return mount(SentDetail, {
+      props: { phone: true, application: { ...application, ...overrides } as never, orpRow: { declared_at: "2026-10-05", missing: [], job_room: [] } as never },
+      global: { stubs: { teleport: true, ContactsPanel: true } },
+    });
+  }
+
+  it("barre « ‹ Envoyées » et « … » ; titre en H1, mots de statut, sans avatar ni Suivi", async () => {
+    const wrapper = mountPhone({ id: 20 });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-back]").text()).toBe("Envoyées");
+    expect(wrapper.find("[data-test=panel-title]").element.tagName).toBe("H1");
+    expect(wrapper.find(".sent-head-logo").exists()).toBe(false);
+    expect(wrapper.find("[data-test=sent-steps]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=word-no-answer]").exists()).toBe(true);
+    await wrapper.find("[data-test=sent-back]").trigger("click");
+    expect(wrapper.emitted("close")).toHaveLength(1);
+  });
+
+  it("carte de relance compacte : « Voir et envoyer » ouvre la feuille Relance avec le message entier", async () => {
+    const wrapper = mountPhone({ id: 21 });
+    await flushPromises();
+    expect(wrapper.find(".follow-card-help").text()).toBe("Court et poli, à envoyer sur LinkedIn à Lombard Odier.");
+    await wrapper.find("[data-test=follow-sheet-open]").trigger("click");
+    expect(wrapper.find("[data-test=follow-sheet] [data-test=follow-quote]").text()).toBe("Bonjour, je me permets de revenir vers vous.");
+    expect(wrapper.find("[data-test=follow-edit]").text()).toBe("Modifier le message");
+  });
+
+  it("deux lignes « Ce que tu as envoyé » et « Trouver un contact », chacune ouvre sa feuille", async () => {
+    const wrapper = mountPhone({ id: 22 });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-docs-open]").text()).toContain("Lettre, CV adapté et l’annonce");
+    expect(wrapper.find("[data-test=sent-find-open]").text()).toContain("2 pistes chez Lombard Odier");
+    expect(wrapper.find("[data-test=section-documents]").exists()).toBe(false);
+    await wrapper.find("[data-test=sent-docs-open]").trigger("click");
+    expect(wrapper.find("[data-test=sent-docs-sheet] [data-test=sent-cv]").attributes("href")).toBe("/api/cvs/5/pdf");
+    await wrapper.find("[data-test=sent-find-open]").trigger("click");
+    expect(wrapper.find("[data-test=sent-find-sheet] [data-test=find-recruiting]").exists()).toBe(true);
+  });
+});

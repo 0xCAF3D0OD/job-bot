@@ -12,13 +12,15 @@ import ApplicationOrp from "./ApplicationOrp.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpCard from "./FollowUpCard.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import BottomSheet from "./BottomSheet.vue";
+import SentRows, { type SentRow } from "./SentRows.vue";
 import SidePanel from "./SidePanel.vue";
 
 // Le détail d'une candidature envoyée sur ordinateur (MODIFICATIONS du 9 novembre, §8.1 ; maquette
 // CandidaturesOrdinateurB, onglet Envoyées) : des cartes blanches séparées sur le crème, 8 px entre elles. En tête,
 // le statut en mots et le Suivi en 5 étapes ; à gauche la relance conseillée puis l'Historique ; à droite (280 px)
 // « Ce que tu as envoyé » et « Trouver un contact ».
-const props = defineProps<{ application: Application; orpRow?: OrpRow | null }>();
+const props = defineProps<{ application: Application; orpRow?: OrpRow | null; phone?: boolean }>();
 const emit = defineEmits<{
   status: [application: Application, status: ApplicationStatus];
   edit: [application: Application];
@@ -27,6 +29,7 @@ const emit = defineEmits<{
   prepare: [application: Application];
   practice: [application: Application];
   changed: [];
+  close: [];
 }>();
 
 const company = computed(() => props.application.company || props.application.job_title);
@@ -51,23 +54,23 @@ async function loadContacts(): Promise<void> {
     const { data } = await api.GET("/api/applications/{application_id}/contacts", {
       params: { path: { application_id: props.application.id } },
     });
-    contacts.value = data ?? null;
+    contacts.value = data && Array.isArray(data.searches) ? data : null;
   } catch {
     contacts.value = null;
   }
 }
 watch(() => props.application.id, () => void loadContacts(), { immediate: true });
 const linkedinUrl = computed(() => contacts.value?.searches.find((s) => s.kind === "recruiting")?.url ?? null);
-const findRows = computed(() => {
+const findRows = computed<SentRow[]>(() => {
   const page = contacts.value;
   if (!page) return [];
   const rows = page.searches.map((s) => {
     const role = /\(([^)]*)\)$/.exec(s.label)?.[1];
     const label = s.label.replace(/\s*\([^)]*\)$/, "");
     const sub = s.kind === "recruiting" ? `${page.company} sur LinkedIn` : s.kind === "team" ? (role ?? page.company) : `Sur LinkedIn, chez ${page.company}`;
-    return { label, sub, url: s.url, test: `find-${s.kind}` };
+    return { label, sub, href: s.url, download: false, test: `find-${s.kind}` };
   });
-  if (page.website) rows.push({ label: "Site de l’employeur", sub: hostname(page.website), url: page.website, test: "find-website" });
+  if (page.website) rows.push({ label: "Site de l’employeur", sub: hostname(page.website), href: page.website, download: false, test: "find-website" });
   return rows;
 });
 
@@ -80,7 +83,7 @@ function hostname(url: string): string {
 }
 const sentRows = computed(() => {
   const a = props.application;
-  const rows: { label: string; sub: string; href: string; download: boolean; test: string }[] = [];
+  const rows: SentRow[] = [];
   if (a.letter_draft_id) rows.push({ label: "Lettre", sub: "PDF", href: `/api/letters/${a.letter_draft_id}/pdf`, download: true, test: "sent-letter" });
   if (a.cv_draft_id) rows.push({ label: "CV adapté", sub: "PDF", href: `/api/cvs/${a.cv_draft_id}/pdf`, download: true, test: "sent-cv" });
   if (a.application_url?.startsWith("http")) {
@@ -93,6 +96,17 @@ const sentRows = computed(() => {
 const assistant = useAssistant();
 const statusOpen = ref(false);
 const contactsOpen = ref(false);
+const docsOpen = ref(false);
+const findOpen = ref(false);
+// Les deux lignes de 72 px du téléphone (§8.3) : « Lettre, CV adapté et l’annonce », « 3 pistes chez Sword Services ».
+const sentSummary = computed(() => {
+  const names = sentRows.value.map((r, i) => (i === 0 ? r.label : r.label.replace(/^L’a/, "l’a")));
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names.at(-1)}` : (names[0] ?? "");
+});
+const findSummary = computed(() => {
+  const n = findRows.value.length;
+  return `${n} ${n > 1 ? "pistes" : "piste"} chez ${props.application.company}`;
+});
 const menuItems = computed<MoreMenuItem[]>(() => {
   const a = props.application;
   return [
@@ -117,22 +131,46 @@ function onStatus(value: ApplicationStatus): void {
 
 <template>
   <div
-    class="sent-detail-cards"
+    :class="['sent-detail-cards', { 'sent-detail-phone': phone }]"
     data-test="application-panel"
   >
+    <!-- Téléphone (§8.3, EnvoyeeDetail) : l'écran poussé a sa barre « ‹ Envoyées » et « … », sans barre d'onglets. -->
+    <header
+      v-if="phone"
+      class="sent-screen-top"
+    >
+      <button
+        type="button"
+        class="sent-screen-back"
+        data-test="sent-back"
+        @click="emit('close')"
+      >
+        <AppIcon name="chevron-left" />Envoyées
+      </button>
+      <MoreMenu
+        :items="menuItems"
+        label="Plus d’options"
+        test-id="panel-more"
+      />
+    </header>
     <div class="sent-card sent-head">
       <div class="sent-head-top">
         <span
+          v-if="!phone"
           :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
           aria-hidden="true"
         >{{ initials(company) }}</span>
         <div class="sent-head-title">
-          <h2 data-test="panel-title">
+          <component
+            :is="phone ? 'h1' : 'h2'"
+            data-test="panel-title"
+          >
             {{ application.job_title }}
-          </h2>
+          </component>
           <p>{{ [application.company, application.location].filter(Boolean).join(" · ") }}</p>
         </div>
         <MoreMenu
+          v-if="!phone"
           :items="menuItems"
           label="Plus d’actions"
           test-id="panel-more"
@@ -152,7 +190,9 @@ function onStatus(value: ApplicationStatus): void {
           name="done"
         />{{ word.text }}</span>
       </p>
+      <!-- Pas de graphique de suivi sur téléphone (§8.3) : les mots disent où on en est. -->
       <ol
+        v-if="!phone"
         class="sent-steps"
         aria-label="Suivi de la candidature"
         data-test="sent-steps"
@@ -186,6 +226,7 @@ function onStatus(value: ApplicationStatus): void {
         <FollowUpCard
           v-if="followUp"
           :application="application"
+          :compact="phone"
           :linkedin-url="linkedinUrl"
           @edit="emit('edit', application)"
           @done="emit('changed')"
@@ -221,6 +262,30 @@ function onStatus(value: ApplicationStatus): void {
           @changed="emit('changed')"
         />
         <section
+          v-if="phone && (sentRows.length || findRows.length)"
+          class="sent-card sent-links"
+          aria-label="Documents et contacts"
+        >
+          <button
+            v-if="sentRows.length"
+            type="button"
+            data-test="sent-docs-open"
+            @click="docsOpen = true"
+          >
+            <span class="sent-row-text"><b>Ce que tu as envoyé</b><span>{{ sentSummary }}</span></span>
+            <AppIcon name="chevron" />
+          </button>
+          <button
+            v-if="findRows.length"
+            type="button"
+            data-test="sent-find-open"
+            @click="findOpen = true"
+          >
+            <span class="sent-row-text"><b>Trouver un contact</b><span>{{ findSummary }}</span></span>
+            <AppIcon name="chevron" />
+          </button>
+        </section>
+        <section
           class="sent-history"
           aria-labelledby="sent-history-title"
           data-test="sent-history"
@@ -254,55 +319,53 @@ function onStatus(value: ApplicationStatus): void {
         </section>
       </div>
       <aside
+        v-if="!phone"
         class="sent-side"
         aria-label="Documents et contacts"
       >
-        <section
+        <SentRows
           v-if="sentRows.length"
-          class="sent-card sent-rows"
+          title="Ce que tu as envoyé"
+          :rows="sentRows"
           data-test="section-documents"
-        >
-          <h3>Ce que tu as envoyé</h3>
-          <a
-            v-for="row in sentRows"
-            :key="row.test"
-            :href="row.href"
-            :download="row.download || undefined"
-            :target="row.download ? undefined : '_blank'"
-            :rel="row.download ? undefined : 'noopener noreferrer'"
-            :data-test="row.test"
-          >
-            <span class="sent-row-text"><b>{{ row.label }}</b><span>{{ row.sub }}</span></span>
-            <AppIcon :name="row.download ? 'download' : 'external'" />
-            <span
-              v-if="!row.download"
-              class="visually-hidden"
-            > (nouvel onglet)</span>
-          </a>
-        </section>
-        <section
+        />
+        <SentRows
           v-if="findRows.length"
-          class="sent-card sent-rows"
+          title="Trouver un contact"
+          :rows="findRows"
           data-test="section-contacts"
-        >
-          <h3>Trouver un contact</h3>
-          <a
-            v-for="row in findRows"
-            :key="row.test"
-            :href="row.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            :data-test="row.test"
-          >
-            <span class="sent-row-text"><b>{{ row.label }}</b><span>{{ row.sub }}</span></span>
-            <AppIcon name="external" />
-            <span class="visually-hidden"> (nouvel onglet)</span>
-          </a>
-        </section>
+        />
       </aside>
     </div>
 
-    <SidePanel
+    <!-- Sur téléphone, des feuilles du bas (BottomSheet) ; sur ordinateur, des panneaux à droite. -->
+    <template v-if="phone">
+      <BottomSheet
+        :open="docsOpen"
+        title="Ce que tu as envoyé"
+        @close="docsOpen = false"
+      >
+        <SentRows
+          :rows="sentRows"
+          data-test="sent-docs-sheet"
+        />
+      </BottomSheet>
+      <BottomSheet
+        :open="findOpen"
+        title="Trouver un contact"
+        @close="findOpen = false"
+      >
+        <p class="sent-sheet-help">
+          Une personne de l’équipe répond souvent plus vite que l’adresse générale.
+        </p>
+        <SentRows
+          :rows="findRows"
+          data-test="sent-find-sheet"
+        />
+      </BottomSheet>
+    </template>
+    <component
+      :is="phone ? BottomSheet : SidePanel"
       :open="statusOpen"
       title="Statut"
       @close="statusOpen = false"
@@ -328,8 +391,9 @@ function onStatus(value: ApplicationStatus): void {
           {{ text }}
         </label>
       </fieldset>
-    </SidePanel>
-    <SidePanel
+    </component>
+    <component
+      :is="phone ? BottomSheet : SidePanel"
       :open="contactsOpen"
       title="Prises de contact"
       @close="contactsOpen = false"
@@ -341,7 +405,7 @@ function onStatus(value: ApplicationStatus): void {
         :application-id="application.id"
         @changed="emit('changed')"
       />
-    </SidePanel>
+    </component>
   </div>
 </template>
 
@@ -387,6 +451,8 @@ function onStatus(value: ApplicationStatus): void {
 .sent-plain .link { min-height: var(--target-min); font-weight: var(--weight-bold); }
 .sent-side { display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-rows { padding-bottom: 0; }
+.sent-rows-bare { padding-top: 0; }
+.sent-rows-bare a:first-of-type { border-top: 0; }
 .sent-rows h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); line-height: var(--space-6); }
 .sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line); color: var(--text); text-decoration: none; }
 .sent-rows a:hover b { text-decoration: underline; }
@@ -408,4 +474,23 @@ function onStatus(value: ApplicationStatus): void {
 @media (max-width: 1279px) {
   .sent-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--sent-8); }
 }
+/* Téléphone (EnvoyeeDetail, §8.3) : barre de 56 « ‹ Envoyées » et « … », marges de 20, 12 px entre les cartes, titre
+   22/28 800, mots à 20 px du titre ; carte de deux lignes de 72 à chevron gris ; Historique 8 px plus bas. */
+.sent-detail-phone { --sent-72-row: 72px; --sent-22: 22px; --sent-28-line: 28px; gap: var(--space-3); padding: 0 var(--space-5) var(--space-8); }
+.sent-screen-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; height: var(--sent-56); margin: 0 calc(-1 * var(--space-3)); padding: 0 var(--space-2) 0 0; background: var(--bg); }
+.sent-screen-back { display: inline-flex; align-items: center; gap: 0; min-height: var(--target-min); padding: 0 var(--space-3) 0 var(--space-1); border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.sent-detail-phone .sent-head { padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
+.sent-detail-phone .sent-head-title h1 { margin: 0; font-size: var(--sent-22); line-height: var(--sent-28-line); font-weight: var(--weight-heavy); }
+.sent-detail-phone .sent-head-title p { margin: 0; line-height: var(--space-5); }
+.sent-detail-phone .sent-words { margin-top: var(--space-5); padding-left: 0; }
+.sent-detail-phone .sent-grid { grid-template-columns: minmax(0, 1fr); }
+.sent-detail-phone .sent-main { gap: var(--space-3); }
+.sent-links { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.sent-links button { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-72-row); padding: var(--space-3) var(--sent-18-5); border: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sent-links button + button { border-top: 1px solid var(--line-soft); }
+.sent-links .sent-row-text b { font-size: var(--font-body); line-height: var(--space-6); }
+.sent-links .sent-row-text span { margin-top: var(--space-1); font-size: var(--font-small); }
+.sent-links button > .icon { flex: none; color: var(--text-secondary); }
+.sent-detail-phone .sent-history { margin-top: var(--space-2); }
+.sent-sheet-help { margin: 0 0 var(--space-4); font-size: var(--font-label); line-height: var(--sent-22); color: var(--text-secondary); }
 </style>
