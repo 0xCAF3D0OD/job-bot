@@ -125,7 +125,9 @@ describe("PreparationView", () => {
     mockGet([letter(12, 2), letter(11, 1, { edited_at: "2026-10-05T09:00:00Z" })]);
     PUT.mockResolvedValue({ data: letter(11, 1, { subject: "Candidature", edited_at: "2026-10-05T10:00:00Z" }) });
     const wrapper = await mountView();
-    expect(wrapper.findAll("[data-test=version]")).toHaveLength(2);
+    // Les versions sont dans le panneau « Versions et téléchargement » (§2.2), ouvert par la ligne « Versions · 2 ».
+    expect(wrapper.get("[data-test=versions-open]").text()).toContain("Versions · 2");
+    expect(wrapper.findAll("[data-test=sheet-version]")).toHaveLength(2);
     // La version affichée est marquée (pastille de sélection, aria-current).
     expect(wrapper.find(".versions [aria-current=page]").text()).toContain("Version 1");
 
@@ -144,7 +146,7 @@ describe("PreparationView", () => {
     expect(long.length).toBeGreaterThan(300);
     mockGet([letter(12, 2, { instruction: long }), letter(11, 1)]);
     const wrapper = await mountView();
-    const versions = wrapper.findAll("[data-test=version]");
+    const versions = wrapper.findAll("[data-test=sheet-version]");
     const named = versions.find((v) => v.text().includes("Insiste"))!;
     expect(named.find(".grouped-row-title").text()).toBe("Version 2");
     expect(named.find(".grouped-row-description").text()).toBe(long);
@@ -213,11 +215,15 @@ describe("PreparationView", () => {
     const line = wrapper.find("[data-test=review-line]");
     expect(line.attributes("aria-live")).toBe("polite");
     expect(line.text()).toBe("Relue : 6/7. À renforcer : précision.");
-    const pills = wrapper.findAll("[data-test=review-detail] [data-test=state-pill]");
-    expect(pills.map((p) => p.text())).toContain("À revoir");
-    expect(pills.filter((p) => p.text() === "Réussi")).toHaveLength(6);
-    expect(wrapper.find("[data-test=review-precision] .state-pill").classes()).toContain("todo");
-    expect(wrapper.find("[data-test=review-detail] .state-pill.error").exists()).toBe(false);
+    // Sur ordinateur (§2.2) : la ligne Relecture de « Ta candidature » ouvre le panneau, le point à renforcer d'abord.
+    const row = wrapper.get("[data-test=review-open]");
+    expect(row.text()).toContain("6 sur 7, 1 point à renforcer");
+    expect(row.find(".prep-file-sub").classes()).toContain("todo");
+    await row.trigger("click");
+    const sheet = wrapper.get("[data-test=review-sheet]");
+    expect(sheet.findAll("h3").map((h) => h.text())).toEqual(["À renforcer · 1", "Vérifié · 6"]);
+    expect(sheet.get("[data-test=review-precision]").text()).toContain("Peu de chiffres.");
+    expect(sheet.text()).toContain("corrigée une fois");
   });
 
   it("consigne hors de portée : une ligne sous la consigne, gardée, pas de nouvelle version", async () => {
@@ -286,10 +292,11 @@ describe("barre de candidature", () => {
     expect(letterTab.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
     expect(letterTab.find("[data-test=tab-cv] [data-test=step-done]").exists()).toBe(true);
     // Une seule étape « courante » pour les lecteurs d'écran (WCAG 4.1.2, audit du 22.10.2026).
-    expect(letterTab.findAll("[aria-current]").map((a) => a.attributes("data-test"))).toEqual(["tab-letter"]);
+    const current = letterTab.findAll("[aria-current]").filter((a) => !a.element.closest("dialog"));
+    expect(current.map((a) => a.attributes("data-test"))).toEqual(["tab-letter"]);
     expect(letterTab.find("[data-test=tab-letter]").attributes("aria-current")).toBe("step");
     expect(letterTab.find("[data-test=apply-bar]").exists()).toBe(false);
-    expect(letterTab.find("[data-test=pdf]").text()).toBe("PDF");
+    expect(letterTab.find("[data-test=pdf]").text()).toBe("Lettre (PDF)");
     expect(letterTab.find("[data-test=save-letter]").exists()).toBe(false);
     letterTab.unmount();
 
@@ -544,22 +551,56 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
   });
 
-  it("ordinateur (lot 15.1) : « J'ai relu la lettre » en bas enregistre la relecture puis passe au CV ; la mise en page", async () => {
+  it("ordinateur (§2.2) : vignettes de modèle, carte « Ta candidature », « J’ai relu, continuer » dans la colonne de droite", async () => {
     mockGet([letter(11, 1)]);
     PUT.mockResolvedValue({ data: letter(11, 1, { read_at: "2026-10-05T09:00:00Z" }) });
     const wrapper = await mountView();
     const steps = wrapper.find("[data-test=prep-desk-head] .step-tabs");
     expect(steps.text()).toContain("1. Lettre");
     expect(steps.text()).toContain("2. CV");
-    const pills = wrapper.findAll("[data-test=layout-card] .layout-card-pills button");
-    expect(pills.map((b) => b.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
-    expect(pills.filter((b) => b.attributes("aria-pressed") === "true")).toHaveLength(1);
-    const read = wrapper.find("[data-test=prep-desk-bottom] [data-test=letter-read]");
-    expect(read.text()).toBe("J’ai relu la lettre");
+    // Quatre vignettes de 48 × 64, une seule choisie.
+    const thumbs = wrapper.findAll("[data-test=layout-card] .layout-card-thumbs button");
+    expect(thumbs.map((b) => b.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
+    expect(thumbs.every((b) => b.find("svg[width='48'][height='64']").exists())).toBe(true);
+    expect(thumbs.filter((b) => b.attributes("aria-pressed") === "true")).toHaveLength(1);
+    // « Ta candidature » : Versions et CV adapté ; la retouche reste à gauche, sans le bouton.
+    const file = wrapper.get("[data-test=prep-file]");
+    expect(file.find("h2").text()).toBe("Ta candidature");
+    expect(file.get("[data-test=versions-open]").text()).toContain("Versions · 1");
+    expect(file.get("[data-test=cv-row]").text()).toContain("CV adapté");
+    expect(wrapper.find("[data-test=prep-desk-bottom] [data-test=letter-read]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=prep-desk-bottom] [data-test=composer-input]").exists()).toBe(true);
+    const read = wrapper.get("[data-test=prep-aside] [data-test=letter-read]");
+    expect(read.text()).toBe("J’ai relu, continuer");
     await read.trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/letters/{draft_id}/read", { params: { path: { draft_id: 11 } }, body: { read: true } });
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
+  });
+
+  it("ordinateur (§2.2) : la note dit « Proche de ton profil » et ouvre le panneau Compatibilité", async () => {
+    const scored = { ...offer, score: 80, strengths: [{ text: "Kubernetes : 40 services" }], gaps: [{ text: "Allemand : B2 demandé" }] };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/offers/{offer_id}" ? scored : path === "/api/offers/{offer_id}/letters" ? [letter(11, 1)] : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
+    );
+    const wrapper = await mountView();
+    const score = wrapper.get("[data-test=prep-score]");
+    expect(score.text()).toContain("Proche de ton profil");
+    expect(score.text()).toContain("Voir la compatibilité");
+    expect(score.attributes("aria-haspopup")).toBe("dialog");
+    await score.trigger("click");
+    const sheet = wrapper.get("[data-test=compat-sheet]");
+    expect(sheet.text()).toContain("Kubernetes");
+    expect(sheet.text()).toContain("B2 demandé");
+  });
+
+  it("ordinateur (§2.2) : sans lettre, la page A4 grisée et la carte « Pas encore de lettre » avec « Générer la lettre »", async () => {
+    mockGet([]);
+    const wrapper = await mountView();
+    const empty = wrapper.get("[data-test=no-letter]");
+    expect(empty.text()).toContain("Pas encore de lettre pour cette offre");
+    expect(empty.get("[data-test=write]").text()).toContain("Générer la lettre");
+    expect(wrapper.find("[data-test=prep-file]").exists()).toBe(false);
   });
 
   it("« J'ai relu, continuer » refusé (démo) : le refus s'affiche et l'on reste sur la lettre", async () => {

@@ -22,11 +22,13 @@ const VIEWS: Record<string, string> = {
 const PRESENTATION = ["LoginView", "DiscoverView", "WelcomeView"];
 const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
 // Titres repris tels quels des maquettes qui font foi (Mon compte ; Mes alertes e-mail, maquette du 8 novembre ;
-// Mon parcours, maquette Compte, déjà là avant le lot 18 : le sur-titre est passé de GroupedList à un h2).
+// Mon parcours, maquette Compte, déjà là avant le lot 18 : le sur-titre est passé de GroupedList à un h2 ; Ta candidature,
+// maquette PreparerOrdinateur du 9 novembre).
 const MAQUETTE = new Set([
   "./components/AccountMenu.vue : Mon compte",
   "./views/AlertsView.vue : Mes alertes e-mail",
   "./views/AccountView.vue : Mon parcours",
+  "./views/PreparationView.vue : Ta candidature",
 ]);
 
 function template(source: string): string {

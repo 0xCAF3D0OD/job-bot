@@ -29,6 +29,9 @@
   --paper-shadow: 0 2px 8px rgb(27 31 42 / 12%);
   /* Carte sélectionnée (§12 du 9 novembre) : #F5F7FE en clair, #232B45 en sombre. */
   --selected-bg: #F5F7FE;
+  /* Vignettes de modèle (PreparerOrdinateur) : la feuille blanche et ses lignes grises ; en sombre, le fond et #5E574F. */
+  --thumb-paper: #FFFFFF;
+  --thumb-line: #B9B4A8;
   --field-border: #8C8478;
   --text-disabled: #B8B3A8;
   /* Les ombres de la maquette du 8 novembre : panneaux latéraux, menus, carte à cheval sur la bande, Composer. */
@@ -203,6 +206,8 @@
     --card-line: #4E473E;
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
+    --thumb-paper: #171411;
+    --thumb-line: #5E574F;
     --field-border: #8C8478;
     --text-disabled: #5E574F;
     --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
@@ -253,6 +258,8 @@
   --card-line: #4E473E;
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
+  --thumb-paper: #171411;
+  --thumb-line: #5E574F;
   --field-border: #8C8478;
   --text-disabled: #5E574F;
   --shadow-panel: -12px 0 32px rgba(27,31,42,.12);

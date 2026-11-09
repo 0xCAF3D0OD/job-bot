@@ -25,6 +25,16 @@ from playwright.async_api import async_playwright
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 AUDIT = (Path(__file__).resolve().parents[2] / "docs/mobile/outils/audit-grille.js").read_text(encoding="utf-8")
 
+# Ordinateur (MODIFICATIONS du 9 novembre, §1 et §11) : les mêmes règles à 1440 px, sauf les cibles, de 24 px au moins
+# (WCAG 2.5.8) au lieu de 44. Le script du paquet n'a pas ce mode : seule sa règle 6 est adaptée ici.
+# La page A4 (lettre, CV) suit sa propre typographie d'imprimé, comme la `.page` des maquettes : hors de la grille de 4.
+AUDIT_DESK = (
+    AUDIT.replace("r.height<44||r.width<44", "r.height<24||r.width<24")
+    .replace("cible tactile >= 44 px", "cible >= 24 px (ordinateur)")
+    .replace("document.querySelectorAll('.scroll *, .top, .bar')", "document.querySelectorAll('.scroll *:not(.print-sheet, .print-sheet *), .top, .bar')")
+)
+assert AUDIT_DESK.count(":not(.print-sheet") == 1 and "<24" in AUDIT_DESK, "le script du paquet a changé : adapter AUDIT_DESK"
+
 # Classe de la maquette ← éléments de l'application qui jouent le même rôle.
 MAPPING = {
     "scroll": "main",
@@ -72,6 +82,11 @@ SCREENS: list[tuple[str, str | None]] = [
     # « Tout est lu » : tout lire, puis l'onglet « Non lues ».
     ("notifications", "[data-test=read-all] && [data-test=filter-unread]"),
 ]
+# Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
+DESK_SCREENS: list[tuple[str, str | None]] = [
+    ("candidatures/offres/{offer}/preparer", None),
+    ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
+]
 
 
 async def main() -> int:
@@ -87,9 +102,11 @@ async def main() -> int:
             "offer": offers["items"][0]["id"] if offers.get("items") else 0,
             "application": applications[0]["id"] if applications else 0,
         }
-        for scheme in ("light", "dark"):
-            page = await browser.new_page(viewport={"width": 390, "height": 844}, color_scheme=scheme, has_touch=True, is_mobile=True)
-            for path, opener in SCREENS:
+        runs = [(390, 844, SCREENS, AUDIT), (1440, 900, DESK_SCREENS, AUDIT_DESK)]
+        for scheme, (width, height, screens, audit) in ((s, r) for s in ("light", "dark") for r in runs):
+            phone = width < 821
+            page = await browser.new_page(viewport={"width": width, "height": height}, color_scheme=scheme, has_touch=phone, is_mobile=phone)
+            for path, opener in screens:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")
                 await page.wait_for_timeout(1500)
@@ -97,10 +114,10 @@ async def main() -> int:
                     await page.click(step)
                     await page.wait_for_timeout(600)
                 await page.evaluate(PRELUDE, MAPPING)
-                faults = await page.evaluate(AUDIT)
+                faults = await page.evaluate(audit)
                 where = f"/{url}" + (f" ({opener})" if opener else "")
                 for fault in faults:
-                    print(f"390 px {scheme}  {where}  {json.dumps(fault, ensure_ascii=False)}")
+                    print(f"{width} px {scheme}  {where}  {json.dumps(fault, ensure_ascii=False)}")
                 total += len(faults)
             await page.close()
         await browser.close()
