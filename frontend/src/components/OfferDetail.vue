@@ -275,6 +275,13 @@ function textSaved(): void {
 const otherLinks = computed(() =>
   props.offer.links.filter((link) => props.offer.status === "applied" || link.url !== postLink.value?.url),
 );
+// « Préparer ma candidature » lance l'écriture de la lettre dès l'arrivée, le CV adapté en même temps (MODIFICATIONS
+// du 9 novembre, §7 n° 1) ; « Reprendre la lettre » ouvre seulement la préparation.
+const prepareLink = computed(() =>
+  props.offer.status === "preparing"
+    ? `/candidatures/offres/${props.offer.id}/preparer`
+    : `/candidatures/offres/${props.offer.id}/preparer?ecrire=1`,
+);
 const ADDRESS_SOURCE: Record<string, string> = {
   page: "annonce",
   registry: "registre IDE",
@@ -660,7 +667,7 @@ watch(
         </RouterLink>
         <RouterLink
           v-else
-          :to="`/candidatures/offres/${offer.id}/preparer`"
+          :to="prepareLink"
           class="button-link primary-link"
           data-test="prepare"
         >
@@ -750,7 +757,7 @@ watch(
       </RouterLink>
       <RouterLink
         v-else
-        :to="`/candidatures/offres/${offer.id}/preparer`"
+        :to="prepareLink"
         class="button-link primary-link offer-bar-main"
         data-test="prepare"
       >

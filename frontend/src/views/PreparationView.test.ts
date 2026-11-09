@@ -611,6 +611,66 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=prep-file]").exists()).toBe(false);
   });
 
+  it("« Préparer ma candidature » (§7 n° 1, §7.1) : la lettre s'écrit dès l'arrivée, le CV adapté en même temps", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
+    );
+    POST.mockImplementation(() => new Promise(() => {}));
+    const wrapper = await mountView("/offres/7/preparer?ecrire=1");
+    const paths = POST.mock.calls.map((call) => call[0]);
+    expect(paths).toContain("/api/offers/{offer_id}/letters");
+    expect(paths).toContain("/api/offers/{offer_id}/cvs");
+    // Le lancement ne se refait pas au rechargement de la page.
+    expect(wrapper.vm.$router.currentRoute.value.query.ecrire).toBeUndefined();
+    const band = wrapper.get("[data-test=letter-writing] [role=status]");
+    expect(band.text()).toContain("J’écris ta lettre… environ 20 secondes");
+    expect(band.text()).toContain("Le CV adapté se prépare en même temps");
+    const file = wrapper.get("[data-test=prep-file]");
+    expect(file.get("[data-test=letter-row]").text()).toContain("En cours d’écriture");
+    expect(file.get("[data-test=cv-row]").text()).toContain("En préparation");
+    expect(wrapper.get("[data-test=letter-read]").attributes("disabled")).toBeDefined();
+    // Puces et saisie grisées, hors d'atteinte tant que la lettre n'est pas écrite.
+    const bottom = wrapper.get("[data-test=prep-desk-bottom]");
+    expect(bottom.attributes("inert")).toBeDefined();
+    expect(bottom.get("[data-test=composer-input]").attributes("placeholder")).toBe("Tu pourras retoucher la lettre dès qu’elle est écrite");
+  });
+
+  it("sans ?ecrire=1, rien ne part tout seul", async () => {
+    mockGet([]);
+    await mountView();
+    expect(POST).not.toHaveBeenCalled();
+  });
+
+  it("ordinateur (§7.3) : la lettre en échec, « La lettre n’a pas pu être écrite » et « Réessayer »", async () => {
+    mockGet([]);
+    POST.mockResolvedValue({ error: { detail: "le service ne répond pas" }, response: { status: 502 } });
+    const wrapper = await mountView();
+    await wrapper.get("[data-test=write]").trigger("click");
+    await flushPromises();
+    const failed = wrapper.get("[data-test=letter-failed]");
+    expect(failed.text()).toContain("La lettre n’a pas pu être écrite");
+    expect(failed.text()).toContain("Rien n’est perdu");
+    expect(failed.get("[data-test=write]").text()).toContain("Réessayer");
+  });
+
+  it("ordinateur (§2.3, §7.3) : sans CV adapté, la page grisée et « Ce CV » ; en échec, « Réessayer »", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
+    );
+    POST.mockResolvedValue({ error: { detail: "le service ne répond pas" } });
+    const wrapper = await mountView("/offres/7/preparer?doc=cv");
+    const empty = wrapper.get("[data-test=no-cv]");
+    expect(empty.text()).toContain("Pas encore de CV adapté à cette offre");
+    expect(empty.text()).toContain("Ton CV d’origine ne change pas.");
+    expect(wrapper.get("[data-test=cv-side]").text()).toContain("Le CV adapté se prépare normalement pendant que tu relis la lettre.");
+    expect(wrapper.get("[data-test=layout-note]").text()).toBe("Le CV suivra ce modèle.");
+    await empty.get("[data-test=write-cv]").trigger("click");
+    await flushPromises();
+    const failed = wrapper.get("[data-test=cv-failed]");
+    expect(failed.text()).toContain("Le CV adapté n’a pas pu être préparé");
+    expect(failed.get("[data-test=write-cv]").text()).toContain("Réessayer");
+  });
+
   it("« J'ai relu, continuer » refusé (démo) : le refus s'affiche et l'on reste sur la lettre", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);

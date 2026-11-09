@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import { onDayAt } from "../format";
@@ -27,11 +27,14 @@ const savedAt = ref(0);
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
-const props = defineProps<{ offer: Offer; primary?: boolean }>();
+// `preparing` et `failed` : le CV adapté lancé avec la lettre (MODIFICATIONS du 9 novembre, §7 n° 1), en cours ou en échec.
+const props = defineProps<{ offer: Offer; primary?: boolean; preparing?: boolean; failed?: boolean }>();
 // Version affichée, pour le lien « CV (Word) » de la barre de la page.
 const emit = defineEmits<{ current: [id: number | null] }>();
 
 const LANGUAGES: Record<LetterLanguage, string> = { fr: "Français", en: "English", de: "Deutsch" };
+// La page A4 grisée du CV (PreparerOrdinateurCV) : le nom, puis les sections en lignes.
+const CV_LINES = [40, 60, 0, 30, 96, 92, 88, 0, 30, 94, 90, 70, 0, 30, 85, 60];
 const SECTIONS: Record<string, string> = {
   experience: "Expériences",
   competence: "Compétences",
@@ -87,6 +90,23 @@ async function load(): Promise<void> {
   loaded.value = true;
 }
 
+// Le CV préparé en même temps que la lettre est arrivé : on le montre.
+watch(
+  () => props.preparing,
+  (now, before) => {
+    if (before && !now) void load();
+  },
+);
+// Sur ordinateur, sans CV adapté (§2.3, §7.3, PreparerOrdinateurCV) : la page A4 grisée et une carte au centre. En échec,
+// « Le CV adapté n’a pas pu être préparé » et « Réessayer » ; sinon « Pas encore de CV adapté à cette offre ».
+const cvFailed = ref(false);
+const emptyCard = computed(() =>
+  props.failed || cvFailed.value
+    ? { title: "Le CV adapté n’a pas pu être préparé", text: "La préparation a été interrompue. Ton CV d’origine ne change pas.", action: "Réessayer" }
+    : { title: "Pas encore de CV adapté à cette offre", text: "jobA1 l’adapte à l’annonce, dans le modèle choisi. Ton CV d’origine ne change pas.", action: "Générer le CV adapté" },
+);
+const deskEmpty = computed(() => !phone.value && loaded.value && !selected.value);
+
 // Le texte qui vient d'arriver de l'IA apparaît ligne à ligne (docs/59 §4).
 const fresh = ref(false);
 // Des modifications non enregistrées : le choix se fait dans la page (docs/108 §1).
@@ -118,9 +138,13 @@ async function write(force = false): Promise<void> {
     // Le compteur de la formule suit ; à la limite, la ligne grise dit pourquoi (docs/125 §4).
     await refreshPlan();
     if (!data) {
-      if (!reached("cv")) error.value = detail(err, "La préparation du CV a échoué, réessaie.");
+      if (!reached("cv")) {
+        error.value = detail(err, "La préparation du CV a échoué, réessaie.");
+        cvFailed.value = true;
+      }
       return;
     }
+    cvFailed.value = false;
     cvs.value = [data, ...cvs.value];
     instruction.value = "";
     show(data);
@@ -128,6 +152,7 @@ async function write(force = false): Promise<void> {
     setTimeout(() => (fresh.value = false), 1000);
   } catch {
     error.value = "API injoignable.";
+    cvFailed.value = true;
   } finally {
     writing.value = false;
   }
@@ -278,7 +303,7 @@ onMounted(() => void load());
   <div :class="['prep-layout', { 'prep-desk': !phone }]">
     <div class="prep-main">
       <p
-        v-if="error"
+        v-if="error && !(deskEmpty && cvFailed && ['La préparation du CV a échoué, réessaie.', 'API injoignable.'].includes(error))"
         class="notice error"
         role="alert"
       >
@@ -341,14 +366,80 @@ onMounted(() => void load());
           data-test="no-cv"
         />
         <div
-          v-else-if="loaded && !selected && !writing"
+          v-else-if="deskEmpty && (writing || preparing)"
+          class="prep-writing"
+          data-test="cv-writing"
+        >
+          <p
+            class="prep-writing-band"
+            role="status"
+          >
+            <span
+              class="prep-spin"
+              aria-hidden="true"
+            />
+            <span>Je prépare ton CV adapté… environ 20 secondes</span>
+          </p>
+          <div class="prep-empty-page">
+            <div
+              class="prep-empty-sheet"
+              aria-hidden="true"
+            >
+              <i
+                v-for="(w, i) in CV_LINES"
+                :key="i"
+                :style="{ width: `${w}%` }"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          v-else-if="deskEmpty"
+          class="prep-empty-page"
+          :data-test="emptyCard.action === 'Réessayer' ? 'cv-failed' : 'no-cv'"
+        >
+          <div
+            class="prep-empty-sheet"
+            aria-hidden="true"
+          >
+            <i
+              v-for="(w, i) in CV_LINES"
+              :key="i"
+              :style="{ width: `${w}%` }"
+            />
+          </div>
+          <div
+            class="prep-empty-card"
+            :role="emptyCard.action === 'Réessayer' ? 'alert' : undefined"
+          >
+            <p class="prep-empty-title">
+              {{ emptyCard.title }}
+            </p>
+            <p class="prep-empty-text">
+              {{ emptyCard.text }}
+            </p>
+            <PlanLimit usage="cv" />
+            <BusyButton
+              class="primary"
+              :busy="writing"
+              busy-label="Préparation…"
+              :disabled="reached('cv')"
+              data-test="write-cv"
+              @click="write()"
+            >
+              {{ emptyCard.action }}
+            </BusyButton>
+          </div>
+        </div>
+        <div
+          v-else-if="loaded && !selected && !writing && !preparing"
           class="empty-detail prep-empty"
           data-test="no-cv"
         >
           <p>Aucun CV adapté pour cette offre.</p>
         </div>
         <AiWriting
-          v-else-if="writing && !selected"
+          v-else-if="(writing || preparing) && !selected"
           kind="cv"
         />
 
@@ -523,14 +614,29 @@ onMounted(() => void load());
            que pour la lettre). -->
       <LayoutCard
         v-if="!phone"
-        :note="words ? `${words} mots` : undefined"
+        :note="deskEmpty ? 'Le CV suivra ce modèle.' : words ? `${words} mots` : undefined"
       />
+      <!-- Sans CV adapté (PreparerOrdinateurCV) : la carte « Ce CV » dit qu'il se prépare pendant la relecture de la
+           lettre. -->
+      <section
+        v-if="deskEmpty"
+        class="side-card"
+        aria-labelledby="cv-side-title"
+        data-test="cv-side"
+      >
+        <h2 id="cv-side-title">
+          Ce CV
+        </h2>
+        <p class="layout-card-help">
+          Le CV adapté se prépare normalement pendant que tu relis la lettre.
+        </p>
+      </section>
       <OfferBrief
-        v-if="!phone"
+        v-if="!phone && !deskEmpty"
         :offer="offer"
       />
       <div
-        v-if="!phone"
+        v-if="!phone && !deskEmpty"
         class="side-card"
       >
         <h2>
