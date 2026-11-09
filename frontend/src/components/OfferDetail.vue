@@ -528,7 +528,7 @@ watch(
       data-test="offer-subhead"
     >
       <IconButton
-        icon="arrow-left"
+        icon="chevron-left"
         label="Retour aux candidatures"
         data-test="back-detail"
         @click="$emit('close')"
