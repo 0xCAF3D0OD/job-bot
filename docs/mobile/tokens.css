@@ -31,6 +31,8 @@
   --primary-graphic: #2445C2;  /* logo, anneaux, icônes, contours */
   --action: #2445C2;
   --on-action: #FFFFFF;
+  /* Lien d'un message sur fond inversé (« Annuler » de « Offre écartée », §10.1) : bleu clair sur fond foncé. */
+  --inverse-link: #AEBDFF;
   --page-blocks: var(--surface-muted);
   --row-blocks: var(--bg);
   --primary-text: #1A3496;     /* liens, boutons texte */
@@ -120,6 +122,7 @@
     --primary-graphic: #7D95FF;
     --action: #7D95FF;
     --on-action: #171411;
+    --inverse-link: #2445C2;
     --page-blocks: var(--bg);
     --row-blocks: var(--surface-muted);
     --primary-text: #AEBDFF;
@@ -159,6 +162,7 @@
   --primary-graphic: #7D95FF;
   --action: #7D95FF;
   --on-action: #171411;
+  --inverse-link: #2445C2;
   --page-blocks: var(--bg);
   --row-blocks: var(--surface-muted);
   --primary-text: #AEBDFF;

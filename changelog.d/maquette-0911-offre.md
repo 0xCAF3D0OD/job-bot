@@ -1,0 +1,1 @@
+Téléphone, §10.1 (9 novembre) : carte de la note avec « Voir la compatibilité », feuille « Compatibilité » (Points forts, À vérifier), « Écarter » avec le message « Annuler », feuilles du bas fermables par le retour et en glissant

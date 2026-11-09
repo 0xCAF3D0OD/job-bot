@@ -31,7 +31,7 @@ MAPPING = {
     "top": ".topbar, .grille-top",
     "bar": ".grille-bar",
     "row": ".block-row, .grille-row",
-    "s info": ".block.info",
+    "s info": ".block.info, .grille-info",
     "go": ".arrow-circle",
     "fam": ".grille-fam",
     "fh": ".grille-fh",
@@ -42,6 +42,13 @@ PRELUDE = r"""(mapping) => {
   // Ce qui n'est pas affiché (display: none, par exemple la feuille ORP réservée à l'impression) n'est pas à l'écran :
   // retiré avant l'audit, qui ne regarde pas la visibilité.
   [...document.body.querySelectorAll('*')].filter((e) => e.isConnected && getComputedStyle(e).display === 'none').forEach((e) => e.remove());
+  // Les <option> d'une liste fermée non plus (leurs marges sont celles du navigateur, pas les nôtres).
+  document.querySelectorAll('select option, select optgroup').forEach((o) => o.remove());
+  // Le contenu d'un <details> fermé n'est pas à l'écran non plus.
+  document.querySelectorAll('details:not([open])').forEach((d) => [...d.children].filter((c) => c.tagName !== 'SUMMARY').forEach((c) => c.remove()));
+  // Une sous-page du téléphone (détail d'une offre) couvre la liste : c'est elle, l'écran.
+  const sub = document.querySelector('.detail-panel.offer-blocks');
+  if (sub) mapping = { ...mapping, scroll: '.detail-panel.offer-blocks' };
   for (const [classes, selector] of Object.entries(mapping)) {
     document.querySelectorAll(selector).forEach((e) => e.classList.add(...classes.split(' ')));
   }
@@ -54,6 +61,8 @@ SCREENS: list[tuple[str, str | None]] = [
     ("bilan/orp", None),
     ("bilan", None),
     ("bilan/orp/candidature/{application}", None),
+    ("candidatures/offres/{offer}", None),
+    ("candidatures/offres/{offer}", "[data-test=compat-open]"),
 ]
 
 

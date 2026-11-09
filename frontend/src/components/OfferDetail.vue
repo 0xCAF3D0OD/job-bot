@@ -15,6 +15,7 @@ import ContactsPanel from "./ContactsPanel.vue";
 import DetailTwoColumns from "./DetailTwoColumns.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
+import OfferCompatSheet, { type CompatPoint } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
@@ -247,6 +248,21 @@ const noteDetail = computed(() => {
   const o = props.offer;
   return !!(o.why || o.level || strengths.value.length || gaps.value.length || scoreNote.value || scored.value);
 });
+// La feuille « Compatibilité » du téléphone (§10.1, 3 bis) : tous les points forts et tous les manques, le critère
+// séparé de sa valeur (« Compétences : Kubernetes… ») ; le niveau compte comme un point à vérifier.
+const compatOpen = ref(false);
+const compatPoint = (text: string): CompatPoint => {
+  const parts = pointParts(text);
+  return { key: parts.key, value: parts.rest };
+};
+const compatStrengths = computed(() => (props.offer.strengths ?? []).map((p) => compatPoint(p.text)));
+const compatGaps = computed(() => [
+  ...(partial.value ? [] : (props.offer.gaps ?? [])).map((p) => compatPoint(p.text)),
+  ...(props.offer.level && props.offer.level_detail ? [{ key: "Niveau", value: props.offer.level_detail }] : []),
+]);
+const compatHow = computed(() =>
+  [props.offer.why, scoreNote.value].filter((t): t is string => !!t?.trim()),
+);
 // Le poste (O6) : les trois résumés de l'IA, dans l'ordre du poste, de ce qu'il demande, de ce qu'il offre.
 const summaryParts = computed(() =>
   [props.offer.summary_role, props.offer.summary_asks, props.offer.summary_offers].filter((t): t is string => !!t?.trim()),
@@ -508,7 +524,7 @@ watch(
     <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
     <header
       v-if="sub"
-      class="offer-subhead"
+      class="offer-subhead grille-top"
       data-test="offer-subhead"
     >
       <IconButton
@@ -559,7 +575,7 @@ watch(
     <!-- La tête (maquette Offre, étape 6b) : logo, poste, « Entreprise · Lieu », l'état, les étiquettes. Sur
          ordinateur, les deux actions dessous (O10) ; sur téléphone, elles sont dans la barre du bas. -->
     <section
-      class="detail-offer"
+      :class="['detail-offer', { 'grille-info': sub }]"
       data-test="section-offer"
     >
       <div class="detail-head">
@@ -703,11 +719,25 @@ watch(
       @discard="sheetOpen = false; emit('status', 'ignored')"
       @sent="sheetOpen = false; emit('applied')"
     />
+    <OfferCompatSheet
+      v-if="sub && scored"
+      :open="compatOpen"
+      :score="offer.score ?? null"
+      :provisional="provisional"
+      :stale="offer.score_stale"
+      :verdict="matchTitle"
+      :tone="matchTone"
+      :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
+      :strengths="compatStrengths"
+      :gaps="compatGaps"
+      :how="compatHow"
+      @close="compatOpen = false"
+    />
     <!-- La barre du bas de la sous-page (O8) : « Écarter » (avec « Annuler » 6 s) et l'action principale ;
          une offre expirée mène aux offres proches (O7). -->
     <div
       v-if="withBar"
-      class="offer-bar"
+      class="offer-bar grille-bar"
       data-test="offer-bar"
     >
       <button
@@ -717,7 +747,7 @@ watch(
         data-test="offer-discard"
         @click="emit('status', 'ignored')"
       >
-        Ignorer
+        Écarter
       </button>
       <RouterLink
         v-if="offer.expired_at && offer.status !== 'preparing'"
@@ -746,7 +776,7 @@ watch(
     >
       <template #main>
         <section
-          :class="['detail-card', 'match-card', { 'detail-section': columns }]"
+          :class="['detail-card', 'match-card', { 'detail-section': columns, 'grille-info': sub }]"
           aria-labelledby="match-title"
           data-test="section-for-you"
         >
@@ -783,7 +813,7 @@ watch(
             </div>
           </div>
           <ul
-            v-if="matchLines.length"
+            v-if="matchLines.length && !sub"
             class="match-lines"
             data-test="match-lines"
           >
@@ -808,8 +838,21 @@ watch(
           >
             <AppIcon name="done" />Note refaite sur l’annonce complète.
           </p>
+          <!-- Téléphone (§10.1) : une seule ligne cliquable, « Voir la compatibilité », sur la ligne de texte du
+               verdict ; le détail est dans la feuille. -->
+          <button
+            v-if="sub && scored"
+            type="button"
+            class="compat-open"
+            aria-haspopup="dialog"
+            data-test="compat-open"
+            @click="compatOpen = true"
+          >
+            Voir la compatibilité
+            <AppIcon name="chevron" />
+          </button>
           <DisclosureRow
-            v-if="noteDetail"
+            v-if="noteDetail && !sub"
             title="Le détail de la note"
             class="match-detail"
             data-test="note-detail"
@@ -1182,57 +1225,65 @@ watch(
 .offer-brief-link { margin-top: var(--space-3); }
 /* La colonne principale est plus étroite : « Écrire à » et « Canal » des contacts passent l’un sous l’autre. */
 .offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
-/* Le détail d'une offre sur téléphone en blocs (MODIFICATIONS du 8 novembre au soir, lot 18, §10.1 ; HTML des maquettes
-   Offre et OffreSombre) : en-tête sur --page-blocks, trois blocs blancs sans bordure à 12 des bords et 8 entre eux
-   (22/20 dedans) ; logo de 52 à côté du poste (22/800) ; étiquettes grises ; anneau de 56, verdict 18/700, raisons
-   15/21 ; « Le poste » en 15/23 ; liens en 15/700 --primary-text ; barre du bas sur --bg : « Ignorer » à contour (48),
-   « Préparer ma candidature » plein (52). */
+/* Le détail d'une offre sur téléphone, version du 9 novembre (MODIFICATIONS §10.1, D35 ; HTML des maquettes Offre,
+   OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d'information (D35) blanches à
+   trait de 1,5 px --line-strong, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste
+   (logo 56, 16 px, intitulé 22/28 800, étiquettes grises 16 px dessous) et la note (anneau 56, verdict 18/24, puis
+   « Voir la compatibilité » sur la ligne du verdict, 56 px, trait au-dessus, chevron de 24 à 20 px du bord) ; puis
+   « Le poste » en section sur le fond (20 px au-dessus, sans trait) ; barre du bas sur --bg avec un trait :
+   « Écarter » à contour (48) et « Préparer ma candidature » plein (52). */
 @media (max-width: 820px) {
-  .offers-grid > .detail-column:not(.placeholder):has(.offer-blocks) { z-index: 39; background: var(--page-blocks); }
+  .offers-grid > .detail-column:not(.placeholder):has(.offer-blocks) { z-index: 39; background: var(--bg); }
   .offer-blocks {
-    --ob-8: 8px; --ob-12: 12px; --ob-14: 14px; --ob-22: 22px; --ob-20: 20px; --ob-28: 28px; --ob-52: 52px; --ob-56: 56px; --ob-48: 48px;
-    --ob-2: 2px; --ob-21: 21px; --ob-23: 23px; --ob-24: 24px; --ob-13: 13px;
+    --ob-pad: 18.5px; --ob-margin: 20px; --ob-gap: 16px; --ob-56: 56px; --ob-48: 48px; --ob-52: 52px; --ob-28: 28px;
+    --ob-24: 24px; --ob-23: 23px; --ob-21: 21px; --ob-12: 12px; --ob-13: 13px; --ob-text: 90.5px;
   }
-  .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { padding-left: var(--ob-12); padding-right: var(--ob-12); }
-  .offer-blocks .offer-subhead { margin: 0 calc(-1 * var(--ob-12)); padding-left: var(--space-2); padding-right: var(--space-2); background: var(--page-blocks); }
+  .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { gap: 0; padding-left: 0; padding-right: 0; background: var(--bg); }
+  .offer-blocks .offer-subhead { margin: 0; padding: var(--ob-12) var(--ob-margin); background: var(--bg); }
   .offer-blocks .offer-subhead .icon-button { width: var(--target-min); height: var(--target-min); color: var(--primary-text); }
-  .offer-blocks > .detail-offer, .offer-blocks .match-card, .offer-blocks .detail-post, .offer-blocks .detail-more-rows {
-    margin: var(--ob-8) 0 0; padding: var(--ob-22) var(--ob-20); background: var(--surface); border: 0; border-radius: var(--radius-card); box-shadow: none;
+  .offer-blocks > .detail-offer, .offer-blocks .match-card {
+    margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-card); box-shadow: none;
   }
-  .offer-blocks > .detail-offer { display: grid; grid-template-columns: var(--ob-52) minmax(0, 1fr); column-gap: var(--ob-14); row-gap: 0; align-items: center; }
+  .offer-blocks .detail-post, .offer-blocks .detail-more-rows {
+    margin: 0 var(--ob-margin); padding: var(--space-6) 0; background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none;
+  }
+  .offer-blocks .match-card + .detail-post { border-top: 0; padding-top: var(--space-5); }
+  .offer-blocks > .detail-offer { display: grid; grid-template-columns: var(--ob-56) minmax(0, 1fr); column-gap: var(--ob-gap); row-gap: 0; align-items: center; }
   .offer-blocks > .detail-offer > :not(.detail-head, .detail-title) { grid-column: 1 / -1; }
   .offer-blocks .detail-head { display: contents; }
   .offer-blocks .detail-top-actions { display: none; }
-  .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { gap: 0; background: var(--page-blocks); }
-  .offer-blocks .detail-head > .logo.large { width: var(--ob-52); height: var(--ob-52); border-radius: var(--radius-sm); }
+  .offer-blocks .detail-head > .logo.large { width: var(--ob-56); height: var(--ob-56); border-radius: var(--radius-sm); }
   .offer-blocks .detail-title { gap: 0; }
   .offer-blocks .detail-title h2 { font-size: var(--font-section); line-height: var(--ob-28); font-weight: var(--weight-heavy); letter-spacing: 0; }
-  .offer-blocks .detail-title .detail-sub { margin: var(--ob-2) 0 0; font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
-  .offer-blocks .offer-tags { margin-top: var(--ob-14); }
-  .offer-blocks .offer-tags li { padding: var(--space-1) var(--space-3); background: var(--surface-muted); border: 0; border-radius: var(--radius-sm); font-size: var(--ob-13); color: var(--text-tertiary); }
-  .offer-blocks .detail-offer .status-line, .offer-blocks .detail-offer .expired-notice { margin-top: var(--ob-14); }
+  .offer-blocks .detail-title .detail-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
+  .offer-blocks .offer-tags { gap: var(--space-2); margin-top: var(--ob-gap); }
+  .offer-blocks .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface-muted); border: 0; border-radius: var(--radius-sm); font-size: var(--ob-13); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
+  .offer-blocks .detail-offer .status-line, .offer-blocks .detail-offer .expired-notice { margin-top: var(--ob-gap); }
   .offer-blocks .match-card { display: block; }
-  .offer-blocks .match-head { gap: var(--ob-14); padding: 0; }
+  .offer-blocks .match-head { gap: var(--ob-gap); padding: 0; }
   .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
   .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }
-  .offer-blocks .match-sub { margin-top: var(--ob-2); font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
-  .offer-blocks .match-lines { gap: 0; margin-top: var(--ob-14); padding: 0; border: 0; }
-  .offer-blocks .match-lines li { gap: var(--space-3); padding: var(--ob-8) 0; font-size: var(--font-label); line-height: var(--ob-21); }
-  /* « Le détail de la note › » : un lien dans le bloc (§2.2, niveau texte) ; il se déplie sur place. */
-  .offer-blocks .match-detail.disclosure { margin-top: var(--ob-8); background: none; border: 0; border-radius: 0; }
-  .offer-blocks .match-detail > .disclosure-row { display: inline-flex; gap: 0; width: auto; min-height: var(--target-min); padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
-  .offer-blocks .match-detail > .disclosure-row .disclosure-title { font-weight: inherit; }
-  .offer-blocks .match-detail > .disclosure-row .disclosure-chevron { display: none; }
-  .offer-blocks .match-detail > .disclosure-row::after { content: " ›"; white-space: pre; }
-  .offer-blocks .match-detail > .disclosure-panel { padding: 0; }
+  .offer-blocks .match-sub { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
+  /* « Voir la compatibilité » : toute la ligne est le bouton, le texte sur la ligne du verdict (18,5 + 56 + 16). */
+  .offer-blocks .compat-open {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--ob-gap); width: calc(100% + 2 * var(--ob-pad)); max-width: none; min-height: var(--ob-56);
+    margin: var(--ob-gap) calc(-1 * var(--ob-pad)) calc(-1 * var(--ob-pad)); padding: 0 var(--ob-pad) 0 var(--ob-text); border: 0; border-top: 1px solid var(--line-soft);
+    border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
+  }
+  .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
   .offer-blocks .detail-post { display: block; }
   .offer-blocks .detail-post-head h3 { font-size: var(--font-title); line-height: var(--ob-24); }
-  .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-2) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
-  .offer-blocks .post-links { margin-top: var(--ob-8); }
+  .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
+  .offer-blocks .post-links { margin-top: var(--space-2); }
   .offer-blocks .post-links .link { color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
-  .offer-blocks .detail-more-rows { padding-top: var(--space-2); padding-bottom: var(--space-2); }
-  .offer-blocks .offer-bar { z-index: 40; gap: var(--space-3); padding: var(--ob-12) var(--ob-12) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
-  .offer-blocks .offer-bar-discard { min-height: var(--ob-48); padding: 0 var(--ob-20); font-size: var(--font-label); font-weight: var(--weight-bold); }
-  .offer-blocks .offer-bar-main { min-height: var(--ob-52); background: var(--action); border-color: var(--action); color: var(--on-action); }
+  .offer-blocks .offer-bar { z-index: 40; gap: var(--space-2); padding: var(--ob-12) var(--ob-margin) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+  .offer-blocks .offer-bar-discard { flex: none; min-height: var(--ob-48); padding: 0 var(--ob-margin); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offer-blocks .offer-bar-main { flex: 1; min-height: var(--ob-52); background: var(--action); border-color: var(--action); color: var(--on-action); }
+  /* §2.9 : chaque lien de la sous-page est une cible de 44 px de haut, et rien n'est poussé par une marge « auto »
+     (hors de la grille de 4) : l'en-tête de section et le repliable répartissent la place eux-mêmes. */
+  .offer-blocks :is(.link, .more-direct) { display: inline-flex; align-items: center; min-height: var(--target-min); }
+  .offer-blocks .section-more, .offer-blocks .disclosure-chevron { margin-left: 0; }
+  .offer-blocks .disclosure-row { justify-content: space-between; }
 }
 </style>
