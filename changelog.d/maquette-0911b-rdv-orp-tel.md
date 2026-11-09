@@ -1,0 +1,1 @@
+Rendez-vous ORP sur téléphone (9 novembre, PR 7) : une seule action dans la carte, le bouton plein « Préparer le rendez-vous », qui ouvre la feuille où se trouve « Imprimer ou télécharger en PDF ». « Voir ma feuille » est retiré ; la pastille « Ta feuille est prête » reste.

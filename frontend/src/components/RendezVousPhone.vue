@@ -16,7 +16,6 @@ import {
   upcomingAppointments,
 } from "../rendezVous";
 import { plural } from "../format";
-import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -39,7 +38,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
-  sheet: [];
   log: [];
   prepare: [application: Application];
   note: [id: number];
@@ -136,8 +134,9 @@ function cal(iso: string): { day: number; month: number } {
             >Feuille à compléter</span>
           </div>
         </div>
-        <!-- §10.7 (9 novembre) : ce qui préparait le rendez-vous passe dans une feuille du bas ; la carte garde une
-             ligne pour l'ouvrir, sur la ligne du texte (48 + 16). -->
+        <!-- §10.7 (9 novembre) : ce qui préparait le rendez-vous passe dans une feuille du bas. Prompt du 9 novembre,
+             PR 7 (maquettes RendezVous et RendezVousSombre) : une seule action dans la carte, le bouton plein qui ouvre
+             la feuille (elle porte « Imprimer ou télécharger en PDF ») ; plus de « Voir ma feuille ». -->
         <button
           type="button"
           class="rdv-prep-open"
@@ -145,15 +144,7 @@ function cal(iso: string): { day: number; month: number } {
           data-test="rdv-prep-open"
           @click="prepOpen = true"
         >
-          Préparer le rendez-vous<AppIcon name="chevron" />
-        </button>
-        <button
-          type="button"
-          class="rdv-sheet"
-          data-test="rdv-sheet"
-          @click="emit('sheet')"
-        >
-          Voir ma feuille
+          Préparer le rendez-vous
         </button>
       </article>
       <MeetingPrepSheet
@@ -371,19 +362,12 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-ready svg { flex: none; }
 .rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
 .rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
-/* « Préparer le rendez-vous › » (maquette RendezVous) : 56 px, traits --line au-dessus et en dessous, le texte sur la
-   ligne du titre (calendrier de 48 + 16), chevron de 24 au bord ; 16 px avant « Voir ma feuille ». */
+/* « Préparer le rendez-vous » (maquette RendezVous du 9 novembre) : le bouton plein de 52 px, 16 px sous l'en-tête. */
 .rdv-prep-open {
-  --rdv-text: calc(var(--space-12) + var(--space-4)); --rdv-row: 56px;
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--rdv-row);
-  margin-top: var(--space-4); padding: 0 0 0 var(--rdv-text); border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-  border-radius: 0; background: transparent; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
-}
-.rdv-prep-open > .icon { flex: none; width: var(--space-6); height: var(--space-6); }
-.rdv-sheet {
-  display: flex; align-items: center; justify-content: center; margin-top: var(--space-4); min-height: var(--btn-secondary); padding: 0 var(--space-4);
-  border: 0; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary);
-  font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer;
+  --rdv-btn: 52px;
+  display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--rdv-btn);
+  margin-top: var(--space-4); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
+  background: var(--primary); color: var(--on-primary); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer;
 }
 .rdv-prepare {
   display: flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: var(--target-min);
