@@ -3736,6 +3736,34 @@ main:focus { outline: none; }
 .bilan-section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 var(--space-1); }
 .bilan-section-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
 .bilan-section-head span { font-size: var(--font-small); color: var(--text-secondary); }
+/* Maquette du 9 novembre (BilanOrdinateur ; §2.5, §10.3) : la carte du mois sans ombre, trait de 1,5 px ; « À déclarer
+   à l'ORP », les recherches et les rendez-vous en cartes séparées (72 px, trait de 1,5 px, rayon 18), le statut en mot
+   coloré, puis le cercle à flèche gris de 36 px. */
+.bilan-page { --bilan-17: 17px; --bilan-gap-28: 28px; --bilan-pad: 18.5px; --bilan-pad-y: 14.5px; --bilan-card-h: 72px; --bilan-bar: 10px; --bilan-lh-21: 21px; }
+.bilan-page .bilan-orp-card { gap: var(--bilan-gap-28); padding: var(--bilan-pad); border: 1.5px solid var(--card-line); box-shadow: none; }
+.bilan-orp-card .orp-month-band { gap: calc(var(--space-2) + var(--space-1) / 2); }
+.bilan-orp-card .orp-month-band-head { font-size: var(--bilan-17); }
+.bilan-orp-card .orp-month-band-head strong:first-child { font-weight: var(--weight-bold); }
+.bilan-orp-card .orp-month-band-head strong:last-child { font-weight: var(--weight-heavy); }
+.bilan-orp-card .orp-month-band-bar { height: var(--bilan-bar); }
+.bilan-orp-card .orp-month-band-line { font-size: var(--font-small); }
+.bilan-section-sub { margin: 0 var(--space-1) var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.bilan-declare { gap: var(--space-2); }
+.bilan-cards { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.bilan-card {
+  display: flex; align-items: center; gap: calc(var(--space-3) + var(--space-1) / 2); width: 100%; min-height: var(--bilan-card-h); box-sizing: border-box;
+  padding: var(--bilan-pad-y) var(--bilan-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card);
+  color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+.bilan-card:hover { border-color: var(--primary-graphic); }
+.bilan-card-what { flex: 1; min-width: 0; font-size: var(--font-label); line-height: var(--bilan-lh-21); }
+.bilan-card-what strong { font-weight: var(--weight-bold); }
+.bilan-card-what > span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
+.bilan-card-state { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text); }
+.bilan-card-state.ok { color: var(--success); }
+.bilan-card-state.todo { color: var(--peach-text); }
+.bilan-card-more { display: inline-flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: 48px; padding: 0 var(--space-1); border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; cursor: pointer; }
+.bilan-card-more svg { width: 16px; height: 16px; }
 .orp-rows-link { overflow: hidden; }
 .orp-rows-link .orp-row { min-height: 56px; gap: var(--space-3); padding: var(--space-3) var(--space-5); color: var(--text); text-decoration: none; }
 .orp-rows-link .orp-row:hover { background: var(--surface-muted); }

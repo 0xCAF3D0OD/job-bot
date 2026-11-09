@@ -39,7 +39,7 @@ import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence } from "../dates";
-import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
+import { formatMonth, ofMonth, orpLeftLine, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
@@ -88,16 +88,13 @@ function matches(a: Application): boolean {
 }
 // Les rubriques d'Envoyées ; venues de la recherche globale avec des mots, seulement ce qui correspond.
 const sections = computed(() => sentSections(wanted.value.length ? all.value.filter(matches) : all.value));
-// L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici la fin du mois.
-const LONG_DAY = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+// L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici l'échéance ORP (§11).
 const goal = computed(() => {
   const data = orp.value;
   if (!data?.target) return null;
-  const [year, m] = data.month.split("-").map(Number);
-  const left = data.target - data.count;
   return {
     percent: Math.min(100, Math.round((data.count / data.target) * 100)),
-    left: left > 0 ? `Encore ${left} d’ici le ${LONG_DAY.format(new Date(year!, m!, 0))}` : "Objectif du mois atteint",
+    left: orpLeftLine(data.count, data.target, data.month, data.due_date),
   };
 });
 let wordsTimer: ReturnType<typeof setTimeout> | undefined;

@@ -420,7 +420,7 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
   it("l'objectif ORP et sa barre, vers le Suivi ORP", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
-    mockApi(() => month({ month: "2026-11", count: 6, target: 10 }), [at("2026-11-06")]);
+    mockApi(() => month({ month: "2026-11", due_date: "2026-12-07", count: 6, target: 10 }), [at("2026-11-06")]);
     const { wrapper } = await mountView();
     const goal = wrapper.find("[data-test=goal]");
     expect(goal.attributes("href")).toBe("/bilan/orp");
@@ -429,7 +429,7 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     const bar = goal.find("[role=progressbar]");
     expect([bar.attributes("aria-valuenow"), bar.attributes("aria-valuemax")]).toEqual(["6", "10"]);
     expect(bar.find("span").attributes("style")).toContain("width: 60%");
-    expect(goal.text()).toContain("Encore 4 d’ici le 30 novembre");
+    expect(goal.text()).toContain("Encore 4 d’ici le 7 décembre");
     // Plus de phrase des relances ni de liste repliée (maquette).
     expect(wrapper.find("[data-test=suivi-sentence]").exists()).toBe(false);
     expect(wrapper.find("[data-test=suivi-detail]").exists()).toBe(false);

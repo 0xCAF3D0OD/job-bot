@@ -28,7 +28,7 @@ from jobbot.db.models import Application, Contact, Offer, PartnerLink, User
 from jobbot.letters.service import load_identity
 from jobbot.llm.redact import redact
 from jobbot.log import get_logger
-from jobbot.orp.service import load_due_day, load_target, month_counts
+from jobbot.orp.service import load_canton, load_due_day, load_target, month_counts
 from jobbot.partners import getemall as service
 from jobbot.runtime import Runtime
 
@@ -347,7 +347,7 @@ async def follow_up(request: Request, response: Response) -> GetemallFollowUp:
                 month=month,
                 done=(await month_counts(session, month)).count,
                 target=await load_target(session),
-                due_on=due_date(month, await load_due_day(session)),
+                due_on=due_date(month, await load_due_day(session), await load_canton(session)),
             )
     return out
 

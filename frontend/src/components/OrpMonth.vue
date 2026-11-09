@@ -26,10 +26,12 @@ const props = defineProps<{
   band?: boolean;
   /** `band` : la phrase sous la barre, à la place de celle du rythme (le Bilan y met l'échéance). */
   line?: string;
+  /** L'échéance ORP du mois (§11), pour « Encore n d’ici le 5 décembre ». */
+  due?: string | null;
 }>();
 
 const SEGMENTS_MAX = 15;
-const pace = computed(() => orpPace(props.count, props.target, props.month));
+const pace = computed(() => orpPace(props.count, props.target, props.month, new Date(), props.due));
 const segments = computed(() => (props.target && props.target <= SEGMENTS_MAX ? props.target : 0));
 const share = computed(() => (props.target ? Math.min(100, Math.round((props.count / props.target) * 100)) : 0));
 const bandLine = computed(() => {

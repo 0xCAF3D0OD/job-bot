@@ -24,7 +24,7 @@ from jobbot.db.models import (
 )
 from jobbot.followups.service import FOLLOW_UP_AFTER, local_today
 from jobbot.letters.document import MONTHS
-from jobbot.orp.service import load_due_day
+from jobbot.orp.service import load_canton, load_due_day
 
 PREFIX = "jba_"
 INTERVIEW_ALARMS = ("P1D", "PT2H")
@@ -103,13 +103,14 @@ async def events(session: AsyncSession, base_url: str) -> list[Event]:
         )
     # Remise des preuves ORP : mois précédent et mois en cours, tant qu'ils ne sont pas remis.
     due_day = await load_due_day(session)
+    canton = await load_canton(session)
     current = f"{today:%Y-%m}"
     months = {a.orp_month for a in applications}
     for month in (shift_month(current, -1), current):
         record = await session.get(OrpMonth, month)
         if month not in months or (record is not None and record.submitted_at):
             continue
-        day = due_date(month, due_day)
+        day = due_date(month, due_day, canton)
         found.append(
             Event(
                 uid=f"orp-{month}@joba1",

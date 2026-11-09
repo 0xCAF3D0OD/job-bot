@@ -132,9 +132,28 @@ export function localDate(day: string): Date {
   return new Date(y ?? 2000, (m ?? 1) - 1, d ?? 1);
 }
 
-// Le jour du mois suivant où les recherches sont à remettre à l'ORP, quand le serveur n'en donne pas (MODIFICATIONS du
-// 8 novembre au soir, §10.2). À confirmer par Kevin avec le texte officiel ; le serveur a le même défaut (5).
+// Le jour du mois suivant où les recherches sont à remettre à l'ORP (art. 26 al. 2 OACI, MODIFICATIONS du 9 novembre
+// §11). Le serveur reporte ce jour au premier jour ouvrable du canton (`due_date`) ; sans lui, le 5 tel quel.
 export const ORP_DEADLINE_DAY = 5;
+
+const DAY_MONTH = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+/** L'échéance d'un mois ORP en toutes lettres, « 5 décembre » : celle du serveur, sinon le 5 du mois suivant. */
+export function orpDueDay(month: string, due?: string | null): string {
+  if (due) return DAY_MONTH.format(localDate(due));
+  const [year, m] = month.split("-").map(Number);
+  return DAY_MONTH.format(new Date(year ?? 2000, m ?? 1, ORP_DEADLINE_DAY));
+}
+/** « Encore 9 d’ici le 5 décembre » (§10.3, §11) ; « Objectif du mois atteint » une fois l'objectif tenu. */
+export function orpLeftLine(count: number, target: number, month: string, due?: string | null): string {
+  const left = target - count;
+  return left > 0 ? `Encore ${left} d’ici le ${orpDueDay(month, due)}` : "Objectif du mois atteint";
+}
+
+/** Le moyen d'une recherche après le poste, sur les cartes de l'ordinateur : « formulaire en ligne » pour
+ * « Électronique » (maquette BilanOrdinateur du 9 novembre), sinon le moyen tel quel. */
+export function orpChannel(method: string): string {
+  return /^[ée]lectronique$/i.test(method.trim()) ? "formulaire en ligne" : method.trim();
+}
 
 export function formatMonth(month: string): string {
   const [year, m] = month.split("-").map(Number);
@@ -222,7 +241,7 @@ function workdays(from: Date, to: Date): number {
   return count;
 }
 
-export function orpPace(count: number, target: number | null | undefined, month: string, now = new Date()): OrpPace | null {
+export function orpPace(count: number, target: number | null | undefined, month: string, now = new Date(), due?: string | null): OrpPace | null {
   if (!target) return null;
   if (count >= target) return { state: "reached", mood: "ravi", word: "Objectif atteint.", line: "Le reste du mois est à toi." };
   const [year, monthNumber] = month.split("-").map(Number);
@@ -237,7 +256,7 @@ export function orpPace(count: number, target: number | null | undefined, month:
   const daysLeft = today > last ? 0 : workdays(today < first ? first : today, last);
   const expected = Math.floor((target * passed) / Math.max(1, total));
   if (count >= expected) {
-    return { state: "on-track", mood: "content", word: "Dans les temps.", line: `Encore ${left} d'ici ${dateInSentence(last, now)}.` };
+    return { state: "on-track", mood: "content", word: "Dans les temps.", line: `${orpLeftLine(count, target, month, due)}.` };
   }
   const days = daysLeft === 1 ? "1 jour ouvrable" : `${daysLeft} jours ouvrables`;
   return {

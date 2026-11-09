@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { cityOnly, dayKey, dayName, dayShort, gapSkill, initials, orpPace, remoteText } from "./format";
+import { cityOnly, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -40,7 +40,9 @@ describe("orpPace (docs/123 §2, Q)", () => {
   // Jeudi 16 octobre 2026 : 11 jours ouvrables passés sur 22.
   const now = new Date(2026, 9, 16);
   it("dans les temps, à rattraper, atteint", () => {
-    expect(orpPace(6, 10, "2026-10", now)).toMatchObject({ state: "on-track", mood: "content", line: "Encore 4 d'ici le 31 octobre." });
+    expect(orpPace(6, 10, "2026-10", now)).toMatchObject({ state: "on-track", mood: "content", line: "Encore 4 d’ici le 5 novembre." });
+    // L'échéance du serveur, reportée au jour ouvrable du canton (§11).
+    expect(orpPace(6, 10, "2026-10", now, "2026-11-06")?.line).toBe("Encore 4 d’ici le 6 novembre.");
     // 11 jours ouvrables restent, du jeudi 16 au vendredi 30.
     expect(orpPace(3, 10, "2026-10", now)).toMatchObject({ state: "behind", line: "Il reste 7 candidatures en 11 jours ouvrables." });
     expect(orpPace(10, 10, "2026-10", now)).toMatchObject({ state: "reached", mood: "ravi" });
@@ -71,5 +73,17 @@ describe("cityOnly et remoteText court (cartes du téléphone)", () => {
     expect(remoteText({ remote: "hybrid", remote_days: 2 }, true)).toBe("Hybride");
     expect(remoteText({ remote: "full" }, true)).toBe("Télétravail");
     expect(remoteText({ remote: "hybrid", remote_days: 2 })).toBe("Télétravail 2 j");
+  });
+});
+
+describe("L'échéance ORP en toutes lettres (MODIFICATIONS du 9 novembre, §11)", () => {
+  it("celle du serveur, sinon le 5 du mois suivant ; « Objectif du mois atteint » une fois tenu", () => {
+    expect(orpDueDay("2026-11")).toBe("5 décembre");
+    expect(orpDueDay("2026-12")).toBe("5 janvier");
+    expect(orpDueDay("2026-11", "2026-12-07")).toBe("7 décembre");
+    expect(orpLeftLine(4, 13, "2026-11", "2026-12-07")).toBe("Encore 9 d’ici le 7 décembre");
+    expect(orpLeftLine(13, 13, "2026-11")).toBe("Objectif du mois atteint");
+    expect(orpChannel("Électronique")).toBe("formulaire en ligne");
+    expect(orpChannel("LinkedIn")).toBe("LinkedIn");
   });
 });

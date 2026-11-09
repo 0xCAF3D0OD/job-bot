@@ -129,7 +129,7 @@ describe("Les premiers pas (docs/128)", () => {
     expect(google.attributes("rel")).toBe("noopener noreferrer");
     expect(group.find("[data-test=start-add]").attributes("href")).toBe("/ajouter-une-offre");
     expect(group.find("[data-test=start-forward]").attributes("href")).toBe("/candidatures/alertes");
-    expect(wrapper.find("[data-test=orp-month]").text()).toContain("Encore 10 d'ici le 30 novembre");
+    expect(wrapper.find("[data-test=orp-month]").text()).toContain("Encore 10 d’ici le 5 décembre");
     expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("retard");
   });
 

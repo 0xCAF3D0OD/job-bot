@@ -2,12 +2,15 @@
 import { computed, ref } from "vue";
 
 import type { OrpMonth, OrpRow } from "../api/client";
-import { formatMonth, ORP_DEADLINE_DAY, plural } from "../format";
+import { formatMonth, orpLeftLine } from "../format";
 import AppIcon from "./AppIcon.vue";
 import BlockRow from "./BlockRow.vue";
 import LiquidCircle from "./LiquidCircle.vue";
 import "../blocks.css";
 
+// Maquette du 9 novembre (Orp, OrpSombre, Explorer ; §11) : à côté du cercle, le mois puis « Encore 2 d’ici le
+// 5 décembre », l'échéance ORP reportée au jour ouvrable du canton ; plus de « n recherches à faire » ni de note
+// sur la conseillère.
 // Le suivi ORP du mois en blocs, sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 18, §10.2 ; maquettes Orp,
 // OrpSombre et l'onglet ORP d'Explorer) : l'objectif et le cercle liquide ; « À déclarer à l'ORP », les candidatures
 // envoyées pas encore déclarées dans Job-Room, chacune vers sa fiche « Pour l'ORP » ; « Recherches du mois », celles
@@ -17,13 +20,6 @@ const emit = defineEmits<{ open: [applicationId: number]; export: [] }>();
 
 const SHOWN = 3;
 const monthName = computed(() => formatMonth(props.data.month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase()));
-const left = computed(() => Math.max(0, (props.data.target ?? 0) - props.data.count));
-// La date limite : celle du serveur (le jour choisi dans les Réglages), sinon le 5 du mois suivant.
-const deadline = computed(() => {
-  const [year, month] = props.data.month.split("-").map(Number);
-  const due = props.data.due_date ? new Date(`${props.data.due_date}T12:00:00`) : new Date(year!, month!, ORP_DEADLINE_DAY);
-  return new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" }).format(due);
-});
 
 const toDeclare = computed(() => props.data.rows.filter((row) => !row.declared_at));
 const declared = computed(() => props.data.rows.filter((row) => row.declared_at));
@@ -59,17 +55,13 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
         <p class="block-cap">
           {{ monthName }}
         </p>
-        <template v-if="data.target">
-          <h2 class="block-title">
-            {{ left ? `${plural(left, "recherche", "recherches")} à faire` : "Objectif du mois atteint" }}
-          </h2>
-          <p
-            class="block-help"
-            data-test="orp-deadline"
-          >
-            Objectif fixé par ta conseillère. À remettre avant le {{ deadline }}.
-          </p>
-        </template>
+        <h2
+          v-if="data.target"
+          class="block-title"
+          data-test="orp-left"
+        >
+          {{ orpLeftLine(data.count, data.target, data.month, data.due_date) }}
+        </h2>
         <template v-else>
           <h2 class="block-title">
             Indique ton objectif ORP
