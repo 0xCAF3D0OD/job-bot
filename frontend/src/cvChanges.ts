@@ -42,12 +42,13 @@ function reorder(cv: Cv, origin: number[], kept: number[]): number[] {
 export function cvChanges(cv: Cv): CvChange[] {
   const origin = cv.origin_ids ?? [];
   const changes: CvChange[] = [];
-  if (cv.summary.trim()) {
+  const summary = (cv.summary ?? "").trim();
+  if (summary) {
     changes.push({
       key: "summary",
       title: "Profil",
       before: "Avant : pas de résumé ; jobA1 l’écrit à partir de tes blocs, sans rien ajouter.",
-      now: `Maintenant : « ${cv.summary.trim()} »`,
+      now: `Maintenant : « ${summary} »`,
       undo: null,
     });
   }
