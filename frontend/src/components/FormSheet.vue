@@ -8,7 +8,8 @@ import DisclosureRow from "./DisclosureRow.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
 // ligne de l'employeur, dans l'ordre habituel de ces formulaires. Une ligne par champ (maquette
-// Preparer, étape 7c) : le nom en petit, la valeur, et « Copier » qui devient « Copié ».
+// Preparer, étape 7c) : le nom en petit, la valeur, et « Copier » qui devient « Copié ». Sur ordinateur
+// (MODIFICATIONS du 9 novembre, §1) : l'icône seule dans un cercle, « Copier : prénom » lu, « Copier » au survol.
 const props = defineProps<{ letterText?: string | null }>();
 
 const identity = ref<Identity | null>(null);
@@ -35,8 +36,10 @@ const rows = computed(() => {
     ["E-mail", who.email],
     ["Téléphone", who.phone],
     ["Rue et numéro", who.street],
-    ["NPA", who.postcode],
-    ["Localité", who.city],
+    // Sur ordinateur, une seule ligne « NPA et localité » (maquette PreparerOrdinateurPostuler).
+    ...(phone.value
+      ? ([["NPA", who.postcode], ["Localité", who.city]] as [string, string | null | undefined][])
+      : ([["NPA et localité", [who.postcode, who.city].filter(Boolean).join(" ")]] as [string, string][])),
     ["Pays", who.city ? "Suisse" : null],
     ["LinkedIn", who.linkedin],
     ["Site personnel", who.website],
@@ -77,7 +80,8 @@ const missing = computed(() => {
         </dd>
         <CopyButton
           :value="value"
-          :text="label"
+          :text="phone ? label : ''"
+          :label="`Copier : ${label.toLowerCase()}`"
           test-id="sheet-copy"
         />
       </div>

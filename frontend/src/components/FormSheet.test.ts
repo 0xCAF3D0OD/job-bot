@@ -39,18 +39,36 @@ describe("FormSheet", () => {
       "Nom",
       "E-mail",
       "Rue et numéro",
-      "NPA",
-      "Localité",
+      "NPA et localité",
       "Pays",
       "LinkedIn",
       "Prétentions salariales",
       "Lettre de motivation (texte)",
     ]);
     expect(wrapper.findAll("dd")[1]?.text()).toContain("Di Exemple");
+    // Sur ordinateur, une seule ligne « NPA et localité » (maquette PreparerOrdinateurPostuler).
+    expect(wrapper.findAll("dd")[4]?.text()).toBe("1020 Renens");
     expect(wrapper.text()).toContain("compléter dans Profil"); // téléphone manquant
   });
 
-  it("« Copier » devient « Copié » ; le nom du champ est lu avec (maquette Preparer)", async () => {
+  it("sur ordinateur, copier est une icône dans un cercle ; « Copier : e-mail » est lu, puis « Copié » (§1 du 9.11)", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const wrapper = mount(FormSheet, { global: { stubs: { RouterLink: RouterLinkStub } } });
+    await flushPromises();
+    const button = wrapper.findAll("[data-test=sheet-copy]")[2]!;
+    expect(button.classes()).toContain("copy-button");
+    expect(button.text()).toBe("Copier : e-mail");
+    expect(button.find(".copy-label").attributes("data-label")).toBe("Copier");
+    await button.trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith("camille@example.ch");
+    expect(button.text()).toBe("Copié");
+    expect(button.find(".copy-label").classes()).toContain("copy-done");
+  });
+
+  it("sur téléphone, « Copier » devient « Copié » ; le nom du champ est lu avec (maquette Preparer)", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     const wrapper = mount(FormSheet, { global: { stubs: { RouterLink: RouterLinkStub } } });

@@ -311,16 +311,24 @@ describe("barre de candidature", () => {
     expect(wrapper.find(".prep-desk-title p").text()).toMatch(/· Lausanne$/);
     const steps = wrapper.find("[data-test=apply-steps]");
     // Postuler (C7) : où l'annonce se postule, les pièces, ce qu'on recopie, puis un contact dans la fiche.
-    expect(steps.findAll("h2").map((h) => h.text())).toEqual([
-      "L'annonce se postule chez l'employeur",
+    // Sur ordinateur (§2.4) : « Où postuler » en capitales, le site en titre.
+    expect(steps.findAll("h2").filter((h) => !h.element.closest("dialog")).map((h) => h.text())).toEqual([
+      "Chez l’employeur",
       "À recopier sur le formulaire",
     ]);
+    expect(steps.find("[data-test=apply-where] .apply-cap").text()).toBe("Où postuler");
     expect(steps.find("[data-test=sheet-letter]").text()).toBe("Lettre.pdf");
+    expect(steps.find("[data-test=download-all]").text()).toBe("Tout télécharger");
     expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf?modele=moderne");
     // Sur ordinateur, pas de ligne « Modèle … » (maquette téléphone seulement).
     expect(steps.find("[data-test=apply-template-note]").exists()).toBe(false);
-    expect(steps.find("[data-test=find-contact]").text()).toBe("Trouver un contact chez Acme SA");
-    expect(steps.find("[data-test=find-contact]").attributes("href")).toBe("/candidatures/offres/7#contacts");
+    // Le contact passe dans la carte Entreprise, à droite : une ligne qui ouvre le panneau des contacts.
+    expect(steps.find("[data-test=find-contact]").exists()).toBe(false);
+    expect(steps.find("[data-test=contacts-open]").text()).toContain("Trouver un contact chez Acme SA");
+    expect(steps.find("[data-test=contacts-open]").attributes("aria-haspopup")).toBe("dialog");
+    expect(steps.find("[data-test=apply-after]").text()).toContain("relancer dans 7 jours");
+    // Les actions au pied de la carte « Où postuler », pas dans une barre à part.
+    expect(steps.find("[data-test=apply-where] [data-test=apply]").exists()).toBe(true);
     // D'abord le formulaire, seul bouton plein (docs/29 §1.3) ; une fois ouvert, « J'ai postulé » (C8).
     const apply = steps.find("[data-test=apply]");
     expect(apply.attributes("href")).toBe("https://acme.example/jobs/1");

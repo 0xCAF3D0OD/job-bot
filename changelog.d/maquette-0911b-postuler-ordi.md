@@ -1,0 +1,1 @@
+Préparer sur ordinateur, étape Postuler (9 novembre, §2.4) : carte « Où postuler » avec « À joindre », « Tout télécharger » et les actions à son pied ; « À recopier » en lignes de 56 px avec copie en cercle et « NPA et localité » ; colonne de droite Entreprise (nom, adresse et sa source, site, panneau Contacts) et « Après l’envoi ». Le téléphone ne change pas.

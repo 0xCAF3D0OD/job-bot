@@ -7,7 +7,8 @@ import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
-import OfferBrief from "../components/OfferBrief.vue";
+import ApplyActions from "../components/ApplyActions.vue";
+import ContactsPanel from "../components/ContactsPanel.vue";
 import OfferCompatSheet from "../components/OfferCompatSheet.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
@@ -80,6 +81,39 @@ const applyLink = computed<ApplyLink | null>(() => {
   const site = SITE_NAMES[link.source] ?? link.source;
   return { url: link.url, label: `Postuler sur ${site}`, where: `sur ${site}`, reopen: `Rouvrir ${site}` };
 });
+// Postuler sur ordinateur (§2.4) : le site en titre (« Sur LinkedIn »), puis l'entreprise à droite, son adresse sur
+// deux lignes avec d'où elle vient, le site de l'employeur s'il est connu, et ses contacts dans un panneau.
+const whereTitle = computed(() => {
+  const where = applyLink.value?.where;
+  if (!where) return phone.value ? "L'annonce" : "L’annonce";
+  return phone.value ? `L'annonce se postule ${where}` : `${where.charAt(0).toUpperCase()}${where.slice(1)}`.replace(/'/g, "’");
+});
+const ADDRESS_FROM: Record<string, string> = {
+  page: "Relevée dans l’annonce",
+  registry: "Trouvée dans le registre IDE",
+  web: "Trouvée sur Internet",
+  letter: "Relevée dans l’annonce",
+  manual: "Saisie par toi",
+};
+const addressLines = computed(() =>
+  (offer.value?.company_address ?? "").split(/\s*[,\n]\s*/).map((line) => line.trim()).filter(Boolean),
+);
+const siteHost = computed(() => {
+  const url = offer.value?.employer_url;
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+});
+const contactsOpen = ref(false);
+const contactsCount = ref(0);
+// « Tout télécharger » : chaque pièce de la ligne « À joindre » qui se télécharge (Lettre.pdf, CV.pdf).
+const attachRow = ref<HTMLElement | null>(null);
+function downloadAll(): void {
+  attachRow.value?.querySelectorAll<HTMLAnchorElement>("a[download]").forEach((link) => link.click());
+}
 // Le formulaire ouvert : « J'ai postulé » devient le bouton plein (maquette, étape 7c).
 const opened = ref(false);
 const currentCvId = ref<number | null>(null);
@@ -871,10 +905,12 @@ onMounted(() => void load());
         </RouterLink>
       </p>
 
-      <!-- Postuler (C7) : où l'annonce se postule et les pièces, ce qu'on recopie, puis un contact. -->
+      <!-- Postuler (C7) : où l'annonce se postule et les pièces, ce qu'on recopie, puis un contact. Sur ordinateur
+           (MODIFICATIONS du 9 novembre, §2.4 ; maquette PreparerOrdinateurPostuler) : les actions au pied de la carte
+           « Où postuler », et à droite l'entreprise (avec ses contacts) et ce qui suit l'envoi. -->
       <div
         v-if="offer && tab === 'apply'"
-        class="prep-layout"
+        :class="['prep-layout', { 'prep-desk': !phone }]"
         data-test="apply-steps"
       >
         <div
@@ -882,33 +918,63 @@ onMounted(() => void load());
           class="prep-main apply-cards"
         >
           <section
-            class="doc-card"
+            :class="phone ? 'doc-card' : 'apply-card'"
             aria-labelledby="apply-where-title"
             data-test="apply-where"
           >
+            <p
+              v-if="!phone"
+              class="apply-cap"
+            >
+              Où postuler
+            </p>
             <h2 id="apply-where-title">
-              {{ applyLink?.where ? `L'annonce se postule ${applyLink.where}` : "L'annonce" }}
+              {{ whereTitle }}
             </h2>
             <p
               v-if="applyLink"
               class="apply-where-text"
             >
-              Le formulaire s'ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l'envoi.
+              {{ phone ? "Le formulaire s'ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l'envoi." : "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." }}
             </p>
-            <PrepCertificates>
-              <a
-                v-if="currentLetterId"
-                :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
-                download
-                data-test="sheet-letter"
-              ><AppIcon name="file" />Lettre.pdf</a>
-              <a
-                v-if="currentCvId"
-                :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
-                download
-                data-test="sheet-cv"
-              ><AppIcon name="file" />CV.pdf</a>
-            </PrepCertificates>
+            <div
+              ref="attachRow"
+              class="apply-attach"
+            >
+              <span
+                v-if="!phone"
+                class="apply-attach-label"
+              >À joindre</span>
+              <PrepCertificates>
+                <a
+                  v-if="currentLetterId"
+                  :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
+                  download
+                  data-test="sheet-letter"
+                ><AppIcon name="file" />Lettre.pdf<AppIcon
+                  v-if="!phone"
+                  name="download"
+                /></a>
+                <a
+                  v-if="currentCvId"
+                  :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
+                  download
+                  data-test="sheet-cv"
+                ><AppIcon name="file" />CV.pdf<AppIcon
+                  v-if="!phone"
+                  name="download"
+                /></a>
+              </PrepCertificates>
+              <button
+                v-if="!phone && currentLetterId && currentCvId"
+                type="button"
+                class="apply-all"
+                data-test="download-all"
+                @click="downloadAll"
+              >
+                <AppIcon name="download" />Tout télécharger
+              </button>
+            </div>
             <p
               v-if="phone && templateNote"
               class="apply-where-text apply-template-note"
@@ -916,19 +982,38 @@ onMounted(() => void load());
             >
               {{ templateNote }}
             </p>
+            <div
+              v-if="!phone"
+              class="apply-go"
+            >
+              <ApplyActions
+                :link="applyLink"
+                :opened="opened"
+                :busy="applyBusy"
+                :error="applyError"
+                @open="opened = true"
+                @mark="markApplied"
+              />
+            </div>
           </section>
           <section
-            class="doc-card apply-copy"
+            :class="phone ? 'doc-card apply-copy' : 'apply-card apply-copy-desk'"
             aria-labelledby="apply-copy-title"
             data-test="apply-sheet"
           >
             <h2 id="apply-copy-title">
               À recopier sur le formulaire
             </h2>
+            <p
+              v-if="!phone"
+              class="apply-where-text"
+            >
+              Le bouton copie la valeur, tu la colles dans le formulaire.
+            </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
           <RouterLink
-            v-if="offer.company"
+            v-if="phone && offer.company"
             :to="`/candidatures/offres/${offer.id}#contacts`"
             class="apply-contact"
             data-test="find-contact"
@@ -936,61 +1021,121 @@ onMounted(() => void load());
             <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
           </RouterLink>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
-          <ActionBar class="prep-bar apply-actions">
-            <p
-              v-if="applyError"
-              class="notice error"
-              role="alert"
-            >
-              {{ applyError }}
-            </p>
-            <a
-              v-if="applyLink && !opened"
-              :href="applyLink.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="button-link primary-link prep-bar-main"
-              data-test="apply"
-              @click="opened = true"
-            ><span class="with-icon">{{ applyLink.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
-            <!-- Déjà fait ailleurs (page rechargée, e-mail, téléphone) : sans rouvrir le formulaire. -->
-            <BusyButton
-              v-if="applyLink && !opened"
-              class="link apply-already"
+          <ActionBar
+            v-if="phone"
+            class="prep-bar apply-actions"
+          >
+            <ApplyActions
+              :link="applyLink"
+              :opened="opened"
               :busy="applyBusy"
-              busy-label="Enregistrement…"
-              data-test="already-applied"
-              @click="markApplied"
-            >
-              J'ai déjà postulé
-            </BusyButton>
-            <template v-else>
-              <BusyButton
-                class="primary prep-bar-main"
-                :busy="applyBusy"
-                busy-label="Enregistrement…"
-                data-test="mark-applied"
-                @click="markApplied"
-              >
-                J'ai postulé
-              </BusyButton>
-              <a
-                v-if="applyLink"
-                :href="applyLink.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link apply-reopen"
-                data-test="apply"
-              >{{ applyLink.reopen }}<span class="visually-hidden"> (nouvel onglet)</span></a>
-            </template>
+              :error="applyError"
+              @open="opened = true"
+              @mark="markApplied"
+            />
           </ActionBar>
         </div>
-        <section
+        <aside
           v-if="!phone"
-          class="prep-side"
+          class="prep-side prep-aside"
+          data-test="apply-aside"
         >
-          <OfferBrief :offer="offer" />
-        </section>
+          <section
+            class="side-card apply-company"
+            aria-labelledby="apply-company-title"
+            data-test="apply-company"
+          >
+            <p
+              id="apply-company-title"
+              class="apply-cap"
+            >
+              Entreprise
+            </p>
+            <dl class="apply-facts">
+              <div>
+                <dt>Nom</dt>
+                <dd :class="{ 'apply-empty': !offer.company }">
+                  {{ offer.company || "Non renseigné" }}
+                </dd>
+              </div>
+              <div>
+                <dt>Adresse</dt>
+                <dd
+                  v-if="addressLines.length"
+                  data-test="apply-address"
+                >
+                  <span
+                    v-for="line in addressLines"
+                    :key="line"
+                  >{{ line }}</span>
+                </dd>
+                <dd
+                  v-else
+                  class="apply-empty"
+                >
+                  Non renseignée
+                </dd>
+                <dd
+                  v-if="addressLines.length"
+                  class="apply-source"
+                >
+                  {{ ADDRESS_FROM[offer.company_address_source ?? "manual"] }}
+                </dd>
+              </div>
+              <div v-if="siteHost">
+                <dt>Site</dt>
+                <dd>
+                  <a
+                    :href="offer.employer_url ?? ''"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="apply-site"
+                    data-test="apply-site"
+                  >{{ siteHost }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+                </dd>
+              </div>
+            </dl>
+            <button
+              v-if="offer.company"
+              type="button"
+              class="prep-file-row"
+              aria-haspopup="dialog"
+              data-test="contacts-open"
+              @click="contactsOpen = true"
+            >
+              <span class="prep-file-text">
+                <b>Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}</b>
+                <span class="prep-file-sub">{{ contactsCount ? "Voir à qui écrire" : `Trouver un contact chez ${offer.company}` }}</span>
+              </span>
+              <AppIcon name="chevron" />
+            </button>
+          </section>
+          <section
+            v-if="offer.status !== 'applied'"
+            class="side-card apply-after"
+            data-test="apply-after"
+          >
+            <p class="apply-cap">
+              Après l’envoi
+            </p>
+            <p class="apply-after-text">
+              Marque l’envoi : jobA1 prépare la déclaration ORP et te rappelle de relancer dans 7 jours.
+            </p>
+          </section>
+        </aside>
+        <BottomSheet
+          v-if="!phone && offer.company"
+          :open="contactsOpen"
+          :title="`Contacts chez ${offer.company}`"
+          data-test="contacts-sheet"
+          @close="contactsOpen = false"
+        >
+          <ContactsPanel
+            :key="offer.id"
+            :offer-id="offer.id"
+            @count="contactsCount = $event"
+          />
+        </BottomSheet>
       </div>
 
       <CvPanel
@@ -1749,6 +1894,53 @@ onMounted(() => void load());
 .prep-empty-text { margin: 0; font-size: var(--font-label); line-height: var(--prep-22); color: var(--text-secondary); }
 .prep-empty-card .primary { margin-top: var(--space-2); }
 .prep-empty-card .prep-ai-link { justify-self: center; }
+/* Postuler sur ordinateur (§2.4, maquette PreparerOrdinateurPostuler) : cartes de 20/24 comme la colonne ; libellé en
+   capitales 13/16 700, titre 18/24 8 px dessous, texte 14/20 gris. « À joindre » après un trait, à 16 px : pastilles de 40
+   (fichier bleu, nom 15/600, téléchargement), « Tout télécharger » à droite en contour de 40 ; 20 px plus bas le bouton
+   plein de 48 et « J’ai déjà postulé » à 20 px. */
+.prep-desk .apply-cards { gap: var(--space-4); }
+.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-56: 56px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.apply-cap { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.apply-cards .apply-card h2 { margin: 0; font-size: var(--font-title); line-height: var(--apply-24); }
+.apply-card > .apply-cap + h2 { margin-top: var(--space-2); }
+.apply-card > .apply-where-text { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); }
+.apply-card .apply-attach { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.apply-attach-label { font-size: var(--apply-15); font-weight: var(--weight-bold); }
+.apply-card .apply-files { display: flex; flex: 1; flex-wrap: wrap; gap: var(--space-3); }
+.apply-card .apply-files > a { min-height: var(--apply-40); font-size: var(--apply-15); border-radius: var(--radius-pill); }
+.apply-card .apply-files .icon-download { color: var(--primary-text); }
+.apply-card .apply-attach > .hint { order: 1; flex-basis: 100%; margin: 0; }
+.apply-all { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--apply-40); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--apply-15); font-weight: var(--weight-bold); cursor: pointer; }
+.apply-all:hover { background: var(--selected-bg); }
+.apply-go { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); margin-top: var(--space-5); }
+.apply-go > .notice { flex-basis: 100%; margin: 0; }
+.apply-go > .prep-bar-main { min-height: var(--apply-48); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.apply-go > :is(.apply-already, .apply-reopen) { min-height: var(--target-min); display: inline-flex; align-items: center; font-weight: var(--weight-bold); }
+/* À recopier (§1) : lignes de 56, trait --line, libellé 13/16 gris au-dessus de la valeur 16/22 600 ; copier en cercle de 40
+   bordé ; la lettre en texte sur 2 lignes, 15 regular. */
+.apply-copy-desk > .apply-where-text { margin-bottom: var(--space-3); }
+.apply-copy-desk { padding-bottom: var(--space-1); }
+.apply-copy-desk .form-sheet-row { min-height: var(--apply-56); padding: var(--space-1) 0; gap: 0 var(--space-4); border-top-color: var(--line); }
+.apply-copy-desk .form-sheet dt { font-size: var(--label-caps); line-height: var(--space-4); }
+.apply-copy-desk .form-sheet dd { font-size: var(--font-body); line-height: var(--apply-22); }
+.apply-copy-desk .form-sheet dd.form-sheet-long { font-size: var(--apply-15); font-weight: var(--weight-regular); }
+.apply-copy-desk .copy-button { width: var(--apply-40); height: var(--apply-40); color: var(--primary-text); }
+.apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
+/* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
+   la source de l'adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
+.apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-56: 56px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+.apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
+.apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }
+.apply-facts dd { margin: 0; font-size: var(--font-body); line-height: var(--apply-22); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.apply-facts dd > span { display: block; }
+.apply-facts dd.apply-empty { font-weight: var(--weight-regular); color: var(--text-secondary); }
+.apply-facts dd.apply-source { font-size: var(--label-caps); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.apply-site { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--primary-text); text-decoration: none; }
+.apply-site:hover { text-decoration: underline; }
+.apply-company > .prep-file-row:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
+/* Le panneau des contacts sur ordinateur : chaque lien et bouton texte garde une cible de 24 px (§1, WCAG 2.5.8). */
+[data-test=contacts-sheet] .link { display: inline-flex; align-items: center; min-height: var(--space-6); }
+.apply-after-text { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
 /* Les versions dans le panneau : 4 px entre le nom et sa ligne (grille de 4). */
 .sheet .versions .grouped-text { gap: var(--space-1); }
 /* Le panneau Relecture (PreparerOrdinateurRelecture) : résultat 18/24, date 14/20 ; familles en capitales 13/16 ;
