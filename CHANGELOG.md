@@ -479,3 +479,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.265 | Maquette du 9 novembre (téléphone) : paquet mis à jour dans docs/mobile, lots 17 et 11 à 16 vérifiés sur main | livrée |
 | 1.6.266 | Téléphone, règles transverses du 9 novembre : sections sur le fond crème, cartes à trait, marges de 20 px, cibles de 44 px, contrôle audit-grille.js | livrée |
 | 1.6.267 | Téléphone, §10.1 (9 novembre) : carte de la note avec « Voir la compatibilité », feuille « Compatibilité » (Points forts, À vérifier), « Écarter » avec le message « Annuler », feuilles du bas fermables par le retour et en glissant | livrée |
+| 1.6.268 | Après « Se déconnecter », plus aucune donnée du compte ne reste affichée ni ne passe au compte suivant (nom, ville, image, photo) : la page se recharge sur la connexion, et l'API interdit au navigateur de garder ses réponses | livrée |
+| 1.6.269 | Téléphone, §10.2 à §10.4 (9 novembre) : carte d'information du mois ORP, Suivi ORP et Pour l'ORP à 20 px avec retour en chevron, onglet ORP de Bilan sur le fond crème, « Se déconnecter » sous les blocs de Compte | livrée |
