@@ -8,7 +8,8 @@ import AccountView from "./AccountView.vue";
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 const me = ref<Record<string, unknown>>({ username: "kevin", auth_enabled: true, demo: false, is_owner: false });
-vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me }) }));
+const logout = vi.fn();
+vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me, logout }) }));
 const collectNow = vi.fn();
 const running = ref(false);
 const collectMessage = ref("");
@@ -26,7 +27,7 @@ const DATA: Record<string, unknown> = {
 
 async function mountPage() {
   GET.mockImplementation((path: string) => Promise.resolve({ data: DATA[path] ?? null }));
-  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/actualites", name: "news", component: { template: "<div />" } }, { path: "/:any(.*)*", component: { template: "<div />" } }] });
   await router.push("/compte");
   const wrapper = mount(AccountView, { global: { plugins: [router] } });
   await flushPromises();
@@ -43,6 +44,19 @@ afterEach(() => {
 });
 
 describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", () => {
+  it("« Se déconnecter » sous les blocs, en rouge ; pas sans connexion (§10.4, 9 novembre)", async () => {
+    const wrapper = await mountPage();
+    const button = wrapper.get("[data-test=logout]");
+    expect(button.text()).toBe("Se déconnecter");
+    expect(button.classes()).toContain("account-logout");
+    await button.trigger("click");
+    await flushPromises();
+    expect(logout).toHaveBeenCalledTimes(1);
+    me.value = { ...me.value, auth_enabled: false };
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find("[data-test=logout]").exists()).toBe(false);
+  });
+
   it("la carte du profil, puis les quatre groupes et leurs liens", async () => {
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");

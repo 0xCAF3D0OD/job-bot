@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -20,7 +21,14 @@ import "../blocks.css";
 // qui te concerne, sur téléphone comme sur ordinateur. La carte du profil, puis Mon parcours, Préférences,
 // Recherche et outils (absent de la maquette, C8), Confidentialité et aide. Chaque ligne ouvre sa page ou sa
 // rubrique des Réglages.
-const { me } = useAuth();
+const { me, logout } = useAuth();
+const router = useRouter();
+
+// « Se déconnecter » sous les blocs, en --danger (§10.4, 9 novembre) : comme le pied du panneau du compte.
+async function signOut(): Promise<void> {
+  await logout();
+  await router.push({ name: "news" });
+}
 const { theme } = useTheme();
 const { plan } = usePlan();
 const { list, current, load, choose } = useProfiles();
@@ -334,6 +342,15 @@ onMounted(() => {
           data-test="account-diagnostic"
         />
       </section>
+      <button
+        v-if="me?.auth_enabled"
+        type="button"
+        class="account-logout account-page-logout"
+        data-test="logout"
+        @click="signOut"
+      >
+        <AppIcon name="logout" />Se déconnecter
+      </button>
     </div>
   </section>
 </template>

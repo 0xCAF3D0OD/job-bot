@@ -32,7 +32,7 @@ function back(): void {
         data-test="orp-fiche-back"
         @click="back"
       >
-        <AppIcon name="arrow-left" />
+        <AppIcon name="chevron-left" />
       </button>
       <h1 id="orp-fiche-title">
         Pour l’ORP
