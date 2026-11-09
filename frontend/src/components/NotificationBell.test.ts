@@ -40,8 +40,8 @@ describe("NotificationBell", () => {
     // légende reprend le nom accessible.
     const bell = wrapper.find("[data-test=bell]");
     expect(bell.classes()).toContain("has-unread");
-    expect(bell.attributes("aria-label")).toBe("Notifications, 2 non lues");
-    expect(bell.attributes("data-label")).toBe("Notifications, 2 non lues");
+    expect(bell.attributes("aria-label")).toBe("Notifications, 2 nouvelles");
+    expect(bell.attributes("data-label")).toBe("Notifications, 2 nouvelles");
 
     await bell.trigger("click");
     await flushPromises();
@@ -94,7 +94,7 @@ describe("NotificationBell sur téléphone (maquette Notifications, N1)", () => 
     // La cloche seule et un point (maquette Accueil) ; le nombre reste dans le nom accessible.
     expect(wrapper.find("[data-test=bell-dot]").exists()).toBe(true);
     expect(wrapper.find("[data-test=bell-badge]").exists()).toBe(false);
-    expect(bell.attributes("aria-label")).toBe("Notifications, 1 non lue");
+    expect(bell.attributes("aria-label")).toBe("Notifications, 1 nouvelle");
     await bell.trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.path).toBe("/notifications");

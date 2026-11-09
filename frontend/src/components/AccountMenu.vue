@@ -105,7 +105,7 @@ onMounted(() => {
       <ProfileImage
         :choice="image.choice.value"
         :initials="image.initials.value"
-        :size="40"
+        :size="44"
       />
     </button>
     <SidePanel

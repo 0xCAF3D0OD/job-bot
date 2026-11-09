@@ -37,7 +37,6 @@ const conversationId = ref<number | null>(null);
 const recent = ref<Conversation[]>([]);
 const draft = ref("");
 const busy = ref(false);
-const reading = ref<string | null>(null);
 const scroller = ref<HTMLElement | null>(null);
 const input = ref<{ focus: () => void } | null>(null);
 const fab = ref<HTMLButtonElement | null>(null);
@@ -218,11 +217,9 @@ async function send(text: string = draft.value): Promise<void> {
       for (const { event, data } of events) {
         if (event === "conversation") conversationId.value = Number(data.id);
         else if (event === "text") {
-          reading.value = null;
           reply.content += String(data.text ?? "");
           scrollDown();
-        } else if (event === "tool") reading.value = String(data.label ?? "");
-        else if (event === "action") {
+        } else if (event === "action") {
           (reply.actions ??= []).push(data as unknown as ChatAction);
           scrollDown();
         }
@@ -242,7 +239,6 @@ async function send(text: string = draft.value): Promise<void> {
     busy.value = false;
     void refreshPlan();
     replying.value = null;
-    reading.value = null;
     controller = null;
     scrollDown();
   }
@@ -532,183 +528,196 @@ const headItems: MoreMenuItem[] = [
           </div>
         </template>
 
-        <div
+        <template
           v-for="(line, index) in lines"
           :key="index"
-          class="assistant-line"
-          :class="[line.role, { error: line.error }]"
         >
-          <!-- La mascotte devant chaque réponse (docs/97), sans cercle, 28 px (LISEZMOI du 8 novembre). -->
-          <AssistantMascot
-            v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
-            :size="28"
-            :mood="lineMood(line)"
-            class="assistant-line-mascot"
-          />
-          <p
-            v-if="line.role === 'user' || line.error"
-            class="assistant-plain"
-          >
-            {{ line.content }}
-          </p>
+          <!-- Pas de bulle vide (lot 11.3) : une réponse n'apparaît qu'avec son premier texte ou sa première action. -->
           <div
-            v-else
-            class="assistant-bubble"
+            v-if="line.role === 'user' || line.error || line.content || line.actions?.length"
+            class="assistant-line"
+            :class="[line.role, { error: line.error }]"
           >
-            <template
-              v-for="(block, b) in blocks(line.content)"
-              :key="b"
-            >
-              <p v-if="block.kind === 'p'">
-                <template
-                  v-for="(row, r) in block.lines"
-                  :key="r"
-                >
-                  <br v-if="r > 0">
-                  <template
-                    v-for="(part, p) in row"
-                    :key="p"
-                  >
-                    <RouterLink
-                      v-if="part.href && !part.external"
-                      :to="part.href"
-                      data-test="assistant-link"
-                      @click="followLink"
-                    >
-                      {{ part.text }}
-                    </RouterLink>
-                    <a
-                      v-else-if="part.href"
-                      :href="part.href"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
-                    <strong v-else-if="part.bold">{{ part.text }}</strong>
-                    <template v-else>
-                      {{ part.text }}
-                    </template>
-                  </template>
-                </template>
-              </p>
-              <component
-                :is="block.ordered ? 'ol' : 'ul'"
-                v-else-if="block.kind === 'list'"
-              >
-                <li
-                  v-for="(item, i) in block.items"
-                  :key="i"
-                >
-                  <template
-                    v-for="(part, p) in item"
-                    :key="p"
-                  >
-                    <RouterLink
-                      v-if="part.href && !part.external"
-                      :to="part.href"
-                      data-test="assistant-link"
-                      @click="followLink"
-                    >
-                      {{ part.text }}
-                    </RouterLink>
-                    <a
-                      v-else-if="part.href"
-                      :href="part.href"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
-                    <strong v-else-if="part.bold">{{ part.text }}</strong>
-                    <template v-else>
-                      {{ part.text }}
-                    </template>
-                  </template>
-                </li>
-              </component>
-              <div
-                v-else
-                class="assistant-copy"
-              >
-                <pre>{{ block.text }}</pre>
-                <CopyButton
-                  :value="block.text"
-                  test-id="assistant-copy"
-                />
-              </div>
-            </template>
-          </div>
-          <div
-            v-for="action in line.actions ?? []"
-            :key="action.id"
-            :class="['assistant-action', action.state]"
-            data-test="assistant-action"
-          >
-            <EngagementMoment
-              v-if="celebrated === action.id && action.state === 'done'"
-              @close="celebrated = null"
+            <!-- La mascotte devant chaque réponse (docs/97), sans cercle, 28 px (LISEZMOI du 8 novembre). -->
+            <AssistantMascot
+              v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
+              :size="28"
+              :mood="lineMood(line)"
+              class="assistant-line-mascot"
             />
-            <p class="assistant-action-label">
-              {{ action.label }}
+            <p
+              v-if="line.role === 'user' || line.error"
+              class="assistant-plain"
+            >
+              {{ line.content }}
             </p>
             <div
-              v-if="action.state === 'proposed'"
-              class="assistant-action-buttons"
+              v-else
+              class="assistant-bubble"
             >
-              <button
-                type="button"
-                class="secondary small"
-                :disabled="deciding === action.id"
-                data-test="assistant-action-decline"
-                @click="decide(action, 'decline')"
+              <template
+                v-for="(block, b) in blocks(line.content)"
+                :key="b"
               >
-                Non merci
-              </button>
-              <button
-                type="button"
-                class="primary small"
-                :disabled="deciding === action.id"
-                data-test="assistant-action-confirm"
-                @click="decide(action, 'confirm')"
-              >
-                Confirmer
-              </button>
+                <p v-if="block.kind === 'p'">
+                  <template
+                    v-for="(row, r) in block.lines"
+                    :key="r"
+                  >
+                    <br v-if="r > 0">
+                    <template
+                      v-for="(part, p) in row"
+                      :key="p"
+                    >
+                      <RouterLink
+                        v-if="part.href && !part.external"
+                        :to="part.href"
+                        data-test="assistant-link"
+                        @click="followLink"
+                      >
+                        {{ part.text }}
+                      </RouterLink>
+                      <a
+                        v-else-if="part.href"
+                        :href="part.href"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
+                      <strong v-else-if="part.bold">{{ part.text }}</strong>
+                      <template v-else>
+                        {{ part.text }}
+                      </template>
+                    </template>
+                  </template>
+                </p>
+                <component
+                  :is="block.ordered ? 'ol' : 'ul'"
+                  v-else-if="block.kind === 'list'"
+                >
+                  <li
+                    v-for="(item, i) in block.items"
+                    :key="i"
+                  >
+                    <template
+                      v-for="(part, p) in item"
+                      :key="p"
+                    >
+                      <RouterLink
+                        v-if="part.href && !part.external"
+                        :to="part.href"
+                        data-test="assistant-link"
+                        @click="followLink"
+                      >
+                        {{ part.text }}
+                      </RouterLink>
+                      <a
+                        v-else-if="part.href"
+                        :href="part.href"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
+                      <strong v-else-if="part.bold">{{ part.text }}</strong>
+                      <template v-else>
+                        {{ part.text }}
+                      </template>
+                    </template>
+                  </li>
+                </component>
+                <div
+                  v-else
+                  class="assistant-copy"
+                >
+                  <pre>{{ block.text }}</pre>
+                  <CopyButton
+                    :value="block.text"
+                    test-id="assistant-copy"
+                  />
+                </div>
+              </template>
             </div>
-            <p
-              v-if="action.state === 'proposed' && action.note"
-              class="hint"
-              role="status"
+            <div
+              v-for="action in line.actions ?? []"
+              :key="action.id"
+              :class="['assistant-action', action.state]"
+              data-test="assistant-action"
             >
-              {{ action.note }}
-            </p>
-            <p
-              v-else-if="action.state !== 'proposed'"
-              class="assistant-action-state"
-              role="status"
-            >
-              <span>{{ action.note ?? DONE_TEXT[action.state] }}</span>
-              <button
-                v-if="action.state === 'done'"
-                type="button"
-                class="link"
-                :disabled="deciding === action.id"
-                data-test="assistant-action-undo"
-                @click="decide(action, 'undo')"
+              <EngagementMoment
+                v-if="celebrated === action.id && action.state === 'done'"
+                @close="celebrated = null"
+              />
+              <p class="assistant-action-label">
+                {{ action.label }}
+              </p>
+              <div
+                v-if="action.state === 'proposed'"
+                class="assistant-action-buttons"
               >
-                Annuler
-              </button>
-            </p>
+                <button
+                  type="button"
+                  class="secondary small"
+                  :disabled="deciding === action.id"
+                  data-test="assistant-action-decline"
+                  @click="decide(action, 'decline')"
+                >
+                  Non merci
+                </button>
+                <button
+                  type="button"
+                  class="primary small"
+                  :disabled="deciding === action.id"
+                  data-test="assistant-action-confirm"
+                  @click="decide(action, 'confirm')"
+                >
+                  Confirmer
+                </button>
+              </div>
+              <p
+                v-if="action.state === 'proposed' && action.note"
+                class="hint"
+                role="status"
+              >
+                {{ action.note }}
+              </p>
+              <p
+                v-else-if="action.state !== 'proposed'"
+                class="assistant-action-state"
+                role="status"
+              >
+                <span>{{ action.note ?? DONE_TEXT[action.state] }}</span>
+                <button
+                  v-if="action.state === 'done'"
+                  type="button"
+                  class="link"
+                  :disabled="deciding === action.id"
+                  data-test="assistant-action-undo"
+                  @click="decide(action, 'undo')"
+                >
+                  Annuler
+                </button>
+              </p>
+            </div>
           </div>
-        </div>
-        <p
-          v-if="busy"
-          class="muted assistant-status"
-          data-test="assistant-status"
+        </template>
+        <!-- L'Assistant écrit (maquette du 8 novembre, lot 11.3) : le logo sans cercle et trois points dans une bulle de
+             la forme d'une réponse, jusqu'au premier texte ; la bulle de la réponse prend alors sa place. -->
+        <div
+          v-if="waiting"
+          class="assistant-line assistant assistant-waiting"
+          role="status"
+          aria-live="polite"
+          data-test="assistant-waiting"
         >
           <AssistantMascot
-            v-if="waiting"
-            :size="24"
+            :size="28"
             mood="thinking"
+            class="assistant-line-mascot"
           />
-          {{ reading ? `Je consulte ${reading}…` : "…" }}
-        </p>
+          <span
+            class="assistant-bubble assistant-dots"
+            aria-hidden="true"
+          ><span /><span /><span /></span>
+          <span class="visually-hidden">L'Assistant écrit…</span>
+        </div>
       </div>
 
       <p

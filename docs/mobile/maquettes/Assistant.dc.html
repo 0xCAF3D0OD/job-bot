@@ -29,7 +29,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 @keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
 .nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
 @media (prefers-reduced-motion: reduce){.nav-active{animation:none}}
-</style>
+@keyframes ja-dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}@media (prefers-reduced-motion: reduce){.ja-dot{animation:none!important;opacity:.6}}</style>
 </helmet>
 <div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
 
@@ -49,9 +49,9 @@ a{color:#2445C2}a:hover{color:#1A3496}
 
 <sc-if value="{{showChips}}" hint-placeholder-val="{{ true }}">
 <div class="msg" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-left: 46px">
-<button type="button" onClick="{{askLetter}}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #2445C2; border-radius: 22px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Écrire la lettre pour Alpstack</button>
-<button type="button" onClick="{{askLetter}}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #2445C2; border-radius: 22px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Préparer les relances</button>
-<button type="button" onClick="{{askLetter}}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #2445C2; border-radius: 22px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Préparer mon rendez-vous ORP</button>
+<button type="button" onClick="{{askLetter}}" style="min-height: 48px; padding: 10px 20px; border: 1.5px solid #2445C2; border-radius: 24px; text-align: left; line-height: 21px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Écrire la lettre pour Alpstack</button>
+<button type="button" onClick="{{askLetter}}" style="min-height: 48px; padding: 10px 20px; border: 1.5px solid #2445C2; border-radius: 24px; text-align: left; line-height: 21px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Préparer les relances</button>
+<button type="button" onClick="{{askLetter}}" style="min-height: 48px; padding: 10px 20px; border: 1.5px solid #2445C2; border-radius: 24px; text-align: left; line-height: 21px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #1A3496; cursor: pointer">Préparer mon rendez-vous ORP</button>
 </div>
 </sc-if>
 
@@ -59,6 +59,10 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 16px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Écris ma lettre pour le poste de DevOps Engineer chez Alpstack.</div>
 </sc-if>
 
+<sc-if value="{{ecrit}}" hint-placeholder-val="{{ false }}">
+<div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 16px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Et en allemand ?</div>
+<div class="msg" role="status" aria-live="polite" style="display: flex; align-items: flex-end; gap: 10px"><svg width="34" height="31" viewBox="8 10 88 80" aria-hidden="true" style="flex: none"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M33 31 Q34.76 40.24 44 42 Q34.76 43.76 33 53 Q31.24 43.76 22 42 Q31.24 40.24 33 31 Z" fill="#E8B48A"></path><path d="M59 31 Q60.76 40.24 70 42 Q60.76 43.76 59 53 Q57.24 43.76 48 42 Q57.24 40.24 59 31 Z" fill="#E8B48A"></path><path d="M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z" fill="#FFFFFF"></path></svg><div style="display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 18px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px"><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: 0s"></span><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: .15s"></span><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: .3s"></span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">L’Assistant écrit…</span></div></div>
+</sc-if>
 <sc-if value="{{working}}" hint-placeholder-val="{{ false }}">
 <div class="msg" role="status" style="display: flex; align-items: flex-end; gap: 10px">
 <svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true" style="flex: none"><defs><clipPath id="asWork"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><g clip-path="url(#asWork)"><g class="as-rise"><path class="as-wave" d="M -100 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 L 200 140 L -100 140 Z" fill="#C9D3F6" stroke="#2445C2" stroke-width="3"></path></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"></path><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><circle cx="33" cy="42" r="6.5" fill="#FFFFFF" class="as-dot as-dot0"></circle><circle cx="59" cy="42" r="6.5" fill="#FFFFFF" class="as-dot as-dot1"></circle><circle cx="46" cy="63" r="6.5" fill="#FFFFFF" class="as-dot as-dot2"></circle></g></svg>
@@ -121,7 +125,8 @@ const phase = s.phase || 'intro';
 const start = () => { clearTimeout(this.t); this.setState({ phase: 'working' }); this.t = setTimeout(() => this.setState({ phase: 'done' }), 3000); };
 return {
 showChips: phase === 'intro',
-asked: phase !== 'intro',
+asked: phase !== 'intro' && phase !== 'ecrit',
+ecrit: phase === 'ecrit',
 working: phase === 'working',
 done: phase === 'done',
 askLetter: start,

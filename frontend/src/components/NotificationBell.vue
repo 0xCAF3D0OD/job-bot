@@ -31,7 +31,7 @@ const earlier = computed(() => recent.value.filter((item) => item.read_at));
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
 const label = computed(() =>
-  inbox.value.unread ? `Notifications, ${plural(inbox.value.unread, "non lue", "non lues")}` : "Notifications",
+  inbox.value.unread ? `Notifications, ${plural(inbox.value.unread, "nouvelle", "nouvelles")}` : "Notifications, aucune nouvelle",
 );
 
 // La ligne de détail : le message (sa première ligne) et l'heure, séparés par un point médian.

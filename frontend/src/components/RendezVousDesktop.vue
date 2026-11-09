@@ -140,8 +140,9 @@ watch(() => props.page, () => void nextTick(measure));
         </div>
         <button
           type="button"
-          class="secondary"
+          class="secondary action-2"
           data-test="rdv-add"
+          :aria-expanded="selected === 'nouveau'"
           @click="select('nouveau')"
         >
           Ajouter
@@ -469,12 +470,16 @@ watch(() => props.page, () => void nextTick(measure));
       <OrpMeetingForm
         v-else-if="editing && page.meeting"
         :meeting="page.meeting"
+        inline
         @saved="emit('saved', $event)"
         @cancel="emit('cancel')"
       />
       <OrpMeetingForm
         v-else
+        inline
+        :can-cancel="keys.length > 0"
         @saved="emit('saved', $event)"
+        @cancel="select(keys[0] ?? 'nouveau')"
       />
     </div>
   </div>

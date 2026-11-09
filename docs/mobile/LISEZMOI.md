@@ -4,6 +4,7 @@ Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
+- `MODIFICATIONS_8_NOVEMBRE_SOIR.md` : texte complet, final et sans contradiction des lots 11 à 18. Il prime sur `PROMPT_CLAUDE_CODE.md` en cas de doute.
 - `maquettes/` : 67 écrans `.dc.html` (à ouvrir dans un navigateur) et `canvas.json` (titres et positions, rangés par section).
 - `captures/` : un PNG par écran, du même nom, dans l'état par défaut. `captures/etats/<Fichier>--<état>.png` montre les états ouverts (menus, panneaux, onglets, sélecteur de date). `vue_ensemble.png` montre tout le canvas. `icone_calendrier.png` montre l'icône date.
 - `illustrations/` :
@@ -32,7 +33,8 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Actions sur une offre | ActionsOffre | |
 | Préparer ma candidature | Preparer | PreparerSombre |
 | Assistant | Assistant | |
-| Suivi ORP | Orp | |
+| Pour l’ORP (une candidature, à recopier dans Job-Room) | OrpFiche | OrpFicheSombre |
+| Suivi ORP | Orp | OrpSombre |
 | Progresser, appelé « Bilan » dans la barre du bas | Explorer | ProgresserSombre |
 | Bilan, résultats | BilanResultats | |
 | Notifications | Notifications | NotificationsSombre |
@@ -96,7 +98,7 @@ Système : Systeme (règles communes), Emoticones, Animations (logo isolé, plus
 - Accent manuscrit Caveat Brush sur la fin du H1 seulement (« repos. », « à envoyer. », « te revoir. »), 1.45em, #2445C2. Un seul par écran, seulement sur les écrans « moment ». Le H1 reste un seul élément.
 
 ## Mise en page ordinateur
-- En-tête commun (AppHeader) aligné sur 1280 px : bulle de recherche, cloche, K. Logo seul sur Maintenance, Pas de connexion, Premiers pas et Connexion.
+- En-tête commun (AppHeader) aligné sur 1280 px. À droite, un seul groupe : bulle de recherche, cloche, avatar, 16 px entre eux (les 32 px séparent logo, menu et ce groupe). Les trois font 44 px. Cloche sans notification : rond blanc, bordure 1,5 px #D8D4CA, comme la recherche (état `lu`). Avec notifications : capsule pêche « 9+ ». Logo seul sur Maintenance, Pas de connexion, Premiers pas et Connexion.
 - Pages de lecture (Aujourd'hui, Bilan, Notifications, Alertes, Réglages, Profil, pages d'état) : contenu centré sur 880 px. Pages de travail (Candidatures, Préparer) : 1280 px.
 - Bande bleu pâle #E8ECFB (sombre #232B45) sous l'en-tête : seulement Aujourd'hui et Bilan. Elle porte la date, le H1 et le sous-titre. La carte du haut (Mois ORP) est à cheval sur son bord bas, bordure #D5DCF5, ombre 0 4px 16px rgba(36,69,194,.10).
 - Aujourd'hui : H1 = action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP. Tâches sur une colonne : en retard, envoyer, trier, préparer un entretien, puis « Quand tu as le temps ».
@@ -132,7 +134,7 @@ Pour tout message libre envoyé tel quel.
 - Menu + (ja-pop) : Importer un fichier (PDF, Word, image, 10 Mo), Joindre mon CV, Joindre une offre de ma liste. Pièces jointes en pastilles dans la pilule. Glisser-déposer accepté. Entrée envoie, Maj + Entrée passe à la ligne.
 - Mention sous l'Assistant : « L'Assistant peut se tromper. Relis toujours avant d'envoyer. »
 - Emplacements : Assistant ; Préparer (« Demander une modification de la lettre », pastilles Plus court, Plus formel, Insister sur Terraform, En allemand) ; Ajouter une offre (3 lignes ordinateur, 4 lignes téléphone, « Lien ou texte de l'annonce », Envoyer = « Ajouter l'offre ») ; Coller l'annonce dans OffreProvisoire (5 lignes, « Enregistrer et refaire la note », désactivé sous 200 caractères).
-- Les champs de formulaire restent des champs de formulaire (libellé au-dessus, rayon 12 px, sans + ni Envoyer).
+- Les champs de formulaire restent des champs de formulaire : libellé au-dessus, hauteur 48 px, bordure 1,5 px #596070 (--text-secondary), fond blanc (--surface), rayon 8 px, sans + ni Envoyer. Une seule règle pour tous les formulaires, y compris ceux qui ne sont pas dessinés (Coordonnées).
 
 ## Logo de l'Assistant
 - Sans cercle dans la discussion : 32 px dans l'en-tête du panneau, 28 px à gauche de chaque message. Pas d'avatar pour les messages de l'utilisateur. L'icône de la barre du bas (téléphone) garde son cercle.
@@ -182,3 +184,25 @@ Un même élément a le même dessin et le même comportement sur les deux suppo
 
 ## Pas encore dessinés
 Attente de la première collecte, entretien décroché, refus reçu, compte supprimé : reprendre la mise en page de l'écran d'état le plus proche.
+
+# CORRECTIONS DU 8 NOVEMBRE AU SOIR
+
+| Point | Maquette, état | Capture |
+|---|---|---|
+| Champs de formulaire : rayon 8 px, bordure 1,5 px #596070, fond blanc | RendezVous, CandidaturesOrdinateurB, Connexion | captures/etats/CandidaturesOrdinateurB--tab-rv.png |
+| En-tête : groupe de 16 px, éléments de 44 px, cloche sans notification | toutes les pages ordinateur, état `lu` | captures/etats/CandidaturesOrdinateurB--cloche-sans-nouvelle.png |
+| Assistant qui écrit : logo sans cercle + bulle de 3 points animés, aucune bulle vide | AssistantOrdinateur `attente`, Assistant `phase: ecrit` | captures/etats/AssistantOrdinateur--attente.png, Assistant--ecrit.png |
+| Mes alertes : lien « ‹ Candidatures » au-dessus du titre ; liste sans cadre ; « Créer l'alerte › » en libellé coloré | AlertesOrdinateur, AlertesTel | captures/AlertesOrdinateur.png, AlertesTel.png |
+| Nouveau rendez-vous sur ordinateur : formulaire dans le panneau de détail, sans carte autour (titre, Date, Heure, Lieu ou lien, Ajouter le rendez-vous, Annuler) | CandidaturesOrdinateurB `tab: rv, ajrv: true` (bouton « Ajouter ») | captures/etats/CandidaturesOrdinateurB--tab-rv-ajouter.png |
+| Envoyées, détail sur ordinateur en deux colonnes : à gauche Statut, Premier message, Prises de contact ; à droite (240 px, trait à gauche) Documents, Contacts. Formulaire d'une seule colonne (Écrire à, puis Canal). Espacements généreux : 32 px au-dessus et 36 px sous chaque section, 48 px entre les colonnes, 40 px de marge dans la colonne de droite | CandidaturesOrdinateurB `tab: en` | captures/etats/CandidaturesOrdinateurB--tab-en.png, --tab-en-bas.png |
+| À traiter, détail sur ordinateur en deux colonnes : à gauche la note (anneau, raisons, bandeau « Il manque l'annonce complète » en bloc arrondi, « Le détail de la note ») puis « Le poste » ; à droite « L'offre en bref » (Lieu, Contrat, Taux d'activité, Reçue, libellé au-dessus de la valeur) et « Voir l'annonce sur le site ». Titre, étiquettes et boutons restent au-dessus des colonnes. Mêmes espacements qu'Envoyées | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png, captures/etats/CandidaturesOrdinateurB--tab-tr-bas.png |
+| Formulaires de rendez-vous sur ordinateur limités à 560 px de large | CandidaturesOrdinateurB `tab: rv` et `ajrv` | captures/etats/CandidaturesOrdinateurB--tab-rv.png, --tab-rv-ajouter.png |
+| « Ce que je cherche » : libellé au-dessus de la valeur (14 px gris, puis 16 px gras), lignes de 68 px, chevron à droite | ProfilOrdinateur, OnboardingOrdinateur | captures/ProfilOrdinateur.png |
+| Rendez-vous ORP sur ordinateur : plus de pastille « Noté » ni « Pas encore noté » (les groupes « À noter » et « Passés » le disent déjà). Détail structuré : sous l'en-tête, « Ce qui a été convenu » en trois sections titrées avec une phrase d'aide (Objectif de recherches, Mesures décidées, Prochain rendez-vous), séparées par un trait, puis « Enregistrer » ; à droite « Le rendez-vous » (Date, Heure, Lieu, Objectif jusqu'ici). Date courte dans la pilule : « Mar. 10 nov. 2026 » | CandidaturesOrdinateurB `tab: rv` | captures/etats/CandidaturesOrdinateurB--tab-rv.png, --tab-rv-bas.png |
+| Préparer sur ordinateur, réorganisé comme la production : en-tête sur une ligne de 64 px centrée (« ‹ Retour à l'offre », logo, H1 = intitulé du poste, entreprise, anneau 76 + verdict, étapes) ; « Ma candidature » n'est plus affiché. À gauche la lettre (titre « Lettre de motivation », langue FR, DE, EN à droite, aperçu). À droite : « Mise en page » (modèle Sobre, Moderne, Bandeau, Classique, pour la lettre et le CV, longueur), « Pour cette offre » (deux groupes titrés « Points forts » avec coche et « À vérifier » avec point d'attention, sujet en gras et détail dessous), « Nouvelle version ». Le verdict n'est plus répété dans « Pour cette offre ». En bas : suggestions, zone de saisie, « J'ai relu la lettre » | PreparerOrdinateur | captures/PreparerOrdinateur.png, captures/etats/PreparerOrdinateur--colonne-bas.png |
+| À traiter : bouton à contour « J'ai déjà postulé » à droite de « Écarter » | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png |
+
+# STYLE « BLOCS » (8 novembre, 21 h)
+
+Pages de lecture : blocs `--surface` sans bordure sur fond `--page-blocks` (clair `--surface-muted`, sombre `--bg`), 8 px (téléphone) ou 16 px (ordinateur) entre eux. Un bloc n'est jamais cliquable en entier. Ce qui s'ouvre est une ligne avec un cercle à contour bleu de 2 px et une flèche. Tout ce qu'on touche est en bleu : un seul bouton plein par écran, les autres à contour bleu. Le statut est un mot coloré après le titre. Détail : MODIFICATIONS_8_NOVEMBRE_SOIR.md, §2 (règles D28 à D34) et §10 (écrans).
+Écrans refaits : Offre, Orp, OrpFiche (nouveau), Compte, onglet ORP de Progresser, et leurs versions sombres (OffreSombre, OrpSombre, OrpFicheSombre, CompteSombre, ProgresserSombre) ; ordinateur : Aujourd'hui, Bilan, Profil, Réglages, Notifications, Alertes.

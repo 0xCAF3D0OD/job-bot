@@ -14,7 +14,9 @@ import { usePhone } from "../composables/usePhone";
 type Page = components["schemas"]["MeetingPage"];
 type Meeting = components["schemas"]["MeetingOut"];
 
-const props = defineProps<{ meeting?: Meeting | null }>();
+// `inline` : dans le panneau de détail de l'ordinateur (lot 11.5), sans carte autour, le titre de 26 px et sa phrase ;
+// `canCancel` : « Annuler » aussi pour un nouveau rendez-vous.
+const props = defineProps<{ meeting?: Meeting | null; inline?: boolean; canCancel?: boolean }>();
 const emit = defineEmits<{ saved: [page: Page]; cancel: [] }>();
 
 function pad(n: number): string {
@@ -82,13 +84,24 @@ async function save(): Promise<void> {
   <form
     v-else
     ref="form"
-    class="rdv-form"
+    :class="['rdv-form', { 'rdv-form-inline': inline }]"
     aria-labelledby="rdv-form-title"
     data-test="meeting-form"
     novalidate
     @submit.prevent="save"
   >
-    <h3 id="rdv-form-title">
+    <div v-if="inline">
+      <h2 id="rdv-form-title">
+        {{ meeting ? "Le prochain rendez-vous" : "Prochain rendez-vous ORP" }}
+      </h2>
+      <p class="rdv-form-sentence">
+        jobA1 prépare ta feuille la veille et te le rappelle le matin.
+      </p>
+    </div>
+    <h3
+      v-else
+      id="rdv-form-title"
+    >
       {{ meeting ? "Le prochain rendez-vous" : "Prochain rendez-vous ORP" }}
     </h3>
     <div class="rdv-form-when">
@@ -147,21 +160,24 @@ async function save(): Promise<void> {
     >
       {{ message }}
     </p>
-    <button
-      type="submit"
-      class="primary"
-      data-test="meeting-save"
-    >
-      {{ meeting ? "Enregistrer le rendez-vous" : "Ajouter le rendez-vous" }}
-    </button>
-    <button
-      v-if="meeting"
-      type="button"
-      class="secondary"
-      @click="emit('cancel')"
-    >
-      Annuler
-    </button>
+    <div :class="{ 'rdv-form-actions': inline }">
+      <button
+        type="submit"
+        class="primary action-1"
+        data-test="meeting-save"
+      >
+        {{ meeting ? "Enregistrer le rendez-vous" : "Ajouter le rendez-vous" }}
+      </button>
+      <button
+        v-if="meeting || canCancel"
+        type="button"
+        :class="inline ? 'rdv-form-cancel' : 'secondary'"
+        data-test="meeting-cancel"
+        @click="emit('cancel')"
+      >
+        Annuler
+      </button>
+    </div>
   </form>
 </template>
 
@@ -176,6 +192,15 @@ async function save(): Promise<void> {
 .rdv-form h3 { margin: 0; font-size: var(--form-17); font-weight: var(--weight-bold); }
 .rdv-form-when { display: grid; gap: var(--space-2); }
 .rdv-form .form-field { margin: 0; min-width: 0; }
-.rdv-form input { box-sizing: border-box; width: 100%; min-width: 0; height: var(--btn-secondary); border: 1.5px solid var(--field-border); border-radius: var(--radius-sm); font-size: var(--font-body); }
+.rdv-form input { width: 100%; min-width: 0; }
 .rdv-form button { min-height: var(--form-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-form > div:last-child:not(.rdv-form-actions) { display: contents; }
+/* Ordinateur, dans le panneau de détail (lot 11.5, CandidaturesOrdinateurB `ajrv`) : pas de carte autour du formulaire,
+   560 px au plus, le titre de 26 px et sa phrase, 20 px entre les blocs ; « Annuler » en bouton texte. */
+.rdv-form.rdv-form-inline { --form-26: 26px; --form-32: 32px; --form-20: 20px; --form-6: 6px; gap: var(--form-20); max-width: 560px; padding: 0; border: 0; border-radius: 0; background: none; animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); }
+.rdv-form-inline h2 { margin: 0; font-size: var(--form-26); line-height: var(--form-32); font-weight: var(--weight-heavy); }
+.rdv-form-sentence { margin: var(--form-6) 0 0; font-size: var(--font-label); color: var(--text-secondary); }
+.rdv-form-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rdv-form-actions .primary { padding: 0 var(--space-6); }
+.rdv-form-actions .rdv-form-cancel { padding: 0 var(--space-4); border: 0; background: transparent; color: var(--primary-text); }
 </style>

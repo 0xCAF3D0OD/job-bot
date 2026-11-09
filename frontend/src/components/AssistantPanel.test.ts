@@ -221,13 +221,19 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     await wrapper.find("[data-test=composer-send]").trigger("click");
     await flushPromises();
     expect(mood(wrapper, ".assistant-head")).toBe("thinking");
-    expect(mood(wrapper, "[data-test=assistant-status]")).toBe("thinking");
-    expect(wrapper.find(".assistant-line.assistant [data-test=assistant-mascot]").exists()).toBe(false);
+    expect(mood(wrapper, "[data-test=assistant-waiting]")).toBe("thinking");
+    // Pas de bulle vide (lot 11.3) : trois points et « L'Assistant écrit… » pour le lecteur d'écran.
+    expect(wrapper.find(".assistant-line.assistant:not(.assistant-waiting)").exists()).toBe(false);
+    expect(wrapper.findAll(".assistant-bubble:not(.assistant-dots)")).toHaveLength(0);
+    const waiting = wrapper.find("[data-test=assistant-waiting]");
+    expect(waiting.attributes("role")).toBe("status");
+    expect(waiting.findAll(".assistant-dots > span")).toHaveLength(3);
+    expect(waiting.find(".visually-hidden").text()).toBe("L'Assistant écrit…");
 
     first.push("text", { text: "Il te reste 2 candidatures." });
     await flushPromises();
     expect(mood(wrapper, ".assistant-line.assistant")).toBe("thinking");
-    expect(wrapper.find("[data-test=assistant-status] [data-test=assistant-mascot]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=assistant-waiting]").exists()).toBe(false);
 
     vi.useFakeTimers();
     first.end();
