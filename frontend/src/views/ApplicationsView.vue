@@ -315,6 +315,18 @@ const opened = computed(() => (openId.value === null ? null : (all.value.find((a
 const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
 // À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
 const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
+// Sur téléphone, hors du Suivi ORP, la candidature s'ouvre en écran poussé (§8.3) ; « ‹ Envoyées » revient à la liste.
+const sentScreen = computed(() => phone.value && !orpPage);
+function closeScreen(): void {
+  openId.value = null;
+  if (!route.query.candidature) return;
+  if (window.history.state?.back) router.back();
+  else {
+    const query = { ...route.query };
+    delete query.candidature;
+    void router.replace({ query });
+  }
+}
 // Le trait bleu de la carte choisie (§8.1) : au centre vertical de la carte, mesuré dans la section.
 const body = ref<HTMLElement | null>(null);
 const linkTop = ref<number | null>(null);
@@ -934,8 +946,28 @@ onUnmounted(() => assistant.setFocus(null));
     />
   </section>
 
+  <!-- Téléphone (§8.3, EnvoyeeDetail) : la candidature est un écran poussé, par-dessus la liste et la barre d'onglets. -->
+  <div
+    v-if="opened && sentScreen"
+    class="sent-screen"
+    data-test="sent-screen"
+  >
+    <SentDetail
+      phone
+      :application="opened"
+      :orp-row="rowsById.get(opened.id) ?? null"
+      @close="closeScreen"
+      @status="setStatus"
+      @edit="editFromPanel"
+      @remove="removeFromPanel"
+      @interview="interviewFromPanel"
+      @prepare="prepareFromPanel"
+      @practice="practiceFromPanel"
+      @changed="load"
+    />
+  </div>
   <SidePanel
-    v-if="opened && !twoColumns"
+    v-else-if="opened && !twoColumns"
     open
     :title="opened.company"
     @close="openId = null"

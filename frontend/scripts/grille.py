@@ -81,6 +81,11 @@ SCREENS: list[tuple[str, str | None]] = [
     ("notifications", None),
     # « Tout est lu » : tout lire, puis l'onglet « Non lues ».
     ("notifications", "[data-test=read-all] && [data-test=filter-unread]"),
+    # Envoyées, détail poussé et ses 3 feuilles (PR 5b, §8.3) : la 2e candidature « À relancer » de la démo.
+    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=follow-sheet-open]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-docs-open]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-find-open]"),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
@@ -94,6 +99,8 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
+# La démo refuse d'écrire, et donc de rédiger la relance : une relance d'exemple, pour auditer la carte et sa feuille.
+DRAFT = {"subject": "Relance", "text": "Bonjour, je me permets de revenir vers vous au sujet de ma candidature.", "language": "fr", "ai": False, "reason": "démo"}
 
 
 async def main() -> int:
@@ -113,6 +120,7 @@ async def main() -> int:
         for scheme, (width, height, screens, audit) in ((s, r) for s in ("light", "dark") for r in runs):
             phone = width < 821
             page = await browser.new_page(viewport={"width": width, "height": height}, color_scheme=scheme, has_touch=phone, is_mobile=phone)
+            await page.route("**/follow-up/draft", lambda route: route.fulfill(json=DRAFT))
             for path, opener in screens:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")
@@ -120,7 +128,8 @@ async def main() -> int:
                 for step in opener.split(" && ") if opener else []:
                     await page.click(step)
                     await page.wait_for_timeout(600)
-                await page.evaluate(PRELUDE, {**MAPPING, "scroll": SCOPES.get(path, MAPPING["scroll"])})
+                scope = SCOPES.get(path, MAPPING["scroll"]) if not phone else (".sent-screen" if "sent-list" in (opener or "") else MAPPING["scroll"])
+                await page.evaluate(PRELUDE, {**MAPPING, "scroll": scope})
                 faults = await page.evaluate(audit)
                 where = f"/{url}" + (f" ({opener})" if opener else "")
                 for fault in faults:

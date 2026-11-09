@@ -4938,6 +4938,8 @@ a.panel-row:hover { background: var(--band); }
   .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
   .sent-columns :is(.sent-goal, .sent-list, .sent-words) { max-width: none; }
 }
+/* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
+.sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }
 .sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
 .sent-goal-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
 .prep-revise { display: grid; gap: var(--space-3); }

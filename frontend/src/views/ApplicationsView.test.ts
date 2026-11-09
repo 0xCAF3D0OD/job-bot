@@ -372,6 +372,20 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     expect(wrapper.find("#orp-month-title").text()).toContain("Recherches du mois");
   });
 
+  it("sur téléphone, une candidature d'Envoyées s'ouvre en écran poussé ; « ‹ Envoyées » revient à la liste (§8.3)", async () => {
+    mockApi(() => month(), [application]);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper } = await mountView(`/candidatures/suivi?candidature=${application.id}`);
+    vi.unstubAllGlobals();
+    const screen = wrapper.find("[data-test=sent-screen]");
+    expect(screen.exists()).toBe(true);
+    expect(screen.find("h1[data-test=panel-title]").text()).toBe(application.job_title);
+    expect(wrapper.find(".side-panel").exists()).toBe(false);
+    await screen.find("[data-test=sent-back]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
+  });
+
   it("le calendrier replié dans le Suivi ORP, pas dans Envoyées ; un jour demandé l'ouvre", async () => {
     mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
     const { wrapper } = await mountView();
