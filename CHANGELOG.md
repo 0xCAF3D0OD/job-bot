@@ -487,3 +487,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.273 | « justificatif » à la place de « preuve » partout (lot 16.4) : interface, rappels, agenda, feuille du rendez-vous, Assistant et fichier CSV | livrée |
 | 1.6.274 | Composants communs du 9 novembre : flèches grises, trait des cartes #CFCBC1, mots d'état, panneau à droite sur ordinateur, champs en pilule, bouton copier, snackbar sombre | livrée |
 | 1.6.275 | Ordinateur sombre du 9 novembre : carrés aux initiales inversés, page A4 blanche avec ombre marquée, carte sélectionnée #232B45, plus de bande bleue sur Bilan | livrée |
+| 1.6.276 | Préparer sur téléphone (9 novembre, §9) : plus d'anneau de note ; « Moderne · Français » et « Changer » ouvrent la feuille « Mise en page et langue » ; aperçu de 384 px ; puces de retouche seulement en écrivant ; un seul bouton « J'ai relu, continuer » ; la tête de Préparer s'affiche de nouveau sur téléphone. | livrée |
