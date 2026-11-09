@@ -372,6 +372,45 @@ async function load(): Promise<void> {
   letters.value = l.data ?? [];
   chunkTitles.value = Object.fromEntries((c.data ?? []).map((chunk) => [chunk.id, chunk.title]));
   select(current(letters.value));
+  launchFromOffer();
+}
+
+// « Préparer ma candidature » (MODIFICATIONS du 9 novembre, §7 n° 1 et §7.1) : l'arrivée avec ?ecrire=1 lance
+// l'écriture de la lettre tout de suite, et le CV adapté se prépare en même temps. La relecture reste obligatoire.
+// En cas d'échec (§7.3), la page le dit avec « Réessayer ».
+const letterFailed = ref("");
+// Sur ordinateur, la carte d'échec dit déjà ces messages génériques ; un motif précis du serveur reste affiché.
+const GENERIC_FAILURES = new Set(["La rédaction a échoué, réessaie.", "API injoignable."]);
+const cvState = ref<"" | "busy" | "failed">("");
+async function prepareCv(): Promise<void> {
+  cvState.value = "busy";
+  try {
+    const { data } = await api.POST("/api/offers/{offer_id}/cvs", {
+      params: { path: { offer_id: offerId } },
+      body: { language: null, instruction: null, base_draft_id: null },
+    });
+    await refreshPlan();
+    cvState.value = data ? "" : "failed";
+    if (data) currentCvId.value = data.id;
+  } catch {
+    cvState.value = "failed";
+  }
+}
+// La ligne « CV adapté » de « Ta candidature » : prêt, en préparation (§7.1), en échec (§7.3) ou à préparer.
+const cvRow = computed<{ text: string; tone: string }>(() => {
+  if (currentCvId.value) return { text: "Prêt, à relire à l’étape 2", tone: "ok" };
+  if (cvState.value === "busy") return { text: "En préparation", tone: "busy" };
+  if (cvState.value === "failed") return { text: "Pas pu être préparé, à refaire à l’étape 2", tone: "todo" };
+  return { text: "À préparer à l’étape 2", tone: "" };
+});
+function launchFromOffer(): void {
+  if (route.query.ecrire !== "1") return;
+  const rest = { ...route.query };
+  delete rest.ecrire;
+  void router.replace({ query: rest });
+  if (offer.value?.status === "applied") return;
+  if (!letters.value.length && !reached("letter")) void write();
+  if (!currentCvId.value && !reached("cv")) void prepareCv();
 }
 
 // Le texte qui vient d'arriver de l'IA apparaît ligne à ligne (docs/59 §4).
@@ -438,6 +477,7 @@ async function write(force = false): Promise<void> {
   choosingWrite.value = false;
   writing.value = true;
   error.value = "";
+  letterFailed.value = "";
   instructionNote.value = "";
   try {
     const { data, error: err, response } = await api.POST("/api/offers/{offer_id}/letters", {
@@ -455,7 +495,10 @@ async function write(force = false): Promise<void> {
     if (!data) {
       // Une consigne hors de portée, ou qui ne change rien : une ligne sous la consigne, gardée.
       if (response?.status === 422) instructionNote.value = detail(err, "Cette consigne ne change rien à la lettre.");
-      else if (!reached("letter")) error.value = detail(err, "La rédaction a échoué, réessaie.");
+      else if (!reached("letter")) {
+        error.value = detail(err, "La rédaction a échoué, réessaie.");
+        letterFailed.value = "L’écriture a été interrompue. Rien n’est perdu : jobA1 reprend avec ton CV et l’annonce.";
+      }
       return;
     }
     // La relecture avant l'affichage (rédacteur, puis relecteur) : la lettre s'affiche relue.
@@ -469,6 +512,7 @@ async function write(force = false): Promise<void> {
     setTimeout(() => (fresh.value = false), 1000);
   } catch {
     error.value = "API injoignable.";
+    letterFailed.value = "La connexion a coupé pendant l’écriture. Rien n’est perdu : jobA1 reprend avec ton CV et l’annonce.";
   } finally {
     writing.value = false;
     phase.value = "write";
@@ -1142,6 +1186,8 @@ onMounted(() => void load());
         v-else-if="offer && tab === 'cv'"
         :offer="offer"
         :primary="nextStep === 'cv'"
+        :preparing="cvState === 'busy'"
+        :failed="cvState === 'failed'"
         @current="currentCvId = $event"
       />
 
@@ -1151,7 +1197,7 @@ onMounted(() => void load());
       >
         <div class="prep-main">
           <p
-            v-if="error"
+            v-if="error && (phone || !letterFailed || !!selected || !GENERIC_FAILURES.has(error))"
             class="notice error"
             role="alert"
           >
@@ -1228,12 +1274,16 @@ onMounted(() => void load());
                   :style="{ width: `${w}%` }"
                 />
               </div>
-              <div class="prep-empty-card">
+              <div
+                class="prep-empty-card"
+                :role="letterFailed ? 'alert' : undefined"
+                :data-test="letterFailed ? 'letter-failed' : undefined"
+              >
                 <p class="prep-empty-title">
-                  Pas encore de lettre pour cette offre
+                  {{ letterFailed ? "La lettre n’a pas pu être écrite" : "Pas encore de lettre pour cette offre" }}
                 </p>
                 <p class="prep-empty-text">
-                  jobA1 l’écrit avec ton CV et l’annonce, dans le modèle choisi. Tu la relis avant qu’elle parte.
+                  {{ letterFailed || "jobA1 l’écrit avec ton CV et l’annonce, dans le modèle choisi. Tu la relis avant qu’elle parte." }}
                 </p>
                 <PlanLimit usage="letter" />
                 <BusyButton
@@ -1244,7 +1294,11 @@ onMounted(() => void load());
                   data-test="write"
                   @click="write()"
                 >
-                  <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
+                  <span v-if="letterFailed">Réessayer</span>
+                  <HoverNote
+                    v-else
+                    :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')"
+                  >
                     <span class="with-icon"><AppIcon name="ai" />{{ writeLabel === "Rédiger la lettre" ? "Générer la lettre" : writeLabel }}</span>
                   </HoverNote>
                 </BusyButton>
@@ -1255,6 +1309,40 @@ onMounted(() => void load());
                 >
                   Ce qui part à l’IA<AppIcon name="chevron" />
                 </RouterLink>
+              </div>
+            </div>
+            <!-- Pendant l'écriture, sur ordinateur (§7.1, PreparerOrdinateurGeneration) : le bandeau bleu en haut du
+                 document, puis la page A4 du modèle en lignes grisées. -->
+            <div
+              v-else-if="writing && !selected && !phone"
+              class="prep-writing"
+              data-test="letter-writing"
+            >
+              <p
+                class="prep-writing-band"
+                role="status"
+              >
+                <span
+                  class="prep-spin"
+                  aria-hidden="true"
+                />
+                <span>{{ phase === "review" ? "Je relis ta lettre…" : "J’écris ta lettre… environ 20 secondes" }}</span>
+                <span
+                  v-if="cvState === 'busy'"
+                  class="prep-writing-cv"
+                >Le CV adapté se prépare en même temps</span>
+              </p>
+              <div class="prep-empty-page">
+                <div
+                  class="prep-empty-sheet"
+                  aria-hidden="true"
+                >
+                  <i
+                    v-for="(w, i) in [45, 96, 92, 94, 60, 0, 95, 90, 93, 88, 40, 0, 70]"
+                    :key="i"
+                    :style="{ width: `${w}%` }"
+                  />
+                </div>
               </div>
             </div>
             <AiWriting
@@ -1470,8 +1558,9 @@ onMounted(() => void load());
           <!-- Retoucher, sur ordinateur (§2.2) : les puces et la zone de saisie collées en bas de la colonne gauche ; pas de
                « + » (on modifie, on ne joint rien). -->
           <div
-            v-if="!phone && selected && !claim"
-            class="prep-desk-bottom"
+            v-if="!phone && (selected || writing) && !claim"
+            :class="['prep-desk-bottom', { 'prep-desk-bottom-off': !selected }]"
+            :inert="!selected"
             data-test="prep-desk-bottom"
           >
             <div
@@ -1485,7 +1574,7 @@ onMounted(() => void load());
               />
               <Composer
                 v-model="revision"
-                placeholder="Demander une modification de la lettre"
+                :placeholder="selected ? 'Demander une modification de la lettre' : 'Tu pourras retoucher la lettre dès qu’elle est écrite'"
                 send-label="Envoyer la demande"
                 :busy="writing"
                 @send="revise"
@@ -1523,7 +1612,7 @@ onMounted(() => void load());
             </button>
           </LayoutCard>
           <section
-            v-if="selected"
+            v-if="selected || writing"
             class="side-card prep-file"
             aria-labelledby="prep-file-title"
             data-test="prep-file"
@@ -1531,8 +1620,23 @@ onMounted(() => void load());
             <h2 id="prep-file-title">
               Ta candidature
             </h2>
+            <!-- Pendant l'écriture (§7.1) : la lettre « En cours d’écriture », avec l'indicateur qui tourne. -->
+            <div
+              v-if="!selected"
+              class="prep-file-row prep-file-busy"
+              data-test="letter-row"
+            >
+              <span class="prep-file-text">
+                <b>Lettre</b>
+                <span class="prep-file-sub busy">En cours d’écriture</span>
+              </span>
+              <span
+                class="prep-spin"
+                aria-hidden="true"
+              />
+            </div>
             <button
-              v-if="selected.review"
+              v-if="selected?.review"
               type="button"
               class="prep-file-row"
               aria-haspopup="dialog"
@@ -1546,6 +1650,7 @@ onMounted(() => void load());
               <AppIcon name="chevron" />
             </button>
             <button
+              v-if="selected"
               type="button"
               class="prep-file-row"
               aria-haspopup="dialog"
@@ -1566,9 +1671,17 @@ onMounted(() => void load());
             >
               <span class="prep-file-text">
                 <b>CV adapté</b>
-                <span :class="['prep-file-sub', { ok: currentCvId }]">{{ currentCvId ? "Prêt, à relire à l’étape 2" : "À préparer à l’étape 2" }}</span>
+                <span :class="['prep-file-sub', cvRow.tone]">{{ cvRow.text }}</span>
               </span>
-              <AppIcon name="chevron" />
+              <span
+                v-if="cvRow.tone === 'busy'"
+                class="prep-spin"
+                aria-hidden="true"
+              />
+              <AppIcon
+                v-else
+                name="chevron"
+              />
             </button>
           </section>
           <InlineConfirm
@@ -1622,6 +1735,16 @@ onMounted(() => void load());
               J’ai relu, continuer
             </button>
           </template>
+          <!-- Pendant l'écriture (§7.1) : le bouton attend la lettre. -->
+          <button
+            v-else-if="writing && !claim"
+            type="button"
+            class="primary prep-aside-main"
+            disabled
+            data-test="letter-read"
+          >
+            J’ai relu, continuer
+          </button>
         </aside>
         <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
@@ -1854,7 +1977,7 @@ onMounted(() => void load());
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
-.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
+.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
 .prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
 .prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
@@ -1892,7 +2015,7 @@ onMounted(() => void load());
 }
 .prep-empty-title { margin: 0; font-size: var(--font-title); line-height: var(--prep-24); font-weight: var(--weight-bold); }
 .prep-empty-text { margin: 0; font-size: var(--font-label); line-height: var(--prep-22); color: var(--text-secondary); }
-.prep-empty-card .primary { margin-top: var(--space-2); }
+.prep-empty-card .primary { min-height: var(--prep-48); margin-top: var(--space-2); padding: 0 var(--prep-24); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .prep-empty-card .prep-ai-link { justify-self: center; }
 /* Postuler sur ordinateur (§2.4, maquette PreparerOrdinateurPostuler) : cartes de 20/24 comme la colonne ; libellé en
    capitales 13/16 700, titre 18/24 8 px dessous, texte 14/20 gris. « À joindre » après un trait, à 16 px : pastilles de 40
@@ -1941,6 +2064,18 @@ onMounted(() => void load());
 /* Le panneau des contacts sur ordinateur : chaque lien et bouton texte garde une cible de 24 px (§1, WCAG 2.5.8). */
 [data-test=contacts-sheet] .link { display: inline-flex; align-items: center; min-height: var(--space-6); }
 .apply-after-text { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
+/* Pendant l'écriture (§7.1, PreparerOrdinateurGeneration) : bandeau --selected-bg en haut du document, 15/700 en
+   --primary-text, indicateur de 18 px qui tourne (arrêté si prefers-reduced-motion), « Le CV adapté se prépare en même
+   temps » à droite en 600 ; puces et saisie grisées. */
+.prep-writing-band { display: flex; align-items: center; gap: var(--space-3); margin: 0; padding: var(--space-3) var(--prep-24); background: var(--selected-bg); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.prep-writing-cv { margin-left: auto; font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.prep-spin { --prep-18: 18px; flex: none; width: var(--prep-18); height: var(--prep-18); box-sizing: border-box; border: 2.5px solid var(--card-line); border-top-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: prep-spin 1s linear infinite; }
+@keyframes prep-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .prep-spin { animation: none; } }
+.prep-file-sub.busy { font-weight: var(--weight-bold); color: var(--primary-text); }
+.prep-file-busy { cursor: default; }
+.prep-file-busy:hover { background: transparent; }
+.prep-desk-bottom-off .prep-revise { opacity: .5; }
 /* Les versions dans le panneau : 4 px entre le nom et sa ligne (grille de 4). */
 .sheet .versions .grouped-text { gap: var(--space-1); }
 /* Le panneau Relecture (PreparerOrdinateurRelecture) : résultat 18/24, date 14/20 ; familles en capitales 13/16 ;

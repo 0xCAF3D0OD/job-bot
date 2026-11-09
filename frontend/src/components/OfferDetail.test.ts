@@ -77,6 +77,8 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     const triage = wrapper.find("[data-test=triage]");
     expect(triage.findAll("a")).toHaveLength(1);
     expect(triage.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
+    // Il lance l'écriture de la lettre et du CV dès l'arrivée (MODIFICATIONS du 9 novembre, §7 n° 1).
+    expect(triage.find("[data-test=prepare]").attributes("href")).toMatch(/\/preparer\?ecrire=1$/);
     expect(triage.find("[data-test=offer-discard]").text()).toBe("Écarter");
     // Lot 15.2 : « J'ai déjà postulé » à droite de « Écarter », le parcours « Marquer comme envoyée ».
     const already = triage.find("[data-test=offer-already-applied]");
@@ -321,6 +323,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(expired.find("[data-test=prepare]").exists()).toBe(false);
     const preparing = await mountDetail(offer({ status: "preparing" }));
     expect(preparing.find("[data-test=prepare]").text()).toBe("Reprendre la lettre");
+    expect(preparing.find("[data-test=prepare]").attributes("href")).toMatch(/\/preparer$/);
     vi.unstubAllGlobals();
   });
 
