@@ -5,8 +5,6 @@ import { useRoute } from "vue-router";
 import { api, type AlertsPage } from "../api/client";
 import { alertsDigest } from "../alertsDigest";
 import { alertsBand, searchGroups, type SearchGroup } from "../alertsState";
-import ActionBand from "../components/ActionBand.vue";
-import AlertSearchCard from "../components/AlertSearchCard.vue";
 import AlertsPhoneList from "../components/AlertsPhoneList.vue";
 import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
@@ -19,14 +17,11 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ReceivedAlerts from "../components/ReceivedAlerts.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SiteMail from "../components/SiteMail.vue";
-import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
-import StatusPill from "../components/StatusPill.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { dateInSentence } from "../dates";
-import type { SiteState } from "../alertsState";
 import { plural } from "../format";
 
 // Onglet Alertes (planche « 6. Alertes », 1.6.70, structure inspirée des pages des CFF) : la
@@ -35,16 +30,12 @@ import { plural } from "../format";
 // voir » (divulgation progressive). L'assistant reste l'entrée tant que rien n'est en place.
 const { last: lastJobsPage } = useJobsMemory();
 const page = ref<AlertsPage | null>(null);
-// Ordinateur dès 1 024 px (maquette du 8 novembre, AlertesOrdinateur) : une page à elle, sur 880 px. Le titre « Mes
-// alertes e-mail », la phrase et « + Ajouter une recherche » ; la bande en bandeau pêche ; « Recherches suivies » en
-// une liste, une ligne par recherche et par site (les mots, les lieux · le site, l'état, « … »).
+// Ordinateur (maquette AlertesOrdinateur du 9 novembre, §2.8) : une page à elle, sur 880 px, à toutes les largeurs
+// au-dessus du téléphone. Le retour à Candidatures, le titre « Mes alertes e-mail », la phrase et « + Ajouter une
+// recherche » ; puis les familles (À confirmer, Actives, À créer), une carte par alerte. Plus de bandeau.
+// Téléphone (maquette du 8 novembre, AlertesTel) : le retour aux candidatures, le titre « Alertes e-mail », la phrase,
+// le bandeau pêche et la même liste.
 const { phone } = usePhone();
-const { phone: wideQuery } = usePhone("(min-width: 1024px)");
-const wide = computed(() => wideQuery.value && !phone.value);
-// Téléphone (maquette du 8 novembre, AlertesTel) : une page à elle aussi, avec le retour aux candidatures, le titre
-// « Alertes e-mail », la phrase, le bandeau pêche et la même liste qu'à l'ordinateur ; « + Ajouter » à côté de
-// « Recherches suivies ».
-const listed = computed(() => wide.value || phone.value);
 usePageReady("alerts", () => !!page.value);
 const mode = ref<"auto" | "wizard" | "manage">("auto");
 // « Créer » sur une ligne : le pas à pas de ce site, pour cette recherche.
@@ -80,17 +71,6 @@ async function confirmed(searchId: number): Promise<void> {
   if (data) page.value = data;
 }
 
-// La conclusion en haut (règles §3.2) : le nombre de recherches suivies, et la dernière alerte reçue.
-const sentence = computed(() => {
-  if (!page.value) return null;
-  const { active, lastReceived } = alertsDigest(page.value);
-  if (!active) return null;
-  return {
-    count: plural(active, "recherche", "recherches"),
-    rest: ` ${active > 1 ? "suivies" : "suivie"}${lastReceived ? `, la dernière alerte reçue ${dateInSentence(lastReceived)}.` : ", aucune alerte reçue pour l'instant."}`,
-  };
-});
-
 // La phrase sous le titre, sur ordinateur : « 5 recherches suivies. Dernière alerte reçue le 7 novembre. »
 const deskSentence = computed(() => {
   if (!page.value) return "";
@@ -103,25 +83,6 @@ const deskSentence = computed(() => {
 const now = ref(new Date());
 const groups = computed<SearchGroup[]>(() => (page.value ? searchGroups(page.value, now.value) : []));
 const band = computed(() => (page.value ? alertsBand(page.value, now.value) : null));
-// Les lignes de la liste sur ordinateur : une par recherche et par site.
-const SITE_TONE: Record<SiteState["kind"], "neutral" | "todo" | "ok"> = { received: "ok", quiet: "neutral", waiting: "neutral", silent: "todo", todo: "todo" };
-const rows = computed(() =>
-  groups.value.flatMap((group) =>
-    group.sites.map((site) => ({
-      key: `${group.terms}-${site.slug}`,
-      group,
-      site,
-      place: `${group.locations.join(", ") || "Toute la Suisse"} · ${site.name}`,
-    })),
-  ),
-);
-function rowMenu(group: SearchGroup): MoreMenuItem[] {
-  return [
-    { label: "Modifier la recherche", test: "search-manage", icon: "pencil", run: () => (mode.value = "manage") },
-    { label: "Supprimer la recherche", test: "search-remove", icon: "trash", danger: true, run: () => void remove(group) },
-  ];
-}
-
 async function bandAction(): Promise<void> {
   const current = band.value;
   if (!current) return;
@@ -200,7 +161,7 @@ async function arrive(): Promise<void> {
   if (!group) return;
   highlighted.value = group.terms;
   await nextTick();
-  const card = document.querySelector<HTMLElement>(`[data-test="alert-search-${group.ids[0]}"]`);
+  const card = document.querySelector<HTMLElement>(`[data-test^="alert-card-${group.ids[0]}-"]`);
   card?.scrollIntoView?.({ behavior: "smooth", block: "center" });
 }
 
@@ -211,10 +172,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section :class="['jobs-body', 'alerts-page', { 'alerts-wide': listed, 'alerts-phone': phone }]">
+  <section :class="['jobs-body', 'alerts-page', 'alerts-wide', { 'alerts-phone': phone }]">
     <!-- Ordinateur (lot 11.4) : le retour à la liste de Candidatures, sur l'onglet qui était ouvert. -->
     <RouterLink
-      v-if="wide && page"
+      v-if="!phone && page"
       :to="lastJobsPage"
       class="alerts-back-wide"
       data-test="alerts-back-wide"
@@ -222,7 +183,7 @@ onMounted(async () => {
       <AppIcon name="chevron-left" />Candidatures
     </RouterLink>
     <header
-      v-if="wide && page"
+      v-if="!phone && page"
       class="alerts-head-wide"
     >
       <div>
@@ -263,9 +224,9 @@ onMounted(async () => {
       >
         {{ deskSentence }}
       </p>
-      <!-- La conclusion d'abord (règles §3.2), puis une seule bande d'action (§3). -->
+      <!-- Téléphone : une seule bande d'action (§3) ; la confirmation passe par la famille « À confirmer ». -->
       <div
-        v-if="listed && view === 'summary' && band && !(phone && band.kind === 'confirm')"
+        v-if="phone && view === 'summary' && band && band.kind !== 'confirm'"
         class="alerts-banner"
         role="status"
         data-test="alerts-banner"
@@ -284,21 +245,6 @@ onMounted(async () => {
           {{ band.action }}
         </button>
       </div>
-      <p
-        v-if="!listed && view === 'summary' && sentence"
-        class="offers-sentence alerts-sentence"
-        data-test="alerts-sentence"
-      >
-        <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
-      </p>
-      <ActionBand
-        v-if="!listed && view === 'summary' && band"
-        :title="band.title"
-        :summary="band.summary"
-        :action="band.action"
-        @action="bandAction"
-      />
-
       <template v-if="view === 'wizard'">
         <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : le logo transformé « cloche » au-dessus de
              l'assistant, pas le personnage. -->
@@ -347,117 +293,20 @@ onMounted(async () => {
       </template>
       <template v-else>
         <!-- Téléphone (§10.8, 9 novembre) : les recherches rangées par famille, une carte par site, la feuille « Alerte ». -->
+        <!-- Ordinateur (§2.8, AlertesOrdinateur du 9 novembre) : la même liste par famille, en cartes ; la feuille
+             « Alerte » devient le panneau de droite. -->
         <AlertsPhoneList
-          v-if="phone"
           :page="page"
           :groups="groups"
+          :desk="!phone"
+          :highlighted="highlighted"
           @add="adding = true"
           @create="create"
           @remove="remove"
           @confirmed="confirmed"
         />
-        <section
-          v-else-if="listed"
-          class="alerts-section alerts-list-wide"
-          data-test="alert-searches"
-        >
-          <div class="alerts-list-head">
-            <h2>Recherches suivies</h2>
-            <button
-              v-if="phone"
-              type="button"
-              class="secondary"
-              data-test="add-search"
-              @click="adding = true"
-            >
-              + Ajouter
-            </button>
-          </div>
-          <ul class="alerts-rows">
-            <li
-              v-for="row in rows"
-              :key="row.key"
-              :class="['alerts-row', { highlighted: highlighted === row.group.terms }]"
-              :data-test="`alert-row-${row.group.ids[0]}-${row.site.slug}`"
-            >
-              <div class="alerts-row-text">
-                <strong>{{ row.group.terms }}</strong>
-                <span>{{ row.place }}</span>
-              </div>
-              <!-- Ordinateur : un libellé suivi de « › » ; « + Ajouter une recherche » reste le seul bouton à contour. -->
-              <button
-                v-if="row.site.state.kind === 'todo'"
-                type="button"
-                :class="phone ? 'secondary' : 'alerts-create'"
-                :aria-label="`Créer l'alerte « ${row.group.terms} » sur ${row.site.name}`"
-                :data-test="`create-${row.site.slug}`"
-                @click="create(row.site.slug, row.group.terms)"
-              >
-                <template v-if="phone">
-                  Créer
-                </template>
-                <template v-else>
-                  Créer l’alerte<AppIcon name="chevron" />
-                </template>
-              </button>
-              <span
-                v-else-if="row.site.state.kind === 'quiet'"
-                class="alert-quiet"
-              >{{ row.site.state.label }}</span>
-              <StatusPill
-                v-else
-                :tone="SITE_TONE[row.site.state.kind]"
-              >
-                {{ row.site.state.label }}
-              </StatusPill>
-              <MoreMenu
-                :items="rowMenu(row.group)"
-                :label="`Actions pour la recherche « ${row.group.terms} »`"
-                :test-id="`search-more-${row.group.ids[0]}-${row.site.slug}`"
-              />
-            </li>
-          </ul>
-          <AlertsForward
-            v-if="page.personal_address && page.mailbox"
-            :address="page.mailbox"
-          />
-        </section>
-        <section
-          v-else
-          class="alerts-section"
-          data-test="alert-searches"
-        >
-          <div class="alerts-section-head">
-            <h2 class="section-title">
-              Recherches suivies
-            </h2>
-            <button
-              type="button"
-              class="secondary"
-              data-test="add-search"
-              @click="adding = true"
-            >
-              <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
-            </button>
-          </div>
-          <div class="setting-cards">
-            <AlertSearchCard
-              v-for="group in groups"
-              :key="group.terms"
-              :group="group"
-              :class="{ highlighted: highlighted === group.terms }"
-              @create="create($event, group.terms)"
-              @manage="mode = 'manage'"
-              @remove="remove(group)"
-            />
-          </div>
-          <AlertsForward
-            v-if="page.personal_address && page.mailbox"
-            :address="page.mailbox"
-          />
-        </section>
         <AlertsForward
-          v-if="phone && page.personal_address && page.mailbox"
+          v-if="page.personal_address && page.mailbox"
           :address="page.mailbox"
         />
         <SiteMail

@@ -41,6 +41,11 @@
 .block-status.todo { color: var(--peach-text); }
 .block-status.info { color: var(--primary-text); }
 .block-status.off { color: var(--text-secondary); }
+/* Le mot d'état à droite, avant le cercle (maquettes de l'ordinateur du 9 novembre) : 15 gras. */
+.block-row-aside { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text); }
+.block-row-aside.ok { color: var(--success); }
+.block-row-aside.todo { color: var(--peach-text); }
+.block-row-aside.muted { color: var(--text-secondary); }
 
 /* D32 : libellé au-dessus de la valeur, bouton copier à droite, trait entre les champs. */
 .block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
