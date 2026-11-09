@@ -1,0 +1,1 @@
+Compte sur téléphone (9 novembre, PR 8) : une carte par groupe (profil, Mon parcours, Préférences, Recherche et outils, Confidentialité et aide, Se déconnecter), lignes séparées par un trait fin, sans trait entre les groupes. « Se déconnecter » est en rouge, avec l’adresse e-mail dessous.
