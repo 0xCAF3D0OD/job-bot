@@ -577,3 +577,44 @@ async def test_jobs_run_account_by_account(
         assert await jobs.execute(worker, "test-exploitant")
     assert seen == [("test-comptes", other)]
     await worker.dispose()
+
+
+async def test_new_account_never_sees_owner_identity(
+    runtime: Runtime, two_accounts: tuple[int, int]
+) -> None:
+    """Incident du 2026-11-09 : un compte neuf montrait le nom, la ville et l'image de Kevin. Le
+    serveur, lui, ne les donne qu'à leur compte : c'était l'interface qui les gardait en mémoire."""
+    owner, _other = two_accounts
+    with accounts.use(owner):
+        async with runtime.sessionmaker.begin() as session:
+            await session.execute(
+                text(
+                    "insert into settings (key, value) values "
+                    "('identity_name', :n), ('identity_city', :c), ('profile_avatar', '3') "
+                    "on conflict (user_id, key) do update set value = excluded.value"
+                ),
+                {"n": f'"{SECRET} Nom"', "c": f'"{SECRET} Ville"'},
+            )
+    try:
+        secured = Runtime.create(make_settings(auth_enabled=True))
+        app = create_app(secured.settings, secured)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://localhost"
+        ) as api:
+            login = await api.post(
+                "/api/auth/login", json={"username": "compte-b", "password": PASSWORD}
+            )
+            assert login.status_code == 204
+            identity = (await api.get("/api/identity")).json()
+            assert identity["name"] is None and identity["city"] is None
+            assert (await api.get("/api/profile-image")).json()["avatar"] is None
+        await secured.dispose()
+    finally:
+        with accounts.use(owner):
+            async with runtime.sessionmaker.begin() as session:
+                await session.execute(
+                    text(
+                        "delete from settings where key in "
+                        "('identity_name', 'identity_city', 'profile_avatar')"
+                    )
+                )

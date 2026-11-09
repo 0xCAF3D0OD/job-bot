@@ -1,6 +1,6 @@
 import { computed, ref } from "vue";
 
-import { api, type Me } from "../api/client";
+import { api, PROFILE_KEY, type Me } from "../api/client";
 
 // Connexion (docs/18 §1) : état partagé par le routeur, la barre du haut et les pages.
 const me = ref<Me | null>(null);
@@ -46,6 +46,12 @@ export function useAuth() {
       else await api.POST("/api/auth/logout");
     } finally {
       me.value = { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
+      // Le profil d'essai choisi appartient à ce compte : le suivant repart du sien.
+      try {
+        globalThis.localStorage?.removeItem(PROFILE_KEY);
+      } catch {
+        // Stockage refusé : rien n'y était gardé.
+      }
       leave.to(LOGIN_PATH);
     }
   }
