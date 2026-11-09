@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import { dateInList } from "../dates";
@@ -19,7 +18,6 @@ import SidePanel from "./SidePanel.vue";
 // docs/89) : l'image choisie, en haut à droite de l'ordinateur, ouvre un panneau latéral non modal de 420 px.
 // En-tête : l'image (48 px), le nom et l'e-mail. « Mon compte » (profil et CV, alertes e-mail, réglages),
 // « Affichage » (le mode sombre, appliqué tout de suite), « Aide », puis « Se déconnecter » en pied.
-const router = useRouter();
 const { me, logout } = useAuth();
 // Le profil affiché est lu dès l'ouverture de l'app (le bandeau « Revenir à … »).
 const { load } = useProfiles();
@@ -79,7 +77,6 @@ function toggle(): void {
 async function signOut(): Promise<void> {
   layer.hide(false);
   await logout();
-  await router.push({ name: "news" });
 }
 
 onMounted(() => {

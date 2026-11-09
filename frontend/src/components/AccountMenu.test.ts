@@ -68,6 +68,18 @@ describe("Panneau du compte (maquette du 8 novembre, docs/143, D24)", () => {
     expect(q("[data-test=logout]")?.textContent?.trim()).toBe("Se déconnecter");
   });
 
+  // Incident du 2026-11-09 : le clic menait vers une page qui n'existe pas, la page restait affichée.
+  it("« Se déconnecter » ferme le panneau et déconnecte (la page est rechargée par useAuth)", async () => {
+    logout.mockClear();
+    const { wrapper } = await mountAt("/bilan/orp");
+    await wrapper.find("[data-test=account-menu]").trigger("click");
+    await flushPromises();
+    q("[data-test=logout]")!.click();
+    await flushPromises();
+    expect(logout).toHaveBeenCalledOnce();
+    expect(q("[data-test=side-panel]")).toBeNull();
+  });
+
   it("Échap ferme et rend le focus à l'image ; un autre panneau ferme celui-ci", async () => {
     const { wrapper, router } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");

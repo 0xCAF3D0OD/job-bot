@@ -120,10 +120,18 @@ async def test_pages_reserved_until_login(rt: Runtime) -> None:
         assert "HttpOnly" in cookie and "SameSite=Lax" in cookie and "Max-Age=2592000" in cookie
         assert "Secure" not in cookie  # localhost
         assert (await api.get("/api/auth/me")).json()["username"] == "camille"
-        assert (await api.get("/api/orp")).status_code == 200
+        orp = await api.get("/api/orp")
+        assert orp.status_code == 200
+        # Rien du compte ne reste dans le cache du navigateur (incident du 2026-11-09).
+        assert orp.headers["cache-control"] == "no-store"
+        assert (await api.get("/api/applications")).headers["cache-control"] == "no-store"
 
         assert (await api.post("/api/auth/logout")).status_code == 204
-        assert (await api.get("/api/orp")).status_code == 401
+        refused = await api.get("/api/orp")
+        assert refused.status_code == 401
+        assert refused.headers["cache-control"] == "no-store"
+        assert "candidatures" not in refused.text.lower()
+        assert (await api.get("/api/applications")).status_code == 401
     async with rt.sessionmaker() as session:
         assert list(await session.scalars(select(UserSession))) == []
 

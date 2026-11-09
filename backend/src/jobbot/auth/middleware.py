@@ -199,15 +199,20 @@ class AuthMiddleware:
             if not is_public(method, path):
                 await _json(send, 401, "connexion requise")
                 return
-        if not (found and found.renewed and token):
-            with accounts.use(account):
-                await self.app(scope, receive, send)
-            return
-        cookie = session_cookie(token, headers).encode()
+        cookie = (
+            session_cookie(token, headers).encode() if found and found.renewed and token else None
+        )
 
         async def send_with_cookie(message: Message) -> None:
             if message["type"] == "http.response.start":
-                message.setdefault("headers", []).append((b"set-cookie", cookie))
+                response_headers = message.setdefault("headers", [])
+                if cookie:
+                    response_headers.append((b"set-cookie", cookie))
+                # Réponse lue avec une session : jamais gardée par le navigateur (incident du
+                # 2026-11-09), pour qu'aucune donnée du compte ne survive à la déconnexion.
+                # Une route qui choisit son propre cache (agenda, logos) le garde.
+                if found and not any(k.lower() == b"cache-control" for k, _ in response_headers):
+                    response_headers.append((b"cache-control", b"no-store"))
             await send(message)
 
         with accounts.use(account):

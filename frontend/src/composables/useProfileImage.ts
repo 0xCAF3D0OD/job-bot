@@ -10,33 +10,54 @@ import { useAuth } from "./useAuth";
 
 export const AVATARS = ["Souriant", "Clin d'œil", "Casque", "Lunettes", "Bonnet", "Écharpe", "Café", "Étoile"] as const;
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
-const PHOTO_KEY = "joba1.profile-photo";
+// La photo est rangée au nom du compte (incident du 2026-11-09) : sur un navigateur partagé, un autre compte ne
+// voit jamais celle du précédent. L'ancienne clé, sans compte, est effacée sans être lue.
+const PHOTO_PREFIX = "joba1.profile-photo:";
+const OLD_PHOTO_KEY = "joba1.profile-photo";
 
 export type ImageChoice = { kind: "initials" } | { kind: "avatar"; avatar: number } | { kind: "photo"; src: string };
 
 const avatar = ref<number | null>(null);
-const photo = ref<string | null>(readPhoto());
+const photo = ref<string | null>(null);
 const fullName = ref<string | null>(null);
 // L'e-mail de la fiche d'identité, montré à l'utilisateur seul (en-tête du panneau du compte) ; jamais envoyé ailleurs.
 const email = ref<string | null>(null);
 // La ville de la fiche d'identité : sous le nom, en tête du Profil (maquette ProfilOrdinateur).
 const city = ref<string | null>(null);
 let loading: Promise<void> | null = null;
+// Le compte dont l'image, le nom et la ville sont en mémoire : un autre compte les relit (incident du 2026-11-09).
+let loadedFor: string | null = null;
 
-function readPhoto(): string | null {
+function photoKey(account: string): string {
+  return PHOTO_PREFIX + account;
+}
+function readPhoto(account: string | null): string | null {
   try {
-    return globalThis.localStorage?.getItem(PHOTO_KEY) ?? null;
+    globalThis.localStorage?.removeItem(OLD_PHOTO_KEY);
+    return account ? (globalThis.localStorage?.getItem(photoKey(account)) ?? null) : null;
   } catch {
     return null;
   }
 }
-function writePhoto(value: string | null): void {
+function writePhoto(account: string | null, value: string | null): void {
+  if (!account) return;
   try {
-    if (value) globalThis.localStorage?.setItem(PHOTO_KEY, value);
-    else globalThis.localStorage?.removeItem(PHOTO_KEY);
+    if (value) globalThis.localStorage?.setItem(photoKey(account), value);
+    else globalThis.localStorage?.removeItem(photoKey(account));
   } catch {
     // Stockage refusé (navigation privée) : la photo reste pour cette visite.
   }
+}
+
+/** Oublie l'image, le nom, l'e-mail et la ville gardés en mémoire (changement de compte, tests). */
+export function forgetProfileImage(): void {
+  avatar.value = null;
+  photo.value = null;
+  fullName.value = null;
+  email.value = null;
+  city.value = null;
+  loading = null;
+  loadedFor = null;
 }
 
 /** « Kevin Di Nocera » en « KD » (les deux premiers mots, maquette ProfilOrdinateur) ; un seul mot : sa lettre. */
@@ -75,7 +96,11 @@ export function useProfileImage() {
   });
 
   async function load(force = false): Promise<void> {
+    const account = me.value?.authenticated ? (me.value.username ?? null) : null;
+    if (account !== loadedFor) forgetProfileImage();
     if (loading && !force) return loading;
+    loadedFor = account;
+    photo.value = readPhoto(account);
     loading = (async () => {
       const [image, identity] = await Promise.all([
         api.GET("/api/profile-image").catch(() => ({ data: undefined })),
@@ -95,7 +120,7 @@ export function useProfileImage() {
     await api.PUT("/api/profile-image", { body: { avatar: wanted } });
     avatar.value = wanted;
     photo.value = next.kind === "photo" ? next.src : null;
-    writePhoto(photo.value);
+    writePhoto(loadedFor, photo.value);
   }
 
   return { choice, initials, name, firstName, email, city, avatar, photo, load, save };
