@@ -276,6 +276,8 @@ function remove(): void {
 .alerts-family.active .alerts-family-title { color: var(--success); }
 .alerts-family-help { margin: 0 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .alerts-families .block-row { margin: 0; background: var(--surface); border: 1.5px solid var(--line-strong); }
+/* Les lieux sont coupés avec « … » (§10.8) ; la ligne « site · état » passe à la ligne sur les écrans étroits (§2.8). */
+.alerts-families .block-row-line:last-child { white-space: normal; }
 .alerts-families.blocks-page { background: transparent; }
 .alerts-families .alerts-add-phone { width: 100%; height: var(--btn-tertiary); min-height: var(--btn-tertiary); justify-content: center; }
 /* §2.9 : sous la liste, « J'attends un code » et « Afficher plus » ont aussi 44 px de haut. */
