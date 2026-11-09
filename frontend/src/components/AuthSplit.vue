@@ -16,7 +16,7 @@ defineProps<{ title: string; subtitle?: string }>();
       <AuthIllustration large />
       <AuthIllustration class="auth-illustration-phone" />
       <p class="auth-pitch">
-        Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
+        Tes alertes triées, tes candidatures préparées, tes justificatifs ORP prêts.
       </p>
     </div>
     <div class="auth-panel">

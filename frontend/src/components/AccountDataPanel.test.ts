@@ -143,7 +143,7 @@ describe("Tes données (docs/65 §6)", () => {
     await flushPromises();
     expect(GET).toHaveBeenLastCalledWith("/api/orp");
     expect(print).toHaveBeenCalledOnce();
-    expect(print.mock.calls[0]![1]).toMatchObject({ title: "Preuves ORP - 2026-11" });
+    expect(print.mock.calls[0]![1]).toMatchObject({ title: "Justificatifs ORP - 2026-11" });
     expect(router.currentRoute.value.fullPath).toBe(before);
     expect(wrapper.find("[data-test=delete-form]").exists()).toBe(true);
     expect(POST).not.toHaveBeenCalledWith("/api/account/delete", expect.anything());

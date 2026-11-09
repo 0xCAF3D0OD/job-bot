@@ -33,6 +33,11 @@ def month_name(month: str) -> str:
     return MONTHS[int(month[5:7]) - 1]
 
 
+def _of(name: str) -> str:
+    """« de septembre », « d'octobre » (élision devant une voyelle)."""
+    return f"d'{name}" if name[0] in "aeiouy" else f"de {name}"
+
+
 def _long(day: date) -> str:
     return f"{'1er' if day.day == 1 else day.day} {MONTHS[day.month - 1]}"
 
@@ -109,10 +114,11 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
             # sinon (PDF remis à l'ORP), le compte serait toujours plein (docs/70 §6).
             if 0 < prev_counts.to_declare < prev_counts.count:
                 details += f", {prev_counts.to_declare} à déclarer dans Job-Room"
+            of = _of(month_name(previous))
             title = (
-                f"Demain : preuves de {month_name(previous)} à remettre"
+                f"Demain : justificatifs {of} à remettre"
                 if key == "eve"
-                else f"Preuves de {month_name(previous)} à remettre avant le {_long(deadline)}"
+                else f"Justificatifs {of} à remettre avant le {_long(deadline)}"
             )
             await notify.deliver(
                 runtime,

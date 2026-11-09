@@ -146,7 +146,7 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       key: "orp",
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
-      title: `Remettre les preuves ${ofMonth(t.orp_due_month)}`,
+      title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
       detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
       to: { path: "/bilan/orp", query: { mois: t.orp_due_month } },
@@ -305,7 +305,7 @@ const todos = computed<HomeTodo[]>(() => {
     todo.label = {
       meeting: "Rendez-vous ORP à préparer",
       interview: many(n, "Entretien à préparer", "Entretiens à préparer"),
-      orp: t.orp_due_month ? `Preuves ${ofMonth(t.orp_due_month)} à remettre` : "Preuves à remettre",
+      orp: t.orp_due_month ? `Justificatifs ${ofMonth(t.orp_due_month)} à remettre` : "Justificatifs à remettre",
       follow: many(n, "Relance à envoyer", "Relances à envoyer"),
       preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
       review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),

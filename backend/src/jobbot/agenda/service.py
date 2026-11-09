@@ -113,7 +113,7 @@ async def events(session: AsyncSession, base_url: str) -> list[Event]:
         found.append(
             Event(
                 uid=f"orp-{month}@joba1",
-                summary=f"Preuves ORP {_of_month(month)} à remettre",
+                summary=f"Justificatifs ORP {_of_month(month)} à remettre",
                 start=day,
                 url=f"{base_url}/candidatures/suivi",
                 alarms=DUE_ALARMS,

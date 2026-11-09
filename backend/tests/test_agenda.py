@@ -114,7 +114,7 @@ async def test_interview_file_and_subscription(
     assert "Entretien \u2013 Exemple\\, SA" in body
     assert "Relancer Autre SA ?" in body
     assert "Suite attendue \u2013 Exemple\\, SA" in body
-    assert "Preuves ORP d" in body and "TRIGGER:-P3D" in body
+    assert "Justificatifs ORP d" in body and "TRIGGER:-P3D" in body
     assert "URL:https://moi.tunnel.ms/candidatures/suivi" in body
     # Le minimum : ni adresse, ni contact.
     assert "Rue secrète" not in body and "Marie" not in body

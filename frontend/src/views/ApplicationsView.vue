@@ -140,10 +140,10 @@ const bannerText = computed(() => {
   const d = orp.value;
   if (!d) return "";
   const month = ofMonth(d.month);
-  if (d.state === "remis" && d.submitted_at) return `Preuves ${month} remises ${dateInSentence(d.submitted_at)}.`;
+  if (d.state === "remis" && d.submitted_at) return `Justificatifs ${month} remis ${dateInSentence(d.submitted_at)}.`;
   const due = dateInSentence(`${d.due_date}T12:00:00`);
-  if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant ${due}.`;
-  return `Preuves ${month} prêtes : à remettre avant ${due}.`;
+  if (d.incomplete) return `Justificatifs ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant ${due}.`;
+  return `Justificatifs ${month} prêts : à remettre avant ${due}.`;
 });
 // Les repliables du détail, comme ceux du Bilan (règles §3) : une icône, un titre et l'enseignement
 // en une phrase, visible replié.
@@ -606,7 +606,7 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
         <InlineConfirm
           v-if="confirmingCancel && orp.state === 'remis'"
-          message="Annuler la remise de ce mois ? Les preuves repassent « à remettre »."
+          message="Annuler la remise de ce mois ? Les justificatifs repassent « à remettre »."
           confirm-label="Annuler la remise"
           cancel-label="Garder la remise"
           @confirm="submit(false)"
@@ -697,7 +697,7 @@ onUnmounted(() => assistant.setFocus(null));
       <SuccessCard
         v-if="submitted"
         name="preuves-orp"
-        :title="`Preuves ${ofMonth(submitted.month)} remises`"
+        :title="`Justificatifs ${ofMonth(submitted.month)} remis`"
         test-id="submitted-moment"
         @close="submitted = null"
       >

@@ -37,7 +37,7 @@ onMounted(async () => {
       <h2>Ce qui est gardé</h2>
       <ul>
         <li>Ton profil : coordonnées, CV et documents déposés, blocs de profil (expériences, compétences…).</li>
-        <li>Ta recherche : critères, alertes, offres reçues avec leur note, candidatures, contacts notés, entretiens et leurs retours, preuves ORP.</li>
+        <li>Ta recherche : critères, alertes, offres reçues avec leur note, candidatures, contacts notés, entretiens et leurs retours, justificatifs ORP.</li>
         <li>Les e-mails d'alerte reçus pour toi, tels quels, pour les relire si un site change de format.</li>
         <li>Tes réglages, tes formations suivies, tes discussions avec l'assistant.</li>
       </ul>
@@ -56,7 +56,7 @@ onMounted(async () => {
       <ul>
         <li><strong>Toi seul</strong>, par ta connexion. Aucun autre compte ne voit tes données.</li>
         <li>
-          L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues. Pendant un test de la plateforme, aussi la date de tes premières étapes (première alerte, première offre reçue, première candidature préparée, premières preuves exportées), sans leur contenu, pour mesurer le temps de prise en main : elles sont effacées à la fin du test, ou avec ton compte.
+          L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues. Pendant un test de la plateforme, aussi la date de tes premières étapes (première alerte, première offre reçue, première candidature préparée, premiers justificatifs exportés), sans leur contenu, pour mesurer le temps de prise en main : elles sont effacées à la fin du test, ou avec ton compte.
         </li>
         <li>
           Il administre le serveur, mais ne voit jamais tes offres, candidatures, documents ou discussions. Il ne les lit qu'à ta demande ou par obligation légale.
@@ -134,7 +134,7 @@ onMounted(async () => {
         <h3>Ce qui ne part jamais</h3>
         <ul>
           <li>Ton nom, tes coordonnées, ton numéro AVS.</li>
-          <li>Ton CV, tes lettres, tes documents, tes preuves ORP.</li>
+          <li>Ton CV, tes lettres, tes documents, tes justificatifs ORP.</li>
           <li>Les contacts des offres et l'identifiant de ton compte jobA1.</li>
         </ul>
         <h3>Comment</h3>

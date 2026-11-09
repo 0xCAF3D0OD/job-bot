@@ -308,7 +308,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(section.find("[data-test=orp-urgent]").classes()).toContain("tone-late");
     expect(section.find("[data-test=upcoming-interview]").classes()).toContain("tone-interview");
     expect(section.find("[data-test=preparing]").classes()).toContain("tone-normal");
-    expect(section.find("[data-test=orp-urgent] strong").text()).toBe("Remettre les preuves de septembre");
+    expect(section.find("[data-test=orp-urgent] strong").text()).toBe("Remettre les justificatifs de septembre");
     expect(section.find("[data-test=orp-urgent] .today-task-action").text()).toBe("Remettre");
     const preparing = section.find("[data-test=preparing]");
     expect(preparing.find("strong").text()).toBe("Préparer 2 candidatures");

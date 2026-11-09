@@ -24,7 +24,7 @@ onMounted(async () => {
     >
       <h2>Le service</h2>
       <ul>
-        <li>jobA1 aide à chercher un emploi en Suisse : il note les offres de tes alertes, prépare tes lettres et tes CV, et suit tes preuves pour l'ORP.</li>
+        <li>jobA1 aide à chercher un emploi en Suisse : il note les offres de tes alertes, prépare tes lettres et tes CV, et suit tes justificatifs pour l'ORP.</li>
         <li>jobA1 n'envoie jamais une candidature à ta place et ne se connecte pas à tes comptes sur les sites d'emploi.</li>
         <li>La note d'une offre et les textes de l'IA sont des aides : relis-les avant de t'en servir.</li>
       </ul>

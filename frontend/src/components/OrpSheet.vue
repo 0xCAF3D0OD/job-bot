@@ -18,7 +18,7 @@ async function printPdf(journal = false): Promise<void> {
   withSearches.value = journal;
   await nextTick();
   const sheet = document.querySelector<HTMLElement>(".orp-sheet");
-  if (sheet) printSheet(sheet, { title: `Preuves ORP - ${props.data.month}`, landscape: true });
+  if (sheet) printSheet(sheet, { title: `Justificatifs ORP - ${props.data.month}`, landscape: true });
   withSearches.value = false;
   await api.POST("/api/orp/{month}/exported", { params: { path: { month: props.data.month } } });
   emit("reload");

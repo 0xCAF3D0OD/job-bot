@@ -144,7 +144,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
     // Un bandeau daté (docs/134) : ce qui reste à faire, et pour quand.
     // La date de phrase (dates.ts) : l'année seulement quand elle diffère.
-    expect(wrapper.find("[data-test=state]").text()).toMatch(/^Preuves d'octobre : 1 ligne à compléter, remise avant le 5 novembre( 2026)?\.$/);
+    expect(wrapper.find("[data-test=state]").text()).toMatch(/^Justificatifs d'octobre : 1 ligne à compléter, remise avant le 5 novembre( 2026)?\.$/);
     // PDF et CSV dans le « ⋯ » de la barre du mois (docs/85 §3) ; plus de colonnes à choisir.
     await wrapper.find("[data-test=orp-more]").trigger("click");
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
@@ -233,9 +233,9 @@ describe("Candidatures, onglet Preuves ORP", () => {
     await wrapper.find("[data-test=submit]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
-    expect(wrapper.find("[data-test=state]").text()).toMatch(/Preuves d'octobre remises le 3 novembre( 2026)?\./);
+    expect(wrapper.find("[data-test=state]").text()).toMatch(/Justificatifs d'octobre remis le 3 novembre( 2026)?\./);
     // La carte qui vient devant (docs/61 §1).
-    expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Preuves d'octobre remises");
+    expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Justificatifs d'octobre remis");
     // Annuler la remise se confirme dans la page (docs/108 §1).
     await wrapper.find("[data-test=cancel-submit]").trigger("click");
     expect(DELETE).not.toHaveBeenCalled();

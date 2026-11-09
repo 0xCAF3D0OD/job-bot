@@ -90,7 +90,7 @@ onMounted(async () => {
     >
       <AuthIllustration large />
       <p class="login-pitch">
-        Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
+        Tes alertes triées, tes candidatures préparées, tes justificatifs ORP prêts.
       </p>
     </div>
     <div class="login-panel">
@@ -120,7 +120,7 @@ onMounted(async () => {
             Content de <span class="login-hand">te revoir.</span>
           </h1>
           <p class="login-sub">
-            Tes offres, tes candidatures et tes preuves ORP, au même endroit.
+            Tes offres, tes candidatures et tes justificatifs ORP, au même endroit.
           </p>
         </template>
         <div

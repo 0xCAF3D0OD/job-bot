@@ -54,7 +54,7 @@ describe("GoalReached", () => {
     const wrapper = await mountIt();
     await wrapper.find("[data-test=goal-export]").trigger("click");
     await new Promise((resolve) => setTimeout(resolve));
-    expect(printSheet).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({ title: "Preuves ORP - 2026-11" }));
+    expect(printSheet).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({ title: "Justificatifs ORP - 2026-11" }));
     expect(POST).toHaveBeenCalledWith("/api/orp/{month}/exported", { params: { path: { month: "2026-11" } } });
     await wrapper.find("[data-test=cancel-applied]").trigger("click");
     expect(wrapper.emitted("cancel")).toHaveLength(1);
