@@ -90,20 +90,23 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=next-step]").exists()).toBe(false);
   });
 
-  it("avec un CV : FR / DE / EN en tête, l'aperçu, « J'ai relu le CV » et la suite vers Postuler", async () => {
+  it("avec un CV : « Moderne · Français » et « Changer » en tête, l'aperçu, « J'ai relu le CV » et la suite vers Postuler", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     PUT.mockResolvedValue({ data: cv(21, [1, 3], { read_at: "2026-11-05T10:00:00Z" }) });
     const wrapper = await mountPanel();
     expect(wrapper.find("[data-test=doc-preview]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=doc-preview]").classes()).toContain("doc-preview-tall");
     expect(wrapper.find("[data-test=cv]").exists()).toBe(false);
-    // La langue du CV affiché, choisie dans la tête de la carte (maquette Preparer) ; plus de liste.
+    // La langue du CV affiché, dans la feuille « Mise en page et langue » (§9) ; plus de FR / DE / EN à l'écran.
     expect(wrapper.find("[data-test=cv-language]").exists()).toBe(false);
-    const head = wrapper.find("[data-test=cv-card] .doc-card-head");
-    expect(head.find("[data-test=cv-language-fr]").attributes("aria-checked")).toBe("true");
-    // FR / DE / EN à l'écran, le nom complet pour un lecteur d'écran (Kevin, 6.11).
-    const pills = head.findAll("[role=radio]");
-    expect(pills.map((b) => b.text())).toEqual(["FR", "DE", "EN"]);
-    expect(pills.map((b) => b.attributes("aria-label"))).toEqual(["Français", "Deutsch", "English"]);
+    const card = wrapper.find("[data-test=cv-card]");
+    expect(card.find(".doc-language").exists()).toBe(false);
+    expect(card.get("[data-test=layout-summary]").text()).toBe("Moderne · Français");
+    await card.get("[data-test=layout-change]").trigger("click");
+    const sheet = wrapper.get("[data-test=layout-sheet]");
+    expect(sheet.get("[data-test=cv-language-fr]").attributes("aria-checked")).toBe("true");
+    const pills = sheet.findAll("[role=radiogroup][aria-label='Langue du titre et du résumé'] [role=radio]");
+    expect(pills.map((b) => b.text())).toEqual(["Français", "Deutsch", "English"]);
     expect(wrapper.find(".prep-side").text()).not.toContain("Nouvelle version");
     expect(wrapper.find("[data-test=next-step]").text()).toBe("Continuer vers Postuler");
 

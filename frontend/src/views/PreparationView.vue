@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
-import TemplateSheetRow from "../components/TemplateSheetRow.vue";
+import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
 import LayoutCard from "../components/LayoutCard.vue";
@@ -220,6 +220,14 @@ const previewParagraphs = computed(() =>
   draft.value && doc.value ? [doc.value.salutation, ...draft.value.paragraphs.map((p) => p.text)].filter(Boolean) : [],
 );
 const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), name: LANGUAGES[code], test: `language-${code}` }));
+// Dans la feuille « Mise en page et langue » du téléphone (§9) : les trois langues en toutes lettres.
+const SHEET_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.map((option) => ({ ...option, label: option.name }));
+// Les puces de retouche n'apparaissent qu'avec le focus dans la zone de saisie ; l'aperçu passe alors à 300 px (§9).
+const composing = ref(false);
+function leaveComposer(event: FocusEvent): void {
+  const next = event.relatedTarget as Node | null;
+  if (!next || !(event.currentTarget as HTMLElement).contains(next)) composing.value = false;
+}
 const shownLanguage = computed<string>({
   get: () => language.value || selected.value?.document?.language || "",
   set: (value) => {
@@ -257,7 +265,6 @@ const insist = computed(() => {
 const suggestions = computed(() => {
   const list = ["Plus court", "Plus formel"];
   if (insist.value) list.push(insist.value);
-  if (selected.value?.language !== "de") list.push("En allemand");
   return list;
 });
 function revise(text: string): void {
@@ -271,21 +278,7 @@ function revise(text: string): void {
   }
   void write();
 }
-// « J'ai relu la lettre » (C11) : gardé avec la version, pour un autre appareil.
 const readBusy = ref(false);
-// En cas d'échec (démo, réseau), la case reprend l'état enregistré.
-async function markRead(box: HTMLInputElement): Promise<void> {
-  const letter = selected.value;
-  if (!letter) return;
-  readBusy.value = true;
-  try {
-    const { data } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: box.checked } });
-    if (data) letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
-    else box.checked = !!letter.read_at;
-  } finally {
-    readBusy.value = false;
-  }
-}
 function pickVersion(letter: Letter): void {
   select(letter);
   versionsOpen.value = false;
@@ -604,16 +597,21 @@ const verdict = computed(() => (offer.value?.score === null || offer.value?.scor
 watch([offer, () => route.fullPath], ([o]) => {
   if (o) void nextTick(() => (document.title = `Ma candidature, ${o.title}, jobA1`));
 });
-// « J'ai relu la lettre » sur ordinateur : un bouton plein (lot 15.1). Il note la relecture, puis passe au CV.
+// « J'ai relu la lettre » sur ordinateur (lot 15.1) et « J'ai relu, continuer » sur téléphone (§9) : un bouton plein.
+// Il note la relecture, gardée avec la version pour un autre appareil, puis passe au CV ; un refus le dit et reste là.
 async function readThenNext(): Promise<void> {
   const letter = selected.value;
   if (!letter || writing.value || readBusy.value) return;
   if (!letter.read_at) {
     readBusy.value = true;
     try {
-      const { data } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: true } });
-      if (data) letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
-      else return;
+      const { data, error: err } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: true } });
+      if (!data) {
+        error.value = detail(err, "La relecture n'a pas été enregistrée, réessaie.");
+        return;
+      }
+      error.value = "";
+      letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
     } finally {
       readBusy.value = false;
     }
@@ -719,12 +717,6 @@ onMounted(() => void load());
         >{{ offer.title }}</span>
         <span class="prep-offer-sub">{{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}</span>
       </p>
-      <ScoreRing
-        v-if="offer.score !== null && offer.score !== undefined"
-        :score="offer.score"
-        :stale="offer.score_stale"
-        bare
-      />
     </div>
     <StepTabs
       v-if="offer"
@@ -984,10 +976,6 @@ onMounted(() => void load());
             <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
-          <TemplateSheetRow
-            v-if="phone"
-            :name="doc?.sender[0]"
-          />
           <!-- La carte de la lettre (maquette Preparer, étape 7b) : le titre et la langue en tête (C3 : choisir
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
                texte » qui ouvre la consigne, puis « J'ai relu la lettre » (C11). -->
@@ -996,7 +984,21 @@ onMounted(() => void load());
             aria-labelledby="letter-card-title"
             data-test="letter-card"
           >
-            <div class="doc-card-head">
+            <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille ; plus de
+                 FR / DE / EN sur l'écran. Sur ordinateur, FR / DE / EN reste en haut du document. -->
+            <LayoutSheetLink
+              v-if="phone"
+              v-model="shownLanguage"
+              title="Lettre de motivation"
+              title-id="letter-card-title"
+              :name="doc?.sender[0]"
+              :options="SHEET_LANGUAGE_OPTIONS"
+              language-label="Langue de la lettre"
+            />
+            <div
+              v-else
+              class="doc-card-head"
+            >
               <h2 id="letter-card-title">
                 Lettre de motivation
               </h2>
@@ -1016,6 +1018,7 @@ onMounted(() => void load());
               :sub="previewSub"
               :paragraphs="[]"
               label="Aperçu vide de la lettre"
+              class="doc-preview-tall"
               data-test="no-letter"
             />
             <div
@@ -1045,8 +1048,42 @@ onMounted(() => void load());
               :sub="previewSub"
               :paragraphs="previewParagraphs"
               label="Ouvrir la lettre entière pour la modifier"
+              :class="['doc-preview-tall', { 'doc-preview-composing': composing }]"
               @open="letterOpen = true"
             />
+            <!-- Retoucher (§9) : la zone de saisie juste sous l'aperçu ; les puces au-dessus seulement avec le focus,
+                 plus de libellé « Retoucher la lettre ». Pas de « + » ni de micro : la question de la PR 577 reste
+                 ouverte (envoi de fichiers à l'IA, service de dictée). -->
+            <div
+              v-if="phone && selected && !claim"
+              class="prep-revise"
+              data-test="prep-revise"
+              @focusin="composing = true"
+              @focusout="leaveComposer"
+            >
+              <SuggestionChips
+                v-if="composing"
+                :items="suggestions"
+                label="Retouches proposées"
+                @mousedown.prevent
+                @pick="revise"
+              />
+              <Composer
+                v-model="revision"
+                placeholder="Que changer ?"
+                send-label="Envoyer la demande"
+                :busy="writing"
+                @send="revise"
+              />
+              <p
+                v-if="instructionNote"
+                class="hint"
+                aria-live="polite"
+                data-test="instruction-note"
+              >
+                {{ instructionNote }}
+              </p>
+            </div>
             <article
               v-if="doc && draft && (!phone || letterOpen)"
               class="letter-sheet print-sheet"
@@ -1158,7 +1195,7 @@ onMounted(() => void load());
               {{ reviewLine }}
             </p>
             <p
-              v-if="phone && pageLine"
+              v-if="phone && pageLine && page && !page.fits"
               class="page-line"
               aria-live="polite"
               data-test="page-line"
@@ -1198,50 +1235,6 @@ onMounted(() => void load());
                 </li>
               </ul>
             </DisclosureRow>
-            <template v-if="phone && selected && !claim">
-              <div
-                class="prep-revise"
-                data-test="prep-revise"
-              >
-                <!-- Téléphone (maquette Preparer du 8 novembre) : la section « Retoucher la lettre », « Que changer ? ». -->
-                <p
-                  v-if="phone"
-                  class="prep-revise-title"
-                >
-                  Retoucher la lettre
-                </p>
-                <SuggestionChips
-                  :items="suggestions"
-                  label="Retouches proposées"
-                  @pick="revise"
-                />
-                <Composer
-                  v-model="revision"
-                  :placeholder="phone ? 'Que changer ?' : 'Demander une modification de la lettre'"
-                  send-label="Envoyer la demande"
-                  :busy="writing"
-                  @send="revise"
-                />
-                <p
-                  v-if="instructionNote"
-                  class="hint"
-                  aria-live="polite"
-                  data-test="instruction-note"
-                >
-                  {{ instructionNote }}
-                </p>
-              </div>
-              <label class="doc-card-read">
-                <input
-                  type="checkbox"
-                  :checked="!!selected.read_at"
-                  :disabled="writing || readBusy"
-                  data-test="letter-read"
-                  @change="markRead($event.target as HTMLInputElement)"
-                >
-                <span>J'ai relu la lettre</span>
-              </label>
-            </template>
           </section>
         </div>
 
@@ -1470,33 +1463,17 @@ onMounted(() => void load());
           >
             <span class="with-icon"><AppIcon name="ai" />{{ writeLabel }}</span>
           </BusyButton>
-          <RouterLink
-            v-else-if="selected?.read_at"
-            :to="{ query: { doc: 'cv' } }"
-            class="button-link primary-link prep-bar-main"
+          <!-- Plus de case « J'ai relu la lettre » (§9) : un seul bouton, qui note la relecture puis passe au CV. -->
+          <button
+            v-else-if="selected"
+            type="button"
+            class="primary prep-bar-main"
+            :disabled="readBusy"
             data-test="next-step"
+            @click="readThenNext"
           >
-            Continuer vers le CV
-          </RouterLink>
-          <!-- Pas encore relue : le bouton reste là, inactif, et dit pourquoi ; l'étape CV reste ouverte. -->
-          <template v-else>
-            <button
-              type="button"
-              class="prep-bar-main prep-bar-waiting"
-              aria-disabled="true"
-              aria-describedby="prep-bar-hint"
-              data-test="next-step"
-            >
-              Continuer vers le CV
-            </button>
-            <p
-              id="prep-bar-hint"
-              class="action-bar-note prep-bar-hint"
-              data-test="next-step-hint"
-            >
-              Relis la lettre pour continuer.
-            </p>
-          </template>
+            J’ai relu, continuer
+          </button>
         </ActionBar>
         <BottomSheet
           v-if="phone && selected"
