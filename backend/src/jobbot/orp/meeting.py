@@ -32,7 +32,7 @@ from jobbot.db.models import (
 )
 from jobbot.insights.service import ENOUGH, _facts, _site_names, compare, headline, orp_summary
 from jobbot.letters.document import MONTHS
-from jobbot.orp.service import load_due_day, load_target
+from jobbot.orp.service import load_canton, load_due_day, load_target
 
 PERIOD = timedelta(days=90)
 # Une offre « bien notée » : celle dont tu te sens proche (docs/73 : la note de l'IA).
@@ -278,6 +278,7 @@ async def _obligations(
 ) -> list[Obligation]:
     obligations: list[Obligation] = []
     due_day = await load_due_day(session)
+    canton = await load_canton(session)
     previous = shift_month(today.strftime("%Y-%m"), -1)
     submitted = await session.scalar(
         select(OrpMonth.submitted_at).where(OrpMonth.month == previous)
@@ -285,8 +286,8 @@ async def _obligations(
     obligations.append(
         Obligation(
             f"Justificatifs {_of(_month_name(previous))} : à remettre au plus tard le "
-            f"{_day(due_date(previous, due_day))}.",
-            due_date(previous, due_day),
+            f"{_day(due_date(previous, due_day, canton))}.",
+            due_date(previous, due_day, canton),
             submitted is not None,
         )
     )

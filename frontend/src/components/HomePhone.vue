@@ -3,7 +3,7 @@ import { computed } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
-import { cityOnly, plural, rateText, remoteText } from "../format";
+import { cityOnly, orpLeftLine, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
@@ -22,21 +22,17 @@ const props = defineProps<{
   month: string;
   count: number;
   target: number | null;
+  /** L'échéance ORP du mois (le 5 du mois suivant, reporté au jour ouvrable du canton). */
+  due?: string | null;
   offers: Offer[];
   emptyText: string;
   todos: HomeTodo[];
 }>();
 
-// « d'ici le 30 nov. » : le dernier jour du mois ORP.
-const monthEnd = computed(() => {
-  const [year, month] = props.month.split("-").map(Number);
-  const last = new Date(year!, month!, 0);
-  return new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" }).format(last);
-});
+// « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
 const orpLine = computed(() => {
   if (!props.target) return `${plural(props.count, "recherche", "recherches")} ce mois.`;
-  const left = props.target - props.count;
-  return left > 0 ? `Encore ${left} d'ici le ${monthEnd.value}` : "Objectif du mois atteint.";
+  return orpLeftLine(props.count, props.target, props.month, props.due);
 });
 function facts(offer: Offer): string[] {
   return [rateText(offer.rate_min, offer.rate_max), offer.employment_type ?? "", remoteText(offer, true) ?? ""].filter(Boolean);

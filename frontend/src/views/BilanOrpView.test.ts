@@ -43,9 +43,10 @@ describe("Bilan › ORP sur téléphone, en blocs (lot 18, §10.2)", () => {
     const goal = wrapper.find("[data-test=orp-goal]");
     expect(goal.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("4 recherches sur 10");
     expect(goal.find(".block-cap").text()).toBe("Octobre");
-    expect(goal.find("h2").text()).toBe("6 recherches à faire");
-    // Sans date du serveur, le 5 du mois suivant (ORP_DEADLINE_DAY).
-    expect(goal.find("[data-test=orp-deadline]").text()).toBe("Objectif fixé par ta conseillère. À remettre avant le 5 novembre.");
+    // Maquette du 9 novembre (§11) : sans date du serveur, le 5 du mois suivant (ORP_DEADLINE_DAY) ; plus de note
+    // sur la conseillère.
+    expect(goal.find("h2").text()).toBe("Encore 6 d’ici le 5 novembre");
+    expect(goal.find("[data-test=orp-deadline]").exists()).toBe(false);
     // Aucune n'est déclarée : quatre à déclarer, trois montrées, « Afficher l'autre ».
     const declare = wrapper.find("[data-test=orp-to-declare]");
     expect(declare.find("h2").text()).toBe("À déclarer à l’ORP · 4");

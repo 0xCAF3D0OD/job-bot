@@ -28,7 +28,7 @@ from jobbot.followups.remind import remind_due
 from jobbot.insights import service as insights_service
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp import meeting as orp_meeting
-from jobbot.orp.service import load_due_day
+from jobbot.orp.service import load_canton, load_due_day
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
 from jobbot.worker.tasks.collect import COLLECT_JOB
@@ -127,6 +127,9 @@ class TodayOut(BaseModel):
     month: str
     month_count: int
     month_target: int | None
+    # L'échéance du mois en cours (le 5 du mois suivant, reporté au jour ouvrable du canton) :
+    # « Encore 2 d'ici le 5 décembre » (MODIFICATIONS du 9 novembre, §11).
+    month_due_date: date | None = None
     # Candidatures en attente depuis 10 jours ou plus : à relancer.
     to_follow_up: int
     # Les 3 plus anciennes à relancer, pour la carte « À relancer » (docs/95, docs/129).
@@ -252,6 +255,7 @@ async def get_today(request: Request) -> TodayOut:
         )
         previous_record = await session.get(OrpMonth, previous)
         due_day = await load_due_day(session)
+        canton = await load_canton(session)
         interviews_to_review = [
             InterviewToReview(
                 application_id=p.application_id,
@@ -347,10 +351,11 @@ async def get_today(request: Request) -> TodayOut:
         month=month,
         month_count=month_count,
         month_target=int(target) if target else None,
+        month_due_date=due_date(month, due_day, canton),
         to_follow_up=to_follow_up,
         follow_ups=follow_ups,
         orp_due_month=due_month,
-        orp_due_date=due_date(due_month, due_day) if due_month else None,
+        orp_due_date=due_date(due_month, due_day, canton) if due_month else None,
         last_collect_at=last_collect_at,
         alerts_waiting=alerts_waiting,
         contacts_to_follow_up=contacts_to_follow_up,

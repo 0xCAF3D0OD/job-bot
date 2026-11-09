@@ -13,6 +13,10 @@
   --surface-muted: #ECE9E1;
   --line: #E5E2D9;
   --line-soft: #EFECE5;
+  /* Le trait entre deux lignes d’une carte de groupe (Compte ; 9 novembre) : #EFECE5 en clair, #38322B en sombre ;
+     « Se déconnecter » en #B4371F, #FF9B85 en sombre. */
+  --row-sep: #EFECE5;
+  --logout-text: #B4371F;
   /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
      1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
   --line-strong: #D8D4CA;
@@ -197,6 +201,8 @@
      Le sombre chaud (docs/mobile/maquettes/ModeSombre.dc.html) : un brun très foncé, jamais le noir ; les cartes plus
      claires que le fond ; le bleu reste sur les boutons pleins et s'éclaircit pour les traits et les liens. */
   :root:not([data-theme="light"]) {
+    --row-sep: #38322B;
+    --logout-text: #FF9B85;
     --bg: #171411;
     --surface: #221E1A;
     --surface-muted: #2C2722;
@@ -249,6 +255,8 @@
   }
 }
 :root[data-theme="dark"] {
+  --row-sep: #38322B;
+  --logout-text: #FF9B85;
   --bg: #171411;
   --surface: #221E1A;
   --surface-muted: #2C2722;
@@ -3736,6 +3744,34 @@ main:focus { outline: none; }
 .bilan-section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 var(--space-1); }
 .bilan-section-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
 .bilan-section-head span { font-size: var(--font-small); color: var(--text-secondary); }
+/* Maquette du 9 novembre (BilanOrdinateur ; §2.5, §10.3) : la carte du mois sans ombre, trait de 1,5 px ; « À déclarer
+   à l'ORP », les recherches et les rendez-vous en cartes séparées (72 px, trait de 1,5 px, rayon 18), le statut en mot
+   coloré, puis le cercle à flèche gris de 36 px. */
+.bilan-page { --bilan-17: 17px; --bilan-gap-28: 28px; --bilan-pad: 18.5px; --bilan-pad-y: 14.5px; --bilan-card-h: 72px; --bilan-bar: 10px; --bilan-lh-21: 21px; }
+.bilan-page .bilan-orp-card { gap: var(--bilan-gap-28); padding: var(--bilan-pad); border: 1.5px solid var(--card-line); box-shadow: none; }
+.bilan-orp-card .orp-month-band { gap: calc(var(--space-2) + var(--space-1) / 2); }
+.bilan-orp-card .orp-month-band-head { font-size: var(--bilan-17); }
+.bilan-orp-card .orp-month-band-head strong:first-child { font-weight: var(--weight-bold); }
+.bilan-orp-card .orp-month-band-head strong:last-child { font-weight: var(--weight-heavy); }
+.bilan-orp-card .orp-month-band-bar { height: var(--bilan-bar); }
+.bilan-orp-card .orp-month-band-line { font-size: var(--font-small); }
+.bilan-section-sub { margin: 0 var(--space-1) var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.bilan-declare { gap: var(--space-2); }
+.bilan-cards { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.bilan-card {
+  display: flex; align-items: center; gap: calc(var(--space-3) + var(--space-1) / 2); width: 100%; min-height: var(--bilan-card-h); box-sizing: border-box;
+  padding: var(--bilan-pad-y) var(--bilan-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card);
+  color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+.bilan-card:hover { border-color: var(--primary-graphic); }
+.bilan-card-what { flex: 1; min-width: 0; font-size: var(--font-label); line-height: var(--bilan-lh-21); }
+.bilan-card-what strong { font-weight: var(--weight-bold); }
+.bilan-card-what > span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
+.bilan-card-state { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text); }
+.bilan-card-state.ok { color: var(--success); }
+.bilan-card-state.todo { color: var(--peach-text); }
+.bilan-card-more { display: inline-flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: 48px; padding: 0 var(--space-1); border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; cursor: pointer; }
+.bilan-card-more svg { width: 16px; height: 16px; }
 .orp-rows-link { overflow: hidden; }
 .orp-rows-link .orp-row { min-height: 56px; gap: var(--space-3); padding: var(--space-3) var(--space-5); color: var(--text); text-decoration: none; }
 .orp-rows-link .orp-row:hover { background: var(--surface-muted); }
@@ -4601,6 +4637,25 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-blocks .account-card-name { font-size: var(--font-body); line-height: var(--row-title-lh); }
 .account-blocks .account-page-logout { justify-self: start; margin: var(--space-2) var(--space-5) 0; padding: 0; }
 .account-blocks .account-card-line { margin-top: var(--space-1); line-height: var(--row-line-lh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Compte sur téléphone (prompt du 9 novembre, PR 8 ; maquettes Compte et CompteSombre) : une carte par groupe, trait
+   intérieur de 1,5 px --card-line, rayon 12 ; les lignes sans bordure, séparées par un trait de 1 px (--row-sep) ; plus
+   de trait entre les groupes, 12 px au-dessus et au-dessous (8 px au-dessus du premier). « Se déconnecter » en rouge
+   (--logout-text), l’adresse e-mail dessous. */
+@media (max-width: 820px) {
+  .account-blocks { --account-group-r: 12px; --account-row-x: 20px; --account-group-y: 12px; --account-first-y: 8px; }
+  .account-blocks .account-page > .block { margin: 0 var(--block-margin-x); padding: var(--account-group-y) 0; border-top: 0; }
+  .account-blocks .account-page > .block:first-of-type { padding-top: var(--account-first-y); }
+  .account-group { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--account-group-r); overflow: hidden; }
+  .account-profile-group { position: relative; }
+  .account-blocks .account-profile-group .account-card { padding: var(--row-pad) var(--account-row-x); background: transparent; border: 0; border-radius: 0; }
+  .account-blocks .account-card-wrap { padding: var(--account-first-y) 0 var(--account-group-y); }
+  .account-blocks .account-profile-group .account-image-button { left: var(--account-row-x); }
+  .account-blocks .account-group .block-row { margin: 0; padding-left: var(--account-row-x); padding-right: var(--account-row-x); border: 0; border-radius: 0; background: transparent; }
+  .account-blocks .account-group .block-row + .block-row { border-top: 1px solid var(--row-sep); }
+}
+.account-logout-row { width: 100%; box-sizing: border-box; font: inherit; text-align: left; cursor: pointer; color: var(--text); }
+.account-logout-row > .icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--logout-text); }
+.account-logout-row .block-row-title { color: var(--logout-text); }
 .account-switch { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 /* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */
 .account-delete-card { border-color: var(--danger-line); }

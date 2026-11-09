@@ -17,7 +17,7 @@ from jobbot.core.plural import plural
 from jobbot.db.models import OrpMonth
 from jobbot.log import get_logger
 from jobbot.notify import service as notify
-from jobbot.orp.service import load_due_day, load_target, month_counts
+from jobbot.orp.service import load_canton, load_due_day, load_target, month_counts
 from jobbot.runtime import Runtime
 
 log = get_logger(__name__)
@@ -70,6 +70,7 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
 
     async with runtime.sessionmaker() as session:
         due_day = await load_due_day(session)
+        canton = await load_canton(session)
         target = await load_target(session)
         now_counts = await month_counts(session, current)
         prev_counts = await month_counts(session, previous)
@@ -101,7 +102,7 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
         sent_count += 1
 
     # 2. Remise du mois précédent : dès le 1er, puis la veille de la date limite.
-    deadline = due_date(previous, due_day)
+    deadline = due_date(previous, due_day, canton)
     previous_sent = dict(previous_record.reminders_sent or {}) if previous_record else {}
     submitted = bool(previous_record and previous_record.submitted_at)
     if not submitted and today < deadline:

@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import type { OrpMonth } from "../api/client";
+import { orpChannel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 
@@ -10,6 +11,8 @@ import CalendarDate from "./CalendarDate.vue";
 // chaque ligne ouvre sa candidature.
 // `link` (maquette du 8 novembre, Bilan sur ordinateur) : chaque ligne mène à sa candidature dans le Suivi ORP du
 // mois ; l'icône calendrier de 36 px, « justificatif joint » en vert ou « justificatif à joindre » en pêche, puis « › ».
+// Maquette du 9 novembre (BilanOrdinateur) : une carte par recherche, « Justificatif joint » ou « Justificatif à
+// joindre », le cercle à flèche gris.
 const props = defineProps<{ rows: OrpMonth["rows"]; limit?: number; open?: boolean; link?: string }>();
 defineEmits<{ open: [id: number] }>();
 
@@ -32,7 +35,7 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
 <template>
   <ul
     v-if="shown.length && link"
-    class="orp-rows orp-rows-link"
+    class="bilan-cards"
     data-test="orp-rows"
   >
     <li
@@ -41,7 +44,7 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
     >
       <RouterLink
         :to="{ path: '/bilan/orp', query: { mois: link, candidature: row.application_id } }"
-        class="orp-row"
+        class="bilan-card"
         :data-test="`orp-row-${row.application_id}`"
       >
         <CalendarDate
@@ -50,8 +53,8 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
           tone="past"
           :size="36"
         />
-        <span class="orp-what"><strong>{{ row.company }}</strong><span class="orp-sub"><span class="orp-job">{{ row.job_title }}</span><span class="orp-channel"> · {{ how(row.method) }}</span></span></span>
-        <span :class="['orp-row-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "justificatif à joindre" : "justificatif joint" }}</span>
+        <span class="bilan-card-what"><strong>{{ row.company }}</strong><span>{{ row.job_title }} · {{ orpChannel(row.method) }}</span></span>
+        <span :class="['bilan-card-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Justificatif à joindre" : "Justificatif joint" }}</span>
         <span
           class="arrow-circle small"
           aria-hidden="true"

@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
+from jobbot.core.holidays import DEFAULT_CANTON, working_day
+
 LOCAL_TZ = ZoneInfo("Europe/Zurich")
 DEFAULT_DUE_DAY = 5
 
@@ -320,7 +322,8 @@ def shift_month(month: str, delta: int) -> str:
     return f"{index // 12:04d}-{index % 12 + 1:02d}"
 
 
-def due_date(month: str, due_day: int = DEFAULT_DUE_DAY) -> date:
-    """Date limite de remise : le jour `due_day` du mois suivant."""
+def due_date(month: str, due_day: int = DEFAULT_DUE_DAY, canton: str = DEFAULT_CANTON) -> date:
+    """Date limite de remise : le jour `due_day` du mois suivant, reporté au premier jour ouvrable
+    s'il tombe un samedi, un dimanche ou un jour férié du canton (art. 26 al. 2 OACI, §11)."""
     year, number = (int(x) for x in shift_month(month, 1).split("-"))
-    return date(year, number, due_day)
+    return working_day(date(year, number, due_day), canton)

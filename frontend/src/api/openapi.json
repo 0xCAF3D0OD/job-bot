@@ -23240,6 +23240,18 @@
             ],
             "title": "Month Target"
           },
+          "month_due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Due Date"
+          },
           "to_follow_up": {
             "type": "integer",
             "title": "To Follow Up"

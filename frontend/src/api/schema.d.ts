@@ -8089,6 +8089,8 @@ export interface components {
             month_count: number;
             /** Month Target */
             month_target: number | null;
+            /** Month Due Date */
+            month_due_date?: string | null;
             /** To Follow Up */
             to_follow_up: number;
             /**
