@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { forgetProfileImage } from "../composables/useProfileImage";
 import AccountView from "./AccountView.vue";
 
 const GET = vi.fn();
@@ -82,13 +83,12 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");
     expect(card.attributes("href")).toBe("/profil");
-    // L'image de profil, à côté du lien (pas dedans) : un toucher ouvre « Ton image ». Sur téléphone, plus de pastille
-    // crayon (maquettes Compte du 9 novembre).
+    // La ligne profil (CompteImage) : toute la ligne est le lien ; l'image (initiales) et sa pastille crayon décorative.
     expect(card.find("button").exists()).toBe(false);
-    const image = wrapper.get("[data-test=account-image]");
-    expect(image.attributes("aria-label")).toBe("Changer ton image");
+    const image = card.get("[data-test=account-image]");
     expect(image.get("[data-test=profile-image]").text()).toBe("KD");
-    expect(image.find(".account-image-badge").exists()).toBe(false);
+    expect(image.get(".account-image-badge").attributes("aria-hidden")).toBe("true");
+    expect(image.find(".account-image-badge .icon").exists()).toBe(true);
     expect(card.text()).toContain("Kevin Di Nocera");
     expect(card.text()).toContain("CV, compétences, postes recherchés");
     expect(wrapper.findAll(".account-block .block-cap").map((t) => t.text())).toEqual([
@@ -117,14 +117,16 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(collectNow).toHaveBeenCalled();
   });
 
-  it("toucher l'image ouvre la feuille « Ton image » (grille de 5 colonnes, AvatarPicker)", async () => {
+  it("l'image choisie dans Profil s'affiche sur la ligne, la pastille reste dans le conteneur de 52 px", async () => {
+    forgetProfileImage();
+    DATA["/api/profile-image"] = { avatar: 3 };
     const wrapper = await mountPage();
-    const picker = wrapper.findComponent({ name: "AvatarPicker" });
-    expect(picker.props("open")).toBe(false);
-    await wrapper.get("[data-test=account-image]").trigger("click");
-    await flushPromises();
-    expect(picker.props("open")).toBe(true);
-    expect(wrapper.get("[data-test=avatar-grid]").classes()).toContain("avatar-grid");
+    const image = wrapper.get("[data-test=account-profile-card] [data-test=account-image]");
+    expect(image.get("img").attributes("src")).toContain("avatar-3");
+    expect(image.find(".account-image-badge").exists()).toBe(true);
+    expect(wrapper.findComponent({ name: "AvatarPicker" }).exists()).toBe(false);
+    delete DATA["/api/profile-image"];
+    forgetProfileImage();
     wrapper.unmount();
   });
 

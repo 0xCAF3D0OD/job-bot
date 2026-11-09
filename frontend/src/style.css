@@ -16,6 +16,9 @@
   /* Le trait entre deux lignes d’une carte de groupe (Compte ; 9 novembre) : #EFECE5 en clair, #38322B en sombre ;
      « Se déconnecter » en #B4371F, #FF9B85 en sombre. */
   --row-sep: #EFECE5;
+  /* Ligne profil du Compte (CompteImage, demande de Kevin du 9 novembre) : contour de la pastille crayon, initiales. */
+  --avatar-badge-line: #E5E2D9;
+  --avatar-initials: #2445C2;
   --logout-text: #B4371F;
   /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
      1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
@@ -202,6 +205,8 @@
      claires que le fond ; le bleu reste sur les boutons pleins et s'éclaircit pour les traits et les liens. */
   :root:not([data-theme="light"]) {
     --row-sep: #38322B;
+    --avatar-badge-line: #3A352E;
+    --avatar-initials: #AEBDFF;
     --logout-text: #FF9B85;
     --bg: #171411;
     --surface: #221E1A;
@@ -256,6 +261,8 @@
 }
 :root[data-theme="dark"] {
   --row-sep: #38322B;
+  --avatar-badge-line: #3A352E;
+  --avatar-initials: #AEBDFF;
   --logout-text: #FF9B85;
   --bg: #171411;
   --surface: #221E1A;
@@ -4616,10 +4623,12 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-page { display: grid; gap: var(--space-5); max-width: 40rem; }
 .account-card { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5) var(--space-4) var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
 .account-card-wrap { position: relative; }
-.account-image-slot { flex: none; width: 52px; height: 52px; }
 /* Le bouton de l'image, posé sur la place réservée de la carte ; la pastille crayon de 22 px, à -3 px du coin. */
-.account-image-button { --account-badge: 22px; position: absolute; top: 50%; left: var(--space-4); display: flex; padding: 0; border: 0; border-radius: 50%; background: transparent; transform: translateY(-50%); }
-.account-image-badge { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: var(--account-badge); height: var(--account-badge); border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--primary-text); }
+/* La ligne profil (CompteImage) : l'image dans un conteneur relatif de 52 px, la pastille de 22 px à −3 px en bas à
+   droite, sur le fond de la carte, contour de 1 px (--avatar-badge-line), crayon de 12 px ; initiales #2445C2 / #AEBDFF. */
+.account-image { --account-badge: 22px; --account-badge-out: -3px; position: relative; flex: none; display: inline-flex; width: 52px; height: 52px; padding: 0; }
+.account-image .profile-image { color: var(--avatar-initials); }
+.account-image-badge { position: absolute; right: var(--account-badge-out); bottom: var(--account-badge-out); display: grid; place-items: center; box-sizing: border-box; width: var(--account-badge); height: var(--account-badge); border: 1px solid var(--avatar-badge-line); border-radius: 50%; background: var(--surface); color: var(--primary-text); }
 .account-image-badge .icon { width: 12px; height: 12px; }
 .account-card-text { display: grid; gap: var(--space-1); flex: 1; min-width: 0; }
 .account-card-name { font-size: var(--font-section); overflow-wrap: anywhere; }
@@ -4632,7 +4641,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-blocks .account-page > .block + .block { margin-top: 0; }
 .account-blocks .account-card-wrap { padding: var(--space-4); }
 .account-blocks .account-card { margin: 0; border: 0; }
-.account-blocks .account-image-button { left: calc(var(--space-4) * 2); }
 .account-blocks .account-card-text { gap: 0; }
 .account-blocks .account-card-name { font-size: var(--font-body); line-height: var(--row-title-lh); }
 .account-blocks .account-page-logout { justify-self: start; margin: var(--space-2) var(--space-5) 0; padding: 0; }
@@ -4647,9 +4655,10 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
   .account-blocks .account-page > .block:first-of-type { padding-top: var(--account-first-y); }
   .account-group { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--account-group-r); overflow: hidden; }
   .account-profile-group { position: relative; }
-  .account-blocks .account-profile-group .account-card { padding: var(--row-pad) var(--account-row-x); background: transparent; border: 0; border-radius: 0; }
+  .account-blocks .account-profile-group { --account-card-14: 14px; border-radius: var(--radius-card); }
+  .account-blocks .account-group.account-profile-group .account-card.block-row { gap: var(--account-card-14); padding: var(--account-card-14); background: transparent; border: 0; border-radius: 0; }
+  .account-blocks .account-profile-group .account-card-line { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; }
   .account-blocks .account-card-wrap { padding: var(--account-first-y) 0 var(--account-group-y); }
-  .account-blocks .account-profile-group .account-image-button { left: var(--account-row-x); }
   .account-blocks .account-group .block-row { margin: 0; padding-left: var(--account-row-x); padding-right: var(--account-row-x); border: 0; border-radius: 0; background: transparent; }
   .account-blocks .account-group .block-row + .block-row { border-top: 1px solid var(--row-sep); }
 }
