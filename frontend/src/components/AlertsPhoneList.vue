@@ -275,7 +275,7 @@ function remove(): void {
 .alerts-family.confirm .alerts-family-title { color: var(--peach-text); }
 .alerts-family.active .alerts-family-title { color: var(--success); }
 .alerts-family-help { margin: 0 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.alerts-families .block-row { margin: 0; background: var(--surface); border: 1.5px solid var(--line-strong); }
+.alerts-families .block-row { margin: 0; background: var(--surface); border: 1.5px solid var(--card-line); }
 /* Les lieux sont coupés avec « … » (§10.8) ; la ligne « site · état » passe à la ligne sur les écrans étroits (§2.8). */
 .alerts-families .block-row-line:last-child { white-space: normal; }
 .alerts-families.blocks-page { background: transparent; }

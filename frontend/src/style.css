@@ -16,6 +16,12 @@
   /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
      1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
   --line-strong: #D8D4CA;
+  /* Trait des cartes (prompt du 9 novembre, PR 1) : #CFCBC1 en clair ; en sombre, le même que --line-strong. */
+  --card-line: #CFCBC1;
+  /* Snackbar (prompt du 9 novembre, PR 1) : fond #1B1F2A, texte blanc, actions #AEBDFF, en clair comme en sombre. */
+  --snackbar-bg: #1B1F2A;
+  --snackbar-text: #FFFFFF;
+  --snackbar-action: #AEBDFF;
   --field-border: #8C8478;
   --text-disabled: #B8B3A8;
   /* Les ombres de la maquette du 8 novembre : panneaux latéraux, menus, carte à cheval sur la bande, Composer. */
@@ -187,6 +193,7 @@
     --line: #38322B;
     --line-soft: #2C2722;
     --line-strong: #4E473E;
+    --card-line: #4E473E;
     --field-border: #8C8478;
     --text-disabled: #5E574F;
     --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
@@ -234,6 +241,7 @@
   --line: #38322B;
   --line-soft: #2C2722;
   --line-strong: #4E473E;
+  --card-line: #4E473E;
   --field-border: #8C8478;
   --text-disabled: #5E574F;
   --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
@@ -395,7 +403,11 @@ button.action-2 { background: var(--surface); border: var(--action-line) solid v
 button.action-2:hover:not(:disabled) { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 :root { --action-line: 1.5px; }
 /* Cercle des lignes à flèche (D29) : contour de 2 px, flèche de 18, décoratif. 36 px dans les lignes de réglages. */
-.arrow-circle { --circle: 40px; flex: none; display: inline-grid; place-items: center; box-sizing: border-box; width: var(--circle); height: var(--circle); border: var(--circle-line) solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); }
+/* Cercle-flèche des cartes cliquables (MODIFICATIONS du 9 novembre, §10.1) : gris #596070 (sombre #ABA398), le bleu
+   reste à l'action principale (D30). Jamais plus clair : il serait lu comme « désactivé ». Les notifications gardent le
+   bleu (.arrow-circle.notif). */
+.arrow-circle { --circle: 40px; flex: none; display: inline-grid; place-items: center; box-sizing: border-box; width: var(--circle); height: var(--circle); border: var(--circle-line) solid var(--text-secondary); border-radius: var(--radius-pill); color: var(--text-secondary); }
+.arrow-circle.notif { border-color: var(--primary-graphic); color: var(--primary-text); }
 .arrow-circle.small { --circle: 36px; }
 .arrow-circle .icon { width: 18px; height: 18px; }
 :root { --circle-line: 2px; }
@@ -591,16 +603,18 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
    --text-secondary (3:1 au moins en clair et en sombre, WCAG 1.4.11), fond de carte, rayon 8 px (D7), texte 16 px
    (pas de zoom sur iOS), 14 px de marge intérieure. États : survol (bordure plus foncée), focus (bordure accent +
    halo accent-soft, à la souris comme au clavier, WCAG 2.4.7), erreur (rouge), désactivé, lecture seule (pointillés). */
-:root { --field-h: 48px; --field-pad-x: 14px; --field-pad-y: 12px; --field-line: 1.5px; }
+:root { --field-h: 48px; --field-pad-x: 18.5px; --field-pad-y: 12.5px; --field-line: 1.5px; }
+/* Prompt du 9 novembre (PR 1) : pilule (rayon 24), texte à 20 px du bord (18,5 + le trait de 1,5), trait 1,5 px
+   --field-border (#8C8478), au focus un seul contour de 2 px --primary-graphic (sans halo) ; zones de texte rayon 20. */
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *)) {
   box-sizing: border-box; min-height: var(--field-h); padding: 0 var(--field-pad-x);
-  border: var(--field-line) solid var(--text-secondary); border-radius: var(--radius-sm); background-color: var(--surface);
+  border: var(--field-line) solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface);
   color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--leading-normal);
 }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select):not(:where(.composer *)) { height: var(--field-h); }
-textarea { padding: var(--field-pad-y) var(--field-pad-x); }
+textarea { padding: var(--field-pad-y) var(--field-pad-x); border-radius: var(--space-5); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *)):hover:not(:disabled, [readonly], :focus) { border-color: var(--field-border-hover); }
-:is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *)):focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px var(--accent-soft); }
+:is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *)):focus { outline: none; border-color: var(--primary-graphic); box-shadow: 0 0 0 0.5px var(--primary-graphic); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *))[aria-invalid="true"] { border-color: var(--down-text); box-shadow: 0 0 0 1px var(--down-text); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *))[aria-invalid="true"]:focus { box-shadow: 0 0 0 1px var(--down-text), 0 0 0 4px var(--accent-soft); }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):not(:where(.composer *)):disabled { border-color: var(--border); background-color: var(--panel); color: var(--muted); cursor: not-allowed; }
@@ -1457,13 +1471,17 @@ button, .button-link { max-width: 100%; }
 }
 
 /* Panneau latéral (docs/32 §2.2) */
-.side-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(17 17 31 / 12%); }
-.side-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 46; width: min(28rem, 100vw); display: flex; flex-direction: column; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -18px 0 48px rgb(17 17 31 / 14%); }
-.side-panel-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4) var(--space-4); border-bottom: 1px solid var(--divider); }
-.side-panel-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.side-panel-body { flex: 1; overflow-y: auto; padding: var(--space-4) var(--space-4) var(--space-6); display: grid; align-content: start; gap: var(--space-4); }
-.side-slide-enter-active, .side-slide-leave-active { transition: transform 0.22s ease; }
-.side-slide-enter-from, .side-slide-leave-to { transform: translateX(100%); }
+/* Prompt du 9 novembre (PR 1) : même panneau que les feuilles du bas sur ordinateur, 440 px (480 au besoin), fond
+   crème, voile rgba(27,31,42,.45), titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. */
+.side-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(27 31 42 / 45%); }
+.side-panel { --sheet-title-lh: 28px; position: fixed; top: 0; right: 0; bottom: 0; z-index: 46; width: min(440px, 100vw); display: flex; flex-direction: column; background: var(--bg); box-shadow: -10px 0 30px rgb(27 31 42 / 18%); }
+.side-panel.side-panel-480 { width: min(480px, 100vw); }
+.side-panel-head { flex: none; display: flex; align-items: center; gap: var(--space-2); min-height: 76px; padding: 0 var(--space-3) 0 var(--space-6); }
+.side-panel-head h2 { margin: 0; font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-panel-head .side-panel-close { width: 48px; height: 48px; }
+.side-panel-body { flex: 1; overflow-y: auto; padding: var(--space-2) var(--space-6) var(--space-6); display: grid; align-content: start; gap: var(--space-4); }
+.side-slide-enter-active, .side-slide-leave-active { transition: transform 250ms cubic-bezier(.2,.8,.2,1), opacity 250ms cubic-bezier(.2,.8,.2,1); }
+.side-slide-enter-from, .side-slide-leave-to { transform: translateX(40px); opacity: 0; }
 .side-fade-enter-active, .side-fade-leave-active { transition: opacity 0.22s ease; }
 .side-fade-enter-from, .side-fade-leave-to { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .side-slide-enter-active, .side-slide-leave-active, .side-fade-enter-active, .side-fade-leave-active { transition: none; } }
@@ -2017,7 +2035,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   button, a, summary, .button-link, .offer-line, .chunk-card, input[type="checkbox"]::after { transition: none !important; }
   button:active, a:active, summary:active, .button-link:active { transform: none !important; }
   .chunk-card:hover { transform: none !important; }
-  input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
+  input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before, .sheet[open] { animation: none !important; }
 }
 /* Le fond de la page jusqu'en bas de l'écran, sous l'en-tête (docs/64 §3). */
 
@@ -2860,6 +2878,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* --- Annuler plutôt que confirmer (docs/108 §1) --- */
 .undo-toast { align-items: center; }
 .undo-toast > button.link { margin-left: auto; font-size: var(--font-body); font-weight: var(--weight-semibold); min-height: 2.75rem; padding: 0 var(--space-2); }
+/* Snackbar du 9 novembre (PR 1) : fond sombre, rayon 12, actions en bleu clair ; 6 s (UNDO_MS), role="status". */
+.undo-toast, .snackbar { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
+:is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
 .inline-confirm p { margin: 0; }
@@ -4026,8 +4047,10 @@ html.search-open { overflow: hidden; }
 .card-head-count { color: var(--muted); font-weight: var(--weight-regular); }
 .card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 /* Copier : l'icône seule, juste à côté de la valeur, à la hauteur commune des contrôles. */
-.copy-button { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--control-h); height: var(--control-h); padding: 0; border: none; border-radius: 50%; background: none; color: var(--muted); vertical-align: middle; }
-.copy-button:hover { color: var(--text); background: var(--accent-soft); }
+/* Prompt du 9 novembre (PR 1) : cercle de 40 px (44 sur téléphone, --control-h), trait 1,5 px --card-line, icône
+   --text ; infobulle « Copier », nom lu « Copier : <libellé> ». */
+.copy-button { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--control-h); height: var(--control-h); padding: 0; border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); vertical-align: middle; }
+.copy-button:hover { background: var(--primary-soft); }
 /* « Afficher plus (4) » : en bas de la carte, le chevron tourne quand c'est ouvert. */
 .show-more { margin-top: var(--space-3); }
 .show-more .icon { transition: transform var(--t-state) var(--ease-out); }
@@ -4162,10 +4185,24 @@ html.search-open { overflow: hidden; }
   .sheet[open] { animation: sheet-rise 320ms cubic-bezier(.2,.8,.2,1); }
   /* Posée en bas par sa position (et non par une marge « auto » de plusieurs centaines de pixels, hors grille). */
   .sheet { inset: auto 0 0; margin: 0; }
-  /* Champs : 14,5 px + le trait de 1,5 px = 16 px, sur la grille de 4 (§2.9), comme les cartes (18,5 + 1,5). */
-  :root { --field-pad-x: 14.5px; }
 }
 @keyframes sheet-rise { from { transform: translateY(100%); } }
+/* Ordinateur (prompt du 9 novembre, PR 1 ; panneaux des maquettes AlertesOrdinateur, BilanOrdinateur) : la même
+   feuille s'ouvre en panneau à droite, 440 px, sur toute la hauteur, fond crème, voile rgba(27,31,42,.45), entrée
+   ja-panel de 250 ms ; titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. Seul le panneau défile. */
+@media (min-width: 821px) {
+  .sheet { --sheet-pad: 24px; --sheet-head-h: 76px; --sheet-title-lh: 28px; position: fixed; inset: 0 0 0 auto; width: 440px; max-width: 440px; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; background: var(--bg); box-shadow: -10px 0 30px rgb(27 31 42 / 18%); }
+  .sheet::backdrop { background: rgb(27 31 42 / 45%); }
+  .sheet[open] { animation: ja-panel 250ms cubic-bezier(.2,.8,.2,1) both; }
+  .sheet-inner { gap: 0; height: 100%; padding: 0; }
+  .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--space-3) 0 var(--sheet-pad); }
+  .sheet .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
+  .sheet-close { width: 48px; height: 48px; background: transparent; }
+  .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
+  .sheet-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: var(--space-2) var(--sheet-pad) var(--sheet-pad); align-content: start; }
+  .sheet-actions { flex: none; padding: var(--space-4) var(--sheet-pad) var(--sheet-pad); }
+}
+@keyframes ja-panel { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* Le contenu des feuilles du bas (§10.7 ; valeurs du HTML de RendezVousPreparer et AlertesTelAlerte) : rappel avec 16 px d'écart, 20 px dessous et trait ; familles à 20 px, titre
    13/16 en capitales ; lignes 12 px au-dessus et en dessous, trait --line ; libellé 13/16 juste au-dessus du texte 15/20 ;
    cases de 24 px à 16 px du texte ; lien de bas de 56 px, 8 px au-dessus. */
@@ -4223,7 +4260,7 @@ html.search-open { overflow: hidden; }
   .undo-toast.inline { display: none; }
 }
 @media (min-width: 600px) {
-  .undo-toast.inline { position: static; width: auto; max-width: none; margin: 0; box-shadow: none; border: 1px solid var(--border); border-left: 3px solid var(--accent); animation: none; }
+  .undo-toast.inline { position: static; width: auto; max-width: none; margin: 0; box-shadow: none; border: 0; animation: none; }
   :root:has(.undo-toast.inline) .undo-toast:not(.inline) { display: none; }
 }
 

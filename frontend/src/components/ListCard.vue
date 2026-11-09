@@ -95,10 +95,10 @@ function onClick(event: MouseEvent): void {
   color: var(--text); text-decoration: none;
 }
 .list-card:hover { border-color: var(--field-border); }
-/* Version du 9 novembre (D29, §2.9), téléphone : une carte sur la page a un trait de 1,5 px --line-strong et 20 px de
+/* Version du 9 novembre (D29, §2.9), téléphone : une carte sur la page a un trait de 1,5 px --card-line et 20 px de
    marge intérieure sur les côtés, trait compris (18,5 + 1,5) ; 16 px en haut et en bas (14,5 + 1,5). */
 @media (max-width: 820px) {
-  .list-card { --card-pad-y: 14.5px; --card-pad-x: 18.5px; padding: var(--card-pad-y) var(--card-pad-x); border: 1.5px solid var(--line-strong); }
+  .list-card { --card-pad-y: 14.5px; --card-pad-x: 18.5px; padding: var(--card-pad-y) var(--card-pad-x); border: 1.5px solid var(--card-line); }
 }
 .list-card[aria-current="true"] {
   padding: calc(var(--card-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);

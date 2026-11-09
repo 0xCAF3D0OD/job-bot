@@ -1227,7 +1227,7 @@ watch(
 .offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
 /* Le détail d'une offre sur téléphone, version du 9 novembre (MODIFICATIONS §10.1, D35 ; HTML des maquettes Offre,
    OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d'information (D35) blanches à
-   trait de 1,5 px --line-strong, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste
+   trait de 1,5 px --card-line, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste
    (logo 56, 16 px, intitulé 22/28 800, étiquettes grises 16 px dessous) et la note (anneau 56, verdict 18/24, puis
    « Voir la compatibilité » sur la ligne du verdict, 56 px, trait au-dessus, chevron de 24 à 20 px du bord) ; puis
    « Le poste » en section sur le fond (20 px au-dessus, sans trait) ; barre du bas sur --bg avec un trait :
@@ -1242,7 +1242,7 @@ watch(
   .offer-blocks .offer-subhead { margin: 0; padding: var(--ob-12) var(--ob-margin); background: var(--bg); }
   .offer-blocks .offer-subhead .icon-button { width: var(--target-min); height: var(--target-min); color: var(--primary-text); }
   .offer-blocks > .detail-offer, .offer-blocks .match-card {
-    margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--line-strong);
+    margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--card-line);
     border-radius: var(--radius-card); box-shadow: none;
   }
   .offer-blocks .detail-post, .offer-blocks .detail-more-rows {

@@ -37,7 +37,10 @@
 /* D31 : le statut, un mot coloré juste après le titre. */
 .block-status { margin-left: var(--space-2); font-size: var(--font-small); font-weight: var(--weight-bold); }
 .block-status.ok { color: var(--success); }
-.block-status.todo { color: var(--warning); }
+/* Mots d'état du 9 novembre (prompt, PR 1) : vert, orange #8A4A16, bleu, gris (sombre #62D497, #F2B98E, #AEBDFF, #ABA398). */
+.block-status.todo { color: var(--peach-text); }
+.block-status.info { color: var(--primary-text); }
+.block-status.off { color: var(--text-secondary); }
 
 /* D32 : libellé au-dessus de la valeur, bouton copier à droite, trait entre les champs. */
 .block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
@@ -47,7 +50,7 @@
 .block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .block-field-value.block-field-none { font-weight: var(--weight-regular); color: var(--text-secondary); }
 .block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.block-field .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-graphic); }
+.block-field .copy-button { flex: none; }
 a.block-action.action-2 { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 a.block-action.action-2:hover { background: var(--primary-soft); }
 
@@ -55,7 +58,7 @@ a.block-action.action-2:hover { background: var(--primary-soft); }
    l'ordinateur (§10.5) garde les blocs jusqu'à sa propre série.
    - D28 : une section n'est pas une carte : posée sur le fond --bg, séparée de la suivante par un trait --line et
      24 px au-dessus et en dessous ; pas de trait au-dessus de la première (12 px) ; 20 px de marge latérale (§2.9).
-   - D29 : une carte (cliquable) est blanche avec un trait de 1,5 px --line-strong sur la page ; 20 px de marge
+   - D29 : une carte (cliquable) est blanche avec un trait de 1,5 px --card-line sur la page ; 20 px de marge
      intérieure trait compris (18,5 + 1,5), 16 px entre l'image ou le texte et le cercle, 8 px entre deux cartes.
    - D35 : une carte d'information (`.block.info`) a la même couleur, le rayon --radius-card, 20 px de marge intérieure
      et 12 px au-dessus ; la section qui la suit n'a pas de trait (20 px). */
@@ -68,9 +71,9 @@ a.block-action.action-2:hover { background: var(--primary-soft); }
   .blocks-page .block { margin: 0 var(--block-margin-x); padding: var(--block-pad-y) 0; background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
   .blocks-page .block + .block { margin-top: 0; }
   .blocks-page .block:not(.info):first-of-type { border-top: 0; padding-top: var(--block-first-top); }
-  .blocks-page .block.info { margin: var(--info-top) var(--block-margin-x) 0; padding: var(--info-pad); background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--radius-card); }
+  .blocks-page .block.info { margin: var(--info-top) var(--block-margin-x) 0; padding: var(--info-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .blocks-page .block.info + .block:not(.info) { border-top: 0; padding-top: var(--after-info); }
-  .blocks-page .block-row { gap: var(--row-inner-gap); padding: var(--row-pad); background: var(--surface); border: 1.5px solid var(--line-strong); }
+  .blocks-page .block-row { gap: var(--row-inner-gap); padding: var(--row-pad); background: var(--surface); border: 1.5px solid var(--card-line); }
   .blocks-page .block-row.small { min-height: var(--row-56); }
   /* D32, maquette OrpFiche : 16 px au-dessus et en dessous de chaque champ (4 px au-dessus du premier) ; étiquette
      « case à cocher » en 4 et 8 px. */
