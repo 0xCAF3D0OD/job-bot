@@ -1102,7 +1102,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .jobs-band > .offers-page { padding-top: var(--space-6); }
 /* Le titre et « Alertes » (docs/139 étape 5a, C1) : un lien à côté du titre ; sur téléphone, dans l'en-tête. */
 .jobs-title { display: flex; align-items: baseline; gap: var(--space-4); }
-.jobs-alerts-link { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: var(--weight-bold); text-decoration: none; }
+.jobs-alerts-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--space-6); font-weight: var(--weight-bold); text-decoration: none; }
 .jobs-alerts-link[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.3em; }
 .jobs-alerts-link .tab-count { margin: 0; }
 .topbar-page-tools, .in-place { display: contents; }
@@ -4928,10 +4928,14 @@ a.panel-row:hover { background: var(--band); }
   @media (prefers-reduced-motion: no-preference) { .offers-grid .detail-top-actions .more-menu .menu { animation: ja-pop 150ms ease-out; } }
 }
 @media (min-width: 1024px) {
-  /* Envoyées (maquette du 8 novembre) : la liste de 480 px à gauche, la candidature dans une carte blanche à droite. */
-  .jobs-band > .jobs-body.sent-columns { display: grid; grid-template-columns: 480px minmax(0, 1fr); column-gap: var(--space-6); align-items: start; }
-  .sent-columns > :not(.sent-detail) { grid-column: 1; }
-  .sent-columns > .sent-detail { --sent-pad-y: 28px; grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding: var(--sent-pad-y) var(--space-8); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+  /* Envoyées (§8.1 du 9 novembre) : la liste de 480 px à gauche, un trait de 2 px --line au milieu de l'écart, le détail
+     en cartes séparées sur le crème à droite (plus de grand cadre). Le trait bleu part de la carte choisie. */
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-8); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
+  .sent-columns > :not(.sent-detail, .sent-divider, .sent-link) { grid-column: 1; }
+  .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding-bottom: var(--space-6); }
+  .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) + var(--sent-gap) / 2 - 1px); width: 2px; background: var(--line); }
+  .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w)); width: calc(var(--sent-gap) / 2); height: 2px; background: var(--primary-graphic); }
+  .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
   .sent-columns :is(.sent-goal, .sent-list, .sent-words) { max-width: none; }
 }
 .sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
