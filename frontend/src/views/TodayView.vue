@@ -430,93 +430,99 @@ const { me } = useAuth();
         </p>
       </div>
     </section>
-    <div class="today-page">
-      <RouterLink
-        to="/bilan/orp"
-        class="today-orp-card"
-        :aria-label="orpLabel"
-        data-test="orp-month"
-      >
-        <OrpMonth
-          :title="`Mois ORP · ${monthName}`"
-          :count="today.month_count"
-          :target="today.month_target ?? null"
-          :month="today.month"
-          band
-        />
-        <template v-if="today.rhythm && !starting">
-          <span
-            class="today-orp-rule"
-            aria-hidden="true"
-          />
-          <RhythmCard
-            :week="today.rhythm"
-            :month-behind="monthBehind"
+    <!-- Lot 18 (§10.5) : sous la bande, le fond des blocs sur toute la largeur. -->
+    <div class="today-page-bg">
+      <div class="today-page">
+        <RouterLink
+          to="/bilan/orp"
+          class="today-orp-card"
+          :aria-label="orpLabel"
+          data-test="orp-month"
+        >
+          <OrpMonth
+            :title="`Mois ORP · ${monthName}`"
+            :count="today.month_count"
+            :target="today.month_target ?? null"
+            :month="today.month"
             band
           />
-        </template>
-        <AppIcon
-          name="chevron"
-          class="today-orp-chevron"
+          <template v-if="today.rhythm && !starting">
+            <span
+              class="today-orp-rule"
+              aria-hidden="true"
+            />
+            <RhythmCard
+              :week="today.rhythm"
+              :month-behind="monthBehind"
+              band
+            />
+          </template>
+          <AppIcon
+            name="chevron"
+            class="today-orp-chevron"
+          />
+        </RouterLink>
+
+        <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
+        <RouterLink
+          v-if="me?.welcome === 'postponed'"
+          to="/bienvenue"
+          class="notice today-welcome"
+          data-test="finish-welcome"
+        >
+          <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
+        </RouterLink>
+
+        <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
+        <FirstSteps
+          v-if="starting"
+          :steps="today.first_steps"
+          :has-offers="today.has_offers ?? true"
+          :offer-id="today.first_steps_offer_id ?? null"
+          :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+          @dismiss="dismissSteps"
         />
-      </RouterLink>
 
-      <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
-      <RouterLink
-        v-if="me?.welcome === 'postponed'"
-        to="/bienvenue"
-        class="notice today-welcome"
-        data-test="finish-welcome"
-      >
-        <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
-      </RouterLink>
-
-      <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
-      <FirstSteps
-        v-if="starting"
-        :steps="today.first_steps"
-        :has-offers="today.has_offers ?? true"
-        :offer-id="today.first_steps_offer_id ?? null"
-        :pick-ready="!restDay && !rhythmPaused && best.length > 0"
-        @dismiss="dismissSteps"
-      />
-
-      <section
-        v-for="group in [
-          { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks' },
-          { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later' },
-        ].filter((g) => g.items.length)"
-        :key="group.key"
-        class="today-section"
-        :aria-labelledby="`today-${group.key}-title`"
-        :data-test="group.test"
-      >
-        <h2 :id="`today-${group.key}-title`">
-          {{ group.title }}
-        </h2>
-        <ul class="today-tasks">
-          <li
-            v-for="task in group.items"
-            :key="task.key"
-          >
-            <RouterLink
-              :to="task.to"
-              :class="['today-task', `tone-${task.tone}`]"
-              :data-test="task.test"
+        <section
+          v-for="group in [
+            { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks' },
+            { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later' },
+          ].filter((g) => g.items.length)"
+          :key="group.key"
+          class="today-section"
+          :aria-labelledby="`today-${group.key}-title`"
+          :data-test="group.test"
+        >
+          <h2 :id="`today-${group.key}-title`">
+            {{ group.title }}
+          </h2>
+          <ul class="today-tasks">
+            <li
+              v-for="task in group.items"
+              :key="task.key"
             >
-              <AppIcon
-                :name="task.icon"
-                class="today-task-icon"
-              />
-              <span class="today-task-main">
-                <strong>{{ task.title }}</strong>
-                <span>{{ task.detail }}</span>
-              </span>
-              <span class="today-task-action">{{ task.action }}<AppIcon name="chevron" /></span>
-            </RouterLink>
-          </li>
-        </ul>
-      </section>
+              <RouterLink
+                :to="task.to"
+                :class="['today-task', `tone-${task.tone}`]"
+                :data-test="task.test"
+              >
+                <AppIcon
+                  :name="task.icon"
+                  class="today-task-icon"
+                />
+                <span class="today-task-main">
+                  <strong>{{ task.title }}</strong>
+                  <span>{{ task.detail }}</span>
+                </span>
+                <span class="today-task-action">{{ task.action }}<span
+                  class="arrow-circle"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span></span>
+              </RouterLink>
+            </li>
+          </ul>
+        </section>
+      </div>
     </div>
   </template>
   <section

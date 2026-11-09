@@ -1,0 +1,1 @@
+Maquette du 8 novembre, lot 18 (ordinateur) : Aujourd'hui, Bilan, Profil, Réglages, Notifications et Alertes sur le fond des blocs, blocs sans bordure et cercles à flèche ; tous les boutons secondaires à contour bleu ; en sombre, les boutons pleins, interrupteurs et choix en cours passent au bleu clair ; la fiche « Pour l'ORP » s'ouvre dans un panneau latéral

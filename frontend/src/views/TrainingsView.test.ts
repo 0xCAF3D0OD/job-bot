@@ -196,9 +196,12 @@ describe("TrainingsView", () => {
     expect(card.text()).toContain("CKAD");
     expect(card.find(".training-current-progress").text()).toBe("Module 3 sur 6");
     expect(card.find("[data-test=training-continue]").attributes("href")).toBe("https://training.example/3");
+    // Lot 18 (§10.5) : « Continuer le cours » au niveau 2, la ligne gardée finit par le cercle D29 de 36 px.
+    expect(card.find("[data-test=training-continue]").classes()).toContain("action-2");
+    expect(wrapper.find(".training-see .arrow-circle.small").attributes("aria-hidden")).toBe("true");
     expect(wrapper.findAll("[data-test=training-kept]").map((li) => li.text())).toEqual([
-      "TerraformGardée · pas encore commencée Voir",
-      "Certified Kubernetes Administrator (CKA)Terminée Voir",
+      "TerraformGardée · pas encore commencée",
+      "Certified Kubernetes Administrator (CKA)Terminée",
     ]);
     await wrapper.findAll("[data-test=training-kept] button")[1]!.trigger("click");
     await flushPromises();

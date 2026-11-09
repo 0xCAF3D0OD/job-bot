@@ -130,7 +130,7 @@ onMounted(() => void load());
         <div class="bilan-orp-actions">
           <button
             type="button"
-            class="secondary"
+            class="secondary action-2"
             data-test="orp-export"
             @click="sheet?.printPdf()"
           >
@@ -138,7 +138,7 @@ onMounted(() => void load());
           </button>
           <button
             type="button"
-            class="secondary"
+            class="secondary action-2"
             data-test="orp-add"
             @click="router.push({ path: '/bilan/orp', query: { mois: orp.month, ajouter: '1' } })"
           >
@@ -212,10 +212,10 @@ onMounted(() => void load());
                 />
                 <span class="orp-what"><strong>{{ pastTitle(item.starts_at).replace(" ORP", "") }}</strong><span class="orp-sub">{{ [item.place, `${dateText(item.starts_at).toLowerCase()}, ${timeAndPlace(item.starts_at, null)}`].filter(Boolean).join(" · ") }}</span></span>
                 <span class="orp-row-state todo">À noter</span>
-                <AppIcon
-                  name="chevron"
-                  class="orp-row-chevron"
-                />
+                <span
+                  class="arrow-circle small"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span>
               </RouterLink>
             </li>
             <li>
@@ -226,10 +226,10 @@ onMounted(() => void load());
               >
                 <span class="orp-what">Prochain rendez-vous</span>
                 <span class="orp-row-state">{{ nextMeeting ? `${dateText(nextMeeting.starts_at)}, ${timeAndPlace(nextMeeting.starts_at, null)}` : "Pas encore fixé" }}</span>
-                <AppIcon
-                  name="chevron"
-                  class="orp-row-chevron"
-                />
+                <span
+                  class="arrow-circle small"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span>
               </RouterLink>
             </li>
           </ul>

@@ -248,7 +248,10 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
           data-test="detail-months"
         >
           <span><strong>Mois par mois</strong><span>{{ goalLine }}</span></span>
-          <AppIcon name="chevron" />
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
         </RouterLink>
         <DisclosureRow
           title="Ce qui marche"

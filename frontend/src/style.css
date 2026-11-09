@@ -373,13 +373,16 @@ button {
 }
 button:disabled { opacity: 0.6; cursor: default; }
 /* Le bouton secondaire se voit à son bord : --faint, 3,3:1 au moins (WCAG 1.4.11, 1.6.4). */
-button:where(.secondary, .small, :not([class])) { border-color: var(--faint); }
-button.primary { background: var(--primary); color: var(--on-accent); border-color: var(--primary); }
+button:where(.small, :not([class])) { border-color: var(--faint); }
+/* Lot 18 (§2.2, D34) : plus aucun contour gris ; le bouton secondaire prend le niveau 2 partout (contour bleu). */
+button:where(.secondary) { border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
+/* Lot 18 (§10.6) : le plein interactif prend --action / --on-action (identiques à --primary en clair). */
+button.primary { background: var(--action); color: var(--on-action); border-color: var(--action); }
 /* Désactivé, le bouton principal passe au gris : un bleu pâle passait pour actif (1.6.4). */
 button.primary:disabled { opacity: 1; background: var(--panel); border-color: var(--border); color: var(--muted); }
 /* Au survol, le bleu plein se fonce en clair et s'éclaircit en sombre : un mélange avec la couleur du texte. */
-button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, var(--text)); border-color: color-mix(in srgb, var(--primary) 88%, var(--text)); }
-button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--action) 88%, var(--text)); border-color: color-mix(in srgb, var(--action) 88%, var(--text)); color: var(--on-action); }
+button.secondary:hover:not(:disabled) { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 /* Niveaux d'action (D30, MODIFICATIONS du 8 novembre au soir §2.2) : 1 plein, 2 à contour bleu. Posés sur les boutons
    des écrans refaits depuis le lot 11 ; le lot 18 les étend aux autres écrans. */
 button.action-1 { background: var(--action); border-color: var(--action); color: var(--on-action); }
@@ -686,8 +689,8 @@ button.link { border-radius: var(--radius-sm); transition: color 0.15s, backgrou
 
 /* --- Candidature et texte complet (0.3.1) --- */
 
-.actions a.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
-.actions a.secondary:hover { border-color: var(--accent); background: var(--surface); }
+.actions a.secondary { background: var(--surface); color: var(--primary-text); border: var(--action-line) solid var(--primary-graphic); }
+.actions a.secondary:hover { border-color: var(--primary-graphic); background: var(--primary-soft); }
 .full-text { white-space: pre-line; color: var(--muted); line-height: var(--leading-normal); font-size: var(--font-small); max-height: 26rem; overflow: auto; padding-right: var(--space-2); }
 p.badge.reason { margin: 0; }
 
@@ -870,8 +873,8 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
   #print-root.landscape { page: landscape; }
 }
 /* Le même bord que les boutons secondaires (--faint, 1.6.27) : « Postuler chez l'employeur » à côté de « Ajouter une offre ». */
-.button-link { display: inline-flex; align-items: center; padding: var(--space-2) var(--space-4); font-size: var(--font-small); font-weight: var(--weight-semibold); border-radius: var(--radius-sm); border: 1px solid var(--faint); color: var(--text); text-decoration: none; background: var(--surface); }
-.button-link:hover { border-color: var(--accent); color: var(--accent); }
+.button-link { display: inline-flex; align-items: center; padding: var(--space-2) var(--space-4); font-size: var(--font-small); font-weight: var(--weight-semibold); border-radius: var(--radius-sm); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); text-decoration: none; background: var(--surface); }
+.button-link:hover { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .side-card .actions a { justify-content: center; }
 
 .prep-tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-5); border-bottom: 1px solid var(--border); }
@@ -956,7 +959,7 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .status-line { display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-2); min-height: 0; }
 .status-line:empty { display: none; }
 .address-form { display: grid; gap: var(--space-2); width: 100%; }
-.button-link.primary-link { background: var(--primary); color: var(--on-accent); border-color: var(--primary); }
+.button-link.primary-link { background: var(--action); color: var(--on-action); border-color: var(--action); }
 .button-link.primary-link:hover { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
 .registry-proposals { width: 100%; display: grid; gap: var(--space-2); }
 .registry-proposals p { margin: 0; }
@@ -1302,7 +1305,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 input[type="checkbox"][role="switch"]:disabled { opacity: 0.5; cursor: not-allowed; }
 input[type="checkbox"][role="switch"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 input[type="checkbox"][role="switch"]::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); }
-input[type="checkbox"][role="switch"]:checked { background: var(--primary); }
+input[type="checkbox"][role="switch"]:checked { background: var(--action); }
 input[type="checkbox"][role="switch"]:checked::after { transform: translateX(0.9rem); }
 /* 44 px sous le doigt (WCAG 2.5.5), sans changer le dessin : une zone de touche invisible. */
 input[type="checkbox"][role="switch"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
@@ -2481,7 +2484,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .tab-bar-icon .icon { width: 1.5rem; height: 1.5rem; stroke-width: var(--icon-stroke); }
   /* L'onglet actif : le rond bleu plein de 56 px, l'icône en blanc, le libellé en bleu et en gras. */
   .tab-bar .active { color: var(--primary-text); font-weight: var(--weight-bold); }
-  .tab-bar .active .tab-bar-icon { width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--primary); color: var(--on-primary); box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 42%, transparent), 0 2px 6px rgb(0 0 0 / 18%); }
+  .tab-bar .active .tab-bar-icon { width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--action); color: var(--on-action); box-shadow: 0 8px 20px color-mix(in srgb, var(--action) 42%, transparent), 0 2px 6px rgb(0 0 0 / 18%); }
   .tab-bar .active .tab-bar-icon .icon { width: 1.625rem; height: 1.625rem; }
   .tab-assistant-ring { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1.6px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); }
   .tab-bar .active .tab-assistant-ring { width: 2.25rem; height: 2.25rem; border-color: var(--on-primary); }
@@ -2857,8 +2860,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
 .inline-confirm p { margin: 0; }
 .inline-confirm-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
-button.secondary.danger { color: var(--down-text); }
-button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); color: var(--down-text); }
+button.secondary.danger { color: var(--down-text); border-color: var(--down-text); }
+button.secondary.danger:hover:not(:disabled) { background: var(--surface); border-color: var(--down-text); color: var(--down-text); }
 
 /* L'aide au doigt (docs/108 §2) : le « i » à droite du titre, une ligne grise sous lui. */
 /* Hors échelle (docs/135 §1) : les marges négatives compensent la cible de 2,75 rem. */
@@ -3448,7 +3451,10 @@ main:focus { outline: none; }
 .doc-language > button { position: relative; min-inline-size: 2.75rem; min-height: 2.25rem; padding-inline: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 /* 36 px visibles, 44 px sous le doigt (Kevin, 6.11) : la zone de touche invisible. */
 .doc-language > button::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
-.doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--primary); color: var(--on-primary); box-shadow: none; }
+.doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--action); color: var(--on-action); box-shadow: none; }
+/* Lot 18 (§10.6, PreparerSombre) : en sombre, le numéro de l'étape en cours est plein, en --action. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); } }
+:root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
 .doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
@@ -3656,9 +3662,11 @@ main:focus { outline: none; }
 .today-task {
   --tone: var(--primary-graphic); --tone-text: var(--primary-text);
   display: flex; align-items: center; gap: var(--space-4); min-height: 88px; box-sizing: border-box; padding: var(--space-4) var(--space-5);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none;
+  background: var(--surface); border: 0; border-radius: var(--radius-card); color: var(--text); text-decoration: none;
 }
-.today-task:hover { border-color: var(--field-border); }
+/* Lot 18 (§10.5) : le fond des blocs sous la bande, cartes sans bordure ; l'action est le mot dans la couleur du ton,
+   puis le cercle D29 de 40 px, 12 px entre les deux. */
+.today-page-bg { background: var(--page-blocks); }
 .today-task.tone-late { --tone: var(--peach-text); --tone-text: var(--peach-text); }
 .today-task.tone-interview { --tone: var(--success); --tone-text: var(--success); }
 .today-task-icon { flex: none; width: 24px; height: 24px; margin: 0 calc(var(--space-1) / 2); color: var(--tone); }
@@ -3666,8 +3674,7 @@ main:focus { outline: none; }
 .today-task-main strong { font-size: var(--today-17); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .today-task-main span { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
 .today-task.tone-late .today-task-main span { color: var(--peach-text); font-weight: var(--weight-semibold); }
-.today-task-action { flex: none; display: flex; align-items: center; gap: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
-.today-task-action svg { width: 16px; height: 16px; }
+.today-task-action { flex: none; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
 .today-page .today-welcome, .today-page .first-steps { margin: 0; }
 /* --- Bilan sur ordinateur (maquette du 8 novembre, BilanOrdinateur) ---
    La bande d'Aujourd'hui : « Bilan » à gauche, les onglets à droite ; la carte du mois à cheval ; des sections en
@@ -3697,6 +3704,11 @@ main:focus { outline: none; }
 .orp-row-chevron { flex: none; width: 16px; height: 16px; color: var(--text-secondary); }
 .bilan-row-more { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 var(--space-5); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .bilan-row-more svg { width: 16px; height: 16px; }
+/* Lot 18 (§10.5, D29, §2.3) : sur ordinateur, les listes à traits sans bordure ; le statut à droite en texte coloré,
+   suivi du cercle D29 de 36 px au lieu du chevron gris. */
+.bilan-page .orp-rows, .bilan-page .orp-none { border: 0; }
+.bilan-page .orp-rows li + li { border-color: var(--line-soft); }
+.orp-rows-link .orp-what strong { font-weight: var(--weight-bold); }
 /* Profil sur ordinateur (maquette ProfilOrdinateur) : l'image de 72 px et sa pastille crayon de 28 px, le nom en 34
    très gras, la ville en 17 ; « Changer d'image » et « Modifier » à droite, en pilule de 44 px. */
 .jobs-head.profile-head { --profile-17: 17px; --profile-34: 34px; max-width: 880px; box-sizing: content-box; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); }
@@ -3775,7 +3787,17 @@ main:focus { outline: none; }
 .bilan-detail .disclosure-row { padding: var(--space-3) var(--space-4); min-height: 3.75rem; }
 .bilan-link { display: flex; align-items: center; gap: var(--space-3); min-height: 3.75rem; padding: 0 var(--space-4); box-sizing: border-box; color: var(--text); text-decoration: none; }
 .bilan-link > span { display: grid; flex: 1; gap: var(--space-1); }
-.bilan-link > .icon { color: var(--text-secondary); }
+/* Lot 18 (§10.5) : Profil, Réglages, Notifications et Alertes sur ordinateur, sur le fond des blocs, blocs sans bordure. */
+@media (min-width: 821px) {
+  .page-blocks-wide, .band.page-blocks-wide, .jobs-band:has(> .alerts-wide) { background: var(--page-blocks); }
+  .page-blocks-wide .band { background: none; }
+  .page-blocks-wide .doc-list.calm-list { background: var(--surface); }
+  .page-blocks-wide :is(.criteria-rows, .certificate, .form-card, .chunk-card, .setting-card, .notifications-card, .doc-list.calm-list) { border: 0; }
+}
+/* Lot 18 (§10.5) : Résultats et Formations sur le fond des blocs, blocs sans bordure, cercles D29 de 36 px. */
+.bilan-page .band { background: none; }
+.bilan-page :is(.bilan-figures li, .bilan-funnel, .bilan-link, .action-band-card, .bilan-detail .disclosure, .training-list, .training-current, .training-kept li) { border: 0; box-shadow: none; }
+.bilan-link > .arrow-circle, .training-funding-note > .arrow-circle { flex: none; }
 @media (min-width: 821px) {
   .bilan { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: var(--space-6); }
 }
@@ -4331,9 +4353,11 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
 .training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
 .training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
-/* Les puces et « Voir » gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
+/* Les puces gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
    (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
-.training-chip::after, .training-see::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
+.training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
+/* Formations gardées (lot 18, D29) : toute la ligne ouvre la formation, le cercle de 36 px en est la marque. */
+.training-see::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .training-chip[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .training-groups { display: grid; gap: var(--space-5); }
 .training-section { display: grid; gap: var(--space-2); align-content: start; }
@@ -4364,11 +4388,12 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-current-head > span:last-child, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
 .training-current-progress { margin: 0; font-weight: var(--weight-bold); }
 .training-current-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
-.training-current-actions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); font-weight: var(--weight-bold); text-decoration: none; }
+.training-current-actions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-4); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
+.training-current-actions a:hover { background: var(--primary-soft); }
 .training-current-actions .link { min-height: var(--target-min); font-size: var(--font-body); }
 .training-kept { display: grid; gap: var(--space-3); }
-.training-kept li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-.training-see { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.training-see { flex: none; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: none; }
 .training-help { margin: 0 var(--space-1); line-height: var(--leading-normal); }
 .training-funding-sheet { display: grid; }
 .training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }

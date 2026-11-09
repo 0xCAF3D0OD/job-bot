@@ -188,7 +188,7 @@ const openStack: symbol[] = [];
       <div
         v-show="open"
         ref="aside"
-        class="side-panel"
+        :class="['side-panel', { 'side-panel-480': width === 480 }]"
         role="dialog"
         aria-modal="true"
         :aria-label="title"
