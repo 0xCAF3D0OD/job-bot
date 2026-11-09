@@ -82,12 +82,13 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");
     expect(card.attributes("href")).toBe("/profil");
-    // L'image de profil et sa pastille crayon, à côté du lien (pas dedans) : un toucher ouvre « Ton image ».
+    // L'image de profil, à côté du lien (pas dedans) : un toucher ouvre « Ton image ». Sur téléphone, plus de pastille
+    // crayon (maquettes Compte du 9 novembre).
     expect(card.find("button").exists()).toBe(false);
     const image = wrapper.get("[data-test=account-image]");
     expect(image.attributes("aria-label")).toBe("Changer ton image");
     expect(image.get("[data-test=profile-image]").text()).toBe("KD");
-    expect(image.find(".account-image-badge .icon").exists()).toBe(true);
+    expect(image.find(".account-image-badge").exists()).toBe(false);
     expect(card.text()).toContain("Kevin Di Nocera");
     expect(card.text()).toContain("CV, compétences, postes recherchés");
     expect(wrapper.findAll(".account-block .block-cap").map((t) => t.text())).toEqual([

@@ -146,7 +146,10 @@ onMounted(() => {
               :initials="initials || image.initials.value"
               :size="52"
             />
+            <!-- Téléphone (maquettes Compte et CompteSombre du 9 novembre) : plus de pastille crayon sur l'image, elle
+                 chevauchait le contour du rond ; l'image reste le bouton « Changer ton image ». -->
             <span
+              v-if="!phone"
               class="account-image-badge"
               aria-hidden="true"
             ><AppIcon name="pencil" /></span>
