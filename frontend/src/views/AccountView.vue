@@ -10,6 +10,7 @@ import PageHero from "../components/PageHero.vue";
 import ProfileImage from "../components/ProfileImage.vue";
 import { useAuth } from "../composables/useAuth";
 import { useCollect } from "../composables/useCollect";
+import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
@@ -33,6 +34,7 @@ async function signOut(): Promise<void> {
   await router.push({ name: "news" });
 }
 const { theme } = useTheme();
+const { phone } = usePhone();
 const { plan } = usePlan();
 const { list, current, load, choose } = useProfiles();
 const { running, message: collectMessage, collectNow } = useCollect();
@@ -358,7 +360,7 @@ onMounted(() => {
       <!-- Prompt du 9 novembre, PR 8 (Compte, CompteSombre) : « Se déconnecter » dans sa propre carte, en rouge, avec
            l'adresse e-mail dessous. -->
       <section
-        v-if="me?.auth_enabled"
+        v-if="me?.auth_enabled && phone"
         class="block account-block account-logout-block"
       >
         <div class="account-group">
@@ -380,6 +382,16 @@ onMounted(() => {
           </button>
         </div>
       </section>
+      <!-- Ordinateur : inchangé (MODIFICATIONS_9 ordinateur, §4), le lien rouge sous les blocs. -->
+      <button
+        v-else-if="me?.auth_enabled"
+        type="button"
+        class="account-logout account-page-logout"
+        data-test="logout"
+        @click="signOut"
+      >
+        <AppIcon name="logout" />Se déconnecter
+      </button>
     </div>
   </section>
 </template>

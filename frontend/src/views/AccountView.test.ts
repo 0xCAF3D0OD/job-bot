@@ -14,6 +14,8 @@ const collectNow = vi.fn();
 const running = ref(false);
 const collectMessage = ref("");
 vi.mock("../composables/useCollect", () => ({ useCollect: () => ({ running, message: collectMessage, collectNow }) }));
+const phone = ref(true);
+vi.mock("../composables/usePhone", () => ({ usePhone: () => ({ phone }) }));
 vi.mock("../composables/usePlan", () => ({ usePlan: () => ({ plan: ref({ plan: "essentiel" }) }) }));
 vi.mock("../composables/useProfiles", () => ({
   useProfiles: () => ({ list: ref(null), current: ref(null), load: vi.fn(), choose: vi.fn() }),
@@ -57,6 +59,15 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     me.value = { ...me.value, auth_enabled: false };
     await wrapper.vm.$nextTick();
     expect(wrapper.find("[data-test=logout]").exists()).toBe(false);
+  });
+
+  it("sur ordinateur, « Se déconnecter » reste le lien rouge sous les blocs (MODIFICATIONS_9 ordinateur, §4)", async () => {
+    phone.value = false;
+    const wrapper = await mountPage();
+    const button = wrapper.get("[data-test=logout]");
+    expect(button.text()).toBe("Se déconnecter");
+    expect(button.classes()).toContain("account-logout");
+    phone.value = true;
   });
 
   it("une carte par groupe (PR 8 du 9 novembre)", async () => {
