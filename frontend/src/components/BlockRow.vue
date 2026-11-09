@@ -23,7 +23,7 @@ defineEmits<{ click: [] }>();
   >
     <slot name="lead" />
     <span class="block-row-text">
-      <span class="block-row-title">{{ title }}<span
+      <span class="block-row-title"><span class="block-row-name">{{ title }}</span><span
         v-if="status"
         :class="['block-status', status.tone]"
       ><span class="visually-hidden">, </span>{{ status.text }}</span></span>

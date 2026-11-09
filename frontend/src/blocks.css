@@ -27,6 +27,12 @@
 .block-row:first-child { margin-top: 0; }
 .block-row-text { display: grid; flex: 1; min-width: 0; }
 .block-row-title { font-size: var(--font-body); line-height: var(--row-title-lh); font-weight: var(--weight-bold); }
+/* §2.8 (écrans étroits) : le statut et le cercle gardent leur taille ; le nom passe à la ligne plutôt que d'être coupé
+   (le contrôle « Téléphone » compte un libellé de bouton coupé par « … » comme un défaut). */
+.block-row-title { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-2); min-width: 0; }
+.block-row-name { min-width: 0; overflow-wrap: anywhere; }
+.block-row-title .block-status { flex: none; margin-left: 0; }
+.block-row > .arrow-circle { flex: none; }
 .block-row-line { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--row-line-lh); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* D31 : le statut, un mot coloré juste après le titre. */
 .block-status { margin-left: var(--space-2); font-size: var(--font-small); font-weight: var(--weight-bold); }
