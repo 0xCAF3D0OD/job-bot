@@ -466,4 +466,12 @@ onMounted(() => void load());
 .criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
 .criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
+/* Ordinateur (MODIFICATIONS du 9 novembre, §2.9 ; HTML de ProfilOrdinateur) : une carte par préférence, 8 px entre les
+   cartes, 72 px de haut, bordure de 1,5 px (12,5 / 18,5 px de marge, trait compris), rayon 18. */
+@media (min-width: 821px) {
+  .criteria-rows { --crit-pad-y: 12.5px; --crit-pad-x: 18.5px; --crit-72: 72px; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; background: none; border: 0; border-radius: 0; }
+  .criteria-rows > li + li { border-top: 0; }
+  .page-blocks-wide .criteria-rows .criteria-row, .criteria-rows .criteria-row { min-height: var(--crit-72); padding: var(--crit-pad-y) var(--crit-pad-x); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+  .criteria-rows .criteria-row:hover { border-color: var(--primary-graphic); background: var(--surface); }
+}
 </style>
