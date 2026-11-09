@@ -180,7 +180,7 @@ const heading = computed<Heading>(() => {
 
 // Les tâches de l'ordinateur : une carte cliquable chacune, l'icône seule dans la couleur du ton, le libellé d'action
 // coloré suivi de « › » (pas de bouton). Retard en pêche, entretien en vert, le reste en bleu.
-type DeskTask = Task & { tone: "late" | "normal" | "interview" };
+type DeskTask = Task & { tone: "late" | "normal" | "interview"; href?: string };
 const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
   const t = today.value;
   if (!t || starting.value) return { todo: [], later: [] };
@@ -244,6 +244,32 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
     (restDay.value || rhythmPaused.value ? todo : later).push(follow);
   }
   return { todo, later };
+});
+// Des offres dès l'inscription (docs/144) : tant qu'aucune offre n'est arrivée, trois façons d'en
+// trouver tout de suite, sans attendre le premier e-mail d'alerte des sites.
+const starterTasks = computed<DeskTask[]>(() => {
+  const t = today.value;
+  if (!t || !starting.value || (t.has_offers ?? true)) return [];
+  const list: DeskTask[] = [];
+  if (t.search_url) {
+    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d'autres sites, réunies", action: "Ouvrir", to: "", href: t.search_url, tone: "normal" });
+  }
+  // Alertes prêtes : la carte des premiers pas propose déjà « Ajouter une offre ».
+  const alertsDone = t.first_steps.some((s) => s.key === "alerts" && s.done);
+  if (!alertsDone) {
+    list.push({ key: "add", test: "start-add", icon: "link", title: "Ajouter une offre vue ailleurs", detail: "Colle son lien : jobA1 la lit et la note", action: "Ajouter", to: "/ajouter-une-offre", tone: "normal" });
+  }
+  list.push(
+    { key: "forward", test: "start-forward", icon: "reply", title: "Transférer mes alertes existantes", detail: "Déjà des alertes jobup ou Indeed : elles arrivent ici", action: "Transférer", to: "/candidatures/alertes", tone: "normal" },
+  );
+  return list;
+});
+// Le mois de l'inscription : pas de « en retard » tant que les premiers pas ne sont pas faits.
+const orpLine = computed(() => {
+  const t = today.value;
+  if (!t || !starting.value || !t.month_target || t.month_count >= t.month_target) return undefined;
+  const [year, month] = t.month.split("-").map(Number);
+  return `Encore ${t.month_target - t.month_count} d'ici ${dateInSentence(new Date(year!, month!, 0))}`;
 });
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
@@ -444,6 +470,7 @@ const { me } = useAuth();
             :count="today.month_count"
             :target="today.month_target ?? null"
             :month="today.month"
+            :line="orpLine"
             band
           />
           <template v-if="today.rhythm && !starting">
@@ -485,6 +512,7 @@ const { me } = useAuth();
 
         <section
           v-for="group in [
+            { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start' },
             { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks' },
             { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later' },
           ].filter((g) => g.items.length)"
@@ -501,7 +529,30 @@ const { me } = useAuth();
               v-for="task in group.items"
               :key="task.key"
             >
+              <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
+              <a
+                v-if="task.href"
+                :href="task.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                :class="['today-task', `tone-${task.tone}`]"
+                :data-test="task.test"
+              >
+                <AppIcon
+                  :name="task.icon"
+                  class="today-task-icon"
+                />
+                <span class="today-task-main">
+                  <strong>{{ task.title }}<span class="visually-hidden"> (nouvel onglet)</span></strong>
+                  <span>{{ task.detail }}</span>
+                </span>
+                <span class="today-task-action">{{ task.action }}<span
+                  class="arrow-circle"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span></span>
+              </a>
               <RouterLink
+                v-else
                 :to="task.to"
                 :class="['today-task', `tone-${task.tone}`]"
                 :data-test="task.test"

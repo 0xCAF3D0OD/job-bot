@@ -314,9 +314,13 @@ async def mark_alert_created(request: Request, search_id: int, site: str) -> Ale
         if await session.get(AlertSearch, search_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "recherche introuvable")
         try:
-            await service.mark_created(session, [search_id], site)
+            marked = await service.mark_created(session, [search_id], site)
         except service.UnknownSite:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu") from None
+    # Le site envoie souvent sa confirmation, parfois ses premières offres, dans les minutes qui
+    # suivent : le relevé rapide les lit sans attendre le relevé des 2 heures (docs/144).
+    if marked:
+        await site_codes.expect(_runtime(request))
     return await _page(_runtime(request))
 
 

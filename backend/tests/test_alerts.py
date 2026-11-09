@@ -172,3 +172,33 @@ async def test_follow_search_with_profile_places_and_real_todo(
     # Une seconde fois : rien n'est doublé.
     again = (await api.post("/api/alert-searches/follow", json={"terms": "kubernetes"})).json()
     assert again["created"] == [] and again["ids"] == data["ids"]
+
+
+async def test_alert_created_starts_the_fast_collect(
+    api: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """« J'ai créé l'alerte » lance le relevé rapide (docs/144), une fois par alerte nouvelle."""
+    expected: list[bool] = []
+
+    async def fake_expect(runtime: Runtime) -> bool:
+        expected.append(True)
+        return True
+
+    monkeypatch.setattr("jobbot.api.routes.alerts.site_codes.expect", fake_expect)
+    devops = (await api.get("/api/alert-searches")).json()["searches"][0]
+    await api.put(f"/api/alert-searches/{devops['id']}/sites/jobup")
+    assert expected == [True]
+    # Déjà marquée : pas de second relevé.
+    await api.put(f"/api/alert-searches/{devops['id']}/sites/jobup")
+    assert expected == [True]
+
+
+def test_google_jobs_url() -> None:
+    """La recherche du métier sur Google Emplois (docs/144) : l'onglet Emplois (udm=8)."""
+    from jobbot.alerts.service import google_jobs_url
+
+    assert (
+        google_jobs_url("chargée de communication", "Lausanne")
+        == "https://www.google.com/search?q=charg%C3%A9e+de+communication+emploi+Lausanne&udm=8"
+    )
+    assert google_jobs_url("DevOps", None) == "https://www.google.com/search?q=DevOps+emploi&udm=8"
