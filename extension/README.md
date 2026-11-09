@@ -62,6 +62,15 @@ par défaut, l'adresse est copiée (le remplissage se choisit dans la roue dent�
 change sa page et que le champ n'est plus trouvé : **Copier**, puis colle-la ; les sélecteurs
 sont dans `alert-selectors.js`, chacun testé sur une page type (`fixtures/alertes/`).
 
+## Transférer tes alertes Gmail
+
+Tes alertes arrivent déjà sur Gmail ? Ouvre Gmail, puis l'icône jobA1 (ou la roue dentée,
+**Transférer tes alertes Gmail**). Trois étapes : ajouter l'adresse jobA1 comme adresse de
+transfert, coller le code que Gmail envoie (il s'affiche dans la fenêtre), puis créer le filtre
+`jobup.ch OR jobs.ch OR linkedin.com` qui transfère à l'adresse jobA1. Jamais tout ton courrier :
+jobA1 supprime sans le lire tout e-mail qui n'est pas une alerte, et te prévient. L'extension ne lit
+rien dans Gmail.
+
 ## Utiliser
 
 Sur le formulaire de l'employeur (ouvert depuis « Postuler ») : icône jobA1 →

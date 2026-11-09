@@ -427,3 +427,138 @@ describe("icônes (maquette du 8 novembre, ExtAnnonce et ExtAlerte)", () => {
     expect(new Set(marks)).toEqual(new Set(["30"]));
   });
 });
+
+// --- Le transfert Gmail (docs/142 §5, écrans validés le 9.11.2026) : trois étapes, l'adresse puis
+// le code de Gmail puis le filtre ; jamais de transfert global, rien n'est lu dans Gmail ;
+// « Vérifie ton filtre Gmail » quand le serveur a supprimé un e-mail.
+
+const ADDRESS = "kevin.k3x@alertes.joba1.ch";
+const gmailTab = { id: 1, url: "https://mail.google.com/mail/u/0/#inbox" };
+
+function gmailPage(stored: Record<string, string> = {}, extra: Page["api"] = {}): Page {
+  return {
+    tab: gmailTab,
+    stored: { ...linked, ...stored },
+    api: {
+      "/api/extension/alerts": { address: ADDRESS, todo: {}, filter_warning_at: null },
+      "/api/extension/codes/expect": { code: null },
+      "/api/extension/codes": { code: null },
+      ...extra,
+    },
+    scripts: {},
+  };
+}
+
+const step = () => ["gm-start", "gm-address", "gm-code", "gm-filter", "gm-ready", "gm-warning"].filter(visible).join(",");
+const text = (id: string) => document.getElementById(id)?.textContent;
+
+async function gmClick(id: string) {
+  document.getElementById(id)!.click();
+  await new Promise((r) => setTimeout(r, 0));
+  await new Promise((r) => setTimeout(r, 0));
+}
+
+let gmClipboard: string[];
+function gmailClipboard() {
+  gmClipboard = [];
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: { writeText: vi.fn(async (t: string) => void gmClipboard.push(t)) },
+  });
+}
+
+describe("transfert Gmail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    gmailClipboard();
+  });
+
+  it("sur Gmail : la présentation, la pastille, rien lu dans la page", async () => {
+    await openPopup(gmailPage());
+    expect(shownState()).toBe("gmail");
+    expect(step()).toBe("gm-start");
+    expect(text("site-name")).toBe("mail.google.com · Transfert");
+    expect(document.querySelectorAll("#gm-start .checks li")).toHaveLength(3);
+    expect(text("gm-start")).toContain("Jamais tout ton courrier.");
+    // Aucun script dans Gmail : l'extension ne lit rien de la boîte.
+    expect(injected).toHaveLength(0);
+    expect(calls.map((c) => c.path)).toEqual(["/api/extension/alerts"]);
+  });
+
+  it("étape 1 : l'adresse jobA1 à copier, le lien vers les réglages de transfert", async () => {
+    await openPopup(gmailPage());
+    await gmClick("gm-begin");
+    expect(step()).toBe("gm-address");
+    expect(text("gm-address-value")).toBe(ADDRESS);
+    await gmClick("gm-copy-address");
+    expect(gmClipboard).toEqual([ADDRESS]);
+    expect(text("gm-copy-address")).toBe("Copiée");
+    const link = document.getElementById("gm-open-settings") as HTMLAnchorElement;
+    expect(link.href).toBe("https://mail.google.com/mail/u/0/#settings/fwdandpop");
+    expect(document.querySelectorAll("#gm-address button.primary")).toHaveLength(1);
+  });
+
+  it("étape 2 : en attente, puis le code de Gmail à copier", async () => {
+    let arrived = false;
+    const page = gmailPage({}, {
+      "/api/extension/codes?site=gmail": () => ({ code: arrived ? { site: "gmail", code: "482913557", received_at: "2026-11-09T10:00:00Z" } : null }),
+    });
+    await openPopup(page);
+    await gmClick("gm-begin");
+    await gmClick("gm-added");
+    expect(step()).toBe("gm-code");
+    expect(visible("gm-wait")).toBe(true);
+    expect((document.getElementById("gm-validated") as HTMLButtonElement).disabled).toBe(true);
+    // Le relevé rapide est demandé, puis le code de Gmail seulement.
+    expect(calls.some((c) => c.path === "/api/extension/codes/expect" && c.init?.method === "POST")).toBe(true);
+    expect(calls.filter((c) => c.path.startsWith("/api/extension/codes?")).map((c) => c.path)).toEqual(["/api/extension/codes?site=gmail"]);
+
+    arrived = true;
+    // L'étape revient : la question est reposée tout de suite.
+    await openPopup({ ...page, stored: { ...page.stored, gmailStep: "gm-code" } });
+    expect(step()).toBe("gm-code");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(visible("gm-code-row")).toBe(true);
+    expect(text("gm-code-value")).toBe("482 913 557");
+    expect(text("gm-code-title")).toBe("Colle ce code dans Gmail");
+    expect((document.getElementById("gm-validated") as HTMLButtonElement).disabled).toBe(false);
+    await gmClick("gm-copy-code");
+    expect(gmClipboard).toEqual(["482913557"]);
+  });
+
+  it("étape 3 : le filtre des trois sites seulement, transféré à l'adresse jobA1", async () => {
+    await openPopup(gmailPage({ gmailStep: "gm-filter" }));
+    expect(step()).toBe("gm-filter");
+    expect(text("gm-query")).toBe("jobup.ch OR jobs.ch OR linkedin.com");
+    expect(text("gm-forward-to")).toBe(ADDRESS);
+    await gmClick("gm-copy-query");
+    expect(gmClipboard).toEqual(["jobup.ch OR jobs.ch OR linkedin.com"]);
+    await gmClick("gm-filtered");
+    expect(step()).toBe("gm-ready");
+    expect(document.getElementById("gm-ready")?.getAttribute("role")).toBe("status");
+    expect(text("gm-ready")).toContain("Transfert prêt");
+  });
+
+  it("« Vérifie ton filtre Gmail » : une fois, puis « Revoir le filtre » ramène à l'étape 3", async () => {
+    const warned = { "/api/extension/alerts": { address: ADDRESS, todo: {}, filter_warning_at: "2026-11-09T08:00:00+00:00" } };
+    await openPopup(gmailPage({ gmailStep: "gm-ready" }, warned));
+    expect(step()).toBe("gm-warning");
+    expect(document.getElementById("gm-warning")?.getAttribute("role")).toBe("alert");
+    expect(text("gm-warning")).toContain("Un e-mail qui n’est pas une alerte est arrivé : vérifie ton filtre Gmail.");
+    await gmClick("gm-review");
+    expect(step()).toBe("gm-filter");
+    // Déjà vu : la fois suivante, l'étape reprend.
+    await openPopup(gmailPage({ gmailStep: "gm-ready", gmailWarningSeen: "2026-11-09T08:00:00+00:00" }, warned));
+    expect(step()).toBe("gm-ready");
+  });
+
+  it("depuis la roue dentée, sur un autre site", async () => {
+    await openPopup({ ...gmailPage(), tab: { id: 1, url: "https://www.google.ch/" }, api: { ...gmailPage().api, "/api/extension/match": { offer: null, choices: [] } } });
+    expect(shownState()).toBe("idle");
+    document.getElementById("gear")!.click();
+    expect(visible("gmail-row")).toBe(true);
+    await gmClick("gmail-row");
+    expect(shownState()).toBe("gmail");
+    expect(step()).toBe("gm-start");
+  });
+});

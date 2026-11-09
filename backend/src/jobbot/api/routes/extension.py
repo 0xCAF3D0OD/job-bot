@@ -5,12 +5,12 @@ vérifié par le middleware). `/api/extension-tokens` : gestion des jetons depui
 Réglages, avec la session habituelle.
 """
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from jobbot import accounts, manual_offers
 from jobbot.alerts import service as alert_service
@@ -19,8 +19,17 @@ from jobbot.api.routes import cvs as cv_routes
 from jobbot.api.routes import letters as letter_routes
 from jobbot.api.routes.orp import application_data
 from jobbot.auth.service import Window
+from jobbot.collect.service import FILTER_WARNING_KIND
 from jobbot.core.orp import job_room_fill, shift_month
-from jobbot.db.models import AlertSearch, Application, DraftKind, ExtensionToken, Offer, Site
+from jobbot.db.models import (
+    AlertSearch,
+    Application,
+    DraftKind,
+    ExtensionToken,
+    Notification,
+    Offer,
+    Site,
+)
 from jobbot.extension import announce, service
 from jobbot.followups.service import local_today
 from jobbot.letters.service import current_draft, load_identity
@@ -55,7 +64,7 @@ class ExtensionMe(BaseModel):
 # Les codes des sites (docs/112) : l'extension remplit le code de vérification.
 # Envoyer une annonce (docs/142 §3).
 # Le formulaire d'alerte des sites (docs/142 §4).
-FEATURES = ["forms", "job-room", "codes", "announce", "alerts"]
+FEATURES = ["forms", "job-room", "codes", "announce", "alerts", "gmail"]
 
 
 class OfferBrief(BaseModel):
@@ -521,6 +530,8 @@ class AlertAddressOut(BaseModel):
     address: str | None
     # Les recherches suivies qui n'ont pas encore d'alerte, par site.
     todo: dict[str, int]
+    # Le dernier « Vérifie ton filtre Gmail » des 7 derniers jours (docs/142 §5), sinon None.
+    filter_warning_at: datetime | None = None
 
 
 class AlertCreatedOut(BaseModel):
@@ -545,7 +556,13 @@ async def alert_address(request: Request) -> AlertAddressOut:
             for cell in await alert_service.cells(session, search, sites):
                 if cell.status == "todo":
                     todo[cell.site] += 1
-    return AlertAddressOut(address=address, todo=todo)
+        warning = await session.scalar(
+            select(func.max(Notification.created_at)).where(
+                Notification.kind == FILTER_WARNING_KIND,
+                Notification.created_at >= datetime.now(UTC) - timedelta(days=7),
+            )
+        )
+    return AlertAddressOut(address=address, todo=todo, filter_warning_at=warning)
 
 
 @router.put(

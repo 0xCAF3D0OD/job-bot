@@ -49,6 +49,7 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(text).toContain("Jamais tes cookies");
     expect(text).toContain("Ton nom est retiré");
     expect(text).toContain("ton adresse jobA1 dans « Créer une alerte », sans rien valider");
+    expect(text).toContain("tout autre e-mail transféré est supprimé sans être lu");
   });
 
   it("le paiement de Plus, seulement une fois ouvert (docs/125 §6)", async () => {

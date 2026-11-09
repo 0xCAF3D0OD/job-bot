@@ -30,6 +30,10 @@ jobA1 est une plateforme de recherche d'emploi pour la Suisse, que tu héberges 
 - Sur LinkedIn, par défaut, l'adresse est seulement copiée ; le remplissage se choisit dans les réglages de l'extension.
 - « J'ai créé l'alerte » le note dans jobA1.
 
+**Transférer tes alertes Gmail**
+- Un parcours en trois étapes : l'adresse de transfert, le code de Gmail (affiché dans la fenêtre), puis un filtre pour les seuls e-mails de jobup, jobs.ch et LinkedIn. Jamais tout ton courrier.
+- L'extension ne lit rien dans Gmail : elle ouvre ses réglages dans un onglet, tu fais chaque étape toi-même.
+
 **Sur Job-Room (preuves de recherches d'emploi)**
 - Choisis une candidature de ton Suivi : la saisie se remplit (date, entreprise, adresse, poste, mode, taux, résultat).
 - Tu vérifies et tu sauvegardes toi-même ; « C'est déclaré » la marque dans ton Suivi.
@@ -69,6 +73,8 @@ Autre (et, si proposé : Productivité).
 >
 > **Les formulaires d'alerte** de jobup, jobs.ch et LinkedIn, quand tu ouvres le panneau sur l'un de ces sites : l'extension cherche si la fenêtre « Créer une alerte » est ouverte et y met ton adresse jobA1 (venue de ta plateforme) ; rien de ces pages n'est envoyé. « J'ai créé l'alerte » envoie à ta plateforme le nom du site.
 >
+> **Le transfert Gmail** : l'extension ne lit rien dans Gmail. Elle demande à ta plateforme ton adresse jobA1 et le code de confirmation que Gmail y a envoyé, pour les afficher.
+>
 > **Ce qui est lu sans être envoyé**, à l'ouverture du panneau : le titre, l'entreprise et le lieu de l'annonce de la page, pour les afficher, et le nombre de champs de formulaire.
 >
 > **Ce qui va de ta plateforme à la page**, seulement quand tu cliques sur « Remplir » : tes coordonnées, ta lettre et ton CV, ou les données d'une candidature (Job-Room). Elles sont mises dans les champs du formulaire ; rien n'est envoyé ni enregistré à ta place.
@@ -90,3 +96,4 @@ Autre (et, si proposé : Productivité).
 - 0.60.0, la nouvelle fenêtre (docs/142 §1) : seulement l'interface du panneau change. À l'ouverture du panneau, sur l'onglet actif, `countFields` compte les champs de formulaire de la page (pour savoir s'il y a un formulaire à remplir) ; seul ce nombre est lu, et il ne quitte pas le navigateur. La police Figtree est dans le paquet (licence OFL).
 - 0.61.0, envoyer une annonce (docs/142 §3) : `annonce.js` définit une seule fonction, passée à l'onglet actif (`func`) au clic sur l'icône (titre, entreprise, lieu du JobPosting, affichés dans le panneau) et au clic sur « Envoyer à jobA1 » (texte de l'annonce, envoyé à `/api/extension/announce` de la plateforme de l'utilisateur). Aucune nouvelle permission. Sur LinkedIn, seuls les blocs de l'annonce ouverte sont lus.
 - 0.62.0, les formulaires d'alerte (docs/142 §4) : `host_permissions` pour `www.jobup.ch`, `jobup.ch`, `www.jobs.ch`, `jobs.ch` et `www.linkedin.com`, et rien d'autre. Aucune lecture en arrière-plan : à l'ouverture du panneau sur l'un de ces sites, `jobA1AlertForm` (`alertes.js`, sélecteurs dans `alert-selectors.js`) cherche la fenêtre « Créer une alerte » et met l'adresse jobA1 dans son champ e-mail (événements `input` et `change`). Jamais de clic sur le bouton d'envoi du site.
+- 0.63.0, le transfert Gmail (docs/142 §5) : aucune nouvelle permission, aucun accès à `mail.google.com`. Sur un onglet Gmail, le panneau affiche un parcours guidé (adresse de transfert, code de confirmation de Gmail lu sur la plateforme de l'utilisateur par `/api/extension/codes?site=gmail`, filtre à copier) ; seule l'adresse de l'onglet est regardée, aucun script n'est injecté dans Gmail.

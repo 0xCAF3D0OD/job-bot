@@ -24,7 +24,7 @@ function say(id, text) {
 
 // --- Les états de la fenêtre ------------------------------------------------------------
 
-const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "alerte", "settings", "main", "job-room", "codes"];
+const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "alerte", "gmail", "settings", "main", "job-room", "codes"];
 // Sans pastille : ces états ne parlent pas de la page ouverte.
 const NO_SITE = new Set(["signin", "linked", "authorize-state", "settings"]);
 let current = null;
@@ -71,6 +71,7 @@ function openSettings() {
   show("link", !linked);
   show("unlink", linked);
   show("linkedin-row", linked);
+  show("gmail-row", linked);
   $("linkedin-fill").checked = fillLinkedIn;
   say("linked-to", linked ? `Reliée à ${config.base}.` : "");
   view("settings");
@@ -249,6 +250,10 @@ async function start() {
     view("idle");
     return;
   }
+  if (isGmail(tab.url)) {
+    await startGmail();
+    return;
+  }
   const alertSite = alertSiteOf(tab.url);
   if (alertSite && (await startAlert(alertSite))) return;
   let found;
@@ -391,6 +396,122 @@ async function alertCreated() {
   } finally {
     $("al-created").disabled = false;
   }
+}
+
+// --- Transfert Gmail (docs/142 §5) ---------------------------------------------------------
+// Un parcours guidé : l'adresse de transfert, le code de Gmail, puis un filtre pour les seules
+// alertes des trois sites. Jamais de transfert de tout le courrier. L'extension ne lit rien dans
+// Gmail : elle ouvre ses réglages dans un onglet, la personne fait elle-même chaque étape.
+
+const GMAIL_STEPS = ["gm-start", "gm-address", "gm-code", "gm-filter", "gm-ready", "gm-warning"];
+const CODE_POLL_MS = 5000;
+const CODE_WAIT_MS = 2 * 60 * 1000;
+let gmailAddress = null;
+let codeTimer = null;
+
+function isGmail(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && hostname === "mail.google.com";
+  } catch {
+    return false;
+  }
+}
+
+function gmailStep(id) {
+  for (const step of GMAIL_STEPS) show(step, step === id);
+  clearTimeout(codeTimer);
+  if (["gm-address", "gm-code", "gm-filter", "gm-ready"].includes(id)) chrome.storage.local.set({ gmailStep: id });
+  if (id === "gm-code") waitForCode();
+}
+
+async function copyText(value, button, done = "Copié") {
+  try {
+    await navigator.clipboard.writeText(value);
+    $(button).textContent = done;
+  } catch {
+    // Le presse-papiers refusé : le texte reste affiché, à sélectionner.
+  }
+}
+
+// L'adresse jobA1 et un éventuel « Vérifie ton filtre Gmail » encore non vu.
+async function startGmail() {
+  setSite(tab?.url || "https://mail.google.com/", "mail.google.com · Transfert");
+  view("gmail");
+  say("gm-error", "");
+  $("gm-copy-address").textContent = "Copier";
+  $("gm-copy-query").textContent = "Copier";
+  const { gmailStep: saved, gmailWarningSeen } = await chrome.storage.local.get(["gmailStep", "gmailWarningSeen"]);
+  let warning = null;
+  try {
+    const body = await (await call("/api/extension/alerts")).json();
+    gmailAddress = body.address;
+    warning = body.filter_warning_at;
+  } catch (error) {
+    gmailAddress = null;
+    say("gm-error", error.status === 404 ? "Mets ta plateforme jobA1 à jour pour transférer tes alertes." : offline(error) ? "Plateforme injoignable." : error.message);
+  }
+  $("gm-address-value").textContent = gmailAddress || "";
+  $("gm-forward-to").textContent = gmailAddress || "ton adresse jobA1";
+  $("gm-added").disabled = !gmailAddress;
+  if (warning && (!gmailWarningSeen || warning > gmailWarningSeen)) {
+    chrome.storage.local.set({ gmailWarningSeen: warning });
+    gmailStep("gm-warning");
+    return;
+  }
+  if (!gmailAddress) {
+    gmailStep("gm-address");
+    return;
+  }
+  gmailStep(GMAIL_STEPS.includes(saved) ? saved : "gm-start");
+}
+
+function showCode(code) {
+  $("gm-code-title").textContent = "Colle ce code dans Gmail";
+  $("gm-code-text").textContent = "Gmail l’a envoyé à ton adresse jobA1. jobA1 ne lit rien d’autre de cet e-mail.";
+  $("gm-code-value").textContent = code.replace(/(\d{3})(?=\d)/g, "$1 ");
+  $("gm-code-note").textContent = "Dans Gmail, colle-le sous « Transfert », puis clique sur « Valider ».";
+  show("gm-wait", false);
+  show("gm-code-row");
+  $("gm-validated").disabled = false;
+}
+
+// Le code arrive dans la boîte jobA1 : le relevé rapide, puis une question toutes les 5 s.
+async function waitForCode() {
+  $("gm-code-title").textContent = "Le code de Gmail";
+  $("gm-code-text").textContent = "Gmail envoie un code de confirmation à ton adresse jobA1. Il s’affichera ici.";
+  $("gm-code-note").textContent = "Rien après deux minutes ? Vérifie l’adresse collée à l’étape 1.";
+  $("gm-copy-code").textContent = "Copier";
+  show("gm-wait");
+  show("gm-code-row", false);
+  $("gm-validated").disabled = true;
+  const until = Date.now() + CODE_WAIT_MS;
+  try {
+    await call("/api/extension/codes/expect", { method: "POST" });
+  } catch {
+    // Le relevé rapide refusé (trop souvent) : la collecte habituelle le trouvera.
+  }
+  const poll = async () => {
+    if (current !== "gmail" || $("gm-code").hidden) return;
+    try {
+      const { code } = await (await call("/api/extension/codes?site=gmail")).json();
+      if (code) {
+        showCode(code.code);
+        return;
+      }
+    } catch {
+      // Injoignable un instant : on redemande.
+    }
+    // Passé deux minutes, la personne peut continuer (code déjà validé, ou recopié ailleurs).
+    if (Date.now() > until) $("gm-validated").disabled = false;
+    codeTimer = setTimeout(poll, CODE_POLL_MS);
+  };
+  await poll();
+}
+
+function gmailReady() {
+  chrome.storage.local.set({ gmailStep: "gm-ready" });
+  gmailStep("gm-ready");
 }
 
 // --- Envoyer une annonce (docs/142 §3) ---------------------------------------------------
@@ -862,6 +983,15 @@ $("gear").addEventListener("click", toggleSettings);
 $("an-send").addEventListener("click", () => sendAnnonce());
 $("al-copy").addEventListener("click", copyAddress);
 $("al-created").addEventListener("click", alertCreated);
+$("gm-begin").addEventListener("click", () => gmailStep("gm-address"));
+$("gm-added").addEventListener("click", () => gmailStep("gm-code"));
+$("gm-validated").addEventListener("click", () => gmailStep("gm-filter"));
+$("gm-filtered").addEventListener("click", gmailReady);
+$("gm-review").addEventListener("click", () => gmailStep("gm-filter"));
+$("gm-copy-address").addEventListener("click", () => copyText(gmailAddress, "gm-copy-address", "Copiée"));
+$("gm-copy-code").addEventListener("click", () => copyText($("gm-code-value").textContent.replace(/\s/g, ""), "gm-copy-code"));
+$("gm-copy-query").addEventListener("click", () => copyText($("gm-query").textContent, "gm-copy-query"));
+$("gmail-row").addEventListener("click", () => startGmail());
 $("linkedin-fill").addEventListener("change", (event) => {
   fillLinkedIn = event.target.checked;
   chrome.storage.local.set({ fillLinkedIn });
