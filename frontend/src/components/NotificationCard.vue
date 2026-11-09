@@ -51,7 +51,7 @@ const kind = computed(() => notificationKind(props.item.kind));
       </span>
     </span>
     <span
-      class="arrow-circle"
+      class="arrow-circle notif"
       aria-hidden="true"
     ><AppIcon name="arrow-right" /></span>
   </component>

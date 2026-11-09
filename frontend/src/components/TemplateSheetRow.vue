@@ -62,7 +62,7 @@ const label = computed(() => DOC_TEMPLATES.find((t) => t.value === template.valu
 .tpl-row {
   --tpl-row-72: 72px; --tpl-row-pad-y: 14.5px; --tpl-row-pad-x: 18.5px; --tpl-row-16: 16px; --tpl-row-22: 22px;
   display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--tpl-row-72); box-sizing: border-box;
-  padding: var(--tpl-row-pad-y) var(--tpl-row-pad-x); background: var(--surface); border: 1.5px solid var(--line-strong);
+  padding: var(--tpl-row-pad-y) var(--tpl-row-pad-x); background: var(--surface); border: 1.5px solid var(--card-line);
   border-radius: var(--radius-sm); color: var(--text); font: inherit; text-align: left; cursor: pointer;
 }
 .tpl-row-text { flex: 1; min-width: 0; }

@@ -8,12 +8,14 @@ import AppIcon from "./AppIcon.vue";
 // reste lu par un lecteur d'écran (texte masqué) et montré en infobulle au survol du bouton.
 const props = defineProps<{ done: boolean; label?: string }>();
 const name = computed(() => (props.done ? "Copié" : (props.label ?? "Copier")));
+// Prompt du 9 novembre : l'infobulle dit seulement « Copier » (ou « Copié ») ; le libellé complet est lu.
+const tip = computed(() => (props.done ? "Copié" : "Copier"));
 </script>
 
 <template>
   <span
     :class="['copy-label', { 'copy-done': done }]"
-    :data-label="name"
+    :data-label="tip"
   >
     <AppIcon :name="done ? 'done' : 'copy'" />
     <span class="visually-hidden">{{ name }}</span>

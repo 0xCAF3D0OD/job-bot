@@ -72,7 +72,7 @@ describe("OrpFicheView", () => {
     const mode = wrapper.findAll("[data-test=copy-field]")[1]!;
     expect(mode.find(".block-tick").text()).toBe("☐ case à cocher dans Job-Room");
     expect(mode.find("[data-test=field-copy]").exists()).toBe(false);
-    expect(wrapper.findAll("[data-test=copy-field]")[0]!.find("[data-label='Copier date']").exists()).toBe(true);
+    expect(wrapper.findAll("[data-test=copy-field]")[0]!.find("[data-label='Copier']").text()).toBe("Copier : date");
     const jobRoom = wrapper.find("[data-test=orp-fiche-job-room]");
     expect(jobRoom.attributes("target")).toBe("_blank");
     expect(jobRoom.classes()).toContain("action-2");
