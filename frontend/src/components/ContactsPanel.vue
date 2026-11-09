@@ -19,10 +19,18 @@ const { aiNote } = usePlan();
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
 // le panneau latéral (docs/32 §2.2) .
-const props = withDefaults(defineProps<{ offerId?: number | null; applicationId?: number | null }>(), {
-  offerId: null,
-  applicationId: null,
-});
+// `part` (MODIFICATIONS du 8 novembre au soir, lot 12) : sur ordinateur, le détail d'une candidature envoyée range
+// « Trouver quelqu'un » dans la colonne d'appui (`find`), le premier message et les prises de contact dans la colonne
+// principale (`follow`). Ailleurs, et sur téléphone, tout reste ensemble (`all`).
+const props = withDefaults(
+  defineProps<{ offerId?: number | null; applicationId?: number | null; part?: "all" | "find" | "follow" }>(),
+  { offerId: null, applicationId: null, part: "all" },
+);
+const columns = props.part !== "all";
+// « L'équipe du poste (DevOps Engineer) » devient « L'équipe du poste » dans la colonne d'appui.
+function searchLabel(label: string): string {
+  return columns ? label.replace(/\s*\([^)]*\)$/, "") : label;
+}
 const emit = defineEmits<{ changed: []; count: [count: number] }>();
 
 const page = ref<ContactsPage | null>(null);
@@ -187,7 +195,7 @@ onMounted(() => void load());
 
 <template>
   <div
-    class="contacts-section"
+    :class="['contacts-section', { 'contacts-columns': columns }]"
     data-test="contacts"
   >
     <p
@@ -199,24 +207,35 @@ onMounted(() => void load());
       Impossible de charger les contacts.
     </p>
     <template v-else-if="page">
-      <section class="contacts-block">
-        <h3>Trouver quelqu'un</h3>
-        <ul class="contacts-searches">
+      <section
+        v-if="part !== 'follow'"
+        class="contacts-block"
+      >
+        <p
+          v-if="columns"
+          class="detail-overline"
+        >
+          Trouver quelqu'un
+        </p>
+        <h3 v-else>
+          Trouver quelqu'un
+        </h3>
+        <ul :class="columns ? 'detail-links' : 'contacts-searches'">
           <li
             v-for="search in page.searches"
             :key="search.kind"
           >
             <a
-              class="link"
+              :class="columns ? 'detail-link' : 'link'"
               :href="search.url"
               target="_blank"
               rel="noopener noreferrer"
               data-test="contact-search"
-            ><span class="with-icon">{{ search.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+            ><span class="with-icon">{{ searchLabel(search.label) }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </li>
           <li v-if="page.website">
             <a
-              class="link"
+              :class="columns ? 'detail-link' : 'link'"
               :href="page.website"
               target="_blank"
               rel="noopener noreferrer"
@@ -227,12 +246,21 @@ onMounted(() => void load());
       </section>
 
       <section
-        class="contacts-block contact-writer"
+        v-if="part !== 'find'"
+        :class="['contacts-block', 'contact-writer', { 'detail-section': columns }]"
         data-test="contact-writer"
       >
-        <h3>Premier message</h3>
+        <p
+          v-if="columns"
+          class="detail-overline"
+        >
+          Premier message
+        </p>
+        <h3 v-else>
+          Premier message
+        </h3>
         <form
-          class="contact-writer-form"
+          :class="['contact-writer-form', { 'contact-writer-stacked': columns }]"
           @submit.prevent="write"
         >
           <FormField
@@ -276,13 +304,13 @@ onMounted(() => void load());
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"
-              class="secondary small"
+              :class="columns ? 'secondary action-2 contact-write-wide' : 'secondary small'"
               :busy="writing"
               busy-label="Rédaction…"
               data-test="contact-write"
             >
               <HoverNote :text="writing ? '' : aiNote('Environ 0,002 $.')">
-                <span class="with-icon"><AppIcon name="ai" />{{ written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
+                <span class="with-icon"><AppIcon :name="columns ? 'pencil' : 'ai'" />{{ written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
               </HoverNote>
             </BusyButton>
           </div>
@@ -316,8 +344,19 @@ onMounted(() => void load());
         </template>
       </section>
 
-      <section class="contacts-block">
-        <h3>Prises de contact</h3>
+      <section
+        v-if="part !== 'find'"
+        :class="['contacts-block', { 'detail-section': columns }]"
+      >
+        <p
+          v-if="columns"
+          class="detail-overline"
+        >
+          Prises de contact
+        </p>
+        <h3 v-else>
+          Prises de contact
+        </h3>
         <p
           v-if="actionError"
           class="notice error"
@@ -422,11 +461,14 @@ onMounted(() => void load());
         <button
           v-if="!adding"
           type="button"
-          class="link"
+          :class="columns ? 'link detail-link strong' : 'link'"
           data-test="contact-add"
           @click="adding = true"
         >
-          J'ai contacté quelqu'un
+          J'ai contacté quelqu'un<AppIcon
+            v-if="columns"
+            name="chevron"
+          />
         </button>
         <form
           v-else
@@ -521,3 +563,20 @@ onMounted(() => void load());
     </template>
   </div>
 </template>
+
+<style>
+/* Détail en deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 12) : sections de 32/36 séparées par un trait,
+   « Écrire à » puis « Canal » l'un sous l'autre (20 entre les deux, 8 entre libellé et champ), « Rédiger un message »
+   à contour de 48, rond, 24 au-dessus ; « Prises de contact » finit à 8. */
+.contacts-columns.contacts-section { --contacts-20: 20px; --contacts-22: 22px; --contacts-48: 48px; display: block; }
+.contacts-columns.contacts-section > .contacts-block { display: block; }
+.contacts-columns.contacts-section > .contacts-block.detail-section { padding: var(--cols-pad-top) 0 var(--cols-pad-bottom); border-top: 1px solid var(--line-soft); }
+.contacts-columns.contacts-section > .contacts-block.detail-section:last-child { padding-bottom: var(--space-2); }
+.contacts-columns.contacts-section > .contacts-block:not(.detail-section) { padding: 0; border: 0; }
+.contacts-columns .contact-writer-stacked { grid-template-columns: minmax(0, 1fr); gap: var(--contacts-20); --label-gap: var(--space-2); }
+.contacts-columns .contact-writer-stacked .form-field-label { font-weight: var(--weight-bold); }
+.contacts-columns .contact-write-wide { min-height: var(--contacts-48); margin-top: var(--space-1); padding: 0 var(--contacts-22); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.contacts-columns .contact-write-wide .icon { width: 18px; height: 18px; }
+.contacts-columns .contacts-empty { margin: 0 0 var(--space-3); font-size: var(--font-label); color: var(--text-secondary); }
+.contacts-columns .contacts-list { margin-bottom: var(--space-3); }
+</style>
