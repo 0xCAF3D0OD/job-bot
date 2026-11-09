@@ -78,16 +78,24 @@ describe("CriteriaForm, déjà saisis", () => {
     const wrapper = mount(CriteriaView);
     await flushPromises();
     const summary = wrapper.find("[data-test=criteria-summary]");
-    // Lignes alignées, cantons en toutes lettres (docs/43 n° 23, 24).
-    const rows = summary.findAll(".summary-rows > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
+    // Une ligne cliquable par critère, le libellé au-dessus de la valeur (lot 13.2) ; cantons en toutes lettres
+    // (docs/43 n° 23, 24).
+    const rows = summary
+      .findAll("button.criteria-row")
+      .map((row) => [row.find(".criteria-row-label").text(), row.find(".criteria-row-value").text()]);
     expect(rows).toEqual([
       ["Lieux", "Vaud, Genève"],
-      ["Télétravail complet", "accepté s'il est ouvert depuis la Suisse"],
+      ["Télétravail complet", "Accepté s'il est ouvert depuis la Suisse"],
       ["Taux d'activité", "80 % au moins"],
-      ["Types d'offres exclus", "stages"],
+      ["Types d'offres exclus", "Stages"],
     ]);
+    // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
+    for (const row of summary.findAll("button.criteria-row")) {
+      expect(row.find(".arrow-circle.small").attributes("aria-hidden")).toBe("true");
+    }
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
-    await wrapper.find("[data-test=edit-criteria]").trigger("click");
+    await wrapper.find("[data-test=criteria-row-taux]").trigger("click");
+    await flushPromises();
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=cancel-criteria]").exists()).toBe(true);
   });

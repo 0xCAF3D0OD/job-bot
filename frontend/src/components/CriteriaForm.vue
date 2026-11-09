@@ -243,30 +243,33 @@ onMounted(() => void load());
         <h2 class="section-title">
           Critères
         </h2>
-        <div
-          class="info-card criteria-summary"
+        <!-- Une ligne cliquable par critère (MODIFICATIONS du 8 novembre au soir, lot 13.2) : le libellé au-dessus de
+             la valeur, alignés à gauche, 68 px, chevron à droite ; la ligne ouvre le formulaire sur son critère. -->
+        <ul
+          class="criteria-rows"
           data-test="criteria-summary"
         >
-          <dl class="summary-rows">
-            <div
-              v-for="row in summary"
-              :key="row.label"
-            >
-              <dt>{{ row.label }}</dt>
-              <dd>{{ row.value }}</dd>
-            </div>
-          </dl>
-          <button
-            type="button"
-            class="edit-round"
-            aria-label="Modifier les prérequis"
-            title="Modifier les prérequis"
-            data-test="edit-criteria"
-            @click="editing = true"
+          <li
+            v-for="row in summary"
+            :key="row.label"
           >
-            <AppIcon name="pencil" />
-          </button>
-        </div>
+            <button
+              type="button"
+              class="criteria-row"
+              :data-test="`criteria-row-${row.key}`"
+              @click="editAt(row.key)"
+            >
+              <span class="criteria-row-text">
+                <span class="criteria-row-label">{{ row.label }}</span>
+                <span class="criteria-row-value">{{ sentence(row.value) }}</span>
+              </span>
+              <span
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
+            </button>
+          </li>
+        </ul>
         <p
           v-if="message"
           role="status"
@@ -450,3 +453,17 @@ onMounted(() => void load());
     </form>
   </div>
 </template>
+
+<style>
+/* Profil › Critères sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.2 ; HTML de ProfilOrdinateur) : carte
+   blanche aux coins de 18, lignes de 68 (12/20), libellé de 14 en --text-secondary au-dessus de la valeur de 16 en
+   700, 2 px entre eux, cercle D29 de 36 à droite (version finale), trait entre les lignes. */
+.criteria-rows { --crit-68: 68px; --crit-14: 14px; --crit-20: 20px; --crit-22: 22px; --crit-2: 2px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.narrow-block:has(.criteria-rows) { max-width: none; }
+.criteria-rows > li + li { border-top: 1px solid var(--surface-muted); }
+.criteria-row { display: flex; align-items: center; gap: var(--crit-14); box-sizing: border-box; width: 100%; min-height: var(--crit-68); padding: var(--space-3) var(--crit-20); border: 0; border-radius: 0; background: transparent; color: var(--text); font-weight: var(--weight-regular); text-align: left; white-space: normal; }
+.criteria-row:hover { background: var(--band); }
+.criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
+.criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
+.criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
+</style>

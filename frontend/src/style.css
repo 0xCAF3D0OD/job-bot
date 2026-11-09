@@ -387,6 +387,11 @@ button.action-1:hover:not(:disabled) { background: color-mix(in srgb, var(--acti
 button.action-2 { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
 button.action-2:hover:not(:disabled) { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 :root { --action-line: 1.5px; }
+/* Cercle des lignes à flèche (D29) : contour de 2 px, flèche de 18, décoratif. 36 px dans les lignes de réglages. */
+.arrow-circle { --circle: 40px; flex: none; display: inline-grid; place-items: center; box-sizing: border-box; width: var(--circle); height: var(--circle); border: var(--circle-line) solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); }
+.arrow-circle.small { --circle: 36px; }
+.arrow-circle .icon { width: 18px; height: 18px; }
+:root { --circle-line: 2px; }
 button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-small); }
 .icon { flex-shrink: 0; }
 
