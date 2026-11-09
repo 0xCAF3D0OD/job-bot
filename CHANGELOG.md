@@ -478,3 +478,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.264 | Des offres dès l'inscription : Google Emplois, ajout par lien et transfert sur Aujourd'hui, relevé rapide après une alerte créée | livrée |
 | 1.6.265 | Maquette du 9 novembre (téléphone) : paquet mis à jour dans docs/mobile, lots 17 et 11 à 16 vérifiés sur main | livrée |
 | 1.6.266 | Téléphone, règles transverses du 9 novembre : sections sur le fond crème, cartes à trait, marges de 20 px, cibles de 44 px, contrôle audit-grille.js | livrée |
+| 1.6.267 | Téléphone, §10.1 (9 novembre) : carte de la note avec « Voir la compatibilité », feuille « Compatibilité » (Points forts, À vérifier), « Écarter » avec le message « Annuler », feuilles du bas fermables par le retour et en glissant | livrée |
