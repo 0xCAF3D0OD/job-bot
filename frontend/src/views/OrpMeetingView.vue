@@ -299,7 +299,6 @@ onMounted(() => void load());
         :sheet-link="sheetLink"
         :meeting-items="editing ? [] : phoneMeetingItems"
         @toggle="toggle"
-        @sheet="openSheet()"
         @prepare="preparing = $event"
       />
       <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »

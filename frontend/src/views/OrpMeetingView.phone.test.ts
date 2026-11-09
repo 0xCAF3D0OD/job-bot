@@ -151,15 +151,15 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
   });
 
-  it("« Voir ma feuille » ouvre la feuille actuelle", async () => {
+  it("une seule action dans la carte : « Préparer le rendez-vous », plus de « Voir ma feuille » (PR 7)", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [PAST], target: 10, trainings: [] });
-    const { wrapper, router } = await open();
-    expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
-    await wrapper.get("[data-test=rdv-sheet]").trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.query.feuille).toBe("1");
-    expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=sheet-questions]").exists()).toBe(true);
+    const { wrapper } = await open();
+    const orp = wrapper.get("[data-test=rdv-orp]");
+    // Le menu « Plus d'actions » (modifier, annuler) reste une icône dans le coin.
+    expect(orp.findAll("button").map((b) => b.text()).filter(Boolean)).toEqual(["Préparer le rendez-vous"]);
+    expect(orp.get("[data-test=rdv-prep-open]").attributes("aria-haspopup")).toBe("dialog");
+    expect(wrapper.find("[data-test=rdv-sheet]").exists()).toBe(false);
+    expect(orp.find("[data-test=rdv-ready]").exists()).toBe(true);
   });
 
   it("aucun rendez-vous : l'illustration et le formulaire d'avant", async () => {
