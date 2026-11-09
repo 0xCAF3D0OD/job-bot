@@ -19,6 +19,7 @@ import { KINDS, NEXT_STEPS } from "../interviewLabels";
 import CopyButton from "./CopyButton.vue";
 import JobRoomDeclared from "./JobRoomDeclared.vue";
 import DetailTwoColumns from "./DetailTwoColumns.vue";
+import OrpFiche from "./OrpFiche.vue";
 
 // Panneau d'une candidature (docs/46 §3) : Statut, Entretiens, Pour l'ORP, Documents, Contacts.
 // `columns` (MODIFICATIONS du 8 novembre au soir, lot 12) : le détail d'Envoyées sur ordinateur, en deux colonnes ;
@@ -36,6 +37,12 @@ const ficheTo = computed(() => {
   const [, m, y] = (props.orpRow?.date ?? "").split(".");
   return { path: `/bilan/orp/candidature/${props.application.id}`, query: m && y ? { mois: `${y}-${m}` } : {} };
 });
+// Sur ordinateur, la fiche s'ouvre dans un panneau latéral (lot 18, §10.3).
+const ficheOpen = ref(false);
+function onDeclared(): void {
+  ficheOpen.value = false;
+  emit("changed");
+}
 // Les étiquettes sous le titre (maquette CandidaturesOrdinateurB, onglet Envoyées).
 const headChips = computed(() => {
   const chips: { text: string; tone: "peach" | "green" | ""; test: string }[] = [];
@@ -473,6 +480,16 @@ const onStatus = (event: Event): void =>
           >
             Pour l’ORP ›
           </RouterLink>
+          <!-- Ordinateur (lot 18, §10.3) : la même fiche dans un panneau latéral de 480 px. -->
+          <button
+            v-if="orpRow && !phone"
+            type="button"
+            class="orp-fiche-link"
+            data-test="orp-fiche-open"
+            @click="ficheOpen = true"
+          >
+            Pour l’ORP ›
+          </button>
           <JobRoomDeclared
             v-if="orpRow && (!phone || orpRow.declared_at)"
             :application-id="application.id"
@@ -601,6 +618,20 @@ const onStatus = (event: Event): void =>
         </section>
       </template>
     </component>
+    <SidePanel
+      v-if="orpRow && !phone"
+      :open="ficheOpen"
+      title="Pour l’ORP"
+      :width="480"
+      @close="ficheOpen = false"
+    >
+      <OrpFiche
+        v-if="ficheOpen"
+        :application-id="application.id"
+        :month="ficheTo.query.mois"
+        @declared="onDeclared"
+      />
+    </SidePanel>
   </div>
 </template>
 
@@ -634,6 +665,6 @@ const onStatus = (event: Event): void =>
 .application-panel-columns button.primary:not(:disabled) { background: var(--action); border-color: var(--action); color: var(--on-action); }
 .application-panel-columns button.secondary { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
 /* Lot 18 (§2.2, niveau « texte ») : le lien vers la fiche « Pour l'ORP », sur téléphone. */
-.orp-fiche-link { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
+.orp-fiche-link { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
 .orp-fiche-link:hover { text-decoration: underline; }
 </style>

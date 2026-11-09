@@ -243,7 +243,10 @@ onMounted(() => void load());
             aria-hidden="true"
           ><AppIcon name="tag" /></span>
           <span><strong>Financement possible par l'ORP</strong><span>Seulement avec l'accord préalable de l'ORP</span></span>
-          <AppIcon name="chevron" />
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
         </button>
         <!-- Les puces (B17) : le genre, un seul choix ; « Gratuites » et « En français » s'ajoutent. -->
         <div
@@ -344,7 +347,7 @@ onMounted(() => void load());
         <!-- La recherche par domaine (B17) : sous la liste, « Chercher d'autres formations ». -->
         <BusyButton
           v-if="canSuggest"
-          class="secondary training-suggest"
+          class="secondary action-2 training-suggest"
           :busy="suggesting"
           busy-label="Recherche en cours…"
           data-test="suggest"
@@ -405,6 +408,7 @@ onMounted(() => void load());
               :href="training.url"
               target="_blank"
               rel="noopener noreferrer"
+              class="action-2"
               data-test="training-continue"
             >Continuer le cours<span class="visually-hidden"> (nouvel onglet)</span><AppIcon name="external" /></a>
             <button
@@ -436,7 +440,10 @@ onMounted(() => void load());
               :aria-label="`Voir : ${training.title}`"
               @click="openId = training.id"
             >
-              Voir
+              <span
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
             </button>
           </li>
         </ul>

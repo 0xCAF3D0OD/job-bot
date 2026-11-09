@@ -45,8 +45,11 @@ const segments = computed<SegmentOption[]>(() => [
         />
       </div>
     </section>
-    <div :class="['bilan-page', `bilan-page-${tab}`]">
-      <RouterView />
+    <!-- Lot 18 (§10.5) : le fond des blocs sous la bande. -->
+    <div class="today-page-bg">
+      <div :class="['bilan-page', `bilan-page-${tab}`]">
+        <RouterView />
+      </div>
     </div>
   </template>
   <PageHero

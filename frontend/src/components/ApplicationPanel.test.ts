@@ -130,3 +130,18 @@ describe("Le détail d'Envoyées en deux colonnes (lot 12)", () => {
     expect(wrapper.find("contacts-panel-stub").attributes("part")).toBe("all");
   });
 });
+
+describe("« Pour l'ORP » sur ordinateur (lot 18, §10.3)", () => {
+  it("le lien ouvre la fiche dans un panneau latéral de 480 px, du mois de la candidature", async () => {
+    const wrapper = mount(ApplicationPanel, {
+      props: { application: application as never, columns: true, orpRow: { date: "02.10.2026", declared_at: null, missing: [], job_room: [] } as never },
+      global: { stubs: { teleport: true, ContactsPanel: true, JobRoomDeclared: true, OrpFiche: true } },
+    });
+    expect(wrapper.find("orp-fiche-stub").exists()).toBe(false);
+    await wrapper.find("[data-test=orp-fiche-open]").trigger("click");
+    const fiche = wrapper.find("orp-fiche-stub");
+    expect(fiche.attributes("month")).toBe("2026-10");
+    expect(fiche.attributes("applicationid")).toBe("3");
+    expect(wrapper.find(".side-panel-480").attributes("aria-label")).toBe("Pour l’ORP");
+  });
+});

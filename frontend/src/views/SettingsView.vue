@@ -338,7 +338,7 @@ watch(
       </RouterLink>
     </template>
   </PageHero>
-  <section class="band">
+  <section :class="['band', { 'page-blocks-wide': wide && grouped }]">
     <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped }]">
       <h1
         v-if="wide && grouped"

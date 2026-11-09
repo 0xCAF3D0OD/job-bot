@@ -52,10 +52,10 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
         />
         <span class="orp-what"><strong>{{ row.company }}</strong><span class="orp-sub"><span class="orp-job">{{ row.job_title }}</span><span class="orp-channel"> · {{ how(row.method) }}</span></span></span>
         <span :class="['orp-row-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "justificatif à joindre" : "justificatif joint" }}</span>
-        <AppIcon
-          name="chevron"
-          class="orp-row-chevron"
-        />
+        <span
+          class="arrow-circle small"
+          aria-hidden="true"
+        ><AppIcon name="arrow-right" /></span>
       </RouterLink>
     </li>
     <slot name="last" />
