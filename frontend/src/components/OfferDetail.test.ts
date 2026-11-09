@@ -256,7 +256,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
     // §10.1 (9 novembre) : la carte de la note ne garde que l'anneau, le verdict et « Voir la compatibilité » ; la
     // phrase passe dans la feuille (« Comment la note est calculée ») ; la correction passe par la feuille « ⋯ ».
-    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Voir la compatibilité");
+    // Sans l'annonce complète, le lien sous la bande s'appelle « Le détail de la note » (corrections du 9 novembre).
+    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Le détail de la note");
     expect(wrapper.findComponent({ name: "OfferCompatSheet" }).props("how")).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
     vi.unstubAllGlobals();

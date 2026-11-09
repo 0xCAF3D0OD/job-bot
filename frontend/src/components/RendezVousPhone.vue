@@ -21,15 +21,16 @@ import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { timeOfDay } from "../dates";
 
-// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Deux parties,
-// posées par OrpMeetingView autour de l'état « aucun rendez-vous » : « À venir » (le prochain rendez-vous ORP et les
-// entretiens, par date), puis « À noter » et « Derniers rendez-vous ORP » ; « Noter » ouvre la feuille de la vue.
+// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Trois parties,
+// posées par OrpMeetingView : « À noter » en premier (corrections du 9 novembre : un rendez-vous passé à noter passe
+// avant le formulaire), « À venir » (le prochain rendez-vous ORP et les entretiens, par date), puis le dernier rendez-vous
+// noté et le Carnet ORP ; « Noter » ouvre la feuille de la vue.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
 
 const props = defineProps<{
-  part: "upcoming" | "past";
+  part: "to-note" | "upcoming" | "past";
   page: Page;
   applications: Application[];
   sheetLink: string;
@@ -204,62 +205,61 @@ function cal(iso: string): { day: number; month: number } {
     </template>
   </section>
 
-  <template v-else-if="part === 'past'">
-    <!-- À noter (maquette du 7.11) : un rendez-vous ORP passé dont rien n'est noté ; « Noter » ouvre la feuille. -->
-    <section
-      v-if="toNote.length"
-      class="rdv-part"
-      aria-labelledby="rdv-a-noter"
-      data-test="rdv-to-note"
+  <!-- À noter (maquette du 7.11) : un rendez-vous ORP passé dont rien n'est noté ; « Noter » ouvre la feuille. -->
+  <section
+    v-else-if="part === 'to-note' && toNote.length"
+    class="rdv-part"
+    aria-labelledby="rdv-a-noter"
+    data-test="rdv-to-note"
+  >
+    <h2
+      id="rdv-a-noter"
+      class="rdv-title"
     >
-      <h2
-        id="rdv-a-noter"
-        class="rdv-title"
-      >
-        À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
-      </h2>
-      <article
-        v-for="item in toNote"
-        :key="item.id"
-        class="rdv-card rdv-last"
-        :data-test="`rdv-to-note-${item.id}`"
-      >
-        <div class="rdv-last-head">
-          <CalendarDate
-            class="rdv-date"
-            v-bind="cal(item.starts_at)"
-            tone="orp"
-          />
-          <div class="rdv-body">
-            <h3 class="rdv-last-title">
-              {{ pastTitle(item.starts_at, now) }}
-            </h3>
-            <!-- Plus de « Pas encore noté » (lot 14) : le groupe « À noter » le dit déjà. -->
-            <span class="rdv-meta">{{ `${dateText(item.starts_at)}, ${timeAndPlace(item.starts_at, item.place)}` }}</span>
-          </div>
+      À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
+    </h2>
+    <article
+      v-for="item in toNote"
+      :key="item.id"
+      class="rdv-card rdv-last"
+      :data-test="`rdv-to-note-${item.id}`"
+    >
+      <div class="rdv-last-head">
+        <CalendarDate
+          class="rdv-date"
+          v-bind="cal(item.starts_at)"
+          tone="orp"
+        />
+        <div class="rdv-body">
+          <h3 class="rdv-last-title">
+            Rendez-vous ORP
+          </h3>
+          <!-- Plus de « Pas encore noté » (lot 14) : le groupe « À noter » le dit déjà. -->
+          <!-- « Vendredi 30 octobre, 11 h · EPFL » : le lieu tel que saisi, sans changer sa casse. -->
+          <span
+            class="rdv-meta"
+            data-test="rdv-to-note-meta"
+          >{{ `${dateText(item.starts_at)}, ${timeAndPlace(item.starts_at, item.place)}` }}</span>
         </div>
-        <button
-          type="button"
-          class="rdv-note"
-          data-test="rdv-note"
-          @click="emit('note', item.id)"
-        >
-          Noter ce qui a été convenu
-        </button>
-      </article>
-    </section>
+      </div>
+      <button
+        type="button"
+        class="rdv-note"
+        data-test="rdv-note"
+        @click="emit('note', item.id)"
+      >
+        Noter ce qui a été convenu
+      </button>
+    </article>
+  </section>
+  <template v-else-if="part === 'past'">
+    <!-- Plus de titre « Derniers rendez-vous ORP » (corrections du 9 novembre) : la ligne « Carnet ORP » suffit. -->
     <section
       v-if="last || page.past.length"
       class="rdv-part"
-      aria-labelledby="rdv-derniers"
+      aria-label="Rendez-vous ORP passés"
       data-test="rdv-past"
     >
-      <h2
-        id="rdv-derniers"
-        class="rdv-title"
-      >
-        Derniers rendez-vous ORP
-      </h2>
       <article
         v-if="last"
         class="rdv-card rdv-last"

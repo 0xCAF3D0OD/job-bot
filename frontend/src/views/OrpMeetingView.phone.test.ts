@@ -168,7 +168,7 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-past]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
-    expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous prévu");
+    expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
     expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(true);
   });
 

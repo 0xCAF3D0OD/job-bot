@@ -132,7 +132,7 @@ async function save(): Promise<void> {
         v-model="place"
         type="text"
         maxlength="200"
-        placeholder="ORP Renens, rue de Lausanne 35"
+        placeholder="Ex. : ORP Renens, rue de Lausanne 35"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
         data-test="meeting-place"
@@ -190,7 +190,7 @@ async function save(): Promise<void> {
   border: 1px solid var(--line); border-radius: var(--radius-card);
 }
 .rdv-form h3 { margin: 0; font-size: var(--form-17); font-weight: var(--weight-bold); }
-.rdv-form-when { display: grid; gap: var(--space-2); }
+.rdv-form-when { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
 .rdv-form .form-field { margin: 0; min-width: 0; }
 .rdv-form input { width: 100%; min-width: 0; }
 .rdv-form button { min-height: var(--form-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }

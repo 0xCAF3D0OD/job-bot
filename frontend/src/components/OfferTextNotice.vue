@@ -48,9 +48,9 @@ async function readNow(): Promise<void> {
     }
     // Trop de lectures (429) : le serveur dit quand réessayer (« Réessaie dans 5 minutes. »).
     const detail = (error as { detail?: unknown } | undefined)?.detail;
-    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l'annonce.");
+    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l'annonce.");
   } catch {
-    problem.value = "API injoignable : réessaie dans un moment.";
+    problem.value = "API injoignable : réessaie dans un moment.";
   } finally {
     reading.value = false;
   }
@@ -58,7 +58,7 @@ async function readNow(): Promise<void> {
 const title = computed(() => (refused.value ? "Ce site bloque la lecture automatique" : "Il manque l’annonce complète"));
 const sentence = computed(() => {
   if (reading.value) return "Lecture de l’annonce…";
-  if (refused.value) return "Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.";
+  if (refused.value) return "Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.";
   return problem.value || "Pour une note sûre, jobA1 doit lire le texte entier de l’annonce.";
 });
 const canRead = computed(() => !!readable.value && !refused.value);
@@ -82,14 +82,14 @@ async function save(): Promise<void> {
       body: { text: text.value },
     });
     if (!data?.saved) {
-      error.value = "Enregistrement impossible : vérifie le texte et réessaie.";
+      error.value = "Enregistrement impossible : vérifie le texte et réessaie.";
       return;
     }
     pasting.value = false;
     text.value = "";
     emit("changed");
   } catch {
-    error.value = "API injoignable : réessaie dans un moment.";
+    error.value = "API injoignable : réessaie dans un moment.";
   } finally {
     saving.value = false;
   }
@@ -139,8 +139,10 @@ watch(
       >
         {{ reading ? "Lecture…" : "Lire l’annonce" }}
       </button>
+      <!-- « Lire l'annonce » en tonal (le principal), « Coller le texte » en contour ; seul, il redevient tonal. -->
       <button
         type="button"
+        :class="{ outline: canRead }"
         data-test="paste-offer-text"
         @click="openPaste"
       >

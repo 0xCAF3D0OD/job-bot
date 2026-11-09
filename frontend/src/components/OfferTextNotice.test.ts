@@ -107,7 +107,7 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     await flushPromises();
     const band = wrapper.find("[data-test=partial-notice]");
     expect(band.find("[data-test=partial-title]").text()).toBe("Ce site bloque la lecture automatique");
-    expect(band.find("[data-test=partial-text]").text()).toBe("Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.");
+    expect(band.find("[data-test=partial-text]").text()).toBe("Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.");
     expect(band.find("[data-test=read-offer-text]").exists()).toBe(false);
     expect(band.findAll(".offer-text-actions button")).toHaveLength(1);
     const open = band.find("[data-test=open-offer]");

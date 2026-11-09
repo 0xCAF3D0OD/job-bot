@@ -34,7 +34,7 @@ const savedAt = ref(0);
 const { aiNote } = usePlan();
 
 // Le rendez-vous ORP (docs/83) : la feuille pour le conseiller, tirée de tes données, sans IA.
-// Rien n'est envoyé à l'ORP : tu la télécharges, l'imprimes ou la lis toi-même.
+// Rien n'est envoyé à l'ORP : tu la télécharges, l'imprimes ou la lis toi-même.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -74,7 +74,7 @@ const lateObligations = computed(() =>
 );
 function lateLine(text: string): string {
   const line = text.replace(" : ", ", ");
-  return ` En retard : ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+  return ` En retard : ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
 }
 // La conclusion en haut (règles §3.2, 1.6.23) : la date, l'heure en accent, le lieu ; puis ce qui
 // est en retard, en orange (ce qui demande d'agir, §4).
@@ -109,7 +109,7 @@ const monthValue = computed(() => {
 const blockersLine = computed(() => {
   const first = prep.value?.blockers[0];
   const works = prep.value?.works ?? "";
-  const line = first ?? (works ? `Ce qui marche : ${works.charAt(0).toLowerCase()}${works.slice(1)}` : "");
+  const line = first ?? (works ? `Ce qui marche : ${works.charAt(0).toLowerCase()}${works.slice(1)}` : "");
   return line.replace(/\.$/, "");
 });
 const dutiesValue = computed(() => {
@@ -291,6 +291,15 @@ onMounted(() => void load());
       @cancel="editing = false"
     />
     <template v-else>
+      <!-- Un rendez-vous passé à noter passe en premier, avant le formulaire (corrections du 9 novembre). -->
+      <RendezVousPhone
+        v-if="compact"
+        part="to-note"
+        :page="page"
+        :applications="applications"
+        :sheet-link="sheetLink"
+        @note="noting = $event"
+      />
       <RendezVousPhone
         v-if="compact"
         part="upcoming"
@@ -349,7 +358,7 @@ onMounted(() => void load());
         Préparer
       </h2>
       <div class="orp-meeting-sheet">
-        <!-- Aucun rendez-vous prévu (maquette RendezVous, état `vide`) : le personnage, le formulaire compact ;
+        <!-- Aucun rendez-vous à venir (maquette RendezVous, état `vide`) : le personnage, le formulaire compact ;
              pas avec l'écran « Pas encore de candidature », un seul des trois par écran. -->
         <OrpMeetingEmpty
           v-if="!meeting && !editing && !noApplications"
@@ -403,7 +412,7 @@ onMounted(() => void load());
               v-if="!meeting"
               class="hint"
             >
-              Indique d'abord la date du rendez-vous : tes questions lui seront rattachées.
+              Indique d'abord la date du rendez-vous : tes questions lui seront rattachées.
             </p>
             <ul class="orp-meeting-questions">
               <li
@@ -469,7 +478,7 @@ onMounted(() => void load());
           >
             <h2>La feuille</h2>
             <p class="setting-desc">
-              Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
+              Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
             </p>
             <FormField
               v-slot="{ id, describedby, invalid }"
@@ -627,14 +636,14 @@ onMounted(() => void load());
                 v-if="prep.works"
                 class="orp-meeting-works"
               >
-                Ce qui marche : {{ prep.works }}
+                Ce qui marche : {{ prep.works }}
               </p>
             </DisclosureRow>
             <DisclosureRow
               v-if="prep.missing.length"
               title="Compétences demandées qui manquent"
               icon="book"
-              :description="`Le plus demandé : ${prep.missing[0]!.skill}`"
+              :description="`Le plus demandé : ${prep.missing[0]!.skill}`"
               data-test="sheet-missing"
             >
               <ul v-if="prep.missing.length">

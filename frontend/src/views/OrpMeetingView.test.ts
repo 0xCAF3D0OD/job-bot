@@ -113,7 +113,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
     const person = wrapper.find("[data-test=meeting-person]");
     expect(person.attributes("data-pose")).toBe("debout");
     expect(person.attributes("height")).toBe("186");
-    expect(wrapper.find("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous prévu");
+    expect(wrapper.find("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
     expect(wrapper.find(".face-state").exists()).toBe(false);
     // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le personnage.
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
@@ -295,7 +295,7 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     const late = wrapper.find("[data-test=meeting-when] .orp-late");
-    expect(late.text()).toBe("En retard : preuves de septembre, à remettre au plus tard le 5 octobre.");
+    expect(late.text()).toBe("En retard : preuves de septembre, à remettre au plus tard le 5 octobre.");
     expect(wrapper.find("[data-test=sheet-obligations] [data-test=disclosure-description]").text()).toBe("1 en retard, 1 échéance");
   });
 
@@ -316,7 +316,7 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     expect(wrapper.find("[data-test=sheet-blockers] [data-test=disclosure-description]").text()).toBe(
-      "Ce qui marche : les offres de jobs.ch obtiennent plus souvent une réponse",
+      "Ce qui marche : les offres de jobs.ch obtiennent plus souvent une réponse",
     );
   });
 

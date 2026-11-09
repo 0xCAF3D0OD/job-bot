@@ -844,9 +844,11 @@ watch(
             class="compat-open"
             aria-haspopup="dialog"
             data-test="compat-open"
+            :class="{ 'after-band': partial && sub }"
             @click="compatOpen = true"
           >
-            Voir la compatibilité
+            <!-- Note provisoire sur téléphone (OffreProvisoire) : « Le détail de la note », aligné sur le contenu. -->
+            {{ partial && sub ? "Le détail de la note" : "Voir la compatibilité" }}
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
@@ -1287,6 +1289,14 @@ watch(
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
+  /* Note provisoire (OffreProvisoire, demande de Kevin du 9 novembre) : la bande pêche en pleine largeur dans la carte,
+     sans dépasser le contour (la carte coupe ce qui dépasse, rayon gardé) ; le lien suit la bande sans vide, le texte
+     au même retrait que le contenu, le chevron à droite. */
+  .offer-blocks .match-card:has(.offer-text-band) { overflow: clip; }
+  .offer-blocks .match-card .offer-text-band { margin: var(--ob-gap) calc(-1 * var(--ob-pad)) 0; padding: var(--ob-gap) var(--ob-pad); }
+  .offer-blocks .offer-text-band + .compat-open.after-band { margin-top: 0; border-top: 0; }
+  .offer-blocks .compat-open.after-band { padding-left: var(--ob-pad); }
+  .offer-blocks .offer-text-actions button { min-width: 0; white-space: nowrap; }
   .offer-blocks .detail-post { display: block; }
   .offer-blocks .detail-post-head h3 { font-size: var(--font-title); line-height: var(--ob-24); }
   .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
