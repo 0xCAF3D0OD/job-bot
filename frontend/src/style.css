@@ -724,7 +724,7 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 
 /* Petit écran : la page un peu plus serrée sur les côtés. */
 @media (max-width: 860px) {
-  .offers-page { padding: var(--space-5) var(--space-4) var(--space-12); }
+  .offers-page { padding: var(--space-5) var(--space-5) var(--space-12); }
 }
 
 @media (max-width: 1200px) {
