@@ -12,7 +12,9 @@ const DIST = new URL("../dist/", import.meta.url).pathname;
 // Relevé pour la maquette du 8 novembre (docs/143, lot 3 : panneaux de l'en-tête, image de profil, Composer ; lot 9 : Alertes et Compte sur téléphone ; lot 10 : DateField).
 // Relevé pour la version téléphone du 9 novembre (docs/143) : règles transverses, puis les écrans du §10.1 au §10.9
 // (feuille Compatibilité, ORP, feuilles du bas, Alertes, Notifications), une seule fois pour toute la série.
-export const LIMITS = { premier: 120_000, total: 350_000, "css-premier": 56_000, css: 82_000 };
+// Relevé pour la série complète du 9 novembre (téléphone et ordinateur, PR 1 à 11 du prompt), une seule fois pour toute
+// la série : Préparer et Candidatures sur ordinateur, détail d'Envoyées, puis les écrans qui suivent.
+export const LIMITS = { premier: 120_000, total: 380_000, "css-premier": 58_000, css: 90_000 };
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const size = (file) => gzipSync(readFileSync(join(DIST, file))).length;
