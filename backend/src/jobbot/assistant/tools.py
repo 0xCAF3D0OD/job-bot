@@ -99,8 +99,8 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "preuves_orp",
-        "description": "Les preuves ORP d'un mois : nombre de candidatures, objectif, lignes à "
-        "compléter, date limite de remise, état de la remise.",
+        "description": "Les justificatifs ORP d'un mois : nombre de candidatures, objectif, "
+        "lignes à compléter, date limite de remise, état de la remise.",
         "input_schema": {
             "type": "object",
             "properties": {"mois": _month_param("Mois AAAA-MM ; le mois en cours par défaut.")},
@@ -146,7 +146,7 @@ LABELS = {
     "offre": "l'offre",
     "candidatures": "tes candidatures",
     "candidature": "la candidature",
-    "preuves_orp": "tes preuves ORP",
+    "preuves_orp": "tes justificatifs ORP",
     "alertes": "tes alertes",
     "retours_entretien": "tes retours d'entretien",
     "profil": "tes blocs de profil",

@@ -8,7 +8,7 @@ Sans IA : des comptes et des règles simples, écrites ici. Rien n'est envoyé �
   profil, avec une formation qui les couvre s'il y en a une.
 - **Tes questions** : proposées d'après ta situation (financement, mesure, assignation, gain
   intermédiaire), à cocher ; tu peux en écrire d'autres.
-- **Tes obligations** : les preuves à remettre, les assignations en cours, le rendez-vous.
+- **Tes obligations** : les justificatifs à remettre, les assignations en cours, le rendez-vous.
 """
 
 from collections import Counter
@@ -94,6 +94,11 @@ class Preparation:
 def _month_name(month: str) -> str:
     year, number = month.split("-")
     return f"{MONTHS['fr'][int(number) - 1]} {year}"
+
+
+def _of(name: str) -> str:
+    """« de septembre 2026 », « d'octobre 2026 » (élision devant une voyelle)."""
+    return f"d'{name}" if name[0] in "aeiouy" else f"de {name}"
 
 
 def _day(value: date) -> str:
@@ -279,7 +284,7 @@ async def _obligations(
     )
     obligations.append(
         Obligation(
-            f"Preuves de {_month_name(previous)} : à remettre au plus tard le "
+            f"Justificatifs {_of(_month_name(previous))} : à remettre au plus tard le "
             f"{_day(due_date(previous, due_day))}.",
             due_date(previous, due_day),
             submitted is not None,

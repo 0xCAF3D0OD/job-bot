@@ -89,7 +89,7 @@ describe("Plateforme (docs/65 §5)", () => {
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     const table = wrapper.find("[data-test=milestones-table]");
-    expect(table.findAll("thead th").map((th) => th.text())).toEqual(["Compte", "Alerte", "Offre", "Candidature", "Preuves"]);
+    expect(table.findAll("thead th").map((th) => th.text())).toEqual(["Compte", "Alerte", "Offre", "Candidature", "Justificatifs"]);
     const row = table.find("[data-test=milestones-row]");
     expect(row.find("th").text()).toContain("n° 12");
     expect(row.findAll("td").map((td) => td.text())).toEqual(["25 min", "6 h", "3 j", "—"]);

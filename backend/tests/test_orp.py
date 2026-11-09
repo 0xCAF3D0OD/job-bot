@@ -152,7 +152,8 @@ async def test_csv_submission_and_changes(api: AsyncClient) -> None:
     response = await api.get("/api/orp/2026-10/csv")
     assert response.status_code == 200
     assert (
-        response.headers["content-disposition"] == 'attachment; filename="preuves-orp-2026-10.csv"'
+        response.headers["content-disposition"]
+        == 'attachment; filename="justificatifs-orp-2026-10.csv"'
     )
     assert response.content.startswith(b"\xef\xbb\xbfDate;")
     assert (await api.get("/api/orp", params={"month": "2026-10"})).json()["exported_at"]

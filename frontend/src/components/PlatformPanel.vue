@@ -27,7 +27,7 @@ const MILESTONES = [
   { key: "first_alert", label: "Alerte" },
   { key: "first_offer", label: "Offre" },
   { key: "first_prepared", label: "Candidature" },
-  { key: "first_export", label: "Preuves" },
+  { key: "first_export", label: "Justificatifs" },
 ] as const;
 // Gardées jusqu'à la fin du test (décision de Kevin) : « Terminer le test » efface les dates de
 // tous les comptes et arrête l'enregistrement ; un nouveau test le rouvre.

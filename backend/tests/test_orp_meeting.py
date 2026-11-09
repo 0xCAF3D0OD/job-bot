@@ -127,7 +127,7 @@ async def test_the_sheet_comes_from_your_data(rt: Runtime) -> None:
     assert any(k.startswith("assignment:") for k in keys)
     assert keys["intermediate"] is False
     texts = [o.text for o in prep.obligations]
-    assert any(t.startswith("Preuves de ") for t in texts)
+    assert any(t.startswith(("Justificatifs de ", "Justificatifs d'")) for t in texts)
     assert any(t.startswith("Assignation chez Entreprise 0 SA") for t in texts)
 
 

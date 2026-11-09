@@ -79,12 +79,14 @@ async def test_due_then_eve_then_nothing_once_submitted(rt: Runtime, sent: list[
     await add(rt, date(2026, 9, 3))
     await add(rt, date(2026, 9, 10), address=None)
     assert await notify_orp(rt, date(2026, 10, 1)) == 1
-    assert sent[0].title == "Preuves de septembre à remettre avant le 5 octobre"
+    assert sent[0].title == "Justificatifs de septembre à remettre avant le 5 octobre"
     assert sent[0].message.startswith("2 candidatures, 1 ligne à compléter.")
     assert sent[0].click and sent[0].click.endswith("/candidatures/suivi?mois=2026-09")
     assert await notify_orp(rt, date(2026, 10, 2)) == 0
     assert await notify_orp(rt, date(2026, 10, 4)) == 1
-    assert sent[1].title == "Demain : preuves de septembre à remettre" and sent[1].priority == 4
+    assert (
+        sent[1].title == "Demain : justificatifs de septembre à remettre" and sent[1].priority == 4
+    )
     assert await notify_orp(rt, date(2026, 10, 5)) == 0  # date limite passée
 
     # Mois de novembre : remis avant la date limite, aucun rappel de veille.
@@ -127,3 +129,11 @@ async def test_due_day_setting_and_no_ntfy(rt: Runtime, sent: list[Message]) -> 
     async with rt.sessionmaker() as session:
         links = list(await session.scalars(select(Notification.link).order_by(Notification.id)))
     assert links == ["/candidatures/suivi?mois=2026-09"] * 2
+
+
+def test_justificatifs_elision() -> None:
+    """« justificatif » à la place de « preuve » (lot 16.4), avec l'élision devant une voyelle."""
+    from jobbot.notify.orp import _of
+
+    assert _of("octobre") == "d'octobre"
+    assert _of("septembre") == "de septembre"

@@ -161,7 +161,7 @@ async function refuse(): Promise<void> {
               >
               <span class="partner-text">
                 <span class="partner-label">Aussi mes recherches ORP du mois</span>
-                <span class="partner-hint">Facultatif. Seulement le nombre fait et l'objectif, jamais le détail ni tes preuves.</span>
+                <span class="partner-hint">Facultatif. Seulement le nombre fait et l'objectif, jamais le détail ni tes justificatifs.</span>
               </span>
             </label>
           </li>
@@ -176,7 +176,7 @@ async function refuse(): Promise<void> {
         </h2>
         <div class="partner-never">
           <span class="partner-dot"><AppIcon name="ban" /></span>
-          <p>Ton nom, tes coordonnées, ton numéro AVS, ton CV, tes lettres et tes documents, les contacts des offres, tes preuves ORP, ni l'identifiant de ton compte jobA1.</p>
+          <p>Ton nom, tes coordonnées, ton numéro AVS, ton CV, tes lettres et tes documents, les contacts des offres, tes justificatifs ORP, ni l'identifiant de ton compte jobA1.</p>
         </div>
       </section>
       <p class="partner-note">

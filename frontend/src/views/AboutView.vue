@@ -24,12 +24,12 @@ onMounted(async () => {
     >
       <h2>Pourquoi jobA1</h2>
       <p>
-        Chercher un emploi, c'est trouver les bonnes offres et prouver chaque mois ses recherches. jobA1 s'occupe des preuves et t'aide pour les offres.
+        Chercher un emploi, c'est trouver les bonnes offres et prouver chaque mois ses recherches. jobA1 s'occupe des justificatifs et t'aide pour les offres.
       </p>
 
       <h2>Ce que jobA1 promet</h2>
       <ul>
-        <li>Le suivi de tes candidatures et tes preuves ORP restent gratuits, sans limite.</li>
+        <li>Le suivi de tes candidatures et tes justificatifs ORP restent gratuits, sans limite.</li>
         <li>Tes coordonnées ne partent jamais à l'IA.</li>
         <li>jobA1 ne postule jamais à ta place et ne se connecte pas à tes comptes sur les sites d'emploi.</li>
         <li>

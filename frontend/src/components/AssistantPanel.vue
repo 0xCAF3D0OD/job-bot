@@ -498,7 +498,7 @@ const headItems: MoreMenuItem[] = [
             sizes="(max-width: 820px) 260px, 424px"
           />
           <p class="muted assistant-intro">
-            Pose une question sur tes offres, candidatures ou preuves ORP. Il propose, tu confirmes.
+            Pose une question sur tes offres, candidatures ou justificatifs ORP. Il propose, tu confirmes.
           </p>
           <div class="assistant-suggestions">
             <button

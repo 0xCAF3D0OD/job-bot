@@ -13,7 +13,7 @@ const TITLES: Record<MockKind, string> = {
   offers: "Candidatures › Offres",
   apply: "Préparer ma candidature",
   follow: "Candidatures › Suivi",
-  orp: "Preuves ORP · octobre",
+  orp: "Justificatifs ORP · octobre",
   trainings: "Bilan › Formations",
 };
 </script>

@@ -385,8 +385,8 @@ watch(
             <SettingCard>
               <SettingRow
                 v-slot="c"
-                title="Date limite des preuves"
-                description="Le jour du mois suivant où les preuves sont dues."
+                title="Date limite des justificatifs"
+                description="Le jour du mois suivant où les justificatifs sont dus."
                 :saved="savedRow === 'due'"
                 :error="rowErrors.due"
                 stack
