@@ -94,6 +94,9 @@ class CvOut(BaseModel):
     document: CvDocumentOut
     # « J'ai relu le CV » (maquette Preparer, comme la lettre) : gardé avec la version.
     read_at: datetime | None = None
+    # Les blocs du CV d'origine dans leur ordre (MODIFICATIONS du 9 novembre, §14) : le panneau « Adapté pour cette
+    # offre » compare la version à cet ordre pour dire ce qui a changé et pouvoir l'annuler.
+    origin_ids: list[int] = []
 
 
 class CvRead(BaseModel):
@@ -155,6 +158,7 @@ async def _render(session: AsyncSession, draft: Draft) -> CvOut:
         blocks=blocks,
         document=CvDocumentOut.model_validate(asdict(_document(draft, chunks, identity))),
         read_at=draft.content.get("read_at"),
+        origin_ids=list(chunks),
     )
 
 

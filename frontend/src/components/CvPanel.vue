@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import { onDayAt } from "../format";
@@ -20,6 +21,13 @@ import DocPreview from "./DocPreview.vue";
 import LayoutSheetLink from "./LayoutSheetLink.vue";
 import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import { usePhone } from "../composables/usePhone";
+import BottomSheet from "./BottomSheet.vue";
+import Composer from "./Composer.vue";
+import GroupedList from "./GroupedList.vue";
+import GroupedRow from "./GroupedRow.vue";
+import SegmentedControl from "./SegmentedControl.vue";
+import SuggestionChips from "./SuggestionChips.vue";
+import { cvChanges, type CvChange } from "../cvChanges";
 
 // Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -28,7 +36,8 @@ const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 // `preparing` et `failed` : le CV adapté lancé avec la lettre (MODIFICATIONS du 9 novembre, §7 n° 1), en cours ou en échec.
-const props = defineProps<{ offer: Offer; primary?: boolean; preparing?: boolean; failed?: boolean }>();
+// `letterLanguage` : la langue de la lettre, celle du CV tant qu'aucune autre n'est choisie (§14).
+const props = defineProps<{ offer: Offer; primary?: boolean; preparing?: boolean; failed?: boolean; letterLanguage?: LetterLanguage | null }>();
 // Version affichée, pour le lien « CV (Word) » de la barre de la page.
 const emit = defineEmits<{ current: [id: number | null] }>();
 
@@ -130,7 +139,7 @@ async function write(force = false): Promise<void> {
     const { data, error: err } = await api.POST("/api/offers/{offer_id}/cvs", {
       params: { path: { offer_id: props.offer.id } },
       body: {
-        language: language.value || null,
+        language: language.value || selected.value?.language || props.letterLanguage || null,
         instruction: text || null,
         base_draft_id: text && selectedId.value ? selectedId.value : null,
       },
@@ -296,6 +305,93 @@ async function markRead(box: HTMLInputElement): Promise<void> {
   }
 }
 
+// L'étape CV prête sur ordinateur (MODIFICATIONS du 9 novembre, §14 ; maquettes PreparerOrdinateurCVPret et
+// PreparerOrdinateurCVChangements) : la structure de l'étape Lettre. FR / DE / EN en tête du CV, retouche en bas, et à
+// droite « Mise en page », la carte « Ce CV » puis le seul bouton plein.
+const router = useRouter();
+const deskReady = computed(() => !phone.value && !!selected.value);
+const suggestions = computed(() => {
+  const first = highlights.value[0];
+  return ["Plus court", ...(first ? [`Mettre ${first} en avant`] : []), "Tenir sur une page"];
+});
+const revision = ref("");
+function revise(text: string): void {
+  const asked = text.trim();
+  if (!asked || writing.value) return;
+  instruction.value = asked;
+  revision.value = "";
+  void write();
+}
+const changes = computed<CvChange[]>(() => (selected.value ? cvChanges(selected.value) : []));
+const changesOpen = ref(false);
+const versionsOpen = ref(false);
+const changesLine = computed(() => {
+  const n = changes.value.length;
+  return n ? `${n} changement${n > 1 ? "s" : ""}, à vérifier` : "Aucun changement";
+});
+const currentVersionLine = computed(() => {
+  const cv = selected.value;
+  if (!cv) return "";
+  return `Actuelle : ${cv.instruction ? `« ${cv.instruction} »` : "adaptée"}, ${onDayAt(cv.edited_at ?? cv.created_at)}`;
+});
+// « jobA1 a ajusté ton CV pour l’annonce d’Alpstack » : « d’ » devant une voyelle.
+const forCompany = computed(() => {
+  const name = props.offer.company?.trim();
+  if (!name) return "pour cette annonce";
+  return `pour l’annonce ${/^[aeiouyàâéèêîôûh]/i.test(name) ? "d’" : "de "}${name}`;
+});
+async function undo(change: CvChange): Promise<void> {
+  if (change.undo && (await save(change.undo))) savedAt.value = Date.now();
+}
+function pickVersion(cv: Cv): void {
+  show(cv);
+  versionsOpen.value = false;
+}
+// Le nombre de pages A4 du CV affiché, mesuré sur la page à l'écran (même modèle que le PDF).
+const sheet = ref<HTMLElement | null>(null);
+const pages = ref(1);
+function measure(): void {
+  const el = sheet.value;
+  if (!el || !el.clientWidth) return;
+  pages.value = Math.max(1, Math.ceil(el.scrollHeight / ((el.clientWidth * 297) / 210) - 0.02));
+}
+let observer: ResizeObserver | null = null;
+watch(sheet, (el) => {
+  observer?.disconnect();
+  if (el && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(measure);
+    observer.observe(el);
+  }
+  measure();
+});
+onBeforeUnmount(() => observer?.disconnect());
+const layoutNote = computed(() => {
+  if (deskEmpty.value) return "Le CV suivra ce modèle.";
+  if (deskReady.value) return `Même modèle que la lettre · ${pages.value} page${pages.value > 1 ? "s" : ""}`;
+  return words.value ? `${words.value} mots` : undefined;
+});
+const readThenBusy = ref(false);
+// « J’ai relu, continuer » : la relecture est notée avec la version, puis Postuler ; un refus le dit et reste là.
+async function readThenNext(): Promise<void> {
+  const cv = selected.value;
+  if (!cv || writing.value || readThenBusy.value) return;
+  if (!cv.read_at) {
+    readThenBusy.value = true;
+    try {
+      const { data, error: err } = await api.PUT("/api/cvs/{draft_id}/read", { params: { path: { draft_id: cv.id } }, body: { read: true } });
+      if (!data) {
+        error.value = detail(err, "La relecture n'a pas été enregistrée, réessaie.");
+        return;
+      }
+      error.value = "";
+      cvs.value = cvs.value.map((c) => (c.id === data.id ? data : c));
+    } finally {
+      readThenBusy.value = false;
+    }
+  }
+  await router.push({ query: { doc: "postuler" } });
+}
+
 onMounted(() => void load());
 </script>
 
@@ -342,20 +438,14 @@ onMounted(() => void load());
           <h2 id="cv-card-title">
             CV adapté
           </h2>
+          <SegmentedControl
+            v-if="selected"
+            v-model="shownLanguage"
+            :options="LANGUAGE_OPTIONS"
+            label="Langue du CV"
+            class="doc-language"
+          />
         </div>
-        <ul
-          v-if="highlights.length && !phone"
-          class="doc-tags"
-          aria-label="Mis en avant pour cette offre"
-          data-test="cv-highlights"
-        >
-          <li
-            v-for="word in highlights"
-            :key="word"
-          >
-            {{ word }}
-          </li>
-        </ul>
         <DocPreview
           v-if="phone && loaded && !selected && !writing"
           :template="template"
@@ -455,6 +545,7 @@ onMounted(() => void load());
         />
         <article
           v-if="doc && selected && (!phone || cvOpen)"
+          ref="sheet"
           class="cv-sheet print-sheet"
           :class="{ 'fresh-lines': fresh, busy: writing || saving }"
           :lang="doc.language"
@@ -566,6 +657,27 @@ onMounted(() => void load());
           </template>
         </template>
       </section>
+      <!-- Retoucher (§14, comme la lettre) : les puces et la zone de saisie collées en bas de la colonne gauche. -->
+      <div
+        v-if="deskReady"
+        class="prep-desk-bottom"
+        data-test="cv-desk-bottom"
+      >
+        <div class="prep-revise">
+          <SuggestionChips
+            :items="suggestions"
+            label="Retouches proposées"
+            @pick="revise"
+          />
+          <Composer
+            v-model="revision"
+            placeholder="Demander une modification du CV"
+            send-label="Envoyer la demande"
+            :busy="writing"
+            @send="revise"
+          />
+        </div>
+      </div>
       <!-- La barre du bas du téléphone : un seul bouton plein, la prochaine chose à faire. -->
       <ActionBar
         v-if="phone && loaded"
@@ -614,8 +726,106 @@ onMounted(() => void load());
            que pour la lettre). -->
       <LayoutCard
         v-if="!phone"
-        :note="deskEmpty ? 'Le CV suivra ce modèle.' : words ? `${words} mots` : undefined"
+        :note="layoutNote"
       />
+      <!-- « Ce CV » (§14, remplace « Ta candidature ») : les changements à vérifier (panneau), les versions (panneau) et le
+           CV d'origine, qui ne change pas. -->
+      <section
+        v-if="deskReady && selected"
+        class="side-card prep-file"
+        aria-labelledby="cv-file-title"
+        data-test="cv-file"
+      >
+        <h2 id="cv-file-title">
+          Ce CV
+        </h2>
+        <button
+          type="button"
+          class="prep-file-row"
+          aria-haspopup="dialog"
+          data-test="cv-changes-open"
+          @click="changesOpen = true"
+        >
+          <span class="prep-file-text">
+            <b>Adapté pour cette offre</b>
+            <span :class="['prep-file-sub', { ok: changes.length }]">{{ changesLine }}</span>
+          </span>
+          <AppIcon name="chevron" />
+        </button>
+        <button
+          type="button"
+          class="prep-file-row"
+          aria-haspopup="dialog"
+          data-test="cv-versions-open"
+          @click="versionsOpen = true"
+        >
+          <span class="prep-file-text">
+            <b>Versions · {{ cvs.length }}</b>
+            <span class="prep-file-sub">{{ currentVersionLine }}</span>
+          </span>
+          <AppIcon name="chevron" />
+        </button>
+        <RouterLink
+          to="/profil?onglet=parcours"
+          class="prep-file-row"
+          data-test="cv-origin"
+        >
+          <span class="prep-file-text">
+            <b>CV d’origine</b>
+            <span class="prep-file-sub">Ne change pas, sert de base</span>
+          </span>
+          <AppIcon name="chevron" />
+        </RouterLink>
+      </section>
+      <template v-if="deskReady">
+        <InlineConfirm
+          v-if="choosingWrite"
+          message="Tu as des modifications non enregistrées dans cette version."
+          confirm-label="Enregistrer, puis rédiger"
+          alt-label="Rédiger sans enregistrer"
+          cancel-label="Garder"
+          :danger="false"
+          :busy="writing"
+          @confirm="saveThenWrite"
+          @alt="write(true)"
+          @cancel="choosingWrite = false"
+        />
+        <button
+          v-if="dirty"
+          type="button"
+          class="secondary prep-aside-main"
+          :disabled="saving"
+          data-test="save-cv"
+          @click="save()"
+        >
+          Enregistrer mes modifications
+        </button>
+        <PlanLimit
+          v-if="writeLabel"
+          usage="cv"
+        />
+        <BusyButton
+          v-if="writeLabel || writing"
+          class="primary prep-aside-main"
+          :busy="writing"
+          busy-label="Préparation…"
+          :disabled="reached('cv')"
+          data-test="write-cv"
+          @click="write()"
+        >
+          <span class="with-icon"><AppIcon name="ai" />{{ writeLabel || "Préparer le CV" }}</span>
+        </BusyButton>
+        <button
+          v-else
+          type="button"
+          class="primary prep-aside-main"
+          :disabled="readThenBusy"
+          data-test="cv-read-next"
+          @click="readThenNext"
+        >
+          J’ai relu, continuer
+        </button>
+      </template>
       <!-- Sans CV adapté (PreparerOrdinateurCV) : la carte « Ce CV » dit qu'il se prépare pendant la relecture de la
            lettre. -->
       <section
@@ -632,11 +842,11 @@ onMounted(() => void load());
         </p>
       </section>
       <OfferBrief
-        v-if="!phone && !deskEmpty"
+        v-if="!phone && !deskEmpty && !deskReady"
         :offer="offer"
       />
       <div
-        v-if="!phone && !deskEmpty"
+        v-if="!phone && !deskEmpty && !deskReady"
         class="side-card"
       >
         <h2>
@@ -694,7 +904,7 @@ onMounted(() => void load());
       </div>
 
       <div
-        v-if="selected"
+        v-if="selected && phone"
         :class="phone ? 'cv-blocks-phone' : 'side-card'"
         data-test="cv-blocks-card"
       >
@@ -753,7 +963,7 @@ onMounted(() => void load());
       </div>
 
       <div
-        v-if="selected"
+        v-if="selected && phone"
         class="side-card"
       >
         <h2>Télécharger</h2>
@@ -791,7 +1001,7 @@ onMounted(() => void load());
       </div>
 
       <div
-        v-if="cvs.length > 1"
+        v-if="cvs.length > 1 && phone"
         class="side-card"
       >
         <h2>Versions</h2>
@@ -812,5 +1022,90 @@ onMounted(() => void load());
         </ul>
       </div>
     </section>
+
+    <!-- Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : un bloc par changement, « Avant »,
+         « Maintenant » et « Annuler ce changement ». -->
+    <BottomSheet
+      v-if="deskReady"
+      :open="changesOpen"
+      title="Adapté pour cette offre"
+      data-test="cv-changes"
+      @close="changesOpen = false"
+    >
+      <p class="cv-changes-intro">
+        jobA1 a ajusté ton CV {{ forCompany }}. Vérifie chaque point : rien n’est inventé, tout vient de ton CV d’origine.
+      </p>
+      <ul class="cv-changes">
+        <li
+          v-for="change in changes"
+          :key="change.key"
+          data-test="cv-change"
+        >
+          <b>{{ change.title }}</b>
+          <span class="cv-change-before">{{ change.before }}</span>
+          <span class="cv-change-now">{{ change.now }}</span>
+          <button
+            v-if="change.undo"
+            type="button"
+            class="link cv-change-undo"
+            :disabled="saving"
+            data-test="cv-change-undo"
+            @click="undo(change)"
+          >
+            Annuler ce changement
+          </button>
+        </li>
+      </ul>
+      <p class="cv-changes-note">
+        Ton CV d’origine ne change pas. Ces changements valent pour cette candidature seulement.
+      </p>
+      <SavedStatus :at="savedAt" />
+    </BottomSheet>
+    <BottomSheet
+      v-if="deskReady && selected"
+      :open="versionsOpen"
+      title="Versions et téléchargement"
+      data-test="cv-versions"
+      @close="versionsOpen = false"
+    >
+      <GroupedList
+        title="Versions"
+        :level="3"
+        class="versions"
+      >
+        <GroupedRow
+          v-for="cv in cvs"
+          :key="cv.id"
+          :title="`Version ${cv.version}`"
+          :description="versionLabel(cv)"
+          button
+          :current="cv.id === selectedId"
+          data-test="cv-version"
+          @click="pickVersion(cv)"
+        />
+      </GroupedList>
+      <p
+        v-if="dirty"
+        class="hint"
+      >
+        Enregistre d'abord tes modifications pour les télécharger.
+      </p>
+      <template #actions>
+        <template v-if="!dirty">
+          <a
+            class="button-link prep-download"
+            :href="pdfHref(`/api/cvs/${selected.id}/pdf`, template)"
+            download
+            data-test="cv-pdf"
+          ><span class="with-icon"><AppIcon name="download" />CV (PDF)</span></a>
+          <a
+            class="button-link prep-download"
+            :href="`/api/cvs/${selected.id}/docx`"
+            download
+            data-test="cv-docx"
+          ><span class="with-icon"><AppIcon name="download" />CV (Word)</span></a>
+        </template>
+      </template>
+    </BottomSheet>
   </div>
 </template>

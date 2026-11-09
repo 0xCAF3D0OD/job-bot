@@ -4843,6 +4843,11 @@ export interface components {
             document: components["schemas"]["CvDocumentOut"];
             /** Read At */
             read_at?: string | null;
+            /**
+             * Origin Ids
+             * @default []
+             */
+            origin_ids: number[];
         };
         /** CvRead */
         CvRead: {

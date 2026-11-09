@@ -145,4 +145,30 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     await wrapper.find("[data-test=cv-instruction]").setValue("Mets Kubernetes en avant");
     expect(wrapper.find("[data-test=write-cv]").text()).toContain("Préparer la nouvelle version");
   });
+  it("cocher un bloc et le monter enregistrent aussitôt", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
+    PUT.mockResolvedValueOnce({ data: cv(21, [1, 3, 2]) }).mockResolvedValueOnce({ data: cv(21, [2, 3, 1]) });
+    const wrapper = await mountPanel();
+    const toggles = wrapper.findAll("[data-test=block-toggle]");
+    // Ordre de la liste : Stage DevOps, Stage web (non coché), Kubernetes.
+    await toggles[1]!.setValue(true);
+    await flushPromises();
+    expect((PUT.mock.calls[0]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([1, 3, 2]);
+
+    const up = wrapper.findAll("[data-test=move-up]");
+    // « Stage web » est le deuxième de sa rubrique : on peut le monter.
+    await up[1]!.trigger("click");
+    await flushPromises();
+    expect((PUT.mock.calls[1]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([2, 3, 1]);
+  });
+
+  it("refuse de décocher le dernier bloc", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1])] });
+    const wrapper = await mountPanel();
+    await wrapper.findAll("[data-test=block-toggle]")[0]!.setValue(false);
+    await flushPromises();
+    expect(PUT).not.toHaveBeenCalled();
+    expect(wrapper.find("[role=alert]").text()).toContain("au moins un bloc");
+  });
+
 });

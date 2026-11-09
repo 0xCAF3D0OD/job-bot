@@ -13500,6 +13500,14 @@
               }
             ],
             "title": "Read At"
+          },
+          "origin_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Origin Ids",
+            "default": []
           }
         },
         "type": "object",
