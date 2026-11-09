@@ -4,8 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import AvatarPicker from "../components/AvatarPicker.vue";
-import GroupedList from "../components/GroupedList.vue";
-import GroupedRow from "../components/GroupedRow.vue";
+import BlockRow from "../components/BlockRow.vue";
 import PageHero from "../components/PageHero.vue";
 import ProfileImage from "../components/ProfileImage.vue";
 import { useAuth } from "../composables/useAuth";
@@ -14,6 +13,8 @@ import { usePlan } from "../composables/usePlan";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
 import { useTheme } from "../composables/useTheme";
+import { plural } from "../format";
+import "../blocks.css";
 
 // La page Compte (maquette Compte, docs/139 étape 10a ; décisions de Kevin du 2026-11-05) : le sommaire de tout ce
 // qui te concerne, sur téléphone comme sur ordinateur. La carte du profil, puis Mon parcours, Préférences,
@@ -92,17 +93,17 @@ onMounted(() => {
 
 <template>
   <PageHero title="Compte" />
-  <section class="band">
+  <section class="band blocks-page account-blocks">
     <div
       class="container account-page"
       data-test="account-page"
     >
       <!-- Maquette du 8 novembre (Compte, CompteImage) : l'image de profil avec sa pastille crayon ; un toucher ouvre
            « Ton image » (AvatarPicker). Le bouton est posé à côté du lien de la carte, pas dedans. -->
-      <div class="account-card-wrap">
+      <section class="block account-card-wrap">
         <RouterLink
           to="/profil"
-          class="account-card"
+          class="block-row account-card"
           data-test="account-profile-card"
         >
           <span
@@ -113,10 +114,10 @@ onMounted(() => {
             <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
             <span class="account-card-line">CV, compétences, postes recherchés</span>
           </span>
-          <AppIcon
-            name="chevron"
-            class="grouped-chevron"
-          />
+          <span
+            class="arrow-circle"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
         </RouterLink>
         <button
           type="button"
@@ -136,7 +137,7 @@ onMounted(() => {
             aria-hidden="true"
           ><AppIcon name="pencil" /></span>
         </button>
-      </div>
+      </section>
       <AvatarPicker
         :open="picking"
         @close="picking = false"
@@ -164,86 +165,113 @@ onMounted(() => {
         </select>
       </label>
 
-      <GroupedList title="Mon parcours">
-        <GroupedRow
+      <!-- Lot 18 (§10.4 ; maquettes Compte et CompteSombre) : des blocs à sur-titre, une ligne à flèche (D29) par
+           élément. « Recherche et outils » n'est pas dessiné : ses réglages restent, dans un bloc à part. -->
+      <section
+        class="block account-block"
+        aria-labelledby="account-path"
+      >
+        <h2
+          id="account-path"
+          class="block-cap"
+        >
+          Mon parcours
+        </h2>
+        <BlockRow
           title="Formations"
-          icon="book"
           to="/bilan/formations"
           data-test="account-trainings"
         />
-        <GroupedRow
-          title="Mes CV"
-          icon="file"
-          :value="cvCount === null ? '' : String(cvCount)"
+        <BlockRow
+          title="CV et lettres"
+          :lines="cvCount === null ? [] : [plural(cvCount, 'document', 'documents')]"
           :to="{ path: '/profil', query: { onglet: 'parcours' } }"
           data-test="account-cv"
         />
-      </GroupedList>
+      </section>
 
-      <GroupedList title="Préférences">
-        <GroupedRow
+      <section
+        class="block account-block"
+        aria-labelledby="account-prefs"
+      >
+        <h2
+          id="account-prefs"
+          class="block-cap"
+        >
+          Préférences
+        </h2>
+        <BlockRow
           title="Critères de recherche"
+          :lines="['Postes, lieux, taux d’activité']"
           to="/profil"
           data-test="account-criteria"
         />
-        <GroupedRow
+        <BlockRow
           title="Notifications"
           :to="rubric('notifications')"
           data-test="account-notifications"
         />
-        <GroupedRow
+        <BlockRow
           title="Apparence"
-          :value="THEME_LABEL[theme]"
+          :lines="[THEME_LABEL[theme]]"
           :to="rubric('affichage')"
           data-test="account-appearance"
         />
-      </GroupedList>
+      </section>
 
-      <GroupedList title="Recherche et outils">
-        <GroupedRow
+      <section
+        class="block account-block"
+        aria-labelledby="account-tools"
+      >
+        <h2
+          id="account-tools"
+          class="block-cap"
+        >
+          Recherche et outils
+        </h2>
+        <BlockRow
           title="Objectif ORP et sites"
           :to="rubric('recherche')"
           data-test="account-orp"
         />
-        <GroupedRow
+        <BlockRow
           title="Rythme"
           :to="rubric('rythme')"
           data-test="account-rhythm"
         />
-        <GroupedRow
+        <BlockRow
           title="IA"
           :to="rubric('ia')"
           data-test="account-ai"
         />
-        <GroupedRow
+        <BlockRow
           title="Agenda"
           :to="rubric('outils')"
           data-test="account-tools"
         />
-        <GroupedRow
+        <BlockRow
           title="Formule"
-          :value="planName"
+          :lines="[planName]"
           :to="rubric('formule')"
           data-test="account-plan"
         />
-        <GroupedRow
+        <BlockRow
           v-if="owner"
           title="Administration"
           :to="rubric('plateforme')"
           data-test="account-admin"
         />
         <!-- Venu du menu du compte (C2). La démo ne collecte rien (docs/72). -->
-        <GroupedRow
+        <BlockRow
           v-if="me && !me.demo"
           title="Collecter maintenant"
-          :description="running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis'"
-          button
-          :busy="running"
-          :chevron="false"
+          :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
+          :aria-busy="running || undefined"
+          :aria-disabled="running || undefined"
           data-test="account-collect"
-          @click="collectNow()"
+          @click="running || collectNow()"
         />
-      </GroupedList>
+      </section>
       <!-- L'état de la collecte, dit aux lecteurs d'écran ; la ligne le montre à l'écran. -->
       <p
         v-if="me && !me.demo"
@@ -254,51 +282,58 @@ onMounted(() => {
         {{ running ? "Relève en cours…" : collectMessage }}
       </p>
 
-      <GroupedList title="Confidentialité et aide">
-        <GroupedRow
+      <section
+        class="block account-block"
+        aria-labelledby="account-privacy"
+      >
+        <h2
+          id="account-privacy"
+          class="block-cap"
+        >
+          Confidentialité et aide
+        </h2>
+        <BlockRow
           title="Mes données"
           :to="rubric('donnees')"
           data-test="account-data"
         />
         <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
-        <GroupedRow
+        <BlockRow
           v-if="me?.auth_enabled && !me.demo"
           title="Connexions"
           :to="rubric('connexions')"
           data-test="account-connections"
         />
-        <GroupedRow
+        <BlockRow
           title="Ce qui part à l'IA"
           :to="{ path: '/tes-donnees', hash: '#ia' }"
           data-test="account-ai-data"
         />
-        <GroupedRow
+        <a
           v-if="operatorEmail"
-          title="Aide et contact"
           :href="`mailto:${operatorEmail}`"
-          :chevron="false"
+          class="block-row small"
           data-test="account-help"
         >
-          <template #end>
-            <AppIcon
-              name="external"
-              class="grouped-chevron"
-            />
-          </template>
-        </GroupedRow>
-        <GroupedRow
+          <span class="block-row-text"><span class="block-row-title">Aide et contact</span></span>
+          <span
+            class="arrow-circle"
+            aria-hidden="true"
+          ><AppIcon name="external" /></span>
+        </a>
+        <BlockRow
           v-else
           title="Aide et contact"
           to="/a-propos"
           data-test="account-help"
         />
-        <GroupedRow
+        <BlockRow
           v-if="showDiagnostic"
           title="État du service"
           to="/reglages/diagnostic"
           data-test="account-diagnostic"
         />
-      </GroupedList>
+      </section>
     </div>
   </section>
 </template>

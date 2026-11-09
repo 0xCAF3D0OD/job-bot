@@ -25,6 +25,7 @@ import InterviewForm from "../components/InterviewForm.vue";
 import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import MomentScreen from "../components/MomentScreen.vue";
+import OrpBlocks from "../components/OrpBlocks.vue";
 import OrpGoalCard from "../components/OrpGoalCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -499,7 +500,7 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <section
     v-else
-    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns }]"
+    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns, 'blocks-page orp-page-blocks': orpPage && phone }]"
   >
     <aside
       v-if="shown"
@@ -552,7 +553,18 @@ onUnmounted(() => assistant.setFocus(null));
             @click="go(1)"
           />
         </div>
-        <OrpGoalCard :data="orp" />
+        <!-- Téléphone (lot 18, §10.2 ; maquette Orp) : l'objectif, « À déclarer à l'ORP » et « Recherches du mois » en
+             blocs, l'export dans le dernier bloc. -->
+        <OrpBlocks
+          v-if="phone"
+          :data="orp"
+          @open="openId = $event"
+          @export="sheet?.printPdf()"
+        />
+        <OrpGoalCard
+          v-else
+          :data="orp"
+        />
         <!-- L'état des preuves du mois, juste sous l'objectif (B8) : une phrase, une action ; seulement s'il y
              a à faire ou si elles sont remises (docs/134). -->
         <div
@@ -603,6 +615,7 @@ onUnmounted(() => assistant.setFocus(null));
         <!-- L'export du formulaire ; le CSV et le PDF avec le journal restent dans le « ⋯ » (docs/85 §3). -->
         <div class="orp-export-row">
           <button
+            v-if="!phone"
             type="button"
             class="secondary orp-export"
             data-test="pdf"
@@ -623,6 +636,7 @@ onUnmounted(() => assistant.setFocus(null));
           @reload="load"
         />
         <section
+          v-if="!phone"
           class="orp-last orp-month-list"
           aria-labelledby="orp-month-title"
         >
@@ -758,7 +772,7 @@ onUnmounted(() => assistant.setFocus(null));
           </ul>
         </template>
         <section
-          v-if="orpPage && orp.count"
+          v-if="orpPage && orp.count && !phone"
           class="dash-card suivi-todo suivi-declare"
           aria-label="À déclarer dans Job-Room"
           data-test="declare"

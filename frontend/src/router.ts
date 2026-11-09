@@ -209,6 +209,8 @@ export const routes: RouteRecordRaw[] = [
   },
   // Le Suivi ORP du mois (docs/139 étape 8b, maquette Orp) : une sous-page de Bilan › ORP.
   { path: "/bilan/orp", name: "orp-month", component: ApplicationsView },
+  // « Pour l'ORP », une candidature à déclarer (MODIFICATIONS du 8 novembre au soir, lot 18, §10.3) : plein écran.
+  { path: "/bilan/orp/candidature/:id", name: "orp-fiche", component: () => import("./views/OrpFicheView.vue"), meta: { bare: true } },
   {
     // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations.
     path: "/bilan",
@@ -331,6 +333,7 @@ const PAGE_TITLES: Record<string, string> = {
   alerts: "Alertes",
   insights: "Bilan",
   "orp-meeting": "Rendez-vous ORP",
+  "orp-fiche": "Pour l'ORP",
   preparation: "Préparer",
   trainings: "Formations",
   profile: "Profil",

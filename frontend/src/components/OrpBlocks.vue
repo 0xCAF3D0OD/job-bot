@@ -1,0 +1,189 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+
+import type { OrpMonth, OrpRow } from "../api/client";
+import { formatMonth, ORP_DEADLINE_DAY, plural } from "../format";
+import AppIcon from "./AppIcon.vue";
+import BlockRow from "./BlockRow.vue";
+import LiquidCircle from "./LiquidCircle.vue";
+import "../blocks.css";
+
+// Le suivi ORP du mois en blocs, sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 18, §10.2 ; maquettes Orp,
+// OrpSombre et l'onglet ORP d'Explorer) : l'objectif et le cercle liquide ; « À déclarer à l'ORP », les candidatures
+// envoyées pas encore déclarées dans Job-Room, chacune vers sa fiche « Pour l'ORP » ; « Recherches du mois », celles
+// qui sont déclarées, puis « Exporter le formulaire (PDF) ».
+const props = defineProps<{ data: OrpMonth }>();
+const emit = defineEmits<{ open: [applicationId: number]; export: [] }>();
+
+const SHOWN = 3;
+const monthName = computed(() => formatMonth(props.data.month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase()));
+const left = computed(() => Math.max(0, (props.data.target ?? 0) - props.data.count));
+// La date limite : celle du serveur (le jour choisi dans les Réglages), sinon le 5 du mois suivant.
+const deadline = computed(() => {
+  const [year, month] = props.data.month.split("-").map(Number);
+  const due = props.data.due_date ? new Date(`${props.data.due_date}T12:00:00`) : new Date(year!, month!, ORP_DEADLINE_DAY);
+  return new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" }).format(due);
+});
+
+const toDeclare = computed(() => props.data.rows.filter((row) => !row.declared_at));
+const declared = computed(() => props.data.rows.filter((row) => row.declared_at));
+const allShown = ref(false);
+const visible = computed(() => (allShown.value ? toDeclare.value : toDeclare.value.slice(0, SHOWN)));
+
+// « 02.11.2026 » du formulaire : « 2 novembre » et « 2 nov. ».
+function day(row: OrpRow, style: "long" | "short"): string {
+  const [d, m, y] = row.date.split(".").map(Number);
+  if (!d || !m || !y) return row.date;
+  return new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: style }).format(new Date(y, m - 1, d));
+}
+const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En ligne" : method.charAt(0).toUpperCase() + method.slice(1));
+const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.application_id}`, query: { mois: props.data.month } });
+</script>
+
+<template>
+  <div
+    class="orp-blocks"
+    data-test="orp-blocks"
+  >
+    <section
+      class="block orp-blocks-goal"
+      data-test="orp-goal"
+    >
+      <LiquidCircle
+        v-if="data.target"
+        :count="data.count"
+        :target="data.target"
+        :size="96"
+      />
+      <div>
+        <p class="block-cap">
+          {{ monthName }}
+        </p>
+        <template v-if="data.target">
+          <h2 class="block-title">
+            {{ left ? `${plural(left, "recherche", "recherches")} à faire` : "Objectif du mois atteint" }}
+          </h2>
+          <p
+            class="block-help"
+            data-test="orp-deadline"
+          >
+            Objectif fixé par ta conseillère. À remettre avant le {{ deadline }}.
+          </p>
+        </template>
+        <template v-else>
+          <h2 class="block-title">
+            Indique ton objectif ORP
+          </h2>
+          <p class="block-help">
+            Le nombre de recherches que l'ORP te demande chaque mois.
+          </p>
+          <RouterLink
+            :to="{ path: '/reglages', query: { rubrique: 'recherche' } }"
+            class="block-link"
+          >
+            Indiquer mon objectif ›
+          </RouterLink>
+        </template>
+      </div>
+    </section>
+
+    <section
+      v-if="toDeclare.length"
+      class="block"
+      aria-labelledby="orp-declare-title"
+      data-test="orp-to-declare"
+    >
+      <h2
+        id="orp-declare-title"
+        class="block-title"
+      >
+        À déclarer à l’ORP · {{ toDeclare.length }}
+      </h2>
+      <p class="block-help">
+        Envoyées, pas encore sur ta feuille de recherches.
+      </p>
+      <div class="orp-blocks-rows">
+        <BlockRow
+          v-for="row in visible"
+          :key="row.application_id"
+          :title="row.company"
+          :status="row.missing.length ? { text: 'infos à compléter', tone: 'todo' } : null"
+          :lines="[`${row.job_title} · ${how(row.method)}`, `Envoyée le ${day(row, 'long')}`]"
+          :to="ficheTo(row)"
+          :data-test="`orp-declare-${row.application_id}`"
+        />
+      </div>
+      <button
+        v-if="!allShown && toDeclare.length > SHOWN"
+        type="button"
+        class="link orp-blocks-more"
+        data-test="orp-declare-more"
+        @click="allShown = true"
+      >
+        {{ toDeclare.length - SHOWN === 1 ? "Afficher l’autre" : `Afficher les ${toDeclare.length - SHOWN} autres` }}
+      </button>
+    </section>
+
+    <section
+      class="block"
+      aria-labelledby="orp-month-title"
+      data-test="orp-searches"
+    >
+      <h2
+        id="orp-month-title"
+        class="block-title"
+      >
+        Recherches du mois · {{ declared.length }}
+      </h2>
+      <p
+        class="block-help"
+        data-test="orp-proof-note"
+      >
+        L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.
+      </p>
+      <div class="orp-blocks-rows">
+        <BlockRow
+          v-for="row in declared"
+          :key="row.application_id"
+          :title="row.company"
+          :status="row.missing.length ? { text: 'justificatif à joindre', tone: 'todo' } : { text: 'justificatif joint', tone: 'ok' }"
+          :lines="[`${day(row, 'short')} · ${row.job_title}`]"
+          :data-test="`orp-row-${row.application_id}`"
+          @click="emit('open', row.application_id)"
+        />
+      </div>
+      <button
+        type="button"
+        class="secondary action-2 block-action"
+        data-test="orp-export"
+        @click="emit('export')"
+      >
+        <AppIcon name="download" />Exporter le formulaire (PDF)
+      </button>
+    </section>
+  </div>
+</template>
+
+<style>
+/* Valeurs du HTML de la maquette Orp : blocs à 12 des bords, cercle de 96 et 16 d'écart, sur-titre à 4 du titre. */
+.orp-blocks { --orp-blocks-16: 16px; }
+.orp-blocks-goal { display: flex; align-items: center; gap: var(--orp-blocks-16); }
+.orp-blocks-goal .block-cap { margin-bottom: var(--space-1); }
+.orp-blocks-rows { margin-top: var(--space-4); }
+.orp-blocks-more { min-height: var(--target-min); margin-top: var(--space-2); font-weight: var(--weight-bold); }
+.orp-blocks .block-row.small { min-height: var(--row-72); }
+</style>
+<style>
+/* L'onglet ORP de Bilan sur téléphone : le fond des blocs sous les onglets, blocs à 12 des bords. */
+.bilan-orp-blocks.band { padding: var(--space-2) 0 var(--space-12); background: var(--page-blocks); border-top: 0; }
+.bilan-orp-blocks > .container { padding-left: var(--block-gutter); padding-right: var(--block-gutter); }
+.bilan-orp-blocks .bilan-orp { gap: 0; }
+@media screen { .bilan-orp-blocks .orp-sheet-tab:not(:has(.notice)) { display: none; } }
+</style>
+<style>
+/* Le Suivi ORP du mois sur téléphone (maquette Orp) : l'en-tête sur --bg, puis les blocs à 12 des bords. */
+.jobs-body.orp-page-blocks { gap: var(--block-gap); padding-left: var(--block-gutter); padding-right: var(--block-gutter); }
+.orp-page-blocks .orp-export-row { justify-content: flex-end; }
+.orp-page-blocks .orp-page-head .icon-button { color: var(--primary-text); }
+.orp-page-blocks .orp-page-head h1 { font-weight: var(--weight-heavy); }
+</style>

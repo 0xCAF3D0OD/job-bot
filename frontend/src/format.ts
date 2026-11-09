@@ -132,6 +132,10 @@ export function localDate(day: string): Date {
   return new Date(y ?? 2000, (m ?? 1) - 1, d ?? 1);
 }
 
+// Le jour du mois suivant où les recherches sont à remettre à l'ORP, quand le serveur n'en donne pas (MODIFICATIONS du
+// 8 novembre au soir, §10.2). À confirmer par Kevin avec le texte officiel ; le serveur a le même défaut (5).
+export const ORP_DEADLINE_DAY = 5;
+
 export function formatMonth(month: string): string {
   const [year, m] = month.split("-").map(Number);
   return monthFormat.format(new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1, 1)));

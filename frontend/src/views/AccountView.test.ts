@@ -42,7 +42,7 @@ afterEach(() => {
   me.value = { username: "kevin", auth_enabled: true, demo: false, is_owner: false };
 });
 
-describe("AccountView (maquette Compte, étape 10a)", () => {
+describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", () => {
   it("la carte du profil, puis les quatre groupes et leurs liens", async () => {
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");
@@ -55,7 +55,7 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     expect(image.find(".account-image-badge .icon").exists()).toBe(true);
     expect(card.text()).toContain("Kevin Di Nocera");
     expect(card.text()).toContain("CV, compétences, postes recherchés");
-    expect(wrapper.findAll(".grouped-title").map((t) => t.text())).toEqual([
+    expect(wrapper.findAll(".account-block .block-cap").map((t) => t.text())).toEqual([
       "Mon parcours",
       "Préférences",
       "Recherche et outils",
@@ -64,7 +64,10 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     expect(href(wrapper, "account-trainings")).toBe("/bilan/formations");
     // « Mes CV » compte les CV, pas les certificats (C5).
     expect(href(wrapper, "account-cv")).toBe("/profil?onglet=parcours");
-    expect(wrapper.get("[data-test=account-cv] .grouped-value").text()).toBe("2");
+    expect(wrapper.get("[data-test=account-cv] .block-row-line").text()).toBe(", 2 documents");
+    // D29 : chaque ligne a son cercle à flèche, décoratif ; la carte du profil aussi.
+    expect(card.get(".arrow-circle").attributes("aria-hidden")).toBe("true");
+    expect(wrapper.get("[data-test=account-page]").element.closest(".blocks-page")).not.toBeNull();
     expect(href(wrapper, "account-criteria")).toBe("/profil");
     expect(href(wrapper, "account-notifications")).toBe("/reglages?rubrique=notifications");
     expect(wrapper.get("[data-test=account-appearance]").text()).toContain("Automatique");
@@ -74,7 +77,7 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     // L'administration et l'état du service, à l'exploitant seulement.
     expect(wrapper.find("[data-test=account-admin]").exists()).toBe(false);
     expect(wrapper.find("[data-test=account-diagnostic]").exists()).toBe(false);
-    await wrapper.get("[data-test=account-collect] button").trigger("click");
+    await wrapper.get("button[data-test=account-collect]").trigger("click");
     expect(collectNow).toHaveBeenCalled();
   });
 
@@ -104,7 +107,7 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
 describe("Collecter maintenant (reprise de la 502)", () => {
   it("pendant la collecte : la ligne est aria-disabled et aria-busy, le clic ne relance rien, l'état est annoncé", async () => {
     const wrapper = await mountPage();
-    const button = () => wrapper.get("[data-test=account-collect] button");
+    const button = () => wrapper.get("button[data-test=account-collect]");
     const status = wrapper.get("[data-test=account-collect-status]");
     expect(status.attributes("role")).toBe("status");
     expect(button().attributes("aria-disabled")).toBeUndefined();
