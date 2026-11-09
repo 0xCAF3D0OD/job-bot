@@ -39,39 +39,39 @@ function cal(iso: string): { day: number; month: number } {
     data-test="rdv-prep-sheet"
     @close="emit('close')"
   >
-    <div class="prep-sum">
+    <div class="sheet-sum">
       <CalendarDate
         v-bind="cal(at)"
         tone="orp"
       />
-      <div class="prep-sum-text">
+      <div class="sheet-sum-text">
         <b>Rendez-vous ORP</b>
         <span>{{ dateText(at) }}, {{ timeAndPlace(at, place) }}</span>
       </div>
     </div>
     <section
       v-if="lines.length"
-      class="prep-group"
+      class="sheet-group"
       :aria-labelledby="whereId"
       data-test="rdv-prep-lines"
     >
       <h3
         :id="whereId"
-        class="prep-group-title"
+        class="sheet-group-title"
       >
         Où tu en es
       </h3>
-      <ul class="prep-items">
+      <ul class="sheet-items">
         <li
           v-for="line in lines"
           :key="line.label"
-          class="prep-item"
+          class="sheet-item"
         >
           <div>
-            <div class="prep-key">
+            <div class="sheet-key">
               {{ line.label }}
             </div>
-            <div class="prep-text">
+            <div class="sheet-text">
               {{ line.text }}
             </div>
           </div>
@@ -80,58 +80,38 @@ function cal(iso: string): { day: number; month: number } {
     </section>
     <section
       v-if="questions.length"
-      class="prep-group"
+      class="sheet-group"
       :aria-labelledby="askId"
       data-test="rdv-prep-questions"
     >
       <h3
         :id="askId"
-        class="prep-group-title"
+        class="sheet-group-title"
       >
         Tes questions au conseiller · {{ checkedCount(checked) }}
       </h3>
-      <ul class="prep-items">
+      <ul class="sheet-items">
         <li
           v-for="question in questions"
           :key="question.key"
         >
-          <label class="prep-item prep-check">
+          <label class="sheet-item sheet-check">
             <input
               type="checkbox"
               :checked="question.checked"
               :data-test="`rdv-question-${question.key}`"
               @change="emit('toggle', question, ($event.target as HTMLInputElement).checked)"
             >
-            <span class="prep-text">{{ question.text }}</span>
+            <span class="sheet-text">{{ question.text }}</span>
           </label>
         </li>
       </ul>
     </section>
     <a
-      class="prep-pdf"
+      class="sheet-link"
       :href="pdf"
       download
       data-test="rdv-pdf"
     >Imprimer ou télécharger en PDF<AppIcon name="chevron" /></a>
   </BottomSheet>
 </template>
-
-<style>
-/* Valeurs du HTML de RendezVousPreparer : rappel avec 16 px d'écart, 20 px dessous et trait ; familles à 20 px, titre
-   13/16 en capitales ; lignes 12 px au-dessus et en dessous, trait --line ; libellé 13/16 juste au-dessus du texte 15/20 ;
-   cases de 24 px à 16 px du texte ; lien de bas de 56 px, 8 px au-dessus. */
-.prep-sum { display: flex; align-items: center; gap: var(--space-4); padding-bottom: var(--space-5); border-bottom: 1px solid var(--line); }
-.prep-sum-text { min-width: 0; }
-.prep-sum-text b { display: block; font-size: var(--font-title); line-height: var(--space-6); }
-.prep-sum-text span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.prep-group { padding-top: var(--space-5); }
-.prep-group-title { margin: 0 0 var(--space-1); font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
-.prep-items { margin: 0; padding: 0; list-style: none; }
-.prep-item { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
-.prep-check { align-items: center; min-height: var(--target-min); box-sizing: border-box; cursor: pointer; }
-.prep-check input { flex: none; width: var(--space-6); height: var(--space-6); margin: 0; accent-color: var(--primary-graphic); cursor: pointer; }
-.prep-key { font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
-.prep-text { font-size: var(--font-label); line-height: var(--space-5); overflow-wrap: anywhere; }
-.prep-pdf { --prep-pdf-h: 56px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--prep-pdf-h); margin-top: var(--space-2); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
-.prep-pdf > .icon { flex: none; width: var(--space-6); height: var(--space-6); }
-</style>

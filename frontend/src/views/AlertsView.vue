@@ -7,6 +7,7 @@ import { alertsDigest } from "../alertsDigest";
 import { alertsBand, searchGroups, type SearchGroup } from "../alertsState";
 import ActionBand from "../components/ActionBand.vue";
 import AlertSearchCard from "../components/AlertSearchCard.vue";
+import AlertsPhoneList from "../components/AlertsPhoneList.vue";
 import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
@@ -166,7 +167,8 @@ async function remove(group: SearchGroup): Promise<void> {
   if (!before) return;
   page.value = { ...before, searches: before.searches.filter((s) => !group.ids.includes(s.id)) };
   await offerUndo({
-    message: `« ${group.terms} » n'est plus suivie.`,
+    // Téléphone (§10.8) : le même message qu'« Offre écartée » (§10.1).
+    message: phone.value ? "Recherche retirée." : `« ${group.terms} » n'est plus suivie.`,
     commit: async (keepalive) => {
       let latest: AlertsPage | undefined;
       for (const id of group.ids) {
@@ -263,7 +265,7 @@ onMounted(async () => {
       </p>
       <!-- La conclusion d'abord (règles §3.2), puis une seule bande d'action (§3). -->
       <div
-        v-if="listed && view === 'summary' && band"
+        v-if="listed && view === 'summary' && band && !(phone && band.kind === 'confirm')"
         class="alerts-banner"
         role="status"
         data-test="alerts-banner"
@@ -344,8 +346,18 @@ onMounted(async () => {
         <AlertsPanel />
       </template>
       <template v-else>
+        <!-- Téléphone (§10.8, 9 novembre) : les recherches rangées par famille, une carte par site, la feuille « Alerte ». -->
+        <AlertsPhoneList
+          v-if="phone"
+          :page="page"
+          :groups="groups"
+          @add="adding = true"
+          @create="create"
+          @remove="remove"
+          @confirmed="confirmed"
+        />
         <section
-          v-if="listed"
+          v-else-if="listed"
           class="alerts-section alerts-list-wide"
           data-test="alert-searches"
         >
@@ -444,6 +456,10 @@ onMounted(async () => {
             :address="page.mailbox"
           />
         </section>
+        <AlertsForward
+          v-if="phone && page.personal_address && page.mailbox"
+          :address="page.mailbox"
+        />
         <SiteMail
           :codes="page.codes ?? []"
           :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
