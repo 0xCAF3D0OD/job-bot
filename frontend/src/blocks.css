@@ -45,7 +45,7 @@
 .block-field-text { flex: 1; min-width: 0; }
 .block-field-label { font-size: var(--block-cap); line-height: var(--field-label-lh); color: var(--text-secondary); }
 .block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
-.block-field-value.empty { font-weight: var(--weight-regular); color: var(--text-secondary); }
+.block-field-value.block-field-none { font-weight: var(--weight-regular); color: var(--text-secondary); }
 .block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .block-field .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-graphic); }
 a.block-action.action-2 { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }

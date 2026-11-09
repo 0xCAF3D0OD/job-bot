@@ -531,7 +531,7 @@ onUnmounted(() => assistant.setFocus(null));
             aria-label="Retour au Bilan"
             data-test="orp-back"
           >
-            <AppIcon name="arrow-left" />
+            <AppIcon name="chevron-left" />
           </RouterLink>
           <h1>Suivi ORP</h1>
         </header>

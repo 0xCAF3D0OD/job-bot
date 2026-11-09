@@ -197,7 +197,7 @@ async function declare(): Promise<void> {
 /* Valeurs du HTML de la maquette OrpFiche : en-tête de 64 sur --bg, blocs à 12 des bords, barre du bas sur --bg avec
    un trait, bouton plein de 52, phrase de 14 centrée à 8 dessous. */
 .orp-fiche { --fiche-64: 64px; --fiche-52: 52px; --fiche-22: 22px; --fiche-28: 28px; min-height: 100dvh; display: flex; flex-direction: column; }
-.orp-fiche-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-3); min-height: var(--fiche-64); padding: var(--space-3) var(--space-4); background: var(--bg); }
+.orp-fiche-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-2); min-height: var(--fiche-64); padding: var(--space-3) var(--space-5); background: var(--bg); }
 .orp-fiche-head h1 { margin: 0; font-size: var(--fiche-22); line-height: var(--fiche-28); font-weight: var(--weight-heavy); }
 .orp-fiche-head .icon-button { width: var(--target-min); height: var(--target-min); border: 0; background: transparent; color: var(--primary-text); }
 .orp-fiche-content { flex: 1; display: flex; flex-direction: column; }
@@ -206,6 +206,8 @@ async function declare(): Promise<void> {
 .orp-fiche-declare { justify-content: center; width: 100%; min-height: var(--fiche-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .orp-fiche-note, .orp-fiche-done { margin: var(--space-2) 0 0; font-size: var(--font-small); text-align: center; color: var(--text-secondary); }
 .orp-fiche-done { margin: 0; }
+/* Téléphone (§2.9, 9 novembre) : la barre aussi à 20 px des bords (maquette OrpFiche, padding 12 20 16). */
+@media (max-width: 820px) { .orp-fiche-bar { padding-left: var(--space-5); padding-right: var(--space-5); } }
 /* Ordinateur (lot 18, §10.3) : dans le panneau latéral de 480 px, les blocs sur leur fond et la barre en bas. */
 .side-panel-body:has(> .orp-fiche-content) { display: flex; flex-direction: column; padding: 0; }
 .side-panel-body > .orp-fiche-content { flex: 1 0 auto; }

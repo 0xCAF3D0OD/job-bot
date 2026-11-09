@@ -4519,6 +4519,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-blocks .account-image-button { left: calc(var(--space-4) * 2); }
 .account-blocks .account-card-text { gap: 0; }
 .account-blocks .account-card-name { font-size: var(--font-body); line-height: var(--row-title-lh); }
+.account-blocks .account-page-logout { justify-self: start; margin: var(--space-2) var(--space-5) 0; padding: 0; }
 .account-blocks .account-card-line { margin-top: var(--space-1); line-height: var(--row-line-lh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .account-switch { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 /* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */

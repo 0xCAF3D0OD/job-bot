@@ -46,7 +46,7 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
     data-test="orp-blocks"
   >
     <section
-      class="block orp-blocks-goal"
+      class="block info orp-blocks-goal"
       data-test="orp-goal"
     >
       <LiquidCircle
@@ -174,16 +174,23 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
 .orp-blocks .block-row.small { min-height: var(--row-72); }
 </style>
 <style>
-/* L'onglet ORP de Bilan sur téléphone : le fond des blocs sous les onglets, blocs à 12 des bords. */
-.bilan-orp-blocks.band { padding: var(--space-2) 0 var(--space-12); background: var(--page-blocks); border-top: 0; }
+/* L'onglet ORP de Bilan sur téléphone : sous les onglets, les sections sur le fond crème (D28 revu le 9 novembre). */
+.bilan-orp-blocks.band { padding: var(--space-2) 0 var(--space-12); background: var(--bg); border-top: 0; }
 .bilan-orp-blocks > .container { padding-left: var(--block-gutter); padding-right: var(--block-gutter); }
 .bilan-orp-blocks .bilan-orp { gap: 0; }
 @media screen { .bilan-orp-blocks .orp-sheet-tab:not(:has(.notice)) { display: none; } }
 </style>
 <style>
 /* Le Suivi ORP du mois sur téléphone (maquette Orp) : l'en-tête sur --bg, puis les blocs à 12 des bords. */
-.jobs-body.orp-page-blocks { gap: var(--block-gap); padding-left: var(--block-gutter); padding-right: var(--block-gutter); }
+.jobs-body.orp-page-blocks { padding-top: 0; gap: var(--block-gap); padding-left: var(--block-gutter); padding-right: var(--block-gutter); }
 .orp-page-blocks .orp-export-row { justify-content: flex-end; }
 .orp-page-blocks .orp-page-head .icon-button { color: var(--primary-text); }
 .orp-page-blocks .orp-page-head h1 { font-weight: var(--weight-heavy); }
+/* Version du 9 novembre (§2.9, maquette Orp) : en-tête de 64 px à 20 px des bords (retour de 44 px, 8 px avant le
+   titre 22/28) ; tout ce qui n'est pas un bloc (mois, bandeau, « ⋯ », « Ajouter une recherche ») garde aussi 20 px. */
+.orp-page-blocks { --orp-page-64: 64px; --orp-page-28: 28px; }
+.orp-page-blocks .orp-page-head { gap: var(--space-2); min-height: var(--orp-page-64); margin: 0; padding: var(--space-3) var(--space-5); }
+.orp-page-blocks .orp-page-head h1 { font-size: var(--font-section); line-height: var(--orp-page-28); }
+.orp-page-blocks .orp-page-head .icon-button { width: var(--target-min); height: var(--target-min); }
+.orp-page-blocks > :not(.orp-page-head, .orp-blocks, .sent-detail) { margin-left: var(--space-5); margin-right: var(--space-5); }
 </style>

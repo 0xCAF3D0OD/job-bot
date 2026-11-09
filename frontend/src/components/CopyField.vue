@@ -17,7 +17,7 @@ const copyLabel = `Copier ${props.label.charAt(0).toLowerCase()}${props.label.sl
       <div class="block-field-label">
         {{ label }}
       </div>
-      <div :class="['block-field-value', { empty: !value }]">
+      <div :class="['block-field-value', { 'block-field-none': !value }]">
         {{ value || "Non renseigné" }}
       </div>
       <span
