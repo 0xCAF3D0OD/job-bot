@@ -601,8 +601,9 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
             ),
             Notification(
                 kind="follow_up",
-                title="Relancer Maquette Médias Sàrl ?",
-                message="Candidature envoyée il y a plus de deux semaines, sans réponse.",
+                # Le texte d'une relance dans la cloche (§10.9) : le titre seul.
+                title="1 candidature sans réponse depuis 10 jours",
+                message="",
                 link="/candidatures/suivi",
                 created_at=_at(today - timedelta(days=1), 9),
             ),

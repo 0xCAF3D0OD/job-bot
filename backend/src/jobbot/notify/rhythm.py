@@ -25,9 +25,12 @@ async def notify_week(runtime: Runtime, today: date | None = None) -> int:
     base = runtime.settings.public_url.rstrip("/")
     await deliver(
         runtime,
-        Message(title=found.title, message=found.message, tags=TAGS[found.kind], click=f"{base}/"),
+        Message(
+            title=found.title, message=found.message, tags=TAGS[found.kind], click=f"{base}/bilan"
+        ),
         kind="rhythm_week",
-        link="/",
+        # Le bilan de la semaine ouvre Bilan (§10.9 ; question pour Kevin).
+        link="/bilan",
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(

@@ -143,7 +143,9 @@ async def test_budget_alert_once_per_month(rt: Runtime, sent: list[Message]) -> 
     again = await service.notify_new_scores(rt)
     assert first.budget_alert and not again.budget_alert
     assert [m.title for m in sent] == ["Budget de l'IA presque atteint"]
-    assert "8.50 CHF dépensés sur 10.00 CHF" in sent[0].message
+    assert sent[0].message == (
+        "8.50 CHF sur 10 ce mois-ci. Au-delà, les nouvelles offres ne sont plus notées."
+    )
 
 
 async def test_send_failure_does_not_fail_scoring(

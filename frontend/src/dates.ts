@@ -110,6 +110,25 @@ export function timeInList(value: string | Date, now: Date = new Date()): string
   return dateInList(value, now);
 }
 
+/** L'heure d'une carte de notification (MODIFICATIONS du 8 novembre au soir, §10.9) : « 09:12 » aujourd'hui, « Hier »,
+ * sinon « 30 oct. ». */
+export function timeInCard(value: string | Date, now: Date = new Date()): string {
+  const days = calendarDays(toDate(value), now);
+  if (days <= 0) {
+    const { hour, minute } = zoned(toDate(value));
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }
+  if (days === 1) return "Hier";
+  return dateInList(value, now);
+}
+
+/** Les familles de la page Notifications sur téléphone (§10.9) : « Aujourd'hui », « Hier », « Plus tôt ». */
+export function dayFamily(value: string | Date, now: Date = new Date()): string {
+  const days = calendarDays(toDate(value), now);
+  if (days <= 0) return "Aujourd'hui";
+  return days === 1 ? "Hier" : "Plus tôt";
+}
+
 const weekday = new Intl.DateTimeFormat("fr-CH", { weekday: "long", timeZone: ZONE });
 const weekdayShort = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "short", timeZone: ZONE });
 

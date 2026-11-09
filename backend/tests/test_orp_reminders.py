@@ -102,7 +102,8 @@ async def test_due_mentions_job_room_only_when_used(rt: Runtime, sent: list[Mess
     await add(rt, date(2026, 9, 3))
     await add(rt, date(2026, 9, 10))
     assert await notify_orp(rt, date(2026, 10, 1)) == 1
-    assert "Job-Room depuis" in sent[0].message and "à déclarer" not in sent[0].message
+    # Un chiffre, pas de consigne (§10.9).
+    assert sent[0].message == "2 candidatures."
 
     await add(rt, date(2026, 9, 17), job_room_at=date(2026, 9, 18))
     assert await notify_orp(rt, date(2026, 10, 4)) == 1

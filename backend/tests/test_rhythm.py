@@ -310,6 +310,9 @@ async def test_the_end_of_week_signal(rt: Runtime, sent: list[Message]) -> None:
         await _scored_application(rt, n, date(2026, 10, 19 + n % 5), 80)
     assert await notify_week(rt, friday) == 1
     assert await notify_week(rt, friday) == 0  # une fois par semaine
+    async with rt.sessionmaker() as session:
+        week = await session.scalar(select(Notification).where(Notification.kind == "rhythm_week"))
+    assert week is not None and week.link == "/bilan"  # §10.9 : le bilan ouvre Bilan
     assert sent[-1].title == "Semaine faite : 5 candidatures"
     assert sent[-1].message == "Octobre : 5 / 10. Le reste du temps est à toi."
     # Beaucoup plus, dont des offres peu notées : « trop ».

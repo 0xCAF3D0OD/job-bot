@@ -34,11 +34,15 @@ export const SCREENS: Record<string, string> = {
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
   "components/GoalReached.vue": "objectif ORP atteint",
   "components/OrpMeetingEmpty.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu (buste sur téléphone, lot 16.3)",
+  "views/NotificationsView.vue": "Notifications, Tout est lu (téléphone, §10.9)",
 };
 
 // Les écrans où le personnage et un autre des trois sont dans des branches qui s'excluent : le fichier
 // contient les deux, la page jamais. Chacun a son test sur la page affichée (le fichier cité).
-const EXCLUSIVE: Record<string, string> = {};
+const EXCLUSIVE: Record<string, string> = {
+  // Le personnage quand tout est lu sur téléphone ; la cloche sur ordinateur ; le logo transformé sans notification.
+  "views/NotificationsView.vue": "views/NotificationsView.test.ts",
+};
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
 const WORK = [

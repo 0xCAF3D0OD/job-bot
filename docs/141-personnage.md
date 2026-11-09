@@ -65,6 +65,7 @@ hachées (48 adresses de moins dans le premier chargement) : 1,4 Ko de moins, le
 | 15 | perso-02-bonjour-buste, 118 px | Téléphone : Connexion, clair et sombre (au lieu du personnage en pied de 140 px) | Connexion, ConnexionSombre | lot 16 |
 | 16 | perso-03-cv-buste, 100 px | Téléphone : Premiers pas, étape « Ton CV » (au lieu de 122 px) | OnboardingC | lot 16 |
 | 17 | perso-07-revelation-buste, 150 px | Téléphone : Premiers pas, dernière étape (au lieu de 186 px) | OnboardingC | lot 16 |
+| 18 | perso-05-assis, 150 px de large, ombre ovale de 120 x 12 px | Téléphone : Notifications, Tout est lu (au lieu de la cloche dans l'arche, qui reste sur ordinateur) | Notifications, NotificationsSombre (`etats/…--tout-lu.png`) | §10.9 |
 
 Bustes (MODIFICATIONS du 8 novembre au soir, lot 16.3) : quand le personnage partage l'écran du téléphone avec un
 formulaire, seul le haut du corps reste, fondu en bas (le fondu est dans le fichier), posé sur la ligne de sol du

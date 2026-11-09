@@ -118,7 +118,8 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                 runtime,
                 notify.Message(
                     title=title,
-                    message=details + ". PDF, CSV ou saisie Job-Room depuis la page ORP.",
+                    # Un chiffre, pas de consigne (§10.9).
+                    message=details + ".",
                     priority=4 if key == "eve" else 3,
                     tags=["calendar"],
                     click=f"{base}/candidatures/suivi?mois={previous}",

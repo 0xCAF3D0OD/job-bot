@@ -68,6 +68,9 @@ SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/offres/{offer}/preparer", "[data-test=template-row]"),
     ("candidatures/alertes", None),
     ("candidatures/alertes", "[data-test^=alert-card-]"),
+    ("notifications", None),
+    # « Tout est lu » : tout lire, puis l'onglet « Non lues ».
+    ("notifications", "[data-test=read-all] && [data-test=filter-unread]"),
 ]
 
 
@@ -90,8 +93,8 @@ async def main() -> int:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")
                 await page.wait_for_timeout(1500)
-                if opener:
-                    await page.click(opener)
+                for step in opener.split(" && ") if opener else []:
+                    await page.click(step)
                     await page.wait_for_timeout(600)
                 await page.evaluate(PRELUDE, MAPPING)
                 faults = await page.evaluate(AUDIT)
