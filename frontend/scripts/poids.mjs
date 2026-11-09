@@ -10,7 +10,9 @@ import { gzipSync } from "node:zlib";
 
 const DIST = new URL("../dist/", import.meta.url).pathname;
 // Relevé pour la maquette du 8 novembre (docs/143, lot 3 : panneaux de l'en-tête, image de profil, Composer ; lot 9 : Alertes et Compte sur téléphone ; lot 10 : DateField).
-export const LIMITS = { premier: 120_000, total: 346_000, "css-premier": 54_000, css: 78_500 };
+// Relevé pour la version téléphone du 9 novembre (docs/143) : règles transverses, puis les écrans du §10.1 au §10.9
+// (feuille Compatibilité, ORP, feuilles du bas, Alertes, Notifications), une seule fois pour toute la série.
+export const LIMITS = { premier: 120_000, total: 350_000, "css-premier": 56_000, css: 82_000 };
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const size = (file) => gzipSync(readFileSync(join(DIST, file))).length;
