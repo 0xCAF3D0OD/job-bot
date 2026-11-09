@@ -6,6 +6,7 @@ import type { SearchGroup, SiteState } from "../alertsState";
 import AppIcon from "./AppIcon.vue";
 import BlockRow from "./BlockRow.vue";
 import BottomSheet from "./BottomSheet.vue";
+import SidePanel from "./SidePanel.vue";
 import "../blocks.css";
 
 // Les alertes e-mail sur téléphone (MODIFICATIONS du 8 novembre au soir, §10.8 ; maquettes AlertesTel,
@@ -13,7 +14,12 @@ import "../blocks.css";
 // (« À confirmer », « Actives », « À créer » ; une famille vide n'est pas affichée), puis « + Ajouter une recherche ».
 // La carte ouvre la feuille « Alerte » : le rappel, « La recherche » (lieux, site), puis selon l'état confirmer,
 // créer, ou les actions ; « Ne plus suivre cette recherche » partout.
-const props = defineProps<{ page: AlertsPage; groups: SearchGroup[] }>();
+// `desk` (maquette AlertesOrdinateur du 9 novembre, §2.8) : la même liste sur ordinateur ; « lieux · site » sous le
+// titre, le mot d'état à droite en couleur, « + Ajouter une recherche » dans l'en-tête de la page ; la feuille devient
+// le panneau de droite (`al`, `cf`), et la note sur le filtre Gmail ferme la liste
+// (seulement avec l'adresse par compte, où les e-mails arrivent par ce filtre).
+// `highlighted` : la recherche venue de la recherche globale (?recherche=…), ses cartes sont mises en avant.
+const props = defineProps<{ page: AlertsPage; groups: SearchGroup[]; desk?: boolean; highlighted?: string | null }>();
 const emit = defineEmits<{
   add: [];
   create: [site: string, terms: string];
@@ -50,6 +56,18 @@ const cards = computed<Card[]>(() =>
       }),
     ),
 );
+const DESK_WORD: Record<SiteState["kind"], (label: string) => string> = {
+  received: (label) => label,
+  quiet: (label) => label,
+  waiting: () => "En attente du premier envoi",
+  silent: () => "Rien reçu depuis la création",
+  todo: () => "Pas encore créée",
+};
+function aside(card: Card): { text: string; tone: "todo" | "plain" | "muted" } {
+  if (card.kind === "confirm") return { text: "Confirmation demandée", tone: "todo" };
+  if (card.kind === "todo") return { text: DESK_WORD.todo(""), tone: "muted" };
+  return { text: DESK_WORD[card.site.state.kind](card.site.state.label), tone: card.site.state.kind === "silent" ? "todo" : "plain" };
+}
 const status = (card: Card) =>
   `${card.site.name} · ${card.kind === "confirm" ? "confirmation demandée" : STATE_WORD[card.site.state.kind](card.site.state.label)}`;
 
@@ -100,7 +118,7 @@ function remove(): void {
 
 <template>
   <div
-    class="blocks-page alerts-families"
+    :class="['blocks-page', 'alerts-families', { desk }]"
     data-test="alert-searches"
   >
     <section
@@ -123,13 +141,16 @@ function remove(): void {
         v-for="card in family.cards"
         :key="card.key"
         :title="card.group.terms"
-        :lines="[card.places, status(card)]"
+        :lines="desk ? [`${card.places} · ${card.site.name}`] : [card.places, status(card)]"
+        :aside="desk ? aside(card) : null"
+        :class="{ highlighted: !!highlighted && card.group.terms === highlighted }"
         aria-haspopup="dialog"
         :data-test="`alert-card-${card.group.ids[0]}-${card.site.slug}`"
         @click="show(card)"
       />
     </section>
     <button
+      v-if="!desk"
       type="button"
       class="secondary action-2 alerts-add-phone"
       data-test="add-search"
@@ -138,13 +159,17 @@ function remove(): void {
       + Ajouter une recherche
     </button>
   </div>
-  <BottomSheet
+  <component
+    :is="desk ? SidePanel : BottomSheet"
     :open="open"
     title="Alerte"
-    data-test="alert-sheet"
     @close="open = false"
   >
-    <template v-if="shown">
+    <div
+      v-if="shown"
+      class="alert-sheet"
+      data-test="alert-sheet"
+    >
       <div class="sheet-sum">
         <div class="sheet-sum-text">
           <b>{{ shown.group.terms }}</b>
@@ -260,8 +285,15 @@ function remove(): void {
       >
         Ne plus suivre cette recherche
       </button>
-    </template>
-  </BottomSheet>
+    </div>
+  </component>
+  <p
+    v-if="desk && page.personal_address"
+    class="alerts-desk-note"
+    data-test="alerts-note"
+  >
+    jobA1 lit seulement les e-mails d’alerte transférés par ton filtre Gmail. Les autres sont supprimés à la réception.
+  </p>
 </template>
 
 <style>
@@ -282,9 +314,20 @@ function remove(): void {
 .alerts-families .alerts-add-phone { width: 100%; height: var(--btn-tertiary); min-height: var(--btn-tertiary); justify-content: center; }
 /* §2.9 : sous la liste, « J'attends un code » et « Afficher plus » ont aussi 44 px de haut. */
 .alerts-phone :is(.show-more, button.small) { min-height: var(--target-min); }
+.alert-sheet { display: contents; }
+.alerts-desk-note { margin: 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .alert-sheet-state { font-weight: var(--weight-bold); }
 .alert-sheet-state.active { color: var(--success); }
 .alert-sheet-state.confirm { color: var(--peach-text); }
+/* Ordinateur (AlertesOrdinateur, §2.8) : 32 px entre les familles, 8 px entre les cartes ; carte de 72 px, 20 px de
+   marge trait compris, rayon 18, 16 px entre le texte, le mot et le cercle de 36 px. */
+.alerts-families.desk { --alerts-pad-y: 14.5px; --alerts-pad-x: 18.5px; gap: var(--space-8); }
+.alerts-families.desk .alerts-family + .alerts-family { margin-top: 0; }
+.alerts-families.desk :is(.alerts-family-title, .alerts-family-help) { margin-left: var(--space-1); margin-right: var(--space-1); }
+.alerts-families.desk .block-row { gap: var(--space-4); min-height: var(--row-72); padding: var(--alerts-pad-y) var(--alerts-pad-x); border-radius: var(--radius-card); }
+.alerts-families.desk .block-row:hover { border-color: var(--primary-graphic); }
+.alerts-families .block-row.highlighted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.alerts-families.desk .block-row .arrow-circle { --circle: 36px; }
 button.sheet-link, button.sheet-cta { width: 100%; padding: 0; border: 0; border-radius: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
 button.sheet-cta { border-radius: var(--radius-pill); background: var(--action); color: var(--on-action); font-size: var(--font-body); justify-content: center; }
 </style>

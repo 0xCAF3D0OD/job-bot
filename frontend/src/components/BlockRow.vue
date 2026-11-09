@@ -6,9 +6,16 @@ import AppIcon from "./AppIcon.vue";
 // Une ligne à flèche (D29, MODIFICATIONS du 8 novembre au soir, §2.1) : toute la ligne est le lien, un seul arrêt
 // de tabulation ; le titre, le statut juste après (D31), les lignes secondaires coupées avec « … » ; à droite le
 // cercle à contour, décoratif. `to` en fait un lien, sinon un bouton. `lead` : une image avant le texte.
+// `aside` (maquettes de l'ordinateur du 9 novembre) : le mot d'état à droite, avant le cercle, en couleur.
 withDefaults(
-  defineProps<{ title: string; lines?: string[]; status?: { text: string; tone: "ok" | "todo" } | null; to?: RouteLocationRaw }>(),
-  { lines: () => [], status: null, to: undefined },
+  defineProps<{
+    title: string;
+    lines?: string[];
+    status?: { text: string; tone: "ok" | "todo" } | null;
+    aside?: { text: string; tone: "ok" | "todo" | "plain" | "muted" } | null;
+    to?: RouteLocationRaw;
+  }>(),
+  { lines: () => [], status: null, aside: null, to: undefined },
 );
 defineEmits<{ click: [] }>();
 </script>
@@ -33,6 +40,10 @@ defineEmits<{ click: [] }>();
         class="block-row-line"
       ><span class="visually-hidden">, </span>{{ line }}</span>
     </span>
+    <span
+      v-if="aside"
+      :class="['block-row-aside', aside.tone]"
+    ><span class="visually-hidden">, </span>{{ aside.text }}</span>
     <span
       class="arrow-circle"
       aria-hidden="true"

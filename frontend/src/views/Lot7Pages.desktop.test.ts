@@ -52,8 +52,8 @@ describe("Notifications sur ordinateur (NotificationsOrdinateur)", () => {
   });
 });
 
-describe("Mes alertes e-mail sur ordinateur (AlertesOrdinateur)", () => {
-  it("le titre, la phrase, le bandeau pêche, une ligne par recherche et par site", async () => {
+describe("Mes alertes e-mail sur ordinateur (AlertesOrdinateur du 9 novembre, §2.8)", () => {
+  it("le titre, la phrase, les familles, une carte par alerte ; plus de bandeau ni de menu « … »", async () => {
     const today = new Date().toISOString();
     GET.mockResolvedValue({
       data: {
@@ -84,11 +84,15 @@ describe("Mes alertes e-mail sur ordinateur (AlertesOrdinateur)", () => {
     expect(wrapper.find("[data-test=alerts-sentence]").text()).toMatch(/^1 recherche suivie\. Dernière alerte reçue/);
     expect(wrapper.find("[data-test=add-search]").text()).toBe("+ Ajouter une recherche");
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
-    const banner = wrapper.find("[data-test=alerts-banner]");
-    expect(banner.text()).toContain("attend ta confirmation");
-    expect(banner.find(".alerts-tonal").exists()).toBe(true);
-    expect(wrapper.find("[data-test=alert-row-1-jobup]").text()).toContain("Lausanne · jobup");
-    expect(wrapper.find("[data-test=alert-row-1-linkedin] [data-test=create-linkedin]").text()).toBe("Créer l’alerte");
+    expect(wrapper.find("[data-test=alerts-banner]").exists()).toBe(false);
+    expect(wrapper.find(".more-button").exists()).toBe(false);
+    expect(wrapper.findAll(".alerts-family-title").map((h) => h.text())).toEqual(["À confirmer · 1", "À créer · 1"]);
+    const confirm = wrapper.find("[data-test=alert-card-1-jobup]");
+    expect(confirm.text()).toContain("Lausanne · jobup");
+    expect(confirm.find(".block-row-aside").classes()).toContain("todo");
+    // Le panneau « cf » : le bouton plein « Confirmer sur jobup ».
+    await confirm.trigger("click");
+    expect(wrapper.find("[data-test=alert-confirm]").text()).toContain("Confirmer sur jobup");
   });
 });
 
