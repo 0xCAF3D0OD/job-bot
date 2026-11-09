@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
-import TemplatePicker from "../components/TemplatePicker.vue";
+import TemplateSheetRow from "../components/TemplateSheetRow.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
 import LayoutCard from "../components/LayoutCard.vue";
@@ -984,7 +984,7 @@ onMounted(() => void load());
             <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
-          <TemplatePicker
+          <TemplateSheetRow
             v-if="phone"
             :name="doc?.sender[0]"
           />

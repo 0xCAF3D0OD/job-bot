@@ -4153,7 +4153,8 @@ html.search-open { overflow: hidden; }
   .sheet-inner { gap: 0; padding: 0 0 calc(var(--sheet-pad) + env(safe-area-inset-bottom)); }
   .sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
   .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-1) var(--sheet-pad); touch-action: none; }
-  .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
+  /* `.sheet .sheet-title` : plus fort qu'un `h2` de page (par exemple `.orp-meeting h2`) qui contient la feuille. */
+  .sheet .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close { width: var(--sheet-close); height: var(--sheet-close); background: transparent; }
   .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
   .sheet-body { margin: 0; padding: var(--space-2) var(--sheet-pad) 0; }
@@ -4627,7 +4628,8 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-pill:has(.composer-files) { border-radius: var(--radius-card); }
 .composer-multi { border-radius: var(--radius-card); }
 .composer-drag { border-color: var(--primary-graphic); }
-.composer { --composer-field-gap: 10px; }
+/* 12 px au-dessus et au-dessous du texte (24) : 48 px, la hauteur des boutons de la rangée, sur la grille de 4 (§2.9). */
+.composer { --composer-field-gap: 12px; }
 .composer-row { display: flex; align-items: flex-end; gap: var(--space-1); }
 /* Lot 17 : le champ intérieur n'a ni fond, ni contour, ni anneau (le focus est sur la pilule entière). */
 .composer .composer-input { flex: 1 1 auto; min-width: 0; min-height: 24px; height: auto; max-height: calc(6lh + var(--space-5)); margin: var(--composer-field-gap) 0; padding: 0 var(--space-1); border: 0; outline: none; resize: none; background: transparent; color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--leading-normal); field-sizing: content; overflow-y: auto; }
@@ -4985,4 +4987,6 @@ a.panel-row:hover { background: var(--band); }
   .app-footer a { min-height: var(--target-min); }
   .suggestion-chip { min-height: var(--target-min); }
   .offers-spontaneous .link { min-height: var(--target-min); }
+  /* FR, DE, EN de la lettre : 44 × 44 comme la maquette Preparer (avant 44 × 36, zone agrandie seulement). */
+  .doc-language > button { min-height: var(--target-min); }
 }

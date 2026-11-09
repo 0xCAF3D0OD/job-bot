@@ -6,7 +6,8 @@ import { DOC_TEMPLATES, useDocTemplate } from "../composables/useDocTemplate";
 // Le choix du modèle (maquette Preparer, Kevin 2026-11-05) : quatre vignettes qui défilent, « Le même pour CV
 // et lettre ». Un groupe de boutons radio ; les flèches passent d'un modèle à l'autre.
 // La vignette Classique porte les initiales du nom, comme la maquette (« K D »).
-const props = defineProps<{ name?: string | null }>();
+// `grid` (feuille « Mise en page », §10.7) : les quatre modèles en deux colonnes, sans le titre.
+const props = defineProps<{ name?: string | null; grid?: boolean }>();
 const { template } = useDocTemplate();
 const initials = computed(() => {
   const words = (props.name || "").split(/\s+/).filter((word) => /^\p{L}/u.test(word));
@@ -25,11 +26,14 @@ function onKey(event: KeyboardEvent, index: number): void {
 
 <template>
   <section
-    class="tpl-picker"
-    aria-labelledby="tpl-picker-title"
+    :class="['tpl-picker', { 'tpl-picker-grid': grid }]"
+    :aria-labelledby="grid ? undefined : 'tpl-picker-title'"
     data-test="template-picker"
   >
-    <div class="tpl-picker-head">
+    <div
+      v-if="!grid"
+      class="tpl-picker-head"
+    >
       <h2 id="tpl-picker-title">
         Modèle
       </h2>
@@ -38,7 +42,8 @@ function onKey(event: KeyboardEvent, index: number): void {
     <div
       class="tpl-picker-row"
       role="radiogroup"
-      aria-labelledby="tpl-picker-title"
+      :aria-labelledby="grid ? undefined : 'tpl-picker-title'"
+      :aria-label="grid ? 'Modèle du document' : undefined"
     >
       <button
         v-for="(item, index) in DOC_TEMPLATES"
@@ -90,6 +95,8 @@ function onKey(event: KeyboardEvent, index: number): void {
 .tpl-picker-head h2 { margin: 0; font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .tpl-picker-head span { font-size: var(--label-caps); color: var(--text-secondary); }
 .tpl-picker-row { display: flex; gap: var(--space-3); overflow-x: auto; margin: 0 calc(var(--space-4) * -1); padding: var(--space-1) var(--space-4); scrollbar-width: none; }
+/* En grille (feuille « Mise en page ») : deux colonnes, 12 px entre les cartes (PreparerMiseEnPage). */
+.tpl-picker-grid .tpl-picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); overflow: visible; margin: 0; padding: var(--space-1) 0 var(--space-2); }
 .tpl-card { flex: none; display: grid; justify-items: center; gap: var(--space-2); min-width: 96px; padding: var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-bold); }
 .tpl-card.selected { border: 2.5px solid var(--primary-graphic); background: var(--primary-soft); }
 /* Les couleurs du papier, en clair puis en sombre (PreparerSombre : un papier brun, des traits estompés). */
