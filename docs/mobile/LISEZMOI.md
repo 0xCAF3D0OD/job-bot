@@ -1,12 +1,14 @@
-# jobA1, maquette de référence (8 novembre 2026)
+# jobA1, maquette de référence (9 novembre 2026)
 
 Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus.
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
+- `PROMPT_CLAUDE_CODE_9_NOVEMBRE_COMPLET.md` : **prompt complet à donner à Claude Code** (téléphone et ordinateur, toutes les décisions du 9 novembre, ordre des PR, tests).
 - `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).
+- `MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md` : corrections de la version ordinateur (9 novembre). Il prime sur tout le reste pour l'ordinateur.
 - `MODIFICATIONS_8_NOVEMBRE_SOIR.md` : texte complet, final et sans contradiction des lots 11 à 18. Il prime sur `PROMPT_CLAUDE_CODE.md` en cas de doute.
-- `maquettes/` : 67 écrans `.dc.html` (à ouvrir dans un navigateur) et `canvas.json` (titres et positions, rangés par section).
+- `maquettes/` : 104 écrans `.dc.html` (à ouvrir dans un navigateur) et `canvas.json` (titres et positions, rangés par section).
 - `captures/` : un PNG par écran, du même nom, dans l'état par défaut. `captures/etats/<Fichier>--<état>.png` montre les états ouverts (menus, panneaux, onglets, sélecteur de date). `vue_ensemble.png` montre tout le canvas. `icone_calendrier.png` montre l'icône date.
 - `illustrations/` :
   - `personnage/` : 12 poses en `-400.webp` (téléphone) et `-800.webp` (ordinateur). 01 debout, 02 bonjour, 03 cv, 04 marche, 05 assis, 06 perplexe, 07 révélation, 08 avion, 09 câbles, 10 hors ligne, 11 loupe, 12 célébration.
@@ -26,6 +28,8 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Accueil | AccueilSmile | AccueilSombre |
 | Candidatures, à traiter | Candidatures | CandidaturesSombre |
 | Candidatures, envoyées | Envoyees | EnvoyeesSombre |
+| Candidature envoyée, détail | EnvoyeeDetail | feuilles : EnvoyeeDetailRelance, EnvoyeeDetailDocuments, EnvoyeeDetailContacts |
+| Envoyées, statut mis à jour par e-mail | EnvoyeesStatut | |
 | Candidatures, rendez-vous (états vue, noter, dp) | RendezVous | RendezVousSombre |
 | Détail d'une offre | Offre | OffreSombre |
 | Compatibilité (feuille du bas, depuis le détail d'une offre) | OffreCompatibilite | OffreCompatibiliteSombre |
@@ -64,16 +68,28 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 |---|---|---|
 | Aujourd'hui, jour de travail | AujourdhuiOrdinateurTravailD | menu = compte, notif |
 | Aujourd'hui, jour de repos | AujourdhuiOrdinateurReposD | menu = compte, notif |
-| Candidatures (à traiter, envoyées, rendez-vous) | CandidaturesOrdinateurB | tab = tr, en, rv ; q ; menu = compte, notif, actions, filtres, ajouter ; dp = cal |
-| Préparer ma candidature | PreparerOrdinateur | tab = let, cv, pos |
+| Candidatures (à traiter, envoyées, rendez-vous) | CandidaturesOrdinateurB | tab = tr, en, rv ; q ; menu = compte, notif, actions, filtres, ajouter ; ajt = of, sp ; cmp ; ec ; dp = cal |
+| Envoyées, statut mis à jour par e-mail | CandidaturesOrdinateurStatut | |
+| Sombre (ligne artistique) : Aujourd’hui, Candidatures, Préparer, Bilan | AujourdhuiOrdinateurTravailDSombre, CandidaturesOrdinateurBSombre, PreparerOrdinateurSombre, BilanOrdinateurSombre | les autres écrans suivent la même table de couleurs (MODIFICATIONS_9 §12) |
+| Ajouter (panneau : une offre / candidature spontanée) | CandidaturesOrdinateurAjouter, CandidaturesOrdinateurSpontanee | |
+| Préparer, lettre générée | PreparerOrdinateur | |
+| Préparer, lettre et CV en cours d’écriture | PreparerOrdinateurGeneration | |
+| Préparer, la lettre n’a pas pu être écrite (échec) | PreparerOrdinateurLettreVide | |
+| Préparer, détail de la relecture (panneau) | PreparerOrdinateurRelecture | |
+| Préparer, le CV adapté n’a pas pu être préparé (échec) | PreparerOrdinateurCV | |
+| Préparer, postuler | PreparerOrdinateurPostuler | |
 | Bilan (ORP, résultats, formations) | BilanOrdinateur | tab = orp, res, form |
+| Pour l’ORP (panneau, une candidature à déclarer) | BilanOrdinateurFiche | |
 | Assistant (panneau latéral) | AssistantOrdinateur | plus, file |
 | Mon profil et mon CV | ProfilOrdinateur | pick, pv, av |
 | Toutes les notifications | NotificationsOrdinateur | tab = all, un |
-| Mes alertes e-mail | AlertesOrdinateur | |
-| Réglages | ReglagesOrdinateur | |
+| Mes alertes e-mail | AlertesOrdinateur | al ; cf |
+| Alertes, nouveau compte et création d’une alerte | AlertesOrdinateurVide, AlertesOrdinateurSite | |
+| Réglages | ReglagesOrdinateur | lg ; tx |
 | Connexion | ConnexionOrdinateur | |
-| Premiers pas | OnboardingOrdinateur | step = 1, 2, 3 |
+| Premiers pas, étape 1 sans CV | OnboardingOrdinateur | |
+| Premiers pas, lecture du CV / coupure / CV lu | OnboardingOrdinateurLecture, OnboardingOrdinateurCoupure, OnboardingOrdinateurCV | |
+| Premiers pas, étape 2 et 3 | OnboardingOrdinateurEtape2, OnboardingOrdinateurEtape3 | |
 | Candidature envoyée | CandidatureEnvoyeeOrdinateur | |
 | Objectif ORP atteint | ObjectifAtteintOrdinateur | |
 | Aucune offre (filtres) | AucuneOffreOrdinateur | |
@@ -93,7 +109,7 @@ Système : Systeme (règles communes), Emoticones, Animations (logo isolé, plus
 - Un seul des trois par écran.
 
 ## Cartes, boutons, icônes
-- Carte (fond blanc, bordure) = cliquable, toute la carte est le lien. Information seule = pas de cadre, traits gris légers #ECE9E1 entre les lignes.
+- Carte (fond blanc, bordure 1,5 px #CFCBC1) = cliquable, toute la carte est le lien. Information importante = carte d'information (même style, sans flèche, D35). Le reste : pas de cadre, traits gris légers entre les lignes. Jamais de carte dans une carte (D29).
 - Dans une carte cliquable, pas de bouton : libellé coloré (couleur du ton, 15 px, gras) suivi de ›.
 - Un seul bouton plein par écran. Les autres ont un contour.
 - Icônes seules, sans pastille de fond coloré. Tons : #8A4A16 retard, #2445C2 normal, #17734A entretien.
@@ -106,7 +122,7 @@ Système : Systeme (règles communes), Emoticones, Animations (logo isolé, plus
 ## Mise en page ordinateur
 - En-tête commun (AppHeader) aligné sur 1280 px. À droite, un seul groupe : bulle de recherche, cloche, avatar, 16 px entre eux (les 32 px séparent logo, menu et ce groupe). Les trois font 44 px. Cloche sans notification : rond blanc, bordure 1,5 px #D8D4CA, comme la recherche (état `lu`). Avec notifications : capsule pêche « 9+ ». Logo seul sur Maintenance, Pas de connexion, Premiers pas et Connexion.
 - Pages de lecture (Aujourd'hui, Bilan, Notifications, Alertes, Réglages, Profil, pages d'état) : contenu centré sur 880 px. Pages de travail (Candidatures, Préparer) : 1280 px.
-- Bande bleu pâle #E8ECFB (sombre #232B45) sous l'en-tête : seulement Aujourd'hui et Bilan. Elle porte la date, le H1 et le sous-titre. La carte du haut (Mois ORP) est à cheval sur son bord bas, bordure #D5DCF5, ombre 0 4px 16px rgba(36,69,194,.10).
+- Fond crème #F7F5F0 partout, jamais de bande colorée sous l'en-tête (remplacé le 9 novembre ; Aujourd'hui sera repris au prochain lot). La carte Mois ORP est une carte normale (blanc, bordure 1,5 px #CFCBC1).
 - Aujourd'hui : H1 = action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP. Tâches sur une colonne : en retard, envoyer, trier, préparer un entretien, puis « Quand tu as le temps ».
 - Candidatures : liste à gauche (cartes de 104 px), détail à droite, jamais vide (premier élément choisi par défaut). Filtre de liste « Filtrer par titre ou entreprise » + « Plus de filtres ».
 - Mode sombre : jetons de la planche ModeSombre (fond #171411, surfaces #221E1A, bordure #38322B, texte #F3EEE6).
@@ -200,7 +216,7 @@ Attente de la première collecte, entretien décroché, refus reçu, compte supp
 | Assistant qui écrit : logo sans cercle + bulle de 3 points animés, aucune bulle vide | AssistantOrdinateur `attente`, Assistant `phase: ecrit` | captures/etats/AssistantOrdinateur--attente.png, Assistant--ecrit.png |
 | Mes alertes : lien « ‹ Candidatures » au-dessus du titre ; liste sans cadre ; « Créer l'alerte › » en libellé coloré | AlertesOrdinateur, AlertesTel | captures/AlertesOrdinateur.png, AlertesTel.png |
 | Nouveau rendez-vous sur ordinateur : formulaire dans le panneau de détail, sans carte autour (titre, Date, Heure, Lieu ou lien, Ajouter le rendez-vous, Annuler) | CandidaturesOrdinateurB `tab: rv, ajrv: true` (bouton « Ajouter ») | captures/etats/CandidaturesOrdinateurB--tab-rv-ajouter.png |
-| Envoyées, détail sur ordinateur en deux colonnes : à gauche Statut, Premier message, Prises de contact ; à droite (240 px, trait à gauche) Documents, Contacts. Formulaire d'une seule colonne (Écrire à, puis Canal). Espacements généreux : 32 px au-dessus et 36 px sous chaque section, 48 px entre les colonnes, 40 px de marge dans la colonne de droite | CandidaturesOrdinateurB `tab: en` | captures/etats/CandidaturesOrdinateurB--tab-en.png, --tab-en-bas.png |
+| ~~Envoyées, détail sur ordinateur en deux colonnes~~ : remplacé le 9 novembre, voir MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md §8 | CandidaturesOrdinateurB `tab: en` | captures/etats/CandidaturesOrdinateurB--tab-en.png, --tab-en-bas.png |
 | À traiter, détail sur ordinateur en deux colonnes : à gauche la note (anneau, raisons, bandeau « Il manque l'annonce complète » en bloc arrondi, « Le détail de la note ») puis « Le poste » ; à droite « L'offre en bref » (Lieu, Contrat, Taux d'activité, Reçue, libellé au-dessus de la valeur) et « Voir l'annonce sur le site ». Titre, étiquettes et boutons restent au-dessus des colonnes. Mêmes espacements qu'Envoyées | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png, captures/etats/CandidaturesOrdinateurB--tab-tr-bas.png |
 | Formulaires de rendez-vous sur ordinateur limités à 560 px de large | CandidaturesOrdinateurB `tab: rv` et `ajrv` | captures/etats/CandidaturesOrdinateurB--tab-rv.png, --tab-rv-ajouter.png |
 | « Ce que je cherche » : libellé au-dessus de la valeur (14 px gris, puis 16 px gras), lignes de 68 px, chevron à droite | ProfilOrdinateur, OnboardingOrdinateur | captures/ProfilOrdinateur.png |

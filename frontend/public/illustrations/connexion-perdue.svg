@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480">
+<rect width="800" height="480" fill="#F7F5F0"/>
+<ellipse cx="400" cy="420" rx="300" ry="26" fill="#E9E6DF"/>
+<!-- floating UI cards greyed -->
+<g opacity=".9"><rect x="96" y="70" width="150" height="58" rx="10" fill="#ECEAE5"/><rect x="112" y="86" width="34" height="26" rx="5" fill="#DAD7D0"/><rect x="156" y="90" width="72" height="7" rx="3.5" fill="#D6D3CC"/><rect x="156" y="104" width="50" height="7" rx="3.5" fill="#E0DDD6"/></g>
+<g opacity=".9"><rect x="560" y="60" width="140" height="50" rx="10" fill="#ECEAE5"/><circle cx="585" cy="85" r="10" fill="#DAD7D0"/><rect x="603" y="79" width="78" height="7" rx="3.5" fill="#D6D3CC"/><rect x="603" y="92" width="52" height="6" rx="3" fill="#E0DDD6"/></g>
+<circle cx="268" cy="150" r="4" fill="#D9D6CF"/><circle cx="540" cy="140" r="5" fill="#D9D6CF"/><circle cx="700" cy="190" r="3.5" fill="#D9D6CF"/><rect x="80" y="210" width="60" height="3" rx="1.5" fill="#DDDAD3"/>
+<!-- laptop -->
+<g transform="translate(250 190)">
+<path d="M20 0h260a14 14 0 0 1 14 14v160H6V14A14 14 0 0 1 20 0z" fill="#D8D6D1"/>
+<rect x="18" y="14" width="264" height="150" rx="6" fill="#FFFFFF"/>
+<path d="M-24 174h348l-14 26H-10z" fill="#C9C6C0"/><rect x="120" y="174" width="60" height="6" rx="3" fill="#B9B6AF"/>
+<!-- wifi off icon -->
+<g transform="translate(150 86)" fill="none" stroke-linecap="round" stroke-width="9">
+<path d="M-52 -18a74 74 0 0 1 104 0" stroke="#D6D3CC"/><path d="M-32 2a46 46 0 0 1 64 0" stroke="#D6D3CC"/><circle cx="0" cy="26" r="7" fill="#2445C2" stroke="none"/>
+<path d="M-46 -40 46 52" stroke="#F2A766" stroke-width="8"/></g>
+</g>
+<!-- unplugged cable -->
+<path d="M560 386c40 0 52-30 92-30" fill="none" stroke="#9C988F" stroke-width="7" stroke-linecap="round"/>
+<g transform="translate(650 344)"><rect width="34" height="24" rx="5" fill="#B9B6AF"/><rect x="34" y="5" width="12" height="4" rx="2" fill="#8E8A82"/><rect x="34" y="15" width="12" height="4" rx="2" fill="#8E8A82"/></g>
+<path d="M544 386h-20" stroke="#9C988F" stroke-width="7" stroke-linecap="round"/>
+<g stroke="#F2A766" stroke-width="4" stroke-linecap="round"><path d="M704 330l10-12"/><path d="M712 350h16"/><path d="M704 370l10 12"/></g>
+<!-- mug & plant -->
+<g transform="translate(736 366)"><rect width="40" height="46" rx="8" fill="#F2B98E"/><path d="M40 12h8a10 10 0 0 1 0 20h-8" fill="none" stroke="#F2B98E" stroke-width="6"/></g>
+<g transform="translate(70 300)"><path d="M10 120h44l-6-40H16z" fill="#FFFFFF" stroke="#E2DFD8" stroke-width="2"/><path d="M32 82c-4-30-26-40-36-56 22 4 36 24 36 56z" fill="#8FC3AE"/><path d="M32 82c2-34 20-48 34-62-4 26-14 44-34 62z" fill="#6FAE96"/><path d="M32 84c-2-22 4-40 10-52" stroke="#5E9C85" stroke-width="3" fill="none"/></g>
+</svg>

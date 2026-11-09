@@ -18,7 +18,10 @@ Lis `MODIFICATIONS_8_NOVEMBRE_SOIR.md` en entier avant d'écrire du code. Il pri
    - §10.7 feuilles du bas : Préparer le rendez-vous, Mise en page, Langue ;
    - §10.8 Alertes e-mail par famille et feuille « Alerte » ;
    - §10.9 Notifications harmonisées, textes allégés, « Tout est lu » avec le personnage assis.
-5. Mot « justificatif » partout à la place de « preuve » (§9, 16.4).
+5. **Préparer simplifié** (MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md §9) : plus d'anneau de note ni de carte « Mise en page » ni de FR / DE / EN à l'écran ; ligne « Moderne · Français » + « Changer » qui ouvre la feuille « Mise en page et langue » (modèles, langue, Retoucher dans Canva) ; aperçu de 384 px ; puces de retouche visibles seulement quand la zone de saisie a le focus (aperçu à 300 px). Clair et sombre.
+6. **Détail d'une candidature envoyée** (§8.3) : EnvoyeeDetail et ses 3 feuilles, EnvoyeesStatut.
+7. **Simplifications transverses** (MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md §10) : cercles-flèches gris (sauf notifications), Compte en cartes groupées, Suivi ORP « Encore 2 d’ici le 5 décembre », une seule action dans la carte Rendez-vous ORP. Clair et sombre.
+8. Mot « justificatif » partout à la place de « preuve » (§9, 16.4).
 
 L'ordinateur (§10.5, §10.6 pour les pages ordinateur) n'est **pas** dans cette série : ne le touche pas encore.
 
