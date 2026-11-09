@@ -4655,8 +4655,10 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
   .account-blocks .account-page > .block:first-of-type { padding-top: var(--account-first-y); }
   .account-group { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--account-group-r); overflow: hidden; }
   .account-profile-group { position: relative; }
-  .account-blocks .account-profile-group { --account-card-14: 14px; border-radius: var(--radius-card); }
-  .account-blocks .account-group.account-profile-group .account-card.block-row { gap: var(--account-card-14); padding: var(--account-card-14); background: transparent; border: 0; border-radius: 0; }
+  .account-blocks .account-profile-group { border-radius: var(--radius-card); }
+  /* CompteImage donne 14 px de marge et d'écart ; posés sur la grille de 4 (§2.9, audit-grille.js) : 16 px, et 20 px à
+     droite pour que le cercle à flèche reste à 20 px du bord, comme sur les autres lignes. */
+  .account-blocks .account-group.account-profile-group .account-card.block-row { gap: var(--space-4); padding: var(--space-4) var(--space-5) var(--space-4) var(--space-4); background: transparent; border: 0; border-radius: 0; }
   .account-blocks .account-profile-group .account-card-line { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; }
   .account-blocks .account-card-wrap { padding: var(--account-first-y) 0 var(--account-group-y); }
   .account-blocks .account-group .block-row { margin: 0; padding-left: var(--account-row-x); padding-right: var(--account-row-x); border: 0; border-radius: 0; background: transparent; }
