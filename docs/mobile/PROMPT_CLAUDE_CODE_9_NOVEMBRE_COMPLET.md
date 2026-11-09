@@ -55,6 +55,7 @@ Ordinateur (MODIFICATIONS_9 §2.2 à §2.4, §7) :
 - « Préparer ma candidature » lance tout de suite l'écriture de la lettre ; le CV adapté se prépare en même temps (PreparerOrdinateurGeneration : bandeau « J’écris ta lettre… environ 20 secondes », lettre qui apparaît, puces et saisie grisées, bouton désactivé).
 - Page A4 toujours visible dans le modèle choisi ; 4 vignettes de modèle ; carte « Ta candidature » (Relecture 7 sur 7, Versions · 3, CV adapté) ; bouton « J’ai relu, continuer ».
 - PreparerOrdinateurLettreVide et PreparerOrdinateurCV : uniquement en cas d'échec, avec « Réessayer ».
+- Étape CV quand le CV est prêt (MODIFICATIONS_9 §14, PreparerOrdinateurCVPret et PreparerOrdinateurCVChangements) : même structure que la Lettre, sélecteur FR / DE / EN (« Langue du CV », par défaut celle de la lettre), carte « Ce CV » (Adapté pour cette offre, Versions, CV d’origine), panneau qui liste chaque changement avec « Annuler ce changement ».
 - Postuler : carte « Où postuler » en haut, « Tout télécharger » à contour (2 fichiers séparés), lignes à copier de 56 px, carte Entreprise à droite.
 Téléphone (MODIFICATIONS_9 §9, maquettes Preparer, PreparerSombre, PreparerMiseEnPage, PreparerMiseEnPageSombre) :
 - Retirer l'anneau de note de l'en-tête, la carte « Mise en page » et le sélecteur FR / DE / EN (téléphone seulement : sur ordinateur, FR / DE / EN reste en haut du document).
