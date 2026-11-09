@@ -66,6 +66,8 @@ SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/rendez-vous-orp", None),
     ("candidatures/rendez-vous-orp", "[data-test=rdv-prep-open]"),
     ("candidatures/offres/{offer}/preparer", "[data-test=template-row]"),
+    ("candidatures/alertes", None),
+    ("candidatures/alertes", "[data-test^=alert-card-]"),
 ]
 
 
