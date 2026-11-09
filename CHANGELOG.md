@@ -468,3 +468,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.254 | Maquette du 8 novembre, lot 11 : champs de formulaire uniques, cloche et avatar de 44 px espacés, trois points pendant que l'Assistant écrit, retour depuis Mes alertes e-mail, nouveau rendez-vous sans carte dans la carte | livrée |
 | 1.6.255 | Maquette du 8 novembre, lot 17 : une seule pilule et un seul anneau de focus dans la zone de saisie, Envoyer en bouton plein, jetons du style « blocs » | livrée |
 | 1.6.256 | Maquette du 8 novembre, lot 12 : le détail d'une candidature envoyée en deux colonnes sur ordinateur (gabarit DetailTwoColumns) | livrée |
+| 1.6.257 | Maquette du 8 novembre, lot 13 : À traiter en deux colonnes sur ordinateur avec « L'offre en bref », et les critères du profil en lignes cliquables | livrée |
