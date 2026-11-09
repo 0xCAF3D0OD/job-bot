@@ -102,7 +102,7 @@ function onClick(event: MouseEvent): void {
 }
 .list-card[aria-current="true"] {
   padding: calc(var(--card-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
-  background: color-mix(in srgb, var(--primary-soft) 45%, var(--surface));
+  background: var(--selected-bg);
 }
 .list-card-logo {
   flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); overflow: hidden;
@@ -110,11 +110,12 @@ function onClick(event: MouseEvent): void {
 }
 .list-card-logo.c0 { background: var(--primary); color: var(--on-primary); }
 .list-card-logo.c1 { background: var(--text); color: var(--bg); }
-.list-card-logo.c2 { background: var(--peach); color: #1B1F2A; }
-.list-card-logo.image { background: #fff; }
+.list-card-logo.c2 { background: var(--peach); color: var(--on-peach); }
+.list-card-logo.image { background: var(--logo-paper); }
 /* Sombre (maquette CandidaturesSombre) : l'encre devient un carré brun, texte clair ; la pêche garde un texte foncé. */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .list-card-logo.c1 { background: var(--line); color: var(--text); } }
-:root[data-theme="dark"] .list-card-logo.c1 { background: var(--line); color: var(--text); }
+/* Sombre, téléphone : carré brun foncé (CandidaturesSombre). L'ordinateur inverse (style.css, §12 du 9 novembre). */
+@media (max-width: 820px) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .list-card-logo.c1 { background: var(--line); color: var(--text); } }
+@media (max-width: 820px) { :root[data-theme="dark"] .list-card-logo.c1 { background: var(--line); color: var(--text); } }
 .list-card-logo img { width: 100%; height: 100%; object-fit: contain; }
 .list-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--card-3); }
 .list-card-title, .list-card-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

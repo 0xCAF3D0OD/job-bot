@@ -22,6 +22,13 @@
   --snackbar-bg: #1B1F2A;
   --snackbar-text: #FFFFFF;
   --snackbar-action: #AEBDFF;
+  /* Lettres sur le carré pêche, et fond blanc d'un logo d'entreprise : les mêmes en clair et en sombre. */
+  --on-peach: #1B1F2A;
+  --logo-paper: #FFFFFF;
+  /* La page A4 reste blanche en sombre, avec une ombre plus marquée (§12 du 9 novembre). */
+  --paper-shadow: 0 2px 8px rgb(27 31 42 / 12%);
+  /* Carte sélectionnée (§12 du 9 novembre) : #F5F7FE en clair, #232B45 en sombre. */
+  --selected-bg: #F5F7FE;
   --field-border: #8C8478;
   --text-disabled: #B8B3A8;
   /* Les ombres de la maquette du 8 novembre : panneaux latéraux, menus, carte à cheval sur la bande, Composer. */
@@ -194,6 +201,8 @@
     --line-soft: #2C2722;
     --line-strong: #4E473E;
     --card-line: #4E473E;
+    --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
+    --selected-bg: #232B45;
     --field-border: #8C8478;
     --text-disabled: #5E574F;
     --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
@@ -242,6 +251,8 @@
   --line-soft: #2C2722;
   --line-strong: #4E473E;
   --card-line: #4E473E;
+  --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
+  --selected-bg: #232B45;
   --field-border: #8C8478;
   --text-disabled: #5E574F;
   --shadow-panel: -12px 0 32px rgba(27,31,42,.12);
@@ -3480,7 +3491,7 @@ main:focus { outline: none; }
 /* Lot 18 (§10.6, PreparerSombre) : en sombre, le numéro de l'étape en cours est plein, en --action. */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); } }
 :root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
-.doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
+.doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: var(--paper-shadow); }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
 .doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
 .doc-card-instruction { display: grid; gap: var(--space-2); }
@@ -3712,7 +3723,8 @@ main:focus { outline: none; }
 .bilan-orp-wide { display: flex; flex-direction: column; gap: var(--space-8); }
 .bilan-orp-card { grid-template-columns: minmax(0, 1fr) auto; }
 @media screen { .bilan-orp-wide > .orp-sheet-tab:not(:has(.notice)) { display: none; } }
-.bilan-band.flat { padding-bottom: var(--space-6); }
+.bilan-band.flat { padding-bottom: var(--space-6); background: var(--bg); }
+.bilan-page .today-orp-card { margin-top: 0; }
 .bilan-orp-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: calc(-1 * var(--space-2)); }
 .bilan-orp-actions button { min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .bilan-section { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
@@ -4033,6 +4045,18 @@ html.search-open { overflow: hidden; }
 @media (max-width: 820px) {
   :root[data-theme="dark"] .logo.c1 { background: var(--line); color: var(--text); }
   :root[data-theme="dark"] .logo.c2 { color: var(--bg); }
+}
+/* Ordinateur sombre (MODIFICATIONS du 9 novembre §12, maquette CandidaturesOrdinateurBSombre) : les carrés aux
+   initiales s'inversent, fond clair et lettres foncées ; la pêche garde des lettres foncées. */
+@media (min-width: 821px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.logo, .list-card-logo).c0 { background: var(--primary-text); color: var(--surface); }
+  :root:not([data-theme="light"]) .list-card-logo.c1 { background: var(--text); color: var(--bg); }
+  :root:not([data-theme="light"]) .list-card-logo.c2 { background: var(--peach); color: var(--on-peach); }
+}
+@media (min-width: 821px) {
+  :root[data-theme="dark"] :is(.logo, .list-card-logo).c0 { background: var(--primary-text); color: var(--surface); }
+  :root[data-theme="dark"] .list-card-logo.c1 { background: var(--text); color: var(--bg); }
+  :root[data-theme="dark"] .list-card-logo.c2 { background: var(--peach); color: var(--on-peach); }
 }
 /* La feuille d'actions d'une offre : le lieu sous le titre, « Écarter » en rouge (maquette ActionsOffre). */
 .offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }

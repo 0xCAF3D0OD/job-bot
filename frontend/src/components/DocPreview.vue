@@ -49,7 +49,7 @@ defineEmits<{ open: [] }>();
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .doc-preview-page { --paper: var(--surface); --ink: var(--text); --ink-body: #D6CFC4; --ink-sub: var(--text-secondary); --blue: var(--primary-graphic); --serif-paper: #26211C; }
 }
-.doc-preview-page { display: grid; align-content: start; height: 100%; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--paper); color: var(--ink); box-shadow: 0 2px 8px rgb(27 31 42 / 12%); overflow: hidden; transition: background-color var(--t-state); }
+.doc-preview-page { display: grid; align-content: start; height: 100%; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--paper); color: var(--ink); box-shadow: var(--paper-shadow); overflow: hidden; transition: background-color var(--t-state); }
 .doc-preview-head { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4) var(--space-2); }
 .doc-preview-head strong { font-size: var(--font-body); font-weight: var(--weight-bold); }
 .doc-preview-head span { font-size: var(--font-caption); }
