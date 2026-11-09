@@ -54,6 +54,34 @@ puis 16, puis 18 (téléphone, puis ordinateur). Les lots 11 à 16 suivent direc
 | 16 | Retours sur le téléphone : pastilles de suggestion, pantalon du personnage, bustes, justificatifs ORP. |
 | 18 | Style « blocs » : téléphone (Offre, Suivi ORP, Pour l'ORP, Compte), puis ordinateur (pages de lecture). |
 
+### Version téléphone du 9 novembre (`docs/mobile/PROMPT_TELEPHONE_9_NOVEMBRE.md`)
+
+Le paquet du 8 novembre a été remis à jour le 9 novembre (validé par Kevin pour le téléphone) : sections posées sur
+le fond crème au lieu des blocs blancs sur fond gris (D28 revu), cartes blanches à trait de 1,5 px (D29 revu), cartes
+d'information (D35), grille de 4 et marges de 20 px (§2.9), cascade (§2.10), et de nouveaux écrans téléphone
+(Compatibilité, Écarter avec « Annuler », feuilles du bas, Alertes par famille, Notifications harmonisées).
+L'ordinateur (§10.5, §10.6) n'est pas dans cette série.
+
+| PR | Contenu |
+|---|---|
+| Mise en place | Paquet du 9 novembre dans `docs/mobile/` ; personnage déjà à jour ; vérification des lots 17 et 11 à 16. |
+| Règles transverses | §2.1 à §2.10 : sections et cartes, actions, statut, sombre, jetons, écrans étroits, grille et cibles de 44 px, cascade ; contrôle `audit-grille.js`. |
+| §10.1 | Détail d'une offre, carte de la note, feuille « Compatibilité », « Écarter » avec « Annuler ». |
+| §10.2 à §10.4 | Suivi ORP et onglet ORP de Bilan, Pour l'ORP, Compte. |
+| §10.7 | Feuilles du bas : Préparer le rendez-vous, Mise en page, Langue. |
+| §10.8 | Alertes e-mail par famille, feuille « Alerte ». |
+| §10.9 | Notifications harmonisées, « Tout est lu » avec le personnage assis. |
+| §9, 16.4 | « justificatif » à la place de « preuve » partout. |
+
+Lots 17 et 11 à 16, vérifiés sur `main` le 9 novembre (PR 574 à 580) :
+
+- 17 : conforme, sauf le « + » et le micro de l'Assistant (point 3), toujours en attente de Kevin (questions de la PR 577).
+- 11 à 14 : conformes ; leur partie ordinateur n'est pas reprise ici.
+- 15.2 : « J'ai déjà postulé » est en place ; « Ignorer » devient « Écarter » partout dans la PR §10.1.
+- 16.1 à 16.3 : conformes (pastilles, pantalon, bustes : les fichiers de `frontend/public/personnage/` sont identiques
+  à ceux du paquet du 9 novembre). 16.4 : le mot « preuve » reste affiché à plusieurs endroits (Aujourd'hui, Réglages,
+  Assistant, Connexion…) : repris dans la PR « justificatif ».
+
 ## 3. Les décisions D18 à D27
 
 | N° | Décision | Remplace |

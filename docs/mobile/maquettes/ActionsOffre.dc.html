@@ -28,7 +28,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </style>
 </helmet>
 <div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
-<header style="flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 12px">
+<header style="flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 12px">
 <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 4px">
 <div style="display: flex; align-items: center; gap: 10px"><svg width="28" height="28" viewBox="8 8 86 86" role="img" aria-label="jobA1"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="45" r="10" fill="#2445C2"></circle><circle cx="76" cy="41" r="10" fill="#E8B48A"></circle><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><h1 style="margin: 0; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.5px">Candidatures</h1></div>
 <a href="Filtres.dc.html" aria-label="Filtres" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #1B1F2A">
@@ -41,15 +41,15 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <input type="search" placeholder="Poste, entreprise, lieu" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: #1B1F2A">
 </label>
 <div role="group" aria-label="Statut" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
-<button type="button" aria-pressed="true" style="height: 40px; border: 0; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27, 31, 42, 0.12); font-family: inherit; font-size: 14px; font-weight: 700; color: #1B1F2A; cursor: pointer">À traiter</button>
-<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Envoyées</button>
-<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Rendez-vous</button>
+<button type="button" aria-pressed="true" style="height: 44px; border: 0; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27, 31, 42, 0.12); font-family: inherit; font-size: 14px; font-weight: 700; color: #1B1F2A; cursor: pointer">À traiter</button>
+<button type="button" aria-pressed="false" style="height: 44px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Envoyées</button>
+<button type="button" aria-pressed="false" style="height: 44px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Rendez-vous</button>
 </div>
 </header>
-<main style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 0 16px 16px">
-<h2 style="position: sticky; top: 0; z-index: 2; margin: 0 -16px; padding: 10px 20px 8px; background: #F7F5F0; display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 700">Aujourd'hui<span style="font-size: 13px; font-weight: 600; color: #596070">3 offres</span></h2>
+<main style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 0 20px 16px">
+<h2 style="position: sticky; top: 0; z-index: 2; margin: 0 -20px; padding: 10px 20px 8px; background: #F7F5F0; display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 700">Aujourd'hui<span style="font-size: 13px; font-weight: 600; color: #596070">3 offres</span></h2>
 <sc-if value="{{showFirst}}" hint-placeholder-val="{{ true }}">
-<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
+<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
 <span style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: #1B1F2A; color: #FFFFFF; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center">AS</span>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
 <span style="display: flex; flex-direction: column; gap: 2px">
@@ -68,7 +68,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </span>
 </a>
 </sc-if>
-<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
+<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
 <span style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: #2445C2; color: #FFFFFF; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center">RL</span>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
 <span style="display: flex; flex-direction: column; gap: 2px">
@@ -85,7 +85,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <span aria-hidden="true" style="font-size: 12px; font-weight: 700; color: #17734A">Proche</span>
 </span>
 </a>
-<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
+<a href="Offre.dc.html" style="display: flex; gap: 14px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A">
 <span style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: #F3B08A; color: #1B1F2A; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center">LD</span>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
 <span style="display: flex; flex-direction: column; gap: 2px">
@@ -122,7 +122,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </div>
 <button type="button" onClick="{{discard}}" style="display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 18px; border: 0; border-bottom: 1px solid #EFECE5; background: transparent; font-family: inherit; font-size: 17px; font-weight: 600; color: #B4371F; text-align: left; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>Écarter l'offre</button>
 <button type="button" onClick="{{sent}}" style="display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 18px; border: 0; border-bottom: 1px solid #EFECE5; background: transparent; font-family: inherit; font-size: 17px; font-weight: 600; color: #1B1F2A; text-align: left; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2445C2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 20 4l-6 16-3-7Z"></path></svg>Marquer comme envoyée</button>
-<button type="button" onClick="{{proof}}" style="display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 18px; border: 0; background: transparent; font-family: inherit; font-size: 17px; font-weight: 600; color: #1B1F2A; text-align: left; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2445C2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"></path><path d="M14 3v5h5M9 14l2 2 4-4"></path></svg>Ajouter une preuve ORP</button>
+<button type="button" onClick="{{proof}}" style="display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 18px; border: 0; background: transparent; font-family: inherit; font-size: 17px; font-weight: 600; color: #1B1F2A; text-align: left; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2445C2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"></path><path d="M14 3v5h5M9 14l2 2 4-4"></path></svg>Ajouter un justificatif ORP</button>
 </div>
 <button type="button" onClick="{{close}}" style="min-height: 58px; border: 0; border-radius: 22px; background: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 700; color: #1A3496; cursor: pointer">Annuler</button>
 </div>
@@ -130,7 +130,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <sc-if value="{{snack}}" hint-placeholder-val="{{ false }}">
 <div role="status" style="position: absolute; left: 12px; right: 12px; bottom: 114px; z-index: 12; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 8px 0 18px; background: #1B1F2A; color: #FFFFFF; border-radius: 16px; box-shadow: 0 8px 20px rgba(27,31,42,0.28); animation: snackIn .25s ease both">
 <span style="flex: 1; font-size: 15px; font-weight: 600">{{snackText}}</span>
-<button type="button" onClick="{{undo}}" style="min-height: 44px; padding: 0 12px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 800; color: #F3B08A; cursor: pointer">Annuler</button>
+<button type="button" onClick="{{undo}}" style="min-height: 44px; padding: 0 12px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 800; color: #AEBDFF; cursor: pointer">Annuler</button>
 </div>
 </sc-if>
 <sc-if value="{{showReopen}}" hint-placeholder-val="{{ false }}">
@@ -153,7 +153,7 @@ close: () => this.setState({ open: false }),
 reopen: () => this.setState({ open: true, removed: false }),
 discard: () => done('Offre écartée', true),
 sent: () => done('Marquée comme envoyée', false),
-proof: () => done('Preuve ORP ajoutée', false),
+proof: () => done('Justificatif ORP ajouté', false),
 undo: () => { clearTimeout(this.t); this.setState({ snack: null, removed: false }); }
 };
 }
