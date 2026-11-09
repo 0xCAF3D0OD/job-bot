@@ -231,7 +231,7 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
 describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 étape 6a)", () => {
   const phone = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px") || media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
 
-  it("en-tête retour, Sauvegarder, « ⋯ » (lot 18 : Partager passe dans la feuille) ; en bas « Ignorer » et « Préparer ma candidature »", async () => {
+  it("en-tête retour, Sauvegarder, « ⋯ » (lot 18 : Partager passe dans la feuille) ; en bas « Écarter » (§10.1, 9 novembre) et « Préparer ma candidature »", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "Kubernetes, Terraform et CI/CD : dans ton profil.", summary_role: "x" }));
     expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
@@ -247,14 +247,40 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     // Lot 18 (maquette Offre) : l'en-tête n'a plus Partager.
     expect(head.find("[data-test=offer-share]").exists()).toBe(false);
     const bar = wrapper.find("[data-test=offer-bar]");
-    expect(bar.find("[data-test=offer-discard]").text()).toBe("Ignorer");
+    expect(bar.find("[data-test=offer-discard]").text()).toBe("Écarter");
     expect(bar.find("[data-test=offer-discard]").classes()).toContain("action-2");
     expect(bar.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
     await bar.find("[data-test=offer-discard]").trigger("click");
     expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
-    // La note et sa phrase restent dans la carte « Pourquoi » ; la correction passe par la feuille « ⋯ ».
-    expect(wrapper.find("[data-test=section-for-you]").text()).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
+    // §10.1 (9 novembre) : la carte de la note ne garde que l'anneau, le verdict et « Voir la compatibilité » ; la
+    // phrase passe dans la feuille (« Comment la note est calculée ») ; la correction passe par la feuille « ⋯ ».
+    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Voir la compatibilité");
+    expect(wrapper.findComponent({ name: "OfferCompatSheet" }).props("how")).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("§10.1 : « Voir la compatibilité » ouvre la feuille ; points « Critère : valeur », phrase entière sans libellé", async () => {
+    phone();
+    const wrapper = await mountDetail(
+      offer({
+        score: 76,
+        description: "Annonce complète.",
+        why: "Kubernetes et Terraform : dans ton profil.",
+        strengths: [{ text: "Lieu : Lausanne, 20 min" }, { text: "Ton expérience en CI/CD correspond" }],
+        gaps: [{ text: "Langue : allemand courant demandé" }],
+      }),
+    );
+    const sheet = wrapper.findComponent({ name: "OfferCompatSheet" });
+    expect(sheet.props("open")).toBe(false);
+    await wrapper.find("[data-test=compat-open]").trigger("click");
+    expect(sheet.props("open")).toBe(true);
+    expect(sheet.props("strengths")).toEqual([
+      { key: "Lieu", value: "Lausanne, 20 min" },
+      { key: "", value: "Ton expérience en CI/CD correspond" },
+    ]);
+    expect(sheet.props("gaps")).toEqual([{ key: "Langue", value: "allemand courant demandé" }]);
+    expect(sheet.props("how")).toContain("Kubernetes et Terraform : dans ton profil.");
     vi.unstubAllGlobals();
   });
 

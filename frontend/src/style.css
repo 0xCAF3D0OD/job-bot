@@ -35,6 +35,8 @@
   --primary-graphic: #2445C2;
   --action: #2445C2;
   --on-action: #FFFFFF;
+  /* Lien d'un message sur fond inversé (« Annuler » de « Offre écartée », §10.1) : bleu clair sur fond foncé. */
+  --inverse-link: #AEBDFF;
   --page-blocks: var(--surface-muted);
   --row-blocks: var(--bg);
   --primary-text: #1A3496;
@@ -199,6 +201,7 @@
     --primary-graphic: #7D95FF;
     --action: #7D95FF;
     --on-action: #171411;
+    --inverse-link: #2445C2;
     --page-blocks: var(--bg);
     --row-blocks: var(--surface-muted);
     --primary-text: #AEBDFF;
@@ -245,6 +248,7 @@
   --primary-graphic: #7D95FF;
   --action: #7D95FF;
   --on-action: #171411;
+  --inverse-link: #2445C2;
   --page-blocks: var(--bg);
   --row-blocks: var(--surface-muted);
   --primary-text: #AEBDFF;
@@ -4142,7 +4146,26 @@ html.search-open { overflow: hidden; }
   /* L'action principale prend la place qui reste (« Afficher 3 offres »). */
   .sheet-actions > .primary { flex: 1 1 auto; justify-content: center; }
   .sheet[open] { animation: sheet-up var(--t-state) var(--ease-out); }
+  /* Version du 9 novembre (§10.1, §10.7 ; maquette OffreCompatibilite) : poignée 36 × 4, rayon 34 en haut (D7),
+     titre 22/28 800 à 24 px du bord, croix de 48 px, corps à 24 px des bords, montée de 320 ms. */
+  .sheet { --sheet-handle-top: 12px; --sheet-handle-gap: 4px; --sheet-handle-w: 36px; --sheet-handle-h: 4px; --sheet-pad: 24px; --sheet-close: 48px; --sheet-title-lh: 28px;
+    border-radius: var(--radius-block) var(--radius-block) 0 0; }
+  .sheet-inner { gap: 0; padding: 0 0 calc(var(--sheet-pad) + env(safe-area-inset-bottom)); }
+  .sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
+  .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-1) var(--sheet-pad); touch-action: none; }
+  .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
+  .sheet-close { width: var(--sheet-close); height: var(--sheet-close); background: transparent; }
+  .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
+  .sheet-body { margin: 0; padding: var(--space-2) var(--sheet-pad) 0; }
+  .sheet-actions { padding: var(--space-4) var(--sheet-pad) 0; }
+  .sheet[open] { animation: sheet-rise 320ms cubic-bezier(.2,.8,.2,1); }
+  /* Posée en bas par sa position (et non par une marge « auto » de plusieurs centaines de pixels, hors grille). */
+  .sheet { inset: auto 0 0; margin: 0; }
+  /* Champs : 14,5 px + le trait de 1,5 px = 16 px, sur la grille de 4 (§2.9), comme les cartes (18,5 + 1,5). */
+  :root { --field-pad-x: 14.5px; }
 }
+@keyframes sheet-rise { from { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
 @keyframes sheet-up { from { transform: translateY(2rem); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
 
@@ -4960,4 +4983,5 @@ a.panel-row:hover { background: var(--band); }
   .topbar .brand { --brand-hit: 6px; min-width: var(--target-min); min-height: var(--target-min); box-sizing: border-box; padding: var(--brand-hit); margin: calc(-1 * var(--brand-hit)); }
   .app-footer a { min-height: var(--target-min); }
   .suggestion-chip { min-height: var(--target-min); }
+  .offers-spontaneous .link { min-height: var(--target-min); }
 }

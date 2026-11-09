@@ -419,7 +419,8 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
     status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")
       ? { id: offer.id, status: previous }
       : null;
-  notice.value = undo.value ? (status === "ignored" ? "Offre écartée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
+  const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
+  notice.value = undo.value ? (status === "ignored" ? discarded : `Passée en ${STATUS_TEXT[status]}.`) : "";
   // « Annuler » reste 6 s (docs/108), puis le message s'efface.
   clearTimeout(undoTimer);
   if (undo.value) {
@@ -693,9 +694,11 @@ onUnmounted(() => {
           id="offers-list-tools"
           class="offers-list-tools"
         />
+        <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
+             pendant 6 secondes (Material 3, snackbar). -->
         <p
           v-if="notice"
-          class="notice"
+          :class="['notice', { 'undo-snackbar': phone && undo }]"
           role="status"
         >
           {{ notice }}
@@ -986,6 +989,17 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Le message « Offre écartée » du téléphone (§10.1, captures Offre--ecartee et OffreSombre--ecartee) : au-dessus de la
+   barre du bas, à 20 px des bords, fond --text, texte --bg, « Annuler » en --inverse-link (jamais en orange, D30). */
+@media (max-width: 820px) {
+  .notice.undo-snackbar {
+    --snack-margin: 20px; --snack-bottom: 12px;
+    position: fixed; left: var(--snack-margin); right: var(--snack-margin); bottom: calc(var(--tabbar-h, 0px) + var(--snack-bottom) + env(safe-area-inset-bottom)); z-index: 45;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin: 0; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
+    border: 0; border-radius: var(--radius-sm); background: var(--text); color: var(--bg); font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--space-5);
+  }
+  .notice.undo-snackbar .link { flex: none; min-height: var(--target-min); padding: 0 var(--space-2); color: var(--inverse-link); font-weight: var(--weight-bold); text-decoration: none; }
+}
 /* Maquette ErreurConnexion (téléphone) : « Connexion perdue » puis l'attente après « Réessayer », centrés,
    titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l'échelle les plus proches
    (gap 14, 800, marge 10 de la maquette n'y sont pas). Ici plutôt que dans NetworkError, pour ne pas
