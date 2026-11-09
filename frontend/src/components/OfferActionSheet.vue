@@ -10,7 +10,11 @@ import GroupedRow from "./GroupedRow.vue";
 // « Annuler » 6 s dans le message (docs/108) ; « Marquer comme envoyée » ouvre le formulaire de la
 // candidature. Le titre de la feuille est le poste, l'entreprise et le lieu dessous. `extra` : les actions propres
 // à la fiche, après les deux de la liste (étape 6, O9).
-withDefaults(defineProps<{ offer: Offer | null; extra?: MoreMenuItem[] }>(), { extra: () => [] });
+// `sentTitle` : « J'ai déjà postulé » dans la fiche (lot 15.2), « Marquer comme envoyée » dans la liste.
+withDefaults(defineProps<{ offer: Offer | null; extra?: MoreMenuItem[]; sentTitle?: string }>(), {
+  extra: () => [],
+  sentTitle: "Marquer comme envoyée",
+});
 const emit = defineEmits<{ close: []; discard: [offer: Offer]; sent: [offer: Offer] }>();
 </script>
 
@@ -38,7 +42,7 @@ const emit = defineEmits<{ close: []; discard: [offer: Offer]; sent: [offer: Off
         />
         <GroupedRow
           v-if="offer.status !== 'applied'"
-          title="Marquer comme envoyée"
+          :title="sentTitle"
           icon="send"
           button
           :chevron="false"

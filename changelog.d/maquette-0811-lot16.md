@@ -1,0 +1,1 @@
+Maquette du 8 novembre, lot 16 : pastilles de l'Assistant plus grandes avec le nom d'entreprise raccourci, personnage en pantalon, bustes sur quatre écrans du téléphone, « justificatif » au lieu de « preuve » dans le Bilan ORP

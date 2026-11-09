@@ -36,6 +36,7 @@ withDefaults(defineProps<{ large?: boolean }>(), { large: false });
     <Illustration
       pose="bonjour"
       :height="large ? 280 : 140"
+      :bust-height="large ? undefined : 118"
       :desktop-height="large ? 380 : 140"
       full
       class="auth-illustration-person"

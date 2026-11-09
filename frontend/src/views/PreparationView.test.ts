@@ -152,9 +152,9 @@ describe("PreparationView", () => {
     // Sans consigne : le nom, puis la version, la langue et la date en sous-titre.
     const first = versions.find((v) => v.find(".grouped-row-title").text() === "Version 1")!;
     expect(first.find(".grouped-row-description").text()).toContain("v1 · Français");
-    // La consigne entière s'affiche aussi au-dessus de la lettre de la version choisie.
+    // Sur ordinateur, « Consigne : … » ne s'affiche plus au-dessus de la lettre (lot 15.1).
     await named.trigger("click");
-    expect(wrapper.find("[data-test=version-instruction]").text()).toBe(`Consigne : ${long}`);
+    expect(wrapper.find("[data-test=version-instruction]").exists()).toBe(false);
     // La consigne passe par la zone de saisie commune sous la lettre (maquette du 8 novembre).
     expect(wrapper.find("[data-test=prep-revise] [data-test=composer-input]").attributes("placeholder")).toBe("Demander une modification de la lettre");
   });
@@ -299,12 +299,14 @@ describe("barre de candidature", () => {
     letterTab.unmount();
 
     const wrapper = await mountView("/offres/7/preparer?doc=postuler");
-    // Le retour à l'offre, toujours possible (C1) ; « Ma candidature » en titre, l'offre dessous.
+    // Le retour à l'offre, toujours possible (C1) ; sur ordinateur, le poste en titre (lot 15.1), « Ma candidature »
+    // seulement dans le titre de l'onglet.
     expect(wrapper.find("[data-test=back-to-offer]").attributes("href")).toBe("/candidatures/offres/7");
-    expect(wrapper.find("h1").text()).toBe("Ma candidature");
+    expect(wrapper.find("h1").text()).toBe(offer.title);
     expect(wrapper.find("[data-test=prep-offer-title]").text()).toBe(offer.title);
+    expect(document.title).toBe(`Ma candidature, ${offer.title}, jobA1`);
     // La ligne de l'entreprise, sans le canton (maquette : « Alpstack · Lausanne »).
-    expect(wrapper.find(".prep-offer-sub").text()).toMatch(/· Lausanne$/);
+    expect(wrapper.find(".prep-desk-title p").text()).toMatch(/· Lausanne$/);
     const steps = wrapper.find("[data-test=apply-steps]");
     // Postuler (C7) : où l'annonce se postule, les pièces, ce qu'on recopie, puis un contact dans la fiche.
     expect(steps.findAll("h2").map((h) => h.text())).toEqual([
@@ -525,6 +527,24 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
   });
 
+  it("ordinateur (lot 15.1) : « J'ai relu la lettre » en bas enregistre la relecture puis passe au CV ; la mise en page", async () => {
+    mockGet([letter(11, 1)]);
+    PUT.mockResolvedValue({ data: letter(11, 1, { read_at: "2026-10-05T09:00:00Z" }) });
+    const wrapper = await mountView();
+    const steps = wrapper.find("[data-test=prep-desk-head] .step-tabs");
+    expect(steps.text()).toContain("1. Lettre");
+    expect(steps.text()).toContain("2. CV");
+    const pills = wrapper.findAll("[data-test=layout-card] .layout-card-pills button");
+    expect(pills.map((b) => b.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
+    expect(pills.filter((b) => b.attributes("aria-pressed") === "true")).toHaveLength(1);
+    const read = wrapper.find("[data-test=prep-desk-bottom] [data-test=letter-read]");
+    expect(read.text()).toBe("J’ai relu la lettre");
+    await read.trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/letters/{draft_id}/read", { params: { path: { draft_id: 11 } }, body: { read: true } });
+    expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
+  });
+
   it("« J'ai relu la lettre » refusé (démo) : la case se décoche", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
@@ -692,14 +712,15 @@ describe("« Pas vrai » (30.10.2026)", () => {
     mockGet([letter(11, 1)]);
     let wrapper = await mountView();
     expect(GET).toHaveBeenCalledWith("/api/letters/{draft_id}/page", { params: { path: { draft_id: 11 }, query: { modele: "moderne" } } });
-    expect(wrapper.find("[data-test=page-line]").text()).toBe("Tient sur une page A4.");
+    // Sur ordinateur, la ligne de la page est dans « Mise en page » (lot 15.1).
+    expect(wrapper.find("[data-test=layout-note]").text()).toMatch(/^Tient sur une page A4 · \d+ mots$/);
     expect(wrapper.find("[data-test=page-end]").exists()).toBe(false);
     wrapper.unmount();
 
     mockGet([letter(11, 1)], { fits: false, overflow_lines: 3, adjusted: true, break_paragraph: 1, break_word: 3 });
     POST.mockResolvedValue({ data: letter(12, 2, { instruction: "Raccourcir pour tenir sur une page A4", name: "Plus courte" }) });
     wrapper = await mountView();
-    expect(wrapper.find("[data-test=page-line]").text()).toContain("Déborde de 3 lignes :");
+    expect(wrapper.find("[data-test=layout-note]").text()).toContain("Déborde de 3 lignes ·");
     // La page 1 se termine dans le 2e paragraphe, après « J'administre un cluster ».
     const marks = wrapper.findAll("[data-test=page-end]");
     expect(marks).toHaveLength(1);

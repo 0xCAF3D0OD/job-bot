@@ -26,14 +26,14 @@ const template = (text: string) => text.slice(text.indexOf("<template>"), text.l
 
 // Les écrans qui montrent le personnage (docs/141 §3). Un nouvel écran s'ajoute ici et dans docs/141.
 export const SCREENS: Record<string, string> = {
-  "views/WelcomeView.vue": "premiers pas : étape CV, « Tout est prêt. »",
-  "components/AuthIllustration.vue": "connexion, téléphone et ordinateur",
+  "views/WelcomeView.vue": "premiers pas : étape CV, « Tout est prêt. » (bustes sur téléphone, lot 16.3)",
+  "components/AuthIllustration.vue": "connexion, téléphone (buste, lot 16.3) et ordinateur",
   "views/NotFoundView.vue": "page introuvable",
   "components/MaintenanceOverlay.vue": "maintenance (mise à jour, annoncée) et pas de connexion",
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
   "components/GoalReached.vue": "objectif ORP atteint",
-  "components/OrpMeetingEmpty.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu",
+  "components/OrpMeetingEmpty.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu (buste sur téléphone, lot 16.3)",
 };
 
 // Les écrans où le personnage et un autre des trois sont dans des branches qui s'excluent : le fichier
@@ -118,10 +118,46 @@ describe("Illustration (docs/141 §2)", () => {
     const dir = resolve(process.cwd(), "public/personnage");
     const names = readdirSync(dir);
     for (const name of names) expect(name).toMatch(/^perso-\d\d-[a-z-]+-(400|800)\.webp$/);
+    // Les quatre bustes du lot 16.3, en 400 et 800.
+    for (const bust of ["01-buste", "02-bonjour-buste", "03-cv-buste", "07-revelation-buste"]) {
+      for (const size of [400, 800]) expect(names, bust).toContain(`perso-${bust}-${size}.webp`);
+    }
     for (const pose of Object.keys(POSE_WIDTH) as Pose[]) {
       expect(names.some((n) => n.endsWith(`-${pose}-400.webp`)), pose).toBe(true);
       expect(names.some((n) => n.endsWith(`-${pose}-800.webp`)), pose).toBe(true);
     }
     expect(existsSync(join(SRC, "assets/personnage"))).toBe(false);
+  });
+});
+
+describe("Bustes sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 16.3)", () => {
+  const original = globalThis.matchMedia;
+  const media = (phone: boolean) =>
+    (globalThis.matchMedia = ((query: string) =>
+      ({ matches: phone && query.includes("820px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList));
+
+  it("sur téléphone, le buste à la hauteur demandée ; sur ordinateur, le personnage en pied", () => {
+    media(true);
+    const phone = mount(Illustration, { props: { pose: "bonjour", height: 140, bustHeight: 118, full: true } });
+    expect(phone.attributes("src")).toMatch(/perso-02-bonjour-buste-400\.webp\?v=\d+$/);
+    expect(phone.attributes("srcset")).toMatch(/perso-02-bonjour-buste-800\.webp\?v=\d+ 2x$/);
+    expect(phone.attributes("height")).toBe("118");
+    expect(phone.attributes("width")).toBe("80");
+    const standing = mount(Illustration, { props: { pose: "debout", height: 186, bustHeight: 120 } });
+    expect(standing.attributes("src")).toMatch(/perso-01-buste-400\.webp/);
+    expect(standing.attributes("width")).toBe("72");
+    media(false);
+    const desk = mount(Illustration, { props: { pose: "bonjour", height: 140, bustHeight: 118, full: true } });
+    expect(desk.attributes("src")).toMatch(/perso-02-bonjour-400\.webp/);
+    expect(desk.attributes("height")).toBe("140");
+    globalThis.matchMedia = original;
+  });
+
+  it("les quatre écrans du lot 16.3 demandent le buste, avec les tailles de la maquette", () => {
+    const text = (path: string) => template(FILES.find((f) => f.path === path)?.text ?? "");
+    expect(text("components/OrpMeetingEmpty.vue")).toContain(':bust-height="120"');
+    expect(text("components/AuthIllustration.vue")).toContain(':bust-height="large ? undefined : 118"');
+    expect(text("views/WelcomeView.vue")).toContain(':bust-height="100"');
+    expect(text("views/WelcomeView.vue")).toContain(':bust-height="150"');
   });
 });

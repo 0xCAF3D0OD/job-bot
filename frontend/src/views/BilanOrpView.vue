@@ -157,6 +157,12 @@ onMounted(() => void load());
             </h2>
             <span>{{ orp.count }} ce mois</span>
           </div>
+          <p
+            class="orp-proof-note"
+            data-test="orp-proof-note"
+          >
+            L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.
+          </p>
           <OrpSearchRows
             :rows="orp.rows"
             :limit="LAST_WIDE"
@@ -169,7 +175,7 @@ onMounted(() => void load());
                   class="bilan-row-more"
                   data-test="orp-all"
                 >
-                  Voir tout le mois et les preuves<AppIcon name="chevron" />
+                  Voir tout le mois et les justificatifs<AppIcon name="chevron" />
                 </RouterLink>
               </li>
             </template>
@@ -250,6 +256,12 @@ onMounted(() => void load());
             <span>Dernières recherches</span>
             <span>{{ orp.count }} ce mois</span>
           </h2>
+          <p
+            class="orp-proof-note"
+            data-test="orp-proof-note"
+          >
+            L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.
+          </p>
           <OrpSearchRows
             :rows="orp.rows"
             :limit="LAST"
@@ -261,7 +273,7 @@ onMounted(() => void load());
           class="orp-all"
           data-test="orp-all"
         >
-          Voir tout le mois et les preuves
+          Voir tout le mois et les justificatifs
         </RouterLink>
       </template>
     </div>

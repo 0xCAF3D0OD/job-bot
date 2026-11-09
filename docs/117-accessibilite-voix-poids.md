@@ -77,6 +77,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 - **Tout le CSS porté à 72,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 12, en attente de l'accord de Kevin) : le gabarit deux colonnes (`DetailTwoColumns`) et le détail d'Envoyées ajoutent environ 1,3 Ko au CSS des pages. Les lots suivants relèveront encore cette limite.
 - **Total porté à 338 Ko, CSS à 73,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 13, en attente de l'accord de Kevin) : les deux colonnes d'À traiter (« L'offre en bref ») et les lignes de « Ce que je cherche » ajoutent 0,6 Ko de JS (336,1 Ko) et 0,8 Ko de CSS des pages (72,6 Ko). Compensation : le résumé à crayon des critères sur ordinateur est retiré.
 - **Total porté à 340 Ko, CSS à 74,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 14, en attente de l'accord de Kevin) : « Ce qui a été convenu » dans le détail d'un rendez-vous passé (formulaire en trois parties, colonne « Le rendez-vous ») met le JS total à 337,9 Ko et tout le CSS à 73,5 Ko.
+- **CSS porté à 75,5 Ko** (2026-11-08, maquette du 8 novembre au soir, lot 15, en attente de l'accord de Kevin) : Préparer sur ordinateur (en-tête d'une ligne, « Mise en page », « Pour cette offre » en deux groupes, bas de page avec la zone de saisie) met tout le CSS à 74,7 Ko.
 
 ## Vérifié (0.88.0)
 

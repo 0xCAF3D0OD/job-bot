@@ -4,6 +4,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import { onDayAt } from "../format";
 import OfferBrief from "./OfferBrief.vue";
+import LayoutCard from "./LayoutCard.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
@@ -249,6 +250,13 @@ const blocksSummary = computed(() => {
   const blocks = selected.value?.blocks ?? [];
   return `${blocks.filter((b) => b.selected).length} sur ${blocks.length}`;
 });
+// Les mots du CV affiché, pour « Mise en page » (lot 15.1).
+const words = computed(() => {
+  const d = doc.value;
+  if (!d) return 0;
+  const texts = [edit.value.headline, edit.value.summary, ...d.sections.flatMap((s) => s.items.flatMap((i) => [i.title, ...i.content.map((c) => c.text)]))];
+  return texts.reduce((n, t) => n + (t?.match(/\S+/g)?.length ?? 0), 0);
+});
 const readBusy = ref(false);
 async function markRead(box: HTMLInputElement): Promise<void> {
   const cv = selected.value;
@@ -267,7 +275,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <div class="prep-layout">
+  <div :class="['prep-layout', { 'prep-desk': !phone }]">
     <div class="prep-main">
       <p
         v-if="error"
@@ -506,6 +514,12 @@ onMounted(() => void load());
     </div>
 
     <section class="prep-side">
+      <!-- Lot 15.1 : « Mise en page » aussi à l'étape CV, le nombre de mots dessous (la mesure de la page A4 n'existe
+           que pour la lettre). -->
+      <LayoutCard
+        v-if="!phone"
+        :note="words ? `${words} mots` : undefined"
+      />
       <OfferBrief
         v-if="!phone"
         :offer="offer"
@@ -541,7 +555,7 @@ onMounted(() => void load());
         </label>
         <div class="mobile-dock">
           <BusyButton
-            :class="primary ? 'primary' : 'secondary'"
+            :class="primary ? 'primary action-1' : 'secondary action-2'"
             :busy="writing"
             busy-label="Préparation…"
             :disabled="reached('cv')"

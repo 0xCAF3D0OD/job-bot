@@ -7,7 +7,7 @@ import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT
 import { dateInList } from "../dates";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
-import { focusBody, greetingText, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { focusBody, greetingText, shortCompany, suggestionsFor, useAssistant } from "../composables/useAssistant";
 import { useDailyDose } from "../composables/useDailyDose";
 import { announceDataChanged } from "../composables/useDataChanged";
 import { pickerOpen, useDismissLayer, openLayerKind } from "../composables/useDismissLayer";
@@ -262,7 +262,7 @@ watch(open, (value) => {
 // Le premier message de la page (décision de Kevin du 2026-11-05, AS3) : écrit par l'app, sans IA, avec les
 // chiffres de l'Accueil et le prénom des Coordonnées ; puis des réponses selon la situation. « Préparer la
 // lettre » ouvre Ma candidature (AS4) ; les autres posent la question à l'Assistant.
-type Reply = { label: string; to?: string };
+type Reply = { label: string; to?: string; aria?: string };
 const greeting = ref("");
 const replies = ref<Reply[]>([]);
 const dailyDose = useDailyDose();
@@ -280,7 +280,13 @@ async function loadGreeting(): Promise<void> {
     greeting.value = greetingText(name, offers, today?.to_follow_up ?? 0);
     const list: Reply[] = [];
     const letter = (current.data?.items ?? []).find((offer) => offer.status === "preparing");
-    if (letter) list.push({ label: `Préparer la lettre pour ${letter.company}`, to: `/candidatures/offres/${letter.id}/preparer` });
+    if (letter) {
+      list.push({
+        label: `Préparer la lettre pour ${shortCompany(letter.company ?? "")}`,
+        aria: `Préparer la lettre pour ${letter.company}`,
+        to: `/candidatures/offres/${letter.id}/preparer`,
+      });
+    }
     if (today?.to_follow_up) list.push({ label: "Préparer les relances" });
     if (today?.orp_meeting_at) list.push({ label: "Préparer mon rendez-vous ORP" });
     replies.value = list.length ? list : fallbackReplies();
@@ -466,6 +472,7 @@ const headItems: MoreMenuItem[] = [
               <RouterLink
                 v-if="reply.to"
                 :to="reply.to"
+                :aria-label="reply.aria"
                 class="assistant-reply"
                 data-test="assistant-reply"
               >

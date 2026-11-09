@@ -78,6 +78,11 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(triage.findAll("a")).toHaveLength(1);
     expect(triage.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
     expect(triage.find("[data-test=offer-discard]").text()).toBe("Écarter");
+    // Lot 15.2 : « J'ai déjà postulé » à droite de « Écarter », le parcours « Marquer comme envoyée ».
+    const already = triage.find("[data-test=offer-already-applied]");
+    expect(already.text()).toBe("J'ai déjà postulé");
+    await already.trigger("click");
+    expect(wrapper.emitted("applied")).toHaveLength(1);
     const apply = wrapper.find("[data-test=section-ad] [data-test=apply]");
     expect(apply.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
     expect(apply.text()).toContain("Postuler sur Indeed");
@@ -288,13 +293,13 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » : Écarter, Marquer comme envoyée, puis les actions de la fiche, sans « Plus tard »", async () => {
+  it("la feuille « ⋯ » : Écarter, J'ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
     const titles = sheet.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles.slice(0, 2)).toEqual(["Écarter l'offre", "Marquer comme envoyée"]);
+    expect(titles.slice(0, 2)).toEqual(["Écarter l'offre", "J'ai déjà postulé"]);
     expect(titles).toContain("Signaler comme expirée");
     expect(titles).toContain("Cette note ne me correspond pas");
     expect(titles).not.toContain("Plus tard");

@@ -46,8 +46,10 @@ describe("Bilan › ORP", () => {
     expect(goal.find("p").text()).toBe("Objectif fixé avec ton ORP. Échéance le 31 octobre.");
     const rows = wrapper.findAll("[data-test=orp-rows] li");
     expect(rows.map((r) => r.find(".orp-what strong").text())).toEqual(["Alpstack", "Romandie Logistics", "Léman Data SA"]);
-    expect(rows[0]!.text()).toContain("DevOps Engineer · Électronique");
-    expect(rows.map((r) => r.find(".status-pill").text())).toEqual(["Preuve", "À joindre", "Preuve"]);
+    expect(rows[0]!.text()).toContain("DevOps Engineer · En ligne");
+    expect(rows.map((r) => r.find(".status-pill").text())).toEqual(["justificatif joint", "justificatif à joindre", "justificatif joint"]);
+    // Lot 16.4 : la phrase sous le titre de la liste.
+    expect(wrapper.find("[data-test=orp-proof-note]").text()).toBe("L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.");
     // L'ordre de la page (B6).
     expect(wrapper.find("[data-test=rhythm]").exists()).toBe(false);
     expect(GET).not.toHaveBeenCalledWith("/api/today");

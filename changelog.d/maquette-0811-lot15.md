@@ -1,0 +1,1 @@
+Maquette du 8 novembre, lot 15 : Préparer sur ordinateur (en-tête d'une ligne, « Mise en page », « Pour cette offre » en deux groupes, « J'ai relu la lettre » en bas) et « J'ai déjà postulé » dans le détail d'une offre
