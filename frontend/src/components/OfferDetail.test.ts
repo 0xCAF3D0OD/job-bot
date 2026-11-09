@@ -373,6 +373,19 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
   });
 
+  it("la note en carte d'information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
+    desktop();
+    const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes" }));
+    const note = wrapper.find("[data-test=section-for-you]");
+    expect(note.find("[data-test=match-lines]").exists()).toBe(false);
+    expect(note.find("[data-test=note-detail]").exists()).toBe(false);
+    const open = note.get("[data-test=compat-open]");
+    expect(open.text()).toContain("Voir la compatibilité");
+    expect(open.attributes("aria-haspopup")).toBe("dialog");
+    await open.trigger("click");
+    expect(wrapper.find("[data-test=compat-sheet]").exists()).toBe(true);
+  });
+
   it("sous 1 024 px, une seule colonne", async () => {
     const wrapper = await mountDetail(offer());
     expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);

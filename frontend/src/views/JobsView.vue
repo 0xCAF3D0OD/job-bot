@@ -16,7 +16,7 @@ import { usePhone } from "../composables/usePhone";
 // Sur téléphone (maquette Candidatures) : « Alertes » monte dans l'en-tête, à côté du titre, et les vues
 // sont un contrôle segmenté ; la vue ouverte y pose ses outils (#jobs-tools : recherche, « Ajouter »).
 // Ordinateur dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB) : à droite des vues, « Mes alertes
-// e-mail » et le nombre de recherches suivies, puis « + Ajouter une offre », qui ouvre le dialogue d'ajout.
+// e-mail » et le nombre de recherches suivies, puis « + Ajouter », qui ouvre le panneau d'ajout (une offre ou une candidature spontanée, §2.6 du 9 novembre).
 const route = useRoute();
 const router = useRouter();
 const followed = ref<number | null>(null);
@@ -150,7 +150,7 @@ onMounted(() => void refresh());
         data-test="manual-open"
         @click="addOffer"
       >
-        <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
+        <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
       </button>
     </div>
   </div>

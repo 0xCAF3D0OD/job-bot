@@ -1,0 +1,1 @@
+Candidatures sur ordinateur du 9 novembre (§2.1, §2.6, §2.7) : la note de l’offre devient une carte crème avec « Voir la compatibilité » qui ouvre le panneau ; un seul bouton « Ajouter » ouvre un panneau à droite avec deux onglets, « Une offre » et « Candidature spontanée » ; l’état vide des filtres propose une candidature spontanée.

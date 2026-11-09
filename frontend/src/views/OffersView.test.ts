@@ -155,6 +155,19 @@ describe("OffersView", () => {
     expect(filtered.find("[data-test=offers-reset]").classes()).toContain("link");
   });
 
+  it("ordinateur large, aucune offre avec ces filtres (§2.7 du 9 novembre) : « Faire une candidature spontanée » ouvre « Ajouter »", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    mockOffers(page([]));
+    const filtered = await mountAt("/offres?canton=VD");
+    // Plus de lien « Postuler spontanément » en bas de liste sur ordinateur.
+    expect(filtered.find(".offers-spontaneous").exists()).toBe(false);
+    const link = filtered.get("[data-test=offers-empty] [data-test=empty-spontaneous]");
+    expect(filtered.find(".offers-empty-spontaneous p").text()).toBe("Tu vises une entreprise précise, même sans offre ?");
+    await link.trigger("click");
+    expect(filtered.get("[data-test=add-sheet] [data-test=add-tab-spontaneous]").attributes("aria-checked")).toBe("true");
+    vi.unstubAllGlobals();
+  });
+
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
@@ -167,9 +180,14 @@ describe("OffersView", () => {
     expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter avec ces filtres.");
     const mixed = await mountAt("/offres?ecartees=montrer");
     expect(mixed.find("[data-test=offers-sentence]").text()).toBe("2 offres affichées avec ces filtres.");
-    // Un seul bouton « + Ajouter » (1.6.47) ; son menu propose les deux façons d'ajouter.
-    await wrapper.find("[data-test=add-menu]").trigger("click");
-    expect(wrapper.find("[data-test=manual-open]").exists()).toBe(true);
+    // Un seul bouton « + Ajouter » (§2.6 du 9 novembre) : un panneau à deux onglets, « Une offre » d'abord.
+    await wrapper.find("[data-test=add-open]").trigger("click");
+    const sheet = wrapper.find("[data-test=add-sheet]");
+    expect(sheet.find("[data-test=add-tab-offer]").attributes("aria-checked")).toBe("true");
+    expect(sheet.text()).toContain("Colle le lien ou le texte de l’annonce.");
+    await sheet.find("[data-test=add-tab-spontaneous]").trigger("click");
+    expect(wrapper.find("[data-test=add-sheet] [data-test=add-tab-spontaneous]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=add-sheet] [data-test=composer-input]").exists()).toBe(false);
     mockOffers(page([offer(3, "Trois")]));
     const dropped = await mountAt("/offres?statut=filtered_out");
     // Dans une autre vue, la phrase redit ce que compte la pastille de l'onglet (1.6.27).
@@ -584,14 +602,11 @@ describe("Offres, revue des pages (docs/43)", () => {
     expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
     expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
     expect(wrapper.findAll(".offer-line-sub").every((sub) => !/ · \d{1,2} \S+$/.test(sub.text()))).toBe(true);
-    // « + Ajouter » dans la barre d'outils (1.6.55) : « Ajouter une offre » et « Postuler spontanément ».
-    const add = wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]");
+    // « + Ajouter » dans la barre d'outils : il ouvre le panneau à deux onglets (§2.6 du 9 novembre).
+    const add = wrapper.find("[data-test=offers-toolbar] [data-test=add-open]");
     expect(add.text()).toBe("Ajouter");
     await add.trigger("click");
-    expect(wrapper.findAll("[data-test=offers-toolbar] [role=menuitem]").map((i) => i.text())).toEqual([
-      "Ajouter une offre",
-      "Postuler spontanément",
-    ]);
+    expect(wrapper.findAll("[data-test=add-sheet] [role=radio]").map((i) => i.text())).toEqual(["Une offre", "Candidature spontanée"]);
     // Aucun filtre actif : ni pastille, ni nombre sur « Filtrer », ni « Tout effacer ».
     expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
     expect(wrapper.find("[data-test=filters-count]").exists()).toBe(false);
@@ -637,7 +652,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
       ),
     );
     const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
-    expect(wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=offers-toolbar] [data-test=add-open]").exists()).toBe(true);
     const input = wrapper.find("[data-test=composer-input]").element as HTMLTextAreaElement;
     expect(input.value).toBe("https://bois.ch/emplois/1");
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
