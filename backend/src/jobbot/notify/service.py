@@ -265,6 +265,11 @@ async def notify_new_scores(runtime: Runtime, now: datetime | None = None) -> No
     return result
 
 
+def _chf(amount: float | Decimal) -> str:
+    """« 16 », « 8.50 » : les centimes seulement quand il y en a."""
+    return f"{amount:.2f}".removesuffix(".00")
+
+
 async def _budget_alert(runtime: Runtime) -> bool:
     now = datetime.now(UTC)
     month = now.strftime("%Y-%m")
@@ -277,8 +282,9 @@ async def _budget_alert(runtime: Runtime) -> bool:
         runtime,
         Message(
             title="Budget de l'IA presque atteint",
-            message=f"{spend:.2f} CHF dépensés sur {budget:.2f} CHF ce mois-ci. "
-            "Au-delà du plafond, les offres ne sont plus notées jusqu'au mois prochain.",
+            # Un chiffre et une conséquence, pas de consigne (§10.9).
+            message=f"{_chf(spend)} CHF sur {_chf(budget)} ce mois-ci. "
+            "Au-delà, les nouvelles offres ne sont plus notées.",
             priority=4,
             tags=["warning"],
             click=f"{runtime.settings.public_url.rstrip('/')}/reglages?rubrique=ia",
@@ -330,19 +336,18 @@ async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
     ]
     if len(due) > MAX_LISTED:
         lines.append(f"… et {plural(len(due) - MAX_LISTED, 'autre', 'autres')}")
+    title = (
+        f"{plural(len(due), 'candidature', 'candidatures')} sans réponse"
+        f" depuis {REMIND_AFTER_DAYS} jours"
+    )
+    click = f"{settings.public_url.rstrip('/')}/candidatures/suivi"
+    # Dans la cloche, le titre seul (§10.9) ; la liste ne part que sur le téléphone.
     await deliver(
         runtime,
-        Message(
-            title=(
-                f"{plural(len(due), 'candidature', 'candidatures')} sans réponse"
-                f" depuis {REMIND_AFTER_DAYS} jours"
-            ),
-            message="Relancer ?\n" + "\n".join(lines),
-            tags=["hourglass"],
-            click=f"{settings.public_url.rstrip('/')}/candidatures/suivi",
-        ),
+        Message(title=title, message="", tags=["hourglass"], click=click),
         kind="follow_up",
         link="/candidatures/suivi",
+        phone=Message(title=title, message="\n".join(lines), tags=["hourglass"], click=click),
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(

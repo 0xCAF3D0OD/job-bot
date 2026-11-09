@@ -17,13 +17,13 @@ const item = (extra: Record<string, unknown> = {}) => ({
 });
 const mountRow = (extra: Record<string, unknown> = {}) => mount(NotificationRow, { props: { item: item(extra) }, global: { plugins: [router] } });
 
-describe("NotificationRow (maquette Notifications, N8)", () => {
-  it("un seul lien : l'icône du genre, le titre, la première ligne et le libellé de l'action", () => {
+describe("NotificationRow (ordinateur, NotificationsOrdinateur)", () => {
+  it("un seul lien : le point « non lue », le titre, la première ligne et le libellé de l'action", () => {
     const wrapper = mountRow();
     const link = wrapper.get("[data-test=notification]");
     expect(link.element.tagName).toBe("A");
     expect(link.attributes("href")).toBe("/candidatures/offres?tri=score");
-    expect(wrapper.get("svg.notif-icon").attributes("data-shape")).toBe("offers");
+    expect(wrapper.find("[data-test=unread-dot]").exists()).toBe(true);
     expect(wrapper.get(".notif-row-text").text()).toBe("La meilleure : Dev chez Infomaniak, proche.");
     expect(wrapper.get("[data-test=notification-action]").text()).toBe("Voir les offres");
     // Aucun élément interactif imbriqué (décision du 2026-11-04).
@@ -31,22 +31,18 @@ describe("NotificationRow (maquette Notifications, N8)", () => {
   });
 
   it.each([
-    ["follow_up", "orp", "Relancer"],
-    ["orp_due", "orp", "Compléter"],
-    ["interview", "orp", "Préparer"],
-    ["training_funding", "orp", "Voir la formation"],
-    ["budget", "warning", "Voir le budget"],
-    ["collect_failed", "warning", "Voir"],
-  ])("%s : forme %s, « %s »", (kind, shape, action) => {
-    const wrapper = mountRow({ kind });
-    expect(wrapper.get("svg.notif-icon").attributes("data-shape")).toBe(shape);
-    expect(wrapper.get("[data-test=notification-action]").text()).toBe(action);
+    ["follow_up", "Relancer"],
+    ["orp_due", "Compléter"],
+    ["interview", "Préparer"],
+    ["training_funding", "Voir la formation"],
+    ["budget", "Voir le budget"],
+    ["collect_failed", "Voir"],
+  ])("%s : « %s »", (kind, action) => {
+    expect(mountRow({ kind }).get("[data-test=notification-action]").text()).toBe(action);
   });
 
-  it("un genre sans action, ou sans page : le visage content, pas de libellé", () => {
-    const calm = mountRow({ kind: "rhythm_week" });
-    expect(calm.get("svg.notif-icon").attributes("data-shape")).toBe("calm");
-    expect(calm.find("[data-test=notification-action]").exists()).toBe(false);
+  it("un genre sans action, ou sans page : pas de libellé", () => {
+    expect(mountRow({ kind: "rhythm_week" }).find("[data-test=notification-action]").exists()).toBe(false);
     const noLink = mountRow({ kind: "budget", link: null });
     expect(noLink.get("[data-test=notification]").element.tagName).toBe("BUTTON");
     expect(noLink.find("[data-test=notification-action]").exists()).toBe(false);

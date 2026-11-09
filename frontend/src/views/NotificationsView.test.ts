@@ -56,9 +56,15 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     expect(wrapper.find("[data-test=notifications-back]").attributes("aria-label")).toBe("Retour à l'accueil");
     expect(wrapper.find("[data-test=filter-unread]").text()).toBe("Non lues (2)");
     // Les groupes ne dépendent que de l'écart en jours ; près de minuit, « Aujourd'hui » peut manquer.
+    // Téléphone (§10.9) : « Aujourd'hui », « Hier », « Plus tôt », plus de « Cette semaine » ; une section nommée par
+    // famille, les cartes sans conteneur.
     const titles = wrapper.findAll(".notifications-group h2").map((h) => h.text());
     expect(titles).toContain("Plus tôt");
+    expect(titles).not.toContain("Cette semaine");
     expect(titles.at(-1)).toBe("Plus tôt");
+    const section = wrapper.get(".notifications-group");
+    expect(section.attributes("aria-labelledby")).toBe(section.get("h2").attributes("id"));
+    expect(wrapper.find(".notifications-card").exists()).toBe(false);
     const rows = wrapper.findAll("[data-test=notification]");
     expect(rows).toHaveLength(4);
     expect(rows.filter((r) => r.classes().includes("unread"))).toHaveLength(2);
@@ -92,28 +98,34 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     const { pending, undo } = useUndo();
 
     await wrapper.find("[data-test=read-all]").trigger("click");
-    expect(wrapper.findAll(".notif-row.unread")).toHaveLength(0);
+    expect(wrapper.findAll(".notif-card.unread")).toHaveLength(0);
     expect(wrapper.find("[data-test=read-all]").attributes("disabled")).toBeDefined();
     expect(pending.value?.message).toBe("2 notifications marquées comme lues");
     expect(POST).not.toHaveBeenCalled();
     await undo();
     await flushPromises();
-    expect(wrapper.findAll(".notif-row.unread")).toHaveLength(2);
+    expect(wrapper.findAll(".notif-card.unread")).toHaveLength(2);
 
     await wrapper.find("[data-test=read-all]").trigger("click");
     vi.advanceTimersByTime(6000);
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/inbox/read-all", { keepalive: false });
-    expect(wrapper.findAll(".notif-row.unread")).toHaveLength(0);
+    expect(wrapper.findAll(".notif-card.unread")).toHaveLength(0);
     wrapper.unmount();
   });
 
-  it("tout est lu : le visage, « Tout est lu » et « Voir toutes les notifications »", async () => {
+  it("tout est lu : le personnage assis et son ombre, « Tout est lu » et « Voir toutes les notifications »", async () => {
     GET.mockResolvedValue({ data: { unread: 0, items: [item(1, { read_at: hoursAgo(1) })] } });
     const { wrapper } = await mountPage();
     await wrapper.find("[data-test=filter-unread]").trigger("click");
     const empty = wrapper.find("[data-test=notifications-empty]");
     expect(empty.text()).toContain("Tout est lu");
+    // §10.9, docs/141 §3 : perso-05-assis, 150 px de large. un seul des trois : ni cloche ni logo transformé.
+    const perso = empty.get("[data-test=notifications-perso] img");
+    expect(perso.attributes("src")).toMatch(/perso-05-assis-400\.webp/);
+    expect(perso.attributes("width")).toBe("150");
+    expect(empty.find(".notifications-perso-shadow").exists()).toBe(true);
+    expect(empty.find(".mood, .face-transform, svg").exists()).toBe(false);
     await empty.find("[data-test=show-all]").trigger("click");
     expect(wrapper.findAll("[data-test=notification]")).toHaveLength(1);
     wrapper.unmount();
