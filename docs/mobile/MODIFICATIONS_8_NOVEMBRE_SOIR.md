@@ -42,12 +42,12 @@ Tout a été validé par Kevin le 2026-11-08. Les maquettes et les captures du z
 | 13.2 | Profil, Premiers pas (ordinateur) | Libellé au-dessus de la valeur | ProfilOrdinateur, OnboardingOrdinateur | `ProfilOrdinateur.png` |
 | 14 | Rendez-vous, détail (ordinateur) | Sans pastille « Noté », 3 sections | CandidaturesOrdinateurB | `etats/CandidaturesOrdinateurB--tab-rv.png`, `--tab-rv-bas.png` |
 | 15.1 | Préparer (ordinateur) | En-tête, Mise en page, Pour cette offre | PreparerOrdinateur | `PreparerOrdinateur.png`, `etats/PreparerOrdinateur--colonne-bas.png` |
-| 15.2 | À traiter | « J'ai déjà postulé » | CandidaturesOrdinateurB, Offre | `CandidaturesOrdinateurB.png` |
+| 15.2 | À traiter | « J'ai déjà postulé » ; « Ignorer » devient « Écarter » partout | CandidaturesOrdinateurB, Offre | `CandidaturesOrdinateurB.png` |
 | 16.1 | Assistant | Pastilles de suggestion | Assistant | `Assistant.png` |
 | 16.2 | Personnage | Pantalon | tous | `illustrations/personnage/` |
 | 16.3 | Personnage | Buste dans les écrans chargés | RendezVous, Connexion, OnboardingC | `etats/RendezVous--vide.png`, `Connexion.png`, `etats/OnboardingC--etape-1.png` |
 | 16.4 | Justificatifs ORP | Mots et phrase d'aide | Orp, Explorer, BilanOrdinateur | `Orp.png`, `BilanOrdinateur.png` |
-| 18 | Style « blocs » | Règles D28 à D34, écrans refaits | voir §10 | voir §10 |
+| 18 | Sections et cartes | Règles D28 à D35, écrans refaits ; fond crème partout, pas de carte dans une carte, cartes d'information (9 novembre) | voir §10 | voir §10 |
 
 ### 1.2 Ordre des PR
 
@@ -64,21 +64,39 @@ Le lot 18 change des règles utilisées par les lots 11 à 16 (couleur des bouto
 
 Ces règles s'appliquent partout où ce document ne dit pas autre chose. Ajoute-les à `docs/regles-ui-ergonomie.md` (section « Décisions du 8 novembre 2026 ») et à `docs/143`.
 
-### 2.1 Blocs et lignes (D28, D29) : remplacent D22 « carte = cliquable »
+### 2.1 Sections et cartes (D28, D29) : précisent D22 « carte = cliquable »
 
-- **D28. Un bloc est une section, jamais cliquable en entier.**
-  - Une page de lecture est une pile de blocs `var(--surface)`, **sans bordure ni ombre**, rayon `--radius-card`.
-  - Fond de page : rôle `--page-blocks` (§2.6).
-  - Écart entre deux blocs : 8 px sur téléphone, 16 px sur ordinateur.
-  - Marge intérieure : 22 px en haut et en bas, 20 px sur les côtés (téléphone) ; 24 px (ordinateur).
-  - Sur-titre de bloc (« Candidature », « Mon parcours ») : 13 px, 700, capitales, `letter-spacing: .06em`, `var(--text-secondary)`, 8 à 10 px dessous.
-  - Titre de bloc : 18 px, 700, line-height 24 px. Phrase d'aide : 14 px, line-height 21 px, `var(--text-secondary)`, 6 px sous le titre.
-- **D29. Une ligne à flèche est cliquable en entier.**
-  - Fond : rôle `--row-blocks` (§2.6), rayon `--radius-sm` (12 px dans la maquette, traduit par D7).
-  - `min-height: 72px` (56 px s'il n'y a qu'une ligne de texte), `padding: 14px 12px 14px 16px`, 10 px entre deux lignes.
+Règle de Kevin du 9 novembre : **une carte est l'élément avec lequel on interagit, ou une information importante à mettre en évidence (D35). Il n'y a jamais de carte dans une carte.**
+
+- **D28. Une section n'est pas une carte.**
+  - Le reste du contenu à lire (« Le poste », champs à recopier) est posé **directement sur le fond de la page**, sans fond blanc, sans cadre, sans ombre.
+  - Fond de page : `var(--bg)` (crème #F7F5F0 en clair), **le même partout** : en-tête, page, barre du bas. Il n'est jamais foncé.
+  - Deux sections sont séparées par un trait `1px solid var(--line)` et 24 px au-dessus et en dessous ; pas de trait au-dessus de la première (12 px au-dessus). Marges latérales : 16 px (téléphone), 24 px (ordinateur).
+  - Sur-titre de section (« Candidature », « Mon parcours ») : 13 px, 700, capitales, `letter-spacing: .06em`, `var(--text-secondary)`, 8 à 10 px dessous.
+  - Titre de section : 18 px, 700, line-height 24 px. Phrase d'aide : 14 px, line-height 21 px, `var(--text-secondary)`, 6 px sous le titre.
+  - Laws of UX (région commune) et NN/g (proximité) : l'espace et le trait suffisent à grouper ; un fond en plus ferait croire que la zone est cliquable.
+- **D29. Une carte est cliquable en entier.**
+  - La couleur de la carte se détache de **son** fond :
+
+    | Fond derrière la carte | Carte |
+    |---|---|
+    | `--bg` (page crème) | fond `var(--surface)` (blanc) + `border: 1.5px solid var(--line-strong)` |
+    | `--surface` (panneau ou fenêtre blanche) | fond `var(--bg)` (crème), sans cadre |
+    | sombre : `--bg` | fond `var(--surface)` + trait `var(--line-strong)` |
+    | sombre : `--surface` | fond `var(--surface-muted)`, sans cadre |
+
+  - **Jamais une carte dans une carte**, ni une carte dans une zone à fond blanc non cliquable posée sur la page : la zone perd son fond, ou la carte change de couleur selon le tableau.
+  - Rayon `--radius-sm` (12 px dans la maquette, traduit par D7).
+  - `min-height: 72px` (56 px s'il n'y a qu'une ligne de texte), `padding: 14px 12px 14px 16px` (moins 1,5 px de chaque côté quand il y a un cadre), 10 px entre deux cartes.
   - Texte : titre 16 px, 700, line-height 22 px ; lignes secondaires 14 px, line-height 20 px, `var(--text-secondary)`, **4 px entre chaque ligne**, coupées avec « … » si trop longues.
   - À droite, **un cercle à contour** de 40 px : sans remplissage, `border: 2px solid var(--primary-graphic)`, `box-sizing: border-box`, flèche → de 18 px en `var(--primary-text)`. 36 px dans les lignes de réglages sur ordinateur.
-  - Toute la ligne est le lien (un seul arrêt de tabulation) ; le cercle est décoratif (`aria-hidden="true"`).
+  - Toute la carte est le lien (un seul arrêt de tabulation) ; le cercle est décoratif (`aria-hidden="true"`).
+  - Une liste à traits sans fond (lignes séparées par `var(--line-soft)`) n'est pas une carte ; ses lignes n'ont jamais de fond propre.
+- **D35. Une information importante est aussi dans une carte** (précision de Kevin du 9 novembre).
+  - Cas : le résumé du mois ORP (cercle « 8/10 », « n recherches à faire », date limite) dans Suivi ORP et l'onglet ORP de Bilan ; l'en-tête d'une offre (logo, intitulé du poste, entreprise, lieu, étiquettes) et la note d'une offre (anneau, verdict, raisons, « Le détail de la note › ») dans le détail d'une offre sur téléphone. Rien d'autre sans l'accord de Kevin.
+  - Même couleur qu'une carte cliquable (tableau D29), mais **rayon `--radius-card`** (18 px), `padding: 18.5px 16.5px`, `margin: 12px 16px 0`, et **pas de cercle à flèche** : c'est le cercle qui dit qu'on peut toucher (NN/g, signes d'interaction). Le lien éventuel à l'intérieur reste un lien texte.
+  - La section qui suit une carte d'information n'a pas de trait au-dessus (20 px d'espace). Deux cartes d'information qui se suivent sont séparées de 12 px.
+  - Une carte d'information ne contient jamais de carte cliquable.
 
 ### 2.2 Hiérarchie des actions (D30, D34)
 
@@ -87,7 +105,7 @@ Tout ce qui est cliquable est en bleu. Le reste (fonds, blocs, étiquettes, text
 | Niveau | Quand | Style |
 |---|---|---|
 | 1. Plein | **Une seule action principale par écran** (« Préparer ma candidature », « Marquer comme déclarée », « Enregistrer », « Se connecter », « Voir ma feuille », « Ajouter le rendez-vous »…), plus le bouton Envoyer du Composer et le bouton central de la barre du bas | fond `var(--action)`, texte ou icône `var(--on-action)` |
-| 2. Contour | Actions secondaires (« Ignorer », « Écarter », « J'ai déjà postulé », « Exporter le formulaire (PDF) », « Ouvrir Job-Room », « Changer d'image », « Modifier », « Voir », « Remplacer », « + Ajouter une recherche », « Rédiger un message », « Rédiger la nouvelle version »…) et boutons copier | fond `var(--surface)`, `border: 1.5px solid var(--primary-graphic)`, texte `var(--primary-text)` |
+| 2. Contour | Actions secondaires (« Écarter », « J'ai déjà postulé », « Exporter le formulaire (PDF) », « Ouvrir Job-Room », « Changer d'image », « Modifier », « Voir », « Remplacer », « + Ajouter une recherche », « Rédiger un message », « Rédiger la nouvelle version »…) et boutons copier | fond `var(--surface)`, `border: 1.5px solid var(--primary-graphic)`, texte `var(--primary-text)` |
 | 3. Cercle | Flèche des lignes D29, flèche de l'action des tâches d'Aujourd'hui | cercle à contour de 2 px (§2.1) |
 | Texte | Liens dans une phrase ou sous un bloc (« Le détail de la note › », « Voir l'annonce complète ») | `var(--primary-text)`, 15 px, 700 |
 
@@ -115,9 +133,11 @@ En sombre, ce qui est devant est plus clair : l'ordre des fonds s'inverse.
 
 | Élément | Clair | Sombre |
 |---|---|---|
-| Fond de page des écrans en blocs | `--surface-muted` (#ECE9E1) | `--bg` (#171411) |
-| Blocs | `--surface` (#FFFFFF) | `--surface` (#221E1A) |
-| Lignes D29, étiquettes | `--bg` (#F7F5F0) | `--surface-muted` (#2C2722) |
+| Fond de page, en-tête, barre du bas, sections | `--bg` (#F7F5F0) | `--bg` (#171411) |
+| Trait entre sections | `--line` (#E5E2D9) | `--line` (#38322B) |
+| Carte sur la page | `--surface` + trait 1,5 px `--line-strong` (#CFCBC1) | `--surface` (#221E1A) + trait 1,5 px `--line-strong` (#4E473E) |
+| Carte sur un fond blanc | `--bg` (#F7F5F0), sans trait | `--surface-muted` (#2C2722), sans trait |
+| Étiquettes grises | `--surface-muted` (#ECE9E1) | `--surface-muted` (#2C2722) |
 | Bouton plein (niveau 1) | `--action` #2445C2, texte blanc | `--action` #7D95FF, texte #171411 |
 | Contours, cercles, icônes d'action | `--primary-graphic` #2445C2 | `--primary-graphic` #7D95FF |
 | Textes de lien, flèches | `--primary-text` #1A3496 | `--primary-text` #AEBDFF |
@@ -134,8 +154,6 @@ Dans `docs/mobile/tokens.css` **et** `style.css` (clair, `prefers-color-scheme: 
 |---|---|---|---|
 | `--action` | #2445C2 | #7D95FF | fond des éléments pleins (niveau 1) |
 | `--on-action` | #FFFFFF | #171411 | texte et icône sur `--action` |
-| `--page-blocks` | `var(--surface-muted)` | `var(--bg)` | fond de page des écrans en blocs |
-| `--row-blocks` | `var(--bg)` | `var(--surface-muted)` | fond des lignes D29 |
 
 Rappel des jetons déjà ajoutés au lot 1 : `--line-strong`, `--field-border`, `--text-disabled`, `--shadow-panel`, `--shadow-menu`, `--shadow-band-card`, `--shadow-composer`.
 
@@ -152,7 +170,7 @@ Utilisé par les lots 12, 13.1 et 14. Crée **un seul composant** `DetailTwoColu
 - Liens de la colonne d'appui : 44 px de haut, `var(--primary-text)`, icône de lien externe 15 px s'ils sortent de jobA1.
 - Ordre du DOM : colonne principale puis colonne d'appui (WCAG 1.3.2). Pas d'`order` CSS.
 - Formulaires : toujours une seule colonne de champs.
-- Le panneau de détail reste **une seule carte** : pas de blocs D28 à l'intérieur. Les boutons y suivent le §2.2.
+- Le panneau de détail reste **une seule surface blanche**. Une carte cliquable à l'intérieur (ex. « Objectif ORP ») prend le fond `var(--bg)` sans cadre (D29). Les boutons y suivent le §2.2.
 - Sur téléphone, le gabarit ne s'applique pas : une seule colonne.
 
 ### 2.8 Écrans étroits (320, 360, 390 px)
@@ -164,6 +182,42 @@ Les maquettes téléphone sont dessinées dans un cadre fixe de 390 px : elles n
 - Une colonne de liste a `max-width: 100%` et `box-sizing: border-box` : jamais de largeur fixe, ni de largeur égale à 100 % plus une marge.
 - Un en-tête de liste avec un bouton (« Recherches suivies » + « + Ajouter ») passe le bouton sous le titre si la place manque (`flex-wrap: wrap`).
 - Chaque PR qui touche un écran téléphone passe ce contrôle **avant** qu'une autre PR soit empilée dessus.
+
+### 2.9 Grille et alignement (9 novembre)
+
+Décisions de jobA1, avec leur source. « Règle » = vient d'une organisation ; « Choix jobA1 » = décision de Kevin, à ne pas « corriger ».
+
+| Point | Valeur | Statut |
+|---|---|---|
+| Grille | tous les espaces (marges, paddings, gaps, hauteurs) sont des multiples de 4 px ; un trait de 1 ou 1,5 px se compte dans le padding (14,5 + 1,5 = 16) | Règle (Material : grille de 8 dp, 4 dp pour icônes et texte) |
+| Marge de l'écran (téléphone) | **20 px** (décision du 9 novembre ; avant 16 px) | Règle : Material 16 dp minimum sur les petits écrans, marges de contenu de 16 à 20 pt côté iOS ; 20 est sur la grille de 4 |
+| Marge intérieure d'une carte | **20 px**, trait compris (18,5 + 1,5) | Choix jobA1, sur la grille de 4 |
+| Ligne simple | 56 px de haut | Règle (listes Material 3, valeur non vérifiée sur la page officielle) |
+| Ligne à deux niveaux (libellé + valeur, titre + sous-titre) | 72 px minimum | idem |
+| Icône dans une liste | 24 px partout, `flex: none` | Règle (Material 3) |
+| Logo, anneau de note, image | 56 px, 16 px avant le texte | Règle (Material 3, élément « image » de 56 px) |
+| Écart icône / texte | 16 px ; 8 px entre une icône et son mot dans un compteur | Règle (Material 3) / Choix jobA1 |
+| Icône de fin (cercle à flèche, chevron) | sa boîte est à 20 px du bord droit de la carte ; toutes les icônes de fin d'une carte sont sur la même verticale | Règle (Material 3) |
+| Chevron d'un bloc qui s'ouvre | à droite, pointe vers le bas fermé, vers le haut ouvert | Règle (NN/g, étude sur les icônes d'accordéon : le chevron est le signe le mieux compris ; le côté n'est pas imposé, il doit être constant) |
+| Axe de la note | dans la carte de la note, les icônes de niveau 1 sont dans la colonne de l'anneau (56 px), **calées contre son bord droit**, et tous les textes commencent sur la ligne du verdict (voir §2.10) | **Choix jobA1** : écart assumé à Material 3, qui colle les icônes au bord ; raison : un seul alignement montre que les critères dépendent de la note (Gestalt, alignement ; Laws of UX, région commune) |
+| Cible tactile | 44 x 44 px minimum ; un lien dans une phrase en est exempté (WCAG 2.5.8) ; un interrupteur l'est si toute sa ligne (au moins 44 px) est cliquable ; un lien texte seul peut agrandir sa zone par `padding: 12px 0; margin: -12px 0` sans changer l'affichage (onglets et pastilles compris : les onglets « À traiter · Envoyées · Rendez-vous », « ORP · Bilan · Formations » et les pastilles de Filtres passent de 40 à 44 px) | Règle (Apple HIG 44 pt ; WCAG 2.5.8 demande 24 px au minimum) |
+| Taille du texte | on **ne réduit pas** le texte pour gagner de la place : texte principal 16 px, secondaire 14 px, légendes 13 px au minimum ; un texte long passe à la ligne | Règle (Material : bodyLarge 16 sp, bodyMedium 14, bodySmall 12 ; Apple : 17 pt par défaut, jamais moins de 11) |
+| Espaces verticaux | sur-titre → titre 8 px ; titre → sous-titre 4 px ; entre deux cartes 8 px (12 px entre deux cartes d'information) | Choix jobA1, sur la grille de 4 |
+
+**Contrôle automatique** : `outils/audit-grille.js` (dans le zip) s'exécute dans la page (Playwright `page.evaluate`). Il renvoie la liste des écarts : débordement d'une carte ou de l'écran, icône de fin à plus ou moins de 16 px du bord, icône hors de l'axe de la note, texte mal aligné, tailles d'icônes mélangées, valeur hors grille de 4, cible tactile trop petite. **Tous les écrans téléphone du canevas** (46, clair et sombre) renvoient **0 écart** au 9 novembre, après le passage à 20 px et la correction des zones à toucher (Alertes, Notifications, Préparer, Réglages, Filtres, Connexion). Ajoute ce contrôle aux tests de bout en bout des écrans du lot 18 : la PR n'est verte qu'avec 0 écart.
+
+### 2.10 Cascade (9 novembre, choix jobA1)
+
+Inspirée des réglages de sbb.ch : l'élément enfant est aligné sur le **texte** de son parent, ce qui rend visible qui dépend de qui.
+
+- Une liste d'informations hiérarchisée (familles, puis éléments) a **au plus 2 niveaux** sur téléphone.
+- Niveau 1 : l'icône est dans la colonne de l'élément de tête (anneau, logo), calée contre son bord droit ; le texte commence sur la ligne de texte du parent.
+- Niveau 2 : l'icône commence exactement sous le texte de son parent (à 1 px près).
+- Le trait entre deux frères commence à leur bord gauche, pas au bord de la carte.
+- Les commandes de la carte (ouvrir / fermer, « Le détail… ») ne sont pas des enfants : elles commencent sur la ligne de texte, sans décalage supplémentaire.
+- Espaces homogènes : 12 px au-dessus et en dessous de chaque ligne, 16 px entre icône et texte.
+- Contrôlé par `outils/audit-grille.js` (règles « cascade », « même écart icône / texte », « espacement homogène »).
+- Sources : Gestalt, proximité (l'indentation regroupe des éléments sous celui qu'ils complètent) ; Laws of UX, région commune. Material 3 n'indente pas les listes : c'est un écart assumé.
 
 ---
 
@@ -336,6 +390,7 @@ Constaté en production le 8 novembre (Assistant, téléphone, sombre) : dans la
 ### 15.2 « J'ai déjà postulé » (téléphone et ordinateur)
 
 - Ordinateur : bouton niveau 2 à droite de « Écarter ». Téléphone : dans le menu « … » du détail d'une offre.
+- « Ignorer » est renommé **« Écarter »** partout (détail d'une offre, offre provisoire, feuille Compatibilité) : un seul mot pour un seul geste.
 - Au clic : parcours existant « Marquer comme envoyée » (écran `ApplicationSent`, puis l'offre passe dans Envoyées avec la date du jour, modifiable).
 
 ---
@@ -378,32 +433,45 @@ Quand le personnage partage l'écran avec un formulaire, on ne garde que le haut
 | Les preuves d'octobre sont en retard | Les justificatifs d'octobre sont en retard |
 | Électronique (canal) | En ligne |
 
+- Le mot « preuve » est remplacé partout, y compris : « Remettre les justificatifs d'octobre » (Aujourd'hui, Assistant), « Justificatifs d'octobre à remettre » (Notifications), « Ajouter le justificatif » et « comme justificatif ORP » (Préparer), « justificatifs joints » (Rendez-vous), « Ajouter un justificatif ORP » et « Justificatif ORP ajouté » (Actions sur une offre), « Justificatifs à remettre » (Réglages), Connexion ordinateur. `grep -ri preuve frontend/src` ne doit plus rien trouver d'affiché.
 - Sous le titre de la liste : « L'ORP peut demander un justificatif pour chaque recherche : l'e-mail de confirmation ou une capture. »
 - Placement du statut : §2.3. Structure de l'écran : §10.2.
 
 ---
 
-## 10. Lot 18 : style « blocs » (à la manière des CFF)
+## 10. Lot 18 : sections et cartes
 
-Référence visuelle : le détail d'un trajet sur sbb.ch. Règles : §2.1 à §2.6.
+Règles : §2.1 à §2.6. Partout dans ce chapitre, « Bloc » veut dire **section posée sur le fond** (D28), jamais une carte blanche. Seules les lignes à flèche sont des cartes (D29).
 
 ### 10.1 Téléphone, Détail d'une offre
 
-- **Maquettes** : `Offre`, `OffreSombre`. **Captures** : `Offre.png`, `etats/Offre--bas.png`, `OffreSombre.png`, `etats/OffreSombre--bas.png`.
+- **Maquettes** : `Offre`, `OffreSombre`, `OffreCompatibilite`, `OffreCompatibiliteSombre`. **Captures** : `Offre.png`, `etats/Offre--bas.png`, `OffreCompatibilite.png`, et les mêmes en sombre.
 - **Où** : `OfferDetail.vue` (téléphone).
 - **Contenu, dans l'ordre** :
-  1. En-tête (fond `var(--page-blocks)`) : retour, garder, « … » (icônes `var(--primary-text)`, 44 px).
-  2. Bloc : logo 52 px, intitulé (22 px, 800), entreprise · lieu ; étiquettes grises (taux, contrat, télétravail, publiée), 14 px au-dessus.
-  3. Bloc : anneau de la note 56 px (chiffre au centre), verdict en couleur (18 px, 700), « Selon ton profil et tes préférences » ; raisons (coche ou point d'attention, 15 px, `padding: 8px 0`) ; lien « Le détail de la note › ».
+  1. En-tête (fond `var(--bg)`) : retour, garder, « … » (icônes `var(--primary-text)`, 44 px).
+  2. **Carte d'information (D35)** : logo 52 px, intitulé (22 px, 800), entreprise · lieu ; étiquettes grises (`var(--surface-muted)`, en clair et en sombre) (taux, contrat, télétravail, publiée), 14 px au-dessus.
+  3. **Carte d'information (D35), la note** (captures `Offre.png`, `OffreSombre.png`) :
+     - anneau 56 px (chiffre au centre, D12), 16 px, verdict en couleur (18 px, 700) et « Selon ton profil et tes préférences » (14 px) ;
+     - dessous, trait, puis **une seule ligne cliquable** « Voir la compatibilité » (`--primary-text`, 15 px, 700), sur la ligne de texte du verdict (72 px), chevron › 24 px à droite, 56 px de haut, toute la ligne est le bouton (`aria-haspopup="dialog"`) ;
+     - pas de liste dans la carte, pas de lien « Le détail de la note » (il est dans la feuille).
+  3 bis. **Feuille « Compatibilité »**, écran nouveau (maquettes `OffreCompatibilite`, `OffreCompatibiliteSombre` ; captures du même nom) :
+     - même composant que la feuille Filtres (`BottomSheet.vue`) : voile, poignée, titre « Compatibilité » (22 px, 800), croix « Fermer » de 48 px, montée depuis le bas (320 ms, aucune animation si `prefers-reduced-motion`), fermeture par la croix, le voile, un glissement vers le bas ou Échap, focus rendu à « Voir la compatibilité » ;
+     - rappel en haut : anneau 56 px, verdict, « poste · entreprise » ; trait ;
+     - deux familles, chacune un `<section aria-labelledby>` : titre en capitales 13 px (« Points forts · n » en `--text-secondary`, « À vérifier · n » en `--peach-text`), puis une `<ul>` ;
+     - **cascade** (§2.10) : l'icône de 24 px de chaque critère commence sous le titre de sa famille (bord gauche du contenu, 24 px) ; 16 px ; libellé (13 px, `--text-secondary`) au-dessus de la valeur (15 px, 700, 4 px d'écart) ; trait sous chaque critère ; 12 px au-dessus et en dessous de chaque ligne ; la valeur d'un point à vérifier aussi en `--peach-text` (WCAG 1.4.1) ;
+     - en bas : « Comment la note est calculée › » (56 px, `--primary-text`) ;
+     - famille vide : ne pas l'afficher ;
+     - **données** : critère, valeur et famille séparés. Si le score ne renvoie qu'une phrase par raison, affiche-la comme valeur, sans libellé, et signale-le dans « Questions pour Kevin ».
   4. Bloc : « Le poste », résumé (15 px, line-height 23 px), lien « Voir l'annonce complète » (icône externe).
-  5. Barre du bas fixe (fond `var(--bg)`, trait en haut) : « Ignorer » (niveau 2) et « Préparer ma candidature » (niveau 1, toute la largeur restante). « J'ai déjà postulé » est dans le menu « … ».
+  5. Barre du bas fixe (fond `var(--bg)`, trait en haut) : « Écarter » (niveau 2) et « Préparer ma candidature » (niveau 1, toute la largeur restante). « J'ai déjà postulé » est dans le menu « … ».
+  6. **« Écarter » agit tout de suite, sans confirmation**, puis affiche un message en bas (capture `etats/Offre--ecartee.png`, `etats/OffreSombre--ecartee.png`) : « Offre écartée. Tu la retrouves dans Suivi. » et le bouton « Annuler » (44 px), 6 secondes, `role="status"`. Fond inversé (clair : `--text` ; sombre : `--text` du mode clair inversé, soit #F3EEE6), texte opposé, « Annuler » en bleu (clair #AEBDFF sur fond foncé, sombre #2445C2 sur fond clair), **jamais en orange** (D30). Raison : écarter se défait (l'offre reste dans Suivi), donc on agit puis on propose d'annuler au lieu de demander une confirmation (Material 3, snackbar ; NN/g, confirmations).
 
 ### 10.2 Téléphone, Suivi ORP et onglet ORP de Bilan
 
 - **Maquettes** : `Orp`, `OrpSombre`, onglet ORP de `Explorer` et `ProgresserSombre`. **Captures** : `Orp.png`, `etats/Orp--bas.png`, `OrpSombre.png`, `etats/OrpSombre--bas.png`, `Explorer.png`, `ProgresserSombre.png`.
 - **Où** : `BilanOrpView.vue` (téléphone) et l'onglet ORP de Bilan.
 - **Contenu** :
-  1. Bloc : **cercle liquide** de 96 px (vague `var(--water)`, contour `var(--primary-graphic)`, « 8/10 » au centre avec un contour de texte de la couleur du bloc), sur-titre du mois, « n recherches à faire », « Objectif fixé par ta conseillère. À remettre avant le 5 <mois suivant>. ».
+  1. **Carte d'information (D35)** : **cercle liquide** de 96 px (vague `var(--water)`, contour `var(--primary-graphic)`, « 8/10 » au centre avec un contour de texte de la couleur du bloc), sur-titre du mois, « n recherches à faire », « Objectif fixé par ta conseillère. À remettre avant le 5 <mois suivant>. ».
   2. Bloc « À déclarer à l'ORP · n » : « Envoyées, pas encore sur ta feuille de recherches. », puis une ligne D29 par candidature : entreprise (+ « infos à compléter » si besoin, D31), « poste · En ligne », « Envoyée le … ». La ligne ouvre la fiche « Pour l'ORP » (§10.3). Plus de 3 éléments : « Afficher les n autres » sous la liste.
   3. Bloc « Recherches du mois · n » : phrase sur le justificatif (16.4), une ligne D29 par recherche : entreprise + statut D31, « date · poste » ; puis « Exporter le formulaire (PDF) » (niveau 2).
 - La date limite vient d'une constante `ORP_DEADLINE_DAY = 5`, pas d'un texte en dur. **Kevin doit la confirmer** avec le texte officiel avant la mise en production : note-le dans « Questions pour Kevin ».
@@ -439,7 +507,7 @@ Référence visuelle : le détail d'un trajet sur sbb.ch. Règles : §2.1 à §2
 
 | Page | Captures | Où | Changements |
 |---|---|---|---|
-| Aujourd'hui (travail et repos) | `AujourdhuiOrdinateurTravailD.png`, `AujourdhuiOrdinateurReposD.png` | `TodayView.vue` | Fond `--page-blocks` (la bande `--primary-soft` reste). Cartes de tâche sans bordure. Action de chaque tâche : le mot (« Envoyer », « Trier », « Remettre », « Préparer », « Relancer ») dans la couleur de son ton, puis le cercle D29 de 40 px, 12 px entre les deux. Toute la carte de tâche est le lien. |
+| Aujourd'hui (travail et repos) | `AujourdhuiOrdinateurTravailD.png`, `AujourdhuiOrdinateurReposD.png` | `TodayView.vue` | Fond `--bg` (la bande `--primary-soft` reste). Cartes de tâche blanches avec trait 1,5 px `--line-strong` (D29). Action de chaque tâche : le mot (« Envoyer », « Trier », « Remettre », « Préparer », « Relancer ») dans la couleur de son ton, puis le cercle D29 de 40 px, 12 px entre les deux. Toute la carte de tâche est le lien. |
 | Bilan | `BilanOrdinateur.png`, `etats/BilanOrdinateur--tab-res.png`, `--tab-form.png` | `BilanView.vue`, `components/bilan/*` | Fond, blocs sans bordure, cercles D29 de 36 px au lieu des chevrons gris, boutons secondaires niveau 2. |
 | Profil | `ProfilOrdinateur.png`, `etats/ProfilOrdinateur--pick.png` | `ProfileView.vue` | Idem ; « Changer d'image », « Modifier », « Voir », « Remplacer » en niveau 2. |
 | Réglages | `ReglagesOrdinateur.png` | `SettingsView.vue` | Idem. Interrupteurs et SegmentedControl inchangés (interrupteur activé : `--action`). |
@@ -453,6 +521,64 @@ Référence visuelle : le détail d'un trajet sur sbb.ch. Règles : §2.1 à §2
 - Dessinés : `OffreSombre`, `OrpSombre`, `OrpFicheSombre`, `CompteSombre`, `ProgresserSombre` (onglet ORP). Les autres écrans sombres suivent le §2.5 sans dessin dédié.
 - Sur **tous** les écrans sombres, les éléments pleins interactifs passent à `--action` / `--on-action` (§2.5) : boutons pleins, Envoyer, bouton central de la barre du bas, langue choisie et numéro de l'étape en cours dans Préparer, interrupteurs activés. Voir `AccueilSombre.png`, `PreparerSombre.png`, `RendezVousSombre.png`, `ConnexionSombre.png`.
 - La planche système `ModeSombre` n'est pas à jour : ce document prime.
+
+### 10.7 Feuilles du bas pour alléger les écrans (9 novembre)
+
+Règle : une feuille du bas porte du contenu **complémentaire** ou un **choix**, jamais une tâche principale ; on peut toujours la fermer (croix, voile, glisser vers le bas, Échap, bouton retour) ; on n'ouvre jamais une feuille depuis une autre feuille (Material 3, bottom sheets ; NN/g, bottom sheets). Toutes réutilisent `BottomSheet.vue` (même composant que Filtres et Compatibilité) : poignée, titre 22 px, croix de 48 px, 24 px de marge, cascade du §2.10 pour les listes, focus rendu au déclencheur à la fermeture.
+
+| Écran | Avant | Après | Maquettes |
+|---|---|---|---|
+| Rendez-vous ORP (carte « À venir ») | Ton mois, Ce qui bloque, Ce qui te manque, questions au conseiller dépliables, « Voir ma feuille », « Imprimer » dans la carte | La carte garde la date, le titre, le lieu, « Ta feuille est prête », une ligne « Préparer le rendez-vous › » (sur la ligne de texte, 62 px, traits au-dessus et en dessous) et « Voir ma feuille » (niveau 1) | `RendezVous`, `RendezVousPreparer` (+ `Sombre`) |
+| Feuille « Préparer le rendez-vous » | (nouvelle) | Rappel (icône calendrier, « Rendez-vous ORP », date · lieu) ; famille « Où tu en es » (libellé au-dessus de la valeur) ; famille « Tes questions au conseiller · n cochées » (cases de 24 px, 44 px de haut) ; « Imprimer ou télécharger en PDF › » | idem |
+| Préparer (étapes Lettre et CV) | 4 grandes vignettes de modèle en haut de l'écran | Une carte cliquable « Mise en page · CV et lettre / Moderne » avec le cercle à flèche (D29) | `Preparer`, `PreparerMiseEnPage` (+ `Sombre`) |
+| Feuille « Mise en page » | (nouvelle) | « Le même modèle s'applique à ta lettre et à ton CV. », les 4 modèles en grille de 2 colonnes (`role="radiogroup"`, choix appliqué tout de suite), « Tient sur une page A4. » | idem |
+| Réglages, Langue | lien vers une page | Feuille « Langue » : Français, Deutsch, English en boutons radio (24 px, ligne de 44 px), rappel « La langue des lettres se choisit dans Préparer » | `Reglages`, `ReglagesLangue` |
+| Notifications | voir §10.9 (remplace cette ligne) | | |
+
+- Pas de feuille pour « Pour l'ORP » (tâche complète, écran à part) ni pour Envoyées (le téléphone n'a pas de changement de statut).
+- « Taille du texte » dans Réglages : **question pour Kevin**. Le mieux est de suivre le réglage du téléphone (Dynamic Type sur iOS, taille de police Android ; WCAG 1.4.4). Si on garde un choix dans jobA1, il faut décider des options avant de dessiner la feuille.
+
+### 10.8 Téléphone, Alertes e-mail restructurées (9 novembre)
+
+- **Maquettes** : `AlertesTel`, `AlertesTelConfirmer`, `AlertesTelAlerte`. **Captures** : les mêmes, plus `etats/AlertesTel--bas.png`. Remplace la version téléphone du §11.4.
+- **Écran** : titre, phrase « n recherches suivies. Dernière alerte reçue le … », puis les recherches **rangées par famille** (une `<section aria-labelledby>` par famille, sur-titre en capitales 13 px avec le nombre, phrase d'aide 14 px), dans cet ordre :
+  1. **À confirmer · n** (`--peach-text`) : « Indeed attend ta confirmation avant d'envoyer les offres. Ouvre l'alerte pour confirmer. » Elle remplace l'ancien bandeau pêche, qui disait la même chose ;
+  2. **Actives · n** (`--success`) : « Les offres reçues par e-mail arrivent dans « À traiter ». » ;
+  3. **À créer · n** (`--text-secondary`) : « La recherche existe dans jobA1, pas encore sur le site. »
+- Une famille vide n'est pas affichée.
+- **Chaque recherche est une carte cliquable** (D29) : nom (16 px, 700), lieux (14 px, coupés avec « … »), « site · état » (« reçue le 7 nov. », « confirmation demandée », « pas encore créée »), cercle à flèche. Plus de pastille d'état, de bouton « Créer » ni de « … » dans la ligne.
+- En bas : « + Ajouter une recherche » (niveau 2, toute la largeur, 48 px).
+- **Feuille « Alerte »** (même `BottomSheet.vue`) ouverte par la carte :
+  - rappel : nom, état en couleur ;
+  - famille « La recherche » : Lieux, Site (cascade §2.10) ;
+  - alerte **à confirmer** : phrase d'explication, « Confirmer sur Indeed » (niveau 1, lien externe, nouvel onglet), puis « Ne plus suivre cette recherche » (`--danger`, centré) ;
+  - alerte **active** : famille « Actions » avec « Voir les offres de cette alerte › », « Modifier sur LinkedIn » (lien externe), « Ne plus suivre cette recherche » (`--danger`) ;
+  - alerte **à créer** : même modèle que « à confirmer », avec « Créer l'alerte sur jobup » en niveau 1.
+- « Ne plus suivre » agit tout de suite et affiche « Recherche retirée » avec « Annuler » (même message que « Écarter », §10.1).
+- **Question pour Kevin** : la liste exacte des actions d'une alerte n'existait pas dans l'ancienne maquette (le « … » n'avait pas de menu dessiné). Les actions ci-dessus sont une proposition à valider.
+
+### 10.9 Téléphone, Notifications harmonisées (9 novembre)
+
+Remplace la ligne « Notifications » du §10.7. **Maquettes** : `Notifications`, `NotificationsSombre`. **Captures** : les mêmes, plus `etats/Notifications--bas.png`, `--non-lues.png`, `--tout-lu.png`.
+
+Incohérences corrigées : trois sortes d'icônes (anneau de note, logo de l'Assistant, personnage dans un carré beige), des lignes cliquables et d'autres non, un fond bleuté pour les non lues en plus du point, un groupe « Cette semaine » qui contenait des dates de la semaine d'avant, des cartes blanches qui contenaient d'autres lignes.
+
+- **Familles** par date, sur-titre en capitales 13 px : « Aujourd'hui », « Hier », « Plus tôt » (plus de « Cette semaine »). Une famille dont toutes les notifications sont masquées (onglet « Non lues ») disparaît avec son titre.
+- **Chaque notification est une carte cliquable** (D29), sans conteneur autour, 8 px entre deux cartes : icône 24 px sans fond, titre, description (14 px, `--text-secondary`), ligne d'information (13 px), cercle à flèche. Plus aucune notification sans destination.
+- **Icônes**, une par type, en `--primary-graphic` sauf retard ou limite en `--peach-text` : offres (porte-documents), lettre prête (document), justificatifs ou budget (point d'exclamation dans un cercle), relance (avion en papier), bilan (courbe).
+- **Non lue** : titre en 700 (lue : 500), et en tête de la ligne d'information un point bleu de 8 px suivi du mot « Non lue » (`--primary-text`, 700), puis « · heure ». La couleur n'est jamais le seul repère (WCAG 1.4.1). Plus de fond bleuté.
+- **Heure** : « 09:12 » pour aujourd'hui, « Hier », puis la date courte (« 30 oct. »).
+- Destinations : offres → À traiter ; lettre → Préparer ; justificatifs → Suivi ORP ; relance → Envoyées ; bilan → Bilan ; budget de l'IA → Réglages. **Question pour Kevin** : « 2 candidatures sur 5 » et « 17 nouvelles offres » n'avaient pas de destination ; celles-ci sont proposées.
+- **Texte d'une notification** : le titre porte le message ; une description seulement si elle apporte **un chiffre, une conséquence ou un choix**, jamais une consigne (« L'Assistant peut… ») ni une reformulation du titre (Apple HIG, Notifications : contenu bref, ne pas dire quoi faire). Sans description, la carte n'a que le titre et la ligne d'information. Textes de la maquette :
+  - « 5 nouvelles offres pour toi » / « La meilleure : Infomaniak, 69/100. » ;
+  - « Ta lettre pour Alpstack est prête à relire » (sans description) ;
+  - « Justificatifs d'octobre en retard » / « 10 candidatures, 4 lignes à compléter. » (le titre suit la date : avant l'échéance « à remettre avant le 5 novembre », après « en retard ») ;
+  - « 5 candidatures sans réponse depuis 10 jours » (sans description) ;
+  - « Semaine du 26 oct. : 2 candidatures sur 5 » (sans description) ;
+  - « Budget de l'IA presque atteint » / « 16 CHF sur 20 ce mois-ci. Au-delà, les nouvelles offres ne sont plus notées. » ;
+  - « 17 nouvelles offres pour toi » / « La meilleure : SonarSource, 64/100. »
+- « Tout lire » en haut à droite, grisé quand tout est lu ; « Choisir mes notifications » (`--primary-text`) en bas.
+- **État « Tout est lu »** (`etats/Notifications--tout-lu.png`, `etats/NotificationsSombre--tout-lu.png`) : le personnage **assis (pose 05, `perso-05-assis`)**, 150 px de large, avec une ombre ovale de 120 x 12 px sous lui, au lieu de l'ancien pictogramme dans une bulle. Ajoute « Notifications, Tout est lu (téléphone) » à la liste fermée de docs/141 §3.
 
 ---
 
@@ -468,7 +594,7 @@ Référence visuelle : le détail d'un trajet sur sbb.ch. Règles : §2.1 à §2
 3. Par écran : au plus un bouton plein visible (hors barre du bas et Envoyer).
 4. Clavier : chaque ligne D29 et chaque carte de tâche est un seul arrêt de tabulation ; dans les détails en deux colonnes, la tabulation parcourt la colonne principale puis la colonne d'appui ; focus visible partout ; le Composer montre un seul anneau, sur la pilule.
 5. Lecteur d'écran : chaque `<aside>` a son nom ; chaque `<fieldset>` annonce son `<legend>` ; une ligne D29 annonce titre, statut et lignes secondaires une seule fois ; « L'Assistant écrit… » annoncé une fois ; « Copié » annoncé après une copie.
-6. Contrastes (WCAG 1.4.3, 1.4.11) : texte bleu sur `--surface` et `--row-blocks` d'au moins 4,5:1 ; contours, cercles et flèches d'au moins 3:1 ; `--on-action` sur `--action` d'au moins 4,5:1, en clair et en sombre.
-7. À 320, 360 et 390 px : le contrôle « Téléphone » de la CI passe sans défaut (§2.8). Entre 821 et 1327 px : les grilles ne débordent pas ; les colonnes d'appui gardent leur largeur, la colonne principale rétrécit.
+6. Contrastes (WCAG 1.4.3, 1.4.11) : texte bleu sur `--surface` et `--bg` d'au moins 4,5:1 ; contours, cercles et flèches d'au moins 3:1 ; `--on-action` sur `--action` d'au moins 4,5:1, en clair et en sombre.
+7. `outils/audit-grille.js` renvoie 0 écart sur chaque écran du lot 18 (§2.9). À 320, 360 et 390 px : le contrôle « Téléphone » de la CI passe sans défaut (§2.8). Entre 821 et 1327 px : les grilles ne débordent pas ; les colonnes d'appui gardent leur largeur, la colonne principale rétrécit.
 8. `prefers-reduced-motion: reduce` : aucune animation.
-9. Tests verts (§0.7 de `PROMPT_CLAUDE_CODE.md`), plus : `DetailTwoColumns.vue` (ordre du DOM, nom de l'aside), ligne d'attente de l'Assistant (aucune bulle vide), Composer (un seul anneau au focus), jetons `--action`, `--on-action`, `--page-blocks`, `--row-blocks`.
+9. Tests verts (§0.7 de `PROMPT_CLAUDE_CODE.md`), plus : `DetailTwoColumns.vue` (ordre du DOM, nom de l'aside), ligne d'attente de l'Assistant (aucune bulle vide), Composer (un seul anneau au focus), jetons `--action` et `--on-action`.

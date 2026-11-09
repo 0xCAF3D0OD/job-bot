@@ -38,11 +38,11 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <button type="button" onClick="{{restart}}" aria-label="Nouvelle conversation" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #1B1F2A; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
 </header>
 
-<main aria-live="polite" style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 8px 16px 16px">
+<main aria-live="polite" style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 16px">
 
 <div class="msg" style="display: flex; align-items: flex-end; gap: 10px">
 <svg width="34" height="31" viewBox="8 10 88 80" aria-hidden="true" style="flex: none"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M26 45 C 28.5 37, 37.5 37, 40 45" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path><path d="M59 30.5 Q60.84 40.16 70.5 42 Q60.84 43.84 59 53.5 Q57.16 43.84 47.5 42 Q57.16 40.16 59 30.5 Z" fill="#E8B48A"></path><path d="M29 60 C 37 71, 55 71, 63 60" fill="none" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"></path></svg>
-<div style="max-width: 280px; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
+<div style="max-width: 280px; display: flex; flex-direction: column; gap: 10px; padding: 14px 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
 <p style="margin: 0; font-size: 16px; line-height: 23px">Bonjour Kevin. 5 offres t'attendent et 13 relances sont en retard. On commence par quoi ?</p>
 </div>
 </div>
@@ -56,17 +56,17 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </sc-if>
 
 <sc-if value="{{asked}}" hint-placeholder-val="{{ false }}">
-<div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 16px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Écris ma lettre pour le poste de DevOps Engineer chez Alpstack.</div>
+<div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 20px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Écris ma lettre pour le poste de DevOps Engineer chez Alpstack.</div>
 </sc-if>
 
 <sc-if value="{{ecrit}}" hint-placeholder-val="{{ false }}">
-<div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 16px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Et en allemand ?</div>
+<div class="msg" style="align-self: flex-end; max-width: 270px; padding: 12px 20px; background: #2445C2; color: #FFFFFF; border-radius: 20px 20px 6px 20px; font-size: 16px; line-height: 23px">Et en allemand ?</div>
 <div class="msg" role="status" aria-live="polite" style="display: flex; align-items: flex-end; gap: 10px"><svg width="34" height="31" viewBox="8 10 88 80" aria-hidden="true" style="flex: none"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M33 31 Q34.76 40.24 44 42 Q34.76 43.76 33 53 Q31.24 43.76 22 42 Q31.24 40.24 33 31 Z" fill="#E8B48A"></path><path d="M59 31 Q60.76 40.24 70 42 Q60.76 43.76 59 53 Q57.24 43.76 48 42 Q57.24 40.24 59 31 Z" fill="#E8B48A"></path><path d="M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z" fill="#FFFFFF"></path></svg><div style="display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 18px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px"><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: 0s"></span><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: .15s"></span><span class="ja-dot" style="width: 8px; height: 8px; border-radius: 4px; background: #596070; animation: ja-dot 1.2s ease-in-out infinite; animation-delay: .3s"></span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">L’Assistant écrit…</span></div></div>
 </sc-if>
 <sc-if value="{{working}}" hint-placeholder-val="{{ false }}">
 <div class="msg" role="status" style="display: flex; align-items: flex-end; gap: 10px">
 <svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true" style="flex: none"><defs><clipPath id="asWork"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><g clip-path="url(#asWork)"><g class="as-rise"><path class="as-wave" d="M -100 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 L 200 140 L -100 140 Z" fill="#C9D3F6" stroke="#2445C2" stroke-width="3"></path></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"></path><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><circle cx="33" cy="42" r="6.5" fill="#FFFFFF" class="as-dot as-dot0"></circle><circle cx="59" cy="42" r="6.5" fill="#FFFFFF" class="as-dot as-dot1"></circle><circle cx="46" cy="63" r="6.5" fill="#FFFFFF" class="as-dot as-dot2"></circle></g></svg>
-<div style="max-width: 280px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
+<div style="max-width: 280px; display: flex; flex-direction: column; gap: 8px; padding: 14px 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
 <span style="font-size: 15px; font-weight: 700">Je rédige ta lettre…</span>
 <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #17734A"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Offre lue</span>
 <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #17734A"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Comparée à ton CV</span>
@@ -78,7 +78,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
 <div class="msg" style="display: flex; align-items: flex-end; gap: 10px">
 <svg width="34" height="31" viewBox="8 10 88 80" aria-hidden="true" style="flex: none"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M33 31 Q34.76 40.24 44 42 Q34.76 43.76 33 53 Q31.24 43.76 22 42 Q31.24 40.24 33 31 Z" fill="#E8B48A"></path><path d="M59 31 Q60.76 40.24 70 42 Q60.76 43.76 59 53 Q57.24 43.76 48 42 Q57.24 40.24 59 31 Z" fill="#E8B48A"></path><path d="M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z" fill="#FFFFFF"></path></svg>
-<div style="max-width: 290px; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
+<div style="max-width: 290px; display: flex; flex-direction: column; gap: 12px; padding: 14px 20px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px 20px 20px 6px">
 <p style="margin: 0; font-size: 16px; line-height: 23px">Voilà ta lettre. J'ai mis en avant Kubernetes, Terraform et GitLab CI, demandés dans l'offre.</p>
 <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #F7F5F0; border-radius: 14px">
 <span style="flex: none; width: 40px; height: 40px; border-radius: 10px; background: #E8ECFB; color: #2445C2; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg></span>
@@ -93,7 +93,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </sc-if>
 </main>
 
-<form onSubmit="{{submit}}" style="flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 16px 10px">
+<form onSubmit="{{submit}}" style="flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px 20px 10px">
 <div style="display: flex; align-items: center; gap: 2px; min-height: 56px; box-sizing: border-box; padding: 6px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 28px; box-shadow: 0 2px 10px rgba(27,31,42,.07)">
 <button type="button" aria-label="Joindre un fichier" aria-haspopup="menu" style="flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1B1F2A; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
 <label for="as-input" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ta demande à l'Assistant</label>

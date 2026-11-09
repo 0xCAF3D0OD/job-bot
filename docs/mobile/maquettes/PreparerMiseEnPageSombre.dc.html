@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1 sombre, Preparer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes face-wink{0%,100%{transform:scaleY(1)}40%,60%{transform:scaleY(.15)}}.face-wink{transform-box:fill-box;transform-origin:center;animation:face-wink .45s ease-in-out .7s both}@media (prefers-reduced-motion: reduce){.face-wink{animation:none}}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+body{margin:0}
+a{color:#7D95FF}a:hover{color:#AEBDFF}
+.tpls{scrollbar-width:none}.tpls::-webkit-scrollbar{display:none}
+@keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}
+@keyframes up{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
+.sheet{animation:up .3s cubic-bezier(.2,0,0,1) both}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+.fade{animation:fade .2s ease-out both}
+@keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+.swap{animation:swap .3s cubic-bezier(.2,0,0,1) both}
+@keyframes twinkle{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+.tw{display:inline-block;width:7px;height:7px;border-radius:4px;background: #2445C2;animation:twinkle 1.2s ease-in-out infinite}
+.tw2{animation-delay:.2s}.tw3{animation-delay:.4s}
+@keyframes asDot{0%,100%{opacity:.35}40%{opacity:1}}
+.as-dot{animation:asDot 1s ease-in-out infinite}.as-dot1{animation-delay:.2s}.as-dot2{animation-delay:.4s}
+@keyframes rise{0%{transform:translateY(80px)}100%{transform:translateY(30px)}}
+.rise{animation:rise 1.8s cubic-bezier(.2,0,0,1) both}
+@keyframes wave{0%{transform:translateX(0)}100%{transform:translateX(50px)}}
+.wave{animation:wave 1.6s linear infinite}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+.sk{height:8px;border-radius:4px;background:linear-gradient(90deg,#2C2722 0,#171411 50%,#2C2722 100%);background-size:400px 8px;animation:shimmer 1.4s linear infinite}
+button,a{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}
+button:active,a:active{transform:scale(.97)}
+@media (prefers-reduced-motion: reduce){.pop,.sheet,.fade,.swap,.rise,.wave,.sk,.as-dot{animation:none}.tw{animation:none;opacity:1;transform:none}*{transition:none !important}}
+.sh{position:absolute;left:0;right:0;bottom:0;z-index:11;max-height:740px;display:flex;flex-direction:column;border-radius:28px 28px 0 0;box-shadow:0 -10px 30px rgba(27,31,42,.18);animation:sheetUp .32s cubic-bezier(.2,.8,.2,1) both}@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}@media (prefers-reduced-motion: reduce){.sh{animation:none}}.sh .hd{display:flex;justify-content:center;padding:12px 0 4px}.sh .ttl{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 4px 24px}.sh h2{margin:0;font-size:22px;line-height:28px;font-weight:800}.sh .x{width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:inherit}.sh .bd{overflow-y:auto;padding:8px 24px 24px}.sh .sum{display:flex;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid #38322B}.sh .sum b{display:block;font-size:18px;line-height:24px}.sh .sum span{display:block;margin-top:4px;font-size:14px;line-height:20px;color:#ABA398}.sh .grp{padding-top:20px}.sh .grp h3{margin:0 0 4px;font-size:13px;line-height:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ABA398}.sh .grp ul{list-style:none;margin:0;padding:0}.sh .it{display:flex;align-items:flex-start;gap:16px;padding:12px 0;border-bottom:1px solid #38322B}.sh .it>svg,.sh .it>input,.sh .it>.rd{flex:none;margin-top:8px}.sh .it .k{font-size:13px;line-height:16px;color:#ABA398}.sh .it .v{margin-top:4px;font-size:15px;line-height:20px;font-weight:700}.sh .it .t{font-size:15px;line-height:20px}.sh label.it{cursor:pointer;min-height:44px;align-items:center}.sh label.it>input,.sh label.it>.rd{margin-top:0}.sh input[type=checkbox]{width:24px;height:24px;margin:0;accent-color:#7D95FF}.sh .rd{width:24px;height:24px;border-radius:12px;border:2px solid #ABA398;box-sizing:border-box;display:flex;align-items:center;justify-content:center}.sh .rd.on{border-color:#7D95FF}.sh .rd.on::after{content:"";width:12px;height:12px;border-radius:6px;background:#7D95FF}.sh .lk2{display:flex;align-items:center;min-height:56px;margin-top:8px;font-size:15px;font-weight:700;text-decoration:none}.sh .btn2{display:flex;align-items:center;justify-content:center;height:52px;margin-top:16px;border-radius:26px;background:#7D95FF;color:#171411;font-size:16px;font-weight:700;text-decoration:none}</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #171411; color: #F3EEE6; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; align-items: center; gap: 4px; padding: 12px 8px 4px">
+<a href="Offre.dc.html" aria-label="Retour à l'offre" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #F3EEE6"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">Ma candidature</h1>
+</header>
+
+<sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+<div style="flex: none; display: flex; flex-direction: column; gap: 10px; padding: 2px 20px 10px">
+<div style="display: flex; align-items: center; gap: 12px; padding: 0 4px">
+<span style="flex: none; width: 40px; height: 40px; border-radius: 11px; background: #3A342D; color: #FFFFFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">AS</span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 16px; font-weight: 700">DevOps Engineer</span><span style="font-size: 14px; color: #ABA398">Alpstack · Lausanne</span></span>
+<svg width="44" height="44" viewBox="0 0 100 100" role="img" aria-label="Proche : 92 sur 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#1C3527" stroke-width="9"></circle><circle cx="50" cy="50" r="42" fill="none" stroke="#62D497" stroke-width="9" stroke-dasharray="242.78 263.89" transform="rotate(-90 50 50)"></circle><path d="M50 1V15M85 50H99M50 85V99M1 50H15" stroke="#FFFFFF" stroke-width="3.5"></path><text x="50" y="62" text-anchor="middle" font-family="Figtree, sans-serif" font-size="32" font-weight="800" fill="#62D497">92</text></svg>
+</div>
+<nav role="tablist" aria-label="Étapes" style="display: flex; gap: 6px; padding: 4px; background: #2C2722; border-radius: 999px">
+<button type="button" role="tab" aria-selected="{{sel1}}" onClick="{{go1}}" style="{{tab1}}"><span style="{{dot1}}">{{mark1}}</span>Lettre</button>
+<button type="button" role="tab" aria-selected="{{sel2}}" onClick="{{go2}}" style="{{tab2}}"><span style="{{dot2}}">{{mark2}}</span>CV</button>
+<button type="button" role="tab" aria-selected="{{sel3}}" onClick="{{go3}}" style="{{tab3}}"><span style="{{dot3}}">3</span>Postuler</button>
+</nav>
+</div>
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px">
+
+<sc-if value="{{isDoc}}" hint-placeholder-val="{{ true }}">
+<a href="PreparerMiseEnPageSombre.dc.html" aria-haspopup="dialog" style="box-sizing:border-box;display:flex;align-items:center;gap:16px;min-height:72px;padding:14.5px 18.5px;background:#221E1A;border:1.5px solid #4E473E;border-radius:12px;color:inherit;text-decoration:none"><span style="flex:1;min-width:0"><span style="display:block;font-size:13px;line-height:16px;color:#ABA398">Mise en page · CV et lettre</span><span style="display:block;margin-top:4px;font-size:16px;line-height:22px;font-weight:700">Moderne</span></span><span aria-hidden="true" style="flex:none;width:40px;height:40px;border:2px solid #7D95FF;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#AEBDFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+
+<section style="display: flex; flex-direction: column; gap: 12px; padding: 14px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<span style="font-size: 16px; font-weight: 700">{{docTitle}}</span>
+<div role="radiogroup" aria-label="Langue" style="display: flex; gap: 2px; padding: 3px; background: #171411; border-radius: 999px">
+<button type="button" role="radio" aria-checked="{{chkFr}}" onClick="{{langFr}}" style="{{lFr}}">FR</button>
+<button type="button" role="radio" aria-checked="{{chkDe}}" onClick="{{langDe}}" style="{{lDe}}">DE</button>
+<button type="button" role="radio" aria-checked="{{chkEn}}" onClick="{{langEn}}" style="{{lEn}}">EN</button>
+</div>
+</div>
+
+<sc-if value="{{writing}}" hint-placeholder-val="{{ false }}">
+<div class="fade" role="status" style="height: 168px; box-sizing: border-box; border-radius: 10px; background: #171411; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 0 22px">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="52" height="52" viewBox="0 0 100 100" aria-hidden="true" style="flex: none"><defs><clipPath id="prW"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#221E1A"></circle><g clip-path="url(#prW)"><g class="rise"><path class="wave" d="M -100 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 q 12.5 -4 25 0 q 12.5 4 25 0 L 200 140 L -100 140 Z" fill="#3A4A85" stroke="#7D95FF" stroke-width="3"></path></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#7D95FF" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"></path><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#7D95FF"></path><circle cx="33" cy="42" r="6.5" fill="#FFFFFF" class="as-dot"></circle><circle cx="59" cy="42" r="6.5" fill="#FFFFFF" class="as-dot as-dot1"></circle><circle cx="46" cy="63" r="6.5" fill="#FFFFFF" class="as-dot as-dot2"></circle></g></svg>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700">{{writingLabel}}<span aria-hidden="true" style="display: inline-flex; gap: 4px; padding-top: 4px"><i class="tw"></i><i class="tw tw2"></i><i class="tw tw3"></i></span></span>
+</div>
+<div aria-hidden="true" style="display: flex; flex-direction: column; gap: 8px"><span class="sk" style="width: 55%"></span><span class="sk"></span><span class="sk"></span><span class="sk" style="width: 75%"></span></div>
+</div>
+</sc-if>
+<sc-if value="{{notWriting}}" hint-placeholder-val="{{ true }}">
+<div class="swap" aria-label="Aperçu du document" role="img" style="height: 168px; overflow: hidden; border-radius: 10px; background: #2C2722; padding: 12px 18px 0">
+<div style="{{pageStyle}}">
+<div style="{{headStyle}}"><span style="{{nameStyle}}">Kevin Di Nocera</span><span style="font-size: 9px; opacity: .8">DevOps · Renens</span></div>
+<div style="padding: 10px 20px; font-size: 11px; line-height: 16px; color: #D6CFC4">{{previewText}}</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isLetter}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; font-weight: 700; color: #ABA398">Retoucher la lettre</span><div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px"><button type="button" style="flex: none; height: 44px; padding: 0 16px; border: 1.5px solid #7D95FF; border-radius: 18px; background: #221E1A; font-family: inherit; font-size: 14px; font-weight: 600; color: #F3EEE6">Plus court</button><button type="button" style="flex: none; height: 44px; padding: 0 16px; border: 1.5px solid #7D95FF; border-radius: 18px; background: #221E1A; font-family: inherit; font-size: 14px; font-weight: 600; color: #F3EEE6">Plus formel</button><button type="button" style="flex: none; height: 44px; padding: 0 16px; border: 1.5px solid #7D95FF; border-radius: 18px; background: #221E1A; font-family: inherit; font-size: 14px; font-weight: 600; color: #F3EEE6">Insister sur Terraform</button><button type="button" style="flex: none; height: 44px; padding: 0 16px; border: 1.5px solid #7D95FF; border-radius: 18px; background: #221E1A; font-family: inherit; font-size: 14px; font-weight: 600; color: #F3EEE6">En allemand</button></div><div style="position: relative"><div style="background: #221E1A; border: 1px solid #38322B; border-radius: 28px; box-shadow: none"><div style="display: flex; align-items: center; gap: 4px; min-height: 56px; box-sizing: border-box; padding: 6px 8px"><button type="button" aria-label="Joindre un fichier" aria-haspopup="menu" aria-expanded="false" style="flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #F3EEE6; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button><textarea rows="1" aria-label="Que changer dans la lettre ?" placeholder="Que changer ?" style="flex: 1; min-width: 0; height: 24px; max-height: 144px; padding: 0 4px; border: 0; outline: 0; resize: none; background: transparent; font-family: inherit; font-size: 16px; line-height: 24px; color: #F3EEE6"></textarea><button type="button" aria-label="Dicter" style="flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #F3EEE6; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button><button type="button" aria-label="Modifier la lettre" style="flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #7D95FF; color: #171411; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div></div></div></div>
+<label style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding-top: 4px; border-top: 1px solid #2C2722; cursor: pointer"><input type="checkbox" checked="{{read}}" onChange="{{toggleRead}}" disabled="{{writing}}" style="width: 24px; height: 24px; margin: 0; accent-color: #7D95FF"><span style="font-size: 15px; font-weight: 600">J'ai relu la lettre</span></label>
+</sc-if>
+<sc-if value="{{isCv}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="padding: 4px 9px; border-radius: 7px; background: #232B45; color: #AEBDFF; font-size: 13px; font-weight: 600">Kubernetes en tête</span><span style="padding: 4px 9px; border-radius: 7px; background: #232B45; color: #AEBDFF; font-size: 13px; font-weight: 600">Terraform</span><span style="padding: 4px 9px; border-radius: 7px; background: #232B45; color: #AEBDFF; font-size: 13px; font-weight: 600">GitLab CI</span></div>
+</sc-if>
+</section>
+
+<button type="button" onClick="{{openCanva}}" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; font-family: inherit; text-align: left; cursor: pointer; color: #F3EEE6">
+<span aria-hidden="true" style="flex: none; width: 28px; height: 40px; color: #F2A766; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16Z"></path><path d="M14 7l3 3"></path></svg></span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">{{canvaTitle}}</span><span style="font-size: 13px; color: #ABA398">{{canvaSub}}</span></span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+</button>
+</sc-if>
+
+<sc-if value="{{isApply}}" hint-placeholder-val="{{ false }}">
+<section class="swap" style="display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px">
+<span style="font-size: 16px; font-weight: 700">L'annonce se postule sur LinkedIn</span>
+<span style="font-size: 14px; line-height: 20px; color: #C7BFB3">Le formulaire s'ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l'envoi.</span>
+<div style="display: flex; gap: 8px">
+<span style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #171411; border-radius: 10px; font-size: 13px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"></path></svg>Lettre.pdf</span>
+<span style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #171411; border-radius: 10px; font-size: 13px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"></path></svg>CV.pdf</span>
+</div>
+<span style="font-size: 13px; color: #ABA398">{{tplNote}}</span>
+</section>
+
+<section class="swap" aria-labelledby="rec" style="display: flex; flex-direction: column; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden">
+<h2 id="rec" style="margin: 0; padding: 14px 14px 6px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #ABA398">À recopier sur le formulaire</h2>
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 6px 0 14px; border-top: 1px solid #2C2722">
+<span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 12px; color: #ABA398">{{f.label}}</span><span style="font-size: 15px; font-weight: 600">{{f.value}}</span></span>
+<button type="button" aria-label="{{f.aria}}" onClick="{{f.copy}}" style="{{f.btnStyle}}">{{f.btn}}</button>
+</div>
+</sc-for>
+</section>
+
+<p style="margin: 0 4px; font-size: 13px; line-height: 18px; color: #ABA398">L'annonce donne aussi une adresse e-mail. <a href="#email" style="font-weight: 700">Envoyer plutôt par e-mail</a></p>
+</sc-if>
+</main>
+
+<div style="flex: none; display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 24px; background: #221E1A; border-top: 1px solid #38322B">
+<sc-if value="{{showNext}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{next}}" aria-disabled="{{disabledAttr}}" style="{{ctaStyle}}">{{ctaLabel}}</button></sc-if>
+<sc-if value="{{showLink}}" hint-placeholder-val="{{ false }}"><a href="#linkedin" onClick="{{openSite}}" target="_blank" rel="noopener" style="height: 54px; border-radius: 27px; background: #7D95FF; color: #171411; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Postuler sur LinkedIn<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">(nouvel onglet)</span></a></sc-if>
+<sc-if value="{{showDone}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{send}}" style="height: 54px; border: 0; border-radius: 27px; background: #7D95FF; color: #171411; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">J'ai postulé</button><a href="#linkedin" onClick="{{openSite}}" target="_blank" rel="noopener" style="min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; text-decoration: none">Rouvrir LinkedIn (nouvel onglet)</a></sc-if>
+<sc-if value="{{hintText}}" hint-placeholder-val="{{ '' }}"><p style="margin: 0; text-align: center; font-size: 13px; color: #ABA398">{{hintText}}</p></sc-if>
+</div>
+
+<sc-if value="{{canva}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="fade" tabindex="-1" aria-hidden="true" onClick="{{closeCanva}}" style="position: absolute; inset: 0; border: 0; padding: 0; background: rgba(0,0,0,.6); cursor: default"></button>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="cvt" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 14px; padding: 10px 20px 26px; background: #221E1A; border-radius: 26px 26px 0 0">
+<span aria-hidden="true" style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #36312B"></span>
+<h2 id="cvt" style="margin: 4px 0 0; font-size: 22px; font-weight: 800">Retoucher dans Canva</h2>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+<li style="display: flex; gap: 12px; align-items: flex-start"><span style="flex: none; width: 28px; height: 28px; border-radius: 14px; background: #232B45; color: #AEBDFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">1</span><span style="font-size: 15px; line-height: 21px">{{canvaStep1}}</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><span style="flex: none; width: 28px; height: 28px; border-radius: 14px; background: #232B45; color: #AEBDFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">2</span><span style="font-size: 15px; line-height: 21px">Tu changes la mise en page comme tu veux.</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><span style="flex: none; width: 28px; height: 28px; border-radius: 14px; background: #232B45; color: #AEBDFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">3</span><span style="font-size: 15px; line-height: 21px">Le bouton Retour de Canva te ramène ici avec le PDF.</span></li>
+</ol>
+<div style="padding: 12px 14px; background: #171411; border-radius: 12px; font-size: 13px; line-height: 19px; color: #C7BFB3"><b style="color: #F3EEE6">jobA1 pourra seulement</b> créer, lire et exporter les designs ouverts depuis jobA1. Tu retires l'accès dans Compte, à tout moment.</div>
+<button type="button" onClick="{{connectCanva}}" style="height: 54px; border: 0; border-radius: 27px; background: #7D95FF; color: #171411; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">{{canvaCta}}</button>
+<button type="button" onClick="{{closeCanva}}" style="height: 48px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #AEBDFF; cursor: pointer">Pas maintenant</button>
+<p style="margin: -6px 0 0; text-align: center; font-size: 13px; color: #ABA398">Pas de compte ? Canva en crée un gratuit pendant la connexion.</p>
+</section>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+<main role="status" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 30px; text-align: center">
+<div class="pop" style="width: 156px; height: 156px; display: flex; align-items: center; justify-content: center"><svg width="150" height="150" viewBox="0 0 100 100" role="img" aria-label="jobA1 content"><path d="M5 84 V58 A45 45 0 0 1 95 58 V84 Q95 91 88 91 H12 Q5 91 5 84 Z" fill="#232B45" stroke="#3A4A85" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 60) scale(0.54) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#7D95FF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle class="face-wink" cx="24" cy="46" r="10" fill="#7D95FF"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M32 74 C 42 80, 58 80, 68 74" fill="none" stroke="#7D95FF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></div>
+<h2 style="margin: 6px 0 0; font-size: 24px; line-height: 30px; font-weight: 800">Candidature notée</h2>
+<p style="margin: 0; font-size: 16px; line-height: 23px; color: #C7BFB3">DevOps Engineer chez Alpstack, postulée sur LinkedIn. Ajoute la capture de confirmation comme justificatif ORP.</p>
+<a href="Orp.dc.html" style="margin-top: 8px; display: flex; align-items: center; gap: 14px; padding: 12px 20px 12px 12px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; text-decoration: none; color: #F3EEE6; text-align: left"><svg width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="9 recherches sur 10"><defs><clipPath id="prepL"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#221E1A"></circle><g clip-path="url(#prepL)"><path d="M -10 22 q 15 -5 30 0 t 30 0 t 30 0 t 30 0 L 120 120 L -10 120 Z" fill="#3A4A85" stroke="#7D95FF" stroke-width="2.5"></path></g><circle cx="50" cy="50" r="44" fill="none" stroke="#7D95FF" stroke-width="3.5"></circle><text x="50" y="59" text-anchor="middle" font-family="Figtree, sans-serif" font-size="26" font-weight="800" fill="#F3EEE6" stroke="#171411" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke">9/10</text></svg><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">Encore 1 recherche</span><span style="font-size: 13px; color: #ABA398">Objectif ORP de novembre</span></span></a>
+</main>
+<div style="flex: none; display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 24px">
+<a href="ActionsOffre.dc.html" style="height: 54px; border-radius: 27px; background: #7D95FF; color: #171411; font-size: 16px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center">Ajouter le justificatif</a>
+<a href="Candidatures.dc.html" style="min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; text-decoration: none">Offre suivante</a>
+<button type="button" onClick="{{undo}}" style="height: 48px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #AEBDFF; cursor: pointer">Annuler, je n'ai pas postulé</button>
+</div>
+</sc-if>
+
+<a href="PreparerSombre.dc.html" tabindex="-1" aria-hidden="true" style="position:absolute;inset:0;z-index:10;background:rgba(27,31,42,0.45)"></a><section role="dialog" aria-modal="true" aria-labelledby="sh-title" class="sh" style="background:#221E1A;color:#F3EEE6"><div class="hd"><span aria-hidden="true" style="width:36px;height:4px;border-radius:2px;background:#5E574F"></span></div><div class="ttl"><h2 id="sh-title">Mise en page</h2><a href="PreparerSombre.dc.html" aria-label="Fermer" class="x"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div><div class="bd"><p style="margin:0 0 12px;font-size:14px;line-height:20px;color:#ABA398">Le même modèle s’applique à ta lettre et à ton CV.</p><div class="tpls" role="radiogroup" aria-label="Modèle du document" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px 0 8px">
+<button type="button" role="radio" aria-checked="{{chkSobre}}" onClick="{{pickSobre}}" style="{{cardSobre}}"><span aria-hidden="true" style="width: 74px; height: 96px; border-radius: 6px; background: #221E1A; box-shadow: 0 1px 3px rgba(27,31,42,.18); display: flex; flex-direction: column; gap: 5px; padding: 10px 9px; box-sizing: border-box"><span style="height: 5px; width: 60%; background: #3A342D; border-radius: 2px"></span><span style="height: 3px; width: 40%; background: #5E584F; border-radius: 2px"></span><span style="height: 3px; margin-top: 6px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; width: 80%; background: #36312B; border-radius: 2px"></span><span style="height: 3px; background: #36312B; border-radius: 2px"></span></span><span style="font-size: 14px; font-weight: 700">Sobre</span></button>
+<button type="button" role="radio" aria-checked="{{chkModerne}}" onClick="{{pickModerne}}" style="{{cardModerne}}"><span aria-hidden="true" style="width: 74px; height: 96px; border-radius: 6px; background: #221E1A; box-shadow: 0 1px 3px rgba(27,31,42,.18); display: flex; overflow: hidden"><span style="width: 22px; background: #2445C2; display: flex; flex-direction: column; align-items: center; padding-top: 9px; gap: 4px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #3A4A85"></span><span style="width: 12px; height: 2px; background: #3A4A85"></span><span style="width: 12px; height: 2px; background: #3A4A85"></span></span><span style="flex: 1; display: flex; flex-direction: column; gap: 5px; padding: 10px 7px"><span style="height: 5px; width: 80%; background: #2445C2; border-radius: 2px"></span><span style="height: 3px; margin-top: 5px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; width: 70%; background: #36312B; border-radius: 2px"></span></span></span><span style="font-size: 14px; font-weight: 700">Moderne</span></button>
+<button type="button" role="radio" aria-checked="{{chkBandeau}}" onClick="{{pickBandeau}}" style="{{cardBandeau}}"><span aria-hidden="true" style="width: 74px; height: 96px; border-radius: 6px; background: #221E1A; box-shadow: 0 1px 3px rgba(27,31,42,.18); display: flex; flex-direction: column; overflow: hidden"><span style="height: 24px; background: #F3B08A; display: flex; align-items: center; padding: 0 8px"><span style="height: 5px; width: 60%; background: #3A342D; border-radius: 2px"></span></span><span style="display: flex; flex-direction: column; gap: 5px; padding: 8px 9px"><span style="height: 3px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; width: 70%; background: #36312B; border-radius: 2px"></span><span style="height: 3px; background: #36312B; border-radius: 2px"></span></span></span><span style="font-size: 14px; font-weight: 700">Bandeau</span></button>
+<button type="button" role="radio" aria-checked="{{chkSerif}}" onClick="{{pickSerif}}" style="{{cardSerif}}"><span aria-hidden="true" style="width: 74px; height: 96px; border-radius: 6px; background: #26211C; box-shadow: 0 1px 3px rgba(27,31,42,.18); display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 9px; box-sizing: border-box"><span style="font-family: Fraunces, Georgia, serif; font-size: 13px; font-weight: 600; color: #F3EEE6">K D</span><span style="height: 1px; width: 100%; background: #3A342D"></span><span style="height: 3px; width: 100%; margin-top: 4px; background: #36312B; border-radius: 2px"></span><span style="height: 3px; width: 100%; background: #36312B; border-radius: 2px"></span><span style="height: 3px; width: 80%; background: #36312B; border-radius: 2px"></span></span><span style="font-size: 14px; font-weight: 700">Classique</span></button>
+</div><p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#ABA398">Tient sur une page A4.</p></div></section></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const s = this.state || {};
+const step = s.step || 1;
+const tpl = s.tpl || 'moderne';
+const lang = s.lang || 'fr';
+const read = !!s.read;
+const sent = !!s.sent;
+const opened = !!s.opened;
+const writing = !!s.writing;
+const canvaOn = !!s.canvaLinked;
+const set = (o) => this.setState(Object.assign({}, this.state || {}, o));
+const rewrite = (o) => { set(Object.assign({ writing: true, read: false }, o)); clearTimeout(this._t); this._t = setTimeout(() => set({ writing: false }), 2200); };
+const tab = (n) => 'flex: 1; height: 44px; border: 0; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 7px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; ' + (step === n ? 'background: #221E1A; color: #F3EEE6; box-shadow: 0 1px 3px rgba(0,0,0,.4)' : 'background: transparent; color: #C7BFB3');
+const done1 = read, done2 = step > 2 || !!s.cvSeen;
+const dot = (n, done) => 'width: 22px; height: 22px; border-radius: 11px; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: background-color .25s; ' + (done ? 'background: #62D497; color: #FFFFFF; animation: joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)' : (step === n ? 'background: #7D95FF; color: #171411' : 'background: #36312B; color: #C7BFB3'));
+const card = (k) => 'flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 10px 8px; min-width: 96px; border-radius: 14px; font-family: inherit; color: #F3EEE6; cursor: pointer; background: ' + (tpl === k ? '#232B45; border: 2.5px solid #7D95FF' : '#221E1A; border: 1px solid #38322B');
+const lb = (k) => 'min-width: 44px; height: 44px; border: 0; border-radius: 999px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; ' + (lang === k ? 'background: #7D95FF; color: #171411' : 'background: transparent; color: #C7BFB3');
+const T = {
+  sobre: { page: 'background: #221E1A; font-family: Figtree, sans-serif', head: 'padding: 14px 20px 8px; display: flex; flex-direction: column; gap: 2px; color: #F3EEE6', name: 'font-size: 15px; font-weight: 800' },
+  moderne: { page: 'background: #221E1A; border-left: 14px solid #7D95FF; font-family: Figtree, sans-serif', head: 'padding: 14px 20px 8px; display: flex; flex-direction: column; gap: 2px; color: #7D95FF', name: 'font-size: 15px; font-weight: 800' },
+  bandeau: { page: 'background: #221E1A; font-family: Figtree, sans-serif', head: 'padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; background: #F3B08A; color: #F3EEE6', name: 'font-size: 15px; font-weight: 800' },
+  serif: { page: 'background: #26211C; font-family: Fraunces, Georgia, serif', head: 'padding: 14px 20px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-bottom: 1px solid #F3EEE6; margin: 0 20px; color: #F3EEE6', name: 'font-size: 16px; font-weight: 600' }
+}[tpl];
+const txt = {
+  fr: 'Madame, Monsieur, votre annonce pour le poste de DevOps Engineer a retenu toute mon attention. Kubernetes et Terraform sont au cœur de mon quotidien depuis mon stage SRE.',
+  de: 'Sehr geehrte Damen und Herren, Ihre Ausschreibung als DevOps Engineer hat mein Interesse geweckt. Kubernetes und Terraform prägen meinen Alltag seit meinem SRE-Praktikum.',
+  en: 'Dear Hiring Team, your DevOps Engineer opening caught my attention. Kubernetes and Terraform have been at the core of my work since my SRE internship.'
+}[lang];
+const cvTxt = 'PROFIL. DevOps junior, 42 Lausanne. Kubernetes, Terraform, GitLab CI. EXPÉRIENCE. Stage SRE, plateforme perso en production.';
+const tplName = { sobre: 'Sobre', moderne: 'Moderne', bandeau: 'Bandeau', serif: 'Classique' }[tpl];
+const isLetter = step === 1, isCv = step === 2;
+const copied = s.copied || '';
+const mk = (k, label, value) => ({ label: label, value: value, aria: 'Copier : ' + label, btn: copied === k ? 'Copié' : 'Copier', copy: () => set({ copied: k }), btnStyle: 'min-width: 76px; height: 44px; border: 0; border-radius: 22px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; ' + (copied === k ? 'background: #1C3527; color: #62D497; animation: joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)' : 'background: #232B45; color: #AEBDFF') });
+let ctaLabel = '', hint = '', disabled = false;
+if (isLetter) { ctaLabel = 'Continuer vers le CV'; disabled = !read || writing; hint = writing ? '' : (read ? '' : 'Relis la lettre pour continuer.'); }
+if (isCv) { ctaLabel = 'Continuer vers Postuler'; disabled = writing; }
+if (step === 3) { hint = opened ? 'Postulé sur LinkedIn ? Marque-le ici.' : ''; }
+return {
+  sent: sent, notSent: !sent, read: read, writing: writing, notWriting: !writing,
+  writingLabel: isLetter ? 'Rédaction en cours' : 'Mise en page du CV',
+  sel1: String(step === 1), sel2: String(step === 2), sel3: String(step === 3),
+  tab1: tab(1), tab2: tab(2), tab3: tab(3),
+  dot1: dot(1, done1), dot2: dot(2, done2), dot3: dot(3, false),
+  mark1: done1 ? '✓' : '1', mark2: done2 ? '✓' : '2',
+  go1: () => set({ step: 1 }), go2: () => set({ step: 2, cvSeen: true }), go3: () => set({ step: 3, cvSeen: true }),
+  isDoc: step < 3, isApply: step === 3, isLetter: isLetter, isCv: isCv,
+  chkSobre: String(tpl === 'sobre'), chkModerne: String(tpl === 'moderne'), chkBandeau: String(tpl === 'bandeau'), chkSerif: String(tpl === 'serif'),
+  cardSobre: card('sobre'), cardModerne: card('moderne'), cardBandeau: card('bandeau'), cardSerif: card('serif'),
+  pickSobre: () => set({ tpl: 'sobre' }), pickModerne: () => set({ tpl: 'moderne' }), pickBandeau: () => set({ tpl: 'bandeau' }), pickSerif: () => set({ tpl: 'serif' }),
+  chkFr: String(lang === 'fr'), chkDe: String(lang === 'de'), chkEn: String(lang === 'en'),
+  lFr: lb('fr'), lDe: lb('de'), lEn: lb('en'),
+  langFr: () => { if (lang !== 'fr') rewrite({ lang: 'fr' }); }, langDe: () => { if (lang !== 'de') rewrite({ lang: 'de' }); }, langEn: () => { if (lang !== 'en') rewrite({ lang: 'en' }); },
+  docTitle: isLetter ? 'Lettre de motivation' : 'CV adapté',
+  canvaStep1: 'jobA1 ouvre ' + (isLetter ? 'ta lettre' : 'ton CV') + ' dans ton compte Canva.',
+  pageStyle: 'height: 100%; border-radius: 4px 4px 0 0; box-shadow: 0 2px 8px rgba(0,0,0,.4); overflow: hidden; transition: all .3s cubic-bezier(.2,0,0,1); ' + T.page,
+  headStyle: T.head, nameStyle: T.name,
+  previewText: isLetter ? txt : cvTxt,
+  toggleRead: () => set({ read: !read }),
+  canvaTitle: canvaOn ? 'Ouvrir dans Canva' : 'Retoucher dans Canva',
+  canvaSub: canvaOn ? 'Compte Canva relié' : 'Avec ton compte, après ton accord',
+  canva: !!s.canva, openCanva: () => set({ canva: true }), closeCanva: () => set({ canva: false }),
+  canvaCta: canvaOn ? 'Ouvrir dans Canva' : 'Relier mon compte Canva',
+  connectCanva: () => set({ canva: false, canvaLinked: true }),
+  tplNote: 'Modèle ' + tplName + ', en ' + { fr: 'français', de: 'allemand', en: 'anglais' }[lang] + '.',
+  fields: [mk('p', 'Prénom', 'Kevin'), mk('n', 'Nom', 'Di Nocera'), mk('e', 'E-mail', 'kevin.dinocera@protonmail.com'), mk('t', 'Téléphone', '+41 76 000 00 00'), mk('a', 'Localité', '1020 Renens')],
+  showNext: step < 3, showLink: step === 3 && !opened, showDone: step === 3 && opened,
+  ctaLabel: ctaLabel, hintText: hint,
+  disabledAttr: String(disabled),
+  ctaStyle: 'height: 54px; border: 0; border-radius: 27px; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer; ' + (disabled ? 'background: #36312B; color: #C7BFB3' : 'background: #7D95FF; color: #171411'),
+  next: () => { if (!disabled) set({ step: step + 1, cvSeen: true }); },
+  openSite: (e) => { if (e && e.preventDefault) e.preventDefault(); set({ opened: true }); },
+  send: () => set({ sent: true }),
+  undo: () => set({ sent: false, opened: false })
+};
+}
+}
+</script>
+</body>
+</html>

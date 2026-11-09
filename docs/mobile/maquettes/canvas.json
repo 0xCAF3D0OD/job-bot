@@ -55,6 +55,24 @@
       "x": 2820,
       "y": 1214
     },
+    "AlertesTelAlerte.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Alerte active (feuille)",
+      "w": 390,
+      "x": 7520,
+      "y": 1214
+    },
+    "AlertesTelConfirmer.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Alerte à confirmer (feuille)",
+      "w": 390,
+      "x": 7050,
+      "y": 1214
+    },
     "Animations.dc.html": {
       "h": 1910,
       "is_interactive": true,
@@ -445,6 +463,24 @@
       "x": 940,
       "y": 250
     },
+    "OffreCompatibilite.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Compatibilité (feuille)",
+      "w": 390,
+      "x": 5170,
+      "y": 1214
+    },
+    "OffreCompatibiliteSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Compatibilité (feuille)",
+      "w": 390,
+      "x": 6580,
+      "y": 4042
+    },
     "OffreProvisoire.dc.html": {
       "h": 844,
       "is_interactive": true,
@@ -551,6 +587,24 @@
       "x": 3290,
       "y": 250
     },
+    "PreparerMiseEnPage.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Mise en page (feuille)",
+      "w": 390,
+      "x": 6110,
+      "y": 1214
+    },
+    "PreparerMiseEnPageSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Mise en page (feuille)",
+      "w": 390,
+      "x": 7520,
+      "y": 4042
+    },
     "PreparerOrdinateur.dc.html": {
       "h": 900,
       "is_interactive": true,
@@ -602,6 +656,15 @@
       "w": 390,
       "x": 470,
       "y": 13966
+    },
+    "ReglagesLangue.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Langue (feuille)",
+      "w": 390,
+      "x": 6580,
+      "y": 1214
     },
     "ReglagesOrdinateur.dc.html": {
       "h": 900,
@@ -655,6 +718,24 @@
       "w": 390,
       "x": 2820,
       "y": 250
+    },
+    "RendezVousPreparer.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Téléphone · Préparer le rendez-vous (feuille)",
+      "w": 390,
+      "x": 5640,
+      "y": 1214
+    },
+    "RendezVousPreparerSombre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "Sombre · Préparer le rendez-vous (feuille)",
+      "w": 390,
+      "x": 7050,
+      "y": 4042
     },
     "RendezVousSombre.dc.html": {
       "h": 844,
@@ -834,7 +915,16 @@
     "RelierLienInvalide.dc.html",
     "OrpFiche.dc.html",
     "OrpSombre.dc.html",
-    "OrpFicheSombre.dc.html"
+    "OrpFicheSombre.dc.html",
+    "OffreCompatibilite.dc.html",
+    "OffreCompatibiliteSombre.dc.html",
+    "RendezVousPreparer.dc.html",
+    "PreparerMiseEnPage.dc.html",
+    "ReglagesLangue.dc.html",
+    "RendezVousPreparerSombre.dc.html",
+    "PreparerMiseEnPageSombre.dc.html",
+    "AlertesTelConfirmer.dc.html",
+    "AlertesTelAlerte.dc.html"
   ],
   "pages": [],
   "title": "jobA1"

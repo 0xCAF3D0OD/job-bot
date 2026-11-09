@@ -212,8 +212,8 @@ const goal = s.goal == null ? 10 : s.goal;
 const onBlue = step === 0;
 const wave0 = 'M0 470 C 110 410, 230 540, 390 440 L390 844 L0 844 Z';
 const wave1 = 'M0 -40 C 110 -40, 230 -40, 390 -40 L390 844 L0 844 Z';
-const chip = (on) => 'height: 40px; padding: 0 14px; border-radius: 20px; font-family: inherit; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; ' + (on ? 'border: 1.5px solid #2445C2; background: #E8ECFB; color: #1A3496' : 'border: 1.5px solid #CFCBC1; background: #FFFFFF; color: #1B1F2A');
-const seg = (on) => 'height: 40px; border: 0; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; ' + (on ? 'background: #FFFFFF; box-shadow: 0 1px 2px rgba(27,31,42,0.12); font-weight: 700; color: #1B1F2A' : 'background: transparent; font-weight: 600; color: #474C59');
+const chip = (on) => 'height: 44px; padding: 0 14px; border-radius: 20px; font-family: inherit; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; ' + (on ? 'border: 1.5px solid #2445C2; background: #E8ECFB; color: #1A3496' : 'border: 1.5px solid #CFCBC1; background: #FFFFFF; color: #1B1F2A');
+const seg = (on) => 'height: 44px; border: 0; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; ' + (on ? 'background: #FFFFFF; box-shadow: 0 1px 2px rgba(27,31,42,0.12); font-weight: 700; color: #1B1F2A' : 'background: transparent; font-weight: 600; color: #474C59');
 const cards = [
 { ini: 'AS', bb: '#1B1F2A', bf: '#FFFFFF', title: 'DevOps Engineer', co: 'Alpstack · Lausanne', chips: ['80–100 %', 'CDI', 'Hybride'], score: 92, why: 'Kubernetes, Terraform et GitLab CI demandés.' },
 { ini: 'RL', bb: '#2445C2', bf: '#FFFFFF', title: 'Platform Engineer junior', co: 'Romandie Logistics · Renens', chips: ['100 %', 'CDI'], score: 87, why: 'poste junior, Ansible et Python demandés.' },

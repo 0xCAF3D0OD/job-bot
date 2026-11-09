@@ -393,10 +393,11 @@ Ce lot remplace ce que les PR #559 et #561 ont codé d'après l'ancienne maquett
 
 ---
 
-## 8. Lots 11 à 18 (8 novembre au soir)
+## 8. Lots 11 à 18 (8 et 9 novembre)
 
-Tout est dans `MODIFICATIONS_8_NOVEMBRE_SOIR.md`, version finale et sans contradiction. Lis-le en entier.
+Tout est dans `MODIFICATIONS_8_NOVEMBRE_SOIR.md`, version finale. Lis-le en entier ; il prime sur ce document en cas de doute.
 
-- Ordre des PR : son §1.2 (lot 17 d'abord, puis 11 à 15, puis 16, puis 18).
-- Ses règles du §2 (D28 à D34) **remplacent** D22 « carte = cliquable » et la règle du §7 de ce document sur les cartes. En cas de doute, ce fichier prime sur ce document.
-- Code les lots 11 à 16 directement avec ces règles finales.
+- Ordre des PR : son §1.2 (lot 17 d'abord, puis 11 à 15, 16, puis 18).
+- Règles transverses : son §2 (D28 à D35, grille et alignement §2.9, cascade §2.10). Elles remplacent D22 et la règle du §7 de ce document sur les cartes.
+- Le téléphone est **validé par Kevin le 9 novembre** : §10.1 à §10.9 (Offre et feuille Compatibilité, Suivi ORP, Pour l'ORP, Compte, feuilles du bas, Alertes, Notifications). L'ordinateur (§10.5) suivra.
+- Contrôle : `outils/audit-grille.js` sur chaque écran téléphone, 0 écart exigé.

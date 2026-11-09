@@ -4,6 +4,7 @@ Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
+- `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).
 - `MODIFICATIONS_8_NOVEMBRE_SOIR.md` : texte complet, final et sans contradiction des lots 11 à 18. Il prime sur `PROMPT_CLAUDE_CODE.md` en cas de doute.
 - `maquettes/` : 67 écrans `.dc.html` (à ouvrir dans un navigateur) et `canvas.json` (titres et positions, rangés par section).
 - `captures/` : un PNG par écran, du même nom, dans l'état par défaut. `captures/etats/<Fichier>--<état>.png` montre les états ouverts (menus, panneaux, onglets, sélecteur de date). `vue_ensemble.png` montre tout le canvas. `icone_calendrier.png` montre l'icône date.
@@ -27,6 +28,11 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Candidatures, envoyées | Envoyees | EnvoyeesSombre |
 | Candidatures, rendez-vous (états vue, noter, dp) | RendezVous | RendezVousSombre |
 | Détail d'une offre | Offre | OffreSombre |
+| Compatibilité (feuille du bas, depuis le détail d'une offre) | OffreCompatibilite | OffreCompatibiliteSombre |
+| Préparer le rendez-vous (feuille du bas) | RendezVousPreparer | RendezVousPreparerSombre |
+| Mise en page (feuille du bas, Préparer) | PreparerMiseEnPage | PreparerMiseEnPageSombre |
+| Langue (feuille du bas, Réglages) | ReglagesLangue | |
+| Alerte e-mail (feuille du bas : à confirmer, active) | AlertesTelConfirmer, AlertesTelAlerte | |
 | Offre provisoire, lire ou coller l'annonce | OffreProvisoire | |
 | Ajouter une offre (feuille du bas) | AjouterOffreTel | |
 | Filtres (feuille du bas) | Filtres | |
@@ -202,7 +208,10 @@ Attente de la première collecte, entretien décroché, refus reçu, compte supp
 | Préparer sur ordinateur, réorganisé comme la production : en-tête sur une ligne de 64 px centrée (« ‹ Retour à l'offre », logo, H1 = intitulé du poste, entreprise, anneau 76 + verdict, étapes) ; « Ma candidature » n'est plus affiché. À gauche la lettre (titre « Lettre de motivation », langue FR, DE, EN à droite, aperçu). À droite : « Mise en page » (modèle Sobre, Moderne, Bandeau, Classique, pour la lettre et le CV, longueur), « Pour cette offre » (deux groupes titrés « Points forts » avec coche et « À vérifier » avec point d'attention, sujet en gras et détail dessous), « Nouvelle version ». Le verdict n'est plus répété dans « Pour cette offre ». En bas : suggestions, zone de saisie, « J'ai relu la lettre » | PreparerOrdinateur | captures/PreparerOrdinateur.png, captures/etats/PreparerOrdinateur--colonne-bas.png |
 | À traiter : bouton à contour « J'ai déjà postulé » à droite de « Écarter » | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png |
 
-# STYLE « BLOCS » (8 novembre, 21 h)
+# SECTIONS ET CARTES (8 et 9 novembre)
 
-Pages de lecture : blocs `--surface` sans bordure sur fond `--page-blocks` (clair `--surface-muted`, sombre `--bg`), 8 px (téléphone) ou 16 px (ordinateur) entre eux. Un bloc n'est jamais cliquable en entier. Ce qui s'ouvre est une ligne avec un cercle à contour bleu de 2 px et une flèche. Tout ce qu'on touche est en bleu : un seul bouton plein par écran, les autres à contour bleu. Le statut est un mot coloré après le titre. Détail : MODIFICATIONS_8_NOVEMBRE_SOIR.md, §2 (règles D28 à D34) et §10 (écrans).
+Pages de lecture : le contenu à lire est posé sur le fond crème `--bg`, le même partout, en sections séparées par un trait. Une carte est un élément cliquable (avec cercle à flèche) ou une information importante (résumé du mois ORP, intitulé et note d'une offre ; rayon 18 px, sans flèche), jamais dans une autre carte : blanche avec un cadre de 1,5 px sur la page, crème sans cadre sur un fond blanc. Un seul bouton plein par écran, les autres à contour bleu. Le statut est un mot coloré après le titre. Détail : MODIFICATIONS_8_NOVEMBRE_SOIR.md, §2 (D28 à D35) et §10.
 Écrans refaits : Offre, Orp, OrpFiche (nouveau), Compte, onglet ORP de Progresser, et leurs versions sombres (OffreSombre, OrpSombre, OrpFicheSombre, CompteSombre, ProgresserSombre) ; ordinateur : Aujourd'hui, Bilan, Profil, Réglages, Notifications, Alertes.
+
+
+Note : la maquette `OnboardingC` (écran d'accueil des premiers pas) référence une image du canevas (`/_blob/fb359129…`) qui n'est pas dans `illustrations/`. Garde l'image déjà utilisée en production pour cet écran.
