@@ -470,3 +470,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.256 | Maquette du 8 novembre, lot 12 : le détail d'une candidature envoyée en deux colonnes sur ordinateur (gabarit DetailTwoColumns) | livrée |
 | 1.6.257 | Maquette du 8 novembre, lot 13 : À traiter en deux colonnes sur ordinateur avec « L'offre en bref », et les critères du profil en lignes cliquables | livrée |
 | 1.6.258 | Maquette du 8 novembre, lot 14 : rendez-vous ORP passé en deux colonnes, « Ce qui a été convenu » en trois parties, plus de pastille « Noté » | livrée |
+| 1.6.259 | Maquette du 8 novembre, lot 15 : Préparer sur ordinateur (en-tête d'une ligne, « Mise en page », « Pour cette offre » en deux groupes, « J'ai relu la lettre » en bas) et « J'ai déjà postulé » dans le détail d'une offre | livrée |
+| 1.6.260 | Maquette du 8 novembre, lot 16 : pastilles de l'Assistant plus grandes avec le nom d'entreprise raccourci, personnage en pantalon, bustes sur quatre écrans du téléphone, « justificatif » au lieu de « preuve » dans le Bilan ORP | livrée |
