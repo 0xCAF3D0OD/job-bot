@@ -88,6 +88,8 @@ SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-find-open]"),
     # Les 4 personnages du logo (PR 11, §15) : la page introuvable.
     ("adresse-inconnue", None),
+    # Coordonnées reprises du CV (maquette CoordonneesTel du 10 novembre au soir, PR 23) : le formulaire.
+    ("profil?onglet=coordonnees", None),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [

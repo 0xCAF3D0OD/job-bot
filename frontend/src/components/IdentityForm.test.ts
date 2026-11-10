@@ -48,7 +48,7 @@ describe("IdentityForm", () => {
         permit: null,
       },
     });
-    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
+    expect(wrapper.find(".identity-message").text()).toContain("enregistrées");
   });
 
   it("remplit les champs vides avec les coordonnées repérées dans le CV, sans les enregistrer", async () => {
@@ -82,11 +82,52 @@ describe("IdentityForm", () => {
       "camille@example.ch",
     ]);
     expect(put).not.toHaveBeenCalled();
-    // « Annuler » revient aux valeurs enregistrées.
+    // Le bloc compte les champs réellement repris, chacun porte « Du CV » (PR 23) ; le nom saisi n'en a pas.
+    expect(wrapper.find("[data-test=identity-from-cv]").text()).toContain("4 champs repris de ton CV");
+    expect(wrapper.find("[data-test=identity-from-cv]").text()).toContain("Vérifie-les puis enregistre. Rien n’est enregistré avant.");
+    const badges = () => wrapper.findAll(".form-field-badge").map((b) => b.element.closest("label")?.textContent?.replace("Du CV", "").trim());
+    expect(badges()).toEqual(["E-mail", "Rue et numéro", "NPA", "Localité"]);
+    // Une marque part dès que la valeur proposée est effacée.
+    await wrapper.find("[data-test=identity-city]").setValue("");
+    expect(wrapper.find("[data-test=identity-from-cv]").text()).toContain("3 champs repris");
+    expect(wrapper.text()).toContain("Elles ne sont jamais envoyées à l’IA.");
+    // « Annuler » vide les valeurs proposées et non enregistrées.
     const cancel = wrapper.findAll("button").find((b) => b.text() === "Annuler");
     expect(cancel).toBeDefined();
     await cancel!.trigger("click");
     expect(value("street")).toBe("");
+    expect(wrapper.find("[data-test=identity-from-cv]").exists()).toBe(false);
+    expect(wrapper.find(".form-field-badge").exists()).toBe(false);
+  });
+
+  it("l'e-mail du compte n'a pas de marque ; après « Enregistrer », les marques et le bloc partent", async () => {
+    const { useAuth } = await import("../composables/useAuth");
+    useAuth().me.value = { username: "kevin@example.ch" } as never;
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/documents"
+            ? [{ id: 4, kind: null, text_status: "ok" }]
+            : path === "/api/identity/from-document/{document_id}"
+              ? { name: "Kevin Di Nocera", street: null, postcode: null, city: null, phone: "079 123 45 67", email: "autre@example.ch" }
+              : undefined,
+      }),
+    );
+    const { api } = await import("../api/client");
+    vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
+    const wrapper = mount(IdentityForm);
+    await flushPromises();
+    expect(wrapper.find<HTMLInputElement>("[data-test=identity-email]").element.value).toBe("kevin@example.ch");
+    expect(wrapper.find("[data-test=identity-from-cv]").text()).toContain("2 champs repris de ton CV");
+    expect(wrapper.find("[data-test=identity-email]").element.closest(".form-field")?.querySelector(".form-field-badge")).toBeNull();
+    for (const [field, mode] of [["name", "name"], ["email", "email"], ["street", "street-address"], ["postcode", "postal-code"], ["city", "address-level2"], ["phone", "tel"]]) {
+      expect(wrapper.find(`[data-test=identity-${field}]`).attributes("autocomplete")).toBe(mode);
+    }
+    await wrapper.find("[data-test=identity-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=identity-from-cv]").exists()).toBe(false);
+    expect(wrapper.find(".form-field-badge").exists()).toBe(false);
+    useAuth().me.value = null;
   });
 
   it("sans CV lisible, le formulaire reste vide", async () => {
@@ -107,7 +148,7 @@ describe("IdentityForm", () => {
     await flushPromises();
     await wrapper.find("[data-test=identity-form]").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("redémarre-la");
+    expect(wrapper.find(".identity-message").text()).toContain("redémarre-la");
   });
 });
 
@@ -116,7 +157,7 @@ describe("IdentityForm, ce qui manque (docs/21 §6)", () => {
     GET.mockResolvedValue({ data: { name: "Camille Exemple", street: null, postcode: null, city: "Lausanne", phone: null, email: null } });
     const wrapper = mount(IdentityForm);
     await flushPromises();
-    expect(wrapper.find("[data-test=identity-missing]").text()).toBe("Il manque : ta rue, ton NPA.");
+    expect(wrapper.find("[data-test=identity-missing]").text()).toBe("Il manque\u202f: ta rue, ton NPA.");
   });
 });
 
@@ -130,16 +171,16 @@ describe("IdentityForm, champs du formulaire (règles §4)", () => {
     expect(wrapper.find("[data-test=identity-form]").exists()).toBe(false);
   });
 
-  it("libellés reliés, « (facultatif) », erreur sous le champ et curseur dans le premier champ en erreur", async () => {
+  it("libellés de la maquette, erreur sous le champ et curseur dans le premier champ en erreur", async () => {
     GET.mockResolvedValue({ data: { name: "Camille Exemple", street: null, postcode: null, city: null, phone: null, email: null } });
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT);
     const wrapper = mount(IdentityForm, { attachTo: document.body });
     await flushPromises();
     const name = wrapper.find("[data-test=identity-name]");
-    expect(wrapper.find(`label[for="${name.attributes("id")}"]`).text()).toBe("Nom et prénom");
+    expect(wrapper.find(`label[for="${name.attributes("id")}"]`).text()).toBe("Prénom et nom");
     const phone = wrapper.find("[data-test=identity-phone]");
-    expect(wrapper.find(`label[for="${phone.attributes("id")}"]`).text()).toBe("Téléphone (facultatif)");
+    expect(wrapper.find(`label[for="${phone.attributes("id")}"]`).text()).toBe("Téléphone");
     expect(wrapper.find("[data-test=identity-website]").attributes("placeholder")).toBeUndefined();
 
     const postcode = wrapper.find("[data-test=identity-postcode]");
@@ -151,8 +192,9 @@ describe("IdentityForm, champs du formulaire (règles §4)", () => {
     await flushPromises();
     expect(put).not.toHaveBeenCalled();
     expect(wrapper.findAll("[data-test=field-error]")).toHaveLength(2);
-    expect(document.activeElement).toBe(postcode.element);
-    expect(wrapper.find("[data-test=identity-form] [role=status]").exists()).toBe(false);
+    // Le premier champ en erreur dans l'ordre de la maquette : l'e-mail, à côté du nom.
+    expect(document.activeElement).toBe(wrapper.find("[data-test=identity-email]").element);
+    expect(wrapper.find(".identity-message").exists()).toBe(false);
 
     // « Annuler » revient aux valeurs enregistrées.
     await wrapper.find("[data-test=cancel-identity]").trigger("click");
