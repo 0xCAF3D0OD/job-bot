@@ -11900,6 +11900,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Document déjà déposé : le même, remis en tête */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
             /** @description Successful Response */
             201: {
                 headers: {

@@ -4271,6 +4271,16 @@
               }
             }
           },
+          "200": {
+            "description": "Document déjà déposé : le même, remis en tête",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Document déjà déposé"
           },

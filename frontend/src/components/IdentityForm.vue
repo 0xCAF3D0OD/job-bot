@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from "vue";
 
-import { api } from "../api/client";
+import { api, QUIET } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import DisclosureRow from "./DisclosureRow.vue";
 import FormField from "./FormField.vue";
@@ -97,10 +97,31 @@ onMounted(async () => {
       ) as IdentityForm;
       saved.value = { ...identity.value };
     }
+    await fillFromCv();
   } finally {
     loaded.value = true;
   }
 });
+
+// Les coordonnées repérées en tête du CV (test du 10 novembre) remplissent les champs encore vides : une proposition,
+// rien n'est enregistré avant « Enregistrer », et « Annuler » revient aux valeurs enregistrées. Le CV est le dernier
+// document lisible qui n'est pas un certificat ; sans CV ou en cas d'erreur, le formulaire reste tel quel.
+const FROM_CV = ["name", "street", "postcode", "city", "phone", "email"] as const;
+async function fillFromCv(): Promise<void> {
+  if (!FROM_CV.some((f) => !identity.value[f].trim())) return;
+  try {
+    const docs = await api.GET("/api/documents", QUIET);
+    const cv = Array.isArray(docs.data) ? docs.data.find((d) => d.kind !== "certificate" && d.text_status === "ok") : undefined;
+    if (!cv) return;
+    const { data } = await api.GET("/api/identity/from-document/{document_id}", { params: { path: { document_id: cv.id } }, ...QUIET });
+    if (!data) return;
+    const next = { ...identity.value };
+    for (const f of FROM_CV) if (!next[f].trim() && data[f]) next[f] = data[f] ?? "";
+    identity.value = next;
+  } catch {
+    // Le CV reste à relire plus tard ; la saisie à la main suffit.
+  }
+}
 </script>
 
 <template>

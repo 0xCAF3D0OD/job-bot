@@ -124,9 +124,15 @@ async def list_documents(request: Request) -> list[DocumentOut]:
     "/documents",
     operation_id="uploadDocument",
     status_code=status.HTTP_201_CREATED,
-    responses={409: {"description": "Document déjà déposé"}, 415: {"description": "Refusé"}},
+    responses={
+        200: {"description": "Document déjà déposé : le même, remis en tête", "model": DocumentOut},
+        409: {"description": "Document déjà déposé"},
+        415: {"description": "Refusé"},
+    },
 )
-async def upload_document(request: Request, file: Annotated[UploadFile, File()]) -> DocumentOut:
+async def upload_document(
+    request: Request, response: Response, file: Annotated[UploadFile, File()]
+) -> DocumentOut:
     runtime = _runtime(request)
     data = await file.read(MAX_SIZE + 1)
     filename = (file.filename or "document").rsplit("/", 1)[-1][:200]
@@ -136,6 +142,23 @@ async def upload_document(request: Request, file: Annotated[UploadFile, File()])
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, str(exc)) from None
 
     digest = hashlib.sha256(data).hexdigest()
+    # Le même fichier redéposé (test du 10 novembre) : plus de refus. Le document existant revient,
+    # remis en tête avec son texte relu, pour que la lecture du CV reparte (un CV déposé quand la
+    # lecture échouait n'était jamais relu). Rien n'est copié dans le stockage. Lu sous la RLS
+    # du compte en cours (C-5) : l'empreinte d'un autre compte n'est jamais trouvée.
+    async with runtime.sessionmaker.begin() as session:
+        existing = await session.scalar(select(Document).where(Document.sha256 == digest))
+        if existing is not None:
+            existing.filename = filename
+            existing.text_status = extracted.status
+            existing.extracted_text = extracted.text
+            existing.uploaded_at = datetime.now(UTC)
+            await session.flush()
+            again = DocumentOut.model_validate(existing)
+    if existing is not None:
+        response.status_code = status.HTTP_200_OK
+        log.info("document_uploaded_again", document_id=again.id, text_status=again.text_status)
+        return again
     # Un dossier par compte (docs/65 §1) ; les documents d'avant gardent leur emplacement.
     key = f"accounts/{accounts.current()}/documents/{uuid.uuid4().hex}.{extracted.type.value}"
     runtime.storage.put(key, data)
