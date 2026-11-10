@@ -89,6 +89,7 @@ export const ICONS = {
   chevron: path("M9 6l6 6-6 6"),
   "chevron-left": path("M15 6l-6 6 6 6"),
   "chevron-down": path("M6 9l6 6 6-6"),
+  "chevron-up": path("M6 15l6-6 6 6"),
   external: path("M14 4.5h5.5V10M19.5 4.5L11 13") + path("M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"),
   bookmark: path("M6.5 4.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16l-5.5-4-5.5 4z"),
   more: circle(5.5, 12, 0.9, ' fill="currentColor"') + circle(12, 12, 0.9, ' fill="currentColor"') + circle(18.5, 12, 0.9, ' fill="currentColor"'),

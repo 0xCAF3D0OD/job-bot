@@ -27,7 +27,7 @@ from jobbot.db.models import (
 )
 from jobbot.employer import service as employer_service
 from jobbot.filtering.service import load_criteria
-from jobbot.llm.scoring import profile_hash
+from jobbot.llm.scoring import PART_MAX, profile_hash
 from jobbot.log import get_logger
 from jobbot.registry.service import name_key
 from jobbot.runtime import Runtime
@@ -126,6 +126,9 @@ class OfferOut(BaseModel):
     why: str | None = None
     level: Literal["above", "below"] | None = None
     level_detail: str | None = None
+    # Comment la note est calculée (score-v7, PR 18) : vide pour une note plus ancienne.
+    score_parts: list["ScorePartOut"] = []
+    score_tip: "ScoreTipOut | None" = None
     scored_at: datetime | None = None
     # Note faite avec un autre profil que l'actuel : à renoter.
     score_stale: bool = False
@@ -169,6 +172,21 @@ class AskKeywordOut(BaseModel):
 class ScorePoint(BaseModel):
     text: str
     chunk_ids: list[int]
+
+
+class ScorePartOut(BaseModel):
+    """Une part de la note (PR 18) : `max` vient de PART_MAX, `points` de la notation."""
+
+    key: Literal["skills", "experience", "location", "languages", "terms"]
+    points: int
+    max: int
+    text: str
+    check: bool = False
+
+
+class ScoreTipOut(BaseModel):
+    text: str
+    action: Literal["skills", "experience", "languages", "criteria"] | None = None
 
 
 class OfferCounts(BaseModel):
@@ -302,6 +320,12 @@ def _evaluation_fields(
             "why": evaluation.why,
             "level": evaluation.level if evaluation.level in ("above", "below") else None,
             "level_detail": evaluation.level_detail,
+            "score_parts": [
+                {**part, "max": PART_MAX[part["key"]]}
+                for part in evaluation.score_parts or []
+                if part.get("key") in PART_MAX
+            ],
+            "score_tip": evaluation.score_tip,
             "scored_at": evaluation.scored_at,
             "score_stale": current_hash is not None and evaluation.profile_hash != current_hash,
         }
