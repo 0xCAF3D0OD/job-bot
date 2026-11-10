@@ -121,6 +121,8 @@ function settingsEntry(to: RouteLocationNormalized): RouteLocationRaw | true {
   return { path: "/compte" };
 }
 
+let accountMenuPending = false;
+
 export const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/aujourdhui" },
   // Anciennes adresses : liens des alertes, des rappels ntfy, marque-pages.
@@ -314,7 +316,7 @@ router.beforeEach(async (to, from) => {
   // Sur ordinateur, pas de page Compte façon téléphone (prompt du 10 novembre, PR 20, point 1) : l'avatar ouvre le
   // panneau « Mon compte ». Un lien vers /compte ouvre ce panneau sur la page où l'on est (Aujourd'hui à l'arrivée).
   if (to.name === "account" && loggedIn.value && !globalThis.matchMedia?.(PHONE_QUERY).matches) {
-    accountMenuRequest.value += 1;
+    accountMenuPending = true;
     return from.matched.length ? false : { path: "/aujourdhui" };
   }
   // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient au compte.
@@ -368,6 +370,12 @@ export function pageTitle(name: unknown): string {
 }
 
 router.afterEach((to, from) => {
+  // Le panneau « Mon compte » demandé par /compte s'ouvre une fois la page posée : un changement de page referme
+  // tous les panneaux (App.vue), il ne doit pas refermer celui-ci.
+  if (accountMenuPending) {
+    accountMenuPending = false;
+    accountMenuRequest.value = true;
+  }
   document.title = pageTitle(to.name);
   useJobsMemory().remember(to.fullPath);
   if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);

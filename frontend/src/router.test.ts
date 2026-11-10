@@ -103,11 +103,11 @@ describe("routes réservées (docs/18 §1)", () => {
     const { router } = await import("./router");
     const { accountMenuRequest } = await import("./composables/useAccountMenu");
     await router.push("/candidatures/alertes");
-    const before = accountMenuRequest.value;
+    accountMenuRequest.value = false;
     await router.push("/compte");
-    // On reste sur la page, le panneau s'ouvre.
+    // On reste sur la page, le panneau s'ouvre une fois la navigation finie.
     expect(router.currentRoute.value.path).toBe("/candidatures/alertes");
-    expect(accountMenuRequest.value).toBe(before + 1);
+    expect(accountMenuRequest.value).toBe(true);
     // Les Réglages sans rubrique : la page des notifications, plus la page Compte.
     await router.push("/reglages");
     expect(router.currentRoute.value.fullPath).toBe("/reglages?rubrique=notifications");

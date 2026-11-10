@@ -437,12 +437,12 @@ onMounted(() => void load());
 /* Téléphone et panneau étroit (prompt du 10 novembre, PR 20, points 3 et 5 ; groupe de ProfilTel) : le même format de
    ligne que l'ordinateur, dans une seule carte (trait intérieur de 1,5 px --card-line, rayon 12) ; lignes de 72 px,
    séparées par un filet de 1 px (--row-sep, #E5E2D9 comme Compte), 20 px de marge, 16 px avant le cercle. */
-.criteria-rows { --crit-72: 72px; --crit-12: 12px; --crit-20: 20px; --crit-22: 22px; --crit-2: 2px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 0; box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--crit-12); }
+.criteria-rows { --crit-72: 72px; --crit-12: 12px; --crit-20: 20px; --crit-22: 22px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 0; box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--crit-12); }
 .narrow-block:has(.criteria-rows) { max-width: none; }
 .criteria-rows > li + li { border-top: 1px solid var(--row-sep); }
 .criteria-row { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: var(--crit-72); padding: var(--space-3) var(--crit-20); border: 0; border-radius: 0; background: transparent; color: var(--text); font-weight: var(--weight-regular); text-align: left; white-space: normal; }
 .criteria-row:hover { background: var(--band); }
-.criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
+.criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
 /* Ordinateur (MODIFICATIONS du 9 novembre, §2.9 ; HTML de ProfilOrdinateur) : une carte par préférence, 8 px entre les

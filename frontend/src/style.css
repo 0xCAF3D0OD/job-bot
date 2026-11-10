@@ -3066,6 +3066,9 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
   .profile-page .doc-list .calm-row strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kind-tabs { flex-wrap: nowrap; overflow-x: auto; }
   .kind-tabs > * { flex: none; }
+  /* Les liens des certificats et l'aide « i » : 44 px de cible, sans marge négative (audit-grille). */
+  .profile-page :is(a.link, button.link) { display: inline-flex; align-items: center; min-height: var(--target-min); }
+  .profile-page .hover-note-info { margin: 0; }
 }
 /* Les titres et les réglages, comme dans les Réglages. */
 .profile-page .form-card legend { font-weight: var(--weight-semibold); font-size: var(--font-body); }

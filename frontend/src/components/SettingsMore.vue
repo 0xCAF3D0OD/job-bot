@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 import BlockRow from "./BlockRow.vue";
 import SettingsSection from "./SettingsSection.vue";
@@ -19,7 +20,9 @@ const { running, message: collectMessage, collectNow } = useCollect();
 const owner = computed(() => Boolean(me.value?.is_owner));
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
-const rubric = (id: string) => ({ path: "/reglages", query: { rubrique: id } });
+const router = useRouter();
+// Des boutons, pas des liens : RouterLink marquerait chaque ligne « page en cours » (même chemin, /reglages).
+const go = (id: string) => void router.push({ path: "/reglages", query: { rubrique: id } });
 
 function onProfileChange(event: Event): void {
   choose(Number((event.target as HTMLSelectElement).value));
@@ -38,35 +41,35 @@ onMounted(() => {
     <div class="settings-more-group">
       <BlockRow
         title="Objectif ORP et sites"
-        :to="rubric('recherche')"
         data-test="account-orp"
+        @click="go('recherche')"
       />
       <BlockRow
         title="Rythme"
-        :to="rubric('rythme')"
         data-test="account-rhythm"
+        @click="go('rythme')"
       />
       <BlockRow
         title="IA"
-        :to="rubric('ia')"
         data-test="account-ai"
+        @click="go('ia')"
       />
       <BlockRow
         title="Agenda"
-        :to="rubric('outils')"
         data-test="account-tools"
+        @click="go('outils')"
       />
       <BlockRow
         title="Formule"
         :lines="[planName]"
-        :to="rubric('formule')"
         data-test="account-plan"
+        @click="go('formule')"
       />
       <BlockRow
         v-if="owner"
         title="Administration"
-        :to="rubric('plateforme')"
         data-test="account-admin"
+        @click="go('plateforme')"
       />
       <!-- La démo ne collecte rien (docs/72). -->
       <BlockRow
@@ -117,10 +120,15 @@ onMounted(() => {
 </template>
 
 <style>
-/* Une carte de groupe comme Compte : trait de 1,5 px, lignes séparées par un filet de 1 px (--row-sep). */
 /* Sur une rubrique seule (821 à 1 023 px), le titre reste visible : ce n'est pas le titre de la page. */
 .settings-sub #plus > .section-title { display: block; }
-.settings-more-group { overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.settings-more-group > .block-row { margin: 0; border: 0; border-radius: 0; background: transparent; }
+/* Une carte de groupe comme Compte : trait de 1,5 px, lignes à flèche (D29) séparées par un filet de 1 px
+   (--row-sep) ; 64 px de haut, 20 px de marge, le titre en gras, sa ligne en gris dessous. */
+.settings-more-group { --more-row-h: 64px; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.settings-more-group > .block-row { display: flex; align-items: center; gap: var(--space-4); width: 100%; box-sizing: border-box; min-height: var(--more-row-h); margin: 0; padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.settings-more-group > .block-row:hover { background: var(--band); }
 .settings-more-group > .block-row + .block-row { border-top: 1px solid var(--row-sep); }
+.settings-more-group .block-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.settings-more-group .block-row-title { font-weight: var(--weight-bold); }
+.settings-more-group .block-row-line { font-size: var(--font-small); color: var(--text-secondary); }
 </style>

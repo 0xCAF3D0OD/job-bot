@@ -9,6 +9,7 @@ import CriteriaForm from "./CriteriaForm.vue";
 import ProfileEditSheet from "./ProfileEditSheet.vue";
 import ProfileGauge from "./ProfileGauge.vue";
 import ProfileImage from "./ProfileImage.vue";
+import QueryLink from "./QueryLink.vue";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
 import { useNarrow } from "../composables/usePhone";
@@ -297,26 +298,27 @@ async function onSaved(): Promise<void> {
         >
           <template v-if="narrow">
             Rien pour l’instant. Relis ton CV ou ajoute-les à la main.<br>
-            <RouterLink
+            <QueryLink
               :to="{ query: { onglet: 'competences', nouveau: '1' } }"
               class="profile-skills-add-link"
               data-test="profile-skill-add"
             >
               Ajouter une compétence
-            </RouterLink>
+            </QueryLink>
           </template>
           <template v-else>
-            Rien pour l’instant. Relis ton CV ou <RouterLink
+            Rien pour l’instant. Relis ton CV ou <QueryLink
               :to="{ query: { onglet: 'competences', nouveau: '1' } }"
               data-test="profile-skill-add"
-            >ajoute-les à la main</RouterLink>.
+              text="ajoute-les à la main"
+            />.
           </template>
         </div>
         <div
           v-else
           class="profile-card profile-skills"
         >
-          <RouterLink
+          <QueryLink
             v-for="skill in skills"
             :key="skill.id"
             class="profile-skill"
@@ -324,14 +326,14 @@ async function onSaved(): Promise<void> {
             :data-test="`profile-skill-${skill.id}`"
           >
             {{ skill.title }}
-          </RouterLink>
-          <RouterLink
+          </QueryLink>
+          <QueryLink
             class="profile-skill-add"
             :to="{ query: { onglet: 'competences', nouveau: '1' } }"
             data-test="profile-skill-add"
           >
             + Ajouter
-          </RouterLink>
+          </QueryLink>
         </div>
       </section>
 
@@ -354,7 +356,7 @@ async function onSaved(): Promise<void> {
             v-for="row in parcours"
             :key="row.key"
           >
-            <RouterLink
+            <QueryLink
               class="criteria-row"
               :to="{ query: { onglet: row.key } }"
               :data-test="`profile-parcours-${row.key}`"
@@ -367,7 +369,7 @@ async function onSaved(): Promise<void> {
                 class="arrow-circle small"
                 aria-hidden="true"
               ><AppIcon name="arrow-right" /></span>
-            </RouterLink>
+            </QueryLink>
           </li>
         </ul>
       </section>
@@ -423,7 +425,7 @@ async function onSaved(): Promise<void> {
   .profile-desktop { --pd-pad-y: 14.5px; --pd-pad-x: 16px; --pd-13: 13px; --pd-15: 15px; --pd-18-lh: 18px; --pd-20: 20px; --pd-22-lh: 22px; --pd-26: 26px; }
   .profile-desktop .jobs-head.profile-head { padding: var(--space-3) var(--space-5) var(--space-2); }
   .profile-desktop .profile-head-main { gap: var(--space-4); padding: var(--space-1) var(--space-1) var(--space-2); }
-  .profile-desktop .profile-head-text .profile-head-name { margin: 0; font-size: var(--pd-20); line-height: var(--pd-26); font-weight: var(--weight-bold); letter-spacing: 0; }
+  .profile-desktop .profile-head-text .profile-head-name { margin: 0; overflow-wrap: anywhere; font-size: var(--pd-20); line-height: var(--pd-26); font-weight: var(--weight-bold); letter-spacing: 0; }
   .profile-desktop .profile-head-text .profile-head-subline { margin: 0; font-size: var(--pd-15); color: var(--text-secondary); }
   .profile-desktop .profile-head-actions button { min-height: 44px; padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--pd-15); font-weight: var(--weight-bold); }
   .profile-desktop-body { gap: 0; padding: 0 var(--space-5) var(--space-8); box-sizing: border-box; }
@@ -433,6 +435,8 @@ async function onSaved(): Promise<void> {
   .profile-section-head span { display: none; }
   .profile-cv-card { border-radius: var(--radius-card); }
   .profile-skills-empty { padding: var(--space-4); font-size: var(--pd-15); line-height: var(--pd-22-lh); }
+  /* Les puces sont des liens : 44 px de cible au toucher (la maquette les dessine à 30 px, sans lien). */
+  .profile-skill, .profile-skill-add { min-height: var(--target-min); }
   .profile-skills-add-link { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 }
 </style>

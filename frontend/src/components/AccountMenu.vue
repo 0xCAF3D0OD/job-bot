@@ -86,10 +86,16 @@ onMounted(() => {
 });
 
 // Un lien vers /compte sur ordinateur (router.ts, PR 20) : le panneau s'ouvre, comme au clic sur l'avatar.
-watch(accountMenuRequest, async () => {
-  await nextTick();
-  if (!layer.open.value) toggle();
-});
+watch(
+  accountMenuRequest,
+  async (wanted) => {
+    if (!wanted) return;
+    await nextTick();
+    accountMenuRequest.value = false;
+    if (!layer.open.value) toggle();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
