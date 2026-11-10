@@ -367,6 +367,7 @@ async function load(): Promise<void> {
   currentCvId.value = [...list].sort((a, b) => stamp(b) - stamp(a) || b.version - a.version)[0]?.id ?? null;
   letters.value = l.data ?? [];
   chunkTitles.value = Object.fromEntries((c.data ?? []).map((chunk) => [chunk.id, chunk.title]));
+  noProfile.value = !!c.data && !c.data.some((chunk) => chunk.active);
   select(current(letters.value));
   launchFromOffer();
 }
@@ -375,6 +376,12 @@ async function load(): Promise<void> {
 // l'écriture de la lettre tout de suite, et le CV adapté se prépare en même temps. La relecture reste obligatoire.
 // En cas d'échec (§7.3), la page le dit avec « Réessayer ».
 const letterFailed = ref("");
+// Sans bloc de profil actif, la lettre ne peut pas s'écrire (409 du serveur) : au lieu de « Réessayer », qui ne
+// peut pas aboutir, la page envoie vers Profil › Expériences, le formulaire du bloc déjà ouvert (test du 10 novembre).
+const noProfile = ref(false);
+const PROFILE_LINK = { path: "/profil", query: { onglet: "experiences", nouveau: "1" } };
+// Le texte et le bouton de la PR 17 (PROMPT_CLAUDE_CODE_10_NOVEMBRE, point 5) ; le formulaire en panneau viendra avec elle.
+const NO_PROFILE_TEXT = "Ajoute au moins une expérience pour écrire une lettre sans invention.";
 // Sur ordinateur, la carte d'échec dit déjà ces messages génériques ; un motif précis du serveur reste affiché.
 const GENERIC_FAILURES = new Set(["La rédaction a échoué, réessaie.", "API injoignable."]);
 const cvState = ref<"" | "busy" | "failed">("");
@@ -406,6 +413,7 @@ function launchFromOffer(): void {
   delete rest.ecrire;
   void router.replace({ query: rest });
   if (offer.value?.status === "applied") return;
+  if (noProfile.value) return;
   if (!letters.value.length && !reached("letter")) void write();
   if (!currentCvId.value && !reached("cv")) void prepareCv();
 }
@@ -492,6 +500,7 @@ async function write(force = false): Promise<void> {
     if (!data) {
       // Une consigne hors de portée, ou qui ne change rien : une ligne sous la consigne, gardée.
       if (response?.status === 422) instructionNote.value = detail(err, "Cette consigne ne change rien à la lettre.");
+      else if (response?.status === 409 && /aucun bloc de profil/i.test(detail(err, ""))) noProfile.value = true;
       else if (!reached("letter")) {
         error.value = detail(err, "La rédaction a échoué, réessaie.");
         letterFailed.value = "L’écriture a été interrompue. Rien n’est perdu : jobA1 reprend avec ton CV et l’annonce.";
@@ -1202,6 +1211,14 @@ onMounted(() => void load());
             {{ error }}
           </p>
           <p
+            v-if="phone && noProfile && !selected"
+            class="notice"
+            role="alert"
+            data-test="no-profile-note"
+          >
+            {{ NO_PROFILE_TEXT }}
+          </p>
+          <p
             v-if="doc && doc.missing_identity.length"
             class="notice"
             data-test="missing-identity"
@@ -1274,17 +1291,30 @@ onMounted(() => void load());
               </div>
               <div
                 class="prep-empty-card"
-                :role="letterFailed ? 'alert' : undefined"
-                :data-test="letterFailed ? 'letter-failed' : undefined"
+                :role="letterFailed || noProfile ? 'alert' : undefined"
+                :data-test="noProfile ? 'no-profile' : letterFailed ? 'letter-failed' : undefined"
               >
                 <p class="prep-empty-title">
-                  {{ letterFailed ? "La lettre n’a pas pu être écrite" : "Pas encore de lettre pour cette offre" }}
+                  {{ noProfile ? "Il manque ton profil" : letterFailed ? "La lettre n’a pas pu être écrite" : "Pas encore de lettre pour cette offre" }}
                 </p>
                 <p class="prep-empty-text">
-                  {{ letterFailed || "jobA1 l’écrit avec ton CV et l’annonce, dans le modèle choisi. Tu la relis avant qu’elle parte." }}
+                  {{ noProfile ? NO_PROFILE_TEXT : letterFailed || "jobA1 l’écrit avec ton CV et l’annonce, dans le modèle choisi. Tu la relis avant qu’elle parte." }}
                 </p>
-                <PlanLimit usage="letter" />
+                <button
+                  v-if="noProfile"
+                  type="button"
+                  class="primary"
+                  data-test="no-profile-link"
+                  @click="router.push(PROFILE_LINK)"
+                >
+                  Ajouter une expérience
+                </button>
+                <PlanLimit
+                  v-if="!noProfile"
+                  usage="letter"
+                />
                 <BusyButton
+                  v-if="!noProfile"
                   class="primary"
                   :busy="writing"
                   busy-label="Rédaction…"
@@ -1792,6 +1822,15 @@ onMounted(() => void load());
               </button>
             </div>
           </template>
+          <button
+            v-else-if="noProfile && !selected"
+            type="button"
+            class="primary prep-bar-main"
+            data-test="no-profile-link"
+            @click="router.push(PROFILE_LINK)"
+          >
+            Ajouter une expérience
+          </button>
           <BusyButton
             v-else-if="writeLabel || writing"
             class="primary prep-bar-main"

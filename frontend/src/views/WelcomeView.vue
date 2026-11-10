@@ -99,6 +99,10 @@ const rateLabel = (value: number | null): string => (value ? `${value} à 100\u2
 const editing = ref<"" | "roles" | "places" | "rate">("");
 const EDIT_TITLES = { roles: "Postes", places: "Lieux", rate: "Taux d’activité" } as const;
 const rolesFromCv = computed(() => !!understanding.value?.roles.length);
+// « Repris de ton CV » seulement si la lecture a vraiment repris quelque chose (test du 10 novembre : le CV
+// enregistré mais pas lu affichait quand même « Pré-rempli depuis ton CV »).
+const fromCv = computed(() => !!understanding.value && (understanding.value.roles.length > 0 || !!understanding.value.min_rate));
+const cvUnread = computed(() => !!cvName.value && !reading.value && !paused.value && !understanding.value);
 const rateFromCv = computed(() => !!understanding.value?.min_rate && rate.value === understanding.value.min_rate);
 
 // Étape 4, le tri.
@@ -671,7 +675,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 2">
             <p class="wdk-lead">
-              {{ cvName ? "Repris de ton CV. Vérifie-les, tu pourras les changer à tout moment dans Profil." : "Tu pourras les changer à tout moment dans Profil." }}
+              {{ fromCv ? "Repris de ton CV. Vérifie-les, tu pourras les changer à tout moment dans Profil." : cvUnread ? "Ton CV n’a pas pu être lu : indique-les ici, tu pourras les changer à tout moment dans Profil." : "Tu pourras les changer à tout moment dans Profil." }}
             </p>
             <ul class="wdk-rows">
               <li>
@@ -1091,7 +1095,7 @@ async function finish(to: string): Promise<void> {
                 <span class="welcome-cv-check"><AppIcon name="check" /></span>
                 <span>
                   <strong>{{ cvName }}</strong>
-                  <small data-test="cv-reading">{{ reading ? "Lecture de ton CV…" : understanding ? "Importé et analysé" : "Importé" }}</small>
+                  <small data-test="cv-reading">{{ reading ? "Lecture de ton CV…" : understanding ? "Importé et analysé" : "Importé, mais pas pu être lu : tu compléteras à l’étape suivante" }}</small>
                 </span>
                 <label class="link welcome-cv-change">
                   Changer
@@ -1185,7 +1189,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 2">
             <p class="welcome-lead">
-              Pré-rempli depuis ton CV. Modifiable à tout moment dans Compte.
+              {{ fromCv ? "Pré-rempli depuis ton CV. Modifiable à tout moment dans Compte." : cvUnread ? "Ton CV n’a pas pu être lu : indique tes postes et tes lieux. Modifiable à tout moment dans Compte." : "Modifiable à tout moment dans Compte." }}
             </p>
             <fieldset class="welcome-field">
               <legend>Postes</legend>

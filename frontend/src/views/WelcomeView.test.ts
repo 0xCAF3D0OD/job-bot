@@ -194,6 +194,28 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
   });
 
+  it("le CV enregistré mais pas lu (502) : ni « Importé et analysé » ni « Pré-rempli depuis ton CV »", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
+    POST.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/documents"
+          ? { data: { id: 3, filename: "cv.pdf" } }
+          : path === "/api/documents/{document_id}/understand"
+            ? { error: { detail: "lecture impossible" }, response: { status: 502 } }
+            : { data: {} },
+      ),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    expect(wrapper.find("[data-test=cv-done]").text()).toContain("pas pu être lu");
+    await click(wrapper, "welcome-continue");
+    const lead = wrapper.find(".welcome-lead").text();
+    expect(lead).not.toContain("Pré-rempli");
+    expect(lead).toContain("Ton CV n’a pas pu être lu");
+  });
+
   it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
     await click(wrapper, "role-open");

@@ -5311,6 +5311,49 @@
         }
       }
     },
+    "/api/identity/from-document/{document_id}": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Guess Identity",
+        "description": "Les coordonnées repérées en tête du CV, sur le serveur et sans IA (test du 10 novembre) :\nune proposition à vérifier, rien n'est enregistré. Le document est celui du compte (§2).",
+        "operationId": "guessIdentity",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/profile-image": {
       "get": {
         "tags": [

@@ -63,7 +63,7 @@ let router: Router;
 
 function mockOffers(response: unknown): void {
   GET.mockImplementation((path: string) =>
-    Promise.resolve(path === "/api/profile-chunks" ? { data: [{ id: 1, title: "Linux" }] } : response),
+    Promise.resolve(path === "/api/profile-chunks" ? { data: [{ id: 1, title: "Linux", active: true }] } : response),
   );
 }
 
@@ -96,7 +96,7 @@ beforeEach(() =>
   GET.mockImplementation((path: string) =>
     Promise.resolve(
       path === "/api/profile-chunks"
-        ? { data: [{ id: 1, title: "Linux" }] }
+        ? { data: [{ id: 1, title: "Linux", active: true }] }
         : page([offer(1, "Ingénieur système")]),
     ),
   ),
@@ -842,5 +842,16 @@ describe("Offres, sous-page ouverte sur ordinateur", () => {
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe("/offres?offre=2");
     expect(wrapper.find("[data-test=offer-detail-title]").text()).toContain("DevOps Engineer");
+  });
+});
+
+describe("profil vide (test du 10 novembre)", () => {
+  it("sans bloc actif, l’offre non notée porte la puce « Profil à compléter »", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/profile-chunks" ? { data: [{ id: 1, title: "Vente", active: false }] } : page([offer(1, "Vendeuse", { score: null })])),
+    );
+    const wrapper = await mountAt("/offres");
+    const chips = wrapper.get("[data-test=offer]").findAll("[data-test=offer-chip]").map((s) => s.text());
+    expect(chips).toContain("Profil à compléter");
   });
 });
