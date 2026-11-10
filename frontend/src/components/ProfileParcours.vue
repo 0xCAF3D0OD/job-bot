@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import {
   api,
   type Chunk,
   type ChunkIn,
   type ChunkKind,
-  type ChunkProposal,
   type DocumentOut,
   type DocumentText,
 } from "../api/client";
-import ChunkProposals from "./ChunkProposals.vue";
+import CvStateBlock from "./CvStateBlock.vue";
 import SidePanel from "./SidePanel.vue";
 import TagInput from "./TagInput.vue";
 import { dateInList } from "../dates";
@@ -21,6 +20,7 @@ import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
+import { useCvReading } from "../composables/useCvReading";
 import { offerUndo } from "../composables/useUndo";
 import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
@@ -93,8 +93,13 @@ const textBox = ref<HTMLElement | null>(null);
 const filter = ref<ChunkKind | "all">(props.startKind ?? "all");
 const editing = ref<{ id: number | null; form: ChunkForm } | null>(null);
 const uploading = ref(false);
-const proposing = ref<number | null>(null);
-const proposal = ref<{ doc: DocumentOut; items: ChunkProposal[] } | null>(null);
+// « Proposer à partir du CV » lance la même lecture que la carte « Mon CV » (PR 21) : sur le serveur, suivie par la
+// cloche, avec les mêmes états sous la ligne du document.
+const reading = useCvReading();
+const fileInput = ref<HTMLInputElement | null>(null);
+function readState(doc: DocumentOut): DocumentOut {
+  return reading.documents.value?.find((d) => d.id === doc.id) ?? doc;
+}
 const message = ref("");
 
 const noun = computed(() => NOUNS[filter.value]);
@@ -166,31 +171,11 @@ async function showText(id: number): Promise<void> {
 }
 
 async function propose(doc: DocumentOut): Promise<void> {
-  // Une lecture à la fois : les autres boutons restent actifs, sans effet tant qu'elle dure.
-  if (proposing.value !== null) return;
-  proposing.value = doc.id;
   message.value = "";
-  try {
-    const { data, error, response } = await api.POST("/api/documents/{document_id}/propose-chunks", {
-      params: { path: { document_id: doc.id } },
-    });
-    if (data) {
-      if (data.length) proposal.value = { doc, items: data };
-      else message.value = "L’IA n’a rien trouvé à proposer dans ce document.";
-    } else {
-      const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : `Échec (HTTP ${response.status}).`;
-    }
-  } catch {
-    message.value = "API injoignable.";
-  } finally {
-    proposing.value = null;
-  }
+  if (!(await reading.read(doc.id))) message.value = "La lecture n’a pas pu partir : vérifie ta connexion et réessaie.";
 }
 
-async function onProposalsSaved(count: number): Promise<void> {
-  proposal.value = null;
-  message.value = `${plural(count, "élément ajouté", "éléments ajoutés")} à ton profil.`;
+async function onReadChosen(): Promise<void> {
   await Promise.all([loadChunks(), loadDocuments()]);
 }
 
@@ -274,10 +259,6 @@ async function removeChunk(chunk: Chunk): Promise<void> {
   });
 }
 
-// Échap ferme les propositions ; les panneaux latéraux se ferment d'eux-mêmes.
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === "Escape") proposal.value = null;
-}
 const editedChunk = computed(() => chunks.value.find((c) => c.id === editing.value?.id) ?? null);
 function chunkFoot(chunk: Chunk): string {
   const tags = chunk.tags?.length ? plural(chunk.tags.length, "mot-clé", "mots-clés") : "";
@@ -304,9 +285,8 @@ const missingProfile = computed(() => {
 });
 
 onMounted(() => {
-  window.addEventListener("keydown", onKeydown);
   // Le temps du chargement : des blocs gris à la forme des documents et des blocs (règles §4).
-  void Promise.all([loadDocuments(), loadChunks()])
+  void Promise.all([loadDocuments(), loadChunks(), reading.load()])
     .catch(() => undefined)
     .finally(() => {
       ready.value = true;
@@ -316,7 +296,6 @@ onMounted(() => {
       else if (props.create) newChunk("", null, props.create);
     });
 });
-onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 // Le document ouvert : « Créer un bloc » visible, le reste dans « ⋯ » (docs/74).
 const documentItems = computed<MoreMenuItem[]>(() => {
@@ -391,13 +370,23 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           <BusyButton
             v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
             :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
-            :busy="proposing === doc.id"
+            :busy="readState(doc).read_state === 'reading'"
             busy-label="L’IA lit le document… (≈ 30 s)"
             :data-test="`propose-${doc.id}`"
             @click="propose(doc)"
           >
             <span class="with-icon"><AppIcon name="ai" />Proposer à partir du CV</span>
           </BusyButton>
+          <div
+            v-if="readState(doc).read_state"
+            class="doc-read-state"
+          >
+            <CvStateBlock
+              :doc="readState(doc)"
+              @replace="fileInput?.click()"
+              @changed="onReadChosen"
+            />
+          </div>
         </li>
       </ul>
       <label
@@ -406,6 +395,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         data-test="drop-zone"
       >
         <input
+          ref="fileInput"
           type="file"
           accept=".pdf,.docx,.txt,.md"
           data-test="file-input"
@@ -521,15 +511,6 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     </template>
   </div>
 
-  <ChunkProposals
-    v-if="proposal"
-    :document-id="proposal.doc.id"
-    :document-name="proposal.doc.filename"
-    :proposals="proposal.items"
-    :existing="chunks"
-    @close="proposal = null"
-    @saved="onProposalsSaved"
-  />
 
   <!-- Le bloc dans le panneau latéral (docs/49 §3), comme le reste de l'application. -->
   <SidePanel
@@ -615,3 +596,9 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     </form>
   </SidePanel>
 </template>
+
+<style>
+/* Le bloc d'état de la lecture passe sous la ligne du document, sur toute la largeur (PR 21). */
+.doc-list li:has(> .doc-read-state) { flex-wrap: wrap; padding-right: 0; }
+.doc-list .doc-read-state { flex-basis: 100%; }
+</style>
