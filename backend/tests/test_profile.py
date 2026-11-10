@@ -1,7 +1,9 @@
 """Documents (extraction, dépôt, suppression) et blocs de profil."""
 
+import hashlib
 import io
 from collections.abc import AsyncIterator
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -133,9 +135,16 @@ async def test_document_lifecycle(api: AsyncClient, tmp_path: Path, account: int
     assert file.headers["content-type"] == "application/pdf"
     assert file.content.startswith(b"%PDF-")
 
+    # Le même fichier redéposé : le document existant revient (200), renommé et remis en tête,
+    # sans copie dans le stockage ; la lecture du CV peut repartir (test du 10 novembre).
     again = await api.post("/api/documents", files={"file": ("copie.pdf", file.content)})
-    assert again.status_code == 409
+    assert again.status_code == 200
+    assert (again.json()["id"], again.json()["filename"]) == (doc["id"], "copie.pdf")
+    assert datetime.fromisoformat(again.json()["uploaded_at"]) >= datetime.fromisoformat(
+        str(doc["uploaded_at"])
+    )
     assert len(list(folder.iterdir())) == 1
+    assert len((await api.get("/api/documents")).json()) == 1
 
     chunk = await api.post(
         "/api/profile-chunks",
@@ -150,6 +159,46 @@ async def test_document_lifecycle(api: AsyncClient, tmp_path: Path, account: int
     [kept] = (await api.get("/api/profile-chunks")).json()
     assert kept["document_id"] is None
     assert (await api.get(f"/api/documents/{doc['id']}/text")).status_code == 404
+
+
+async def test_same_file_in_another_account_is_never_returned(
+    api: AsyncClient, account: int
+) -> None:
+    """Le même fichier déposé par un autre compte : un nouveau document pour soi (201), jamais le
+    sien (C-5) ; l'autre document reste tel quel."""
+    data = pdf_with_text("Infirmiere")
+    guest = "compte-meme-cv"
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM users WHERE username = :u"), {"u": guest})
+        guest_id = (
+            await conn.execute(
+                text("INSERT INTO users (username, password_hash) VALUES (:u, 'x') RETURNING id"),
+                {"u": guest},
+            )
+        ).scalar_one()
+        theirs = (
+            await conn.execute(
+                text(
+                    "INSERT INTO documents (user_id, filename, doc_type, size, sha256, storage_key,"
+                    " text_status, extracted_text) VALUES (:g, 'leur.pdf', 'pdf', 1, :h, 'k', 'ok',"
+                    " 'Infirmiere') RETURNING id"
+                ),
+                {"g": guest_id, "h": hashlib.sha256(data).hexdigest()},
+            )
+        ).scalar_one()
+    try:
+        mine = await upload(api, "CV.pdf", data)
+        assert mine["id"] != theirs
+        async with admin_engine().begin() as conn:
+            row = (
+                await conn.execute(
+                    text("SELECT filename, user_id FROM documents WHERE id = :i"), {"i": theirs}
+                )
+            ).one()
+        assert tuple(row) == ("leur.pdf", guest_id)
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE username = :u"), {"u": guest})
 
 
 async def test_rejected_upload(api: AsyncClient) -> None:

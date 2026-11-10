@@ -6,6 +6,7 @@ import IdentityForm from "./IdentityForm.vue";
 const GET = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), PUT: vi.fn() },
+  QUIET: { headers: { "X-Jobbot-Quiet": "1" } },
 }));
 afterEach(() => vi.resetAllMocks());
 
@@ -48,6 +49,54 @@ describe("IdentityForm", () => {
       },
     });
     expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
+  });
+
+  it("remplit les champs vides avec les coordonnées repérées dans le CV, sans les enregistrer", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/identity"
+            ? { name: "Camille Exemple", street: null, postcode: null, city: null, phone: null, email: null }
+            : path === "/api/documents"
+              ? [
+                  { id: 9, kind: "certificate", text_status: "ok" },
+                  { id: 4, kind: null, text_status: "ok" },
+                ]
+              : path === "/api/identity/from-document/{document_id}"
+                ? { name: "Autre Nom", street: "Rue du Test 1", postcode: "1003", city: "Lausanne", phone: null, email: "camille@example.ch" }
+                : undefined,
+      }),
+    );
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT);
+    const wrapper = mount(IdentityForm);
+    await flushPromises();
+    // Le CV, pas le certificat ; le nom déjà saisi est gardé.
+    expect(GET).toHaveBeenCalledWith("/api/identity/from-document/{document_id}", expect.objectContaining({ params: { path: { document_id: 4 } } }));
+    const value = (test: string) => wrapper.find<HTMLInputElement>(`[data-test=identity-${test}]`).element.value;
+    expect([value("name"), value("street"), value("postcode"), value("city"), value("email")]).toEqual([
+      "Camille Exemple",
+      "Rue du Test 1",
+      "1003",
+      "Lausanne",
+      "camille@example.ch",
+    ]);
+    expect(put).not.toHaveBeenCalled();
+    // « Annuler » revient aux valeurs enregistrées.
+    const cancel = wrapper.findAll("button").find((b) => b.text() === "Annuler");
+    expect(cancel).toBeDefined();
+    await cancel!.trigger("click");
+    expect(value("street")).toBe("");
+  });
+
+  it("sans CV lisible, le formulaire reste vide", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/documents" ? [{ id: 2, kind: null, text_status: "unreadable" }] : undefined }),
+    );
+    const wrapper = mount(IdentityForm);
+    await flushPromises();
+    expect(GET).not.toHaveBeenCalledWith("/api/identity/from-document/{document_id}", expect.anything());
+    expect(wrapper.find<HTMLInputElement>("[data-test=identity-street]").element.value).toBe("");
   });
 
   it("plateforme pas à jour : demande de la redémarrer", async () => {
