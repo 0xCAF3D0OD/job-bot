@@ -33,9 +33,20 @@ class RemotePolicy(StrEnum):
 
 
 class Language(StrEnum):
+    FRENCH = "francais"
     GERMAN = "allemand"
     ITALIAN = "italien"
     ENGLISH = "anglais"
+
+
+class LanguageLevel(StrEnum):
+    """Niveau d'une langue (prompt du 10 novembre, PR 17). « Non renseigné » n'écarte jamais une
+    offre ; « Notions » l'écarte si elle exige la langue couramment (décision de Kevin, 10.11)."""
+
+    UNKNOWN = "unknown"
+    NOTIONS = "notions"
+    FLUENT = "fluent"
+    NATIVE = "native"
 
 
 @dataclass(frozen=True)
@@ -46,7 +57,22 @@ class Criteria:
     min_rate: int | None = None
     excluded_types: tuple[ContractType, ...] = ()
     banned_words: tuple[str, ...] = ()
-    unspoken_languages: tuple[Language, ...] = ()
+    # Langue (nom libre, « allemand », « espagnol ») et niveau ; une langue absente vaut
+    # « Non renseigné ».
+    language_levels: tuple[tuple[str, LanguageLevel], ...] = ()
+
+    @property
+    def unspoken_languages(self) -> tuple[Language, ...]:
+        """Langues que le filtre sait lire et que tu ne parles qu'avec des notions."""
+        known = {lang.value: lang for lang in Language}
+        return tuple(
+            known[name]
+            for name, level in self.language_levels
+            if level is LanguageLevel.NOTIONS and name in known
+        )
+
+    def level_of(self, language: Language) -> LanguageLevel:
+        return dict(self.language_levels).get(language.value, LanguageLevel.UNKNOWN)
 
     def digest(self) -> str:
         """Empreinte des prérequis : une évaluation faite avec d'autres prérequis est périmée."""
@@ -83,6 +109,7 @@ CONTRACT_KEYWORDS: dict[ContractType, tuple[str, ...]] = {
 }  # fmt: skip
 
 LANGUAGE_NAMES: dict[Language, tuple[str, ...]] = {
+    Language.FRENCH: ("francais", "french", "franzosisch", "franzosischkenntnisse", "francese"),
     Language.GERMAN: ("allemand", "german", "deutsch", "deutschkenntnisse"),
     Language.ITALIAN: ("italien", "italian", "italienisch", "italiano"),
     Language.ENGLISH: ("anglais", "english", "englisch", "englischkenntnisse"),
@@ -238,6 +265,17 @@ def evaluate(
             reasons.append(Reason("language", f"Langue : {language.value} exigé (« {phrase} »)"))
 
     return Evaluation(passed=not reasons, reasons=reasons)
+
+
+def languages_to_check(text: str, criteria: Criteria) -> list[Language]:
+    """Langues exigées par l'annonce, au niveau non renseigné (« Langue à vérifier »)."""
+    normalized = normalize_text(text)
+    return [
+        language
+        for language in Language
+        if criteria.level_of(language) is LanguageLevel.UNKNOWN
+        and _language_requirement(normalized, language)
+    ]
 
 
 def _language_requirement(text: str, language: Language) -> str | None:

@@ -45,3 +45,62 @@ Modèle : `CompteImage`. Cause probable du bug : le badge crayon est positionné
 ## Typographie (partout)
 - Espace fine insécable (U+202F) avant « : ; ? ! » dans tous les textes en français.
 - Apostrophe typographique ’ partout (pas d’apostrophe droite).
+
+---
+
+# Suite du 10 novembre (après-midi) : PR 17 à 20
+
+Nouvelles maquettes : `OnboardingOrdinateurProfil`, `OnboardingOrdinateurProfilSombre`, `OnboardingProfil`, `OnboardingProfilSombre`.
+Maquettes mises à jour : `Assistant`, `AssistantOrdinateur`, `OffreCompatibilite`, `OffreCompatibiliteSombre`.
+
+## PR 17. Parcours sans CV lu : plus aucune impasse
+
+Modèle : `OnboardingOrdinateurProfil` (ordinateur) et `OnboardingProfil` (téléphone), clair et sombre.
+
+1. Accueil, échec ou absence de CV : afficher l’étape « Complétons ton profil » (reste l’étape 1 sur 3).
+   - Fichier en erreur avec la raison en clair (« C’est une image scannée : le texte n’est pas lisible. ») et le lien « Essayer un autre fichier ».
+   - Expériences : poste, employeur, début, fin (désactivée et grisée si « J’y travaille encore » est coché), tâches principales (textarea). Lien « Ajouter une expérience ». Exemples adaptés aux postes recherchés.
+   - Langues : français, allemand, italien, anglais, chacune avec Non renseigné (défaut) / Notions / Courant / Langue maternelle. Lien « Ajouter une langue ».
+   - Coordonnées : prénom et nom (seul champ obligatoire, indiqué « (obligatoire) »), adresse, NPA + localité, téléphone, e-mail pré-rempli avec le compte.
+   - Actions : « Retour », « Plus tard » (lien), « Continuer » (principal). Téléphone : barre du bas fixe avec « Continuer » pleine largeur et « Plus tard » dessous.
+   - Ordinateur : encadré « À quoi ça sert » à droite.
+   - Quand le CV EST lu : ajouter quand même l’étape Langues, pré-remplie.
+2. Critères : « Repris de ton CV » / « Trouvé dans ton CV » uniquement pour les valeurs réellement extraites.
+3. Langues : « Non renseigné » n’écarte jamais une offre et ne baisse pas la note ; afficher « Langue à vérifier » dans le détail. Remplacer « Langues non parlées » par « Langues » avec les niveaux.
+4. Offre « Pas encore notée » faute de profil : « Il manque ton profil pour noter cette offre » + bouton « Compléter mon profil » (ouvre le même formulaire, puis revient et note l’offre).
+5. Préparer ma candidature : remplacer « Aucun bloc de profil actif » + « Réessayer » par « Ajoute au moins une expérience pour écrire une lettre sans invention. » + bouton « Ajouter une expérience » (même formulaire en panneau) ; relancer la préparation au retour. Nom ou adresse manquants : les demander avant la génération.
+6. Profil › Expériences : supprimer la mention d’un bouton absent, remplacer « bloc » par « expérience » ou « compétence » dans tous les textes visibles.
+Test obligatoire : parcours complet avec un compte sans CV lu (employée de commerce) jusqu’à une lettre, sans détour. Captures à chaque étape.
+
+## PR 18. « Comment la note est calculée »
+
+Modèle : `OffreCompatibilite` et `OffreCompatibiliteSombre`, état `calc` (capture `captures/etats/OffreCompatibilite--calcul-ouvert.png`).
+- Bouton accordéon (`aria-expanded`, `aria-controls`), chevron bas fermé / haut ouvert.
+- Contenu : une phrase d’intro, puis 5 critères avec points et barre : Compétences demandées /40, Expérience /20, Lieu et trajet /15, Langues /15, Taux et contrat /10. Total = note sur 100.
+- Pour chaque critère : une phrase claire en français (ce qui est trouvé, ce qui manque). Pas d’anglais ni de jargon (« collent », « DB reliability »).
+- Barre : vert si plein, bleu si partiel, orange si point à vérifier. Le chiffre est toujours écrit (WCAG 1.4.1), barre en `role="img"` avec `aria-label`.
+- Encadré « Pour faire monter la note » avec une action concrète (ex. « Ajouter une compétence »).
+- Pied : date et source du calcul (annonce complète ou extrait) + « jobA1 ne lit pas d’informations personnelles comme l’âge ou la nationalité. »
+- Les points viennent du vrai calcul : si le moteur ne les expose pas, les exposer (API) plutôt qu’inventer.
+
+## PR 19. Zone de saisie de l’Assistant (téléphone et ordinateur)
+
+Modèle : `Assistant` et `AssistantOrdinateur` (même principe que la zone de saisie de Claude).
+- Marges 16 px de chaque côté. Boîte : radius 24 px, padding 14 px 16 px 9 px, bordure 1 px #E5E2D9, ombre légère.
+- Ligne 1 : textarea (pas input), 16 px / 24 px, s’agrandit de 1 à 6 lignes puis défile.
+- Ligne 2 dans la boîte : + à gauche, micro et Envoyer à droite, zones tactiles 44 px. Envoyer = rond 36 px, gris (#E5E2D9, icône #8A8F9C, `aria-disabled`) si vide, bleu #2445C2 s’il y a du texte. Entrée envoie, Maj+Entrée = nouvelle ligne.
+- Fichier joint (ordinateur) : puce alignée sur le texte (padding 10 px 16 px 0).
+- Focus : bordure 1,5 px #2445C2 à l’intérieur de la boîte, rien ne dépasse (pas d’outline extérieur).
+- Avertissement : 10 px sous la boîte, 12 px / 16 px, #596070.
+- Discussions récentes : titre `flex: 1; min-width: 0` avec ellipsis, date `flex: none` jamais coupée. Rien ne dépasse la colonne.
+Vérifier à 360, 390 et 1440 px, vide / 1 ligne / 8 lignes, clair et sombre.
+
+## PR 20. Compte, Profil, Critères, Administration
+
+1. Ordinateur : pas de page Compte façon téléphone. L’avatar ouvre le menu « Mon compte » (voir `ProfilOrdinateur`).
+2. Profil ordinateur ET téléphone : page unique, sans onglets (décision B), ordre de `ProfilOrdinateur` : en-tête, Mon CV, Compétences trouvées, Ce que je cherche, puis groupe « Mon parcours » en lignes (Formations, Expériences, Documents et certificats, Coordonnées, avec un résumé chacune). Rien caché derrière « Modifier ». Supprimer « Changer d’image » (le badge crayon le fait). Lister où chaque ancienne fonction se retrouve.
+3. Partout : pas de tuile grise dans une carte blanche (D28). Lignes d’un groupe séparées par un filet 1 px #E5E2D9, comme `Compte`.
+4. Profil téléphone, documents : nom de fichier tronqué sur 1 ligne, bouton sous le nom (plus de chevauchement). Filtres sur une seule ligne qui défile.
+5. Critères : lignes au format de `ProfilOrdinateur` (libellé gris, valeur en gras, cercle flèche gris #596070). « Écartées surtout pour » : une ligne par raison (« 95 offres pour le lieu »).
+6. Administration : « … » sur la ligne du nom, à droite (48 px). Champ « Plafond IA par mois » avec suffixe « CHF » dans le champ. Texte : « IA 0,00 CHF utilisés ce mois » (sans répéter le plafond).
+7. Apostrophes ’ et espaces fines insécables avant : ; ? ! partout.

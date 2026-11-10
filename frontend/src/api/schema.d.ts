@@ -4756,8 +4756,10 @@ export interface components {
             excluded_types?: components["schemas"]["ContractType"][];
             /** Banned Words */
             banned_words?: string[];
-            /** Unspoken Languages */
-            unspoken_languages?: components["schemas"]["Language"][];
+            /** Language Levels */
+            language_levels?: {
+                [key: string]: components["schemas"]["LanguageLevel"];
+            };
         };
         /** CriteriaOut */
         CriteriaOut: {
@@ -5947,7 +5949,14 @@ export interface components {
          * Language
          * @enum {string}
          */
-        Language: "allemand" | "italien" | "anglais";
+        Language: "francais" | "allemand" | "italien" | "anglais";
+        /**
+         * LanguageLevel
+         * @description Niveau d'une langue (prompt du 10 novembre, PR 17). « Non renseigné » n'écarte jamais une
+         *     offre ; « Notions » l'écarte si elle exige la langue couramment (décision de Kevin, 10.11).
+         * @enum {string}
+         */
+        LanguageLevel: "unknown" | "notions" | "fluent" | "native";
         /**
          * LetterDocumentOut
          * @description La lettre telle qu'elle sera envoyée, en-tête compris.
@@ -6774,6 +6783,11 @@ export interface components {
             added_by_you: boolean;
             /** Text Reading */
             text_reading?: ("reading" | "done" | "refused") | null;
+            /**
+             * Languages To Check
+             * @default []
+             */
+            languages_to_check: components["schemas"]["Language"][];
         };
         /** OfferPage */
         OfferPage: {
@@ -7702,6 +7716,11 @@ export interface components {
             added_by_you: boolean;
             /** Text Reading */
             text_reading?: ("reading" | "done" | "refused") | null;
+            /**
+             * Languages To Check
+             * @default []
+             */
+            languages_to_check: components["schemas"]["Language"][];
             /** Is First */
             is_first: boolean;
         };

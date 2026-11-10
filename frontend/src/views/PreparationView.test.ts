@@ -65,6 +65,11 @@ function letter(id: number, version: number, extra: Record<string, unknown> = {}
   };
 }
 
+// Le dernier élément rendu dans le corps de la page (les panneaux s'y téléportent, d'un test à l'autre).
+function last<T extends Element = HTMLElement>(test: string): T {
+  return [...document.body.querySelectorAll<T>(`[data-test=${test}]`)].at(-1)!;
+}
+const IDENTITY = { name: "Camille Exemple", street: "Rue du Test 1", postcode: "1020", city: "Renens" };
 const FITS = { fits: true, overflow_lines: 0, adjusted: false, break_paragraph: null, break_word: null };
 function mockGet(letters: unknown[], page: unknown = FITS): void {
   GET.mockImplementation((path: string) =>
@@ -76,7 +81,9 @@ function mockGet(letters: unknown[], page: unknown = FITS): void {
             ? letters
             : path === "/api/letters/{draft_id}/page"
               ? page
-              : [{ id: 1, title: "Kubernetes", active: true }],
+              : path === "/api/identity"
+                ? IDENTITY
+                : [{ id: 1, title: "Kubernetes", active: true }],
     }),
   );
 }
@@ -621,7 +628,9 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
               ? FITS
               : path === "/api/profile-chunks"
                 ? [{ id: 1, title: "Vente", active: true }]
-                : [],
+                : path === "/api/identity"
+                  ? IDENTITY
+                  : [],
       }),
     );
     POST.mockImplementation(() => new Promise(() => {}));
@@ -672,9 +681,39 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     const card = wrapper.get("[data-test=no-profile]");
     expect(card.text()).toContain("Il manque ton profil");
     expect(card.find("[data-test=write]").exists()).toBe(false);
+    // Le formulaire des premiers pas s'ouvre en panneau (PR 17, point 5), la page reste là.
     await card.get("[data-test=no-profile-link]").trigger("click");
     await flushPromises();
-    expect(wrapper.vm.$router.currentRoute.value.fullPath).toBe("/profil?onglet=experiences&nouveau=1");
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe("/offres/7/preparer");
+    expect(document.body.querySelector("[data-test=completion-experiences]")).not.toBeNull();
+    wrapper.unmount();
+  });
+
+  it("nom ou adresse manquants : demandés avant la génération, puis la lettre s’écrit", async () => {
+    mockGet([]);
+    const base = GET.getMockImplementation()!;
+    GET.mockImplementation((path: string, ...rest: unknown[]) =>
+      path === "/api/identity"
+        ? Promise.resolve({ data: { name: "Camille Exemple", street: null } })
+        : path === "/api/criteria"
+          ? Promise.resolve({ data: { criteria: { remote_policy: "refuse", language_levels: {} } } })
+          : base(path, ...rest),
+    );
+    POST.mockImplementation(() => new Promise(() => {}));
+    PUT.mockResolvedValue({ data: {}, response: { ok: true } });
+    const wrapper = await mountView();
+    await wrapper.get("[data-test=write]").trigger("click");
+    await flushPromises();
+    expect(POST).not.toHaveBeenCalled();
+    const street = last<HTMLInputElement>("completion-street");
+    expect(last("completion-identity").closest("[role=dialog]")?.querySelector("[data-test=completion-experiences]")).toBeNull();
+    street.value = "Rue du Test 1";
+    street.dispatchEvent(new Event("input"));
+    last<HTMLButtonElement>("completion-save").click();
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/identity", { body: expect.objectContaining({ street: "Rue du Test 1" }) });
+    expect(POST.mock.calls.map((c) => c[0])).toContain("/api/offers/{offer_id}/letters");
+    wrapper.unmount();
   });
 
   it("le serveur répond « aucun bloc de profil actif » : la page envoie vers Profil", async () => {

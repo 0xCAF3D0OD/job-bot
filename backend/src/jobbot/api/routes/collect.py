@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, case, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.core.filter import remote_location
+from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import (
@@ -26,6 +26,7 @@ from jobbot.db.models import (
     Search,
 )
 from jobbot.employer import service as employer_service
+from jobbot.filtering.service import load_criteria
 from jobbot.llm.scoring import profile_hash
 from jobbot.log import get_logger
 from jobbot.registry.service import name_key
@@ -149,6 +150,9 @@ class OfferOut(BaseModel):
     # collée) et la note refaite, « refused » si le site bloque la lecture ; None : l'offre avait
     # son texte complet dès le départ, ou c'est une candidature spontanée.
     text_reading: Literal["reading", "done", "refused"] | None = None
+    # Langues exigées par l'annonce dont tu n'as pas renseigné le niveau (PR 17) : « Langue à
+    # vérifier » dans le détail.
+    languages_to_check: list[Language] = []
 
 
 class DoubtOut(BaseModel):
@@ -727,10 +731,15 @@ async def list_offers(
     links, evaluations = await _links(runtime, ids), await _evaluations(runtime, ids)
     async with runtime.sessionmaker() as session:
         current_hash = profile_hash(await active_profile(session))
+        criteria = await load_criteria(session)
     logos = await _logo_keys(runtime)
     return OfferPage(
         items=[
-            _with_logo(_offer_out(o, links[o.id], evaluations.get(o.id), current_hash), logos)
+            _with_languages(
+                _with_logo(_offer_out(o, links[o.id], evaluations.get(o.id), current_hash), logos),
+                o,
+                criteria,
+            )
             for o in offers
         ],
         total=total,
@@ -747,9 +756,17 @@ async def get_offer(request: Request, offer_id: int) -> OfferOut:
         if offer is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
         current_hash = profile_hash(await active_profile(session))
+        criteria = await load_criteria(session)
     links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
     out = _offer_out(offer, links[offer_id], evaluations.get(offer_id), current_hash)
-    return _with_logo(out, await _logo_keys(runtime))
+    return _with_languages(_with_logo(out, await _logo_keys(runtime)), offer, criteria)
+
+
+def _with_languages(out: OfferOut, offer: Offer, criteria: Criteria) -> OfferOut:
+    """« Langue à vérifier » (PR 17) : langues exigées par l'annonce, au niveau non renseigné."""
+    text = f"{offer.title} {offer.description or offer.snippet or ''}"
+    out.languages_to_check = languages_to_check(text, criteria)
+    return out
 
 
 async def _logo_keys(runtime: Runtime) -> set[str]:

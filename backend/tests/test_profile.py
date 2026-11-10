@@ -198,3 +198,37 @@ async def test_chunk_crud_and_validation(api: AsyncClient) -> None:
 
     assert (await api.delete(f"/api/profile-chunks/{created['id']}")).status_code == 204
     assert (await api.get("/api/profile-chunks")).json() == []
+
+
+async def test_first_experience_starts_scoring(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Parcours sans CV lu (PR 17) : la 1re expérience saisie lance la notation des offres."""
+    from jobbot.api.routes import profile as profile_routes
+
+    queued: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        queued.append(name)
+        return True
+
+    monkeypatch.setattr(profile_routes, "enqueue", enqueue)
+    rt = Runtime.create(make_settings(storage_path=tmp_path, anthropic_api_key="sk-test"))
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE documents, profile_chunks CASCADE"))
+    try:
+        app = create_app(rt.settings, rt)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+            chunk = {
+                "kind": "experience",
+                "title": "Vendeuse, Coop",
+                "content": "Caisse",
+                "tags": [],
+            }
+            assert (await api.post("/api/profile-chunks", json=chunk)).status_code == 201
+            assert (
+                await api.post("/api/profile-chunks", json={**chunk, "title": "Caissière"})
+            ).status_code == 201
+        assert queued == [profile_routes.SCORE_JOB]
+    finally:
+        await rt.dispose()

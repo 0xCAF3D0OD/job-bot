@@ -395,3 +395,17 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(wrapper.find("[data-test=offer-brief]").exists()).toBe(false);
   });
 });
+
+describe("OfferDetail, langues (prompt du 10 novembre, PR 17)", () => {
+  it("une langue exigée au niveau non renseigné s’affiche « à vérifier »", async () => {
+    const wrapper = await mountDetail(offer({ languages_to_check: ["anglais", "allemand"] }));
+    const facts = wrapper.findAll("[data-test=facts] li").map((li) => li.text());
+    expect(facts).toContain("Langue à vérifier : anglais");
+    expect(facts).toContain("Langue à vérifier : allemand");
+  });
+
+  it("rien à vérifier : aucune ligne de langue", async () => {
+    const wrapper = await mountDetail(offer());
+    expect(wrapper.text()).not.toContain("Langue à vérifier");
+  });
+});

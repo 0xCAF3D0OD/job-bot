@@ -69,7 +69,7 @@ describe("CriteriaForm, déjà saisis", () => {
           min_rate: 80,
           excluded_types: ["stage"],
           banned_words: [],
-          unspoken_languages: [],
+          language_levels: { francais: "native", allemand: "notions" },
         },
         keywords: { contract_types: {}, language_names: {}, requirement_words: [] },
         saved_at: "2026-10-01T08:00:00Z",
@@ -88,6 +88,8 @@ describe("CriteriaForm, déjà saisis", () => {
       ["Télétravail complet", "Accepté s’il est ouvert depuis la Suisse"],
       ["Taux d’activité", "80 % au moins"],
       ["Types d’offres exclus", "Stages"],
+      // « Langues » avec les niveaux (PR 17), plus « Langues non parlées ».
+      ["Langues", "Français : langue maternelle, Allemand : notions"],
     ]);
     // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
     for (const row of summary.findAll("button.criteria-row")) {
@@ -168,7 +170,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     const summary = wrapper.find("[data-test=criteria-summary]");
     expect(summary.find(".grouped-title").text()).toBe("Poste recherché");
     const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Offres exclues"]);
+    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Offres exclues", "Langues"]);
     // Une seule hauteur, la valeur en pastilles (D14) ; la phrase entière pour les lecteurs d'écran.
     expect(summary.find(".grouped-row-description").exists()).toBe(false);
     expect(summary.find("[data-test=criteria-row-taux] .grouped-value").text()).toBe("80 % et +");

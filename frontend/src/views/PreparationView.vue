@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
+import ProfileCompletionPanel from "../components/ProfileCompletionPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
@@ -379,8 +380,27 @@ const letterFailed = ref("");
 // Sans bloc de profil actif, la lettre ne peut pas s'écrire (409 du serveur) : au lieu de « Réessayer », qui ne
 // peut pas aboutir, la page envoie vers Profil › Expériences, le formulaire du bloc déjà ouvert (test du 10 novembre).
 const noProfile = ref(false);
-const PROFILE_LINK = { path: "/profil", query: { onglet: "experiences", nouveau: "1" } };
-// Le texte et le bouton de la PR 17 (PROMPT_CLAUDE_CODE_10_NOVEMBRE, point 5) ; le formulaire en panneau viendra avec elle.
+// « Ajouter une expérience » ouvre le formulaire des premiers pas en panneau (PR 17, point 5) ; au retour, la
+// préparation repart (lettre et CV adapté). Le même panneau demande le nom et l'adresse avant une lettre.
+const completion = ref<"" | "profile" | "identity">("");
+const identityAsked = ref(false);
+let pendingForce = false;
+const COMPLETION_SECTIONS = { profile: ["experiences", "languages", "identity"], identity: ["identity"] } as const;
+async function completionSaved(): Promise<void> {
+  const was = completion.value;
+  completion.value = "";
+  if (was === "profile") {
+    noProfile.value = false;
+    identityAsked.value = true;
+    if (!letters.value.length) void write();
+    if (!currentCvId.value) void prepareCv();
+  } else void write(pendingForce);
+}
+function completionClosed(): void {
+  const was = completion.value;
+  completion.value = "";
+  if (was === "identity") void write(pendingForce);
+}
 const NO_PROFILE_TEXT = "Ajoute au moins une expérience pour écrire une lettre sans invention.";
 // Sur ordinateur, la carte d'échec dit déjà ces messages génériques ; un motif précis du serveur reste affiché.
 const GENERIC_FAILURES = new Set(["La rédaction a échoué, réessaie.", "API injoignable."]);
@@ -480,6 +500,16 @@ async function write(force = false): Promise<void> {
     return;
   }
   choosingWrite.value = false;
+  // Nom ou adresse manquants (PR 17, point 5) : demandés une fois avant la génération ; « Annuler » écrit quand même.
+  if (!identityAsked.value) {
+    identityAsked.value = true;
+    const { data } = await api.GET("/api/identity").catch(() => ({ data: null }));
+    if (data && (!data.name?.trim() || !data.street?.trim())) {
+      pendingForce = force;
+      completion.value = "identity";
+      return;
+    }
+  }
   writing.value = true;
   error.value = "";
   letterFailed.value = "";
@@ -1305,7 +1335,7 @@ onMounted(() => void load());
                   type="button"
                   class="primary"
                   data-test="no-profile-link"
-                  @click="router.push(PROFILE_LINK)"
+                  @click="completion = 'profile'"
                 >
                   Ajouter une expérience
                 </button>
@@ -1827,7 +1857,7 @@ onMounted(() => void load());
             type="button"
             class="primary prep-bar-main"
             data-test="no-profile-link"
-            @click="router.push(PROFILE_LINK)"
+            @click="completion = 'profile'"
           >
             Ajouter une expérience
           </button>
@@ -1973,6 +2003,13 @@ onMounted(() => void load());
     :only-sentence="onlySentence"
     @close="claimOpen = false; claimError = ''"
     @confirm="confirmClaim"
+  />
+  <ProfileCompletionPanel
+    :open="!!completion"
+    :title="completion === 'identity' ? 'Avant ta lettre' : 'Ajouter une expérience'"
+    :sections="completion ? [...COMPLETION_SECTIONS[completion]] : undefined"
+    @close="completionClosed"
+    @saved="completionSaved"
   />
 </template>
 

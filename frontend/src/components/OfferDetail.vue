@@ -24,7 +24,9 @@ import ScoreCorrection from "./ScoreCorrection.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
-import { ADD_EXPERIENCE, useProfileEmpty } from "../composables/useProfileEmpty";
+import { useProfileEmpty } from "../composables/useProfileEmpty";
+import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
+import { languageLabel } from "./ProfileCompletionForm.vue";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
@@ -198,6 +200,8 @@ const facts = computed<Fact[]>(() => {
     list.push({ mark: "check", text: doubt.text, excerpt: doubt.excerpt ?? undefined, scam: doubt.kind === "scam" });
   }
   for (const reason of o.filter_reasons ?? []) list.push({ mark: "no", text: reason });
+  // « Non renseigné » n'écarte rien (PR 17, point 3) : la langue exigée par l'annonce est seulement à vérifier.
+  for (const language of o.languages_to_check ?? []) list.push({ mark: "check", text: `Langue à vérifier : ${languageLabel(language).toLowerCase()}` });
   if (o.enrich_status === "expired") list.push({ mark: "no", text: "L’annonce n’est plus en ligne sur jobup." });
   return list;
 });
@@ -221,6 +225,13 @@ const matchTitle = computed(() => {
 const { empty: profileEmpty, refresh: refreshProfile } = useProfileEmpty();
 onMounted(() => void refreshProfile());
 const needsProfile = computed(() => !scored.value && profileEmpty.value);
+// « Compléter mon profil » (PR 17, point 4) : le formulaire des premiers pas en panneau ; à l'enregistrement, la fiche
+// reste ouverte et l'offre est notée (le serveur lance la notation au premier élément du profil).
+const completing = ref(false);
+async function profileSaved(): Promise<void> {
+  completing.value = false;
+  await refreshProfile();
+}
 const matchSub = computed(() => {
   const o = props.offer;
   if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
@@ -811,14 +822,16 @@ watch(
               >
                 {{ matchSub }}
               </p>
-              <RouterLink
+              <button
                 v-if="needsProfile"
-                :to="ADD_EXPERIENCE"
+                type="button"
                 class="match-profile-link"
+                aria-haspopup="dialog"
                 data-test="match-profile-link"
+                @click="completing = true"
               >
                 Compléter mon profil<AppIcon name="chevron" />
-              </RouterLink>
+              </button>
             </div>
           </div>
           <ul
@@ -1206,6 +1219,12 @@ watch(
         </section>
       </template>
     </component>
+    <ProfileCompletionPanel
+      :open="completing"
+      title="Compléter mon profil"
+      @close="completing = false"
+      @saved="profileSaved"
+    />
   </article>
 </template>
 
@@ -1238,7 +1257,7 @@ watch(
 .offer-cols .match-card .match-head:only-child, .offer-cols .match-card .match-head.match-head-alone { padding-bottom: var(--cols-info-pad); border-bottom: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .offer-cols .match-card .match-title { font-size: var(--font-title); }
 /* « Compléter mon profil » sous la phrase, quand le profil manque : le style du lien « Ce qui part à l’IA ». */
-.match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
+.match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; cursor: pointer; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .match-profile-link:hover { text-decoration: underline; }
 .match-profile-link .icon { width: 14px; height: 14px; }
 .offer-cols .match-card .match-sub { font-size: var(--font-small); color: var(--text-secondary); }

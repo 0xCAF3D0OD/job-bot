@@ -136,12 +136,17 @@ async def test_api_criteria_save_and_refilter(api: AsyncClient) -> None:
         "min_rate": 80,
         "excluded_types": ["stage"],
         "banned_words": ["vente"],
-        "unspoken_languages": ["allemand"],
+        "language_levels": {"allemand": "notions", " Espagnol ": "fluent", "anglais": "unknown"},
     }
     response = (await api.put("/api/criteria", json=body)).json()
     assert response["saved_at"] is not None
     saved = response["criteria"]
     assert saved["locations"] == ["VD", "Genève"]  # espaces retirés, doublons écartés
+    assert saved["language_levels"] == {
+        "allemand": "notions",
+        "espagnol": "fluent",
+        "anglais": "unknown",
+    }
     assert (await api.get("/api/criteria")).json()["criteria"] == saved
 
     # Le filtre a tourné tout de suite (plus de tâche en file) ; « Collecter » en relance une.

@@ -4,7 +4,8 @@ Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
-- `PROMPT_CLAUDE_CODE_10_NOVEMBRE.md` : **à donner à Claude Code après celui du 9 novembre** (PR 13 à 16 : annonce lue automatiquement, ligne profil du Compte, détail d’une offre, onglet Rendez-vous). Il prime sur les fichiers précédents pour ces points.
+- Nouveaux écrans du 10 novembre : `OnboardingOrdinateurProfil` et `OnboardingProfil` (+ `Sombre`) = étape « Complétons ton profil » quand le CV n’a pas pu être lu.
+- `PROMPT_CLAUDE_CODE_10_NOVEMBRE.md` : **à donner à Claude Code après celui du 9 novembre** (PR 13 à 20 : annonce lue automatiquement, ligne profil du Compte, détail d’une offre, onglet Rendez-vous, parcours sans CV lu, détail de la note, zone de saisie de l’Assistant, Compte / Profil / Critères / Administration). Il prime sur les fichiers précédents pour ces points.
 - `illustrations/troupe/` : les 4 personnages du logo, une scène par état de la plateforme, en clair et en sombre (MODIFICATIONS_9 §15). Ils remplacent `illustrations/personnage/`, gardé seulement pour les notifications.
 - `PROMPT_CLAUDE_CODE_9_NOVEMBRE_COMPLET.md` : **prompt complet à donner à Claude Code** (téléphone et ordinateur, toutes les décisions du 9 novembre, ordre des PR, tests).
 - `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).

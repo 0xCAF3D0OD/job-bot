@@ -13212,12 +13212,17 @@
             "maxItems": 100,
             "title": "Banned Words"
           },
-          "unspoken_languages": {
-            "items": {
-              "$ref": "#/components/schemas/Language"
+          "language_levels": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LanguageLevel"
             },
-            "type": "array",
-            "title": "Unspoken Languages"
+            "propertyNames": {
+              "maxLength": 40,
+              "minLength": 1
+            },
+            "type": "object",
+            "maxProperties": 12,
+            "title": "Language Levels"
           }
         },
         "type": "object",
@@ -16953,11 +16958,23 @@
       "Language": {
         "type": "string",
         "enum": [
+          "francais",
           "allemand",
           "italien",
           "anglais"
         ],
         "title": "Language"
+      },
+      "LanguageLevel": {
+        "type": "string",
+        "enum": [
+          "unknown",
+          "notions",
+          "fluent",
+          "native"
+        ],
+        "title": "LanguageLevel",
+        "description": "Niveau d'une langue (prompt du 10 novembre, PR 17). « Non renseigné » n'écarte jamais une\noffre ; « Notions » l'écarte si elle exige la langue couramment (décision de Kevin, 10.11)."
       },
       "LetterDocumentOut": {
         "properties": {
@@ -19603,6 +19620,14 @@
               }
             ],
             "title": "Text Reading"
+          },
+          "languages_to_check": {
+            "items": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "array",
+            "title": "Languages To Check",
+            "default": []
           }
         },
         "type": "object",
@@ -22222,6 +22247,14 @@
               }
             ],
             "title": "Text Reading"
+          },
+          "languages_to_check": {
+            "items": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "array",
+            "title": "Languages To Check",
+            "default": []
           },
           "is_first": {
             "type": "boolean",

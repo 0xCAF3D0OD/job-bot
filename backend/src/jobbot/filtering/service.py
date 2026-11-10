@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot.core.filter import (
     ContractType,
     Criteria,
-    Language,
+    LanguageLevel,
     OfferFacts,
     RemotePolicy,
     canton_of,
@@ -29,6 +29,11 @@ log = get_logger(__name__)
 FILTERABLE = (OfferStatus.NEW, OfferStatus.TO_REVIEW, OfferStatus.FILTERED_OUT)
 
 
+def _levels(value: dict[str, str]) -> tuple[tuple[str, LanguageLevel], ...]:
+    known = {level.value for level in LanguageLevel}
+    return tuple((name, LanguageLevel(level)) for name, level in value.items() if level in known)
+
+
 async def load_criteria(session: AsyncSession) -> Criteria:
     rows = {c.kind: c.value for c in await session.scalars(select(Criterion))}
     return Criteria(
@@ -37,7 +42,7 @@ async def load_criteria(session: AsyncSession) -> Criteria:
         min_rate=rows.get("min_rate"),
         excluded_types=tuple(ContractType(v) for v in rows.get("excluded_types", [])),
         banned_words=tuple(rows.get("banned_words", [])),
-        unspoken_languages=tuple(Language(v) for v in rows.get("unspoken_languages", [])),
+        language_levels=_levels(rows.get("language_levels") or {}),
     )
 
 
@@ -48,7 +53,7 @@ async def save_criteria(session: AsyncSession, criteria: Criteria) -> None:
         "min_rate": criteria.min_rate,
         "excluded_types": [t.value for t in criteria.excluded_types],
         "banned_words": list(criteria.banned_words),
-        "unspoken_languages": [lang.value for lang in criteria.unspoken_languages],
+        "language_levels": {name: level.value for name, level in criteria.language_levels},
     }
     for kind, value in values.items():
         await session.execute(
