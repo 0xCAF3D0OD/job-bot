@@ -8,12 +8,13 @@ import ProfileDesktop from "./ProfileDesktop.vue";
 const GET = vi.fn();
 const PUT = vi.fn();
 const PATCH = vi.fn();
+const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     PUT: (...a: unknown[]) => PUT(...a),
     PATCH: (...a: unknown[]) => PATCH(...a),
-    POST: vi.fn(),
+    POST: (...a: unknown[]) => POST(...a),
   },
   QUIET: {},
   PROFILE_KEY: "jobA1.profile",
@@ -58,6 +59,31 @@ afterEach(() => {
 });
 
 describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novembre)", () => {
+  it("CV redéposé (PR 24) : nouveau fichier → « Nouveau CV déposé » ; même fichier jamais lu → « déjà déposé, jamais lu » ; Fermer", async () => {
+    const wrapper = await mountPage();
+    const fresh = { id: 7, filename: "CV_2.pdf", doc_type: "pdf", size: 1000, text_status: "ok", uploaded_at: "2026-11-10T10:00:00Z", chunk_count: 0, kind: null, read_state: null, read_at: null, found: null };
+    DATA["/api/documents"] = [fresh, ...(DATA["/api/documents"] as unknown[])];
+    POST.mockResolvedValue({ data: fresh, response: { status: 201 } });
+    const input = wrapper.get("[data-test=profile-cv-input]");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "CV_2.pdf")], configurable: true });
+    await input.trigger("change");
+    await flushPromises();
+    expect(wrapper.get("[data-test=profile-cv-line]").text()).toBe("Déposé à l’instant · pas encore lu");
+    expect(wrapper.find("[data-test=cv-state-nouveau]").text()).toContain("Nouveau CV déposé");
+    expect(wrapper.find("[data-test=cv-later]").exists()).toBe(true);
+
+    POST.mockResolvedValue({ data: fresh, response: { status: 200 } });
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "CV_2.pdf")], configurable: true });
+    await input.trigger("change");
+    await flushPromises();
+    expect(wrapper.find("[data-test=cv-state-jamais]").text()).toContain("jamais été lu");
+    expect(wrapper.get("[data-test=cv-close]").attributes("aria-label")).toBe("Fermer le message");
+    await wrapper.get("[data-test=cv-close]").trigger("click");
+    expect(wrapper.find("[data-test=cv-state-jamais]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=cv-state-relire]").exists()).toBe(true);
+    (DATA["/api/documents"] as unknown[]).shift();
+  });
+
   it("CV jamais lu (PR 21) : ligne orange « pas encore lu » et bloc « Relire mon CV » sous un filet, dans une zone annoncée", async () => {
     const saved = DATA["/api/documents"];
     DATA["/api/documents"] = [{ id: 5, filename: "CV.pdf", doc_type: "pdf", size: 1000, text_status: "ok", uploaded_at: "2026-11-02T10:00:00Z", chunk_count: 0, kind: null, read_state: null, read_at: null, found: null }];
