@@ -222,6 +222,9 @@ AUDIT = r"""() => {
     // agrandit la cible) comparée à la place que lui laisse la boîte (sans ses marges intérieures).
     for (const box of [el, ...el.querySelectorAll('*')]) {
       if (!shown(box)) continue;
+      // Un nom de fichier (.file-name) est un contenu, pas un libellé : sur téléphone il tient sur une
+      // ligne, coupé par « … » (prompt du 10 novembre, PR 20, point 4), le nom complet dans title.
+      if (box.closest('.file-name')) continue;
       const own = [...box.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim());
       if (!own.length) continue;
       let left = Infinity, right = -Infinity;

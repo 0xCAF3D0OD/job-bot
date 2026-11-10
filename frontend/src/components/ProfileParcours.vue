@@ -378,7 +378,10 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             :data-test="`open-document-${doc.id}`"
             @click="showText(doc.id)"
           >
-            <strong>{{ doc.filename }}</strong>
+            <strong
+              class="file-name"
+              :title="doc.filename"
+            >{{ doc.filename }}</strong>
             <span class="hint">
               {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "élément repris", "éléments repris") }}<template v-if="doc.text_status !== 'ok'">
                 · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
