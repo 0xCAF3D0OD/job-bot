@@ -33,6 +33,10 @@
 .block-row-name { min-width: 0; overflow-wrap: anywhere; }
 .block-row-title .block-status { flex: none; margin-left: 0; }
 .block-row > .arrow-circle { flex: none; }
+/* L'icône de la ligne (maquettes Compte du 10 novembre, PR 34) : 24 px, contour de 2 px, --row-icon ; 16 px avant le
+   texte, qui reste aligné d'une ligne à l'autre. */
+.block-row-icon { flex: none; width: var(--space-6); height: var(--space-6); stroke-width: 2; color: var(--row-icon); }
+.block-row:has(> .block-row-icon) { gap: var(--space-4); }
 .block-row-line { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--row-line-lh); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* D31 : le statut, un mot coloré juste après le titre. */
 .block-status { margin-left: var(--space-2); font-size: var(--font-small); font-weight: var(--weight-bold); }

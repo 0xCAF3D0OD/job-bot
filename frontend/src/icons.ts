@@ -44,6 +44,9 @@ export const ICONS = {
   eye: path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3),
   // Le mot de passe affiché (maquette Connexion) : l'œil barré.
   "eye-off": path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3) + path("M3 3l18 18"),
+  // Le chapeau de diplômé et la base de données (maquettes Compte du 10 novembre, PR 34) : tracés de la maquette.
+  graduation: path("M22 10 12 5 2 10l10 5 10-5Z") + path("M6 12v5c3 2 9 2 12 0v-5"),
+  database: '<ellipse cx="12" cy="5" rx="8" ry="3"/>' + path("M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"),
   file: path("M7 3h7l4 4v14H7z") + path("M14 3v4h4M10 12h5M10 16h5"),
   // Fichier illisible (maquette OnboardingProfil du 10 novembre).
   "file-alert": path("M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z") + path("M14 3v5h5M12 12v3M12 18h.01"),

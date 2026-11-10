@@ -1,0 +1,1 @@
+Compte et menu « Mon compte » : une icône à contour de 24 px avant chaque ligne (maquettes Compte du 10 novembre), aussi sous Réglages › Recherche et outils ; « Ce qui part à l’IA » devient « L’IA et tes données ».
