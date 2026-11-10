@@ -22,6 +22,7 @@ from jobbot.db.models import (
     ApplicationMethod,
     ApplicationStatus,
     Contact,
+    Document,
     DraftKind,
     Evaluation,
     Interview,
@@ -32,6 +33,7 @@ from jobbot.db.models import (
 )
 from jobbot.followups import remind
 from jobbot.followups import service as followups
+from jobbot.letters.contact_guess import guess_contact
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -601,6 +603,18 @@ async def put_identity(request: Request, body: Identity) -> Identity:
                 .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
             )
     return body
+
+
+@router.get("/identity/from-document/{document_id}", operation_id="guessIdentity")
+async def guess_identity(request: Request, document_id: int) -> Identity:
+    """Les coordonnées repérées en tête du CV, sur le serveur et sans IA (test du 10 novembre) :
+    une proposition à vérifier, rien n'est enregistré. Le document est celui du compte (§2)."""
+    async with _runtime(request).sessionmaker() as session:
+        document = await session.get(Document, document_id)
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "document introuvable")
+    found = guess_contact(document.extracted_text or "")
+    return Identity(**asdict(found))
 
 
 # --- L'image de profil (maquette du 8 novembre, docs/143 §6) ---------------------------------

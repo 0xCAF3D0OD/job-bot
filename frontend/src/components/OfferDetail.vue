@@ -223,7 +223,7 @@ onMounted(() => void refreshProfile());
 const needsProfile = computed(() => !scored.value && profileEmpty.value);
 const matchSub = computed(() => {
   const o = props.offer;
-  if (needsProfile.value) return "Il manque ton profil : sans tes expériences, jobA1 ne peut pas noter cette offre.";
+  if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
   if (!scored.value) return o.score_error ?? "La note arrive dès que l’annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
@@ -817,7 +817,7 @@ watch(
                 class="match-profile-link"
                 data-test="match-profile-link"
               >
-                Ajouter mon expérience<AppIcon name="chevron" />
+                Compléter mon profil<AppIcon name="chevron" />
               </RouterLink>
             </div>
           </div>
@@ -1237,7 +1237,7 @@ watch(
 .offer-cols .match-card .match-head { order: 1; padding: var(--cols-info-pad) var(--cols-info-pad) var(--space-4); background: var(--bg); border: 1.5px solid var(--card-line); border-bottom: 0; border-radius: var(--radius-card) var(--radius-card) 0 0; }
 .offer-cols .match-card .match-head:only-child, .offer-cols .match-card .match-head.match-head-alone { padding-bottom: var(--cols-info-pad); border-bottom: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .offer-cols .match-card .match-title { font-size: var(--font-title); }
-/* « Ajouter mon expérience » sous la phrase, quand le profil manque : le style du lien « Ce qui part à l’IA ». */
+/* « Compléter mon profil » sous la phrase, quand le profil manque : le style du lien « Ce qui part à l’IA ». */
 .match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .match-profile-link:hover { text-decoration: underline; }
 .match-profile-link .icon { width: 14px; height: 14px; }

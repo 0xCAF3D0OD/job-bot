@@ -380,7 +380,8 @@ const letterFailed = ref("");
 // peut pas aboutir, la page envoie vers Profil › Expériences, le formulaire du bloc déjà ouvert (test du 10 novembre).
 const noProfile = ref(false);
 const PROFILE_LINK = { path: "/profil", query: { onglet: "experiences", nouveau: "1" } };
-const NO_PROFILE_TEXT = "jobA1 écrit ta lettre à partir de tes expériences, et ton profil n’en a encore aucune. Ajoute ton dernier poste, puis reviens ici.";
+// Le texte et le bouton de la PR 17 (PROMPT_CLAUDE_CODE_10_NOVEMBRE, point 5) ; le formulaire en panneau viendra avec elle.
+const NO_PROFILE_TEXT = "Ajoute au moins une expérience pour écrire une lettre sans invention.";
 // Sur ordinateur, la carte d'échec dit déjà ces messages génériques ; un motif précis du serveur reste affiché.
 const GENERIC_FAILURES = new Set(["La rédaction a échoué, réessaie.", "API injoignable."]);
 const cvState = ref<"" | "busy" | "failed">("");
@@ -1306,7 +1307,7 @@ onMounted(() => void load());
                   data-test="no-profile-link"
                   @click="router.push(PROFILE_LINK)"
                 >
-                  Ajouter mon expérience
+                  Ajouter une expérience
                 </button>
                 <PlanLimit
                   v-if="!noProfile"
@@ -1828,7 +1829,7 @@ onMounted(() => void load());
             data-test="no-profile-link"
             @click="router.push(PROFILE_LINK)"
           >
-            Ajouter mon expérience
+            Ajouter une expérience
           </button>
           <BusyButton
             v-else-if="writeLabel || writing"

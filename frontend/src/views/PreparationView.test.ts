@@ -662,7 +662,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(failed.get("[data-test=write]").text()).toContain("Réessayer");
   });
 
-  it("sans bloc de profil : « Il manque ton profil » et « Ajouter mon expérience » au lieu de « Réessayer »", async () => {
+  it("sans bloc de profil : « Il manque ton profil » et « Ajouter une expérience » au lieu de « Réessayer »", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
     );
@@ -684,7 +684,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     await wrapper.get("[data-test=write]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=letter-failed]").exists()).toBe(false);
-    expect(wrapper.get("[data-test=no-profile]").text()).toContain("Ajouter mon expérience");
+    expect(wrapper.get("[data-test=no-profile]").text()).toContain("Ajouter une expérience");
   });
 
   it("ordinateur (§2.3, §7.3) : sans CV adapté, la page grisée et « Ce CV » ; en échec, « Réessayer »", async () => {

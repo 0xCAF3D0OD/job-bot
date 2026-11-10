@@ -289,6 +289,26 @@ async def test_identity_rejects_bad_postcode(api: AsyncClient) -> None:
     assert (await api.put("/api/identity", json={"website": "pas une adresse"})).status_code == 422
 
 
+async def test_identity_guessed_from_cv_without_saving(api: AsyncClient) -> None:
+    # Test du 10 novembre : l'en-tête des lettres restait vide ; le CV propose les coordonnées.
+    cv = "Camille Exemple\nRue du Test 1\n1003 Lausanne\n079 123 45 67\n\nExpériences\nVendeuse"
+    uploaded = await api.post(
+        "/api/documents", files={"file": ("cv.txt", cv.encode(), "text/plain")}
+    )
+    document_id = uploaded.json()["id"]
+    found = (await api.get(f"/api/identity/from-document/{document_id}")).json()
+    assert found["name"] == "Camille Exemple"
+    assert (found["street"], found["postcode"], found["city"]) == (
+        "Rue du Test 1",
+        "1003",
+        "Lausanne",
+    )
+    assert found["phone"] == "079 123 45 67"
+    # Une proposition : rien n'est enregistré tant que la personne ne valide pas.
+    assert (await api.get("/api/identity")).json()["name"] is None
+    assert (await api.get("/api/identity/from-document/999999")).status_code == 404
+
+
 async def test_profile_image_keeps_only_the_avatar_number(api: AsyncClient) -> None:
     # Maquette du 8 novembre (docs/143 §6) : le numéro de l'avatar, 1 à 8, rien d'autre.
     assert (await api.get("/api/profile-image")).json() == {"avatar": None}
