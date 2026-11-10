@@ -279,9 +279,24 @@ async def _propose(
         ) from None
     except anthropic.APIStatusError as exc:
         problem = account_problem(exc)
+        # Sans le message de l'API, qui peut citer la demande (J-1) : le code, le type
+        # d'erreur et l'identifiant de la demande suffisent pour la retrouver chez Anthropic.
+        body = exc.body if isinstance(exc.body, dict) else {}
+        error = body.get("error")
+        error = error if isinstance(error, dict) else {}
+        log.warning(
+            "document_reading_failed",
+            document_id=document_id,
+            understand=understand,
+            status_code=exc.status_code,
+            error_type=error.get("type"),
+            request_id=exc.request_id,
+        )
         raise HTTPException(
             status.HTTP_409_CONFLICT if problem else status.HTTP_502_BAD_GATEWAY,
-            problem or f"erreur de l'API ({exc.status_code})",
+            problem
+            or f"l'IA n'a pas pu lire ce document (erreur {exc.status_code}) : "
+            "complète les champs toi-même, rien n'est perdu",
         ) from None
 
     async with runtime.sessionmaker.begin() as session:

@@ -1,0 +1,1 @@
+La lecture du CV à l'accueil remarche : le schéma envoyé à l'IA n'utilise plus de forme refusée par l'API (erreur 400), un test vérifie tous les schémas, et un échec donne un message clair et une trace sans contenu

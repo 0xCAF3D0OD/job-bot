@@ -77,9 +77,11 @@ UNDERSTOOD_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "roles": {"type": "array", "items": {"type": "string"}},
-        "min_rate": {"type": ["integer", "null"]},
+        # Valeur absente = null, écrit avec anyOf comme `duplicate_of` : l'API des sorties
+        # structurées refusait (400) les types multiples et le null mêlé à un enum.
+        "min_rate": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
         "languages": {"type": "array", "items": {"type": "string", "enum": list(LANGUAGES)}},
-        "remote": {"type": ["string", "null"], "enum": ["remote", "onsite", None]},
+        "remote": {"anyOf": [{"type": "string", "enum": ["remote", "onsite"]}, {"type": "null"}]},
     },
     "required": ["roles", "min_rate", "languages", "remote"],
     "additionalProperties": False,
