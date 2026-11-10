@@ -35,6 +35,18 @@ const KINDS: { value: ChunkKind; label: string; hint: string; tags: string }[] =
   { value: "ton", label: "Ton", hint: "Comment tes lettres doivent sonner.", tags: "simple, chaleureux…" },
 ];
 const kindLabel = Object.fromEntries(KINDS.map((k) => [k.value, k.label])) as Record<ChunkKind, string>;
+// Plus de « bloc » à l'écran (PR 17, point 6) : le nom de ce qu'on regarde, « élément » quand les types sont mêlés.
+type Noun = { one: string; many: string; a: string; the: string; none: string };
+const NOUNS: Record<ChunkKind | "all", Noun> = {
+  experience: { one: "expérience", many: "expériences", a: "une expérience", the: "cette expérience", none: "Aucune expérience" },
+  competence: { one: "compétence", many: "compétences", a: "une compétence", the: "cette compétence", none: "Aucune compétence" },
+  formation: { one: "formation", many: "formations", a: "une formation", the: "cette formation", none: "Aucune formation" },
+  preference: { one: "préférence", many: "préférences", a: "une préférence", the: "cette préférence", none: "Aucune préférence" },
+  redhibitoire: { one: "refus", many: "refus", a: "un refus", the: "ce refus", none: "Aucun refus" },
+  ton: { one: "consigne de ton", many: "consignes de ton", a: "une consigne de ton", the: "cette consigne", none: "Aucune consigne de ton" },
+  all: { one: "élément", many: "éléments", a: "un élément", the: "cet élément", none: "Aucun élément" },
+};
+const capital = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 type ChunkForm = Required<ChunkIn>;
 const EMPTY_CHUNK: ChunkForm = {
@@ -85,6 +97,8 @@ const proposing = ref<number | null>(null);
 const proposal = ref<{ doc: DocumentOut; items: ChunkProposal[] } | null>(null);
 const message = ref("");
 
+const noun = computed(() => NOUNS[filter.value]);
+const formNoun = computed(() => (editing.value ? NOUNS[editing.value.form.kind] : NOUNS.all));
 const visibleChunks = computed(() =>
   filter.value === "all" ? chunks.value : chunks.value.filter((c) => c.kind === filter.value),
 );
@@ -176,7 +190,7 @@ async function propose(doc: DocumentOut): Promise<void> {
 
 async function onProposalsSaved(count: number): Promise<void> {
   proposal.value = null;
-  message.value = `${plural(count, "bloc ajouté", "blocs ajoutés")} à ton profil.`;
+  message.value = `${plural(count, "élément ajouté", "éléments ajoutés")} à ton profil.`;
   await Promise.all([loadChunks(), loadDocuments()]);
 }
 
@@ -238,7 +252,7 @@ async function saveChunk(): Promise<void> {
     editing.value = null;
     await Promise.all([loadChunks(), loadDocuments()]);
   } else {
-    message.value = "Bloc refusé : titre et contenu sont obligatoires.";
+    message.value = "Refusé : le titre et le contenu sont obligatoires.";
   }
 }
 
@@ -281,10 +295,10 @@ const missingProfile = computed(() => {
   if (!chunks.value.some((c) => c.active)) {
     // « Proposer des blocs » n'est à l'écran qu'avec la liste des documents, et sur un document lisible.
     const proposable = showDocuments.value && firstReadable.value !== null;
-    const yourself = showBlocks.value ? "« Nouveau bloc »" : "« Nouveau bloc », dans Expériences";
+    const yourself = showBlocks.value ? `« Ajouter ${noun.value.a} »` : "« Ajouter une expérience », dans Expériences";
     return proposable
-      ? `Il manque tes blocs de profil : « Proposer des blocs », à côté de ton CV, les prépare. Tu peux aussi les écrire toi-même avec ${yourself}.`
-      : `Il manque tes blocs de profil : sans eux, les offres ne sont pas notées et les lettres ne peuvent pas être écrites. Ajoute ton dernier poste avec ${yourself}.`;
+      ? `Il manque tes expériences : « Proposer à partir du CV », à côté de ton CV, les prépare. Tu peux aussi les écrire toi-même avec ${yourself}.`
+      : `Il manque tes expériences : sans elles, les offres ne sont pas notées et les lettres ne peuvent pas être écrites. Ajoute ton dernier poste avec ${yourself}.`;
   }
   return "";
 });
@@ -366,7 +380,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           >
             <strong>{{ doc.filename }}</strong>
             <span class="hint">
-              {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
+              {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "élément repris", "éléments repris") }}<template v-if="doc.text_status !== 'ok'">
                 · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
               </template>
             </span>
@@ -379,7 +393,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             :data-test="`propose-${doc.id}`"
             @click="propose(doc)"
           >
-            <span class="with-icon"><AppIcon name="ai" />Proposer des blocs</span>
+            <span class="with-icon"><AppIcon name="ai" />Proposer à partir du CV</span>
           </BusyButton>
         </li>
       </ul>
@@ -396,7 +410,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         >
         <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
         <span class="detail">
-          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l’IA en tire tes premiers blocs." }}
+          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l’IA en tire tes premières expériences et compétences." }}
         </span>
       </label>
 
@@ -425,7 +439,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             data-test="chunk-from-selection"
             @click="chunkFromSelection"
           >
-            <span class="with-icon"><AppIcon name="plus" />Créer un bloc avec la sélection</span>
+            <span class="with-icon"><AppIcon name="plus" />Ajouter la sélection au profil</span>
           </button>
           <MoreMenu
             v-if="documentItems.length"
@@ -451,7 +465,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     <template v-if="ready && showBlocks">
       <div class="chunks-head">
         <h2 class="section-title">
-          Blocs de profil
+          {{ filter === "all" ? "Parcours" : capital(noun.many) }}
         </h2>
         <button
           type="button"
@@ -459,7 +473,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           data-test="new-chunk"
           @click="newChunk('', null, filter === 'all' ? undefined : filter)"
         >
-          <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
+          <span class="with-icon"><AppIcon name="plus" />Ajouter {{ noun.a }}</span>
         </button>
       </div>
       <!-- Le type de bloc en contrôle segmenté (D4, 2026-11-03), avec le nombre de chaque type. -->
@@ -467,7 +481,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         v-if="chunks.length"
         :model-value="filter"
         :options="kindSegments"
-        label="Types de blocs"
+        label="Types"
         class="kind-tabs"
         @update:model-value="filter = $event as ChunkKind | 'all'"
       />
@@ -499,7 +513,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         v-if="!visibleChunks.length"
         class="muted empty"
       >
-        Aucun bloc ici. Crée-en un, ou sélectionne un passage dans un document.
+        {{ noun.none }} pour l’instant : « Ajouter {{ noun.a }} », ou sélectionne un passage dans un document.
       </p>
     </template>
   </div>
@@ -518,7 +532,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
   <SidePanel
     v-if="editing"
     open
-    :title="editing.id === null ? 'Nouveau bloc' : (editedChunk?.title ?? 'Bloc')"
+    :title="editing.id === null ? capital(`Ajouter ${formNoun.a}`) : (editedChunk?.title ?? capital(formNoun.one))"
     @close="editing = null"
   >
     <form
@@ -589,7 +603,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       >
         <IconButton
           icon="trash"
-          label="Supprimer ce bloc"
+          :label="`Supprimer ${formNoun.the}`"
           danger
           data-test="remove-chunk"
           @click="removeChunk(editedChunk)"

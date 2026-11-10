@@ -39,7 +39,7 @@ async function save(): Promise<void> {
   if (saving.value) return;
   // Bouton toujours actif (docs/29 §3) : sans bloc coché, il le dit.
   if (!selectedCount.value) {
-    error.value = "Coche au moins un bloc à ajouter.";
+    error.value = "Coche au moins un élément à ajouter.";
     return;
   }
   saving.value = true;
@@ -62,7 +62,7 @@ async function save(): Promise<void> {
     }
     emit("saved", created);
   } catch {
-    error.value = `${plural(created, "bloc ajouté", "blocs ajoutés")}, puis un refus : vérifie titres et contenus.`;
+    error.value = `${plural(created, "élément ajouté", "éléments ajoutés")}, puis un refus : vérifie titres et contenus.`;
   } finally {
     saving.value = false;
   }
@@ -80,7 +80,7 @@ async function save(): Promise<void> {
       @submit.prevent="save"
     >
       <h3>
-        Blocs proposés pour « {{ documentName }} »
+        Repris de « {{ documentName }} »
       </h3>
       <ul class="proposal-list">
         <li
@@ -105,13 +105,13 @@ async function save(): Promise<void> {
             v-model="item.title"
             type="text"
             maxlength="200"
-            :aria-label="`Titre du bloc ${index + 1}`"
+            :aria-label="`Titre de l’élément ${index + 1}`"
             required
           >
           <textarea
             v-model="item.content"
             rows="3"
-            :aria-label="`Contenu du bloc ${index + 1}`"
+            :aria-label="`Contenu de l’élément ${index + 1}`"
             required
           />
           <span
@@ -134,7 +134,7 @@ async function save(): Promise<void> {
           busy-label="Ajout…"
           data-test="add-proposals"
         >
-          Ajouter {{ plural(selectedCount, "bloc", "blocs") }}
+          Ajouter {{ plural(selectedCount, "élément", "éléments") }}
         </BusyButton>
         <button
           type="button"
