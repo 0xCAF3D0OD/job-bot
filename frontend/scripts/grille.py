@@ -104,6 +104,10 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("profil", "[data-test=profile-edit]"),
     # Aujourd'hui (PR 9d) : bande bleue, carte du mois, cartes d'action aux cercles gris.
     ("", None),
+    # Réglages (PR 9c, §2.10) et les panneaux Langue et Taille du texte.
+    ("reglages?rubrique=notifications", None),
+    ("reglages?rubrique=notifications", "[data-test=language-row]"),
+    ("reglages?rubrique=notifications", "[data-test=text-size-row]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
