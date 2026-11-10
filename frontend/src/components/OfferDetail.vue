@@ -1287,13 +1287,20 @@ watch(
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
+  /* Note provisoire (OffreProvisoire, demande de Kevin du 9 novembre) : la bande pêche en pleine largeur dans la carte,
+     sans dépasser le contour (la carte coupe ce qui dépasse, rayon gardé) ; le lien suit la bande sans vide, le texte
+     au même retrait que le contenu, le chevron à droite. */
+  .offer-blocks .match-card:has(.offer-text-band) { overflow: clip; }
+  .offer-blocks .match-card .offer-text-band { margin: var(--ob-gap) calc(-1 * var(--ob-pad)) 0; padding: var(--ob-gap) var(--ob-pad); }
+  .offer-blocks .offer-text-band + .compat-open.after-band { margin-top: 0; border-top: 0; }
+  .offer-blocks .compat-open.after-band { padding-left: var(--ob-pad); }
+  .offer-blocks .offer-text-actions button { min-width: 0; white-space: nowrap; }
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
      retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
      refus séparé par un filet, 16 px dessus (14 dans la maquette, sur la grille de 4), 12 px entre ses lignes ; puis
      « Le détail de la note » sans vide. */
   .offer-blocks .match-card .offer-reading, .offer-blocks .match-card .redone { margin-top: var(--ob-gap); }
   .offer-blocks .match-card .offer-text-refused { margin-top: var(--ob-gap); padding-top: var(--ob-gap); border-top: 1px solid var(--line-soft); }
-  .offer-blocks .compat-open.after-band { padding-left: var(--ob-pad); }
   .offer-blocks .detail-post { display: block; }
   .offer-blocks .detail-post-head h3 { font-size: var(--font-title); line-height: var(--ob-24); }
   .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
