@@ -267,7 +267,7 @@ watch(() => props.page, () => void nextTick(measure));
           <MoreMenu
             v-if="meetingItems.length"
             :items="meetingItems"
-            label="Plus d'actions sur le rendez-vous ORP"
+            label="Plus d’actions sur le rendez-vous ORP"
             test-id="rdv-more"
           />
         </div>

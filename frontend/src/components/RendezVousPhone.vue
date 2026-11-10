@@ -91,7 +91,7 @@ function cal(iso: string): { day: number; month: number } {
           <MoreMenu
             :items="meetingItems"
             :inline="false"
-            label="Plus d'actions sur le rendez-vous ORP"
+            label="Plus d’actions sur le rendez-vous ORP"
             test-id="rdv-more"
           />
         </div>

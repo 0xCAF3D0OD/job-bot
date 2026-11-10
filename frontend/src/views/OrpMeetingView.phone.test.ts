@@ -162,14 +162,14 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.find("[data-test=rdv-ready]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous : l'illustration et le formulaire d'avant", async () => {
+  it("aucun rendez-vous : le titre et le formulaire d'avant, sans personnage (prompt du 10 novembre)", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-past]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
     expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=meeting-empty] [data-illustration=personnage]").exists()).toBe(false);
   });
 
   it("un entretien sans rendez-vous ORP : l'entretien à venir, puis le formulaire du rendez-vous", async () => {

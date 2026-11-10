@@ -33,7 +33,6 @@ export const SCREENS: Record<string, string> = {
   "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
   "components/GoalReached.vue": "objectif ORP atteint",
-  "components/OrpMeetingEmpty.vue": "Candidatures › Rendez-vous, aucun rendez-vous prévu (buste sur téléphone, lot 16.3)",
   "views/NotificationsView.vue": "Notifications, Tout est lu (téléphone, §10.9)",
 };
 
@@ -157,9 +156,9 @@ describe("Bustes sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 16.3)
     globalThis.matchMedia = original;
   });
 
-  it("les quatre écrans du lot 16.3 demandent le buste, avec les tailles de la maquette", () => {
+  // Prompt du 10 novembre (PR 16) : Rendez-vous sans rendez-vous prévu n'a plus de personnage (scène à venir).
+  it("les écrans du lot 16.3 encore illustrés demandent le buste, avec les tailles de la maquette", () => {
     const text = (path: string) => template(FILES.find((f) => f.path === path)?.text ?? "");
-    expect(text("components/OrpMeetingEmpty.vue")).toContain(':bust-height="120"');
     expect(text("components/AuthIllustration.vue")).toContain(':bust-height="large ? undefined : 118"');
     expect(text("views/WelcomeView.vue")).toContain(':bust-height="100"');
     expect(text("views/WelcomeView.vue")).toContain(':bust-height="150"');
