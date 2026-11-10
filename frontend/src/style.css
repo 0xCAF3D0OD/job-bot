@@ -4559,7 +4559,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 /* « Relire ton CV » (AccueilSmile, variable cvNonLu ; PR 22) : l'icône document en pêche à la place du nombre, le titre
    de 16 gras et la ligne « Sans lui… » de 14 en pêche ; 72 de haut. */
 .home-todo a.home-todo-alert { min-height: 4.5rem; gap: 0.875em; }
-.home-todo-icon { display: flex; flex: none; width: calc(var(--space-8) - 0.125rem); }
+.home-todo a > .home-todo-icon { display: flex; flex: none; width: calc(var(--space-8) - 0.125rem); }
 .home-todo .home-todo-icon .icon { color: var(--peach-text); width: var(--space-6); height: var(--space-6); }
 .home-todo-title { display: block; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .home-todo-detail { display: block; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--peach-text); }
