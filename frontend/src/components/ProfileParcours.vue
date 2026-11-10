@@ -44,6 +44,16 @@ const EMPTY_CHUNK: ChunkForm = {
   document_id: null,
 };
 
+// Profil ordinateur en page unique (PR 9b, décision de Kevin du 10 novembre) : chaque ligne de « Mon parcours » ouvre une
+// partie de cette page. `part` : les documents seuls, les blocs seuls, ou tout (téléphone et anciens liens) ;
+// `startKind` : le filtre des blocs au départ ; `create` : un nouveau bloc de ce type ; `openChunk` : ce bloc ouvert.
+const props = withDefaults(
+  defineProps<{ part?: "all" | "documents" | "blocks"; startKind?: ChunkKind | null; create?: ChunkKind | null; openChunk?: number | null }>(),
+  { part: "all", startKind: null, create: null, openChunk: null },
+);
+const showDocuments = computed(() => props.part !== "blocks");
+const showBlocks = computed(() => props.part !== "documents");
+
 const documents = ref<DocumentOut[]>([]);
 // Les certificats de travail (docs/87) : la section se recharge quand un document change.
 const certificatesVersion = ref(0);
@@ -66,7 +76,7 @@ const firstReadable = computed(() =>
 const openText = ref<DocumentText | null>(null);
 const openDocument = computed(() => documents.value.find((d) => d.id === openText.value?.id) ?? null);
 const textBox = ref<HTMLElement | null>(null);
-const filter = ref<ChunkKind | "all">("all");
+const filter = ref<ChunkKind | "all">(props.startKind ?? "all");
 const editing = ref<{ id: number | null; form: ChunkForm } | null>(null);
 const uploading = ref(false);
 const proposing = ref<number | null>(null);
@@ -186,8 +196,8 @@ async function removeDocument(doc: DocumentOut): Promise<void> {
   });
 }
 
-function newChunk(content = "", documentId: number | null = null): void {
-  editing.value = { id: null, form: { ...EMPTY_CHUNK, content, document_id: documentId } };
+function newChunk(content = "", documentId: number | null = null, kind: ChunkKind = EMPTY_CHUNK.kind): void {
+  editing.value = { id: null, form: { ...EMPTY_CHUNK, kind, content, document_id: documentId } };
 }
 
 function chunkFromSelection(): void {
@@ -279,6 +289,10 @@ onMounted(() => {
     .catch(() => undefined)
     .finally(() => {
       ready.value = true;
+      // Ouvert depuis le Profil (« + Ajouter », une compétence touchée) : le formulaire du bloc tout de suite.
+      const asked = props.openChunk === null ? null : chunks.value.find((c) => c.id === props.openChunk);
+      if (asked) editChunk(asked);
+      else if (props.create) newChunk("", null, props.create);
     });
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
@@ -318,71 +332,73 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       {{ message }}
     </p>
 
-    <h2 class="section-title first">
-      Documents
-    </h2>
-    <!-- Une seule zone « Chargement… » (règles §4) : la liste, le dépôt et les blocs. -->
-    <LoadingBlocks
-      v-if="!ready"
-      :heights="['4rem', '7rem', '12rem']"
-    />
-    <!-- Lignes calmes (docs/49 §2) : une action, le texte et « Supprimer » dans le panneau. -->
-    <ul
-      v-if="ready && documents.length"
-      class="calm-list doc-list"
-    >
-      <li
-        v-for="doc in documents"
-        :key="doc.id"
-        data-test="document"
+    <template v-if="showDocuments">
+      <h2 class="section-title first">
+        Documents
+      </h2>
+      <!-- Une seule zone « Chargement… » (règles §4) : la liste, le dépôt et les blocs. -->
+      <LoadingBlocks
+        v-if="!ready"
+        :heights="['4rem', '7rem', '12rem']"
+      />
+      <!-- Lignes calmes (docs/49 §2) : une action, le texte et « Supprimer » dans le panneau. -->
+      <ul
+        v-if="ready && documents.length"
+        class="calm-list doc-list"
       >
-        <button
-          type="button"
-          class="calm-row"
-          :data-test="`open-document-${doc.id}`"
-          @click="showText(doc.id)"
+        <li
+          v-for="doc in documents"
+          :key="doc.id"
+          data-test="document"
         >
-          <strong>{{ doc.filename }}</strong>
-          <span class="hint">
-            {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
-              · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
-            </template>
-          </span>
-        </button>
-        <BusyButton
-          v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
-          :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
-          :busy="proposing === doc.id"
-          busy-label="L'IA lit le document… (≈ 30 s)"
-          :data-test="`propose-${doc.id}`"
-          @click="propose(doc)"
-        >
-          <span class="with-icon"><AppIcon name="ai" />Proposer des blocs</span>
-        </BusyButton>
-      </li>
-    </ul>
-    <label
-      v-if="ready"
-      :class="['drop-zone', { busy: uploading, 'drop-zone-first': !documents.length }]"
-      data-test="drop-zone"
-    >
-      <input
-        type="file"
-        accept=".pdf,.docx,.txt,.md"
-        data-test="file-input"
-        @change="onFile"
+          <button
+            type="button"
+            class="calm-row"
+            :data-test="`open-document-${doc.id}`"
+            @click="showText(doc.id)"
+          >
+            <strong>{{ doc.filename }}</strong>
+            <span class="hint">
+              {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
+                · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
+              </template>
+            </span>
+          </button>
+          <BusyButton
+            v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
+            :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
+            :busy="proposing === doc.id"
+            busy-label="L'IA lit le document… (≈ 30 s)"
+            :data-test="`propose-${doc.id}`"
+            @click="propose(doc)"
+          >
+            <span class="with-icon"><AppIcon name="ai" />Proposer des blocs</span>
+          </BusyButton>
+        </li>
+      </ul>
+      <label
+        v-if="ready"
+        :class="['drop-zone', { busy: uploading, 'drop-zone-first': !documents.length }]"
+        data-test="drop-zone"
       >
-      <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
-      <span class="detail">
-        PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
-      </span>
-    </label>
+        <input
+          type="file"
+          accept=".pdf,.docx,.txt,.md"
+          data-test="file-input"
+          @change="onFile"
+        >
+        <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
+        <span class="detail">
+          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
+        </span>
+      </label>
 
-    <CertificatesSection
-      v-if="ready"
-      :version="certificatesVersion"
-      :documents="documents.length"
-    />
+      <CertificatesSection
+        v-if="ready"
+        :version="certificatesVersion"
+        :documents="documents.length"
+      />
+    </template>
 
     <SidePanel
       v-if="openText"
@@ -421,7 +437,11 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       </div>
     </SidePanel>
 
-    <template v-if="ready">
+    <LoadingBlocks
+      v-if="!ready && !showDocuments"
+      :heights="['4rem', '12rem']"
+    />
+    <template v-if="ready && showBlocks">
       <div class="chunks-head">
         <h2 class="section-title">
           Blocs de profil
@@ -430,7 +450,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           type="button"
           class="pill"
           data-test="new-chunk"
-          @click="newChunk()"
+          @click="newChunk('', null, filter === 'all' ? undefined : filter)"
         >
           <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
         </button>
