@@ -5,6 +5,8 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
+import anthropic
+import httpx2
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text, update
@@ -206,3 +208,21 @@ async def test_understand_without_understood_part(api: AsyncClient, fake: FakeCl
         [],
         None,
     )
+
+
+async def test_understand_api_error_is_clear_and_logged_without_content(
+    api: AsyncClient, fake: FakeClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Une demande refusée par l'API (400) : message clair, et rien du CV dans le journal."""
+    doc = await upload(api, "cv.txt", CV.encode())
+    request = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+    fake.response = anthropic.BadRequestError(
+        "schéma refusé : Stage DevOps chez Acme",
+        response=httpx2.Response(400, request=request, headers={"request-id": "req_123"}),
+        body={"type": "error", "error": {"type": "invalid_request_error", "message": "x"}},
+    )
+    response = await api.post(f"/api/documents/{doc}/understand")
+    assert response.status_code == 502
+    detail = response.json()["detail"]
+    assert "n'a pas pu lire" in detail and "400" in detail
+    assert "Acme" not in caplog.text
