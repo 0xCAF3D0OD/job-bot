@@ -6,14 +6,15 @@ import type { components } from "../api/schema";
 import AppIcon from "./AppIcon.vue";
 import AvatarPicker from "./AvatarPicker.vue";
 import CriteriaForm from "./CriteriaForm.vue";
+import CvStateBlock from "./CvStateBlock.vue";
 import ProfileEditSheet from "./ProfileEditSheet.vue";
 import ProfileGauge from "./ProfileGauge.vue";
 import ProfileImage from "./ProfileImage.vue";
 import QueryLink from "./QueryLink.vue";
+import { cvSubtitle, useCvReading } from "../composables/useCvReading";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
 import { useNarrow } from "../composables/usePhone";
-import { dateInSentence } from "../dates";
 import { plural } from "../format";
 
 // Profil en page unique, sur ordinateur (maquette ProfilOrdinateur ; PR 9b) et sur téléphone (maquette ProfilTel ;
@@ -25,7 +26,9 @@ type Identity = components["schemas"]["Identity"];
 const image = useProfileImage();
 const { phone: narrow } = useNarrow();
 const profiles = useProfiles();
-const documents = ref<DocumentOut[]>([]);
+// Les documents viennent de la lecture du CV (PR 21) : la carte suit la lecture même quand elle finit ailleurs.
+const reading = useCvReading();
+const documents = computed<DocumentOut[]>(() => reading.documents.value ?? []);
 const chunks = ref<Chunk[]>([]);
 const identity = ref<Identity | null>(null);
 const picking = ref(false);
@@ -34,8 +37,7 @@ const uploading = ref(false);
 const message = ref("");
 
 async function loadDocuments(): Promise<void> {
-  const { data } = await api.GET("/api/documents");
-  documents.value = data ?? [];
+  await reading.load();
 }
 async function loadAll(): Promise<void> {
   const [chunkList, who] = await Promise.all([
@@ -59,12 +61,18 @@ const subline = computed(() => [profiles.current.value?.occupation?.trim(), imag
 const cv = computed(() =>
   [...documents.value].filter((d) => d.kind !== "certificate").sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at))[0] ?? null,
 );
-const cvLine = computed(() => {
-  const doc = cv.value;
-  if (!doc) return "";
-  const state = doc.text_status !== "ok" ? "texte non lisible" : doc.chunk_count ? "analysé" : "pas encore analysé";
-  return `Mis à jour ${dateInSentence(doc.uploaded_at)} · ${state}`;
-});
+// La ligne sous le nom du fichier (maquette ProfilOrdinateurCV) : orange quand il reste à lire, vert quand la lecture a
+// trouvé des éléments, grise sinon.
+const cvLine = computed(() => (cv.value ? cvSubtitle(cv.value, null) : null));
+
+// « Remplacer » du bloc d'état (« Lecture impossible ») ouvre le même choix de fichier que le bouton de la carte.
+const fileInputs: HTMLInputElement[] = [];
+function keepInput(el: unknown): void {
+  if (el instanceof HTMLInputElement && !fileInputs.includes(el)) fileInputs.push(el);
+}
+function pickFile(): void {
+  fileInputs.find((input) => input.isConnected)?.click();
+}
 
 // « Remplacer » dépose le nouveau CV ; l'ancien reste dans « Documents et certificats », rien n'est effacé.
 async function onFile(event: Event): Promise<void> {
@@ -215,7 +223,12 @@ async function onSaved(): Promise<void> {
             />
             <div class="profile-cv-text">
               <strong data-test="profile-cv-name">{{ cv ? cv.filename : "Aucun CV déposé" }}</strong>
-              <span>{{ cv ? cvLine : "PDF, DOCX, TXT ou MD · 10 Mo au plus" }}</span>
+              <span
+                v-if="cvLine"
+                :class="`profile-cv-line profile-cv-line-${cvLine.tone}`"
+                data-test="profile-cv-line"
+              >{{ cvLine.text }}</span>
+              <span v-else>PDF, DOCX, TXT ou MD · 10 Mo au plus</span>
             </div>
             <template v-if="!narrow">
               <a
@@ -232,6 +245,7 @@ async function onSaved(): Promise<void> {
                 data-test="profile-cv-replace"
               >
                 <input
+                  :ref="keepInput"
                   type="file"
                   class="visually-hidden"
                   accept=".pdf,.docx,.txt,.md"
@@ -242,7 +256,13 @@ async function onSaved(): Promise<void> {
               </label>
             </template>
           </div>
-          <!-- Ici, sous un filet, le bloc d'état de la lecture du CV (PR 21, maquettes ProfilTel et ProfilOrdinateurCV). -->
+          <!-- Sous un filet, le bloc d'état de la lecture du CV (PR 21, maquettes ProfilTel et ProfilOrdinateurCV). -->
+          <CvStateBlock
+            v-if="cv"
+            :doc="cv"
+            @replace="pickFile"
+            @changed="loadAll"
+          />
           <!-- Téléphone (ProfilTel) : « Voir | Remplacer » en bas de la carte, séparés par un filet. -->
           <div
             v-if="narrow"
@@ -261,6 +281,7 @@ async function onSaved(): Promise<void> {
               data-test="profile-cv-replace"
             >
               <input
+                :ref="keepInput"
                 type="file"
                 class="visually-hidden"
                 accept=".pdf,.docx,.txt,.md"
@@ -394,6 +415,9 @@ async function onSaved(): Promise<void> {
 .profile-cv-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .profile-cv-text strong { font-size: var(--font-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .profile-cv-text span { font-size: var(--font-small); color: var(--text-secondary); }
+.profile-cv-text .profile-cv-line-todo { color: var(--peach-text); font-weight: var(--weight-semibold); }
+.profile-cv-text .profile-cv-line-ok { color: var(--success); font-weight: var(--weight-semibold); }
+.profile-cv-card { --cv-pad-x: var(--pd-pad-x); }
 .profile-cv .button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-5); box-sizing: border-box; border: 1.5px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; cursor: pointer; }
 .profile-cv .button:hover { background: var(--primary-soft); }
 .profile-cv-upload:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }

@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { resetCvReading } from "../composables/useCvReading";
 import ProfileDesktop from "./ProfileDesktop.vue";
 
 const GET = vi.fn();
@@ -14,6 +15,7 @@ vi.mock("../api/client", () => ({
     PATCH: (...a: unknown[]) => PATCH(...a),
     POST: vi.fn(),
   },
+  QUIET: {},
   PROFILE_KEY: "jobA1.profile",
 }));
 vi.mock("../composables/useAuth", async () => {
@@ -50,9 +52,29 @@ async function mountPage() {
   return wrapper;
 }
 
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  resetCvReading();
+});
 
 describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novembre)", () => {
+  it("CV jamais lu (PR 21) : ligne orange « pas encore lu » et bloc « Relire mon CV » sous un filet, dans une zone annoncée", async () => {
+    const saved = DATA["/api/documents"];
+    DATA["/api/documents"] = [{ id: 5, filename: "CV.pdf", doc_type: "pdf", size: 1000, text_status: "ok", uploaded_at: "2026-11-02T10:00:00Z", chunk_count: 0, kind: null, read_state: null, read_at: null, found: null }];
+    try {
+      const wrapper = await mountPage();
+      const line = wrapper.get("[data-test=profile-cv-line]");
+      expect(line.text()).toMatch(/^Déposé .* · pas encore lu$/);
+      expect(line.classes()).toContain("profile-cv-line-todo");
+      const live = wrapper.get("[data-test=cv-card] [data-test=cv-state-live]");
+      expect(live.attributes("role")).toBe("status");
+      expect(live.attributes("aria-live")).toBe("polite");
+      expect(live.find("[data-test=cv-state-relire]").exists()).toBe(true);
+    } finally {
+      DATA["/api/documents"] = saved;
+    }
+  });
+
   it("l’ordre : en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours", async () => {
     const wrapper = await mountPage();
     expect(wrapper.findAll(".profile-desktop-body h2").map((h) => h.text())).toEqual(["Mon CV", "Compétences trouvées", "Ce que je cherche", "Mon parcours"]);
