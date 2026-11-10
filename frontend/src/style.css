@@ -3195,8 +3195,10 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .profile-gauge .segments { display: flex; gap: var(--space-1); flex: 1; min-width: 8rem; max-width: 16rem; }
 .profile-gauge .segment { flex: 1; height: 0.5rem; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--muted) 22%, transparent); }
 .profile-gauge .segment.done { background: var(--accent); }
-.profile-gauge-next { margin-left: auto; font-weight: var(--weight-semibold); }
-@media (max-width: 820px) { .profile-gauge-next { margin-left: 0; } }
+/* Le lien prend la place qui reste et se cale à droite (plutôt qu'une marge automatique, hors grille de 4) ; 44 px
+   de cible au toucher. */
+.profile-gauge-next { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: flex-end; min-height: var(--target-min); font-weight: var(--weight-semibold); }
+@media (max-width: 820px) { .profile-gauge-next { justify-content: flex-start; } }
 
 /* Le visage du 1 (docs/123) : la tuile de 56 px, le grand visage de 120 px, les trois gestes. */
 .face-tile { display: inline-grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; border-radius: var(--radius); color: var(--text); transition: background-color 150ms ease; }

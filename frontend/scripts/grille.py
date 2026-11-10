@@ -91,6 +91,8 @@ SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique sur téléphone (maquette ProfilTel, PR 20), et la page des documents.
     ("profil", None),
     ("profil?onglet=documents", None),
+    # Coordonnées reprises du CV (maquette CoordonneesTel du 10 novembre au soir, PR 23) : le formulaire.
+    ("profil?onglet=coordonnees", None),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
