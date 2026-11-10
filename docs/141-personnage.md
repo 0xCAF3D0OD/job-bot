@@ -37,7 +37,8 @@ Les animations de transition entre les pages et les mascottes d'humeur existante
   couleurs du thème) se posent autour, dans l'écran qui les utilise.
 
 L'ancienne série d'illustrations (docs/67, `illustrations_transparentes.zip`) s'appelle désormais
-`SceneIllustration.vue`. Elle disparaît écran par écran (§4).
+`SceneIllustration.vue`. Elle disparaissait écran par écran (§4) ; depuis le 9 novembre (MODIFICATIONS_9 §6), elle
+reste pour présenter et expliquer une situation : page de présentation, premiers pas, alertes d'un nouveau compte.
 
 Budget de poids (docs/117, limite 315 Ko depuis la PR 543) : le personnage ajoute environ 1 Ko de code. En
 compensation, l'ancienne série est servie elle aussi depuis `frontend/public/illustrations/`, sans adresses
@@ -84,8 +85,13 @@ personnage (PR 4).
   (`ia-vide`), Formations vide (`formations-vide`), Bilan « Trop tôt » (`trop-tot`), Préparer vide
   (`preparer-vide`), réussites « Tri terminé » et « Tout est à jour » (`reussite`). Elles sont retirées au fil des
   PR quand l'écran passe au personnage ou à une mascotte d'humeur.
+- Décision du 9 novembre (MODIFICATIONS_9 §6) : la série `SceneIllustration` n'est plus « à retirer ». Elle reste
+  pour la page de présentation, les premiers pas (`offres-profils`, `lecture-calme`, `formations-vide`,
+  `connexion-perdue`, `lieux-carte`, `reussite`) et les alertes d'un nouveau compte (`alertes-carte`). Un seul type
+  d'illustration par écran : jamais une scène et le personnage ensemble.
 - Retirées (PR 2) : `connexion-perdue` (la baie de serveurs : l'erreur réseau dans la page montre la mascotte qui
-  fait « non », sur ordinateur comme sur téléphone), `introuvable` (la personne devant un écran : l'offre
+  fait « non », sur ordinateur comme sur téléphone ; une nouvelle scène du même nom, l'ordinateur débranché, revient
+  le 9 novembre pour la coupure pendant la lecture du CV des premiers pas, MODIFICATIONS_9 §13), `introuvable` (la personne devant un écran : l'offre
   introuvable est un écran de travail, elle garde le visage du 1), `aucune-offre` (remplacée par le personnage à la
   loupe ; l'image n'était plus utilisée).
 - Maintenance et pas de connexion : 250 px sur téléphone (maquette), 290 px sur ordinateur. Les deux poses sont

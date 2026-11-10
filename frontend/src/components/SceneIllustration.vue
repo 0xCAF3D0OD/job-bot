@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 
-// L'ancienne série d'illustrations (docs/67), à retirer écran par écran (docs/141 §4) : une image générée, préparée par
+// Les scènes de la page de présentation (docs/67) : elles présentent et expliquent une situation (présentation, premiers
+// pas, alertes d'un nouveau compte ; MODIFICATIONS_9 §6, qui modifie docs/141 §4 : la série reste). Une image générée, préparée par
 // scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
 // fondu, quand elle est là.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
@@ -50,7 +51,9 @@ export type SceneName =
   | "preparer-vide"
   | "ia-vide"
   | "formations-vide"
-  | "trop-tot";
+  | "trop-tot"
+  // Coupure pendant la lecture du CV (MODIFICATIONS_9 §13), version provisoire sans personnage.
+  | "connexion-perdue";
 </script>
 
 <template>

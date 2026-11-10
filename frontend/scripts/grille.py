@@ -108,6 +108,11 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("reglages?rubrique=notifications", None),
     ("reglages?rubrique=notifications", "[data-test=language-row]"),
     ("reglages?rubrique=notifications", "[data-test=text-size-row]"),
+    # Premiers pas (PR 10, §5) : les 3 étapes et le panneau d'un critère.
+    ("bienvenue", None),
+    ("bienvenue", "[data-test=welcome-continue]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=criteria-roles]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-criteria]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
