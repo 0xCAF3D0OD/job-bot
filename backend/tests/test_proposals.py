@@ -273,7 +273,8 @@ async def test_cv_reading_runs_on_the_server_and_keeps_the_result(
     assert "+41" not in fake.params[0]["messages"][0]["content"]
     async with runtime.sessionmaker() as session:
         # D'autres tests laissent leurs notifications : on ne regarde que celle de la lecture du CV.
-        [note] = list(await session.scalars(select(Notification).where(Notification.kind == "cv_read")))
+        query = select(Notification).where(Notification.kind == "cv_read")
+        [note] = list(await session.scalars(query))
     assert (note.kind, note.link) == ("cv_read", "/profil")
     assert note.message == "Ton CV est lu : 1 élément à choisir"
 
@@ -328,3 +329,40 @@ async def test_cv_read_before_shows_its_first_element_date(api: AsyncClient) -> 
     read = await _document(api, doc)
     assert read["read_state"] is None and read["chunk_count"] == 1
     assert read["read_at"] is not None
+
+
+async def test_cv_reading_of_another_account_is_404(api: AsyncClient, queued: list[str]) -> None:
+    """C-4 : les trois routes de la lecture ne voient pas le document d'un autre compte."""
+    from jobbot import accounts
+    from jobbot.db.models import Document, User
+
+    runtime: Runtime = api._transport.app.state.test_runtime  # type: ignore[attr-defined]
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM users WHERE username = 'compte-lecture-cv'"))
+    async with runtime.sessionmaker.begin() as session:
+        guest = User(username="compte-lecture-cv", password_hash="!")
+        session.add(guest)
+        await session.flush()
+        guest_id = guest.id
+    try:
+        with accounts.use(guest_id):
+            async with runtime.sessionmaker.begin() as session:
+                other = Document(
+                    filename="cv-fictif.txt",
+                    doc_type="txt",
+                    size=10,
+                    sha256="fictif01",
+                    storage_key="fictif01",
+                    text_status="ok",
+                    extracted_text="Expérience fictive",
+                )
+                session.add(other)
+                await session.flush()
+                other_id = other.id
+        assert (await api.post(f"/api/documents/{other_id}/read")).status_code == 404
+        assert (await api.get(f"/api/documents/{other_id}/read")).status_code == 404
+        assert (await api.delete(f"/api/documents/{other_id}/read")).status_code == 404
+        assert queued == []
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE username = 'compte-lecture-cv'"))
