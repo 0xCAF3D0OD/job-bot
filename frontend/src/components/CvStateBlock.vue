@@ -366,7 +366,7 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
 /* Le bloc d'état (maquettes ProfilOrdinateurCV et ProfilTel) : filet de 1 px en haut, 16 de marge verticale et la marge
    horizontale de la carte (18,5 sur ordinateur, 16 sur téléphone, --cv-pad-x), icône de 24 à 12 du texte ; titre 16/22
    gras, texte 14/20 en --text-tertiary ; actions à 12 dessous, 16 d'écart, boutons de 44 en pilule. */
-.cv-state { display: flex; gap: 12px; padding: 16px var(--cv-pad-x, 18.5px); border-top: 1px solid var(--line); background: var(--surface); }
+.cv-state { display: flex; gap: var(--space-3); padding: var(--space-4) var(--cv-pad-x, 1.15625em); border-top: 1px solid var(--line); background: var(--surface); }
 .cv-state-relire, .cv-state-indispo, .cv-state-illisible, .cv-state-jamais { background: var(--peach-wash); }
 .cv-state-lu, .cv-state-deja { background: var(--success-wash); }
 .cv-state-nouveau { background: var(--primary-soft); }
@@ -379,18 +379,18 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
 @keyframes cv-state-turn { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .cv-state-spinner { animation: none; } }
 .cv-state-body { flex: 1; min-width: 0; }
-.cv-state-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; color: var(--text); }
-.cv-state-text { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text-tertiary); }
-.cv-state-actions { margin-top: 12px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.cv-state-button { height: 44px; padding: 0 20px; border-radius: 22px; font-family: inherit; font-size: 15px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.cv-state-title { margin: 0; font-size: var(--font-body); line-height: 1.375em; font-weight: var(--weight-bold); color: var(--text); }
+.cv-state-text { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-tertiary); }
+.cv-state-actions { margin-top: var(--space-3); display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.cv-state-button { height: 2.75rem; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-family: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); white-space: nowrap; cursor: pointer; }
 .cv-state-primary { border: 0; background: var(--primary); color: var(--on-primary, #fff); }
-.cv-state-outline { border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary-text); font-weight: 600; padding: 0 18.5px; }
+.cv-state-outline { border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-semibold); padding: 0 1.2333em; }
 .cv-state-tonal { border: 0; background: var(--primary-soft); color: var(--primary-text); }
-.cv-state-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 700; color: var(--primary-text); text-decoration: none; }
+.cv-state-link { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .cv-state-link:hover { text-decoration: underline; }
-.cv-state-hint { font-size: 14px; color: var(--text-secondary); }
-.cv-state-progress { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-.cv-state-progress span { display: block; height: 100%; border-radius: 3px; background: var(--primary); transition: width 1s linear; }
-.cv-state-failed { margin: 8px 0 0; font-size: 14px; color: var(--peach-text); }
-.cv-state-close { flex: none; width: 44px; height: 44px; margin: -10px -10px 0 0; padding: 0; border: 0; background: none; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.cv-state-hint { font-size: var(--font-small); color: var(--text-secondary); }
+.cv-state-progress { flex: 1; height: 0.375rem; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; }
+.cv-state-progress span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary); transition: width 1s linear; }
+.cv-state-failed { margin: var(--space-2) 0 0; font-size: var(--font-small); color: var(--peach-text); }
+.cv-state-close { flex: none; width: 2.75rem; height: 2.75rem; margin: -0.625rem -0.625rem 0 0; padding: 0; border: 0; background: none; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 </style>
