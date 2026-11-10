@@ -503,3 +503,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.289 | Téléphone : la bande « Il manque l'annonce complète » tient dans sa carte avec « Lire l'annonce » en principal, et l'onglet Rendez-vous montre d'abord le rendez-vous à noter, la date et l'heure sur une ligne, sans titre « Derniers rendez-vous ORP ». | livrée |
 | 1.6.290 | Ordinateur : le Profil devient une page unique (en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours) ; chaque ligne de « Mon parcours » ouvre sa page et « Modifier » ne change que le nom, le poste et le lieu. | livrée |
 | 1.6.291 | Réglages sur ordinateur : groupes bordés, lignes Langue et Taille du texte avec leur panneau, rappel ORP 5 jours avant la fin du mois | livrée avec une réserve (interface en français seulement : Deutsch et English grisés) |
+| 1.6.292 | Aujourd'hui sur ordinateur : fond crème sous la bande bleue, espacements sur la grille de 4 | livrée |
