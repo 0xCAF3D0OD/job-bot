@@ -2,6 +2,7 @@ import { createApp } from "vue";
 
 import App from "./App.vue";
 import { router } from "./router";
+import { useTextSize } from "./composables/useTextSize";
 import { useTheme } from "./composables/useTheme";
 import "@fontsource-variable/figtree";
 import "./style.css";
@@ -30,4 +31,5 @@ router.onError((error: unknown) => {
 
 // L'apparence choisie (Clair, Sombre) avant le premier rendu : pas d'éclair de l'autre thème.
 useTheme().apply();
+useTextSize().apply();
 createApp(App).use(router).mount("#app");

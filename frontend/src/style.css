@@ -5090,12 +5090,37 @@ a.panel-row:hover { background: var(--band); }
 
 /* Réglages sur ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : 880 px, le titre de 34 sans bandeau, une
    carte par section, ses réglages en lignes séparées d'un filet (D22). */
-.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; --settings-10: 10px; --settings-88: 88px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
+.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; --settings-88: 88px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .settings-wide-title { margin: 0 0 var(--space-8); font-size: var(--settings-34); line-height: var(--settings-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+/* MODIFICATIONS_9 §2.10 : les groupes bordés de 1,5 px (--card-line, comme les cartes du prompt du 9 novembre). */
+.settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .settings-wide .setting-card { border: 0; border-radius: 0; }
 .settings-wide .setting-card + .setting-card { border-top: 1px solid var(--line-soft); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
+/* Langue et Taille du texte (ReglagesOrdinateur) : toute la ligne s'ouvre, le libellé à gauche, la valeur en gris et le
+   chevron de 20 px à droite, au bord des autres contrôles. */
+.setting-link-row { --setting-link-h: 64px; --setting-link-icon: 20px; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--setting-link-h); padding: var(--space-5) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.setting-link-row:hover { background: var(--surface-muted); }
+.setting-link-title { flex: 1; font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.setting-link-value { font-size: var(--font-label); color: var(--text-secondary); }
+.setting-link-row .icon { flex: none; width: var(--setting-link-icon); height: var(--setting-link-icon); color: var(--text-secondary); }
+/* Panneau à boutons radio (ChoicePanel, panneaux lg et tx) : sur-titre 13/16 en capitales grises, lignes de 68 px
+   séparées d'un filet, cercle de 24 px (bleu plein quand il est choisi), libellé 16/22 et précision 14/20. */
+.choice-panel { --choice-68: 68px; --choice-lh-22: 22px; --choice-lh-20: 20px; --choice-lh-16: 16px; --choice-dot: 24px; --choice-inner: 11px; --choice-gap-2: 2px; display: grid; gap: var(--space-1); }
+.choice-panel-heading { margin: 0; font-size: var(--font-caption); line-height: var(--choice-lh-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.choice-rad { display: flex; align-items: center; gap: var(--space-4); min-height: var(--choice-68); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.choice-rad.disabled { cursor: not-allowed; }
+.choice-rad.disabled .choice-rad-text { opacity: 0.6; }
+.choice-rad input { appearance: none; flex: none; display: grid; place-content: center; width: var(--choice-dot); height: var(--choice-dot); margin: 0; border: 2px solid var(--text-secondary); border-radius: 50%; background: none; }
+.choice-rad input:checked { border-color: var(--primary-graphic); }
+.choice-rad input:checked::before { content: ""; width: var(--choice-inner); height: var(--choice-inner); border-radius: 50%; background: var(--primary-graphic); }
+.choice-rad input:focus-visible { outline: var(--choice-gap-2) solid var(--primary-graphic); outline-offset: var(--choice-gap-2); }
+.choice-rad-text b { display: block; font-size: var(--font-body); line-height: var(--choice-lh-22); }
+.choice-rad-text span { display: block; margin-top: var(--choice-gap-2); font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
+.choice-panel-note { margin: var(--space-3) 0 0; font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
+/* Taille du texte « Grande » (useTextSize) : tout ce qui est en rem (textes et espacements) grandit de 25 %, comme un zoom ;
+   les quelques valeurs en px restent. */
+html.text-large { font-size: 125%; }
 
 /* Pages d'état sur ordinateur (maquette du 8 novembre, lot 8 : PageIntrouvable, Maintenance, HorsLigne,
    CandidatureEnvoyee, ObjectifAtteint) : centrées sur 880 px, le personnage de 240, le titre de 34/42 en 800, la
