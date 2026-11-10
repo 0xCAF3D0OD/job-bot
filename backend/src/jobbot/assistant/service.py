@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import plans
 from jobbot.assistant import actions, tools
-from jobbot.db.models import Application, ChatConversation, ChatMessage, Offer
+from jobbot.db.models import Application, ChatConversation, ChatMessage, Document, Offer
 from jobbot.llm.client import ChatTurn, chat_client_factory
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -80,6 +80,7 @@ class Focus:
     application_id: int | None = None
     day: date | None = None
     month: str | None = None
+    document_id: int | None = None
 
 
 async def describe(session: AsyncSession, page: str | None, focus: Focus | None) -> str | None:
@@ -100,6 +101,8 @@ async def describe(session: AsyncSession, page: str | None, focus: Focus | None)
                 f"candidature choisie : id {application.id}, « {application.job_title} » "
                 f"chez {application.company}"
             )
+        if focus.document_id and (document := await session.get(Document, focus.document_id)):
+            parts.append(f"document joint : id {document.id}, « {document.filename} »")
         if focus.day:
             parts.append(f"jour choisi dans le calendrier : {focus.day.isoformat()}")
         if focus.month:
