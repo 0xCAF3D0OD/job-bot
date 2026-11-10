@@ -226,3 +226,104 @@ async def test_understand_api_error_is_clear_and_logged_without_content(
     detail = response.json()["detail"]
     assert "n'a pas pu lire" in detail and "400" in detail
     assert "Acme" not in caplog.text
+
+
+# --- Lecture du CV qui continue hors de la page (PR 21 du 10 novembre) -----------------
+
+
+@pytest.fixture
+def queued(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    from jobbot.api.routes import profile as profile_routes
+
+    calls: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        calls.append(name)
+        return True
+
+    monkeypatch.setattr(profile_routes, "enqueue", enqueue)
+    return calls
+
+
+async def _document(api: AsyncClient, doc: int) -> dict[str, Any]:
+    found: dict[str, Any] = next(
+        d for d in (await api.get("/api/documents")).json() if d["id"] == doc
+    )
+    return found
+
+
+async def test_cv_reading_runs_on_the_server_and_keeps_the_result(
+    api: AsyncClient, fake: FakeClient, queued: list[str]
+) -> None:
+    from jobbot.db.models import Notification
+    from jobbot.profile.reading import read_pending
+
+    doc = await upload(api, "cv.txt", CV.encode())
+    assert (await _document(api, doc))["read_state"] is None
+    started = await api.post(f"/api/documents/{doc}/read")
+    assert started.status_code == 202 and started.json()["read_state"] == "reading"
+    assert queued == ["cv_read"]
+
+    runtime: Runtime = api._transport.app.state.test_runtime  # type: ignore[attr-defined]
+    assert await read_pending(runtime) == 1
+    read = await _document(api, doc)
+    assert read["read_state"] == "done" and read["read_at"] is not None
+    assert read["found"] == {"experience": 1}
+    # Les coordonnées ne partent pas à l'IA (I-1).
+    assert "+41" not in fake.params[0]["messages"][0]["content"]
+    async with runtime.sessionmaker() as session:
+        [note] = list(await session.scalars(select(Notification)))
+    assert (note.kind, note.link) == ("cv_read", "/profil")
+    assert note.message == "Ton CV est lu : 1 élément à choisir"
+
+    [proposal] = (await api.get(f"/api/documents/{doc}/read")).json()
+    assert proposal["kind"] == "experience"
+    # Choisis : la liste n'est plus gardée, la date de lecture reste.
+    assert (await api.delete(f"/api/documents/{doc}/read")).status_code == 204
+    cleared = await _document(api, doc)
+    assert cleared["found"] is None and cleared["read_state"] == "done"
+    assert (await api.get(f"/api/documents/{doc}/read")).json() == []
+    # Rien à relire ensuite.
+    assert await read_pending(runtime) == 0
+
+
+async def test_cv_reading_failures(api: AsyncClient, fake: FakeClient, queued: list[str]) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from jobbot.db.models import Document
+    from jobbot.profile.reading import read_pending
+
+    empty = await upload(api, "vide.txt", b"   ")
+    unreadable = await api.post(f"/api/documents/{empty}/read")
+    assert unreadable.json()["read_state"] == "unreadable"
+    assert queued == []
+
+    doc = await upload(api, "cv.txt", CV.encode())
+    await api.post(f"/api/documents/{doc}/read")
+    fake.response = Refused("refus")
+    runtime: Runtime = api._transport.app.state.test_runtime  # type: ignore[attr-defined]
+    assert await read_pending(runtime) == 0
+    assert (await _document(api, doc))["read_state"] == "unavailable"
+
+    # Une lecture bloquée (worker arrêté) devient indisponible au bout de dix minutes.
+    await api.post(f"/api/documents/{doc}/read")
+    async with runtime.sessionmaker.begin() as session:
+        document = await session.get(Document, doc)
+        assert document is not None
+        document.read_started_at = datetime.now(UTC) - timedelta(minutes=11)
+    assert (await _document(api, doc))["read_state"] == "unavailable"
+
+    assert (await api.post("/api/documents/999999/read")).status_code == 404
+    assert (await api.get("/api/documents/999999/read")).status_code == 404
+    assert (await api.delete("/api/documents/999999/read")).status_code == 404
+
+
+async def test_cv_read_before_shows_its_first_element_date(api: AsyncClient) -> None:
+    doc = await upload(api, "cv.txt", CV.encode())
+    await api.post(
+        "/api/profile-chunks",
+        json={"kind": "competence", "title": "Helm", "content": "Charts", "document_id": doc},
+    )
+    read = await _document(api, doc)
+    assert read["read_state"] is None and read["chunk_count"] == 1
+    assert read["read_at"] is not None

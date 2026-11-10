@@ -7,13 +7,11 @@ seuls l'identifiant et la taille le sont.
 import hashlib
 import uuid
 from datetime import UTC, datetime
-from decimal import Decimal
 from typing import Annotated, Literal
 
-import anthropic
 from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from jobbot import accounts
@@ -26,15 +24,12 @@ from jobbot.core.extract import (
     extract,
 )
 from jobbot.db.models import ChunkKind, Document, ProfileChunk
-from jobbot.letters.service import load_identity
 from jobbot.llm import proposals
-from jobbot.llm.client import Refused
-from jobbot.llm.scoring import InvalidScore
 from jobbot.log import get_logger
+from jobbot.profile import reading
 from jobbot.runtime import Runtime
-from jobbot.scoring import service as scoring_service
-from jobbot.scoring.service import account_problem, active_profile, budget_state, record_call
 from jobbot.worker.queue import enqueue
+from jobbot.worker.tasks.cv_read import CV_READ_JOB
 from jobbot.worker.tasks.score import SCORE_JOB
 
 router = APIRouter(prefix="/api", tags=["profile"])
@@ -53,6 +48,33 @@ class DocumentOut(BaseModel):
     chunk_count: int = 0
     # « certificate » : un certificat de travail (docs/87).
     kind: str | None = None
+    # La lecture du CV (PR 21) : NULL (jamais demandée), « reading », « done », « unavailable »,
+    # « unreadable ». `read_at` : fin de la dernière lecture ; pour un CV lu avant, la date du
+    # premier élément repris de lui. `found` : les éléments proposés encore à choisir, par sorte.
+    read_state: str | None = None
+    read_at: datetime | None = None
+    found: dict[str, int] | None = None
+
+
+def _document_out(
+    document: Document, chunk_count: int, first_chunk: datetime | None
+) -> DocumentOut:
+    result = document.read_result if isinstance(document.read_result, list) else None
+    found: dict[str, int] | None = None
+    if result is not None:
+        found = {}
+        for item in result:
+            if isinstance(item, dict) and item.get("duplicate_of") is None:
+                kind = str(item.get("kind"))
+                found[kind] = found.get(kind, 0) + 1
+    return DocumentOut.model_validate(document).model_copy(
+        update={
+            "chunk_count": chunk_count,
+            "read_state": reading.state_of(document),
+            "read_at": document.read_at or (first_chunk if chunk_count else None),
+            "found": found,
+        }
+    )
 
 
 class DocumentText(BaseModel):
@@ -114,12 +136,17 @@ async def list_documents(request: Request) -> list[DocumentOut]:
         documents = list(
             await session.scalars(select(Document).order_by(Document.uploaded_at.desc()))
         )
-        chunks = list(await session.scalars(select(ProfileChunk.document_id)))
-    counts = {doc_id: chunks.count(doc_id) for doc_id in {d.id for d in documents}}
-    return [
-        DocumentOut.model_validate(d).model_copy(update={"chunk_count": counts.get(d.id, 0)})
-        for d in documents
-    ]
+        rows = (
+            await session.execute(
+                select(
+                    ProfileChunk.document_id,
+                    func.count(),
+                    func.min(ProfileChunk.created_at),
+                ).group_by(ProfileChunk.document_id)
+            )
+        ).all()
+    counts = {row[0]: (int(row[1]), row[2]) for row in rows if row[0] is not None}
+    return [_document_out(d, *counts.get(d.id, (0, None))) for d in documents]
 
 
 @router.post(
@@ -156,7 +183,15 @@ async def upload_document(
             existing.extracted_text = extracted.text
             existing.uploaded_at = datetime.now(UTC)
             await session.flush()
-            again = DocumentOut.model_validate(existing)
+            # Le nombre d'éléments repris dit à la page si ce CV a déjà été lu (PR 24).
+            count, first = (
+                await session.execute(
+                    select(func.count(), func.min(ProfileChunk.created_at)).where(
+                        ProfileChunk.document_id == existing.id
+                    )
+                )
+            ).one()
+            again = _document_out(existing, int(count), first)
     if existing is not None:
         response.status_code = status.HTTP_200_OK
         log.info("document_uploaded_again", document_id=again.id, text_status=again.text_status)
@@ -253,87 +288,15 @@ class ChunkProposal(BaseModel):
     duplicate_of: int | None
 
 
-# Estimation prudente du coût d'une proposition (document de quelques pages).
-PROPOSAL_ESTIMATE_USD = Decimal("0.10")
-
-
 async def _propose(
     request: Request, document_id: int, *, understand: bool = False
 ) -> tuple[list[ChunkProposal], str]:
     """L'IA lit le document : les blocs proposés, et la réponse brute (pour `understood`)."""
-    runtime = _runtime(request)
-    settings = runtime.settings
-    if not settings.llm_configured:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "IA non configurée : renseigner JOBBOT_ANTHROPIC_API_KEY."
-        )
-    document = await _get_document(runtime, document_id)
-    if document.text_status != TextStatus.OK or not document.extracted_text.strip():
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "ce document n'a pas de texte lisible"
-        )
-    async with runtime.sessionmaker() as session:
-        existing = await active_profile(session)
-        spend, budget, rate = await budget_state(session, datetime.now(UTC))
-        # Les coordonnées connues, retirées du texte avant l'envoi (docs/121 §A.3).
-        identity = await load_identity(session)
-    if spend + PROPOSAL_ESTIMATE_USD * rate > budget:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            "plafond mensuel de l'IA atteint : le relever dans les Réglages",
-        )
-
-    client = scoring_service.make_client(settings)
-    params = proposals.request_params(
-        settings.llm_model,
-        settings.llm_effort,
-        existing,
-        document.extracted_text,
-        identity,
-        understand=understand,
-    )
     try:
-        raw = await client.score(params)
-    except Refused:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, "l'IA a refusé de traiter ce document"
-        ) from None
-    except (anthropic.RateLimitError, anthropic.APIConnectionError):
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "IA momentanément indisponible, réessayer"
-        ) from None
-    except anthropic.APIStatusError as exc:
-        problem = account_problem(exc)
-        # Sans le message de l'API, qui peut citer la demande (J-1) : le code, le type
-        # d'erreur et l'identifiant de la demande suffisent pour la retrouver chez Anthropic.
-        body = exc.body if isinstance(exc.body, dict) else {}
-        error = body.get("error")
-        error = error if isinstance(error, dict) else {}
-        log.warning(
-            "document_reading_failed",
-            document_id=document_id,
-            understand=understand,
-            status_code=exc.status_code,
-            error_type=error.get("type"),
-            request_id=exc.request_id,
-        )
-        raise HTTPException(
-            status.HTTP_409_CONFLICT if problem else status.HTTP_502_BAD_GATEWAY,
-            problem
-            or f"l'IA n'a pas pu lire ce document (erreur {exc.status_code}) : "
-            "complète les champs toi-même, rien n'est perdu",
-        ) from None
-
-    async with runtime.sessionmaker.begin() as session:
-        await record_call(session, raw, offer_id=None, rate=rate, purpose="propose")
-    try:
-        result = proposals.parse_output(raw.text, existing)
-    except InvalidScore:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, "réponse de l'IA inutilisable, réessayer"
-        ) from None
-    log.info("chunks_proposed", document_id=document_id, proposals=len(result))
-    return [ChunkProposal(**p.model_dump()) for p in result], raw.text
+        found, text = await reading.propose(_runtime(request), document_id, understand=understand)
+    except reading.ReadingFailed as exc:
+        raise HTTPException(exc.status_code, exc.message) from None
+    return [ChunkProposal(**p.model_dump()) for p in found], text
 
 
 @router.post(
@@ -350,6 +313,53 @@ async def propose_chunks(request: Request, document_id: int) -> list[ChunkPropos
     qui crée les blocs que Kevin accepte."""
     chunks, _ = await _propose(request, document_id)
     return chunks
+
+
+@router.post(
+    "/documents/{document_id}/read",
+    operation_id="startCvReading",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_reading(request: Request, document_id: int) -> DocumentOut:
+    """« Relire mon CV » (PR 21) : la lecture part sur le serveur et continue quand on quitte la
+    page ; la cloche prévient à la fin. Le document est relu sous la RLS du compte (C-5)."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
+        document = await session.get(Document, document_id)
+        if document is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "document introuvable")
+        readable = document.text_status == TextStatus.OK and document.extracted_text.strip()
+        document.read_state = reading.READING if readable else reading.UNREADABLE
+        document.read_started_at = datetime.now(UTC)
+        document.read_result = None
+        await session.flush()
+        out = _document_out(document, 0, None)
+    if readable:
+        await enqueue(runtime.settings, CV_READ_JOB)
+    log.info("cv_reading_requested", document_id=document_id, readable=bool(readable))
+    return out
+
+
+@router.get("/documents/{document_id}/read", operation_id="getCvReading")
+async def get_reading(request: Request, document_id: int) -> list[ChunkProposal]:
+    """Les éléments trouvés par la dernière lecture, à choisir (« Choisir les éléments »)."""
+    document = await _get_document(_runtime(request), document_id)
+    result = document.read_result if isinstance(document.read_result, list) else []
+    return [ChunkProposal.model_validate(item) for item in result]
+
+
+@router.delete(
+    "/documents/{document_id}/read",
+    operation_id="clearCvReading",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def clear_reading(request: Request, document_id: int) -> None:
+    """Les éléments choisis (ou écartés) : la liste proposée n'est plus gardée."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        document = await session.get(Document, document_id)
+        if document is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "document introuvable")
+        document.read_result = None
 
 
 class Understanding(BaseModel):
