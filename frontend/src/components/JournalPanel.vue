@@ -8,7 +8,7 @@ import BusyButton from "./BusyButton.vue";
 import ShowMore from "./ShowMore.vue";
 import StatusPill from "./StatusPill.vue";
 import { dateWithTime } from "../dates";
-import { SITE_NAMES, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
+import { frenchName, parseStatusLabel, plural, rateText, SITE_NAMES, sourceLabel } from "../format";
 
 // L'analyse d'une alerte en pastille (§4) : réussie en vert, le rouge seulement pour un vrai échec.
 const PARSE_TONE: Record<ParseStatus, "neutral" | "ok" | "error"> = { parsed: "ok", empty: "neutral", unrecognized: "neutral", failed: "error" };
@@ -136,7 +136,7 @@ onMounted(() => void load());
       v-else-if="!loading && items.length === 0"
       class="muted"
     >
-      Aucune alerte reçue pour l'instant.
+      Aucune alerte reçue pour l’instant.
     </p>
 
     <table
@@ -221,7 +221,7 @@ onMounted(() => void load());
                     data-test="detail-offer-meta"
                   >
                     <span v-if="offer.company"><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company }}</span>
-                    <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+                    <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ frenchName(offer.location) }}</span>
                     <span v-if="rateText(offer.rate_min, offer.rate_max)"><AppIcon name="rate" /><span class="visually-hidden">Taux : </span>{{ rateText(offer.rate_min, offer.rate_max) }}</span>
                   </span>
                   <a

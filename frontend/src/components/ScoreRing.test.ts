@@ -21,14 +21,14 @@ describe("ScoreRing", () => {
     expect(ring.attributes("aria-label")).toBe("Proche : 75 sur 100");
   });
 
-  it("garde l'arc entre vide et plein, et signale une note ancienne", () => {
+  it("garde l’arc entre vide et plein, et signale une note ancienne", () => {
     const full = mount(ScoreRing, { props: { score: 130, stale: true } });
     expect(arc(full)).toBe("263.89 263.89");
     expect(full.find("[data-test=score]").attributes("aria-label")).toContain("ancien profil");
     expect(arc(mount(ScoreRing, { props: { score: -5 } }))).toBe("0.00 263.89");
   });
 
-  it("sans note : pas d'anneau, « Pas encore notée » en texte, la raison pour les lecteurs d'écran", () => {
+  it("sans note : pas d’anneau, « Pas encore notée » en texte, la raison pour les lecteurs d’écran", () => {
     const wrapper = mount(ScoreRing, { props: { score: null, pending: "Pas encore notée, à noter", worded: true } });
     expect(wrapper.find("svg").exists()).toBe(false);
     expect(wrapper.find("[data-test=score]").classes()).toContain("score-pending");

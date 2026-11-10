@@ -64,7 +64,7 @@ afterEach(() => {
 });
 
 describe("Rendez-vous sur ordinateur", () => {
-  it("deux colonnes : le prochain rendez-vous ORP ouvert, un rendez-vous noté s'ouvre dans ?rdv=", async () => {
+  it("deux colonnes : le prochain rendez-vous ORP ouvert, un rendez-vous noté s’ouvre dans ?rdv=", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [NOTED], target: 10, trainings: [] });
     const { wrapper, router } = await open();
     expect(wrapper.find("[data-test=rdv-desktop]").exists()).toBe(true);

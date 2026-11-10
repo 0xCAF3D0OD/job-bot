@@ -57,7 +57,7 @@ async function revoke(): Promise<void> {
   const { response } = await api.DELETE("/api/partenaires/getemall");
   close();
   if (!response.ok) {
-    error.value = "L'accès n'a pas pu être retiré. Réessaie.";
+    error.value = "L’accès n’a pas pu être retiré. Réessaie.";
     return;
   }
   await load();
@@ -78,7 +78,7 @@ onMounted(load);
           aria-hidden="true"
         ><AppIcon name="chat" /></span>
         <span class="setting-row-text">
-          <span class="setting-row-title">Get'emAll</span>
+          <span class="setting-row-title">Get’emAll</span>
           <span class="setting-row-description">Entraînement aux entretiens, lecture seule</span>
           <span
             class="setting-row-description"
@@ -91,7 +91,7 @@ onMounted(load);
       <SettingRow
         v-slot="c"
         title="Partager mes recherches ORP"
-        description="Le nombre fait et l'objectif du mois"
+        description="Le nombre fait et l’objectif du mois"
         :saved="saved"
         :error="error"
       >
@@ -112,7 +112,7 @@ onMounted(load);
           data-test="getemall-remove"
           @click="open"
         >
-          Retirer l'accès
+          Retirer l’accès
         </button>
       </div>
     </SettingCard>
@@ -135,11 +135,11 @@ onMounted(load);
       @cancel.prevent="close"
     >
       <h2 id="getemall-remove-title">
-        Retirer l'accès de Get'emAll&nbsp;?
+        Retirer l’accès de Get’emAll&nbsp;?
       </h2>
       <p id="getemall-remove-text">
-        Get'emAll ne pourra plus lire ton suivi. Ton entraînement reste dans Get'emAll : tu peux l'effacer depuis
-        l'app. Tu pourras relier ton compte de nouveau plus tard.
+        Get’emAll ne pourra plus lire ton suivi. Ton entraînement reste dans Get’emAll : tu peux l’effacer depuis
+        l’app. Tu pourras relier ton compte de nouveau plus tard.
       </p>
       <div class="partner-confirm-actions">
         <button
@@ -148,7 +148,7 @@ onMounted(load);
           data-test="getemall-keep"
           @click="close"
         >
-          Garder l'accès
+          Garder l’accès
         </button>
         <button
           type="button"
@@ -156,7 +156,7 @@ onMounted(load);
           data-test="getemall-confirm-remove"
           @click="revoke"
         >
-          Retirer l'accès
+          Retirer l’accès
         </button>
       </div>
     </dialog>

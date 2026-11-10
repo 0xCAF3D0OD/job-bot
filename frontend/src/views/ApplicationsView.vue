@@ -147,7 +147,7 @@ const bannerText = computed(() => {
 // en une phrase, visible replié.
 const calendarLine = computed(() => {
   const missing = monthItems.value.filter((a) => incomplete.value.has(a.id)).length;
-  if (missing) return `${plural(missing, "candidature", "candidatures")} à compléter pour l'ORP`;
+  if (missing) return `${plural(missing, "candidature", "candidatures")} à compléter pour l’ORP`;
   const days = new Set(monthItems.value.map((a) => a.sent_at)).size;
   return days ? `${plural(days, "jour", "jours")} avec au moins une candidature` : "Aucune candidature ce mois-ci";
 });
@@ -253,7 +253,7 @@ async function save(value: ApplicationFormValue): Promise<void> {
   // que le refus du serveur, dit tel quel.
   if (!result.data) {
     const detail = (result.error as { detail?: unknown } | undefined)?.detail;
-    error.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l'instant : réessaie.";
+    error.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l’instant : réessaie.";
     return;
   }
   celebrateIf(editing.value.id ?? result.data.id, value.status, value.company);
@@ -401,7 +401,7 @@ async function removeInterview(): Promise<void> {
   if (!id) return;
   interviewing.value = null;
   await offerUndo({
-    message: "Retour d'entretien supprimé",
+    message: "Retour d’entretien supprimé",
     commit: async (keepalive) => {
       const { error } = await api.DELETE("/api/interviews/{interview_id}", { params: { path: { interview_id: id } }, keepalive });
       if (error !== undefined) return false;
@@ -600,7 +600,7 @@ onUnmounted(() => assistant.setFocus(null));
           />
         </div>
         <!-- Téléphone (lot 18, §10.2 ; maquette Orp) : l'objectif, « À déclarer à l'ORP » et « Recherches du mois » en
-             blocs, l'export dans le dernier bloc. -->
+             blocs, l’export dans le dernier bloc. -->
         <OrpBlocks
           v-if="phone"
           :data="orp"
@@ -672,7 +672,7 @@ onUnmounted(() => assistant.setFocus(null));
           <MoreMenu
             v-if="orp.count"
             :items="monthMenu.slice(1)"
-            label="Plus d'actions sur le mois"
+            label="Plus d’actions sur le mois"
             test-id="orp-more"
           />
         </div>
@@ -758,7 +758,7 @@ onUnmounted(() => assistant.setFocus(null));
         title="Pas encore de candidature"
         data-test="applications-none-yet"
       >
-        <p>Une candidature envoyée s'ajoute ici.</p>
+        <p>Une candidature envoyée s’ajoute ici.</p>
         <div class="face-state-actions">
           <RouterLink
             to="/candidatures/offres"

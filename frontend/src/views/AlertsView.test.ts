@@ -75,9 +75,9 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     await wrapper.find("[data-test=wizard-next]").trigger("click");
 
     // Étape 2 : jobup, puis LinkedIn ; l'avancée sur la ligne de l'étape, deux boutons (docs/104 §4).
-    expect(wrapper.text()).toContain("Crée l'alerte sur jobup");
+    expect(wrapper.text()).toContain("Crée l’alerte sur jobup");
     expect(wrapper.find("[data-test=wizard-site-count]").text()).toBe("· site 1 sur 2");
-    expect(wrapper.find("[data-test=wizard-site-done]").text()).toBe("J'ai créé l'alerte");
+    expect(wrapper.find("[data-test=wizard-site-done]").text()).toBe("J’ai créé l’alerte");
     expect(wrapper.find("[data-test=wizard-skip]").text()).toBe("Plus tard");
     expect(wrapper.find("[data-test=wizard-skip]").classes()).toContain("secondary");
     expect(wrapper.find("[data-test=wizard-open]").attributes("href")).toBe("https://jobup.example/?term=DevOps");
@@ -86,17 +86,17 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", {
       params: { path: { search_id: 1, site: "jobup" } },
     });
-    expect(wrapper.text()).toContain("Crée l'alerte sur LinkedIn");
+    expect(wrapper.text()).toContain("Crée l’alerte sur LinkedIn");
     await wrapper.find("[data-test=wizard-skip]").trigger("click");
 
     // Étape 3.
-    expect(wrapper.text()).toContain("C'est prêt");
+    expect(wrapper.text()).toContain("C’est prêt");
     expect(wrapper.text()).toContain("moi@exemple.ch");
   });
 });
 
 describe("Alertes, assistant : le bouton bleu ajoute aussi (2026-11-05)", () => {
-  it("une recherche tapée sans le « + » est ajoutée par « Continuer », puis l'étape suivante s'ouvre", async () => {
+  it("une recherche tapée sans le « + » est ajoutée par « Continuer », puis l’étape suivante s’ouvre", async () => {
     const wrapper = await mountView(page([]));
     POST.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
     await wrapper.find("[data-test=wizard-next]").trigger("click");
@@ -108,12 +108,12 @@ describe("Alertes, assistant : le bouton bleu ajoute aussi (2026-11-05)", () => 
     await wrapper.find("[data-test=wizard-next]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "DevOps", location: null } });
-    expect(wrapper.text()).toContain("Crée l'alerte sur jobup");
+    expect(wrapper.text()).toContain("Crée l’alerte sur jobup");
   });
 });
 
 describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
-  it("la phrase, les familles, une carte par alerte avec le mot d'état ; pas de bandeau", async () => {
+  it("la phrase, les familles, une carte par alerte avec le mot d’état ; pas de bandeau", async () => {
     const wrapper = await mountView(
       page([
         search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - 2 * DAY).toISOString() }), cell("linkedin")]),
@@ -144,7 +144,7 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     expect(wrapper.find("[data-test=alert-sheet]").text()).toContain("À créer sur LinkedIn");
     await wrapper.find("[data-test=alert-create]").trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toContain("Crée l'alerte sur LinkedIn");
+    expect(wrapper.text()).toContain("Crée l’alerte sur LinkedIn");
     expect(wrapper.findAll("[data-test=wizard-open]").map((a) => a.text())).toEqual([expect.stringContaining("DevOps")]);
     await wrapper.find("[data-test=close-wizard]").trigger("click");
     await flushPromises();
@@ -169,7 +169,7 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     expect(wrapper.find("[data-test=alert-card-2-jobup]").exists()).toBe(true);
   });
 
-  it("ajout sans mot : l'erreur sous le champ, le curseur dedans, « (facultatif) » sur le lieu", async () => {
+  it("ajout sans mot : l’erreur sous le champ, le curseur dedans, « (facultatif) » sur le lieu", async () => {
     GET.mockResolvedValue({ data: page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]) });
     const wrapper = mount(AlertsView, { global: { stubs: { teleport: true } }, attachTo: document.body });
     await flushPromises();
@@ -190,7 +190,7 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
   it("sans alerte reçue : la phrase le dit", async () => {
     const day = new Date(Date.now() - DAY).toISOString();
     const wrapper = await mountView(page([search(1, [cell("jobup", { status: "created", created_at: day })])]));
-    expect(wrapper.find("[data-test=alerts-sentence]").text()).toBe("1 recherche suivie. Aucune alerte reçue pour l'instant.");
+    expect(wrapper.find("[data-test=alerts-sentence]").text()).toBe("1 recherche suivie. Aucune alerte reçue pour l’instant.");
     expect(wrapper.find("[data-test=alert-card-1-jobup] .block-row-aside").text().replace(/^, /, "")).toBe("En attente du premier envoi");
   });
 
@@ -233,7 +233,7 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
 });
 
 describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
-  it("dit à l'invité que les codes passent par la boîte de jobA1 ; rien pour l'exploitant", async () => {
+  it("dit à l’invité que les codes passent par la boîte de jobA1 ; rien pour l’exploitant", async () => {
     const received = [search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() })])];
     const guest = await mountView({ ...page(received), personal_address: true, guest_mailbox: true });
     expect(guest.find("[data-test=site-code-row]").text()).toContain("la boîte de jobA1");
@@ -253,7 +253,7 @@ describe("Alertes, une colonne (planche « 6. Alertes »)", () => {
 });
 
 describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
-  it("ouvrir le site copie l'adresse d'avance", async () => {
+  it("ouvrir le site copie l’adresse d’avance", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const todo = { ...page([search(1, [cell("jobup"), cell("linkedin")])]), mailbox: "alertes+lea-abc12345@joba1.ch", personal_address: true };

@@ -17,6 +17,7 @@ import StepProgress from "../components/StepProgress.vue";
 import UndoToast from "../components/UndoToast.vue";
 import { offerUndo } from "../composables/useUndo";
 import { dateInSentence } from "../dates";
+import { companyPlace } from "../format";
 
 // Les relances une à une (planche « Tri et panneau de commande », B2) : ouvertes depuis la carte
 // « À relancer » du Suivi, sur téléphone. Une candidature à la fois ; dans le panneau du bas,
@@ -163,7 +164,7 @@ onMounted(async () => {
               />
               <div class="pick-title">
                 <strong>{{ current.job_title }}</strong>
-                <span class="muted">{{ [current.company, current.location].filter(Boolean).join(" · ") }}</span>
+                <span class="muted">{{ companyPlace(current.company, current.location) }}</span>
               </div>
             </header>
             <div class="follow-up-lines">

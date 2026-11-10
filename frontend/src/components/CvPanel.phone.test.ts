@@ -81,7 +81,7 @@ async function mountPanel() {
 }
 
 describe("CvPanel sur téléphone (maquette Preparer)", () => {
-  it("sans CV : le modèle, l'aperçu vide et « Préparer le CV » en bas", async () => {
+  it("sans CV : le modèle, l’aperçu vide et « Préparer le CV » en bas", async () => {
     GET.mockResolvedValue({ data: [] });
     const wrapper = await mountPanel();
     expect(wrapper.find("[data-test=template-moderne]").exists()).toBe(true);
@@ -90,7 +90,7 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=next-step]").exists()).toBe(false);
   });
 
-  it("avec un CV : « Moderne · Français » et « Changer » en tête, l'aperçu, « J'ai relu le CV » et la suite vers Postuler", async () => {
+  it("avec un CV : « Moderne · Français » et « Changer » en tête, l’aperçu, « J’ai relu le CV » et la suite vers Postuler", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     PUT.mockResolvedValue({ data: cv(21, [1, 3], { read_at: "2026-11-05T10:00:00Z" }) });
     const wrapper = await mountPanel();
@@ -119,7 +119,7 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=cv]").exists()).toBe(true);
   });
 
-  it("une autre langue propose de préparer le CV à nouveau ; les mots mis en avant sous l'aperçu ; « Blocs du CV » replié", async () => {
+  it("une autre langue propose de préparer le CV à nouveau ; les mots mis en avant sous l’aperçu ; « Blocs du CV » replié", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     const wrapper = await mountPanel();
     await wrapper.find("[data-test=cv-language-de]").trigger("click");
@@ -138,7 +138,7 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(row.attributes("aria-expanded")).toBe("false");
   });
 
-  it("« Modifier le texte avec l'Assistant » ouvre la consigne et change le bouton du bas", async () => {
+  it("« Modifier le texte avec l’Assistant » ouvre la consigne et change le bouton du bas", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1])] });
     const wrapper = await mountPanel();
     await wrapper.find("[data-test=cv-edit-text]").trigger("click");

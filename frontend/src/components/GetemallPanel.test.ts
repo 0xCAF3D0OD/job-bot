@@ -32,14 +32,14 @@ async function mountPanel(answer: unknown) {
   return wrapper;
 }
 
-describe("Réglages › Connexions, Get'emAll (docs/140)", () => {
-  it("rien tant que la connexion n'est pas configurée", async () => {
+describe("Réglages › Connexions, Get’emAll (docs/140)", () => {
+  it("rien tant que la connexion n’est pas configurée", async () => {
     const wrapper = await mountPanel({ ...UNLINKED, available: false });
     expect(wrapper.find("[data-test=getemall-panel]").exists()).toBe(false);
     expect(wrapper.find("[data-test=getemall-empty]").exists()).toBe(false);
   });
 
-  it("l'interrupteur ORP s'enregistre tout de suite", async () => {
+  it("l’interrupteur ORP s’enregistre tout de suite", async () => {
     const wrapper = await mountPanel(LINKED);
     expect(wrapper.find("[data-test=getemall-last-read]").text()).toBe("Pas encore lu");
     PATCH.mockResolvedValue({ data: { ...LINKED, orp: true } });
@@ -51,7 +51,7 @@ describe("Réglages › Connexions, Get'emAll (docs/140)", () => {
     wrapper.unmount();
   });
 
-  it("« Retirer l'accès » demande confirmation, puis la section dit qu'aucune app n'est reliée", async () => {
+  it("« Retirer l’accès » demande confirmation, puis la section dit qu’aucune app n’est reliée", async () => {
     const wrapper = await mountPanel(LINKED);
     await wrapper.find("[data-test=getemall-remove]").trigger("click");
     await flushPromises();

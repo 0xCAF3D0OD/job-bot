@@ -29,9 +29,9 @@ describe("blocks", () => {
 
 describe("liens", () => {
   it("garde les chemins de la plateforme et les adresses https, sinon le texte", () => {
-    expect(inline("Voir [l'offre](/candidatures/offres?offre=12) et [ce jour](/candidatures/suivi?mois=2026-10&jour=2026-10-02).")).toEqual([
+    expect(inline("Voir [l’offre](/candidatures/offres?offre=12) et [ce jour](/candidatures/suivi?mois=2026-10&jour=2026-10-02).")).toEqual([
       { text: "Voir ", bold: false },
-      { text: "l'offre", bold: false, href: "/candidatures/offres?offre=12" },
+      { text: "l’offre", bold: false, href: "/candidatures/offres?offre=12" },
       { text: " et ", bold: false },
       { text: "ce jour", bold: false, href: "/candidatures/suivi?mois=2026-10&jour=2026-10-02" },
       { text: ".", bold: false },

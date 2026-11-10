@@ -12,7 +12,7 @@ describe("débordement sur le côté", () => {
     expect(css).toMatch(/html, body \{ overflow-x: clip; \}/);
   });
 
-  it("sur écran tactile, l'infobulle d'un bouton icône ne prend pas de place", () => {
+  it("sur écran tactile, l’infobulle d’un bouton icône ne prend pas de place", () => {
     expect(css).toMatch(
       /@media \(hover: none\) and \(pointer: coarse\) \{ button\.icon-only:not\(:focus-visible\)::after \{ display: none; \} \}/,
     );

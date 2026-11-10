@@ -34,13 +34,13 @@ async function mountPanel(over: Partial<typeof ME> = {}) {
 }
 
 describe("SessionPanel", () => {
-  it("une carte : qui est connecté, puis l'accueil ; chaque action à droite de sa ligne", async () => {
+  it("une carte : qui est connecté, puis l’accueil ; chaque action à droite de sa ligne", async () => {
     const { wrapper } = await mountPanel();
     const card = wrapper.find("[data-test=session-panel]");
     expect(card.classes()).toContain("setting-card");
     expect(wrapper.find("fieldset").exists()).toBe(false);
     const rows = card.findAll("[data-test=setting-row]");
-    expect(rows.map((r) => r.find(".setting-row-title").text())).toEqual(["Connexion", "L'accueil"]);
+    expect(rows.map((r) => r.find(".setting-row-title").text())).toEqual(["Connexion", "L’accueil"]);
     expect(rows[0]!.find(".setting-row-description").text()).toBe("Connecté en tant que camille.");
     expect(rows[0]!.find(".setting-row-control [data-test=logout-all]").classes()).toEqual(["secondary", "small"]);
     expect(rows[1]!.find(".setting-row-control [data-test=welcome-again]").exists()).toBe(true);
@@ -62,7 +62,7 @@ describe("SessionPanel", () => {
     wrapper.unmount();
   });
 
-  it("refaire l'accueil : les réponses gardées, la page d'accueil", async () => {
+  it("refaire l’accueil : les réponses gardées, la page d’accueil", async () => {
     PUT.mockResolvedValue({});
     const { wrapper, router } = await mountPanel();
     await wrapper.find("[data-test=welcome-again]").trigger("click");
@@ -72,12 +72,12 @@ describe("SessionPanel", () => {
     wrapper.unmount();
   });
 
-  it("l'exploitant ne refait pas l'accueil ; la démo et la connexion désactivée le disent", async () => {
+  it("l’exploitant ne refait pas l’accueil ; la démo et la connexion désactivée le disent", async () => {
     const owner = await mountPanel({ is_owner: true });
     expect(owner.wrapper.find("[data-test=welcome-again]").exists()).toBe(false);
     owner.wrapper.unmount();
     const demo = await mountPanel({ authenticated: false, auth_enabled: false, demo: true });
-    expect(demo.wrapper.find("[data-test=auth-demo] .setting-row-description").text()).toBe("Démo : rien de ce que tu fais n'est enregistré.");
+    expect(demo.wrapper.find("[data-test=auth-demo] .setting-row-description").text()).toBe("Démo : rien de ce que tu fais n’est enregistré.");
     demo.wrapper.unmount();
     const open = await mountPanel({ authenticated: false, auth_enabled: false });
     expect(open.wrapper.find("[data-test=auth-disabled]").text()).toContain("Connexion désactivée sur cette installation");

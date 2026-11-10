@@ -42,7 +42,7 @@ describe("Repliable avec icône et phrase (1.6.61)", () => {
     expect(wrapper.find("button").attributes("aria-expanded")).toBe("false");
   });
 
-  it("sans icône ni phrase : la ligne d'avant, inchangée", () => {
+  it("sans icône ni phrase : la ligne d’avant, inchangée", () => {
     const wrapper = mount(DisclosureRow, { props: { title: "Un", value: "2 lignes" } });
     expect(wrapper.find(".disclosure-icon").exists()).toBe(false);
     expect(wrapper.find(".disclosure-text").exists()).toBe(false);

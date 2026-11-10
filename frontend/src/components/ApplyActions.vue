@@ -40,7 +40,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
     data-test="already-applied"
     @click="emit('mark')"
   >
-    J'ai déjà postulé
+    J’ai déjà postulé
   </BusyButton>
   <template v-else>
     <BusyButton
@@ -50,7 +50,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
       data-test="mark-applied"
       @click="emit('mark')"
     >
-      J'ai postulé
+      J’ai postulé
     </BusyButton>
     <a
       v-if="link"

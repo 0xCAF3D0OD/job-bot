@@ -60,7 +60,7 @@ describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
     expect(GET).toHaveBeenCalledTimes(6); // pastilles et recherches suivies relues au changement de vue
   });
 
-  it("l'en-tête suit la largeur de l'onglet : Offres à 1 280 px, les autres à 1 020 (1.6.29)", async () => {
+  it("l’en-tête suit la largeur de l’onglet : Offres à 1 280 px, les autres à 1 020 (1.6.29)", async () => {
     GET.mockResolvedValue({ data: {} });
     const { wrapper, router } = await mountJobs("/candidatures/offres");
     expect(wrapper.find(".jobs-head").classes()).toContain("wide");

@@ -83,7 +83,7 @@ onMounted(() => void refresh());
         <RouterLink
           to="/"
           class="icon-button icon-only"
-          aria-label="Retour à l'accueil"
+          aria-label="Retour à l’accueil"
           data-test="notifications-back"
         >
           <AppIcon name="arrow-left" />
@@ -171,7 +171,7 @@ onMounted(() => void refresh());
         data-test="notifications-empty"
       >
         <!-- « Tout est lu » : sur téléphone, le personnage assis et son ombre (§10.9, docs/141 §3) ; sur ordinateur,
-             la cloche sonne dans l'arche, une fois (maquette Animations). Un seul des trois par écran. -->
+             la cloche sonne dans l’arche, une fois (maquette Animations). Un seul des trois par écran. -->
         <div
           v-if="inbox.items.length && !wide"
           class="notifications-perso"
@@ -197,7 +197,7 @@ onMounted(() => void refresh());
           :size="120"
         />
         <h2 class="face-state-title">
-          {{ inbox.items.length ? "Tout est lu" : "Aucune notification pour l'instant" }}
+          {{ inbox.items.length ? "Tout est lu" : "Aucune notification pour l’instant" }}
         </h2>
         <p class="face-state-line">
           Les nouvelles offres et les rappels ORP arriveront ici.

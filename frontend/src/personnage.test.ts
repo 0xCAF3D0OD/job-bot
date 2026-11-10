@@ -84,7 +84,7 @@ describe("Personnage : un seul des trois par écran (docs/141)", () => {
     expect(troupe.map((f) => f.path).sort()).toEqual(Object.keys(TROUPE_SCREENS).sort());
   });
 
-  it("aucun écran de travail ne montre l'un ou l'autre", () => {
+  it("aucun écran de travail ne montre l’un ou l’autre", () => {
     for (const path of WORK) {
       const file = FILES.find((f) => f.path === path);
       expect(file, path).toBeDefined();
@@ -92,7 +92,7 @@ describe("Personnage : un seul des trois par écran (docs/141)", () => {
     }
   });
 
-  it("aucune page n'affiche à la fois une image et une mascotte d'humeur ou le logo transformé", () => {
+  it("aucune page n’affiche à la fois une image et une mascotte d’humeur ou le logo transformé", () => {
     for (const file of [...users, ...troupe]) {
       const pageTest = EXCLUSIVE[file.path];
       if (pageTest) {
@@ -112,7 +112,7 @@ describe("Personnage : un seul des trois par écran (docs/141)", () => {
   });
 });
 describe("Illustration (docs/141 §2)", () => {
-  it("pose l'image 400 px, 800 px pour les écrans 2×, avec sa taille, décorative et chargée à l'affichage", async () => {
+  it("pose l’image 400 px, 800 px pour les écrans 2×, avec sa taille, décorative et chargée à l’affichage", async () => {
     const wrapper = mount(Illustration, { props: { pose: "loupe", height: 200 } });
     const img = wrapper.find("img");
     expect(img.attributes("src")).toMatch(/perso-11-loupe-400\.webp\?v=\d+$/);

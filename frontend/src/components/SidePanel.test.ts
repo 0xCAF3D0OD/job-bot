@@ -69,7 +69,7 @@ describe("SidePanel (docs/32 §2.2)", () => {
     expect(document.documentElement.classList.contains("side-open")).toBe(false);
   });
 
-  it("rend le focus à l'élément de départ quand le panneau est démonté", async () => {
+  it("rend le focus à l’élément de départ quand le panneau est démonté", async () => {
     const opener = document.createElement("button");
     document.body.append(opener);
     opener.focus();

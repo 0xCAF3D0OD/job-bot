@@ -111,7 +111,7 @@ onUnmounted(() => clearInterval(timer));
           v-if="!inbox.items.length"
           class="hint bell-empty"
         >
-          Aucune notification pour l'instant.
+          Aucune notification pour l’instant.
         </p>
         <template
           v-for="group in [{ title: 'Nouvelles', items: fresh }, { title: 'Plus tôt', items: earlier }]"

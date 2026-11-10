@@ -45,7 +45,7 @@ async function readInDetail(item: Certificate): Promise<void> {
       page.value = data;
       open.value = item.document_id;
     } else {
-      message.value = (error as { detail?: string } | undefined)?.detail ?? "Lecture impossible pour l'instant.";
+      message.value = (error as { detail?: string } | undefined)?.detail ?? "Lecture impossible pour l’instant.";
     }
   } finally {
     reading.value = null;
@@ -62,7 +62,7 @@ onMounted(() => void load());
     class="hint certificates-hint"
     data-test="certificates-hint"
   >
-    Un certificat parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail ». Encore en poste ?
+    Un certificat parmi tes documents ? Ouvre-le, puis ⋯ › « C’est un certificat de travail ». Encore en poste ?
     <button
       type="button"
       class="link"
@@ -141,7 +141,7 @@ onMounted(() => void load());
           :data-test="`certificate-details-${item.document_id}`"
           @click="open = open === item.document_id ? null : item.document_id"
         >
-          <HoverNote text="Une lecture reste une interprétation : la phrase d'origine fait foi.">
+          <HoverNote text="Une lecture reste une interprétation : la phrase d’origine fait foi.">
             <span class="with-icon">{{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}<AppIcon name="chevron-down" /></span>
           </HoverNote>
         </button>
@@ -192,7 +192,7 @@ onMounted(() => void load());
           <BusyButton
             class="secondary small"
             :busy="reading === item.document_id"
-            busy-label="L'IA lit le certificat…"
+            busy-label="L’IA lit le certificat…"
             :data-test="`certificate-read-${item.document_id}`"
             @click="readInDetail(item)"
           >
@@ -214,7 +214,7 @@ onMounted(() => void load());
     </article>
     <p class="hint">
       <HoverNote text="Les personnes citées en signature sont retirées aussi ; un nom seul dans une phrase peut rester.">
-        Avant l'IA, ton nom est retiré.
+        Avant l’IA, ton nom est retiré.
       </HoverNote>
     </p>
   </section>

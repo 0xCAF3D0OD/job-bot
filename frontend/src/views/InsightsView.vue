@@ -77,7 +77,7 @@ async function load(): Promise<void> {
     insights.value = data;
   } catch (cause) {
     offline.value = isNetworkError(cause);
-    error.value = "Bilan indisponible pour l'instant.";
+    error.value = "Bilan indisponible pour l’instant.";
   }
 }
 
@@ -86,9 +86,9 @@ const figures = computed(() => {
   const f = insights.value?.funnel;
   if (!f) return [];
   return [
-    { key: "applications", value: f.applications, label: f.applications === 1 ? "candidature" : "candidatures" },
-    { key: "responses", value: f.responses, label: f.responses === 1 ? "réponse" : "réponses" },
-    { key: "interviews", value: f.interviews, label: f.interviews === 1 ? "entretien" : "entretiens" },
+    { key: "applications", value: f.applications, label: f.applications <= 1 ? "candidature" : "candidatures" },
+    { key: "responses", value: f.responses, label: f.responses <= 1 ? "réponse" : "réponses" },
+    { key: "interviews", value: f.interviews, label: f.interviews <= 1 ? "entretien" : "entretiens" },
   ];
 });
 // « Mois par mois » : l'objectif ORP mensuel, s'il est indiqué.
@@ -106,7 +106,7 @@ const site = computed(() => (insights.value ? bestSite(insights.value.comparison
 // « Le résumé d'octobre à copier », « Le résumé de mai à copier ».
 const orpDescription = computed(() => {
   const name = monthName(month.value);
-  return `Le résumé ${/^[aeiou]/.test(name) ? "d'" : "de "}${name} à copier`;
+  return `Le résumé ${/^[aeiou]/.test(name) ? "d’" : "de "}${name} à copier`;
 });
 // Sur téléphone, plus de sélecteur : une ligne dit la période des chiffres (Kevin, 6.11).
 const periodLine = computed(() => {
@@ -270,7 +270,7 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
         <!-- « Pour l'ORP » (période « Un mois ») : le résumé du mois à copier pour le rendez-vous. -->
         <DisclosureRow
           v-if="period === 'month' && insights.orp_summary"
-          title="Pour l'ORP"
+          title="Pour l’ORP"
           :description="orpDescription"
           data-test="detail-orp"
         >

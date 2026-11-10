@@ -84,7 +84,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(toggle.attributes("aria-expanded")).toBe("true");
   });
 
-  it("les offres expirées : « Voir les offres expirées (n) » au bas de la liste, seulement s'il y en a (Kevin, 6.11)", async () => {
+  it("les offres expirées : « Voir les offres expirées (n) » au bas de la liste, seulement s’il y en a (Kevin, 6.11)", async () => {
     const none = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
     expect(none.find("[data-test=offers-expired]").exists()).toBe(false);
     document.body.innerHTML = "";
@@ -136,7 +136,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     const wrapper = await mountAt("/offres?note=70&taux=80", []);
     const empty = wrapper.find("[data-test=offers-empty]");
     expect(empty.find(".face-state-title").text()).toBe("Aucune offre avec ces filtres");
-    expect(empty.text()).toContain("Note minimale : Proche et plus, Taux minimum : 80 %. Élargis un critère pour voir plus d'offres.");
+    expect(empty.text()).toContain("Note minimale : Proche et plus, Taux minimum : 80 %. Élargis un critère pour voir plus d’offres.");
     expect(empty.find("[data-test=offers-edit-filters]").classes()).toContain("primary");
     // Les 4 personnages du logo (maquette AucuneOffre, §15) : la scène « aucune-offre », 330 px, seule sur l'écran.
     const person = empty.find("[data-illustration=troupe]");
@@ -168,7 +168,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
 });
 
 describe("Connexion perdue après un premier chargement (maquette ErreurConnexion, 2026-11-06)", () => {
-  it("l'erreur seule, sans l'ancienne liste ; « Réessayer » montre l'attente jusqu'à la réponse", async () => {
+  it("l’erreur seule, sans l’ancienne liste ; « Réessayer » montre l’attente jusqu’à la réponse", async () => {
     const host = await mountAt("/offres", [offer(1, "Développeur")]);
     expect(host.find(".offer-cards").exists()).toBe(true);
     const router = (host.vm as unknown as { $router: ReturnType<typeof createRouter> }).$router;
@@ -195,7 +195,7 @@ describe("Connexion perdue après un premier chargement (maquette ErreurConnexio
   });
 });
 
-describe("La fiche d'une offre, une sous-page sur téléphone (docs/139 étape 6a, O1)", () => {
+describe("La fiche d’une offre, une sous-page sur téléphone (docs/139 étape 6a, O1)", () => {
   async function mountNamed(path: string, items: unknown[]) {
     GET.mockImplementation((p: string) =>
       Promise.resolve(p === "/api/offers" ? { data: { items, total: items.length, counts, facets } } : { data: null }),
@@ -227,7 +227,7 @@ describe("La fiche d'une offre, une sous-page sur téléphone (docs/139 étape 6
     expect(host.find("[data-test=offer-detail]").exists()).toBe(false);
   });
 
-  it("un lien ?offre=12 devient la sous-page ; arrivé directement, le retour remplace l'adresse", async () => {
+  it("un lien ?offre=12 devient la sous-page ; arrivé directement, le retour remplace l’adresse", async () => {
     const { host, router } = await mountNamed("/candidatures/offres?offre=12", [offer(12, "DevOps Engineer")]);
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres/12");

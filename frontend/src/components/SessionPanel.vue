@@ -60,7 +60,7 @@ async function everywhere(): Promise<void> {
     </div>
     <SettingRow
       v-if="!me.is_owner"
-      title="L'accueil"
+      title="L’accueil"
       description="Les premières questions, avec tes réponses actuelles."
     >
       <button
@@ -69,14 +69,14 @@ async function everywhere(): Promise<void> {
         data-test="welcome-again"
         @click="welcomeAgain"
       >
-        Refaire l'accueil
+        Refaire l’accueil
       </button>
     </SettingRow>
   </SettingCard>
   <SettingCard v-else-if="me?.demo">
     <SettingRow
       title="Connexion"
-      description="Démo : rien de ce que tu fais n'est enregistré."
+      description="Démo : rien de ce que tu fais n’est enregistré."
       data-test="auth-demo"
     />
   </SettingCard>

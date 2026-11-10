@@ -3,7 +3,7 @@ import { nextTick, ref } from "vue";
 
 import { api, type OrpMonth, type Source } from "../api/client";
 import { printSheet } from "../composables/usePrint";
-import { formatMonth, sourceLabel } from "../format";
+import { formatMonth, phoneDisplay, sourceLabel } from "../format";
 
 // Les preuves ORP du mois (docs/09), en version imprimée, et ce qu'il faut savoir avant de les
 // remettre. Le tableau à l'écran et la vue champ par champ sont partis en 0.67.4 (docs/85) :
@@ -40,9 +40,9 @@ defineExpose({ printPdf });
       v-if="data.count && !data.holder.name"
       class="notice"
     >
-      Ton nom n'est pas saisi : <RouterLink to="/profil?onglet=coordonnees">
+      Ton nom n’est pas saisi : <RouterLink to="/profil?onglet=coordonnees">
         complète tes coordonnées
-      </RouterLink> pour l'en-tête du PDF.
+      </RouterLink> pour l’en-tête du PDF.
     </p>
 
     <!-- Version imprimée : A4 paysage, proche du formulaire officiel. -->
@@ -79,7 +79,7 @@ defineExpose({ printPdf });
           >
             <td>{{ row.date }}</td>
             <td>{{ [row.company, row.address].filter(Boolean).join(", ") }}</td>
-            <td>{{ [row.contact, row.phone].filter(Boolean).join(", ") }}</td>
+            <td>{{ [row.contact, row.phone && phoneDisplay(row.phone)].filter(Boolean).join(", ") }}</td>
             <td>
               {{ row.job_title }}
               <span

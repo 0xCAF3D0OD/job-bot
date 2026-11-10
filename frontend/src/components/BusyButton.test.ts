@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import BusyButton from "./BusyButton.vue";
 
 describe("BusyButton (planche « vide et chargement »)", () => {
-  it("pendant l'action : aria-disabled sans disabled, clic ignoré, état annoncé", async () => {
+  it("pendant l’action : aria-disabled sans disabled, clic ignoré, état annoncé", async () => {
     const wrapper = mount(BusyButton, {
       props: { busy: false, busyLabel: "Rédaction…" },
       slots: { default: "Rédiger la relance" },

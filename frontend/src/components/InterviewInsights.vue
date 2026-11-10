@@ -49,7 +49,7 @@ async function coach(): Promise<void> {
     if (next) data.value = next;
     else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : "Impossible pour l'instant.";
+      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : "Impossible pour l’instant.";
     }
   } finally {
     busy.value = false;
@@ -79,7 +79,7 @@ const summaryValue = computed(() =>
       class="hint reading-width"
       data-test="insights-empty"
     >
-      Aucun retour d'entretien pour l'instant : fais le point après chaque entretien.
+      Aucun retour d’entretien pour l’instant : fais le point après chaque entretien.
     </p>
     <div
       v-if="data.count"
@@ -134,7 +134,7 @@ const summaryValue = computed(() =>
         </ul>
       </section>
       <section v-if="data.went_badly.length">
-        <h4>Ce qui n'a pas marché</h4>
+        <h4>Ce qui n’a pas marché</h4>
         <ul>
           <li
             v-for="(note, index) in data.went_badly.slice(0, 6)"
@@ -188,7 +188,7 @@ const summaryValue = computed(() =>
         @click="coach"
       >
         <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
-          <span class="with-icon"><AppIcon name="ai" />{{ data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}</span>
+          <span class="with-icon"><AppIcon name="ai" />{{ data.coaching ? "Nouvelles pistes de l’IA" : "Pistes de l’IA" }}</span>
         </HoverNote>
       </BusyButton>
       <p
@@ -210,8 +210,8 @@ const summaryValue = computed(() =>
         :disabled="reached('practice')"
         @click="practicing = true"
       >
-        <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l\'IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
-          <span class="with-icon"><AppIcon name="ai" />M'entraîner sur un entretien type</span>
+        <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l’IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
+          <span class="with-icon"><AppIcon name="ai" />M’entraîner sur un entretien type</span>
         </HoverNote>
       </button>
     </p>

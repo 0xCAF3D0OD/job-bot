@@ -13,7 +13,7 @@ describe("animations du logo", () => {
     ["envoyee", ".tilt"],
     ["objectif", ".sun"],
   ];
-  it.each(shapes)("%s : sa forme, cachée aux lecteurs d'écran", (kind, shape) => {
+  it.each(shapes)("%s : sa forme, cachée aux lecteurs d’écran", (kind, shape) => {
     const svg = mount(MoodAnimation, { props: { kind } }).find("svg");
     expect(svg.attributes("aria-hidden")).toBe("true");
     expect(svg.attributes("data-mood-animation")).toBe(kind);

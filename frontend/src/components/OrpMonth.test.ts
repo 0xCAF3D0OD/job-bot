@@ -23,7 +23,7 @@ describe("OrpMonth", () => {
     expect(tile.classes()).toEqual(expect.arrayContaining(["attentif", "act"]));
   });
 
-  it("l'objectif atteint : ravi, sans orange", () => {
+  it("l’objectif atteint : ravi, sans orange", () => {
     at(24);
     const wrapper = mount(OrpMonth, { props: { title: "Mois ORP", count: 10, target: 10, month: "2026-10" } });
     expect(wrapper.find("[data-test=month-left]").text()).toBe("Objectif atteint. Le reste du mois est à toi.");
@@ -40,7 +40,7 @@ describe("OrpMonth", () => {
 });
 
 describe("FaceState (docs/123 §2, T)", () => {
-  it("le visage décoratif, le titre, une ligne ; l'attente fait pulser", () => {
+  it("le visage décoratif, le titre, une ligne ; l’attente fait pulser", () => {
     const wrapper = mount(FaceState, { props: { title: "Aucune offre", waiting: true }, slots: { default: "<p>Rien.</p>" } });
     expect(wrapper.find("svg").attributes("aria-hidden")).toBe("true");
     expect(wrapper.find("svg").classes()).toContain("waiting");

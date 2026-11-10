@@ -29,12 +29,12 @@ const sentence = computed(() => {
   if (props.week.pause_until) {
     // « jusqu'au 1er novembre » : la date de phrase sans son « le », contracté dans « au ».
     const until = dateInSentence(`${props.week.pause_until}T12:00:00`).replace(/^le /, "");
-    return `En pause jusqu'au ${until}. Pense à l'annoncer à ton conseiller.`;
+    return `En pause jusqu’au ${until}. Pense à l’annoncer à ton conseiller.`;
   }
   if (props.week.target === null) return "";
   if (done.value) return props.monthBehind ? "" : "Semaine faite. Le reste du temps est à toi.";
   // Jour de repos : dans la carte d'Aujourd'hui, la phrase du haut le dit déjà (1.6.26).
-  if (!props.week.research_today) return props.nested ? "" : "Jour de repos : rien à faire aujourd'hui.";
+  if (!props.week.research_today) return props.nested ? "" : "Jour de repos : rien à faire aujourd’hui.";
   // Dans la carte du mois (docs/129) : le compte au-dessus le dit déjà.
   if (props.nested) return "";
   return left.value === 1 ? "Encore 1 cette semaine." : `Encore ${left.value} cette semaine.`;
@@ -100,7 +100,7 @@ function dayLabel(day: Week["days"][number], index: number): string {
         class="rhythm-count"
         data-test="rhythm-count"
       >
-        <strong>{{ week.count }}</strong> / {{ week.target }} {{ week.target === 1 ? "candidature" : "candidatures" }}
+        <strong>{{ week.count }}</strong> / {{ week.target }} {{ week.target <= 1 ? "candidature" : "candidatures" }}
       </p>
     </header>
     <ol
@@ -133,7 +133,7 @@ function dayLabel(day: Week["days"][number], index: number): string {
       class="hint"
     >
       <RouterLink :to="{ path: '/reglages', query: { rubrique: 'recherche' } }">
-        Indiquer l'objectif mensuel
+        Indiquer l’objectif mensuel
       </RouterLink> pour le répartir sur tes semaines.
     </p>
   </section>

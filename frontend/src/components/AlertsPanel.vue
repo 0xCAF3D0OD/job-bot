@@ -137,7 +137,7 @@ onMounted(() => void load());
         Ton adresse pour les alertes : <MailboxAddress
           :address="page.mailbox"
           personal
-        />. Donne-la aux sites d'emploi : la plateforme
+        />. Donne-la aux sites d’emploi : la plateforme
         reçoit pour toi.
       </template>
       <template v-else-if="page.mailbox">
@@ -145,7 +145,7 @@ onMounted(() => void load());
         Les alertes doivent y arriver.
       </template>
       <template v-else>
-        La lecture de ta boîte mail n'est pas encore disponible sur cette plateforme.
+        La lecture de ta boîte mail n’est pas encore disponible sur cette plateforme.
       </template>
     </p>
     <DisclosureRow
@@ -153,7 +153,7 @@ onMounted(() => void load());
       title="Tu as donné une autre adresse sur le site ?"
     >
       <p class="hint">
-        Fais-les suivre vers la boîte lue avec un filtre sur l'expéditeur :
+        Fais-les suivre vers la boîte lue avec un filtre sur l’expéditeur :
       </p>
       <ul>
         <li
@@ -273,13 +273,13 @@ onMounted(() => void load());
                   :checked="Boolean(cell.created_at)"
                   :data-test="`created-${cell.site}`"
                   @change="toggleCreated(search, cell)"
-                > J'ai créé l'alerte
+                > J’ai créé l’alerte
               </label>
             </td>
             <td class="row-more">
               <MoreMenu
                 :items="searchItems(search)"
-                :label="`Plus d'actions sur la recherche ${search.terms}`"
+                :label="`Plus d’actions sur la recherche ${search.terms}`"
                 test-id="alert-more"
               />
             </td>

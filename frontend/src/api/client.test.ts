@@ -7,7 +7,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("en-tête du profil d'essai", () => {
+describe("en-tête du profil d’essai", () => {
   it("envoie le profil choisi, rien pour le principal", async () => {
     const fetch = vi.fn(() => Promise.resolve(new Response("{}", { headers: { "Content-Type": "application/json" } })));
     vi.stubGlobal("fetch", fetch);
@@ -20,7 +20,7 @@ describe("en-tête du profil d'essai", () => {
 });
 
 describe("session expirée", () => {
-  it("un 401 hors /api/auth prévient l'application", async () => {
+  it("un 401 hors /api/auth prévient l’application", async () => {
     const listener = vi.fn();
     window.addEventListener(UNAUTHORIZED_EVENT, listener);
     const answer = (status: number) => () => Promise.resolve(new Response("{}", { status, headers: { "Content-Type": "application/json" } }));
@@ -44,23 +44,23 @@ describe("démo publique (docs/72)", () => {
     window.addEventListener(DEMO_REFUSED_EVENT, listener);
     const { response, error } = await api.PUT("/api/applications/{application_id}/job-room", {
       params: { path: { application_id: 1 } },
-      ...respond(403, { detail: "Dans la démo, rien n'est enregistré.", demo: true }),
+      ...respond(403, { detail: "Dans la démo, rien n’est enregistré.", demo: true }),
     });
     expect(response.status).toBe(403);
     // La réponse reste lisible par la page qui a fait la demande.
-    expect(error).toEqual({ detail: "Dans la démo, rien n'est enregistré.", demo: true });
+    expect(error).toEqual({ detail: "Dans la démo, rien n’est enregistré.", demo: true });
     // Un autre refus (droits, connexion) n'est pas pris pour la démo.
     await api.PUT("/api/applications/{application_id}/job-room", {
       params: { path: { application_id: 1 } },
-      ...respond(403, { detail: "réservé à l'exploitant" }),
+      ...respond(403, { detail: "réservé à l’exploitant" }),
     });
     window.removeEventListener(DEMO_REFUSED_EVENT, listener);
-    expect(heard).toEqual(["Dans la démo, rien n'est enregistré."]);
+    expect(heard).toEqual(["Dans la démo, rien n’est enregistré."]);
   });
 });
 
 describe("maintenance (docs/79)", () => {
-  it("la page d'attente pour une maintenance, un serveur qui ne répond pas, pas pour une autre erreur", async () => {
+  it("la page d’attente pour une maintenance, un serveur qui ne répond pas, pas pour une autre erreur", async () => {
     const heard: (string | null)[] = [];
     const listener = (event: Event) => heard.push((event as CustomEvent<string | null>).detail);
     window.addEventListener(MAINTENANCE_EVENT, listener);
@@ -77,7 +77,7 @@ describe("maintenance (docs/79)", () => {
     expect(heard).toEqual(["Dix minutes", null, null]);
   });
 
-  it("hors ligne, pas de page d'attente : la page montre « Connexion perdue » (maquette ErreurConnexion)", async () => {
+  it("hors ligne, pas de page d’attente : la page montre « Connexion perdue » (maquette ErreurConnexion)", async () => {
     const heard: (string | null)[] = [];
     const listener = (event: Event) => heard.push((event as CustomEvent<string | null>).detail);
     window.addEventListener(MAINTENANCE_EVENT, listener);
@@ -90,7 +90,7 @@ describe("maintenance (docs/79)", () => {
 });
 
 describe("maintenance en lecture seule (docs/80)", () => {
-  it("une écriture refusée prévient sans poser la page d'attente", async () => {
+  it("une écriture refusée prévient sans poser la page d’attente", async () => {
     const waiting = vi.fn();
     const read: (string | null)[] = [];
     const listener = (event: Event) => read.push((event as CustomEvent<string | null>).detail);

@@ -205,13 +205,13 @@ function copyOnOpen(): void {
     </template>
 
     <template v-else-if="step === 2 && site">
-      <h2>Crée l'alerte sur {{ site.name }}</h2>
+      <h2>Crée l’alerte sur {{ site.name }}</h2>
       <!-- Une ligne (docs/121 §B.2) : l'adresse est copiée en ouvrant le site, il reste à la
              coller dans « Créer une alerte » ; le détail au survol. -->
       <p class="hint">
         <template v-if="page.mailbox">
-          <HoverNote text="Sur le site, « Créer une alerte » ou « Activer l'alerte », puis colle l'adresse.">
-            {{ copiedOnOpen ? "Adresse copiée :" : "En ouvrant le site, l'adresse est copiée :" }}
+          <HoverNote text="Sur le site, « Créer une alerte » ou « Activer l’alerte », puis colle l’adresse.">
+            {{ copiedOnOpen ? "Adresse copiée :" : "En ouvrant le site, l’adresse est copiée :" }}
           </HoverNote>{{ " " }}<MailboxAddress
             :address="page.mailbox"
             :personal="page.personal_address"
@@ -257,7 +257,7 @@ function copyOnOpen(): void {
           data-test="wizard-site-done"
           @click="siteDone"
         >
-          J'ai créé l'alerte
+          J’ai créé l’alerte
         </button>
         <button
           type="button"
@@ -271,7 +271,7 @@ function copyOnOpen(): void {
     </template>
 
     <template v-else>
-      <h2>C'est prêt</h2>
+      <h2>C’est prêt</h2>
       <p>
         Tes alertes arriveront<template v-if="page.mailbox">
           à <MailboxAddress

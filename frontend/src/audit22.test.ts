@@ -8,14 +8,14 @@ vi.mock("./api/client", async (original) => ({ ...(await original<object>()), ap
 afterEach(() => vi.resetAllMocks());
 
 describe("audit du 22.10.2026", () => {
-  it("chaque page a son titre d'onglet, « Page · jobA1 »", () => {
+  it("chaque page a son titre d’onglet, « Page · jobA1 »", () => {
     expect(pageTitle("offers")).toBe("Offres · jobA1");
     expect(pageTitle("orp-meeting")).toBe("Rendez-vous ORP · jobA1");
-    expect(pageTitle("terms")).toBe("Conditions d'utilisation · jobA1");
+    expect(pageTitle("terms")).toBe("Conditions d’utilisation · jobA1");
     expect(pageTitle(undefined)).toBe("jobA1");
   });
 
-  it("une candidature retenue dont l'offre n'existe plus est oubliée", async () => {
+  it("une candidature retenue dont l’offre n’existe plus est oubliée", async () => {
     localStorage.setItem("jobbot-candidatures", "/candidatures/offres/1109/preparer");
     vi.resetModules();
     const { useJobsMemory } = await import("./composables/useJobsMemory");

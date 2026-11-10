@@ -32,7 +32,7 @@ async function mountPanel(summary = SUMMARY, path = "/reglages") {
 }
 
 describe("Tes données (docs/65 §6)", () => {
-  it("le résumé, et l'export après le mot de passe (docs/regles-securite-donnees.md X-1)", async () => {
+  it("le résumé, et l’export après le mot de passe (docs/regles-securite-donnees.md X-1)", async () => {
     POST.mockResolvedValueOnce({ error: { detail: "mot de passe incorrect" }, response: { ok: false, headers: new Headers() } });
     POST.mockResolvedValueOnce({
       data: new Blob(["zip"]),
@@ -44,7 +44,7 @@ describe("Tes données (docs/65 §6)", () => {
     const { wrapper } = await mountPanel();
     // Les compteurs en une phrase (1.6.67).
     expect(wrapper.find("[data-test=account-counts] .setting-row-description").text()).toBe(
-      "12 offres · 3 candidatures · 1 document · 5 blocs de profil · 20 e-mails d'alerte",
+      "12 offres · 3 candidatures · 1 document · 5 blocs de profil · 20 e-mails d’alerte",
     );
     // Plus de lien direct : une session seule ne télécharge rien.
     expect(wrapper.find("a[href='/api/account/export']").exists()).toBe(false);
@@ -93,7 +93,7 @@ describe("Tes données (docs/65 §6)", () => {
     wrapper.unmount();
   });
 
-  it("supprimer : le texte de la maquette, l'export ORP, « Annuler » par défaut, puis le mot de passe", async () => {
+  it("supprimer : le texte de la maquette, l’export ORP, « Annuler » par défaut, puis le mot de passe", async () => {
     POST.mockResolvedValueOnce({ error: { detail: "mot de passe incorrect" }, response: { ok: false } });
     POST.mockResolvedValueOnce({ response: { ok: true } });
     const { wrapper, router } = await mountPanel();
@@ -151,7 +151,7 @@ describe("Tes données (docs/65 §6)", () => {
     wrapper.unmount();
   });
 
-  it("l'exploitant ne ferme pas son compte ici, même venu du menu", async () => {
+  it("l’exploitant ne ferme pas son compte ici, même venu du menu", async () => {
     const { wrapper } = await mountPanel({ ...SUMMARY, can_delete: false }, "/reglages?rubrique=donnees&fermer=1");
     expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
     expect(wrapper.find("[data-test=delete-form]").exists()).toBe(false);

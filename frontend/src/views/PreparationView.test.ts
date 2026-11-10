@@ -38,10 +38,10 @@ function letter(id: number, version: number, extra: Record<string, unknown> = {}
     version,
     name: `Version ${version}`,
     language: "fr",
-    subject: "Candidature au poste d'ingénieur DevOps junior",
+    subject: "Candidature au poste d’ingénieur DevOps junior",
     paragraphs: [
       { text: "Votre annonce a retenu mon attention.", chunk_ids: [] },
-      { text: "J'administre un cluster K3s.", chunk_ids: [1] },
+      { text: "J’administre un cluster K3s.", chunk_ids: [1] },
     ],
     employer: { address: null, contact_name: null, contact_phone: null },
     instruction: null,
@@ -53,10 +53,10 @@ function letter(id: number, version: number, extra: Record<string, unknown> = {}
       sender: ["Camille Exemple", "Rue du Test 1", "1020 Renens"],
       place_date: "Renens, le 5 octobre 2026",
       recipient: ["Acme SA"],
-      subject_line: "Objet : Candidature au poste d'ingénieur DevOps junior",
+      subject_line: "Objet : Candidature au poste d’ingénieur DevOps junior",
       salutation: "Madame, Monsieur,",
       paragraphs: [],
-      closing: "Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.",
+      closing: "Je vous prie d’agréer, Madame, Monsieur, mes salutations distinguées.",
       signature: "Camille Exemple",
       enclosure: "Annexe : curriculum vitae",
       missing_identity: [],
@@ -115,13 +115,13 @@ describe("PreparationView", () => {
     expect(sheet.text()).toContain("Objet :");
     expect(sheet.text()).toContain("Blocs : Kubernetes");
     expect(wrapper.find<HTMLInputElement>("[data-test=subject]").element.value).toBe(
-      "Candidature au poste d'ingénieur DevOps junior",
+      "Candidature au poste d’ingénieur DevOps junior",
     );
     expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx?modele=moderne");
     expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=moderne");
   });
 
-  it("la version modifiée en dernier est celle affichée ; les corrections s'enregistrent", async () => {
+  it("la version modifiée en dernier est celle affichée ; les corrections s’enregistrent", async () => {
     mockGet([letter(12, 2), letter(11, 1, { edited_at: "2026-10-05T09:00:00Z" })]);
     PUT.mockResolvedValue({ data: letter(11, 1, { subject: "Candidature", edited_at: "2026-10-05T10:00:00Z" }) });
     const wrapper = await mountView();
@@ -185,7 +185,7 @@ describe("PreparationView", () => {
     expect(chips().map((b) => b.text())).not.toContain("En allemand");
   });
 
-  it("la lettre s'affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
+  it("la lettre s’affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
     mockGet([letter(11, 1)]);
     const criteria = [
       ["accroche", "Accroche", true],
@@ -244,13 +244,13 @@ describe("PreparationView", () => {
     expect(wrapper.findAll("[data-test=version]")).toHaveLength(0);
   });
 
-  it("erreur de l'API : message lisible", async () => {
+  it("erreur de l’API : message lisible", async () => {
     mockGet([]);
-    POST.mockResolvedValue({ data: undefined, error: { detail: "plafond mensuel de l'IA atteint" } });
+    POST.mockResolvedValue({ data: undefined, error: { detail: "plafond mensuel de l’IA atteint" } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=write]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[role=alert]").text()).toBe("Plafond mensuel de l'IA atteint.");
+    expect(wrapper.find("[role=alert]").text()).toBe("Plafond mensuel de l’IA atteint.");
   });
 
   it("coordonnées manquantes : renvoie vers les Réglages", async () => {
@@ -336,11 +336,11 @@ describe("barre de candidature", () => {
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
     expect(steps.find("[data-test=mark-applied]").exists()).toBe(false);
     // Déjà postulé ailleurs (e-mail, téléphone, page rechargée) : un lien tertiaire, pas un second bouton plein.
-    expect(steps.find("[data-test=already-applied]").text()).toContain("J'ai déjà postulé");
+    expect(steps.find("[data-test=already-applied]").text()).toContain("J’ai déjà postulé");
     expect(steps.find("[data-test=already-applied]").classes()).toContain("link");
     apply.element.addEventListener("click", (event) => event.preventDefault());
     await apply.trigger("click");
-    expect(steps.find("[data-test=apply]").text()).toBe("Rouvrir le site de l'employeur (nouvel onglet)");
+    expect(steps.find("[data-test=apply]").text()).toBe("Rouvrir le site de l’employeur (nouvel onglet)");
     expect(steps.find("[data-test=already-applied]").exists()).toBe(false);
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
 
@@ -376,7 +376,7 @@ describe("barre de candidature", () => {
     expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
 
     // « Je n'ai pas postulé » : l'offre revient en préparation (le menu y ramène) ; la candidature part après 6 s.
-    expect(done.find("[data-test=cancel-applied]").text()).toBe("Je n'ai pas postulé");
+    expect(done.find("[data-test=cancel-applied]").text()).toBe("Je n’ai pas postulé");
     useJobsMemory().remember("/candidatures/offres/7/preparer?doc=postuler");
     useJobsMemory().sent(7);
     expect(useJobsMemory().last.value).toBe("/candidatures/suivi");
@@ -394,7 +394,7 @@ describe("barre de candidature", () => {
     expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 5 } } }));
   });
 
-  it("« C'est fait ! » remplace « Candidature notée » quand l'envoi atteint l'objectif, une fois par mois (B10)", async () => {
+  it("« C’est fait ! » remplace « Candidature notée » quand l’envoi atteint l’objectif, une fois par mois (B10)", async () => {
     localStorage.clear();
     const orp = { month: "2026-10", count: 10, target: 10, rows: [], holder: { name: "Kevin", address: null }, searches: [], changed_after_submit: false };
     GET.mockImplementation((path: string) =>
@@ -414,7 +414,7 @@ describe("barre de candidature", () => {
     await wrapper.find("[data-test=already-applied]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=goal-reached] h1").text()).toBe("C'est fait !");
+    expect(wrapper.find("[data-test=goal-reached] h1").text()).toBe("C’est fait !");
     // Retenu sur l'appareil, avec la même clé que la carte de l'Accueil.
     expect(localStorage.getItem("jobA1.orp-goal.2026-10")).toBe("1");
 
@@ -436,7 +436,7 @@ describe("barre de candidature", () => {
     localStorage.clear();
   });
 
-  it("« J'ai déjà postulé » enregistre l'envoi sans rouvrir le formulaire", async () => {
+  it("« J’ai déjà postulé » enregistre l’envoi sans rouvrir le formulaire", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data:
@@ -458,7 +458,7 @@ describe("barre de candidature", () => {
     expect(wrapper.find("[data-test=sent-orp]").text()).toBe("3 recherches");
   });
 
-  it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d'étape « Suivre » (Q1)", async () => {
+  it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d’étape « Suivre » (Q1)", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data:
@@ -525,7 +525,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(opts.body).toMatchObject({ language: "de" });
   });
 
-  it("les puces de retouche n'apparaissent qu'avec le focus dans la zone de saisie ; l'aperçu passe de 384 à 300 px (§9)", async () => {
+  it("les puces de retouche n’apparaissent qu’avec le focus dans la zone de saisie ; l’aperçu passe de 384 à 300 px (§9)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     const wrapper = await mountView();
@@ -542,7 +542,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(revise.find(".suggestion-chips").exists()).toBe(false);
   });
 
-  it("« J'ai relu, continuer » : plus de case ; le bouton note la relecture et passe au CV (§9, C11)", async () => {
+  it("« J’ai relu, continuer » : plus de case ; le bouton note la relecture et passe au CV (§9, C11)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     PUT.mockResolvedValue({ data: letter(11, 1, { read_at: "2026-10-05T09:00:00Z" }) });
@@ -611,7 +611,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=prep-file]").exists()).toBe(false);
   });
 
-  it("« Préparer ma candidature » (§7 n° 1, §7.1) : la lettre s'écrit dès l'arrivée, le CV adapté en même temps", async () => {
+  it("« Préparer ma candidature » (§7 n° 1, §7.1) : la lettre s’écrit dès l’arrivée, le CV adapté en même temps", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
     );
@@ -671,18 +671,18 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(failed.get("[data-test=write-cv]").text()).toContain("Réessayer");
   });
 
-  it("« J'ai relu, continuer » refusé (démo) : le refus s'affiche et l'on reste sur la lettre", async () => {
+  it("« J’ai relu, continuer » refusé (démo) : le refus s’affiche et l’on reste sur la lettre", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
-    PUT.mockResolvedValue({ error: { detail: "Dans la démo, rien n'est enregistré." } });
+    PUT.mockResolvedValue({ error: { detail: "Dans la démo, rien n’est enregistré." } });
     const wrapper = await mountView();
     await wrapper.get("[data-test=action-bar] [data-test=next-step]").trigger("click");
     await flushPromises();
-    expect(wrapper.get("[role=alert]").text()).toBe("Dans la démo, rien n'est enregistré.");
+    expect(wrapper.get("[role=alert]").text()).toBe("Dans la démo, rien n’est enregistré.");
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBeUndefined();
   });
 
-  it("le modèle (Kevin, 2026-11-05 ; feuille « Mise en page et langue », §9) : l'aperçu de la lettre et le PDF dans le modèle choisi", async () => {
+  it("le modèle (Kevin, 2026-11-05 ; feuille « Mise en page et langue », §9) : l’aperçu de la lettre et le PDF dans le modèle choisi", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     const wrapper = await mountView();
@@ -718,7 +718,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(note.text()).toBe("Modèle Moderne, en allemand.");
   });
 
-  it("sans lettre : l'aperçu vide du modèle à la place de « Aucune lettre »", async () => {
+  it("sans lettre : l’aperçu vide du modèle à la place de « Aucune lettre »", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([]);
     const wrapper = await mountView();
@@ -745,26 +745,26 @@ describe("« Pas vrai » (30.10.2026)", () => {
     return area.trigger("select");
   }
 
-  it("ordinateur : la sélection s'étend à la phrase, « Pas vrai », retirer, « Annuler » pendant 6 s", async () => {
+  it("ordinateur : la sélection s’étend à la phrase, « Pas vrai », retirer, « Annuler » pendant 6 s", async () => {
     const two = letter(11, 1, {
       paragraphs: [
         { text: "Votre annonce a retenu mon attention.", chunk_ids: [] },
-        { text: "J'administre un cluster K3s. Il tourne en production à l'État de Vaud.", chunk_ids: [1] },
+        { text: "J’administre un cluster K3s. Il tourne en production à l’État de Vaud.", chunk_ids: [1] },
       ],
     });
     mockGet([two]);
-    POST.mockResolvedValue({ data: { letter: { ...two, paragraphs: [two.paragraphs[0], { text: "J'administre un cluster K3s.", chunk_ids: [1] }] }, claim_id: 5 } });
+    POST.mockResolvedValue({ data: { letter: { ...two, paragraphs: [two.paragraphs[0], { text: "J’administre un cluster K3s.", chunk_ids: [1] }] }, claim_id: 5 } });
     const wrapper = await mountView();
     const text = two.paragraphs[1]!.text;
     await choose(wrapper, 1, text.indexOf("production"), text.indexOf("production") + 5);
     await wrapper.find("[data-test=false-claim]").trigger("click");
     const sheet = wrapper.find("[data-test=false-claim-sheet]");
-    expect(sheet.find("[data-test=false-claim-quote]").text()).toBe("« Il tourne en production à l'État de Vaud. »");
+    expect(sheet.find("[data-test=false-claim-quote]").text()).toBe("« Il tourne en production à l’État de Vaud. »");
     await sheet.find("[data-test=false-claim-confirm]").trigger("click");
     await flushPromises();
     // Retirée tout de suite à l'écran ; la demande part après 6 s, sauf « Annuler ».
     const area = () => wrapper.findAll("[data-test=paragraph]")[1]!.element as HTMLTextAreaElement;
-    expect(area().value).toBe("J'administre un cluster K3s.");
+    expect(area().value).toBe("J’administre un cluster K3s.");
     expect(POST).not.toHaveBeenCalled();
     await useUndo().undo();
     await flushPromises();
@@ -776,7 +776,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith(
       "/api/letters/{draft_id}/false-claim",
-      expect.objectContaining({ body: { sentence: "Il tourne en production à l'État de Vaud.", mode: "remove" } }),
+      expect.objectContaining({ body: { sentence: "Il tourne en production à l’État de Vaud.", mode: "remove" } }),
     );
   });
 
@@ -793,13 +793,13 @@ describe("« Pas vrai » (30.10.2026)", () => {
     await useUndo().undo();
     await flushPromises();
     const texts = wrapper.findAll("[data-test=paragraph]").map((p) => (p.element as HTMLTextAreaElement).value);
-    expect(texts).toEqual(["Votre annonce a retenu mon attention.", "J'administre un cluster K3s."]);
+    expect(texts).toEqual(["Votre annonce a retenu mon attention.", "J’administre un cluster K3s."]);
   });
 
-  it("réécrire d'après le profil : une nouvelle version relue ; « Annuler » revient à l'ancienne", async () => {
+  it("réécrire d’après le profil : une nouvelle version relue ; « Annuler » revient à l’ancienne", async () => {
     const first = letter(11, 1);
     mockGet([first]);
-    const rewritten = letter(12, 2, { instruction: "Pas vrai : « J'administre un cluster K3s. »" });
+    const rewritten = letter(12, 2, { instruction: "Pas vrai : « J’administre un cluster K3s. »" });
     POST.mockImplementation((path: string) =>
       Promise.resolve({ data: path.endsWith("/review") ? rewritten : { letter: rewritten, claim_id: 7 } }),
     );
@@ -812,7 +812,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith(
       "/api/letters/{draft_id}/false-claim",
-      expect.objectContaining({ body: { sentence: "J'administre un cluster K3s.", mode: "rewrite" } }),
+      expect.objectContaining({ body: { sentence: "J’administre un cluster K3s.", mode: "rewrite" } }),
     );
     expect(POST).toHaveBeenCalledWith("/api/letters/{draft_id}/review", expect.anything());
     expect(wrapper.find(".versions [aria-current=page] .grouped-row-description").text()).toContain("Pas vrai");
@@ -833,7 +833,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     (area.element as HTMLTextAreaElement).setSelectionRange(3, 3);
     await area.trigger("click");
     const bar = wrapper.find("[data-test=action-bar]");
-    expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J'administre un cluster K3s. »");
+    expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J’administre un cluster K3s. »");
     expect(bar.find("[data-test=next-step]").exists()).toBe(false);
     // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
     expect(wrapper.find("[data-test=prep-revise]").exists()).toBe(false);
@@ -857,7 +857,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     // La page 1 se termine dans le 2e paragraphe, après « J'administre un cluster ».
     const marks = wrapper.findAll("[data-test=page-end]");
     expect(marks).toHaveLength(1);
-    expect(marks[0]!.text()).toBe("Fin de la page A4 dans ce paragraphe, après «\u00a0J'administre un cluster\u00a0».");
+    expect(marks[0]!.text()).toBe("Fin de la page A4 dans ce paragraphe, après «\u00a0J’administre un cluster\u00a0».");
     expect(wrapper.findAll(".letter-paragraph")[1]!.find("[data-test=page-end]").exists()).toBe(true);
 
     await wrapper.find("[data-test=shorten]").trigger("click");

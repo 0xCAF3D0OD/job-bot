@@ -45,7 +45,7 @@ const props = withDefaults(
     trigger?: string;
     triggerIcon?: IconName;
   }>(),
-  { label: "Plus d'actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
+  { label: "Plus d’actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
 );
 
 // Une seule action ordinaire : pas de menu, l'action directement (docs/76 §3).

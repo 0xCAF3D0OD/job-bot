@@ -14,7 +14,7 @@ const day = (iso: string): string => dateInSentence(iso).replace(/^le /, "");
     data-test="coaching"
   >
     <p class="hint">
-      Pistes de l'IA du {{ day(coaching.created_at) }}.
+      Pistes de l’IA du {{ day(coaching.created_at) }}.
     </p>
     <ul v-if="coaching.pistes.length">
       <li

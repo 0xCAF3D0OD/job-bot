@@ -78,7 +78,7 @@ function onPageShow(event: PageTransitionEvent): void {
 // Démo publique (docs/72) : une action refusée le dit, au lieu d'une erreur.
 const demoRefused = ref("");
 function onDemoRefused(event: Event): void {
-  demoRefused.value = String((event as CustomEvent<string>).detail || "Dans la démo, rien n'est enregistré.");
+  demoRefused.value = String((event as CustomEvent<string>).detail || "Dans la démo, rien n’est enregistré.");
 }
 
 onMounted(async () => {
@@ -110,7 +110,7 @@ onUnmounted(() => {
     role="status"
     data-test="profile-banner"
   >
-    <strong>Profil d'essai : {{ profile.name }}</strong>
+    <strong>Profil d’essai : {{ profile.name }}</strong>
     <span>Seules les Formations suivent ce profil ; les autres pages restent les tiennes.</span>
     <button
       v-if="mainProfile"
@@ -130,7 +130,7 @@ onUnmounted(() => {
     data-test="demo-banner"
   >
     <strong>Démo</strong>
-    <span>Données fictives : rien de ce que tu fais n'est enregistré.</span>
+    <span>Données fictives : rien de ce que tu fais n’est enregistré.</span>
     <RouterLink to="/la-plateforme">
       Découvrir jobA1
     </RouterLink>

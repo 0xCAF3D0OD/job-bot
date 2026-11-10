@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import MoreMenu from "./MoreMenu.vue";
 
 describe("MoreMenu (docs/50 §1)", () => {
-  it("Échap ferme le seul menu et rend le focus ; les flèches passent d'une action à l'autre", async () => {
+  it("Échap ferme le seul menu et rend le focus ; les flèches passent d’une action à l’autre", async () => {
     const run = vi.fn();
     const outside = vi.fn();
     document.addEventListener("keydown", outside);
@@ -42,7 +42,7 @@ describe("MoreMenu (docs/50 §1)", () => {
       props: {
         items: [
           { label: "Lettre (Word)", test: "letter", href: "/api/letters/1/docx", download: true },
-          { label: "Ouvrir l'annonce", test: "page", href: "https://exemple.ch/annonce" },
+          { label: "Ouvrir l’annonce", test: "page", href: "https://exemple.ch/annonce" },
           { label: "Contacts", test: "contacts", count: 2, run: vi.fn() },
           { label: "Supprimer", test: "remove", danger: true, run: vi.fn() },
         ],
@@ -64,7 +64,7 @@ describe("MoreMenu (docs/50 §1)", () => {
     expect(roles).toEqual(["none", "none", "none", "separator", "none"]);
   });
 
-  it("une seule action ordinaire s'affiche directement, sans menu (docs/76 §3)", async () => {
+  it("une seule action ordinaire s’affiche directement, sans menu (docs/76 §3)", async () => {
     const run = vi.fn();
     const single = mount(MoreMenu, { props: { items: [{ label: "Contacts", test: "contacts", count: 2, run }] } });
     expect(single.find("[data-test=more]").exists()).toBe(false);
@@ -82,7 +82,7 @@ describe("MoreMenu (docs/50 §1)", () => {
     const wrapper = mount(MoreMenu, {
       attachTo: document.body,
       props: {
-        label: "Actions sur l'entreprise",
+        label: "Actions sur l’entreprise",
         items: [
           { label: "Modifier", test: "edit", run: vi.fn() },
           { label: "Chercher", test: "search", run: vi.fn(), disabled: true },
@@ -108,10 +108,10 @@ describe("MoreMenu (docs/50 §1)", () => {
 
 
 describe("MoreMenu, planche « tête de carte, Copier et ⋯ »", () => {
-  it("le bouton s'appelle « Plus d'actions » par défaut", () => {
+  it("le bouton s’appelle « Plus d’actions » par défaut", () => {
     const wrapper = mount(MoreMenu, {
       props: { items: [{ label: "Renommer", test: "a", run: vi.fn() }, { label: "Révoquer", test: "b", run: vi.fn() }] },
     });
-    expect(wrapper.find("[data-test=more]").attributes("aria-label")).toBe("Plus d'actions");
+    expect(wrapper.find("[data-test=more]").attributes("aria-label")).toBe("Plus d’actions");
   });
 });

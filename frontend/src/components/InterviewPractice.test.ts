@@ -82,7 +82,7 @@ describe("InterviewPractice", () => {
     const wrapper = mount(InterviewPractice, { props: {} });
     await flushPromises();
     expect(GET).toHaveBeenCalledWith("/api/interview-practices/defaults", { params: { query: {} } });
-    expect(wrapper.text()).toContain("n'est pas configurée");
+    expect(wrapper.text()).toContain("n’est pas configurée");
     expect(wrapper.find("[data-test=practice-start]").exists()).toBe(false);
   });
 
@@ -120,7 +120,7 @@ describe("InterviewPractice", () => {
     expect(wrapper.find("[data-test=practice-added] [data-icon=done]").exists()).toBe(true);
   });
 
-  it("dit l'erreur de l'IA et propose « Réessayer » quand le recruteur n'a pas répondu", async () => {
+  it("dit l’erreur de l’IA et propose « Réessayer » quand le recruteur n’a pas répondu", async () => {
     GET.mockResolvedValue({
       data: practice({
         waiting: true,
@@ -130,16 +130,16 @@ describe("InterviewPractice", () => {
         ],
       }),
     });
-    POST.mockResolvedValue({ error: { detail: "plafond mensuel de l'IA atteint" } });
+    POST.mockResolvedValue({ error: { detail: "plafond mensuel de l’IA atteint" } });
     const wrapper = mount(InterviewPractice, { props: { practiceId: 5 } });
     await flushPromises();
     expect(wrapper.find("[data-test=practice-input]").exists()).toBe(false);
     await wrapper.find("[data-test=practice-retry]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[role=alert]").text()).toBe("Impossible : plafond mensuel de l'IA atteint.");
+    expect(wrapper.find("[role=alert]").text()).toBe("Impossible : plafond mensuel de l’IA atteint.");
   });
 
-  it("fenêtre : Échap ferme d'où qu'on soit, le focus revient au bouton d'ouverture (docs/76 §4)", async () => {
+  it("fenêtre : Échap ferme d’où qu’on soit, le focus revient au bouton d’ouverture (docs/76 §4)", async () => {
     GET.mockResolvedValue({ data: { kind: "rh", language: "fr", can_practice: true } });
     const opener = document.createElement("button");
     document.body.append(opener);

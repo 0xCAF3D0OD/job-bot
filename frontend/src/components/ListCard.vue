@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useRouter, type RouteLocationRaw } from "vue-router";
 
-import { cityOnly, colorIndex, initials } from "../format";
+import { colorIndex, companyPlace, initials } from "../format";
 import { isBlankLogo } from "../logoImage";
 
 // La carte d'une liste de Candidatures (maquettes CandidaturesOrdinateur, Candidatures et Envoyees du 7.11.2026),
@@ -27,7 +27,7 @@ const emit = defineEmits<{ select: [] }>();
 const router = useRouter();
 const href = computed(() => router.resolve(props.to).href);
 const name = computed(() => props.company || props.title);
-const sub = computed(() => [props.company, cityOnly(props.location)].filter(Boolean).join(" · "));
+const sub = computed(() => companyPlace(props.company, props.location, true));
 
 // Une image qui ne charge pas, ou vide (un carré blanc générique) : les initiales colorées à la place.
 const logoFailed = ref(false);

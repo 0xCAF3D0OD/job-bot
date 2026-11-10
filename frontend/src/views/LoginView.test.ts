@@ -98,7 +98,7 @@ describe("LoginView, Apple, Google et Microsoft (docs/65, complément du 2026-11
     expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
   });
 
-  it("seulement les fournisseurs configurés, dans l'ordre Apple, Google, Microsoft", async () => {
+  it("seulement les fournisseurs configurés, dans l’ordre Apple, Google, Microsoft", async () => {
     offer(["microsoft", "google", "inconnu"]);
     const { wrapper } = await mountLogin();
     const buttons = wrapper.findAll(".social-button");
@@ -109,7 +109,7 @@ describe("LoginView, Apple, Google et Microsoft (docs/65, complément du 2026-11
     expect(wrapper.find(".social-divider").text()).toBe("ou avec ton identifiant");
   });
 
-  it("les trois configurés : trois boutons ; une adresse de retour externe n'est pas transmise", async () => {
+  it("les trois configurés : trois boutons ; une adresse de retour externe n’est pas transmise", async () => {
     offer(["apple", "google", "microsoft"]);
     const { wrapper } = await mountLogin("/connexion?suite=//piege.example");
     expect(wrapper.findAll(".social-button").map((b) => b.attributes("href"))).toEqual([
@@ -122,7 +122,7 @@ describe("LoginView, Apple, Google et Microsoft (docs/65, complément du 2026-11
   it("le refus du serveur, dit sur la page (connexion sur invitation)", async () => {
     offer(["google"]);
     const { wrapper } = await mountLogin("/connexion?erreur=aucun-compte&fournisseur=google");
-    expect(wrapper.find("[data-test=oauth-error]").text()).toBe("Aucun compte jobA1 n'est lié à ce compte Google.");
+    expect(wrapper.find("[data-test=oauth-error]").text()).toBe("Aucun compte jobA1 n’est lié à ce compte Google.");
     expect(wrapper.find("[data-test=oauth-error]").attributes("role")).toBe("alert");
   });
 
@@ -134,7 +134,7 @@ describe("LoginView, Apple, Google et Microsoft (docs/65, complément du 2026-11
 });
 
 describe("LoginView, maquette Connexion", () => {
-  it("le titre, l'illustration décorative et le logo", async () => {
+  it("le titre, l’illustration décorative et le logo", async () => {
     GET.mockResolvedValue({ data: anonymous });
     const { wrapper } = await mountLogin();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Content de te revoir.");
@@ -157,7 +157,7 @@ describe("LoginView, maquette Connexion", () => {
     expect(wrapper.find("[data-test=brand-logo]").exists()).toBe(true);
   });
 
-  it("champs vides : l'erreur sous chaque champ, avec aria-invalid", async () => {
+  it("champs vides : l’erreur sous chaque champ, avec aria-invalid", async () => {
     GET.mockResolvedValue({ data: anonymous });
     const { wrapper } = await mountLogin();
     await wrapper.find("[data-test=login-form]").trigger("submit");
@@ -197,21 +197,21 @@ describe("LoginView, demander un compte (docs/102)", () => {
     expect(wrapper.text()).not.toContain("sur invitation");
   });
 
-  it("demandes fermées : l'invitation, sans lien", async () => {
+  it("demandes fermées : l’invitation, sans lien", async () => {
     answer(false);
     const { wrapper } = await mountLogin();
     expect(wrapper.find("[data-test=signup-link]").exists()).toBe(false);
-    expect(wrapper.text()).toContain("L'accès se fait sur invitation.");
+    expect(wrapper.text()).toContain("L’accès se fait sur invitation.");
   });
 
   it("un compte qui attend la validation : le message du serveur, tel quel", async () => {
     answer(true);
-    POST.mockResolvedValue({ response: { ok: false, status: 403 }, error: { detail: "ton compte attend encore la validation de l'exploitant" } });
+    POST.mockResolvedValue({ response: { ok: false, status: 403 }, error: { detail: "ton compte attend encore la validation de l’exploitant" } });
     const { wrapper } = await mountLogin();
     await wrapper.find("[data-test=username]").setValue("camille");
     await wrapper.find("[data-test=password]").setValue("un-mot-de-passe-solide");
     await wrapper.find("[data-test=login-form]").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[data-test=login-error]").text()).toBe("Ton compte attend encore la validation de l'exploitant.");
+    expect(wrapper.find("[data-test=login-error]").text()).toBe("Ton compte attend encore la validation de l’exploitant.");
   });
 });

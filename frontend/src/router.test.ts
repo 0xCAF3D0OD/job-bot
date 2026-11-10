@@ -26,7 +26,7 @@ describe("routes réservées (docs/18 §1)", () => {
     expect(router.currentRoute.value.name).toBe("login");
   });
 
-  it("connecté : la page de connexion renvoie vers l'application", async () => {
+  it("connecté : la page de connexion renvoie vers l’application", async () => {
     useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
     const { router } = await import("./router");
     await router.push("/formations");
@@ -95,8 +95,8 @@ describe("routes réservées (docs/18 §1)", () => {
   });
 });
 
-describe("accueil d'un nouveau compte (docs/66 §4)", () => {
-  it("à faire : chaque page mène à l'accueil ; remis à plus tard : on circule", async () => {
+describe("accueil d’un nouveau compte (docs/66 §4)", () => {
+  it("à faire : chaque page mène à l’accueil ; remis à plus tard : on circule", async () => {
     useAuth().me.value = {
       authenticated: true,
       username: "camille",
@@ -118,7 +118,7 @@ describe("accueil d'un nouveau compte (docs/66 §4)", () => {
 });
 
 describe("demander un compte (docs/102)", () => {
-  it("ouvert sans connexion ; connecté, renvoie vers l'application", async () => {
+  it("ouvert sans connexion ; connecté, renvoie vers l’application", async () => {
     GET.mockResolvedValue({ data: { authenticated: false, username: null, setup_needed: false, auth_enabled: true } });
     const { router } = await import("./router");
     await router.push("/inscription");

@@ -23,7 +23,7 @@ function insights(extra: Record<string, unknown> = {}) {
     went_well: [{ company: "Autre SA", held_at: "2026-10-06", text: "Bonne démo" }],
     went_badly: [{ company: "Exemple SA", held_at: null, text: "Réponse floue" }],
     to_prepare: [{ text: "Exemple chiffré", done: false }],
-    missed_questions: [{ company: "Exemple SA", held_at: null, text: "Taille de l'équipe ?" }],
+    missed_questions: [{ company: "Exemple SA", held_at: null, text: "Taille de l’équipe ?" }],
     employer_feedback: [],
     coaching: null,
     can_coach: true,
@@ -39,7 +39,7 @@ const coaching = {
 };
 
 describe("Mes enseignements (docs/23 §3)", () => {
-  it("questions qui reviennent, à préparer coché, pistes de l'IA à la demande", async () => {
+  it("questions qui reviennent, à préparer coché, pistes de l’IA à la demande", async () => {
     GET.mockResolvedValue({ data: insights() });
     PUT.mockResolvedValue({ data: insights({ to_prepare: [{ text: "Exemple chiffré", done: true }] }) });
     POST.mockResolvedValue({ data: insights({ coaching }) });
@@ -66,7 +66,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
   });
 });
 
-describe("Préparer l'entretien (docs/23 §3)", () => {
+describe("Préparer l’entretien (docs/23 §3)", () => {
   it("poste, questions difficiles, à préparer, pistes pour cet entretien", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({

@@ -39,7 +39,7 @@ async function rescore(): Promise<void> {
         ? "IA non configurée."
         : data?.result === "already_queued"
           ? "Une renotation attend déjà son tour."
-          : "Renotation lancée, en lot : les notes arrivent d'ici une heure environ.";
+          : "Renotation lancée, en lot : les notes arrivent d’ici une heure environ.";
   } finally {
     busy.value = false;
   }
@@ -54,7 +54,7 @@ async function readRemote(): Promise<void> {
         ? "IA non configurée."
         : data?.result === "already_queued"
           ? "Une relecture attend déjà son tour."
-          : "Relecture lancée : le télétravail apparaît sur les offres d'ici quelques minutes.";
+          : "Relecture lancée : le télétravail apparaît sur les offres d’ici quelques minutes.";
   } finally {
     busy.value = false;
   }
@@ -89,7 +89,7 @@ defineExpose({ load });
   >
     <SettingRow
       title="Intelligence artificielle"
-      :description="status.configured ? 'Elle note les offres.' : 'Réglage d\'installation, voir le README.'"
+      :description="status.configured ? 'Elle note les offres.' : 'Réglage d’installation, voir le README.'"
     >
       <span :class="['state-word', status.configured ? 'ok' : 'warn']">{{ status.configured ? "Active" : "Non configurée" }}</span>
     </SettingRow>

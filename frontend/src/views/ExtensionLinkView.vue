@@ -70,38 +70,38 @@ onBeforeUnmount(stop);
           class="extension-link-done"
           data-test="link-done"
         >
-          C'est relié. Tu peux fermer cet onglet : l'icône jobA1 de ton navigateur est prête.
+          C’est relié. Tu peux fermer cet onglet : l’icône jobA1 de ton navigateur est prête.
         </p>
       </template>
       <template v-else>
-        <p>L'extension jobA1 de ce navigateur ({{ name }}) pourra :</p>
+        <p>L’extension jobA1 de ce navigateur ({{ name }}) pourra :</p>
         <ul>
           <li>remplir les formulaires de candidature et la saisie Job-Room avec tes données ;</li>
-          <li>enregistrer « J'ai envoyé » et « C'est déclaré » dans ton Suivi ;</li>
-          <li>proposer, à ta demande, une réponse aux questions libres d'un formulaire.</li>
+          <li>enregistrer « J’ai envoyé » et « C’est déclaré » dans ton Suivi ;</li>
+          <li>proposer, à ta demande, une réponse aux questions libres d’un formulaire.</li>
         </ul>
         <p class="muted">
-          Elle n'agit que quand tu cliques. Tu peux la délier dans Réglages › Outils.
+          Elle n’agit que quand tu cliques. Tu peux la délier dans Réglages › Outils.
         </p>
         <p
           v-if="state === 'waiting'"
           class="muted"
           data-test="link-waiting"
         >
-          En attente de l'extension…
+          En attente de l’extension…
         </p>
         <p
           v-else-if="state === 'timeout'"
           class="notice"
           data-test="link-timeout"
         >
-          L'extension n'a pas répondu : ouvre-la et clique sur « Relier ».
+          L’extension n’a pas répondu : ouvre-la et clique sur « Relier ».
         </p>
         <p
           v-else-if="state === 'error'"
           class="notice"
         >
-          Le lien n'a pas pu être créé. Réessaie.
+          Le lien n’a pas pu être créé. Réessaie.
         </p>
         <div class="form-actions">
           <button

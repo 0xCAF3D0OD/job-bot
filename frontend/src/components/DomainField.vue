@@ -29,7 +29,7 @@ async function save(): Promise<void> {
     if (!data) throw new Error();
     emit("saved", data.domain_keywords);
   } catch {
-    error.value = "Enregistrement impossible pour l'instant.";
+    error.value = "Enregistrement impossible pour l’instant.";
   } finally {
     saving.value = false;
   }

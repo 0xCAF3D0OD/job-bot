@@ -29,7 +29,7 @@ const offer = (id: number, title: string, extra: Record<string, unknown> = {}) =
   location: "Lausanne, VD",
   rate_min: 80,
   rate_max: 100,
-  snippet: "Gérer l'infrastructure.",
+  snippet: "Gérer l’infrastructure.",
   status: "to_review",
   first_seen_at: "2026-10-02T08:00:00Z",
   last_seen_at: "2026-10-02T08:00:00Z",
@@ -106,7 +106,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("filtres dans l'adresse", () => {
+describe("filtres dans l’adresse", () => {
   it("lit et écrit les filtres", () => {
     const filters = fromQuery({ canton: ["vd", "GE"], site: "jobup", taux: "80", externe: "1", statut: "all" });
     expect(filters).toMatchObject({
@@ -132,7 +132,7 @@ describe("filtres dans l'adresse", () => {
 });
 
 describe("OffersView", () => {
-  it("un compte neuf, sans filtre : pourquoi c'est vide, et quoi faire (docs/128 §3)", async () => {
+  it("un compte neuf, sans filtre : pourquoi c’est vide, et quoi faire (docs/128 §3)", async () => {
     const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
     mockOffers({ data: { ...page([]).data, counts: none } });
     const wrapper = await mountAt("/offres");
@@ -193,7 +193,7 @@ describe("OffersView", () => {
     expect(dropped.find("[data-test=offers-sentence]").text().replace(/\s+/g, " ")).toMatch(/^1 offre écartée( · \d+ à traiter)?\.$/);
   });
 
-  it("transmet les filtres de l'adresse à l'API", async () => {
+  it("transmet les filtres de l’adresse à l’API", async () => {
     await mountAt("/offres?canton=VD&taux=80&site=jobup&externe=1&q=linux");
     expect(lastQuery()).toMatchObject({
       view: "pending",
@@ -206,7 +206,7 @@ describe("OffersView", () => {
   });
 
   // Le panneau de la maquette CandidaturesOrdinateur (7.11.2026) : des pastilles aria-pressed, appliquées tout de suite.
-  it("un clic sur un filtre met à jour l'adresse et recharge", async () => {
+  it("un clic sur un filtre met à jour l’adresse et recharge", async () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     expect(wrapper.find("[data-test=pop-view-pending]").attributes("aria-pressed")).toBe("true");
@@ -267,7 +267,7 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     const cards = wrapper.findAll("[data-test=offer]");
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
-    expect(cards[0]?.text()).not.toContain("chez l'employeur");
+    expect(cards[0]?.text()).not.toContain("chez l’employeur");
     // Pas encore notée : pas d'anneau, le texte, et la raison au survol (docs/76 §3).
     expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
     expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["80–100 %", "Temporaire"]);
@@ -276,7 +276,7 @@ describe("OffersView", () => {
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
-    expect(apply.text()).toContain("Postuler chez l'employeur");
+    expect(apply.text()).toContain("Postuler chez l’employeur");
     expect(apply.attributes("rel")).toBe("noopener noreferrer");
     expect(wrapper.find("[data-test=description]").text()).toBe("Notre client recherche un ingénieur.");
     expect(wrapper.text()).toContain("Temporaire");
@@ -299,10 +299,10 @@ describe("note et résumé", () => {
           summary_asks: "5 ans Linux, Ansible",
           summary_offers: "80-100 %, salaire non précisé",
           strengths: [{ text: "Linux solide", chunk_ids: [1] }],
-          gaps: [{ text: "Pas d'Ansible", chunk_ids: [] }],
+          gaps: [{ text: "Pas d’Ansible", chunk_ids: [] }],
           scored_at: "2026-10-05T08:00:00Z",
           // Texte complet lu : la note n'est pas provisoire, ses manques s'affichent.
-          description: "Texte complet de l'annonce.",
+          description: "Texte complet de l’annonce.",
         }),
         offer(10, "Pas notée"),
       ]),
@@ -318,7 +318,7 @@ describe("note et résumé", () => {
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
-    expect(scored?.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+$|^Reçue (aujourd'hui|hier)$/);
+    expect(scored?.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+$|^Reçue (aujourd’hui|hier)$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
     expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
 
@@ -332,12 +332,12 @@ describe("note et résumé", () => {
     // Plus de soulignement pointillé ni de bloc au survol (planche « Fiche d'une offre »).
     expect(strengths.text()).toBe("Linux solide");
     expect(strengths.findComponent({ name: "HoverNote" }).exists()).toBe(false);
-    expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d'Ansible");
+    expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d’Ansible");
   });
 });
 
 describe("tri et candidature", () => {
-  it("ouvrir une offre : l'adresse la suit, le focus passe à son titre, « Retour » la referme", async () => {
+  it("ouvrir une offre : l’adresse la suit, le focus passe à son titre, « Retour » la referme", async () => {
     const wrapper = await mountAt("/offres");
     document.body.appendChild(wrapper.element);
     await wrapper.find("[data-test=offer]").trigger("click");
@@ -469,7 +469,7 @@ describe("détail allégé et adresse", () => {
       page([
         offer(1, "Ingénieur système", {
           status: "later",
-          company_address: "Chemin de l'Exemple 10\n1206 Genève",
+          company_address: "Chemin de l’Exemple 10\n1206 Genève",
           company_address_source: "page",
         }),
       ]),
@@ -478,7 +478,7 @@ describe("détail allégé et adresse", () => {
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=status-pill]").text()).toBe("Plus tard");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l'Exemple 10, 1206 Genève");
+    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
 
     await wrapper.find("[data-test=more]").trigger("click");
@@ -562,7 +562,7 @@ describe("étiquettes en mots-clés", () => {
 });
 
 describe("tri « Dernière action »", () => {
-  it("devient le tri de l'onglet En cours, et disparaît en le quittant", async () => {
+  it("devient le tri de l’onglet En cours, et disparaît en le quittant", async () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.text()).not.toContain("Dernière action");
     await openFilters(wrapper);
@@ -579,7 +579,7 @@ describe("tri « Dernière action »", () => {
 });
 
 describe("Offres, revue des pages (docs/43)", () => {
-  it("une ligne par jour, les offres sans leur date ; « + Ajouter » dans la barre d'outils", async () => {
+  it("une ligne par jour, les offres sans leur date ; « + Ajouter » dans la barre d’outils", async () => {
     // Une horloge figée en milieu de journée : les jours sont rangés à l'heure de Zurich, et le soir du changement
     // d'heure (ou une machine en UTC), « 24 h plus tôt » pouvait encore être aujourd'hui.
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -590,7 +590,7 @@ describe("Offres, revue des pages (docs/43)", () => {
     const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
     mockOffers(
       page([
-        offer(1, "Aujourd'hui", { first_seen_at: ago(0) }),
+        offer(1, "Aujourd’hui", { first_seen_at: ago(0) }),
         offer(2, "Hier", { first_seen_at: ago(1) }),
         offer(3, "Hier aussi", { first_seen_at: ago(1) }),
         offer(4, "Ancienne", { first_seen_at: ago(20) }),
@@ -598,7 +598,7 @@ describe("Offres, revue des pages (docs/43)", () => {
     );
     const wrapper = await mountAt("/offres");
     const days = wrapper.findAll("[data-test=offer-day]");
-    expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
+    expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd’hui", "Hier", dayName(ago(20))]);
     expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
     expect(wrapper.findAll(".offer-line-sub").every((sub) => !/ · \d{1,2} \S+$/.test(sub.text()))).toBe(true);
     // « + Ajouter » dans la barre d'outils : il ouvre le panneau à deux onglets (§2.6 du 9 novembre).
@@ -660,7 +660,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
   // L'offre ajoutée n'est pas dans la page chargée (pas encore notée, ou écartée) : elle est posée en
   // tête et reste ouverte. Avant, ?offre= dans l'adresse relançait le chargement de la liste, qui
   // l'effaçait aussitôt et refermait sa fiche.
-  it("l'offre ajoutée s'ouvre et reste ouverte", async () => {
+  it("l’offre ajoutée s’ouvre et reste ouverte", async () => {
     // La liste répond après l'offre seule, comme sur le serveur.
     const later = <T,>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 20));
     GET.mockImplementation((path: string) =>
@@ -687,7 +687,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     expect(listLoads() - before).toBe(1);
   });
 
-  it("l'étiquette « Ajoutée par toi » sur la carte", async () => {
+  it("l’étiquette « Ajoutée par toi » sur la carte", async () => {
     mockOffers(page([offer(1, "Une", { added_by_you: true, links: [] })]));
     const wrapper = await mountAt("/offres");
     const chip = wrapper.findAll("[data-test=offer-chip]").find((c) => c.text() === "Ajoutée par toi");
@@ -695,7 +695,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
   });
 });
 
-describe("Offres, sans bande d'action (1.6.53)", () => {
+describe("Offres, sans bande d’action (1.6.53)", () => {
   it("des offres à examiner : pas de bande, la liste est déjà la tâche", async () => {
     const now = new Date().toISOString();
     mockOffers(page([offer(1, "Une", { score: 90, first_seen_at: now }), offer(2, "Deux", { score: 60, first_seen_at: now })]));
@@ -718,7 +718,7 @@ describe("Offres, sans bande d'action (1.6.53)", () => {
   });
 });
 
-describe("Offres, barre d'outils (1.6.55)", () => {
+describe("Offres, barre d’outils (1.6.55)", () => {
   it("la recherche dans la barre, « Filtrer » ouvre le panneau, « Afficher N offres » le referme", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
@@ -747,7 +747,7 @@ describe("Offres, barre d'outils (1.6.55)", () => {
     const wrapper = await mountAt("/offres?note=70&canton=VD&canton=GE&externe=1&q=dev");
     const chips = wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text());
     // La recherche n'a pas de pastille : son champ est dans la barre.
-    expect(chips).toEqual(["Note minimale : Proche et plus", "Canton : VD", "Canton : GE", "Chez l'employeur"]);
+    expect(chips).toEqual(["Note minimale : Proche et plus", "Canton : VD", "Canton : GE", "Chez l’employeur"]);
     expect(wrapper.find("[data-test=filters-count]").text()).toBe("4");
     expect(wrapper.find("[data-test=filters-toggle]").attributes("aria-label")).toBe("Filtrer, 4 filtres actifs");
     await wrapper.find("[data-test=chip-remove-canton-VD]").trigger("click");
@@ -761,16 +761,16 @@ describe("Offres, barre d'outils (1.6.55)", () => {
 });
 
 describe("Offres, illustrations (planche « Illustrations »)", () => {
-  it("rien en préparation : « Rien à préparer pour l'instant », vers le tri", async () => {
+  it("rien en préparation : « Rien à préparer pour l’instant », vers le tri", async () => {
     mockOffers(page([]));
     const wrapper = await mountAt("/offres?statut=in_progress");
     const empty = wrapper.find("[data-test=offers-nothing-to-prepare]");
-    expect(empty.find(".face-state-title").text()).toBe("Rien à préparer pour l'instant");
+    expect(empty.find(".face-state-title").text()).toBe("Rien à préparer pour l’instant");
     expect(empty.find(".illu").exists()).toBe(true);
     expect(empty.find("a").attributes("href")).toBe("/aujourdhui/tri");
   });
 
-  it("panne de réseau : l'écran « Pas de connexion » au lieu du message d'erreur", async () => {
+  it("panne de réseau : l’écran « Pas de connexion » au lieu du message d’erreur", async () => {
     GET.mockImplementation((path: string) =>
       path === "/api/offers" ? Promise.reject(new TypeError("Failed to fetch")) : Promise.resolve({ data: [] }),
     );
@@ -781,7 +781,7 @@ describe("Offres, illustrations (planche « Illustrations »)", () => {
 });
 
 describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
-  it("en préparation d'abord, sous son titre ; « Plus tard » et les faits en puces", async () => {
+  it("en préparation d’abord, sous son titre ; « Plus tard » et les faits en puces", async () => {
     const now = new Date().toISOString();
     mockOffers(
       page([
@@ -793,7 +793,7 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     const wrapper = await mountAt("/offres");
     expect(lastQuery().view).toBe("pending");
     const titles = wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text());
-    expect(titles).toEqual(["En préparation", "Aujourd'hui"]);
+    expect(titles).toEqual(["En préparation", "Aujourd’hui"]);
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[0]!.text()).not.toContain("En préparation");
     expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["80–100 %", "CDI", "Plus tard"]);
@@ -826,7 +826,7 @@ describe("« Afficher aussi » : Écartées et Expirées (docs/139 étapes 5c et
 // Vidéo de Kevin (6.11) : sur ordinateur, l'adresse /offres/384?offre=675 (arrivé par « Retour à l'offre ») rouvrait
 // toujours la 384 ; chaque clic dans la liste revenait sur elle.
 describe("Offres, sous-page ouverte sur ordinateur", () => {
-  it("devient ?offre=, et un clic ouvre l'offre cliquée", async () => {
+  it("devient ?offre=, et un clic ouvre l’offre cliquée", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve(path === "/api/profile-chunks" ? { data: [] } : page([offer(1, "Administrateur"), offer(2, "DevOps Engineer")])),
     );

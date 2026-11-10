@@ -39,8 +39,8 @@ async function mountView(query = QUERY, state: unknown = READY) {
   return { wrapper, router };
 }
 
-describe("Relier Get'emAll (docs/140, maquette AutoriserGetemall)", () => {
-  it("la case ORP est décochée, et ne part qu'avec « Autoriser »", async () => {
+describe("Relier Get’emAll (docs/140, maquette AutoriserGetemall)", () => {
+  it("la case ORP est décochée, et ne part qu’avec « Autoriser »", async () => {
     const { wrapper } = await mountView();
     const box = wrapper.find("[data-test=partner-orp]");
     expect((box.element as HTMLInputElement).checked).toBe(false);
@@ -61,7 +61,7 @@ describe("Relier Get'emAll (docs/140, maquette AutoriserGetemall)", () => {
     expect(assign).toHaveBeenCalledWith("https://getthemall.ch/connexion?code=jbc_x&state=etat-123456");
   });
 
-  it("« Refuser » passe par le serveur, qui vérifie l'adresse de retour", async () => {
+  it("« Refuser » passe par le serveur, qui vérifie l’adresse de retour", async () => {
     const { wrapper } = await mountView();
     POST.mockResolvedValue({ data: { redirect_to: "https://getthemall.ch/connexion?error=access_denied&state=etat-123456" } });
     await wrapper.find("[data-test=partner-refuse]").trigger("click");
@@ -72,7 +72,7 @@ describe("Relier Get'emAll (docs/140, maquette AutoriserGetemall)", () => {
     expect(assign).toHaveBeenCalledWith("https://getthemall.ch/connexion?error=access_denied&state=etat-123456");
   });
 
-  it("refusée sans adresse de retour : retour à l'accueil, jamais ailleurs", async () => {
+  it("refusée sans adresse de retour : retour à l’accueil, jamais ailleurs", async () => {
     const { wrapper, router } = await mountView("state=etat-123456");
     expect(wrapper.find("[data-test=partner-blocked]").exists()).toBe(true);
     expect(wrapper.find("[data-test=partner-allow]").attributes("disabled")).toBeDefined();

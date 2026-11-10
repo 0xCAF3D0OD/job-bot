@@ -11,7 +11,7 @@ describe("Les alertes existantes (docs/116 §1, 0.86.1)", () => {
     await wrapper.find("[data-test=alerts-forward] button").trigger("click");
     const rows = wrapper.findAll("[data-test=forward-steps] li");
     expect(rows.map((r) => r.find("strong").text())).toEqual([
-      "Ajouter l'adresse de transfert",
+      "Ajouter l’adresse de transfert",
       "Recopier le code de Gmail",
       "Créer le filtre",
     ]);

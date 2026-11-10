@@ -73,7 +73,7 @@ export function avatarSrc(n: number, size: 128 | 256 = 128): string {
 /** Recadre une image au centre, en carré de 256 px (le cercle est fait à l'affichage), en JPEG. */
 export async function cropPhoto(file: File): Promise<string> {
   if (!["image/jpeg", "image/png"].includes(file.type)) throw new Error("Choisis une image JPG ou PNG.");
-  if (file.size > PHOTO_MAX_BYTES) throw new Error("L'image dépasse 5 Mo.");
+  if (file.size > PHOTO_MAX_BYTES) throw new Error("L’image dépasse 5 Mo.");
   const bitmap = await createImageBitmap(file);
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement("canvas");

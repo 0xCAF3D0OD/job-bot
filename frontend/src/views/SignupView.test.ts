@@ -36,7 +36,7 @@ async function fill(wrapper: Awaited<ReturnType<typeof mountSignup>>, values: { 
 }
 
 describe("demander un compte (docs/102)", () => {
-  it("vérifie avant d'envoyer : chaque envoi compte dans la limite", async () => {
+  it("vérifie avant d’envoyer : chaque envoi compte dans la limite", async () => {
     const wrapper = await mountSignup();
     const form = wrapper.find("[data-test=signup-form]");
     await fill(wrapper, { username: "  " });
@@ -74,12 +74,12 @@ describe("demander un compte (docs/102)", () => {
       },
     });
     const sent = wrapper.find("[data-test=signup-sent]");
-    expect(sent.text()).toContain("Ta demande est envoyée. Tu pourras te connecter dès que l'équipe jobA1 l'aura acceptée.");
+    expect(sent.text()).toContain("Ta demande est envoyée. Tu pourras te connecter dès que l’équipe jobA1 l’aura acceptée.");
     expect(sent.find("a").attributes("href")).toBe("/connexion");
     expect(wrapper.find("[data-test=signup-form]").exists()).toBe(false);
   });
 
-  it("l'erreur du serveur, comme sur la page d'invitation", async () => {
+  it("l’erreur du serveur, comme sur la page d’invitation", async () => {
     POST.mockResolvedValue({ response: { ok: false, status: 422 }, error: { detail: "cet identifiant est déjà pris" } });
     const wrapper = await mountSignup();
     await fill(wrapper);
@@ -108,7 +108,7 @@ describe("demander un compte (docs/102)", () => {
     expect(wrapper.find("[data-test=signup-closed]").exists()).toBe(true);
   });
 
-  it("le champ piège : présent, hors de portée des lecteurs d'écran et du clavier", async () => {
+  it("le champ piège : présent, hors de portée des lecteurs d’écran et du clavier", async () => {
     const wrapper = await mountSignup();
     const trap = wrapper.find("[data-test=signup-trap]");
     expect(trap.attributes("aria-hidden")).toBe("true");
@@ -123,7 +123,7 @@ describe("demander un compte (docs/102)", () => {
   it("le lien vers « Tes données » à côté de la case", async () => {
     const wrapper = await mountSignup();
     const consent = wrapper.find(".signup-consent");
-    expect(consent.text()).toContain("J'ai lu ce que deviennent mes données");
+    expect(consent.text()).toContain("J’ai lu ce que deviennent mes données");
     expect(consent.find("a").attributes("href")).toBe("/tes-donnees");
   });
 });

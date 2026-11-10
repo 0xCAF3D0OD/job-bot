@@ -22,7 +22,7 @@ const main = { id: 1, name: "Profil principal", occupation: null, is_main: true,
 const nurse = { id: 2, name: "Infirmière", occupation: "infirmière", is_main: false, domain_keywords: ["soins"] };
 
 describe("ProfilesPanel", () => {
-  it("création d'un profil d'essai avec domaine, langues et pays", async () => {
+  it("création d’un profil d’essai avec domaine, langues et pays", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main] } }),
     );
@@ -45,7 +45,7 @@ describe("ProfilesPanel", () => {
     expect(wrapper.find("[data-test=propose-keywords]").exists()).toBe(false);
   });
 
-  it("sans nom : l'erreur sous le champ, pas de création ; Annuler referme", async () => {
+  it("sans nom : l’erreur sous le champ, pas de création ; Annuler referme", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main] } }),
     );
@@ -65,7 +65,7 @@ describe("ProfilesPanel", () => {
     wrapper.unmount();
   });
 
-  it("le modèle des Réglages (1.6.67) : une carte, une ligne par profil, l'action à droite", async () => {
+  it("le modèle des Réglages (1.6.67) : une carte, une ligne par profil, l’action à droite", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main, nurse] } }),
     );
@@ -76,7 +76,7 @@ describe("ProfilesPanel", () => {
     expect(wrapper.find("fieldset").exists()).toBe(false);
     // En-tête, deux profils, « Un autre profil ».
     const titles = card.findAll(".setting-row-title").map((t) => t.text());
-    expect(titles).toEqual(["Profils d'essai", "Profil principal (principal)", "Infirmière", "Un autre profil"]);
+    expect(titles).toEqual(["Profils d’essai", "Profil principal (principal)", "Infirmière", "Un autre profil"]);
     expect(card.findAll("[data-test=setting-row]")).toHaveLength(2);
     const [first, second] = card.findAll("[data-test=profile]");
     expect(second!.find(".setting-row-description").text()).toBe("infirmière · soins");
@@ -87,7 +87,7 @@ describe("ProfilesPanel", () => {
     expect(card.find(".setting-row-control [data-test=add-profile-open]").exists()).toBe(true);
   });
 
-  it("mots-clés proposés par l'IA à partir du métier", async () => {
+  it("mots-clés proposés par l’IA à partir du métier", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: true } : { current_id: 1, items: [main] } }),
     );
@@ -97,7 +97,7 @@ describe("ProfilesPanel", () => {
     await wrapper.find("[data-test=add-profile-open]").trigger("click");
     // Bouton actif (docs/29 §3) : sans métier, il explique au clic.
     await wrapper.find("[data-test=propose-keywords]").trigger("click");
-    expect(wrapper.text()).toContain("Indique d'abord le métier");
+    expect(wrapper.text()).toContain("Indique d’abord le métier");
     await wrapper.find("[data-test=profile-occupation]").setValue("infirmière");
     await wrapper.find("[data-test=propose-keywords]").trigger("click");
     await flushPromises();

@@ -17,8 +17,8 @@ const EXEMPT_RULES: [RegExp, string][] = [
   [/(^|[\s,])\.(letter|cv|orp-sheet)[\w-]*|(^|[\s,])\.kw\b/, "lettre, CV et feuille ORP : ils imitent le papier et le PDF"],
   [/#print-root|(^|[\s,])\.orp-(holder|sign)\b/, "la feuille ORP imprimée, en millimètres et en points"],
   [/(^|[\s,])\.(dmock|confetti)\b/, "illustrations : la maquette de « La plateforme », les confettis"],
-  [/\.hover-note-info\b/, "marges négatives qui compensent la cible de 2,75 rem du bouton d'aide"],
-  [/^input, select, textarea$/, "16 px : en dessous, l'iPhone zoome sur le champ"],
+  [/\.hover-note-info\b/, "marges négatives qui compensent la cible de 2,75 rem du bouton d’aide"],
+  [/^input, select, textarea$/, "16 px : en dessous, l’iPhone zoome sur le champ"],
   [/^\.info-card \.summary-rows$/, "la place réservée au bouton de la carte"],
 ];
 
@@ -131,7 +131,7 @@ describe("Les largeurs (1.6.32)", () => {
     expect(css().some(([sel, body]) => sel === ":root" && /--page-max:\s*1020px/.test(body))).toBe(true);
   });
 
-  it("les blocs d'une page prennent toute la largeur du conteneur", () => {
+  it("les blocs d’une page prennent toute la largeur du conteneur", () => {
     // Aucune règle ne rétrécit un bloc posé dans le corps d'une page (Aujourd'hui, Suivi, Alertes,
     // Rendez-vous, Bilan) : seule la mesure limite le texte, pas le bloc.
     const narrowed = css().filter(
@@ -172,7 +172,7 @@ describe("Réglages et mesure (1.6.35)", () => {
     expect(drawn?.[1]).toMatch(/inset:\s*0 0 0 var\(--annotation\)/);
   });
 
-  it("la mesure : 31 em à toutes les tailles d'écran (75 caractères, Baymard avant Material)", () => {
+  it("la mesure : 31 em à toutes les tailles d’écran (75 caractères, Baymard avant Material)", () => {
     const roots = css().filter(([sel]) => sel === ":root").map(([, body]) => body.match(/--measure:\s*([^;]+)/)?.[1]?.trim()).filter(Boolean);
     expect(roots).toEqual(["31em"]);
   });

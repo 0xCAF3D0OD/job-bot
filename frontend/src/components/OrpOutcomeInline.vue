@@ -185,7 +185,7 @@ const facts = computed(() => [
 
 <style>
 /* Valeurs du lot 14 : sur-titre au-dessus des trois parties ; chaque partie à 28/32 avec un trait au-dessus (sauf la
-   première), le titre de 18 en 700, « (facultatif) » en 15 normal, la phrase d'aide en 14 (4 au-dessus, 16
+   première), le titre de 18 en 700, « (facultatif) » en 15 normal, la phrase d’aide en 14 (4 au-dessus, 16
    dessous) ; compteur en ronds de 44 ; « Enregistrer » plein de 52, après un trait. */
 .outcome-inline { --out-28: 28px; --out-32: 32px; --out-22: 22px; --out-24: 24px; --out-52: 52px; --out-14: 14px; padding-top: var(--cols-pad-top); }
 .outcome-inline > .detail-overline { margin: 0; }

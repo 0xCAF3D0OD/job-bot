@@ -129,8 +129,8 @@ onMounted(async () => {
           data-test="setup-needed"
         >
           <p>
-            Aucun compte n'existe encore.
-            <HoverNote text="12 caractères au moins. Le mot de passe n'est jamais enregistré en clair.">
+            Aucun compte n’existe encore.
+            <HoverNote text="12 caractères au moins. Le mot de passe n’est jamais enregistré en clair.">
               Crée-le une fois
             </HoverNote>, dans un terminal, depuis le dossier du projet :
           </p>
@@ -242,7 +242,7 @@ onMounted(async () => {
               </RouterLink>
             </template>
             <template v-else>
-              Pas encore de compte ? L'accès se fait sur invitation.
+              Pas encore de compte ? L’accès se fait sur invitation.
             </template>
           </p>
           <p class="login-foot login-foot-small">

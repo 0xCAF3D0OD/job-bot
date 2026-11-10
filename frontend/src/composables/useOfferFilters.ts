@@ -167,7 +167,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
     });
   if (filters.minRate !== null)
     chips.push({ key: "rate", label: `Taux minimum : ${filters.minRate} %`, patch: { minRate: null } });
-  if (filters.externalOnly) chips.push({ key: "external", label: "Chez l'employeur", patch: { externalOnly: false } });
+  if (filters.externalOnly) chips.push({ key: "external", label: "Chez l’employeur", patch: { externalOnly: false } });
   if (filters.hideDoubtful)
     chips.push({ key: "doubtful", label: "Sans les offres à vérifier", patch: { hideDoubtful: false } });
   if (filters.showFilteredOut)

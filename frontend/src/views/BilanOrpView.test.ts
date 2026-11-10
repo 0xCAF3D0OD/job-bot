@@ -37,7 +37,7 @@ function mountView(target: number | null) {
 }
 
 describe("Bilan › ORP sur téléphone, en blocs (lot 18, §10.2)", () => {
-  it("l'objectif et la date de remise, « À déclarer à l'ORP » vers la fiche, « Recherches du mois » et l'export", async () => {
+  it("l’objectif et la date de remise, « À déclarer à l’ORP » vers la fiche, « Recherches du mois » et l’export", async () => {
     const wrapper = mountView(10);
     await flushPromises();
     const goal = wrapper.find("[data-test=orp-goal]");

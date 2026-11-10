@@ -62,7 +62,7 @@ async function openPanel(wrapper: Awaited<ReturnType<typeof mountView>>): Promis
 }
 
 describe("TrainingsView", () => {
-  it("catalogue : l'encadré du financement, les puces, les lignes groupées (B16 à B18)", async () => {
+  it("catalogue : l’encadré du financement, les puces, les lignes groupées (B16 à B18)", async () => {
     GET.mockResolvedValue({
       data: page([
         training(1),
@@ -76,10 +76,10 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=filter-all]").exists()).toBe(false);
     // Le financement : l'encadré, puis la feuille « Formation et chômage » (B16, formulation neutre B4).
     const note = wrapper.find("[data-test=orp-note]");
-    expect(note.text()).toBe("Financement possible par l'ORPSeulement avec l'accord préalable de l'ORP");
+    expect(note.text()).toBe("Financement possible par l’ORPSeulement avec l’accord préalable de l’ORP");
     await note.trigger("click");
     const sheet = wrapper.find("[data-test=orp-sheet]");
-    expect(sheet.text()).toContain("Il faut d'abord la demander à l'ORP et attendre son accord");
+    expect(sheet.text()).toContain("Il faut d’abord la demander à l’ORP et attendre son accord");
     expect(sheet.findAll("a")).toHaveLength(2);
     // Les groupes, avec leur nombre ; une ligne : titre, « éditeur · format · langue », le prix.
     expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications1");
@@ -162,7 +162,7 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Autre");
   });
 
-  it("suggestions de l'IA : recherche, garder, écarter", async () => {
+  it("suggestions de l’IA : recherche, garder, écarter", async () => {
     const ai = training(5, { title: "Kubernetes en français", origin: "ai", verified: false, price: "free" });
     GET.mockResolvedValue({ data: page([ai, training(6, { origin: "ai", verified: false, title: "Autre" })]) });
     POST.mockImplementation((path: string) =>
@@ -182,7 +182,7 @@ describe("TrainingsView", () => {
     expect(wrapper.findAll("[data-test=unverified]")).toHaveLength(0);
   });
 
-  it("Suivies : en cours en carte avec l'avancement, puis les gardées et les terminées (B19)", async () => {
+  it("Suivies : en cours en carte avec l’avancement, puis les gardées et les terminées (B19)", async () => {
     const done = { status: "done", progress: null, done_at: "2026-09-30", certified: true };
     const current = { status: "in_progress", progress: "Module 3 sur 6", done_at: null, certified: null };
     const kept = { status: "interested", progress: null, done_at: null, certified: null };
@@ -210,7 +210,7 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("CKAD");
   });
 
-  it("B19 : le compteur de modules, la barre, l'envoi unique et « Marquer comme terminée »", async () => {
+  it("B19 : le compteur de modules, la barre, l’envoi unique et « Marquer comme terminée »", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const current = { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: 12, modules_done: 6 };
     GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
@@ -288,7 +288,7 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=progress]").exists()).toBe(true);
   });
 
-  it("Suivies vide : l'invitation à garder une formation", async () => {
+  it("Suivies vide : l’invitation à garder une formation", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     const wrapper = await mountView("/formations?onglet=miennes");
     expect(wrapper.find("[data-test=trainings-none]").text()).toContain("Garde une formation du catalogue avec son signet.");
@@ -315,13 +315,13 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=in-profile]").exists()).toBe(true);
   });
 
-  it("financement ORP : texte avec l'argument tiré des offres, puis demandée et acceptée", async () => {
+  it("financement ORP : texte avec l’argument tiré des offres, puis demandée et acceptée", async () => {
     const interested = { status: "interested", progress: null, done_at: null, certified: null, chunk_id: null, funding_status: null, funding_requested_at: null };
     GET.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/trainings/{training_id}/funding-request"
           ? { data: { offers: 12, matched: ["Kubernetes", "CKA"], examples: [{ title: "Ingénieur DevOps", company: "Consort Group" }], sender: "Camille Exemple" } }
-          : { data: page([training(1, { mark: interested, duration: "2 h d'examen" })]) },
+          : { data: page([training(1, { mark: interested, duration: "2 h d’examen" })]) },
       ),
     );
     PUT.mockResolvedValueOnce({ data: { ...interested, funding_status: "requested", funding_requested_at: "2026-10-15" } });
@@ -332,8 +332,8 @@ describe("TrainingsView", () => {
     await flushPromises();
     const text = (wrapper.find("[data-test=funding-letter]").element as HTMLTextAreaElement).value;
     expect(text).toContain("« Certified Kubernetes Administrator (CKA) » (The Linux Foundation / CNCF");
-    expect(text).toContain("12 offres que j'ai reçues demandaient Kubernetes ou CKA, par exemple « Ingénieur DevOps » chez Consort Group.");
-    expect(text).toContain("Coût : [montant]. Durée : 2 h d'examen.");
+    expect(text).toContain("12 offres que j’ai reçues demandaient Kubernetes ou CKA, par exemple « Ingénieur DevOps » chez Consort Group.");
+    expect(text).toContain("Coût : [montant]. Durée : 2 h d’examen.");
     expect(text.trim().endsWith("Camille Exemple")).toBe(true);
 
     await wrapper.find("[data-test=funding-requested]").trigger("click");
@@ -343,14 +343,14 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=training-funding]").text()).toContain("Demandée le 15 oct.");
   });
 
-  it("« Chercher d'autres formations » sans domaine : le champ du domaine s'ouvre", async () => {
+  it("« Chercher d’autres formations » sans domaine : le champ du domaine s’ouvre", async () => {
     GET.mockResolvedValue({ data: page([training(1)], { domain_keywords: [] }) });
     const wrapper = await mountView();
     expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
     await wrapper.find("[data-test=suggest]").trigger("click");
     await flushPromises();
     expect(POST).not.toHaveBeenCalled();
-    expect(wrapper.text()).toContain("Indique d'abord ton domaine");
+    expect(wrapper.text()).toContain("Indique d’abord ton domaine");
     expect(wrapper.find("#domaine-champ").exists()).toBe(true);
   });
 });

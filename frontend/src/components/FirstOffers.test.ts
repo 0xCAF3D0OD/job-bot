@@ -17,7 +17,7 @@ afterEach(() => {
 const state = (extra: Record<string, unknown>) => ({ status: "none", at: null, found: 0, new: 0, queries: [], ...extra });
 
 describe("Les premières offres (docs/104, 0.80.0)", () => {
-  it("page Offres : la recherche en cours, puis le résultat et l'offre rechargée", async () => {
+  it("page Offres : la recherche en cours, puis le résultat et l’offre rechargée", async () => {
     vi.useFakeTimers();
     GET.mockResolvedValueOnce({ data: state({ status: "queued" }) });
     const now = new Date().toISOString();
@@ -50,14 +50,14 @@ describe("Les premières offres (docs/104, 0.80.0)", () => {
     await wrapper.find("[data-test=first-offers-start]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches/first-offers");
-    expect(wrapper.find("[data-test=first-offers-message]").text()).toContain("moins d'une heure");
+    expect(wrapper.find("[data-test=first-offers-message]").text()).toContain("moins d’une heure");
   });
 
   it("page Alertes : sans métier, il le dit", async () => {
     GET.mockResolvedValueOnce({ data: state({ status: "no_trade" }) });
     const wrapper = mount(FirstOffers, { props: { where: "alerts" } });
     await flushPromises();
-    expect(wrapper.text()).toContain("Indique d'abord ton métier");
+    expect(wrapper.text()).toContain("Indique d’abord ton métier");
   });
 });
 

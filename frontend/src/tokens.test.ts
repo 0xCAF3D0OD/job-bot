@@ -57,14 +57,14 @@ describe("les variables de docs/mobile/tokens.css (docs/139)", () => {
     }
   });
 
-  it("« À creuser » reste en gris chaud, jamais l'orange (D5, 2026-11-02)", () => {
+  it("« À creuser » reste en gris chaud, jamais l’orange (D5, 2026-11-02)", () => {
     expect(styleLight.get("score-dig")).not.toBe(styleLight.get("warning"));
     expect(styleDark.get("score-dig")).not.toBe(styleDark.get("warning"));
   });
 });
 
 describe("le choix forcé clair ou sombre (Compte › Apparence, Q7)", () => {
-  it("le sombre automatique ne s'applique pas quand le clair est forcé", () => {
+  it("le sombre automatique ne s’applique pas quand le clair est forcé", () => {
     expect(darkBlock).toContain(':root:not([data-theme="light"]) {');
     expect(darkBlock).not.toMatch(/^\s*:root \{/m);
   });
@@ -75,7 +75,7 @@ describe("le choix forcé clair ou sombre (Compte › Apparence, Q7)", () => {
     for (const [name, value] of referenceDark) expect(styleForced.get(name), `--${name}`).toBe(value);
   });
 
-  it("chaque règle sombre a son double forcé, et ne s'applique pas quand le clair est forcé", () => {
+  it("chaque règle sombre a son double forcé, et ne s’applique pas quand le clair est forcé", () => {
     const rules = [...css.matchAll(/@media \(prefers-color-scheme: dark\) \{\s*([^{}]+)\{([^{}]*)\}/g)];
     expect(rules.length).toBeGreaterThan(5);
     for (const [, selector, body] of rules) {

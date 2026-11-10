@@ -129,7 +129,7 @@ export function alertsBand(page: AlertsPage, now: Date): Band | null {
       kind: "code",
       site: code.site,
       title: `${name(code.site)} attend un code de vérification.`,
-      summary: "Le code arrive par e-mail sur ton adresse d'alertes.",
+      summary: "Le code arrive par e-mail sur ton adresse d’alertes.",
       action: "Vérifier",
     };
   }
@@ -141,7 +141,7 @@ export function alertsBand(page: AlertsPage, now: Date): Band | null {
       url: confirm.url,
       searchId: confirm.search_id,
       title: `${name(confirm.site)} attend ta confirmation.`,
-      summary: "Le site demande de confirmer l'alerte avant de l'envoyer : ouvre son lien.",
+      summary: "Le site demande de confirmer l’alerte avant de l’envoyer : ouvre son lien.",
       action: "Confirmer",
     };
   }
@@ -153,9 +153,9 @@ export function alertsBand(page: AlertsPage, now: Date): Band | null {
         kind: "silent",
         site: silent.slug,
         terms: group.terms,
-        title: `${silent.name} n'a encore rien reçu.`,
+        title: `${silent.name} n’a encore rien reçu.`,
         summary: `Ta recherche « ${group.terms} » y existe depuis ${silent.state.days} jours, sans un seul e-mail : le réglage est sans doute à revoir.`,
-        action: "Vérifier l'alerte",
+        action: "Vérifier l’alerte",
       };
     }
   }

@@ -28,19 +28,19 @@ const senders = computed(() => (mailer.value === "gmail" ? `from:(${SENDERS.join
 
 const STEPS: Record<Mailer, Step[]> = {
   gmail: [
-    { title: "Ajouter l'adresse de transfert", hint: "Paramètres, Transfert et POP/IMAP", copy: "address" },
-    { title: "Recopier le code de Gmail", hint: "Il s'affiche dans « Les e-mails des sites »." },
+    { title: "Ajouter l’adresse de transfert", hint: "Paramètres, Transfert et POP/IMAP", copy: "address" },
+    { title: "Recopier le code de Gmail", hint: "Il s’affiche dans « Les e-mails des sites »." },
     { title: "Créer le filtre", hint: "Les expéditeurs dans « De », puis « Transférer à ».", copy: "senders" },
   ],
   outlook: [
     { title: "Créer une règle", hint: "Paramètres, Courrier, Règles" },
     { title: "Coller les expéditeurs", hint: "Dans la condition « De ».", copy: "senders" },
-    { title: "Transférer à l'adresse jobA1", hint: "Dans l'action « Transférer à ».", copy: "address" },
+    { title: "Transférer à l’adresse jobA1", hint: "Dans l’action « Transférer à ».", copy: "address" },
   ],
   other: [
     { title: "Créer une règle ou un filtre", hint: "Dans les réglages de ta messagerie." },
-    { title: "Coller les expéditeurs", hint: "Les e-mails venant d'eux seulement.", copy: "senders" },
-    { title: "Transférer à l'adresse jobA1", hint: "L'action « Transférer à ».", copy: "address" },
+    { title: "Coller les expéditeurs", hint: "Les e-mails venant d’eux seulement.", copy: "senders" },
+    { title: "Transférer à l’adresse jobA1", hint: "L’action « Transférer à ».", copy: "address" },
   ],
 };
 
@@ -108,7 +108,7 @@ async function copy(what: "address" | "senders"): Promise<void> {
           <IconButton
             v-if="step.copy"
             icon="copy"
-            :label="copied === step.copy ? 'Copié' : step.copy === 'address' ? `Copier l'adresse ${props.address}` : 'Copier les expéditeurs'"
+            :label="copied === step.copy ? 'Copié' : step.copy === 'address' ? `Copier l’adresse ${props.address}` : 'Copier les expéditeurs'"
             :data-test="`forward-copy-${step.copy}`"
             @click="copy(step.copy)"
           />

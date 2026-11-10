@@ -27,7 +27,7 @@ watch(
 );
 const CHOICES: { value: FalseClaimMode; label: string; description: string }[] = [
   { value: "remove", label: "Retirer la phrase", description: "Elle disparaît de cette version." },
-  { value: "rewrite", label: "La réécrire d'après mon profil", description: "Une nouvelle version, relue." },
+  { value: "rewrite", label: "La réécrire d’après mon profil", description: "Une nouvelle version, relue." },
 ];
 </script>
 

@@ -380,7 +380,7 @@ async function readThenNext(): Promise<void> {
     try {
       const { data, error: err } = await api.PUT("/api/cvs/{draft_id}/read", { params: { path: { draft_id: cv.id } }, body: { read: true } });
       if (!data) {
-        error.value = detail(err, "La relecture n'a pas été enregistrée, réessaie.");
+        error.value = detail(err, "La relecture n’a pas été enregistrée, réessaie.");
         return;
       }
       error.value = "";
@@ -414,14 +414,14 @@ onMounted(() => void load());
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
       <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
-           l'adaptation a mis en avant (ses mots-clés). -->
+           l’adaptation a mis en avant (ses mots-clés). -->
       <section
         class="doc-card"
         aria-labelledby="cv-card-title"
         data-test="cv-card"
       >
         <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille « Mise en page
-             et langue » ; plus de FR / DE / EN sur l'écran. -->
+             et langue » ; plus de FR / DE / EN sur l’écran. -->
         <LayoutSheetLink
           v-if="phone"
           v-model="shownLanguage"
@@ -628,7 +628,7 @@ onMounted(() => void load());
               data-test="cv-edit-text"
               @click="openInstruction"
             >
-              Modifier le texte avec l'Assistant
+              Modifier le texte avec l’Assistant
             </button>
             <div
               v-else
@@ -652,7 +652,7 @@ onMounted(() => void load());
                 data-test="cv-read"
                 @change="markRead($event.target as HTMLInputElement)"
               >
-              <span>J'ai relu le CV</span>
+              <span>J’ai relu le CV</span>
             </label>
           </template>
         </template>
@@ -729,7 +729,7 @@ onMounted(() => void load());
         :note="layoutNote"
       />
       <!-- « Ce CV » (§14, remplace « Ta candidature ») : les changements à vérifier (panneau), les versions (panneau) et le
-           CV d'origine, qui ne change pas. -->
+           CV d’origine, qui ne change pas. -->
       <section
         v-if="deskReady && selected"
         class="side-card prep-file"
@@ -857,7 +857,7 @@ onMounted(() => void load());
             v-model="language"
             data-test="cv-language"
           >
-            <option value="">Celle de l'annonce</option>
+            <option value="">Celle de l’annonce</option>
             <option
               v-for="(label, code) in LANGUAGES"
               :key="code"
@@ -978,7 +978,7 @@ onMounted(() => void load());
             Enregistrer le titre et le résumé
           </BusyButton>
           <p class="hint">
-            Enregistre d'abord tes modifications pour les télécharger.
+            Enregistre d’abord tes modifications pour les télécharger.
           </p>
         </template>
         <div
@@ -1088,7 +1088,7 @@ onMounted(() => void load());
         v-if="dirty"
         class="hint"
       >
-        Enregistre d'abord tes modifications pour les télécharger.
+        Enregistre d’abord tes modifications pour les télécharger.
       </p>
       <template #actions>
         <template v-if="!dirty">

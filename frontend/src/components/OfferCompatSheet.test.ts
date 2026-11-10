@@ -9,11 +9,11 @@ const base = {
   verdict: "Proche de ton profil",
   tone: "close",
   subtitle: "Ingénieur DevOps · Exemple SA",
-  how: ["La note compare l'annonce à ton profil."],
+  how: ["La note compare l’annonce à ton profil."],
 };
 
 describe("OfferCompatSheet (§10.1, maquette OffreCompatibilite)", () => {
-  it("deux familles avec leur nombre, libellé au-dessus de la valeur ; une famille vide n'est pas affichée", () => {
+  it("deux familles avec leur nombre, libellé au-dessus de la valeur ; une famille vide n’est pas affichée", () => {
     const wrapper = mount(OfferCompatSheet, {
       attachTo: document.body,
       props: { ...base, strengths: [{ key: "Lieu", value: "Lausanne" }, { key: "", value: "Ton expérience correspond" }], gaps: [] },

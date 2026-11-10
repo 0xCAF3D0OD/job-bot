@@ -25,14 +25,14 @@ const SCENES: { art: SceneName; mock: MockKind; title: string; text: string; bel
     art: "offres-profils",
     mock: "offers",
     below: true,
-    title: "Les bonnes offres d'abord",
+    title: "Les bonnes offres d’abord",
     text: "Chaque offre reçoit une note selon ce que tu cherches et ton profil : les meilleures en tête.",
   },
   {
     art: "suivi-envoi",
     mock: "apply",
     title: "Ta candidature préparée",
-    text: "Une lettre et un CV adaptés à l'offre. Tu relis, tu corriges, tu envoies toi-même.",
+    text: "Une lettre et un CV adaptés à l’offre. Tu relis, tu corriges, tu envoies toi-même.",
   },
   {
     art: "tableau-de-bord",
@@ -45,7 +45,7 @@ const SCENES: { art: SceneName; mock: MockKind; title: string; text: string; bel
     mock: "orp",
     below: true,
     title: "Tes justificatifs ORP prêts",
-    text: "Chaque mois, la liste de tes recherches est prête à remettre à l'ORP, avant la date limite.",
+    text: "Chaque mois, la liste de tes recherches est prête à remettre à l’ORP, avant la date limite.",
   },
   {
     art: "formations",
@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
       />
       <h1>jobA1 tient ton objectif ORP sans y passer tes journées</h1>
       <p class="discover-lead">
-        Il t'aide à chercher un emploi en Suisse et à prouver tes recherches à l'ORP.
+        Il t’aide à chercher un emploi en Suisse et à prouver tes recherches à l’ORP.
       </p>
       <RouterLink
         v-if="!loggedIn"
@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
         v-if="!loggedIn"
         class="hint"
       >
-        L'accès se fait sur invitation{{ me?.demo_url ? " ; la démo est ouverte à tous, avec des données fictives" : "" }}.
+        L’accès se fait sur invitation{{ me?.demo_url ? " ; la démo est ouverte à tous, avec des données fictives" : "" }}.
       </p>
     </header>
 
@@ -239,10 +239,10 @@ onBeforeUnmount(() => {
             <div class="discover-data">
               <h2>Tes données restent à toi</h2>
               <p>
-                Ton compte est séparé des autres. Tes coordonnées ne partent jamais à l'IA.
+                Ton compte est séparé des autres. Tes coordonnées ne partent jamais à l’IA.
               </p>
               <RouterLink to="/tes-donnees">
-                Ce qui est gardé, et ce qui part à l'IA
+                Ce qui est gardé, et ce qui part à l’IA
               </RouterLink>
               <RouterLink
                 v-if="!loggedIn"

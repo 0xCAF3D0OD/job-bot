@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import { api, type Application, type ApplicationStatus, type ContactsPage, type Interview, type OrpRow } from "../api/client";
 import { followUpDue, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
-import { applicationStatusLabel, colorIndex, initials } from "../format";
+import { applicationStatusLabel, colorIndex, companyPlace, initials } from "../format";
 import { sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
@@ -114,7 +114,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
     { label: "Modifier", test: "panel-edit", icon: "pencil", run: () => emit("edit", a) },
     ...(assistant.available.value
       ? [{
-          label: "Demander à l'assistant",
+          label: "Demander à l’assistant",
           test: "panel-ask",
           icon: "ai" as const,
           run: () => assistant.askAbout({ applicationId: a.id, label: `candidature ${a.job_title} chez ${a.company}` }),
@@ -167,7 +167,7 @@ function onStatus(value: ApplicationStatus): void {
           >
             {{ application.job_title }}
           </component>
-          <p>{{ [application.company, application.location].filter(Boolean).join(" · ") }}</p>
+          <p>{{ companyPlace(application.company, application.location) }}</p>
         </div>
         <MoreMenu
           v-if="!phone"
@@ -411,7 +411,7 @@ function onStatus(value: ApplicationStatus): void {
 
 <style>
 /* Valeurs de CandidaturesOrdinateurB (onglet Envoyées, §8.1), ramenées sur la grille de 4 quand elles en sortent (écarts
-   de 18 → 12 et 24 dans l'en-tête, 6 → 4, libellé et date du Suivi collés) : cartes blanches à trait 1,5 px --card-line, rayon 18,
+   de 18 → 12 et 24 dans l’en-tête, 6 → 4, libellé et date du Suivi collés) : cartes blanches à trait 1,5 px --card-line, rayon 18,
    8 px entre elles ; en-tête 22,5 de marge, logo 56, titre 24/30 800, « entreprise · ville » 15 ; mots 15/20 700
    décalés de 72 ; Suivi : cercles de 28 à trait 2, libellés 14/18 700 à gauche, dates 13/16, traits de 2 à 8 px des
    cercles ; colonne droite de 280, lignes de 56 ; Historique sur le crème, 20 px plus bas. */

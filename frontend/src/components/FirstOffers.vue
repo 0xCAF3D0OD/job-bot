@@ -54,7 +54,7 @@ const offersLine = computed(() => {
   if (!s) return null;
   if (s.status === "queued") return "Je cherche tes premières offres sur jobup… Elles arrivent dans une minute.";
   if (s.status === "done" && s.new > 0 && recent.value) {
-    return `${plural(s.new, "première offre trouvée", "premières offres trouvées")} sur jobup (${searched.value}). Tes alertes prennent le relais dès qu'elles arrivent.`;
+    return `${plural(s.new, "première offre trouvée", "premières offres trouvées")} sur jobup (${searched.value}). Tes alertes prennent le relais dès qu’elles arrivent.`;
   }
   return null;
 });
@@ -62,8 +62,8 @@ const alertsText = computed(() => {
   const s = state.value;
   if (!s || s.status === "none") return "jobA1 peut chercher tout de suite sur jobup, avec ton métier et tes lieux, sans attendre tes alertes.";
   if (s.status === "queued") return "Recherche en cours sur jobup…";
-  if (s.status === "no_trade") return "Indique d'abord ton métier : c'est lui que jobA1 cherche.";
-  if (s.status === "failed") return "jobup n'a pas répondu à la dernière recherche. Réessaie plus tard.";
+  if (s.status === "no_trade") return "Indique d’abord ton métier : c’est lui que jobA1 cherche.";
+  if (s.status === "failed") return "jobup n’a pas répondu à la dernière recherche. Réessaie plus tard.";
   return `Dernière recherche (${searched.value}) : ${plural(s.found, "offre trouvée", "offres trouvées")}, dont ${plural(s.new, "nouvelle", "nouvelles")}.`;
 });
 
@@ -73,11 +73,11 @@ async function start(): Promise<void> {
   try {
     const { data } = await api.POST("/api/alert-searches/first-offers");
     if (!data) {
-      message.value = "Recherche impossible pour l'instant.";
+      message.value = "Recherche impossible pour l’instant.";
       return;
     }
     state.value = data;
-    if (data.result === "too_soon") message.value = "Déjà cherché il y a moins d'une heure : réessaie un peu plus tard.";
+    if (data.result === "too_soon") message.value = "Déjà cherché il y a moins d’une heure : réessaie un peu plus tard.";
     else if (data.result === "already_queued") message.value = "La recherche est déjà en route.";
     poll();
   } finally {

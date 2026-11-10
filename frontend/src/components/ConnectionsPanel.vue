@@ -52,7 +52,7 @@ async function remove(id: number): Promise<void> {
   });
   if (!response.ok) {
     const detail = (error as { detail?: unknown } | undefined)?.detail;
-    problem.value = typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : "Le lien n'a pas pu être retiré.";
+    problem.value = typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : "Le lien n’a pas pu être retiré.";
     return;
   }
   await load();
@@ -104,7 +104,7 @@ onMounted(load);
         class="setting-row-form"
       >
         <InlineConfirm
-          message="Retirer ce compte ? Tu ne pourras plus t'en servir pour te connecter."
+          message="Retirer ce compte ? Tu ne pourras plus t’en servir pour te connecter."
           confirm-label="Retirer"
           @confirm="remove(confirming)"
           @cancel="confirming = null"
@@ -116,7 +116,7 @@ onMounted(load);
         class="hint"
         data-test="connections-only-way"
       >
-        C'est ton seul moyen de te connecter : lie d'abord un autre compte pour pouvoir le retirer.
+        C’est ton seul moyen de te connecter : lie d’abord un autre compte pour pouvoir le retirer.
       </p>
       <p
         v-if="problem"

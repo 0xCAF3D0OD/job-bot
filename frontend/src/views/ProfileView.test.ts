@@ -33,7 +33,7 @@ describe("Profil, structure téléphone", () => {
     expect(wrapper.find(".prep-tabs").exists()).toBe(false);
   });
 
-  it("au-delà : plus d'onglets (PR 9b, page unique) ; ?onglet=coordonnees ouvre sa page avec un retour au Profil", async () => {
+  it("au-delà : plus d’onglets (PR 9b, page unique) ; ?onglet=coordonnees ouvre sa page avec un retour au Profil", async () => {
     const wrapper = await mountAt("wide");
     expect(wrapper.find(".prep-tabs").exists()).toBe(false);
     expect(wrapper.find(".segmented").exists()).toBe(false);

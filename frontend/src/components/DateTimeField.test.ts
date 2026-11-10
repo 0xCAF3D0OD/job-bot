@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import DateTimeField from "./DateTimeField.vue";
 
 describe("DateTimeField (docs/143, D26)", () => {
-  it("la date et l'heure en toutes lettres, nommées, et le choix ouvert", async () => {
+  it("la date et l’heure en toutes lettres, nommées, et le choix ouvert", async () => {
     const wrapper = mount(DateTimeField, { props: { date: "2026-11-10", time: "09:30", open: "date" } });
     const date = wrapper.get("[data-test=dt-date]");
     expect(date.text()).toContain("Mardi 10 novembre 2026");

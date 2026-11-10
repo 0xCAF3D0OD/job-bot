@@ -29,7 +29,7 @@ const segments = computed<SegmentOption[]>(() => [
 
 <template>
   <!-- Ordinateur (maquette du 8 novembre, BilanOrdinateur) : le titre à gauche et les onglets à droite, sur 880 px ;
-       le contenu dessous, sur la même colonne. Plus de bande bleue (prompt du 9 novembre §1 : seule Aujourd'hui en a
+       le contenu dessous, sur la même colonne. Plus de bande bleue (prompt du 9 novembre §1 : seule Aujourd’hui en a
        une ; maquettes BilanOrdinateur et BilanOrdinateurSombre). -->
   <template v-if="!phone">
     <section

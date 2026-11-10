@@ -27,9 +27,9 @@ function report(extra: Record<string, unknown> = {}) {
     funnel: { received: 75, retained: 19, applications: 22, responses: 9, interviews: 3, engagements: 0 },
     delay: { typical: 9, shortest: 2, longest: 18 },
     comparisons: [
-      { key: "source", title: "D'où vient l'offre", groups: [group("jobup", 5, 9), group("LinkedIn", 1, 3)] },
-      { key: "score", title: "Note de l'IA", groups: [] },
-      { key: "contact", title: "Contact dans l'entreprise", groups: [group("avec un contact", 1, 5)] },
+      { key: "source", title: "D’où vient l’offre", groups: [group("jobup", 5, 9), group("LinkedIn", 1, 3)] },
+      { key: "score", title: "Note de l’IA", groups: [] },
+      { key: "contact", title: "Contact dans l’entreprise", groups: [group("avec un contact", 1, 5)] },
       { key: "follow_up", title: "Relance (après 10 jours)", groups: [group("relancées", 0, 4)] },
     ],
     headline: "Les offres de jobup obtiennent plus souvent une réponse (5 sur 9, contre 1 sur 7).",
@@ -89,7 +89,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "recent" } } });
     // La conclusion d'abord (règles §3.2), comparée au trimestre d'avant, sans redire la bande.
     expect(wrapper.find(".insights").element.firstElementChild?.getAttribute("data-test")).toBe("headline");
-    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche avance : 9 réponses, contre 4 au trimestre d'avant.");
+    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche avance : 9 réponses, contre 4 au trimestre d’avant.");
     expect(wrapper.find("[data-test=headline] strong").text()).toBe("avance");
     // La bande (§3) : le site qui répond le plus, contre les autres sites qui ont assez de données.
     const band = wrapper.find("[data-test=action-band]");
@@ -187,16 +187,16 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=detail-orp]").exists()).toBe(false);
   });
 
-  it("un mois : navigation et résumé pour l'ORP à copier", async () => {
-    const summary = "Octobre 2026 : 4 candidatures. 2 réponses, aucun entretien, pas encore d'engagement.";
+  it("un mois : navigation et résumé pour l’ORP à copier", async () => {
+    const summary = "Octobre 2026 : 4 candidatures. 2 réponses, aucun entretien, pas encore d’engagement.";
     serve(report({ orp_summary: summary, previous_responses: 9 }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const { wrapper, router } = await mountView("/candidatures/bilan?mois=2026-10");
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "month", month: "2026-10" } } });
-    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche tient le rythme : 9 réponses, contre 9 au mois d'avant.");
+    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche tient le rythme : 9 réponses, contre 9 au mois d’avant.");
     const orp = wrapper.find("[data-test=detail-orp]");
-    expect(orp.find("[data-test=disclosure-description]").text()).toBe("Le résumé d'octobre à copier");
+    expect(orp.find("[data-test=disclosure-description]").text()).toBe("Le résumé d’octobre à copier");
     await orp.find(".disclosure-row").trigger("click");
     expect(wrapper.find("[data-test=orp-summary]").text()).toContain(summary);
     await wrapper.find("[data-test=orp-summary-copy]").trigger("click");

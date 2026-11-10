@@ -6,9 +6,9 @@ import { dateInList, dateInSentence, dateWithTime, dayFamily, dayGroup, inDays, 
 const now = new Date("2026-10-27T11:00:00Z");
 
 describe("Les dates de jobA1 (1.6.74, règle §5)", () => {
-  it("dans une liste : aujourd'hui, hier, puis la date courte, l'année si elle diffère", () => {
-    expect(dateInList("2026-10-27T06:00:00Z", now)).toBe("aujourd'hui");
-    expect(dateInList("2026-10-26T23:30:00Z", now)).toBe("aujourd'hui"); // 0 h 30 le 27 à Zurich
+  it("dans une liste : aujourd’hui, hier, puis la date courte, l’année si elle diffère", () => {
+    expect(dateInList("2026-10-27T06:00:00Z", now)).toBe("aujourd’hui");
+    expect(dateInList("2026-10-26T23:30:00Z", now)).toBe("aujourd’hui"); // 0 h 30 le 27 à Zurich
     expect(dateInList("2026-10-26T08:00:00Z", now)).toBe("hier");
     expect(dateInList("2026-10-12T08:00:00Z", now)).toBe("12 oct.");
     expect(dateInList("2025-10-12T08:00:00Z", now)).toBe("12 oct. 2025");
@@ -21,7 +21,7 @@ describe("Les dates de jobA1 (1.6.74, règle §5)", () => {
   });
 
   it("une notification : son groupe et son heure (maquette Notifications)", () => {
-    expect(dayGroup("2026-10-27T06:00:00Z", now)).toBe("Aujourd'hui");
+    expect(dayGroup("2026-10-27T06:00:00Z", now)).toBe("Aujourd’hui");
     expect(dayGroup("2026-10-26T08:00:00Z", now)).toBe("Hier");
     expect(dayGroup("2026-10-21T08:00:00Z", now)).toBe("Cette semaine");
     expect(dayGroup("2026-10-20T08:00:00Z", now)).toBe("Plus tôt");
@@ -32,15 +32,15 @@ describe("Les dates de jobA1 (1.6.74, règle §5)", () => {
     expect(timeInCard("2026-10-27T08:12:00Z", now)).toBe("09:12");
     expect(timeInCard("2026-10-26T08:00:00Z", now)).toBe("Hier");
     expect(timeInCard("2026-10-21T08:00:00Z", now)).toBe("21 oct.");
-    expect(dayFamily("2026-10-27T06:00:00Z", now)).toBe("Aujourd'hui");
+    expect(dayFamily("2026-10-27T06:00:00Z", now)).toBe("Aujourd’hui");
     expect(dayFamily("2026-10-26T08:00:00Z", now)).toBe("Hier");
     expect(dayFamily("2026-10-21T08:00:00Z", now)).toBe("Plus tôt");
   });
 
-  it("l'heure, seulement quand elle compte", () => {
+  it("l’heure, seulement quand elle compte", () => {
     expect(timeOfDay("2026-10-27T13:05:00Z")).toBe("14 h 05");
     expect(timeOfDay("2026-10-27T13:00:00Z")).toBe("14 h");
-    expect(dateWithTime("2026-10-27T13:00:00Z", now)).toBe("aujourd'hui à 14 h");
+    expect(dateWithTime("2026-10-27T13:00:00Z", now)).toBe("aujourd’hui à 14 h");
     expect(dateWithTime("2026-10-26T08:30:00Z", now)).toBe("hier à 9 h 30");
   });
 

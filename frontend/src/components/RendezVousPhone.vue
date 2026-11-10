@@ -326,7 +326,7 @@ function cal(iso: string): { day: number; month: number } {
 <style scoped>
 /* Les valeurs de la maquette (RendezVous.dc.html), écrites avec les échelles (scales.test.ts) ; mises sur la grille de 4
    le 9 novembre (§2.9, audit-grille.js) : 14 → 16 entre le calendrier et le texte, 10 → 8 entre deux cartes, 6 → 8
-   entre une icône et son mot ; « Préparer l'entretien » a 44 px de haut. 15 px = --font-small + 1 px. */
+   entre une icône et son mot ; « Préparer l’entretien » a 44 px de haut. 15 px = --font-small + 1 px. */
 .rdv-part { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .rdv-title {
   display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) 0;

@@ -67,14 +67,14 @@ export function sheetLines(prep: Preparation): { label: string; text: string }[]
   if (last) {
     lines.push({
       label: "Ton mois",
-      text: last.target ? `${last.count} ${last.count === 1 ? "recherche" : "recherches"} sur ${last.target}` : plural(last.count, "recherche", "recherches"),
+      text: last.target ? `${last.count} ${last.count <= 1 ? "recherche" : "recherches"} sur ${last.target}` : plural(last.count, "recherche", "recherches"),
     });
   }
   const blocker = prep.blockers[0];
   if (blocker) lines.push({ label: "Ce qui bloque", text: blocker.replace(/\.$/, "") });
   const missing = prep.missing[0];
   if (missing) {
-    lines.push({ label: "Ce qui te manque", text: `${missing.skill}, demandé dans ${missing.count} ${prep.offers === 1 ? "offre" : "offres"} sur ${prep.offers}` });
+    lines.push({ label: "Ce qui te manque", text: `${missing.skill}, demandé dans ${missing.count} ${prep.offers <= 1 ? "offre" : "offres"} sur ${prep.offers}` });
   }
   return lines;
 }

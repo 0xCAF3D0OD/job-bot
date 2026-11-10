@@ -39,7 +39,7 @@ async function add(): Promise<void> {
       body: { title: title.value.trim(), content: content.value.trim() },
     });
     if (!data) {
-      error.value = "Le bloc n'a pas pu être ajouté. Réessaie.";
+      error.value = "Le bloc n’a pas pu être ajouté. Réessaie.";
       return;
     }
     open.value = false;
@@ -58,7 +58,7 @@ async function add(): Promise<void> {
     data-test="gap-fill"
     @click="start"
   >
-    Je l'ai
+    Je l’ai
   </button>
   <form
     v-else
@@ -81,7 +81,7 @@ async function add(): Promise<void> {
         type="text"
         maxlength="300"
         required
-        placeholder="Trois ans d'infrastructure en Terraform chez…"
+        placeholder="Trois ans d’infrastructure en Terraform chez…"
         data-test="gap-fill-content"
       >
     </label>
@@ -101,7 +101,7 @@ async function add(): Promise<void> {
         :disabled="!title.trim() || !content.trim()"
         data-test="gap-fill-add"
       >
-        <span class="with-icon"><AppIcon name="ai" /><HoverNote :text="aiNote('Environ 0,003 $.', undefined, 'L\'offre est renotée avec ce bloc.')">Ajouter au profil</HoverNote></span>
+        <span class="with-icon"><AppIcon name="ai" /><HoverNote :text="aiNote('Environ 0,003 $.', undefined, 'L’offre est renotée avec ce bloc.')">Ajouter au profil</HoverNote></span>
       </BusyButton>
       <button
         type="button"

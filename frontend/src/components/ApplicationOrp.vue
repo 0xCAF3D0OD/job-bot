@@ -34,7 +34,7 @@ function onDeclared(): void {
     class="panel-section"
     data-test="section-orp"
   >
-    <h3>Pour l'ORP</h3>
+    <h3>Pour l’ORP</h3>
     <p
       v-if="orpRow?.missing.length"
       class="notice card-missing"
@@ -55,7 +55,7 @@ function onDeclared(): void {
       class="remote-orp"
       data-test="remote-orp"
     >
-      Employeur à l'étranger ? Vérifie le contrat et les assurances avec ton conseiller.
+      Employeur à l’étranger ? Vérifie le contrat et les assurances avec ton conseiller.
     </p>
     <!-- Téléphone (lot 18, §10.3) : les champs à recopier sont dans la fiche « Pour l'ORP ». -->
     <RouterLink

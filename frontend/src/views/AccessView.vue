@@ -73,7 +73,7 @@ async function submit(): Promise<void> {
     >
       <p>{{ problem }}</p>
       <p class="hint">
-        Demande un nouveau lien à la personne qui t'a invité.
+        Demande un nouveau lien à la personne qui t’a invité.
       </p>
     </div>
     <form

@@ -151,7 +151,7 @@ async function suggest(): Promise<void> {
   // Bouton toujours actif (docs/29 §3) : sans domaine, il ouvre le champ du domaine.
   if (!hasDomain.value) {
     domainFieldOpen.value = true;
-    message.value = "Indique d'abord ton domaine : les formations proposées en dépendent.";
+    message.value = "Indique d’abord ton domaine : les formations proposées en dépendent.";
     return;
   }
   suggesting.value = true;
@@ -242,7 +242,7 @@ onMounted(() => void load());
             class="training-funding-icon"
             aria-hidden="true"
           ><AppIcon name="tag" /></span>
-          <span><strong>Financement possible par l'ORP</strong><span>Seulement avec l'accord préalable de l'ORP</span></span>
+          <span><strong>Financement possible par l’ORP</strong><span>Seulement avec l’accord préalable de l’ORP</span></span>
           <span
             class="arrow-circle small"
             aria-hidden="true"
@@ -354,7 +354,7 @@ onMounted(() => void load());
           @click="suggest"
         >
           <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
-            Chercher d'autres formations
+            Chercher d’autres formations
           </HoverNote>
         </BusyButton>
       </template>
@@ -417,7 +417,7 @@ onMounted(() => void load());
               data-test="training-update"
               @click="openId = training.id"
             >
-              Noter l'avancement
+              Noter l’avancement
             </button>
           </div>
         </section>
@@ -463,7 +463,7 @@ onMounted(() => void load());
       class="training-funding-sheet"
       data-test="orp-sheet"
     >
-      <p>L'ORP peut financer une formation. Il faut d'abord la demander à l'ORP et attendre son accord, avant de t'inscrire.</p>
+      <p>L’ORP peut financer une formation. Il faut d’abord la demander à l’ORP et attendre son accord, avant de t’inscrire.</p>
       <a
         v-for="link in ORP_LINKS"
         :key="link.url"

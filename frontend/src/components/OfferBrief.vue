@@ -81,7 +81,7 @@ const groups = computed(() =>
 
 <style>
 /* Valeurs du lot 15.1 : sous-titre 14 --text-secondary ; groupes en 14/700 ; éléments en 10 px de marge, sujet 15/700,
-   détail 14 --text-tertiary ; coche --success, point d'attention --peach-text. */
+   détail 14 --text-tertiary ; coche --success, point d’attention --peach-text. */
 .offer-brief { --brief-10: 10px; --brief-icon: 18px; }
 .offer-brief .offer-brief-head { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .offer-brief-group h3 { margin: var(--space-4) 0 0; font-size: var(--font-small); font-weight: var(--weight-bold); }

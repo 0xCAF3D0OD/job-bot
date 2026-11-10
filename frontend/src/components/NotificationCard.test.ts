@@ -33,7 +33,7 @@ describe("NotificationCard (MODIFICATIONS du 8 novembre au soir, §10.9)", () =>
     expect(wrapper.find(".arrow-circle").attributes("aria-hidden")).toBe("true");
   });
 
-  it("lue : ni point ni « Non lue » ; sans description, la carte n'a que le titre et l'heure", () => {
+  it("lue : ni point ni « Non lue » ; sans description, la carte n’a que le titre et l’heure", () => {
     const wrapper = mountCard({ read_at: new Date().toISOString(), message: null });
     expect(wrapper.get("[data-test=notification]").classes()).not.toContain("unread");
     expect(wrapper.find("[data-test=unread-dot]").exists()).toBe(false);

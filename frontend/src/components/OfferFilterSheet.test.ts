@@ -40,7 +40,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(mountSheet({ view: "expired" }).find("[data-test=sheet-filtered-out]").exists()).toBe(false);
   });
 
-  it("chaque choix s'applique tout de suite", async () => {
+  it("chaque choix s’applique tout de suite", async () => {
     const wrapper = mountSheet();
     await wrapper.find("[data-test=sheet-score-50]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minScore: 50, maxScore: null }]);

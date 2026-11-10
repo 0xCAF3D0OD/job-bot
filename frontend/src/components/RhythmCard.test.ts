@@ -32,7 +32,7 @@ describe("Ta semaine", () => {
       "Semaine faite. Le reste du temps est à toi.",
     );
     expect(mountCard({ research_today: false }).find("[data-test=rhythm-sentence]").text()).toContain(
-      "Jour de repos : rien à faire aujourd'hui.",
+      "Jour de repos : rien à faire aujourd’hui.",
     );
     // Dans la carte d'Aujourd'hui, la phrase du haut le dit déjà (1.6.26).
     expect(mountCard({ research_today: false }, true).find("[data-test=rhythm-sentence]").exists()).toBe(false);
@@ -41,11 +41,11 @@ describe("Ta semaine", () => {
     expect(free.text()).toContain("pour le répartir sur tes semaines");
   });
 
-  it("en pause : jusqu'à quand, et l'annoncer au conseiller", () => {
+  it("en pause : jusqu’à quand, et l’annoncer au conseiller", () => {
     const paused = days.map((d, i) => ({ ...d, research: false, paused: i < 5 }));
     const wrapper = mountCard({ days: paused, research_today: false, pause_until: "2026-11-01" });
     expect(wrapper.find("[data-test=rhythm-sentence]").text()).toBe(
-      "En pause jusqu'au 1er novembre. Pense à l'annoncer à ton conseiller.",
+      "En pause jusqu’au 1er novembre. Pense à l’annoncer à ton conseiller.",
     );
     expect(wrapper.findAll(".rhythm-days li")[0]!.attributes("aria-label")).toBe("lundi, en pause, 1 candidature");
   });

@@ -24,14 +24,14 @@ describe("cvChanges", () => {
     expect(cvChanges(cv([1, 2, 3, 4]))).toEqual([]);
   });
 
-  it("un nouvel ordre dans une rubrique : annuler remet l'ordre d'origine aux mêmes places", () => {
+  it("un nouvel ordre dans une rubrique : annuler remet l’ordre d’origine aux mêmes places", () => {
     const [change] = cvChanges(cv([3, 1, 2, 4]));
     expect(change).toMatchObject({ title: "Expériences", before: "Avant : « Projet perso » venait en 3e position." });
     expect(change!.now).toBe("Maintenant : il vient en première position, pour cette offre.");
     expect(change!.undo).toEqual([1, 2, 3, 4]);
   });
 
-  it("un bloc retiré : annuler le remet entre ses voisins d'origine", () => {
+  it("un bloc retiré : annuler le remet entre ses voisins d’origine", () => {
     const changes = cvChanges(cv([1, 3, 4]));
     expect(changes).toHaveLength(1);
     expect(changes[0]).toMatchObject({ title: "Stage web", now: "Maintenant : retiré pour cette offre.", undo: [1, 2, 3, 4] });
@@ -42,7 +42,7 @@ describe("cvChanges", () => {
     expect(change).toMatchObject({ title: "Profil", now: "Maintenant : « Ingénieur DevOps. »", undo: null });
   });
 
-  it("sans ordre d'origine (ancienne réponse), seul le résumé compte", () => {
+  it("sans ordre d’origine (ancienne réponse), seul le résumé compte", () => {
     const old = { ...cv([2, 1], "Résumé."), origin_ids: undefined } as unknown as Cv;
     expect(cvChanges(old).map((c) => c.key)).toEqual(["summary"]);
   });

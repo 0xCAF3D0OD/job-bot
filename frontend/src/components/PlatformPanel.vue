@@ -46,7 +46,7 @@ function elapsed(from: string, to: string | null | undefined): string {
   return `${Math.round(hours / 24)} j`;
 }
 // Où s'arrêtent les comptes qui n'ont pas fini (docs/128 §4) : l'étape à faire, et combien.
-const STEP_TITLES = ["Critères et CV", "Alertes sur les sites d'emploi", "Première offre gardée", "Lettre et CV pour l'offre", "Candidature envoyée"];
+const STEP_TITLES = ["Critères et CV", "Alertes sur les sites d’emploi", "Première offre gardée", "Lettre et CV pour l’offre", "Candidature envoyée"];
 const stoppedAt = computed(() =>
   (platform.value?.first_steps?.stopped_at ?? [])
     .map((count, index) => ({ label: `Étape ${index + 1} · ${STEP_TITLES[index]}`, count }))
@@ -323,11 +323,11 @@ const backupLast = computed(() => {
   const kept = `${plural(backup.count, "sauvegarde gardée", "sauvegardes gardées")} dans ${backup.folder}.`;
   return backup.last_at
     ? `Faite ${dateWithTime(backup.last_at)}, ${size(backup.last_size)} · ${kept}`
-    : `Pas encore de sauvegarde : la première se fait dans l'heure. ${kept}`;
+    : `Pas encore de sauvegarde : la première se fait dans l’heure. ${kept}`;
 });
 const backupTest = computed(() => {
   const backup = platform.value?.backup;
-  if (!backup?.test_at) return { text: "Pas encore d'essai : il se fait chaque dimanche.", state: "À venir", tone: "neutral" } as const;
+  if (!backup?.test_at) return { text: "Pas encore d’essai : il se fait chaque dimanche.", state: "À venir", tone: "neutral" } as const;
   return backup.test_ok
     ? ({ text: `Dernier essai ${dateInList(backup.test_at)}.`, state: "Réussi", tone: "ok" } as const)
     : ({ text: `Dernier essai ${dateInList(backup.test_at)} : ${backup.test_error}.`, state: "Échec", tone: "error" } as const);
@@ -346,7 +346,7 @@ function size(bytes: number | null | undefined): string {
     v-if="failed"
     class="notice error"
   >
-    Impossible de lire les comptes pour l'instant.
+    Impossible de lire les comptes pour l’instant.
   </p>
   <!-- L'administration (1.6.67, planche « 5. Réglages ») : des cartes de lignes ; chaque ligne, son
        titre, une phrase et son contrôle ou son action à droite. -->
@@ -357,8 +357,8 @@ function size(bytes: number | null | undefined): string {
       role="alert"
       data-test="platform-database-admin"
     >
-      Le serveur se connecte à la base en administrateur : la séparation des comptes ne tient qu'à lui.
-      Dans le fichier <code>.env</code>, utilise le rôle <code>jobbot_app</code> pour l'API et
+      Le serveur se connecte à la base en administrateur : la séparation des comptes ne tient qu’à lui.
+      Dans le fichier <code>.env</code>, utilise le rôle <code>jobbot_app</code> pour l’API et
       <code>jobbot_worker</code> pour le worker (voir <code>docs/exploitation.md</code>, « Accès à la base »).
     </p>
     <p
@@ -425,7 +425,7 @@ function size(bytes: number | null | undefined): string {
     >
       <SettingRow
         title="Comptes"
-        description="Leur usage seulement : connexion, dépense de l'IA, offres reçues."
+        description="Leur usage seulement : connexion, dépense de l’IA, offres reçues."
       />
       <template
         v-for="account in platform.accounts"
@@ -473,10 +473,10 @@ function size(bytes: number | null | undefined): string {
               :data-test="`cap-${account.username}`"
               @change="saveCap(account)"
             >
-            <span :id="`cap-label-${account.id}`">CHF d'IA / mois</span>
+            <span :id="`cap-label-${account.id}`">CHF d’IA / mois</span>
             <MoreMenu
               :items="accountItems(account)"
-              :label="`Plus d'actions sur le compte ${account.username}`"
+              :label="`Plus d’actions sur le compte ${account.username}`"
               :test-id="`account-more-${account.username}`"
             />
           </template>
@@ -528,7 +528,7 @@ function size(bytes: number | null | undefined): string {
         >
       </SettingRow>
       <SettingRow
-        title="Inviter quelqu'un"
+        title="Inviter quelqu’un"
         description="Un lien de création de compte, valable une fois."
       >
         <button
@@ -543,7 +543,7 @@ function size(bytes: number | null | undefined): string {
       <SettingRow
         v-if="link"
         class="platform-link"
-        :title="link.kind === 'invite' ? 'Lien d\'invitation' : `Lien de nouveau mot de passe pour ${link.username}`"
+        :title="link.kind === 'invite' ? 'Lien d’invitation' : `Lien de nouveau mot de passe pour ${link.username}`"
         :description="linkLine(link)"
         data-test="platform-link"
       >
@@ -562,7 +562,7 @@ function size(bytes: number | null | undefined): string {
       >
         <IconButton
           icon="trash"
-          label="Retirer l'invitation"
+          label="Retirer l’invitation"
           danger
           data-test="invitation-withdraw"
           @click="withdraw(invitation.id)"
@@ -611,10 +611,10 @@ function size(bytes: number | null | undefined): string {
       <SettingRow
         title="Test utilisateurs"
         :description="!platform.user_test_open
-          ? 'Aucun test en cours : rien n\'est enregistré.'
+          ? 'Aucun test en cours : rien n’est enregistré.'
           : platform.milestones?.length
-            ? 'Le temps entre l\'inscription et la première fois de chaque étape. Gardé jusqu\'à la fin du test.'
-            : 'Aucun compte invité pour l\'instant.'"
+            ? 'Le temps entre l’inscription et la première fois de chaque étape. Gardé jusqu’à la fin du test.'
+            : 'Aucun compte invité pour l’instant.'"
       >
         <button
           v-if="platform.user_test_open"
@@ -637,7 +637,7 @@ function size(bytes: number | null | undefined): string {
       </SettingRow>
       <InlineConfirm
         v-if="endingTest"
-        message="Les dates de tous les comptes sont effacées, et plus rien n'est enregistré."
+        message="Les dates de tous les comptes sont effacées, et plus rien n’est enregistré."
         confirm-label="Terminer et effacer"
         @confirm="setUserTest(false)"
         @cancel="endingTest = false"
@@ -789,8 +789,8 @@ function size(bytes: number | null | undefined): string {
     >
       <SettingRow
         v-slot="c"
-        title="Plafond total de l'IA, tous comptes"
-        description="Au-delà, l'IA s'arrête pour tous jusqu'au mois suivant."
+        title="Plafond total de l’IA, tous comptes"
+        description="Au-delà, l’IA s’arrête pour tous jusqu’au mois suivant."
         :saved="savedRow === 'total'"
         :error="rowErrors.total"
         stack

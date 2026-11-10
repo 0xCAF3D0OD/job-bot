@@ -16,9 +16,9 @@ afterEach(() => {
 
 describe("Composer (docs/143, D25)", () => {
   it("Entrée envoie, Maj + Entrée passe à la ligne ; Envoyer porte son nom accessible", async () => {
-    const wrapper = mount(Composer, { props: { modelValue: "Bonjour", placeholder: "Demander à l'Assistant", sendLabel: "Envoyer le message" } });
+    const wrapper = mount(Composer, { props: { modelValue: "Bonjour", placeholder: "Demander à l’Assistant", sendLabel: "Envoyer le message" } });
     const input = wrapper.get("[data-test=composer-input]");
-    expect(input.attributes("aria-label")).toBe("Demander à l'Assistant");
+    expect(input.attributes("aria-label")).toBe("Demander à l’Assistant");
     await input.trigger("keydown", { key: "Enter", shiftKey: true });
     expect(wrapper.emitted("send")).toBeUndefined();
     await input.trigger("keydown", { key: "Enter" });
@@ -38,7 +38,7 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.get("[data-test=composer-counter]").text()).toBe("5 caractères, 200 au moins · la flèche enregistre et refait la note");
   });
 
-  it("le menu + s'ouvre, se parcourt aux flèches et joint l'élément choisi", async () => {
+  it("le menu + s’ouvre, se parcourt aux flèches et joint l’élément choisi", async () => {
     const wrapper = mount(Composer, { attachTo: document.body, props: { modelValue: "", placeholder: "Message", plusItems: ITEMS } });
     const plus = wrapper.get("[data-test=composer-plus]");
     expect(plus.attributes("aria-label")).toBe("Joindre un fichier");
@@ -50,7 +50,7 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.find("[data-test=composer-menu]").exists()).toBe(false);
   });
 
-  it("le micro reste caché tant que la dictée n'est pas permise (O-4)", () => {
+  it("le micro reste caché tant que la dictée n’est pas permise (O-4)", () => {
     const wrapper = mount(Composer, { props: { modelValue: "", placeholder: "Message", mic: true } });
     expect(wrapper.find("[data-test=composer-mic]").exists()).toBe(false);
   });

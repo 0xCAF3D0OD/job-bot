@@ -40,7 +40,7 @@ async function mountView(today: unknown) {
 }
 
 describe("Accueil du téléphone : les cartes Offres (maquette AccueilSmile)", () => {
-  it("restent là après le tri du jour, tant qu'il reste des offres ; la ville sans canton", async () => {
+  it("restent là après le tri du jour, tant qu’il reste des offres ; la ville sans canton", async () => {
     localStorage.setItem(`jobA1.tri.${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}`, "1");
     const wrapper = await mountView(day());
     expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);

@@ -6,7 +6,7 @@ import ActionBand from "./ActionBand.vue";
 
 const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
 
-describe("ActionBand (§3, la bande d'action)", () => {
+describe("ActionBand (§3, la bande d’action)", () => {
   it("une région nommée par son titre, une phrase, un aperçu et une seule action, en lien", () => {
     const wrapper = mount(ActionBand, {
       props: { title: "Offres à examiner.", summary: "4 nouvelles depuis hier, dont 1 très proche.", action: "Commencer le tri", to: "/candidatures/tri" },
@@ -27,7 +27,7 @@ describe("ActionBand (§3, la bande d'action)", () => {
     expect(actions[0]!.classes()).toContain("primary-link");
   });
 
-  it("sans lien, l'action est un bouton principal qui prévient la page", async () => {
+  it("sans lien, l’action est un bouton principal qui prévient la page", async () => {
     const wrapper = mount(ActionBand, { props: { title: "Relances.", action: "Relancer" }, global: { plugins: [router] } });
     expect(wrapper.find(".action-band-summary").exists()).toBe(false);
     const button = wrapper.find("button[data-test=action-band-action]");

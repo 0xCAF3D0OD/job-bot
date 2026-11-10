@@ -112,7 +112,7 @@ describe("CvPanel", () => {
     expect((POST.mock.calls[0]![1] as { body: { language: string } }).body.language).toBe("de");
   });
 
-  it("« Ce CV » : les changements à vérifier, et « Annuler ce changement » remet l'ordre d'origine", async () => {
+  it("« Ce CV » : les changements à vérifier, et « Annuler ce changement » remet l’ordre d’origine", async () => {
     // L'adaptation a mis « Stage web » avant « Stage DevOps ».
     GET.mockResolvedValue({ data: [cv(21, [2, 1, 3], { origin_ids: [1, 2, 3] })] });
     PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
@@ -135,7 +135,7 @@ describe("CvPanel", () => {
     expect(wrapper.findAll("[data-test=cv-change]")).toHaveLength(1);
   });
 
-  it("un bloc retiré revient à sa place d'origine", async () => {
+  it("un bloc retiré revient à sa place d’origine", async () => {
     GET.mockResolvedValue({ data: [cv(21, [2, 3], { origin_ids: [1, 2, 3] })] });
     PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
     const wrapper = await mountPanel();

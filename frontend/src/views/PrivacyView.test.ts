@@ -25,7 +25,7 @@ async function mountPage(contact: string | null, guestMailbox = false, billing =
 }
 
 describe("page Tes données (docs/65 §6)", () => {
-  it("dit ce qui part à l'IA, et jamais les coordonnées", async () => {
+  it("dit ce qui part à l’IA, et jamais les coordonnées", async () => {
     const wrapper = await mountPage("Kevin, Lausanne");
     expect(wrapper.text()).toContain("Jamais tes coordonnées");
     expect(wrapper.text()).toContain("30 jours");
@@ -39,13 +39,13 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(text).toContain("les efface de cette boîte");
     expect(text).toContain("30 minutes");
     const shared = await mountPage("Kevin", false);
-    expect(shared.find("[data-test=privacy-mailbox]").text()).toContain("que l'exploitant administre");
+    expect(shared.find("[data-test=privacy-mailbox]").text()).toContain("que l’exploitant administre");
   });
 
-  it("l'extension : ce qu'elle lit, quand, et ce qu'elle envoie (docs/142)", async () => {
+  it("l’extension : ce qu’elle lit, quand, et ce qu’elle envoie (docs/142)", async () => {
     const text = (await mountPage("Kevin")).find("[data-test=privacy-extension]").text();
-    expect(text).toContain("qu'au clic sur son icône");
-    expect(text).toContain("seulement l'annonce et son adresse");
+    expect(text).toContain("qu’au clic sur son icône");
+    expect(text).toContain("seulement l’annonce et son adresse");
     expect(text).toContain("Jamais tes cookies");
     expect(text).toContain("Ton nom est retiré");
     expect(text).toContain("ton adresse jobA1 dans « Créer une alerte », sans rien valider");
@@ -62,20 +62,20 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(open.find("[data-test=privacy-billing] a").attributes("href")).toBe("/conditions");
   });
 
-  it("Get'emAll, seulement une fois la connexion ouverte (docs/140)", async () => {
+  it("Get’emAll, seulement une fois la connexion ouverte (docs/140)", async () => {
     const closed = await mountPage("Kevin, Lausanne");
     expect(closed.find("[data-test=privacy-getemall]").exists()).toBe(false);
     expect(closed.find("[data-test=privacy-revoke]").exists()).toBe(false);
     expect(closed.text()).not.toContain("apps reliées");
     const open = await mountPage("Kevin, Lausanne", false, false, true);
     const text = open.find("[data-test=privacy-getemall]").text();
-    expect(text).toContain("seulement si tu l'as coché");
-    expect(text).toContain("l'identifiant de ton compte jobA1");
+    expect(text).toContain("seulement si tu l’as coché");
+    expect(text).toContain("l’identifiant de ton compte jobA1");
     expect(open.find("[data-test=privacy-revoke]").text()).toContain("Réglages › Connexions");
-    expect(open.text()).toContain("et l'accès des apps reliées est retiré");
+    expect(open.text()).toContain("et l’accès des apps reliées est retiré");
     // La section vient juste après celle de l'IA.
     const titles = open.findAll("h2").map((h) => h.text());
-    expect(titles[titles.indexOf("Ce qui part à l'IA (Anthropic)") + 1]).toBe("Get'emAll, si tu le relies");
+    expect(titles[titles.indexOf("Ce qui part à l’IA (Anthropic)") + 1]).toBe("Get’emAll, si tu le relies");
   });
 
   it("sans mentions : le dit", async () => {

@@ -39,6 +39,6 @@ export function followMessage(found: FollowOut): { title: string; todo: string |
   const where = found.todo.length === found.sites.length && found.sites.length > 1 ? `sur chaque site : ${andList(found.todo)}` : `sur ${andList(found.todo)}`;
   return {
     title: `Recherche ajoutée : ${summary}`,
-    todo: `Il te reste à créer l'alerte ${where}. Tant qu'elle n'est pas créée, rien n'arrive.`,
+    todo: `Il te reste à créer l’alerte ${where}. Tant qu’elle n’est pas créée, rien n’arrive.`,
   };
 }

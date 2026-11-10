@@ -47,7 +47,7 @@ afterEach(() => {
 });
 
 describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", () => {
-  it("« Se déconnecter » dans sa carte, en rouge, l'adresse dessous ; pas sans connexion (§10.4, PR 8 du 9 novembre)", async () => {
+  it("« Se déconnecter » dans sa carte, en rouge, l’adresse dessous ; pas sans connexion (§10.4, PR 8 du 9 novembre)", async () => {
     const wrapper = await mountPage();
     const button = wrapper.get("[data-test=logout]");
     expect(button.find(".block-row-title").text()).toBe("Se déconnecter");
@@ -108,7 +108,7 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(href(wrapper, "account-notifications")).toBe("/reglages?rubrique=notifications");
     expect(wrapper.get("[data-test=account-appearance]").text()).toContain("Automatique");
     expect(href(wrapper, "account-ai-data")).toBe("/tes-donnees#ia");
-    expect(wrapper.get("[data-test=account-ai-data]").text()).toBe("Ce qui part à l'IA");
+    expect(wrapper.get("[data-test=account-ai-data]").text()).toBe("Ce qui part à l’IA");
     expect(href(wrapper, "account-help")).toBe("mailto:aide@example.ch");
     // L'administration et l'état du service, à l'exploitant seulement.
     expect(wrapper.find("[data-test=account-admin]").exists()).toBe(false);
@@ -117,7 +117,7 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(collectNow).toHaveBeenCalled();
   });
 
-  it("l'image choisie dans Profil s'affiche sur la ligne, la pastille reste dans le conteneur de 52 px", async () => {
+  it("l’image choisie dans Profil s’affiche sur la ligne, la pastille reste dans le conteneur de 52 px", async () => {
     forgetProfileImage();
     DATA["/api/profile-image"] = { avatar: 3 };
     const wrapper = await mountPage();
@@ -130,7 +130,7 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     wrapper.unmount();
   });
 
-  it("sans nom ni contact : « Ton profil », l'aide mène à À propos ; la démo ne collecte pas", async () => {
+  it("sans nom ni contact : « Ton profil », l’aide mène à À propos ; la démo ne collecte pas", async () => {
     DATA["/api/identity"] = { name: "" };
     DATA["/api/privacy"] = { contact: null };
     me.value = { username: "demo", auth_enabled: false, demo: true };
@@ -143,7 +143,7 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
 });
 
 describe("Collecter maintenant (reprise de la 502)", () => {
-  it("pendant la collecte : la ligne est aria-disabled et aria-busy, le clic ne relance rien, l'état est annoncé", async () => {
+  it("pendant la collecte : la ligne est aria-disabled et aria-busy, le clic ne relance rien, l’état est annoncé", async () => {
     const wrapper = await mountPage();
     const button = () => wrapper.get("button[data-test=account-collect]");
     const status = wrapper.get("[data-test=account-collect-status]");
@@ -157,9 +157,9 @@ describe("Collecter maintenant (reprise de la 502)", () => {
     await button().trigger("click");
     expect(collectNow).not.toHaveBeenCalled();
     running.value = false;
-    collectMessage.value = "Collecte lancée. Le journal se met à jour d'ici une minute.";
+    collectMessage.value = "Collecte lancée. Le journal se met à jour d’ici une minute.";
     await flushPromises();
     expect(button().attributes("aria-busy")).toBeUndefined();
-    expect(status.text()).toBe("Collecte lancée. Le journal se met à jour d'ici une minute.");
+    expect(status.text()).toBe("Collecte lancée. Le journal se met à jour d’ici une minute.");
   });
 });

@@ -6,7 +6,7 @@ import { api } from "../api/client";
 import type { components } from "../api/schema";
 import { useAuth } from "../composables/useAuth";
 import { UNDO_MS } from "../composables/useUndo";
-import { colorIndex, scoreWord } from "../format";
+import { colorIndex, companyPlace, scoreWord } from "../format";
 import { applicationLine, companyLine, followMessage } from "../searchText";
 import AppIcon from "./AppIcon.vue";
 
@@ -128,7 +128,7 @@ async function follow(): Promise<void> {
   try {
     const { data } = await api.POST("/api/alert-searches/follow", { body: { terms: terms.value } });
     if (!data) {
-      status.value = me.value?.demo ? "Démo : rien n'est enregistré." : "La recherche n'a pas pu être ajoutée. Réessaie.";
+      status.value = me.value?.demo ? "Démo : rien n’est enregistré." : "La recherche n’a pas pu être ajoutée. Réessaie.";
       return;
     }
     followed.value = data;
@@ -399,7 +399,7 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
                   >{{ (o.company ?? o.title).charAt(0).toUpperCase() }}</span>
                   <span class="gs-text">
                     <strong>{{ o.title }}</strong>
-                    <span>{{ [o.company, o.location].filter(Boolean).join(" · ") }}</span>
+                    <span>{{ companyPlace(o.company, o.location) }}</span>
                   </span>
                   <span
                     v-if="o.score !== null && o.score !== undefined"

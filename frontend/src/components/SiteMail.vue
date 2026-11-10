@@ -73,7 +73,7 @@ async function toggle(item: SiteMessage): Promise<void> {
   openId.value = openId.value === item.id ? null : item.id;
   if (openId.value === null || item.id in texts) return;
   const { data } = await api.GET("/api/alert-searches/messages/{search_id}", { params: { path: { search_id: item.id } } });
-  texts[item.id] = data?.text || "Ce message n'a pas de texte.";
+  texts[item.id] = data?.text || "Ce message n’a pas de texte.";
 }
 
 onMounted(async () => {
@@ -98,7 +98,7 @@ onUnmounted(stop);
       <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
       <SettingRow
         title="Code de vérification"
-        :description="codes.length ? 'Recopie-le sur le site qui te le demande.' : waiting ? 'J\'attends le code, pendant 5 minutes.' : guestMailbox ? 'Il s\'affiche ici dès qu\'il arrive dans la boîte de jobA1.' : 'Il s\'affiche ici dès qu\'il arrive.'"
+        :description="codes.length ? 'Recopie-le sur le site qui te le demande.' : waiting ? 'J’attends le code, pendant 5 minutes.' : guestMailbox ? 'Il s’affiche ici dès qu’il arrive dans la boîte de jobA1.' : 'Il s’affiche ici dès qu’il arrive.'"
         :stack="!!codes.length"
         data-test="site-code-row"
       >
@@ -110,11 +110,11 @@ onUnmounted(stop);
           v-else
           class="secondary small"
           :busy="waiting"
-          busy-label="J'attends…"
+          busy-label="J’attends…"
           data-test="site-code-expect"
           @click="expect"
         >
-          J'attends un code
+          J’attends un code
         </BusyButton>
       </SettingRow>
       <p
@@ -154,7 +154,7 @@ onUnmounted(stop);
         v-if="!items.length"
         class="setting-row-message muted"
       >
-        Aucun message pour l'instant.
+        Aucun message pour l’instant.
       </p>
       <p
         v-if="items.length > LATEST"

@@ -36,7 +36,7 @@ describe("CriteriaView", () => {
     expect(wrapper.text()).toContain("VD");
     // La description en une ligne sous son titre, les mots-clés au survol (docs/110, docs/118 §1).
     const descriptions = wrapper.findAll(".setting-desc").map((p) => p.text());
-    expect(descriptions).toContain("Écartée si le titre ou l'extrait contient un mot du type.");
+    expect(descriptions).toContain("Écartée si le titre ou l’extrait contient un mot du type.");
     const notes = wrapper.findAllComponents(HoverNote).map((n) => n.props("text"));
     expect(notes.some((t) => t.includes("Stages : stage, internship…"))).toBe(true);
 
@@ -85,9 +85,9 @@ describe("CriteriaForm, déjà saisis", () => {
       .map((row) => [row.find(".criteria-row-label").text(), row.find(".criteria-row-value").text()]);
     expect(rows).toEqual([
       ["Lieux", "Vaud, Genève"],
-      ["Télétravail complet", "Accepté s'il est ouvert depuis la Suisse"],
-      ["Taux d'activité", "80 % au moins"],
-      ["Types d'offres exclus", "Stages"],
+      ["Télétravail complet", "Accepté s’il est ouvert depuis la Suisse"],
+      ["Taux d’activité", "80 % au moins"],
+      ["Types d’offres exclus", "Stages"],
     ]);
     // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
     for (const row of summary.findAll("button.criteria-row")) {
@@ -111,7 +111,7 @@ describe("CriteriaForm, chargement et erreurs (règles §4)", () => {
     expect(wrapper.find("[data-test=criteria-missing]").exists()).toBe(false);
   });
 
-  it("taux hors limites : l'erreur sous le champ, pas d'enregistrement", async () => {
+  it("taux hors limites : l’erreur sous le champ, pas d’enregistrement", async () => {
     GET.mockResolvedValue({ data: { criteria: { locations: ["VD"], min_rate: null }, keywords } });
     const wrapper = mount(CriteriaView, { attachTo: document.body });
     await flushPromises();
@@ -154,9 +154,9 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
                 received: 36,
                 retained: 33,
                 reasons: [
-                  { rule: "type", label: "Type d'offre", count: 1 },
+                  { rule: "type", label: "Type d’offre", count: 1 },
                   { rule: "lieu", label: "Lieu", count: 1 },
-                  { rule: "taux", label: "Taux d'activité", count: 1 },
+                  { rule: "taux", label: "Taux d’activité", count: 1 },
                 ],
               },
             },
@@ -168,7 +168,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     const summary = wrapper.find("[data-test=criteria-summary]");
     expect(summary.find(".grouped-title").text()).toBe("Poste recherché");
     const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d'activité", "Offres exclues"]);
+    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Offres exclues"]);
     // Une seule hauteur, la valeur en pastilles (D14) ; la phrase entière pour les lecteurs d'écran.
     expect(summary.find(".grouped-row-description").exists()).toBe(false);
     expect(summary.find("[data-test=criteria-row-taux] .grouped-value").text()).toBe("80 % et +");
@@ -180,7 +180,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
       "33 offres passent sur 36",
       "Écartées surtout pour",
     ]);
-    expect(outcome.text()).toContain("Type d'offre, lieu, taux d'activité : 1 chacune.");
+    expect(outcome.text()).toContain("Type d’offre, lieu, taux d’activité : 1 chacune.");
 
     await wrapper.find("[data-test=criteria-row-taux] button").trigger("click");
     await flushPromises();

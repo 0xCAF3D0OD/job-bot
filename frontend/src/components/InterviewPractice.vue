@@ -73,7 +73,7 @@ const headItems = computed<MoreMenuItem[]>(() =>
 
 function detail(error: unknown): string {
   const text = (error as { detail?: unknown } | undefined)?.detail;
-  if (typeof text !== "string") return "Impossible pour l'instant, réessaie.";
+  if (typeof text !== "string") return "Impossible pour l’instant, réessaie.";
   // Une phrase entière (la limite de la formule, docs/125) se dit telle quelle.
   return /[.!?]$/.test(text) ? text : `Impossible : ${text}.`;
 }
@@ -262,7 +262,7 @@ onMounted(async () => {
       :class="['practice-screen', { running: practice }]"
       role="dialog"
       aria-modal="true"
-      :aria-label="`S'entraîner : ${title}`"
+      :aria-label="`S’entraîner : ${title}`"
       data-test="practice"
     >
       <p
@@ -275,7 +275,7 @@ onMounted(async () => {
         <div>
           <h3>{{ title }}</h3>
           <p class="hint">
-            S'entraîner<template v-if="practice && !finished">
+            S’entraîner<template v-if="practice && !finished">
               · <span data-test="practice-progress">Question {{ Math.max(practice.question, 1) }} sur {{ practice.questions }}</span>
             </template><template v-else-if="finished">
               · le retour
@@ -296,12 +296,12 @@ onMounted(async () => {
           <MoreMenu
             v-if="headItems.length"
             :items="headItems"
-            label="Actions sur l'entraînement"
+            label="Actions sur l’entraînement"
             test-id="practice-more"
           />
           <IconButton
             icon="close"
-            label="Fermer l'entraînement"
+            label="Fermer l’entraînement"
             data-test="practice-close"
             @click="emit('close')"
           />
@@ -314,21 +314,21 @@ onMounted(async () => {
         class="practice-setup"
       >
         <p class="practice-intro">
-          L'IA joue le recruteur : 5 questions, puis un retour.
+          L’IA joue le recruteur : 5 questions, puis un retour.
         </p>
         <p
           v-if="defaults && !defaults.can_practice"
           class="notice"
         >
-          L'entraînement demande l'IA, qui n'est pas configurée sur cette installation.
+          L’entraînement demande l’IA, qui n’est pas configurée sur cette installation.
         </p>
         <template v-else>
           <fieldset class="practice-choice">
-            <legend>Le type d'entretien</legend>
+            <legend>Le type d’entretien</legend>
             <div
               class="segmented"
               role="radiogroup"
-              aria-label="Le type d'entretien"
+              aria-label="Le type d’entretien"
             >
               <button
                 v-for="option in KINDS"

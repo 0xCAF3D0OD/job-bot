@@ -71,7 +71,7 @@ describe("remplissage du formulaire", () => {
         <label>Lettre de motivation <textarea name="cover"></textarea></label>
         <label>Pourquoi souhaitez-vous nous rejoindre ? <textarea name="why"></textarea></label>
         <label>Date de naissance <input name="birth" required></label>
-        <label><input type="checkbox" name="consent" required> J'accepte la politique de confidentialité</label>
+        <label><input type="checkbox" name="consent" required> J’accepte la politique de confidentialité</label>
         <label>CV <input type="file" name="resume"></label>
       </form>`;
     const report = jobbot().fill(data);
@@ -95,7 +95,7 @@ describe("remplissage du formulaire", () => {
     expect(value("why")).toBe("Parce que…");
   });
 
-  it("met le nom complet dans un seul champ « Name », et signale un cadre d'un autre site", () => {
+  it("met le nom complet dans un seul champ « Name », et signale un cadre d’un autre site", () => {
     document.documentElement.lang = "de";
     document.body.innerHTML = `
       <label>Name <input name="n"></label>

@@ -16,7 +16,7 @@ afterEach(() => vi.restoreAllMocks());
 
 const router = () => createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
 
-describe("Pages d'état sur ordinateur (maquette du 8 novembre)", () => {
+describe("Pages d’état sur ordinateur (maquette du 8 novembre)", () => {
   it("maintenance : le logo seul en haut, le personnage à 240 px, le prochain essai en toutes lettres", async () => {
     const app = document.createElement("div");
     app.id = "app";

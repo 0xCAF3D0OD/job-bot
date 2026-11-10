@@ -25,7 +25,7 @@ describe("OfferBrief, « Pour cette offre » (lot 15.1)", () => {
     expect(gap.find("strong").text()).toBe("Allemand");
   });
 
-  it("rien sans résumé de l'IA", () => {
+  it("rien sans résumé de l’IA", () => {
     const wrapper = mount(OfferBrief, { props: { offer: { summary_role: null } as never } });
     expect(wrapper.find("[data-test=offer-brief]").exists()).toBe(false);
   });

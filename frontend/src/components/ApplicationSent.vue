@@ -25,7 +25,7 @@ const emit = defineEmits<{ cancel: []; leave: [] }>();
 
 const searches = computed(() => {
   if (props.count === null) return "";
-  const n = `${props.count} ${props.count === 1 ? "recherche" : "recherches"}`;
+  const n = `${props.count} ${props.count <= 1 ? "recherche" : "recherches"}`;
   return props.target ? `${n} sur ${props.target}` : n;
 });
 </script>
@@ -73,7 +73,7 @@ const searches = computed(() => {
         data-test="cancel-applied"
         @click="emit('cancel')"
       >
-        Je n'ai pas postulé
+        Je n’ai pas postulé
       </button>
     </template>
   </MomentScreen>

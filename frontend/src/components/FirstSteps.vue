@@ -24,9 +24,9 @@ const emit = defineEmits<{ dismiss: [] }>();
 // Les titres sont des noms (docs/interface.md, Titres 2) ; l'action est sur le bouton.
 const STEPS: Record<Key, { title: string; why: string; action: string; icon: IconName }> = {
   profile: { title: "Critères et CV", why: "jobA1 trie les offres avec tes critères.", action: "Compléter mon profil", icon: "user" },
-  alerts: { title: "Alertes sur les sites d'emploi", why: "Les offres arrivent ici, notées pour toi.", action: "Créer mes alertes", icon: "bell" },
+  alerts: { title: "Alertes sur les sites d’emploi", why: "Les offres arrivent ici, notées pour toi.", action: "Créer mes alertes", icon: "bell" },
   keep: { title: "Première offre gardée", why: "Celles qui te vont passent en « À préparer ».", action: "Voir les offres du jour", icon: "briefcase" },
-  prepare: { title: "Lettre et CV pour l'offre", why: "Adaptés à l'offre gardée, en quelques minutes.", action: "Préparer", icon: "mail" },
+  prepare: { title: "Lettre et CV pour l’offre", why: "Adaptés à l’offre gardée, en quelques minutes.", action: "Préparer", icon: "mail" },
   sent: { title: "Candidature envoyée", why: "Marque-la comme envoyée : elle compte pour ton mois ORP.", action: "Ouvrir la préparation", icon: "send" },
 };
 
@@ -83,14 +83,14 @@ const target = computed<RouteLocationRaw>(() => {
           Alertes prêtes
         </h2>
         <p class="first-steps-why">
-          Les premières offres arrivent d'ici un ou deux jours.
+          Les premières offres arrivent d’ici un ou deux jours.
         </p>
         <RouterLink
           :to="{ path: '/candidatures/offres', query: { ajouter: '1' } }"
           class="button-link primary-link first-steps-action"
           data-test="first-steps-add"
         >
-          <span class="with-icon"><AppIcon name="plus" />Ajouter une offre que j'ai vue</span>
+          <span class="with-icon"><AppIcon name="plus" />Ajouter une offre que j’ai vue</span>
         </RouterLink>
       </template>
       <template v-else>

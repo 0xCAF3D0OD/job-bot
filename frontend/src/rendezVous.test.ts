@@ -26,7 +26,7 @@ const meeting = (starts_at: string): Meeting => ({ id: 1, starts_at, place: "ORP
 const application = (id: number, interview_at: string | null, status = "entretien") =>
   ({ id, company: `Entreprise ${id}`, job_title: `Poste ${id}`, status, interview_at, company_address: null }) as unknown as Application;
 
-describe("la liste « À venir » (ORP et entretiens d'embauche)", () => {
+describe("la liste « À venir » (ORP et entretiens d’embauche)", () => {
   it("triée par date, du plus proche au plus lointain", () => {
     const items = upcomingAppointments(null, [application(1, "2026-11-16T09:00:00Z"), application(2, "2026-11-12T13:00:00Z"), application(3, "2026-11-20T08:00:00Z")], NOW);
     expect(items.map((i) => i.key)).toEqual(["entretien-2", "entretien-1", "entretien-3"]);
@@ -59,10 +59,10 @@ describe("les textes de la carte", () => {
     expect(dateText("2026-11-10T08:30:00Z")).toBe("Mardi 10 novembre");
     expect(countdown("2026-11-10T08:30:00Z", NOW)).toBe("Dans 4 jours");
     expect(countdown("2026-11-07T08:30:00Z", NOW)).toBe("Demain");
-    expect(countdown("2026-11-06T15:00:00Z", NOW)).toBe("Aujourd'hui");
+    expect(countdown("2026-11-06T15:00:00Z", NOW)).toBe("Aujourd’hui");
   });
 
-  it("les trois lignes tirées de la feuille ; une partie vide ne s'affiche pas", () => {
+  it("les trois lignes tirées de la feuille ; une partie vide ne s’affiche pas", () => {
     const prep = {
       summaries: [],
       works: null,
@@ -82,7 +82,7 @@ describe("les textes de la carte", () => {
     expect(sheetLines({ ...prep, blockers: [], missing: [], months: [] })).toEqual([]);
   });
 
-  it("le lieu de l'entretien : le lieu ou lien saisi, sinon l'adresse de l'entreprise", () => {
+  it("le lieu de l’entretien : le lieu ou lien saisi, sinon l’adresse de l’entreprise", () => {
     expect(interviewPlace({ interview_place: "Visio", company_address: "Rue du Port 1, Lausanne" })).toBe("Visio");
     expect(interviewPlace({ interview_place: "  ", company_address: "Rue du Port 1, Lausanne" })).toBe("Rue du Port 1, Lausanne");
     expect(interviewPlace({ interview_place: null, company_address: null })).toBeNull();
@@ -116,11 +116,11 @@ describe("« À noter » et « Derniers rendez-vous ORP » (maquettes du 7.11.20
     expect(notedMeetings(page(held, [noted]), NOW).map((m) => m.id)).toEqual([2]);
   });
 
-  it("un rendez-vous à venir n'est pas à noter", () => {
+  it("un rendez-vous à venir n’est pas à noter", () => {
     expect(meetingsToNote(page(meeting("2026-11-10T08:30:00Z"), []), NOW)).toEqual([]);
   });
 
-  it("le résumé d'un rendez-vous noté", () => {
+  it("le résumé d’un rendez-vous noté", () => {
     const noted = { ...meeting("2026-09-15T08:00:00Z"), agreed_target: 8, measures: [{ text: "Financement Terraform", training_id: null }] };
     expect(notedSummary(noted)).toBe("Objectif 8 par mois · financement Terraform");
     expect(notedSummary(meeting("2026-09-15T08:00:00Z"))).toBe("Rien de particulier");

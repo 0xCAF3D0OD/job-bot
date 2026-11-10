@@ -6,7 +6,7 @@ import { useRoute } from "vue-router";
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInList, dateInSentence } from "../dates";
-import { cityOnly, expiredText, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
@@ -99,12 +99,12 @@ async function findEmployer(): Promise<void> {
 // Bouton « Postuler » (docs/21 §5) : chez l'employeur si l'annonce y est, sinon sur le site.
 const postLink = computed(() => {
   const o = props.offer;
-  if (o.employer_url) return { url: o.employer_url, label: "Postuler chez l'employeur" };
+  if (o.employer_url) return { url: o.employer_url, label: "Postuler chez l’employeur" };
   if (o.apply_url) {
-    return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
+    return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l’employeur" : "Postuler sur jobup" };
   }
   const link = o.links[0];
-  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l'annonce" };
+  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l’annonce" };
   return link ? { url: link.url, label: `Postuler sur ${sourceLabel[link.source]}` } : null;
 });
 
@@ -136,8 +136,8 @@ async function searchRegistry(): Promise<void> {
         ? ` Recherche sur Internet impossible : ${data.web_unavailable}.`
         : " Rien de fiable sur Internet non plus.";
       registryMessage.value = data.candidates.length
-        ? `Pas de correspondance sûre : choisis parmi le registre, ou saisis l'adresse.${web}`
-        : `Aucune entreprise à ce nom dans le registre.${web} Saisis l'adresse à la main.`;
+        ? `Pas de correspondance sûre : choisis parmi le registre, ou saisis l’adresse.${web}`
+        : `Aucune entreprise à ce nom dans le registre.${web} Saisis l’adresse à la main.`;
     }
   } catch {
     registryMessage.value = "API injoignable.";
@@ -197,7 +197,7 @@ const facts = computed<Fact[]>(() => {
     list.push({ mark: "check", text: doubt.text, excerpt: doubt.excerpt ?? undefined, scam: doubt.kind === "scam" });
   }
   for (const reason of o.filter_reasons ?? []) list.push({ mark: "no", text: reason });
-  if (o.enrich_status === "expired") list.push({ mark: "no", text: "L'annonce n'est plus en ligne sur jobup." });
+  if (o.enrich_status === "expired") list.push({ mark: "no", text: "L’annonce n’est plus en ligne sur jobup." });
   return list;
 });
 // Points forts et manques (planche) : trois au plus, le mot clé en gras en tête (« Kubernetes : … »).
@@ -218,7 +218,7 @@ const matchTitle = computed(() => {
 });
 const matchSub = computed(() => {
   const o = props.offer;
-  if (!scored.value) return o.score_error ?? "La note arrive dès que l'annonce est lue.";
+  if (!scored.value) return o.score_error ?? "La note arrive dès que l’annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
   // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
@@ -228,7 +228,7 @@ const matchSub = computed(() => {
       : "Calculée sur l’extrait de l’alerte, en attendant l’annonce complète.";
   }
   const base = "Selon ton profil et tes préférences";
-  return o.summary_partial ? `${base}, sur l'extrait de l'alerte seulement` : base;
+  return o.summary_partial ? `${base}, sur l’extrait de l’alerte seulement` : base;
 });
 const pointTitle = (text: string): string => pointParts(text).key || pointParts(text).rest;
 const matchLines = computed(() => [
@@ -284,7 +284,7 @@ const ADDRESS_SOURCE: Record<string, string> = {
   page: "annonce",
   registry: "registre IDE",
   web: "trouvée sur Internet",
-  letter: "relevée dans l'annonce",
+  letter: "relevée dans l’annonce",
   manual: "saisie par toi",
 };
 
@@ -353,23 +353,23 @@ async function copyLink(): Promise<void> {
 const desktopItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
-  if (shareUrl.value) items.push({ label: "Ouvrir l'annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
+  if (shareUrl.value) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
   if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
   if (noteDetail.value) items.push({ label: "Voir le détail de la note", test: "show-note-detail", icon: "eye", run: showNoteDetail });
   if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
   if (withBar.value && scored.value) {
-    items.push({ label: "Signaler une erreur dans l'offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
+    items.push({ label: "Signaler une erreur dans l’offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
   }
   if (o.status !== "applied") {
-    items.push({ label: "J'ai postulé", test: "mark-applied", icon: "check-circle", separator: true, run: () => emit("applied") });
+    items.push({ label: "J’ai postulé", test: "mark-applied", icon: "check-circle", separator: true, run: () => emit("applied") });
     items.push(
       o.expired_at
         ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
         : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
     );
   }
-  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
 const menuItems = computed<MoreMenuItem[]>(() => {
@@ -377,7 +377,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status !== "applied") {
-    items.push({ label: "J'ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
+    items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
       items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
@@ -395,7 +395,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
     items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
   }
   if (assistant.available.value) {
-    items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+    items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   }
   return items;
 });
@@ -418,8 +418,8 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
-  if (shareUrl.value) items.push({ label: "Partager l'annonce", test: "share", icon: "upload", run: () => void share() });
-  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  if (shareUrl.value) items.push({ label: "Partager l’annonce", test: "share", icon: "upload", run: () => void share() });
+  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
 // Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
@@ -461,10 +461,10 @@ const canSearchEmployer = computed(
 const companyItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
-  if (o.company_address) items.push({ label: "Modifier l'adresse", test: "edit-address", icon: "pencil", run: startAddress });
+  if (o.company_address) items.push({ label: "Modifier l’adresse", test: "edit-address", icon: "pencil", run: startAddress });
   if (o.company && o.company_address_source !== "manual" && o.company_address_source !== "page") {
     items.push({
-      label: "Chercher l'adresse",
+      label: "Chercher l’adresse",
       test: "search-registry",
       icon: "ai",
       disabled: searching.value,
@@ -473,7 +473,7 @@ const companyItems = computed<MoreMenuItem[]>(() => {
   }
   if (canSearchEmployer.value) {
     items.push({
-      label: o.employer_checked_at ? "Chercher à nouveau chez l'employeur" : "Chercher l'offre chez l'employeur",
+      label: o.employer_checked_at ? "Chercher à nouveau chez l’employeur" : "Chercher l’offre chez l’employeur",
       test: "find-employer",
       icon: "ai",
       disabled: employerBusy.value,
@@ -481,7 +481,7 @@ const companyItems = computed<MoreMenuItem[]>(() => {
     });
   }
   if (o.company_address_source === "web" && o.company_address_url) {
-    items.push({ label: "Vérifier la source de l'adresse", test: "address-source", href: o.company_address_url });
+    items.push({ label: "Vérifier la source de l’adresse", test: "address-source", href: o.company_address_url });
   }
   return items;
 });
@@ -543,7 +543,7 @@ watch(
         </button>
         <IconButton
           icon="more"
-          label="Plus d'actions sur l'offre"
+          label="Plus d’actions sur l’offre"
           data-test="detail-more"
           @click="sheetOpen = true"
         />
@@ -591,7 +591,7 @@ watch(
           <MoreMenu
             v-if="menuItems.length && !sub"
             :items="menuItems"
-            label="Plus d'actions sur l'offre"
+            label="Plus d’actions sur l’offre"
           />
         </div>
       </div>
@@ -607,7 +607,7 @@ watch(
           data-test="detail-meta"
         >
           <span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée"
-          }} · <span class="visually-hidden">Lieu : </span>{{ (sub ? cityOnly(offer.location) : offer.location) || "Lieu non précisé" }}
+          }} · <span class="visually-hidden">Lieu : </span>{{ (sub ? cityOnly(offer.location) : frenchName(offer.location)) || "Lieu non précisé" }}
         </p>
       </div>
       <!-- Sur téléphone, l'état n'a pas de ligne (maquette Offre) : le bouton du bas le dit déjà
@@ -686,7 +686,7 @@ watch(
           data-test="offer-already-applied"
           @click="emit('applied')"
         >
-          J'ai déjà postulé
+          J’ai déjà postulé
         </button>
       </div>
     </section>
@@ -709,7 +709,7 @@ watch(
       v-if="sub"
       :offer="sheetOpen ? offer : null"
       :extra="sheetExtra"
-      sent-title="J'ai déjà postulé"
+      sent-title="J’ai déjà postulé"
       @close="sheetOpen = false"
       @discard="sheetOpen = false; emit('status', 'ignored')"
       @sent="sheetOpen = false; emit('applied')"
@@ -763,7 +763,7 @@ watch(
     </div>
 
     <!-- La correspondance (O3, O4) : l'anneau sans chiffre (D3), le mot en titre, « 92 sur 100 » dessous
-         (docs/121) ; une ligne par point fort (coche) et par manque (gris chaud, D5 : un manque n'est pas une
+         (docs/121) ; une ligne par point fort (coche) et par manque (gris chaud, D5 : un manque n’est pas une
          action) ; le détail de la note replié. -->
     <component
       :is="layout"
@@ -921,7 +921,7 @@ watch(
         </section>
 
         <!-- Le poste (O6) : le résumé rédigé par jobA1, dit comme tel ; l'annonce complète se déplie sur place ;
-         « Postuler chez l'employeur » à côté (O7) ; les réserves sur l'annonce dessous. -->
+         « Postuler chez l’employeur » à côté (O7) ; les réserves sur l’annonce dessous. -->
         <section
           :class="['detail-post', { 'detail-section': columns }]"
           aria-labelledby="post-title"
@@ -935,7 +935,7 @@ watch(
               v-if="announceItems.length"
               class="section-more"
               :items="announceItems"
-              label="Plus d'actions sur l'annonce"
+              label="Plus d’actions sur l’annonce"
               test-id="ad-more"
             />
           </div>
@@ -967,7 +967,7 @@ watch(
             v-else-if="!offer.description"
             class="detail-snippet"
           >
-            {{ offer.snippet || "Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site." }}
+            {{ offer.snippet || "Pas d’extrait dans l’alerte : le texte complet de l’annonce est sur le site." }}
           </p>
           <div
             v-if="offer.description && (textOpen || !summaryParts.length)"
@@ -986,7 +986,7 @@ watch(
               data-test="read-more"
               @click="openText"
             >
-              Voir l'annonce complète
+              Voir l’annonce complète
             </button>
             <a
               v-if="postLink && offer.status !== 'applied'"
@@ -1034,7 +1034,7 @@ watch(
               <MoreMenu
                 class="section-more"
                 :items="companyItems"
-                label="Plus d'actions sur l'entreprise"
+                label="Plus d’actions sur l’entreprise"
                 test-id="company-more"
               />
             </template>
@@ -1050,7 +1050,7 @@ watch(
                       v-model="addressDraft"
                       rows="2"
                       placeholder="Rue et numéro&#10;NPA localité"
-                      aria-label="Adresse de l'entreprise"
+                      aria-label="Adresse de l’entreprise"
                       data-test="address-input"
                     />
                     <div>
@@ -1133,14 +1133,14 @@ watch(
               <span
                 v-if="employerBusy"
                 role="status"
-              >Recherche chez l'employeur en cours (jusqu'à 30 s)…</span>
+              >Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
               <span
                 v-else-if="offer.employer_url && offer.employer_checked_at"
-              >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+              >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
                 {{ dateInSentence(offer.employer_checked_at) }}.</span>
-              <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
-              <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
-              <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
+              <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
+              <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
+              <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
               <span
                 v-if="employerMessage"
                 role="status"
@@ -1197,9 +1197,9 @@ watch(
 
 <style>
 /* À traiter sur ordinateur, deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 13.1 ; HTML de
-   CandidaturesOrdinateurB, onglet À traiter) : la note sans carte, l'anneau de 64 et le verdict, les critères en ligne
-   (12 × 24), le bandeau pêche en bloc (18/20, boutons de 44 à 10 d'écart), « Le détail de la note » à 16 dessous ;
-   « Le poste » en 15/23 ; « L'offre en bref » en <dl>, puis le lien vers l'annonce, 12 dessous. */
+   CandidaturesOrdinateurB, onglet À traiter) : la note sans carte, l’anneau de 64 et le verdict, les critères en ligne
+   (12 × 24), le bandeau pêche en bloc (18/20, boutons de 44 à 10 d’écart), « Le détail de la note » à 16 dessous ;
+   « Le poste » en 15/23 ; « L’offre en bref » en <dl>, puis le lien vers l’annonce, 12 dessous. */
 .offer-cols { --cols-match-gap: 16px; --cols-lines-gap: 12px 24px; --cols-band-pad: 18px 20px; --cols-band-gap: 14px; --cols-band-btn: 10px; --cols-text: 23px; --cols-48: 48px; --cols-2: 2px; }
 .offer-cols .match-card.detail-section { display: block; padding: var(--cols-pad-top) 0 var(--cols-pad-bottom); background: none; border: 0; border-radius: 0; }
 .offer-cols .match-card .match-head { gap: var(--space-4); padding-bottom: var(--space-4); }
@@ -1241,7 +1241,7 @@ watch(
 /* La colonne principale est plus étroite : « Écrire à » et « Canal » des contacts passent l’un sous l’autre. */
 .offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
 /* Le détail d'une offre sur téléphone, version du 9 novembre (MODIFICATIONS §10.1, D35 ; HTML des maquettes Offre,
-   OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d'information (D35) blanches à
+   OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d’information (D35) blanches à
    trait de 1,5 px --card-line, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste
    (logo 56, 16 px, intitulé 22/28 800, étiquettes grises 16 px dessous) et la note (anneau 56, verdict 18/24, puis
    « Voir la compatibilité » sur la ligne du verdict, 56 px, trait au-dessus, chevron de 24 à 20 px du bord) ; puis
@@ -1303,7 +1303,7 @@ watch(
   .offer-blocks .offer-bar-discard { flex: none; min-height: var(--ob-48); padding: 0 var(--ob-margin); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offer-blocks .offer-bar-main { flex: 1; min-height: var(--ob-52); background: var(--action); border-color: var(--action); color: var(--on-action); }
   /* §2.9 : chaque lien de la sous-page est une cible de 44 px de haut, et rien n'est poussé par une marge « auto »
-     (hors de la grille de 4) : l'en-tête de section et le repliable répartissent la place eux-mêmes. */
+     (hors de la grille de 4) : l’en-tête de section et le repliable répartissent la place eux-mêmes. */
   .offer-blocks :is(.link, .more-direct) { display: inline-flex; align-items: center; min-height: var(--target-min); }
   .offer-blocks .section-more, .offer-blocks .disclosure-chevron { margin-left: 0; }
   .offer-blocks .disclosure-row { justify-content: space-between; }

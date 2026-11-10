@@ -10,7 +10,7 @@ const certificate = (id: number, filename: string, advice: string) => ({ documen
 
 // Dans « Postuler » (docs/87 §4) : les certificats à joindre, ceux à faire corriger d'abord.
 describe("Les certificats dans Préparer", () => {
-  it("à joindre, les plus récents d'abord ; à corriger, à part", async () => {
+  it("à joindre, les plus récents d’abord ; à corriger, à part", async () => {
     GET.mockResolvedValue({
       data: {
         certificates: [

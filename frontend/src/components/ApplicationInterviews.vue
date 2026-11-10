@@ -45,7 +45,7 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
   }
   // S'entraîner avec l'IA (docs/75), seulement si l'IA est configurée.
   if (assistant.available.value) {
-    items.push({ label: "M'entraîner", test: "interview-practice", icon: "ai", run: () => emit("practice") });
+    items.push({ label: "M’entraîner", test: "interview-practice", icon: "ai", run: () => emit("practice") });
   }
   const last = latest.value;
   if (last) {
@@ -69,7 +69,7 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
         v-if="interviewItems.length"
         class="section-more"
         :items="interviewItems"
-        label="Plus d'actions sur les entretiens"
+        label="Plus d’actions sur les entretiens"
         test-id="interviews-more"
       />
     </div>
@@ -98,7 +98,7 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
         data-test="interview-prepare"
         @click="emit('prepare')"
       >
-        Préparer l'entretien
+        Préparer l’entretien
       </button>
       <button
         v-else
@@ -107,7 +107,7 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
         data-test="interview-feedback"
         @click="emit('interview', application, null)"
       >
-        Faire le point sur l'entretien
+        Faire le point sur l’entretien
       </button>
     </p>
   </section>

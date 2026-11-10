@@ -29,7 +29,7 @@ describe("Les codes des sites (docs/112)", () => {
     expect(wrapper.find("[data-test=site-code-copy]").text()).toBe("Copié");
   });
 
-  it("« J'attends un code » : la page se met à jour jusqu'à son arrivée", async () => {
+  it("« J’attends un code » : la page se met à jour jusqu’à son arrivée", async () => {
     vi.useFakeTimers();
     POST.mockResolvedValueOnce({ data: { queued: true } });
     GET.mockResolvedValue({ data: [] });
@@ -38,7 +38,7 @@ describe("Les codes des sites (docs/112)", () => {
     await wrapper.find("[data-test=site-code-expect]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches/expect-code");
-    expect(wrapper.text()).toContain("J'attends le code, pendant 5 minutes.");
+    expect(wrapper.text()).toContain("J’attends le code, pendant 5 minutes.");
     await vi.advanceTimersByTimeAsync(10_000);
     expect(wrapper.emitted("refresh")).toHaveLength(1);
     await wrapper.setProps({ codes: [code] });
@@ -59,7 +59,7 @@ describe("Les codes des sites (docs/112)", () => {
     expect(wrapper.text()).toContain("Déjà six relevés rapides");
   });
 
-  it("les messages des sites, le texte à l'ouverture", async () => {
+  it("les messages des sites, le texte à l’ouverture", async () => {
     GET.mockResolvedValueOnce({ data: [{ id: 7, site: "jobup", subject: "Bienvenue sur jobup", received_at: "2026-10-21T08:00:00Z" }] });
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
@@ -86,7 +86,7 @@ describe("Les codes des sites (docs/112)", () => {
     expect(more.text()).toBe("Afficher moins");
   });
 
-  it("« J'attends un code » : le bouton reste actif et dit « J'attends… » (règles §4)", async () => {
+  it("« J’attends un code » : le bouton reste actif et dit « J’attends… » (règles §4)", async () => {
     POST.mockResolvedValueOnce({ data: { queued: true } });
     GET.mockResolvedValue({ data: [] });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });

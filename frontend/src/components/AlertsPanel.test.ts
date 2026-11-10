@@ -50,7 +50,7 @@ function page(extra: Record<string, unknown> = {}) {
 }
 
 describe("AlertsPanel (docs/20 §1)", () => {
-  it("recherche × sites : lien, état, « J'ai créé l'alerte »", async () => {
+  it("recherche × sites : lien, état, « J’ai créé l’alerte »", async () => {
     GET.mockResolvedValue({ data: page() });
     PUT.mockResolvedValue({ data: page() });
     const wrapper = mount(AlertsPanel);
@@ -70,7 +70,7 @@ describe("AlertsPanel (docs/20 §1)", () => {
     });
   });
 
-  it("ajout d'une recherche, mise de côté", async () => {
+  it("ajout d’une recherche, mise de côté", async () => {
     GET.mockResolvedValue({ data: page() });
     POST.mockResolvedValue({ data: page() });
     PATCH.mockResolvedValue({ data: page({ searches: [{ ...page().searches[0], active: false }] }) });

@@ -19,29 +19,29 @@ const weak = {
   language: "fr",
   grade: 1,
   grade_label: "à revoir",
-  explanation: "À revoir : « dans l'ensemble à notre satisfaction ».",
+  explanation: "À revoir : « dans l’ensemble à notre satisfaction ».",
   advice: "correct",
-  advice_label: "à faire corriger d'abord",
+  advice_label: "à faire corriger d’abord",
   passages: [
-    { text: "dans l'ensemble à notre satisfaction", meaning: "À revoir.", tone: "bad", category: "performance", level: 1 },
+    { text: "dans l’ensemble à notre satisfaction", meaning: "À revoir.", tone: "bad", category: "performance", level: 1 },
   ],
   notes: [{ text: "Pas de formule de fin.", tone: "bad" }],
   ai: null,
   ai_at: null,
 };
-const page = { certificates: [weak], summary: "Pour « Démo SA », demande d'abord une correction." };
+const page = { certificates: [weak], summary: "Pour « Démo SA », demande d’abord une correction." };
 
 describe("Certificats de travail", () => {
-  it("la note, le conseil, le détail, puis la lecture de l'IA", async () => {
+  it("la note, le conseil, le détail, puis la lecture de l’IA", async () => {
     GET.mockResolvedValue({ data: page });
     const wrapper = mount(CertificatesSection, { props: { version: 0 } });
     await flushPromises();
-    expect(wrapper.find("[data-test=certificates-summary]").text()).toContain("demande d'abord une correction");
+    expect(wrapper.find("[data-test=certificates-summary]").text()).toContain("demande d’abord une correction");
     const card = wrapper.find("[data-test=certificate-2]");
     expect(card.find("[data-test=certificate-grade]").text()).toBe("à revoir");
-    expect(card.find("[data-test=certificate-advice]").text()).toBe("À faire corriger d'abord");
+    expect(card.find("[data-test=certificate-advice]").text()).toBe("À faire corriger d’abord");
     await card.find("[data-test=certificate-details-2]").trigger("click");
-    expect(card.find(".certificate-passages").text()).toContain("« dans l'ensemble à notre satisfaction »");
+    expect(card.find(".certificate-passages").text()).toContain("« dans l’ensemble à notre satisfaction »");
     expect(card.find(".certificate-notes").text()).toContain("Pas de formule de fin.");
     POST.mockResolvedValue({
       data: {
@@ -65,27 +65,27 @@ describe("Certificats de travail", () => {
     expect(read.find("[data-test=certificate-read-2] .busy-label").text()).toBe("Relire en détail");
   });
 
-  it("sans certificat : rien ; l'IA indisponible : le dit", async () => {
+  it("sans certificat : rien ; l’IA indisponible : le dit", async () => {
     GET.mockResolvedValue({ data: { certificates: [], summary: null } });
     const empty = mount(CertificatesSection, { props: { version: 0 } });
     await flushPromises();
     expect(empty.find("[data-test=certificates]").exists()).toBe(false);
     GET.mockResolvedValue({ data: page });
-    POST.mockResolvedValue({ error: { detail: "plafond mensuel de l'IA atteint" } });
+    POST.mockResolvedValue({ error: { detail: "plafond mensuel de l’IA atteint" } });
     const wrapper = mount(CertificatesSection, { props: { version: 0 } });
     await flushPromises();
     await wrapper.find("[data-test=certificate-read-2]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[role=status]").text()).toBe("plafond mensuel de l'IA atteint");
+    expect(wrapper.find("[role=status]").text()).toBe("plafond mensuel de l’IA atteint");
   });
 
-  it("la lettre de correction, puis rédigée par l'IA ; le certificat intermédiaire (0.69.1)", async () => {
+  it("la lettre de correction, puis rédigée par l’IA ; le certificat intermédiaire (0.69.1)", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data:
           path === "/api/certificates"
             ? page
-            : { subject: "Demande de correction de mon certificat de travail", text: "Madame, Monsieur,\n- « dans l'ensemble »", ai: false, reason: null },
+            : { subject: "Demande de correction de mon certificat de travail", text: "Madame, Monsieur,\n- « dans l’ensemble »", ai: false, reason: null },
       }),
     );
     const wrapper = mount(CertificatesSection, { props: { version: 0 }, global });
@@ -97,14 +97,14 @@ describe("Certificats de travail", () => {
     });
     const letter = wrapper.find("[data-test=certificate-letter]");
     expect(letter.text()).toContain("Demande de correction de mon certificat de travail");
-    expect((letter.find("textarea").element as HTMLTextAreaElement).value).toContain("« dans l'ensemble »");
-    POST.mockResolvedValue({ data: { subject: "Demande de correction de mon certificat de travail", text: "Écrit par l'IA.", ai: true } });
+    expect((letter.find("textarea").element as HTMLTextAreaElement).value).toContain("« dans l’ensemble »");
+    POST.mockResolvedValue({ data: { subject: "Demande de correction de mon certificat de travail", text: "Écrit par l’IA.", ai: true } });
     await letter.find("[data-test=certificate-letter-ai]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenLastCalledWith("/api/certificates/{document_id}/correction", {
       params: { path: { document_id: 2 } },
     });
-    expect((wrapper.find("[data-test=certificate-letter-text]").element as HTMLTextAreaElement).value).toBe("Écrit par l'IA.");
+    expect((wrapper.find("[data-test=certificate-letter-text]").element as HTMLTextAreaElement).value).toBe("Écrit par l’IA.");
     expect(wrapper.find("[data-test=certificate-letter-ai]").exists()).toBe(false);
   });
 

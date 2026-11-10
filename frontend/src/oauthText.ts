@@ -28,11 +28,11 @@ export function oauthMessage(code: unknown, provider: unknown): string {
   const name = isProvider(provider) ? PROVIDER_LABEL[provider] : "ce fournisseur";
   switch (code) {
     case "aucun-compte":
-      return `Aucun compte jobA1 n'est lié à ce compte ${name}.`;
+      return `Aucun compte jobA1 n’est lié à ce compte ${name}.`;
     case "en-attente":
-      return "Ton compte attend encore la validation de l'exploitant.";
+      return "Ton compte attend encore la validation de l’exploitant.";
     case "suspendu":
-      return "Ce compte est suspendu : vois avec l'exploitant de la plateforme.";
+      return "Ce compte est suspendu : vois avec l’exploitant de la plateforme.";
     case "annule":
       return `Connexion avec ${name} annulée.`;
     case "expire":
@@ -44,8 +44,8 @@ export function oauthMessage(code: unknown, provider: unknown): string {
     case "deja-lie":
       return `Ce compte ${name} est déjà lié à un autre compte jobA1.`;
     case "demande":
-      return `Ta demande de compte est envoyée. Tu pourras te connecter avec ${name} quand l'exploitant l'aura acceptée.`;
+      return `Ta demande de compte est envoyée. Tu pourras te connecter avec ${name} quand l’exploitant l’aura acceptée.`;
     default:
-      return `La connexion avec ${name} n'a pas pu être vérifiée. Réessaie.`;
+      return `La connexion avec ${name} n’a pas pu être vérifiée. Réessaie.`;
   }
 }

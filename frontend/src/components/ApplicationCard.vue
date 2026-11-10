@@ -61,7 +61,7 @@ function run(): void {
 
 <template>
   <!-- La Ligne d'offre compacte (planche « Ligne d'offre ») : l'initiale, le poste, « entreprise · lieu »,
-       l'état sous le titre, l'action à droite ; toute la ligne ouvre le panneau. -->
+       l’état sous le titre, l’action à droite ; toute la ligne ouvre le panneau. -->
   <OfferLine
     :title="application.job_title"
     :company="application.company"

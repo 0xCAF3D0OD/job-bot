@@ -10,12 +10,12 @@ const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback" }>()
 
 const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint: string }> = {
   letter: {
-    labels: ["Lire l'offre", "Choisir tes expériences", "Rédiger", "Relire"],
+    labels: ["Lire l’offre", "Choisir tes expériences", "Rédiger", "Relire"],
     everyMs: 7000,
     hint: "Une trentaine de secondes.",
   },
   cv: {
-    labels: ["Lire l'offre", "Choisir ce qui compte", "Mettre en forme", "Relire"],
+    labels: ["Lire l’offre", "Choisir ce qui compte", "Mettre en forme", "Relire"],
     everyMs: 6000,
     hint: "Une vingtaine de secondes.",
   },

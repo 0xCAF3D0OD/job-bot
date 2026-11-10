@@ -69,7 +69,7 @@ describe("JournalView", () => {
     expect(wrapper.find("[data-test=off-topic]").text()).toBe("(+ 4 hors métier, écartées)");
   });
 
-  it("liste les alertes et affiche les offres d'une alerte au clic", async () => {
+  it("liste les alertes et affiche les offres d’une alerte au clic", async () => {
     mockApi();
     const wrapper = mount(JournalView);
     await flushPromises();
@@ -88,7 +88,7 @@ describe("JournalView", () => {
     expect(link.attributes("href")).toBe("https://www.jobup.ch/offre/1");
   });
 
-  it("transmet les filtres à l'API", async () => {
+  it("transmet les filtres à l’API", async () => {
     mockApi();
     const wrapper = mount(JournalView);
     await flushPromises();

@@ -110,7 +110,7 @@ onMounted(() => {
       data-test="account-page"
     >
       <!-- La ligne profil (CompteImage.dc.html, demande de Kevin du 9 novembre) : toute la ligne est le lien vers le
-           Profil. L'image de 52 px (celle choisie dans Profil, sinon les initiales), la pastille crayon décorative dans un conteneur de la taille de l'image, le nom, puis « CV,
+           Profil. L’image de 52 px (celle choisie dans Profil, sinon les initiales), la pastille crayon décorative dans un conteneur de la taille de l’image, le nom, puis « CV,
            compétences, postes recherchés » sur deux lignes au plus. -->
       <section class="block account-card-wrap">
         <div class="account-group account-profile-group">
@@ -168,7 +168,7 @@ onMounted(() => {
       </label>
 
       <!-- Lot 18 (§10.4 ; maquettes Compte et CompteSombre) : des blocs à sur-titre, une ligne à flèche (D29) par
-           élément. « Recherche et outils » n'est pas dessiné : ses réglages restent, dans un bloc à part. -->
+           élément. « Recherche et outils » n’est pas dessiné : ses réglages restent, dans un bloc à part. -->
       <section
         class="block account-block"
         aria-labelledby="account-path"
@@ -314,7 +314,7 @@ onMounted(() => {
             data-test="account-connections"
           />
           <BlockRow
-            title="Ce qui part à l'IA"
+            title="Ce qui part à l’IA"
             :to="{ path: '/tes-donnees', hash: '#ia' }"
             data-test="account-ai-data"
           />
@@ -345,7 +345,7 @@ onMounted(() => {
         </div>
       </section>
       <!-- Prompt du 9 novembre, PR 8 (Compte, CompteSombre) : « Se déconnecter » dans sa propre carte, en rouge, avec
-           l'adresse e-mail dessous. -->
+           l’adresse e-mail dessous. -->
       <section
         v-if="me?.auth_enabled && phone"
         class="block account-block account-logout-block"

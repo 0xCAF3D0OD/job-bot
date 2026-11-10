@@ -46,8 +46,8 @@ async function mountTriage() {
   return { wrapper, router };
 }
 
-describe("L'écran de tri (1.6.50)", () => {
-  it("« ← Aujourd'hui », le titre, « 1 sur 3 », une offre à la fois", async () => {
+describe("L’écran de tri (1.6.50)", () => {
+  it("« ← Aujourd’hui », le titre, « 1 sur 3 », une offre à la fois", async () => {
     mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75), offer(4, "Data", 70)]);
     const { wrapper } = await mountTriage();
     expect(wrapper.find("h1").text()).toBe("Offres du jour");
@@ -63,7 +63,7 @@ describe("L'écran de tri (1.6.50)", () => {
     expect(wrapper.find("[data-test=step-progress]").text()).toBe("2 sur 3");
   });
 
-  it("le tri fini : l'illustration, le récapitulatif, « Revenir à Aujourd'hui » sans offre gardée", async () => {
+  it("le tri fini : l’illustration, le récapitulatif, « Revenir à Aujourd’hui » sans offre gardée", async () => {
     mockApi([offer(1, "DevOps", 90)]);
     const { wrapper } = await mountTriage();
     await wrapper.find("[data-test=pick-dismiss]").trigger("click");

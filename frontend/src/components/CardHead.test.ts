@@ -13,7 +13,7 @@ describe("CardHead (règles §4)", () => {
     expect(wrapper.find("[data-test=card-all]").text()).toBe("Tout voir");
   });
 
-  it("sans lien ni action, pas de zone d'actions ; une action passe par le slot", () => {
+  it("sans lien ni action, pas de zone d’actions ; une action passe par le slot", () => {
     expect(mount(CardHead, { props: { title: "Contacts" }, global }).find(".card-head-actions").exists()).toBe(false);
     const withAction = mount(CardHead, {
       props: { title: "Contacts", count: 0, level: 3 },

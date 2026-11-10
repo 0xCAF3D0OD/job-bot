@@ -69,7 +69,7 @@ async function saveIdentity(): Promise<void> {
     if (data) {
       identityMessage.value = "Coordonnées enregistrées.";
       saved.value = { ...identity.value };
-    } else if (response.status === 404) identityMessage.value = "La plateforme n'est pas à jour : redémarre-la.";
+    } else if (response.status === 404) identityMessage.value = "La plateforme n’est pas à jour : redémarre-la.";
     else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres) et les adresses web.";
   } catch {
     identityMessage.value = "API injoignable.";
@@ -124,7 +124,7 @@ onMounted(async () => {
       <fieldset>
         <p class="setting-desc">
           <HoverNote text="Ajoutées par la plateforme à tes lettres et à ton CV.">
-            Elles ne partent jamais à l'IA.
+            Elles ne partent jamais à l’IA.
           </HoverNote>
         </p>
         <p

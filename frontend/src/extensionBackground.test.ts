@@ -58,15 +58,15 @@ async function link(base: string): Promise<unknown> {
   return new Promise((resolve) => listeners.message!({ type: "link", base }, {}, resolve));
 }
 
-describe("fond de l'extension", () => {
-  it("ouvre l'onglet « Relier jobA1 » à l'installation seulement", () => {
+describe("fond de l’extension", () => {
+  it("ouvre l’onglet « Relier jobA1 » à l’installation seulement", () => {
     listeners.installed!({ reason: "update" });
     expect(chrome.tabs.create).not.toHaveBeenCalled();
     listeners.installed!({ reason: "install" });
     expect(chrome.tabs.create).toHaveBeenCalledWith({ url: "moz-extension://x/popup.html?accueil=1" });
   });
 
-  it("ouvre la page de la plateforme, lit le jeton quand elle l'annonce, et le garde", async () => {
+  it("ouvre la page de la plateforme, lit le jeton quand elle l’annonce, et le garde", async () => {
     expect(await link("https://joba1.exemple.ch/reglages")).toEqual({ ok: true });
     expect(chrome.tabs.create).toHaveBeenCalledWith({ url: "https://joba1.exemple.ch/extension/relier" });
     executeScript.mockResolvedValue([{ result: "jbx_secret" }]);
@@ -93,7 +93,7 @@ describe("fond de l'extension", () => {
     expect(session.linking).toBeUndefined();
   });
 
-  it("ignore ce qui n'est pas un jeton", async () => {
+  it("ignore ce qui n’est pas un jeton", async () => {
     await link("https://joba1.exemple.ch");
     executeScript.mockResolvedValue([{ result: "autre chose" }]);
     tabs.get(1)!.url = "https://joba1.exemple.ch/extension/relier?etat=pret";
@@ -135,7 +135,7 @@ describe("les codes des sites", () => {
     expect(codes().fillCode("482913")).toBe(false);
   });
 
-  it("prévient la plateforme, attend le code, puis le remplit dans l'onglet", async () => {
+  it("prévient la plateforme, attend le code, puis le remplit dans l’onglet", async () => {
     Object.assign(local, { base: "https://joba1.exemple.ch", token: "jbx_secret" });
     tabs.set(5, { id: 5, url: CHALLENGE });
     const answers = [{ code: null }, { code: { site: "jobup", code: "482913", received_at: "x" } }];
@@ -157,7 +157,7 @@ describe("les codes des sites", () => {
     );
   });
 
-  it("ne remplit rien si l'onglet a quitté la page du code", async () => {
+  it("ne remplit rien si l’onglet a quitté la page du code", async () => {
     Object.assign(local, { base: "https://joba1.exemple.ch", token: "jbx_secret" });
     tabs.set(6, { id: 6, url: "https://ailleurs.exemple.com/" });
     Object.assign(globalThis, {

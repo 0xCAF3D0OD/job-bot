@@ -116,7 +116,7 @@ onUnmounted(() => window.removeEventListener("scroll", onScroll));
       >
         <!-- Deux boutons ronds, sans capsule (1.6.46) : la cloche et l'initiale ; chacun ouvre son menu
              sous lui, au clic, et se ferme à Échap ou par un clic ailleurs. La recherche globale (série du
-             27.10, point 2) : le champ à gauche de la cloche. Sur téléphone, la cloche seule, sur l'Accueil. -->
+             27.10, point 2) : le champ à gauche de la cloche. Sur téléphone, la cloche seule, sur l’Accueil. -->
         <!-- Les liens et outils d'une page d'onglet, sur téléphone (Candidatures : « Alertes », filtres). -->
         <div
           id="topbar-page-tools"

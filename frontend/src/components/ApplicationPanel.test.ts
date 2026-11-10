@@ -44,7 +44,7 @@ function mountPanel(overrides: Record<string, unknown> = {}) {
 }
 
 describe("La relance dans la fiche candidature", () => {
-  it("par défaut 10 jours après l'envoi ; « Changer » enregistre un jour entre 5 et 30 jours", async () => {
+  it("par défaut 10 jours après l’envoi ; « Changer » enregistre un jour entre 5 et 30 jours", async () => {
     const wrapper = mountPanel();
     const line = () => wrapper.find("[data-test=panel-remind]");
     expect(line().text()).toMatch(/^Relance : le 12 octobre( 2026)? ·\s+Changer le jour de la relance$/);
@@ -59,10 +59,10 @@ describe("La relance dans la fiche candidature", () => {
     await wrapper.find("[data-test=remind-date] [data-test=dt-back]").trigger("click");
 
     // Le serveur refuse (le jour a changé entre-temps) : le message le dit.
-    PATCH.mockResolvedValueOnce({ data: undefined, error: { detail: "entre 5 et 30 jours après l'envoi" } });
+    PATCH.mockResolvedValueOnce({ data: undefined, error: { detail: "entre 5 et 30 jours après l’envoi" } });
     await wrapper.find("form").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[role=alert]").text()).toBe("Choisis un jour entre 5 et 30 jours après l'envoi.");
+    expect(wrapper.find("[role=alert]").text()).toBe("Choisis un jour entre 5 et 30 jours après l’envoi.");
     expect(wrapper.find("[data-test=remind-date] .dt-field").attributes("aria-invalid")).toBe("true");
 
     PATCH.mockResolvedValueOnce({ data: { ...application, follow_up_on: "2026-10-20" } });
@@ -100,8 +100,8 @@ describe("La relance dans la fiche candidature", () => {
   });
 });
 
-describe("Le panneau d'une candidature (téléphone et écrans moyens)", () => {
-  it("sans colonnes (téléphone), l'ordre reste : Statut, Documents, Contacts", () => {
+describe("Le panneau d’une candidature (téléphone et écrans moyens)", () => {
+  it("sans colonnes (téléphone), l’ordre reste : Statut, Documents, Contacts", () => {
     const wrapper = mountPanel({ letter_draft_id: 4 });
     expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);
     const order = wrapper.findAll("section").map((s) => s.attributes("data-test"));
@@ -110,7 +110,7 @@ describe("Le panneau d'une candidature (téléphone et écrans moyens)", () => {
   });
 });
 
-describe("« Pour l'ORP » sur ordinateur (lot 18, §10.3)", () => {
+describe("« Pour l’ORP » sur ordinateur (lot 18, §10.3)", () => {
   it("le lien ouvre la fiche dans un panneau latéral de 480 px, du mois de la candidature", async () => {
     const wrapper = mount(ApplicationPanel, {
       props: { application: application as never, orpRow: { date: "02.10.2026", declared_at: null, missing: [], job_room: [] } as never },

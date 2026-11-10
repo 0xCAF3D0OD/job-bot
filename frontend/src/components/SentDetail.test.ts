@@ -17,7 +17,7 @@ beforeEach(() => {
       contacts: [],
       searches: [
         { kind: "recruiting", label: "Recrutement", url: "https://www.linkedin.com/search/rh" },
-        { kind: "team", label: "L'équipe du poste (Application Monitoring)", url: "https://www.linkedin.com/search/team" },
+        { kind: "team", label: "L’équipe du poste (Application Monitoring)", url: "https://www.linkedin.com/search/team" },
       ],
     },
   });
@@ -55,8 +55,8 @@ function mountDetail(overrides: Record<string, unknown> = {}) {
   });
 }
 
-describe("Le détail d'Envoyées en cartes (§8.1)", () => {
-  it("en-tête : titre en H2, entreprise · ville, mots de statut, puis le Suivi en 5 étapes avec l'étape en cours", async () => {
+describe("Le détail d’Envoyées en cartes (§8.1)", () => {
+  it("en-tête : titre en H2, entreprise · ville, mots de statut, puis le Suivi en 5 étapes avec l’étape en cours", async () => {
     const wrapper = mountDetail();
     await flushPromises();
     expect(wrapper.find("[data-test=panel-title]").element.tagName).toBe("H2");
@@ -77,7 +77,7 @@ describe("Le détail d'Envoyées en cartes (§8.1)", () => {
     expect(wrapper.find("[data-test=sent-cv]").attributes("href")).toBe("/api/cvs/5/pdf");
     expect(wrapper.find("[data-test=sent-offer]").text()).toContain("Sur linkedin.com");
     expect(wrapper.find("[data-test=find-recruiting]").text()).toContain("Lombard Odier sur LinkedIn");
-    expect(wrapper.find("[data-test=find-team] b").text()).toBe("L'équipe du poste");
+    expect(wrapper.find("[data-test=find-team] b").text()).toBe("L’équipe du poste");
     expect(wrapper.find("[data-test=find-team]").text()).toContain("Application Monitoring");
   });
 
@@ -101,7 +101,7 @@ describe("Le détail d'Envoyées en cartes (§8.1)", () => {
     expect(wrapper.find("textarea[data-test=follow-text]").exists()).toBe(true);
   });
 
-  it("au retour après l'envoi, la candidature passe à « Relancée »", async () => {
+  it("au retour après l’envoi, la candidature passe à « Relancée »", async () => {
     const wrapper = mountDetail({ id: 11, contact_email: "rh@exemple.ch" });
     await flushPromises();
     await wrapper.find("a[data-test=follow-open]").trigger("click");
@@ -120,7 +120,7 @@ describe("Le détail d'Envoyées en cartes (§8.1)", () => {
     expect(wrapper.find("[data-test=follow-retry]").exists()).toBe(true);
   });
 
-  it("une réponse reçue : pas de carte de relance, l'Historique et « J’ai contacté quelqu’un » restent", async () => {
+  it("une réponse reçue : pas de carte de relance, l’Historique et « J’ai contacté quelqu’un » restent", async () => {
     const wrapper = mountDetail({ id: 13, status: "refus", status_at: "2026-10-30" });
     await flushPromises();
     expect(wrapper.find("[data-test=follow-card]").exists()).toBe(false);
@@ -140,7 +140,7 @@ describe("Le détail d'Envoyées en cartes (§8.1)", () => {
   });
 });
 
-describe("Le détail d'Envoyées sur téléphone (§8.3)", () => {
+describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
   function mountPhone(overrides: Record<string, unknown> = {}) {
     return mount(SentDetail, {
       props: { phone: true, application: { ...application, ...overrides } as never, orpRow: { declared_at: "2026-10-05", missing: [], job_room: [] } as never },

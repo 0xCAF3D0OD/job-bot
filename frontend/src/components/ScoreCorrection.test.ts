@@ -42,7 +42,7 @@ describe("Cette note ne me correspond pas (docs/114)", () => {
     expect(wrapper.find("[data-test=score-correction-block]").text()).toContain("Rédhibitoire");
     await wrapper.find("[data-test=score-correction-title]").setValue("Pas de vente en magasin");
     await wrapper.find("[data-test=score-correction-add]").trigger("click");
-    expect(wrapper.find("[data-test=score-correction-saved]").text()).toContain("trop haute, ce n'est pas mon métier");
+    expect(wrapper.find("[data-test=score-correction-saved]").text()).toContain("trop haute, ce n’est pas mon métier");
     expect(PUT).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(UNDO_MS);
     await flushPromises();
@@ -92,7 +92,7 @@ describe("Cette note ne me correspond pas (docs/114)", () => {
     const wrapper = mount(ScoreCorrection, { props: { offerId: 7 }, global: { plugins: [router] } });
     await flushPromises();
     expect(wrapper.find("[data-test=score-correction-saved]").text()).toBe(
-      "Tu as corrigé cette note : trop basse, c'est bien mon métier.",
+      "Tu as corrigé cette note : trop basse, c’est bien mon métier.",
     );
     expect(wrapper.find("[data-test=score-correction-open]").text()).toBe("Corriger à nouveau");
   });

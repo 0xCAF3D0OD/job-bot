@@ -4,7 +4,7 @@ import type { Contact } from "./api/client";
 export const ROLES: Record<Contact["role"], string> = {
   recruiter: "Recrutement",
   manager: "Futur responsable",
-  team: "Membre de l'équipe",
+  team: "Membre de l’équipe",
   alumni: "Ancien de ton école",
   other: "Autre",
 };

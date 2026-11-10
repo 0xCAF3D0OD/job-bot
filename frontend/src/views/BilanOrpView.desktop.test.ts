@@ -120,7 +120,7 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     expect(searches.find("[data-test=orp-all]").text()).toBe("Voir tout le mois et les justificatifs");
   });
 
-  it("un mois passé déjà remis n'a plus rien à déclarer", async () => {
+  it("un mois passé déjà remis n’a plus rien à déclarer", async () => {
     GET.mockImplementation((path: string, init?: { params?: { query?: { month?: string } } }) => {
       if (path !== "/api/orp") return Promise.resolve({ data: null });
       return Promise.resolve({ data: init?.params?.query?.month === "2026-11" ? november : { ...october, state: "remis" } });

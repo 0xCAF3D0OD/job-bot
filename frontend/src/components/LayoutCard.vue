@@ -161,7 +161,7 @@ const { template } = useDocTemplate();
 
 <style>
 /* Valeurs de PreparerOrdinateur : titre 18/24 700, aide 14/20 grise 4 px dessous ; vignettes à 16 px, une ligne de quatre,
-   8 px d'écart, chacune 8 6 de marge et 6 px avant le nom (ici 8 8 et 4, même hauteur, grille de 4) en 13/600, contour 1,5 px transparent rayon 12 ; choisie :
+   8 px d’écart, chacune 8 6 de marge et 6 px avant le nom (ici 8 8 et 4, même hauteur, grille de 4) en 13/600, contour 1,5 px transparent rayon 12 ; choisie :
    contour --primary-graphic, fond --selected-bg, nom en --primary-text 700. Puis le trait --line et la page à 12 px. */
 .layout-card { --layout-12: 12px; --layout-13: 13px; --layout-24: 24px; }
 .layout-card > h2 { margin: 0; font-size: var(--font-title); line-height: var(--layout-24); }

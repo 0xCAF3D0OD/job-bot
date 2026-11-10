@@ -40,7 +40,7 @@ function template(source: string): string {
 
 describe("titres (docs/88)", () => {
   it("le menu principal : trois entrées, une question chacune (docs/126 §1)", () => {
-    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures", "Bilan"]);
+    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd’hui", "Candidatures", "Bilan"]);
   });
 
   it("chaque page affiche comme titre son nom de page, Réglages à part", () => {
@@ -75,7 +75,7 @@ describe("titres (docs/88)", () => {
     expect(found).toEqual([]);
   });
 
-  it("aucun prix dans le libellé d'un bouton (0.70.1)", () => {
+  it("aucun prix dans le libellé d’un bouton (0.70.1)", () => {
     const found: string[] = [];
     for (const [path, source] of Object.entries(sources)) {
       for (const match of template(source).matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/g)) {

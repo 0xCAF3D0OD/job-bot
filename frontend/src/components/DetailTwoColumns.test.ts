@@ -9,7 +9,7 @@ describe("Gabarit deux colonnes (MODIFICATIONS du 8 novembre au soir, §2)", () 
     aside: '<section class="detail-section"><h3>Documents</h3><a href="#">Lettre (Word)</a></section>',
   };
 
-  it("la colonne principale, puis la colonne d'appui, dans l'ordre du DOM", () => {
+  it("la colonne principale, puis la colonne d’appui, dans l’ordre du DOM", () => {
     const wrapper = mount(DetailTwoColumns, { props: { asideLabel: "Documents et contacts" }, slots });
     const children = wrapper.find("[data-test=detail-columns]").element.children;
     expect(children).toHaveLength(2);
@@ -20,7 +20,7 @@ describe("Gabarit deux colonnes (MODIFICATIONS du 8 novembre au soir, §2)", () 
     expect(focusable).toEqual(["Relancer", "Lettre (Word)"]);
   });
 
-  it("la colonne d'appui porte son nom", () => {
+  it("la colonne d’appui porte son nom", () => {
     const wrapper = mount(DetailTwoColumns, { props: { asideLabel: "Documents et contacts" }, slots });
     expect(wrapper.find("aside").attributes("aria-label")).toBe("Documents et contacts");
   });

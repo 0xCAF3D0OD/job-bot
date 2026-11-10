@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 describe("Annuler plutôt que confirmer (docs/108 §1)", () => {
-  it("l'action part au bout de 6 s ; « Annuler » la remet et rien ne part", async () => {
+  it("l’action part au bout de 6 s ; « Annuler » la remet et rien ne part", async () => {
     vi.useFakeTimers();
     const commit = vi.fn();
     const restore = vi.fn();
@@ -49,7 +49,7 @@ describe("Annuler plutôt que confirmer (docs/108 §1)", () => {
     expect(restore).toHaveBeenCalledTimes(1);
   });
 
-  it("le compte s'arrête tant que la souris est sur le bandeau", async () => {
+  it("le compte s’arrête tant que la souris est sur le bandeau", async () => {
     vi.useFakeTimers();
     const commit = vi.fn();
     void offerUndo({ message: "Site retiré", commit, restore: vi.fn() });
@@ -74,7 +74,7 @@ describe("Annuler plutôt que confirmer (docs/108 §1)", () => {
     wrapper.unmount();
   });
 
-  it("plus aucune fenêtre window.confirm ni window.prompt dans l'interface (0.77.1)", () => {
+  it("plus aucune fenêtre window.confirm ni window.prompt dans l’interface (0.77.1)", () => {
     const found: string[] = [];
     const walk = (dir: string): void => {
       for (const name of readdirSync(dir)) {

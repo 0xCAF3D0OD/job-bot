@@ -39,8 +39,8 @@ const filled =
     value.trim() ? null : message;
 const { errors, check, clearIfFixed, validate } = useChecks(
   {
-    sent_at: filled("Indique la date d'envoi."),
-    company: filled("Indique l'entreprise."),
+    sent_at: filled("Indique la date d’envoi."),
+    company: filled("Indique l’entreprise."),
     job_title: filled("Indique le poste."),
     contact_email: email,
   },
@@ -82,7 +82,7 @@ const today = todayDay();
       <div class="form-grid">
         <DateField
           :model-value="form.sent_at"
-          label="Date d'envoi"
+          label="Date d’envoi"
           :min="null"
           :max="today"
           :error="errors.sent_at"
@@ -149,7 +149,7 @@ const today = todayDay();
         <FormField
           v-slot="{ id, describedby, invalid }"
           class="wide"
-          label="Adresse de l'entreprise"
+          label="Adresse de l’entreprise"
           optional
         >
           <input
@@ -242,7 +242,7 @@ const today = todayDay();
           class="wide"
           label="Lien de la candidature"
           optional
-          hint="Le formulaire de l'employeur, l'annonce ou l'adresse e-mail utilisée."
+          hint="Le formulaire de l’employeur, l’annonce ou l’adresse e-mail utilisée."
         >
           <input
             :id="id"
@@ -259,7 +259,7 @@ const today = todayDay();
           v-model="form.assigned_by_orp"
           type="checkbox"
         >
-        Assignée par l'ORP
+        Assignée par l’ORP
       </label>
       <div
         v-if="withStatus"
@@ -301,7 +301,7 @@ const today = todayDay();
         <FormField
           v-slot="{ id, describedby, invalid }"
           class="wide"
-          label="Lieu ou lien de l'entretien"
+          label="Lieu ou lien de l’entretien"
           optional
           hint="Une adresse, « Visio », ou le lien de la visioconférence."
         >

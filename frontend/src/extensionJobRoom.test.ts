@@ -175,11 +175,11 @@ describe("remplissage de Job-Room", () => {
   });
 
   it("ne fait rien hors du formulaire de saisie", async () => {
-    document.body.innerHTML = "<main><h1>Mes recherches d'emploi</h1></main>";
+    document.body.innerHTML = "<main><h1>Mes recherches d’emploi</h1></main>";
     expect(await jobRoom().fill(values)).toEqual({ form: false, filled: [], todo: [] });
   });
 
-  it("se passe en entier à la page : rien d'autre, pas de variable globale (docs/76 §5)", async () => {
+  it("se passe en entier à la page : rien d’autre, pas de variable globale (docs/76 §5)", async () => {
     // `executeScript({ func })` ne transmet que le texte de la fonction : on la recrée de même.
     const copy = new Function(`return (${fillJobRoom.toString()})`)() as typeof fillJobRoom;
     const report = await copy(values);
@@ -200,13 +200,13 @@ describe("remplissage de Job-Room", () => {
     expect(report.todo.map((t) => t.label)).toContain("Autre mode coché");
   });
 
-  it("l'assignation ORP vise la question de l'ORP, pas le premier oui / non", async () => {
+  it("l’assignation ORP vise la question de l’ORP, pas le premier oui / non", async () => {
     const other = document.createElement("div");
     other.innerHTML = '<p>Autre question ?</p><input type="radio" id="autre-true"><input type="radio" id="autre-false">';
     document.querySelector("form")!.prepend(other);
     const orp = document.getElementById("alv-radio-button-0-false")!;
     const groupBox = document.createElement("div");
-    groupBox.innerHTML = "<p>Assignation par l'ORP ?</p>";
+    groupBox.innerHTML = "<p>Assignation par l’ORP ?</p>";
     orp.closest("label")!.before(groupBox);
     groupBox.append(document.getElementById("alv-radio-button-0-true")!.closest("label")!, orp.closest("label")!);
     await jobRoom().fill(values);

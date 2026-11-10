@@ -44,7 +44,7 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(wrapper.text()).not.toContain("Progresser");
   });
 
-  it("la page en cours, les offres à examiner, le creux sous l'onglet actif ; cachée sur les écrans de travail", async () => {
+  it("la page en cours, les offres à examiner, le creux sous l’onglet actif ; cachée sur les écrans de travail", async () => {
     const router = makeRouter();
     await router.push("/candidatures/offres");
     const wrapper = mount(BottomNav, { global: { plugins: [router] } });
@@ -98,7 +98,7 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(wrapper.find("[data-test=tab-bar]").attributes("style")).toContain("--notch-x: 50%");
   });
 
-  it("tant que la présence de l'Assistant n'est pas connue, pas de barre (AS8 : pas de saut de 5 à 4)", async () => {
+  it("tant que la présence de l’Assistant n’est pas connue, pas de barre (AS8 : pas de saut de 5 à 4)", async () => {
     assistant.known.value = false;
     const router = makeRouter();
     await router.push("/aujourdhui");

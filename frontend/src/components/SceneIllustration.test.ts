@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import SceneIllustration from "./SceneIllustration.vue";
 
 describe("SceneIllustration (docs/67)", () => {
-  it("pose l'image réduite, chargée à l'affichage, décorative par défaut", async () => {
+  it("pose l’image réduite, chargée à l’affichage, décorative par défaut", async () => {
     const plain = mount(SceneIllustration, { props: { name: "bilan" } });
     const img = plain.find("img");
     expect(img.attributes("srcset")).toMatch(/bilan-480\.webp 480w, .*bilan-800\.webp 800w$/);

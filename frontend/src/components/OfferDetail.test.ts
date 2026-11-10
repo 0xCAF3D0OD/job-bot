@@ -38,7 +38,7 @@ async function mountDetail(value: Record<string, unknown>) {
   return wrapper;
 }
 
-describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
+describe("OfferDetail, annonce chez l’employeur (docs/20 §2)", () => {
   it("lien vérifié affiché avec sa source", async () => {
     const wrapper = await mountDetail(
       offer({ employer_url: "https://exemple.ch/jobs/2", employer_url_source: "ats", employer_status: "found", employer_checked_at: "2026-10-07T08:00:00Z" }),
@@ -61,7 +61,7 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
     const line = wrapper.find("[data-test=employer-line]");
     expect(line.text().match(/Pas trouvée/g)).toHaveLength(1);
     await wrapper.find("[data-test=company-more]").trigger("click");
-    expect(wrapper.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau chez l'employeur");
+    expect(wrapper.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau chez l’employeur");
   });
 
   it("agence, ou lien employeur déjà donné par jobup", async () => {
@@ -71,8 +71,8 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
   });
 });
 
-describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
-  it("tête : « Préparer » et « Écarter », le reste dans ⋯, le lien de l'annonce dans « Le poste » (étape 6b)", async () => {
+describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
+  it("tête : « Préparer » et « Écarter », le reste dans ⋯, le lien de l’annonce dans « Le poste » (étape 6b)", async () => {
     const wrapper = await mountDetail(offer());
     const triage = wrapper.find("[data-test=triage]");
     expect(triage.findAll("a")).toHaveLength(1);
@@ -82,7 +82,7 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(triage.find("[data-test=offer-discard]").text()).toBe("Écarter");
     // Lot 15.2 : « J'ai déjà postulé » à droite de « Écarter », le parcours « Marquer comme envoyée ».
     const already = triage.find("[data-test=offer-already-applied]");
-    expect(already.text()).toBe("J'ai déjà postulé");
+    expect(already.text()).toBe("J’ai déjà postulé");
     await already.trigger("click");
     expect(wrapper.emitted("applied")).toHaveLength(1);
     const apply = wrapper.find("[data-test=section-ad] [data-test=apply]");
@@ -162,23 +162,23 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.text()).not.toMatch(/fois, depuis le/);
   });
 
-  it("annonce trouvée chez l'employeur : « Postuler chez l'employeur »", async () => {
+  it("annonce trouvée chez l’employeur : « Postuler chez l’employeur »", async () => {
     const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/jobs/2", employer_status: "found" }));
     const button = wrapper.find("[data-test=employer]");
     expect(button.attributes("href")).toBe("https://exemple.ch/jobs/2");
-    expect(button.text()).toContain("Postuler chez l'employeur");
+    expect(button.text()).toContain("Postuler chez l’employeur");
   });
 });
 
 describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
-  it("l'adresse dans la partie Entreprise, les actions dans son « ⋯ », « Adresse inconnue · Ajouter »", async () => {
+  it("l’adresse dans la partie Entreprise, les actions dans son « ⋯ », « Adresse inconnue · Ajouter »", async () => {
     const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
     expect(known.find("[data-test=address] dd").text()).toContain("Rue 1, 1201 Genève");
     expect(known.find("[data-test=add-address]").exists()).toBe(false);
     const section = known.find("[data-test=company-section]");
     await section.find("[data-test=company-more]").trigger("click");
     const labels = section.findAll("[role=menuitem]").map((item) => item.text());
-    expect(labels).toEqual(["Modifier l'adresse", "Chercher l'adresse", "Chercher l'offre chez l'employeur"]);
+    expect(labels).toEqual(["Modifier l’adresse", "Chercher l’adresse", "Chercher l’offre chez l’employeur"]);
 
     const missing = await mountDetail(offer());
     expect(missing.find("[data-test=address] dd").text().replace(/\s+/g, " ")).toBe("Adresse inconnue · Ajouter");
@@ -188,7 +188,7 @@ describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
 });
 
 describe("la note expliquée (docs/121 §C.1-3)", () => {
-  it("la phrase « pourquoi », le niveau en étiquette, « Je l'ai » seulement sur un manque sans bloc", async () => {
+  it("la phrase « pourquoi », le niveau en étiquette, « Je l’ai » seulement sur un manque sans bloc", async () => {
     POST.mockResolvedValue({ data: { chunk_id: 9, score: 84 } });
     const wrapper = await mountDetail(
       offer({
@@ -202,10 +202,10 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
         strengths: [{ text: "AWS en production", chunk_ids: [1] }],
         gaps: [
           { text: "Pas de Terraform", chunk_ids: [] },
-          { text: "Préférence : pas d'astreintes", chunk_ids: [2] },
+          { text: "Préférence : pas d’astreintes", chunk_ids: [2] },
         ],
         // Le texte complet est lu : les manques s'affichent (la note n'est pas provisoire).
-        description: "Texte complet de l'annonce.",
+        description: "Texte complet de l’annonce.",
       }),
     );
     expect(wrapper.find("[data-test=score-why]").text()).toContain("Ton expérience AWS colle ; il manque Terraform.");
@@ -219,12 +219,12 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
 
     await gaps[0]!.find("[data-test=gap-fill]").trigger("click");
     expect((wrapper.find("[data-test=gap-fill-title]").element as HTMLInputElement).value).toBe("Terraform");
-    await wrapper.find("[data-test=gap-fill-content]").setValue("Trois ans d'infrastructure en Terraform.");
+    await wrapper.find("[data-test=gap-fill-content]").setValue("Trois ans d’infrastructure en Terraform.");
     await wrapper.find("[data-test=gap-fill-form]").trigger("submit");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/gap-block", {
       params: { path: { offer_id: 4 } },
-      body: { title: "Terraform", content: "Trois ans d'infrastructure en Terraform." },
+      body: { title: "Terraform", content: "Trois ans d’infrastructure en Terraform." },
     });
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
@@ -299,7 +299,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("« Partager l'annonce » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
+  it("« Partager l’annonce » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
     phone();
     const shareFn = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, share: shareFn });
@@ -330,13 +330,13 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » : Écarter, J'ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
+  it("la feuille « ⋯ » : Écarter, J’ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
     const titles = sheet.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles.slice(0, 2)).toEqual(["Écarter l'offre", "J'ai déjà postulé"]);
+    expect(titles.slice(0, 2)).toEqual(["Écarter l’offre", "J’ai déjà postulé"]);
     expect(titles).toContain("Signaler comme expirée");
     expect(titles).toContain("Cette note ne me correspond pas");
     expect(titles).not.toContain("Plus tard");
@@ -345,7 +345,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("une offre où j'ai postulé : pas de barre", async () => {
+  it("une offre où j’ai postulé : pas de barre", async () => {
     phone();
     const wrapper = await mountDetail(offer({ status: "applied" }));
     expect(wrapper.find("[data-test=offer-bar]").exists()).toBe(false);
@@ -357,7 +357,7 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
   const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("la note et le poste à gauche ; « L'offre en bref » à droite, en <dl>, avec le lien vers l'annonce", async () => {
+  it("la note et le poste à gauche ; « L’offre en bref » à droite, en <dl>, avec le lien vers l’annonce", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
     const main = wrapper.find("[data-test=detail-columns-main]");
@@ -376,7 +376,7 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
   });
 
-  it("la note en carte d'information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
+  it("la note en carte d’information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes" }));
     const note = wrapper.find("[data-test=section-for-you]");

@@ -45,7 +45,7 @@ afterEach(() => {
 });
 
 describe("Panneau du compte (maquette du 8 novembre, docs/143, D24)", () => {
-  it("l'image nommée « Compte de Kevin » ouvre le panneau : en-tête, Mon compte, Affichage, Aide, Se déconnecter", async () => {
+  it("l’image nommée « Compte de Kevin » ouvre le panneau : en-tête, Mon compte, Affichage, Aide, Se déconnecter", async () => {
     const { wrapper } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");
     expect(trigger.attributes("aria-label")).toBe("Compte de Kevin");
@@ -80,7 +80,7 @@ describe("Panneau du compte (maquette du 8 novembre, docs/143, D24)", () => {
     expect(q("[data-test=side-panel]")).toBeNull();
   });
 
-  it("Échap ferme et rend le focus à l'image ; un autre panneau ferme celui-ci", async () => {
+  it("Échap ferme et rend le focus à l’image ; un autre panneau ferme celui-ci", async () => {
     const { wrapper, router } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");
     await trigger.trigger("click");

@@ -12,7 +12,7 @@ vi.mock("../api/client", () => ({
 afterEach(() => vi.resetAllMocks());
 
 describe("Candidature spontanée (docs/39)", () => {
-  it("crée la candidature, propose l'adresse au registre, puis ouvre la préparation", async () => {
+  it("crée la candidature, propose l’adresse au registre, puis ouvre la préparation", async () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     await router.push("/candidatures/offres");
     POST.mockResolvedValueOnce({ data: { id: 77 } });
@@ -49,7 +49,7 @@ describe("Candidature spontanée (docs/39)", () => {
     expect(router.currentRoute.value.path).toBe("/candidatures/offres/77/preparer");
   });
 
-  it("une offre chez cette entreprise est déjà là : l'avis l'ouvre, ou « Créer quand même »", async () => {
+  it("une offre chez cette entreprise est déjà là : l’avis l’ouvre, ou « Créer quand même »", async () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     POST.mockResolvedValueOnce({ data: { id: null, existing: { id: 12, title: "Technicien", company: "SpeciTec SA", spontaneous: false } } });
     POST.mockResolvedValueOnce({ data: { id: 78 } });

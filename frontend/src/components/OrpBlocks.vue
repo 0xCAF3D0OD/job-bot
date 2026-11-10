@@ -67,7 +67,7 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
             Indique ton objectif ORP
           </h2>
           <p class="block-help">
-            Le nombre de recherches que l'ORP te demande chaque mois.
+            Le nombre de recherches que l’ORP te demande chaque mois.
           </p>
           <RouterLink
             :to="{ path: '/reglages', query: { rubrique: 'recherche' } }"
@@ -179,7 +179,7 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
 .orp-page-blocks .orp-page-head .icon-button { color: var(--primary-text); }
 .orp-page-blocks .orp-page-head h1 { font-weight: var(--weight-heavy); }
 /* Version du 9 novembre (§2.9, maquette Orp) : en-tête de 64 px à 20 px des bords (retour de 44 px, 8 px avant le
-   titre 22/28) ; tout ce qui n'est pas un bloc (mois, bandeau, « ⋯ », « Ajouter une recherche ») garde aussi 20 px. */
+   titre 22/28) ; tout ce qui n’est pas un bloc (mois, bandeau, « ⋯ », « Ajouter une recherche ») garde aussi 20 px. */
 .orp-page-blocks { --orp-page-64: 64px; --orp-page-28: 28px; }
 .orp-page-blocks .orp-page-head { gap: var(--space-2); min-height: var(--orp-page-64); margin: 0; padding: var(--space-3) var(--space-5); }
 .orp-page-blocks .orp-page-head h1 { font-size: var(--font-section); line-height: var(--orp-page-28); }

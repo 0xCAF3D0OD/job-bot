@@ -44,7 +44,7 @@ function mockGet(configured: boolean): void {
 }
 
 describe("SettingsView, notifications", () => {
-  it("API sans la route : le dit au lieu d'afficher « non configurées »", async () => {
+  it("API sans la route : le dit au lieu d’afficher « non configurées »", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/notifications"
@@ -86,7 +86,7 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     const { wrapper } = await mountSettings("notifications");
     expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Notifications", "Affichage", "Mes données"]);
     const rows = wrapper.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text());
-    expect(rows).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP"]);
+    expect(rows).toEqual(["Nouvelles offres", "M’avertir dès", "Relances", "Objectif ORP"]);
     expect(wrapper.findAll("[data-test=notify-switches] input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([true, true, true]);
     expect(wrapper.text()).not.toContain("Actualités et formations");
     expect(wrapper.find("[data-test=ai-data-link]").attributes("href")).toBe("/tes-donnees#ia");
@@ -97,7 +97,7 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     // Sur ordinateur, une rubrique par page, avec les mêmes interrupteurs.
     vi.unstubAllGlobals();
     const desktop = (await mountSettings("notifications")).wrapper;
-    expect(desktop.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text())).toEqual(["Nouvelles offres", "M'avertir dès", "Relances", "Objectif ORP"]);
+    expect(desktop.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text())).toEqual(["Nouvelles offres", "M’avertir dès", "Relances", "Objectif ORP"]);
     expect(desktop.find("[data-test=section-affichage]").exists()).toBe(false);
   });
 });
@@ -112,7 +112,7 @@ describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
     );
   }
 
-  it("un champ chiffré s'enregistre quand on le quitte, pas à chaque frappe ; « Enregistré » sur la ligne", async () => {
+  it("un champ chiffré s’enregistre quand on le quitte, pas à chaque frappe ; « Enregistré » sur la ligne", async () => {
     serveSettings();
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: settings({ orp_due_day: 10 }) } as never);
@@ -141,7 +141,7 @@ describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
     expect(wrapper.text()).not.toContain("Enregistrer");
   });
 
-  it("une valeur impossible : l'erreur sous le champ, l'ancienne reste enregistrée, la saisie reste", async () => {
+  it("une valeur impossible : l’erreur sous le champ, l’ancienne reste enregistrée, la saisie reste", async () => {
     serveSettings();
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT);
@@ -169,18 +169,18 @@ describe("SettingsView, une rubrique par page (étape 10b, C10)", () => {
     expect(wrapper.find("[data-test=settings-list]").exists()).toBe(false);
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("M'avertir d'une offre");
+    expect(wrapper.text()).not.toContain("M’avertir d’une offre");
     await router.push({ query: { rubrique: "notifications" } });
     await flushPromises();
     expect(wrapper.find("h1").text()).toBe("Notifications");
-    expect(wrapper.text()).toContain("M'avertir dès");
+    expect(wrapper.text()).toContain("M’avertir dès");
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(false);
     expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
     // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
     expect(wrapper.find("[data-test=employer-threshold]").exists()).toBe(false);
   });
 
-  it("l'ancienne rubrique Compte se partage entre Affichage, Formule et Mes données", async () => {
+  it("l’ancienne rubrique Compte se partage entre Affichage, Formule et Mes données", async () => {
     mockGet(false);
     const rubrics: [string, string][] = [
       ["affichage", "Affichage"],
@@ -195,12 +195,12 @@ describe("SettingsView, une rubrique par page (étape 10b, C10)", () => {
     }
   });
 
-  it("« Chercher l'annonce chez l'employeur » est dans Recherche d'emploi (1.6.28)", async () => {
+  it("« Chercher l’annonce chez l’employeur » est dans Recherche d’emploi (1.6.28)", async () => {
     mockGet(false);
     const { wrapper } = await mountSettings("recherche");
     const employer = wrapper.find("[data-test=employer-threshold]");
     expect(employer.exists()).toBe(true);
-    expect(employer.element.closest("[data-test=setting-row]")!.textContent).toContain("Chercher l'annonce chez l'employeur");
+    expect(employer.element.closest("[data-test=setting-row]")!.textContent).toContain("Chercher l’annonce chez l’employeur");
   });
 });
 
@@ -227,7 +227,7 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(logout.classes()).toContain("secondary");
   });
 
-  it("compte invité : la formule plutôt qu'un plafond en francs, ni Plateforme ni profils d'essai", async () => {
+  it("compte invité : la formule plutôt qu’un plafond en francs, ni Plateforme ni profils d’essai", async () => {
     await as(false);
     mockGet(false);
     const { wrapper } = await mountSettings("ia");
@@ -262,7 +262,7 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(wrapper.find("[data-test=phone-on]").text()).toContain("jobbot-abc");
   });
 
-  it("exploitant : le plafond de l'IA s'enregistre au changement (docs/106)", async () => {
+  it("exploitant : le plafond de l’IA s’enregistre au changement (docs/106)", async () => {
     await as(true);
     mockGet(false);
     const { api } = await import("../api/client");
@@ -287,7 +287,7 @@ describe("SettingsView, comptes (docs/65)", () => {
 });
 
 describe("SettingsView, le bon rythme (docs/86)", () => {
-  it("les jours, la pause et le message des offres s'appliquent tout de suite", async () => {
+  it("les jours, la pause et le message des offres s’appliquent tout de suite", async () => {
     mockGet(false);
     const PUT = vi.mocked((await import("../api/client")).api.PUT).mockResolvedValue({ data: null } as never);
     const { wrapper } = await mountSettings("rythme");
@@ -338,7 +338,7 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.find("[data-test=notifications] .setting-row-title").text()).toBe("Notification de test");
   });
 
-  it("un seuil d'avant tombe sur le mot qui le contient", async () => {
+  it("un seuil d’avant tombe sur le mot qui le contient", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data: path === "/api/notifications" ? { configured: false } : { notify_score_threshold: 72, llm_monthly_budget_chf: 10 },

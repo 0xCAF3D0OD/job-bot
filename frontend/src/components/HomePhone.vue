@@ -3,7 +3,7 @@ import { computed } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
-import { cityOnly, orpLeftLine, plural, rateText, remoteText } from "../format";
+import { companyPlace, orpLeftLine, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
@@ -116,7 +116,7 @@ function facts(offer: Offer): string[] {
               />
             </span>
             <strong>{{ offer.title }}</strong>
-            <span class="home-card-where">{{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}</span>
+            <span class="home-card-where">{{ companyPlace(offer.company, offer.location, true) }}</span>
             <span
               v-if="facts(offer).length"
               class="home-card-facts"

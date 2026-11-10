@@ -16,7 +16,7 @@ describe("Le logo et la mascotte (docs/97)", () => {
     expect(bar.findAll(".brand-logo-spark")).toHaveLength(1);
   });
 
-  it("la mascotte (docs/99) : un visage rond, trois expressions ; les traits s'épaississent", () => {
+  it("la mascotte (docs/99) : un visage rond, trois expressions ; les traits s’épaississent", () => {
     const listening = mount(AssistantMascot, { props: { size: 150 } });
     expect(listening.attributes("data-mood")).toBe("listening");
     expect(listening.find(".mascot-face").exists()).toBe(true);
