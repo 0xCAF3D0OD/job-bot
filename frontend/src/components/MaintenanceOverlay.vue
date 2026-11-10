@@ -1,16 +1,19 @@
 <script lang="ts">
-import { poseFile } from "../personnage";
+import { SCENES, sceneFile, type Scene } from "../troupe";
 
-// Les deux poses sont chargées d'avance au premier moment libre et gardées en mémoire : pendant la
-// maintenance, le serveur ne répond peut-être plus ; hors ligne, plus rien n'arrive (docs/80 §2).
+// Les trois scènes sont chargées d'avance au premier moment libre et gardées en mémoire : pendant la
+// maintenance, le serveur ne répond peut-être plus ; hors ligne, plus rien n'arrive (docs/80 §2). Dans
+// l'apparence du moment (Réglages, ou le système en Auto), à la taille de l'écran.
 const held: HTMLImageElement[] = [];
 const idle = globalThis.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1500));
 if (typeof Image !== "undefined") {
   idle(() => {
-    for (const pose of ["cables", "hors-ligne"] as const) {
+    const root = document.documentElement.dataset.theme;
+    const dark = root === "dark" || (root !== "light" && !!globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches);
+    const wide = !!globalThis.matchMedia?.("(min-width: 1024px)").matches;
+    for (const scene of ["hors-ligne", "maintenance", "mise-a-jour"] as Scene[]) {
       const img = new Image();
-      img.srcset = `${poseFile(pose, 400)} 1x, ${poseFile(pose, 800)} 2x`;
-      img.src = poseFile(pose, 400);
+      img.src = sceneFile(scene, wide ? SCENES[scene].desk : SCENES[scene].phone, dark);
       held.push(img);
     }
   });
@@ -21,20 +24,20 @@ if (typeof Image !== "undefined") {
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 import BrandMark from "./BrandMark.vue";
-import Illustration from "./Illustration.vue";
+import TroupeScene from "./TroupeScene.vue";
 import { usePhone } from "../composables/usePhone";
 
 // La page d'attente (docs/79) : par-dessus tout, sans recharger ; le reste de l'écran est
 // inerte tant qu'elle est là, et retrouvé tel quel ensuite. Mise en page (maquettes MaintenanceMaj,
-// MaintenanceAnnoncee et MaintenanceHorsLigne du 2026-11-06) : le personnage aux câbles (nouvelle tête) pour
-// la mise à jour et la maintenance annoncée, le personnage au téléphone quand le réseau manque (docs/141, 5 et
-// 6), 250 px ; un titre
+// MaintenanceAnnoncee et MaintenanceHorsLigne, scènes du 9 novembre, §15) : les 4 personnages du logo, 340 px sur
+// téléphone ; « mise-a-jour » pour la mise à jour, « maintenance » pour la maintenance annoncée, « hors-ligne »
+// (l'équipe rebranche la prise) quand le réseau manque ; un titre
 // selon le cas, ce qui se passe, puis en bas le prochain essai et « Réessayer maintenant ».
 // Trois cas : hors ligne (le navigateur le sait), une maintenance annoncée avec son message, sinon
 // une mise à jour.
 const props = defineProps<{ waiting: boolean; message: string | null; nextAt?: number | null }>();
 // Ordinateur dès 1 024 px (maquettes du 8 novembre, MaintenanceOrdinateur et HorsLigneOrdinateur) : le logo seul en
-// haut, le personnage à 240 px, le titre de 34, le prochain essai en toutes lettres et le bouton plein dessous.
+// haut, la scène (409 px pour la mise à jour, 612 hors ligne), le titre de 34, le prochain essai en toutes lettres et le bouton plein dessous.
 const { phone: wide } = usePhone("(min-width: 1024px)");
 const emit = defineEmits<{ retry: [] }>();
 const panel = ref<HTMLElement | null>(null);
@@ -50,6 +53,10 @@ onMounted(() => {
 onUnmounted(() => {
   globalThis.removeEventListener?.("online", network);
   globalThis.removeEventListener?.("offline", network);
+});
+const scene = computed<Scene>(() => {
+  if (offline.value) return "hors-ligne";
+  return props.message ? "maintenance" : "mise-a-jour";
 });
 const title = computed(() => {
   if (offline.value) return "Pas de connexion";
@@ -128,10 +135,8 @@ async function retry(): Promise<void> {
         <span>jobA1</span>
       </header>
       <div class="maintenance-body">
-        <Illustration
-          :pose="offline ? 'hors-ligne' : 'cables'"
-          :height="250"
-          :desktop-height="240"
+        <TroupeScene
+          :scene="scene"
           full
           class="maintenance-person"
           data-test="maintenance-person"

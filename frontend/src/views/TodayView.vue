@@ -456,7 +456,7 @@ const { me } = useAuth();
         </p>
       </div>
     </section>
-    <!-- Lot 18 (§10.5) : sous la bande, le fond des blocs sur toute la largeur. -->
+    <!-- Sous la bande, le fond crème de la page sur toute la largeur (MODIFICATIONS_9 §1). -->
     <div class="today-page-bg">
       <div class="today-page">
         <RouterLink

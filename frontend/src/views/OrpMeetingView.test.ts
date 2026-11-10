@@ -106,16 +106,16 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous prévu : le personnage debout, 186 px ; un seul des trois par écran (docs/141)", async () => {
+  it("aucun rendez-vous prévu : le « 1 » seul, 72 px de haut ; un seul des trois par écran (docs/141)", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     const person = wrapper.find("[data-test=meeting-person]");
-    expect(person.attributes("data-pose")).toBe("debout");
-    expect(person.attributes("height")).toBe("186");
+    expect(person.attributes("data-scene")).toBe("un");
+    expect(person.attributes("height")).toBe("72");
     expect(wrapper.find("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
     expect(wrapper.find(".face-state").exists()).toBe(false);
-    // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le personnage.
+    // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le « 1 ».
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
     const none = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();

@@ -1,17 +1,26 @@
 <script setup lang="ts">
-import Illustration from "./Illustration.vue";
+import TroupeScene from "./TroupeScene.vue";
 
-// L'illustration de la connexion (maquettes Connexion et Connexion, ordinateur ; kit du 2026-11-05) : le
-// personnage qui dit bonjour (Illustration, docs/141), le soleil, le nuage, la colline et le sol, aux couleurs du thème (--peach-soft,
-// --primary-soft, --surface-muted). `large` : la moitié gauche de l'ordinateur (560 × 420) ; sinon le bandeau du
-// téléphone (150 px). Personnage de 140 px sur téléphone, 380 px sur ordinateur (maquettes).
+// L'illustration de la connexion (maquettes Connexion, ConnexionSombre et ConnexionOrdinateur du 9 novembre, §15) :
+// les 4 personnages du logo (scène « groupe »). Sur téléphone, le bandeau de 150 px : le soleil, le nuage, la colline
+// et le sol aux couleurs du thème (--peach-soft, --primary-soft, --surface-muted), la scène de 206 px posée dessus.
+// `large` : la moitié gauche de l'ordinateur, la scène seule, 720 px au plus et 82 % de la place.
 withDefaults(defineProps<{ large?: boolean }>(), { large: false });
 </script>
 
 <template>
+  <TroupeScene
+    v-if="large"
+    scene="groupe"
+    :width="720"
+    :desktop-width="720"
+    full
+    class="auth-illustration-large"
+    data-test="auth-illustration"
+  />
   <div
+    v-else
     class="auth-illustration"
-    :class="{ 'auth-illustration-large': large }"
     aria-hidden="true"
     data-test="auth-illustration"
   >
@@ -33,11 +42,9 @@ withDefaults(defineProps<{ large?: boolean }>(), { large: false });
       preserveAspectRatio="none"
     ><path d="M0 90 C 40 20, 120 0, 170 10 C 220 20, 270 50, 300 90 Z" /></svg>
     <span class="auth-illustration-ground" />
-    <Illustration
-      pose="bonjour"
-      :height="large ? 280 : 140"
-      :bust-height="large ? undefined : 118"
-      :desktop-height="large ? 380 : 140"
+    <TroupeScene
+      scene="groupe"
+      :width="206"
       full
       class="auth-illustration-person"
     />
@@ -45,7 +52,7 @@ withDefaults(defineProps<{ large?: boolean }>(), { large: false });
 </template>
 
 <style>
-/* Valeurs de la maquette Connexion (390 px) et Connexion, ordinateur (560 × 420). */
+/* Valeurs de la maquette Connexion (390 px). */
 .auth-illustration { position: relative; flex: none; width: 100%; height: 150px; overflow: hidden; }
 .auth-illustration svg { position: absolute; display: block; }
 .auth-illustration-sun { right: 46px; top: 9px; width: 82px; height: 82px; fill: var(--peach-soft); }
@@ -53,10 +60,6 @@ withDefaults(defineProps<{ large?: boolean }>(), { large: false });
 .auth-illustration-hill { left: -19px; bottom: 4px; width: 292px; height: 42px; fill: var(--primary-soft); }
 .auth-illustration-ground { position: absolute; left: 23px; right: 23px; bottom: 0; height: 10px; border-radius: var(--radius-sm); background: var(--surface-muted); }
 .auth-illustration-person { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); }
-.auth-illustration-large { width: 560px; max-width: 100%; height: 420px; }
-.auth-illustration-large .auth-illustration-sun { right: 67px; top: 25px; width: 231px; height: 231px; }
-.auth-illustration-large .auth-illustration-cloud { left: 33px; top: 50px; width: 145px; height: 72px; }
-.auth-illustration-large .auth-illustration-hill { left: -28px; bottom: 12px; width: 420px; height: 117px; }
-.auth-illustration-large .auth-illustration-ground { left: 33px; right: 33px; height: 16px; }
-.auth-illustration-large .auth-illustration-person { bottom: 8px; }
+/* Ordinateur (ConnexionOrdinateur du 9 novembre) : la scène seule, min(720 px, 82 %). */
+.auth-illustration-large { --troupe-max: 82%; }
 </style>

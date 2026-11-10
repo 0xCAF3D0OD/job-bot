@@ -362,12 +362,12 @@ describe("barre de candidature", () => {
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, sent_at: "2026-10-05", application_url: "https://acme.example/jobs/1" });
 
-    // « Candidature envoyée. » (maquette CandidatureEnvoyee, docs/141, 8) à la place de la page : le personnage à
-    // l'avion, ce qui compte pour l'ORP, « Voir mes candidatures », « Préparer la prochaine », « Je n'ai pas postulé ».
+    // « Candidature envoyée. » (maquette CandidatureEnvoyee, §15) à la place de la page : la scène « envoyee »,
+    // ce qui compte pour l'ORP, « Voir mes candidatures », « Préparer la prochaine », « Je n'ai pas postulé ».
     const done = wrapper.find("[data-test=sent-moment]");
     expect(done.find("h1").text()).toBe("Candidature envoyée.");
     expect(done.find("[role=status]").exists()).toBe(true);
-    expect(done.find("[data-illustration=personnage]").attributes("data-pose")).toBe("avion");
+    expect(done.find("[data-illustration=troupe]").attributes("data-scene")).toBe("envoyee");
     expect(done.find("[data-mood-animation]").exists()).toBe(false);
     expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA. Elle compte pour l’ORP : 9 recherches sur 10 ce mois.");
     expect(done.find("[data-test=sent-follow-up]").exists()).toBe(false);

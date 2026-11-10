@@ -3,7 +3,7 @@ import { reactive, watch } from "vue";
 import type { Transform } from "../components/FaceTransform.vue";
 
 // Les pages qui chargent des données (docs/61 §2) : à l'arrivée sur la page, si les données ne
-// sont pas là après 0,15 s, l'écran se grise avec le visage du 1 au centre, l'œil et la bille
+// sont pas là après 1 s, l'écran se grise avec le visage du 1 au centre, l'œil et la bille
 // qui pulsent (docs/123 §2, T) ; dès qu'elles arrivent, le voile s'efface, après 1,2 s au moins
 // (docs/63 §3). Depuis la 0.96.0, le visage prend l'objet de la page (`face`, docs/123,
 // complément) ; les Actualités et les Formations gardent le visage qui pulse.
@@ -20,11 +20,12 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   settings: { label: "Réglages", face: "settings" },
   trainings: { label: "Formations" },
 };
-// Planche « vide et chargement » : rien avant 300 ms (NN/g, Response Time Limits).
-const SHOW_AFTER_MS = 300;
+// Rien avant 1 s, puis l'attente jusqu'à 10 s (MODIFICATIONS du 9 novembre, §15) ; ensuite la page montre ses
+// blocs gris.
+const SHOW_AFTER_MS = 1000;
 // Plus lente (docs/63 §3) : le temps de voir le visage.
 const SHOW_AT_LEAST_MS = 1200;
-const GIVE_UP_MS = 8000;
+const GIVE_UP_MS = 10_000;
 
 export const pageTransition = reactive({ page: null as string | null, shown: false });
 let ready = true;
