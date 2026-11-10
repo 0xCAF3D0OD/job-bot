@@ -18,10 +18,11 @@ describe("page introuvable (docs/59 §5)", () => {
     const home = wrapper.find("[data-test=not-found-home]");
     expect(home.text()).toBe("Retour à l’accueil");
     expect(home.attributes("href")).toBe("/aujourdhui");
-    // Le personnage du kit : 400 px, 800 px en 2×, décoratif.
+    // Les 4 personnages du logo (scène « introuvable », §15) : 340 px, 392 sur ordinateur, décoratif.
     const person = wrapper.find("[data-test=not-found-person]");
-    expect(person.attributes("src")).toContain("perso-06-perplexe-400");
-    expect(person.attributes("srcset")).toContain("perso-06-perplexe-800");
+    expect(person.attributes("src")).toContain("/troupe/introuvable-680");
+    expect(person.attributes("srcset")).toContain("/troupe/introuvable-784");
+    expect(person.attributes("width")).toBe("340");
     expect(person.attributes("alt")).toBe("");
     expect(wrapper.find("[data-test=not-found-scene]").attributes("aria-hidden")).toBe("true");
   });

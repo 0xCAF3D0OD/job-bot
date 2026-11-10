@@ -4,13 +4,13 @@ import { ref } from "vue";
 import type { OrpMonth } from "../api/client";
 import { ofMonth } from "../format";
 import AppIcon from "./AppIcon.vue";
-import Illustration from "./Illustration.vue";
+import TroupeScene from "./TroupeScene.vue";
 import OrpSheet from "./OrpSheet.vue";
 
 // « C'est fait ! » (maquette ObjectifAtteint, docs/139 étape 8c ; B10 à B12, Kevin, 2026-11-04) : quand
 // « J'ai postulé » ou « Marquer comme envoyée » atteint l'objectif ORP du mois, cet écran remplace
-// « Candidature envoyée. ». Le personnage qui fête (maquette du 6.11, docs/141, 9 : à la place du logo ravi et
-// du soleil), « n recherches à faire » barré une fois, « C'est fait ! » en Caveat Brush (un sous-ensemble partagé
+// « Candidature envoyée. ». Les 4 personnages du logo qui fêtent (scène « objectif », §15 du 9 novembre ; 340 px,
+// 473 sur ordinateur), « n recherches à faire » barré une fois, « C'est fait ! » en Caveat Brush (un sous-ensemble partagé
 // avec les titres des premiers pas, 3,8 Ko), l'export de la feuille, puis l'accueil.
 // « Je n'ai pas postulé » reste, en lien discret.
 withDefaults(defineProps<{ data: OrpMonth; cancellable?: boolean }>(), { cancellable: true });
@@ -40,10 +40,8 @@ const SCRIBBLE =
       class="goal-reached-body"
       role="status"
     >
-      <Illustration
-        pose="celebration"
-        :height="240"
-        :desktop-height="240"
+      <TroupeScene
+        scene="objectif"
         full
         class="goal-reached-art"
       />

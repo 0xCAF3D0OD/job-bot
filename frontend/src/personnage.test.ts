@@ -24,23 +24,31 @@ function vueFiles(dir: string): string[] {
 const FILES = vueFiles(SRC).map((path) => ({ path: relative(SRC, path), text: readFileSync(path, "utf8") }));
 const template = (text: string) => text.slice(text.indexOf("<template>"), text.lastIndexOf("</template>"));
 
-// Les écrans qui montrent le personnage (docs/141 §3). Un nouvel écran s'ajoute ici et dans docs/141.
+// Les écrans qui montrent encore le personnage à capuche : les notifications seulement (MODIFICATIONS du 9 novembre,
+// §15). Un nouvel écran s'ajoute ici et dans docs/141.
 export const SCREENS: Record<string, string> = {
-  "views/WelcomeView.vue": "premiers pas : étape CV, « Tout est prêt. » (bustes sur téléphone, lot 16.3)",
-  "components/AuthIllustration.vue": "connexion, téléphone (buste, lot 16.3) et ordinateur",
-  "views/NotFoundView.vue": "page introuvable",
-  "components/MaintenanceOverlay.vue": "maintenance (mise à jour, annoncée) et pas de connexion",
-  "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
-  "components/MomentScreen.vue": "candidature envoyée, entretien décroché, réponse négative",
-  "components/GoalReached.vue": "objectif ORP atteint",
   "views/NotificationsView.vue": "Notifications, Tout est lu (téléphone, §10.9)",
 };
 
-// Les écrans où le personnage et un autre des trois sont dans des branches qui s'excluent : le fichier
+// Les écrans des 4 personnages du logo (§15) : une scène par état de la plateforme.
+export const TROUPE_SCREENS: Record<string, string> = {
+  "components/AuthIllustration.vue": "connexion (groupe)",
+  "components/MaintenanceOverlay.vue": "hors ligne, maintenance, mise à jour",
+  "views/NotFoundView.vue": "page introuvable",
+  "components/CharacterState.vue": "aucune offre",
+  "components/MomentScreen.vue": "candidature envoyée, entretien décroché",
+  "components/GoalReached.vue": "objectif ORP atteint",
+  "components/OrpMeetingEmpty.vue": "aucun rendez-vous prévu (le « 1 » seul)",
+  "views/WelcomeView.vue": "premiers pas sur téléphone (le « 1 » seul)",
+};
+
+// Les écrans où l'image et un autre des trois sont dans des branches qui s'excluent : le fichier
 // contient les deux, la page jamais. Chacun a son test sur la page affichée (le fichier cité).
 const EXCLUSIVE: Record<string, string> = {
   // Le personnage quand tout est lu sur téléphone ; la cloche sur ordinateur ; le logo transformé sans notification.
   "views/NotificationsView.vue": "views/NotificationsView.test.ts",
+  // Les scènes avec des personnes sur ordinateur, le « 1 » seul sur téléphone.
+  "views/WelcomeView.vue": "views/WelcomeView.test.ts",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
@@ -66,31 +74,43 @@ const OTHERS = /<(MoodAnimation|FaceTransform|FaceState|FaceMark|NetworkError|Sc
 
 describe("Personnage : un seul des trois par écran (docs/141)", () => {
   const users = FILES.filter((f) => /<Illustration\b/.test(template(f.text)));
+  const troupe = FILES.filter((f) => /<TroupeScene\b/.test(template(f.text)));
 
-  it("seuls les écrans de la liste montrent le personnage", () => {
+  it("seuls les écrans de la liste montrent le personnage à capuche (les notifications)", () => {
     expect(users.map((f) => f.path).sort()).toEqual(Object.keys(SCREENS).sort());
   });
 
-  it("aucun écran de travail ne le montre", () => {
+  it("seuls les écrans de la liste montrent les 4 personnages du logo", () => {
+    expect(troupe.map((f) => f.path).sort()).toEqual(Object.keys(TROUPE_SCREENS).sort());
+  });
+
+  it("aucun écran de travail ne montre l'un ou l'autre", () => {
     for (const path of WORK) {
       const file = FILES.find((f) => f.path === path);
       expect(file, path).toBeDefined();
-      expect(template(file?.text ?? ""), path).not.toMatch(/<Illustration\b/);
+      expect(template(file?.text ?? ""), path).not.toMatch(/<(Illustration|TroupeScene)\b/);
     }
   });
 
-  it("aucune page n'affiche à la fois le personnage et une mascotte d'humeur ou le logo transformé", () => {
-    for (const file of users) {
+  it("aucune page n'affiche à la fois une image et une mascotte d'humeur ou le logo transformé", () => {
+    for (const file of [...users, ...troupe]) {
       const pageTest = EXCLUSIVE[file.path];
       if (pageTest) {
         expect(readFileSync(join(SRC, pageTest), "utf8"), file.path).toContain("un seul des trois");
         continue;
       }
       expect(template(file.text), file.path).not.toMatch(OTHERS);
+      expect(template(file.text), file.path).not.toMatch(/<Illustration\b[\s\S]*<TroupeScene\b|<TroupeScene\b[\s\S]*<Illustration\b/);
     }
   });
-});
 
+  it("jamais les 4 personnages sur un refus : la réponse négative garde une icône sobre (§15)", () => {
+    const view = template(FILES.find((f) => f.path === "views/ApplicationsView.vue")?.text ?? "");
+    const refusal = view.slice(view.indexOf('v-else-if="refused"'), view.indexOf("</MomentScreen>", view.indexOf('v-else-if="refused"')));
+    expect(refusal).toContain('icon="mail"');
+    expect(refusal).not.toMatch(/scene=/);
+  });
+});
 describe("Illustration (docs/141 §2)", () => {
   it("pose l'image 400 px, 800 px pour les écrans 2×, avec sa taille, décorative et chargée à l'affichage", async () => {
     const wrapper = mount(Illustration, { props: { pose: "loupe", height: 200 } });
@@ -154,13 +174,5 @@ describe("Bustes sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 16.3)
     expect(desk.attributes("src")).toMatch(/perso-02-bonjour-400\.webp/);
     expect(desk.attributes("height")).toBe("140");
     globalThis.matchMedia = original;
-  });
-
-  // Prompt du 10 novembre (PR 16) : Rendez-vous sans rendez-vous prévu n'a plus de personnage (scène à venir).
-  it("les écrans du lot 16.3 encore illustrés demandent le buste, avec les tailles de la maquette", () => {
-    const text = (path: string) => template(FILES.find((f) => f.path === path)?.text ?? "");
-    expect(text("components/AuthIllustration.vue")).toContain(':bust-height="large ? undefined : 118"');
-    expect(text("views/WelcomeView.vue")).toContain(':bust-height="100"');
-    expect(text("views/WelcomeView.vue")).toContain(':bust-height="150"');
   });
 });

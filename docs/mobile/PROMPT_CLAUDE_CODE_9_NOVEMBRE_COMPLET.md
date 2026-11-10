@@ -113,7 +113,13 @@ Statut mis à jour par e-mail (CandidaturesOrdinateurStatut, EnvoyeesStatut) :
 - docs/141 §4 : la série SceneIllustration n'est plus « à retirer ».
 - Lecture du CV asynchrone (202 + job_id), étape enregistrée côté serveur, écran de maintenance uniquement sur 503 + X-Maintenance.
 
-### PR 11. Textes
+### PR 11. Les 4 personnages du logo (MODIFICATIONS_9 §15)
+- Remplacer le personnage à capuche par les scènes de illustrations/troupe/ selon le tableau du §15 (clair et sombre), sauf dans les notifications.
+- Composant unique `TroupeScene.vue` (prop `scene`, variante sombre automatique), images décoratives, pas d'animation si prefers-reduced-motion.
+- Jamais sur un refus, une échéance ORP dépassée, une perte de données ou une erreur grave.
+- Indicateur de chargement 1 à 10 s : les 4 sautent l'un après l'autre (SVG animé).
+
+### PR 12. Textes
 - Apostrophe typographique ’ partout, accords au singulier pour 0 et 1, noms en français (CICR, Genève), téléphone affiché espacé et copié brut, « LinkedIn » avec majuscules, « justificatif » à la place de « preuve ».
 
 ## 3. Ne pas toucher

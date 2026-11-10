@@ -39,12 +39,12 @@ describe("LoginView", () => {
     expect(wrapper.find("[data-test=login-form]").exists()).toBe(false);
   });
 
-  it("au revoir, après la suppression du compte : le personnage qui salue, ce qui est effacé (docs/141, 13)", async () => {
+  it("au revoir, après la suppression du compte : les 4 personnages du logo, ce qui est effacé (docs/141, 13)", async () => {
     GET.mockResolvedValue({ data: anonymous });
     const { wrapper } = await mountLogin("/connexion?au-revoir=1");
     expect(wrapper.find("[data-test=goodbye]").text()).toBe("Ton compte est supprimé.");
     expect(wrapper.find("[role=status]").text()).toContain("sont effacés");
-    expect(wrapper.find("[data-pose=bonjour]").exists()).toBe(true);
+    expect(wrapper.find("[data-scene=groupe]").exists()).toBe(true);
     expect(wrapper.text()).not.toContain("Content de");
     expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
   });
@@ -143,16 +143,17 @@ describe("LoginView, maquette Connexion", () => {
     expect(art.length).toBe(2);
     for (const one of art) {
       // Décorative : cachée aux lecteurs d'écran, image sans texte.
-      expect(one.attributes("aria-hidden") ?? one.element.closest("[aria-hidden=true]")).toBeTruthy();
-      expect(one.find("img").attributes("alt")).toBe("");
-      // Le personnage (docs/141) : 400 px en 1×, 800 px en 2×, taille réservée.
-      const img = one.find("img");
-      expect(img.attributes("data-pose")).toBe("bonjour");
-      expect(img.attributes("src")).toContain("perso-02-bonjour-400");
-      expect(img.attributes("srcset")).toMatch(/perso-02-bonjour-400\S* 1x, \S*perso-02-bonjour-800\S* 2x/);
+      const img = one.element.tagName === "IMG" ? one : one.find("img");
+      expect(img.attributes("aria-hidden") ?? one.attributes("aria-hidden")).toBe("true");
+      expect(img.attributes("alt")).toBe("");
+      // Les 4 personnages du logo (scène « groupe », §15 du 9 novembre) : taille réservée.
+      expect(img.attributes("data-scene")).toBe("groupe");
+      expect(img.attributes("src")).toMatch(/\/troupe\/groupe-412\.webp/);
+      expect(img.attributes("srcset")).toMatch(/groupe-1200\S* 1200w/);
       expect(Number(img.attributes("height"))).toBeGreaterThan(0);
-      expect(Number(img.attributes("width"))).toBe(Math.round((150 * Number(img.attributes("height"))) / 400));
     }
+    // Téléphone : 206 px dans le bandeau ; ordinateur : 720 px au plus (ConnexionOrdinateur).
+    expect(art.map((one) => (one.element.tagName === "IMG" ? one : one.find("img")).attributes("width")).sort()).toEqual(["206", "720"]);
     expect(wrapper.find("[data-test=brand-logo]").exists()).toBe(true);
   });
 
