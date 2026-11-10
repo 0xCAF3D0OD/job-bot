@@ -1,0 +1,1 @@
+Budget de poids : le JavaScript, le CSS et les images mesurés bruts, en gzip et en brotli, page par page (Accueil, Candidatures, Bilan, Compte) ; limites à la taille du jour + 5 %, vérifiées à chaque PR ; illustrations en WebP seulement ; mesure du CSS inutilisé (make css-inutilise) ; tout dans docs/performance.md.
