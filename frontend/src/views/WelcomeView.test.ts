@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import { useAssistant } from "../composables/useAssistant";
@@ -16,6 +16,7 @@ vi.mock("../api/client", () => ({
     POST: (...a: unknown[]) => POST(...a),
     PATCH: (...a: unknown[]) => PATCH(...a),
   },
+  QUIET: { headers: { "X-Jobbot-Quiet": "1" } },
 }));
 afterEach(() => vi.resetAllMocks());
 
@@ -120,11 +121,11 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const privacy = wrapper.find("[data-test=cv-privacy]");
     expect(privacy.text()).toContain("L'IA n'en reçoit que les parties utiles, sans tes coordonnées.");
     expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
-    // Sans Assistant, pas de « Pas de CV à jour ? » ; le personnage au CV, lui, est là (maquette OnboardingC).
+    // Sans Assistant, pas de « Pas de CV à jour ? » ; le « 1 » seul, lui, est là (maquette OnboardingC, §15).
     expect(wrapper.find("[data-test=cv-assistant]").exists()).toBe(false);
     const person = wrapper.find("[data-test=cv-person]");
-    expect(person.attributes("src")).toContain("perso-03-cv-400");
-    expect(person.attributes("srcset")).toContain("perso-03-cv-800");
+    expect(person.attributes("src")).toContain("/troupe/un-400");
+    expect(person.attributes("height")).toBe("100");
     expect(person.attributes("alt")).toBe("");
     expect(wrapper.find("[data-test=cv-scene]").attributes("aria-hidden")).toBe("true");
   });
@@ -333,5 +334,93 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
       expect(document.activeElement?.textContent?.replace(/\s+/g, " ").trim()).toBe("Tout réécrire Ton CV suffit.");
     });
     wrapper.unmount();
+  });
+});
+
+describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur…)", () => {
+  const realMatch = globalThis.matchMedia;
+  beforeEach(() => {
+    globalThis.matchMedia = ((q: string) => ({ matches: q.includes("min-width: 1024px"), addEventListener() {}, removeEventListener() {} })) as unknown as typeof matchMedia;
+  });
+  afterEach(() => {
+    globalThis.matchMedia = realMatch;
+    vi.useRealTimers();
+  });
+
+  it("étape 1 : en-tête « Étape 1 sur 3 », plus de « Passer », zone de dépôt, scène offres-profils décorative ; un seul des trois (la scène, pas le personnage)", async () => {
+    const { wrapper } = await mountWelcome();
+    expect(wrapper.findComponent({ name: "Illustration" }).exists()).toBe(false);
+    expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 1 sur 3");
+    expect(wrapper.find("[data-test=welcome-later]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=cv-upload]").text()).toContain("Glisse ton CV ici");
+    expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer sans CV");
+    const scene = wrapper.get("[data-illustration]");
+    expect(scene.attributes("data-illustration")).toBe("offres-profils");
+    expect(scene.attributes("aria-hidden")).toBe("true");
+    expect(scene.get("img").attributes("alt")).toBe("");
+  });
+
+  it("CV lu : « Lu : 2 postes, 1 compétence trouvés » et la scène formations-vide", async () => {
+    const { wrapper } = await mountWelcome();
+    POST.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/documents"
+            ? { id: 3, filename: "cv.pdf" }
+            : { chunks: [{ kind: "competence", title: "Kubernetes", content: "…", tags: [], duplicate_of: null }], roles: ["DevOps", "SRE"], min_rate: 80, languages: [], remote: null },
+      }),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 2 postes, 1 compétence trouvés");
+    expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("formations-vide");
+    await click(wrapper, "welcome-continue");
+    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("DevOps, SRE");
+    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("Trouvé dans ton CV");
+    expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("80 à 100");
+    expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("lieux-carte");
+  });
+
+  it("coupure pendant la lecture : « En pause », scène connexion-perdue, nouvel essai après 5 s", async () => {
+    const { wrapper } = await mountWelcome();
+    vi.useFakeTimers();
+    let attempts = 0;
+    POST.mockImplementation((path: string) => {
+      if (path === "/api/documents") return Promise.resolve({ data: { id: 3, filename: "cv.pdf" } });
+      attempts += 1;
+      return attempts === 1 ? Promise.reject(new TypeError("Failed to fetch")) : Promise.resolve({ data: { chunks: [], roles: ["DevOps"], min_rate: null, languages: [], remote: null } });
+    });
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    expect(wrapper.get("[data-test=cv-reading]").text()).toBe("En pause");
+    expect(wrapper.get("[data-test=cv-paused]").text()).toContain("Nouvel essai dans 5 secondes");
+    expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("connexion-perdue");
+    await vi.advanceTimersByTimeAsync(5000);
+    await flushPromises();
+    expect(attempts).toBe(2);
+    expect(wrapper.find("[data-test=cv-paused]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 1 poste trouvé");
+  });
+
+  it("étape 2 : objectif ORP de 1 à 99 ; étape 3 : Garder sur une carte, puis Annuler", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    expect(wrapper.get("[data-test=target]").text()).toBe("10");
+    await click(wrapper, "target-plus");
+    expect(wrapper.get("[data-test=target]").text()).toBe("11");
+    await click(wrapper, "welcome-criteria");
+    await flushPromises();
+    expect(wrapper.get("[data-test=welcome-offers-title]").text()).toBe("1 offre pour toi");
+    expect(wrapper.get("[data-test=welcome-offer]").text()).toContain("Très proche · 88");
+    await click(wrapper, "welcome-keep");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 7 } }, body: { status: "preparing" } });
+    expect(wrapper.get("[data-test=welcome-offer]").text()).toContain("Gardée");
+    await click(wrapper, "undo-status");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-keep]").exists()).toBe(true);
   });
 });

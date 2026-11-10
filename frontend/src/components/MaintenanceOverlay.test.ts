@@ -120,14 +120,22 @@ describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05
     await flushPromises();
     expect(wrapper.emitted("retry")).toHaveLength(1);
     expect(next()?.trim()).toBe("Nouvel essai en cours…");
-    // Le personnage aux câbles (docs/141, 5) : 400 px, 800 px en 2×, 250 px, décoratif ; pas d'en-tête sur
+    // La mise à jour (scène « mise-a-jour », §15) : 340 px, 409 sur ordinateur, décorative ; pas d'en-tête sur
     // téléphone (le logo seul n'apparaît que sur ordinateur, maquette du 8 novembre).
     const person = document.querySelector("[data-test=maintenance-person]");
-    expect(person?.getAttribute("src")).toContain("perso-09-cables-400");
-    expect(person?.getAttribute("srcset")).toContain("perso-09-cables-800");
+    expect(person?.getAttribute("src")).toContain("/troupe/mise-a-jour-680");
+    expect(person?.getAttribute("srcset")).toContain("/troupe/mise-a-jour-818");
     expect(person?.getAttribute("alt")).toBe("");
-    expect(person?.getAttribute("height")).toBe("250");
+    expect(person?.getAttribute("width")).toBe("340");
     expect(document.querySelector(".maintenance header")).toBeNull();
+    wrapper.unmount();
+  });
+
+  it("une maintenance annoncée : la scène « maintenance » (§15)", async () => {
+    const wrapper = mount(MaintenanceOverlay, { props: { waiting: true, message: "De retour à 14 h.", nextAt: null }, attachTo: "#app" });
+    await flushPromises();
+    expect(document.querySelector("[data-test=maintenance] h1")?.textContent?.trim()).toBe("Maintenance en cours");
+    expect(document.querySelector("[data-test=maintenance-person]")?.getAttribute("data-scene")).toBe("maintenance");
     wrapper.unmount();
   });
 
@@ -138,14 +146,14 @@ describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05
     const title = () => document.querySelector("[data-test=maintenance] h1")?.textContent?.trim();
     expect(title()).toBe("Pas de connexion");
     expect(document.querySelector("[data-test=maintenance]")?.textContent).toContain("Vérifie le Wi‑Fi ou les données mobiles.");
-    // Le personnage au téléphone, distinct de la maintenance (docs/141, 6).
-    const pose = () => document.querySelector("[data-test=maintenance-person]")?.getAttribute("data-pose");
+    // L'équipe rebranche la prise (scène « hors-ligne », §15), distincte de la mise à jour.
+    const pose = () => document.querySelector("[data-test=maintenance-person]")?.getAttribute("data-scene");
     expect(pose()).toBe("hors-ligne");
     online.mockReturnValue(true);
     window.dispatchEvent(new Event("online"));
     await flushPromises();
     expect(title()).toBe("jobA1 se met à jour");
-    expect(pose()).toBe("cables");
+    expect(pose()).toBe("mise-a-jour");
     online.mockRestore();
     wrapper.unmount();
   });

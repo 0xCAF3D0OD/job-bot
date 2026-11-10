@@ -23,7 +23,6 @@ import BottomSheet from "../components/BottomSheet.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
 import CharacterState from "../components/CharacterState.vue";
-import cup from "../assets/accessoires/accessoire-tasse.webp";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
@@ -759,11 +758,10 @@ onUnmounted(() => {
           :heights="['4.5rem', '4.5rem', '4.5rem']"
         />
         <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
-        <!-- En attente de la première collecte (docs/141 §3, écran 10) : le personnage assis, sa tasse. -->
+        <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
         <CharacterState
           v-else-if="!loading && items.length === 0 && noOffersYet"
-          pose="assis"
-          :accessory="cup"
+          scene="aucune-offre"
           title="Pas encore d'offre"
           data-test="offers-none-yet"
         >
@@ -811,15 +809,14 @@ onUnmounted(() => {
             </RouterLink>
           </div>
         </FaceState>
-        <!-- Téléphone (maquette AucuneOffre du 6.11, C9) : le personnage à la loupe (docs/141, 7), ce qui filtre,
+        <!-- Téléphone (maquette AucuneOffre, §15 du 9 novembre) : la scène « aucune-offre » (330 px), ce qui filtre,
              en mots, et « Modifier les filtres ». -->
-        <!-- Ordinateur (maquette du 8 novembre, AucuneOffreOrdinateur) : le même écran, le personnage à 240 px,
+        <!-- Ordinateur (maquette AucuneOffreOrdinateur) : le même écran, la scène à 482 px,
              « Tout effacer » puis « Modifier les filtres ». -->
         <CharacterState
           v-else-if="!loading && items.length === 0 && activeCount(filters) && (phone || wide)"
-          pose="loupe"
+          scene="aucune-offre"
           title="Aucune offre avec ces filtres"
-          :desktop-height="240"
           :full="wide && !phone"
           :class="{ 'character-state-wide': wide && !phone }"
           data-test="offers-empty"

@@ -2189,7 +2189,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .auth-split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); min-height: calc(100dvh - 4.4rem); }
 .auth-art { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--space-6) + var(--space-1)); padding: 0 var(--space-6); background: var(--surface); border-right: 1px solid var(--line); }
 .auth-art .auth-illustration-phone { display: none; }
-.auth-pitch { margin: 0; max-width: 460px; text-align: center; font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+.auth-pitch { margin: 0; --pitch-24: 1.5rem; --pitch-lh: 1.25; max-width: 520px; text-align: center; font-size: var(--pitch-24); line-height: var(--pitch-lh); font-weight: var(--weight-bold); }
 .auth-panel { display: grid; place-items: center; padding: var(--space-12) var(--space-6); background: var(--bg); }
 .auth-box { display: grid; gap: var(--space-4); width: min(100%, 24rem); }
 .auth-box h1 { margin: 0; font-size: var(--font-figure); }
@@ -3714,27 +3714,28 @@ main:focus { outline: none; }
 .rhythm-band-text strong { font-size: var(--font-label); }
 .rhythm-band-text span { font-size: var(--label-caps); color: var(--text-secondary); }
 .rhythm-band.done .rhythm-band-text span { color: var(--success); font-weight: var(--weight-bold); }
-.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: calc(var(--space-1) * 1.5); text-align: center; }
-.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: var(--space-2); text-align: center; }
+.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rhythm-band-days li.today { font-weight: var(--weight-heavy); color: var(--text); }
 .rhythm-band-dot { display: grid; place-items: center; width: 34px; height: 34px; box-sizing: border-box; border: 2px solid var(--field-border); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .rhythm-band-days li.rest .rhythm-band-dot { border-style: dashed; }
 .rhythm-band-days li.sent .rhythm-band-dot { background: var(--primary-graphic); border-color: var(--primary-graphic); color: var(--on-primary); }
-.today-page .today-section { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.today-page .today-section { display: flex; flex-direction: column; gap: var(--space-3); }
 .today-page .today-section > h2 { margin: 0 var(--space-1); font-size: var(--font-title); font-weight: var(--weight-bold); }
-.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .today-task {
   --tone: var(--primary-graphic); --tone-text: var(--primary-text);
   display: flex; align-items: center; gap: var(--space-4); min-height: 88px; box-sizing: border-box; padding: var(--space-4) var(--space-5);
   background: var(--surface); border: 0; border-radius: var(--radius-card); color: var(--text); text-decoration: none;
 }
-/* Lot 18 (§10.5) : le fond des blocs sous la bande, cartes sans bordure ; l'action est le mot dans la couleur du ton,
-   puis le cercle D29 de 40 px, 12 px entre les deux. */
-.today-page-bg { background: var(--page-blocks); }
+/* Sous la bande, le fond crème de la page (MODIFICATIONS_9 §1 « Crème #F7F5F0 partout », AujourdhuiOrdinateurTravailD) ;
+   cartes blanches sans bordure ; l'action est le mot dans la couleur du ton, puis le cercle gris D29 de 40 px, 12 px
+   entre les deux. */
+.today-page-bg { background: var(--bg); }
 .today-task.tone-late { --tone: var(--peach-text); --tone-text: var(--peach-text); }
 .today-task.tone-interview { --tone: var(--success); --tone-text: var(--success); }
-.today-task-icon { flex: none; width: 24px; height: 24px; margin: 0 calc(var(--space-1) / 2); color: var(--tone); }
-.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(var(--space-1) / 2); }
+.today-task-icon { flex: none; width: 24px; height: 24px; color: var(--tone); }
+.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .today-task-main strong { font-size: var(--today-17); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .today-task-main span { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
 .today-task.tone-late .today-task-main span { color: var(--peach-text); font-weight: var(--weight-semibold); }
@@ -5094,12 +5095,37 @@ a.panel-row:hover { background: var(--band); }
 
 /* Réglages sur ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : 880 px, le titre de 34 sans bandeau, une
    carte par section, ses réglages en lignes séparées d'un filet (D22). */
-.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; --settings-10: 10px; --settings-88: 88px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
+.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; --settings-88: 88px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .settings-wide-title { margin: 0 0 var(--space-8); font-size: var(--settings-34); line-height: var(--settings-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+/* MODIFICATIONS_9 §2.10 : les groupes bordés de 1,5 px (--card-line, comme les cartes du prompt du 9 novembre). */
+.settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .settings-wide .setting-card { border: 0; border-radius: 0; }
 .settings-wide .setting-card + .setting-card { border-top: 1px solid var(--line-soft); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
+/* Langue et Taille du texte (ReglagesOrdinateur) : toute la ligne s'ouvre, le libellé à gauche, la valeur en gris et le
+   chevron de 20 px à droite, au bord des autres contrôles. */
+.setting-link-row { --setting-link-h: 64px; --setting-link-icon: 20px; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--setting-link-h); padding: var(--space-5) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.setting-link-row:hover { background: var(--surface-muted); }
+.setting-link-title { flex: 1; font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.setting-link-value { font-size: var(--font-label); color: var(--text-secondary); }
+.setting-link-row .icon { flex: none; width: var(--setting-link-icon); height: var(--setting-link-icon); color: var(--text-secondary); }
+/* Panneau à boutons radio (ChoicePanel, panneaux lg et tx) : sur-titre 13/16 en capitales grises, lignes de 68 px
+   séparées d'un filet, cercle de 24 px (bleu plein quand il est choisi), libellé 16/22 et précision 14/20. */
+.choice-panel { --choice-68: 68px; --choice-lh-22: 22px; --choice-lh-20: 20px; --choice-lh-16: 16px; --choice-dot: 24px; --choice-inner: 11px; --choice-gap-2: 2px; display: grid; gap: var(--space-1); }
+.choice-panel-heading { margin: 0; font-size: var(--font-caption); line-height: var(--choice-lh-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.choice-rad { display: flex; align-items: center; gap: var(--space-4); min-height: var(--choice-68); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.choice-rad.disabled { cursor: not-allowed; }
+.choice-rad.disabled .choice-rad-text { opacity: 0.6; }
+.choice-rad input { appearance: none; flex: none; display: grid; place-content: center; width: var(--choice-dot); height: var(--choice-dot); margin: 0; border: 2px solid var(--text-secondary); border-radius: 50%; background: none; }
+.choice-rad input:checked { border-color: var(--primary-graphic); }
+.choice-rad input:checked::before { content: ""; width: var(--choice-inner); height: var(--choice-inner); border-radius: 50%; background: var(--primary-graphic); }
+.choice-rad input:focus-visible { outline: var(--choice-gap-2) solid var(--primary-graphic); outline-offset: var(--choice-gap-2); }
+.choice-rad-text b { display: block; font-size: var(--font-body); line-height: var(--choice-lh-22); }
+.choice-rad-text span { display: block; margin-top: var(--choice-gap-2); font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
+.choice-panel-note { margin: var(--space-3) 0 0; font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
+/* Taille du texte « Grande » (useTextSize) : tout ce qui est en rem (textes et espacements) grandit de 25 %, comme un zoom ;
+   les quelques valeurs en px restent. */
+html.text-large { font-size: 125%; }
 
 /* Pages d'état sur ordinateur (maquette du 8 novembre, lot 8 : PageIntrouvable, Maintenance, HorsLigne,
    CandidatureEnvoyee, ObjectifAtteint) : centrées sur 880 px, le personnage de 240, le titre de 34/42 en 800, la

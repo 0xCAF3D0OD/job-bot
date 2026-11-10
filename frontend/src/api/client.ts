@@ -30,6 +30,11 @@ export const MAINTENANCE_READ_EVENT = "jobbot:maintenance-read";
 // pendant une maintenance en lecture seule, elle est abandonnée sans message (docs/81 §2).
 export const BACKGROUND_HEADER = "X-Jobbot-Background";
 export const BACKGROUND = { headers: { [BACKGROUND_HEADER]: "1" } };
+// Une requête que la page sait reprendre seule (la lecture du CV des premiers pas, MODIFICATIONS_9 §5.2) : une
+// coupure ou un 502/504 ne pose pas la page d'attente, la page affiche « En pause » et réessaie. Seule une vraie
+// maintenance (réponse marquée « maintenance ») la pose encore.
+export const QUIET_HEADER = "X-Jobbot-Quiet";
+export const QUIET = { headers: { [QUIET_HEADER]: "1" } };
 
 function maintenance(message: string | null = null): void {
   globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
@@ -49,6 +54,7 @@ api.use({
       const body = (await response.clone().json().catch(() => null)) as
         | { maintenance?: boolean; mode?: string; message?: string | null }
         | null;
+      if (request.headers.get(QUIET_HEADER) && !body?.maintenance) return response;
       if (body?.maintenance && body.mode === "lecture") {
         if (request.headers.get(BACKGROUND_HEADER)) return response;
         globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_READ_EVENT, { detail: body.message ?? null }));
@@ -63,12 +69,13 @@ api.use({
     }
     return response;
   },
-  onError({ error }) {
+  onError({ request, error }) {
     // Le serveur ne répond pas du tout (redémarrage) : l'erreur suit son cours, la page
     // d'attente s'affiche. Une requête annulée par la page elle-même n'en est pas une.
     // Hors ligne (le navigateur le sait), ce n'est pas une maintenance : la page montre son erreur
     // « Connexion perdue » et « Réessayer » (maquette ErreurConnexion, décision du 2026-11-06).
     if (error instanceof DOMException && error.name === "AbortError") return;
+    if (request.headers.get(QUIET_HEADER)) return;
     if (globalThis.navigator && globalThis.navigator.onLine === false) return;
     maintenance();
   },

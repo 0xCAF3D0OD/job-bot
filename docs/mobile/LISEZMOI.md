@@ -5,6 +5,7 @@ Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, Aujourd
 
 ## Contenu
 - `PROMPT_CLAUDE_CODE_10_NOVEMBRE.md` : **à donner à Claude Code après celui du 9 novembre** (PR 13 à 16 : annonce lue automatiquement, ligne profil du Compte, détail d’une offre, onglet Rendez-vous). Il prime sur les fichiers précédents pour ces points.
+- `illustrations/troupe/` : les 4 personnages du logo, une scène par état de la plateforme, en clair et en sombre (MODIFICATIONS_9 §15). Ils remplacent `illustrations/personnage/`, gardé seulement pour les notifications.
 - `PROMPT_CLAUDE_CODE_9_NOVEMBRE_COMPLET.md` : **prompt complet à donner à Claude Code** (téléphone et ordinateur, toutes les décisions du 9 novembre, ordre des PR, tests).
 - `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).
 - `MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md` : corrections de la version ordinateur (9 novembre). Il prime sur tout le reste pour l'ordinateur.
