@@ -3,20 +3,22 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
-import { api, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
+import { api, QUIET, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import Illustration from "../components/Illustration.vue";
 import IconButton from "../components/IconButton.vue";
+import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
 import ScoreRing from "../components/ScoreRing.vue";
+import SidePanel from "../components/SidePanel.vue";
 import TagInput from "../components/TagInput.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
 import { UNDO_MS } from "../composables/useUndo";
-import { rateText, remoteText } from "../format";
+import { rateText, remoteText, scoreWord } from "../format";
 import { whyLine } from "../whyLine";
 
 // Les premiers pas (maquette OnboardingC, docs/139 étape 11b ; O1 à O10, Kevin, 2026-11-05) : quatre étapes, une
@@ -45,17 +47,12 @@ const TITLES: { lead: string; struck: string; hand: string }[] = [
   { lead: "Lire", struck: "312 offres", hand: "En trier 3." },
 ];
 
-// Ordinateur dès 1 024 px (maquette du 8 novembre, OnboardingOrdinateur, D27) : trois étapes sur le fond clair, sans
-// la page bleue ; en haut, le logo, trois points et « Passer » ; « Étape N sur 3 » au-dessus du titre ; la première
-// réunit l'accueil et le CV, avec le personnage de 360 px à droite ; « Retour » et « Continuer » en bas.
+// Ordinateur dès 1 024 px (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur… du 9 novembre) : trois étapes sur la
+// grille commune (1 080 px, 640 + 80 + 360), une scène par étape à droite, plus de « Passer » ; la lecture du CV ne
+// bloque pas l'écran.
 const { phone } = usePhone();
 const { phone: wideQuery } = usePhone("(min-width: 1024px)");
 const desk = computed(() => wideQuery.value && !phone.value);
-const DESK_TITLES: Record<number, { lead: string; hand: string }> = {
-  1: { lead: "Moins chercher,", hand: "plus vivre." },
-  2: { lead: "Ce que tu cherches", hand: "" },
-  3: { lead: "312 offres lues. En trier 3.", hand: "" },
-};
 
 const router = useRouter();
 const { me } = useAuth();
@@ -69,6 +66,14 @@ const settings = ref<SettingsModel | null>(null);
 // Étape 2, le CV.
 const cvName = ref("");
 const cvId = ref<number | null>(null);
+// Sur ordinateur, la carte du fichier : « PDF · 212 Ko ».
+const cvMeta = ref("");
+// La lecture du CV ne bloque pas l'écran (MODIFICATIONS_9 §5.2) : « Lecture… », « Lu », ou « En pause » quand la
+// connexion tombe ; nouvel essai tout seul 5 s plus tard, ou tout de suite par « Réessayer ».
+const paused = ref(false);
+const retryIn = ref(0);
+let retryTimer: ReturnType<typeof setInterval> | undefined;
+const RETRY_S = 5;
 const uploading = ref(false);
 const reading = ref(false);
 const cvError = ref("");
@@ -86,6 +91,15 @@ const adding = ref(false);
 const places = ref<string[]>([]);
 const orp = ref(true);
 const target = ref(10);
+// Le taux minimum (OnboardingOrdinateurEtape2, carte « Taux d'activité ») : celui du CV s'il le dit, sinon peu importe.
+const rate = ref<number | null>(null);
+const RATES = [null, 50, 60, 70, 80, 90, 100] as const;
+const rateLabel = (value: number | null): string => (value ? `${value} à 100\u202F%` : "Peu importe");
+// Le panneau ouvert par une carte de critère (Postes, Lieux, Taux d'activité).
+const editing = ref<"" | "roles" | "places" | "rate">("");
+const EDIT_TITLES = { roles: "Postes", places: "Lieux", rate: "Taux d'activité" } as const;
+const rolesFromCv = computed(() => !!understanding.value?.roles.length);
+const rateFromCv = computed(() => !!understanding.value?.min_rate && rate.value === understanding.value.min_rate);
 
 // Étape 4, le tri.
 const offers = ref<Offer[]>([]);
@@ -112,6 +126,7 @@ onMounted(async () => {
   if (found.data) {
     criteria.value = found.data.criteria;
     places.value = [...(found.data.criteria.locations ?? [])];
+    rate.value = found.data.criteria.min_rate ?? null;
   }
   if (saved.data) {
     settings.value = saved.data;
@@ -138,8 +153,24 @@ async function onCv(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
-  if (!file) return;
+  if (file) await upload(file);
+}
+
+// « Glisse ton CV ici » (OnboardingOrdinateur) : le fichier lâché sur la zone suit le même chemin que « Choisir ».
+const dragging = ref(false);
+async function onDrop(event: DragEvent): Promise<void> {
+  dragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (file) await upload(file);
+}
+
+function sizeText(bytes: number): string {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))}\u202FKo` : `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")}\u202FMo`;
+}
+
+async function upload(file: File): Promise<void> {
   uploading.value = true;
+  cvMeta.value = `${file.name.toLowerCase().endsWith(".pdf") ? "PDF" : "Word"} · ${sizeText(file.size)}`;
   cvError.value = "";
   try {
     const { data, error } = await api.POST("/api/documents", {
@@ -168,27 +199,86 @@ async function onCv(event: Event): Promise<void> {
 // compétences, et l'étape 3 part de ce qui est déjà enregistré.
 async function understand(documentId: number): Promise<void> {
   reading.value = true;
+  stopRetry();
   try {
-    const { data } = await api.POST("/api/documents/{document_id}/understand", { params: { path: { document_id: documentId } } });
+    const { data } = await api.POST("/api/documents/{document_id}/understand", { params: { path: { document_id: documentId } }, ...QUIET });
     if (!data || (!data.chunks.length && !data.roles.length)) return;
     understanding.value = data;
     const known = new Set(roles.value.map((r) => r.toLowerCase()));
     const found = data.roles.filter((r) => !known.has(r.toLowerCase()));
     roles.value = [...roles.value, ...found];
     picked.value = [...picked.value, ...found].slice(0, MAX_ROLES);
+    if (data.min_rate && rate.value === null) rate.value = data.min_rate;
+    saveChunks();
   } catch {
+    // La connexion est tombée : le CV est enregistré, la lecture reprend seule (OnboardingOrdinateurCoupure).
     understanding.value = null;
+    if (cvId.value === documentId) pause(documentId);
   } finally {
     reading.value = false;
   }
 }
 
+function stopRetry(): void {
+  clearInterval(retryTimer);
+  retryTimer = undefined;
+  paused.value = false;
+  retryIn.value = 0;
+}
+
+function pause(documentId: number): void {
+  paused.value = true;
+  retryIn.value = RETRY_S;
+  clearInterval(retryTimer);
+  retryTimer = setInterval(() => {
+    retryIn.value -= 1;
+    if (retryIn.value <= 0) void understand(documentId);
+  }, 1000);
+}
+
+function retryNow(): void {
+  if (cvId.value !== null) void understand(cvId.value);
+}
+
+// « Lu : 3 postes, 14 compétences trouvés » (OnboardingOrdinateurCV) : ce que la lecture a trouvé, au bon accord.
+const readSummary = computed(() => {
+  const found = understanding.value;
+  if (!found) return "";
+  const competences = found.chunks.filter((c) => c.kind === "competence").length;
+  const parts = [
+    found.roles.length ? `${found.roles.length} ${found.roles.length > 1 ? "postes" : "poste"}` : "",
+    competences ? `${competences} ${competences > 1 ? "compétences" : "compétence"}` : "",
+  ].filter(Boolean);
+  if (!parts.length) return "Lu, rien de particulier trouvé";
+  const plural = found.roles.length + competences > 1;
+  return `Lu : ${parts.join(", ")} ${plural ? "trouvés" : "trouvé"}`;
+});
+const readState = computed<"reading" | "paused" | "done" | "">(() =>
+  paused.value ? "paused" : reading.value ? "reading" : cvName.value ? "done" : "",
+);
+// La scène de la colonne de droite (MODIFICATIONS_9 §6) : une par étape, et par état de la lecture à l'étape 1.
+const scene = computed<SceneName>(() => {
+  if (step.value === 2) return "lieux-carte";
+  if (step.value === 3) return "reussite";
+  if (readState.value === "paused") return "connexion-perdue";
+  if (readState.value === "reading") return "lecture-calme";
+  if (readState.value === "done") return "formations-vide";
+  return "offres-profils";
+});
+
 // « Continuer » : les blocs lus dans le CV (sauf ceux déjà dans le profil) rejoignent le profil, rattachés au
 // CV ; ils restent modifiables dans Profil.
+// La lecture peut finir après « Continuer » (elle ne bloque plus l'écran) : les blocs partent alors à son arrivée.
+const cvConfirmed = ref(false);
 function confirmCv(): void {
-  const found = understanding.value;
+  cvConfirmed.value = true;
   go(2);
-  if (!found) return;
+  saveChunks();
+}
+
+function saveChunks(): void {
+  const found = understanding.value;
+  if (!found || !cvConfirmed.value) return;
   for (const chunk of found.chunks.filter((c) => c.duplicate_of == null)) {
     void api.POST("/api/profile-chunks", {
       body: { kind: chunk.kind, title: chunk.title, content: chunk.content, tags: chunk.tags, active: true, document_id: cvId.value },
@@ -226,7 +316,8 @@ async function confirmCriteria(): Promise<void> {
     criteria.value = {
       ...criteria.value,
       locations: places.value,
-      min_rate: null,
+      // Sur ordinateur, le taux se choisit dans sa carte ; sur téléphone, peu importe (O1).
+      min_rate: desk.value ? rate.value : null,
       remote_policy: "from_switzerland",
       unspoken_languages: OTHER_LANGUAGES.filter((l) => !spoken.value.includes(l)),
     };
@@ -279,6 +370,36 @@ async function decide(choice: "keep" | "dismiss"): Promise<void> {
   }
 }
 
+// Sur ordinateur, les 3 offres côte à côte (OnboardingOrdinateurEtape3) : « Écarter » ou « Garder » sur chaque carte,
+// « Annuler » ensuite sur la carte même.
+const decided = ref<Record<number, "keep" | "dismiss">>({});
+async function decideOffer(offer: Offer, choice: "keep" | "dismiss"): Promise<void> {
+  if (deciding.value) return;
+  deciding.value = true;
+  try {
+    const { response } = await api.PATCH("/api/offers/{offer_id}/status", {
+      params: { path: { offer_id: offer.id } },
+      body: { status: choice === "keep" ? "preparing" : "ignored" },
+    });
+    if (response.ok) decided.value = { ...decided.value, [offer.id]: choice };
+  } finally {
+    deciding.value = false;
+  }
+}
+async function undoOffer(offer: Offer): Promise<void> {
+  const { response } = await api.PATCH("/api/offers/{offer_id}/status", {
+    params: { path: { offer_id: offer.id } },
+    body: { status: offer.status === "later" ? "later" : "to_review" },
+  });
+  if (!response.ok) return;
+  const next = { ...decided.value };
+  delete next[offer.id];
+  decided.value = next;
+}
+const initials = (name: string | null | undefined): string =>
+  (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
+const DESK_EYEBROWS: Record<number, string> = { 1: "Premiers pas", 2: "Ce que tu cherches", 3: "Tes premières offres" };
+
 async function undoDismiss(): Promise<void> {
   const last = undo.value;
   if (!last) return;
@@ -293,7 +414,10 @@ async function undoDismiss(): Promise<void> {
   position.value = Math.max(0, position.value - 1);
   dismissed.value = Math.max(0, dismissed.value - 1);
 }
-onBeforeUnmount(() => clearTimeout(undoTimer));
+onBeforeUnmount(() => {
+  clearTimeout(undoTimer);
+  clearInterval(retryTimer);
+});
 
 const tags = computed(() => {
   const o = current.value;
@@ -344,37 +468,557 @@ async function finish(to: string): Promise<void> {
 </script>
 
 <template>
+  <!-- Premiers pas sur ordinateur (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur…) : la grille commune des
+       3 étapes, 640 px de contenu, 80 px, la scène de 360 px ; l'en-tête aligné sur la grille. -->
   <section
-    v-if="loaded"
-    :class="['welcome', { 'welcome-blue': step === 0 && !desk, 'welcome-desk': desk }]"
+    v-if="loaded && desk"
+    class="welcome wdk"
+    data-test="welcome"
+  >
+    <header class="wdk-top">
+      <span class="welcome-brand"><BrandMark :size="30" />jobA1</span>
+      <span
+        class="wdk-step"
+        data-test="welcome-eyebrow"
+      >Étape {{ step }} sur 3</span>
+      <span
+        class="wdk-bars"
+        role="progressbar"
+        :aria-label="`Étape ${step} sur 3`"
+        aria-valuemin="1"
+        aria-valuemax="3"
+        :aria-valuenow="step"
+        data-test="welcome-dots"
+      >
+        <span
+          v-for="i in 3"
+          :key="i"
+          :class="{ on: i <= step, current: i === step }"
+        />
+      </span>
+    </header>
+    <div class="wdk-grid">
+      <Transition
+        name="welcome-step"
+        mode="out-in"
+        @after-enter="focusTitle"
+      >
+        <div
+          :key="step"
+          class="wdk-col"
+          :data-test="`welcome-step-${step + 1}`"
+        >
+          <p class="wdk-cap">
+            {{ DESK_EYEBROWS[step] }}
+          </p>
+          <h1
+            v-if="step === 1"
+            class="wdk-title"
+          >
+            Moins chercher, <span class="welcome-hand">plus vivre.</span>
+          </h1>
+          <h1
+            v-else-if="step === 2"
+            class="wdk-title"
+          >
+            Tes critères
+          </h1>
+          <h1
+            v-else
+            class="wdk-title"
+            data-test="welcome-offers-title"
+          >
+            {{ offers.length ? `${offers.length} ${offers.length > 1 ? "offres" : "offre"} pour toi` : "Tes premières offres arrivent demain matin" }}
+          </h1>
+
+          <template v-if="step === 1">
+            <p class="wdk-lead">
+              jobA1 trie les offres, prépare tes lettres et tient ton suivi ORP. Ton CV suffit pour commencer.
+            </p>
+            <div
+              v-if="cvName"
+              :class="['wdk-card', 'wdk-file', readState]"
+              data-test="cv-done"
+            >
+              <div class="wdk-file-head">
+                <AppIcon
+                  name="file"
+                  class="wdk-file-icon"
+                />
+                <span class="wdk-file-name">
+                  <b>{{ cvName }}</b>
+                  <span>{{ cvMeta }}</span>
+                </span>
+                <span
+                  v-if="readState === 'reading'"
+                  class="wdk-file-state"
+                  data-test="cv-reading"
+                >Lecture…</span>
+                <span
+                  v-else-if="readState === 'paused'"
+                  class="wdk-file-state paused"
+                  data-test="cv-reading"
+                >En pause</span>
+                <label
+                  v-else
+                  class="link wdk-file-change"
+                >
+                  Changer
+                  <input
+                    type="file"
+                    accept=".pdf,.docx"
+                    class="visually-hidden"
+                    @change="onCv"
+                  >
+                </label>
+              </div>
+              <template v-if="readState === 'reading' || readState === 'paused'">
+                <div
+                  class="wdk-bar"
+                  role="progressbar"
+                  aria-label="Lecture du CV"
+                >
+                  <span />
+                </div>
+                <p class="wdk-file-note">
+                  {{ readState === "paused" ? "Ton CV est bien enregistré. La lecture reprend toute seule dès que la connexion revient." : "On repère tes postes, tes compétences et tes lieux. Tu peux continuer, on termine pendant ce temps." }}
+                </p>
+              </template>
+              <p
+                v-else
+                class="wdk-found"
+                role="status"
+                data-test="cv-summary"
+              >
+                <AppIcon
+                  v-if="understanding"
+                  name="tick"
+                />{{ understanding ? readSummary : "Enregistré. L'IA n'a rien pu lire : tu complètes à l'étape suivante." }}
+              </p>
+            </div>
+            <label
+              v-else
+              :class="['wdk-drop', { dragging }]"
+              data-test="cv-upload"
+              @dragover.prevent="dragging = true"
+              @dragleave="dragging = false"
+              @drop.prevent="onDrop"
+            >
+              <AppIcon
+                name="file"
+                class="wdk-drop-icon"
+              />
+              <b>Glisse ton CV ici</b>
+              <span>PDF ou Word, 10&#8239;Mo maximum</span>
+              <span class="wdk-drop-button">{{ uploading ? "Import…" : "Choisir un fichier" }}</span>
+              <input
+                type="file"
+                accept=".pdf,.docx"
+                class="visually-hidden"
+                @change="onCv"
+              >
+            </label>
+            <p
+              v-if="cvError"
+              class="notice"
+              role="alert"
+            >
+              {{ cvError }}
+            </p>
+            <p
+              class="wdk-note"
+              data-test="cv-privacy"
+            >
+              <AppIcon name="lock" />
+              <span>Ton CV reste privé&#8239;: il sert à noter les offres et à préparer tes lettres. L'IA n'en reçoit que les parties utiles,
+                sans tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
+            </p>
+            <div class="wdk-foot">
+              <template v-if="!cvName">
+                <button
+                  v-if="assistant.available.value"
+                  type="button"
+                  class="wdk-link"
+                  data-test="cv-assistant"
+                  @click="askForCv"
+                >
+                  Pas de CV à jour&#8239;? L'Assistant t'aide à en créer un
+                </button>
+                <span v-else />
+                <button
+                  type="button"
+                  class="wdk-link"
+                  data-test="welcome-continue"
+                  @click="confirmCv"
+                >
+                  Continuer sans CV<AppIcon name="chevron" />
+                </button>
+              </template>
+              <template v-else>
+                <span />
+                <button
+                  type="button"
+                  class="primary wdk-cta"
+                  :disabled="uploading"
+                  data-test="welcome-continue"
+                  @click="confirmCv"
+                >
+                  Continuer
+                </button>
+              </template>
+            </div>
+          </template>
+
+          <template v-else-if="step === 2">
+            <p class="wdk-lead">
+              {{ cvName ? "Repris de ton CV. Vérifie-les, tu pourras les changer à tout moment dans Profil." : "Tu pourras les changer à tout moment dans Profil." }}
+            </p>
+            <ul class="wdk-rows">
+              <li>
+                <button
+                  type="button"
+                  class="wdk-row"
+                  aria-haspopup="dialog"
+                  data-test="criteria-roles"
+                  @click="editing = 'roles'"
+                >
+                  <span class="wdk-row-text">
+                    <span class="wdk-row-key">Postes</span>
+                    <span class="wdk-row-value">{{ reading && !picked.length ? "Lecture du CV…" : picked.join(", ") || "À choisir" }}</span>
+                    <span
+                      v-if="rolesFromCv"
+                      class="wdk-tag"
+                    ><AppIcon name="tick" />Trouvé dans ton CV</span>
+                  </span>
+                  <span
+                    class="arrow-circle small"
+                    aria-hidden="true"
+                  ><AppIcon name="arrow-right" /></span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="wdk-row"
+                  aria-haspopup="dialog"
+                  data-test="criteria-places"
+                  @click="editing = 'places'"
+                >
+                  <span class="wdk-row-text">
+                    <span class="wdk-row-key">Lieux</span>
+                    <span class="wdk-row-value">{{ places.join(", ") || "Toute la Suisse" }}</span>
+                  </span>
+                  <span
+                    class="arrow-circle small"
+                    aria-hidden="true"
+                  ><AppIcon name="arrow-right" /></span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="wdk-row"
+                  aria-haspopup="dialog"
+                  data-test="criteria-rate"
+                  @click="editing = 'rate'"
+                >
+                  <span class="wdk-row-text">
+                    <span class="wdk-row-key">Taux d'activité</span>
+                    <span class="wdk-row-value">{{ reading && rate === null ? "Lecture du CV…" : rateLabel(rate) }}</span>
+                    <span
+                      v-if="rateFromCv"
+                      class="wdk-tag"
+                    ><AppIcon name="tick" />Trouvé dans ton CV</span>
+                  </span>
+                  <span
+                    class="arrow-circle small"
+                    aria-hidden="true"
+                  ><AppIcon name="arrow-right" /></span>
+                </button>
+              </li>
+            </ul>
+            <div class="wdk-card wdk-orp">
+              <label class="wdk-orp-row">
+                <span><b>Je suis inscrit à l'ORP</b><span>jobA1 tient le suivi de tes recherches</span></span>
+                <input
+                  v-model="orp"
+                  type="checkbox"
+                  role="switch"
+                  data-test="orp-switch"
+                >
+              </label>
+              <div
+                v-if="orp"
+                class="wdk-orp-row"
+              >
+                <span id="welcome-target"><b>Recherches par mois</b><span>Objectif fixé avec ta conseillère</span></span>
+                <button
+                  type="button"
+                  class="wdk-stepper"
+                  aria-label="Une de moins"
+                  :disabled="target <= 1"
+                  data-test="target-minus"
+                  @click="target = Math.max(1, target - 1)"
+                >
+                  −
+                </button>
+                <output
+                  class="wdk-target"
+                  aria-live="polite"
+                  aria-labelledby="welcome-target"
+                  data-test="target"
+                >{{ target }}</output>
+                <button
+                  type="button"
+                  class="wdk-stepper"
+                  aria-label="Une de plus"
+                  :disabled="target >= 99"
+                  data-test="target-plus"
+                  @click="target = Math.min(99, target + 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div class="wdk-foot">
+              <button
+                type="button"
+                class="secondary wdk-back"
+                data-test="welcome-back"
+                @click="go(1)"
+              >
+                Retour
+              </button>
+              <button
+                type="button"
+                class="primary wdk-cta"
+                data-test="welcome-criteria"
+                @click="confirmCriteria"
+              >
+                Continuer
+              </button>
+            </div>
+            <SidePanel
+              :open="editing !== ''"
+              :title="editing ? EDIT_TITLES[editing] : ''"
+              @close="editing = ''"
+            >
+              <div
+                v-if="editing === 'roles'"
+                class="wdk-panel"
+              >
+                <p class="wdk-panel-note">
+                  Trois postes au plus.
+                </p>
+                <div
+                  class="welcome-roles"
+                  data-test="roles"
+                >
+                  <button
+                    v-for="role in roles"
+                    :key="role"
+                    type="button"
+                    :class="['chip', 'welcome-role', { on: picked.includes(role) }]"
+                    :aria-pressed="picked.includes(role)"
+                    :aria-disabled="!picked.includes(role) && picked.length >= MAX_ROLES ? 'true' : undefined"
+                    @click="toggleRole(role)"
+                  >
+                    <AppIcon
+                      v-if="picked.includes(role)"
+                      name="check"
+                    />{{ role }}
+                  </button>
+                </div>
+                <div class="tag-add">
+                  <input
+                    id="welcome-role"
+                    v-model="newRole"
+                    type="text"
+                    maxlength="80"
+                    placeholder="Ajouter un poste"
+                    aria-label="Ajouter un poste"
+                    data-test="role-input"
+                    @keydown.enter.prevent="addRole"
+                  >
+                  <IconButton
+                    icon="plus"
+                    label="Ajouter"
+                    data-test="role-add"
+                    @click="addRole"
+                  />
+                </div>
+              </div>
+              <div
+                v-else-if="editing === 'places'"
+                class="wdk-panel"
+              >
+                <label
+                  for="welcome-place"
+                  class="wdk-panel-note"
+                >Une ville ou un canton, autant que tu veux.</label>
+                <TagInput
+                  id="welcome-place"
+                  v-model="places"
+                  placeholder="Une ville ou un canton"
+                />
+              </div>
+              <fieldset
+                v-else-if="editing === 'rate'"
+                class="wdk-panel wdk-rates"
+              >
+                <legend class="visually-hidden">
+                  Taux d'activité minimum
+                </legend>
+                <label
+                  v-for="value in RATES"
+                  :key="String(value)"
+                  class="wdk-rate"
+                >
+                  <input
+                    v-model="rate"
+                    type="radio"
+                    name="welcome-rate"
+                    :value="value"
+                  >
+                  {{ rateLabel(value) }}
+                </label>
+              </fieldset>
+              <template #footer>
+                <button
+                  type="button"
+                  class="primary wdk-panel-done"
+                  data-test="criteria-done"
+                  @click="editing = ''"
+                >
+                  OK
+                </button>
+              </template>
+            </SidePanel>
+          </template>
+
+          <template v-else>
+            <p class="wdk-lead">
+              {{ offers.length ? "jobA1 a lu les offres publiées cette semaine. Celles-ci te correspondent le mieux. Garde ou écarte : jobA1 apprend de tes choix." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t'attendront dans Candidatures." }}
+            </p>
+            <ul
+              v-if="offers.length"
+              class="wdk-offers"
+            >
+              <li
+                v-for="offer in offers"
+                :key="offer.id"
+                class="wdk-card wdk-offer"
+                data-test="welcome-offer"
+              >
+                <span
+                  class="wdk-offer-logo"
+                  aria-hidden="true"
+                >{{ initials(offer.company) }}</span>
+                <span class="wdk-offer-text">
+                  <b>{{ offer.title }}</b>
+                  <span>{{ [offer.company || "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}<template v-if="offer.score != null"> · <b :class="`tone-${scoreWord(offer.score).tone}`">{{ scoreWord(offer.score).word }} · {{ Math.round(offer.score) }}</b></template></span>
+                </span>
+                <template v-if="decided[offer.id]">
+                  <span
+                    class="wdk-offer-done"
+                    role="status"
+                  >{{ decided[offer.id] === "keep" ? "Gardée" : "Écartée" }}</span>
+                  <button
+                    type="button"
+                    class="link"
+                    data-test="undo-status"
+                    @click="undoOffer(offer)"
+                  >
+                    Annuler
+                  </button>
+                </template>
+                <template v-else>
+                  <button
+                    type="button"
+                    class="secondary wdk-small"
+                    :aria-label="`Écarter ${offer.title}`"
+                    data-test="welcome-dismiss"
+                    @click="decideOffer(offer, 'dismiss')"
+                  >
+                    Écarter
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary wdk-small"
+                    :aria-label="`Garder ${offer.title}`"
+                    data-test="welcome-keep"
+                    @click="decideOffer(offer, 'keep')"
+                  >
+                    Garder
+                  </button>
+                </template>
+              </li>
+            </ul>
+            <p
+              v-if="offers.length"
+              class="wdk-note"
+            >
+              Les suivantes arrivent chaque matin, triées de la même façon.
+            </p>
+            <div class="wdk-foot">
+              <button
+                type="button"
+                class="secondary wdk-back"
+                data-test="welcome-back"
+                @click="go(2)"
+              >
+                Retour
+              </button>
+              <button
+                type="button"
+                class="primary wdk-cta"
+                data-test="welcome-finish"
+                @click="finish('/candidatures/offres')"
+              >
+                Voir mes offres
+              </button>
+            </div>
+          </template>
+        </div>
+      </Transition>
+      <div class="wdk-scene">
+        <SceneIllustration
+          :name="scene"
+          sizes="360px"
+        />
+      </div>
+    </div>
+    <div
+      v-if="paused"
+      class="wdk-toast"
+      role="status"
+      data-test="cv-paused"
+    >
+      <span>Connexion interrompue. Nouvel essai dans {{ retryIn }} {{ retryIn > 1 ? "secondes" : "seconde" }}.</span>
+      <button
+        type="button"
+        data-test="cv-retry"
+        @click="retryNow"
+      >
+        Réessayer
+      </button>
+    </div>
+  </section>
+  <section
+    v-else-if="loaded"
+    :class="['welcome', { 'welcome-blue': step === 0 }]"
     data-test="welcome"
   >
     <div class="welcome-column">
       <header class="welcome-top">
         <IconButton
-          v-if="step > 0 && !desk"
+          v-if="step > 0"
           icon="arrow-left"
           label="Étape précédente"
           data-test="welcome-back"
           @click="go((step - 1) as Step)"
         />
         <span class="welcome-brand"><BrandMark :size="30" />jobA1</span>
-        <span
-          v-if="desk"
-          class="welcome-dots"
-          role="progressbar"
-          :aria-label="`Étape ${step} sur 3`"
-          aria-valuemin="1"
-          aria-valuemax="3"
-          :aria-valuenow="step"
-          data-test="welcome-dots"
-        >
-          <span
-            v-for="i in 3"
-            :key="i"
-            :class="{ on: i <= step, current: i === step }"
-          />
-        </span>
         <button
           v-if="!(step === 3 && !sorting)"
           type="button"
@@ -386,7 +1030,6 @@ async function finish(to: string): Promise<void> {
         </button>
       </header>
       <div
-        v-if="!desk"
         class="welcome-progress"
         role="progressbar"
         :aria-label="`Étape ${step + 1} sur 4`"
@@ -411,23 +1054,7 @@ async function finish(to: string): Promise<void> {
           class="welcome-screen"
           :data-test="`welcome-step-${step + 1}`"
         >
-          <p
-            v-if="desk"
-            class="welcome-eyebrow"
-            data-test="welcome-eyebrow"
-          >
-            Étape {{ step }} sur 3
-          </p>
           <h1
-            v-if="desk && DESK_TITLES[step]"
-            class="welcome-title"
-          >
-            {{ DESK_TITLES[step]!.lead }}<template v-if="DESK_TITLES[step]!.hand">
-              {{ " " }}<span class="welcome-hand">{{ DESK_TITLES[step]!.hand }}</span>
-            </template>
-          </h1>
-          <h1
-            v-else
             class="welcome-title"
           >
             <template v-if="TITLES[step]!.lead">
@@ -452,17 +1079,8 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 1">
             <p class="welcome-lead">
-              {{ desk ? "jobA1 trie les offres, prépare tes lettres et tient ton suivi ORP. Ton CV suffit pour commencer." : "jobA1 en tire tes compétences pour noter chaque offre." }}
+              jobA1 en tire tes compétences pour noter chaque offre.
             </p>
-            <Illustration
-              v-if="desk"
-              pose="bonjour"
-              :height="280"
-              :desktop-height="360"
-              full
-              class="welcome-desk-person"
-              data-test="welcome-desk-person"
-            />
             <div
               v-if="cvName"
               class="welcome-cv"
@@ -536,7 +1154,6 @@ async function finish(to: string): Promise<void> {
               </button>
               <!-- Le personnage du kit avec son CV, le soleil et la colline (maquette OnboardingC, étape 2). -->
               <div
-                v-if="!desk"
                 class="welcome-cv-scene"
                 aria-hidden="true"
                 data-test="cv-scene"
@@ -802,15 +1419,6 @@ async function finish(to: string): Promise<void> {
 
       <footer class="welcome-actions">
         <button
-          v-if="desk && step > 1 && !(step === 3 && !sorting)"
-          type="button"
-          class="secondary welcome-desk-back"
-          data-test="welcome-back"
-          @click="go((step - 1) as Step)"
-        >
-          Retour
-        </button>
-        <button
           v-if="step === 0"
           type="button"
           class="welcome-cta welcome-start"
@@ -967,37 +1575,99 @@ async function finish(to: string): Promise<void> {
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-/* Ordinateur (maquette du 8 novembre, OnboardingOrdinateur, D27) : 880 px sur le fond clair ; le logo à gauche, trois
-   points et « Passer » à droite ; « Étape N sur 3 », le titre de 34, la phrase de 17 ; à la première étape, le personnage
-   de 360 px à droite ; « Retour » et « Continuer » en bas, de part et d'autre. */
-.welcome-desk { --wd-300: 300px; --wd-34: 34px; --wd-40: 40px; --wd-17: 17px; --wd-28: 28px; --wd-360: 360px; --wd-24: 24px; }
-.welcome-desk .welcome-column { min-height: 0; max-width: none; padding: 0; }
-.welcome-desk .welcome-screen { flex: none; gap: 0; }
-.welcome-desk .welcome-screen > * + * { margin-top: var(--space-4); }
-.welcome-desk .welcome-screen > .welcome-title { margin-top: 0; }
-.welcome-desk .welcome-top { gap: var(--space-4); padding: var(--space-5) max(var(--space-6), calc((100vw - var(--header-max)) / 2 + var(--space-6))) 0; }
-.welcome-desk .welcome-brand { flex: 1; }
-.welcome-dots { display: inline-flex; align-items: center; gap: var(--space-1); }
-.welcome-dots span { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--line); transition: width 0.3s; }
-.welcome-dots span.on { background: var(--primary-graphic); }
-.welcome-dots span.current { width: var(--wd-28); }
-.welcome-desk .welcome-later { padding: 0 var(--space-3); color: var(--primary-text); font-weight: var(--weight-bold); }
-.welcome-desk .welcome-screen { position: relative; box-sizing: border-box; width: 100%; max-width: 880px; margin: 0 auto; padding: var(--space-8) 0 0; }
-.welcome-desk .welcome-screen[data-test="welcome-step-2"] { padding-right: var(--wd-300); }
-.welcome-eyebrow { margin: 0 0 var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
-.welcome-desk .welcome-title { font-size: var(--wd-34); line-height: var(--wd-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.welcome-desk .welcome-hand { margin-top: 0; font-size: 1.45em; line-height: var(--leading-none); color: var(--primary-graphic); transform: none; }
-.welcome-desk .welcome-screen > .welcome-lead { margin-top: var(--space-3); font-size: var(--wd-17); line-height: var(--wd-28); color: var(--text-secondary); }
-.welcome-desk-person { position: absolute; top: var(--wd-24); right: 60px; }
-.welcome-desk .welcome-actions { position: static; display: flex; justify-content: space-between; gap: var(--space-3); box-sizing: border-box; width: 100%; max-width: 880px; margin: var(--wd-24) auto var(--space-12); padding: 0; background: none; }
-.welcome-desk .welcome-actions > .welcome-cta { width: auto; min-height: var(--target-min); margin-left: auto; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); }
-.welcome-desk .welcome-actions > .welcome-cta .icon { display: none; }
-.welcome-desk .welcome-desk-back { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
-.welcome-desk .welcome-sort { display: flex; gap: var(--space-3); margin-left: auto; }
-.welcome-desk .welcome-sort button { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
-.welcome-desk .welcome-sort .icon { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .welcome-progress span { transition: none; }
   .welcome-struck path, .welcome-hand { animation: none; }
 }
+
+/* Premiers pas sur ordinateur (MODIFICATIONS_9 §5.1, maquettes OnboardingOrdinateur…) : en-tête et grille sur 1 080 px,
+   640 px de contenu, 80 px, la scène de 360 px à 48 px sous le haut ; boutons 32 px sous le dernier bloc. Valeurs de la
+   maquette ramenées sur la grille de 4 (6 → 8 entre les traits, 6 → 4 sous la valeur d'un critère). */
+.wdk { --wdk-w: 1080px; --wdk-col: 640px; --wdk-scene: 360px; --wdk-gap: 80px; --wdk-top: 76px; --wdk-bar: 8px; --wdk-bar-on: 28px;
+  --wdk-13: 13px; --wdk-16: 16px; --wdk-40: 40px; --wdk-48: 48px; --wdk-18: 18px; --wdk-28: 28px; --wdk-22: 22px; --wdk-20: 20px; --wdk-24: 24px;
+  --wdk-52: 52px; --wdk-pad: 18.5px; --wdk-row-pad: 14.5px; --wdk-orp-pad: 10.5px; --wdk-72: 72px; --wdk-56: 56px; --wdk-44: 44px; --wdk-radius-logo: 10px;
+  min-height: 100dvh; background: var(--bg); color: var(--text); }
+.wdk-top { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: min(var(--wdk-w), 100% - 2 * var(--space-6)); height: var(--wdk-top); margin: 0 auto; }
+.wdk-top .welcome-brand { flex: 1; font-size: var(--font-section); font-weight: var(--weight-heavy); }
+.wdk-step { font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.wdk-bars { display: flex; align-items: center; gap: var(--space-2); }
+.wdk-bars span { width: var(--wdk-bar); height: var(--wdk-bar); border-radius: var(--radius-pill); background: var(--line-strong); transition: width 0.3s; }
+.wdk-bars span.on { background: var(--primary-graphic); }
+.wdk-bars span.current { width: var(--wdk-bar-on); }
+.wdk-grid { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, var(--wdk-col)) var(--wdk-scene); column-gap: var(--wdk-gap); justify-content: space-between; width: min(var(--wdk-w), 100% - 2 * var(--space-6)); margin: 0 auto; padding-top: var(--wdk-40); }
+.wdk-col { display: flex; flex-direction: column; min-width: 0; }
+.wdk-cap { margin: 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.wdk-title { margin: var(--space-3) 0 0; font-size: var(--wdk-40); line-height: var(--wdk-48); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
+.wdk-title:focus { outline: none; }
+.wdk-title .welcome-hand { margin: 0; font-size: 1.45em; line-height: var(--leading-none); color: var(--primary-graphic); transform: none; animation: none; }
+.wdk-lead { margin: var(--space-3) 0 0; font-size: var(--wdk-18); line-height: var(--wdk-28); color: var(--text-tertiary); }
+.wdk-card { box-sizing: border-box; padding: var(--wdk-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.wdk-drop { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin-top: var(--space-8); padding: var(--space-8) var(--space-6); background: var(--surface); border: 2px dashed var(--field-border); border-radius: var(--radius-card); text-align: center; cursor: pointer; }
+.wdk-drop.dragging { border-color: var(--primary-graphic); background: var(--primary-soft); }
+.wdk-drop:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }
+.wdk-drop-icon { width: var(--wdk-28); height: var(--wdk-28); color: var(--primary-graphic); }
+.wdk-drop > b { margin-top: var(--space-2); font-size: var(--wdk-18); line-height: var(--wdk-24); }
+.wdk-drop > span:not(.wdk-drop-button) { font-size: var(--font-label); line-height: var(--wdk-22); color: var(--text-secondary); }
+.wdk-drop-button, .wdk-cta { display: inline-flex; align-items: center; justify-content: center; height: var(--wdk-52); min-height: var(--wdk-52); padding: 0 var(--wdk-28); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); white-space: nowrap; }
+.wdk-drop-button { margin-top: var(--space-3); background: var(--primary); color: var(--on-primary); }
+.wdk-file { margin-top: var(--space-8); }
+.wdk-file-head { display: flex; align-items: center; gap: var(--space-4); }
+.wdk-file-icon { flex: none; width: var(--wdk-28); height: var(--wdk-28); color: var(--primary-graphic); }
+.wdk-file-name { flex: 1; min-width: 0; }
+.wdk-file-name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-body); line-height: var(--wdk-22); }
+.wdk-file-name span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
+.wdk-file-state { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
+.wdk-file-state.paused { color: var(--peach-text); }
+.wdk-file-change { min-height: var(--wdk-44); display: inline-flex; align-items: center; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
+.wdk-file-change:focus-within { outline: 2px solid var(--primary-graphic); }
+.wdk-bar { height: var(--wdk-bar); margin-top: var(--space-4); border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
+.wdk-bar span { display: block; width: 60%; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); animation: wdk-read 24s cubic-bezier(.1, .7, .3, 1) both; }
+.wdk-file.paused .wdk-bar span { background: var(--warning); animation-play-state: paused; }
+@keyframes wdk-read { from { width: 8%; } to { width: 92%; } }
+@media (prefers-reduced-motion: reduce) { .wdk-bar span { animation: none; } }
+.wdk-file-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
+.wdk-found { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-3) 0 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
+.wdk-found .icon, .wdk-tag .icon { width: var(--space-4); height: var(--space-4); }
+.wdk-note { display: flex; gap: var(--space-3); margin: var(--space-5) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
+.wdk-note .icon { flex: none; width: var(--wdk-18); height: var(--wdk-18); }
+.wdk-note a { padding: var(--space-1) 0; color: var(--primary-text); font-weight: var(--weight-bold); }
+.wdk-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-8); padding: var(--space-6) 0 var(--wdk-40); }
+.wdk-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--wdk-44); padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); cursor: pointer; }
+.wdk-link .icon { width: var(--wdk-18); height: var(--wdk-18); }
+.wdk-back { height: var(--wdk-52); min-height: var(--wdk-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
+.wdk-rows { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--wdk-28) 0 0; padding: 0; list-style: none; }
+.wdk-row { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--wdk-72); padding: var(--wdk-row-pad) var(--wdk-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.wdk-row:hover { border-color: var(--primary-graphic); }
+.wdk-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.wdk-row-key { font-size: var(--wdk-13); line-height: var(--wdk-16); color: var(--text-secondary); }
+.wdk-row-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--wdk-22); font-weight: var(--weight-bold); }
+.wdk-tag { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
+.wdk-orp { margin-top: var(--space-4); padding-top: var(--wdk-orp-pad); padding-bottom: var(--wdk-orp-pad); }
+.wdk-orp-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--wdk-56); }
+.wdk-orp-row + .wdk-orp-row { border-top: 1px solid var(--line); }
+.wdk-orp-row > span:first-child { flex: 1; }
+.wdk-orp-row b { display: block; font-size: var(--font-body); line-height: var(--wdk-22); }
+.wdk-orp-row b + span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
+.wdk-stepper { flex: none; display: grid; place-items: center; width: var(--wdk-40); height: var(--wdk-40); min-height: var(--wdk-40); padding: 0; border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-title); }
+.wdk-target { min-width: var(--space-8); text-align: center; font-size: var(--font-title); font-weight: var(--weight-heavy); }
+.wdk-panel { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: 0; border: 0; }
+.wdk-panel-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
+.wdk-rate { display: flex; align-items: center; gap: var(--space-3); min-height: var(--wdk-44); font-size: var(--font-body); cursor: pointer; }
+.wdk-rate input { width: var(--wdk-20); height: var(--wdk-20); margin: 0; accent-color: var(--primary-graphic); }
+.wdk-panel-done { width: 100%; }
+.wdk-offers { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--wdk-28) 0 0; padding: 0; list-style: none; }
+.wdk-offer { display: flex; align-items: center; gap: var(--space-4); padding-top: var(--wdk-row-pad); padding-bottom: var(--wdk-row-pad); }
+.wdk-offer-logo { flex: none; display: grid; place-items: center; width: var(--wdk-44); height: var(--wdk-44); border-radius: var(--wdk-radius-logo); background: var(--text); color: var(--surface); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.wdk-offer-text { flex: 1; min-width: 0; }
+.wdk-offer-text > b { display: block; font-size: var(--font-body); line-height: var(--wdk-22); }
+.wdk-offer-text > span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
+.wdk-offer-text .tone-very-close, .wdk-offer-text .tone-close { color: var(--success); }
+.wdk-offer-text .tone-dig { color: var(--peach-text); }
+.wdk-small { height: var(--wdk-40); min-height: var(--wdk-40); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
+.wdk-offer-done { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
+.wdk-scene .illu { width: var(--wdk-scene); }
+.wdk-scene .illu img { width: 100%; height: auto; }
+.wdk-toast { position: fixed; left: 50%; bottom: var(--space-8); z-index: 20; display: flex; align-items: center; gap: var(--space-4); min-height: var(--wdk-56); padding: 0 var(--space-2) 0 var(--space-5); transform: translateX(-50%); background: var(--snackbar-bg); color: var(--snackbar-text); border-radius: var(--space-4); box-shadow: var(--shadow-band-card); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+.wdk-toast button { min-height: var(--wdk-44); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font: inherit; font-weight: var(--weight-heavy); }
 </style>

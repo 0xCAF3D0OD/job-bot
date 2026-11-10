@@ -102,6 +102,11 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),
+    # Premiers pas (PR 10, §5) : les 3 étapes et le panneau d'un critère.
+    ("bienvenue", None),
+    ("bienvenue", "[data-test=welcome-continue]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=criteria-roles]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-criteria]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}

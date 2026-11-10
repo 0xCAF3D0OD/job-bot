@@ -42,6 +42,8 @@ export const SCREENS: Record<string, string> = {
 const EXCLUSIVE: Record<string, string> = {
   // Le personnage quand tout est lu sur téléphone ; la cloche sur ordinateur ; le logo transformé sans notification.
   "views/NotificationsView.vue": "views/NotificationsView.test.ts",
+  // Premiers pas : le personnage sur téléphone (OnboardingC) ; les scènes sur ordinateur (MODIFICATIONS_9 §6).
+  "views/WelcomeView.vue": "views/WelcomeView.test.ts",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
