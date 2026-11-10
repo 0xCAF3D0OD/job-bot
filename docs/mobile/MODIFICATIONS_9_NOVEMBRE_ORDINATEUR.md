@@ -258,3 +258,29 @@ Maquettes : PreparerOrdinateurCVPret, PreparerOrdinateurCVChangements (panneau).
 - **Sélecteur FR / DE / EN** en haut du CV (aria-label « Langue du CV ») : par défaut la langue de la lettre, modifiable à part.
 - **Carte « Ce CV »** (remplace « Ta candidature ») : « Adapté pour cette offre · n changements, à vérifier » (ouvre le panneau), « Versions · n », « CV d’origine » (ne change pas, sert de base).
 - **Panneau « Adapté pour cette offre »** (SidePanel) : phrase « rien n’est inventé, tout vient de ton CV d’origine », puis un bloc par changement (rubrique, « Avant : … », « Maintenant : … », lien « Annuler ce changement »), et « Ton CV d’origine ne change pas. Ces changements valent pour cette candidature seulement. »
+
+## 15. Les 4 personnages du logo remplacent le personnage à capuche (validé le 9 novembre au soir)
+Les 4 morceaux du logo (point bleu, « 1 », sourire, point orange) deviennent les personnages de la plateforme. Le personnage à capuche (illustrations/personnage/) n'est plus utilisé, **sauf dans les notifications** (inchangées).
+
+Deux familles d'images seulement :
+- **scènes avec des personnes** (illustrations/scenes/) : premiers pas sur ordinateur et vitrine ;
+- **les 4 personnages** (illustrations/troupe/) : états de la plateforme.
+
+| Écran | Scène (illustrations/troupe/) |
+|---|---|
+| Connexion (téléphone, ordinateur, sombre) | groupe |
+| Pas de connexion, hors ligne | hors-ligne (l'équipe rebranche la prise) |
+| Maintenance en cours, maintenance annoncée | maintenance |
+| Mise à jour (« jobA1 se met à jour ») | mise-a-jour |
+| Page introuvable | introuvable |
+| Aucune offre | aucune-offre |
+| Candidature envoyée | envoyee |
+| Objectif ORP atteint | objectif |
+| Petits emplacements (premiers pas téléphone, préparation du rendez-vous ORP) | un (le « 1 » seul) |
+| Réserve, non placée : écriture de la lettre | ecriture |
+
+- **Mode sombre** : fichiers `-sombre` (bras et jambes en #AEBDFF, ombre au sol en #2C2722, yeux et bouches inchangés). Les originaux haute définition sont dans illustrations/troupe/source/.
+- **Ton** : uniquement pour les moments neutres ou positifs. Jamais pour un refus, une échéance ORP dépassée, une perte de données ou une erreur grave : ces écrans gardent une icône sobre (NN/g, ton adapté au contexte).
+- **Accessibilité** : images décoratives (`alt=""`, `aria-hidden="true"`), aucune animation si `prefers-reduced-motion`.
+- **Chargement** : sous 1 s rien ; de 1 à 10 s un petit indicateur animé (les 4 sautent l'un après l'autre, SVG) ; au-delà, la scène avec un texte qui dit ce qui se passe.
+- Les images sont générées : à terme, une version vectorielle fixe garantira des proportions identiques.

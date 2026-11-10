@@ -481,7 +481,7 @@ onUnmounted(() => assistant.setFocus(null));
 <template>
   <MomentScreen
     v-if="interviewWon"
-    pose="celebration"
+    scene="objectif"
     :title="`Entretien décroché chez ${interviewWon.company}.`"
     line="Ta candidature a retenu l’attention."
     data-test="interview-moment"
@@ -507,7 +507,7 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <MomentScreen
     v-else-if="refused"
-    pose="bonjour"
+    icon="mail"
     :title="`Réponse de ${refused.company}.`"
     line="Pas pour cette fois. Chaque candidature envoyée te rapproche d’un oui."
     data-test="refusal-moment"

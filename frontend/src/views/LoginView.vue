@@ -35,8 +35,8 @@ const providers = ref<Provider[]>([]);
 const oauthError = computed(() =>
   typeof route.query.erreur === "string" ? oauthMessage(route.query.erreur, route.query.fournisseur) : "",
 );
-// Au revoir (docs/141, 13) : après « Supprimer définitivement », la connexion devient la page d'au revoir, le
-// personnage qui salue déjà là. Elle dit ce qui est effacé (les mots de la confirmation), sans regret.
+// Au revoir (docs/141, 13) : après « Supprimer définitivement », la connexion devient la page d'au revoir, les 4
+// personnages du logo déjà là (scène « groupe », §15). Elle dit ce qui est effacé (les mots de la confirmation), sans regret.
 const goodbye = computed(() => route.query["au-revoir"] === "1");
 const oauthInfo = computed(() => (route.query.info === "demande" ? oauthMessage("demande", route.query.fournisseur) : ""));
 
@@ -293,7 +293,7 @@ onMounted(async () => {
 @media (min-width: 821px) {
   .login-art { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--space-6) + var(--space-1)); min-width: 0; padding: 0 var(--space-6); background: var(--surface); border-right: 1px solid var(--line); }
   .login-art-phone { display: none; }
-  .login-pitch { margin: 0; max-width: 460px; text-align: center; font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+  .login-pitch { margin: 0; --pitch-24: 1.5rem; --pitch-lh: 1.25; max-width: 520px; text-align: center; font-size: var(--pitch-24); line-height: var(--pitch-lh); font-weight: var(--weight-bold); }
   .login-panel { flex: none; width: 600px; max-width: 50%; padding: var(--space-8) 0; }
   .login-brand { padding: 0 calc(var(--space-8) * 2); font-size: var(--font-section); }
   .login-brand .brand-logo { width: 32px; height: 32px; }

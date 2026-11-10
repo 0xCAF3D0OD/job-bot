@@ -4,6 +4,7 @@ Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
+- `illustrations/troupe/` : les 4 personnages du logo, une scène par état de la plateforme, en clair et en sombre (MODIFICATIONS_9 §15). Ils remplacent `illustrations/personnage/`, gardé seulement pour les notifications.
 - `PROMPT_CLAUDE_CODE_9_NOVEMBRE_COMPLET.md` : **prompt complet à donner à Claude Code** (téléphone et ordinateur, toutes les décisions du 9 novembre, ordre des PR, tests).
 - `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).
 - `MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md` : corrections de la version ordinateur (9 novembre). Il prime sur tout le reste pour l'ordinateur.
