@@ -14,7 +14,9 @@ const DIST = new URL("../dist/", import.meta.url).pathname;
 // (feuille Compatibilité, ORP, feuilles du bas, Alertes, Notifications), une seule fois pour toute la série.
 // Relevé pour la série complète du 9 novembre (téléphone et ordinateur, PR 1 à 11 du prompt), une seule fois pour toute
 // la série : Préparer et Candidatures sur ordinateur, détail d'Envoyées, puis les écrans qui suivent.
-export const LIMITS = { premier: 120_000, total: 380_000, "css-premier": 58_000, css: 90_000 };
+// Relevé pour le paquet du 10 novembre (PR 17 à 20 : « Complétons ton profil », détail de la note, zone de saisie de
+// l'Assistant, Compte et Profil), une seule fois pour toute la série.
+export const LIMITS = { premier: 120_000, total: 388_000, "css-premier": 58_000, css: 93_000 };
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const size = (file) => gzipSync(readFileSync(join(DIST, file))).length;
