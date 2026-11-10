@@ -26,7 +26,7 @@ describe("Textes (MODIFICATIONS du 9 novembre)", () => {
     expect(plural(0, "offre", "offres", "aucune offre")).toBe("aucune offre");
   });
 
-  it("les noms des villes et des organisations en français, à l'affichage seulement", () => {
+  it("les noms des villes et des organisations en français, à l’affichage seulement", () => {
     expect(frenchName("ICRC · Geneva")).toBe("CICR · Genève");
     expect(frenchName("Bern, Switzerland")).toBe("Berne, Suisse");
     expect(frenchName("Zürich")).toBe("Zurich");
@@ -38,7 +38,7 @@ describe("Textes (MODIFICATIONS du 9 novembre)", () => {
     expect(companyPlace(null, "Luzern")).toBe("Lucerne");
   });
 
-  it("un numéro de téléphone suisse s'affiche espacé ; les autres restent tels quels", () => {
+  it("un numéro de téléphone suisse s’affiche espacé ; les autres restent tels quels", () => {
     expect(phoneDisplay("+41764304321")).toBe("+41 76 430 43 21");
     expect(phoneDisplay("0041 76 430 43 21")).toBe("+41 76 430 43 21");
     expect(phoneDisplay("0764304321")).toBe("076 430 43 21");
@@ -46,7 +46,7 @@ describe("Textes (MODIFICATIONS du 9 novembre)", () => {
     expect(phoneDisplay("+33 6 12 34 56 78")).toBe("+33 6 12 34 56 78");
   });
 
-  it("plus d'apostrophe droite dans les textes des écrans", () => {
+  it("plus d’apostrophe droite dans les textes des écrans", () => {
     const found: string[] = [];
     for (const path of files(SRC)) {
       const text = readFileSync(path, "utf8");

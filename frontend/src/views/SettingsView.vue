@@ -241,7 +241,7 @@ type SwitchKey = "notify_offers" | "notify_follow_ups" | "notify_orp";
 const SWITCHES: { key: SwitchKey; title: string; description: string }[] = [
   { key: "notify_offers", title: "Nouvelles offres", description: "Quand une offre te correspond, selon le seuil ci-dessous" },
   { key: "notify_follow_ups", title: "Relances", description: "Une candidature attend une réponse depuis 10 jours" },
-  { key: "notify_orp", title: "Objectif ORP", description: "Rappel le 25 du mois, si tu es sous l’objectif" },
+  { key: "notify_orp", title: "Objectif ORP", description: "Rappel 5 jours avant la fin du mois" },
 ];
 async function setSwitch(key: SwitchKey, value: boolean): Promise<void> {
   form.value[key] = value;
@@ -809,7 +809,7 @@ watch(
           title="Affichage"
           cards
         >
-          <AppearancePanel />
+          <AppearancePanel :detailed="wide && grouped" />
         </SettingsSection>
 
         <SettingsSection
@@ -897,7 +897,7 @@ watch(
 .settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
 .settings-wide :deep(#donnees) { order: 1; }
 .settings-wide :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--settings-10);
+  margin: 0 var(--space-1) var(--space-3);
   font-size: var(--font-title);
   font-weight: var(--weight-bold);
   color: var(--text);

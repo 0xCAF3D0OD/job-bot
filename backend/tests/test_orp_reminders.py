@@ -1,4 +1,4 @@
-"""Rappels ntfy des preuves ORP : objectif le 25, remise dès le 1er, veille (docs/09 §5)."""
+"""Rappels ntfy des preuves ORP : objectif fin de mois, remise dès le 1er, veille (docs/09 §5)."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime
@@ -65,14 +65,21 @@ async def add(
         )
 
 
-async def test_under_target_from_the_25th(rt: Runtime, sent: list[Message]) -> None:
+async def test_under_target_five_days_before_month_end(rt: Runtime, sent: list[Message]) -> None:
     for day in (2, 9, 16):
         await add(rt, date(2026, 10, day))
-    assert await notify_orp(rt, date(2026, 10, 24)) == 0
-    assert await notify_orp(rt, date(2026, 10, 25)) == 1
+    assert await notify_orp(rt, date(2026, 10, 26)) == 0
+    assert await notify_orp(rt, date(2026, 10, 27)) == 1
     assert sent[0].title == "3 / 20 candidatures en octobre"
-    assert "Il reste 7 jours" in sent[0].message
-    assert await notify_orp(rt, date(2026, 10, 26)) == 0  # une seule fois
+    assert "Il reste 5 jours" in sent[0].message
+    assert await notify_orp(rt, date(2026, 10, 28)) == 0  # une seule fois
+
+
+async def test_under_target_follows_month_length(rt: Runtime, sent: list[Message]) -> None:
+    """Novembre a 30 jours : le rappel part le 26."""
+    await add(rt, date(2026, 11, 2))
+    assert await notify_orp(rt, date(2026, 11, 25)) == 0
+    assert await notify_orp(rt, date(2026, 11, 26)) == 1
 
 
 async def test_due_then_eve_then_nothing_once_submitted(rt: Runtime, sent: list[Message]) -> None:
