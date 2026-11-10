@@ -65,20 +65,19 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><li style="display: flex; gap: 10px"><svg style="flex: none; margin-top: 1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8540E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg><span>Azure demandé, tu connais surtout AWS</span></li></sc-if>
 </ul>
 
-<sc-if value="{{prov}}" hint-placeholder-val="{{ true }}">
-<div role="group" aria-labelledby="prov-titre" style="display: flex; flex-direction: column; gap: 12px; margin: 0 -18px; padding: 16px 18px; background: #FBF4EE; border-top: 1px solid #F3D3BF">
-<div style="display: flex; gap: 12px">
-<span aria-hidden="true" style="flex: none; width: 28px; height: 28px; color: #8A4A16; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg></span>
+<sc-if value="{{reading}}" hint-placeholder-val="{{ false }}">
+<p role="status" aria-live="polite" style="margin: 0; display: flex; gap: 10px; align-items: center; font-size: 15px; line-height: 20px; color: #596070"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9" stroke="#E5E2D9"></circle><path d="M12 3a9 9 0 0 1 9 9" stroke="#2445C2"></path></svg>jobA1 lit l’annonce complète…</p>
+</sc-if>
+<sc-if value="{{refused}}" hint-placeholder-val="{{ false }}">
+<div role="group" aria-labelledby="prov-titre" style="display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid #EFECE5">
 <div style="display: flex; flex-direction: column; gap: 3px">
-<h3 id="prov-titre" style="margin: 0; font-size: 16px; line-height: 21px; font-weight: 700">{{provTitle}}</h3>
-<p aria-live="polite" style="margin: 0; font-size: 14px; line-height: 20px; color: #474C59">{{provText}}</p>
+<h3 id="prov-titre" style="margin: 0; font-size: 16px; line-height: 21px; font-weight: 700">jobA1 n’a pas pu lire l’annonce</h3>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #474C59">Ce site bloque la lecture automatique. Colle le texte : la note sera refaite tout de suite.</p>
 </div>
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+<button type="button" onClick="{{openPaste}}" style="flex: none; height: 48px; padding: 0 20px; border: 0; border-radius: 24px; background: #E8ECFB; color: #1A3496; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Coller le texte</button>
+<a href="#annonce" style="min-height: 44px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: #1A3496; text-decoration: none">Ouvrir l’annonce<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
 </div>
-<div style="display: flex; gap: 8px; flex-wrap: wrap">
-<sc-if value="{{canRead}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{read}}" disabled="{{reading}}" style="flex: 1; min-width: 150px; height: 48px; border: 0; border-radius: 24px; background: #E8ECFB; color: #1A3496; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">{{readLabel}}</button></sc-if>
-<button type="button" onClick="{{openPaste}}" style="{{pasteStyle}}">Coller le texte</button>
-</div>
-<sc-if value="{{refused}}" hint-placeholder-val="{{ false }}"><a href="#annonce" style="align-self: flex-start; min-height: 44px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: #1A3496; text-decoration: none">Ouvrir l’annonce pour la copier<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a></sc-if>
 </div>
 </sc-if>
 
@@ -91,7 +90,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <h2 id="desc" style="margin: 0; font-size: 18px; font-weight: 700">Le poste</h2>
 <p style="margin: 0; font-size: 13px; font-weight: 700; color: #596070; text-transform: uppercase; letter-spacing: .5px">{{descLabel}}</p>
 <p style="margin: 0; font-size: 15px; line-height: 23px; color: #3D4250">{{descText}}</p>
-<a href="#annonce" style="align-self: flex-start; min-height: 44px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; text-decoration: none">Voir l'annonce sur le site<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+<a href="#annonce" style="align-self: flex-start; min-height: 44px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; text-decoration: none">Voir l’annonce sur le site<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
 </section>
 
 </main>
@@ -121,7 +120,8 @@ Préparer ma candidature</a>
 class Component extends DCLogic {
 renderVals() {
 const s = this.state || {};
-const st = s.st || 'idle'; // idle | reading | refused | done
+const st = s.st || 'reading'; // reading | refused | done (lecture automatique)
+if (st === 'reading' && !this._auto) { this._auto = setTimeout(() => this.setState({ st: 'refused' }), 2500); }
 const prov = st !== 'done';
 const text = s.text || '';
 const n = text.trim().length;
@@ -135,7 +135,7 @@ score: prov ? '68' : '76',
 ringLabel: prov ? 'À creuser : 68 sur 100, note provisoire' : 'Proche : 76 sur 100',
 ringText: prov ? '#6B6157' : '#17734A', ringColor: '#17734A',
 title: prov ? 'À creuser' : 'Proche de ton profil', titleColor: prov ? '#6B6157' : '#17734A',
-basis: prov ? 'Calculée sur 3 lignes de l’alerte : les exigences n’ont pas pu être vérifiées.' : 'Selon ton profil et tes préférences, sur l’annonce complète',
+basis: prov ? (st === 'reading' ? 'Calculée sur l’extrait de l’alerte, en attendant l’annonce complète.' : 'Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées.') : 'Selon ton profil et tes préférences, sur l’annonce complète',
 p1: prov ? 'DevOps, CI/CD et automatisation' : 'Kubernetes, GitLab CI et Terraform demandés',
 contract: prov ? 'Contrat non précisé' : 'CDI · 100 %',
 provTitle: st === 'refused' ? 'Ce site bloque la lecture automatique' : 'Il manque l’annonce complète',

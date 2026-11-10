@@ -220,11 +220,12 @@ const matchSub = computed(() => {
   const o = props.offer;
   if (!scored.value) return o.score_error ?? "La note arrive dès que l'annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
-  // Note provisoire (maquette OffreProvisoire) : sur combien de lignes de l'alerte elle repose.
+  // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
+  // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
   if (provisional.value) {
-    const lines = (o.snippet ?? "").split("\n").filter((l) => l.trim()).length;
-    const basis = lines ? `${lines} ligne${lines > 1 ? "s" : ""} de l’alerte` : "l’extrait de l’alerte";
-    return `Calculée sur ${basis} : les exigences n’ont pas pu être vérifiées.`;
+    return o.text_reading === "refused"
+      ? "Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées."
+      : "Calculée sur l’extrait de l’alerte, en attendant l’annonce complète.";
   }
   const base = "Selon ton profil et tes préférences";
   return o.summary_partial ? `${base}, sur l'extrait de l'alerte seulement` : base;
@@ -260,17 +261,14 @@ const summaryParts = computed(() =>
 );
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
 // Note provisoire : l'offre n'a que l'extrait de l'alerte (pas de texte complet). Ses manques sont alors
-// génériques (« Exigences », « Données », « Conseil ») : l'encadré « Lire l'annonce » les remplace.
+// génériques (« Exigences », « Données », « Conseil ») : la lecture de l'annonce complète les remplace.
 const partial = computed(() => !props.offer.description && !props.offer.spontaneous);
 const gaps = computed(() => (partial.value ? [] : (props.offer.gaps ?? []).slice(0, POINTS_MAX)));
 // Notée sur l'extrait seulement : pastille « Provisoire », anneau pâli, sous-titre qui le dit.
 const provisional = computed(() => partial.value && scored.value);
-// L'annonce lue ou collée : la note est refaite, la fiche le confirme jusqu'à la prochaine offre.
-const redone = ref(false);
-function textSaved(): void {
-  redone.value = true;
-  emit("changed");
-}
+// L'annonce lue (automatiquement) ou collée : la note est refaite, la carte le confirme (prompt du 10 novembre, état
+// `done`).
+const redone = computed(() => props.offer.text_reading === "done");
 // Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
 const otherLinks = computed(() =>
   props.offer.links.filter((link) => props.offer.status === "applied" || link.url !== postLink.value?.url),
@@ -505,7 +503,6 @@ function saveAddress(): void {
 watch(
   () => props.offer.id,
   () => {
-    redone.value = false;
     editingAddress.value = false;
     proposals.value = [];
     registryMessage.value = "";
@@ -826,7 +823,8 @@ watch(
           <OfferTextNotice
             v-if="partial"
             :offer="offer"
-            @changed="textSaved"
+            @changed="emit('changed')"
+            @refresh="emit('changed')"
           />
           <p
             v-else-if="redone"
@@ -844,7 +842,6 @@ watch(
             class="compat-open"
             aria-haspopup="dialog"
             data-test="compat-open"
-            :class="{ 'after-band': partial && sub }"
             @click="compatOpen = true"
           >
             <!-- Téléphone (prompt du 10 novembre, PR 15) : « Le détail de la note », aligné sur le contenu de la carte,
@@ -1208,15 +1205,15 @@ watch(
 .offer-cols .match-card .match-head { gap: var(--space-4); padding-bottom: var(--space-4); }
 .offer-cols .match-card .match-lines { display: flex; flex-wrap: wrap; gap: var(--cols-lines-gap); padding-bottom: var(--space-6); font-size: var(--font-label); }
 .offer-cols .match-card .match-lines li { gap: var(--space-2); }
-.offer-cols .offer-text-band { gap: var(--cols-band-gap); margin: 0; padding: var(--cols-band-pad); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--radius-card); }
-.offer-cols .offer-text-band .offer-text-icon { display: none; }
-.offer-cols .offer-text-band h4 { font-size: var(--font-label); }
-.offer-cols .offer-text-band p { margin-top: var(--cols-2); font-size: var(--font-small); color: var(--text-tertiary); }
-.offer-cols .offer-text-actions { gap: var(--cols-band-btn); }
-.offer-cols .offer-text-actions button { flex: none; min-width: 0; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-small); }
-/* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter », « Lire l'annonce » et « Coller le
-   texte » à contour bleu. */
-.offer-cols .offer-text-actions button, .offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
+/* Lecture refusée (prompt du 10 novembre, PR 13 ; CandidaturesOrdinateurB) : un bloc pêche 16 px sous la carte, rayon 18,
+   18,5 dedans ; titre 15 gras, phrase 14 ; « Coller le texte » tonal de 44 px et « Ouvrir l'annonce » en lien, 16 d'écart. */
+.offer-cols .offer-text-refused { --cols-refused-pad: 18.5px; gap: var(--space-4); padding: var(--cols-refused-pad); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--radius-card); }
+.offer-cols .offer-text-refused h4 { font-size: var(--font-label); }
+.offer-cols .offer-text-refused p { font-size: var(--font-small); color: var(--text-tertiary); }
+.offer-cols .offer-text-actions button { min-height: var(--target-min); font-size: var(--font-small); }
+.offer-cols .offer-text-open { font-size: var(--font-small); }
+/* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter » à contour bleu. */
+.offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 .offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }
 /* La note en carte d'information (MODIFICATIONS du 9 novembre, §2.1 ; HTML de CandidaturesOrdinateurB) : fond --bg sur le
    blanc du détail, trait de 1,5 px --card-line, rayon 18, 18,5 dedans ; anneau de 64, verdict 18 ; puis, 16 px dessous et
@@ -1291,13 +1288,12 @@ watch(
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
-  /* Note provisoire (OffreProvisoire, demande de Kevin du 9 novembre) : la bande pêche en pleine largeur dans la carte,
-     sans dépasser le contour (la carte coupe ce qui dépasse, rayon gardé) ; le lien suit la bande sans vide, le texte
-     au même retrait que le contenu, le chevron à droite. */
-  .offer-blocks .match-card:has(.offer-text-band) { overflow: clip; }
-  .offer-blocks .match-card .offer-text-band { margin: var(--ob-gap) calc(-1 * var(--ob-pad)) 0; padding: var(--ob-gap) var(--ob-pad); }
-  .offer-blocks .offer-text-band + .compat-open.after-band { margin-top: 0; border-top: 0; }
-  .offer-blocks .offer-text-actions button { min-width: 0; white-space: nowrap; }
+  /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
+     retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
+     refus séparé par un filet, 16 px dessus (14 dans la maquette, sur la grille de 4), 12 px entre ses lignes ; puis
+     « Le détail de la note » sans vide. */
+  .offer-blocks .match-card .offer-reading, .offer-blocks .match-card .redone { margin-top: var(--ob-gap); }
+  .offer-blocks .match-card .offer-text-refused { margin-top: var(--ob-gap); padding-top: var(--ob-gap); border-top: 1px solid var(--line-soft); }
   .offer-blocks .detail-post { display: block; }
   .offer-blocks .detail-post-head h3 { font-size: var(--font-title); line-height: var(--ob-24); }
   .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }

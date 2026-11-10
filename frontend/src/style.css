@@ -2737,19 +2737,23 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .match-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .provisional-pill { padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--peach-soft); color: var(--peach-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .score-ring-wrap.provisional .score-ring-arc { opacity: 0.45; }
-.offer-text-band { display: grid; gap: var(--space-3); margin: 0 calc(-1 * var(--space-5)); padding: var(--space-4) var(--space-5); background: color-mix(in srgb, var(--peach-soft) 40%, color-mix(in srgb, var(--bg), var(--surface))); border-top: 1px solid color-mix(in srgb, var(--peach) 40%, var(--peach-soft)); }
-.offer-text-band > div:first-child { display: flex; gap: var(--space-3); }
-/* Maquette OffreProvisoire (8.11) : l'icône de 20 px dans 28 px, sans fond (§7). */
-.offer-text-icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; color: var(--peach-text); }
-.offer-text-icon .icon { width: 20px; height: 20px; }
-.offer-text-band h4 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
-.offer-text-band p { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-tertiary); }
-.offer-text-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.offer-text-actions button { flex: 1; min-width: 150px; min-height: var(--btn-tertiary); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.offer-text-open { justify-self: start; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
-.offer-text-actions button[aria-disabled] { opacity: 0.6; }
-/* OffreProvisoire : « Coller le texte » en contour à côté de « Lire l'annonce » (largeur du texte, 1,5 px). */
-.offer-text-actions button.outline { --otn-pad: 18px; flex: none; min-width: 0; padding: 0 var(--otn-pad); border: 1.5px solid var(--card-line); background: var(--surface); color: var(--text); }
+/* Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire). « jobA1 lit l'annonce
+   complète… » en 15/20 gris, l'indicateur de 18 px (anneau --line, arc --primary) qui tourne, sauf si le mouvement est
+   réduit ; 8 px entre les deux (10 dans la maquette, sur la grille de 4). */
+.offer-reading { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: calc(var(--font-small) + 1px); --reading-20: 20px; line-height: var(--reading-20); color: var(--text-secondary); }
+.offer-reading-spinner { flex: none; animation: offer-reading-turn 900ms linear infinite; }
+.offer-reading-track { stroke: var(--line); }
+.offer-reading-arc { stroke: var(--primary); }
+@keyframes offer-reading-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .offer-reading-spinner { animation: none; } }
+/* Refus : titre 16/21 gras, phrase 14/20, 12 px entre les lignes ; « Coller le texte » tonal de 48 px (20 de marge) et le
+   lien « Ouvrir l'annonce » de 44 px, 16 d'écart. */
+.offer-text-refused { display: grid; --refused-20: 20px; --refused-21: 21px; gap: var(--space-3); }
+.offer-text-refused h4 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--refused-21); }
+.offer-text-refused p { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--refused-20); color: var(--text-tertiary); }
+.offer-text-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.offer-text-actions button { flex: none; min-width: 0; min-height: var(--btn-tertiary); padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
+.offer-text-open { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); text-decoration: none; }
 .redone { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .match-detail { margin: 0; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
 .match-detail > .disclosure-row { min-height: var(--target-min); padding: var(--space-3) 0 0; }
