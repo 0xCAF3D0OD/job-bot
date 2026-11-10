@@ -48,7 +48,7 @@ const counts = computed(() => {
     plural(s.applications, "candidature", "candidatures"),
     plural(s.documents, "document", "documents"),
     plural(s.profile_blocks, "bloc de profil", "blocs de profil"),
-    plural(s.alert_emails, "e-mail d'alerte", "e-mails d'alerte"),
+    plural(s.alert_emails, "e-mail d’alerte", "e-mails d’alerte"),
   ].join(" · ");
 });
 
@@ -111,7 +111,7 @@ async function exportOrp(): Promise<void> {
     await nextTick();
     await orpSheet.value?.printPdf();
   } catch {
-    orpError.value = "La feuille ORP n'a pas pu être préparée. Réessaie depuis le Bilan.";
+    orpError.value = "La feuille ORP n’a pas pu être préparée. Réessaie depuis le Bilan.";
   } finally {
     orpBusy.value = false;
   }
@@ -205,7 +205,7 @@ async function remove(): Promise<void> {
     </form>
   </SettingCard>
   <!-- Supprimer le compte (maquette Réglages ; décisions de Kevin du 2026-11-05, C13) : seul dans sa carte, en
-       rouge. La confirmation garde le mot de passe, propose d'abord d'exporter la feuille ORP, et « Annuler » a le
+       rouge. La confirmation garde le mot de passe, propose d’abord d’exporter la feuille ORP, et « Annuler » a le
        focus. Entrée dans le mot de passe ne supprime rien : seul le clic sur « Supprimer définitivement » le fait. -->
   <SettingCard
     v-if="summary?.can_delete"

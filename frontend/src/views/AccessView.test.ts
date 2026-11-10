@@ -25,7 +25,7 @@ async function mountAccess() {
   return { wrapper, router };
 }
 
-describe("lien d'accès (docs/65 §2)", () => {
+describe("lien d’accès (docs/65 §2)", () => {
   it("invitation : identifiant et mot de passe, puis la plateforme", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve(
@@ -52,7 +52,7 @@ describe("lien d'accès (docs/65 §2)", () => {
     expect(router.currentRoute.value.fullPath).toBe("/aujourdhui");
   });
 
-  it("réinitialisation : le compte, pas d'identifiant à choisir", async () => {
+  it("réinitialisation : le compte, pas d’identifiant à choisir", async () => {
     GET.mockResolvedValue({ data: { kind: "reset", username: "camille", expires_at: "2026-10-17T10:00:00Z" } });
     const { wrapper } = await mountAccess();
     expect(wrapper.text()).toContain("Pour le compte camille");

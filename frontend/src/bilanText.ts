@@ -31,7 +31,7 @@ export function conclusion(report: Report, period: Period): { before: string; ac
   if (p === null || p === undefined || p === 0) {
     return { before: "", accent: "Premières réponses", after: ` : ${r} sur ${n} candidatures.` };
   }
-  const span = period === "month" ? "au mois d'avant" : "au trimestre d'avant";
+  const span = period === "month" ? "au mois d’avant" : "au trimestre d’avant";
   const after = ` : ${r} ${word(r, "réponse", "réponses")}, contre ${p} ${span}.`;
   // Stable : une réponse d'écart au plus, ou, au-delà de 10 réponses avant, moins de 10 % d'écart.
   const gap = Math.abs(r - p);
@@ -133,7 +133,7 @@ export function bestComparison(comparisons: Comparison[], skipSites = false): st
     else lead = `${top.label} répond le mieux`;
     if (best === null || ratio > best.ratio) best = { ratio, text: `${lead} : ${figures}` };
   }
-  return best?.text ?? (skipSites ? "Par site, avec un contact, après une relance" : "Rien de net pour l'instant");
+  return best?.text ?? (skipSites ? "Par site, avec un contact, après une relance" : "Rien de net pour l’instant");
 }
 
 const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -146,7 +146,7 @@ export const dayShort = { format: (date: Date): string => dateInList(date) };
 
 /** La phrase repliée de « Entretiens » : combien, et le prochain. */
 export function interviewsLine(lines: InterviewLine[]): string {
-  if (!lines.length) return "Pas encore d'entretien";
+  if (!lines.length) return "Pas encore d’entretien";
   const next = lines.filter((l) => l.state === "upcoming").at(-1);
   const count = `${lines.length} ${word(lines.length, "entretien", "entretiens")}`;
   return next ? `${count}, le prochain ${dateInSentence(`${next.day}T12:00:00`)}` : `${count}, aucun à venir`;

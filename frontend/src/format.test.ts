@@ -7,16 +7,16 @@ import { cityOnly, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, or
 const NOW = new Date("2026-10-18T08:00:00Z");
 
 describe("jours des offres", () => {
-  it("nomme la ligne du jour : aujourd'hui, hier, puis le jour en toutes lettres", () => {
-    expect(dayName("2026-10-18T05:00:00Z", NOW)).toBe("Aujourd'hui");
-    expect(dayName("2026-10-17T22:30:00Z", NOW)).toBe("Aujourd'hui"); // 0 h 30 à Zurich, le 18
+  it("nomme la ligne du jour : aujourd’hui, hier, puis le jour en toutes lettres", () => {
+    expect(dayName("2026-10-18T05:00:00Z", NOW)).toBe("Aujourd’hui");
+    expect(dayName("2026-10-17T22:30:00Z", NOW)).toBe("Aujourd’hui"); // 0 h 30 à Zurich, le 18
     expect(dayName("2026-10-17T21:30:00Z", NOW)).toBe("Hier"); // 23 h 30 à Zurich, le 17
     expect(dayName("2026-10-15T12:00:00Z", NOW)).toBe("Jeudi 15 octobre");
     expect(dayName("2025-12-31T12:00:00Z", NOW)).toBe("Mercredi 31 décembre 2025");
   });
 
   it("donne le jour en bref dans une offre, hors du tri par jour", () => {
-    expect(dayShort("2026-10-18T05:00:00Z", NOW)).toBe("aujourd'hui");
+    expect(dayShort("2026-10-18T05:00:00Z", NOW)).toBe("aujourd’hui");
     expect(dayShort("2026-10-17T12:00:00Z", NOW)).toBe("hier");
     expect(dayShort("2026-10-15T12:00:00Z", NOW)).toBe("15 oct.");
   });
@@ -28,9 +28,9 @@ describe("jours des offres", () => {
 });
 
 describe("gapSkill (docs/121 §C.3)", () => {
-  it("garde la compétence d'un manque, pas une phrase", () => {
-    expect(gapSkill("Spark : pas d'expérience dans ton profil.")).toBe("Spark");
-    expect(gapSkill("Pas d'Ansible.")).toBe("Ansible");
+  it("garde la compétence d’un manque, pas une phrase", () => {
+    expect(gapSkill("Spark : pas d’expérience dans ton profil.")).toBe("Spark");
+    expect(gapSkill("Pas d’Ansible.")).toBe("Ansible");
     expect(gapSkill("Allemand courant demandé")).toBe("Allemand courant");
     expect(gapSkill("Le poste demande plus de développement que ton profil.")).toBeNull();
   });
@@ -48,13 +48,13 @@ describe("orpPace (docs/123 §2, Q)", () => {
     expect(orpPace(10, 10, "2026-10", now)).toMatchObject({ state: "reached", mood: "ravi" });
     expect(orpPace(4, null, "2026-10", now)).toBeNull();
   });
-  it("le premier jour du mois, personne n'est en retard", () => {
+  it("le premier jour du mois, personne n’est en retard", () => {
     expect(orpPace(0, 10, "2026-10", new Date(2026, 9, 1))?.state).toBe("on-track");
   });
 });
 
-describe("initiales d'une entreprise (téléphone)", () => {
-  it("deux mots sans la forme juridique, ou les deux premières lettres d'un seul mot", () => {
+describe("initiales d’une entreprise (téléphone)", () => {
+  it("deux mots sans la forme juridique, ou les deux premières lettres d’un seul mot", () => {
     expect(initials("Léman Data SA")).toBe("LD");
     expect(initials("Romandie Logistics")).toBe("RL");
     expect(initials("Alpstack")).toBe("AL");
@@ -76,7 +76,7 @@ describe("cityOnly et remoteText court (cartes du téléphone)", () => {
   });
 });
 
-describe("L'échéance ORP en toutes lettres (MODIFICATIONS du 9 novembre, §11)", () => {
+describe("L’échéance ORP en toutes lettres (MODIFICATIONS du 9 novembre, §11)", () => {
   it("celle du serveur, sinon le 5 du mois suivant ; « Objectif du mois atteint » une fois tenu", () => {
     expect(orpDueDay("2026-11")).toBe("5 décembre");
     expect(orpDueDay("2026-12")).toBe("5 janvier");

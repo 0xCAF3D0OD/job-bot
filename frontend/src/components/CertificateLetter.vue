@@ -37,7 +37,7 @@ async function load(ai = false): Promise<void> {
       letter.value = result.data;
       text.value = result.data.text;
     } else {
-      failed.value = (result.error as { detail?: string } | undefined)?.detail ?? "Lettre impossible pour l'instant.";
+      failed.value = (result.error as { detail?: string } | undefined)?.detail ?? "Lettre impossible pour l’instant.";
     }
   } finally {
     busy.value = false;
@@ -91,12 +91,12 @@ onMounted(() => void load());
             v-if="documentId && !letter.ai"
             class="link"
             :busy="busy"
-            busy-label="L'IA rédige…"
+            busy-label="L’IA rédige…"
             data-test="certificate-letter-ai"
             @click="load(true)"
           >
             <HoverNote :text="aiNote('Environ 0,02 CHF.', undefined, 'Le certificat part sans ton nom ni les personnes citées.')">
-              <span class="with-icon"><AppIcon name="ai" />Rédiger avec l'IA</span>
+              <span class="with-icon"><AppIcon name="ai" />Rédiger avec l’IA</span>
             </HoverNote>
           </BusyButton>
         </div>

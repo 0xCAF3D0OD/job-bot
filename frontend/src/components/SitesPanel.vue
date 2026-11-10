@@ -76,7 +76,7 @@ async function toggle(site: SiteOut): Promise<void> {
   const before = sites.value;
   sites.value = before.map((s) => (s.id === site.id ? { ...s, active: false } : s));
   await offerUndo({
-    message: `${site.name} n'est plus suivi.`,
+    message: `${site.name} n’est plus suivi.`,
     commit: (keepalive) => setActive(site, false, keepalive),
     restore: () => {
       sites.value = before;
@@ -90,7 +90,7 @@ async function remove(site: SiteOut): Promise<void> {
   sites.value = before.filter((s) => s.id !== site.id);
   openId.value = null;
   await offerUndo({
-    message: `${site.name} n'est plus suivi`,
+    message: `${site.name} n’est plus suivi`,
     commit: async (keepalive) => {
       const { data } = await api.DELETE("/api/sites/{site_id}", { params: { path: { site_id: site.id } }, keepalive });
       if (!data) return false;
@@ -107,7 +107,7 @@ const openId = ref<number | null>(null);
 const opened = computed(() => sites.value.find((s) => s.id === openId.value) ?? null);
 // « Lu directement · 83 alertes · dernière le 22 oct. » (planche « 5. Réglages »).
 function line(site: SiteOut): string {
-  return `${site.reader === "ai" ? "Lu par l'IA" : "Lu directement"} · ${stats(site)}`;
+  return `${site.reader === "ai" ? "Lu par l’IA" : "Lu directement"} · ${stats(site)}`;
 }
 function stats(site: SiteOut): string {
   const last = site.last_alert_at ? ` · dernière ${onDay(site.last_alert_at)}` : "";
@@ -128,7 +128,7 @@ async function add(): Promise<void> {
   sites.value = data;
   adding.value = false;
   form.value = { name: "", senders: "", url: "" };
-  message.value = "Site ajouté : ses prochaines alertes seront lues par l'IA.";
+  message.value = "Site ajouté : ses prochaines alertes seront lues par l’IA.";
 }
 
 async function addSuggestion(suggestion: Suggestion): Promise<void> {
@@ -142,7 +142,7 @@ async function addSuggestion(suggestion: Suggestion): Promise<void> {
   }
   sites.value = data;
   suggestions.value = suggestions.value.filter((s) => s.name !== suggestion.name);
-  message.value = `${suggestion.name} ajouté : crée ton alerte sur le site, ses e-mails seront lus par l'IA.`;
+  message.value = `${suggestion.name} ajouté : crée ton alerte sur le site, ses e-mails seront lus par l’IA.`;
 }
 
 async function reread(): Promise<void> {
@@ -173,7 +173,7 @@ onMounted(() => void load());
   >
     <SettingRow
       title="Sites suivis"
-      description="La plateforme lit leurs e-mails d'alerte."
+      description="La plateforme lit leurs e-mails d’alerte."
     />
     <SettingRow
       v-for="site in sites"
@@ -218,7 +218,7 @@ onMounted(() => void load());
     <SettingRow
       v-if="unrecognized"
       title="Alertes non reconnues"
-      :description="`${plural(unrecognized, 'alerte', 'alertes')} à relire par l'IA.`"
+      :description="`${plural(unrecognized, 'alerte', 'alertes')} à relire par l’IA.`"
     >
       <BusyButton
         class="secondary small"
@@ -233,7 +233,7 @@ onMounted(() => void load());
     <SettingRow
       v-if="owner && !adding"
       title="Un autre site"
-      description="Ses e-mails d'alerte seront lus par l'IA."
+      description="Ses e-mails d’alerte seront lus par l’IA."
     >
       <button
         type="button"
@@ -276,7 +276,7 @@ onMounted(() => void load());
           class="field-error"
         >{{ errors.url }}</span>
       </label>
-      <label class="wide">Adresses d'expédition des alertes
+      <label class="wide">Adresses d’expédition des alertes
         <input
           id="site-senders"
           v-model="form.senders"
@@ -332,7 +332,7 @@ onMounted(() => void load());
         <dl class="summary-rows">
           <div>
             <dt>Lecture</dt>
-            <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "directement" }}</dd>
+            <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l’IA (environ 0,01 $ par e-mail)" : "par l’IA" : "directement" }}</dd>
           </div>
           <div>
             <dt>E-mails de</dt>

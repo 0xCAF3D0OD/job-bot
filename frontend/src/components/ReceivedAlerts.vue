@@ -56,7 +56,7 @@ onMounted(async () => {
         v-if="!items.length"
         class="setting-row-message muted"
       >
-        Aucune alerte reçue pour l'instant.
+        Aucune alerte reçue pour l’instant.
       </p>
     </SettingCard>
     <ShowMore

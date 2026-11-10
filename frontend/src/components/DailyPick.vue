@@ -5,7 +5,7 @@ import { api, type Offer } from "../api/client";
 import { useArrowKeys } from "../composables/useArrowKeys";
 import { useNarrow } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
-import { plural, rateText, remoteText } from "../format";
+import { companyPlace, plural, rateText, remoteText } from "../format";
 import { whyLine } from "../whyLine";
 import ActionBar from "./ActionBar.vue";
 import AppIcon from "./AppIcon.vue";
@@ -93,7 +93,7 @@ const summary = computed(() =>
     .filter(Boolean)
     .join(", "),
 );
-const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gardée" : `les ${plural(kept.value, "offre gardée", "offres gardées")}`}`);
+const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l’offre gardée" : `les ${plural(kept.value, "offre gardée", "offres gardées")}`}`);
 </script>
 
 <template>
@@ -123,7 +123,7 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
               >
                 <strong>{{ current.title }}</strong>
               </RouterLink>
-              <span class="muted">{{ [current.company || "Entreprise non indiquée", current.location].filter(Boolean).join(" · ") }}</span>
+              <span class="muted">{{ companyPlace(current.company || "Entreprise non indiquée", current.location) }}</span>
             </div>
           </header>
           <template v-if="!narrow">
@@ -166,11 +166,11 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
               rel="noopener noreferrer"
               class="pick-ad"
               data-test="pick-ad"
-            ><span class="with-icon">Voir l'annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+            ><span class="with-icon">Voir l’annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </template>
         </article>
         <!-- « Annuler » entre la carte et les boutons, sur ordinateur (planche) ; sur téléphone, celui
-             d'App, au-dessus du panneau. -->
+             d’App, au-dessus du panneau. -->
         <UndoToast inline />
         <ActionBar>
           <template v-if="narrow">
@@ -199,7 +199,7 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
               rel="noopener noreferrer"
               class="pick-ad"
               data-test="pick-ad"
-            ><span class="with-icon">Voir l'annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+            ><span class="with-icon">Voir l’annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </template>
           <div class="action-bar-row">
             <button
@@ -257,7 +257,7 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
               class="button-link"
               data-test="pick-today"
             >
-              Revenir à Aujourd'hui
+              Revenir à Aujourd’hui
             </RouterLink>
           </div>
         </FaceState>

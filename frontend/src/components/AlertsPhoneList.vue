@@ -298,7 +298,7 @@ function remove(): void {
 
 <style>
 /* Valeurs du HTML d'AlertesTel : familles à 16 px l'une de l'autre (plus l'écart de la page), sur-titre 13/16 en
-   capitales dans la couleur de l'état, aide 14/20 avec 4 px dessous, 8 px entre les cartes ; « + Ajouter une
+   capitales dans la couleur de l’état, aide 14/20 avec 4 px dessous, 8 px entre les cartes ; « + Ajouter une
    recherche » sur toute la largeur, 48 px. */
 .alerts-families { display: flex; flex-direction: column; gap: var(--space-4); }
 .alerts-family { display: flex; flex-direction: column; gap: var(--space-2); }

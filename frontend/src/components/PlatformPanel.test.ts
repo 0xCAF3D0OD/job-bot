@@ -55,20 +55,20 @@ const PLATFORM = {
 };
 
 describe("Plateforme (docs/65 §5)", () => {
-  it("les premiers pas : des nombres seulement, où s'arrêtent les autres (docs/128 §4)", async () => {
+  it("les premiers pas : des nombres seulement, où s’arrêtent les autres (docs/128 §4)", async () => {
     GET.mockResolvedValue({ data: { ...PLATFORM, first_steps: { accounts: 5, sent_within_week: 2, stopped_at: [0, 2, 1, 0, 0] } } });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     expect(wrapper.find("[data-test=first-steps-rate]").text()).toContain("2 sur 5");
     const rows = wrapper.findAll("[data-test=first-steps-stopped]");
     expect(rows.map((row) => row.find(".setting-row-title").text())).toEqual([
-      "Étape 2 · Alertes sur les sites d'emploi",
+      "Étape 2 · Alertes sur les sites d’emploi",
       "Étape 3 · Première offre gardée",
     ]);
     expect(rows.map((row) => row.find(".setting-row-control").text())).toEqual(["2 comptes", "1 compte"]);
   });
 
-  it("le test utilisateurs : le temps entre l'inscription et chaque étape, sans nom (30.10.2026)", async () => {
+  it("le test utilisateurs : le temps entre l’inscription et chaque étape, sans nom (30.10.2026)", async () => {
     const created = "2026-10-20T08:00:00Z";
     GET.mockResolvedValue({
       data: {
@@ -111,7 +111,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(empty.find("[data-test=platform-milestones]").text()).toContain("Aucun compte invité");
   });
 
-  it("l'usage de chaque compte, les actions seulement pour les autres", async () => {
+  it("l’usage de chaque compte, les actions seulement pour les autres", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
@@ -135,7 +135,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=platform-database-admin]").text()).toContain("jobbot_app");
   });
 
-  it("les sauvegardes : la dernière, l'essai, et ce qui ne va pas (docs/82)", async () => {
+  it("les sauvegardes : la dernière, l’essai, et ce qui ne va pas (docs/82)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const fine = mount(PlatformPanel);
     await flushPromises();
@@ -168,7 +168,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=platform-link]").text()).toContain("/acces/jba_secret");
   });
 
-  it("supprimer demande d'écrire l'identifiant, dans la page (docs/108 §1)", async () => {
+  it("supprimer demande d’écrire l’identifiant, dans la page (docs/108 §1)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     DELETE.mockResolvedValue({ data: { ...PLATFORM, accounts: [PLATFORM.accounts[0]] } });
     const wrapper = mount(PlatformPanel);
@@ -186,7 +186,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=account-camille]").exists()).toBe(false);
   });
 
-  it("le plafond d'un compte se change sur place", async () => {
+  it("le plafond d’un compte se change sur place", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     PATCH.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
@@ -200,7 +200,7 @@ describe("Plateforme (docs/65 §5)", () => {
     });
   });
 
-  it("la formule d'un compte se choisit sur place (docs/125 §5)", async () => {
+  it("la formule d’un compte se choisit sur place (docs/125 §5)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     PATCH.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
@@ -212,7 +212,7 @@ describe("Plateforme (docs/65 §5)", () => {
     });
   });
 
-  it("le plafond total s'enregistre au changement, sans bouton (0.78.4)", async () => {
+  it("le plafond total s’enregistre au changement, sans bouton (0.78.4)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     PUT.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
@@ -226,7 +226,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=platform-ai] [data-test=setting-saved]").text()).toContain("Enregistré");
   });
 
-  it("un plafond impossible n'est pas envoyé : l'ancien reste, la saisie aussi (1.6.67)", async () => {
+  it("un plafond impossible n’est pas envoyé : l’ancien reste, la saisie aussi (1.6.67)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
@@ -249,15 +249,15 @@ describe("Plateforme (docs/65 §5)", () => {
     );
   });
 
-  it("des cartes de lignes : titre, phrase, l'action à droite, sans « Enregistrer » (1.6.67)", async () => {
+  it("des cartes de lignes : titre, phrase, l’action à droite, sans « Enregistrer » (1.6.67)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     expect(wrapper.find(".form-card, fieldset, legend").exists()).toBe(false);
     expect(wrapper.find("button[type=submit]").exists()).toBe(false);
     const titles = wrapper.findAll("[data-test=setting-row] .setting-row-title").map((t) => t.text());
-    expect(titles).toEqual(expect.arrayContaining(["Comptes", "Demandes de compte", "Inviter quelqu'un", "Plafond total de l'IA, tous comptes"]));
-    const invite = wrapper.findAll("[data-test=setting-row]").find((row) => row.text().startsWith("Inviter quelqu'un"));
+    expect(titles).toEqual(expect.arrayContaining(["Comptes", "Demandes de compte", "Inviter quelqu’un", "Plafond total de l’IA, tous comptes"]));
+    const invite = wrapper.findAll("[data-test=setting-row]").find((row) => row.text().startsWith("Inviter quelqu’un"));
     expect(invite?.find(".setting-row-control [data-test=invite]").exists()).toBe(true);
     // Chaque contrôle est nommé par sa ligne.
     const signup = wrapper.find("[data-test=signup-open]");
@@ -318,7 +318,7 @@ describe("Plateforme, demandes de compte (docs/102)", () => {
     expect(wrapper.find("[data-test=platform-requests]").exists()).toBe(false);
   });
 
-  it("l'interrupteur enregistre les demandes ouvertes ou fermées", async () => {
+  it("l’interrupteur enregistre les demandes ouvertes ou fermées", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     PUT.mockResolvedValue({ data: { ...PLATFORM, signup_open: false } });
     const wrapper = mount(PlatformPanel);

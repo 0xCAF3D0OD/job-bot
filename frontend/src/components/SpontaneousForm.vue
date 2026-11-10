@@ -37,7 +37,7 @@ const chosen = ref<string | null>(null);
 // l'envoi, et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
 type Field = "company" | "title" | "reason";
 const MISSING: Record<Field, string> = {
-  company: "Indique l'entreprise.",
+  company: "Indique l’entreprise.",
   title: "Indique le poste visé.",
   reason: "Dis pourquoi cette entreprise.",
 };
@@ -73,7 +73,7 @@ async function create(event: Event): Promise<void> {
       },
     });
     if (!data) {
-      error.value = "Création impossible pour l'instant : réessaie.";
+      error.value = "Création impossible pour l’instant : réessaie.";
       return;
     }
     if (data.id === null || data.id === undefined) {
@@ -96,7 +96,7 @@ async function searchAddress(): Promise<void> {
       params: { path: { offer_id: offerId.value } },
     });
     if (!data) {
-      searchMessage.value = "Registre injoignable pour l'instant : tu pourras compléter l'adresse à l'envoi.";
+      searchMessage.value = "Registre injoignable pour l’instant : tu pourras compléter l’adresse à l’envoi.";
       return;
     }
     candidates.value = data.candidates;
@@ -170,7 +170,7 @@ function prepare(): void {
     </FormField>
     <FormField
       v-slot="{ id, describedby, invalid }"
-      label="Site de l'entreprise"
+      label="Site de l’entreprise"
       optional
       :width="30"
     >
@@ -218,7 +218,7 @@ function prepare(): void {
         data-test="spontaneous-open-existing"
         @click="emit('open', existing.id)"
       >
-        L'ouvrir
+        L’ouvrir
       </button>
     </p>
     <p
@@ -244,7 +244,7 @@ function prepare(): void {
     data-test="spontaneous-address"
   >
     <p class="muted">
-      L'adresse de {{ form.company }} servira au formulaire ORP. Tu peux aussi la compléter à l'envoi.
+      L’adresse de {{ form.company }} servira au formulaire ORP. Tu peux aussi la compléter à l’envoi.
     </p>
     <p
       v-if="chosen"
@@ -262,7 +262,7 @@ function prepare(): void {
           data-test="spontaneous-search"
           @click="searchAddress"
         >
-          <span class="with-icon"><AppIcon name="ai" />Chercher l'adresse au registre</span>
+          <span class="with-icon"><AppIcon name="ai" />Chercher l’adresse au registre</span>
         </BusyButton>
       </span>
       <ul

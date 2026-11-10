@@ -82,7 +82,7 @@ async function onFile(event: Event): Promise<void> {
     });
     if (data) {
       await loadDocuments();
-      message.value = data.text_status === "ok" ? "CV déposé." : "CV déposé, mais son texte n'est pas lisible (PDF scanné ?).";
+      message.value = data.text_status === "ok" ? "CV déposé." : "CV déposé, mais son texte n’est pas lisible (PDF scanné ?).";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
       message.value = typeof detail === "string" ? `Refusé : ${detail}.` : `Refusé (HTTP ${response.status}).`;
@@ -134,7 +134,7 @@ async function onSaved(): Promise<void> {
         <button
           type="button"
           class="profile-head-image"
-          aria-label="Changer d'image"
+          aria-label="Changer d’image"
           data-test="profile-image-edit"
           @click="picking = true"
         >
@@ -308,7 +308,7 @@ async function onSaved(): Promise<void> {
 
 <style>
 /* Les valeurs de ProfilOrdinateur, sur la grille de 4 (§2.9) : titres de 18 px, cartes à bordure de 1,5 px (12,5 / 18,5 px
-   de marge, trait compris), puces de compétence 14 px sur fond gris clair (--surface-muted, #F1EFE9 n'est pas un jeton). */
+   de marge, trait compris), puces de compétence 14 px sur fond gris clair (--surface-muted, #F1EFE9 n’est pas un jeton). */
 .profile-desktop { --pd-18: 18px; --pd-pad-y: 14.5px; --pd-pad-x: 18.5px; --pd-chip-y: 4px; --pd-chip-h: 32px; max-width: 880px; margin: 0 auto; }
 .profile-desktop-body { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-4); max-width: 880px; padding-right: var(--space-6); padding-bottom: var(--space-8); padding-left: var(--space-6); margin: 0 auto; box-sizing: content-box; }
 .profile-section { display: flex; flex-direction: column; gap: var(--space-2); }

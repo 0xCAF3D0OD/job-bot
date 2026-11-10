@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe("ProfileImage (docs/143)", () => {
-  it("les initiales par défaut, l'avatar ou la photo ; décorative", () => {
+  it("les initiales par défaut, l’avatar ou la photo ; décorative", () => {
     expect(initialsOf("Kevin Di Nocera")).toBe("KD");
     expect(initialsOf("kevin")).toBe("K");
     const initials = mount(ProfileImage, { props: { choice: { kind: "initials" }, initials: "KD", size: 48 } });
@@ -38,7 +38,7 @@ describe("AvatarPicker (docs/143)", () => {
     await useProfileImage().load(true);
     const wrapper = mount(AvatarPicker, { attachTo: document.body, props: { open: true } });
     await flushPromises();
-    expect(wrapper.text()).toContain("Elle s'affiche seulement dans jobA1. Elle n'est jamais envoyée aux employeurs.");
+    expect(wrapper.text()).toContain("Elle s’affiche seulement dans jobA1. Elle n’est jamais envoyée aux employeurs.");
     const options = wrapper.findAll(".avatar-option");
     expect(options.map((o) => o.text())).toEqual(["KDInitiales", "Souriant", "Clin d'œil", "Casque", "Lunettes", "Bonnet", "Écharpe", "Café", "Étoile", "Ma photo"]);
     expect(wrapper.get("[data-test=avatar-initials]").attributes("aria-pressed")).toBe("true");

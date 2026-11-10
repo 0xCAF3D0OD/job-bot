@@ -32,8 +32,8 @@ function plan(over: Record<string, unknown> = {}, letters = 2) {
       { key: "score", label: "offres notées", used: 37, limit: 150, limit_text: "Les 150 offres notées du mois sont utilisées : elles reviennent le 1er novembre." },
       { key: "letter", label: "lettres", used: letters, limit: 10, limit_text: "Les 10 lettres du mois sont utilisées : elles reviennent le 1er novembre." },
       { key: "cv", label: "CV adaptés", used: 0, limit: 10, limit_text: "x" },
-      { key: "chat", label: "messages à l'assistant", used: 3, limit: 30, limit_text: "x" },
-      { key: "practice", label: "entraînements à l'entretien", used: 0, limit: 1, limit_text: "x" },
+      { key: "chat", label: "messages à l’assistant", used: 3, limit: 30, limit_text: "x" },
+      { key: "practice", label: "entraînements à l’entretien", used: 0, limit: 1, limit_text: "x" },
     ],
     ...over,
   };
@@ -42,7 +42,7 @@ function plan(over: Record<string, unknown> = {}, letters = 2) {
 const router = () => createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
 
 describe("la formule", () => {
-  it("Essentiel : une ligne d'en-tête, une ligne par usage, ce que Plus ajoute", async () => {
+  it("Essentiel : une ligne d’en-tête, une ligne par usage, ce que Plus ajoute", async () => {
     GET.mockResolvedValue({ data: plan() });
     await usePlan().refresh();
     const wrapper = mount(PlanPanel, { global: { plugins: [router()] } });
@@ -50,7 +50,7 @@ describe("la formule", () => {
     const name = wrapper.find("[data-test=plan-name]");
     expect(name.find(".setting-row-title").text()).toBe("Formule Essentiel");
     // Quand les compteurs repartent, dans la phrase de l'en-tête.
-    expect(name.find(".setting-row-description").text()).toBe("Gratuite : seule l'IA a des limites, remises à zéro le 1er novembre.");
+    expect(name.find(".setting-row-description").text()).toBe("Gratuite : seule l’IA a des limites, remises à zéro le 1er novembre.");
     // Le compteur à droite de sa ligne, la jauge cachée aux lecteurs d'écran.
     const score = wrapper.find("[data-test=plan-score]");
     expect(score.find(".setting-row-title").text()).toBe("Offres notées");
@@ -82,13 +82,13 @@ describe("la formule", () => {
     expect(wrapper.find("[data-test=plan-plus] + .setting-row-form [data-test=plan-accept]").exists()).toBe(true);
   });
 
-  it("les descriptions au survol : le compteur pour une personne invitée, le coût pour l'exploitant", async () => {
+  it("les descriptions au survol : le compteur pour une personne invitée, le coût pour l’exploitant", async () => {
     GET.mockResolvedValue({ data: plan() });
     const { refresh, aiNote } = usePlan();
     await refresh();
     expect(aiNote("Environ 0,10 $.", "letter")).toBe("Lettres : 2 sur 10 ce mois-ci.");
     expect(aiNote("Environ 0,002 $.")).toBe("");
-    expect(aiNote("Environ 0,003 $.", undefined, "L'offre est renotée.")).toBe("L'offre est renotée.");
+    expect(aiNote("Environ 0,003 $.", undefined, "L’offre est renotée.")).toBe("L’offre est renotée.");
     GET.mockResolvedValue({ data: plan({ unlimited: true }) });
     await refresh();
     expect(aiNote("Environ 0,10 $.", "letter")).toBe("Environ 0,10 $.");
@@ -106,7 +106,7 @@ describe("la formule", () => {
     expect(line.find("a").attributes("href")).toBe("/reglages?rubrique=formule");
   });
 
-  it("l'exploitant n'a pas de carte Formule", async () => {
+  it("l’exploitant n’a pas de carte Formule", async () => {
     GET.mockResolvedValue({ data: plan({ unlimited: true }) });
     await usePlan().refresh();
     const wrapper = mount(PlanPanel, { global: { plugins: [router()] } });
@@ -115,7 +115,7 @@ describe("la formule", () => {
 });
 
 describe("le paiement de Plus (docs/125 §6)", () => {
-  it("les conditions acceptées d'abord, puis la page de Payrexx", async () => {
+  it("les conditions acceptées d’abord, puis la page de Payrexx", async () => {
     GET.mockResolvedValue({ data: plan({ billing_available: true }) });
     POST.mockResolvedValue({ data: { link: "https://jobA1.payrexx.com/?payment=abc" } });
     const assign = vi.fn();
@@ -152,28 +152,28 @@ describe("le paiement de Plus (docs/125 §6)", () => {
     const wrapper = mount(PlanPanel, { global: { plugins: [r] } });
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/billing/sync");
-    expect(wrapper.find("[data-test=plan-message]").text()).toBe("Merci : Plus est actif jusqu'au 25 novembre.");
+    expect(wrapper.find("[data-test=plan-message]").text()).toBe("Merci : Plus est actif jusqu’au 25 novembre.");
     expect(r.currentRoute.value.query.paiement).toBeUndefined();
-    expect(wrapper.find("[data-test=plan-paid] .setting-row-title").text()).toBe("Plus jusqu'au 25 novembre");
+    expect(wrapper.find("[data-test=plan-paid] .setting-row-title").text()).toBe("Plus jusqu’au 25 novembre");
     expect(wrapper.find("[data-test=plan-paid] .setting-row-description").text()).toBe("Renouvelé chaque mois, sans engagement.");
     expect(wrapper.find("[data-test=plan-paid] .setting-row-control [data-test=plan-cancel]").exists()).toBe(true);
     expect(wrapper.find("[data-test=plan-payments]").text()).toContain("22 octobre 2026");
     expect(wrapper.find("[data-test=plan-payments]").text()).toContain("7,00 CHF");
     await wrapper.find("[data-test=plan-cancel]").trigger("click");
-    expect(wrapper.text()).toContain("Résilier Plus ? Il reste actif jusqu'au 25 novembre, sans nouveau paiement.");
+    expect(wrapper.text()).toContain("Résilier Plus ? Il reste actif jusqu’au 25 novembre, sans nouveau paiement.");
     await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/billing/cancel");
   });
 
-  it("un paiement annulé : rien n'a été débité", async () => {
+  it("un paiement annulé : rien n’a été débité", async () => {
     GET.mockResolvedValue({ data: plan({ billing_available: true }) });
     await usePlan().refresh();
     const r = router();
     await r.push("/reglages?rubrique=formule&paiement=annule");
     const wrapper = mount(PlanPanel, { global: { plugins: [r] } });
     await flushPromises();
-    expect(wrapper.find("[data-test=plan-message]").text()).toBe("Paiement annulé : rien n'a été débité.");
+    expect(wrapper.find("[data-test=plan-message]").text()).toBe("Paiement annulé : rien n’a été débité.");
     expect(POST).not.toHaveBeenCalled();
   });
 });

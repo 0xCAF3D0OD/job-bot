@@ -18,7 +18,7 @@ const item = (extra: Record<string, unknown> = {}) => ({
 const mountRow = (extra: Record<string, unknown> = {}) => mount(NotificationRow, { props: { item: item(extra) }, global: { plugins: [router] } });
 
 describe("NotificationRow (ordinateur, NotificationsOrdinateur)", () => {
-  it("un seul lien : le point « non lue », le titre, la première ligne et le libellé de l'action", () => {
+  it("un seul lien : le point « non lue », le titre, la première ligne et le libellé de l’action", () => {
     const wrapper = mountRow();
     const link = wrapper.get("[data-test=notification]");
     expect(link.element.tagName).toBe("A");

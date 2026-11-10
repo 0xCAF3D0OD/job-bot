@@ -11,7 +11,7 @@ vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }
 afterEach(() => vi.resetAllMocks());
 
 describe("TermsView", () => {
-  it("le service, les formules, le paiement, la résiliation, l'exploitant", async () => {
+  it("le service, les formules, le paiement, la résiliation, l’exploitant", async () => {
     GET.mockResolvedValue({ data: { contact: "Kevin Exemple, Lausanne, contact@joba1.ch", guest_mailbox: true, billing: true } });
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     const wrapper = mount(TermsView, { global: { plugins: [router] } });

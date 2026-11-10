@@ -24,8 +24,8 @@ function template(source: string): string {
 // (« Candidatures › Bilan »), pas seul dans un élément.
 const GLYPHS = /[×←→↗＋↑↓⌄▶★✓✗]|👤|🧪|>\s*›\s*</u;
 
-describe("L'iconographie (docs/101)", () => {
-  it("aucun caractère ne sert d'icône dans les gabarits", () => {
+describe("L’iconographie (docs/101)", () => {
+  it("aucun caractère ne sert d’icône dans les gabarits", () => {
     const offenders = vueFiles(ROOT).flatMap((file) =>
       template(readFileSync(file, "utf-8"))
         .split("\n")
@@ -36,7 +36,7 @@ describe("L'iconographie (docs/101)", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("le point pêche n'est que sur l'icône des actions IA", () => {
+  it("le point pêche n’est que sur l’icône des actions IA", () => {
     const withDot = Object.entries(ICONS).filter(([, inner]) => inner.includes("icon-ai-dot"));
     expect(withDot.map(([name]) => name)).toEqual(["ai"]);
   });

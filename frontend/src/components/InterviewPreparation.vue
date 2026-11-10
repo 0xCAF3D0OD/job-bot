@@ -65,7 +65,7 @@ async function coach(): Promise<void> {
     if (data) insights.value = data;
     else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : "Impossible pour l'instant.";
+      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : "Impossible pour l’instant.";
     }
   } finally {
     busy.value = false;
@@ -93,7 +93,7 @@ onMounted(async () => {
       data-test="interview-preparation"
     >
       <header class="preparation-sheet-head">
-        <h3>Préparer l'entretien · {{ application.company }}</h3>
+        <h3>Préparer l’entretien · {{ application.company }}</h3>
         <IconButton
           icon="close"
           label="Fermer"
@@ -117,8 +117,8 @@ onMounted(async () => {
           :disabled="reached('practice')"
           @click="practicing = true"
         >
-          <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l\'IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
-            <span class="with-icon"><AppIcon name="ai" />M'entraîner pour cet entretien</span>
+          <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l’IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
+            <span class="with-icon"><AppIcon name="ai" />M’entraîner pour cet entretien</span>
           </HoverNote>
         </button>
         <PlanLimit usage="practice" />
@@ -147,7 +147,7 @@ onMounted(async () => {
         </ul>
       </section>
       <section v-if="difficult.length">
-        <h4>Les questions qui t'ont déjà mis en difficulté</h4>
+        <h4>Les questions qui t’ont déjà mis en difficulté</h4>
         <ul data-test="prep-difficult">
           <li
             v-for="question in difficult"
@@ -194,7 +194,7 @@ onMounted(async () => {
         v-if="insights && !insights.count"
         class="hint"
       >
-        Aucun retour d'entretien pour l'instant.
+        Aucun retour d’entretien pour l’instant.
       </p>
       <section
         v-if="practices.length"
@@ -243,7 +243,7 @@ onMounted(async () => {
           @click="coach"
         >
           <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
-            <span class="with-icon"><AppIcon name="ai" />Pistes de l'IA</span>
+            <span class="with-icon"><AppIcon name="ai" />Pistes de l’IA</span>
           </HoverNote>
         </BusyButton>
       </div>

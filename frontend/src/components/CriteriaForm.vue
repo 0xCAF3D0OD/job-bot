@@ -38,7 +38,7 @@ const REMOTE_POLICIES: { value: RemotePolicy; label: string; summary: string; pi
   {
     value: "from_switzerland",
     label: "Si ouvert depuis la Suisse",
-    summary: "Télétravail complet : accepté s'il est ouvert depuis la Suisse",
+    summary: "Télétravail complet : accepté s’il est ouvert depuis la Suisse",
     pill: "Depuis la Suisse",
   },
   { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout", pill: "Partout" },
@@ -93,10 +93,10 @@ const summary = computed(() => {
   const [remoteLabel, remoteValue] = (policy?.summary ?? "").split(" : ");
   if (policy && remoteLabel && remoteValue) rows.push({ key: "teletravail", label: remoteLabel, value: remoteValue, items: [policy.pill] });
   const rate = f.min_rate ? `${f.min_rate} % au moins` : "tous";
-  rows.push({ key: "taux", label: "Taux d'activité", value: rate, items: [f.min_rate ? `${f.min_rate} % et +` : "Tous"] });
+  rows.push({ key: "taux", label: "Taux d’activité", value: rate, items: [f.min_rate ? `${f.min_rate} % et +` : "Tous"] });
   // Seule l'initiale passe en minuscule : « temporaires et CDD », pas « cdd ».
   const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.charAt(0).toLowerCase() + c.label.slice(1));
-  rows.push({ key: "types", label: "Types d'offres exclus", short: "Offres exclues", value: types.length ? types.join(", ") : "aucun", items: types.length ? types.map(sentence) : ["Aucun"] });
+  rows.push({ key: "types", label: "Types d’offres exclus", short: "Offres exclues", value: types.length ? types.join(", ") : "aucun", items: types.length ? types.map(sentence) : ["Aucun"] });
   if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", short: "Mots interdits", value: f.banned_words.join(", "), items: f.banned_words });
   const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
   if (langs.length) rows.push({ key: "langues", label: "Langues non parlées", value: langs.join(", "), items: langs.map(sentence) });
@@ -167,7 +167,7 @@ async function save(): Promise<void> {
       ? `Critères enregistrés. ${plural(back, "offre revient", "offres reviennent")} dans À examiner.`
       : "Critères enregistrés. Aucune offre écartée ne revient.";
   } catch {
-    message.value = "L'enregistrement a échoué : vérifie les valeurs saisies.";
+    message.value = "L’enregistrement a échoué : vérifie les valeurs saisies.";
   } finally {
     saving.value = false;
   }
@@ -327,13 +327,13 @@ onMounted(() => void load());
 
       <fieldset id="criteria-taux">
         <legend id="min_rate-legend">
-          Taux d'activité minimum
+          Taux d’activité minimum
         </legend>
         <p
           id="min_rate-desc"
           class="setting-desc"
         >
-          « 60-80 % » passe avec un minimum de 80 ; sans taux, l'offre passe.
+          « 60-80 % » passe avec un minimum de 80 ; sans taux, l’offre passe.
         </p>
         <div class="inline-field">
           <input
@@ -363,16 +363,16 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset id="criteria-types">
-        <legend>Types d'offres exclus</legend>
+        <legend>Types d’offres exclus</legend>
         <p class="setting-desc">
           <HoverNote
             v-if="contractsHelp"
             :text="contractsHelp"
           >
-            Écartée si le titre ou l'extrait contient un mot du type.
+            Écartée si le titre ou l’extrait contient un mot du type.
           </HoverNote>
           <template v-else>
-            Écartée si le titre ou l'extrait contient un mot du type.
+            Écartée si le titre ou l’extrait contient un mot du type.
           </template>
         </p>
         <label
@@ -392,7 +392,7 @@ onMounted(() => void load());
       <fieldset id="criteria-mots">
         <legend>Mots interdits dans le titre</legend>
         <p class="setting-desc">
-          Une offre dont le titre contient l'un de ces mots est écartée.
+          Une offre dont le titre contient l’un de ces mots est écartée.
         </p>
         <TagInput
           id="banned_words"
@@ -408,10 +408,10 @@ onMounted(() => void load());
             v-if="keywords"
             :text="languagesHelp"
           >
-            Écartée si le titre ou l'extrait exige l'une de ces langues.
+            Écartée si le titre ou l’extrait exige l’une de ces langues.
           </HoverNote>
           <template v-else>
-            Écartée si le titre ou l'extrait exige l'une de ces langues.
+            Écartée si le titre ou l’extrait exige l’une de ces langues.
           </template>
         </p>
         <label

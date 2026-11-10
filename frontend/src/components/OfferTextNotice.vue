@@ -48,7 +48,7 @@ async function readNow(): Promise<void> {
     }
     // Trop de lectures (429) : le serveur dit quand réessayer (« Réessaie dans 5 minutes. »).
     const detail = (error as { detail?: unknown } | undefined)?.detail;
-    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l'annonce.");
+    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l’annonce.");
   } catch {
     problem.value = "API injoignable : réessaie dans un moment.";
   } finally {

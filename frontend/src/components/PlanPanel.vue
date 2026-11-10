@@ -30,9 +30,9 @@ function money(cents: number, currency: string): string {
 const resets = computed(() => day(plan.value?.resets_on));
 // La phrase de l'en-tête : ce que la formule limite, et quand les compteurs repartent.
 const planLine = computed(() => {
-  if (plan.value?.plan !== "plus") return `Gratuite : seule l'IA a des limites, remises à zéro le ${resets.value}.`;
-  const who = offered.value ? "Offerte par l'équipe jobA1" : "Payée chaque mois";
-  return `${who} : l'IA va plus loin, compteurs remis à zéro le ${resets.value}.`;
+  if (plan.value?.plan !== "plus") return `Gratuite : seule l’IA a des limites, remises à zéro le ${resets.value}.`;
+  const who = offered.value ? "Offerte par l’équipe jobA1" : "Payée chaque mois";
+  return `${who} : l’IA va plus loin, compteurs remis à zéro le ${resets.value}.`;
 });
 const plusLimits = computed(() => plan.value?.limits.plus ?? {});
 const paid = computed(() => plan.value?.plan === "plus" && !!plan.value.plan_until);
@@ -58,7 +58,7 @@ function detail(error: unknown, fallback: string): string {
 }
 
 async function buy(): Promise<void> {
-  termsError.value = accepted.value ? "" : "Accepte les conditions d'utilisation pour passer à Plus.";
+  termsError.value = accepted.value ? "" : "Accepte les conditions d’utilisation pour passer à Plus.";
   if (termsError.value) {
     termsBox.value?.focus();
     return;
@@ -68,7 +68,7 @@ async function buy(): Promise<void> {
   try {
     const { data, error } = await api.POST("/api/billing/checkout", { body: { accept_terms: accepted.value } });
     if (!data) {
-      message.value = { text: detail(error, "La page de paiement ne s'ouvre pas. Réessaie plus tard."), kind: "error" };
+      message.value = { text: detail(error, "La page de paiement ne s’ouvre pas. Réessaie plus tard."), kind: "error" };
       return;
     }
     // La page de paiement est celle de Payrexx : jobA1 ne voit jamais la carte.
@@ -83,12 +83,12 @@ async function cancel(): Promise<void> {
   try {
     const { data, error } = await api.POST("/api/billing/cancel");
     if (!data) {
-      message.value = { text: detail(error, "La résiliation n'a pas abouti. Réessaie plus tard."), kind: "error" };
+      message.value = { text: detail(error, "La résiliation n’a pas abouti. Réessaie plus tard."), kind: "error" };
       return;
     }
     confirming.value = false;
     await refresh();
-    message.value = { text: `Résilié : Plus reste actif jusqu'au ${day(data.plan_until)}, sans nouveau paiement.`, kind: "ok" };
+    message.value = { text: `Résilié : Plus reste actif jusqu’au ${day(data.plan_until)}, sans nouveau paiement.`, kind: "ok" };
   } finally {
     busy.value = false;
   }
@@ -103,12 +103,12 @@ onMounted(async () => {
     const { data } = await api.POST("/api/billing/sync");
     await refresh();
     message.value = data?.confirmed
-      ? { text: `Merci : Plus est actif jusqu'au ${day(data.plan_until)}.`, kind: "ok" }
-      : { text: "Le paiement est en cours de confirmation : Plus s'active dans quelques minutes.", kind: "hint" };
+      ? { text: `Merci : Plus est actif jusqu’au ${day(data.plan_until)}.`, kind: "ok" }
+      : { text: "Le paiement est en cours de confirmation : Plus s’active dans quelques minutes.", kind: "hint" };
   } else if (back === "annule") {
-    message.value = { text: "Paiement annulé : rien n'a été débité.", kind: "hint" };
+    message.value = { text: "Paiement annulé : rien n’a été débité.", kind: "hint" };
   } else {
-    message.value = { text: "Le paiement n'a pas abouti : rien n'a été débité. Réessaie.", kind: "error" };
+    message.value = { text: "Le paiement n’a pas abouti : rien n’a été débité. Réessaie.", kind: "error" };
   }
   const query = { ...route.query };
   delete query.paiement;
@@ -133,7 +133,7 @@ onMounted(async () => {
         {{ message.text }}
       </p>
       <!-- Une ligne par usage, le compteur à droite ; la jauge redit le compteur, sans rien de plus
-           (WCAG 1.4.1) : elle est cachée aux lecteurs d'écran. -->
+           (WCAG 1.4.1) : elle est cachée aux lecteurs d’écran. -->
       <SettingRow
         v-for="usage in plan.usage"
         :key="usage.key"
@@ -152,7 +152,7 @@ onMounted(async () => {
     <!-- Plus payé : la date de fin, et résilier (confirmé sous la ligne). -->
     <SettingCard v-if="paid">
       <SettingRow
-        :title="`Plus jusqu'au ${day(plan.plan_until)}`"
+        :title="`Plus jusqu’au ${day(plan.plan_until)}`"
         :description="plan.cancelled ? 'Puis Essentiel. Pas de nouveau paiement.' : 'Renouvelé chaque mois, sans engagement.'"
         data-test="plan-paid"
       >
@@ -171,7 +171,7 @@ onMounted(async () => {
         class="setting-row-form"
       >
         <InlineConfirm
-          :message="`Résilier Plus ? Il reste actif jusqu'au ${day(plan.plan_until)}, sans nouveau paiement.`"
+          :message="`Résilier Plus ? Il reste actif jusqu’au ${day(plan.plan_until)}, sans nouveau paiement.`"
           confirm-label="Résilier"
           :busy="busy"
           @confirm="cancel"
@@ -181,7 +181,7 @@ onMounted(async () => {
     </SettingCard>
 
     <!-- Essentiel : ce que Plus ajoute ; une fois le paiement ouvert, « Passer à Plus », les
-         conditions acceptées d'abord, juste dessous. -->
+         conditions acceptées d’abord, juste dessous. -->
     <SettingCard v-else-if="plan.plan !== 'plus'">
       <SettingRow
         v-slot="c"
@@ -218,7 +218,7 @@ onMounted(async () => {
             :aria-describedby="termsError ? 'plan-terms-error' : undefined"
             @change="accepted && (termsError = '')"
           >
-          <span>J'accepte les <RouterLink to="/conditions">conditions d'utilisation</RouterLink></span>
+          <span>J’accepte les <RouterLink to="/conditions">conditions d’utilisation</RouterLink></span>
         </label>
         <p
           v-if="termsError"

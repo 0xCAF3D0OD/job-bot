@@ -7,7 +7,7 @@ import { LOGIN_PATH, leave, useAuth } from "./useAuth";
 
 // Incident du 2026-11-09 : après « Se déconnecter », le Suivi ORP restait affiché avec les candidatures, parce
 // que la page ne changeait pas (route inexistante) et que rien ne vidait la mémoire de l'application.
-describe("Déconnexion : rien du compte ne reste à l'écran ni en mémoire", () => {
+describe("Déconnexion : rien du compte ne reste à l’écran ni en mémoire", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     POST.mockReset();
@@ -35,7 +35,7 @@ describe("Déconnexion : rien du compte ne reste à l'écran ni en mémoire", ()
     expect(to).toHaveBeenCalledWith(LOGIN_PATH);
   });
 
-  it("quitte la page même quand l'appel échoue (réseau coupé)", async () => {
+  it("quitte la page même quand l’appel échoue (réseau coupé)", async () => {
     POST.mockRejectedValue(new TypeError("Failed to fetch"));
     const to = vi.spyOn(leave, "to").mockImplementation(() => undefined);
     const { me, loggedIn, logout } = useAuth();

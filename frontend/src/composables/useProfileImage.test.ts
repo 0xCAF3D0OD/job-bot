@@ -47,7 +47,7 @@ describe("Image de profil : propre à chaque compte", () => {
     expect(image.choice.value).toEqual({ kind: "initials" });
   });
 
-  it("la photo importée reste au compte qui l'a choisie", async () => {
+  it("la photo importée reste au compte qui l’a choisie", async () => {
     signIn("kevin");
     const image = useProfileImage();
     await image.load();
@@ -63,7 +63,7 @@ describe("Image de profil : propre à chaque compte", () => {
     expect(image.photo.value).toBe("data:image/jpeg;base64,KEVIN");
   });
 
-  it("l'ancienne photo, gardée sans compte, n'est montrée à personne et disparaît", async () => {
+  it("l’ancienne photo, gardée sans compte, n’est montrée à personne et disparaît", async () => {
     localStorage.setItem("joba1.profile-photo", "data:image/jpeg;base64,ANCIENNE");
     signIn("nouveau");
     const image = useProfileImage();

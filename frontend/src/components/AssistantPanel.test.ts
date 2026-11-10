@@ -133,13 +133,13 @@ describe("AssistantPanel, propositions (docs/52)", () => {
     await wrapper.find("[data-test=assistant-recent]").trigger("click");
     await flushPromises();
     const lines = wrapper.findAll(".assistant-line");
-    expect(lines[1]!.find("[data-test=assistant-action]").text()).toContain("rien n'a été changé");
+    expect(lines[1]!.find("[data-test=assistant-action]").text()).toContain("rien n’a été changé");
     expect(wrapper.find("[data-test=assistant-action-confirm]").exists()).toBe(false);
   });
 });
 
 describe("AssistantPanel, effacer la discussion (règles §4, menu « ⋯ »)", () => {
-  it("« Effacer la discussion » se confirme sur place ; « Garder » n'efface rien", async () => {
+  it("« Effacer la discussion » se confirme sur place ; « Garder » n’efface rien", async () => {
     const wrapper = await mountPanel();
     GET.mockImplementation((path: string) =>
       Promise.resolve({
@@ -161,7 +161,7 @@ describe("AssistantPanel, effacer la discussion (règles §4, menu « ⋯ »)", 
     await wrapper.find("[data-test=assistant-recent]").trigger("click");
     await flushPromises();
     const more = wrapper.find("[data-test=assistant-more]");
-    expect(more.attributes("aria-label")).toBe("Plus d'actions sur la discussion");
+    expect(more.attributes("aria-label")).toBe("Plus d’actions sur la discussion");
 
     await more.trigger("click");
     await wrapper.find("[data-test=assistant-erase]").trigger("click");
@@ -210,7 +210,7 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
   const mood = (wrapper: Awaited<ReturnType<typeof mountPanel>>, selector: string) =>
     wrapper.find(`${selector} [data-test=assistant-mascot]`).attributes("data-mood");
 
-  it("réfléchit pendant la réponse, a trouvé à l'arrivée, puis revient à l'écoute", async () => {
+  it("réfléchit pendant la réponse, a trouvé à l’arrivée, puis revient à l’écoute", async () => {
     const first = manualStream();
     const second = manualStream();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(first.response).mockResolvedValueOnce(second.response));
@@ -228,7 +228,7 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     const waiting = wrapper.find("[data-test=assistant-waiting]");
     expect(waiting.attributes("role")).toBe("status");
     expect(waiting.findAll(".assistant-dots > span")).toHaveLength(3);
-    expect(waiting.find(".visually-hidden").text()).toBe("L'Assistant écrit…");
+    expect(waiting.find(".visually-hidden").text()).toBe("L’Assistant écrit…");
 
     first.push("text", { text: "Il te reste 2 candidatures." });
     await flushPromises();
@@ -255,7 +255,7 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     await flushPromises();
   });
 
-  it("une erreur reste à l'écoute", async () => {
+  it("une erreur reste à l’écoute", async () => {
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({ detail: "Indisponible" }) })));
     const wrapper = await mountPanel();
     await wrapper.find("[data-test=composer-input]").setValue("Bonjour");
@@ -267,16 +267,16 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
   });
 });
 
-describe("Une question posée d'ailleurs (« Pas de CV à jour ? », 2026-11-06)", () => {
-  it("le panneau l'envoie dès qu'il s'affiche, une seule fois", async () => {
+describe("Une question posée d’ailleurs (« Pas de CV à jour ? », 2026-11-06)", () => {
+  it("le panneau l’envoie dès qu’il s’affiche, une seule fois", async () => {
     const fetch = vi.fn(() => Promise.resolve(stream(["delta", { text: "Commençons par ton parcours." }], ["done", { conversation_id: 3 }])));
     vi.stubGlobal("fetch", fetch);
-    useAssistant().ask("Je n'ai pas de CV à jour. Aide-moi à en créer un.");
+    useAssistant().ask("Je n’ai pas de CV à jour. Aide-moi à en créer un.");
     const wrapper = await mountPanel();
     expect(fetch).toHaveBeenCalledTimes(1);
     const body = JSON.parse((fetch.mock.calls[0] as unknown as [string, { body: string }])[1].body) as { message?: string; content?: string };
     expect(JSON.stringify(body)).toContain("Aide-moi à en créer un.");
-    expect(wrapper.find(".assistant-line.user").text()).toContain("Je n'ai pas de CV à jour.");
+    expect(wrapper.find(".assistant-line.user").text()).toContain("Je n’ai pas de CV à jour.");
     expect(useAssistant().pending.value).toBeNull();
   });
 });
@@ -315,7 +315,7 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
 
   const TODAY = { month: "2026-11", month_count: 10, month_target: 10, to_follow_up: 13, orp_meeting_at: "2026-11-09T09:00:00Z", rhythm: null };
 
-  it("la bulle écrite par l'app : le prénom, les offres du tri de l'Accueil, les relances ; les réponses selon la situation", async () => {
+  it("la bulle écrite par l’app : le prénom, les offres du tri de l’Accueil, les relances ; les réponses selon la situation", async () => {
     localStorage.clear();
     const { wrapper } = await mountPage(TODAY, [{ id: 12, status: "preparing", company: "Alpstack" }]);
     const panel = wrapper.find("[data-test=assistant-panel]");
@@ -326,7 +326,7 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
     expect(wrapper.find("[data-test=assistant-new]").attributes("aria-label")).toBe("Nouvelle discussion");
     // Le tri de l'Accueil : 3 offres (la dose), pas les 4 à examiner.
     expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe(
-      "Bonjour Kevin. 3 offres t'attendent et 13 relances sont en retard. On commence par quoi ?",
+      "Bonjour Kevin. 3 offres t’attendent et 13 relances sont en retard. On commence par quoi ?",
     );
     const replies = wrapper.findAll("[data-test=assistant-reply]");
     expect(replies.map((r) => r.text())).toEqual(["Préparer la lettre pour Alpstack", "Préparer les relances", "Préparer mon rendez-vous ORP"]);
@@ -335,19 +335,19 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
     expect(wrapper.find("[data-test=composer-input]").attributes("placeholder")).toBe("Demande quelque chose…");
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Envoyer");
     // Maquette du 8 novembre (D25) : la zone de saisie commune, et la mention sous elle.
-    expect(wrapper.find("[data-test=assistant-disclaimer]").text()).toBe("L'Assistant peut se tromper. Relis toujours avant d'envoyer.");
+    expect(wrapper.find("[data-test=assistant-disclaimer]").text()).toBe("L’Assistant peut se tromper. Relis toujours avant d’envoyer.");
     expect(GET).not.toHaveBeenCalledWith("/api/assistant/messages", expect.anything());
   });
 
-  it("rien à faire : « Tout est à jour », et les questions de l'Accueil", async () => {
+  it("rien à faire : « Tout est à jour », et les questions de l’Accueil", async () => {
     localStorage.clear();
     GET.mockReset();
     const { wrapper } = await mountPage({ ...TODAY, to_follow_up: 0, orp_meeting_at: null, rhythm: { research_today: false } });
     expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe("Bonjour Kevin. Tout est à jour. Une question ?");
-    expect(wrapper.findAll("[data-test=assistant-reply]").map((r) => r.text())).toContain("Que faire aujourd'hui ?");
+    expect(wrapper.findAll("[data-test=assistant-reply]").map((r) => r.text())).toContain("Que faire aujourd’hui ?");
   });
 
-  it("un raccourci « Demander à l'assistant » sur téléphone mène à la page", async () => {
+  it("un raccourci « Demander à l’assistant » sur téléphone mène à la page", async () => {
     const { router, assistant } = await mountPage(TODAY);
     await router.push("/candidatures/offres");
     await flushPromises();

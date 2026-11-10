@@ -21,7 +21,7 @@ function mountPick() {
 }
 
 describe("DailyPick", () => {
-  it("une offre à la fois : la note et pourquoi, les étiquettes, l'annonce, sa place", () => {
+  it("une offre à la fois : la note et pourquoi, les étiquettes, l’annonce, sa place", () => {
     const wrapper = mountPick();
     const card = wrapper.find("[data-test=pick-card]");
     expect(card.text()).toContain("DevOps");
@@ -41,7 +41,7 @@ describe("DailyPick", () => {
     expect(wrapper.find("[data-test=pick-keep]").attributes("aria-keyshortcuts")).toBe("ArrowRight");
   });
 
-  it("Garder puis Écarter : le statut part après coup, « Annuler » remet l'offre", async () => {
+  it("Garder puis Écarter : le statut part après coup, « Annuler » remet l’offre", async () => {
     PATCH.mockResolvedValue({ response: { ok: true } });
     const wrapper = mountPick();
     await wrapper.find("[data-test=pick-keep]").trigger("click");
@@ -63,7 +63,7 @@ describe("DailyPick", () => {
     const done = wrapper.find("[data-test=pick-done]");
     expect(done.text()).toContain("Tri du jour terminé");
     expect(done.text()).toContain("1 gardée, 1 écartée.");
-    expect(done.find("[data-test=pick-preparing]").text()).toBe("Préparer l'offre gardée");
+    expect(done.find("[data-test=pick-preparing]").text()).toBe("Préparer l’offre gardée");
     expect(wrapper.emitted("changed")).toBeTruthy();
     await done.find("[data-test=pick-preparing]").trigger("click");
     expect(wrapper.emitted("showPreparing")).toBeTruthy();
@@ -82,7 +82,7 @@ describe("DailyPick", () => {
     wrapper.unmount();
   });
 
-  it("sur téléphone : la note, pourquoi et l'annonce passent dans le panneau, pas de raccourcis", () => {
+  it("sur téléphone : la note, pourquoi et l’annonce passent dans le panneau, pas de raccourcis", () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
     const wrapper = mountPick();
     const card = wrapper.find("[data-test=pick-card]");

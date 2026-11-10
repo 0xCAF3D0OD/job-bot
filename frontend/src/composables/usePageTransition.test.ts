@@ -9,7 +9,7 @@ describe("voile du premier chargement (planche « vide et chargement »)", () =>
   });
   afterEach(() => vi.useRealTimers());
 
-  it("rapide : rien ne s'affiche avant 1 s (§15 du 9 novembre)", () => {
+  it("rapide : rien ne s’affiche avant 1 s (§15 du 9 novembre)", () => {
     startPage("trainings");
     vi.advanceTimersByTime(950);
     expect(pageTransition.shown).toBe(false);
@@ -30,7 +30,7 @@ describe("voile du premier chargement (planche « vide et chargement »)", () =>
     expect(pageTransition.shown).toBe(false);
   });
 
-  it("très lent : le voile s'efface après 10 s, la page montre ses blocs", () => {
+  it("très lent : le voile s’efface après 10 s, la page montre ses blocs", () => {
     startPage("trainings");
     vi.advanceTimersByTime(9_900);
     expect(pageTransition.shown).toBe(true);
@@ -38,7 +38,7 @@ describe("voile du premier chargement (planche « vide et chargement »)", () =>
     expect(pageTransition.shown).toBe(false);
   });
 
-  it("seulement au premier chargement : un changement de page n'a pas de voile", () => {
+  it("seulement au premier chargement : un changement de page n’a pas de voile", () => {
     startPage("today");
     pageReady("today");
     startPage("trainings");

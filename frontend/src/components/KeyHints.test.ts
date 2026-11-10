@@ -12,7 +12,7 @@ function press(key: string, init: KeyboardEventInit = {}, target: EventTarget = 
 }
 
 describe("KeyHints et useArrowKeys", () => {
-  it("montre ← et → avec leurs actions, caché aux lecteurs d'écran", () => {
+  it("montre ← et → avec leurs actions, caché aux lecteurs d’écran", () => {
     const wrapper = mount(KeyHints, { props: { left: "Écarter", right: "Garder" } });
     expect(wrapper.text()).toBe("Écarter Garder");
     expect(wrapper.findAll("kbd svg")).toHaveLength(2);

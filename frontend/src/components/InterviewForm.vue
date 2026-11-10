@@ -108,7 +108,7 @@ function submit(): void {
       @submit.prevent="submit"
     >
       <h3>
-        Retour d'entretien · {{ company }}
+        Retour d’entretien · {{ company }}
       </h3>
 
       <fieldset>
@@ -131,7 +131,7 @@ function submit(): void {
           <DateField
             v-model="form.held_at"
             label="Date"
-            title="Date de l'entretien"
+            title="Date de l’entretien"
             :min="null"
             optional
             data-test="held-at"
@@ -283,7 +283,7 @@ function submit(): void {
           v-if="form.questions.length"
           class="hint"
         >
-          Coche celles qui t'ont mis en difficulté.
+          Coche celles qui t’ont mis en difficulté.
         </p>
         <ul class="question-list">
           <li
@@ -349,7 +349,7 @@ function submit(): void {
             type="checkbox"
             data-test="salary-yes"
           >
-          On t'a posé la question du salaire
+          On t’a posé la question du salaire
         </label>
         <FormField
           v-if="form.salary_asked"
@@ -370,7 +370,7 @@ function submit(): void {
       </fieldset>
 
       <fieldset>
-        <legend>Ce qui a marché, ce qui n'a pas marché</legend>
+        <legend>Ce qui a marché, ce qui n’a pas marché</legend>
         <div class="form-grid">
           <FormField
             v-slot="{ id, describedby, invalid }"
@@ -416,7 +416,7 @@ function submit(): void {
               :id="id"
               v-model="form.to_prepare"
               rows="2"
-              placeholder="Un exemple chiffré de projet&#10;Les chiffres de l'entreprise"
+              placeholder="Un exemple chiffré de projet&#10;Les chiffres de l’entreprise"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             />
@@ -471,7 +471,7 @@ function submit(): void {
           </FormField>
           <FormField
             v-slot="{ id, describedby, invalid }"
-            label="Points d'attention"
+            label="Points d’attention"
             optional
           >
             <textarea
@@ -550,7 +550,7 @@ function submit(): void {
             v-if="withEmployerFeedback"
             v-slot="{ id, describedby, invalid }"
             class="wide"
-            label="Le retour de l'employeur (motif, conseils)"
+            label="Le retour de l’employeur (motif, conseils)"
             optional
           >
             <textarea

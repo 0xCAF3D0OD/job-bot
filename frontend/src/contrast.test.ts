@@ -64,7 +64,7 @@ describe.each([
   });
 });
 
-describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", () => {
+describe("--faint, réservé à ce qui n’est pas du texte (docs/135, 1.6.1)", () => {
   it("au moins 3,3:1 en clair et 3:1 en sombre sur les fonds de page", () => {
     for (const background of BACKGROUNDS) {
       expect(ratio(light.faint!, light[background]!), `clair, ${background}`).toBeGreaterThanOrEqual(3.3);
@@ -72,7 +72,7 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20), la piste de l'interrupteur (1.6.23) ; le texte gris est en --muted", () => {
+  it("seulement pour les chevrons, les soulignés, l’encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20), la piste de l’interrupteur (1.6.23) ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
     for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot|:root input\[type="checkbox"\]|\.button-link)/);
     expect(rules.length).toBeGreaterThan(0);
@@ -111,7 +111,7 @@ describe("la tuile du visage (1.6.16)", () => {
 });
 
 describe("initiales des entreprises et pastille de la cloche (audit du 22.10.2026)", () => {
-  it("l'initiale foncée sur les fonds clairs, le chiffre blanc sur un rouge assez sombre", () => {
+  it("l’initiale foncée sur les fonds clairs, le chiffre blanc sur un rouge assez sombre", () => {
     // Sur la menthe et le ciel, l'initiale reste foncée : --text en clair, --on-accent en sombre (1.6.15).
     for (const tone of ["mint", "sky"]) {
       expect(css).toMatch(new RegExp(`\\.logo\\.c\\d \\{ background: var\\(--${tone}\\); color: var\\(--text\\); \\}`));
@@ -128,7 +128,7 @@ describe("initiales des entreprises et pastille de la cloche (audit du 22.10.202
   });
 });
 
-describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () => {
+describe("la pastille de la cloche et la sélection d’une offre (1.6.18)", () => {
   it("la cloche, seule pastille orange : 4,5:1 au moins en clair et en sombre", () => {
     // La pastille unique (CountBadge, 1.6.33), en orange pour la cloche : chiffre blanc sur l'orange foncé en clair,
     // chiffre de la couleur du fond sur l'orange clair du sombre chaud (docs/139).
@@ -139,7 +139,7 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
     expect(ratio(dark.bg!, dark.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(css).not.toContain("#c62a2f");
   });
-  it("une offre sélectionnée : --muted reste à 4,5:1 sur le voile d'accent", () => {
+  it("une offre sélectionnée : --muted reste à 4,5:1 sur le voile d’accent", () => {
     const share = Number(css.match(/\.offer-line\.selected \{ background: color-mix\(in srgb, var\(--accent\) (\d+)%/)![1]) / 100;
     for (const theme of [light, dark]) {
       expect(ratio(theme.muted!, mix(theme.accent!, theme.surface!, share))).toBeGreaterThanOrEqual(4.5);
@@ -148,13 +148,13 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
 });
 
 describe("le Suivi (1.6.20)", () => {
-  it("un refus n'est pas une erreur : gris ; « sans réponse » en --faint, plus de couleur en dur", () => {
+  it("un refus n’est pas une erreur : gris ; « sans réponse » en --faint, plus de couleur en dur", () => {
     expect(css).toContain(".app-status .dot.refus { background: var(--muted); }");
     expect(css).toContain(".app-status .dot.sans_reponse { background: var(--faint); }");
     expect(css).not.toContain("#c4c8d2");
   });
 
-  it("le titre d'une ligne repliable en 600, ouverte ou fermée (comme Figma)", () => {
+  it("le titre d’une ligne repliable en 600, ouverte ou fermée (comme Figma)", () => {
     expect(css).toMatch(/\.disclosure-title \{[^}]*font-weight: var\(--weight-semibold\)/);
   });
 });
@@ -181,7 +181,7 @@ describe("les champs (planche « Champs »)", () => {
   });
 });
 
-describe("l'entrée affichée d'une liste groupée", () => {
+describe("l’entrée affichée d’une liste groupée", () => {
   it("la phrase reste lisible sur le fond teinté, en clair et en sombre (WCAG 1.4.3)", () => {
     expect(css).toContain(".grouped-row-current .grouped-row-description { color: var(--text); }");
     for (const theme of [light, dark]) {
@@ -200,7 +200,7 @@ describe("radios (planche « Champs »)", () => {
   });
 });
 
-describe("l'interrupteur (1.6.23)", () => {
+describe("l’interrupteur (1.6.23)", () => {
   it("la piste non cochée se voit sur la carte : --faint, 3:1 au moins (WCAG 1.4.11)", () => {
     expect(css).toMatch(/:root input\[type="checkbox"\]\[role="switch"\] \{[^}]*background: var\(--faint\)/);
     expect(ratio(light.faint!, light.surface!)).toBeGreaterThanOrEqual(3);
@@ -209,7 +209,7 @@ describe("l'interrupteur (1.6.23)", () => {
 });
 
 describe("les lignes repliables (1.6.24)", () => {
-  it("le résumé n'est jamais coupé : il passe à la ligne", () => {
+  it("le résumé n’est jamais coupé : il passe à la ligne", () => {
     const rule = css.match(/\.disclosure-value \{[^}]*\}/)![0];
     expect(rule).not.toContain("ellipsis");
     expect(rule).not.toContain("nowrap");
@@ -229,8 +229,8 @@ describe("revue sur ordinateur (1.6.27)", () => {
   });
 });
 
-describe("l'anneau de la note : « Loin » et « À creuser » (revue de la PR 461)", () => {
-  it("l'anneau de « Loin » se voit sur la carte (3:1, WCAG 1.4.11) et se distingue du gris chaud d'« À creuser »", () => {
+describe("l’anneau de la note : « Loin » et « À creuser » (revue de la PR 461)", () => {
+  it("l’anneau de « Loin » se voit sur la carte (3:1, WCAG 1.4.11) et se distingue du gris chaud d'« À creuser »", () => {
     for (const theme of [light, dark]) {
       expect(ratio(theme["neutral-graphic"]!, theme.surface!)).toBeGreaterThanOrEqual(3);
       expect(ratio(theme["neutral-graphic"]!, theme["score-dig"]!)).toBeGreaterThanOrEqual(1.5);
@@ -242,7 +242,7 @@ describe("l'anneau de la note : « Loin » et « À creuser » (revue de la PR 4
 });
 
 describe("les puces et le contrôle segmenté (D4, 2026-11-03)", () => {
-  it("le bord d'une puce non choisie fait 3:1 sur la carte et sur la page, en clair et en sombre (WCAG 1.4.11)", () => {
+  it("le bord d’une puce non choisie fait 3:1 sur la carte et sur la page, en clair et en sombre (WCAG 1.4.11)", () => {
     expect(css).toContain('button.chip:is([aria-pressed], [role="radio"]) { border: 1px solid var(--field-border);');
     expect(css).toMatch(/\.filter-choice \{[^}]*border: 1px solid var\(--field-border\)/);
     for (const theme of [light, dark]) {

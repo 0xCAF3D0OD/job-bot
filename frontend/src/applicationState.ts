@@ -67,7 +67,7 @@ export function nextStep(a: Application, row?: OrpRow | null): NextStep {
   if (followUpDue(a)) return { key: "follow-up", text: noAnswerText(a), action: "Relancer" };
   if (noAnswerDue(a)) return { key: "no-answer", text: "Relancée, sans réponse", action: "Classer sans réponse" };
   if (row?.missing.length) {
-    return { key: "complete", text: `Pour l'ORP, il manque : ${row.missing.join(", ")}`, action: "Compléter" };
+    return { key: "complete", text: `Pour l’ORP, il manque : ${row.missing.join(", ")}`, action: "Compléter" };
   }
   return { key: "manage", text: "", action: "Gérer" };
 }

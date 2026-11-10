@@ -70,7 +70,7 @@ export function useOrpOutcome(meeting: Ref<Meeting | null>, target: Ref<number |
         },
       });
       if (data) onSaved(data);
-      else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
+      else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
     } finally {
       busy.value = false;
     }

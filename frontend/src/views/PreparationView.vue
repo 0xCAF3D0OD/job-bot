@@ -41,7 +41,7 @@ import SuggestionChips from "../components/SuggestionChips.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInSentence, dateWithTime } from "../dates";
-import { expiredText, scoreWord } from "../format";
+import { companyPlace, expiredText, scoreWord } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
@@ -64,7 +64,7 @@ const tab = computed(() =>
 // le lien secondaire une fois ouvert (C8, « Rouvrir jobup »).
 const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", jobroom: "Job-Room" };
 type ApplyLink = { url: string; label: string; where: string; reopen: string };
-const EMPLOYER = { label: "Postuler chez l'employeur", where: "chez l'employeur", reopen: "Rouvrir le site de l'employeur" };
+const EMPLOYER = { label: "Postuler chez l’employeur", where: "chez l’employeur", reopen: "Rouvrir le site de l’employeur" };
 const applyLink = computed<ApplyLink | null>(() => {
   const o = offer.value;
   if (!o) return null;
@@ -77,7 +77,7 @@ const applyLink = computed<ApplyLink | null>(() => {
   }
   const link = o.links[0];
   if (!link) return null;
-  if (link.source === "manual") return { url: link.url, label: "Ouvrir l'annonce", where: "", reopen: "Rouvrir l'annonce" };
+  if (link.source === "manual") return { url: link.url, label: "Ouvrir l’annonce", where: "", reopen: "Rouvrir l’annonce" };
   const site = SITE_NAMES[link.source] ?? link.source;
   return { url: link.url, label: `Postuler sur ${site}`, where: `sur ${site}`, reopen: `Rouvrir ${site}` };
 });
@@ -85,8 +85,8 @@ const applyLink = computed<ApplyLink | null>(() => {
 // deux lignes avec d'où elle vient, le site de l'employeur s'il est connu, et ses contacts dans un panneau.
 const whereTitle = computed(() => {
   const where = applyLink.value?.where;
-  if (!where) return phone.value ? "L'annonce" : "L’annonce";
-  return phone.value ? `L'annonce se postule ${where}` : `${where.charAt(0).toUpperCase()}${where.slice(1)}`.replace(/'/g, "’");
+  if (!where) return phone.value ? "L’annonce" : "L’annonce";
+  return phone.value ? `L’annonce se postule ${where}` : `${where.charAt(0).toUpperCase()}${where.slice(1)}`.replace(/'/g, "’");
 });
 const ADDRESS_FROM: Record<string, string> = {
   page: "Relevée dans l’annonce",
@@ -143,7 +143,7 @@ async function markApplied(): Promise<void> {
     const prefill = await api.GET("/api/offers/{offer_id}/application-prefill", { params: { path: { offer_id: offerId } } });
     const { data, error: err } = prefill.data ? await api.POST("/api/applications", { body: prefill.data }) : { data: null, error: prefill.error };
     if (!data) {
-      applyError.value = detail(err, "Enregistrement impossible pour l'instant : réessaie.");
+      applyError.value = detail(err, "Enregistrement impossible pour l’instant : réessaie.");
       return;
     }
     useJobsMemory().sent(offerId);
@@ -175,7 +175,7 @@ function cancelApplied(): void {
   // L'offre revient en préparation : le menu Candidatures y ramène de nouveau.
   useJobsMemory().remember(`/candidatures/offres/${offerId}/preparer?doc=postuler`);
   void offerUndo({
-    message: "Candidature retirée : l'offre revient en préparation.",
+    message: "Candidature retirée : l’offre revient en préparation.",
     commit: async (keepalive) => {
       const { response } = await api.DELETE("/api/applications/{application_id}", {
         params: { path: { application_id: done.id } },
@@ -242,10 +242,6 @@ const versionsOpen = ref(false);
 // modèle choisi ; l'aperçu touché ouvre la lettre entière, modifiable.
 const { template } = useDocTemplate();
 const letterOpen = ref(false);
-// La ligne de l'entreprise (maquette Preparer) : « Alpstack · Lausanne », sans le canton.
-function cityOnly(location: string | null | undefined): string {
-  return (location || "").replace(/,\s*[A-Z]{2}$/, "");
-}
 const previewName = computed(() => doc.value?.sender[0] || "Ton nom");
 // « 1020 Renens » devient « Renens » sous le nom.
 const previewSub = computed(() => {
@@ -530,7 +526,7 @@ async function save(): Promise<void> {
       body: { subject: draft.value.subject, paragraphs: draft.value.paragraphs.filter((p) => p.text.trim()) },
     });
     if (!data) {
-      error.value = detail(err, "Enregistrement refusé : l'objet et au moins un paragraphe sont nécessaires.");
+      error.value = detail(err, "Enregistrement refusé : l’objet et au moins un paragraphe sont nécessaires.");
       return;
     }
     letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
@@ -611,7 +607,7 @@ async function confirmClaim(mode: FalseClaimMode): Promise<void> {
     if (rest) flash(chosen.index);
     void nextTick(resizeAll);
     await offerUndo({
-      message: "Phrase retirée. jobA1 ne l'écrira plus.",
+      message: "Phrase retirée. jobA1 ne l’écrira plus.",
       commit: async (keepalive) => {
         const { data } = await api.POST("/api/letters/{draft_id}/false-claim", {
           params: { path: { draft_id: letter.id } },
@@ -650,7 +646,7 @@ async function confirmClaim(mode: FalseClaimMode): Promise<void> {
     fresh.value = true;
     setTimeout(() => (fresh.value = false), 1000);
     void offerUndo({
-      message: "Phrase réécrite d'après ton profil.",
+      message: "Phrase réécrite d’après ton profil.",
       commit: () => true,
       restore: async () => {
         select(letter);
@@ -727,7 +723,7 @@ async function readThenNext(): Promise<void> {
     try {
       const { data, error: err } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: true } });
       if (!data) {
-        error.value = detail(err, "La relecture n'a pas été enregistrée, réessaie.");
+        error.value = detail(err, "La relecture n’a pas été enregistrée, réessaie.");
         return;
       }
       error.value = "";
@@ -798,7 +794,7 @@ onMounted(() => void load());
     @cancel="cancelApplied"
   />
   <!-- La tête (maquette Preparer, étape 7a) : le retour à l'offre, « Ma candidature », puis l'offre en une
-       ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre, D3) et les étapes. -->
+       ligne (logo, poste, « Entreprise · Lieu », l’anneau sans chiffre, D3) et les étapes. -->
   <PageHero
     v-else-if="phone"
     class="prep-head"
@@ -811,7 +807,7 @@ onMounted(() => void load());
         data-test="back-to-offer"
         @click="backToOffer"
       >
-        <AppIcon name="arrow-left" /><span class="prep-back-text">Retour à l'offre</span>
+        <AppIcon name="arrow-left" /><span class="prep-back-text">Retour à l’offre</span>
       </RouterLink>
     </template>
     <template #actions>
@@ -835,7 +831,7 @@ onMounted(() => void load());
           class="prep-offer-title"
           data-test="prep-offer-title"
         >{{ offer.title }}</span>
-        <span class="prep-offer-sub">{{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}</span>
+        <span class="prep-offer-sub">{{ companyPlace(offer.company, offer.location, true) }}</span>
       </p>
     </div>
     <StepTabs
@@ -846,8 +842,8 @@ onMounted(() => void load());
     />
   </PageHero>
   <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
-       H1 avec l'entreprise et le lieu, l'anneau de 48 avec le verdict, puis les étapes. « Ma candidature » ne reste
-       que dans le titre de l'onglet. -->
+       H1 avec l’entreprise et le lieu, l’anneau de 48 avec le verdict, puis les étapes. « Ma candidature » ne reste
+       que dans le titre de l’onglet. -->
   <header
     v-else
     class="container prep-desk-head"
@@ -874,7 +870,7 @@ onMounted(() => void load());
         {{ notFound ? "Offre introuvable" : offer?.title ?? "" }}
       </h1>
       <p v-if="offer">
-        {{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}
+        {{ companyPlace(offer.company, offer.location, true) }}
       </p>
     </div>
     <!-- La note (§2.2) : l'anneau, « Proche de ton profil » puis « Voir la compatibilité › », qui ouvre le panneau. -->
@@ -918,7 +914,7 @@ onMounted(() => void load());
         mood="attentif"
         data-test="offer-not-found"
       >
-        <p>Elle a peut-être été retirée par l'employeur.</p>
+        <p>Elle a peut-être été retirée par l’employeur.</p>
         <div class="face-state-actions">
           <RouterLink
             to="/candidatures/offres"
@@ -936,7 +932,7 @@ onMounted(() => void load());
         class="notice expired-notice"
         data-test="expired"
       >
-        {{ expiredText(offer) }} Vérifie avant d'envoyer ta candidature.
+        {{ expiredText(offer) }} Vérifie avant d’envoyer ta candidature.
       </p>
       <!-- Une candidature déjà envoyée (Q1) : le rappel de l'envoi et le lien vers le suivi. -->
       <p
@@ -952,7 +948,7 @@ onMounted(() => void load());
 
       <!-- Postuler (C7) : où l'annonce se postule et les pièces, ce qu'on recopie, puis un contact. Sur ordinateur
            (MODIFICATIONS du 9 novembre, §2.4 ; maquette PreparerOrdinateurPostuler) : les actions au pied de la carte
-           « Où postuler », et à droite l'entreprise (avec ses contacts) et ce qui suit l'envoi. -->
+           « Où postuler », et à droite l’entreprise (avec ses contacts) et ce qui suit l’envoi. -->
       <div
         v-if="offer && tab === 'apply'"
         :class="['prep-layout', { 'prep-desk': !phone }]"
@@ -980,7 +976,7 @@ onMounted(() => void load());
               v-if="applyLink"
               class="apply-where-text"
             >
-              {{ phone ? "Le formulaire s'ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l'envoi." : "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." }}
+              {{ phone ? "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." : "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." }}
             </p>
             <div
               ref="attachRow"
@@ -1216,14 +1212,14 @@ onMounted(() => void load());
 
           <!-- La carte de la lettre (maquette Preparer, étape 7b) : le titre et la langue en tête (C3 : choisir
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
-               texte » qui ouvre la consigne, puis « J'ai relu la lettre » (C11). -->
+               texte » qui ouvre la consigne, puis « J’ai relu la lettre » (C11). -->
           <section
             class="doc-card"
             aria-labelledby="letter-card-title"
             data-test="letter-card"
           >
             <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille ; plus de
-                 FR / DE / EN sur l'écran. Sur ordinateur, FR / DE / EN reste en haut du document. -->
+                 FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. -->
             <LayoutSheetLink
               v-if="phone"
               v-model="shownLanguage"
@@ -1372,7 +1368,7 @@ onMounted(() => void load());
             />
             <!-- Retoucher (§9) : la zone de saisie juste sous l'aperçu ; les puces au-dessus seulement avec le focus,
                  plus de libellé « Retoucher la lettre ». Pas de « + » ni de micro : la question de la PR 577 reste
-                 ouverte (envoi de fichiers à l'IA, service de dictée). -->
+                 ouverte (envoi de fichiers à l’IA, service de dictée). -->
             <div
               v-if="phone && selected && !claim"
               class="prep-revise"
@@ -1507,7 +1503,7 @@ onMounted(() => void load());
             <!-- La relecture (décision de Kevin) : une ligne, puis le détail repliable, un critère par
                ligne avec sa pastille (« Réussi » ou « À revoir », jamais le ton erreur). -->
             <!-- Sur ordinateur, la relecture est dans la carte « Ta candidature » (§2.2) ; la ligne reste pour les lecteurs
-                 d'écran. -->
+                 d’écran. -->
             <p
               :class="['review-line', { 'visually-hidden': !phone }]"
               aria-live="polite"
@@ -1595,7 +1591,7 @@ onMounted(() => void load());
 
         <!-- Colonne de droite sur ordinateur (MODIFICATIONS du 9 novembre, §2.2 et §7.2 ; maquette PreparerOrdinateur) :
              la mise en page, la carte « Ta candidature » (Relecture, Versions, CV adapté, chaque ligne ouvre un panneau
-             ou l'étape), puis le seul bouton plein. Elle reste en place quand la page défile. -->
+             ou l’étape), puis le seul bouton plein. Elle reste en place quand la page défile. -->
         <aside
           v-if="!phone"
           class="prep-side prep-aside"
@@ -1846,7 +1842,7 @@ onMounted(() => void load());
             v-if="dirty"
             class="hint"
           >
-            Enregistre d'abord tes modifications pour les télécharger.
+            Enregistre d’abord tes modifications pour les télécharger.
           </p>
           <template #actions>
             <button
@@ -1945,8 +1941,8 @@ onMounted(() => void load());
 /* Conteneur de 1280 (D18), 24 de marge entre 821 et 1327 px. */
 .prep-desk-head.container, .prep-desk-band > .container { --prep-max: 1280px; max-width: calc(var(--prep-max) + 2 * var(--space-6)); }
 /* Préparer sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 15.1 ; captures PreparerOrdinateur et
-   --colonne-bas) : en-tête de 64 px, grille 1fr + 360 à 24 d'écart, colonne de droite qui défile seule, cartes de
-   20/24, lettre sur --surface-muted, bas de page en grille qui reste en bas de l'écran. */
+   --colonne-bas) : en-tête de 64 px, grille 1fr + 360 à 24 d’écart, colonne de droite qui défile seule, cartes de
+   20/24, lettre sur --surface-muted, bas de page en grille qui reste en bas de l’écran. */
 .prep-desk-head { --prep-22: 22px; --prep-20: 20px; --prep-32: 32px; --prep-44: 44px; --prep-48: 48px; --prep-64: 64px; --prep-24: 24px; display: flex; align-items: center; gap: var(--prep-20); min-height: var(--prep-64); padding-top: var(--space-4); padding-bottom: var(--space-2); }
 .prep-desk-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--prep-44); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; white-space: nowrap; }
 .prep-desk-back:hover { text-decoration: underline; }
@@ -2082,7 +2078,7 @@ onMounted(() => void load());
 .apply-copy-desk .copy-button { width: var(--apply-40); height: var(--apply-40); color: var(--primary-text); }
 .apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
 /* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
-   la source de l'adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
+   la source de l’adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
 .apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-56: 56px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
 .apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
 .apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }

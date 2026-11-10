@@ -88,7 +88,7 @@ describe("Les premiers pas (docs/128)", () => {
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=first-steps]");
     expect(card.text()).toContain("2 sur 5");
-    expect(card.find("h2").text()).toBe("Alertes sur les sites d'emploi");
+    expect(card.find("h2").text()).toBe("Alertes sur les sites d’emploi");
     expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
     expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
@@ -109,7 +109,7 @@ describe("Les premiers pas (docs/128)", () => {
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=first-steps]");
     expect(card.find("h2").text()).toBe("Alertes prêtes");
-    expect(card.text()).toContain("d'ici un ou deux jours");
+    expect(card.text()).toContain("d’ici un ou deux jours");
     expect(card.find("[data-test=first-steps-add]").attributes("href")).toBe("/candidatures/offres?ajouter=1");
     // Le mois ORP reste.
     expect(wrapper.find("[data-test=orp-month]").exists()).toBe(true);
@@ -145,7 +145,7 @@ describe("Les premiers pas (docs/128)", () => {
     expect(wrapper.find("[data-test=today-start]").exists()).toBe(false);
   });
 
-  it("garder une offre : le bouton ouvre l'écran de tri", async () => {
+  it("garder une offre : le bouton ouvre l’écran de tri", async () => {
     mockGet(starting(2));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/aujourdhui/tri");
@@ -196,7 +196,7 @@ describe("Les premiers pas (docs/128)", () => {
   });
 });
 
-describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
+describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
   const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: i === 1 ? 2 : 0, paused: false }));
   const rhythm = (extra: Record<string, unknown> = {}) => ({ target: 3, count: 1, days, research_today: true, ...extra });
   // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
@@ -215,7 +215,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     clearStorage();
   });
 
-  it("la bande : la date, le titre (l'action du jour, sa fin à la main) en un seul titre, la phrase", async () => {
+  it("la bande : la date, le titre (l’action du jour, sa fin à la main) en un seul titre, la phrase", async () => {
     onFirstOfOctober();
     mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
@@ -228,7 +228,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     // Un seul accent manuscrit par écran.
     expect(wrapper.findAll(".today-hand")).toHaveLength(1);
     expect(title.find(".today-hand").text()).toBe("à envoyer.");
-    expect(band.find("[data-test=today-sub]").text()).toBe("C'est ton rythme pour rester dans l'objectif ORP. 1 offre est à trier.");
+    expect(band.find("[data-test=today-sub]").text()).toBe("C’est ton rythme pour rester dans l’objectif ORP. 1 offre est à trier.");
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } });
     // Plus de bande d'action ni de « À retenir » : le tri est une tâche.
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
@@ -249,7 +249,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     wrapper = await mountView();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Jour de repos.");
     expect(wrapper.find(".today-hand").text()).toBe("repos.");
-    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ta semaine est faite. Si tu veux avancer, 2 choses t'attendent.");
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ta semaine est faite. Si tu veux avancer, 2 choses t’attendent.");
     // Un jour de repos, une seule liste, sans tri.
     expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
     expect(wrapper.find("[data-test=today-later]").exists()).toBe(false);
@@ -258,7 +258,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }) }));
     wrapper = await mountView();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("En pause.");
-    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Jusqu'au 3 novembre. Pense à l'annoncer à ton conseiller.");
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Jusqu’au 3 novembre. Pense à l’annoncer à ton conseiller.");
   });
 
   it("les tâches : en retard, envoyer, trier, préparer un entretien, puis « Quand tu as le temps »", async () => {
@@ -318,7 +318,7 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(triage.find("strong").text()).toBe("Trier 1 offre");
     expect(triage.text()).toContain("Dont 1 très proche de ton profil");
     expect(triage.attributes("href")).toBe("/aujourdhui/tri");
-    expect(section.find("[data-test=upcoming-interview]").text()).toMatch(/Bientôt SA · (aujourd'hui|demain) à/);
+    expect(section.find("[data-test=upcoming-interview]").text()).toMatch(/Bientôt SA · (aujourd’hui|demain) à/);
     // Toute la carte est le lien : pas de bouton dedans.
     expect(section.find("button").exists()).toBe(false);
     const later = wrapper.find("[data-test=today-later]");
@@ -363,13 +363,13 @@ describe("Aujourd'hui sur ordinateur (maquette du 8 novembre)", () => {
   });
 });
 
-describe("Aujourd'hui, les moments (docs/123 §2)", () => {
+describe("Aujourd’hui, les moments (docs/123 §2)", () => {
   afterEach(() => {
     document.body.innerHTML = "";
     clearStorage();
   });
 
-  it("R : l'objectif atteint, une victoire une seule fois par mois", async () => {
+  it("R : l’objectif atteint, une victoire une seule fois par mois", async () => {
     mockGet(today({ month_count: 20, month_target: 20 }));
     const first = await mountView();
     expect(document.body.querySelector("[data-test=goal-moment]")?.textContent).toContain("Objectif du mois atteint");

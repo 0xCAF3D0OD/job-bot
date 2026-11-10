@@ -75,9 +75,9 @@ async function confirmed(searchId: number): Promise<void> {
 const deskSentence = computed(() => {
   if (!page.value) return "";
   const { active, lastReceived } = alertsDigest(page.value);
-  if (!active) return "Aucune recherche suivie pour l'instant.";
+  if (!active) return "Aucune recherche suivie pour l’instant.";
   const count = `${plural(active, "recherche", "recherches")} ${active > 1 ? "suivies" : "suivie"}.`;
-  return `${count} ${lastReceived ? `Dernière alerte reçue ${dateInSentence(lastReceived)}.` : "Aucune alerte reçue pour l'instant."}`;
+  return `${count} ${lastReceived ? `Dernière alerte reçue ${dateInSentence(lastReceived)}.` : "Aucune alerte reçue pour l’instant."}`;
 });
 
 const now = ref(new Date());
@@ -129,7 +129,7 @@ async function remove(group: SearchGroup): Promise<void> {
   page.value = { ...before, searches: before.searches.filter((s) => !group.ids.includes(s.id)) };
   await offerUndo({
     // Téléphone (§10.8) : le même message qu'« Offre écartée » (§10.1).
-    message: phone.value ? "Recherche retirée." : `« ${group.terms} » n'est plus suivie.`,
+    message: phone.value ? "Recherche retirée." : `« ${group.terms} » n’est plus suivie.`,
     commit: async (keepalive) => {
       let latest: AlertsPage | undefined;
       for (const id of group.ids) {
@@ -247,7 +247,7 @@ onMounted(async () => {
       </div>
       <template v-if="view === 'wizard'">
         <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : le logo transformé « cloche » au-dessus de
-             l'assistant, pas le personnage. -->
+             l’assistant, pas le personnage. -->
         <div
           v-if="nothingYet && !focus"
           class="face-state alerts-empty"

@@ -18,7 +18,7 @@ function phone(matches: boolean): void {
 const Page = defineComponent({
   components: { SettingsSection },
   template: `<div>
-    <SettingsSection id="recherche" title="Recherche d'emploi" value="objectif 10 / mois"><p>critères</p></SettingsSection>
+    <SettingsSection id="recherche" title="Recherche d’emploi" value="objectif 10 / mois"><p>critères</p></SettingsSection>
     <SettingsSection id="actualites" title="Actualités"><p>sources</p></SettingsSection>
   </div>`,
 });
@@ -36,12 +36,12 @@ describe("Section des Réglages (docs/110)", () => {
     phone(false);
     const wrapper = await mountAt("/reglages");
     expect(wrapper.findAll("section.settings-section").map((s) => s.attributes("id"))).toEqual(["recherche", "actualites"]);
-    expect(wrapper.findAll(".settings-section > h2.section-title").map((h) => h.text())).toEqual(["Recherche d'emploi", "Actualités"]);
+    expect(wrapper.findAll(".settings-section > h2.section-title").map((h) => h.text())).toEqual(["Recherche d’emploi", "Actualités"]);
     expect(wrapper.find(".settings-section > .settings-card").text()).toBe("critères");
     expect(wrapper.find(".disclosure").exists()).toBe(false);
   });
 
-  it("téléphone : plus de lignes dépliables, toutes les sections l'une sous l'autre", async () => {
+  it("téléphone : plus de lignes dépliables, toutes les sections l’une sous l’autre", async () => {
     phone(true);
     const wrapper = await mountAt("/reglages#actualites");
     expect(wrapper.find(".settings-row").exists()).toBe(false);

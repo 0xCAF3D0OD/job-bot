@@ -26,7 +26,7 @@ describe("Pas de connexion, erreur dans la page (docs/141)", () => {
     expect(events).toHaveLength(2);
   });
 
-  it("téléphone (maquette ErreurConnexion) : le triangle qui dit « non », pas l'illustration", async () => {
+  it("téléphone (maquette ErreurConnexion) : le triangle qui dit « non », pas l’illustration", async () => {
     const wrapper = mount(NetworkError, { props: { title: "Connexion perdue", line: "Vérifie ta connexion." } });
     await vi.dynamicImportSettled();
     await flushPromises();

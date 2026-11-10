@@ -48,7 +48,7 @@ onMounted(load);
         class="back-link"
         data-test="triage-back"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />Aujourd'hui</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />Aujourd’hui</span>
       </RouterLink>
     </template>
   </PageHero>
@@ -63,13 +63,13 @@ onMounted(load);
         :title="restDay ? 'Jour de repos' : 'Rien à trier'"
         data-test="triage-empty"
       >
-        <p>{{ restDay ? "Pas de tri aujourd'hui." : "Les nouvelles offres arrivent chaque matin." }}</p>
+        <p>{{ restDay ? "Pas de tri aujourd’hui." : "Les nouvelles offres arrivent chaque matin." }}</p>
         <div class="face-state-actions">
           <RouterLink
             :to="{ name: 'today' }"
             class="button-link"
           >
-            Revenir à Aujourd'hui
+            Revenir à Aujourd’hui
           </RouterLink>
         </div>
       </FaceState>

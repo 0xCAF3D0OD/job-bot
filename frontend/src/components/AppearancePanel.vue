@@ -24,7 +24,7 @@ const model = computed({
   <SettingCard data-test="appearance-panel">
     <SettingRow
       title="Apparence"
-      description="Auto suit l'appareil."
+      description="Auto suit l’appareil."
       stack
     >
       <SegmentedControl

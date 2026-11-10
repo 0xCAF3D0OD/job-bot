@@ -130,7 +130,7 @@ async function onFile(event: Event): Promise<void> {
     if (data) {
       await loadDocuments();
       await showText(data.id);
-      message.value = data.text_status === "ok" ? "" : "Document déposé, mais son texte n'est pas lisible (PDF scanné ?).";
+      message.value = data.text_status === "ok" ? "" : "Document déposé, mais son texte n’est pas lisible (PDF scanné ?).";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
       message.value = typeof detail === "string" ? `Refusé : ${detail}.` : `Refusé (HTTP ${response.status}).`;
@@ -160,7 +160,7 @@ async function propose(doc: DocumentOut): Promise<void> {
     });
     if (data) {
       if (data.length) proposal.value = { doc, items: data };
-      else message.value = "L'IA n'a rien trouvé à proposer dans ce document.";
+      else message.value = "L’IA n’a rien trouvé à proposer dans ce document.";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
       message.value = typeof detail === "string" ? `Impossible : ${detail}.` : `Échec (HTTP ${response.status}).`;
@@ -205,7 +205,7 @@ function chunkFromSelection(): void {
   const selected = selection?.toString().trim() ?? "";
   const inside = selection?.anchorNode && textBox.value?.contains(selection.anchorNode);
   if (!selected || !inside) {
-    message.value = "Sélectionne d'abord un passage dans le texte du document.";
+    message.value = "Sélectionne d’abord un passage dans le texte du document.";
     return;
   }
   message.value = "";
@@ -305,7 +305,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
   return [
     { label: "Ouvrir le fichier", test: "open-document-file", icon: "external", href: `/api/documents/${doc.id}/file` },
     {
-      label: certificate ? "Ce n'est pas un certificat de travail" : "C'est un certificat de travail",
+      label: certificate ? "Ce n’est pas un certificat de travail" : "C’est un certificat de travail",
       test: "toggle-certificate",
       icon: "file",
       run: () => void setCertificate(doc, !certificate),
@@ -368,7 +368,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
             :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
             :busy="proposing === doc.id"
-            busy-label="L'IA lit le document… (≈ 30 s)"
+            busy-label="L’IA lit le document… (≈ 30 s)"
             :data-test="`propose-${doc.id}`"
             @click="propose(doc)"
           >
@@ -389,7 +389,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         >
         <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
         <span class="detail">
-          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
+          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l’IA en tire tes premiers blocs." }}
         </span>
       </label>
 
@@ -424,7 +424,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             v-if="documentItems.length"
             class="section-more"
             :items="documentItems"
-            label="Plus d'actions sur le document"
+            label="Plus d’actions sur le document"
             test-id="document-more"
           />
         </p>
@@ -432,7 +432,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           ref="textBox"
           class="doc-text"
         >
-          {{ openText.text || "Aucun texte n'a pu être extrait de ce document." }}
+          {{ openText.text || "Aucun texte n’a pu être extrait de ce document." }}
         </div>
       </div>
     </SidePanel>
@@ -565,7 +565,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           v-model="editing.form.active"
           type="checkbox"
         >
-        <span>Utilisé par l'IA</span>
+        <span>Utilisé par l’IA</span>
       </label>
       <div class="form-actions">
         <button

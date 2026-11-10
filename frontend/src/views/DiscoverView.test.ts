@@ -6,7 +6,7 @@ import { useAuth } from "../composables/useAuth";
 import DiscoverView from "./DiscoverView.vue";
 
 describe("La plateforme, en parcours (docs/67)", () => {
-  it("présente les étapes et propose de se connecter à qui ne l'est pas", async () => {
+  it("présente les étapes et propose de se connecter à qui ne l’est pas", async () => {
     useAuth().me.value = null;
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     await router.push("/la-plateforme");
@@ -16,7 +16,7 @@ describe("La plateforme, en parcours (docs/67)", () => {
     expect(wrapper.findAll(".dmock")).toHaveLength(6);
     expect(wrapper.findAll(".discover-bubble")).toHaveLength(6);
     expect(wrapper.find("[data-test=discover-login]").attributes("href")).toBe("/connexion");
-    expect(wrapper.text()).toContain("ne partent jamais à l'IA");
+    expect(wrapper.text()).toContain("ne partent jamais à l’IA");
   });
 
   it("propose la démo quand son adresse est réglée, mais pas dans la démo elle-même (docs/72)", async () => {
@@ -32,7 +32,7 @@ describe("La plateforme, en parcours (docs/67)", () => {
     useAuth().me.value = null;
   });
 
-  it("en bas de la page, le chemin va jusqu'à la dernière pastille ; les notes en cercle (0.79.1)", async () => {
+  it("en bas de la page, le chemin va jusqu’à la dernière pastille ; les notes en cercle (0.79.1)", async () => {
     useAuth().me.value = null;
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     await router.push("/la-plateforme");

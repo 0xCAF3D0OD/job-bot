@@ -43,7 +43,7 @@ const SORTS: { label: string; value: Sort }[] = [
   { label: "Récentes", value: "recent" },
 ];
 
-const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Afficher ${props.total} offres`));
+const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
 </script>
 
 <template>

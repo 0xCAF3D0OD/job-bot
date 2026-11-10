@@ -9,7 +9,7 @@ const Field = defineComponent({
   components: { SettingCard, SettingRow },
   props: { saved: Boolean, error: { type: String, default: "" } },
   template: `<SettingCard>
-    <SettingRow title="Objectif mensuel de l'ORP" description="Les candidatures demandées chaque mois." :saved="saved" :error="error" stack>
+    <SettingRow title="Objectif mensuel de l’ORP" description="Les candidatures demandées chaque mois." :saved="saved" :error="error" stack>
       <template #default="{ labelledby, describedby, invalid }">
         <input :aria-labelledby="labelledby" :aria-describedby="describedby" :aria-invalid="invalid" value="10">
       </template>
@@ -27,7 +27,7 @@ describe("Ligne de réglage (1.6.65)", () => {
     expect(input.attributes("aria-invalid")).toBeUndefined();
   });
 
-  it("« Enregistré » dans un message d'état (WCAG 4.1.3), vide tant que rien n'est enregistré", async () => {
+  it("« Enregistré » dans un message d’état (WCAG 4.1.3), vide tant que rien n’est enregistré", async () => {
     const wrapper = mount(Field);
     const status = wrapper.find("[data-test=setting-saved]");
     expect(status.attributes("role")).toBe("status");

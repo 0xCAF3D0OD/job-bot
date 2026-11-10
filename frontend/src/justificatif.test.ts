@@ -20,7 +20,7 @@ function files(dir: string): string[] {
 }
 
 describe("Le mot « justificatif » (lot 16.4)", () => {
-  it("aucun « preuve » affiché dans l'interface", () => {
+  it("aucun « preuve » affiché dans l’interface", () => {
     const found: string[] = [];
     for (const path of files(SRC)) {
       const text = readFileSync(path, "utf8").replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g, "");

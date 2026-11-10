@@ -152,7 +152,7 @@ async function writeSheet(): Promise<void> {
   try {
     const { data, error } = await api.POST("/api/orp-meeting/redaction");
     if (data) page.value = data;
-    else writeMessage.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible de rédiger pour l'instant.";
+    else writeMessage.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible de rédiger pour l’instant.";
   } finally {
     writing.value = false;
   }
@@ -203,7 +203,7 @@ async function saveQuestions(questions: Question[]): Promise<void> {
     message.value = "";
     savedAt.value = Date.now();
   } else {
-    message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
+    message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
   }
 }
 
@@ -272,7 +272,7 @@ onMounted(() => void load());
       v-if="failed"
       class="notice error"
     >
-      Impossible de préparer le rendez-vous pour l'instant.
+      Impossible de préparer le rendez-vous pour l’instant.
     </p>
     <LoadingBlocks v-else-if="!page" />
     <RendezVousDesktop
@@ -342,7 +342,7 @@ onMounted(() => void load());
           <MoreMenu
             v-if="meeting && !editing"
             :items="meetingItems"
-            label="Plus d'actions sur le rendez-vous"
+            label="Plus d’actions sur le rendez-vous"
             test-id="meeting-more"
           />
         </div>
@@ -359,7 +359,7 @@ onMounted(() => void load());
       </h2>
       <div class="orp-meeting-sheet">
         <!-- Aucun rendez-vous à venir (maquette RendezVous, état `vide`) : le personnage, le formulaire compact ;
-             pas avec l'écran « Pas encore de candidature », un seul des trois par écran. -->
+             pas avec l’écran « Pas encore de candidature », un seul des trois par écran. -->
         <OrpMeetingEmpty
           v-if="!meeting && !editing && !noApplications"
           @saved="meetingSaved"
@@ -412,7 +412,7 @@ onMounted(() => void load());
               v-if="!meeting"
               class="hint"
             >
-              Indique d'abord la date du rendez-vous : tes questions lui seront rattachées.
+              Indique d’abord la date du rendez-vous : tes questions lui seront rattachées.
             </p>
             <ul class="orp-meeting-questions">
               <li
@@ -468,7 +468,7 @@ onMounted(() => void load());
               {{ message }}
             </p>
             <p class="hint">
-              Sur tes droits, c'est ton conseiller qui répond.
+              Sur tes droits, c’est ton conseiller qui répond.
             </p>
           </section>
 
@@ -478,7 +478,7 @@ onMounted(() => void load());
           >
             <h2>La feuille</h2>
             <p class="setting-desc">
-              Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
+              Rien n’est envoyé à l’ORP : tu la télécharges, ou tu l’envoies toi-même.
             </p>
             <FormField
               v-slot="{ id, describedby, invalid }"
@@ -514,7 +514,7 @@ onMounted(() => void load());
                 @click="writeSheet"
               >
                 <HoverNote :text="aiNote('Environ 0,02 CHF.')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
+                  <span class="with-icon"><AppIcon name="ai" />{{ meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l’IA" }}</span>
                 </HoverNote>
               </BusyButton>
             </div>
@@ -545,7 +545,7 @@ onMounted(() => void load());
                 {{ writeMessage }}
               </p>
               <p class="hint">
-                Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
+                Ni ton nom, ni le lieu, ni ton conseiller ne partent à l’IA.
               </p>
             </div>
           </section>
@@ -570,7 +570,7 @@ onMounted(() => void load());
         </div>
       </FaceState>
       <!-- Le mois (règles §3.4, décision du 25/10) : une ligne repliable par partie, avec son résumé ;
-           « Le mois en bref » ouvert ; une partie vide ne s'affiche pas (docs/131 §B.8). -->
+           « Le mois en bref » ouvert ; une partie vide ne s’affiche pas (docs/131 §B.8). -->
       <RendezVousPhone
         v-if="compact"
         part="past"

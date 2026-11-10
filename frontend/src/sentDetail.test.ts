@@ -32,7 +32,7 @@ describe("Les mots de statut", () => {
     expect(words[1]!.check).toBe(true);
   });
 
-  it("refus en gris, sans « Déclarée » quand rien n'est déclaré", () => {
+  it("refus en gris, sans « Déclarée » quand rien n’est déclaré", () => {
     expect(sentWords({ ...(base as object), status: "refus" } as never, null, now).map((w) => w.text)).toEqual(["Refus"]);
   });
 });
@@ -45,13 +45,13 @@ describe("Le Suivi en 5 étapes", () => {
     expect(steps.map((s) => s.sub)).toEqual(["Lettre et CV", "13 sept.", "5 oct.", "conseillée", "en attente"]);
   });
 
-  it("pas encore déclarée : l'étape ORP est en cours et « à faire »", () => {
+  it("pas encore déclarée : l’étape ORP est en cours et « à faire »", () => {
     const steps = sentSteps(base, { declared_at: null, missing: [] } as never, now);
     expect(steps[2]).toEqual({ label: "Déclarée ORP", sub: "à faire", state: "current" });
     expect(steps[3]!.state).toBe("todo");
   });
 
-  it("une réponse reçue : tout est fait, la relance n'était pas utile", () => {
+  it("une réponse reçue : tout est fait, la relance n’était pas utile", () => {
     const steps = sentSteps({ ...(base as object), status: "entretien" } as never, declared, now);
     expect(steps.every((s) => s.state === "done")).toBe(true);
     expect(steps[3]!.sub).toBe("pas besoin");
@@ -59,15 +59,15 @@ describe("Le Suivi en 5 étapes", () => {
   });
 });
 
-describe("L'Historique", () => {
-  it("du plus récent au plus ancien : déclaration (formulaire du mois), puis l'envoi avec le site et les documents", () => {
+describe("L’Historique", () => {
+  it("du plus récent au plus ancien : déclaration (formulaire du mois), puis l’envoi avec le site et les documents", () => {
     expect(sentHistory(base, declared, now)).toEqual([
       { day: "2026-10-05", date: "5 oct.", title: "Déclarée à l’ORP", detail: "Formulaire de septembre" },
       { day: "2026-09-13", date: "13 sept.", title: "Candidature envoyée sur linkedin.com", detail: "Lettre et CV adapté" },
     ]);
   });
 
-  it("une prise de contact et une relance s'y ajoutent", () => {
+  it("une prise de contact et une relance s’y ajoutent", () => {
     const a = {
       ...(base as object),
       status: "relancee",

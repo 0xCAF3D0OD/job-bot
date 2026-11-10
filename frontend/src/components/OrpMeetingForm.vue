@@ -52,7 +52,7 @@ function checkDay(): void {
   dayError.value = day.value ? "" : "Indique la date du rendez-vous.";
 }
 function checkTime(): void {
-  timeError.value = time.value ? "" : "Indique l'heure.";
+  timeError.value = time.value ? "" : "Indique l’heure.";
 }
 
 async function save(): Promise<void> {
@@ -67,7 +67,7 @@ async function save(): Promise<void> {
     body: { starts_at: new Date(`${day.value}T${time.value}`).toISOString(), place: place.value, advisor: advisor.value },
   });
   if (data) emit("saved", data);
-  else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
+  else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
 }
 </script>
 

@@ -18,7 +18,7 @@ import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
 import { UNDO_MS } from "../composables/useUndo";
-import { rateText, remoteText, scoreWord } from "../format";
+import { companyPlace, rateText, remoteText, scoreWord } from "../format";
 import { whyLine } from "../whyLine";
 
 // Les premiers pas (maquette OnboardingC, docs/139 étape 11b ; O1 à O10, Kevin, 2026-11-05) : quatre étapes, une
@@ -97,7 +97,7 @@ const RATES = [null, 50, 60, 70, 80, 90, 100] as const;
 const rateLabel = (value: number | null): string => (value ? `${value} à 100\u202F%` : "Peu importe");
 // Le panneau ouvert par une carte de critère (Postes, Lieux, Taux d'activité).
 const editing = ref<"" | "roles" | "places" | "rate">("");
-const EDIT_TITLES = { roles: "Postes", places: "Lieux", rate: "Taux d'activité" } as const;
+const EDIT_TITLES = { roles: "Postes", places: "Lieux", rate: "Taux d’activité" } as const;
 const rolesFromCv = computed(() => !!understanding.value?.roles.length);
 const rateFromCv = computed(() => !!understanding.value?.min_rate && rate.value === understanding.value.min_rate);
 
@@ -188,7 +188,7 @@ async function upload(file: File): Promise<void> {
       void understand(data.id);
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      cvError.value = typeof detail === "string" ? `Refusé : ${detail}.` : "Ce fichier n'a pas pu être importé.";
+      cvError.value = typeof detail === "string" ? `Refusé : ${detail}.` : "Ce fichier n’a pas pu être importé.";
     }
   } finally {
     uploading.value = false;
@@ -452,7 +452,7 @@ async function later(): Promise<void> {
 
 // « Pas de CV à jour ? » (maquette OnboardingC, décision de Kevin du 2026-11-06) : les premiers pas sont mis de
 // côté, comme avec « Passer », et l'Assistant reçoit la demande ; on les reprend depuis l'Accueil.
-const CV_QUESTION = "Je n'ai pas de CV à jour. Aide-moi à en créer un.";
+const CV_QUESTION = "Je n’ai pas de CV à jour. Aide-moi à en créer un.";
 async function askForCv(): Promise<void> {
   await remember({ postponed: true });
   if (me.value) me.value = { ...me.value, welcome: "postponed" };
@@ -469,7 +469,7 @@ async function finish(to: string): Promise<void> {
 
 <template>
   <!-- Premiers pas sur ordinateur (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur…) : la grille commune des
-       3 étapes, 640 px de contenu, 80 px, la scène de 360 px ; l'en-tête aligné sur la grille. -->
+       3 étapes, 640 px de contenu, 80 px, la scène de 360 px ; l’en-tête aligné sur la grille. -->
   <section
     v-if="loaded && desk"
     class="welcome wdk"
@@ -593,7 +593,7 @@ async function finish(to: string): Promise<void> {
                 <AppIcon
                   v-if="understanding"
                   name="tick"
-                />{{ understanding ? readSummary : "Enregistré. L'IA n'a rien pu lire : tu complètes à l'étape suivante." }}
+                />{{ understanding ? readSummary : "Enregistré. L’IA n’a rien pu lire : tu complètes à l’étape suivante." }}
               </p>
             </div>
             <label
@@ -630,7 +630,7 @@ async function finish(to: string): Promise<void> {
               data-test="cv-privacy"
             >
               <AppIcon name="lock" />
-              <span>Ton CV reste privé&#8239;: il sert à noter les offres et à préparer tes lettres. L'IA n'en reçoit que les parties utiles,
+              <span>Ton CV reste privé&#8239;: il sert à noter les offres et à préparer tes lettres. L’IA n’en reçoit que les parties utiles,
                 sans tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
             </p>
             <div class="wdk-foot">
@@ -642,7 +642,7 @@ async function finish(to: string): Promise<void> {
                   data-test="cv-assistant"
                   @click="askForCv"
                 >
-                  Pas de CV à jour&#8239;? L'Assistant t'aide à en créer un
+                  Pas de CV à jour&#8239;? L’Assistant t’aide à en créer un
                 </button>
                 <span v-else />
                 <button
@@ -723,7 +723,7 @@ async function finish(to: string): Promise<void> {
                   @click="editing = 'rate'"
                 >
                   <span class="wdk-row-text">
-                    <span class="wdk-row-key">Taux d'activité</span>
+                    <span class="wdk-row-key">Taux d’activité</span>
                     <span class="wdk-row-value">{{ reading && rate === null ? "Lecture du CV…" : rateLabel(rate) }}</span>
                     <span
                       v-if="rateFromCv"
@@ -739,7 +739,7 @@ async function finish(to: string): Promise<void> {
             </ul>
             <div class="wdk-card wdk-orp">
               <label class="wdk-orp-row">
-                <span><b>Je suis inscrit à l'ORP</b><span>jobA1 tient le suivi de tes recherches</span></span>
+                <span><b>Je suis inscrit à l’ORP</b><span>jobA1 tient le suivi de tes recherches</span></span>
                 <input
                   v-model="orp"
                   type="checkbox"
@@ -867,7 +867,7 @@ async function finish(to: string): Promise<void> {
                 class="wdk-panel wdk-rates"
               >
                 <legend class="visually-hidden">
-                  Taux d'activité minimum
+                  Taux d’activité minimum
                 </legend>
                 <label
                   v-for="value in RATES"
@@ -898,7 +898,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else>
             <p class="wdk-lead">
-              {{ offers.length ? "jobA1 a lu les offres publiées cette semaine. Celles-ci te correspondent le mieux. Garde ou écarte : jobA1 apprend de tes choix." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t'attendront dans Candidatures." }}
+              {{ offers.length ? "jobA1 a lu les offres publiées cette semaine. Celles-ci te correspondent le mieux. Garde ou écarte : jobA1 apprend de tes choix." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t’attendront dans Candidatures." }}
             </p>
             <ul
               v-if="offers.length"
@@ -916,7 +916,7 @@ async function finish(to: string): Promise<void> {
                 >{{ initials(offer.company) }}</span>
                 <span class="wdk-offer-text">
                   <b>{{ offer.title }}</b>
-                  <span>{{ [offer.company || "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}<template v-if="offer.score != null"> · <b :class="`tone-${scoreWord(offer.score).tone}`">{{ scoreWord(offer.score).word }} · {{ Math.round(offer.score) }}</b></template></span>
+                  <span>{{ companyPlace(offer.company || "Entreprise non indiquée", offer.location) }}<template v-if="offer.score != null"> · <b :class="`tone-${scoreWord(offer.score).tone}`">{{ scoreWord(offer.score).word }} · {{ Math.round(offer.score) }}</b></template></span>
                 </span>
                 <template v-if="decided[offer.id]">
                   <span
@@ -1149,7 +1149,7 @@ async function finish(to: string): Promise<void> {
                 data-test="cv-assistant"
                 @click="askForCv"
               >
-                <span><strong>Pas de CV à jour ?</strong><small>L'Assistant t'aide à en créer un</small></span>
+                <span><strong>Pas de CV à jour ?</strong><small>L’Assistant t’aide à en créer un</small></span>
                 <AppIcon name="chevron" />
               </button>
               <!-- Le « 1 » seul (§15 du 9 novembre, 100 px), le soleil et la colline (maquette OnboardingC, étape 2). -->
@@ -1178,7 +1178,7 @@ async function finish(to: string): Promise<void> {
               data-test="cv-privacy"
             >
               <AppIcon name="lock" />
-              <span>Ton CV reste privé : il sert à noter les offres et à préparer tes lettres. L'IA n'en reçoit que les parties utiles,
+              <span>Ton CV reste privé : il sert à noter les offres et à préparer tes lettres. L’IA n’en reçoit que les parties utiles,
                 sans tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
             </p>
           </template>
@@ -1258,7 +1258,7 @@ async function finish(to: string): Promise<void> {
             </div>
             <div class="welcome-orp">
               <label class="welcome-orp-row">
-                <span><strong>Je suis inscrit à l'ORP</strong><small>Active le suivi de tes recherches</small></span>
+                <span><strong>Je suis inscrit à l’ORP</strong><small>Active le suivi de tes recherches</small></span>
                 <input
                   v-model="orp"
                   type="checkbox"
@@ -1301,7 +1301,7 @@ async function finish(to: string): Promise<void> {
           <template v-else>
             <template v-if="sorting && current">
               <p class="welcome-lead">
-                Garde ou écarte. Celles que tu gardes t'attendent dans Candidatures.
+                Garde ou écarte. Celles que tu gardes t’attendent dans Candidatures.
               </p>
               <article
                 :key="current.id"
@@ -1317,7 +1317,7 @@ async function finish(to: string): Promise<void> {
                 </div>
                 <p class="welcome-offer-title">
                   <strong>{{ current.title }}</strong>
-                  <span>{{ [current.company || "Entreprise non indiquée", current.location].filter(Boolean).join(" · ") }}</span>
+                  <span>{{ companyPlace(current.company || "Entreprise non indiquée", current.location) }}</span>
                 </p>
                 <ul
                   v-if="tags.length"
@@ -1334,7 +1334,7 @@ async function finish(to: string): Promise<void> {
                   v-if="current.why"
                   class="welcome-offer-why"
                 >
-                  <strong>D'après ton CV :</strong> {{ whyLine(current.why) }}
+                  <strong>D’après ton CV :</strong> {{ whyLine(current.why) }}
                 </p>
               </article>
               <p
@@ -1423,7 +1423,7 @@ async function finish(to: string): Promise<void> {
           data-test="welcome-start"
           @click="go(1)"
         >
-          C'est parti<AppIcon name="arrow-right" />
+          C’est parti<AppIcon name="arrow-right" />
         </button>
         <button
           v-else-if="step === 1"
@@ -1484,7 +1484,7 @@ async function finish(to: string): Promise<void> {
 <style>
 /* Chargé avec la page seulement, pas avec le premier écran (budget « css-premier », docs/117 §3). */
 /* Les premiers pas (OnboardingC, 11b) : une colonne de 30 rem, la barre en 4 segments, le titre barré puis
-   manuscrit, l'action en bas. La première étape est toute bleue (O3, O10 : --primary dans les deux thèmes). */
+   manuscrit, l’action en bas. La première étape est toute bleue (O3, O10 : --primary dans les deux thèmes). */
 .welcome { min-height: 100dvh; background: var(--bg); color: var(--text); }
 .welcome-blue { background: var(--primary); color: var(--on-primary); }
 .welcome-column { display: flex; flex-direction: column; min-height: 100dvh; max-width: 30rem; margin: 0 auto; padding: var(--space-2) var(--space-5) var(--space-6); box-sizing: border-box; }
@@ -1580,7 +1580,7 @@ async function finish(to: string): Promise<void> {
 
 /* Premiers pas sur ordinateur (MODIFICATIONS_9 §5.1, maquettes OnboardingOrdinateur…) : en-tête et grille sur 1 080 px,
    640 px de contenu, 80 px, la scène de 360 px à 48 px sous le haut ; boutons 32 px sous le dernier bloc. Valeurs de la
-   maquette ramenées sur la grille de 4 (6 → 8 entre les traits, 6 → 4 sous la valeur d'un critère). */
+   maquette ramenées sur la grille de 4 (6 → 8 entre les traits, 6 → 4 sous la valeur d’un critère). */
 .wdk { --wdk-w: 1080px; --wdk-col: 640px; --wdk-scene: 360px; --wdk-gap: 80px; --wdk-top: 76px; --wdk-bar: 8px; --wdk-bar-on: 28px;
   --wdk-13: 13px; --wdk-16: 16px; --wdk-40: 40px; --wdk-48: 48px; --wdk-18: 18px; --wdk-28: 28px; --wdk-22: 22px; --wdk-20: 20px; --wdk-24: 24px;
   --wdk-52: 52px; --wdk-pad: 18.5px; --wdk-row-pad: 14.5px; --wdk-orp-pad: 10.5px; --wdk-72: 72px; --wdk-56: 56px; --wdk-44: 44px; --wdk-radius-logo: 10px;

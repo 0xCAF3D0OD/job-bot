@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import StatusPill from "./StatusPill.vue";
 
-describe("Pastille d'état (1.6.74)", () => {
+describe("Pastille d’état (1.6.74)", () => {
   it("le ton en classe, le point décoratif, le mot lisible", () => {
     const wrapper = mount(StatusPill, { props: { tone: "todo" }, slots: { default: "Rien reçu depuis la création" } });
     expect(wrapper.classes()).toEqual(expect.arrayContaining(["state-pill", "todo"]));

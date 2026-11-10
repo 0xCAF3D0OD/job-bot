@@ -25,9 +25,9 @@ export const secureAddress: Check = (value) => {
 // Adresses d'expédition d'un site suivi : adresses e-mail ou domaines, séparés par des espaces.
 export const senders: Check = (value) => {
   const items = value.split(/[\s,;]+/).filter(Boolean);
-  if (!items.length) return "Au moins une adresse d'expédition ou un domaine.";
+  if (!items.length) return "Au moins une adresse d’expédition ou un domaine.";
   const bad = items.find((item) => !/^([^\s@]+@)?[^\s@.]+(\.[^\s@.]+)+$/.test(item));
-  return bad ? `« ${bad} » n'est ni une adresse e-mail ni un domaine.` : null;
+  return bad ? `« ${bad} » n’est ni une adresse e-mail ni un domaine.` : null;
 };
 
 export const futureOrToday =

@@ -28,8 +28,8 @@ const complete = Boolean(request.redirect_uri && request.state && request.code_c
 
 const READS = [
   { label: "Tes premiers pas", hint: "Combien sont faits sur 5, et le suivant" },
-  { label: "Tes candidatures", hint: "Poste, entreprise, statut, date d'entretien" },
-  { label: "Le texte d'une offre", hint: "Quand tu t'entraînes pour elle, sans les contacts" },
+  { label: "Tes candidatures", hint: "Poste, entreprise, statut, date d’entretien" },
+  { label: "Le texte d’une offre", hint: "Quand tu t’entraînes pour elle, sans les contacts" },
 ] as const;
 
 const orp = ref(false);
@@ -44,18 +44,18 @@ const back = computed(() => {
   } catch {
     // Adresse illisible : le serveur la refusera de toute façon.
   }
-  return "dans Get'emAll";
+  return "dans Get’emAll";
 });
 
 const BLOCKED: Record<number, string> = {
-  400: "Ce lien ne vient pas de Get'emAll. Reviens dans l'app et réessaie.",
-  403: "Get'emAll est réservé aux testeurs invités pour l'instant.",
-  404: "La connexion avec Get'emAll n'est pas ouverte sur jobA1.",
+  400: "Ce lien ne vient pas de Get’emAll. Reviens dans l’app et réessaie.",
+  403: "Get’emAll est réservé aux testeurs invités pour l’instant.",
+  404: "La connexion avec Get’emAll n’est pas ouverte sur jobA1.",
 };
 
 function block(code: number | undefined): void {
   status.value = "blocked";
-  message.value = (code && BLOCKED[code]) || "Ça n'a pas marché. Reviens dans Get'emAll et réessaie.";
+  message.value = (code && BLOCKED[code]) || "Ça n’a pas marché. Reviens dans Get’emAll et réessaie.";
 }
 
 onMounted(async () => {
@@ -116,8 +116,8 @@ async function refuse(): Promise<void> {
         </span>
       </div>
       <header class="partner-head">
-        <h1>Relier Get'emAll à ton compte&nbsp;?</h1>
-        <p>Get'emAll t'entraîne aux entretiens. Avec ton accord, il lit ton suivi pour t'entraîner sur tes vraies candidatures.</p>
+        <h1>Relier Get’emAll à ton compte&nbsp;?</h1>
+        <p>Get’emAll t’entraîne aux entretiens. Avec ton accord, il lit ton suivi pour t’entraîner sur tes vraies candidatures.</p>
       </header>
       <p
         v-if="status === 'blocked'"
@@ -133,7 +133,7 @@ async function refuse(): Promise<void> {
         class="partner-section"
       >
         <h2 id="partner-reads">
-          Get'emAll pourra lire
+          Get’emAll pourra lire
         </h2>
         <ul class="partner-list">
           <li
@@ -161,7 +161,7 @@ async function refuse(): Promise<void> {
               >
               <span class="partner-text">
                 <span class="partner-label">Aussi mes recherches ORP du mois</span>
-                <span class="partner-hint">Facultatif. Seulement le nombre fait et l'objectif, jamais le détail ni tes justificatifs.</span>
+                <span class="partner-hint">Facultatif. Seulement le nombre fait et l’objectif, jamais le détail ni tes justificatifs.</span>
               </span>
             </label>
           </li>
@@ -172,15 +172,15 @@ async function refuse(): Promise<void> {
         class="partner-section"
       >
         <h2 id="partner-never">
-          Get'emAll ne lira jamais
+          Get’emAll ne lira jamais
         </h2>
         <div class="partner-never">
           <span class="partner-dot"><AppIcon name="ban" /></span>
-          <p>Ton nom, tes coordonnées, ton numéro AVS, ton CV, tes lettres et tes documents, les contacts des offres, tes justificatifs ORP, ni l'identifiant de ton compte jobA1.</p>
+          <p>Ton nom, tes coordonnées, ton numéro AVS, ton CV, tes lettres et tes documents, les contacts des offres, tes justificatifs ORP, ni l’identifiant de ton compte jobA1.</p>
         </div>
       </section>
       <p class="partner-note">
-        Lecture seule : Get'emAll ne peut rien changer dans jobA1. Tu peux retirer l'accès à tout moment dans
+        Lecture seule : Get’emAll ne peut rien changer dans jobA1. Tu peux retirer l’accès à tout moment dans
         <strong>Réglages › Connexions</strong>.
         <RouterLink :to="{ name: 'privacy', hash: '#getemall' }">
           Détails dans Données personnelles
@@ -195,7 +195,7 @@ async function refuse(): Promise<void> {
         data-test="partner-allow"
         @click="allow"
       >
-        {{ status === "leaving" ? "Retour vers Get'emAll…" : "Autoriser" }}
+        {{ status === "leaving" ? "Retour vers Get’emAll…" : "Autoriser" }}
       </button>
       <button
         type="button"

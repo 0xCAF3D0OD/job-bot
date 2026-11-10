@@ -49,7 +49,7 @@ function clean(text: string): string {
 export function dateInList(value: string | Date, now: Date = new Date()): string {
   const date = toDate(value);
   const days = calendarDays(date, now);
-  if (days === 0) return "aujourd'hui";
+  if (days === 0) return "aujourd’hui";
   if (days === 1) return "hier";
   return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear).format(date));
 }
@@ -81,7 +81,7 @@ export function meetingDate(value: string | Date): string {
 /** Depuis quand : « depuis aujourd'hui », « depuis hier », « depuis 9 jours ». */
 export function sinceDays(value: string | Date, now: Date = new Date()): string {
   const days = Math.max(0, calendarDays(toDate(value), now));
-  if (days === 0) return "depuis aujourd'hui";
+  if (days === 0) return "depuis aujourd’hui";
   if (days === 1) return "depuis hier";
   return `depuis ${days} jours`;
 }
@@ -89,7 +89,7 @@ export function sinceDays(value: string | Date, now: Date = new Date()): string 
 /** Dans combien de temps : « aujourd'hui », « demain », « dans 3 jours ». */
 export function inDays(value: string | Date, now: Date = new Date()): string {
   const days = calendarDays(now, toDate(value));
-  if (days <= 0) return "aujourd'hui";
+  if (days <= 0) return "aujourd’hui";
   if (days === 1) return "demain";
   return `dans ${days} jours`;
 }
@@ -97,7 +97,7 @@ export function inDays(value: string | Date, now: Date = new Date()): string {
 /** Le groupe d'une notification (maquette Notifications) : « Aujourd'hui », « Hier », « Cette semaine », « Plus tôt ». */
 export function dayGroup(value: string | Date, now: Date = new Date()): string {
   const days = calendarDays(toDate(value), now);
-  if (days <= 0) return "Aujourd'hui";
+  if (days <= 0) return "Aujourd’hui";
   if (days === 1) return "Hier";
   return days < 7 ? "Cette semaine" : "Plus tôt";
 }
@@ -125,7 +125,7 @@ export function timeInCard(value: string | Date, now: Date = new Date()): string
 /** Les familles de la page Notifications sur téléphone (§10.9) : « Aujourd'hui », « Hier », « Plus tôt ». */
 export function dayFamily(value: string | Date, now: Date = new Date()): string {
   const days = calendarDays(toDate(value), now);
-  if (days <= 0) return "Aujourd'hui";
+  if (days <= 0) return "Aujourd’hui";
   return days === 1 ? "Hier" : "Plus tôt";
 }
 

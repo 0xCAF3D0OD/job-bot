@@ -53,14 +53,14 @@ async function mountPage() {
 afterEach(() => vi.resetAllMocks());
 
 describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novembre)", () => {
-  it("l'ordre : en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours", async () => {
+  it("l’ordre : en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours", async () => {
     const wrapper = await mountPage();
     expect(wrapper.findAll(".profile-desktop-body h2").map((h) => h.text())).toEqual(["Mon CV", "Compétences trouvées", "Ce que je cherche", "Mon parcours"]);
     expect(wrapper.get("[data-test=profile-head] h1").text()).toBe("Kevin Di Nocera");
     expect(wrapper.get("[data-test=profile-subline]").text()).toBe("Junior DevOps · Renens");
   });
 
-  it("plus de « Changer d'image » : la pastille crayon de l'image ouvre « Ton image »", async () => {
+  it("plus de « Changer d’image » : la pastille crayon de l’image ouvre « Ton image »", async () => {
     const wrapper = await mountPage();
     expect(wrapper.find("[data-test=change-image]").exists()).toBe(false);
     expect(wrapper.findAll(".profile-head-actions button").map((b) => b.text())).toEqual(["Modifier"]);
@@ -89,7 +89,7 @@ describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novemb
     expect(PATCH).toHaveBeenCalledWith("/api/profiles/{profile_id}", { params: { path: { profile_id: 1 } }, body: { occupation: "DevOps" } });
   });
 
-  it("Mon CV : le dernier document qui n'est pas un certificat, Voir et Remplacer", async () => {
+  it("Mon CV : le dernier document qui n’est pas un certificat, Voir et Remplacer", async () => {
     const wrapper = await mountPage();
     expect(wrapper.get("[data-test=profile-cv-name]").text()).toBe("CV_Kevin.pdf");
     expect(wrapper.get("[data-test=profile-cv-open]").attributes("href")).toBe("/api/documents/2/file");

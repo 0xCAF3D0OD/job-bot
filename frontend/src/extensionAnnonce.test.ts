@@ -24,8 +24,8 @@ beforeAll(async () => {
   read = (globalThis as unknown as { jobA1Annonce: typeof read }).jobA1Annonce;
 });
 
-describe("l'annonce de la page", () => {
-  it("JobPosting : titre, entreprise, lieu à l'ouverture, sans le texte", () => {
+describe("l’annonce de la page", () => {
+  it("JobPosting : titre, entreprise, lieu à l’ouverture, sans le texte", () => {
     open("jobposting.html", "https://careers.specitec.com/jobs/7?utm=x#postuler");
     expect(read(false)).toEqual({
       kind: "posting",
@@ -47,7 +47,7 @@ describe("l'annonce de la page", () => {
     expect(found.text).not.toContain("newsletter");
   });
 
-  it("LinkedIn : l'annonce ouverte seulement, jamais le profil ni la liste", () => {
+  it("LinkedIn : l’annonce ouverte seulement, jamais le profil ni la liste", () => {
     open("linkedin.html", "https://www.linkedin.com/jobs/search/?currentJobId=3912345678&keywords=linux");
     const found = read(true)!;
     expect(found.kind).toBe("linkedin");
@@ -66,7 +66,7 @@ describe("l'annonce de la page", () => {
     expect(read(true)).toBeNull();
   });
 
-  it("sans balisage : le texte principal d'une page d'annonce, le titre lu par jobA1", () => {
+  it("sans balisage : le texte principal d’une page d’annonce, le titre lu par jobA1", () => {
     open("texte-principal.html", "https://www.exemple.ch/carriere/admin-systeme");
     expect(read(false)).toMatchObject({ kind: "text", title: "Administrateur système (80-100 %)" });
     const found = read(true)!;
@@ -74,7 +74,7 @@ describe("l'annonce de la page", () => {
     expect(found.text).not.toContain("Accueil · Carrière");
   });
 
-  it("une page ordinaire n'est pas une annonce", () => {
+  it("une page ordinaire n’est pas une annonce", () => {
     open("page-ordinaire.html", "https://www.recettes.ch/tarte-aux-pommes");
     expect(read(false)).toBeNull();
   });

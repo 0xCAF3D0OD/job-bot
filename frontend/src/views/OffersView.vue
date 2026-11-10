@@ -101,7 +101,7 @@ const chips = computed(() => activeChips(filters.value));
 const emptyFiltersLine = computed(() => {
   const q = filters.value.q.trim();
   const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];
-  return `${parts.join(", ")}. Élargis un critère pour voir plus d'offres.`;
+  return `${parts.join(", ")}. Élargis un critère pour voir plus d’offres.`;
 });
 const filterLabel = computed(() => {
   const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
@@ -333,12 +333,12 @@ async function manualAdded(result: {
   // Complétée : sa note est refaite quand le texte de l'annonce arrive.
   notice.value = result.filled?.length
     ? result.filled.includes("description")
-      ? "Offre complétée : sa note est refaite avec le texte de l'annonce."
+      ? "Offre complétée : sa note est refaite avec le texte de l’annonce."
       : "Offre complétée."
     : result.existing
       ? "Cette offre était déjà là : la voici."
       : result.status === "filtered_out"
-        ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+        ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
         : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
@@ -501,7 +501,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   });
   if (!data) {
     const detail = (error as { detail?: unknown } | undefined)?.detail;
-    applyError.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l'instant : réessaie.";
+    applyError.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l’instant : réessaie.";
     return;
   }
   applying.value = null;
@@ -589,7 +589,7 @@ onUnmounted(() => {
          (ordinateur), « Filtrer » et « + Ajouter » ; les filtres actifs en pastilles dessous. La liste a
          toute la largeur, sans colonne de filtres. -->
     <!-- Téléphone (docs/139 étape 5a, maquette Candidatures) : la recherche et « Ajouter » montent au-dessus
-         des vues (#jobs-tools), le bouton des filtres dans l'en-tête, à côté d'« Alertes ». -->
+         des vues (#jobs-tools), le bouton des filtres dans l’en-tête, à côté d'« Alertes ». -->
     <component
       :is="phone || wide ? Teleport : 'div'"
       v-bind="phone || wide ? { to: phone ? '#jobs-tools' : '#offers-list-tools', defer: true } : { class: 'in-place' }"
@@ -614,7 +614,7 @@ onUnmounted(() => {
             v-bind="phone ? { to: '#topbar-page-tools', defer: true } : { class: 'in-place' }"
           >
             <!-- L'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille ; sur téléphone,
-                 l'icône seule, ronde, 44 px. -->
+                 l’icône seule, ronde, 44 px. -->
             <button
               ref="filterToggle"
               type="button"
@@ -762,7 +762,7 @@ onUnmounted(() => {
         <CharacterState
           v-else-if="!loading && items.length === 0 && noOffersYet"
           scene="aucune-offre"
-          title="Pas encore d'offre"
+          title="Pas encore d’offre"
           data-test="offers-none-yet"
         >
           <p>Tes premières offres arrivent après la prochaine collecte.</p>
@@ -795,7 +795,7 @@ onUnmounted(() => {
         <!-- Rien en préparation (planche « Illustrations ») : garder une offre dans le tri. -->
         <FaceState
           v-else-if="!loading && items.length === 0 && filters.view === 'in_progress' && !activeCount(filters)"
-          title="Rien à préparer pour l'instant"
+          title="Rien à préparer pour l’instant"
           illustration="preparer-vide"
           data-test="offers-nothing-to-prepare"
         >
@@ -878,7 +878,7 @@ onUnmounted(() => {
           title="Aucune offre"
           data-test="offers-empty"
         >
-          <p>Rien ne correspond pour l'instant.</p>
+          <p>Rien ne correspond pour l’instant.</p>
         </FaceState>
         <!-- Connexion perdue ou nouvel essai : l'écran d'erreur seul, sans l'ancienne liste dessous. -->
         <TransitionGroup
@@ -929,7 +929,7 @@ onUnmounted(() => {
           {{ showFar ? "Masquer les offres loin de ton profil" : `Afficher aussi les offres loin de ton profil (${farCount})` }}
         </button>
         <!-- Les offres expirées sur téléphone (Kevin, 6.11) : la feuille Filtres n'a plus « Expirées » ; un lien au
-             bas de la liste, même filtre qu'avant, seulement s'il y en a. -->
+             bas de la liste, même filtre qu’avant, seulement s’il y en a. -->
         <button
           v-if="phone && filters.view === 'pending' && counts.expired > 0 && !loading && !failed"
           type="button"
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
     v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
-    subtitle="Colle le lien ou le texte de l'annonce. jobA1 la lit et la note."
+    subtitle="Colle le lien ou le texte de l’annonce. jobA1 la lit et la note."
     class="manual-sheet"
     @close="manualOpen = false"
   >
@@ -1055,8 +1055,8 @@ onUnmounted(() => {
   .notice.undo-snackbar .link { flex: none; min-height: var(--target-min); padding: 0 var(--space-2); color: var(--inverse-link); font-weight: var(--weight-bold); text-decoration: none; }
 }
 /* Maquette ErreurConnexion (téléphone) : « Connexion perdue » puis l'attente après « Réessayer », centrés,
-   titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l'échelle les plus proches
-   (gap 14, 800, marge 10 de la maquette n'y sont pas). Ici plutôt que dans NetworkError, pour ne pas
+   titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l’échelle les plus proches
+   (gap 14, 800, marge 10 de la maquette n’y sont pas). Ici plutôt que dans NetworkError, pour ne pas
    peser sur le CSS du premier écran. */
 .network-waiting { gap: var(--space-3); min-height: 60vh; align-content: center; padding: 0 var(--space-4) var(--space-8); }
 .network-waiting :deep(.face-state-title) { font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }

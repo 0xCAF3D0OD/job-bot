@@ -20,7 +20,7 @@ describe("TroupeScene", () => {
     useTheme().setTheme("auto");
   });
 
-  it("pose la scène aux largeurs des maquettes, décorative, avec le fichier 2× de l'ordinateur", () => {
+  it("pose la scène aux largeurs des maquettes, décorative, avec le fichier 2× de l’ordinateur", () => {
     const wrapper = mount(TroupeScene, { props: { scene: "envoyee" } });
     expect(wrapper.attributes("src")).toMatch(/\/troupe\/envoyee-680\.webp\?v=\d+$/);
     expect(wrapper.attributes("srcset")).toMatch(/envoyee-680\.webp\?v=\d+ 680w, .*envoyee-942\.webp\?v=\d+ 942w$/);
@@ -32,7 +32,7 @@ describe("TroupeScene", () => {
     expect(wrapper.attributes("loading")).toBe("lazy");
   });
 
-  it("le « 1 » seul s'affiche par sa hauteur ; un écran plein charge tout de suite", () => {
+  it("le « 1 » seul s’affiche par sa hauteur ; un écran plein charge tout de suite", () => {
     const one = mount(TroupeScene, { props: { scene: "un", height: 72, full: true } });
     expect(one.attributes("src")).toMatch(/\/troupe\/un-400\.webp/);
     expect(one.attributes("srcset")).toBeUndefined();

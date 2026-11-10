@@ -65,7 +65,7 @@ async function saveRemind(): Promise<void> {
     body: { follow_up_on: remindDraft.value || null },
   });
   if (!data) {
-    remindError.value = `Choisis un jour entre ${MIN_DAYS} et ${MAX_DAYS} jours après l'envoi.`;
+    remindError.value = `Choisis un jour entre ${MIN_DAYS} et ${MAX_DAYS} jours après l’envoi.`;
     return;
   }
   followUpOn.value = data.follow_up_on ?? shift(data.sent_at, REMIND_AFTER_DAYS);
@@ -80,7 +80,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [];
   if (a.cv_draft_id) items.push({ label: "CV (Word)", test: "panel-cv", icon: "download", href: `/api/cvs/${a.cv_draft_id}/docx`, download: true });
   if (a.application_url?.startsWith("http")) {
-    items.push({ label: "Ouvrir l'annonce", test: "panel-link", icon: "external", href: a.application_url });
+    items.push({ label: "Ouvrir l’annonce", test: "panel-link", icon: "external", href: a.application_url });
   }
   return items;
 });
@@ -109,7 +109,7 @@ function askAssistant(): void {
 }
 const menuItems = computed<MoreMenuItem[]>(() => [
   { label: "Modifier", test: "panel-edit", icon: "pencil", run: () => emit("edit", props.application) },
-  ...(assistant.available.value ? [{ label: "Demander à l'assistant", test: "panel-ask", icon: "ai" as const, run: askAssistant }] : []),
+  ...(assistant.available.value ? [{ label: "Demander à l’assistant", test: "panel-ask", icon: "ai" as const, run: askAssistant }] : []),
   { label: "Supprimer", test: "panel-remove", icon: "trash", run: () => emit("remove", props.application) },
 ]);
 
@@ -143,7 +143,7 @@ const onStatus = (event: Event): void =>
       </p>
       <MoreMenu
         :items="menuItems"
-        label="Plus d'actions sur la candidature"
+        label="Plus d’actions sur la candidature"
         test-id="panel-more"
       />
     </div>
@@ -296,7 +296,7 @@ const onStatus = (event: Event): void =>
           class="section-more"
           :items="documentItems"
           :inline="!application.letter_draft_id"
-          label="Plus d'actions sur les documents"
+          label="Plus d’actions sur les documents"
           test-id="documents-more"
         />
       </div>

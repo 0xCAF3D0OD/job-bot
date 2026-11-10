@@ -28,10 +28,10 @@ async function mountIt() {
 }
 
 describe("GoalReached", () => {
-  it("dit l'objectif atteint, comme la maquette : barré, « C'est fait ! », la phrase, l'export, l'accueil", async () => {
+  it("dit l’objectif atteint, comme la maquette : barré, « C’est fait ! », la phrase, l’export, l’accueil", async () => {
     const wrapper = await mountIt();
     expect(wrapper.find(".goal-reached-todo s").text()).toBe("10 recherches à faire");
-    expect(wrapper.find("h1").text()).toBe("C'est fait !");
+    expect(wrapper.find("h1").text()).toBe("C’est fait !");
     expect(wrapper.find("[role=status]").text()).toContain(
       "Objectif ORP de novembre atteint, 10 recherches sur 10. Ta feuille est prête pour le rendez-vous.",
     );
@@ -43,14 +43,14 @@ describe("GoalReached", () => {
     expect(wrapper.find(".confetti").exists()).toBe(false);
     expect(wrapper.find("[data-test=goal-close]").attributes("aria-label")).toBe("Fermer");
     expect(wrapper.find("[data-test=goal-close]").attributes("href")).toBe("/");
-    expect(wrapper.find("[data-test=goal-home]").text()).toBe("Retour à l'accueil");
+    expect(wrapper.find("[data-test=goal-home]").text()).toBe("Retour à l’accueil");
     // Un seul bouton plein, l'export.
     expect(wrapper.findAll(".primary")).toHaveLength(1);
     expect(wrapper.find("[data-test=goal-export]").text()).toBe("Exporter ma feuille ORP");
     wrapper.unmount();
   });
 
-  it("« Exporter ma feuille ORP » imprime la feuille du mois ; « Je n'ai pas postulé » reste", async () => {
+  it("« Exporter ma feuille ORP » imprime la feuille du mois ; « Je n’ai pas postulé » reste", async () => {
     const wrapper = await mountIt();
     await wrapper.find("[data-test=goal-export]").trigger("click");
     await new Promise((resolve) => setTimeout(resolve));

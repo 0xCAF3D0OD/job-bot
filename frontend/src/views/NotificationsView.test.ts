@@ -53,7 +53,7 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     });
     const { wrapper } = await mountPage();
     expect(wrapper.find("h1").text()).toBe("Notifications");
-    expect(wrapper.find("[data-test=notifications-back]").attributes("aria-label")).toBe("Retour à l'accueil");
+    expect(wrapper.find("[data-test=notifications-back]").attributes("aria-label")).toBe("Retour à l’accueil");
     expect(wrapper.find("[data-test=filter-unread]").text()).toBe("Non lues (2)");
     // Les groupes ne dépendent que de l'écart en jours ; près de minuit, « Aujourd'hui » peut manquer.
     // Téléphone (§10.9) : « Aujourd'hui », « Hier », « Plus tôt », plus de « Cette semaine » ; une section nommée par
@@ -135,7 +135,7 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     GET.mockResolvedValue({ data: { unread: 0, items: [] } });
     const { wrapper } = await mountPage();
     const empty = wrapper.find("[data-test=notifications-empty]");
-    expect(empty.text()).toContain("Aucune notification pour l'instant");
+    expect(empty.text()).toContain("Aucune notification pour l’instant");
     expect(empty.find("[data-test=show-all]").exists()).toBe(false);
     expect(wrapper.find("[data-test=read-all]").attributes("disabled")).toBeDefined();
     wrapper.unmount();

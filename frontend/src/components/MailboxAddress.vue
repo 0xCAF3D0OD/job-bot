@@ -26,7 +26,7 @@ const shown = computed(() => {
     <strong data-test="mailbox-address">{{ shown }}</strong>
     <CopyButton
       :value="address"
-      label="Copier l'adresse"
+      label="Copier l’adresse"
       test-id="mailbox-copy"
     />
   </span>

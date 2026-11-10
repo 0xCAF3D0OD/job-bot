@@ -114,7 +114,7 @@ describe("recherche globale (série du 27.10, point 2)", () => {
     expect(done.text()).toContain("Recherche ajoutée : kubernetes · Zurich · jobup, LinkedIn");
     expect(done.text()).not.toContain("Recherche suivie");
     expect(wrapper.find("[data-test=search-todo]").text()).toBe(
-      "Il te reste à créer l'alerte sur LinkedIn. Tant qu'elle n'est pas créée, rien n'arrive.",
+      "Il te reste à créer l’alerte sur LinkedIn. Tant qu’elle n’est pas créée, rien n’arrive.",
     );
     expect(wrapper.find(".gs-actions").findAll("button").map((b) => b.text())).toEqual(["Créer les alertes", "Modifier", "Annuler (6 s)"]);
     expect(wrapper.find("[data-test=search-create-alerts]").classes()).toContain("primary");

@@ -84,7 +84,7 @@ describe("état des alertes (planche « 6. Alertes »)", () => {
     expect(linux!.pill).toEqual({ kind: "received", label: "Reçue · jobup" });
   });
 
-  it("la bande : un code d'abord, puis une confirmation, puis l'alerte muette ; sinon rien", () => {
+  it("la bande : un code d’abord, puis une confirmation, puis l’alerte muette ; sinon rien", () => {
     const code = alertsBand(page({ codes: [{ search_id: 1, site: "jobup", code: "123456", received_at: ago(0) }] }), NOW);
     expect(code).toMatchObject({ title: "jobup attend un code de vérification.", action: "Vérifier" });
     const confirm = alertsBand(page({ to_confirm: [{ search_id: 1, site: "linkedin", subject: null, received_at: ago(0), url: "https://x" }] }), NOW);
@@ -92,9 +92,9 @@ describe("état des alertes (planche « 6. Alertes »)", () => {
     const silent = alertsBand(page(), NOW);
     expect(silent).toMatchObject({
       kind: "silent",
-      title: "LinkedIn n'a encore rien reçu.",
+      title: "LinkedIn n’a encore rien reçu.",
       summary: "Ta recherche « Linux » y existe depuis 5 jours, sans un seul e-mail : le réglage est sans doute à revoir.",
-      action: "Vérifier l'alerte",
+      action: "Vérifier l’alerte",
     });
     // Une alerte créée il y a 2 jours seulement : pas de bande.
     const fresh = page();

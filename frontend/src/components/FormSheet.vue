@@ -5,6 +5,7 @@ import { api, type Identity } from "../api/client";
 import { usePhone } from "../composables/usePhone";
 import CopyButton from "./CopyButton.vue";
 import DisclosureRow from "./DisclosureRow.vue";
+import { phoneDisplay } from "../format";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
 // ligne de l'employeur, dans l'ordre habituel de ces formulaires. Une ligne par champ (maquette
@@ -76,7 +77,7 @@ const missing = computed(() => {
       >
         <dt>{{ label }}</dt>
         <dd :class="{ 'form-sheet-long': value.length > 80 }">
-          {{ value }}
+          {{ label === "Téléphone" ? phoneDisplay(value) : value }}
         </dd>
         <CopyButton
           :value="value"
@@ -101,7 +102,7 @@ const missing = computed(() => {
         >
           <dt>{{ label }}</dt>
           <dd :class="{ 'form-sheet-long': value.length > 80 }">
-            {{ value }}
+            {{ label === "Téléphone" ? phoneDisplay(value) : value }}
           </dd>
           <CopyButton
             :value="value"

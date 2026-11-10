@@ -141,7 +141,7 @@ onMounted(() => void load());
         class="notice error"
         role="alert"
       >
-        Le suivi ORP n'a pas pu être chargé.
+        Le suivi ORP n’a pas pu être chargé.
       </p>
       <LoadingBlocks
         v-else-if="!orp"

@@ -201,7 +201,7 @@ async function send(text: string = draft.value): Promise<void> {
     if (response.status === 401) globalThis.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     if (!response.ok || !response.body) {
       const detail = (await response.json().catch(() => null)) as { detail?: unknown } | null;
-      reply.content = typeof detail?.detail === "string" ? detail.detail : "L'assistant ne répond pas, réessaie.";
+      reply.content = typeof detail?.detail === "string" ? detail.detail : "L’assistant ne répond pas, réessaie.";
       reply.error = true;
       return;
     }
@@ -331,7 +331,7 @@ async function decide(action: ChatAction, decision: keyof typeof DECISIONS): Pro
   try {
     const { data } = await api.POST(DECISIONS[decision], { params: { path: { action_id: action.id } } });
     if (!data) {
-      action.note = "Impossible pour l'instant, réessaie.";
+      action.note = "Impossible pour l’instant, réessaie.";
       return;
     }
     Object.assign(action, data);
@@ -349,7 +349,7 @@ const DONE_TEXT: Record<string, string> = {
   done: "Fait.",
   undone: "Annulé : remis comme avant.",
   declined: "Laissé tel quel.",
-  stale: "Plus à faire : rien n'a été changé.",
+  stale: "Plus à faire : rien n’a été changé.",
 };
 
 // « Nouvelle discussion » visible, l'effacement dans « ⋯ » (docs/74), confirmé sur place.
@@ -365,7 +365,7 @@ const headItems: MoreMenuItem[] = [
       ref="fab"
       type="button"
       class="assistant-fab"
-      aria-label="Ouvrir l'assistant"
+      aria-label="Ouvrir l’assistant"
       data-test="assistant-open"
       @click="open = true"
     >
@@ -421,13 +421,13 @@ const headItems: MoreMenuItem[] = [
           <MoreMenu
             v-if="lines.length"
             :items="headItems"
-            label="Plus d'actions sur la discussion"
+            label="Plus d’actions sur la discussion"
             test-id="assistant-more"
           />
           <IconButton
             v-if="!page"
             icon="close"
-            label="Fermer l'assistant"
+            label="Fermer l’assistant"
             data-test="assistant-close"
             @click="layer.hide(true)"
           />
@@ -706,7 +706,7 @@ const headItems: MoreMenuItem[] = [
           </div>
         </template>
         <!-- L'Assistant écrit (maquette du 8 novembre, lot 11.3) : le logo sans cercle et trois points dans une bulle de
-             la forme d'une réponse, jusqu'au premier texte ; la bulle de la réponse prend alors sa place. -->
+             la forme d’une réponse, jusqu’au premier texte ; la bulle de la réponse prend alors sa place. -->
         <div
           v-if="waiting"
           class="assistant-line assistant assistant-waiting"
@@ -723,7 +723,7 @@ const headItems: MoreMenuItem[] = [
             class="assistant-bubble assistant-dots"
             aria-hidden="true"
           ><span /><span /><span /></span>
-          <span class="visually-hidden">L'Assistant écrit…</span>
+          <span class="visually-hidden">L’Assistant écrit…</span>
         </div>
       </div>
 
@@ -755,7 +755,7 @@ const headItems: MoreMenuItem[] = [
         <Composer
           ref="input"
           v-model="draft"
-          :placeholder="page ? 'Demande quelque chose…' : 'Demander à l\'Assistant'"
+          :placeholder="page ? 'Demande quelque chose…' : 'Demander à l’Assistant'"
           send-label="Envoyer"
           :busy="busy || reached('chat')"
           data-test="assistant-input"
@@ -767,7 +767,7 @@ const headItems: MoreMenuItem[] = [
         class="assistant-disclaimer"
         data-test="assistant-disclaimer"
       >
-        L'Assistant peut se tromper. Relis toujours avant d'envoyer.
+        L’Assistant peut se tromper. Relis toujours avant d’envoyer.
       </p>
     </div>
   </template>

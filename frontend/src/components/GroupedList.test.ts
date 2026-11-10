@@ -15,11 +15,11 @@ const global = { plugins: [router()] };
 describe("GroupedList et GroupedRow (règles §4)", () => {
   it("titre hors de la carte avec son compteur, une ligne par entrée", () => {
     const wrapper = mount(GroupedList, {
-      props: { title: "À faire aujourd'hui", count: 9 },
+      props: { title: "À faire aujourd’hui", count: 9 },
       slots: { default: '<li class="grouped-item">a</li><li class="grouped-item">b</li>' },
       global,
     });
-    expect(wrapper.find("h2").text()).toContain("À faire aujourd'hui");
+    expect(wrapper.find("h2").text()).toContain("À faire aujourd’hui");
     expect(wrapper.find(".count-badge").text()).toBe("9");
     expect(wrapper.find("section").attributes("aria-labelledby")).toBe(wrapper.find("h2").attributes("id"));
     expect(wrapper.findAll(".grouped-card > li")).toHaveLength(2);
@@ -54,7 +54,7 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
     expect(wrapper.find(".grouped-chevron").exists()).toBe(false);
   });
 
-  it("l'entrée affichée (liste et détail) : aria-current et la pastille de sélection", () => {
+  it("l’entrée affichée (liste et détail) : aria-current et la pastille de sélection", () => {
     const wrapper = mount(GroupedRow, { props: { title: "Notifications", to: "/reglages?rubrique=notifications", current: true }, global });
     const link = wrapper.find("a.grouped-row");
     expect(link.attributes("aria-current")).toBe("page");

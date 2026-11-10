@@ -74,7 +74,7 @@ describe("page de maintenance (docs/79)", () => {
     wrapper.unmount();
   });
 
-  it("l'exploitant qui passe pendant une maintenance annoncée la voit rappelée", async () => {
+  it("l’exploitant qui passe pendant une maintenance annoncée la voit rappelée", async () => {
     GET.mockResolvedValue({ data: { active: true, reason: "announced", message: null, bypass: true } });
     const wrapper = mount(Host, { attachTo: "#app" });
     await flushPromises();
@@ -85,7 +85,7 @@ describe("page de maintenance (docs/79)", () => {
 });
 
 describe("maintenance en lecture seule (docs/80)", () => {
-  it("un bandeau, un message si l'on enregistre, puis plus rien quand elle est levée", async () => {
+  it("un bandeau, un message si l’on enregistre, puis plus rien quand elle est levée", async () => {
     GET.mockResolvedValue({ data: { active: true, reason: "announced", mode: "lecture", message: "Sauvegarde", bypass: false } });
     const fetch = vi.fn().mockResolvedValue(state({ active: false, mode: "complete", message: null, bypass: false }));
     vi.stubGlobal("fetch", fetch);

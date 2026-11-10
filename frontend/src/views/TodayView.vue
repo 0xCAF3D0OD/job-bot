@@ -87,7 +87,7 @@ const tasks = computed<Task[]>(() => {
     list.push({ key: "meeting", test: "orp-meeting-soon", icon: "calendar", title: "Préparer le rendez-vous ORP", detail: `${dayAndTime(t.orp_meeting_at)} : ta feuille est prête.`, action: "Voir", to: "/candidatures/rendez-vous-orp" });
   }
   for (const item of t.upcoming_interviews ?? []) {
-    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "users", title: "Préparer l'entretien", detail: `${dayAndTime(item.at)} chez ${item.company}.`, action: "Préparer", to: "/candidatures/suivi" });
+    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "users", title: "Préparer l’entretien", detail: `${dayAndTime(item.at)} chez ${item.company}.`, action: "Préparer", to: "/candidatures/suivi" });
   }
   const orp = orpTask.value;
   if (orp?.urgent) list.push(orp.task);
@@ -117,7 +117,7 @@ const tasks = computed<Task[]>(() => {
   }
   if (orp && !orp.urgent) list.push(orp.task);
   for (const item of t.interviews_to_review ?? []) {
-    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l'entretien", detail: `Chez ${item.company} : comment s'est-il passé ?`, action: "Faire le point", to: item.link });
+    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l’entretien", detail: `Chez ${item.company} : comment s’est-il passé ?`, action: "Faire le point", to: item.link });
   }
   if (t.alerts_waiting) {
     list.push({
@@ -125,7 +125,7 @@ const tasks = computed<Task[]>(() => {
       test: "alerts-waiting",
       icon: "bell",
       title: `Vérifier ${plural(t.alerts_waiting, "alerte", "alertes")}`,
-      detail: t.alerts_waiting === 1 ? "Créée hier, elle n'a encore rien envoyé." : "Créées depuis hier, elles n'ont encore rien envoyé.",
+      detail: t.alerts_waiting === 1 ? "Créée hier, elle n’a encore rien envoyé." : "Créées depuis hier, elles n’ont encore rien envoyé.",
       action: "Vérifier",
       to: "/candidatures/alertes",
     });
@@ -147,7 +147,7 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
       title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
-      detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
+      detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
       to: { path: "/bilan/orp", query: { mois: t.orp_due_month } },
     },
@@ -162,9 +162,9 @@ const heading = computed<Heading>(() => {
   if (!t) return { lead: "", hand: "", sub: "" };
   if (starting.value) return { lead: "Commence par les premiers pas.", hand: "", sub: "" };
   const pause = t.rhythm?.pause_until;
-  if (pause) return { lead: "En", hand: "pause.", sub: `Jusqu'au ${untilDay(pause)}. Pense à l'annoncer à ton conseiller.` };
+  if (pause) return { lead: "En", hand: "pause.", sub: `Jusqu’au ${untilDay(pause)}. Pense à l’annoncer à ton conseiller.` };
   const waiting = deskTodo.value.length + deskLater.value.length;
-  const more = waiting ? `Si tu veux avancer, ${waiting === 1 ? "une chose t'attend" : `${waiting} choses t'attendent`}.` : "Profite de ta journée.";
+  const more = waiting ? `Si tu veux avancer, ${waiting === 1 ? "une chose t’attend" : `${waiting} choses t’attendent`}.` : "Profite de ta journée.";
   if (restDay.value) {
     const weekDone = !!t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
     return { lead: "Jour de", hand: "repos.", sub: weekDone ? `Ta semaine est faite. ${more}` : more };
@@ -172,7 +172,7 @@ const heading = computed<Heading>(() => {
   const perDay = dailyPace(t.month_count, t.month_target, t.month);
   const offers = triagePending.value ? ` ${plural(dose.value.length, "offre est", "offres sont")} à trier.` : "";
   if (perDay) {
-    return { lead: plural(perDay, "candidature", "candidatures"), hand: "à envoyer.", sub: `C'est ton rythme pour rester dans l'objectif ORP.${offers}` };
+    return { lead: plural(perDay, "candidature", "candidatures"), hand: "à envoyer.", sub: `C’est ton rythme pour rester dans l’objectif ORP.${offers}` };
   }
   if (perDay === 0) return { lead: "Tout est", hand: "à jour.", sub: `Objectif ORP du mois atteint : le reste du mois est à toi.${offers}` };
   return { lead: "Tout est", hand: "à jour.", sub: offers.trim() };
@@ -209,7 +209,7 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
       test: "triage",
       icon: "filter",
       title: `Trier ${plural(dose.value.length, "offre", "offres")}`,
-      detail: near ? `Dont ${near} très ${near === 1 ? "proche" : "proches"} de ton profil` : "La meilleure d'abord",
+      detail: near ? `Dont ${near} très ${near === 1 ? "proche" : "proches"} de ton profil` : "La meilleure d’abord",
       action: "Trier",
       to: { name: "triage" },
       tone: "normal",
@@ -219,14 +219,14 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
     todo.push({ key: "meeting", test: "orp-meeting-soon", icon: "calendar", title: "Préparer le rendez-vous ORP", detail: `${dayAndTime(t.orp_meeting_at)} · ta feuille est prête`, action: "Voir", to: "/candidatures/rendez-vous-orp", tone: "normal" });
   }
   for (const item of t.upcoming_interviews ?? []) {
-    todo.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "calendar", title: "Préparer l'entretien", detail: `${item.company} · ${dayAndTime(item.at).toLowerCase()}`, action: "Préparer", to: "/candidatures/suivi", tone: "interview" });
+    todo.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "calendar", title: "Préparer l’entretien", detail: `${item.company} · ${dayAndTime(item.at).toLowerCase()}`, action: "Préparer", to: "/candidatures/suivi", tone: "interview" });
   }
   if (orp && !orp.urgent) todo.push({ ...orp.task, tone: "normal" });
   for (const item of t.interviews_to_review ?? []) {
-    todo.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l'entretien", detail: `Chez ${item.company} : comment s'est-il passé ?`, action: "Faire le point", to: item.link, tone: "interview" });
+    todo.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l’entretien", detail: `Chez ${item.company} : comment s’est-il passé ?`, action: "Faire le point", to: item.link, tone: "interview" });
   }
   if (t.alerts_waiting) {
-    todo.push({ key: "alerts", test: "alerts-waiting", icon: "bell", title: `Vérifier ${plural(t.alerts_waiting, "alerte", "alertes")}`, detail: t.alerts_waiting === 1 ? "Créée hier, elle n'a encore rien envoyé" : "Créées depuis hier, elles n'ont encore rien envoyé", action: "Vérifier", to: "/candidatures/alertes", tone: "normal" });
+    todo.push({ key: "alerts", test: "alerts-waiting", icon: "bell", title: `Vérifier ${plural(t.alerts_waiting, "alerte", "alertes")}`, detail: t.alerts_waiting === 1 ? "Créée hier, elle n’a encore rien envoyé" : "Créées depuis hier, elles n’ont encore rien envoyé", action: "Vérifier", to: "/candidatures/alertes", tone: "normal" });
   }
   if (t.to_follow_up) {
     const oldest = Math.max(0, ...(t.follow_ups ?? []).map((f) => daysBefore(f.sent_at)));
@@ -252,7 +252,7 @@ const starterTasks = computed<DeskTask[]>(() => {
   if (!t || !starting.value || (t.has_offers ?? true)) return [];
   const list: DeskTask[] = [];
   if (t.search_url) {
-    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d'autres sites, réunies", action: "Ouvrir", to: "", href: t.search_url, tone: "normal" });
+    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d’autres sites, réunies", action: "Ouvrir", to: "", href: t.search_url, tone: "normal" });
   }
   // Alertes prêtes : la carte des premiers pas propose déjà « Ajouter une offre ».
   const alertsDone = t.first_steps.some((s) => s.key === "alerts" && s.done);

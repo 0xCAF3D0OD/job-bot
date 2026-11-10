@@ -9,20 +9,20 @@ describe("useAssistant", () => {
     expect(focusBody({ offerId: 12, label: "offre SRE" })).toEqual({ offer_id: 12, application_id: null, day: null, month: null });
   });
 
-  it("propose des suggestions selon la page et l'élément choisi", () => {
+  it("propose des suggestions selon la page et l’élément choisi", () => {
     expect(suggestionsFor("offers", null)[0]).toBe("Lesquelles postuler en priorité ?");
     expect(suggestionsFor("offers", { offerId: 1 })[0]).toBe("Explique-moi la note de cette offre");
-    expect(suggestionsFor("applications", { month: "2026-10", day: "2026-10-02" })[0]).toBe("Qu'ai-je envoyé ce jour-là ?");
+    expect(suggestionsFor("applications", { month: "2026-10", day: "2026-10-02" })[0]).toBe("Qu’ai-je envoyé ce jour-là ?");
     // « Comment ça marche ici ? » remplace les « ? » des pages (docs/53).
     expect(suggestionsFor("inconnue", null)).toHaveLength(4);
     expect(suggestionsFor("settings", null).at(-1)).toBe("Comment ça marche ici ?");
     // Le Bilan a ses propres suggestions (docs/56), plus les génériques.
-    expect(suggestionsFor("insights", null)[2]).toBe("Prépare mon résumé pour l'ORP");
+    expect(suggestionsFor("insights", null)[2]).toBe("Prépare mon résumé pour l’ORP");
     // Profil parle aussi des critères (docs/64 §1).
-    expect(suggestionsFor("profile", null)).toContain("Quel critère m'écarte le plus d'offres ?");
+    expect(suggestionsFor("profile", null)).toContain("Quel critère m’écarte le plus d’offres ?");
   });
 
-  it("un raccourci ouvre le panneau sur l'élément", () => {
+  it("un raccourci ouvre le panneau sur l’élément", () => {
     const assistant = useAssistant();
     const before = assistant.fresh.value;
     assistant.askAbout({ applicationId: 3, label: "candidature DevOps" });

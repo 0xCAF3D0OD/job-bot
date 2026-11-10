@@ -40,7 +40,7 @@ async function revoke(token: Token): Promise<void> {
   const before = tokens.value;
   tokens.value = before.filter((t) => t.id !== token.id);
   await offerUndo({
-    message: `« ${token.name} » révoqué : l'extension ne remplira plus`,
+    message: `« ${token.name} » révoqué : l’extension ne remplira plus`,
     commit: async (keepalive) => {
       const { error } = await api.DELETE("/api/extension-tokens/{token_id}", { params: { path: { token_id: token.id } }, keepalive });
       if (error !== undefined) return false;
@@ -80,11 +80,11 @@ onMounted(load);
         rel="noopener noreferrer"
         class="button-link"
         data-test="extension-install"
-      ><span class="with-icon">Installer l'extension<AppIcon name="external" /><span class="visually-hidden"> (Firefox, nouvel onglet)</span></span></a>
+      ><span class="with-icon">Installer l’extension<AppIcon name="external" /><span class="visually-hidden"> (Firefox, nouvel onglet)</span></span></a>
     </SettingRow>
     <SettingRow
-      title="Relier l'extension"
-      :description="`Dans l'onglet « Relier jobA1 » qui s'ouvre, indique ${origin}, puis « Relier » et « Relier ce navigateur ».`"
+      title="Relier l’extension"
+      :description="`Dans l’onglet « Relier jobA1 » qui s’ouvre, indique ${origin}, puis « Relier » et « Relier ce navigateur ».`"
     />
     <SettingRow
       v-for="token in tokens"
@@ -102,7 +102,7 @@ onMounted(load);
     </SettingRow>
     <SettingRow
       title="Relier avec un jeton"
-      description="Si « Relier » ne marche pas : crée un jeton et colle-le dans l'extension."
+      description="Si « Relier » ne marche pas : crée un jeton et colle-le dans l’extension."
     >
       <button
         type="button"
@@ -116,7 +116,7 @@ onMounted(load);
     <SettingRow
       v-if="created"
       title="Nouveau jeton"
-      description="Montré une seule fois : colle-le maintenant dans l'extension."
+      description="Montré une seule fois : colle-le maintenant dans l’extension."
       wide
     >
       <div
@@ -133,10 +133,10 @@ onMounted(load);
     </SettingRow>
   </SettingCard>
   <!-- Sans fiche de boutique : les étapes par navigateur, repliées sous la carte (retour du
-       2026-10-20 : le texte d'un bloc était illisible). -->
+       2026-10-20 : le texte d’un bloc était illisible). -->
   <MoreInfo
     v-if="!STORE_URL"
-    label="Comment l'installer"
+    label="Comment l’installer"
   >
     <p class="install-browser">
       Firefox
@@ -153,7 +153,7 @@ onMounted(load);
     <ol class="install-steps">
       <li>Ouvre <code>chrome://extensions</code>.</li>
       <li>Active le mode développeur.</li>
-      <li>« Charger l'extension non empaquetée », puis choisis le dossier <code>extension/</code>.</li>
+      <li>« Charger l’extension non empaquetée », puis choisis le dossier <code>extension/</code>.</li>
     </ol>
   </MoreInfo>
 </template>

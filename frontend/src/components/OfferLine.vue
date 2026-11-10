@@ -3,7 +3,7 @@ import { computed, ref, useId, watch } from "vue";
 import { RouterLink, useRouter, type RouteLocationRaw } from "vue-router";
 
 import { usePhone } from "../composables/usePhone";
-import { cityOnly, colorIndex, initials, scoreWord } from "../format";
+import { cityOnly, colorIndex, frenchName, initials, scoreWord } from "../format";
 import { isBlankLogo } from "../logoImage";
 
 // La Ligne d'offre (planche « Ligne d'offre », composant 179:2912), la même partout : le logo ou
@@ -81,7 +81,7 @@ function onLogoLoad(event: Event): void {
 const initial = computed(() => (phone.value ? initials(name.value) : name.value.trim().charAt(0).toUpperCase() || "?"));
 // Sur téléphone, la ville sans le canton (maquette Candidatures).
 // L'entreprise, puis le lieu ; deux morceaux, pour que seule l'entreprise se coupe (« … ») et jamais la ville.
-const place = computed(() => (phone.value ? cityOnly(props.location) : props.location) || "");
+const place = computed(() => (phone.value ? cityOnly(props.location) : frenchName(props.location)) || "");
 const verdict = computed(() => (props.score === null || props.score === undefined ? null : scoreWord(props.score)));
 const label = computed(() => [props.title, props.company].filter(Boolean).join(", "));
 const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id}-more` : "", verdict.value ? `${id}-verdict` : ""].filter(Boolean).join(" "));

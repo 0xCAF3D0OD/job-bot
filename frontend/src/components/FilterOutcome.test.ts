@@ -7,7 +7,7 @@ import FilterOutcome from "./FilterOutcome.vue";
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 
-describe("de l'information plutôt que du vide (docs/63 §2)", () => {
+describe("de l’information plutôt que du vide (docs/63 §2)", () => {
   it("ce que donnent les critères : retenues sur reçues, trois raisons au plus", async () => {
     GET.mockResolvedValue({
       data: {
@@ -16,9 +16,9 @@ describe("de l'information plutôt que du vide (docs/63 §2)", () => {
         retained: 96,
         reasons: [
           { rule: "locations", label: "lieu", count: 180 },
-          { rule: "min_rate", label: "taux d'activité", count: 74 },
+          { rule: "min_rate", label: "taux d’activité", count: 74 },
           { rule: "language", label: "langue", count: 31 },
-          { rule: "contract", label: "type d'offre", count: 9 },
+          { rule: "contract", label: "type d’offre", count: 9 },
         ],
       },
     });

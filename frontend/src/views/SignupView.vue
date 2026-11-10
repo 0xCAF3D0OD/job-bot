@@ -43,17 +43,17 @@ onMounted(async () => {
 function problem(): string {
   const name = username.value.trim();
   if (!name) return "Choisis un identifiant.";
-  if (name.length > MAX_USERNAME) return `L'identifiant fait ${MAX_USERNAME} caractères au plus.`;
+  if (name.length > MAX_USERNAME) return `L’identifiant fait ${MAX_USERNAME} caractères au plus.`;
   if (password.value.length < MIN_PASSWORD) return `Le mot de passe fait ${MIN_PASSWORD} caractères au moins.`;
   if (password.value !== again.value) return "Les deux mots de passe diffèrent.";
-  if (note.value.length > MAX_NOTE) return `Le mot pour l'équipe jobA1 fait ${MAX_NOTE} caractères au plus.`;
+  if (note.value.length > MAX_NOTE) return `Le mot pour l’équipe jobA1 fait ${MAX_NOTE} caractères au plus.`;
   return "";
 }
 
 async function submit(): Promise<void> {
   error.value = problem();
   if (error.value) return;
-  consentError.value = consent.value ? "" : "Coche la case : lis d'abord ce que deviennent tes données.";
+  consentError.value = consent.value ? "" : "Coche la case : lis d’abord ce que deviennent tes données.";
   if (consentError.value) {
     consentBox.value?.focus();
     return;
@@ -106,7 +106,7 @@ async function submit(): Promise<void> {
       role="status"
       data-test="signup-sent"
     >
-      <p>Ta demande est envoyée. Tu pourras te connecter dès que l'équipe jobA1 l'aura acceptée.</p>
+      <p>Ta demande est envoyée. Tu pourras te connecter dès que l’équipe jobA1 l’aura acceptée.</p>
       <p class="hint">
         <RouterLink to="/connexion">
           Se connecter
@@ -121,7 +121,7 @@ async function submit(): Promise<void> {
       @submit.prevent="submit"
     >
       <p class="hint">
-        Choisis un identifiant et un mot de passe ; l'équipe jobA1 valide ensuite ton compte.
+        Choisis un identifiant et un mot de passe ; l’équipe jobA1 valide ensuite ton compte.
       </p>
       <label>Identifiant
         <input
@@ -154,7 +154,7 @@ async function submit(): Promise<void> {
           data-test="signup-again"
         >
       </label>
-      <label>Un mot pour l'équipe jobA1 (facultatif)
+      <label>Un mot pour l’équipe jobA1 (facultatif)
         <textarea
           v-model="note"
           rows="3"
@@ -189,7 +189,7 @@ async function submit(): Promise<void> {
           :aria-describedby="consentError ? 'signup-consent-error' : undefined"
           @change="consent && (consentError = '')"
         >
-        <span>J'ai lu <RouterLink
+        <span>J’ai lu <RouterLink
           to="/tes-donnees"
           target="_blank"
         >ce que deviennent mes données<span class="visually-hidden"> (nouvel onglet)</span></RouterLink></span>

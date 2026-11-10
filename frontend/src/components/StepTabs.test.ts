@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import StepTabs from "./StepTabs.vue";
 
 describe("StepTabs (maquette Preparer, C2)", () => {
-  it("le numéro en pastille teintée, une coche pour l'étape faite, seule l'étape ouverte annoncée", async () => {
+  it("le numéro en pastille teintée, une coche pour l’étape faite, seule l’étape ouverte annoncée", async () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     await router.push("/");
     const wrapper = mount(StepTabs, {

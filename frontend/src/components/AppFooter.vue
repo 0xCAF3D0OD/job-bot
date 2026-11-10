@@ -3,7 +3,7 @@
 // clic de chaque page (nLPD). Une ligne de liens, sans cadre.
 const LINKS = [
   { to: "/tes-donnees", label: "Données personnelles" },
-  { to: "/conditions", label: "Conditions d'utilisation" },
+  { to: "/conditions", label: "Conditions d’utilisation" },
   { to: "/accessibilite", label: "Accessibilité" },
   { to: "/a-propos", label: "À propos" },
 ];

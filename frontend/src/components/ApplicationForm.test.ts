@@ -18,13 +18,13 @@ afterEach(() => {
 });
 
 describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () => {
-  it("l'erreur apparaît sous le champ en le quittant, dit quoi faire, et part dès que c'est corrigé", async () => {
+  it("l’erreur apparaît sous le champ en le quittant, dit quoi faire, et part dès que c’est corrigé", async () => {
     const wrapper = mountForm();
     const company = wrapper.find("[data-test=company]");
     expect(wrapper.find("[data-test=field-error]").exists()).toBe(false);
     await company.trigger("blur");
     const error = wrapper.find("[data-test=field-error]");
-    expect(error.text()).toBe("Indique l'entreprise.");
+    expect(error.text()).toBe("Indique l’entreprise.");
     expect(company.attributes("aria-invalid")).toBe("true");
     expect(company.attributes("aria-describedby")).toBe(error.attributes("id"));
     await company.setValue("Beta Sàrl");
@@ -33,13 +33,13 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
     wrapper.unmount();
   });
 
-  it("à l'envoi : une erreur sous chaque champ manquant, le curseur dans le premier, rien d'envoyé", async () => {
+  it("à l’envoi : une erreur sous chaque champ manquant, le curseur dans le premier, rien d’envoyé", async () => {
     const wrapper = mountForm();
     await wrapper.find("[data-test=company]").setValue("Beta Sàrl");
     await wrapper.find("form").trigger("submit");
     await wrapper.vm.$nextTick();
     expect(wrapper.findAll("[data-test=field-error]").map((e) => e.text())).toEqual([
-      "Indique la date d'envoi.",
+      "Indique la date d’envoi.",
       "Indique le poste.",
     ]);
     expect(document.activeElement).toBe(wrapper.find("[data-test=sent-at] [data-test=dt-date]").element);
@@ -49,7 +49,7 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
     wrapper.unmount();
   });
 
-  it("candidature enregistrée : le lieu ou lien de l'entretien part avec le reste", async () => {
+  it("candidature enregistrée : le lieu ou lien de l’entretien part avec le reste", async () => {
     const saved = { ...(initial as object), sent_at: "2026-11-02", company: "Banque Exemple", job_title: "Ingénieur", status: "entretien", interview_at: "2026-11-16T09:00:00Z" } as never;
     const wrapper = mount(ApplicationForm, { props: { title: "Modifier", initial: saved, withStatus: true }, attachTo: document.body });
     await wrapper.get("[data-test=interview-place]").setValue("  Visio Teams  ");
@@ -63,7 +63,7 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
     wrapper.unmount();
   });
 
-  it("libellés au-dessus, « (facultatif) » sur les champs facultatifs, un seul bouton principal nommé par l'action", () => {
+  it("libellés au-dessus, « (facultatif) » sur les champs facultatifs, un seul bouton principal nommé par l’action", () => {
     const wrapper = mountForm();
     const labels = wrapper.findAll(".form-field-label").map((l) => l.text());
     expect(labels).toContain("Entreprise");

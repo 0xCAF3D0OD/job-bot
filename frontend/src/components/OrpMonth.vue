@@ -135,7 +135,7 @@ const wink = pace.value?.state === "reached" && firstTime("orp-wink");
       data-test="month-count"
     >
       <strong>{{ count }}</strong>
-      <span>{{ target ? ` / ${target} candidatures` : ` ${count === 1 ? "candidature" : "candidatures"}` }}</span>
+      <span>{{ target ? ` / ${target} candidatures` : ` ${count <= 1 ? "candidature" : "candidatures"}` }}</span>
     </p>
     <div
       v-if="target"

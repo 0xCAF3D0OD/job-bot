@@ -11,7 +11,7 @@ describe("shortCompany", () => {
     expect(shortCompany("Banque Cantonale Vaudoise Services SA")).toBe("Banque Cantonale Vaudois…");
     expect(shortCompany("Alpstack")).toBe("Alpstack");
   });
-  it("un trait d'union dans un mot ne coupe pas", () => {
+  it("un trait d’union dans un mot ne coupe pas", () => {
     expect(shortCompany("Croix-Rouge")).toBe("Croix-Rouge");
   });
 });

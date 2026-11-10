@@ -41,7 +41,7 @@ onMounted(async () => {
     v-if="toCorrect.length"
     class="hint"
   >
-    Pas encore {{ toCorrect.map((c) => `« ${label(c.filename)} »`).join(", ") }} : à faire corriger d'abord, dans
+    Pas encore {{ toCorrect.map((c) => `« ${label(c.filename)} »`).join(", ") }} : à faire corriger d’abord, dans
     <RouterLink to="/profil?onglet=parcours">
       Profil › Parcours
     </RouterLink>.

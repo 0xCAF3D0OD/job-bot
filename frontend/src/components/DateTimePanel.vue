@@ -123,14 +123,14 @@ function onTypedDate(): void {
   const day = parseTypedDay(typedDate.value);
   if (!day) dateError.value = "Écris la date comme ceci : 10.11.2026.";
   else if (low.value && day < low.value) dateError.value = low.value === now.value ? "Ce jour est déjà passé." : `Choisis un jour à partir du ${longDate(low.value)}.`;
-  else if (props.max && day > props.max) dateError.value = props.max === now.value ? "Ce jour n'est pas encore arrivé." : `Choisis un jour jusqu'au ${longDate(props.max)}.`;
+  else if (props.max && day > props.max) dateError.value = props.max === now.value ? "Ce jour n’est pas encore arrivé." : `Choisis un jour jusqu’au ${longDate(props.max)}.`;
   else choose(day);
 }
 
 function onTypedTime(): void {
   if (!typedTime.value.trim()) return;
   const value = parseTypedTime(typedTime.value);
-  if (!value) timeError.value = "Écris l'heure comme ceci : 09:30.";
+  if (!value) timeError.value = "Écris l’heure comme ceci : 09:30.";
   else chooseTime(value);
 }
 

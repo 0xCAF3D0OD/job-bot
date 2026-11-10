@@ -7,7 +7,7 @@ vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }
 import AccessibilityView from "./AccessibilityView.vue";
 
 describe("Accessibilité (docs/117 §1)", () => {
-  it("ce qui est vérifié, ce qui ne l'est pas, la dictée, à qui signaler", async () => {
+  it("ce qui est vérifié, ce qui ne l’est pas, la dictée, à qui signaler", async () => {
     GET.mockResolvedValue({ data: { contact: "Kevin, contact@joba1.ch", guest_mailbox: true } });
     const wrapper = mount(AccessibilityView);
     await flushPromises();

@@ -10,7 +10,7 @@ export const SITE_NAMES: Record<string, string> = {
   // Le code de Gmail qui confirme un transfert vers l'adresse jobA1 (docs/116 §1).
   gmail: "Gmail",
   // Offre ajoutée par toi (docs/111) : son lien mène à l'annonce elle-même.
-  manual: "l'annonce",
+  manual: "l’annonce",
   unknown: "inconnu",
 };
 
@@ -23,7 +23,7 @@ export const parseStatusLabel: Record<ParseStatus, string> = {
   parsed: "analysé",
   empty: "sans offre",
   unrecognized: "non reconnu",
-  failed: "erreur d'analyse",
+  failed: "erreur d’analyse",
 };
 
 export function rateText(min: number | null, max: number | null): string {
@@ -42,7 +42,7 @@ export function daysBefore(iso: string, now: Date = new Date()): number {
 /** Ligne d'un jour : « Aujourd'hui », « Hier », « Jeudi 15 octobre » (avec l'année si autre). */
 export function dayName(iso: string, now: Date = new Date()): string {
   const before = daysBefore(iso, now);
-  if (before === 0) return "Aujourd'hui";
+  if (before === 0) return "Aujourd’hui";
   if (before === 1) return "Hier";
   const sameYear = dayKey(iso).slice(0, 4) === dayKey(now.toISOString()).slice(0, 4);
   const text = new Date(iso).toLocaleDateString("fr-CH", {
@@ -73,7 +73,7 @@ export function onDayAt(value: string | Date, now: Date = new Date()): string {
 }
 /** Une échéance dans une phrase : « jusqu'au 12 octobre » (dates.ts, §5). */
 export function untilDay(value: string | Date, now: Date = new Date()): string {
-  return `jusqu'${dateInSentence(value, now).replace(/^le /, "au ")}`;
+  return `jusqu’${dateInSentence(value, now).replace(/^le /, "au ")}`;
 }
 
 /** Couleur stable (0 à 3) pour la pastille d'une entreprise. */
@@ -163,7 +163,7 @@ export function formatMonth(month: string): string {
 // « de septembre », « d'octobre », « d'août » : le nom du mois après « de », élidé.
 export function ofMonth(month: string): string {
   const name = formatMonth(month).split(" ")[0]!.toLowerCase();
-  return /^[aeiouyàâéèêî]/.test(name) ? `d'${name}` : `de ${name}`;
+  return /^[aeiouyàâéèêî]/.test(name) ? `d’${name}` : `de ${name}`;
 }
 
 export function shiftMonth(month: string, delta: number): string {
@@ -179,7 +179,7 @@ export function expiredText(offer: { expired_at?: string | null; expiry_source?:
   if (offer.expiry_source === "manual") return `Signalée expirée par toi ${day}.`;
   return offer.expiry_source === "age"
     ? `Probablement expirée : plus vue dans aucune alerte depuis 30 jours (${day}).`
-    : `Offre expirée ${day} : l'annonce n'est plus en ligne.`;
+    : `Offre expirée ${day} : l’annonce n’est plus en ligne.`;
 }
 
 // Télétravail d'une offre (docs/26 §2) : « Télétravail 2 j », « 100 % télétravail · Europe ».
@@ -199,15 +199,55 @@ export function remoteText(
   return null;
 }
 
-// La ville seule sur une carte du téléphone (maquettes) : « Lausanne, VD » devient « Lausanne ».
-export function cityOnly(location: string | null | undefined): string | null {
-  return location ? location.replace(/,\s*[A-Z]{2}$/, "") : null;
+// Les noms en français (MODIFICATIONS du 9 novembre, Textes) : les sites d'annonces écrivent parfois « Geneva »,
+// « Bern » ou « ICRC ». Affichage seulement : la donnée enregistrée ne change pas.
+const FRENCH_NAMES: [RegExp, string][] = [
+  [/\b(Geneva|Genf|Ginevra)\b/g, "Genève"],
+  [/\bBern\b/g, "Berne"],
+  [/\bBasel\b/g, "Bâle"],
+  [/\bBiel\b(?!\/)/g, "Bienne"],
+  [/\bNeuchatel\b/g, "Neuchâtel"],
+  [/\bLuzern\b/g, "Lucerne"],
+  [/\b(Zürich|Zuerich)\b/g, "Zurich"],
+  [/\bFreiburg\b/g, "Fribourg"],
+  [/\bSitten\b/g, "Sion"],
+  [/\bSwitzerland\b/g, "Suisse"],
+  [/\bInternational Committee of the Red Cross\b/g, "Comité international de la Croix-Rouge"],
+  [/\bICRC\b/g, "CICR"],
+];
+export function frenchName(text: string): string;
+export function frenchName(text: string | null | undefined): string | null;
+export function frenchName(text: string | null | undefined): string | null {
+  if (!text) return text ?? null;
+  return FRENCH_NAMES.reduce((out, [pattern, name]) => out.replace(pattern, name), text);
 }
 
-// « 1 offre », « 3 offres », « aucune offre » : de vrais accords plutôt que « offre(s) » (docs/43 n° 2).
+// L'entreprise et le lieu sur une ligne : « CICR · Genève ». `city` : la ville seule (cartes du téléphone).
+export function companyPlace(company: string | null | undefined, location: string | null | undefined, city = false): string {
+  return [frenchName(company), city ? cityOnly(location) : frenchName(location)].filter(Boolean).join(" · ");
+}
+
+// Un numéro de téléphone affiché espacé (MODIFICATIONS du 9 novembre, Textes) : « +41764304321 » donne
+// « +41 76 430 43 21 », « 0764304321 » donne « 076 430 43 21 ». La copie garde le numéro tel qu'il a été saisi.
+// Un numéro qui n'a pas la forme suisse reste tel quel.
+export function phoneDisplay(raw: string): string {
+  const digits = raw.replace(/[\s./-]/g, "").replace(/^00/, "+");
+  const swiss = /^\+41(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(digits);
+  if (swiss) return `+41 ${swiss.slice(1).join(" ")}`;
+  const local = /^(0\d{2})(\d{3})(\d{2})(\d{2})$/.exec(digits);
+  return local ? local.slice(1).join(" ") : raw;
+}
+
+// La ville seule sur une carte du téléphone (maquettes) : « Lausanne, VD » devient « Lausanne ».
+export function cityOnly(location: string | null | undefined): string | null {
+  return location ? frenchName(location.replace(/,\s*[A-Z]{2}$/, "")) : null;
+}
+
+// « 0 offre », « 1 offre », « 3 offres », « aucune offre » : de vrais accords plutôt que « offre(s) » (docs/43 n° 2) ;
+// le singulier pour 0 et 1 (MODIFICATIONS du 9 novembre, Textes).
 export function plural(count: number, one: string, many: string, none?: string): string {
   if (count === 0 && none) return none;
-  return `${count} ${count === 1 ? one : many}`;
+  return `${count} ${Math.abs(count) < 2 ? one : many}`;
 }
 
 // La compétence d'un manque de la note (docs/121 §C.3) : « Spark : pas d'expérience… »,
@@ -258,12 +298,12 @@ export function orpPace(count: number, target: number | null | undefined, month:
   if (count >= expected) {
     return { state: "on-track", mood: "content", word: "Dans les temps.", line: `${orpLeftLine(count, target, month, due)}.` };
   }
-  const days = daysLeft === 1 ? "1 jour ouvrable" : `${daysLeft} jours ouvrables`;
+  const days = daysLeft <= 1 ? `${daysLeft} jour ouvrable` : `${daysLeft} jours ouvrables`;
   return {
     state: "behind",
     mood: "attentif",
-    word: `En retard de ${expected - count} ${expected - count === 1 ? "candidature" : "candidatures"}.`,
-    line: `Il reste ${left} ${left === 1 ? "candidature" : "candidatures"} en ${days}.`,
+    word: `En retard de ${expected - count} ${expected - count <= 1 ? "candidature" : "candidatures"}.`,
+    line: `Il reste ${left} ${left <= 1 ? "candidature" : "candidatures"} en ${days}.`,
   };
 }
 

@@ -44,7 +44,7 @@ const RATES: { label: string; value: number | null }[] = [
 ];
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
-const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Afficher ${props.total} offres`));
+const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
 </script>
 
 <template>

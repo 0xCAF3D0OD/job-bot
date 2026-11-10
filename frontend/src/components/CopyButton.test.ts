@@ -10,8 +10,8 @@ describe("CopyButton (règles §4)", () => {
     vi.useFakeTimers();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
-    const wrapper = mount(CopyButton, { props: { value: "abc@joba1.ch", label: "Copier l'adresse" } });
-    expect(wrapper.find("button").text()).toContain("Copier l'adresse");
+    const wrapper = mount(CopyButton, { props: { value: "abc@joba1.ch", label: "Copier l’adresse" } });
+    expect(wrapper.find("button").text()).toContain("Copier l’adresse");
     expect(wrapper.find("[role=status]").text()).toBe("");
 
     await wrapper.find("button").trigger("click");
@@ -24,10 +24,10 @@ describe("CopyButton (règles §4)", () => {
     vi.advanceTimersByTime(2000);
     await flushPromises();
     expect(wrapper.find("[role=status]").text()).toBe("");
-    expect(wrapper.find("button").text()).toContain("Copier l'adresse");
+    expect(wrapper.find("button").text()).toContain("Copier l’adresse");
   });
 
-  it("n'annonce rien si la copie échoue", async () => {
+  it("n’annonce rien si la copie échoue", async () => {
     Object.assign(navigator, { clipboard: { writeText: vi.fn().mockRejectedValue(new Error("refusé")) } });
     const wrapper = mount(CopyButton, { props: { value: "x" } });
     await wrapper.find("button").trigger("click");

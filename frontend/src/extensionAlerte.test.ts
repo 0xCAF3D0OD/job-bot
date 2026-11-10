@@ -43,8 +43,8 @@ beforeAll(async () => {
   rules = g.jobA1AlertSelectors;
 });
 
-describe("remplir le formulaire d'alerte, par site", () => {
-  it("jobup : l'adresse dans le champ e-mail, input et change, sans envoyer", () => {
+describe("remplir le formulaire d’alerte, par site", () => {
+  it("jobup : l’adresse dans le champ e-mail, input et change, sans envoyer", () => {
     const page = open("jobup.html");
     expect(fillForm(rules.jobup!, ADDRESS)).toEqual({ form: true, filled: true });
     expect(value("#alert-email")).toBe(ADDRESS);
@@ -55,7 +55,7 @@ describe("remplir le formulaire d'alerte, par site", () => {
     expect(document.querySelector<HTMLInputElement>("input[name=consent]")!.checked).toBe(false);
   });
 
-  it("jobs.ch : le champ e-mail de la fenêtre, pas le nom de l'alerte", () => {
+  it("jobs.ch : le champ e-mail de la fenêtre, pas le nom de l’alerte", () => {
     const page = open("jobsch.html");
     expect(fillForm(rules.jobsch!, ADDRESS)).toEqual({ form: true, filled: true });
     expect(value("input[name=email]")).toBe(ADDRESS);
@@ -64,14 +64,14 @@ describe("remplir le formulaire d'alerte, par site", () => {
     expect(page.submitted()).toBe(false);
   });
 
-  it("LinkedIn : le champ de la fenêtre d'alerte seulement", () => {
+  it("LinkedIn : le champ de la fenêtre d’alerte seulement", () => {
     const page = open("linkedin.html");
     expect(fillForm(rules.linkedin!, ADDRESS)).toEqual({ form: true, filled: true });
     expect(value("#job-alert-email")).toBe(ADDRESS);
     expect(page.submitted()).toBe(false);
   });
 
-  it("à l'ouverture, sans adresse : le formulaire est reconnu, rien n'est rempli", () => {
+  it("à l’ouverture, sans adresse : le formulaire est reconnu, rien n’est rempli", () => {
     open("jobup.html");
     expect(fillForm(rules.jobup!, null)).toEqual({ form: true, filled: false });
     expect(value("#alert-email")).toBe("");
@@ -84,7 +84,7 @@ describe("remplir le formulaire d'alerte, par site", () => {
     expect(page.events).toEqual([]);
   });
 
-  it("fenêtre d'alerte fermée : pas de formulaire, ni la recherche ni la newsletter remplies", () => {
+  it("fenêtre d’alerte fermée : pas de formulaire, ni la recherche ni la newsletter remplies", () => {
     open("jobup-sans-fenetre.html");
     expect(fillForm(rules.jobup!, ADDRESS)).toEqual({ form: false, filled: false });
     expect(value("input[name=newsletter]")).toBe("");
@@ -92,7 +92,7 @@ describe("remplir le formulaire d'alerte, par site", () => {
 });
 
 describe("les sites et leurs accès", () => {
-  it("host_permissions : jobup.ch, jobs.ch, linkedin.com, rien d'autre", () => {
+  it("host_permissions : jobup.ch, jobs.ch, linkedin.com, rien d’autre", () => {
     const hosts = Object.values(rules).flatMap((r) => r.hosts.map((h) => `https://${h}/*`));
     expect([...manifest.host_permissions].sort()).toEqual(hosts.sort());
     expect(manifest.host_permissions.join(" ")).not.toMatch(/all_urls|\*\.|auth\./);

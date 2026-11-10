@@ -11,7 +11,7 @@ describe("HoverNote au doigt (docs/108 §2)", () => {
     const Page = defineComponent(() => () =>
       h("div", [
         h("label", h(HoverNote, { text: "Communes ou cantons." }, () => "Lieux")),
-        h("legend", h(HoverNote, { text: "Les autres jours, rien n'arrive." }, () => "Jours de recherche")),
+        h("legend", h(HoverNote, { text: "Les autres jours, rien n’arrive." }, () => "Jours de recherche")),
         h("button", h(HoverNote, { text: "Environ 0,05 $." }, () => "Préparer le CV")),
       ]),
     );
@@ -25,7 +25,7 @@ describe("HoverNote au doigt (docs/108 §2)", () => {
     await infos[1]!.trigger("click");
     const lines = wrapper.findAll("[data-test=hover-note-line]");
     expect(lines).toHaveLength(1);
-    expect(lines[0]!.text()).toBe("Les autres jours, rien n'arrive.");
+    expect(lines[0]!.text()).toBe("Les autres jours, rien n’arrive.");
     await infos[1]!.trigger("click");
     expect(wrapper.find("[data-test=hover-note-line]").exists()).toBe(false);
     wrapper.unmount();

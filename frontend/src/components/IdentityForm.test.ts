@@ -63,7 +63,7 @@ describe("IdentityForm", () => {
 });
 
 describe("IdentityForm, ce qui manque (docs/21 §6)", () => {
-  it("annonce les champs manquants de l'en-tête", async () => {
+  it("annonce les champs manquants de l’en-tête", async () => {
     GET.mockResolvedValue({ data: { name: "Camille Exemple", street: null, postcode: null, city: "Lausanne", phone: null, email: null } });
     const wrapper = mount(IdentityForm);
     await flushPromises();

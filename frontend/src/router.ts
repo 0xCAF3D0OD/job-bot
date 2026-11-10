@@ -62,7 +62,7 @@ export interface NavEntry {
 // Menu (docs/19 §1) : une entrée par question. Offres, suivi, preuves ORP et alertes sont
 // des onglets de la rubrique Candidatures ; l'État est une section des Réglages.
 export const navigation: NavEntry[] = [
-  { path: "/aujourdhui", name: "today", label: "Aujourd'hui", icon: "calendar" },
+  { path: "/aujourdhui", name: "today", label: "Aujourd’hui", icon: "calendar" },
   { path: "/candidatures", name: "jobs", label: "Candidatures", icon: "check-circle" },
   { path: "/bilan", name: "bilan", label: "Bilan", icon: "stats" },
   // La page Compte (docs/139 étape 10a) : le sommaire du profil et des réglages, l'onglet Compte du téléphone.
@@ -326,14 +326,14 @@ router.beforeEach(async (to) => {
 // seulement un filtre, un mois ou un onglet dans la page.
 // Le titre de l'onglet du navigateur, « Page · jobA1 » (WCAG 2.4.2, audit du 22.10.2026).
 const PAGE_TITLES: Record<string, string> = {
-  today: "Aujourd'hui",
+  today: "Aujourd’hui",
   assistant: "Assistant",
   offers: "Offres",
   applications: "Suivi",
   alerts: "Alertes",
   insights: "Bilan",
   "orp-meeting": "Rendez-vous ORP",
-  "orp-fiche": "Pour l'ORP",
+  "orp-fiche": "Pour l’ORP",
   preparation: "Préparer",
   trainings: "Formations",
   profile: "Profil",
@@ -345,11 +345,11 @@ const PAGE_TITLES: Record<string, string> = {
   discover: "La plateforme",
   privacy: "Données personnelles",
   accessibility: "Accessibilité",
-  terms: "Conditions d'utilisation",
+  terms: "Conditions d’utilisation",
   about: "À propos",
   welcome: "Bienvenue",
   "extension-link": "Extension",
-  "getemall-authorize": "Relier Get'emAll",
+  "getemall-authorize": "Relier Get’emAll",
   "not-found": "Page introuvable",
 };
 

@@ -16,8 +16,8 @@ vi.mock("../api/client", () => ({
 afterEach(() => vi.resetAllMocks());
 
 const GAPS = [
-  { text: "Exigences : non précisées dans l'extrait", chunk_ids: [] },
-  { text: "Conseil : lire l'annonce complète", chunk_ids: [] },
+  { text: "Exigences : non précisées dans l’extrait", chunk_ids: [] },
+  { text: "Conseil : lire l’annonce complète", chunk_ids: [] },
 ];
 
 function offer(extra: Record<string, unknown> = {}) {
@@ -31,7 +31,7 @@ function offer(extra: Record<string, unknown> = {}) {
     last_seen_at: "2026-11-05T08:00:00Z",
     seen_count: 1,
     links: [{ source: "linkedin", url: "https://www.linkedin.com/jobs/view/42" }],
-    snippet: "Extrait de l'alerte",
+    snippet: "Extrait de l’alerte",
     description: null,
     score: 61,
     summary_partial: true,
@@ -49,7 +49,7 @@ async function mountDetail(value: Record<string, unknown>) {
 }
 
 describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
-  it("en-tête : pastille « Provisoire », anneau pâli, sous-titre sur n lignes de l'alerte", async () => {
+  it("en-tête : pastille « Provisoire », anneau pâli, sous-titre sur n lignes de l’alerte", async () => {
     const wrapper = await mountDetail(offer({ snippet: "Ligne un\nLigne deux\n\nLigne trois" }));
     expect(wrapper.find("[data-test=provisional]").text()).toBe("Provisoire");
     const ring = wrapper.find("[data-test=section-for-you] [data-test=score]");
@@ -61,7 +61,7 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     expect(wrapper.find("[data-test=match-lines]").text()).not.toContain("Exigences");
   });
 
-  it("bande au repos : titre, phrase, « Lire l'annonce » et « Coller le texte », aucun bouton plein", async () => {
+  it("bande au repos : titre, phrase, « Lire l’annonce » et « Coller le texte », aucun bouton plein", async () => {
     const wrapper = await mountDetail(offer());
     const band = wrapper.find("[data-test=partial-notice]");
     expect(band.find("[data-test=partial-title]").text()).toBe("Il manque l’annonce complète");
@@ -74,7 +74,7 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
   });
 
   it("note complète ou candidature spontanée : ni bande ni pastille", async () => {
-    const full = await mountDetail(offer({ description: "Texte complet de l'annonce", summary_partial: false }));
+    const full = await mountDetail(offer({ description: "Texte complet de l’annonce", summary_partial: false }));
     expect(full.find("[data-test=partial-notice]").exists()).toBe(false);
     expect(full.find("[data-test=provisional]").exists()).toBe(false);
     expect(full.find("[data-test=match-lines]").text()).toContain("Exigences");
@@ -83,7 +83,7 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     expect(spontaneous.find("[data-test=partial-notice]").exists()).toBe(false);
   });
 
-  it("lecture : « Lecture… » désactivé, la phrase change, rien ne s'empile", async () => {
+  it("lecture : « Lecture… » désactivé, la phrase change, rien ne s’empile", async () => {
     let finish: (v: unknown) => void = () => {};
     POST.mockReturnValueOnce(new Promise((resolve) => (finish = resolve)));
     const wrapper = await mountDetail(offer());
@@ -100,8 +100,8 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
 
-  it("refus du site : nouveau titre, « Lire » disparaît, « Coller le texte » seul, lien pour ouvrir l'annonce", async () => {
-    POST.mockResolvedValueOnce({ data: { saved: false, problem: "Ce site interdit la lecture par un robot : colle le texte de l'annonce.", paste: true } });
+  it("refus du site : nouveau titre, « Lire » disparaît, « Coller le texte » seul, lien pour ouvrir l’annonce", async () => {
+    POST.mockResolvedValueOnce({ data: { saved: false, problem: "Ce site interdit la lecture par un robot : colle le texte de l’annonce.", paste: true } });
     const wrapper = await mountDetail(offer());
     await wrapper.find("[data-test=read-offer-text]").trigger("click");
     await flushPromises();
@@ -184,11 +184,11 @@ describe("OfferDetail, note provisoire (maquette OffreProvisoire)", () => {
     expect(wrapper.find("[data-test=redone]").exists()).toBe(false);
   });
 
-  it("« Le poste » : « Extrait de l'alerte » si provisoire, « Résumé par jobA1 » sinon", async () => {
-    const partial = await mountDetail(offer({ summary_role: "Résumé tiré de l'extrait" }));
+  it("« Le poste » : « Extrait de l’alerte » si provisoire, « Résumé par jobA1 » sinon", async () => {
+    const partial = await mountDetail(offer({ summary_role: "Résumé tiré de l’extrait" }));
     expect(partial.find("[data-test=snippet-by]").text()).toBe("Extrait de l’alerte");
     expect(partial.find("[data-test=summary-by]").exists()).toBe(false);
-    expect(partial.find(".detail-snippet").text()).toBe("Extrait de l'alerte");
+    expect(partial.find(".detail-snippet").text()).toBe("Extrait de l’alerte");
     const full = await mountDetail(offer({ description: "Texte complet", summary_partial: false, summary_role: "Missions : CI/CD" }));
     expect(full.find("[data-test=snippet-by]").exists()).toBe(false);
     expect(full.find("[data-test=summary-by]").text()).toBe("Résumé par jobA1");

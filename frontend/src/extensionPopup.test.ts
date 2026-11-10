@@ -102,7 +102,7 @@ const nothingHere = { "/api/extension/match": { offer: null, choices: [] } };
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("fenêtre de l'extension", () => {
+describe("fenêtre de l’extension", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("non connectée (ExtNonConnecte) : « Se connecter à jobA1 », sans pastille, rien demandé à la page", async () => {
@@ -116,7 +116,7 @@ describe("fenêtre de l'extension", () => {
     expect(injected).toHaveLength(0);
   });
 
-  it("« Se connecter » sans adresse connue : les réglages, l'adresse à donner", async () => {
+  it("« Se connecter » sans adresse connue : les réglages, l’adresse à donner", async () => {
     await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: {}, api: {}, scripts: {} });
     document.getElementById("signin-go")!.click();
     expect(shownState()).toBe("settings");
@@ -124,7 +124,7 @@ describe("fenêtre de l'extension", () => {
     expect(document.getElementById("gear")?.getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("« Se connecter » avec l'adresse connue : la page « Relier ce navigateur » s'ouvre", async () => {
+  it("« Se connecter » avec l’adresse connue : la page « Relier ce navigateur » s’ouvre", async () => {
     await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: { base: linked.base }, api: {}, scripts: {} });
     document.getElementById("signin-go")!.click();
     await new Promise((r) => setTimeout(r, 0));
@@ -133,7 +133,7 @@ describe("fenêtre de l'extension", () => {
     expect(document.getElementById("signin-message")?.textContent).toContain("Relier ce navigateur");
   });
 
-  it("autre site (ExtAutreSite) : « Rien à faire sur cette page », la pastille de l'hôte", async () => {
+  it("autre site (ExtAutreSite) : « Rien à faire sur cette page », la pastille de l’hôte", async () => {
     await openPopup({
       tab: { id: 1, url: "https://www.google.ch/search?q=emploi" },
       stored: linked,
@@ -159,7 +159,7 @@ describe("fenêtre de l'extension", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("formulaire de l'employeur reconnu : l'état d'avant la maquette, dans la nouvelle fenêtre", async () => {
+  it("formulaire de l’employeur reconnu : l’état d’avant la maquette, dans la nouvelle fenêtre", async () => {
     await openPopup({
       tab: { id: 1, url: "https://careers.exemple.ch/jobs/1/apply" },
       stored: linked,
@@ -171,12 +171,12 @@ describe("fenêtre de l'extension", () => {
     expect(document.querySelectorAll("#main button.primary")).toHaveLength(1);
   });
 
-  it("accès à la plateforme pas encore donné : « Autoriser l'accès »", async () => {
+  it("accès à la plateforme pas encore donné : « Autoriser l’accès »", async () => {
     await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: linked, api: {}, scripts: {}, granted: false });
     expect(shownState()).toBe("authorize-state");
   });
 
-  it("roue dentée : les réglages (délier), puis retour à l'état d'avant", async () => {
+  it("roue dentée : les réglages (délier), puis retour à l’état d’avant", async () => {
     await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: linked, api: nothingHere, scripts: {} });
     const gear = document.getElementById("gear")!;
     expect(gear.getAttribute("aria-label")).toBe("Réglages de l’extension");
@@ -189,7 +189,7 @@ describe("fenêtre de l'extension", () => {
     expect(shownState()).toBe("idle");
   });
 
-  it("délier : le jeton est oublié, retour à « Relie l'extension »", async () => {
+  it("délier : le jeton est oublié, retour à « Relie l’extension »", async () => {
     await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: linked, api: nothingHere, scripts: {} });
     document.getElementById("gear")!.click();
     document.getElementById("unlink")!.click();
@@ -216,7 +216,7 @@ const click = async (id: string) => {
 const sentBodies = () => calls.filter((c) => c.init?.method === "POST").map((c) => JSON.parse(String(c.init!.body)));
 
 describe("envoyer une annonce (ExtAnnonce)", () => {
-  it("à l'ouverture : la carte de l'annonce, rien d'envoyé, seul le titre lu", async () => {
+  it("à l’ouverture : la carte de l’annonce, rien d’envoyé, seul le titre lu", async () => {
     await openPopup(annoncePage({}));
     expect(shownState()).toBe("annonce");
     expect(document.getElementById("site-name")?.textContent).toBe("careers.specitec.com");
@@ -228,7 +228,7 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
     expect(sentBodies()).toEqual([]);
   });
 
-  it("« Envoyer à jobA1 » : l'annonce lue maintenant, envoyée seule ; « Offre ajoutée » et sa note", async () => {
+  it("« Envoyer à jobA1 » : l’annonce lue maintenant, envoyée seule ; « Offre ajoutée » et sa note", async () => {
     await openPopup(annoncePage({ "/api/extension/announce": { outcome: "added", offer_id: 12, score: 76, label: "Proche", filled: [], known: null } }));
     await click("an-send");
     expect(injected.filter((i) => i.name === "jobA1Annonce").map((i) => i.args)).toEqual([[false], [true]]);
@@ -242,7 +242,7 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
     expect(document.getElementById("an-open")?.getAttribute("href")).toBe(`${linked.base}/candidatures/offres?offre=12`);
   });
 
-  it("même poste chez la même entreprise : « C'est bien cette offre ? », puis « Oui, compléter cette offre »", async () => {
+  it("même poste chez la même entreprise : « C’est bien cette offre ? », puis « Oui, compléter cette offre »", async () => {
     let n = 0;
     await openPopup(
       annoncePage({
@@ -285,15 +285,15 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
   });
 
   it("30 envois par jour : le message du serveur", async () => {
-    const limit = () => new Response(JSON.stringify({ detail: "30 annonces envoyées aujourd'hui : c'est le maximum. Réessaie demain." }), { status: 429 });
+    const limit = () => new Response(JSON.stringify({ detail: "30 annonces envoyées aujourd’hui : c’est le maximum. Réessaie demain." }), { status: 429 });
     await openPopup(annoncePage({ "/api/extension/announce": limit }));
     await click("an-send");
-    expect(document.getElementById("an-error")?.textContent).toBe("30 annonces envoyées aujourd'hui : c'est le maximum. Réessaie demain.");
+    expect(document.getElementById("an-error")?.textContent).toBe("30 annonces envoyées aujourd’hui : c’est le maximum. Réessaie demain.");
     expect(document.getElementById("an-error")?.getAttribute("role")).toBe("alert");
     expect(document.getElementById("an-send")?.hasAttribute("disabled")).toBe(false);
   });
 
-  it("le formulaire de candidature d'une offre connue l'emporte sur l'annonce", async () => {
+  it("le formulaire de candidature d’une offre connue l’emporte sur l’annonce", async () => {
     const page = annoncePage({ "/api/extension/match": { offer: { id: 7, title: "DevOps", company: "Sword", applied: false }, choices: [] } });
     page.scripts.countFields = [{ frameId: 0, result: 6 }];
     await openPopup(page);
@@ -311,7 +311,7 @@ const alertPage = (url: string, filled: boolean, stored: Record<string, string |
 });
 const alertCalls = () => injected.filter((i) => i.name === "jobA1AlertForm").map((i) => i.args[1]);
 
-describe("formulaire d'alerte (ExtAlerte)", () => {
+describe("formulaire d’alerte (ExtAlerte)", () => {
   let clipboard: string[];
   beforeEach(() => {
     clipboard = [];
@@ -321,7 +321,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
     });
   });
 
-  it("jobup : « Adresse jobA1 remplie », la pastille du formulaire, rien d'autre demandé", async () => {
+  it("jobup : « Adresse jobA1 remplie », la pastille du formulaire, rien d’autre demandé", async () => {
     await openPopup(alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true));
     expect(shownState()).toBe("alerte");
     expect(document.getElementById("site-name")?.textContent).toBe("jobup.ch · Créer une alerte");
@@ -335,7 +335,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
     expect(document.querySelectorAll("#al-todo button.primary")).toHaveLength(1);
   });
 
-  it("champ pas trouvé : le repli, l'adresse à copier et la phrase de la maquette", async () => {
+  it("champ pas trouvé : le repli, l’adresse à copier et la phrase de la maquette", async () => {
     await openPopup(alertPage("https://www.jobs.ch/fr/offres-emplois/?term=devops", false));
     expect(document.getElementById("site-name")?.textContent).toBe("jobs.ch · Créer une alerte");
     expect(document.getElementById("al-title")?.textContent).toBe("Copie ton adresse jobA1");
@@ -349,7 +349,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
     expect(document.getElementById("al-copy")?.textContent).toBe("Copiée");
   });
 
-  it("LinkedIn, par défaut : rien n'est rempli, l'adresse est copiée", async () => {
+  it("LinkedIn, par défaut : rien n’est rempli, l’adresse est copiée", async () => {
     await openPopup(alertPage("https://www.linkedin.com/jobs/search/?keywords=devops", true));
     expect(alertCalls()).toEqual([null]);
     expect(clipboard).toEqual(["kevin.k3x@alertes.joba1.ch"]);
@@ -374,7 +374,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
     expect(chrome.storage.local.set).toHaveBeenCalledWith({ fillLinkedIn: true });
   });
 
-  it("« J'ai créé l'alerte » : la route de l'assistant, « Alerte jobup enregistrée »", async () => {
+  it("« J’ai créé l’alerte » : la route de l’assistant, « Alerte jobup enregistrée »", async () => {
     const page = alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true);
     page.api["/api/extension/alerts/jobup"] = { site: "jobup", marked: 2 };
     await openPopup(page);
@@ -385,7 +385,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
     expect(document.getElementById("al-done-title")?.textContent).toBe("Alerte jobup enregistrée");
   });
 
-  it("sur jobup sans fenêtre d'alerte ouverte : on continue (annonce, ou rien à faire)", async () => {
+  it("sur jobup sans fenêtre d’alerte ouverte : on continue (annonce, ou rien à faire)", async () => {
     const page = alertPage("https://www.jobup.ch/fr/emplois/", true);
     page.scripts.jobA1AlertForm = [{ frameId: 0, result: { form: false, filled: false } }];
     await openPopup(page);
@@ -395,7 +395,7 @@ describe("formulaire d'alerte (ExtAlerte)", () => {
 });
 
 describe("couleurs de la fenêtre", () => {
-  it("les jetons de l'app, en clair et en sombre (prefers-color-scheme)", () => {
+  it("les jetons de l’app, en clair et en sombre (prefers-color-scheme)", () => {
     const app = readFileSync(resolve(__dirname, "style.css"), "utf-8");
     const light = css.split("@media (prefers-color-scheme: dark)")[0]!;
     const dark = css.split("@media (prefers-color-scheme: dark)")[1]!;
@@ -485,7 +485,7 @@ describe("transfert Gmail", () => {
     expect(calls.map((c) => c.path)).toEqual(["/api/extension/alerts"]);
   });
 
-  it("étape 1 : l'adresse jobA1 à copier, le lien vers les réglages de transfert", async () => {
+  it("étape 1 : l’adresse jobA1 à copier, le lien vers les réglages de transfert", async () => {
     await openPopup(gmailPage());
     await gmClick("gm-begin");
     expect(step()).toBe("gm-address");
@@ -526,7 +526,7 @@ describe("transfert Gmail", () => {
     expect(gmClipboard).toEqual(["482913557"]);
   });
 
-  it("étape 3 : le filtre des trois sites seulement, transféré à l'adresse jobA1", async () => {
+  it("étape 3 : le filtre des trois sites seulement, transféré à l’adresse jobA1", async () => {
     await openPopup(gmailPage({ gmailStep: "gm-filter" }));
     expect(step()).toBe("gm-filter");
     expect(text("gm-query")).toBe("jobup.ch OR jobs.ch OR linkedin.com");
@@ -539,7 +539,7 @@ describe("transfert Gmail", () => {
     expect(text("gm-ready")).toContain("Transfert prêt");
   });
 
-  it("« Vérifie ton filtre Gmail » : une fois, puis « Revoir le filtre » ramène à l'étape 3", async () => {
+  it("« Vérifie ton filtre Gmail » : une fois, puis « Revoir le filtre » ramène à l’étape 3", async () => {
     const warned = { "/api/extension/alerts": { address: ADDRESS, todo: {}, filter_warning_at: "2026-11-09T08:00:00+00:00" } };
     await openPopup(gmailPage({ gmailStep: "gm-ready" }, warned));
     expect(step()).toBe("gm-warning");

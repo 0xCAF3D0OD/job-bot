@@ -8,7 +8,7 @@ import type { Transform } from "../components/FaceTransform.vue";
 // (docs/63 §3). Depuis la 0.96.0, le visage prend l'objet de la page (`face`, docs/123,
 // complément) ; les Actualités et les Formations gardent le visage qui pulse.
 export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform }> = {
-  today: { label: "Aujourd'hui", face: "today" },
+  today: { label: "Aujourd’hui", face: "today" },
   offers: { label: "Offres", face: "offers" },
   applications: { label: "Suivi", face: "applications" },
   insights: { label: "Bilan", face: "insights" },

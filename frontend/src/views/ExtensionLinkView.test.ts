@@ -38,7 +38,7 @@ async function mountView() {
 const token = () => document.getElementById("jobbot-extension-token") as HTMLOutputElement;
 
 describe("relier ce navigateur", () => {
-  it("pose le jeton dans la page, prévient par l'adresse, puis « C'est relié » une fois lu", async () => {
+  it("pose le jeton dans la page, prévient par l’adresse, puis « C’est relié » une fois lu", async () => {
     POST.mockResolvedValue({ data: { id: 7, token: "jbx_secret", name: "Firefox" } });
     const { wrapper, router } = await mountView();
     expect(token().dataset.token).toBeUndefined();

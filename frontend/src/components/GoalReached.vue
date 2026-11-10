@@ -59,7 +59,7 @@ const SCRIBBLE =
         </span>
       </p>
       <h1 class="goal-reached-title">
-        C'est <span class="goal-reached-hand">fait !</span>
+        C’est <span class="goal-reached-hand">fait !</span>
       </h1>
       <p class="goal-reached-line">
         Objectif ORP {{ ofMonth(data.month) }} atteint, {{ data.count }} recherches sur {{ data.target }}.
@@ -80,7 +80,7 @@ const SCRIBBLE =
         class="goal-reached-home"
         data-test="goal-home"
       >
-        Retour à l'accueil
+        Retour à l’accueil
       </RouterLink>
       <button
         v-if="cancellable"
@@ -89,7 +89,7 @@ const SCRIBBLE =
         data-test="cancel-applied"
         @click="emit('cancel')"
       >
-        Je n'ai pas postulé
+        Je n’ai pas postulé
       </button>
     </div>
     <OrpSheet

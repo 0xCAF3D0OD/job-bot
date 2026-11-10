@@ -50,9 +50,9 @@ const existingId = ref<number | null>(null);
 type Fillable = "company" | "location" | "description" | "url";
 const fillable = ref<Fillable[]>([]);
 const FILLABLE_WORDS: Record<Fillable, string> = {
-  company: "l'entreprise",
+  company: "l’entreprise",
   location: "le lieu",
-  description: "le texte de l'annonce",
+  description: "le texte de l’annonce",
   url: "le lien",
 };
 const completing = computed(() => existingId.value !== null && fillable.value.length > 0);
@@ -82,15 +82,15 @@ const slug = computed(() =>
 const linkExample = computed(() => `https://entreprise.ch/emplois/${slug.value}`);
 const full = computed(() => addedToday.value >= limit.value);
 const textHint = computed(
-  () => `${plan.value?.unlimited ? "Lu par l'IA, environ 0,01 $, compté dans ton plafond." : "Lu par l'IA."} Tes coordonnées ne partent pas.`,
+  () => `${plan.value?.unlimited ? "Lu par l’IA, environ 0,01 $, compté dans ton plafond." : "Lu par l’IA."} Tes coordonnées ne partent pas.`,
 );
 
 // Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
 // l'envoi, et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
 type Field = "url" | "text" | "title";
 const MISSING: Record<Field, string> = {
-  url: "Colle le lien de l'annonce.",
-  text: "Colle le texte de l'annonce.",
+  url: "Colle le lien de l’annonce.",
+  text: "Colle le texte de l’annonce.",
   title: "Indique le poste.",
 };
 const errors = ref<Partial<Record<Field, string>>>({});
@@ -117,7 +117,7 @@ async function valid(form: EventTarget | null, field: Field): Promise<boolean> {
 async function read(value: string = entry.value): Promise<void> {
   const typed = value.trim();
   if (!typed) {
-    entryError.value = "Colle le lien ou le texte de l'annonce.";
+    entryError.value = "Colle le lien ou le texte de l’annonce.";
     return;
   }
   entryError.value = "";
@@ -136,7 +136,7 @@ async function read(value: string = entry.value): Promise<void> {
     const body = mode.value === "link" ? { url: url.value.trim() } : { text: text.value };
     const { data } = await api.POST("/api/offers/manual/read", { body });
     if (!data) {
-      problem.value = "Lecture impossible pour l'instant : réessaie, ou remplis la fiche à la main.";
+      problem.value = "Lecture impossible pour l’instant : réessaie, ou remplis la fiche à la main.";
       return;
     }
     if (!data.draft) {
@@ -203,7 +203,7 @@ async function add(event: Event): Promise<void> {
     });
     if (!data) {
       const detail = (refused as { detail?: unknown } | undefined)?.detail;
-      error.value = typeof detail === "string" ? detail : "Ajout impossible pour l'instant : réessaie.";
+      error.value = typeof detail === "string" ? detail : "Ajout impossible pour l’instant : réessaie.";
       return;
     }
     emit("added", data);
@@ -230,8 +230,8 @@ const { phone } = usePhone();
     <Composer
       v-model="entry"
       :rows="phone ? 4 : 3"
-      placeholder="Lien ou texte de l'annonce"
-      send-label="Ajouter l'offre"
+      placeholder="Lien ou texte de l’annonce"
+      send-label="Ajouter l’offre"
       :busy="reading || full"
       data-test="manual-entry"
       @send="read"
@@ -249,7 +249,7 @@ const { phone } = usePhone();
       class="hint"
       role="status"
     >
-      Lecture de l'annonce…
+      Lecture de l’annonce…
     </p>
     <p
       v-else-if="mode === 'text'"
@@ -278,7 +278,7 @@ const { phone } = usePhone();
       class="hint"
       data-test="manual-count"
     >
-      {{ full ? `${limit} offres ajoutées en 24 heures : c'est le maximum, reviens demain.` : `${plural(addedToday, "offre ajoutée", "offres ajoutées")} sur ${limit} ces 24 heures.` }}
+      {{ full ? `${limit} offres ajoutées en 24 heures : c’est le maximum, reviens demain.` : `${plural(addedToday, "offre ajoutée", "offres ajoutées")} sur ${limit} ces 24 heures.` }}
     </p>
   </form>
   <form
@@ -289,7 +289,7 @@ const { phone } = usePhone();
     @submit.prevent="add"
   >
     <p class="setting-desc">
-      {{ readBy === "page" ? "Lue sur la page de l'annonce." : readBy === "ia" ? "Lue par l'IA." : "À remplir toi-même." }}
+      {{ readBy === "page" ? "Lue sur la page de l’annonce." : readBy === "ia" ? "Lue par l’IA." : "À remplir toi-même." }}
       Corrige au besoin, puis ajoute-la.
     </p>
     <p
@@ -298,7 +298,7 @@ const { phone } = usePhone();
       data-test="manual-existing"
     >
       <template v-if="completing">
-        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l'offre » les ajoute,
+        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
         sans rien remplacer.
       </template>
       <template v-else>
@@ -309,7 +309,7 @@ const { phone } = usePhone();
         class="link"
         @click="openExisting"
       >
-        L'ouvrir
+        L’ouvrir
       </button>
     </p>
     <p
@@ -375,7 +375,7 @@ const { phone } = usePhone();
     </FormField>
     <FormField
       v-slot="{ id, describedby, invalid }"
-      label="Lien de l'annonce"
+      label="Lien de l’annonce"
       optional
     >
       <input
@@ -392,7 +392,7 @@ const { phone } = usePhone();
     </FormField>
     <FormField
       v-slot="{ id, describedby, invalid }"
-      label="Texte de l'annonce"
+      label="Texte de l’annonce"
       optional
       hint="Il sert à la note, à la lettre et au CV adapté."
     >
@@ -421,7 +421,7 @@ const { phone } = usePhone();
         :busy-label="completing ? 'Ajout des champs…' : 'Ajout…'"
         data-test="manual-add"
       >
-        {{ completing ? "Compléter l'offre" : "Ajouter l'offre" }}
+        {{ completing ? "Compléter l’offre" : "Ajouter l’offre" }}
       </BusyButton>
       <button
         type="button"

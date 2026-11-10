@@ -215,10 +215,10 @@ onMounted(() => void load());
           v-if="columns"
           class="detail-overline"
         >
-          Trouver quelqu'un
+          Trouver quelqu’un
         </p>
         <h3 v-else>
-          Trouver quelqu'un
+          Trouver quelqu’un
         </h3>
         <ul :class="columns ? 'detail-links' : 'contacts-searches'">
           <li
@@ -240,7 +240,7 @@ onMounted(() => void load());
               target="_blank"
               rel="noopener noreferrer"
               data-test="contact-website"
-            ><span class="with-icon">Site de l'employeur<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+            ><span class="with-icon">Site de l’employeur<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </li>
         </ul>
       </section>
@@ -405,7 +405,7 @@ onMounted(() => void load());
               </button>
               <MoreMenu
                 :items="contactItems(contact)"
-                :label="`Plus d'actions sur le contact ${contactName(contact)}`"
+                :label="`Plus d’actions sur le contact ${contactName(contact)}`"
                 test-id="contact-more"
               />
             </span>
@@ -456,7 +456,7 @@ onMounted(() => void load());
           v-if="!page.contacts.length && !adding"
           class="muted contacts-empty"
         >
-          Aucun contact pour l'instant.
+          Aucun contact pour l’instant.
         </p>
         <button
           v-if="!adding"
@@ -465,7 +465,7 @@ onMounted(() => void load());
           data-test="contact-add"
           @click="adding = true"
         >
-          J'ai contacté quelqu'un<AppIcon
+          J’ai contacté quelqu’un<AppIcon
             v-if="columns"
             name="chevron"
           />
@@ -566,7 +566,7 @@ onMounted(() => void load());
 
 <style>
 /* Détail en deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 12) : sections de 32/36 séparées par un trait,
-   « Écrire à » puis « Canal » l'un sous l'autre (20 entre les deux, 8 entre libellé et champ), « Rédiger un message »
+   « Écrire à » puis « Canal » l’un sous l’autre (20 entre les deux, 8 entre libellé et champ), « Rédiger un message »
    à contour de 48, rond, 24 au-dessus ; « Prises de contact » finit à 8. */
 .contacts-columns.contacts-section { --contacts-20: 20px; --contacts-22: 22px; --contacts-48: 48px; display: block; }
 .contacts-columns.contacts-section > .contacts-block { display: block; }

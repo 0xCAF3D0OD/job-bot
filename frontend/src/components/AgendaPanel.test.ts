@@ -15,8 +15,8 @@ vi.mock("../api/client", () => ({
 }));
 afterEach(() => vi.resetAllMocks());
 
-describe("Abonnement d'agenda (docs/40 §2)", () => {
-  it("crée l'adresse avec l'origine du navigateur, la montre une fois, puis la liste", async () => {
+describe("Abonnement d’agenda (docs/40 §2)", () => {
+  it("crée l’adresse avec l’origine du navigateur, la montre une fois, puis la liste", async () => {
     GET.mockResolvedValueOnce({ data: [] });
     POST.mockResolvedValue({ data: { id: 1, name: "Mon agenda", created_at: "2026-10-15T10:00:00Z", last_used_at: null, url: "https://moi.tunnel.ms/api/agenda/feed/jba_x.ics" } });
     GET.mockResolvedValueOnce({ data: [{ id: 1, name: "Mon agenda", created_at: "2026-10-15T10:00:00Z", last_used_at: null }] });
@@ -30,7 +30,7 @@ describe("Abonnement d'agenda (docs/40 §2)", () => {
     expect(wrapper.findAll("[data-test=agenda-revoke]")).toHaveLength(1);
   });
 
-  it("le bouton dit « Création… » pendant la création, sans second envoi, et dit l'échec", async () => {
+  it("le bouton dit « Création… » pendant la création, sans second envoi, et dit l’échec", async () => {
     GET.mockResolvedValueOnce({ data: [] });
     let answer: (value: unknown) => void = () => {};
     POST.mockReturnValue(new Promise((resolve) => (answer = resolve)));
@@ -47,7 +47,7 @@ describe("Abonnement d'agenda (docs/40 §2)", () => {
     expect(wrapper.find("[data-test=agenda-error]").text()).toBe("Création impossible : réessaie dans un instant.");
   });
 
-  it("se range en lignes de réglage : titre, phrase, et l'action à droite (planche « 5. Réglages »)", async () => {
+  it("se range en lignes de réglage : titre, phrase, et l’action à droite (planche « 5. Réglages »)", async () => {
     GET.mockResolvedValueOnce({ data: [{ id: 1, name: "Agenda du 15 oct.", created_at: "2026-10-15T10:00:00Z", last_used_at: null }] });
     const wrapper = mount(AgendaPanel);
     await flushPromises();
@@ -55,8 +55,8 @@ describe("Abonnement d'agenda (docs/40 §2)", () => {
     expect(card.attributes("data-test")).toBe("agenda-panel");
     expect(wrapper.find("fieldset").exists()).toBe(false);
     const rows = card.findAll("[data-test=setting-row]");
-    expect(rows.map((r) => r.find(".setting-row-title").text())).toEqual(["Abonnement d'agenda", "Agenda du 15 oct."]);
-    expect(rows[0]!.find(".setting-row-control [data-test=agenda-create] .busy-label").text()).toBe("Créer l'abonnement");
+    expect(rows.map((r) => r.find(".setting-row-title").text())).toEqual(["Abonnement d’agenda", "Agenda du 15 oct."]);
+    expect(rows[0]!.find(".setting-row-control [data-test=agenda-create] .busy-label").text()).toBe("Créer l’abonnement");
     expect(rows[1]!.find(".setting-row-description").text()).toBe("Pas encore relue par ton agenda.");
     expect(rows[1]!.find(".setting-row-control [data-test=agenda-revoke]").attributes("aria-label")).toBe("Révoquer Agenda du 15 oct.");
     // Aucune description n'est un lien.

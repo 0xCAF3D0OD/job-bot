@@ -47,7 +47,7 @@ function page(contacts: unknown[]) {
       website: "https://acme.ch",
       searches: [
         { kind: "recruiting", label: "Recrutement", url: "https://www.linkedin.com/search/results/people/?keywords=a" },
-        { kind: "team", label: "L'équipe du poste", url: "https://www.linkedin.com/search/results/people/?keywords=b" },
+        { kind: "team", label: "L’équipe du poste", url: "https://www.linkedin.com/search/results/people/?keywords=b" },
       ],
       contacts,
     },
@@ -55,11 +55,11 @@ function page(contacts: unknown[]) {
 }
 
 describe("ContactsPanel", () => {
-  it("vide : « Aucun contact pour l'instant. » sous la tête, sans « · 0 » (règles §4)", async () => {
+  it("vide : « Aucun contact pour l’instant. » sous la tête, sans « · 0 » (règles §4)", async () => {
     GET.mockResolvedValue(page([]));
     const wrapper = mount(ContactsPanel, { props: { applicationId: 3 } });
     await flushPromises();
-    expect(wrapper.find(".contacts-empty").text()).toBe("Aucun contact pour l'instant.");
+    expect(wrapper.find(".contacts-empty").text()).toBe("Aucun contact pour l’instant.");
     expect(wrapper.text()).not.toContain("· 0");
   });
 
@@ -76,7 +76,7 @@ describe("ContactsPanel", () => {
     expect(due[0]!.text()).toContain("relancer Marie");
   });
 
-  it("enregistre une prise de contact sans nom, datée d'aujourd'hui", async () => {
+  it("enregistre une prise de contact sans nom, datée d’aujourd’hui", async () => {
     GET.mockResolvedValue(page([]));
     POST.mockResolvedValue({ data: contact(5, {}) });
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
@@ -100,7 +100,7 @@ describe("ContactsPanel", () => {
     expect(PUT.mock.calls[0]![1].body).toMatchObject({ answered_on: isoDay(), note: "Appel jeudi" });
   });
 
-  it("rédige un message, compte les caractères d'une invitation et reprend le rôle", async () => {
+  it("rédige un message, compte les caractères d’une invitation et reprend le rôle", async () => {
     GET.mockResolvedValue(page([]));
     POST.mockResolvedValueOnce({ data: { text: "Bonjour [Prénom], ".repeat(20), limit: 300 } });
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
@@ -115,14 +115,14 @@ describe("ContactsPanel", () => {
     expect((wrapper.find("[data-test=contact-form] select").element as HTMLSelectElement).value).toBe("team");
   });
 
-  it("explique pourquoi le message n'a pas pu être rédigé", async () => {
+  it("explique pourquoi le message n’a pas pu être rédigé", async () => {
     GET.mockResolvedValue(page([]));
-    POST.mockResolvedValueOnce({ error: { detail: "plafond mensuel de l'IA atteint" } });
+    POST.mockResolvedValueOnce({ error: { detail: "plafond mensuel de l’IA atteint" } });
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
     await flushPromises();
     await wrapper.find("[data-test=contact-writer] form").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[role=alert]").text()).toBe("Rédaction impossible : plafond mensuel de l'IA atteint.");
+    expect(wrapper.find("[role=alert]").text()).toBe("Rédaction impossible : plafond mensuel de l’IA atteint.");
   });
 
   it("dit que le chargement a échoué, réseau coupé compris", async () => {
@@ -134,7 +134,7 @@ describe("ContactsPanel", () => {
     expect(error.text()).toBe("Impossible de charger les contacts.");
   });
 
-  it("retire tout de suite, « Annuler » le remet ; l'échec le remet et le dit (docs/108 §1)", async () => {
+  it("retire tout de suite, « Annuler » le remet ; l’échec le remet et le dit (docs/108 §1)", async () => {
     GET.mockResolvedValue(page([contact(1, {})]));
     const { useUndo } = await import("../composables/useUndo");
     const { undo, flush, pending } = useUndo();
@@ -162,7 +162,7 @@ describe("ContactsPanel", () => {
     expect(wrapper.emitted("changed")).toBeUndefined();
   });
 
-  it("dit que l'ajout a échoué", async () => {
+  it("dit que l’ajout a échoué", async () => {
     GET.mockResolvedValue(page([]));
     POST.mockResolvedValue({ error: { detail: "invalide" } });
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
@@ -175,18 +175,18 @@ describe("ContactsPanel", () => {
 });
 
 describe("ContactsPanel en deux colonnes (lot 12)", () => {
-  it("find : seulement « Trouver quelqu'un », libellé sans parenthèse ; follow : le premier message et les prises de contact", async () => {
+  it("find : seulement « Trouver quelqu’un », libellé sans parenthèse ; follow : le premier message et les prises de contact", async () => {
     const data = page([]);
-    data.data.searches[1]!.label = "L'équipe du poste (DevOps Engineer)";
+    data.data.searches[1]!.label = "L’équipe du poste (DevOps Engineer)";
     GET.mockResolvedValue(data);
     const find = mount(ContactsPanel, { props: { applicationId: 3, part: "find" } });
     const follow = mount(ContactsPanel, { props: { applicationId: 3, part: "follow" } });
     await flushPromises();
-    expect(find.find(".detail-overline").text()).toBe("Trouver quelqu'un");
-    expect(find.findAll("[data-test=contact-search]")[1]!.text()).toBe("L'équipe du poste (nouvel onglet)");
+    expect(find.find(".detail-overline").text()).toBe("Trouver quelqu’un");
+    expect(find.findAll("[data-test=contact-search]")[1]!.text()).toBe("L’équipe du poste (nouvel onglet)");
     expect(find.find("[data-test=contact-writer]").exists()).toBe(false);
     expect(follow.find("[data-test=contact-search]").exists()).toBe(false);
     expect(follow.findAll(".detail-section .detail-overline").map((p) => p.text())).toEqual(["Premier message", "Prises de contact"]);
-    expect(follow.find("[data-test=contact-add]").text()).toBe("J'ai contacté quelqu'un");
+    expect(follow.find("[data-test=contact-add]").text()).toBe("J’ai contacté quelqu’un");
   });
 });

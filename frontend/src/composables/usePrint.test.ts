@@ -5,7 +5,7 @@ import { printSheet, zoomToFit } from "./usePrint";
 afterEach(() => vi.restoreAllMocks());
 
 describe("zoomToFit", () => {
-  it("réduit un document qui dépasse à peine d'une page", () => {
+  it("réduit un document qui dépasse à peine d’une page", () => {
     expect(zoomToFit(900, 1000)).toBe(1); // tient sur une page
     expect(zoomToFit(1050, 1000)).toBeCloseTo((1 / 1.05) * 0.97); // « Langues » seule en page 2
     expect(zoomToFit(1600, 1000)).toBe(1); // deuxième page bien remplie : on garde 2 pages

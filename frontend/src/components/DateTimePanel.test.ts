@@ -15,7 +15,7 @@ function panel(props: Record<string, unknown> = {}) {
 }
 
 describe("DateTimePanel (docs/143, D26)", () => {
-  it("6 semaines dès le lundi, jours passés désactivés, aujourd'hui et le jour choisi marqués", () => {
+  it("6 semaines dès le lundi, jours passés désactivés, aujourd’hui et le jour choisi marqués", () => {
     const wrapper = panel();
     const days = wrapper.findAll(".dt-day");
     expect(days).toHaveLength(42);

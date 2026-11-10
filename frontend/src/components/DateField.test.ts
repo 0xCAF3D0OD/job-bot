@@ -17,10 +17,10 @@ function host(props: Record<string, unknown>) {
 
 describe("DateField", () => {
   it("la pilule sans heure, le sélecteur à sa place, puis le curseur revient sur la pilule", async () => {
-    const { wrapper, value } = host({ label: "Date d'envoi", min: null, max: "2026-11-08" });
+    const { wrapper, value } = host({ label: "Date d’envoi", min: null, max: "2026-11-08" });
     expect(wrapper.find("input[type=date]").exists()).toBe(false);
     expect(wrapper.find("[data-test=dt-time]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=dt-date]").attributes("aria-label")).toBe("Date d'envoi : Choisir une date");
+    expect(wrapper.find("[data-test=dt-date]").attributes("aria-label")).toBe("Date d’envoi : Choisir une date");
     await pickDate(wrapper, "field", "2026-10-06");
     expect(value.value).toBe("2026-10-06");
     expect(wrapper.find("[data-test=date-time-panel]").exists()).toBe(false);
@@ -36,7 +36,7 @@ describe("DateField", () => {
     const typed = wrapper.find("[data-test=dt-typed-date]");
     await typed.setValue("20.11.2026");
     await typed.trigger("change");
-    expect(wrapper.find("[role=alert]").text()).toMatch(/^(Ce jour n'est pas encore arrivé|Choisis un jour jusqu'au .+)\.$/);
+    expect(wrapper.find("[role=alert]").text()).toMatch(/^(Ce jour n’est pas encore arrivé|Choisis un jour jusqu’au .+)\.$/);
     await wrapper.find("[data-test=date-time-panel]").trigger("keydown", { key: "Escape" });
     expect(value.value).toBeNull();
     wrapper.unmount();

@@ -42,7 +42,7 @@ const title = computed(() => (left.value > 0 ? `${plural(left.value, "recherche"
   >
     <div>
       <h2>Indique ton objectif ORP</h2>
-      <p>Le nombre de recherches que l'ORP te demande chaque mois. Le cercle se remplit à chaque candidature.</p>
+      <p>Le nombre de recherches que l’ORP te demande chaque mois. Le cercle se remplit à chaque candidature.</p>
       <RouterLink
         :to="{ path: '/reglages', query: { rubrique: 'recherche' } }"
         class="button-link"

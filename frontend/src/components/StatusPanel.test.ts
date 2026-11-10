@@ -48,7 +48,7 @@ describe("StatusView", () => {
     wrapper.unmount();
   });
 
-  it("API injoignable : voyants rouges, pas d'appel aux tâches", async () => {
+  it("API injoignable : voyants rouges, pas d’appel aux tâches", async () => {
     GET.mockRejectedValue(new TypeError("Failed to fetch"));
     const wrapper = mount(StatusView);
     await flushPromises();
@@ -58,7 +58,7 @@ describe("StatusView", () => {
     wrapper.unmount();
   });
 
-  it("une colonne de lignes : le voyant, son détail, l'état en mots à droite (1.6.67, WCAG 1.4.1)", async () => {
+  it("une colonne de lignes : le voyant, son détail, l’état en mots à droite (1.6.67, WCAG 1.4.1)", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data:

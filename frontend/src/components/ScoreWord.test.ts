@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import ScoreWord from "./ScoreWord.vue";
 
-describe("La note d'une offre (règles §4, 1.6.6)", () => {
+describe("La note d’une offre (règles §4, 1.6.6)", () => {
   it("le visage, un mot et une jauge discrète ; le visage cadré au plus près pour remplir ses 20 px", () => {
     const wrapper = mount(ScoreWord, { props: { score: 76 } });
     expect(wrapper.text()).toContain("Proche");

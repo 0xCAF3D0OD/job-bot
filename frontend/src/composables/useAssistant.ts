@@ -77,7 +77,7 @@ export function focusBody(value: AssistantFocus | null): Record<string, unknown>
 export function greetingText(name: string, offers: number, followUps: number): string {
   const hello = name ? `Bonjour ${name}.` : "Bonjour.";
   const parts: string[] = [];
-  if (offers) parts.push(offers === 1 ? "1 offre t'attend" : `${offers} offres t'attendent`);
+  if (offers) parts.push(offers === 1 ? "1 offre t’attend" : `${offers} offres t’attendent`);
   if (followUps) parts.push(followUps === 1 ? "1 relance est en retard" : `${followUps} relances sont en retard`);
   if (!parts.length) return `${hello} Tout est à jour. Une question ?`;
   return `${hello} ${parts.join(" et ")}. On commence par quoi ?`;
@@ -100,29 +100,29 @@ export function shortCompany(name: string): string {
 export function suggestionsFor(page: string, value: AssistantFocus | null): string[] {
   if (value?.offerId) {
     if (page === "preparation") {
-      return ["Comment améliorer ma lettre pour cette offre ?", "Que mettre en avant pour ce poste ?", "Rédige un court e-mail d'accompagnement"];
+      return ["Comment améliorer ma lettre pour cette offre ?", "Que mettre en avant pour ce poste ?", "Rédige un court e-mail d’accompagnement"];
     }
     return ["Explique-moi la note de cette offre", "Dois-je postuler à cette offre ?", "Quels points mettre en avant pour ce poste ?"];
   }
   if (value?.applicationId) {
-    return ["Où en est cette candidature ?", "Rédige un e-mail de relance pour cette candidature", "Comment préparer l'entretien pour ce poste ?"];
+    return ["Où en est cette candidature ?", "Rédige un e-mail de relance pour cette candidature", "Comment préparer l’entretien pour ce poste ?"];
   }
   if (value?.day) {
-    return ["Qu'ai-je envoyé ce jour-là ?", "Qui relancer cette semaine ?", "Où en suis-je ce mois pour l'ORP ?"];
+    return ["Qu’ai-je envoyé ce jour-là ?", "Qui relancer cette semaine ?", "Où en suis-je ce mois pour l’ORP ?"];
   }
   const byPage: Record<string, string[]> = {
-    today: ["Que faire aujourd'hui ?", "Qui relancer cette semaine ?", "Où en suis-je pour l'ORP ce mois-ci ?"],
+    today: ["Que faire aujourd’hui ?", "Qui relancer cette semaine ?", "Où en suis-je pour l’ORP ce mois-ci ?"],
     offers: ["Lesquelles postuler en priorité ?", "Pourquoi certaines offres sont-elles mal notées ?", "Comment fonctionne la note ?"],
-    applications: ["Où en suis-je ce mois pour l'ORP ?", "Qui relancer cette semaine ?", "Que retenir de mes entretiens ?"],
-    insights: ["Qu'est-ce qui marche le mieux pour moi ?", "Pourquoi « trop peu pour conclure » ?", "Prépare mon résumé pour l'ORP"],
+    applications: ["Où en suis-je ce mois pour l’ORP ?", "Qui relancer cette semaine ?", "Que retenir de mes entretiens ?"],
+    insights: ["Qu’est-ce qui marche le mieux pour moi ?", "Pourquoi « trop peu pour conclure » ?", "Prépare mon résumé pour l’ORP"],
     alerts: ["Mes alertes arrivent-elles bien ?", "Comment créer une alerte sur un site ?", "Quelles recherches ajouter ?"],
     news: ["Que retenir des dernières actualités ?", "Comment ajouter une source ?", "Comment filtrer sur mon domaine ?"],
     trainings: ["Quelle formation me serait la plus utile ?", "Où en sont mes formations ?", "Comment fonctionnent les suggestions ?"],
-    profile: ["Que manque-t-il à mon profil ?", "Comment écrire un bon bloc de profil ?", "Quel critère m'écarte le plus d'offres ?"],
-    settings: ["À quoi servent les seuils de note ?", "Comment ajouter un site suivi ?", "Comment fonctionne le plafond de l'IA ?"],
-    diagnostic: ["Que veut dire cet état ?", "La collecte fonctionne-t-elle ?", "Pourquoi l'IA ne note-t-elle pas ?"],
+    profile: ["Que manque-t-il à mon profil ?", "Comment écrire un bon bloc de profil ?", "Quel critère m’écarte le plus d’offres ?"],
+    settings: ["À quoi servent les seuils de note ?", "Comment ajouter un site suivi ?", "Comment fonctionne le plafond de l’IA ?"],
+    diagnostic: ["Que veut dire cet état ?", "La collecte fonctionne-t-elle ?", "Pourquoi l’IA ne note-t-elle pas ?"],
   };
-  const list = byPage[page] ?? ["Que faire aujourd'hui ?", "Où en suis-je pour l'ORP ce mois-ci ?", "Comment créer mes alertes ?"];
+  const list = byPage[page] ?? ["Que faire aujourd’hui ?", "Où en suis-je pour l’ORP ce mois-ci ?", "Comment créer mes alertes ?"];
   // Les « ? » ont laissé la place à l'assistant (docs/53) : il explique la page ouverte.
   return [...list, HOW_IT_WORKS];
 }

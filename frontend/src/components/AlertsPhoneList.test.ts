@@ -38,7 +38,7 @@ function mountList() {
 }
 
 describe("AlertsPhoneList (§10.8, maquettes AlertesTel, AlertesTelConfirmer, AlertesTelAlerte)", () => {
-  it("les recherches par famille, dans l'ordre À confirmer, Actives, À créer ; une carte par site", () => {
+  it("les recherches par famille, dans l’ordre À confirmer, Actives, À créer ; une carte par site", () => {
     const wrapper = mountList();
     const titles = wrapper.findAll(".alerts-family-title").map((t) => t.text());
     expect(titles).toEqual(["À confirmer · 1", "Actives · 1", "À créer · 2"]);
@@ -64,7 +64,7 @@ describe("AlertsPhoneList (§10.8, maquettes AlertesTel, AlertesTelConfirmer, Al
     wrapper.unmount();
   });
 
-  it("feuille « Alerte » active : les actions ; à créer : « Créer l'alerte sur jobup »", async () => {
+  it("feuille « Alerte » active : les actions ; à créer : « Créer l’alerte sur jobup »", async () => {
     const wrapper = mountList();
     await wrapper.get("[data-test=alert-card-2-indeed]").trigger("click");
     expect(wrapper.get("[data-test=alert-sheet-state]").text()).toBe("Active · reçue le 5 nov.");

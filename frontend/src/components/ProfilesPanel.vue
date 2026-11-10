@@ -34,7 +34,7 @@ const proposing = ref(false);
 async function propose(): Promise<void> {
   // Bouton toujours actif (docs/29 §3) : sans métier, il le dit.
   if (form.value.occupation.trim().length < 2) {
-    message.value = "Indique d'abord le métier (deux lettres au moins).";
+    message.value = "Indique d’abord le métier (deux lettres au moins).";
     return;
   }
   proposing.value = true;
@@ -172,8 +172,8 @@ onMounted(async () => {
     data-test="profiles-panel"
   >
     <SettingRow
-      title="Profils d'essai"
-      description="Des chercheurs d'emploi fictifs, pour juger les Actualités et les Formations."
+      title="Profils d’essai"
+      description="Des chercheurs d’emploi fictifs, pour juger les Actualités et les Formations."
     />
     <template
       v-for="profile in list.items"
@@ -217,7 +217,7 @@ onMounted(async () => {
         </button>
         <MoreMenu
           :items="profileItems(profile)"
-          :label="`Plus d'actions sur le profil ${profile.name}`"
+          :label="`Plus d’actions sur le profil ${profile.name}`"
           test-id="profile-more"
         />
       </SettingRow>

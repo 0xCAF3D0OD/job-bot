@@ -25,7 +25,7 @@ function home(props: Partial<InstanceType<typeof HomePhone>["$props"]> = {}) {
   });
 }
 
-describe("L'Accueil du téléphone (docs/139 étape 4)", () => {
+describe("L’Accueil du téléphone (docs/139 étape 4)", () => {
   it("bonjour, ORP en cercle liquide, les offres et « Tout voir », À faire en nombres", () => {
     const view = home();
     expect(view.find("h1").text()).toBe("Bonjour Kevin.");
@@ -45,19 +45,19 @@ describe("L'Accueil du téléphone (docs/139 étape 4)", () => {
     expect(view.find("[data-test=todo-follow-ups]").text()).toContain("Relances à envoyer");
   });
 
-  it("sans offre à trier : l'état vide du bloc", () => {
+  it("sans offre à trier : l’état vide du bloc", () => {
     const view = home({ offers: [] });
     expect(view.find("[data-test=home-offers-empty]").text()).toContain("Rien à trier");
     expect(view.find("[data-test=home-offers-all]").exists()).toBe(true);
   });
 
-  it("l'accroche du premier jour, en français ; sans prénom, « Bonjour. »", () => {
+  it("l’accroche du premier jour, en français ; sans prénom, « Bonjour. »", () => {
     const view = home({ firstDay: true, name: null });
     expect(view.find("h1").text()).toBe("Bonjour.");
     expect(view.find("[data-test=home-tagline]").text()).toBe("Moins chercher,plus vivre.");
   });
 
-  it("l'objectif atteint se dit", () => {
+  it("l’objectif atteint se dit", () => {
     expect(home({ count: 10 }).find("[data-test=home-orp]").text()).toContain("Objectif du mois atteint");
   });
 });

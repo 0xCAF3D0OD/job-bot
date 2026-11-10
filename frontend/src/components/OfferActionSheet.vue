@@ -4,6 +4,7 @@ import type { MoreMenuItem } from "./MoreMenu.vue";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
+import { companyPlace } from "../format";
 
 // La feuille d'actions d'une offre (maquette ActionsOffre, docs/139 étape 5d, C6) : ouverte par le « ⋯ » de
 // sa carte, jamais par un appui long seul (clavier, lecteurs d'écran). « Écarter l'offre » en rouge garde
@@ -27,12 +28,12 @@ const emit = defineEmits<{ close: []; discard: [offer: Offer]; sent: [offer: Off
   >
     <template v-if="offer">
       <p class="offer-actions-where">
-        {{ [offer.company, offer.location].filter(Boolean).join(" · ") }}
+        {{ companyPlace(offer.company, offer.location) }}
       </p>
       <GroupedList :level="3">
         <GroupedRow
           v-if="offer.status !== 'ignored'"
-          title="Écarter l'offre"
+          title="Écarter l’offre"
           icon="close"
           button
           :chevron="false"

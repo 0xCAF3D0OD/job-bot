@@ -28,8 +28,8 @@ onMounted(async () => {
 
       <h2>Pas encore vérifié</h2>
       <ul>
-        <li>Un essai complet avec un lecteur d'écran (VoiceOver, NVDA).</li>
-        <li>L'extension du navigateur.</li>
+        <li>Un essai complet avec un lecteur d’écran (VoiceOver, NVDA).</li>
+        <li>L’extension du navigateur.</li>
       </ul>
 
       <h2>Dicter</h2>
@@ -47,7 +47,7 @@ onMounted(async () => {
         v-else
         class="hint"
       >
-        L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.
+        L’exploitant de la plateforme n’a pas encore indiqué ses coordonnées.
       </p>
     </div>
   </section>

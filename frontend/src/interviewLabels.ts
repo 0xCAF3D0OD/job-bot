@@ -8,14 +8,14 @@ export const KINDS: Record<string, string> = {
   autre: "Autre",
 };
 export const FORMATS: Record<string, string> = { sur_place: "Sur place", visio: "Visio", telephone: "Téléphone" };
-export const DURATIONS: Record<string, string> = { moins_30: "Moins de 30 min", "30_60": "30 à 60 min", plus_60: "Plus d'une heure" };
+export const DURATIONS: Record<string, string> = { moins_30: "Moins de 30 min", "30_60": "30 à 60 min", plus_60: "Plus d’une heure" };
 export const INTERVIEWERS: Record<string, string> = {
   rh: "RH",
   manager: "Futur manager",
   equipe: "Équipe",
   direction: "Direction",
 };
-export const INTEREST: Record<string, string> = { more: "Plus qu'avant", same: "Pareil", less: "Moins" };
+export const INTEREST: Record<string, string> = { more: "Plus qu’avant", same: "Pareil", less: "Moins" };
 export const OUTLOOK: Record<string, string> = {
   positive: "Probablement positive",
   unsure: "Incertaine",

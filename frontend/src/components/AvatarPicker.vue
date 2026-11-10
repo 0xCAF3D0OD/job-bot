@@ -59,7 +59,7 @@ async function confirm(): Promise<void> {
     await save(pending.value);
     emit("close");
   } catch {
-    error.value = "L'image n'a pas pu être enregistrée. Réessaie.";
+    error.value = "L’image n’a pas pu être enregistrée. Réessaie.";
   } finally {
     saving.value = false;
   }
@@ -70,7 +70,7 @@ async function confirm(): Promise<void> {
   <BottomSheet
     :open="open"
     title="Ton image"
-    subtitle="Elle s'affiche seulement dans jobA1. Elle n'est jamais envoyée aux employeurs."
+    subtitle="Elle s’affiche seulement dans jobA1. Elle n’est jamais envoyée aux employeurs."
     @close="emit('close')"
   >
     <ul

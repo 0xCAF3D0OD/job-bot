@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { addDays, addMonths, clockLabel, dayLabel, longDate, monthCaps, monthTitle, parseTypedDay, parseTypedTime, shortDate, typedDay } from "./dates";
 
 describe("les dates du sélecteur (docs/143, D26)", () => {
-  it("écrit le jour et l'heure en toutes lettres", () => {
+  it("écrit le jour et l’heure en toutes lettres", () => {
     expect(longDate("2026-11-10")).toBe("Mardi 10 novembre 2026");
     expect(shortDate("2026-11-10")).toBe("Mar. 10 nov. 2026");
     expect(monthTitle("2026-11-10")).toBe("Novembre 2026");
@@ -12,7 +12,7 @@ describe("les dates du sélecteur (docs/143, D26)", () => {
     expect(clockLabel("14:00")).toBe("14 h");
   });
 
-  it("abrège le mois de l'icône calendrier en capitales", () => {
+  it("abrège le mois de l’icône calendrier en capitales", () => {
     expect(monthCaps(11)).toBe("NOV");
     expect(monthCaps(9)).toBe("SEPT");
     expect(monthCaps(10)).toBe("OCT");

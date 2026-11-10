@@ -182,7 +182,7 @@ async function saveNumber(key: NumberKey): Promise<void> {
     savedRow.value = null;
     rowErrors.value = {
       ...rowErrors.value,
-      [rule.row]: `${rule.text} ${old === null || old === undefined ? "Rien n'est enregistré." : `Le ${old} reste enregistré.`}`,
+      [rule.row]: `${rule.text} ${old === null || old === undefined ? "Rien n’est enregistré." : `Le ${old} reste enregistré.`}`,
     };
     return;
   }
@@ -241,7 +241,7 @@ type SwitchKey = "notify_offers" | "notify_follow_ups" | "notify_orp";
 const SWITCHES: { key: SwitchKey; title: string; description: string }[] = [
   { key: "notify_offers", title: "Nouvelles offres", description: "Quand une offre te correspond, selon le seuil ci-dessous" },
   { key: "notify_follow_ups", title: "Relances", description: "Une candidature attend une réponse depuis 10 jours" },
-  { key: "notify_orp", title: "Objectif ORP", description: "Rappel le 25 du mois, si tu es sous l'objectif" },
+  { key: "notify_orp", title: "Objectif ORP", description: "Rappel le 25 du mois, si tu es sous l’objectif" },
 ];
 async function setSwitch(key: SwitchKey, value: boolean): Promise<void> {
   form.value[key] = value;
@@ -360,7 +360,7 @@ watch(
             <SettingCard>
               <SettingRow
                 v-slot="c"
-                title="Objectif mensuel de l'ORP"
+                title="Objectif mensuel de l’ORP"
                 description="Les candidatures demandées chaque mois."
                 :saved="savedRow === 'orp'"
                 :error="rowErrors.orp"
@@ -412,8 +412,8 @@ watch(
             <SettingCard>
               <SettingRow
                 v-slot="c"
-                title="Chercher l'annonce chez l'employeur"
-                description="Dès cette note, l'annonce est aussi cherchée chez l'employeur."
+                title="Chercher l’annonce chez l’employeur"
+                description="Dès cette note, l’annonce est aussi cherchée chez l’employeur."
                 :saved="savedRow === 'employer'"
                 :error="rowErrors.employer"
                 stack
@@ -509,8 +509,8 @@ watch(
                   />
                   <DateField
                     :model-value="form.rhythm_pause_until ?? null"
-                    label="Jusqu'au"
-                    title="Pause jusqu'au"
+                    label="Jusqu’au"
+                    title="Pause jusqu’au"
                     :min="form.rhythm_pause_from ?? undefined"
                     data-test="pause-until"
                     @update:model-value="form.rhythm_pause_until = $event; void savePause()"
@@ -532,7 +532,7 @@ watch(
             <SettingCard data-test="rhythm-mode">
               <SettingRow
                 title="Les offres bien notées"
-                description="Comment elles t'arrivent."
+                description="Comment elles t’arrivent."
                 :saved="savedRow === 'mode'"
                 :error="rowErrors.mode"
               />
@@ -574,8 +574,8 @@ watch(
                 v-slot="c"
                 class="radio-row"
                 data-test="rhythm-instant-row"
-                title="Dès qu'elles arrivent"
-                description="Un message par offre, dès qu'elle est notée."
+                title="Dès qu’elles arrivent"
+                description="Un message par offre, dès qu’elle est notée."
                 @click="pickMode($event, 'instant')"
               >
                 <input
@@ -630,7 +630,7 @@ watch(
                 </SettingRow>
                 <SettingRow
                   v-if="item.key === 'notify_offers' && form.notify_offers"
-                  title="M'avertir dès"
+                  title="M’avertir dès"
                   :saved="savedRow === 'threshold'"
                   :error="rowErrors.threshold"
                   class="notify-threshold"
@@ -640,7 +640,7 @@ watch(
                   <SegmentedControl
                     v-model="threshold"
                     :options="THRESHOLD_OPTIONS"
-                    label="M'avertir dès"
+                    label="M’avertir dès"
                     full
                   />
                 </SettingRow>
@@ -651,7 +651,7 @@ watch(
                 <SettingRow
                   v-slot="c"
                   title="Recevoir sur mon téléphone"
-                  description="Offres bien notées, relances et rappel ORP, par l'application ntfy."
+                  description="Offres bien notées, relances et rappel ORP, par l’application ntfy."
                 >
                   <input
                     type="checkbox"
@@ -666,7 +666,7 @@ watch(
                 <SettingRow
                   v-if="notifications.configured"
                   title="Notification de test"
-                  :description="`Dans l'application ntfy, abonne-toi au sujet ${notifications.topic ?? ''} sur le serveur ${notifications.server}.`"
+                  :description="`Dans l’application ntfy, abonne-toi au sujet ${notifications.topic ?? ''} sur le serveur ${notifications.server}.`"
                   data-test="phone-on"
                 >
                   <span
@@ -708,7 +708,7 @@ watch(
               <SettingRow
                 v-else-if="notificationsUnknown"
                 title="Notifications sur le téléphone"
-                description="Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment."
+                description="Impossible de vérifier pour l’instant : la plateforme ne répond pas. Réessaie dans un moment."
                 data-test="notifications-unknown"
               />
               <SettingRow
@@ -740,7 +740,7 @@ watch(
             >
               <SettingRow
                 :title="`Formule ${planName}`"
-                description="Ce que l'IA fait chaque mois : les offres notées, les lettres, les CV, l'assistant."
+                description="Ce que l’IA fait chaque mois : les offres notées, les lettres, les CV, l’assistant."
               >
                 <RouterLink
                   :to="{ query: { rubrique: 'formule' } }"
@@ -753,23 +753,23 @@ watch(
             </SettingCard>
             <template v-else>
               <!-- L'IA pas encore branchée (planche « Illustrations ») : pour l'exploitant seulement. C'est un
-                   réglage d'installation, sans écran dans l'application : pas de bouton qui ne mènerait nulle part. -->
+                   réglage d’installation, sans écran dans l’application : pas de bouton qui ne mènerait nulle part. -->
               <FaceState
                 v-if="aiConfigured === false"
-                title="L'IA n'est pas encore branchée"
+                title="L’IA n’est pas encore branchée"
                 illustration="ia-vide"
                 data-test="ai-not-configured"
               >
-                <p>Elle note les offres et t'aide à rédiger.</p>
+                <p>Elle note les offres et t’aide à rédiger.</p>
                 <p class="muted">
-                  Un réglage d'installation, sur le serveur.
+                  Un réglage d’installation, sur le serveur.
                 </p>
               </FaceState>
               <SettingCard data-test="budget-form">
                 <SettingRow
                   v-slot="c"
-                  title="Plafond mensuel du coût de l'IA"
-                  description="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
+                  title="Plafond mensuel du coût de l’IA"
+                  description="Au-delà, les offres ne sont plus notées jusqu’au mois suivant."
                   :saved="savedRow === 'budget'"
                   :error="rowErrors.budget"
                   stack
@@ -832,8 +832,8 @@ watch(
           <!-- « Ce qui part à l'IA » (libellé validé par Kevin, 6.11) : la page publique, à sa section IA. -->
           <SettingCard data-test="ai-data">
             <SettingRow
-              title="Ce qui part à l'IA"
-              description="Ce que jobA1 envoie à l'IA, et ce qui n'y part jamais."
+              title="Ce qui part à l’IA"
+              description="Ce que jobA1 envoie à l’IA, et ce qui n’y part jamais."
             >
               <RouterLink
                 :to="{ path: '/tes-donnees', hash: '#ia' }"
@@ -892,7 +892,7 @@ watch(
 }
 .settings-grouped :deep(.settings-section + .settings-section) { margin-top: var(--space-5); }
 /* Ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : les titres de section en 18 gras, une carte par section
-   aux lignes séparées d'un filet (D22) ; Connexions avant Mes données. */
+   aux lignes séparées d’un filet (D22) ; Connexions avant Mes données. */
 .settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); }
 .settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
 .settings-wide :deep(#donnees) { order: 1; }

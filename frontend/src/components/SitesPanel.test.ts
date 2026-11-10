@@ -63,7 +63,7 @@ describe("SitesPanel", () => {
     expect(PATCH).not.toHaveBeenCalled();
     expect((wrapper.find("[data-test=active-linkedin]").element as HTMLInputElement).checked).toBe(false);
     const { pending, undo, flush } = useUndo();
-    expect(pending.value?.message).toBe("linkedin n'est plus suivi.");
+    expect(pending.value?.message).toBe("linkedin n’est plus suivi.");
     await undo();
     await flushPromises();
     expect((wrapper.find("[data-test=active-linkedin]").element as HTMLInputElement).checked).toBe(true);

@@ -82,7 +82,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
     // Le message rédigé par l'IA rejoint « La feuille » ; la phrase sur l'ORP en est la description.
     const sheet = wrapper.find("[data-test=sheet-download]");
     expect(sheet.find("[data-test=sheet-ai]").exists()).toBe(true);
-    expect(sheet.text()).toContain("Rien n'est envoyé à l'ORP");
+    expect(sheet.text()).toContain("Rien n’est envoyé à l’ORP");
     // Le mois : une seule carte ; les obligations toutes faites ne s'affichent pas (docs/131 §B.9).
     const facts = wrapper.find("[data-test=sheet-facts]");
     for (const part of ["sheet-summary", "sheet-blockers", "sheet-missing"]) {
@@ -177,7 +177,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
       outcome_at: "2020-10-22T09:00:00Z",
       agreed_target: 10,
       measures: [{ text: "Terraform Associate", training_id: 3 }, { text: "Cours de CV", training_id: null }],
-      note: "Viser aussi l'anglais.",
+      note: "Viser aussi l’anglais.",
     };
     PUT.mockResolvedValue({ data: { meeting: agreed, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
@@ -193,7 +193,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(sheet.get("[data-test=outcome-target]").text()).toBe("10");
     expect(sheet.text()).toContain("12 le mois dernier");
     await sheet.get("[data-test=outcome-measures]").setValue("Cours de CV ");
-    await sheet.get("[data-test=outcome-note]").setValue("Viser aussi l'anglais.");
+    await sheet.get("[data-test=outcome-note]").setValue("Viser aussi l’anglais.");
     await sheet.get("[data-test=outcome-form]").trigger("submit");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/{meeting_id}/convenu", {
@@ -202,7 +202,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
         target: 10,
         measures: [{ text: "Cours de CV", training_id: null }],
         assignments: "",
-        note: "Viser aussi l'anglais.",
+        note: "Viser aussi l’anglais.",
         next_starts_at: null,
       },
     });
@@ -211,12 +211,12 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(shown).toContain("Terraform Associate, Cours de CV");
   });
 
-  it("le carnet, et le message rédigé par l'IA", async () => {
+  it("le carnet, et le message rédigé par l’IA", async () => {
     const old = { ...MEETING, id: 2, starts_at: "2020-09-15T08:00:00Z", asked: ["Une mesure ?"] };
     const noted = { ...old, id: 3, asked: [], outcome_at: "2020-08-01T10:00:00Z", assignments: "Une assignation." };
     GET.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE, past: [old, noted] } });
     POST.mockResolvedValue({
-      data: { meeting: { ...MEETING, sheet_text: "Bonjour,\n\nVoici où j'en suis." }, preparation: PREP, ...MORE },
+      data: { meeting: { ...MEETING, sheet_text: "Bonjour,\n\nVoici où j’en suis." }, preparation: PREP, ...MORE },
     });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
@@ -227,11 +227,11 @@ describe("Rendez-vous ORP (docs/83)", () => {
     await wrapper.find("[data-test=sheet-write]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/orp-meeting/redaction");
-    expect(wrapper.find("[data-test=sheet-text]").text()).toContain("Voici où j'en suis.");
+    expect(wrapper.find("[data-test=sheet-text]").text()).toContain("Voici où j’en suis.");
   });
 });
 
-describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () => {
+describe("Rendez-vous, l’essentiel d’abord (1.6.23, décisions du 25/10)", () => {
   const months = [
     { month: "2026-09", count: 10, target: 10, answered: 4, interviews: 1 },
     { month: "2026-10", count: 6, target: 10, answered: 1, interviews: 1 },
@@ -271,7 +271,7 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
       const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
       await flushPromises();
       const more = wrapper.find("[data-test=meeting-more]");
-      expect(more.attributes("aria-label")).toBe("Plus d'actions sur le rendez-vous");
+      expect(more.attributes("aria-label")).toBe("Plus d’actions sur le rendez-vous");
       await more.trigger("click");
       const remove = wrapper.find("[data-test=meeting-delete]");
       expect(remove.classes()).not.toContain("danger");
@@ -320,7 +320,7 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     );
   });
 
-  it("sans candidature, une échéance passée n'est pas une alerte", async () => {
+  it("sans candidature, une échéance passée n’est pas une alerte", async () => {
     const obligations = [{ text: "Preuves de septembre : à remettre au plus tard le 5 octobre.", due: "2020-10-05", done: false }];
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, obligations, has_applications: false }, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });

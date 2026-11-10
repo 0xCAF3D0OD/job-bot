@@ -89,7 +89,7 @@ describe("ProfileView", () => {
     expect(wrapper.find("[role=status]").text()).toContain("pas lisible");
   });
 
-  it("crée un bloc à partir d'un passage sélectionné", async () => {
+  it("crée un bloc à partir d’un passage sélectionné", async () => {
     mockApi();
     POST.mockResolvedValue({ data: { ...chunk, id: 10 }, response: { status: 201 } });
     const wrapper = mount(ProfileView, { attachTo: document.body, global: { stubs: { teleport: true } } });
@@ -164,11 +164,11 @@ describe("propositions de blocs", () => {
     expect(wrapper.find("[role=status]").text()).toContain("1 bloc ajouté");
   });
 
-  it("explique un refus de l'API", async () => {
+  it("explique un refus de l’API", async () => {
     mockApi();
     POST.mockResolvedValue({
       data: undefined,
-      error: { detail: "plafond mensuel de l'IA atteint : le relever dans les Réglages" },
+      error: { detail: "plafond mensuel de l’IA atteint : le relever dans les Réglages" },
       response: { status: 409 },
     });
     const wrapper = mount(ProfileView);
@@ -180,7 +180,7 @@ describe("propositions de blocs", () => {
 });
 
 describe("Mon parcours, panneaux (docs/49)", () => {
-  it("sans document : un seul encart ; un bloc s'ouvre dans le panneau, Supprimer en bas", async () => {
+  it("sans document : un seul encart ; un bloc s’ouvre dans le panneau, Supprimer en bas", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/documents" ? [] : path === "/api/profile-chunks" ? [chunk] : null }),
     );

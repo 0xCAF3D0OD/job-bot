@@ -43,7 +43,7 @@ async function mountView(list: unknown[]) {
 }
 
 describe("Les relances une à une", () => {
-  it("une candidature à la fois, les plus anciennes d'abord ; « Passer » n'enregistre rien", async () => {
+  it("une candidature à la fois, les plus anciennes d’abord ; « Passer » n’enregistre rien", async () => {
     const wrapper = await mountView([
       app(1, "Récente SA", daysAgo(2)),
       app(2, "Maquette Médias Sàrl", "2026-09-08"),
@@ -61,7 +61,7 @@ describe("Les relances une à une", () => {
     expect(PUT).not.toHaveBeenCalled();
   });
 
-  it("« Classer sans réponse » part après 6 s, « Annuler » la remet ; puis l'écran de fin", async () => {
+  it("« Classer sans réponse » part après 6 s, « Annuler » la remet ; puis l’écran de fin", async () => {
     PUT.mockResolvedValue({ response: { ok: true } });
     const wrapper = await mountView([app(2, "Maquette Médias Sàrl", "2026-09-08")]);
     await wrapper.find("[data-test=follow-up-archive]").trigger("click");

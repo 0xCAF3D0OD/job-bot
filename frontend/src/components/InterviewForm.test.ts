@@ -67,14 +67,14 @@ const application = {
   cv_draft_id: null,
 };
 
-describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, docs/46)", () => {
+describe("Carte et panneau d’une candidature, retour d’entretien (docs/23 §3, docs/46)", () => {
   it("entretien passé sans retour : « Faire le point » sur la carte", async () => {
     const wrapper = mount(ApplicationCard, { props: { application: { ...application, interviews: [] } as never } });
     await wrapper.find("[data-test=card-step-feedback]").trigger("click");
     expect(wrapper.emitted("interview")![0]).toEqual([expect.objectContaining({ id: 3 }), null]);
   });
 
-  it("retour fait : résumé d'une ligne et « Voir le retour » dans le panneau", async () => {
+  it("retour fait : résumé d’une ligne et « Voir le retour » dans le panneau", async () => {
     // Le retour porte le jour de l'entretien, calculé comme lui depuis la date du jour : écrit en dur
     // (« 2026-10-06 »), il ne correspondait à l'entretien « il y a 20 jours » que le 26.10.
     const heldAt = application.interview_at.slice(0, 10);

@@ -29,15 +29,15 @@ type Saved = { direction: Direction; reason: Reason; note?: string | null; chunk
 
 const REASONS: Record<Direction, { value: Reason; label: string }[]> = {
   high: [
-    { value: "not_my_trade", label: "Ce n'est pas mon métier" },
+    { value: "not_my_trade", label: "Ce n’est pas mon métier" },
     { value: "not_my_level", label: "Pas mon niveau" },
-    { value: "sector", label: "Le secteur ne m'intéresse pas" },
+    { value: "sector", label: "Le secteur ne m’intéresse pas" },
     { value: "place_rate_contract", label: "Le lieu, le taux ou le contrat" },
     { value: "other", label: "Autre" },
   ],
   low: [
-    { value: "my_trade", label: "C'est bien mon métier" },
-    { value: "have_experience", label: "J'ai l'expérience demandée" },
+    { value: "my_trade", label: "C’est bien mon métier" },
+    { value: "have_experience", label: "J’ai l’expérience demandée" },
     { value: "sector_ok", label: "Le secteur me plaît" },
     { value: "other", label: "Autre" },
   ],
@@ -107,7 +107,7 @@ async function propose(value: Reason): Promise<void> {
       body: { direction: direction.value, reason: value, note: note.value.trim() || null },
     });
     if (!data) {
-      error.value = "La correction n'a pas pu être préparée. Réessaie.";
+      error.value = "La correction n’a pas pu être préparée. Réessaie.";
       return;
     }
     block.value = data.block ? { ...data.block } : null;
@@ -146,7 +146,7 @@ function send(body: { block?: Omit<Block, "by_ai"> | null; criteria?: Record<str
 function addBlock(): void {
   const b = block.value;
   if (!b || !b.title.trim() || !b.content.trim()) return;
-  send({ block: { kind: b.kind, title: b.title.trim(), content: b.content.trim() } }, "Bloc ajouté à ton profil : l'offre va être renotée.");
+  send({ block: { kind: b.kind, title: b.title.trim(), content: b.content.trim() } }, "Bloc ajouté à ton profil : l’offre va être renotée.");
 }
 
 function applyChange(change: Change): void {
@@ -264,7 +264,7 @@ function applyChange(change: Change): void {
             data-test="score-correction-title"
           >
         </label>
-        <label>Ce que l'IA lira
+        <label>Ce que l’IA lira
           <textarea
             v-model="block.content"
             rows="3"
@@ -301,7 +301,7 @@ function applyChange(change: Change): void {
         data-test="score-correction-criteria"
       >
         <p class="setting-desc">
-          Ce n'est pas l'affaire de l'IA : un critère écarte ces offres, sans note.
+          Ce n’est pas l’affaire de l’IA : un critère écarte ces offres, sans note.
         </p>
         <div class="pill-row">
           <button

@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidatures)", () => {
-  it("« Alertes » et les filtres dans l'en-tête ; la recherche et « Ajouter » au-dessus des trois vues", async () => {
+  it("« Alertes » et les filtres dans l’en-tête ; la recherche et « Ajouter » au-dessus des trois vues", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/offers"

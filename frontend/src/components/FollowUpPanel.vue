@@ -39,7 +39,7 @@ async function write(): Promise<void> {
       params: { path: { application_id: props.application.id } },
     });
     if (!data) {
-      error.value = "Rédaction impossible pour l'instant.";
+      error.value = "Rédaction impossible pour l’instant.";
       return;
     }
     subject.value = data.subject;

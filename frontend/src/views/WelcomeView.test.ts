@@ -119,7 +119,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=cv-upload]").text()).toContain("PDF ou Word, 10 Mo maximum");
     expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer sans CV");
     const privacy = wrapper.find("[data-test=cv-privacy]");
-    expect(privacy.text()).toContain("L'IA n'en reçoit que les parties utiles, sans tes coordonnées.");
+    expect(privacy.text()).toContain("L’IA n’en reçoit que les parties utiles, sans tes coordonnées.");
     expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
     // Sans Assistant, pas de « Pas de CV à jour ? » ; le « 1 » seul, lui, est là (maquette OnboardingC, §15).
     expect(wrapper.find("[data-test=cv-assistant]").exists()).toBe(false);
@@ -130,23 +130,23 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=cv-scene]").attributes("aria-hidden")).toBe("true");
   });
 
-  it("« Pas de CV à jour ? » : les premiers pas mis de côté, la demande part à l'Assistant (décision du 2026-11-06)", async () => {
+  it("« Pas de CV à jour ? » : les premiers pas mis de côté, la demande part à l’Assistant (décision du 2026-11-06)", async () => {
     const assistant = useAssistant();
     assistant.available.value = true;
     const { wrapper, router } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
     const card = wrapper.find("[data-test=cv-assistant]");
     expect(card.text()).toContain("Pas de CV à jour ?");
-    expect(card.text()).toContain("L'Assistant t'aide à en créer un");
+    expect(card.text()).toContain("L’Assistant t’aide à en créer un");
     await click(wrapper, "cv-assistant");
     expect(calls("/api/welcome")).toContainEqual({ postponed: true });
-    expect(assistant.pending.value).toBe("Je n'ai pas de CV à jour. Aide-moi à en créer un.");
+    expect(assistant.pending.value).toBe("Je n’ai pas de CV à jour. Aide-moi à en créer un.");
     expect(router.currentRoute.value.path).toBe("/assistant");
     assistant.available.value = false;
     assistant.pending.value = null;
     assistant.open.value = false;
   });
 
-  it("le CV lu par l'IA : les compétences trouvées, les blocs ajoutés au profil, les postes pré-remplis", async () => {
+  it("le CV lu par l’IA : les compétences trouvées, les blocs ajoutés au profil, les postes pré-remplis", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
     POST.mockImplementation((path: string) =>
       Promise.resolve({
@@ -202,7 +202,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4, roles: ["Infirmière", "Aide-soignante"] });
   });
 
-  it("les critères : postes (trois au plus), lieux en puces, l'ORP et ses recherches par mois", async () => {
+  it("les critères : postes (trois au plus), lieux en puces, l’ORP et ses recherches par mois", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
     await click(wrapper, "role-open");
     for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {
@@ -240,7 +240,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(PUT.mock.calls.some((c) => c[0] === "/api/notifications/phone")).toBe(false);
   });
 
-  it("sans ORP : pas d'objectif, pas de remise dans la ligne des valeurs par défaut", async () => {
+  it("sans ORP : pas d’objectif, pas de remise dans la ligne des valeurs par défaut", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
     await wrapper.find("[data-test=orp-switch]").setValue(false);
     expect(wrapper.find("[data-test=target]").exists()).toBe(false);
@@ -255,9 +255,9 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const offers = [OFFER, { ...OFFER, id: 8, title: "SRE", score: 55 }];
     const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
     await click(wrapper, "welcome-continue");
-    expect(wrapper.text()).toContain("Garde ou écarte. Celles que tu gardes t'attendent dans Candidatures.");
+    expect(wrapper.text()).toContain("Garde ou écarte. Celles que tu gardes t’attendent dans Candidatures.");
     expect(wrapper.text()).not.toContain("apprend");
-    expect(wrapper.find("[data-test=welcome-offer]").text()).toContain("D'après ton CV : Kubernetes et Terraform demandés.");
+    expect(wrapper.find("[data-test=welcome-offer]").text()).toContain("D’après ton CV : Kubernetes et Terraform demandés.");
     // L'anneau sans chiffre, le mot dessous (D3, D5).
     expect(wrapper.find(".score-ring-worded").exists()).toBe(true);
     expect(wrapper.text()).toContain("Offre 1 sur 2");
@@ -274,7 +274,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
   });
 
-  it("« Écarter » laisse « Annuler » 6 s : l'offre reprend son statut et le tri revient sur elle", async () => {
+  it("« Écarter » laisse « Annuler » 6 s : l’offre reprend son statut et le tri revient sur elle", async () => {
     const offers = [{ ...OFFER, status: "to_review" }, { ...OFFER, id: 8, title: "SRE", score: 55, status: "later" }];
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
     await click(wrapper, "welcome-continue");
@@ -307,7 +307,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     }
   });
 
-  it("sans offre notée : directement « Tout est prêt. », et « Modifier dans Compte » termine l'accueil", async () => {
+  it("sans offre notée : directement « Tout est prêt. », et « Modifier dans Compte » termine l’accueil", async () => {
     const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
     await click(wrapper, "welcome-continue");
     expect(wrapper.find("[data-test=welcome-offer]").exists()).toBe(false);
@@ -325,7 +325,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
   });
 
-  it("en changeant d'étape, le focus va au titre de la nouvelle (docs/69 §4)", async () => {
+  it("en changeant d’étape, le focus va au titre de la nouvelle (docs/69 §4)", async () => {
     const { wrapper } = await mountWelcome(undefined, { realTransition: true });
     await click(wrapper, "welcome-start");
     await vi.waitFor(async () => {

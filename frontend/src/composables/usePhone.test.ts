@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 describe("usePhone (docs/33)", () => {
-  it("sait dès le premier rendu qu'on est sur téléphone", () => {
+  it("sait dès le premier rendu qu’on est sur téléphone", () => {
     globalThis.matchMedia = ((query: string) =>
       ({ matches: query === PHONE_QUERY, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
     const seen: boolean[] = [];
