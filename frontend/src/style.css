@@ -3710,27 +3710,28 @@ main:focus { outline: none; }
 .rhythm-band-text strong { font-size: var(--font-label); }
 .rhythm-band-text span { font-size: var(--label-caps); color: var(--text-secondary); }
 .rhythm-band.done .rhythm-band-text span { color: var(--success); font-weight: var(--weight-bold); }
-.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: calc(var(--space-1) * 1.5); text-align: center; }
-.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-1) * 1.5); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: var(--space-2); text-align: center; }
+.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rhythm-band-days li.today { font-weight: var(--weight-heavy); color: var(--text); }
 .rhythm-band-dot { display: grid; place-items: center; width: 34px; height: 34px; box-sizing: border-box; border: 2px solid var(--field-border); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .rhythm-band-days li.rest .rhythm-band-dot { border-style: dashed; }
 .rhythm-band-days li.sent .rhythm-band-dot { background: var(--primary-graphic); border-color: var(--primary-graphic); color: var(--on-primary); }
-.today-page .today-section { display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.today-page .today-section { display: flex; flex-direction: column; gap: var(--space-3); }
 .today-page .today-section > h2 { margin: 0 var(--space-1); font-size: var(--font-title); font-weight: var(--weight-bold); }
-.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(var(--space-2) + var(--space-1) / 2); }
+.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .today-task {
   --tone: var(--primary-graphic); --tone-text: var(--primary-text);
   display: flex; align-items: center; gap: var(--space-4); min-height: 88px; box-sizing: border-box; padding: var(--space-4) var(--space-5);
   background: var(--surface); border: 0; border-radius: var(--radius-card); color: var(--text); text-decoration: none;
 }
-/* Lot 18 (§10.5) : le fond des blocs sous la bande, cartes sans bordure ; l'action est le mot dans la couleur du ton,
-   puis le cercle D29 de 40 px, 12 px entre les deux. */
-.today-page-bg { background: var(--page-blocks); }
+/* Sous la bande, le fond crème de la page (MODIFICATIONS_9 §1 « Crème #F7F5F0 partout », AujourdhuiOrdinateurTravailD) ;
+   cartes blanches sans bordure ; l'action est le mot dans la couleur du ton, puis le cercle gris D29 de 40 px, 12 px
+   entre les deux. */
+.today-page-bg { background: var(--bg); }
 .today-task.tone-late { --tone: var(--peach-text); --tone-text: var(--peach-text); }
 .today-task.tone-interview { --tone: var(--success); --tone-text: var(--success); }
-.today-task-icon { flex: none; width: 24px; height: 24px; margin: 0 calc(var(--space-1) / 2); color: var(--tone); }
-.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(var(--space-1) / 2); }
+.today-task-icon { flex: none; width: 24px; height: 24px; color: var(--tone); }
+.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .today-task-main strong { font-size: var(--today-17); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .today-task-main span { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
 .today-task.tone-late .today-task-main span { color: var(--peach-text); font-weight: var(--weight-semibold); }

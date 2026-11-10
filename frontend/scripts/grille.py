@@ -102,6 +102,8 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),
+    # Aujourd'hui (PR 9d) : bande bleue, carte du mois, cartes d'action aux cercles gris.
+    ("", None),
     # Réglages (PR 9c, §2.10) et les panneaux Langue et Taille du texte.
     ("reglages?rubrique=notifications", None),
     ("reglages?rubrique=notifications", "[data-test=language-row]"),
