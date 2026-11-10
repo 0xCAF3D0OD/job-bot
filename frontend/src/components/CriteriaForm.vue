@@ -17,6 +17,8 @@ import GroupedRow from "./GroupedRow.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
 import type { IconName } from "../icons";
 import { useNarrow } from "../composables/usePhone";
+// Le titre du résumé : « Critères » ; « Ce que je cherche » dans le Profil ordinateur (maquette ProfilOrdinateur).
+withDefaults(defineProps<{ heading?: string }>(), { heading: "Critères" });
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
   { value: "apprentissage", label: "Apprentissages" },
@@ -241,7 +243,7 @@ onMounted(() => void load());
            gris, un crayon rond pour le modifier. -->
       <section class="criteria-summary-section">
         <h2 class="section-title">
-          Critères
+          {{ heading }}
         </h2>
         <!-- Une ligne cliquable par critère (MODIFICATIONS du 8 novembre au soir, lot 13.2) : le libellé au-dessus de
              la valeur, alignés à gauche, 68 px, chevron à droite ; la ligne ouvre le formulaire sur son critère. -->
@@ -466,4 +468,15 @@ onMounted(() => void load());
 .criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
 .criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
+/* Ordinateur (MODIFICATIONS du 9 novembre, §2.9 ; HTML de ProfilOrdinateur) : une carte par préférence, 8 px entre les
+   cartes, 72 px de haut au moins, bordure de 1,5 px, rayon 18. Sur la grille de 4 (décision de Kevin du 10 novembre) :
+   16 / 20 px de marge trait compris (12,5 de la maquette → 14,5), 16 px entre le texte et le cercle, 4 px entre les lignes. */
+@media (min-width: 821px) {
+  .criteria-rows .criteria-row { gap: var(--space-4); }
+  .criteria-rows .criteria-row-text { gap: var(--space-1); }
+  .criteria-rows { --crit-pad-y: 14.5px; --crit-pad-x: 18.5px; --crit-72: 72px; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; background: none; border: 0; border-radius: 0; }
+  .criteria-rows > li + li { border-top: 0; }
+  .page-blocks-wide .criteria-rows .criteria-row, .criteria-rows .criteria-row { min-height: var(--crit-72); padding: var(--crit-pad-y) var(--crit-pad-x); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+  .criteria-rows .criteria-row:hover { border-color: var(--primary-graphic); background: var(--surface); }
+}
 </style>

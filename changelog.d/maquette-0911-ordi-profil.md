@@ -1,0 +1,1 @@
+Ordinateur : le Profil devient une page unique (en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours) ; chaque ligne de « Mon parcours » ouvre sa page et « Modifier » ne change que le nom, le poste et le lieu.

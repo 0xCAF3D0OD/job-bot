@@ -3810,6 +3810,11 @@ main:focus { outline: none; }
 .profile-head-text p { margin: var(--space-1) 0 0; font-size: var(--profile-17); color: var(--text-secondary); }
 .profile-head-actions { flex: none; display: flex; gap: var(--space-3); }
 .profile-head-actions button { min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+/* Une page de « Mon parcours » (PR 9b) : « ← Profil » au-dessus du titre, comme l'en-tête du Profil. */
+.jobs-head.profile-subhead { --profile-34: 34px; max-width: 880px; box-sizing: content-box; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.profile-subhead h1 { margin: 0; font-size: var(--profile-34); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
+.profile-back { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.profile-back .icon { width: 20px; height: 20px; }
 
 /* --- Offres, barre d'outils (1.6.55, planche « Barre d'outils Offres ») ---
    Ordinateur : la recherche prend la ligne, puis « Filtrer » et « + Ajouter », boutons secondaires à la

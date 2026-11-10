@@ -23,12 +23,15 @@ const PRESENTATION = ["LoginView", "DiscoverView", "WelcomeView"];
 const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
 // Titres repris tels quels des maquettes qui font foi (Mon compte ; Mes alertes e-mail, maquette du 8 novembre ;
 // Mon parcours, maquette Compte, déjà là avant le lot 18 : le sur-titre est passé de GroupedList à un h2 ; Ta candidature,
-// maquette PreparerOrdinateur du 9 novembre).
+// maquette PreparerOrdinateur du 9 novembre ; Mon CV, maquette ProfilOrdinateur, et Mon parcours, demandé par Kevin le
+// 10 novembre pour le Profil ordinateur).
 const MAQUETTE = new Set([
   "./components/AccountMenu.vue : Mon compte",
   "./views/AlertsView.vue : Mes alertes e-mail",
   "./views/AccountView.vue : Mon parcours",
   "./views/PreparationView.vue : Ta candidature",
+  "./components/ProfileDesktop.vue : Mon CV",
+  "./components/ProfileDesktop.vue : Mon parcours",
 ]);
 
 function template(source: string): string {

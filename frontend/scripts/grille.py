@@ -99,6 +99,9 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Envoyées (PR 5, §8.1) : le détail seul ; la liste, partagée avec À traiter, garde les valeurs de la maquette.
     ("candidatures/suivi", None),
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card"),
+    # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
+    ("profil", None),
+    ("profil", "[data-test=profile-edit]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
