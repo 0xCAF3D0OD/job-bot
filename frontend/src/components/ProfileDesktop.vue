@@ -63,7 +63,8 @@ const cv = computed(() =>
 );
 // La ligne sous le nom du fichier (maquette ProfilOrdinateurCV) : orange quand il reste à lire, vert quand la lecture a
 // trouvé des éléments, grise sinon.
-const cvLine = computed(() => (cv.value ? cvSubtitle(cv.value, null) : null));
+const cvNotice = computed(() => (cv.value && reading.notice.value?.id === cv.value.id ? reading.notice.value.kind : null));
+const cvLine = computed(() => (cv.value ? cvSubtitle(cv.value, cvNotice.value) : null));
 
 // « Remplacer » du bloc d'état (« Lecture impossible ») ouvre le même choix de fichier que le bouton de la carte.
 const fileInputs: HTMLInputElement[] = [];
@@ -92,8 +93,10 @@ async function onFile(event: Event): Promise<void> {
       },
     });
     if (data) {
+      // PR 24 : le même fichier (200) ou un nouveau (201) ; le message de la carte dit ce qui se passe ensuite.
+      reading.deposited(data, response.status === 200);
       await loadDocuments();
-      message.value = data.text_status === "ok" ? "CV déposé." : "CV déposé, mais son texte n’est pas lisible (PDF scanné ?).";
+      message.value = data.text_status === "ok" ? "" : "CV déposé, mais son texte n’est pas lisible (PDF scanné ?).";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
       message.value = typeof detail === "string" ? `Refusé : ${detail}.` : `Refusé (HTTP ${response.status}).`;
@@ -260,6 +263,7 @@ async function onSaved(): Promise<void> {
           <CvStateBlock
             v-if="cv"
             :doc="cv"
+            :notice="cvNotice"
             @replace="pickFile"
             @changed="loadAll"
           />
