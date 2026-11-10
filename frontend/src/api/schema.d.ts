@@ -5262,6 +5262,8 @@ export interface components {
             day?: string | null;
             /** Month */
             month?: string | null;
+            /** Document Id */
+            document_id?: number | null;
         };
         /** FollowIn */
         FollowIn: {

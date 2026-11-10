@@ -1,5 +1,5 @@
 import { mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import Composer from "./Composer.vue";
 import { closeAllLayers } from "../composables/useDismissLayer";
@@ -50,9 +50,40 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.find("[data-test=composer-menu]").exists()).toBe(false);
   });
 
-  it("le micro reste caché tant que la dictée n’est pas permise (O-4)", () => {
+  it("le micro reste caché quand le navigateur ne sait pas dicter", () => {
     const wrapper = mount(Composer, { props: { modelValue: "", placeholder: "Message", mic: true } });
     expect(wrapper.find("[data-test=composer-mic]").exists()).toBe(false);
+  });
+
+  it("le premier appui sur le micro demande l’accord (O-4) ; « Annuler » ne dicte rien", async () => {
+    const started: string[] = [];
+    class FakeRecognition {
+      lang = "";
+      onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null = null;
+      onend: (() => void) | null = null;
+      start(): void {
+        started.push(this.lang);
+        this.onresult?.({ results: [[{ transcript: "bonjour" }]] });
+      }
+    }
+    vi.stubGlobal("webkitSpeechRecognition", FakeRecognition);
+    localStorage.removeItem("jobA1.dictee");
+    const wrapper = mount(Composer, { props: { modelValue: "", placeholder: "Message", mic: true, stacked: true } });
+    await wrapper.get("[data-test=composer-mic]").trigger("click");
+    expect(wrapper.get("[data-test=composer-mic-consent]").text()).toContain("Google");
+    await wrapper.get("[data-test=inline-confirm-no]").trigger("click");
+    expect(started).toEqual([]);
+    await wrapper.get("[data-test=composer-mic]").trigger("click");
+    await wrapper.get("[data-test=inline-confirm-yes]").trigger("click");
+    expect(started).toEqual(["fr-CH"]);
+    expect(wrapper.emitted("update:modelValue")).toEqual([["bonjour"]]);
+    expect(localStorage.getItem("jobA1.dictee")).toBe("oui");
+    // Accord donné : le micro dicte tout de suite.
+    await wrapper.get("[data-test=composer-mic]").trigger("click");
+    expect(started).toHaveLength(2);
+    expect(wrapper.find("[data-test=composer-mic-consent]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+    localStorage.removeItem("jobA1.dictee");
   });
 });
 

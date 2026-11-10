@@ -84,6 +84,7 @@ onBeforeUnmount(() => clearTimeout(headTimer));
 async function loadRecent(): Promise<void> {
   const { data } = await api.GET("/api/assistant/conversations");
   recent.value = data ?? [];
+  void loadCv();
 }
 
 watch(open, async (value) => {
@@ -161,8 +162,86 @@ async function erase(): Promise<void> {
 // « Envoyer » reste actif (docs/29 §3) : sans question, il rend la main au champ.
 const emptyHint = ref(false);
 
+// « + » (PR 19, décision de Kevin du 10 novembre ; maquette AssistantOrdinateur, états plus et file) : importer un
+// fichier, joindre son CV, ou une candidature de sa liste. Le fichier est déposé dans Documents comme les autres (E-5) ;
+// la question nomme le document, l'IA en lit le texte sans les coordonnées (outil `document`, I-1).
+type Attached = { id: string; label: string; documentId: number };
+type Pick = { id: number; label: string };
+const attached = ref<Attached | null>(null);
+const attachError = ref("");
+const uploading = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+const cvDocument = ref<{ id: number; filename: string } | null>(null);
+const picking = ref<Pick[] | null>(null);
+const ACCEPT = "application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown";
+const plusItems = computed(() => [
+  { id: "file", label: "Importer un fichier", hint: "PDF, Word ou texte, 10 Mo maximum", icon: "upload" as const },
+  ...(cvDocument.value ? [{ id: "cv", label: "Joindre mon CV", hint: cvDocument.value.filename, icon: "file" as const }] : []),
+  { id: "application", label: "Joindre une offre de ma liste", hint: "Choisir parmi tes candidatures", icon: "briefcase" as const },
+]);
+async function loadCv(): Promise<void> {
+  const { data } = await api.GET("/api/documents").catch(() => ({ data: undefined }));
+  const cvs = (data ?? []).filter((doc) => doc.kind !== "certificate").sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
+  cvDocument.value = cvs[0] ? { id: cvs[0].id, filename: cvs[0].filename } : null;
+}
+async function upload(file: File): Promise<void> {
+  attachError.value = "";
+  uploading.value = true;
+  try {
+    const { data, response } = await api.POST("/api/documents", {
+      body: { file: "" },
+      bodySerializer: () => {
+        const form = new FormData();
+        form.append("file", file);
+        return form;
+      },
+    });
+    let doc: { id: number; filename: string } | undefined = data;
+    // Déjà déposé : le même fichier, retrouvé dans Documents.
+    if (!doc && response.status === 409) {
+      const list = await api.GET("/api/documents");
+      doc = (list.data ?? []).find((d) => d.filename === file.name && d.size === file.size);
+    }
+    if (doc) attached.value = { id: `doc-${doc.id}`, label: doc.filename, documentId: doc.id };
+    else attachError.value = response.status === 415 ? "Ce fichier n’est pas lisible : PDF, Word ou texte seulement." : "Le fichier n’a pas pu être joint, réessaie.";
+  } catch {
+    attachError.value = "Le fichier n’a pas pu être joint, réessaie.";
+  } finally {
+    uploading.value = false;
+  }
+}
+function onFile(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  target.value = "";
+  if (file) void upload(file);
+}
+async function onAttach(item: string | File): Promise<void> {
+  if (item instanceof File) return upload(item);
+  if (item === "file") fileInput.value?.click();
+  else if (item === "cv" && cvDocument.value) {
+    attached.value = { id: `doc-${cvDocument.value.id}`, label: cvDocument.value.filename, documentId: cvDocument.value.id };
+  } else if (item === "application") {
+    const { data } = await api.GET("/api/applications").catch(() => ({ data: undefined }));
+    picking.value = (data ?? [])
+      .slice()
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, 20)
+      .map((a) => ({ id: a.id, label: `${a.job_title} · ${shortCompany(a.company)}` }));
+  }
+}
+function pickApplication(choice: Pick): void {
+  setFocus({ applicationId: choice.id, label: choice.label });
+  picking.value = null;
+  input.value?.focus();
+}
+
 // Les messages du mois (docs/125) : le compteur suit chaque réponse.
 const { reached, refresh: refreshPlan } = usePlan();
+
+function withDocument(body: Record<string, unknown> | null, documentId: number | null): Record<string, unknown> | null {
+  return documentId ? { ...(body ?? {}), document_id: documentId } : body;
+}
 
 async function send(text: string = draft.value): Promise<void> {
   const question = text.trim();
@@ -174,6 +253,9 @@ async function send(text: string = draft.value): Promise<void> {
   }
   emptyHint.value = false;
   draft.value = "";
+  // Le document joint part avec cette question, puis la zone de saisie se vide (comme le texte).
+  const sentDocument = attached.value?.documentId ?? null;
+  attached.value = null;
   busy.value = true;
   lines.value.push({ role: "user", content: question });
   lines.value.push({ role: "assistant", content: "" });
@@ -195,7 +277,7 @@ async function send(text: string = draft.value): Promise<void> {
         conversation_id: conversationId.value,
         text: question,
         page: route.path,
-        focus: focusBody(focus.value),
+        focus: withDocument(focusBody(focus.value), sentDocument),
       }),
     });
     if (response.status === 401) globalThis.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
@@ -749,8 +831,59 @@ const headItems: MoreMenuItem[] = [
         Écris ta question.
       </p>
       <PlanLimit usage="chat" />
-      <!-- La zone de saisie commune (Composer, D25), en boîte comme celle de Claude (PR 19 du 10 novembre) ; sans « + »
-           (pas de pièce jointe à l’IA sans règle, I-1 et E-5) ni micro (dictée masquée, O-4). -->
+      <div
+        v-if="picking"
+        class="assistant-pick"
+        data-test="assistant-pick"
+      >
+        <div class="assistant-pick-head">
+          <p class="assistant-label">
+            Joindre une candidature
+          </p>
+          <IconButton
+            icon="close"
+            label="Fermer la liste"
+            data-test="assistant-pick-close"
+            @click="picking = null"
+          />
+        </div>
+        <p
+          v-if="!picking.length"
+          class="muted"
+        >
+          Aucune candidature pour l’instant.
+        </p>
+        <button
+          v-for="choice in picking"
+          :key="choice.id"
+          type="button"
+          class="assistant-recent-item"
+          data-test="assistant-pick-item"
+          @click="pickApplication(choice)"
+        >
+          <span>{{ choice.label }}</span>
+        </button>
+      </div>
+      <p
+        v-if="attachError || uploading"
+        :class="attachError ? 'field-error' : 'muted'"
+        role="status"
+        data-test="assistant-attach-status"
+      >
+        {{ attachError || "Envoi du fichier…" }}
+      </p>
+      <input
+        ref="fileInput"
+        type="file"
+        class="visually-hidden"
+        :accept="'.pdf,.docx,.txt,.md'"
+        tabindex="-1"
+        aria-hidden="true"
+        data-test="assistant-file"
+        @change="onFile"
+      >
+      <!-- La zone de saisie commune (Composer, D25), en boîte comme celle de Claude (PR 19 du 10 novembre), avec « + »
+           (un fichier, le CV ou une candidature) et le micro (dictée du navigateur, accord au premier appui, O-4). -->
       <div class="assistant-form">
         <Composer
           ref="input"
@@ -758,9 +891,15 @@ const headItems: MoreMenuItem[] = [
           :placeholder="page ? 'Demande quelque chose…' : 'Demander à l’Assistant'"
           send-label="Envoyer"
           stacked
-          :busy="busy || reached('chat')"
+          mic
+          :plus-items="plusItems"
+          :attachments="attached ? [{ id: attached.id, label: attached.label }] : []"
+          :accept="ACCEPT"
+          :busy="busy || uploading || reached('chat')"
           data-test="assistant-input"
           @send="send"
+          @attach="onAttach"
+          @remove="attached = null"
         />
       </div>
       <!-- AS7 : sous le champ, sur la page comme dans le panneau. -->

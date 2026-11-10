@@ -2,8 +2,9 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from "vue";
 
 import AppIcon from "./AppIcon.vue";
+import InlineConfirm from "./InlineConfirm.vue";
 import { useDismissLayer } from "../composables/useDismissLayer";
-import { DICTATION_ALLOWED, type ComposerAttachment, type ComposerItem } from "../composer";
+import { acceptDictation, dictationAccepted, DICTATION_ALLOWED, type ComposerAttachment, type ComposerItem } from "../composer";
 
 // La zone de saisie unique (maquette du 8 novembre, docs/143, D25) : pour tout message libre envoyé tel quel
 // (Assistant, retouche de la lettre, ajout d'une offre, texte d'une annonce). Une ligne : une pilule avec +, le
@@ -45,7 +46,7 @@ const area = ref<HTMLTextAreaElement | null>(null);
 const plusButton = ref<HTMLButtonElement | null>(null);
 const menuId = useId();
 const counterId = useId();
-const menu = useDismissLayer("composer");
+const menu = useDismissLayer("composer", undefined, { nested: true });
 const dragging = ref(false);
 const multi = computed(() => props.rows > 1 && !props.stacked);
 const length = computed(() => props.modelValue.trim().length);
@@ -56,12 +57,19 @@ const canSend = computed(() => {
 });
 const showMic = computed(() => props.mic && DICTATION_ALLOWED && speech() !== null);
 
-function speech(): (new () => { lang: string; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; start: () => void }) | null {
+function speech(): (new () => { lang: string; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; start: () => void }) | null {
   const w = globalThis as unknown as Record<string, unknown>;
   return (w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null) as ReturnType<typeof speech>;
 }
 
+// Le premier appui demande l'accord (O-4) : la phrase dit où part la voix ; « Annuler » ne dicte rien.
+const asking = ref(false);
+const listening = ref(false);
 function dictate(): void {
+  if (!dictationAccepted()) {
+    asking.value = true;
+    return;
+  }
   const Recognition = speech();
   if (!Recognition) return;
   const recognition = new Recognition();
@@ -70,7 +78,14 @@ function dictate(): void {
     const text = Array.from(event.results).map((result) => result[0]?.transcript ?? "").join(" ");
     emit("update:modelValue", `${props.modelValue}${props.modelValue ? " " : ""}${text}`.trim());
   };
+  recognition.onend = () => (listening.value = false);
+  listening.value = true;
   recognition.start();
+}
+function acceptAndDictate(): void {
+  acceptDictation();
+  asking.value = false;
+  dictate();
 }
 
 function send(): void {
@@ -175,6 +190,16 @@ defineExpose({ focus: () => area.value?.focus() });
         </span>
       </button>
     </div>
+    <InlineConfirm
+      v-if="asking"
+      message="La dictée passe par ton navigateur : Chrome envoie ta voix à Google, Safari à Apple, pour l’écrire en texte. jobA1 ne reçoit que le texte."
+      confirm-label="Accepter et dicter"
+      cancel-label="Annuler"
+      :danger="false"
+      data-test="composer-mic-consent"
+      @confirm="acceptAndDictate"
+      @cancel="asking = false"
+    />
     <ul
       v-if="attachments.length"
       class="composer-files"
@@ -231,6 +256,7 @@ defineExpose({ focus: () => area.value?.focus() });
           type="button"
           class="composer-icon"
           aria-label="Dicter"
+          :aria-pressed="listening"
           data-test="composer-mic"
           @click="dictate"
         >
@@ -302,6 +328,7 @@ defineExpose({ focus: () => area.value?.focus() });
         type="button"
         class="composer-icon"
         aria-label="Dicter"
+        :aria-pressed="listening"
         data-test="composer-mic"
         @click="dictate"
       >

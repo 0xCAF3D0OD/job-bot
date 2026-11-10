@@ -1308,6 +1308,10 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .assistant-suggestions .chip { --reply-48: 48px; --reply-pad: 10px 20px; --reply-lh: 21px; min-height: var(--reply-48); padding: var(--reply-pad); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--reply-lh); text-align: left; }
 .assistant-label { margin: var(--space-2) 0 var(--space-1); font-size: var(--font-caption); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+/* « Joindre une offre de ma liste » (PR 19) : la liste des candidatures au-dessus de la zone de saisie, dans la colonne. */
+.assistant-pick { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); max-height: 40vh; overflow-y: auto; padding: 0 var(--space-4); }
+.assistant-pick-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.assistant-pick-head .assistant-label { margin: 0; }
 .assistant-recent { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
 .assistant-recent-item { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font-size: var(--font-small); cursor: pointer; color: var(--text); }
 .assistant-recent-item:hover { background: var(--panel); }
@@ -4809,9 +4813,10 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-send { background: var(--action); color: var(--on-action); }
 .composer-send:disabled { background: var(--btn-disabled); color: var(--text-secondary); }
 .composer-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-2) 0; list-style: none; }
-.composer-file { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 40px; padding: 0 var(--space-1) 0 var(--space-3); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-small); font-weight: var(--weight-semibold); }
+/* La pièce jointe de la zone de saisie : la croix fait 44 px (cible tactile), la puce suit. */
+.composer-file { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-1) 0 var(--space-3); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .composer-file .icon { color: var(--primary-graphic); }
-.composer-file-remove { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); }
+.composer-file-remove { display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: var(--target-min); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); }
 /* La boîte de l'Assistant (prompt du 10 novembre, PR 19 ; maquettes Assistant et AssistantOrdinateur) : rayon 24,
    texte 16/24 en haut (1 à 6 lignes, puis défile), barre dessous avec des cibles de 44 ; Envoyer = rond de 36, gris
    et `aria-disabled` à vide, bleu avec du texte. Focus : bordure 1,5 px bleue à l'intérieur, rien ne dépasse.

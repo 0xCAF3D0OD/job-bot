@@ -38,24 +38,29 @@ export function closeAllLayers(returnFocus = false): void {
   current.value?.hide(returnFocus);
 }
 
-export function useDismissLayer(kind: string, onClose?: () => void) {
+// `nested` : un menu ouvert dans un panneau (le « + » de la zone de saisie dans l'Assistant) le garde ouvert ; fermer
+// le menu rend la main au panneau, qui reste la couche ouverte.
+export function useDismissLayer(kind: string, onClose?: () => void, options: { nested?: boolean } = {}) {
   const id = Symbol(kind);
   const open = ref(false);
   let trigger: HTMLElement | null = null;
+  let parent: Layer | null = null;
 
   function hide(returnFocus = true): void {
     if (!open.value) return;
     open.value = false;
     if (current.value?.id === id) {
-      current.value = null;
-      listen(false);
+      current.value = parent;
+      if (!parent) listen(false);
     }
+    parent = null;
     onClose?.();
     if (returnFocus && trigger?.isConnected) trigger.focus();
   }
 
   function show(from?: HTMLElement | null): void {
-    if (current.value && current.value.id !== id) current.value.hide(false);
+    if (options.nested && current.value && current.value.id !== id) parent = current.value;
+    else if (current.value && current.value.id !== id) current.value.hide(false);
     trigger = from ?? (typeof document !== "undefined" && document.activeElement instanceof HTMLElement ? document.activeElement : null);
     current.value = { id, kind, hide };
     open.value = true;

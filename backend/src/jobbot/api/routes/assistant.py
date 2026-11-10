@@ -69,6 +69,8 @@ class FocusIn(BaseModel):
     application_id: int | None = None
     day: date | None = None
     month: Annotated[str, Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")] | None = None
+    # Un document joint avec « + » (PR 19) : un CV ou un fichier déposé dans Documents.
+    document_id: int | None = None
 
 
 class QuestionIn(BaseModel):

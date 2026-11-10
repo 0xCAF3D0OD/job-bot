@@ -47,9 +47,9 @@ function stream(...events: [string, unknown][]) {
   };
 }
 
-async function mountPanel() {
+async function mountPanel(extra: Record<string, unknown> = {}) {
   GET.mockImplementation((path: string) =>
-    Promise.resolve({ data: path === "/api/assistant/status" ? { available: true, model: "x" } : [] }),
+    Promise.resolve({ data: path === "/api/assistant/status" ? { available: true, model: "x" } : (extra[path] ?? []) }),
   );
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   await router.push("/candidatures/offres");
@@ -60,6 +60,36 @@ async function mountPanel() {
   await flushPromises();
   return wrapper;
 }
+
+describe("AssistantPanel, « + » (PR 19)", () => {
+  it("« Joindre mon CV » met le CV sous la question ; il part avec elle (document_id), puis la zone se vide", async () => {
+    const fetch = vi.fn(() => Promise.resolve(stream(["done", { conversation_id: 3 }])));
+    vi.stubGlobal("fetch", fetch);
+    const wrapper = await mountPanel({
+      "/api/documents": [
+        { id: 4, filename: "Ancien.pdf", kind: "cv", uploaded_at: "2026-01-01T00:00:00Z" },
+        { id: 9, filename: "CV_fictif01.pdf", kind: "cv", uploaded_at: "2026-11-02T00:00:00Z" },
+        { id: 5, filename: "Certificat.pdf", kind: "certificate", uploaded_at: "2026-11-05T00:00:00Z" },
+      ],
+    });
+    // Le CV se lit avec les discussions récentes, à l'ouverture du panneau.
+    useAssistant().open.value = false;
+    await flushPromises();
+    useAssistant().open.value = true;
+    await flushPromises();
+    await wrapper.get("[data-test=composer-plus]").trigger("click");
+    await flushPromises();
+    expect(wrapper.get("[data-test=composer-item-cv]").text()).toContain("CV_fictif01.pdf");
+    await wrapper.get("[data-test=composer-item-cv]").trigger("click");
+    expect(wrapper.get(".composer-file").text()).toContain("CV_fictif01.pdf");
+    await wrapper.get("[data-test=composer-input]").setValue("Relis mon CV");
+    await wrapper.get("[data-test=composer-send]").trigger("click");
+    await flushPromises();
+    const body = JSON.parse((fetch.mock.calls[0] as unknown as [string, { body: string }])[1].body);
+    expect(body.focus).toEqual({ document_id: 9 });
+    expect(wrapper.find(".composer-file").exists()).toBe(false);
+  });
+});
 
 describe("AssistantPanel, propositions (docs/52)", () => {
   it("affiche la proposition, la fait sur « Confirmer », puis propose « Annuler »", async () => {
