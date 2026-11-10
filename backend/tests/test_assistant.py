@@ -14,6 +14,7 @@ from jobbot.db.models import (
     Application,
     ChatConversation,
     ChatMessage,
+    Document,
     Evaluation,
     LlmCall,
     Offer,
@@ -240,6 +241,40 @@ async def test_tools_read_data(runtime: Runtime) -> None:
         # Les Actualités ont quitté la plateforme (docs/135, 1.6.25) : plus d'outil.
         assert (await tools.run(session, 1, "actualites", {}))[1] is True
     assert set(tools.LABELS) == {t["name"] for t in tools.TOOLS}
+    await reset(runtime)
+
+
+async def test_attached_document(runtime: Runtime) -> None:
+    """« + » de l'Assistant (PR 19) : le document joint est nommé dans le contexte, et son texte
+    se lit sans e-mail ni téléphone (I-1)."""
+    await reset(runtime)
+    async with runtime.sessionmaker.begin() as session:
+        document = Document(
+            filename="CV_fictif01.pdf",
+            doc_type="pdf",
+            size=3,
+            sha256="d" * 64,
+            storage_key="accounts/a/documents/assistant.pdf",
+            text_status="ok",
+            extracted_text=(
+                "Vendeuse chez Coop\nfictif01@example.ch\n079 123 45 67\nCaisse et conseil"
+            ),
+        )
+        session.add(document)
+        await session.flush()
+        document_id = document.id
+    async with runtime.sessionmaker() as session:
+        context = await service.describe(
+            session, "/assistant", service.Focus(document_id=document_id)
+        )
+        assert context == f"/assistant ; document joint : id {document_id}, « CV_fictif01.pdf »"
+        read, error = await tools.run(session, 1, "document", {"id": document_id})
+        body = json.loads(read)
+        assert not error and "Caisse et conseil" in body["texte"]
+        assert "fictif01@example.ch" not in body["texte"] and "079 123 45 67" not in body["texte"]
+        assert (await tools.run(session, 1, "document", {"id": "x"}))[1] is True
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM documents WHERE sha256 = :h"), {"h": "d" * 64})
     await reset(runtime)
 
 

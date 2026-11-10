@@ -98,6 +98,7 @@ onMounted(async () => {
         <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
         <li>Le texte de ton CV, sans tes coordonnées ni ta date de naissance, pour proposer tes blocs de profil.</li>
         <li>Le contenu des alertes des sites que l’IA lit.</li>
+        <li>Un document que tu joins à une question de l’Assistant (« + »), sans tes coordonnées.</li>
         <li>
           <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la
           plateforme les ajoute elle-même aux lettres.
@@ -105,6 +106,10 @@ onMounted(async () => {
       </ul>
       <p>
         Les notifications sur ton téléphone passent par le service ntfy, seulement si tu les as activées.
+      </p>
+      <p data-test="privacy-dictation">
+        La dictée (le micro de l’Assistant) passe par ton navigateur : Chrome envoie ta voix à Google, Safari à Apple,
+        pour l’écrire en texte. Elle ne s’active qu’après ton accord, au premier appui ; jobA1 ne reçoit que le texte.
       </p>
       <p data-test="privacy-oauth">
         Si tu te connectes avec Apple, Google ou Microsoft, ce fournisseur sait que tu utilises jobA1 ; jobA1 garde

@@ -20,6 +20,7 @@ from jobbot.db.models import (
     AlertSearch,
     Application,
     ApplicationStatus,
+    Document,
     Evaluation,
     Interview,
     Offer,
@@ -33,6 +34,8 @@ from jobbot.filtering.service import load_criteria
 from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due, remind_on
 from jobbot.insights import service as insight_service
 from jobbot.interviews import service as interview_service
+from jobbot.letters.service import load_identity
+from jobbot.llm.redact import redact
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp.service import load_canton, load_due_day, load_target, month_counts
 from jobbot.rhythm import service as rhythm
@@ -41,6 +44,8 @@ from jobbot.sources.sites import followed
 
 _MONTH = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 DESCRIPTION_LIMIT = 4_000
+# Un document joint à la question (« + » de l'Assistant, PR 19) : son texte, sans coordonnées (I-1).
+DOCUMENT_LIMIT = 12_000
 CHUNK_LIMIT = 1_500
 
 
@@ -133,6 +138,17 @@ TOOLS: list[dict[str, Any]] = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "document",
+        "description": "Le texte d'un document déposé par la personne (CV, certificat, fichier "
+        "joint à la question avec « + »), sans ses coordonnées. À appeler quand la question "
+        "mentionne un document joint : son id est dans le contexte.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"id": {"type": "integer", "description": "id du document"}},
+            "required": ["id"],
+        },
+    },
+    {
         "name": "formations",
         "description": "Les formations suivies par le profil affiché (intéressé, en cours, "
         "terminée), avec la progression.",
@@ -152,6 +168,7 @@ LABELS = {
     "profil": "tes blocs de profil",
     "criteres": "tes critères",
     "formations": "tes formations",
+    "document": "le document joint",
 }
 
 
@@ -509,6 +526,19 @@ async def _criteria(session: AsyncSession, _profile_id: int, _params: dict[str, 
     }
 
 
+async def _document(session: AsyncSession, _profile_id: int, params: dict[str, Any]) -> Any:
+    document_id = params.get("id")
+    if not isinstance(document_id, int) or isinstance(document_id, bool):
+        raise ToolInputError("id : l'identifiant entier du document")
+    document = await session.get(Document, document_id)
+    if document is None:
+        return {"erreur": f"aucun document {document_id}"}
+    if document.text_status != "ok" or not document.extracted_text:
+        return {"id": document.id, "nom": document.filename, "erreur": "texte illisible"}
+    text = redact(document.extracted_text, await load_identity(session))
+    return {"id": document.id, "nom": document.filename, "texte": _cut(text, DOCUMENT_LIMIT)}
+
+
 async def _trainings(session: AsyncSession, profile_id: int, _params: dict[str, Any]) -> Any:
     rows = (
         await session.execute(
@@ -544,6 +574,7 @@ _TOOLS: dict[str, Tool] = {
     "profil": _profile,
     "criteres": _criteria,
     "formations": _trainings,
+    "document": _document,
 }
 
 

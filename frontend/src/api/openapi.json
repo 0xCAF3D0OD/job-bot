@@ -14682,6 +14682,17 @@
               }
             ],
             "title": "Month"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
           }
         },
         "type": "object",
