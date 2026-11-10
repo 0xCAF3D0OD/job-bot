@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { resetCvReading } from "../composables/useCvReading";
 import ProfileView from "./ProfileParcours.vue";
 
 const GET = vi.fn();
@@ -14,9 +15,13 @@ vi.mock("../api/client", () => ({
     PUT: (...a: unknown[]) => PUT(...a),
     DELETE: (...a: unknown[]) => DELETE(...a),
   },
+  QUIET: {},
 }));
 
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  resetCvReading();
+});
 
 const doc = {
   id: 4,
@@ -125,57 +130,60 @@ describe("ProfileView", () => {
   });
 });
 
-describe("propositions de blocs", () => {
-  it("propose, laisse décocher les doublons, ajoute la sélection", async () => {
-    mockApi();
+describe("« Proposer à partir du CV » : la même lecture que la carte Mon CV (PR 21)", () => {
+  it("lance la lecture sur le serveur, montre « Lecture en cours » puis l’état « lu »", async () => {
+    let documents: unknown[] = [doc];
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/documents"
+            ? documents
+            : path === "/api/certificates"
+              ? { certificates: [], summary: null }
+              : path === "/api/profile-chunks"
+                ? [chunk]
+                : path === "/api/documents/{document_id}/read"
+                  ? [
+                      { kind: "competence", title: "Kubernetes", content: "K3s", tags: ["k8s"], duplicate_of: 9 },
+                      { kind: "experience", title: "Projets 42", content: "Cloud-1, Webserv", tags: [], duplicate_of: null },
+                    ]
+                  : null,
+      }),
+    );
     POST.mockImplementation((path: string) =>
       Promise.resolve(
-        path === "/api/documents/{document_id}/propose-chunks"
-          ? {
-              data: [
-                { kind: "competence", title: "Kubernetes", content: "K3s", tags: ["k8s"], duplicate_of: 9 },
-                { kind: "experience", title: "Projets 42", content: "Cloud-1, Webserv", tags: [], duplicate_of: null },
-              ],
-              response: { status: 200 },
-            }
+        path === "/api/documents/{document_id}/read"
+          ? { data: { ...doc, read_state: "reading", read_at: null, found: null }, response: { status: 202 } }
           : { data: { id: 50 }, response: { status: 201 } },
       ),
     );
+    DELETE.mockResolvedValue({ response: { status: 204 } });
     const wrapper = mount(ProfileView);
     await flushPromises();
+    expect(wrapper.find(".doc-read-state").exists()).toBe(false);
+
     await wrapper.find("[data-test=propose-4]").trigger("click");
     await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/documents/{document_id}/read", { params: { path: { document_id: 4 } } });
+    expect(wrapper.find("[data-test=propose-4]").attributes("aria-disabled")).toBe("true");
+    expect(wrapper.find(".doc-read-state [data-test=cv-state-cours]").exists()).toBe(true);
 
-    const proposals = wrapper.findAll("[data-test=proposal]");
-    expect(proposals).toHaveLength(2);
-    expect(proposals[0]?.text()).toContain("ressemble à : Kubernetes");
-    expect((proposals[0]?.find("input[type=checkbox]").element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.find("[data-test=add-proposals]").text()).toContain("Ajouter 1 élément");
-
-    await proposals[1]?.find("input[type=text]").setValue("Projets 42 Lausanne");
-    await wrapper.find("[data-test=proposals]").trigger("submit");
+    // La lecture finit sur le serveur : la carte passe à « lu » au passage suivant.
+    documents = [{ ...doc, read_state: "done", read_at: "2026-11-10T10:00:00Z", found: { competence: 1, experience: 1 } }];
+    const { useCvReading } = await import("../composables/useCvReading");
+    await useCvReading().load();
     await flushPromises();
-    const created = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
-    expect(created).toHaveLength(1);
-    expect(created[0]?.[1]).toEqual({
-      body: expect.objectContaining({ title: "Projets 42 Lausanne", kind: "experience", document_id: 4 }),
-    });
-    expect(wrapper.find("[data-test=proposals]").exists()).toBe(false);
-    expect(wrapper.find("[role=status]").text()).toContain("1 élément ajouté");
+    expect(wrapper.find(".doc-read-state [data-test=cv-state-lu]").exists()).toBe(true);
   });
 
-  it("explique un refus de l’API", async () => {
+  it("explique un départ manqué", async () => {
     mockApi();
-    POST.mockResolvedValue({
-      data: undefined,
-      error: { detail: "plafond mensuel de l’IA atteint : le relever dans les Réglages" },
-      response: { status: 409 },
-    });
+    POST.mockResolvedValue({ data: undefined, error: { detail: "x" }, response: { status: 500 } });
     const wrapper = mount(ProfileView);
     await flushPromises();
     await wrapper.find("[data-test=propose-4]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[role=status]").text()).toContain("plafond mensuel");
+    expect(wrapper.find("[role=status]").text()).toContain("La lecture n’a pas pu partir");
   });
 });
 
