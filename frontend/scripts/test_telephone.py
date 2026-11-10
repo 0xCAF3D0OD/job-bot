@@ -188,6 +188,16 @@ def test_un_segment_coupe_par_des_points_de_suspension(page: Page) -> None:
     assert any("coupé par « … »" in f and "Coordonnées" in f for f in faults)
 
 
+def test_un_nom_de_fichier_coupe_par_des_points_de_suspension_passe(page: Page) -> None:
+    html = """
+    <button style="display: grid; width: 160px; height: 64px; padding: 0; font: 16px sans-serif">
+      <strong class="file-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Certificat Prototype Fintech SA.txt</strong>
+      <span>1 Ko</span>
+    </button>
+    """
+    assert not [f for f in audit(page, html) if "coupé" in f]
+
+
 def test_un_segment_sur_deux_lignes_est_un_defaut(page: Page) -> None:
     faults = audit(page, SEGMENTS % ("200px", "white-space: normal; overflow-wrap: anywhere; height: auto;"))
     assert any("lignes" in f and "Coordonnées" in f for f in faults)

@@ -32,6 +32,8 @@ const MAQUETTE = new Set([
   "./views/PreparationView.vue : Ta candidature",
   "./components/ProfileDesktop.vue : Mon CV",
   "./components/ProfileDesktop.vue : Mon parcours",
+  // Maquette ProfilTel (prompt du 10 novembre, PR 20) : le titre du Profil sur téléphone.
+  "./views/ProfileView.vue : Mon profil",
 ]);
 
 function template(source: string): string {
@@ -49,7 +51,9 @@ describe("titres (docs/88)", () => {
       if (entry.name === "settings") continue;
       // Aujourd'hui (maquette du 8 novembre, LISEZMOI : « H1 = action du jour ») : la date au-dessus, pas le nom de la page.
       if (entry.name === "today") continue;
-      // Profil sur ordinateur (maquette ProfilOrdinateur) : le nom en titre ; « Profil » reste le titre du téléphone.
+      // Profil (maquettes ProfilOrdinateur et ProfilTel, PR 20) : le nom en titre sur ordinateur, « Mon profil » sur
+      // téléphone.
+      if (entry.name === "profile") continue;
       const view = VIEWS[entry.name];
       expect(view, entry.name).toBeDefined();
       const html = template(sources[`./views/${view}.vue`]!);

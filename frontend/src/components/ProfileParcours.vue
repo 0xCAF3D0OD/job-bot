@@ -30,7 +30,7 @@ const KINDS: { value: ChunkKind; label: string; hint: string; tags: string }[] =
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations.", tags: "vente, accueil, stock…" },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau.", tags: "caisse, Excel, permis B…" },
   { value: "formation", label: "Formation", hint: "Diplôme, certification, cours.", tags: "CFC, brevet, premiers secours…" },
-  { value: "preference", label: "Préférence", hint: "Ce que tu recherches : équipe, rythme, télétravail…", tags: "temps partiel, horaires de jour…" },
+  { value: "preference", label: "Préférence", hint: "Ce que tu recherches : équipe, rythme, télétravail…", tags: "temps partiel, horaires de jour…" },
   { value: "redhibitoire", label: "Rédhibitoire", hint: "Ce que tu refuses.", tags: "travail de nuit…" },
   { value: "ton", label: "Ton", hint: "Comment tes lettres doivent sonner.", tags: "simple, chaleureux…" },
 ];
@@ -146,10 +146,10 @@ async function onFile(event: Event): Promise<void> {
     if (data) {
       await loadDocuments();
       await showText(data.id);
-      message.value = data.text_status === "ok" ? "" : "Document déposé, mais son texte n’est pas lisible (PDF scanné ?).";
+      message.value = data.text_status === "ok" ? "" : "Document déposé, mais son texte n’est pas lisible (PDF scanné ?).";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Refusé : ${detail}.` : `Refusé (HTTP ${response.status}).`;
+      message.value = typeof detail === "string" ? `Refusé : ${detail}.` : `Refusé (HTTP ${response.status}).`;
     }
   } catch {
     message.value = "API injoignable.";
@@ -179,7 +179,7 @@ async function propose(doc: DocumentOut): Promise<void> {
       else message.value = "L’IA n’a rien trouvé à proposer dans ce document.";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : `Échec (HTTP ${response.status}).`;
+      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : `Échec (HTTP ${response.status}).`;
     }
   } catch {
     message.value = "API injoignable.";
@@ -252,7 +252,7 @@ async function saveChunk(): Promise<void> {
     editing.value = null;
     await Promise.all([loadChunks(), loadDocuments()]);
   } else {
-    message.value = "Refusé : le titre et le contenu sont obligatoires.";
+    message.value = "Refusé : le titre et le contenu sont obligatoires.";
   }
 }
 
@@ -297,8 +297,8 @@ const missingProfile = computed(() => {
     const proposable = showDocuments.value && firstReadable.value !== null;
     const yourself = showBlocks.value ? `« Ajouter ${noun.value.a} »` : "« Ajouter une expérience », dans Expériences";
     return proposable
-      ? `Il manque tes expériences : « Proposer à partir du CV », à côté de ton CV, les prépare. Tu peux aussi les écrire toi-même avec ${yourself}.`
-      : `Il manque tes expériences : sans elles, les offres ne sont pas notées et les lettres ne peuvent pas être écrites. Ajoute ton dernier poste avec ${yourself}.`;
+      ? `Il manque tes expériences : « Proposer à partir du CV », à côté de ton CV, les prépare. Tu peux aussi les écrire toi-même avec ${yourself}.`
+      : `Il manque tes expériences : sans elles, les offres ne sont pas notées et les lettres ne peuvent pas être écrites. Ajoute ton dernier poste avec ${yourself}.`;
   }
   return "";
 });
@@ -378,7 +378,10 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             :data-test="`open-document-${doc.id}`"
             @click="showText(doc.id)"
           >
-            <strong>{{ doc.filename }}</strong>
+            <strong
+              class="file-name"
+              :title="doc.filename"
+            >{{ doc.filename }}</strong>
             <span class="hint">
               {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "élément repris", "éléments repris") }}<template v-if="doc.text_status !== 'ok'">
                 · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
@@ -410,7 +413,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         >
         <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
         <span class="detail">
-          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l’IA en tire tes premières expériences et compétences." }}
+          PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l’IA en tire tes premières expériences et compétences." }}
         </span>
       </label>
 
@@ -513,7 +516,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         v-if="!visibleChunks.length"
         class="muted empty"
       >
-        {{ noun.none }} pour l’instant : « Ajouter {{ noun.a }} », ou sélectionne un passage dans un document.
+        {{ noun.none }} pour l’instant : « Ajouter {{ noun.a }} », ou sélectionne un passage dans un document.
       </p>
     </template>
   </div>

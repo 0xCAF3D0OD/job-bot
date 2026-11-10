@@ -249,6 +249,8 @@ async def _store(
             "why": output.why,
             "level": output.level,
             "level_detail": output.level_detail,
+            "score_parts": [p.model_dump() for p in output.parts],
+            "score_tip": output.tip.model_dump() if output.tip else None,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre

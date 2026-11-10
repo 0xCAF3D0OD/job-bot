@@ -116,7 +116,13 @@ describe("Plateforme (docs/65 §5)", () => {
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     const camille = wrapper.find("[data-test=account-camille]");
-    expect(camille.text()).toContain("IA 0,40 CHF sur 5,00");
+    // La dépense seule ; le plafond dans son champ « Plafond IA par mois », « CHF » dedans (PR 20, point 6).
+    expect(camille.text()).toContain("IA 0,40 CHF utilisés ce mois");
+    expect(camille.text()).not.toContain("sur 5,00");
+    expect(camille.find(".field-suffix").text()).toBe("CHF");
+    expect(camille.text()).toContain("Plafond IA par mois");
+    // Le « … » sur la ligne du nom.
+    expect(camille.find(".setting-row-head [data-test=account-more-camille]").exists()).toBe(true);
     expect(camille.text()).toContain("12 offres reçues");
     expect(camille.text()).toContain("jamais connecté");
     expect(wrapper.find("[data-test=account-kevin] .setting-row-title").text()).toBe("kevin (toi)");
@@ -256,7 +262,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find(".form-card, fieldset, legend").exists()).toBe(false);
     expect(wrapper.find("button[type=submit]").exists()).toBe(false);
     const titles = wrapper.findAll("[data-test=setting-row] .setting-row-title").map((t) => t.text());
-    expect(titles).toEqual(expect.arrayContaining(["Comptes", "Demandes de compte", "Inviter quelqu’un", "Plafond total de l’IA, tous comptes"]));
+    expect(titles).toEqual(expect.arrayContaining(["Comptes", "Demandes de compte", "Inviter quelqu’un", "Plafond total de l’IA par mois, tous comptes"]));
     const invite = wrapper.findAll("[data-test=setting-row]").find((row) => row.text().startsWith("Inviter quelqu’un"));
     expect(invite?.find(".setting-row-control [data-test=invite]").exists()).toBe(true);
     // Chaque contrôle est nommé par sa ligne.
@@ -329,7 +335,7 @@ describe("Plateforme, demandes de compte (docs/102)", () => {
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/platform/settings", { body: { signup_open: false } });
     expect((wrapper.find("[data-test=signup-open]").element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.text()).toContain("Fermées : seules tes invitations ouvrent un compte.");
+    expect(wrapper.text()).toContain("Fermées\u202f: seules tes invitations ouvrent un compte.");
     expect(wrapper.find("[data-test=platform-invite] [data-test=setting-saved]").text()).toContain("Enregistré");
   });
 });

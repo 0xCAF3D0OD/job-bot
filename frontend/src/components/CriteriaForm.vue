@@ -13,11 +13,7 @@ import { plural } from "../format";
 
 import AppIcon from "./AppIcon.vue";
 import FilterOutcome from "./FilterOutcome.vue";
-import GroupedList from "./GroupedList.vue";
-import GroupedRow from "./GroupedRow.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
-import type { IconName } from "../icons";
-import { useNarrow } from "../composables/usePhone";
 // Le titre du résumé : « Critères » ; « Ce que je cherche » dans le Profil ordinateur (maquette ProfilOrdinateur).
 withDefaults(defineProps<{ heading?: string }>(), { heading: "Critères" });
 const CONTRACTS: { value: ContractType; label: string }[] = [
@@ -30,14 +26,14 @@ const CONTRACTS: { value: ContractType; label: string }[] = [
 // Télétravail complet (docs/26 §3) : trois positions, la phrase reste courte.
 // `pill` : l'aperçu court dans la ligne du résumé sur téléphone.
 const REMOTE_POLICIES: { value: RemotePolicy; label: string; summary: string; pill: string }[] = [
-  { value: "refuse", label: "Refusé", summary: "Télétravail complet : refusé hors de tes lieux", pill: "Refusé" },
+  { value: "refuse", label: "Refusé", summary: "Télétravail complet : refusé hors de tes lieux", pill: "Refusé" },
   {
     value: "from_switzerland",
     label: "Si ouvert depuis la Suisse",
-    summary: "Télétravail complet : accepté s’il est ouvert depuis la Suisse",
+    summary: "Télétravail complet : accepté s’il est ouvert depuis la Suisse",
     pill: "Depuis la Suisse",
   },
-  { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout", pill: "Partout" },
+  { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout", pill: "Partout" },
 ];
 
 // Tous les champs sont présents dans le formulaire, même ceux que l'API rend facultatifs.
@@ -77,7 +73,7 @@ const editing = ref(false);
 const contractsHelp = computed(() => {
   if (!keywords.value) return "";
   const k = keywords.value;
-  return `${CONTRACTS.map((c) => `${c.label} : ${(k.contract_types[c.value] ?? []).slice(0, 3).join(", ")}…`).join(" ; ")}.`;
+  return `${CONTRACTS.map((c) => `${c.label} : ${(k.contract_types[c.value] ?? []).slice(0, 3).join(", ")}…`).join(" ; ")}.`;
 });
 const languagesHelp = computed(() => {
   const words = keywords.value?.requirement_words.slice(0, 8).join(", ") ?? "";
@@ -95,7 +91,7 @@ const summary = computed(() => {
     { key: "lieux", label: "Lieux", value: places.length ? places.join(", ") : "partout", items: places.length ? places : ["Partout"] },
   ];
   const policy = REMOTE_POLICIES.find((p) => p.value === f.remote_policy);
-  const [remoteLabel, remoteValue] = (policy?.summary ?? "").split(" : ");
+  const [remoteLabel, remoteValue] = (policy?.summary ?? "").split(/\s:\s/);
   if (policy && remoteLabel && remoteValue) rows.push({ key: "teletravail", label: remoteLabel, value: remoteValue, items: [policy.pill] });
   const rate = f.min_rate ? `${f.min_rate} % au moins` : "tous";
   rows.push({ key: "taux", label: "Taux d’activité", value: rate, items: [f.min_rate ? `${f.min_rate} % et +` : "Tous"] });
@@ -105,15 +101,13 @@ const summary = computed(() => {
   if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", short: "Mots interdits", value: f.banned_words.join(", "), items: f.banned_words });
   const langs = Object.entries(f.language_levels)
     .filter(([, level]) => level !== "unknown")
-    .map(([name, level]) => `${languageLabel(name)} : ${levelLabel(level as Level).toLowerCase()}`);
+    .map(([name, level]) => `${languageLabel(name)} : ${levelLabel(level as Level).toLowerCase()}`);
   rows.push({ key: "langues", label: "Langues", value: langs.length ? langs.join(", ") : "non renseignées", items: langs.length ? langs : ["Non renseignées"] });
   return rows;
 });
 
-// Sous 600 px (planche « Structure téléphone ») : le résumé en liste groupée, une ligne par critère, d'une seule
-// hauteur, la valeur en pastilles (D14, 2026-11-05) ; toucher une ligne ouvre le formulaire sur ce critère.
-const { phone: narrow } = useNarrow();
-const ICONS: Record<string, IconName> = { lieux: "pin", teletravail: "plug", taux: "stats", types: "briefcase", mots: "filter", langues: "globe" };
+// Partout, une ligne par critère au format de ProfilOrdinateur (prompt du 10 novembre, PR 20, point 5 : libellé gris,
+// valeur en gras, cercle à flèche gris) ; toucher une ligne ouvre le formulaire sur ce critère.
 function sentence(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -174,7 +168,7 @@ async function save(): Promise<void> {
       ? `Critères enregistrés. ${plural(back, "offre revient", "offres reviennent")} dans À examiner.`
       : "Critères enregistrés. Aucune offre écartée ne revient.";
   } catch {
-    message.value = "L’enregistrement a échoué : vérifie les valeurs saisies.";
+    message.value = "L’enregistrement a échoué : vérifie les valeurs saisies.";
   } finally {
     saving.value = false;
   }
@@ -190,7 +184,7 @@ onMounted(() => void load());
       class="notice"
       data-test="criteria-missing"
     >
-      Aucun lieu indiqué : les offres de toute la Suisse passent le filtre.
+      Aucun lieu indiqué : les offres de toute la Suisse passent le filtre.
     </p>
     <LoadingBlocks
       v-if="!loaded"
@@ -202,46 +196,6 @@ onMounted(() => void load());
     >
       Impossible de charger les prérequis.
     </p>
-    <div
-      v-else-if="!editing && narrow"
-      class="criteria-layout"
-    >
-      <GroupedList
-        title="Poste recherché"
-        data-test="criteria-summary"
-      >
-        <GroupedRow
-          v-for="row in summary"
-          :key="row.key"
-          :title="row.short ?? row.label"
-          :icon="ICONS[row.key]"
-          button
-          :data-test="`criteria-row-${row.key}`"
-          @click="editAt(row.key)"
-        >
-          <template #end>
-            <span
-              class="grouped-value"
-              aria-hidden="true"
-            >{{ row.items[0] }}</span>
-            <span
-              v-if="row.items.length > 1"
-              class="grouped-value"
-              aria-hidden="true"
-            >+{{ row.items.length - 1 }}</span>
-            <span class="visually-hidden">: {{ row.value }}</span>
-          </template>
-        </GroupedRow>
-      </GroupedList>
-      <p
-        v-if="message"
-        role="status"
-        class="muted"
-      >
-        {{ message }}
-      </p>
-      <FilterOutcome grouped />
-    </div>
     <div
       v-else-if="!editing"
       class="criteria-layout"
@@ -299,7 +253,7 @@ onMounted(() => void load());
       <fieldset id="criteria-lieux">
         <legend>Lieux acceptés</legend>
         <p class="setting-desc">
-          Communes (Lausanne) ou cantons (VD). Vide : partout.
+          Communes (Lausanne) ou cantons (VD). Vide : partout.
         </p>
         <TagInput
           id="locations"
@@ -340,7 +294,7 @@ onMounted(() => void load());
           id="min_rate-desc"
           class="setting-desc"
         >
-          « 60-80 % » passe avec un minimum de 80 ; sans taux, l’offre passe.
+          « 60-80 % » passe avec un minimum de 80 ; sans taux, l’offre passe.
         </p>
         <div class="inline-field">
           <input
@@ -480,12 +434,15 @@ onMounted(() => void load());
 /* Profil › Critères sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.2 ; HTML de ProfilOrdinateur) : carte
    blanche aux coins de 18, lignes de 68 (12/20), libellé de 14 en --text-secondary au-dessus de la valeur de 16 en
    700, 2 px entre eux, cercle D29 de 36 à droite (version finale), trait entre les lignes. */
-.criteria-rows { --crit-68: 68px; --crit-14: 14px; --crit-20: 20px; --crit-22: 22px; --crit-2: 2px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+/* Téléphone et panneau étroit (prompt du 10 novembre, PR 20, points 3 et 5 ; groupe de ProfilTel) : le même format de
+   ligne que l'ordinateur, dans une seule carte (trait intérieur de 1,5 px --card-line, rayon 12) ; lignes de 72 px,
+   séparées par un filet de 1 px (--row-sep, #E5E2D9 comme Compte), 20 px de marge, 16 px avant le cercle. */
+.criteria-rows { --crit-72: 72px; --crit-12: 12px; --crit-20: 20px; --crit-22: 22px; margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 0; box-shadow: inset 0 0 0 1.5px var(--card-line); border-radius: var(--crit-12); }
 .narrow-block:has(.criteria-rows) { max-width: none; }
-.criteria-rows > li + li { border-top: 1px solid var(--surface-muted); }
-.criteria-row { display: flex; align-items: center; gap: var(--crit-14); box-sizing: border-box; width: 100%; min-height: var(--crit-68); padding: var(--space-3) var(--crit-20); border: 0; border-radius: 0; background: transparent; color: var(--text); font-weight: var(--weight-regular); text-align: left; white-space: normal; }
+.criteria-rows > li + li { border-top: 1px solid var(--row-sep); }
+.criteria-row { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: var(--crit-72); padding: var(--space-3) var(--crit-20); border: 0; border-radius: 0; background: transparent; color: var(--text); font-weight: var(--weight-regular); text-align: left; white-space: normal; }
 .criteria-row:hover { background: var(--band); }
-.criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--crit-2); }
+.criteria-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .criteria-row-label { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .criteria-row-value { font-size: var(--font-body); line-height: var(--crit-22); font-weight: var(--weight-bold); }
 /* Ordinateur (MODIFICATIONS du 9 novembre, §2.9 ; HTML de ProfilOrdinateur) : une carte par préférence, 8 px entre les
@@ -494,7 +451,7 @@ onMounted(() => void load());
 @media (min-width: 821px) {
   .criteria-rows .criteria-row { gap: var(--space-4); }
   .criteria-rows .criteria-row-text { gap: var(--space-1); }
-  .criteria-rows { --crit-pad-y: 14.5px; --crit-pad-x: 18.5px; --crit-72: 72px; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; background: none; border: 0; border-radius: 0; }
+  .criteria-rows { --crit-pad-y: 14.5px; --crit-pad-x: 18.5px; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; background: none; border: 0; box-shadow: none; border-radius: 0; }
   .criteria-rows > li + li { border-top: 0; }
   .page-blocks-wide .criteria-rows .criteria-row, .criteria-rows .criteria-row { min-height: var(--crit-72); padding: var(--crit-pad-y) var(--crit-pad-x); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .criteria-rows .criteria-row:hover { border-color: var(--primary-graphic); background: var(--surface); }

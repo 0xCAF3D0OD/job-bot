@@ -46,3 +46,56 @@ describe("OfferCompatSheet (§10.1, maquette OffreCompatibilite)", () => {
     wrapper.unmount();
   });
 });
+
+describe("OfferCompatSheet, comment la note est calculée (prompt du 10 novembre, PR 18)", () => {
+  const parts = [
+    { key: "skills", points: 37, max: 40, text: "Kubernetes est dans ton profil. Ansible n’y figure pas." },
+    { key: "experience", points: 15, max: 20, text: "3 ans demandés, 2 dans ton profil.", check: true },
+    { key: "location", points: 15, max: 15, text: "Lausanne." },
+    { key: "languages", points: 15, max: 15, text: "Français demandé : indiqué." },
+    { key: "terms", points: 10, max: 10, text: "80 à 100 %, CDI." },
+  ] as const;
+
+  it("les cinq parts avec leurs points, la barre décrite, la couleur selon l’état", async () => {
+    const wrapper = mount(OfferCompatSheet, {
+      attachTo: document.body,
+      props: {
+        ...base,
+        score: 92,
+        strengths: [],
+        gaps: [],
+        parts: [...parts],
+        tip: { text: "Tu as déjà utilisé Ansible ?", action: "skills" },
+        scoredAt: new Date().toISOString(),
+      },
+    });
+    const how = wrapper.find("[data-test=compat-how]");
+    expect(how.find("[data-icon]").attributes("data-icon")).toBe("chevron-down");
+    await how.trigger("click");
+    expect(how.find("[data-icon]").attributes("data-icon")).toBe("chevron-up");
+    const rows = wrapper.findAll("[data-test=compat-parts] li");
+    expect(rows.map((r) => r.find(".compat-part-head").text())).toEqual([
+      "Compétences demandées37 / 40",
+      "Expérience15 / 20",
+      "Lieu et trajet15 / 15",
+      "Langues15 / 15",
+      "Taux et contrat10 / 10",
+    ]);
+    expect(rows[0]!.find("[role=img]").attributes("aria-label")).toBe("37 points sur 40");
+    expect(rows.map((r) => r.classes().find((c) => c.startsWith("is-")))).toEqual(["is-partial", "is-check", "is-full", "is-full", "is-full"]);
+    expect(wrapper.find("[data-test=compat-calc-foot]").text()).toContain("sur l’annonce complète");
+    expect(wrapper.find("[data-test=compat-calc-foot]").text()).toContain("jobA1 ne lit pas d’informations personnelles");
+    await wrapper.find("[data-test=compat-tip-action]").trigger("click");
+    expect(wrapper.find("[data-test=compat-tip-action]").text()).toBe("Ajouter une compétence");
+    expect(wrapper.emitted("tip")).toEqual([["skills"]]);
+    wrapper.unmount();
+  });
+
+  it("une note plus ancienne, sans parts : l’explication d’avant, aucun point inventé", async () => {
+    const wrapper = mount(OfferCompatSheet, { attachTo: document.body, props: { ...base, strengths: [], gaps: [] } });
+    await wrapper.find("[data-test=compat-how]").trigger("click");
+    expect(wrapper.find("[data-test=compat-parts]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=compat-calc-old]").exists()).toBe(true);
+    wrapper.unmount();
+  });
+});

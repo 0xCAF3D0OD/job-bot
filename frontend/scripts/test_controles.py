@@ -51,6 +51,11 @@ def test_une_rangee_de_hauteurs_inegales_echoue(page: Page) -> None:
     assert "hauteurs inégales" in faults[0] and "Préparer » 44 px" in faults[0] and "Modifier » 40 px" in faults[0]
 
 
+def test_la_photo_du_profil_ne_compte_pas_dans_la_rangee(page: Page) -> None:
+    html = '<div class="row"><button class="profile-head-image" style="height: 64px">CE</button><button style="height: 44px">Modifier</button></div>'
+    assert audit(page, html) == []
+
+
 def test_un_pixel_d_ecart_passe(page: Page) -> None:
     html = '<div class="row"><button style="height: 44px">Préparer</button><select style="height: 43px; width: 200px"><option>Tous</option></select></div>'
     assert audit(page, html) == []

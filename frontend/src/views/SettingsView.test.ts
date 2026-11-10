@@ -158,14 +158,15 @@ describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
 });
 
 describe("SettingsView, une rubrique par page (étape 10b, C10)", () => {
-  it("une seule rubrique affichée, son nom en titre, « Retour au compte »", async () => {
+  it("une seule rubrique affichée, son nom en titre, « Retour aux réglages » sur ordinateur", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
     // Sans rubrique valable, la première : Objectif ORP et sites.
     expect(wrapper.find("h1").text()).toBe("Objectif ORP et sites");
     const back = wrapper.find("[data-test=settings-back]");
-    expect(back.text()).toContain("Retour au compte");
-    expect(back.attributes("href")).toBe("/compte");
+    // Plus de page Compte sur ordinateur (prompt du 10 novembre, PR 20) : le retour mène aux Réglages.
+    expect(back.text()).toContain("Retour aux réglages");
+    expect(back.attributes("href")).toBe("/reglages");
     expect(wrapper.find("[data-test=settings-list]").exists()).toBe(false);
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
@@ -323,7 +324,9 @@ describe("Des Réglages épurés (docs/106)", () => {
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 85 } } as never);
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.findAll("[data-test=settings-card]")).toHaveLength(1);
+    expect(wrapper.findAll("[data-test=section-notifications] [data-test=settings-card]")).toHaveLength(1);
+    // Sur ordinateur, ce qui était sur la page Compte suit les notifications (PR 20).
+    expect(wrapper.find("[data-test=section-plus] [data-test=account-orp]").exists()).toBe(true);
     const choices = wrapper.findAll("[data-test=notify-switches] [role=radio]").map((b) => b.text());
     expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
     expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");

@@ -13,9 +13,9 @@
   --surface-muted: #ECE9E1;
   --line: #E5E2D9;
   --line-soft: #EFECE5;
-  /* Le trait entre deux lignes d’une carte de groupe (Compte ; 9 novembre) : #EFECE5 en clair, #38322B en sombre ;
-     « Se déconnecter » en #B4371F, #FF9B85 en sombre. */
-  --row-sep: #EFECE5;
+  /* Le trait entre deux lignes d’une carte de groupe (Compte ; 9 novembre) : #E5E2D9 en clair depuis le prompt du
+     10 novembre (PR 20, point 3 ; #EFECE5 avant), #38322B en sombre ; « Se déconnecter » en #B4371F, #FF9B85 en sombre. */
+  --row-sep: #E5E2D9;
   /* Ligne profil du Compte (CompteImage, demande de Kevin du 9 novembre) : contour de la pastille crayon, initiales. */
   --avatar-badge-line: #E5E2D9;
   --avatar-initials: #2445C2;
@@ -2162,15 +2162,11 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté. */
 .criteria-layout { display: grid; gap: var(--space-4); }
-.filter-outcome { display: grid; gap: var(--space-2); align-content: start; }
-.filter-outcome h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); }
-.filter-outcome h3 { margin: var(--space-2) 0 0; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
-.filter-outcome p { margin: 0; }
-.filter-outcome-figures { font-size: var(--font-body); }
-.filter-outcome-figures strong { font-size: var(--font-title); }
-.filter-outcome ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.filter-outcome li { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 2.5rem; align-items: center; gap: var(--space-3); font-size: var(--font-small); }
-.filter-outcome li strong { text-align: right; font-variant-numeric: tabular-nums; }
+/* Effet des critères (prompt du 10 novembre, PR 20) : les lignes de « Ce que je cherche », sans cercle ni survol. */
+.filter-outcome-section { display: grid; gap: var(--space-2); align-content: start; }
+.filter-outcome-section .section-title { margin: 0; }
+.filter-outcome-head { margin: var(--space-2) 0 0; font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.filter-outcome-rows .criteria-row:hover { background: transparent; }
 @media (min-width: 821px) {
   .criteria-layout { grid-template-columns: minmax(0, 44rem) minmax(16rem, 22rem); align-items: start; }
 }
@@ -2921,6 +2917,17 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .setting-row.inline .setting-row-text { flex-basis: 0; min-width: 8rem; }
 .setting-row-text { display: grid; gap: var(--space-1); flex: 1 1 16rem; min-width: 0; }
 .setting-row-title { font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+/* Le titre et une action à droite sur la même ligne (Administration, prompt du 10 novembre, PR 20, point 6) : le
+   « … » fait 48 px. */
+.setting-row-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--field-h); }
+.setting-row-head .setting-row-title { min-width: 0; overflow-wrap: anywhere; }
+.setting-row-head .more-trigger { width: var(--field-h); height: var(--field-h); min-height: var(--field-h); padding: 0; justify-content: center; }
+/* Un champ avec son unité dedans (« CHF ») : l'unité à droite, dans le cadre du champ. */
+.field-suffix { position: relative; display: inline-flex; align-items: center; }
+.field-suffix > input { padding-right: calc(var(--field-pad-x) + var(--space-10)); }
+.field-suffix > span { position: absolute; right: var(--field-pad-x); color: var(--text-secondary); font-weight: var(--weight-semibold); pointer-events: none; }
+.setting-row-control .field-suffix .setting-number { width: 8rem; }
+.platform-cap { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
 .setting-row-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); text-decoration: none; overflow-wrap: anywhere; }
 .setting-row-control { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 .setting-row-status, .saved-status { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ok-text); font-size: var(--font-small); }
@@ -3054,7 +3061,22 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .profile-page .chunk-card { position: relative; background: var(--band); border-color: transparent; }
 .profile-page .chunk-card:hover { border-color: var(--accent); }
 .profile-page .chunk-card .chunk-foot { border-top-color: var(--divider); }
-.profile-page .doc-list.calm-list { background: var(--band); border-color: transparent; border-radius: var(--radius); }
+/* Prompt du 10 novembre (PR 20, point 3) : la liste des documents en carte blanche, lignes séparées par un filet de
+   1 px (--row-sep, comme Compte), plus de fond gris. */
+.profile-page .doc-list.calm-list { background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius); }
+.profile-page .doc-list.calm-list li + li { border-top-color: var(--row-sep); }
+/* Téléphone (point 4) : le nom du fichier sur une ligne, tronqué ; le bouton sous le nom, plus de chevauchement. Les
+   types de blocs sur une seule ligne qui défile. */
+@media (max-width: 599px) {
+  .profile-page .doc-list.calm-list li { flex-direction: column; align-items: flex-start; gap: 0; padding: 0 var(--space-4) var(--space-3); }
+  .profile-page .doc-list .calm-row { align-self: stretch; justify-items: stretch; padding: var(--space-3) 0 var(--space-2); }
+  .profile-page .doc-list .calm-row strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kind-tabs { flex-wrap: nowrap; overflow-x: auto; }
+  .kind-tabs > * { flex: none; }
+  /* Les liens des certificats et l'aide « i » : 44 px de cible, sans marge négative (audit-grille). */
+  .profile-page :is(a.link, button.link) { display: inline-flex; align-items: center; min-height: var(--target-min); }
+  .profile-page .hover-note-info { margin: 0; }
+}
 /* Les titres et les réglages, comme dans les Réglages. */
 .profile-page .form-card legend { font-weight: var(--weight-semibold); font-size: var(--font-body); }
 .profile-page .form-card legend + .setting-desc { margin-top: calc(var(--space-2) * -1); }

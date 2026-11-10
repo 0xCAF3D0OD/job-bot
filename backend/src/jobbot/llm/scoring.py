@@ -14,13 +14,25 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v6"
+PROMPT_VERSION = "score-v7"
 # score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
 # score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
 # valable, elle n'est pas refaite (« Renoter » la refait, sur demande). score-v6 : la phrase
 # « pourquoi » en deux morceaux (ce qui colle, la cause de l'écart), mis dans l'ordre par la note.
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5", "score-v6")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v6.md").read_text("utf-8")
+# score-v7 (prompt du 10 novembre, PR 18) : la note devient la somme de cinq parts, chacune avec sa
+# phrase (« Comment la note est calculée ») ; une note plus ancienne garde son chiffre, sans détail.
+COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5", "score-v6", "score-v7")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v7.md").read_text("utf-8")
+# Les cinq parts de la note et leur maximum (total 100), dans l'ordre d'affichage.
+PART_MAX: dict[str, int] = {
+    "skills": 40,
+    "experience": 20,
+    "location": 15,
+    "languages": 15,
+    "terms": 10,
+}
+PART_TEXT = 200
+TIP_ACTIONS = ["skills", "experience", "languages", "criteria"]
 KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
@@ -40,6 +52,18 @@ class AskKeyword(BaseModel):
 class ScamSignal(BaseModel):
     reason: str = Field(max_length=200)
     excerpt: str = Field(default="", max_length=400)
+
+
+class ScorePart(BaseModel):
+    key: Literal["skills", "experience", "location", "languages", "terms"]
+    points: int
+    text: str = ""
+    check: bool = False
+
+
+class ScoreTip(BaseModel):
+    text: str
+    action: Literal["skills", "experience", "languages", "criteria"] | None = None
 
 
 class ScoreOutput(BaseModel):
@@ -67,6 +91,9 @@ class ScoreOutput(BaseModel):
     why_gap: str | None = Field(default=None, max_length=120)
     level: Literal["above", "below"] | None = None
     level_detail: str | None = Field(default=None, max_length=200)
+    # score-v7 : les cinq parts de la note et l'action qui la ferait monter.
+    parts: list[ScorePart] = Field(default_factory=list, max_length=10)
+    tip: ScoreTip | None = None
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -120,6 +147,42 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "why_gap": {"anyOf": [{"type": "string"}, {"type": "null"}]},
         "level": {"anyOf": [{"type": "string", "enum": ["above", "below"]}, {"type": "null"}]},
         "level_detail": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "parts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string", "enum": list(PART_MAX)},
+                    "points": {"type": "integer"},
+                    "text": {"type": "string"},
+                    "check": {"type": "boolean"},
+                },
+                "required": ["key", "points", "text", "check"],
+                "additionalProperties": False,
+            },
+        },
+        "tip": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "text": {"type": "string"},
+                        "action": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "enum": ["skills", "experience", "languages", "criteria"],
+                                },
+                                {"type": "null"},
+                            ]
+                        },
+                    },
+                    "required": ["text", "action"],
+                    "additionalProperties": False,
+                },
+                {"type": "null"},
+            ]
+        },
     },
     "required": [
         "summary_role",
@@ -140,6 +203,8 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "why_gap",
         "level",
         "level_detail",
+        "parts",
+        "tip",
     ],
     "additionalProperties": False,
 }
@@ -299,14 +364,45 @@ def why_sentence(score: int | None, fit: str | None, gap: str | None) -> str | N
     return alone if len(alone) <= WHY_MAX else alone[: WHY_MAX - 1].rsplit(" ", 1)[0] + "."
 
 
+def _clean(text: str, limit: int) -> str:
+    clean = " ".join(text.split())
+    return clean if len(clean) <= limit else clean[: limit - 1].rsplit(" ", 1)[0] + "…"
+
+
+def score_parts(output: ScoreOutput) -> tuple[list[ScorePart], int | None]:
+    """Les cinq parts, une par critère, dans l'ordre de PART_MAX, bornées à leur maximum ; la note
+    devient leur somme (PR 18 : les points affichés sont ceux qui font la note). Une réponse sans
+    les cinq parts garde sa note, sans détail : rien n'est inventé pour combler."""
+    found: dict[str, ScorePart] = {}
+    for part in output.parts:
+        found.setdefault(part.key, part)
+    if output.score is None or set(found) != set(PART_MAX):
+        return [], output.score
+    parts = [
+        ScorePart(
+            key=key,
+            points=min(max(found[key].points, 0), top),
+            text=_clean(found[key].text, PART_TEXT),
+            check=found[key].check,
+        )
+        for key, top in PART_MAX.items()
+    ]
+    return parts, sum(p.points for p in parts)
+
+
 def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
     try:
         output = ScoreOutput.model_validate(json.loads(text))
     except (json.JSONDecodeError, ValidationError) as exc:
         raise InvalidScore(f"réponse non conforme : {type(exc).__name__}") from exc
+    parts, total = score_parts(output)
+    tip = output.tip if parts and output.tip and output.tip.text.strip() else None
     output = output.model_copy(
         update={
+            "parts": parts,
+            "score": total,
+            "tip": tip.model_copy(update={"text": _clean(tip.text, PART_TEXT)}) if tip else None,
             **remote_fields(output),
             "scam_signals": [
                 ScamSignal(
@@ -320,7 +416,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),
             # Une phrase, nettoyée ; le détail du niveau seulement avec un niveau.
-            "why": why_sentence(output.score, output.why_fit, output.why_gap)
+            "why": why_sentence(total, output.why_fit, output.why_gap)
             if output.why_fit or output.why_gap
             else (" ".join(output.why.split())[:140] or None if output.why else None),
             "level_detail": (" ".join(output.level_detail.split())[:100] or None)
@@ -340,6 +436,8 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
                 "why": None,
                 "level": None,
                 "level_detail": None,
+                "parts": [],
+                "tip": None,
             }
         )
 

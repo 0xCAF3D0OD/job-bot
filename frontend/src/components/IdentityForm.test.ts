@@ -116,7 +116,7 @@ describe("IdentityForm, ce qui manque (docs/21 §6)", () => {
     GET.mockResolvedValue({ data: { name: "Camille Exemple", street: null, postcode: null, city: "Lausanne", phone: null, email: null } });
     const wrapper = mount(IdentityForm);
     await flushPromises();
-    expect(wrapper.find("[data-test=identity-missing]").text()).toBe("Il manque : ta rue, ton NPA.");
+    expect(wrapper.find("[data-test=identity-missing]").text()).toBe("Il manque\u202f: ta rue, ton NPA.");
   });
 });
 

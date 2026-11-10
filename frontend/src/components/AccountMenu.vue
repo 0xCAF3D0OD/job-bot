@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import { dateInList } from "../dates";
 import { plural } from "../format";
+import { accountMenuRequest } from "../composables/useAccountMenu";
 import { useAuth } from "../composables/useAuth";
 import { useDismissLayer } from "../composables/useDismissLayer";
 import { useProfileImage } from "../composables/useProfileImage";
@@ -83,6 +84,18 @@ onMounted(() => {
   void load();
   void image.load();
 });
+
+// Un lien vers /compte sur ordinateur (router.ts, PR 20) : le panneau s'ouvre, comme au clic sur l'avatar.
+watch(
+  accountMenuRequest,
+  async (wanted) => {
+    if (!wanted) return;
+    await nextTick();
+    accountMenuRequest.value = false;
+    if (!layer.open.value) toggle();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

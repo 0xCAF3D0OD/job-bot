@@ -45,11 +45,11 @@ async function propose(): Promise<void> {
     });
     if (!data) {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      message.value = typeof detail === "string" ? `Proposition impossible : ${detail}.` : "Proposition impossible.";
+      message.value = typeof detail === "string" ? `Proposition impossible : ${detail}.` : "Proposition impossible.";
       return;
     }
     if (!data.keywords.length) {
-      message.value = "Aucun mot-clé proposé : précise le métier.";
+      message.value = "Aucun mot-clé proposé : précise le métier.";
       return;
     }
     form.value.keywords = data.keywords.join(", ");
@@ -82,14 +82,14 @@ async function create(): Promise<void> {
       },
     });
     if (!data) {
-      message.value = "Création refusée : vérifie le nom.";
+      message.value = "Création refusée : vérifie le nom.";
       return;
     }
     apply(data);
     adding.value = false;
     nameError.value = "";
     form.value = empty();
-    message.value = "Profil créé : choisis-le dans le menu en haut pour voir ses Formations.";
+    message.value = "Profil créé : choisis-le dans le menu en haut pour voir ses Formations.";
   } finally {
     busy.value = false;
   }

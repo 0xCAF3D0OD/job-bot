@@ -9,18 +9,21 @@ import CriteriaForm from "./CriteriaForm.vue";
 import ProfileEditSheet from "./ProfileEditSheet.vue";
 import ProfileGauge from "./ProfileGauge.vue";
 import ProfileImage from "./ProfileImage.vue";
+import QueryLink from "./QueryLink.vue";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
+import { useNarrow } from "../composables/usePhone";
 import { dateInSentence } from "../dates";
 import { plural } from "../format";
 
-// Profil sur ordinateur, en page unique (maquette ProfilOrdinateur ; PR 9b, décision de Kevin du 10 novembre) :
-// l'en-tête (image à pastille crayon, nom, poste · lieu, « Modifier »), Mon CV, Compétences trouvées, Ce que je
+// Profil en page unique, sur ordinateur (maquette ProfilOrdinateur ; PR 9b) et sur téléphone (maquette ProfilTel ;
+// prompt du 10 novembre, PR 20, décision B) : l'en-tête (image à pastille crayon, nom, poste · lieu, « Modifier »), Mon CV, Compétences trouvées, Ce que je
 // cherche, puis « Mon parcours » en lignes qui ouvrent chacune leur page (?onglet=…). La pastille crayon ouvre
 // « Ton image » : plus de bouton « Changer d'image ». « Modifier » ne change que le nom, le poste et le lieu.
 type Identity = components["schemas"]["Identity"];
 
 const image = useProfileImage();
+const { phone: narrow } = useNarrow();
 const profiles = useProfiles();
 const documents = ref<DocumentOut[]>([]);
 const chunks = ref<Chunk[]>([]);
@@ -109,9 +112,9 @@ const parcours = computed(() => {
   const phone = who?.phone?.trim();
   const contact = [who?.city?.trim(), phone ? `${phone.slice(0, 3)}…` : ""].filter(Boolean).join(" · ");
   return [
-    { key: "formations", label: "Formations", line: count("formation") ? plural(count("formation"), "formation", "formations") : "Aucune formation" },
-    { key: "experiences", label: "Expériences", line: count("experience") ? plural(count("experience"), "expérience", "expériences") : "Aucune expérience" },
-    { key: "documents", label: "Documents et certificats", line: docs || "Aucun document" },
+    { key: "formations", label: "Formations", line: count("formation") ? plural(count("formation"), "formation", "formations") : "Aucune pour l’instant" },
+    { key: "experiences", label: "Expériences", line: count("experience") ? plural(count("experience"), "expérience", "expériences") : "Aucune pour l’instant" },
+    { key: "documents", label: "Documents et certificats", line: docs || "Aucun pour l’instant" },
     { key: "coordonnees", label: "Coordonnées", line: contact || "À compléter" },
   ];
 });
@@ -141,7 +144,7 @@ async function onSaved(): Promise<void> {
           <ProfileImage
             :choice="image.choice.value"
             :initials="image.initials.value"
-            :size="72"
+            :size="narrow ? 64 : 72"
           />
           <span
             class="profile-head-pencil"
@@ -149,9 +152,16 @@ async function onSaved(): Promise<void> {
           ><AppIcon name="pencil" /></span>
         </button>
         <div class="profile-head-text">
-          <h1>{{ image.name.value || "Profil" }}</h1>
+          <!-- Sur téléphone, le titre de la page est « Mon profil » (barre du haut) : le nom n'est pas un second h1. -->
+          <component
+            :is="narrow ? 'p' : 'h1'"
+            class="profile-head-name"
+          >
+            {{ image.name.value || "Profil" }}
+          </component>
           <p
             v-if="subline"
+            class="profile-head-subline"
             data-test="profile-subline"
           >
             {{ subline }}
@@ -194,37 +204,72 @@ async function onSaved(): Promise<void> {
             Mon CV
           </h2>
         </div>
-        <div class="profile-card profile-cv">
-          <AppIcon
-            name="file"
-            class="profile-cv-icon"
-          />
-          <div class="profile-cv-text">
-            <strong data-test="profile-cv-name">{{ cv ? cv.filename : "Aucun CV déposé" }}</strong>
-            <span>{{ cv ? cvLine : "PDF, DOCX, TXT ou MD · 10 Mo au plus" }}</span>
+        <div
+          class="profile-card profile-cv-card"
+          data-test="cv-card"
+        >
+          <div class="profile-cv">
+            <AppIcon
+              name="file"
+              class="profile-cv-icon"
+            />
+            <div class="profile-cv-text">
+              <strong data-test="profile-cv-name">{{ cv ? cv.filename : "Aucun CV déposé" }}</strong>
+              <span>{{ cv ? cvLine : "PDF, DOCX, TXT ou MD · 10 Mo au plus" }}</span>
+            </div>
+            <template v-if="!narrow">
+              <a
+                v-if="cv"
+                class="button secondary action-2"
+                :href="`/api/documents/${cv.id}/file`"
+                target="_blank"
+                rel="noopener"
+                data-test="profile-cv-open"
+              >Voir<span class="visually-hidden">{{ ` ${cv.filename} (nouvel onglet)` }}</span></a>
+              <label
+                class="button secondary action-2 profile-cv-upload"
+                :aria-busy="uploading ? 'true' : undefined"
+                data-test="profile-cv-replace"
+              >
+                <input
+                  type="file"
+                  class="visually-hidden"
+                  accept=".pdf,.docx,.txt,.md"
+                  data-test="profile-cv-input"
+                  @change="onFile"
+                >
+                {{ uploading ? "Envoi…" : cv ? "Remplacer" : "Déposer mon CV" }}
+              </label>
+            </template>
           </div>
-          <a
-            v-if="cv"
-            class="button secondary action-2"
-            :href="`/api/documents/${cv.id}/file`"
-            target="_blank"
-            rel="noopener"
-            data-test="profile-cv-open"
-          >Voir<span class="visually-hidden"> {{ cv.filename }} (nouvel onglet)</span></a>
-          <label
-            class="button secondary action-2 profile-cv-upload"
-            :aria-busy="uploading ? 'true' : undefined"
-            data-test="profile-cv-replace"
+          <!-- Ici, sous un filet, le bloc d'état de la lecture du CV (PR 21, maquettes ProfilTel et ProfilOrdinateurCV). -->
+          <!-- Téléphone (ProfilTel) : « Voir | Remplacer » en bas de la carte, séparés par un filet. -->
+          <div
+            v-if="narrow"
+            class="profile-cv-split"
           >
-            <input
-              type="file"
-              class="visually-hidden"
-              accept=".pdf,.docx,.txt,.md"
-              data-test="profile-cv-input"
-              @change="onFile"
+            <a
+              v-if="cv"
+              :href="`/api/documents/${cv.id}/file`"
+              target="_blank"
+              rel="noopener"
+              data-test="profile-cv-open"
+            >Voir<span class="visually-hidden">{{ ` ${cv.filename} (nouvel onglet)` }}</span></a>
+            <label
+              class="profile-cv-upload"
+              :aria-busy="uploading ? 'true' : undefined"
+              data-test="profile-cv-replace"
             >
-            {{ uploading ? "Envoi…" : cv ? "Remplacer" : "Déposer mon CV" }}
-          </label>
+              <input
+                type="file"
+                class="visually-hidden"
+                accept=".pdf,.docx,.txt,.md"
+                data-test="profile-cv-input"
+                @change="onFile"
+              >
+              {{ uploading ? "Envoi…" : cv ? "Remplacer" : "Déposer mon CV" }}
+            </label>
+          </div>
         </div>
         <p
           v-if="message"
@@ -246,8 +291,34 @@ async function onSaved(): Promise<void> {
           </h2>
           <span>Utilisées pour noter les offres</span>
         </div>
-        <div class="profile-card profile-skills">
-          <RouterLink
+        <div
+          v-if="!skills.length"
+          class="profile-card profile-skills-empty"
+          data-test="profile-skills-empty"
+        >
+          <template v-if="narrow">
+            Rien pour l’instant. Relis ton CV ou ajoute-les à la main.<br>
+            <QueryLink
+              :to="{ query: { onglet: 'competences', nouveau: '1' } }"
+              class="profile-skills-add-link"
+              data-test="profile-skill-add"
+            >
+              Ajouter une compétence
+            </QueryLink>
+          </template>
+          <template v-else>
+            Rien pour l’instant. Relis ton CV ou <QueryLink
+              :to="{ query: { onglet: 'competences', nouveau: '1' } }"
+              data-test="profile-skill-add"
+              text="ajoute-les à la main"
+            />.
+          </template>
+        </div>
+        <div
+          v-else
+          class="profile-card profile-skills"
+        >
+          <QueryLink
             v-for="skill in skills"
             :key="skill.id"
             class="profile-skill"
@@ -255,14 +326,14 @@ async function onSaved(): Promise<void> {
             :data-test="`profile-skill-${skill.id}`"
           >
             {{ skill.title }}
-          </RouterLink>
-          <RouterLink
+          </QueryLink>
+          <QueryLink
             class="profile-skill-add"
             :to="{ query: { onglet: 'competences', nouveau: '1' } }"
             data-test="profile-skill-add"
           >
             + Ajouter
-          </RouterLink>
+          </QueryLink>
         </div>
       </section>
 
@@ -285,7 +356,7 @@ async function onSaved(): Promise<void> {
             v-for="row in parcours"
             :key="row.key"
           >
-            <RouterLink
+            <QueryLink
               class="criteria-row"
               :to="{ query: { onglet: row.key } }"
               :data-test="`profile-parcours-${row.key}`"
@@ -298,7 +369,7 @@ async function onSaved(): Promise<void> {
                 class="arrow-circle small"
                 aria-hidden="true"
               ><AppIcon name="arrow-right" /></span>
-            </RouterLink>
+            </QueryLink>
           </li>
         </ul>
       </section>
@@ -317,14 +388,17 @@ async function onSaved(): Promise<void> {
 .profile-section-head h2 { margin: 0; font-size: var(--pd-18); font-weight: var(--weight-bold); }
 .profile-section-head span { font-size: var(--font-small); color: var(--text-secondary); }
 .profile-card { background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.profile-cv-card { overflow: hidden; }
 .profile-cv { display: flex; align-items: center; gap: var(--space-4); padding: var(--pd-pad-y) var(--pd-pad-x); }
 .profile-cv-icon { flex: none; width: 28px; height: 28px; color: var(--primary-graphic); }
 .profile-cv-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.profile-cv-text strong { font-size: var(--font-label); overflow-wrap: anywhere; }
+.profile-cv-text strong { font-size: var(--font-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .profile-cv-text span { font-size: var(--font-small); color: var(--text-secondary); }
 .profile-cv .button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-5); box-sizing: border-box; border: 1.5px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; cursor: pointer; }
 .profile-cv .button:hover { background: var(--primary-soft); }
 .profile-cv-upload:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }
+.profile-skills-empty { padding: var(--pd-pad-y) var(--pd-pad-x); font-size: var(--font-small); color: var(--text-secondary); }
+.profile-skills-empty a { color: var(--primary-text); font-weight: var(--weight-bold); }
 .profile-skills { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--pd-pad-y) var(--pd-pad-x); }
 .profile-skill, .profile-skill-add { display: inline-flex; align-items: center; min-height: var(--pd-chip-h); padding: var(--pd-chip-y) var(--space-3); box-sizing: border-box; border-radius: var(--radius-pill); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .profile-skill { background: var(--surface-muted); color: var(--text-secondary); }
@@ -332,4 +406,37 @@ async function onSaved(): Promise<void> {
 .profile-skill-add { border: 1.5px dashed var(--field-border); color: var(--primary-text); }
 .profile-section .criteria-row { text-decoration: none; }
 .profile-desktop .narrow-block, .profile-section .narrow-block { max-width: none; }
+
+/* Téléphone (maquette ProfilTel, prompt du 10 novembre, PR 20) : la barre « Mon profil » de 56 px avec le retour de
+   48 px ; l'en-tête en ligne (image de 64, nom de 20, « Modifier » en lien) ; les titres de section en sur-titre de
+   13 px en capitales ; sections à 20 px des bords, 12 px au-dessus et au-dessous, sans trait. La carte du CV : nom du
+   fichier tronqué sur une ligne, « Voir | Remplacer » en bas, séparés par un filet (--line). */
+.profile-topbar { --pt-22: 22px; display: flex; align-items: center; gap: var(--space-1); min-height: 56px; padding: 0 var(--space-2) 0 var(--space-1); }
+.profile-topbar h1 { margin: 0; font-size: var(--pt-22); font-weight: var(--weight-heavy); }
+.profile-topbar-back { display: grid; place-items: center; width: 48px; height: 48px; color: var(--text); }
+.profile-topbar-back .icon { width: 24px; height: 24px; }
+.jobs-head.profile-subhead.profile-topbar { flex-direction: row; align-items: center; max-width: none; margin: 0; padding: 0 var(--space-2) 0 var(--space-1); }
+.profile-subhead.profile-topbar h1 { font-size: var(--pt-22); letter-spacing: 0; }
+.profile-cv-split { display: flex; border-top: 1px solid var(--line); }
+.profile-cv-split > :is(a, label) { flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; cursor: pointer; }
+.profile-cv-split > * + * { border-left: 1px solid var(--line); }
+.profile-cv-split label:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: -2px; }
+@media (max-width: 599px) {
+  .profile-desktop { --pd-pad-y: 14.5px; --pd-pad-x: 16px; --pd-13: 13px; --pd-15: 15px; --pd-18-lh: 18px; --pd-20: 20px; --pd-22-lh: 22px; --pd-26: 26px; }
+  .profile-desktop .jobs-head.profile-head { padding: var(--space-3) var(--space-5) var(--space-2); }
+  .profile-desktop .profile-head-main { gap: var(--space-4); padding: var(--space-1) var(--space-1) var(--space-2); }
+  .profile-desktop .profile-head-text .profile-head-name { margin: 0; overflow-wrap: anywhere; font-size: var(--pd-20); line-height: var(--pd-26); font-weight: var(--weight-bold); letter-spacing: 0; }
+  .profile-desktop .profile-head-text .profile-head-subline { margin: 0; font-size: var(--pd-15); color: var(--text-secondary); }
+  .profile-desktop .profile-head-actions button { min-height: 44px; padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--pd-15); font-weight: var(--weight-bold); }
+  .profile-desktop-body { gap: 0; padding: 0 var(--space-5) var(--space-8); box-sizing: border-box; }
+  .profile-desktop-body > .profile-section { padding: var(--space-3) 0; }
+  .profile-section-head h2, .profile-section .section-title { margin: 0; font-size: var(--pd-13); line-height: var(--pd-18-lh); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+  .profile-section-head { margin: 0; }
+  .profile-section-head span { display: none; }
+  .profile-cv-card { border-radius: var(--radius-card); }
+  .profile-skills-empty { padding: var(--space-4); font-size: var(--pd-15); line-height: var(--pd-22-lh); }
+  /* Les puces sont des liens : 44 px de cible au toucher (la maquette les dessine à 30 px, sans lien). */
+  .profile-skill, .profile-skill-add { min-height: var(--target-min); }
+  .profile-skills-add-link { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+}
 </style>

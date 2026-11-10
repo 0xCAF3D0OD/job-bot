@@ -31,7 +31,8 @@ function isCurrent(entry: NavEntry): boolean {
   return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
 }
 
-// Une fiche ouverte (offre, candidature) ou une rubrique des Réglages est une sous-page : pas de titre d'onglet.
+// Une fiche ouverte (offre, candidature) ou une rubrique des Réglages est une sous-page : pas de titre d'onglet. Le
+// Profil aussi (maquette ProfilTel, PR 20) : il a sa barre « ← Mon profil », sous le Compte.
 const SUB_PAGE = ["offre", "candidature", "rubrique"];
 const phoneTitle = computed<string | null>(() => {
   if (!loggedIn.value || SUB_PAGE.some((key) => route.query[key])) return null;
@@ -39,7 +40,6 @@ const phoneTitle = computed<string | null>(() => {
   if (route.path.startsWith("/bilan") && route.meta.tab) return "Bilan";
   if (route.name === "account") return "Compte";
   if (route.name === "settings") return "Réglages";
-  if (route.name === "profile") return "Profil";
   return null;
 });
 const variant = computed(() => {

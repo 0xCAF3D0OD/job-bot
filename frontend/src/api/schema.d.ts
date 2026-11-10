@@ -6736,6 +6736,12 @@ export interface components {
             level?: ("above" | "below") | null;
             /** Level Detail */
             level_detail?: string | null;
+            /**
+             * Score Parts
+             * @default []
+             */
+            score_parts: components["schemas"]["ScorePartOut"][];
+            score_tip?: components["schemas"]["ScoreTipOut"] | null;
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -7477,12 +7483,41 @@ export interface components {
             /** Pause Until */
             pause_until?: string | null;
         };
+        /**
+         * ScorePartOut
+         * @description Une part de la note (PR 18) : `max` vient de PART_MAX, `points` de la notation.
+         */
+        ScorePartOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "skills" | "experience" | "location" | "languages" | "terms";
+            /** Points */
+            points: number;
+            /** Max */
+            max: number;
+            /** Text */
+            text: string;
+            /**
+             * Check
+             * @default false
+             */
+            check: boolean;
+        };
         /** ScorePoint */
         ScorePoint: {
             /** Text */
             text: string;
             /** Chunk Ids */
             chunk_ids: number[];
+        };
+        /** ScoreTipOut */
+        ScoreTipOut: {
+            /** Text */
+            text: string;
+            /** Action */
+            action?: ("skills" | "experience" | "languages" | "criteria") | null;
         };
         /** ScoringStatus */
         ScoringStatus: {
@@ -7669,6 +7704,12 @@ export interface components {
             level?: ("above" | "below") | null;
             /** Level Detail */
             level_detail?: string | null;
+            /**
+             * Score Parts
+             * @default []
+             */
+            score_parts: components["schemas"]["ScorePartOut"][];
+            score_tip?: components["schemas"]["ScoreTipOut"] | null;
             /** Scored At */
             scored_at?: string | null;
             /**

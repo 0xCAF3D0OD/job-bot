@@ -7,6 +7,7 @@ import {
   type RouteRecordRaw,
 } from "vue-router";
 
+import { accountMenuRequest } from "./composables/useAccountMenu";
 import { useAssistant } from "./composables/useAssistant";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
@@ -115,8 +116,12 @@ function settingsEntry(to: RouteLocationNormalized): RouteLocationRaw | true {
   if (anchor) return { path: "/reglages", query: { rubrique: anchor } };
   // L'ancien lien de l'état technique (docs/21 §6).
   if (to.hash === "#etat") return { path: "/reglages/diagnostic" };
+  // Sur ordinateur, plus de page Compte (prompt du 10 novembre, PR 20) : les Réglages s'ouvrent aux notifications.
+  if (!globalThis.matchMedia?.(PHONE_QUERY).matches) return { path: "/reglages", query: { rubrique: "notifications" } };
   return { path: "/compte" };
 }
+
+let accountMenuPending = false;
 
 export const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/aujourdhui" },
@@ -282,7 +287,7 @@ export const router = createRouter({
 // connexion depuis la 0.55.0 (docs/67).
 export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy", "accessibility", "terms", "about"]);
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
   const { loggedIn, load } = useAuth();
   await load();
   // Connecté, la connexion et la demande de compte renvoient vers l'application.
@@ -307,6 +312,12 @@ router.beforeEach(async (to) => {
         return { path: "/aujourdhui" };
       }
     }
+  }
+  // Sur ordinateur, pas de page Compte façon téléphone (prompt du 10 novembre, PR 20, point 1) : l'avatar ouvre le
+  // panneau « Mon compte ». Un lien vers /compte ouvre ce panneau sur la page où l'on est (Aujourd'hui à l'arrivée).
+  if (to.name === "account" && loggedIn.value && !globalThis.matchMedia?.(PHONE_QUERY).matches) {
+    accountMenuPending = true;
+    return from.matched.length ? false : { path: "/aujourdhui" };
   }
   // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient au compte.
   if (to.name === "diagnostic" && loggedIn.value && me.value?.auth_enabled && !me.value.is_owner) {
@@ -359,6 +370,12 @@ export function pageTitle(name: unknown): string {
 }
 
 router.afterEach((to, from) => {
+  // Le panneau « Mon compte » demandé par /compte s'ouvre une fois la page posée : un changement de page referme
+  // tous les panneaux (App.vue), il ne doit pas refermer celui-ci.
+  if (accountMenuPending) {
+    accountMenuPending = false;
+    accountMenuRequest.value = true;
+  }
   document.title = pageTitle(to.name);
   useJobsMemory().remember(to.fullPath);
   if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);

@@ -8,7 +8,7 @@ const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 
 describe("de l’information plutôt que du vide (docs/63 §2)", () => {
-  it("ce que donnent les critères : retenues sur reçues, trois raisons au plus", async () => {
+  it("ce que donnent les critères : retenues sur reçues, une ligne par raison, trois au plus", async () => {
     GET.mockResolvedValue({
       data: {
         start: "2026-08-01",
@@ -27,9 +27,12 @@ describe("de l’information plutôt que du vide (docs/63 §2)", () => {
     expect(GET).toHaveBeenCalledWith("/api/insights/filter");
     expect(wrapper.text()).toContain("96 offres passent sur 412 reçues");
     expect(wrapper.text()).toContain("23 %");
-    expect(wrapper.findAll("li")).toHaveLength(3);
-    // Une largeur CSS valide (« 57% », sans espace), sinon toutes les barres sont pleines.
-    expect(wrapper.find(".bilan-bar").attributes("style")).toContain("width: 57%");
+    // Une ligne par raison, trois au plus (prompt du 10 novembre, PR 20, point 5).
+    expect(wrapper.findAll("[data-test=filter-reasons] li").map((li) => li.text())).toEqual([
+      "180 offres pour le lieu",
+      "74 offres pour le taux d’activité",
+      "31 offres pour la langue",
+    ]);
   });
 
   it("la dépense du mois à côté du plafond", async () => {

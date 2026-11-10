@@ -38,7 +38,7 @@ describe("CriteriaView", () => {
     const descriptions = wrapper.findAll(".setting-desc").map((p) => p.text());
     expect(descriptions).toContain("Écartée si le titre ou l’extrait contient un mot du type.");
     const notes = wrapper.findAllComponents(HoverNote).map((n) => n.props("text"));
-    expect(notes.some((t) => t.includes("Stages : stage, internship…"))).toBe(true);
+    expect(notes.some((t) => t.includes("Stages\u202f: stage, internship…"))).toBe(true);
 
     const locationInput = wrapper.find("#locations");
     await locationInput.setValue("Genève");
@@ -89,7 +89,7 @@ describe("CriteriaForm, déjà saisis", () => {
       ["Taux d’activité", "80 % au moins"],
       ["Types d’offres exclus", "Stages"],
       // « Langues » avec les niveaux (PR 17), plus « Langues non parlées ».
-      ["Langues", "Français : langue maternelle, Allemand : notions"],
+      ["Langues", "Français\u202f: langue maternelle, Allemand\u202f: notions"],
     ]);
     // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
     for (const row of summary.findAll("button.criteria-row")) {
@@ -138,7 +138,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     globalThis.matchMedia = original;
   });
 
-  it("le résumé en liste groupée ; toucher une ligne ouvre le formulaire sur ce critère", async () => {
+  it("les lignes de ProfilOrdinateur ; toucher une ligne ouvre le formulaire sur ce critère", async () => {
     globalThis.matchMedia = ((query: string) =>
       ({ matches: query.includes("599px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
     GET.mockImplementation((path: string) =>
@@ -167,24 +167,23 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     const wrapper = mount(CriteriaView, { attachTo: document.body });
     await flushPromises();
 
+    // Prompt du 10 novembre (PR 20, point 5) : le format de ProfilOrdinateur aussi sur téléphone, libellé gris au-dessus
+    // de la valeur en gras, cercle à flèche.
     const summary = wrapper.find("[data-test=criteria-summary]");
-    expect(summary.find(".grouped-title").text()).toBe("Poste recherché");
-    const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Offres exclues", "Langues"]);
-    // Une seule hauteur, la valeur en pastilles (D14) ; la phrase entière pour les lecteurs d'écran.
-    expect(summary.find(".grouped-row-description").exists()).toBe(false);
-    expect(summary.find("[data-test=criteria-row-taux] .grouped-value").text()).toBe("80 % et +");
-    expect(summary.find("[data-test=criteria-row-taux] .visually-hidden").text()).toBe(": 80 % au moins");
-    expect(summary.findAll("[data-test=criteria-row-lieux] .grouped-value").map((v) => v.text())).toEqual(["Vaud"]);
+    const labels = summary.findAll(".criteria-row-label").map((t) => t.text());
+    expect(labels).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Types d’offres exclus", "Langues"]);
+    expect(summary.find("[data-test=criteria-row-taux] .criteria-row-value").text()).toBe("80 % au moins");
+    expect(summary.find(".grouped-value").exists()).toBe(false);
 
+    // « Écartées surtout pour » : une ligne par raison.
     const outcome = wrapper.find("[data-test=filter-outcome]");
-    expect(outcome.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
-      "33 offres passent sur 36",
-      "Écartées surtout pour",
-    ]);
-    expect(outcome.text()).toContain("Type d’offre, lieu, taux d’activité : 1 chacune.");
+    expect(outcome.findAll("[data-test=filter-reasons] .criteria-row-value").map((t) => t.text())).toEqual([
+      "1 offre pour : Type d’offre",
+      "1 offre pour : Lieu",
+      "1 offre pour : Taux d’activité",
+    ].map((t) => t.replace(" :", "\u202f:")));
 
-    await wrapper.find("[data-test=criteria-row-taux] button").trigger("click");
+    await wrapper.find("button[data-test=criteria-row-taux]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);
     expect(document.activeElement?.id).toBe("min_rate");
