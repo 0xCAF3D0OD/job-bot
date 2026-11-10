@@ -25,6 +25,12 @@
   --line-strong: #D8D4CA;
   /* Trait des cartes (prompt du 9 novembre, PR 1) : #CFCBC1 en clair ; en sombre, le même que --line-strong. */
   --card-line: #CFCBC1;
+  /* « Complétons ton profil » (maquettes OnboardingProfil du 10 novembre) : champ désactivé (Fin, « J’y travaille
+     encore »), texte d’attente (« Non renseigné »), icône du fichier illisible, phrase d’introduction. */
+  --field-disabled-bg: #F2F0EB;
+  --text-placeholder: #6E7381;
+  --file-error: #B4542D;
+  --text-lead: #3D4250;
   /* Snackbar (prompt du 9 novembre, PR 1) : fond #1B1F2A, texte blanc, actions #AEBDFF, en clair comme en sombre. */
   --snackbar-bg: #1B1F2A;
   --snackbar-text: #FFFFFF;
@@ -215,6 +221,10 @@
     --line-soft: #2C2722;
     --line-strong: #4E473E;
     --card-line: #4E473E;
+    --field-disabled-bg: #2C2722;
+    --text-placeholder: #9A9389;
+    --file-error: #F2A766;
+    --text-lead: #D6CFC4;
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
     --thumb-paper: #171411;
@@ -271,6 +281,10 @@
   --line-soft: #2C2722;
   --line-strong: #4E473E;
   --card-line: #4E473E;
+  --field-disabled-bg: #2C2722;
+  --text-placeholder: #9A9389;
+  --file-error: #F2A766;
+  --text-lead: #D6CFC4;
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
   --thumb-paper: #171411;
@@ -2775,7 +2789,7 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .post-links .link { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0; font-weight: var(--weight-semibold); text-decoration: none; }
 .detail-post .offer-facts { display: grid; margin: var(--space-2) 0 0; }
 .detail-post .offer-facts span { padding: 0; background: none; border-radius: 0; font-size: inherit; font-weight: inherit; color: inherit; }
-.detail-post .offer-facts .fact-mark { padding-top: 0.2em; }
+.detail-post .offer-facts .fact-mark { padding-top: var(--space-1); }
 .detail-more-rows { display: grid; }
 .detail-rows { margin: 0; display: grid; }
 .detail-rows > div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--divider); line-height: var(--leading-normal); }
@@ -2792,7 +2806,7 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 /* L'action d'une ligne ouverte (« Voir sur jobs.ch ») à la marge du texte, pas collée au bord. */
 .detail-panel .detail-disclosure .disclosure-actions { padding-right: var(--space-6); }
 /* « À savoir » : les pastilles taux, télétravail, contrat, puis les faits avec leur icône. */
-.offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: 0.2em; }
+.offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: var(--space-1); }
 .offer-facts .fact-mark > .icon { width: 1rem; height: 1rem; }
 .offer-facts .seen .fact-mark { color: var(--muted); }
 /* Retirer une recherche dans une pastille : la croix ronde, à la taille de la pastille. */

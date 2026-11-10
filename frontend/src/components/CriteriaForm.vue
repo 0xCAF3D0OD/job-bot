@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from "vue";
 
-import { api, type ContractType, type CriteriaIn, type Keywords, type Language } from "../api/client";
+import { api, type ContractType, type CriteriaIn, type Keywords } from "../api/client";
 import type { components } from "../api/schema";
 
 type RemotePolicy = components["schemas"]["RemotePolicy"];
 import HoverNote from "./HoverNote.vue";
+import { BASE_LANGUAGES, LEVELS, languageLabel, type Level } from "./ProfileCompletionForm.vue";
 import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 import { plural } from "../format";
@@ -24,11 +25,6 @@ const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "apprentissage", label: "Apprentissages" },
   { value: "temporaire", label: "Temporaires et CDD" },
   { value: "freelance", label: "Freelance" },
-];
-const LANGUAGES: { value: Language; label: string }[] = [
-  { value: "allemand", label: "Allemand" },
-  { value: "italien", label: "Italien" },
-  { value: "anglais", label: "Anglais" },
 ];
 
 // Télétravail complet (docs/26 §3) : trois positions, la phrase reste courte.
@@ -53,8 +49,17 @@ const EMPTY: CriteriaForm = {
   min_rate: null,
   excluded_types: [],
   banned_words: [],
-  unspoken_languages: [],
+  language_levels: {},
 };
+// « Langues » avec les niveaux (prompt du 10 novembre, PR 17) : les quatre langues, puis celles ajoutées.
+const languageRows = computed(() => {
+  const names = [...BASE_LANGUAGES.map((l) => l.name), ...Object.keys(form.value.language_levels).filter((n) => !BASE_LANGUAGES.some((l) => l.name === n))];
+  return names.map((name) => ({ name, label: languageLabel(name) }));
+});
+const levelLabel = (level: Level): string => LEVELS.find((l) => l.value === level)?.label ?? "Non renseigné";
+function setLevel(name: string, level: Level): void {
+  form.value = { ...form.value, language_levels: { ...form.value.language_levels, [name]: level } };
+}
 
 const form = ref<CriteriaForm>({ ...EMPTY });
 const keywords = ref<Keywords | null>(null);
@@ -98,8 +103,10 @@ const summary = computed(() => {
   const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.charAt(0).toLowerCase() + c.label.slice(1));
   rows.push({ key: "types", label: "Types d’offres exclus", short: "Offres exclues", value: types.length ? types.join(", ") : "aucun", items: types.length ? types.map(sentence) : ["Aucun"] });
   if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", short: "Mots interdits", value: f.banned_words.join(", "), items: f.banned_words });
-  const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
-  if (langs.length) rows.push({ key: "langues", label: "Langues non parlées", value: langs.join(", "), items: langs.map(sentence) });
+  const langs = Object.entries(f.language_levels)
+    .filter(([, level]) => level !== "unknown")
+    .map(([name, level]) => `${languageLabel(name)} : ${levelLabel(level as Level).toLowerCase()}`);
+  rows.push({ key: "langues", label: "Langues", value: langs.length ? langs.join(", ") : "non renseignées", items: langs.length ? langs : ["Non renseignées"] });
   return rows;
 });
 
@@ -402,30 +409,39 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset id="criteria-langues">
-        <legend>Langues non parlées</legend>
+        <legend>Langues</legend>
         <p class="setting-desc">
           <HoverNote
             v-if="keywords"
             :text="languagesHelp"
           >
-            Écartée si le titre ou l’extrait exige l’une de ces langues.
+            Une langue non renseignée n’écarte aucune offre. Avec «&#8239;Notions&#8239;», une offre qui exige la langue est écartée.
           </HoverNote>
           <template v-else>
-            Écartée si le titre ou l’extrait exige l’une de ces langues.
+            Une langue non renseignée n’écarte aucune offre. Avec «&#8239;Notions&#8239;», une offre qui exige la langue est écartée.
           </template>
         </p>
-        <label
-          v-for="language in LANGUAGES"
-          :key="language.value"
-          class="check"
+        <div
+          v-for="language in languageRows"
+          :key="language.name"
+          class="criteria-language"
+          :data-test="`criteria-language-${language.name}`"
         >
-          <input
-            v-model="form.unspoken_languages"
-            type="checkbox"
-            :value="language.value"
+          <label :for="`criteria-level-${language.name}`">{{ language.label }}</label>
+          <select
+            :id="`criteria-level-${language.name}`"
+            :value="form.language_levels[language.name] ?? 'unknown'"
+            @change="setLevel(language.name, ($event.target as HTMLSelectElement).value as Level)"
           >
-          {{ language.label }}
-        </label>
+            <option
+              v-for="level in LEVELS"
+              :key="level.value"
+              :value="level.value"
+            >
+              {{ level.label }}
+            </option>
+          </select>
+        </div>
       </fieldset>
 
       <div class="form-actions">
@@ -457,6 +473,10 @@ onMounted(() => void load());
 </template>
 
 <style>
+/* Étroit (panneau sur téléphone) : la liste passe sous le nom de la langue plutôt que de couper « Langue maternelle ». */
+.criteria-language { --criteria-level-w: 210px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); min-height: var(--target-min); }
+.criteria-language label { flex: 1 0 auto; font-weight: var(--weight-semibold); }
+.criteria-language select { flex: 0 1 var(--criteria-level-w); min-width: var(--criteria-level-w); max-width: 100%; }
 /* Profil › Critères sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.2 ; HTML de ProfilOrdinateur) : carte
    blanche aux coins de 18, lignes de 68 (12/20), libellé de 14 en --text-secondary au-dessus de la valeur de 16 en
    700, 2 px entre eux, cercle D29 de 36 à droite (version finale), trait entre les lignes. */

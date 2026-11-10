@@ -6,10 +6,12 @@ from jobbot.core.filter import (
     ContractType,
     Criteria,
     Language,
+    LanguageLevel,
     OfferFacts,
     RemotePolicy,
     canton_of,
     evaluate,
+    languages_to_check,
 )
 
 
@@ -146,7 +148,41 @@ def test_banned_words_ignore_case_and_accents() -> None:
 )
 def test_language_requirements(snippet: str, excluded: bool) -> None:
     facts = OfferFacts("DevOps", snippet=snippet)
-    assert ("language" in rules(facts, Criteria(unspoken_languages=(Language.GERMAN,)))) is excluded
+    notions = Criteria(language_levels=(("allemand", LanguageLevel.NOTIONS),))
+    assert ("language" in rules(facts, notions)) is excluded
+
+
+@pytest.mark.parametrize(
+    "level", [LanguageLevel.UNKNOWN, LanguageLevel.FLUENT, LanguageLevel.NATIVE]
+)
+def test_only_notions_excludes_a_language(level: LanguageLevel) -> None:
+    """« Non renseigné » n'écarte jamais une offre (PR 17), ni « Courant », ni « Maternelle »."""
+    facts = OfferFacts("Vendeuse", snippet="Allemand courant indispensable.")
+    assert rules(facts, Criteria(language_levels=(("allemand", level),))) == []
+    assert rules(facts, Criteria()) == []
+
+
+def test_languages_to_check() -> None:
+    text = (
+        "L'anglais serait un atout pour ce poste. "
+        "Français courant exigé. Allemand courant indispensable."
+    )
+    assert languages_to_check(text, Criteria()) == [Language.FRENCH, Language.GERMAN]
+    native = Criteria(language_levels=(("francais", LanguageLevel.NATIVE),))
+    assert languages_to_check(text, native) == [Language.GERMAN]
+    notions = Criteria(language_levels=(("allemand", LanguageLevel.NOTIONS),))
+    assert languages_to_check(text, notions) == [Language.FRENCH]
+
+
+def test_unspoken_languages_come_from_notions() -> None:
+    criteria = Criteria(
+        language_levels=(
+            ("allemand", LanguageLevel.NOTIONS),
+            ("espagnol", LanguageLevel.NOTIONS),
+            ("anglais", LanguageLevel.FLUENT),
+        )
+    )
+    assert criteria.unspoken_languages == (Language.GERMAN,)
 
 
 def test_several_reasons_are_all_reported() -> None:

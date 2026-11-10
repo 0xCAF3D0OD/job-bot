@@ -34,6 +34,8 @@ from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring_service
 from jobbot.scoring.service import account_problem, active_profile, budget_state, record_call
+from jobbot.worker.queue import enqueue
+from jobbot.worker.tasks.score import SCORE_JOB
 
 router = APIRouter(prefix="/api", tags=["profile"])
 log = get_logger(__name__)
@@ -378,11 +380,19 @@ async def create_chunk(request: Request, body: ChunkIn) -> ChunkOut:
     runtime = _runtime(request)
     await _check_document(runtime, body.document_id)
     async with runtime.sessionmaker.begin() as session:
+        was_empty = body.active and not await session.scalar(
+            select(ProfileChunk.id).where(ProfileChunk.active.is_(True)).limit(1)
+        )
         chunk = ProfileChunk(**body.model_dump())
         session.add(chunk)
         await session.flush()
         await session.refresh(chunk)
-        return ChunkOut.model_validate(chunk)
+        out = ChunkOut.model_validate(chunk)
+    # Premier élément du profil (PR 17, « Compléter mon profil ») : les offres restées sans note
+    # faute de profil sont notées tout de suite, sans attendre la relève des 10 minutes.
+    if was_empty and runtime.settings.llm_configured:
+        await enqueue(runtime.settings, SCORE_JOB)
+    return out
 
 
 @router.put("/profile-chunks/{chunk_id}", operation_id="updateProfileChunk")

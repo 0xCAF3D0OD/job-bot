@@ -17,6 +17,7 @@ from jobbot.core.filter import (
     ContractType,
     Criteria,
     Language,
+    LanguageLevel,
     RemotePolicy,
 )
 from jobbot.db.models import Criterion, Setting
@@ -31,6 +32,7 @@ from jobbot.worker.tasks.filter import FILTER_JOB
 router = APIRouter(prefix="/api", tags=["preferences"])
 
 ShortText = Annotated[str, Field(min_length=1, max_length=80)]
+LanguageName = Annotated[str, Field(min_length=1, max_length=40)]
 
 
 def _clean(values: list[str]) -> list[str]:
@@ -49,7 +51,14 @@ class CriteriaIn(BaseModel):
     min_rate: int | None = Field(default=None, ge=1, le=100)
     excluded_types: list[ContractType] = Field(default_factory=list)
     banned_words: list[ShortText] = Field(default_factory=list, max_length=100)
-    unspoken_languages: list[Language] = Field(default_factory=list)
+    # Langues et niveaux (PR 17) : « francais », « allemand », « italien », « anglais », ou une
+    # langue ajoutée (« espagnol »). Une langue absente ou « unknown » n'écarte jamais une offre.
+    language_levels: dict[LanguageName, LanguageLevel] = Field(default_factory=dict, max_length=12)
+
+    @field_validator("language_levels")
+    @classmethod
+    def _languages(cls, values: dict[str, LanguageLevel]) -> dict[str, LanguageLevel]:
+        return {name.strip().casefold(): level for name, level in values.items() if name.strip()}
 
     @field_validator("locations", "banned_words")
     @classmethod
@@ -142,7 +151,7 @@ def _criteria_in(criteria: Criteria) -> CriteriaIn:
         min_rate=criteria.min_rate,
         excluded_types=list(criteria.excluded_types),
         banned_words=list(criteria.banned_words),
-        unspoken_languages=list(criteria.unspoken_languages),
+        language_levels=dict(criteria.language_levels),
     )
 
 
@@ -164,7 +173,7 @@ async def put_criteria(request: Request, body: CriteriaIn) -> CriteriaOut:
         min_rate=body.min_rate,
         excluded_types=tuple(body.excluded_types),
         banned_words=tuple(body.banned_words),
-        unspoken_languages=tuple(body.unspoken_languages),
+        language_levels=tuple(body.language_levels.items()),
     )
     async with runtime.sessionmaker.begin() as session:
         await save_criteria(session, criteria)

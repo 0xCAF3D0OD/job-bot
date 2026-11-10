@@ -14,6 +14,8 @@ import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import SidePanel from "../components/SidePanel.vue";
 import TagInput from "../components/TagInput.vue";
+import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
+import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
@@ -32,8 +34,6 @@ import { whyLine } from "../whyLine";
 // désactivé.
 type Understanding = components["schemas"]["Understanding"];
 type Step = 0 | 1 | 2 | 3;
-const OTHER_LANGUAGES = ["allemand", "italien", "anglais"] as const;
-const LANGUAGE_NAMES: Record<string, string> = { allemand: "allemand", italien: "italien", anglais: "anglais" };
 const MAX_ROLES = 3;
 const DUE_DAY = 5;
 // Le gribouillis qui barre le premier mot de chaque titre : le tracé de la maquette (comme « C'est fait ! »).
@@ -77,6 +77,13 @@ const RETRY_S = 5;
 const uploading = ref(false);
 const reading = ref(false);
 const cvError = ref("");
+// « Complétons ton profil » (prompt du 10 novembre, PR 17) : l'étape 1 quand le CV n'a pas pu être lu ou qu'il n'y en a
+// pas ; la raison en clair, sous le nom du fichier.
+const completing = ref(false);
+const cvReason = ref("");
+// Les niveaux de langue choisis (formulaire ou étape 2) ; null : on garde ceux déjà enregistrés.
+const languageLevels = ref<Record<string, Level> | null>(null);
+const levelsForm = ref<InstanceType<typeof ProfileCompletionForm> | null>(null);
 const understanding = ref<Understanding | null>(null);
 const skills = computed(() =>
   (understanding.value?.chunks ?? []).filter((c) => c.kind === "competence").map((c) => c.title).slice(0, 8),
@@ -189,6 +196,7 @@ async function upload(file: File): Promise<void> {
       cvName.value = data.filename;
       cvId.value = data.id;
       understanding.value = null;
+      cvReason.value = data.text_status === "empty" || data.text_status === "unreadable" ? UNREADABLE : "";
       void understand(data.id);
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
@@ -205,8 +213,11 @@ async function understand(documentId: number): Promise<void> {
   reading.value = true;
   stopRetry();
   try {
-    const { data } = await api.POST("/api/documents/{document_id}/understand", { params: { path: { document_id: documentId } }, ...QUIET });
-    if (!data || (!data.chunks.length && !data.roles.length)) return;
+    const { data, response } = await api.POST("/api/documents/{document_id}/understand", { params: { path: { document_id: documentId } }, ...QUIET });
+    if (!data || (!data.chunks.length && !data.roles.length)) {
+      if (!cvReason.value) cvReason.value = readFailure(response.status, !!data);
+      return;
+    }
     understanding.value = data;
     const known = new Set(roles.value.map((r) => r.toLowerCase()));
     const found = data.roles.filter((r) => !known.has(r.toLowerCase()));
@@ -221,6 +232,15 @@ async function understand(documentId: number): Promise<void> {
   } finally {
     reading.value = false;
   }
+}
+
+// Pourquoi le CV n'a pas été lu, en clair (maquette OnboardingProfil).
+const UNREADABLE = "C’est une image scannée : le texte n’est pas lisible.";
+function readFailure(status: number, answered: boolean): string {
+  if (answered) return "jobA1 n’y a trouvé ni poste ni compétence.";
+  if (status === 422) return UNREADABLE;
+  if (status === 409) return "La lecture des CV n’est pas disponible pour le moment.";
+  return "La lecture a échoué. Tu pourras réessayer depuis Profil.";
 }
 
 function stopRetry(): void {
@@ -275,9 +295,30 @@ const scene = computed<SceneName>(() => {
 // La lecture peut finir après « Continuer » (elle ne bloque plus l'écran) : les blocs partent alors à son arrivée.
 const cvConfirmed = ref(false);
 function confirmCv(): void {
+  // CV absent ou pas lu : « Complétons ton profil » (la lecture encore en cours, elle, ne bloque pas).
+  if (!understanding.value && !reading.value && !paused.value) {
+    completing.value = true;
+    return;
+  }
   cvConfirmed.value = true;
   go(2);
   saveChunks();
+}
+
+function profileDone(levels: Record<string, Level>): void {
+  languageLevels.value = levels;
+  completing.value = false;
+  go(2);
+}
+
+function profileLater(): void {
+  completing.value = false;
+  go(2);
+}
+
+function profileFile(file: File): void {
+  completing.value = false;
+  void upload(file);
 }
 
 function saveChunks(): void {
@@ -309,8 +350,8 @@ function addRole(): void {
   if (!picked.value.includes(same) && picked.value.length < MAX_ROLES) picked.value = [...picked.value, same];
 }
 
-// Les langues : celles que le CV mentionne, sinon le français seul.
-const spoken = computed(() => (understanding.value?.languages ?? []).filter((l) => (OTHER_LANGUAGES as readonly string[]).includes(l)));
+// Les langues que le CV mentionne : « Courant » au départ, à corriger à l'étape 2 (PR 17).
+const cvLanguages = computed(() => understanding.value?.languages ?? []);
 
 // « Voir mes offres » : les critères, les réglages et les postes partent ensemble, avec les valeurs par défaut.
 // Un poste tapé sans le « + » compte aussi : le bouton bleu est celui qu'on presse (2026-11-05, Kevin).
@@ -323,7 +364,8 @@ async function confirmCriteria(): Promise<void> {
       // Sur ordinateur, le taux se choisit dans sa carte ; sur téléphone, peu importe (O1).
       min_rate: desk.value ? rate.value : null,
       remote_policy: "from_switzerland",
-      unspoken_languages: OTHER_LANGUAGES.filter((l) => !spoken.value.includes(l)),
+      // « Non renseigné » n'écarte jamais une offre (PR 17) : plus de langue écartée d'office.
+      language_levels: levelsForm.value?.levels ?? languageLevels.value ?? criteria.value.language_levels ?? {},
     };
     void api.PUT("/api/criteria", { body: criteria.value });
   }
@@ -437,11 +479,17 @@ const sortSummary = computed(() => {
   if (!offers.value.length) return "Tes premières offres arrivent après la prochaine collecte.";
   return parts.length ? `${parts.join(", ")}.` : "";
 });
+const spokenLanguages = computed(() =>
+  Object.entries(levelsForm.value?.levels ?? languageLevels.value ?? criteria.value?.language_levels ?? {})
+    .filter(([, level]) => level === "fluent" || level === "native")
+    .map(([name]) => languageLabel(name).toLowerCase())
+    .join(", "),
+);
 // Les valeurs par défaut (O1), en une ligne.
 const defaults = computed(() =>
   [
     "Taux : peu importe",
-    `Langues : ${["français", ...spoken.value.map((l) => LANGUAGE_NAMES[l])].join(", ")}`,
+    `Langues : ${spokenLanguages.value || "à renseigner dans Profil"}`,
     "Télétravail : accepté depuis la Suisse",
     ...(orp.value ? [`Remise ORP : le ${DUE_DAY}`] : []),
     "Téléphone : désactivé",
@@ -474,8 +522,20 @@ async function finish(to: string): Promise<void> {
 <template>
   <!-- Premiers pas sur ordinateur (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur…) : la grille commune des
        3 étapes, 640 px de contenu, 80 px, la scène de 360 px ; l’en-tête aligné sur la grille. -->
+  <WelcomeProfileStep
+    v-if="loaded && completing"
+    :desk="desk"
+    :cv-name="cvName"
+    :cv-reason="cvReason"
+    :document-id="cvId"
+    :roles="picked.length ? picked : roles"
+    @back="completing = false"
+    @later="profileLater"
+    @done="profileDone"
+    @file="profileFile"
+  />
   <section
-    v-if="loaded && desk"
+    v-else-if="loaded && desk"
     class="welcome wdk"
     data-test="welcome"
   >
@@ -784,6 +844,16 @@ async function finish(to: string): Promise<void> {
                 </button>
               </div>
             </div>
+            <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
+            <ProfileCompletionForm
+              v-if="understanding"
+              ref="levelsForm"
+              class="welcome-langs"
+              :sections="['languages']"
+              languages-only
+              :desk="desk"
+              :cv-languages="cvLanguages"
+            />
             <div class="wdk-foot">
               <button
                 type="button"
@@ -1300,6 +1370,16 @@ async function finish(to: string): Promise<void> {
                 </button>
               </div>
             </div>
+            <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
+            <ProfileCompletionForm
+              v-if="understanding"
+              ref="levelsForm"
+              class="welcome-langs"
+              :sections="['languages']"
+              languages-only
+              :desk="desk"
+              :cv-languages="cvLanguages"
+            />
           </template>
 
           <template v-else>
@@ -1549,6 +1629,7 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-person { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
 .welcome-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .welcome-orp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.welcome-langs { margin-top: var(--space-8); }
 .welcome-orp-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3); }
 .welcome-orp-row + .welcome-orp-row { border-top: 1px solid var(--line-soft); }
 .welcome-orp-row > span { flex: 1; display: grid; gap: calc(var(--space-1) / 2); }

@@ -45,6 +45,8 @@ export const ICONS = {
   // Le mot de passe affiché (maquette Connexion) : l'œil barré.
   "eye-off": path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3) + path("M3 3l18 18"),
   file: path("M7 3h7l4 4v14H7z") + path("M14 3v4h4M10 12h5M10 16h5"),
+  // Fichier illisible (maquette OnboardingProfil du 10 novembre).
+  "file-alert": path("M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z") + path("M14 3v5h5M12 12v3M12 18h.01"),
   // États
   check: circle(12, 12, 9, ' fill="currentColor" stroke="none"') + path("M8 12.5l2.5 2.5L16 9.5", ' stroke="var(--icon-on-fill, #fff)"'),
   done: path("M5 12.5l4.5 4.5L19 7.5"),

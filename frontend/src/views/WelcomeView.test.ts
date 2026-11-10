@@ -26,7 +26,7 @@ const CRITERIA = {
   min_rate: 80,
   excluded_types: [],
   banned_words: [],
-  unspoken_languages: [],
+  language_levels: {},
 };
 const SETTINGS = {
   orp_monthly_target: null,
@@ -69,7 +69,7 @@ async function mountWelcome(
                 : {},
     }),
   );
-  PUT.mockResolvedValue({ data: {} });
+  PUT.mockResolvedValue({ data: {}, response: { ok: true } });
   PATCH.mockResolvedValue({ response: { ok: true }, data: {} });
   const router = createRouter({
     history: createMemoryHistory(),
@@ -188,9 +188,15 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
     expect(roles.every((r) => r.attributes("aria-pressed") === "true")).toBe(true);
 
-    // Les valeurs par défaut : les langues du CV.
+    // CV lu : les langues quand même, pré-remplies (PR 17) ; celle du CV en « Courant », les autres « Non renseigné ».
+    const languages = wrapper.find("[data-test=completion-languages]");
+    expect(languages.findAll("[data-test=completion-language] b").map((b) => b.text())).toEqual(["Français", "Allemand", "Italien", "Anglais"]);
+    expect((languages.find("[data-test=completion-level-anglais]").element as HTMLSelectElement).value).toBe("fluent");
+    await languages.find("[data-test=completion-level-francais]").setValue("native");
     await click(wrapper, "welcome-continue");
-    expect(calls("/api/criteria").at(-1)).toMatchObject({ unspoken_languages: ["allemand", "italien"] });
+    expect(calls("/api/criteria").at(-1)).toMatchObject({
+      language_levels: { francais: "native", allemand: "unknown", italien: "unknown", anglais: "fluent" },
+    });
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
   });
 
@@ -210,10 +216,54 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     await input.trigger("change");
     await flushPromises();
     expect(wrapper.find("[data-test=cv-done]").text()).toContain("pas pu être lu");
+    // « Complétons ton profil » (PR 17) : le fichier et la raison en clair ; « Plus tard » passe aux critères.
     await click(wrapper, "welcome-continue");
+    const step = wrapper.get("[data-test=welcome-profile]");
+    expect(step.get("h1").text()).toBe("Complétons ton profil");
+    expect(step.get("[data-test=welcome-profile-file]").text()).toContain("cv.pdf");
+    expect(step.get("[data-test=welcome-profile-file]").text()).toContain("La lecture a échoué.");
+    await click(wrapper, "welcome-profile-later");
     const lead = wrapper.find(".welcome-lead").text();
     expect(lead).not.toContain("Pré-rempli");
     expect(lead).toContain("Ton CV n’a pas pu être lu");
+  });
+
+  it("sans CV : « Complétons ton profil », une expérience, les langues et le nom, puis les critères", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null, roles: ["Employée de commerce"] });
+    POST.mockResolvedValue({ data: {}, response: { ok: true } });
+    await click(wrapper, "welcome-continue");
+    const step = wrapper.get("[data-test=welcome-profile]");
+    expect(step.find("[data-test=welcome-profile-file]").exists()).toBe(false);
+    // Les exemples suivent le poste cherché.
+    expect(step.text()).toContain("Ex.\u202F: accueil des clients, caisse, commandes, inventaire.");
+    // Le nom est le seul champ obligatoire.
+    await click(wrapper, "welcome-profile-continue");
+    expect(wrapper.get("[data-test=completion-message]").text()).toBe("Indique ton prénom et ton nom.");
+    expect(POST).not.toHaveBeenCalledWith("/api/profile-chunks", expect.anything());
+
+    await step.get("[data-test=completion-title]").setValue("Employée de commerce");
+    await step.get("[data-test=completion-employer]").setValue("Coop, Renens");
+    await step.get("[data-test=completion-start]").setValue("Mars 2021");
+    await step.get("[data-test=completion-current]").setValue(true);
+    expect(step.get("[data-test=completion-end]").attributes("disabled")).toBeDefined();
+    expect((step.get("[data-test=completion-end]").element as HTMLInputElement).value).toBe("Aujourd’hui");
+    await step.get("[data-test=completion-tasks]").setValue("Caisse et mise en rayon.");
+    await step.get("[data-test=completion-level-francais]").setValue("native");
+    await step.get("[data-test=completion-level-allemand]").setValue("notions");
+    await step.get("[data-test=completion-name]").setValue("Léa Martin");
+    await click(wrapper, "welcome-profile-continue");
+
+    expect(POST).toHaveBeenCalledWith("/api/profile-chunks", {
+      body: { kind: "experience", title: "Employée de commerce, Coop, Renens", content: "Mars 2021 à aujourd’hui.\nCaisse et mise en rayon.", tags: [], active: true },
+    });
+    expect(calls("/api/identity").at(-1)).toMatchObject({ name: "Léa Martin", street: null });
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ language_levels: { francais: "native", allemand: "notions", italien: "unknown", anglais: "unknown" } });
+    // Retour aux critères, sans redemander les langues ; elles partent avec les critères.
+    expect(wrapper.find("[data-test=welcome-profile]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=completion-languages]").exists()).toBe(false);
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ language_levels: { francais: "native", allemand: "notions" } });
+    expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français");
   });
 
   it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
@@ -249,7 +299,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
       locations: ["VD"],
       min_rate: null,
       remote_policy: "from_switzerland",
-      unspoken_languages: ["allemand", "italien", "anglais"],
+      // Plus aucune langue écartée d'office (PR 17) : « Non renseigné » n'écarte rien.
+      language_levels: {},
     });
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 12, orp_due_day: 5 });
     expect(calls("/api/welcome").at(-1)).toMatchObject({
@@ -270,7 +321,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: null });
     expect(calls("/api/welcome").at(-1)).toMatchObject({ goal: "job" });
     const line = wrapper.find("[data-test=welcome-defaults]").text();
-    expect(line).toBe("Taux : peu importe · Langues : français · Télétravail : accepté depuis la Suisse · Téléphone : désactivé");
+    expect(line).toBe("Taux : peu importe · Langues : à renseigner dans Profil · Télétravail : accepté depuis la Suisse · Téléphone : désactivé");
   });
 
   it("le tri : les offres déjà notées, une à la fois ; Garder et Écarter comme dans Candidatures", async () => {

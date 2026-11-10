@@ -113,8 +113,10 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Premiers pas (PR 10, §5) : les 3 étapes et le panneau d'un critère.
     ("bienvenue", None),
     ("bienvenue", "[data-test=welcome-continue]"),
-    ("bienvenue", "[data-test=welcome-continue] && [data-test=criteria-roles]"),
-    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-criteria]"),
+    # Sans CV lu, « Continuer » ouvre « Complétons ton profil » (PR 17) ; « Plus tard » mène aux critères.
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=criteria-roles]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria]"),
     # Les 4 personnages du logo (PR 11, §15).
     ("adresse-inconnue", None),
 ]

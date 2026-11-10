@@ -1,0 +1,1 @@
+Parcours sans CV lu : écran « Complétons ton profil » (expériences, langues, coordonnées), niveau par langue (Non renseigné, Notions, Courant, Maternelle) avec « Langue à vérifier » sur l’offre, et le profil se complète sur place depuis l’offre et Préparer
