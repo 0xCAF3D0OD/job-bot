@@ -508,3 +508,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.294 | Les 4 personnages du logo remplacent le personnage à capuche (connexion, hors ligne, maintenance, page introuvable, aucune offre, candidature envoyée, objectif atteint, petits emplacements), en clair et en sombre ; l'attente du premier chargement les fait sauter l'un après l'autre | livrée (les notifications gardent le personnage à capuche) |
 | 1.6.295 | Compte sur téléphone : la ligne profil suit CompteImage du 10 novembre (sous-titre sans troncature, rond sans contour, crayon plus épais) | livrée |
 | 1.6.296 | Détail d’une offre sur téléphone : le lien du bas de la carte de la note s’appelle « Le détail de la note », aligné sur le contenu de la carte | livrée |
+| 1.6.297 | Rendez-vous sur téléphone : formulaire et état vide sur la grille de 4, apostrophes typographiques | livrée |
