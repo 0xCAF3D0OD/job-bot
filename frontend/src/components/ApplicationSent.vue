@@ -4,11 +4,11 @@ import { computed } from "vue";
 import { dateInSentence } from "../dates";
 import MomentScreen from "./MomentScreen.vue";
 
-// « Candidature envoyée. » (maquette CandidatureEnvoyee du 6.11, docs/141, 8) : après « J'ai postulé » dans Ma
+// « Candidature envoyée. » (maquette CandidatureEnvoyee, §15 du 9 novembre) : après « J'ai postulé » dans Ma
 // candidature ou « Marquer comme envoyée », quand l'objectif ORP du mois n'est pas atteint (sinon « C'est
-// fait ! »). Le personnage à l'avion, ce qui compte pour l'ORP, la relance prévue s'il y en a une, puis « Voir
-// mes candidatures » et « Préparer la prochaine ». « Je n'ai pas postulé » reste, en lien discret, quand la vue
-// sait l'annuler.
+// fait ! »). Les 4 personnages du logo (scène « envoyee »), ce qui compte pour l'ORP, la relance prévue s'il y en
+// a une, puis « Voir mes candidatures » et « Préparer la prochaine ». « Je n'ai pas postulé » reste, en lien
+// discret, quand la vue sait l'annuler.
 const props = withDefaults(
   defineProps<{
     title: string;
@@ -32,7 +32,7 @@ const searches = computed(() => {
 
 <template>
   <MomentScreen
-    pose="avion"
+    scene="envoyee"
     title="Candidature"
     hand="envoyée."
     data-test="sent-moment"

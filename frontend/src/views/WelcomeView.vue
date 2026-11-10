@@ -8,9 +8,9 @@ import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
-import Illustration from "../components/Illustration.vue";
 import IconButton from "../components/IconButton.vue";
 import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
+import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import SidePanel from "../components/SidePanel.vue";
 import TagInput from "../components/TagInput.vue";
@@ -1152,7 +1152,7 @@ async function finish(to: string): Promise<void> {
                 <span><strong>Pas de CV à jour ?</strong><small>L'Assistant t'aide à en créer un</small></span>
                 <AppIcon name="chevron" />
               </button>
-              <!-- Le personnage du kit avec son CV, le soleil et la colline (maquette OnboardingC, étape 2). -->
+              <!-- Le « 1 » seul (§15 du 9 novembre, 100 px), le soleil et la colline (maquette OnboardingC, étape 2). -->
               <div
                 class="welcome-cv-scene"
                 aria-hidden="true"
@@ -1165,10 +1165,9 @@ async function finish(to: string): Promise<void> {
                   preserveAspectRatio="none"
                 ><path d="M0 90 C 40 20, 120 0, 170 10 C 220 20, 270 50, 300 90 Z" /></svg>
                 <span class="welcome-cv-ground" />
-                <Illustration
-                  pose="cv"
-                  :height="122"
-                  :bust-height="100"
+                <TroupeScene
+                  scene="un"
+                  :height="100"
                   class="welcome-cv-person"
                   data-test="cv-person"
                 />
@@ -1351,7 +1350,7 @@ async function finish(to: string): Promise<void> {
               role="status"
               data-test="welcome-ready"
             >
-              <!-- Le personnage de la révélation à la place de la coche (maquette OnboardingC, fin du tri). -->
+              <!-- Le « 1 » seul (§15, 150 px) à la place de la coche (maquette OnboardingC, fin du tri). -->
               <div
                 class="welcome-ready-scene"
                 aria-hidden="true"
@@ -1366,10 +1365,9 @@ async function finish(to: string): Promise<void> {
                   height="52"
                   decoding="async"
                 >
-                <Illustration
-                  pose="revelation"
-                  :height="186"
-                  :bust-height="150"
+                <TroupeScene
+                  scene="un"
+                  :height="150"
                   full
                   class="welcome-ready-person"
                 />
@@ -1534,7 +1532,7 @@ async function finish(to: string): Promise<void> {
 .welcome-role.chip { min-height: var(--btn-compact); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .welcome-role .icon { width: 16px; height: 16px; }
 .welcome-role-add.chip { border: 1.5px dashed var(--field-border); background: transparent; color: var(--primary-text); }
-/* « Pas de CV à jour ? » et le personnage au CV (maquette OnboardingC, étape 2). */
+/* « Pas de CV à jour ? » et le « 1 » seul (maquette OnboardingC, étape 2). */
 .welcome-no-cv { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-4); background: transparent; border: 1.5px solid var(--field-border); border-radius: var(--radius-card); color: var(--text); text-align: left; white-space: normal; }
 .welcome-no-cv > span { flex: 1; display: grid; gap: var(--space-1); }
 .welcome-no-cv strong { font-size: var(--font-body); }
@@ -1561,7 +1559,7 @@ async function finish(to: string): Promise<void> {
 .welcome-offer-why { margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-soft); font-size: var(--font-small); line-height: var(--leading-normal); }
 .welcome-count { margin: 0; text-align: center; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .welcome-ready { display: grid; justify-items: center; gap: var(--space-3); padding: var(--space-6) var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); text-align: center; }
-/* « Tout est prêt. » (maquette OnboardingC) : le rond pêche de 170 px, les étincelles, le personnage de 186 px. */
+/* « Tout est prêt. » (maquette OnboardingC) : le rond pêche de 170 px, les étincelles, le « 1 » de 150 px (§15). */
 .welcome-ready-scene { position: relative; width: 100%; height: 190px; }
 .welcome-ready-sun { position: absolute; left: 50%; top: 6px; width: 170px; height: 170px; border-radius: 50%; background: var(--peach-soft); transform: translateX(-50%); }
 .welcome-ready-sparkles { position: absolute; left: 28px; top: 14px; width: auto; height: 52px; }

@@ -86,6 +86,8 @@ SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=follow-sheet-open]"),
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-docs-open]"),
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-find-open]"),
+    # Les 4 personnages du logo (PR 11, §15) : la page introuvable.
+    ("adresse-inconnue", None),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
@@ -113,6 +115,8 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("bienvenue", "[data-test=welcome-continue]"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=criteria-roles]"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-criteria]"),
+    # Les 4 personnages du logo (PR 11, §15).
+    ("adresse-inconnue", None),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}

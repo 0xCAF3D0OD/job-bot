@@ -1,46 +1,29 @@
 <script setup lang="ts">
-import type { Pose } from "../personnage";
-import Illustration from "./Illustration.vue";
+import type { Scene } from "../troupe";
+import TroupeScene from "./TroupeScene.vue";
 
-// Un état montré par le personnage (docs/141 §3) : la pose, le titre, une ligne, puis les actions. Même
-// mise en page que FaceState, mais avec le personnage à la place du visage ; jamais les deux à la fois.
-// `full` : un écran plein (240 à 280 px) ; sinon l'état tient dans une liste (200 px au plus).
-// `accessory` : un objet du kit posé au sol à droite du personnage (la tasse de l'attente, docs/141 §3).
+// Un état montré par les 4 personnages du logo (§15 du 9 novembre) : la scène, le titre, une ligne, puis les
+// actions. Même mise en page que FaceState, mais avec la scène à la place du visage ; jamais les deux à la fois.
+// Largeurs des maquettes AucuneOffre (330 px) et AucuneOffreOrdinateur (482 px). `full` : un écran plein, l'image
+// est chargée tout de suite.
 withDefaults(
   defineProps<{
-    pose: Pose;
+    scene: Scene;
     title: string;
-    height?: number;
-    desktopHeight?: number;
     full?: boolean;
     heading?: "h1" | "h2";
-    accessory?: string;
   }>(),
-  { height: 200, desktopHeight: undefined, full: false, heading: "h2", accessory: undefined },
+  { full: false, heading: "h2" },
 );
 </script>
 
 <template>
   <div class="face-state character-state">
-    <div class="character-state-scene">
-      <Illustration
-        :pose="pose"
-        :height="height"
-        :desktop-height="desktopHeight"
-        :full="full"
-      />
-      <img
-        v-if="accessory"
-        class="character-state-accessory"
-        :src="accessory"
-        alt=""
-        aria-hidden="true"
-        width="40"
-        height="53"
-        loading="lazy"
-        data-test="character-accessory"
-      >
-    </div>
+    <TroupeScene
+      :scene="scene"
+      :full="full"
+      class="character-state-scene"
+    />
     <component
       :is="heading"
       class="face-state-title character-state-title"
@@ -57,9 +40,8 @@ withDefaults(
 </template>
 
 <style scoped>
-/* Valeurs de la maquette AucuneOffre (390 px) : le titre à 22 px en gras, 8 px sous le personnage. */
-.character-state-scene { display: flex; align-items: flex-end; justify-content: center; gap: var(--space-1); }
-.character-state-accessory { width: 40px; height: auto; }
+/* Valeurs de la maquette AucuneOffre (390 px) : le titre à 22 px en gras, 8 px sous la scène. */
+.character-state-scene { margin-inline: auto; }
 .character-state-title { margin-top: var(--space-2); font-size: var(--font-section); font-weight: var(--weight-bold); }
 /* Ordinateur (maquette du 8 novembre, AucuneOffreOrdinateur) : le titre de 34/42 en 800, la phrase de 18/28, les
    boutons de 44 côte à côte. */

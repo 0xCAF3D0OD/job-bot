@@ -118,3 +118,29 @@ personnage (PR 4).
 - Alertes (PR 4) : l'en-tête est la transition de page, qui montrait déjà la cloche. La liste vide n'existe pas
   comme telle : sans recherche en place, la page ouvre l'assistant ; le logo à la cloche se pose au-dessus, avec
   « Aucune alerte pour l'instant ». Pas de board.
+
+## 5. Les 4 personnages du logo (MODIFICATIONS du 9 novembre, §15, PR 11)
+
+Validé par Kevin le 9 novembre au soir : les 4 morceaux du logo (point bleu, « 1 », sourire, point orange) remplacent
+le personnage à capuche partout, **sauf dans les notifications**. Composant `TroupeScene.vue` (prop `scene`, table
+`src/troupe.ts`, fichiers servis depuis `public/troupe/`), variante sombre selon Réglages ou le système en Auto.
+
+| Écran | Scène | Fichier |
+|---|---|---|
+| Connexion (téléphone, ordinateur), au revoir | groupe | `AuthIllustration.vue` |
+| Pas de connexion | hors-ligne | `MaintenanceOverlay.vue` |
+| Maintenance annoncée | maintenance | `MaintenanceOverlay.vue` |
+| « jobA1 se met à jour » | mise-a-jour | `MaintenanceOverlay.vue` |
+| Page introuvable | introuvable | `NotFoundView.vue` |
+| Aucune offre (avec filtres, et en attente de la première collecte) | aucune-offre | `CharacterState.vue` |
+| Candidature envoyée | envoyee | `ApplicationSent.vue` |
+| Objectif ORP atteint, entretien décroché | objectif | `GoalReached.vue`, `MomentScreen.vue` |
+| Premiers pas sur téléphone, aucun rendez-vous ORP prévu | un | `WelcomeView.vue`, `OrpMeetingEmpty.vue` |
+
+- Jamais sur un refus, une échéance ORP dépassée, une perte de données ou une erreur grave : la réponse négative
+  montre une icône sobre (`MomentScreen` avec `icon`), testé dans `personnage.test.ts`.
+- La scène « ecriture » (réserve) n'est pas placée ; les originaux haute définition restent dans le zip du 9 novembre.
+- L'attente : `TroupeLoader.vue`, rien sous 1 s, les 4 morceaux qui sautent l'un après l'autre jusqu'à 10 s, puis un
+  texte. Placé dans le voile du premier chargement (téléphone, et Formations sur ordinateur), à 1 s au lieu de 300 ms
+  et jusqu'à 10 s au lieu de 8. Sur ordinateur, les pages avec un objet gardent le logo transformé.
+- Entretien décroché (absent du tableau du §15) : la scène « objectif », à confirmer par Kevin.

@@ -138,10 +138,10 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(empty.find(".face-state-title").text()).toBe("Aucune offre avec ces filtres");
     expect(empty.text()).toContain("Note minimale : Proche et plus, Taux minimum : 80 %. Élargis un critère pour voir plus d'offres.");
     expect(empty.find("[data-test=offers-edit-filters]").classes()).toContain("primary");
-    // Le personnage à la loupe (maquette AucuneOffre du 6.11, docs/141) : 200 px, seul sur l'écran.
-    const person = empty.find("[data-illustration=personnage]");
-    expect(person.attributes("data-pose")).toBe("loupe");
-    expect(person.attributes("height")).toBe("200");
+    // Les 4 personnages du logo (maquette AucuneOffre, §15) : la scène « aucune-offre », 330 px, seule sur l'écran.
+    const person = empty.find("[data-illustration=troupe]");
+    expect(person.attributes("data-scene")).toBe("aucune-offre");
+    expect(person.attributes("width")).toBe("330");
     expect(wrapper.find("[data-mood-animation]").exists()).toBe(false);
     expect(wrapper.find(".face-mark").exists()).toBe(false);
     wrapper.unmount();

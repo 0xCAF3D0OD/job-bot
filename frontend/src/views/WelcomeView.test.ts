@@ -121,11 +121,11 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const privacy = wrapper.find("[data-test=cv-privacy]");
     expect(privacy.text()).toContain("L'IA n'en reçoit que les parties utiles, sans tes coordonnées.");
     expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
-    // Sans Assistant, pas de « Pas de CV à jour ? » ; le personnage au CV, lui, est là (maquette OnboardingC).
+    // Sans Assistant, pas de « Pas de CV à jour ? » ; le « 1 » seul, lui, est là (maquette OnboardingC, §15).
     expect(wrapper.find("[data-test=cv-assistant]").exists()).toBe(false);
     const person = wrapper.find("[data-test=cv-person]");
-    expect(person.attributes("src")).toContain("perso-03-cv-400");
-    expect(person.attributes("srcset")).toContain("perso-03-cv-800");
+    expect(person.attributes("src")).toContain("/troupe/un-400");
+    expect(person.attributes("height")).toBe("100");
     expect(person.attributes("alt")).toBe("");
     expect(wrapper.find("[data-test=cv-scene]").attributes("aria-hidden")).toBe("true");
   });

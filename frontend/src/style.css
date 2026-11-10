@@ -2189,7 +2189,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .auth-split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); min-height: calc(100dvh - 4.4rem); }
 .auth-art { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--space-6) + var(--space-1)); padding: 0 var(--space-6); background: var(--surface); border-right: 1px solid var(--line); }
 .auth-art .auth-illustration-phone { display: none; }
-.auth-pitch { margin: 0; max-width: 460px; text-align: center; font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
+.auth-pitch { margin: 0; --pitch-24: 1.5rem; --pitch-lh: 1.25; max-width: 520px; text-align: center; font-size: var(--pitch-24); line-height: var(--pitch-lh); font-weight: var(--weight-bold); }
 .auth-panel { display: grid; place-items: center; padding: var(--space-12) var(--space-6); background: var(--bg); }
 .auth-box { display: grid; gap: var(--space-4); width: min(100%, 24rem); }
 .auth-box h1 { margin: 0; font-size: var(--font-figure); }

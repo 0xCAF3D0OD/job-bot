@@ -35,10 +35,10 @@ describe("GoalReached", () => {
     expect(wrapper.find("[role=status]").text()).toContain(
       "Objectif ORP de novembre atteint, 10 recherches sur 10. Ta feuille est prête pour le rendez-vous.",
     );
-    // Le personnage qui fête, 240 px, à la place du logo ravi et du soleil (docs/141, 9) ; rien d'autre.
-    const person = wrapper.find("[data-illustration=personnage]");
-    expect(person.attributes("data-pose")).toBe("celebration");
-    expect(person.attributes("height")).toBe("240");
+    // Les 4 personnages du logo qui fêtent (scène « objectif », §15), 340 px ; rien d'autre.
+    const person = wrapper.find("[data-illustration=troupe]");
+    expect(person.attributes("data-scene")).toBe("objectif");
+    expect(person.attributes("width")).toBe("340");
     expect(wrapper.find("[data-mood-animation]").exists()).toBe(false);
     expect(wrapper.find(".confetti").exists()).toBe(false);
     expect(wrapper.find("[data-test=goal-close]").attributes("aria-label")).toBe("Fermer");
