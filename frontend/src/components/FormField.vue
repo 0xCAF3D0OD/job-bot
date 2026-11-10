@@ -5,10 +5,11 @@ import { computed, useId } from "vue";
 // semi-gras, « (facultatif) » en gris sur un champ facultatif (pas d'astérisque, Material 3), une
 // aide d'une ligne sous le libellé, le champ, puis l'erreur sous le champ, avec une icône (WCAG 1.4.1,
 // 3.3.1 ; Material 3 et Polaris). `width` : la largeur dit la réponse attendue, en caractères
-// (Baymard Institute, Form Field Width). Le slot reçoit l'id, la description et l'état invalide.
+// (Baymard Institute, Form Field Width). Le slot reçoit l'id, la description et l'état invalide. `badge` : une marque
+// à côté du libellé, comme « Du CV » (maquette CoordonneesOrdinateur du 10 novembre au soir).
 const props = withDefaults(
-  defineProps<{ label: string; optional?: boolean; hint?: string; error?: string; width?: 5 | 10 | 20 | 30 }>(),
-  { optional: false, hint: "", error: "", width: undefined },
+  defineProps<{ label: string; optional?: boolean; hint?: string; error?: string; width?: 5 | 10 | 20 | 30; badge?: string }>(),
+  { optional: false, hint: "", error: "", width: undefined, badge: "" },
 );
 
 const id = useId();
@@ -32,7 +33,10 @@ const control = computed(() => ({
     >{{ label }}<span
       v-if="optional"
       class="form-field-optional"
-    > (facultatif)</span></label>
+    > (facultatif)</span><span
+      v-if="badge"
+      class="form-field-badge"
+    >{{ badge }}</span></label>
     <p
       v-if="hint"
       :id="hintId"
