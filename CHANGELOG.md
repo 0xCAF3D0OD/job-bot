@@ -504,3 +504,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.290 | Ordinateur : le Profil devient une page unique (en-tête, Mon CV, Compétences trouvées, Ce que je cherche, Mon parcours) ; chaque ligne de « Mon parcours » ouvre sa page et « Modifier » ne change que le nom, le poste et le lieu. | livrée |
 | 1.6.291 | Réglages sur ordinateur : groupes bordés, lignes Langue et Taille du texte avec leur panneau, rappel ORP 5 jours avant la fin du mois | livrée avec une réserve (interface en français seulement : Deutsch et English grisés) |
 | 1.6.292 | Aujourd'hui sur ordinateur : fond crème sous la bande bleue, espacements sur la grille de 4 | livrée |
+| 1.6.293 | Premiers pas sur ordinateur : grille commune des 3 étapes, scènes de la présentation, lecture du CV qui ne bloque plus l'écran et reprend après une coupure | livrée avec une réserve (lecture du CV toujours en une requête, pas encore 202 + job_id) |
