@@ -102,6 +102,10 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),
+    # Réglages (PR 9c, §2.10) et les panneaux Langue et Taille du texte.
+    ("reglages?rubrique=notifications", None),
+    ("reglages?rubrique=notifications", "[data-test=language-row]"),
+    ("reglages?rubrique=notifications", "[data-test=text-size-row]"),
     # Premiers pas (PR 10, §5) : les 3 étapes et le panneau d'un critère.
     ("bienvenue", None),
     ("bienvenue", "[data-test=welcome-continue]"),

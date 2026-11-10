@@ -1,6 +1,6 @@
 """Rappels ntfy des preuves ORP (docs/09-export-orp.md §5).
 
-- le 25 du mois, si les candidatures sont sous l'objectif ;
+- les 5 derniers jours du mois (dès le 27 d'un mois de 31 jours), sous l'objectif ;
 - le 1er du mois suivant, puis la veille de la date limite si le mois n'est pas remis.
 
 Chaque rappel n'est envoyé qu'une fois par mois (orp_months.reminders_sent) : dans la cloche,
@@ -22,7 +22,9 @@ from jobbot.runtime import Runtime
 
 log = get_logger(__name__)
 
-UNDER_TARGET_DAY = 25
+# Le rappel « sous l'objectif » part quand il reste ces jours dans le mois, aujourd'hui compris
+# (Réglages : « Rappel 5 jours avant la fin du mois », ReglagesOrdinateur, MODIFICATIONS_9 §2.10).
+UNDER_TARGET_DAYS_LEFT = 5
 MONTHS = [
     "janvier", "février", "mars", "avril", "mai", "juin",
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
@@ -77,16 +79,16 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
         current_record = await session.get(OrpMonth, current)
         previous_record = await session.get(OrpMonth, previous)
 
-    # 1. Sous l'objectif, à partir du 25.
+    # 1. Sous l'objectif, les 5 derniers jours du mois.
+    days_left = (_last_day(current) - today).days + 1
     current_sent = dict(current_record.reminders_sent or {}) if current_record else {}
     if (
         target
-        and today.day >= UNDER_TARGET_DAY
+        and days_left <= UNDER_TARGET_DAYS_LEFT
         and now_counts.count < target
         and "under_target" not in current_sent
         and not (current_record and current_record.submitted_at)
     ):
-        days_left = (_last_day(current) - today).days + 1
         await notify.deliver(
             runtime,
             notify.Message(
