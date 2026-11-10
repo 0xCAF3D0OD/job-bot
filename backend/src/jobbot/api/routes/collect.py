@@ -144,6 +144,11 @@ class OfferOut(BaseModel):
     spontaneous: bool = False
     # Offre ajoutée par toi, par son lien ou son texte (docs/111).
     added_by_you: bool = False
+    # Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) : « reading »
+    # tant qu'elle est à faire ou en cours, « done » quand jobA1 l'a lue (ou qu'elle a été
+    # collée) et la note refaite, « refused » si le site bloque la lecture ; None : l'offre avait
+    # son texte complet dès le départ, ou c'est une candidature spontanée.
+    text_reading: Literal["reading", "done", "refused"] | None = None
 
 
 class DoubtOut(BaseModel):
@@ -324,8 +329,18 @@ def _offer_out(
             **_evaluation_fields(evaluation, current_hash),
             **remote,
             "doubts": _doubts(offer, evaluation),
+            "text_reading": text_reading(offer),
         }
     )
+
+
+def text_reading(offer: Offer) -> str | None:
+    """L'état de la lecture automatique de l'annonce complète, pour la carte de la note."""
+    if offer.spontaneous:
+        return None
+    if offer.description:
+        return "done" if offer.text_read == "done" else None
+    return "refused" if offer.text_read == "refused" else "reading"
 
 
 # « À examiner » regroupe les offres retenues par le filtre et celles qui n'y sont pas encore

@@ -190,6 +190,14 @@ class Offer(Base):
     canton: Mapped[str | None] = mapped_column(Text, index=True)
     enrich_attempts: Mapped[int] = mapped_column(default=0)
     enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) : NULL à faire,
+    # « done » (lue ou collée), « refused » (le site bloque, page retirée, pas de lien) ; la raison
+    # en code court (« robots », « blocked », « no-text », « gone », « timeout »…), le nombre
+    # d'essais (2 au plus) et le dernier. Niveau « Personnelle » (D-1), comme le reste de l'offre.
+    text_read: Mapped[str | None] = mapped_column(Text)
+    text_read_reason: Mapped[str | None] = mapped_column(Text)
+    text_read_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    text_read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Offre retirée (docs/10 §1) : page jobup introuvable (« page ») ou plus vue dans aucune
     # alerte depuis 30 jours (« age », pour les sites qu'on ne peut pas vérifier).
     expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
