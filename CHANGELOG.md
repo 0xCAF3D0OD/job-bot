@@ -509,3 +509,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.295 | Compte sur téléphone : la ligne profil suit CompteImage du 10 novembre (sous-titre sans troncature, rond sans contour, crayon plus épais) | livrée |
 | 1.6.296 | Détail d’une offre sur téléphone : le lien du bas de la carte de la note s’appelle « Le détail de la note », aligné sur le contenu de la carte | livrée |
 | 1.6.297 | Rendez-vous sur téléphone : formulaire et état vide sur la grille de 4, apostrophes typographiques | livrée |
+| 1.6.298 | Annonce complète lue automatiquement : jobA1 lit l’annonce d’une offre d’alerte en arrière-plan, la fiche montre « jobA1 lit l’annonce complète… » ou, si le site bloque, « Coller le texte » et « Ouvrir l’annonce » ; plus de bouton « Lire l’annonce » | livrée |
