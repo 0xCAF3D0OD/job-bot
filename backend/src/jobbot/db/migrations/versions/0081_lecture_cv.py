@@ -1,7 +1,7 @@
 """Lecture du CV qui continue hors de la page (maquette du 10 novembre au soir, PR 21)
 
-Revision ID: 0080
-Revises: 0079
+Revision ID: 0081
+Revises: 0080
 Create Date: 2026-11-10
 
 - `documents.read_state` : NULL (jamais demandée), « reading », « done », « unavailable »,
@@ -20,8 +20,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB
 
-revision: str = "0080"
-down_revision: str | None = "0079"
+revision: str = "0081"
+down_revision: str | None = "0080"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
