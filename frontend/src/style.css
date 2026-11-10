@@ -78,6 +78,10 @@
   --spark: #E8B48A;
   --peach: #F3B08A;
   --peach-soft: #FDEDE3;
+  /* Le fond des blocs d'état de la carte « Mon CV » (maquette ProfilOrdinateurCV du 10 novembre au soir, PR 21) : à
+     faire (pêche lavé) et lu (vert lavé), plus pâles que --peach-soft et --success-soft. */
+  --peach-wash: #FBF4EE;
+  --success-wash: #EAF4EE;
   /* Le texte sur --peach-soft : le bloc date du rendez-vous ORP (maquette RendezVous, 6.11.2026). */
   --peach-text: #8A4A16;
   --scribble: #F09A66;
@@ -250,6 +254,8 @@
     --primary-soft: #232B45;
     --water: #3A4A85;
     --peach-soft: #3A281E;
+    --peach-wash: #2E241C;
+    --success-wash: #1F2E26;
     --peach-text: #F2B98E;
     --success: #62D497;
     --success-soft: #1C3527;
@@ -310,6 +316,8 @@
   --primary-soft: #232B45;
   --water: #3A4A85;
   --peach-soft: #3A281E;
+  --peach-wash: #2E241C;
+  --success-wash: #1F2E26;
   --peach-text: #F2B98E;
   --success: #62D497;
   --success-soft: #1C3527;

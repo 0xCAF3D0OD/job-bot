@@ -23,6 +23,7 @@ const KINDS: Record<string, Kind> = {
   collect_failed: { action: "Voir", icon: "alert-circle", late: true },
   gmail_filter: { action: "Voir", icon: "alert-circle", late: true },
   backup_failed: { action: "Voir", icon: "alert-circle", late: true },
+  cv_read: { action: "Choisir", icon: "file" },
 };
 
 export function notificationKind(kind: string): Kind {

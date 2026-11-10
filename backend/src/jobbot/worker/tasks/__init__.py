@@ -3,6 +3,7 @@
 from jobbot.worker.tasks import (
     backup,
     collect,
+    cv_read,
     employer,
     enrich,
     filter,
@@ -17,6 +18,7 @@ from jobbot.worker.tasks import (
 __all__ = [
     "backup",
     "collect",
+    "cv_read",
     "employer",
     "enrich",
     "filter",
