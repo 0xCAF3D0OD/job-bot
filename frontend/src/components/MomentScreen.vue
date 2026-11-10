@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import type { Pose } from "../personnage";
+import type { IconName } from "../icons";
+import type { Scene } from "../troupe";
+import AppIcon from "./AppIcon.vue";
 import BrandMark from "./BrandMark.vue";
-import Illustration from "./Illustration.vue";
+import TroupeScene from "./TroupeScene.vue";
 
 // Un moment en écran plein (maquette CandidatureEnvoyee du 6.11, docs/141 §3) : la marque en haut sur
-// téléphone, le personnage, le titre et ses lignes au centre (annoncés, role="status"), les actions en bas.
+// téléphone, la scène des 4 personnages du logo (§15 du 9 novembre ; 340 px, 471 sur ordinateur), le titre et ses
+// lignes au centre (annoncés, role="status"), les actions en bas.
 // Sert à « Candidature envoyée. », « Entretien décroché », à la réponse négative et à l'au revoir.
 // Les actions viennent de la vue (`#actions`) : `sent-screen-primary` pour le bouton plein, `sent-screen-next`
 // pour le lien dessous.
-// `hand` : la fin du titre, manuscrite sur ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) ; le
-// personnage y fait 240 px, et les actions se rangent côte à côte sous le texte.
-withDefaults(defineProps<{ pose: Pose; title: string; hand?: string; line?: string; height?: number }>(), {
+// `hand` : la fin du titre, manuscrite sur ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) ;
+// les actions se rangent côte à côte sous le texte.
+// `icon` à la place de `scene` : une icône sobre, pour une réponse négative (§15 : jamais les personnages sur un
+// refus).
+withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?: string; line?: string }>(), {
+  scene: undefined,
+  icon: undefined,
   hand: "",
   line: "",
-  height: 280,
 });
 </script>
 
@@ -27,12 +33,17 @@ withDefaults(defineProps<{ pose: Pose; title: string; hand?: string; line?: stri
       class="sent-screen-body"
       role="status"
     >
-      <Illustration
-        :pose="pose"
-        :height="height"
-        :desktop-height="240"
+      <TroupeScene
+        v-if="scene"
+        :scene="scene"
         full
       />
+      <span
+        v-else-if="icon"
+        class="sent-screen-icon"
+        aria-hidden="true"
+        data-test="moment-icon"
+      ><AppIcon :name="icon" /></span>
       <h1 class="sent-screen-title">
         {{ title }}<template v-if="hand">
           {{ " " }}<span class="sent-screen-hand">{{ hand }}</span>
@@ -54,6 +65,8 @@ withDefaults(defineProps<{ pose: Pose; title: string; hand?: string; line?: stri
 .sent-screen { display: flex; flex-direction: column; min-height: 100dvh; max-width: 30rem; margin-inline: auto; box-sizing: border-box; color: var(--text); }
 .sent-screen-brand { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-5) 0; font-size: var(--font-section); font-weight: var(--weight-bold); }
 .sent-screen-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: 0 var(--space-6); text-align: center; }
+.sent-screen-icon { --moment-icon: 6rem; --moment-glyph: 2.5rem; display: grid; place-items: center; width: var(--moment-icon); height: var(--moment-icon); border-radius: 50%; background: var(--surface-muted); color: var(--text-secondary); }
+.sent-screen-icon :deep(svg) { width: var(--moment-glyph); height: var(--moment-glyph); }
 .sent-screen-title { margin: var(--space-2) 0 0; font-size: var(--font-figure); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -0.3px; }
 .sent-screen-body :slotted(p) { margin: 0; max-width: 310px; font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .sent-screen-body :slotted(p strong) { color: var(--text); }
@@ -63,7 +76,7 @@ withDefaults(defineProps<{ pose: Pose; title: string; hand?: string; line?: stri
 .sent-screen-actions :slotted(.sent-screen-next) { display: flex; font-size: var(--font-body); align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .sent-screen-actions :slotted(.sent-screen-cancel) { justify-self: center; min-height: var(--target-min); color: var(--text-secondary); font-weight: var(--weight-regular); }
 @media (min-width: 821px) { .sent-screen { min-height: 0; padding-block: var(--space-8); } .sent-screen-brand { display: none; } }
-/* Ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) : 880 px, le personnage de 240, le titre de 34/42
+/* Ordinateur (maquette du 8 novembre, CandidatureEnvoyeeOrdinateur) : 880 px, la scène de 471, le titre de 34/42
    en 800 et sa fin manuscrite, la phrase de 18/28 ; les deux boutons de 44 côte à côte, le contour puis le plein. */
 @media (min-width: 1024px) {
   .sent-screen { --sent-34: 34px; --sent-42: 42px; --sent-18: 18px; --sent-28: 28px; --sent-10: 10px; max-width: 880px; padding-top: var(--space-6); }

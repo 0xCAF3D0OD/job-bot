@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import sign from "../assets/accessoires/accessoire-panneau.webp";
 import BrandMark from "../components/BrandMark.vue";
-import Illustration from "../components/Illustration.vue";
+import TroupeScene from "../components/TroupeScene.vue";
 
 // Page introuvable (docs/59 §5 ; maquette PageIntrouvable du 2026-11-05) : une adresse qui ne mène nulle
 // part le dit, au lieu de renvoyer sans un mot vers l'accueil. Le logo et « jobA1 » en haut, sans barre ;
-// le personnage perplexe (Illustration, docs/141 : écran plein, 280 px sur téléphone au lieu des 290 de la
-// maquette, 290 sur ordinateur) devant le panneau, les nuages et le sol ; « Retour à l'accueil » en bas, pleine largeur.
+// les 4 personnages du logo (scène « introuvable », §15 du 9 novembre, 340 px) devant le panneau, les nuages et le
+// sol ; « Retour à l'accueil » en bas, pleine largeur.
 // Ordinateur dès 1 024 px (maquette du 8 novembre, PageIntrouvableOrdinateur) : l'en-tête complet quand on est
-// connecté (App.vue), le personnage seul à 240 px, le titre de 34 et « Retour à l'accueil » en bouton plein dessous.
+// connecté (App.vue), la scène seule à 392 px, le titre de 34 et « Retour à l'accueil » en bouton plein dessous.
 </script>
 
 <template>
@@ -39,10 +39,8 @@ import Illustration from "../components/Illustration.vue";
           height="337"
           decoding="async"
         >
-        <Illustration
-          pose="perplexe"
-          :height="280"
-          :desktop-height="240"
+        <TroupeScene
+          scene="introuvable"
           full
           class="lost-person"
           data-test="not-found-person"
@@ -69,7 +67,7 @@ import Illustration from "../components/Illustration.vue";
 </template>
 
 <style scoped>
-/* Valeurs de la maquette PageIntrouvable (390 px), ramenées aux échelles ; le personnage à 280 px (docs/141). */
+/* Valeurs de la maquette PageIntrouvable (390 px), ramenées aux échelles ; la scène à 340 px. */
 .lost-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
 .lost-brand { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-5) 0; font-size: var(--font-section); font-weight: var(--weight-bold); }
 .lost-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: 0 var(--space-6); text-align: center; }
@@ -92,13 +90,13 @@ import Illustration from "../components/Illustration.vue";
 @media (min-width: 821px) {
   .lost-scene { height: 340px; }
 }
-/* Ordinateur (maquette du 8 novembre, PageIntrouvableOrdinateur) : le personnage seul, 240 px ; le titre de 34/42 en
+/* Ordinateur (maquette PageIntrouvableOrdinateur) : la scène seule, 392 px ; le titre de 34/42 en
    800, la phrase de 18/28, le bouton plein de 44 dessous. */
 @media (min-width: 1024px) {
   .lost-page { --lost-34: 34px; --lost-42: 42px; --lost-18: 18px; --lost-28: 28px; min-height: calc(100dvh - 12rem); flex: 1; justify-content: center; }
   :root:has(.topbar) .lost-brand { display: none; }
   .lost-brand { padding: var(--space-5) max(var(--space-6), calc((100vw - var(--header-max)) / 2 + var(--space-6))) 0; }
-  .lost-main { flex: 0 0 auto; max-width: 880px; margin-inline: auto; gap: 0; padding: var(--space-6) 0 0; }
+  .lost-main { flex: 0 0 auto; align-self: center; max-width: 880px; gap: 0; padding: var(--space-6) 0 0; }
   .lost-scene { width: auto; height: auto; }
   .lost-scene :is(svg, .lost-sign, .lost-ground) { display: none; }
   .lost-person { position: static; transform: none; }

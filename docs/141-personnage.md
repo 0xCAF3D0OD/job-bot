@@ -37,7 +37,8 @@ Les animations de transition entre les pages et les mascottes d'humeur existante
   couleurs du thème) se posent autour, dans l'écran qui les utilise.
 
 L'ancienne série d'illustrations (docs/67, `illustrations_transparentes.zip`) s'appelle désormais
-`SceneIllustration.vue`. Elle disparaît écran par écran (§4).
+`SceneIllustration.vue`. Elle disparaissait écran par écran (§4) ; depuis le 9 novembre (MODIFICATIONS_9 §6), elle
+reste pour présenter et expliquer une situation : page de présentation, premiers pas, alertes d'un nouveau compte.
 
 Budget de poids (docs/117, limite 315 Ko depuis la PR 543) : le personnage ajoute environ 1 Ko de code. En
 compensation, l'ancienne série est servie elle aussi depuis `frontend/public/illustrations/`, sans adresses
@@ -84,8 +85,13 @@ personnage (PR 4).
   (`ia-vide`), Formations vide (`formations-vide`), Bilan « Trop tôt » (`trop-tot`), Préparer vide
   (`preparer-vide`), réussites « Tri terminé » et « Tout est à jour » (`reussite`). Elles sont retirées au fil des
   PR quand l'écran passe au personnage ou à une mascotte d'humeur.
+- Décision du 9 novembre (MODIFICATIONS_9 §6) : la série `SceneIllustration` n'est plus « à retirer ». Elle reste
+  pour la page de présentation, les premiers pas (`offres-profils`, `lecture-calme`, `formations-vide`,
+  `connexion-perdue`, `lieux-carte`, `reussite`) et les alertes d'un nouveau compte (`alertes-carte`). Un seul type
+  d'illustration par écran : jamais une scène et le personnage ensemble.
 - Retirées (PR 2) : `connexion-perdue` (la baie de serveurs : l'erreur réseau dans la page montre la mascotte qui
-  fait « non », sur ordinateur comme sur téléphone), `introuvable` (la personne devant un écran : l'offre
+  fait « non », sur ordinateur comme sur téléphone ; une nouvelle scène du même nom, l'ordinateur débranché, revient
+  le 9 novembre pour la coupure pendant la lecture du CV des premiers pas, MODIFICATIONS_9 §13), `introuvable` (la personne devant un écran : l'offre
   introuvable est un écran de travail, elle garde le visage du 1), `aucune-offre` (remplacée par le personnage à la
   loupe ; l'image n'était plus utilisée).
 - Maintenance et pas de connexion : 250 px sur téléphone (maquette), 290 px sur ordinateur. Les deux poses sont
@@ -112,3 +118,29 @@ personnage (PR 4).
 - Alertes (PR 4) : l'en-tête est la transition de page, qui montrait déjà la cloche. La liste vide n'existe pas
   comme telle : sans recherche en place, la page ouvre l'assistant ; le logo à la cloche se pose au-dessus, avec
   « Aucune alerte pour l'instant ». Pas de board.
+
+## 5. Les 4 personnages du logo (MODIFICATIONS du 9 novembre, §15, PR 11)
+
+Validé par Kevin le 9 novembre au soir : les 4 morceaux du logo (point bleu, « 1 », sourire, point orange) remplacent
+le personnage à capuche partout, **sauf dans les notifications**. Composant `TroupeScene.vue` (prop `scene`, table
+`src/troupe.ts`, fichiers servis depuis `public/troupe/`), variante sombre selon Réglages ou le système en Auto.
+
+| Écran | Scène | Fichier |
+|---|---|---|
+| Connexion (téléphone, ordinateur), au revoir | groupe | `AuthIllustration.vue` |
+| Pas de connexion | hors-ligne | `MaintenanceOverlay.vue` |
+| Maintenance annoncée | maintenance | `MaintenanceOverlay.vue` |
+| « jobA1 se met à jour » | mise-a-jour | `MaintenanceOverlay.vue` |
+| Page introuvable | introuvable | `NotFoundView.vue` |
+| Aucune offre (avec filtres, et en attente de la première collecte) | aucune-offre | `CharacterState.vue` |
+| Candidature envoyée | envoyee | `ApplicationSent.vue` |
+| Objectif ORP atteint, entretien décroché | objectif | `GoalReached.vue`, `MomentScreen.vue` |
+| Premiers pas sur téléphone, aucun rendez-vous ORP prévu | un | `WelcomeView.vue`, `OrpMeetingEmpty.vue` |
+
+- Jamais sur un refus, une échéance ORP dépassée, une perte de données ou une erreur grave : la réponse négative
+  montre une icône sobre (`MomentScreen` avec `icon`), testé dans `personnage.test.ts`.
+- La scène « ecriture » (réserve) n'est pas placée ; les originaux haute définition restent dans le zip du 9 novembre.
+- L'attente : `TroupeLoader.vue`, rien sous 1 s, les 4 morceaux qui sautent l'un après l'autre jusqu'à 10 s, puis un
+  texte. Placé dans le voile du premier chargement (téléphone, et Formations sur ordinateur), à 1 s au lieu de 300 ms
+  et jusqu'à 10 s au lieu de 8. Sur ordinateur, les pages avec un objet gardent le logo transformé.
+- Entretien décroché (absent du tableau du §15) : la scène « objectif », à confirmer par Kevin.

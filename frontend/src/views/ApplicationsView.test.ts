@@ -293,10 +293,10 @@ describe("Suivi en calendrier (docs/22)", () => {
     await panel.find("[data-test=panel-status]").setValue("entretien");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 2 } } }));
-    // Un entretien proposé : « Entretien décroché », en écran plein, le personnage qui fête (docs/141, 12).
+    // Un entretien proposé : « Entretien décroché », en écran plein, les 4 personnages du logo qui fêtent (§15).
     const moment = wrapper.find("[data-test=interview-moment]");
     expect(moment.find("h1").text()).toMatch(/^Entretien décroché chez .+\.$/);
-    expect(moment.find("[data-pose=celebration]").exists()).toBe(true);
+    expect(moment.find("[data-scene=objectif]").exists()).toBe(true);
     expect(moment.find("[role=status]").exists()).toBe(true);
     expect(wrapper.find(".jobs-body").exists()).toBe(false);
     // « Préparer l'entretien » ouvre la préparation de cette candidature.
@@ -319,7 +319,9 @@ describe("Suivi en calendrier (docs/22)", () => {
     await flushPromises();
     const moment = wrapper.find("[data-test=refusal-moment]");
     expect(moment.find("h1").text()).toMatch(/^Réponse de .+\.$/);
-    expect(moment.find("[data-pose=bonjour]").exists()).toBe(true);
+    // Jamais les personnages sur un refus (§15) : une icône sobre.
+    expect(moment.find("[data-test=moment-icon]").exists()).toBe(true);
+    expect(moment.find("[data-scene]").exists()).toBe(false);
     expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
     expect(moment.find("[data-test=refusal-next]").attributes("href")).toBe("/candidatures/offres");
     expect(moment.find(".face-mark").exists()).toBe(false);

@@ -86,6 +86,8 @@ SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=follow-sheet-open]"),
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-docs-open]"),
     ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-find-open]"),
+    # Les 4 personnages du logo (PR 11, §15) : la page introuvable.
+    ("adresse-inconnue", None),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
@@ -102,6 +104,19 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),
+    # Aujourd'hui (PR 9d) : bande bleue, carte du mois, cartes d'action aux cercles gris.
+    ("", None),
+    # Réglages (PR 9c, §2.10) et les panneaux Langue et Taille du texte.
+    ("reglages?rubrique=notifications", None),
+    ("reglages?rubrique=notifications", "[data-test=language-row]"),
+    ("reglages?rubrique=notifications", "[data-test=text-size-row]"),
+    # Premiers pas (PR 10, §5) : les 3 étapes et le panneau d'un critère.
+    ("bienvenue", None),
+    ("bienvenue", "[data-test=welcome-continue]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=criteria-roles]"),
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-criteria]"),
+    # Les 4 personnages du logo (PR 11, §15).
+    ("adresse-inconnue", None),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
