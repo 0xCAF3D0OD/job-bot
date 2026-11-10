@@ -276,6 +276,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     );
     const sheet = wrapper.findComponent({ name: "OfferCompatSheet" });
     expect(sheet.props("open")).toBe(false);
+    // Prompt du 10 novembre, PR 15 : sur téléphone, le lien s'appelle « Le détail de la note », note provisoire ou non.
+    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Le détail de la note");
     await wrapper.find("[data-test=compat-open]").trigger("click");
     expect(sheet.props("open")).toBe(true);
     expect(sheet.props("strengths")).toEqual([

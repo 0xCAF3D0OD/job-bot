@@ -845,8 +845,9 @@ watch(
             :class="{ 'after-band': partial && sub }"
             @click="compatOpen = true"
           >
-            <!-- Note provisoire sur téléphone (OffreProvisoire) : « Le détail de la note », aligné sur le contenu. -->
-            {{ partial && sub ? "Le détail de la note" : "Voir la compatibilité" }}
+            <!-- Téléphone (prompt du 10 novembre, PR 15) : « Le détail de la note », aligné sur le contenu de la carte,
+                 chevron à droite, que la note soit provisoire ou non. Ordinateur : « Voir la compatibilité ». -->
+            {{ sub ? "Le détail de la note" : "Voir la compatibilité" }}
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
@@ -1251,7 +1252,7 @@ watch(
   .offers-grid > .detail-column:not(.placeholder):has(.offer-blocks) { z-index: 39; background: var(--bg); }
   .offer-blocks {
     --ob-pad: 18.5px; --ob-margin: 20px; --ob-gap: 16px; --ob-56: 56px; --ob-48: 48px; --ob-52: 52px; --ob-28: 28px;
-    --ob-24: 24px; --ob-23: 23px; --ob-21: 21px; --ob-12: 12px; --ob-13: 13px; --ob-text: 90.5px;
+    --ob-24: 24px; --ob-23: 23px; --ob-21: 21px; --ob-12: 12px; --ob-13: 13px;
   }
   .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { gap: 0; padding-left: 0; padding-right: 0; background: var(--bg); }
   .offer-blocks .offer-subhead { margin: 0; padding: var(--ob-12) var(--ob-margin); background: var(--bg); }
@@ -1280,10 +1281,11 @@ watch(
   .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
   .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }
   .offer-blocks .match-sub { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
-  /* « Voir la compatibilité » : toute la ligne est le bouton, le texte sur la ligne du verdict (18,5 + 56 + 16). */
+  /* « Le détail de la note » (prompt du 10 novembre, PR 15) : toute la ligne est le bouton, le texte au même retrait que
+     le contenu de la carte (18,5 px, pas le retrait du verdict ni les 98,5 px de l'ordinateur), le chevron à droite. */
   .offer-blocks .compat-open {
     display: flex; align-items: center; justify-content: space-between; gap: var(--ob-gap); width: calc(100% + 2 * var(--ob-pad)); max-width: none; min-height: var(--ob-56);
-    margin: var(--ob-gap) calc(-1 * var(--ob-pad)) calc(-1 * var(--ob-pad)); padding: 0 var(--ob-pad) 0 var(--ob-text); border: 0; border-top: 1px solid var(--line-soft);
+    margin: var(--ob-gap) calc(-1 * var(--ob-pad)) calc(-1 * var(--ob-pad)); padding: 0 var(--ob-pad); border: 0; border-top: 1px solid var(--line-soft);
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
@@ -1293,7 +1295,6 @@ watch(
   .offer-blocks .match-card:has(.offer-text-band) { overflow: clip; }
   .offer-blocks .match-card .offer-text-band { margin: var(--ob-gap) calc(-1 * var(--ob-pad)) 0; padding: var(--ob-gap) var(--ob-pad); }
   .offer-blocks .offer-text-band + .compat-open.after-band { margin-top: 0; border-top: 0; }
-  .offer-blocks .compat-open.after-band { padding-left: var(--ob-pad); }
   .offer-blocks .offer-text-actions button { min-width: 0; white-space: nowrap; }
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
      retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
