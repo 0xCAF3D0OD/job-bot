@@ -72,8 +72,8 @@ describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidature
     expect(tools.find("[data-test=search]").attributes("placeholder")).toBe("Poste, entreprise, lieu");
     expect(tools.find("[data-test=manual-open]").text()).toBe("Ajouter");
     expect(tools.find("[data-test=add-menu]").exists()).toBe(false);
-    // « Postuler spontanément » : un lien au bas de la liste.
-    expect(wrapper.find("[data-test=spontaneous-open]").classes()).toContain("link");
+    // « Postuler spontanément » : une ligne du groupe « Autres offres », au bas de la liste (PR 35).
+    expect(wrapper.find("[data-test=spontaneous-open]").classes()).toContain("offers-other-row");
 
     // Sur Envoyées, pas d'outils d'offres ; « Alertes » reste.
     await router.push("/candidatures/suivi");
