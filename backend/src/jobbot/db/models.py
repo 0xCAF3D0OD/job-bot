@@ -367,6 +367,13 @@ class Document(Base):
     )
     # « certificate » : un certificat de travail, lu par jobA1 (docs/87).
     kind: Mapped[str | None] = mapped_column(Text)
+    # La lecture par l'IA qui continue hors de la page (PR 21 du 10 novembre) : NULL (jamais
+    # demandée), « reading », « done », « unavailable », « unreadable ». Les blocs proposés
+    # restent ici jusqu'au choix de la personne, puis sont effacés (`read_result` à NULL).
+    read_state: Mapped[str | None] = mapped_column(Text)
+    read_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    read_result: Mapped[Any] = mapped_column(JSONB, nullable=True)
 
 
 class ScoreCorrection(Base):
@@ -788,7 +795,7 @@ class Notification(Base):
     user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    # offers, follow_up, orp_target, orp_due, budget, collect_failed
+    # offers, follow_up, orp_target, orp_due, budget, collect_failed, cv_read
     kind: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
     message: Mapped[str] = mapped_column(Text, default="")

@@ -1703,6 +1703,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents/{document_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reading
+         * @description Les éléments trouvés par la dernière lecture, à choisir (« Choisir les éléments »).
+         */
+        get: operations["getCvReading"];
+        put?: never;
+        /**
+         * Start Reading
+         * @description « Relire mon CV » (PR 21) : la lecture part sur le serveur et continue quand on quitte la
+         *     page ; la cloche prévient à la fin. Le document est relu sous la RLS du compte (C-5).
+         */
+        post: operations["startCvReading"];
+        /**
+         * Clear Reading
+         * @description Les éléments choisis (ou écartés) : la liste proposée n'est plus gardée.
+         */
+        delete: operations["clearCvReading"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/documents/{document_id}/understand": {
         parameters: {
             query?: never;
@@ -4984,6 +5013,14 @@ export interface components {
             chunk_count: number;
             /** Kind */
             kind?: string | null;
+            /** Read State */
+            read_state?: string | null;
+            /** Read At */
+            read_at?: string | null;
+            /** Found */
+            found?: {
+                [key: string]: number;
+            } | null;
         };
         /** DocumentText */
         DocumentText: {
@@ -12093,6 +12130,97 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getCvReading: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkProposal"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    startCvReading: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clearCvReading: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
