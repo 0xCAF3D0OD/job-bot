@@ -470,7 +470,7 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
 .identity-actions { display: flex; justify-content: flex-end; gap: var(--space-3); }
 .identity-button { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 2.75rem; border-radius: var(--radius-pill); font-family: inherit; font-size: var(--font-label); white-space: nowrap; cursor: pointer; }
 .identity-save { padding: 0 var(--space-5); border: 0; background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); }
-.identity-cancel { padding: 0 1.2333em; border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-semibold); }
+.identity-cancel { padding: 0 var(--space-5); border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-semibold); }
 .identity-message { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 @media (max-width: 599px) {
   .identity-pair { grid-template-columns: 1fr; }
