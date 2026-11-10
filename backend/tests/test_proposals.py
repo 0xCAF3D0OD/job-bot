@@ -272,7 +272,8 @@ async def test_cv_reading_runs_on_the_server_and_keeps_the_result(
     # Les coordonnées ne partent pas à l'IA (I-1).
     assert "+41" not in fake.params[0]["messages"][0]["content"]
     async with runtime.sessionmaker() as session:
-        [note] = list(await session.scalars(select(Notification)))
+        # D'autres tests laissent leurs notifications : on ne regarde que celle de la lecture du CV.
+        [note] = list(await session.scalars(select(Notification).where(Notification.kind == "cv_read")))
     assert (note.kind, note.link) == ("cv_read", "/profil")
     assert note.message == "Ton CV est lu : 1 élément à choisir"
 
