@@ -102,6 +102,8 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),
+    # Aujourd'hui (PR 9d) : bande bleue, carte du mois, cartes d'action aux cercles gris.
+    ("", None),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
