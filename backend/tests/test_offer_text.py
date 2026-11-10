@@ -277,3 +277,135 @@ async def test_read_now_is_limited_per_offer_and_per_account(
     assert over.status_code == 429 and over.json()["detail"].startswith("Réessaie dans ")
     # Une offre inconnue reste un 404, même à la limite.
     assert (await api.post("/api/offers/999999/read")).status_code == 404
+
+
+# --- Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) ---------------
+
+
+async def reading_state(api: AsyncClient, offer_id: int) -> str | None:
+    response = await api.get(f"/api/offers/{offer_id}")
+    assert response.status_code == 200
+    state: str | None = response.json()["text_reading"]
+    return state
+
+
+async def read_columns(rt: Runtime, offer_id: int) -> tuple[str | None, str | None, int]:
+    async with rt.sessionmaker() as session:
+        offer = await session.get(Offer, offer_id)
+        assert offer is not None
+        return offer.text_read, offer.text_read_reason, offer.text_read_attempts
+
+
+async def test_background_reading_fills_the_text_without_rescoring(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La tâche de fond lit l'annonce ; la notation en lot qui suit la collecte refait la note."""
+    offer_id = await alert_offer(ai)
+    fetched = site(monkeypatch, None)
+    assert await reading_state(api, offer_id) == "reading"
+
+    result = await manual_offers.read_pending_texts(ai)
+
+    assert (result.tried, result.done, result.refused) == (1, 1, 0)
+    assert fetched == [LINK]
+    assert (await description(ai, offer_id) or "").startswith("Tu administres nos serveurs")
+    assert await read_columns(ai, offer_id) == ("done", None, 0)
+    assert await reading_state(api, offer_id) == "done"
+    # Pas de note tout de suite (une seule, celle de l'extrait) ; plus rien à lire ensuite.
+    assert len(fake.calls) == 1
+    assert (await manual_offers.read_pending_texts(ai)).tried == 0
+
+
+async def test_blocked_site_is_refused_at_once_and_logged_by_domain(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    site(monkeypatch, "User-agent: *\nDisallow: /jobs/\n")
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        manual_offers.log, "info", lambda event, **kw: logged.append({"event": event, **kw})
+    )
+
+    result = await manual_offers.read_pending_texts(ai)
+
+    assert (result.done, result.refused) == (0, 1)
+    assert await read_columns(ai, offer_id) == ("refused", "robots", 1)
+    assert await reading_state(api, offer_id) == "refused"
+    failed = [e for e in logged if e["event"] == "offer_text_read_failed"]
+    assert failed == [
+        {
+            "event": "offer_text_read_failed",
+            "offer": offer_id,
+            "domain": "exemple-emplois.ch",
+            "reason": "robots",
+            "transient": False,
+        }
+    ]
+    # Un refus est définitif : pas de nouvel essai.
+    assert (await manual_offers.read_pending_texts(ai)).tried == 0
+
+
+async def test_slow_site_gets_one_more_try_then_is_refused(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+
+    async def slow(_url: str) -> str:
+        raise manual_offers.ReadProblem("lent", paste=True, reason="timeout", transient=True)
+
+    monkeypatch.setattr(manual_offers, "read_link", slow)
+
+    await manual_offers.read_pending_texts(ai)
+    assert await read_columns(ai, offer_id) == (None, "timeout", 1)
+    assert await reading_state(api, offer_id) == "reading"
+    # Le nouvel essai attend 10 minutes : pas dans la même exécution.
+    assert (await manual_offers.read_pending_texts(ai)).tried == 0
+    async with ai.sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        assert offer is not None and offer.text_read_at is not None
+        offer.text_read_at = offer.text_read_at - manual_offers.READ_RETRY_AFTER
+    await manual_offers.read_pending_texts(ai)
+    assert await read_columns(ai, offer_id) == ("refused", "timeout", 2)
+    assert await reading_state(api, offer_id) == "refused"
+
+
+async def test_read_from_the_card_says_when_jobA1_will_retry(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+
+    async def unreachable(_url: str) -> str:
+        raise manual_offers.ReadProblem(
+            "injoignable", paste=True, reason="unreachable", transient=True
+        )
+
+    monkeypatch.setattr(manual_offers, "read_link", unreachable)
+
+    body = (await api.post(f"/api/offers/{offer_id}/read")).json()
+
+    # Premier essai raté : pas encore de « Coller le texte », jobA1 réessaiera.
+    assert (body["saved"], body["paste"], body["retry"]) == (False, False, True)
+    assert await reading_state(api, offer_id) == "reading"
+
+
+async def test_pasted_text_marks_the_offer_done(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+) -> None:
+    offer_id = await alert_offer(ai)
+    response = await api.put(f"/api/offers/{offer_id}/description", json={"text": LONG})
+    assert response.status_code == 200
+    assert await reading_state(api, offer_id) == "done"

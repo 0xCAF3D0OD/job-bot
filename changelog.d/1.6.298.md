@@ -1,0 +1,1 @@
+Annonce complète lue automatiquement : jobA1 lit l’annonce d’une offre d’alerte en arrière-plan, la fiche montre « jobA1 lit l’annonce complète… » ou, si le site bloque, « Coller le texte » et « Ouvrir l’annonce » ; plus de bouton « Lire l’annonce »

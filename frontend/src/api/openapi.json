@@ -19544,6 +19544,22 @@
             "type": "boolean",
             "title": "Added By You",
             "default": false
+          },
+          "text_reading": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reading",
+                  "done",
+                  "refused"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Reading"
           }
         },
         "type": "object",
@@ -19702,6 +19718,11 @@
           "paste": {
             "type": "boolean",
             "title": "Paste",
+            "default": false
+          },
+          "retry": {
+            "type": "boolean",
+            "title": "Retry",
             "default": false
           }
         },
@@ -22142,6 +22163,22 @@
             "type": "boolean",
             "title": "Added By You",
             "default": false
+          },
+          "text_reading": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reading",
+                  "done",
+                  "refused"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Reading"
           },
           "is_first": {
             "type": "boolean",

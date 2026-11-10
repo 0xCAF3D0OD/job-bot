@@ -276,6 +276,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     );
     const sheet = wrapper.findComponent({ name: "OfferCompatSheet" });
     expect(sheet.props("open")).toBe(false);
+    // Prompt du 10 novembre, PR 15 : sur téléphone, le lien s'appelle « Le détail de la note », note provisoire ou non.
+    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Le détail de la note");
     await wrapper.find("[data-test=compat-open]").trigger("click");
     expect(sheet.props("open")).toBe(true);
     expect(sheet.props("strengths")).toEqual([
@@ -361,8 +363,8 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     const main = wrapper.find("[data-test=detail-columns-main]");
     expect(main.find("[data-test=section-for-you]").exists()).toBe(true);
     expect(main.find("[data-test=section-ad]").exists()).toBe(true);
-    // Le bandeau « Il manque l'annonce complète » reste dans la note.
-    expect(main.find("[data-test=section-for-you] [data-test=partial-notice]").exists()).toBe(true);
+    // La lecture de l'annonce complète (prompt du 10 novembre) reste dans la note.
+    expect(main.find("[data-test=section-for-you] [data-test=text-reading]").exists()).toBe(true);
     const aside = wrapper.find("aside[data-test=detail-columns-aside]");
     expect(aside.attributes("aria-label")).toBe("L’offre en bref");
     const rows = aside.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);

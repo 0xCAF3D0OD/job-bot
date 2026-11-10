@@ -6751,6 +6751,8 @@ export interface components {
              * @default false
              */
             added_by_you: boolean;
+            /** Text Reading */
+            text_reading?: ("reading" | "done" | "refused") | null;
         };
         /** OfferPage */
         OfferPage: {
@@ -6800,6 +6802,11 @@ export interface components {
              * @default false
              */
             paste: boolean;
+            /**
+             * Retry
+             * @default false
+             */
+            retry: boolean;
         };
         /**
          * OrpHolder
@@ -7672,6 +7679,8 @@ export interface components {
              * @default false
              */
             added_by_you: boolean;
+            /** Text Reading */
+            text_reading?: ("reading" | "done" | "refused") | null;
             /** Is First */
             is_first: boolean;
         };

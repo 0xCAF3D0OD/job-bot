@@ -6,6 +6,7 @@ lecteur des alertes (docs/20), le nom de la personne retiré. Une page protégé
 robots n'est jamais contournée : on propose de coller le texte.
 """
 
+import asyncio
 import re
 import secrets
 from collections.abc import Awaitable, Callable
@@ -19,7 +20,7 @@ from urllib.robotparser import RobotFileParser
 import anthropic
 import httpx
 from bs4 import BeautifulSoup
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.filter import canton_of
@@ -59,12 +60,23 @@ NO_LINK = "https://annonce-collee.invalid/"
 
 
 class ReadProblem(Exception):
-    """Ce qui empêche de lire l'annonce ; `paste` : proposer de coller son texte."""
+    """Ce qui empêche de lire l'annonce ; `paste` : proposer de coller son texte. `reason` : un
+    code court, journalisé par domaine (prompt du 10 novembre, PR 13) et gardé sur l'offre ;
+    `transient` : un autre essai peut réussir (site lent ou injoignable)."""
 
-    def __init__(self, message: str, *, paste: bool = False) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        paste: bool = False,
+        reason: str = "unreadable",
+        transient: bool = False,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.paste = paste
+        self.reason = reason
+        self.transient = transient
 
 
 @dataclass
@@ -127,20 +139,36 @@ async def fetch_page(url: str, before: Callable[[str], Awaitable[None]] | None =
         try:
             data, _final = await logos._get(client, url, MAX_PAGE_BYTES, before)
         except logos.Refused as exc:
-            raise ReadProblem(f"Lien refusé : {exc}.") from exc
+            raise ReadProblem(f"Lien refusé : {exc}.", reason="link-refused") from exc
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code in (401, 403, 429):
                 raise ReadProblem(
                     "Ce site ne se laisse pas lire par un robot : colle le texte de l'annonce.",
                     paste=True,
+                    reason="blocked",
                 ) from exc
             code = exc.response.status_code
+            # 404 ou 410 : l'annonce est retirée ; 5xx : le site a un souci, un autre essai.
+            gone = code in (404, 410)
             raise ReadProblem(
-                f"La page ne répond pas ({code}) : colle le texte de l'annonce.", paste=True
+                f"La page ne répond pas ({code}) : colle le texte de l'annonce.",
+                paste=True,
+                reason="gone" if gone else f"http-{code}",
+                transient=code >= 500,
+            ) from exc
+        except httpx.TimeoutException as exc:
+            raise ReadProblem(
+                "La page ne répond pas : colle le texte de l'annonce.",
+                paste=True,
+                reason="timeout",
+                transient=True,
             ) from exc
         except httpx.HTTPError as exc:
             raise ReadProblem(
-                "La page ne répond pas : colle le texte de l'annonce.", paste=True
+                "La page ne répond pas : colle le texte de l'annonce.",
+                paste=True,
+                reason="unreachable",
+                transient=True,
             ) from exc
     return data.decode("utf-8", errors="replace")
 
@@ -407,16 +435,22 @@ async def fetch_robots(url: str) -> str | None:
         try:
             data, _final = await logos._get(client, robots, MAX_PAGE_BYTES)
         except logos.Refused as exc:
-            raise ReadProblem(f"Lien refusé : {exc}.") from exc
+            raise ReadProblem(f"Lien refusé : {exc}.", reason="link-refused") from exc
         except httpx.HTTPStatusError as exc:
             if 400 <= exc.response.status_code < 500:
                 return None
             raise ReadProblem(
-                "Le site ne répond pas : colle le texte de l'annonce.", paste=True
+                "Le site ne répond pas : colle le texte de l'annonce.",
+                paste=True,
+                reason="unreachable",
+                transient=True,
             ) from exc
         except httpx.HTTPError as exc:
             raise ReadProblem(
-                "Le site ne répond pas : colle le texte de l'annonce.", paste=True
+                "Le site ne répond pas : colle le texte de l'annonce.",
+                paste=True,
+                reason="unreachable",
+                transient=True,
             ) from exc
     return data.decode("utf-8", errors="replace")
 
@@ -460,7 +494,7 @@ async def read_link(url: str) -> str:
         # Chaque adresse est vérifiée : une redirection peut mener à un autre hôte, ou à un
         # chemin que le robots.txt du même hôte interdit.
         if not await robots_allowed(hop, robots):
-            raise ReadProblem(ROBOTS_REFUSED, paste=True)
+            raise ReadProblem(ROBOTS_REFUSED, paste=True, reason="robots")
 
     page = await fetch_page(url, robots_first)
     posting = job_posting(page)
@@ -472,6 +506,7 @@ async def read_link(url: str) -> str:
             "Cette page ne montre pas d'annonce lisible (connexion demandée ?) : "
             "colle le texte de l'annonce.",
             paste=True,
+            reason="no-text",
         )
     return found[:MAX_TEXT]
 
@@ -518,17 +553,97 @@ async def _load(session: AsyncSession, offer_id: int) -> tuple[Offer, list[str]]
     return offer, links
 
 
-async def save_description(runtime: Runtime, offer_id: int, text: str, source: str) -> int | None:
+# --- Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) -----------------
+# Une offre venue d'une alerte avec un lien est lue en arrière-plan (tâche « enrich ») : la page,
+# puis son contenu principal, le robots.txt respecté, 15 secondes au plus par lecture et un seul
+# nouvel essai si le site est lent ou injoignable. Un refus (robots.txt, connexion demandée,
+# page retirée, pas d'annonce lisible) est définitif : la fiche propose de coller le texte.
+# `offers.text_read` : NULL tant que la lecture est à faire, « done » (texte complet lu ou
+# collé), « refused » ; `text_read_reason` garde la raison, journalisée aussi par domaine.
+
+READ_TIMEOUT_SECONDS = 15
+# Une lecture, puis un seul nouvel essai.
+READ_ATTEMPTS = 2
+READ_RETRY_AFTER = timedelta(minutes=10)
+READ_PER_RUN = 20
+READ_DELAY_SECONDS = 2.0
+TEXT_DONE = "done"
+TEXT_REFUSED = "refused"
+# Statuts dont l'annonce complète sert encore (comme la revérification des offres, docs/10).
+READ_STATUSES = (OfferStatus.NEW, OfferStatus.TO_REVIEW, OfferStatus.LATER, OfferStatus.PREPARING)
+
+# Remplaçable dans les tests (pas d'attente réelle).
+read_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep
+
+
+def _host(url: str) -> str:
+    return (urlsplit(url).hostname or "").removeprefix("www.")
+
+
+async def _read_first(offer_id: int, urls: list[str]) -> tuple[str, str]:
+    """Le texte du premier lien lisible et ce lien ; sinon ReadProblem (le premier problème
+    passager s'il y en a un : un autre essai peut réussir)."""
+    problems: list[ReadProblem] = []
+    for url in urls:
+        try:
+            return await asyncio.wait_for(read_link(url), READ_TIMEOUT_SECONDS), url
+        except TimeoutError:
+            problem = ReadProblem(
+                "La page met trop de temps à répondre : colle le texte de l'annonce.",
+                paste=True,
+                reason="timeout",
+                transient=True,
+            )
+        except ReadProblem as exc:
+            problem = exc
+        # La raison par domaine, pour voir quels sites posent problème (jamais le texte, J-1).
+        log.info(
+            "offer_text_read_failed",
+            offer=offer_id,
+            domain=_host(url),
+            reason=problem.reason,
+            transient=problem.transient,
+        )
+        problems.append(problem)
+    return_problem = next((p for p in problems if p.transient), problems[-1])
+    raise return_problem
+
+
+async def _record_read(
+    runtime: Runtime, offer_id: int, *, status: str | None, reason: str | None, attempt: bool
+) -> None:
+    async with runtime.sessionmaker.begin() as session:
+        await session.execute(
+            update(Offer)
+            .where(Offer.id == offer_id)
+            .values(
+                text_read=status,
+                text_read_reason=reason,
+                text_read_at=datetime.now(UTC),
+                text_read_attempts=Offer.text_read_attempts + (1 if attempt else 0),
+            )
+        )
+
+
+async def store_description(runtime: Runtime, offer_id: int, text: str, source: str) -> None:
     """Le texte complet enregistré : la note n'est plus partielle. L'offre repasse par le filtre
-    (le texte peut révéler un contrat ou une langue), puis elle est renotée tout de suite.
-    Rend la nouvelle note (None : pas d'IA ou plafond, elle suivra au prochain passage)."""
+    (le texte peut révéler un contrat ou une langue)."""
     async with runtime.sessionmaker.begin() as session:
         offer, _links = await _load(session, offer_id)
         offer.description = text
         if not offer.snippet:
             offer.snippet = text[:500]
+        offer.text_read = TEXT_DONE
+        offer.text_read_reason = None
+        offer.text_read_at = datetime.now(UTC)
     await run_filter(runtime)
     log.info("offer_description_completed", offer=offer_id, source=source)
+
+
+async def save_description(runtime: Runtime, offer_id: int, text: str, source: str) -> int | None:
+    """Le texte complet enregistré, puis l'offre renotée tout de suite. Rend la nouvelle note
+    (None : pas d'IA ou plafond, elle suivra au prochain passage)."""
+    await store_description(runtime, offer_id, text, source)
     if not runtime.settings.llm_configured:
         return None
     return await scoring_service.score_offer(runtime, offer_id)
@@ -540,20 +655,93 @@ async def check_offer(runtime: Runtime, offer_id: int) -> None:
         await _load(session, offer_id)
 
 
-async def read_offer(runtime: Runtime, offer_id: int) -> int | None:
-    """« Lire l'annonce maintenant » : le premier lien lisible ; sinon ReadProblem."""
+async def read_full_text(runtime: Runtime, offer_id: int, *, rescore: bool) -> int | None:
+    """Lit l'annonce complète de l'offre par ses liens et enregistre le résultat sur l'offre.
+    `rescore` : la renoter tout de suite (lecture demandée depuis la fiche) ; sinon la tâche de
+    notation qui suit la collecte s'en charge, en lot. ReadProblem si la lecture échoue ; son
+    `transient` reste vrai seulement si un nouvel essai est encore prévu."""
     async with runtime.sessionmaker() as session:
         offer, links = await _load(session, offer_id)
         urls = offer_urls(offer, links)
+        attempts = offer.text_read_attempts
     if not urls:
-        raise ReadProblem("Cette offre n'a pas de lien : colle le texte de l'annonce.", paste=True)
-    problem: ReadProblem | None = None
-    for url in urls:
-        try:
-            found = await read_link(url)
-        except ReadProblem as exc:
-            problem = exc
-            continue
+        await _record_read(runtime, offer_id, status=TEXT_REFUSED, reason="no-link", attempt=True)
+        log.info(
+            "offer_text_read_failed", offer=offer_id, domain=None, reason="no-link", transient=False
+        )
+        raise ReadProblem(
+            "Cette offre n'a pas de lien : colle le texte de l'annonce.",
+            paste=True,
+            reason="no-link",
+        )
+    try:
+        found, url = await _read_first(offer_id, urls)
+    except ReadProblem as exc:
+        final = not exc.transient or attempts + 1 >= READ_ATTEMPTS
+        await _record_read(
+            runtime,
+            offer_id,
+            status=TEXT_REFUSED if final else None,
+            reason=exc.reason,
+            attempt=True,
+        )
+        exc.transient = not final
+        raise
+    log.info("offer_text_read", offer=offer_id, domain=_host(url))
+    if rescore:
         return await save_description(runtime, offer_id, found, "page")
-    assert problem is not None
-    raise problem
+    await store_description(runtime, offer_id, found, "page")
+    return None
+
+
+async def read_offer(runtime: Runtime, offer_id: int) -> int | None:
+    """Lecture demandée depuis la fiche : le premier lien lisible, l'offre renotée ; sinon
+    ReadProblem."""
+    return await read_full_text(runtime, offer_id, rescore=True)
+
+
+@dataclass
+class TextReadResult:
+    tried: int = 0
+    done: int = 0
+    refused: int = 0
+
+
+async def read_pending_texts(runtime: Runtime) -> TextReadResult:
+    """Les annonces complètes à lire pour le compte en cours (C-6) : offres sans texte complet,
+    encore utiles, jamais lues ou en attente de leur nouvel essai. Une à la fois, 2 s entre deux."""
+    result = TextReadResult()
+    retry_before = datetime.now(UTC) - READ_RETRY_AFTER
+    async with runtime.sessionmaker() as session:
+        ids = list(
+            await session.scalars(
+                select(Offer.id)
+                .where(
+                    Offer.description.is_(None),
+                    Offer.spontaneous.is_(False),
+                    Offer.status.in_(READ_STATUSES),
+                    Offer.expired_at.is_(None),
+                    Offer.text_read.is_(None),
+                    Offer.text_read_attempts < READ_ATTEMPTS,
+                    or_(Offer.text_read_at.is_(None), Offer.text_read_at < retry_before),
+                )
+                .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
+                .limit(READ_PER_RUN)
+            )
+        )
+    for index, offer_id in enumerate(ids):
+        if index:
+            await read_sleep(READ_DELAY_SECONDS)
+        result.tried += 1
+        try:
+            await read_full_text(runtime, offer_id, rescore=False)
+        except ReadProblem as exc:
+            if not exc.transient:
+                result.refused += 1
+            continue
+        except (OfferNotFound, NoAnnouncement):
+            continue
+        result.done += 1
+    if result.tried:
+        log.info("offer_texts_read", tried=result.tried, done=result.done, refused=result.refused)
+    return result

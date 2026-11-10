@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import Composer from "./Composer.vue";
 
-// Note provisoire (offre venue d'une alerte, extrait seulement), maquette OffreProvisoire (6.11.2026) : une bande
-// pêche en pleine largeur dans la carte de la note, entre les points forts et « Le détail de la note ». Lire
-// l'annonce par son lien, ou coller son texte. Le serveur respecte le robots.txt du site et ne contourne aucune
-// connexion. Le contenu de la bande change d'un état à l'autre (rien ne s'empile) : lecture, refus du site (« Coller
-// le texte » seul, en pleine largeur, et le lien pour ouvrir l'annonce), pas de lien lisible (« Coller le texte » seul).
-// Maquette du 8 novembre (D25) : la feuille « Coller le texte » prend le Composer de 5 lignes ; Envoyer = « Enregistrer
-// et refaire la note », désactivé sous 200 caractères ; le compteur sous la zone. Pas de + : aucun fichier ne part à
-// l'IA sans règle (I-1, E-5).
-// Le texte enregistré, l'offre est renotée et la fiche rechargée : la bande disparaît (`changed`).
+// Annonce complète lue automatiquement (prompt du 10 novembre, PR 13 ; maquettes OffreProvisoire et
+// CandidaturesOrdinateurB) : l'utilisateur ne va plus chercher le texte lui-même. Une offre venue d'une alerte est lue
+// en arrière-plan ; la carte de la note montre où en est la lecture, sans bouton :
+// - `reading` : « jobA1 lit l'annonce complète… » avec un petit indicateur (role="status", aria-live="polite") ;
+// - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : « jobA1 n'a pas pu lire
+//   l'annonce », « Coller le texte » en tonal (la feuille de collage) et le lien « Ouvrir l'annonce ».
+// Plus de « Lire l'annonce » ni de bande « Il manque l'annonce complète ». `done` est montré par la fiche (« Note
+// refaite sur l'annonce complète. »). Si la fiche s'ouvre avant la tâche de fond, la lecture est demandée tout de suite
+// (une fois par offre) ; si le site est lent, jobA1 réessaie une fois de lui-même et la fiche se recharge un moment.
 const props = defineProps<{ offer: Offer }>();
-const emit = defineEmits<{ changed: [] }>();
+// `changed` : le texte est enregistré, ou la lecture a abouti ; `refresh` : relire l'offre (la lecture continue).
+const emit = defineEmits<{ changed: []; refresh: [] }>();
 
 const MIN_TEXT = 200;
 // Le lien d'un texte collé à l'ajout n'est pas une page à lire (manual_offers.NO_LINK).
@@ -27,41 +28,61 @@ const readable = computed(() =>
     : props.offer.links.find((l) => l.url.startsWith("https://") && !l.url.startsWith(NO_LINK))?.url,
 );
 
-const reading = ref(false);
-// Le site refuse la lecture (robots.txt, connexion, page sans annonce) : le serveur propose de coller (`paste`).
-const refused = ref(false);
-// Un autre empêchement (trop de lectures, IA indisponible) : la phrase de la bande le dit.
-const problem = ref("");
+// Le serveur dit l'état ; la réponse d'une lecture demandée d'ici peut le devancer (refus).
+const refusedHere = ref(false);
+const state = computed(() => (refusedHere.value || props.offer.text_reading === "refused" ? "refused" : "reading"));
+
+// La phrase de l'indicateur entre dans la région vivante après son ouverture : un lecteur d'écran l'annonce.
+const announce = ref("");
+const READING = "jobA1 lit l’annonce complète…";
+
+// Une seule lecture demandée par offre et par visite de l'application ; la fiche se recharge ensuite toutes les
+// 20 secondes, 6 fois au plus, le temps que la tâche de fond finisse.
+const REFRESH_MS = 20_000;
+const REFRESH_MAX = 6;
+let refreshes = 0;
+let timer: ReturnType<typeof setTimeout> | undefined;
+function later(): void {
+  if (refreshes >= REFRESH_MAX) return;
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    refreshes += 1;
+    emit("refresh");
+  }, REFRESH_MS);
+}
 async function readNow(): Promise<void> {
-  if (reading.value) return;
-  reading.value = true;
-  problem.value = "";
+  const id = props.offer.id;
+  if (requested.has(id)) {
+    later();
+    return;
+  }
+  requested.add(id);
   try {
-    const { data, error } = await api.POST("/api/offers/{offer_id}/read", { params: { path: { offer_id: props.offer.id } } });
+    const { data } = await api.POST("/api/offers/{offer_id}/read", { params: { path: { offer_id: id } } });
+    if (id !== props.offer.id) return;
     if (data?.saved) {
       emit("changed");
       return;
     }
     if (data?.paste) {
-      refused.value = true;
+      refusedHere.value = true;
       return;
     }
-    // Trop de lectures (429) : le serveur dit quand réessayer (« Réessaie dans 5 minutes. »).
-    const detail = (error as { detail?: unknown } | undefined)?.detail;
-    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Lecture impossible : colle le texte de l’annonce.");
   } catch {
-    problem.value = "API injoignable : réessaie dans un moment.";
-  } finally {
-    reading.value = false;
+    // API injoignable : la tâche de fond lira l'annonce ; la fiche se recharge.
   }
+  later();
 }
-const title = computed(() => (refused.value ? "Ce site bloque la lecture automatique" : "Il manque l’annonce complète"));
-const sentence = computed(() => {
-  if (reading.value) return "Lecture de l’annonce…";
-  if (refused.value) return "Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.";
-  return problem.value || "Pour une note sûre, jobA1 doit lire le texte entier de l’annonce.";
-});
-const canRead = computed(() => !!readable.value && !refused.value);
+function start(): void {
+  announce.value = "";
+  if (state.value !== "reading") return;
+  setTimeout(() => {
+    announce.value = READING;
+  }, 50);
+  void readNow();
+}
+onMounted(start);
+onBeforeUnmount(() => clearTimeout(timer));
 
 const pasting = ref(false);
 const text = ref("");
@@ -82,14 +103,14 @@ async function save(): Promise<void> {
       body: { text: text.value },
     });
     if (!data?.saved) {
-      error.value = "Enregistrement impossible : vérifie le texte et réessaie.";
+      error.value = "Enregistrement impossible : vérifie le texte et réessaie.";
       return;
     }
     pasting.value = false;
     text.value = "";
     emit("changed");
   } catch {
-    error.value = "API injoignable : réessaie dans un moment.";
+    error.value = "API injoignable : réessaie dans un moment.";
   } finally {
     saving.value = false;
   }
@@ -97,94 +118,118 @@ async function save(): Promise<void> {
 watch(
   () => props.offer.id,
   () => {
-    problem.value = "";
-    refused.value = false;
+    clearTimeout(timer);
+    refreshes = 0;
+    refusedHere.value = false;
     pasting.value = false;
     text.value = "";
+    start();
   },
 );
 </script>
 
+<script lang="ts">
+// Les offres dont la lecture a déjà été demandée depuis une fiche (le serveur limite à une toutes les 5 minutes).
+const requested = new Set<number>();
+export function resetRequested(): void {
+  requested.clear();
+}
+</script>
+
 <template>
+  <p
+    v-if="state === 'reading'"
+    class="offer-reading"
+    role="status"
+    aria-live="polite"
+    data-test="text-reading"
+  >
+    <svg
+      class="offer-reading-spinner"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke-width="2.6"
+      stroke-linecap="round"
+      aria-hidden="true"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        class="offer-reading-track"
+      />
+      <path
+        d="M12 3a9 9 0 0 1 9 9"
+        class="offer-reading-arc"
+      />
+    </svg>
+    <span>{{ announce }}</span>
+  </p>
   <div
-    class="offer-text-band"
+    v-else
+    class="offer-text-refused"
     role="group"
     aria-labelledby="offer-text-title"
-    data-test="partial-notice"
+    data-test="text-refused"
   >
     <div>
-      <span class="offer-text-icon"><AppIcon name="file" /></span>
-      <div>
-        <h4
-          id="offer-text-title"
-          data-test="partial-title"
-        >
-          {{ title }}
-        </h4>
-        <p
-          aria-live="polite"
-          data-test="partial-text"
-        >
-          {{ sentence }}
-        </p>
-      </div>
+      <h4
+        id="offer-text-title"
+        data-test="refused-title"
+      >
+        jobA1 n’a pas pu lire l’annonce
+      </h4>
+      <p data-test="refused-text">
+        Ce site bloque la lecture automatique. Colle le texte : la note sera refaite tout de suite.
+      </p>
     </div>
     <div class="offer-text-actions">
       <button
-        v-if="canRead"
         type="button"
-        :aria-disabled="reading ? 'true' : undefined"
-        data-test="read-offer-text"
-        @click="readNow"
-      >
-        {{ reading ? "Lecture…" : "Lire l’annonce" }}
-      </button>
-      <!-- « Lire l'annonce » en tonal (le principal), « Coller le texte » en contour ; seul, il redevient tonal. -->
-      <button
-        type="button"
-        :class="{ outline: canRead }"
         data-test="paste-offer-text"
         @click="openPaste"
       >
         Coller le texte
       </button>
+      <a
+        v-if="readable"
+        :href="readable"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="offer-text-open"
+        data-test="open-offer"
+      >Ouvrir l’annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
     </div>
-    <a
-      v-if="refused && readable"
-      :href="readable"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="offer-text-open"
-      data-test="open-offer"
-    >Ouvrir l’annonce pour la copier<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
-    <BottomSheet
-      :open="pasting"
-      title="Coller le texte de l’annonce"
-      data-test="paste-sheet"
-      @close="pasting = false"
-    >
-      <p class="hint">
-        Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici. jobA1 refait la note tout de suite.
-      </p>
-      <Composer
-        v-model="text"
-        placeholder="Colle ici le texte de l’annonce"
-        :rows="5"
-        :min-chars="MIN_TEXT"
-        send-label="Enregistrer et refaire la note"
-        :busy="saving"
-        counter-hint="la flèche enregistre et refait la note"
-        data-test="paste-text"
-        @send="save"
-      />
-      <p
-        v-if="error"
-        class="field-error"
-        role="alert"
-        data-test="paste-error"
-      >
-        {{ error }}
-      </p>
-    </BottomSheet>
   </div>
+  <BottomSheet
+    :open="pasting"
+    title="Coller le texte de l’annonce"
+    data-test="paste-sheet"
+    @close="pasting = false"
+  >
+    <p class="hint">
+      Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici. jobA1 refait la note tout de suite.
+    </p>
+    <Composer
+      v-model="text"
+      placeholder="Colle ici le texte de l’annonce"
+      :rows="5"
+      :min-chars="MIN_TEXT"
+      send-label="Enregistrer et refaire la note"
+      :busy="saving"
+      counter-hint="la flèche enregistre et refait la note"
+      data-test="paste-text"
+      @send="save"
+    />
+    <p
+      v-if="error"
+      class="field-error"
+      role="alert"
+      data-test="paste-error"
+    >
+      {{ error }}
+    </p>
+  </BottomSheet>
 </template>

@@ -49,6 +49,9 @@ class OfferTextOut(BaseModel):
     # Ce qui a empêché la lecture ; `paste` : proposer de coller le texte de l'annonce.
     problem: str | None = None
     paste: bool = False
+    # Vrai : le site était lent ou injoignable, jobA1 réessaiera une fois de lui-même (la fiche
+    # reste sur « jobA1 lit l'annonce complète… »).
+    retry: bool = False
 
 
 class OfferTextIn(BaseModel):
@@ -89,7 +92,12 @@ async def read(request: Request, offer_id: int) -> OfferTextOut:
     except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
         raise _refused(exc) from None
     except manual_offers.ReadProblem as exc:
-        return OfferTextOut(saved=False, problem=exc.message, paste=exc.paste)
+        return OfferTextOut(
+            saved=False,
+            problem=exc.message,
+            paste=exc.paste and not exc.transient,
+            retry=exc.transient,
+        )
     return OfferTextOut(saved=True, source="page", score=score)
 
 
