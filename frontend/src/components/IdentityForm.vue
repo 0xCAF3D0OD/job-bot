@@ -71,8 +71,8 @@ async function saveIdentity(): Promise<void> {
       identityMessage.value = "Coordonnées enregistrées.";
       saved.value = { ...identity.value };
       fromCv.value = [];
-    } else if (response.status === 404) identityMessage.value = "La plateforme n’est pas à jour : redémarre-la.";
-    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres) et les adresses web.";
+    } else if (response.status === 404) identityMessage.value = "La plateforme n’est pas à jour : redémarre-la.";
+    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres) et les adresses web.";
   } catch {
     identityMessage.value = "API injoignable.";
   }
