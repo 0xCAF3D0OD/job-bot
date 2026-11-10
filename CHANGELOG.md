@@ -514,3 +514,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.300 | La lecture du CV à l'accueil remarche : le schéma envoyé à l'IA n'utilise plus de forme refusée par l'API (erreur 400), un test vérifie tous les schémas, et un échec donne un message clair et une trace sans contenu | livrée |
 | 1.6.301 | Sans profil, l’offre et « Préparer ma candidature » le disent et mènent à Profil ; plus de faux « Repris de ton CV » ; coordonnées repérées dans le CV sans IA (route) | livrée |
 | 1.6.302 | Parcours sans CV lu : écran « Complétons ton profil » (expériences, langues, coordonnées), niveau par langue (Non renseigné, Notions, Courant, Maternelle) avec « Langue à vérifier » sur l’offre, et le profil se complète sur place depuis l’offre et Préparer | livrée |
+| 1.6.303 | Redéposer un CV déjà déposé le relit au lieu de le refuser ; le formulaire Coordonnées reprend les coordonnées repérées dans le CV, à enregistrer | livrée |
