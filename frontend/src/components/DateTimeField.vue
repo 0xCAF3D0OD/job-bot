@@ -44,10 +44,13 @@ onMounted(() => {
   measure();
 });
 onUnmounted(() => observer?.disconnect());
+// Téléphone (corrections du 9 novembre) : date et heure côte à côte, la pilule vide dit « Choisir » ; le libellé au-dessus
+// nomme déjà le champ, et « Choisir une heure » ne tiendrait pas à 360 px.
+const empty = (long: string) => (props.compact ? "Choisir" : long);
 const dateText = computed(() =>
-  props.date ? (props.compact || narrow.value ? shortDate(props.date) : longDate(props.date)) : "Choisir une date",
+  props.date ? (props.compact || narrow.value ? shortDate(props.date) : longDate(props.date)) : empty("Choisir une date"),
 );
-const timeText = computed(() => (props.time ? clockLabel(props.time) : "Choisir une heure"));
+const timeText = computed(() => (props.time ? clockLabel(props.time) : empty("Choisir une heure")));
 </script>
 
 <template>

@@ -1,0 +1,1 @@
+Téléphone : la bande « Il manque l'annonce complète » tient dans sa carte avec « Lire l'annonce » en principal, et l'onglet Rendez-vous montre d'abord le rendez-vous à noter, la date et l'heure sur une ligne, sans titre « Derniers rendez-vous ORP ».

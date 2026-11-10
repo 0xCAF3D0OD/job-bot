@@ -18,6 +18,8 @@ describe("DateTimeField (docs/143, D26)", () => {
   it("abrégée sur le téléphone, et une invite sans valeur", () => {
     const wrapper = mount(DateTimeField, { props: { date: "2026-11-10", time: "", compact: true } });
     expect(wrapper.get("[data-test=dt-date]").text()).toContain("Mar. 10 nov. 2026");
-    expect(wrapper.get("[data-test=dt-time]").text()).toContain("Choisir une heure");
+    // Côte à côte sur téléphone (corrections du 9 novembre) : l'invite courte, le libellé « Heure » au-dessus.
+    expect(wrapper.get("[data-test=dt-time]").text()).toContain("Choisir");
+    expect(wrapper.get("[data-test=dt-time]").text()).not.toContain("une heure");
   });
 });

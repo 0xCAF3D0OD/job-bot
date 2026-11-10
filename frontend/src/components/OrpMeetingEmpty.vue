@@ -25,14 +25,14 @@ const emit = defineEmits<{ saved: [page: Page] }>();
       />
       <div>
         <h2 id="rdv-empty-title">
-          Aucun rendez-vous prévu
+          Aucun rendez-vous à venir
         </h2>
-        <p>Ajoute ton prochain rendez-vous ORP : jobA1 prépare ta feuille la veille.</p>
+        <p>Ajoute ton prochain rendez-vous ORP : jobA1 prépare ta feuille la veille.</p>
       </div>
     </div>
     <OrpMeetingForm @saved="emit('saved', $event)" />
     <p class="rdv-empty-note">
-      Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.
+      Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.
     </p>
   </section>
 </template>
