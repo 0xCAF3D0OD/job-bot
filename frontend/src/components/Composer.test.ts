@@ -55,3 +55,28 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.find("[data-test=composer-mic]").exists()).toBe(false);
   });
 });
+
+describe("Composer en boîte (prompt du 10 novembre, PR 19 ; maquettes Assistant et AssistantOrdinateur)", () => {
+  it("le texte en haut, + à gauche et Envoyer à droite en dessous, même sur une ligne", () => {
+    const wrapper = mount(Composer, { props: { modelValue: "", placeholder: "Demander à l’Assistant", stacked: true, plusItems: ITEMS } });
+    expect(wrapper.classes()).toContain("composer-stacked");
+    expect(wrapper.get("textarea").element.tagName).toBe("TEXTAREA");
+    const bar = wrapper.get(".composer-stacked-bar");
+    expect(bar.find("[data-test=composer-plus]").exists()).toBe(true);
+    expect(bar.element.lastElementChild?.getAttribute("data-test")).toBe("composer-send");
+    expect(wrapper.findAll("[data-test=composer-send]")).toHaveLength(1);
+  });
+
+  it("Envoyer reste visible : gris et aria-disabled à vide, actif avec du texte", async () => {
+    const wrapper = mount(Composer, { props: { modelValue: "", placeholder: "Message", stacked: true } });
+    const send = wrapper.get("[data-test=composer-send]");
+    expect(send.attributes("aria-disabled")).toBe("true");
+    expect(send.attributes("disabled")).toBeUndefined();
+    await send.trigger("click");
+    expect(wrapper.emitted("send")).toBeUndefined();
+    await wrapper.setProps({ modelValue: "Prépare ma lettre" });
+    expect(wrapper.get("[data-test=composer-send]").attributes("aria-disabled")).toBeUndefined();
+    await wrapper.get("[data-test=composer-input]").trigger("keydown", { key: "Enter" });
+    expect(wrapper.emitted("send")).toEqual([["Prépare ma lettre"]]);
+  });
+});

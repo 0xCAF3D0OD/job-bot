@@ -749,14 +749,15 @@ const headItems: MoreMenuItem[] = [
         Écris ta question.
       </p>
       <PlanLimit usage="chat" />
-      <!-- La zone de saisie commune (Composer, D25) : une ligne, sans « + » (pas de pièce jointe à l'IA sans règle,
-           I-1 et E-5) ni micro (dictée masquée, O-4). -->
+      <!-- La zone de saisie commune (Composer, D25), en boîte comme celle de Claude (PR 19 du 10 novembre) ; sans « + »
+           (pas de pièce jointe à l’IA sans règle, I-1 et E-5) ni micro (dictée masquée, O-4). -->
       <div class="assistant-form">
         <Composer
           ref="input"
           v-model="draft"
           :placeholder="page ? 'Demande quelque chose…' : 'Demander à l’Assistant'"
           send-label="Envoyer"
+          stacked
           :busy="busy || reached('chat')"
           data-test="assistant-input"
           @send="send"

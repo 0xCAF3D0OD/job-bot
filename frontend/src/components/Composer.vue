@@ -27,8 +27,12 @@ const props = withDefaults(
     busy?: boolean;
     // La suite du compteur (« la flèche enregistre et refait la note », maquette OffreProvisoire).
     counterHint?: string;
+    // La boîte de l'Assistant (prompt du 10 novembre, PR 19 ; maquettes Assistant et AssistantOrdinateur, comme la
+    // zone de saisie de Claude) : le texte en haut, dès une ligne ; + à gauche, micro et Envoyer à droite en dessous.
+    // Envoyer reste visible, gris et `aria-disabled` tant qu'il n'y a rien à envoyer.
+    stacked?: boolean;
   }>(),
-  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, counterHint: "" },
+  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, counterHint: "", stacked: false },
 );
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -43,7 +47,7 @@ const menuId = useId();
 const counterId = useId();
 const menu = useDismissLayer("composer");
 const dragging = ref(false);
-const multi = computed(() => props.rows > 1);
+const multi = computed(() => props.rows > 1 && !props.stacked);
 const length = computed(() => props.modelValue.trim().length);
 const canSend = computed(() => {
   if (props.busy) return false;
@@ -137,7 +141,7 @@ defineExpose({ focus: () => area.value?.focus() });
 
 <template>
   <div
-    :class="['composer', multi ? 'composer-multi' : 'composer-pill', { 'composer-drag': dragging }]"
+    :class="['composer', stacked ? 'composer-stacked' : multi ? 'composer-multi' : 'composer-pill', { 'composer-drag': dragging }]"
     data-test="composer"
     @dragover="onDragOver"
     @dragleave="dragging = false"
@@ -196,7 +200,7 @@ defineExpose({ focus: () => area.value?.focus() });
     </ul>
     <div class="composer-row">
       <button
-        v-if="plusItems.length && !multi"
+        v-if="plusItems.length && !multi && !stacked"
         ref="plusButton"
         type="button"
         class="composer-icon"
@@ -221,7 +225,7 @@ defineExpose({ focus: () => area.value?.focus() });
         @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
         @keydown="onKeydown"
       />
-      <template v-if="!multi">
+      <template v-if="!multi && !stacked">
         <button
           v-if="showMic"
           type="button"
@@ -272,6 +276,46 @@ defineExpose({ focus: () => area.value?.focus() });
         @click="send"
       >
         <AppIcon name="arrow-up" />
+      </button>
+    </div>
+    <div
+      v-if="stacked"
+      class="composer-bar composer-stacked-bar"
+    >
+      <button
+        v-if="plusItems.length"
+        ref="plusButton"
+        type="button"
+        class="composer-icon"
+        aria-label="Joindre un fichier"
+        aria-haspopup="menu"
+        :aria-expanded="menu.open.value"
+        :aria-controls="menu.open.value ? menuId : undefined"
+        data-test="composer-plus"
+        @click="toggleMenu"
+      >
+        <AppIcon name="plus" />
+      </button>
+      <span class="composer-spacer" />
+      <button
+        v-if="showMic"
+        type="button"
+        class="composer-icon"
+        aria-label="Dicter"
+        data-test="composer-mic"
+        @click="dictate"
+      >
+        <AppIcon name="mic" />
+      </button>
+      <button
+        type="button"
+        class="composer-send composer-send-round"
+        :aria-label="sendLabel"
+        :aria-disabled="canSend ? undefined : 'true'"
+        data-test="composer-send"
+        @click="send"
+      >
+        <span class="composer-send-dot"><AppIcon name="arrow-up" /></span>
       </button>
     </div>
     <p
