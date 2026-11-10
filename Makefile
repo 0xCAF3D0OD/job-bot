@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille poids css-inutilise
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -104,8 +104,11 @@ changelog-check: ## vérifie les fichiers de changelog.d/, l'assemblage et les n
 	python3 scripts/changelog.py --check
 	python3 scripts/docs_numeros.py
 
-poids: ## le budget de poids des pages (docs/117 §3)
+poids: ## le budget de poids : JS, CSS et images, brut, gzip et brotli (docs/performance.md)
 	cd frontend && npm run -s poids
+
+css-inutilise: ## le CSS inutilisé sur Accueil, Candidatures et Bilan (couverture de Chrome ; DEMO_URL d'un build servi, docs/performance.md)
+	cd frontend && node scripts/css-inutilise.mjs $(or $(DEMO_URL),http://localhost:4173)
 
 lint: ## ruff, mypy, eslint
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy src tests
