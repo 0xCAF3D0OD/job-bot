@@ -76,7 +76,7 @@ function mockGet(letters: unknown[], page: unknown = FITS): void {
             ? letters
             : path === "/api/letters/{draft_id}/page"
               ? page
-              : [{ id: 1, title: "Kubernetes" }],
+              : [{ id: 1, title: "Kubernetes", active: true }],
     }),
   );
 }
@@ -613,7 +613,16 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
 
   it("« Préparer ma candidature » (§7 n° 1, §7.1) : la lettre s’écrit dès l’arrivée, le CV adapté en même temps", async () => {
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}"
+            ? offer
+            : path === "/api/letters/{draft_id}/page"
+              ? FITS
+              : path === "/api/profile-chunks"
+                ? [{ id: 1, title: "Vente", active: true }]
+                : [],
+      }),
     );
     POST.mockImplementation(() => new Promise(() => {}));
     const wrapper = await mountView("/offres/7/preparer?ecrire=1");
@@ -651,6 +660,31 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(failed.text()).toContain("La lettre n’a pas pu être écrite");
     expect(failed.text()).toContain("Rien n’est perdu");
     expect(failed.get("[data-test=write]").text()).toContain("Réessayer");
+  });
+
+  it("sans bloc de profil : « Il manque ton profil » et « Ajouter mon expérience » au lieu de « Réessayer »", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/offers/{offer_id}" ? offer : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
+    );
+    const wrapper = await mountView("/offres/7/preparer?ecrire=1");
+    // Rien ne part : la lettre ne pourrait pas s'écrire.
+    expect(POST).not.toHaveBeenCalled();
+    const card = wrapper.get("[data-test=no-profile]");
+    expect(card.text()).toContain("Il manque ton profil");
+    expect(card.find("[data-test=write]").exists()).toBe(false);
+    await card.get("[data-test=no-profile-link]").trigger("click");
+    await flushPromises();
+    expect(wrapper.vm.$router.currentRoute.value.fullPath).toBe("/profil?onglet=experiences&nouveau=1");
+  });
+
+  it("le serveur répond « aucun bloc de profil actif » : la page envoie vers Profil", async () => {
+    mockGet([]);
+    POST.mockResolvedValue({ error: { detail: "aucun bloc de profil actif : rien à rédiger" }, response: { status: 409 } });
+    const wrapper = await mountView();
+    await wrapper.get("[data-test=write]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=letter-failed]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=no-profile]").text()).toContain("Ajouter mon expérience");
   });
 
   it("ordinateur (§2.3, §7.3) : sans CV adapté, la page grisée et « Ce CV » ; en échec, « Réessayer »", async () => {

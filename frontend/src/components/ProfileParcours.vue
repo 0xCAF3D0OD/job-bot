@@ -24,13 +24,15 @@ import CertificatesSection from "./CertificatesSection.vue";
 import { offerUndo } from "../composables/useUndo";
 import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
-const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
-  { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
-  { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
-  { value: "formation", label: "Formation", hint: "Diplôme, certification, cours." },
-  { value: "preference", label: "Préférence", hint: "Ce que tu recherches : équipe, rythme, télétravail…" },
-  { value: "redhibitoire", label: "Rédhibitoire", hint: "Ce que tu refuses." },
-  { value: "ton", label: "Ton", hint: "Comment tes lettres doivent sonner." },
+// Les exemples de mots-clés parlent à tous les métiers, pas seulement à l'informatique (test du 10 novembre :
+// « infra, linux… » ne disait rien à une employée de commerce).
+const KINDS: { value: ChunkKind; label: string; hint: string; tags: string }[] = [
+  { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations.", tags: "vente, accueil, stock…" },
+  { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau.", tags: "caisse, Excel, permis B…" },
+  { value: "formation", label: "Formation", hint: "Diplôme, certification, cours.", tags: "CFC, brevet, premiers secours…" },
+  { value: "preference", label: "Préférence", hint: "Ce que tu recherches : équipe, rythme, télétravail…", tags: "temps partiel, horaires de jour…" },
+  { value: "redhibitoire", label: "Rédhibitoire", hint: "Ce que tu refuses.", tags: "travail de nuit…" },
+  { value: "ton", label: "Ton", hint: "Comment tes lettres doivent sonner.", tags: "simple, chaleureux…" },
 ];
 const kindLabel = Object.fromEntries(KINDS.map((k) => [k.value, k.label])) as Record<ChunkKind, string>;
 
@@ -277,7 +279,12 @@ const missingProfile = computed(() => {
   // Sans document, l'encart de dépôt le dit déjà (docs/49 §2).
   if (!documents.value.length) return "";
   if (!chunks.value.some((c) => c.active)) {
-    return "Il manque tes blocs de profil : « Proposer des blocs » les prépare à partir de ton CV.";
+    // « Proposer des blocs » n'est à l'écran qu'avec la liste des documents, et sur un document lisible.
+    const proposable = showDocuments.value && firstReadable.value !== null;
+    const yourself = showBlocks.value ? "« Nouveau bloc »" : "« Nouveau bloc », dans Expériences";
+    return proposable
+      ? `Il manque tes blocs de profil : « Proposer des blocs », à côté de ton CV, les prépare. Tu peux aussi les écrire toi-même avec ${yourself}.`
+      : `Il manque tes blocs de profil : sans eux, les offres ne sont pas notées et les lettres ne peuvent pas être écrites. Ajoute ton dernier poste avec ${yourself}.`;
   }
   return "";
 });
@@ -557,7 +564,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         <TagInput
           id="chunk-tags"
           v-model="editing.form.tags"
-          placeholder="infra, linux…"
+          :placeholder="KINDS.find((k) => k.value === editing?.form.kind)?.tags ?? ''"
         />
       </div>
       <label class="check calm-panel-switch">

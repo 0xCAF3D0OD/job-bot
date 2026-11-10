@@ -34,6 +34,7 @@ import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
+import { useProfileEmpty } from "../composables/useProfileEmpty";
 import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
 
@@ -541,7 +542,10 @@ async function loadChunkTitles(): Promise<void> {
   }
 }
 
+// Sans profil, les cartes le disent par une puce (useProfileEmpty).
+const { refresh: refreshProfile } = useProfileEmpty();
 onMounted(() => {
+  void refreshProfile();
   window.addEventListener("keydown", onKeydown);
   window.addEventListener("resize", measureGrid);
   document.addEventListener("pointerdown", onPointerDown);
