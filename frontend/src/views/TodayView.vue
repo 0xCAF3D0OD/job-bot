@@ -16,6 +16,7 @@ import SuccessCard from "../components/SuccessCard.vue";
 import HomePhone, { type HomeTodo } from "../components/HomePhone.vue";
 import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
+import { useCvReading } from "../composables/useCvReading";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
 import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpLeftLine, orpPace, plural } from "../format";
@@ -76,6 +77,15 @@ const starting = computed(() => {
 });
 // Le tri à faire : une tâche « Trier » sur ordinateur, les offres de la dose sur téléphone.
 const triagePending = computed(() => !restDay.value && !rhythmPaused.value && dose.value.length > 0 && !triageDone.value);
+// « Relire ton CV » (maquette du 10 novembre, PR 22) : en tête de « À faire » tant qu'un CV lisible n'a jamais été lu ;
+// la ligne part dès que la lecture a trouvé quelque chose (état « lu »).
+const reading = useCvReading();
+const cvUnread = computed(() => {
+  const cv = reading.cv.value;
+  return !!cv && cv.text_status === "ok" && ["relire", "cours", "indispo"].includes(reading.stateOf(cv));
+});
+const CV_TASK = { key: "cv", test: "cv-unread", icon: "file-alert", title: "Relire ton CV", action: "Relire", to: "/profil" } as const;
+
 // Les tâches du téléphone (« À faire », A4) : icône, titre avec un verbe, une
 // ligne de détail, un bouton à contour) ; seulement ce qui a quelque chose à faire, le daté d'abord.
 type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw };
@@ -83,6 +93,7 @@ const tasks = computed<Task[]>(() => {
   const t = today.value;
   if (!t || starting.value) return [];
   const list: Task[] = [];
+  if (cvUnread.value) list.push({ ...CV_TASK, detail: "Sans lui, tes offres ne sont pas notées" });
   if (t.orp_meeting_at) {
     list.push({ key: "meeting", test: "orp-meeting-soon", icon: "calendar", title: "Préparer le rendez-vous ORP", detail: `${dayAndTime(t.orp_meeting_at)} : ta feuille est prête.`, action: "Voir", to: "/candidatures/rendez-vous-orp" });
   }
@@ -188,6 +199,7 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
   const later: DeskTask[] = [];
   const orp = orpTask.value;
   const late = !!orp && !!t.orp_due_date && localDate(t.orp_due_date).getTime() < startOfDay(new Date());
+  if (cvUnread.value) todo.push({ ...CV_TASK, detail: "Sans lui, tes offres ne sont pas notées · 30 secondes", tone: "late" });
   if (orp?.urgent) todo.push({ ...orp.task, tone: late ? "late" : "normal" });
   if (preparing.value.length) {
     const n = preparing.value.length;
@@ -297,7 +309,7 @@ const todos = computed<HomeTodo[]>(() => {
     }
     const count =
       group === "follow" ? t.to_follow_up : group === "preparing" ? preparing.value.length : group === "alerts" ? t.alerts_waiting : 1;
-    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to });
+    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to, ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}) });
   }
   for (const todo of list) {
     const n = todo.count;
@@ -309,6 +321,7 @@ const todos = computed<HomeTodo[]>(() => {
       preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
       review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),
       alerts: many(n, "Alerte à vérifier", "Alertes à vérifier"),
+      cv: "Relire ton CV",
     }[todo.key] ?? "";
     if (todo.key === "interview" || todo.key === "review") todo.to = "/candidatures/suivi";
   }
@@ -389,7 +402,10 @@ function dismissSteps(): void {
   });
 }
 
-onMounted(() => void load());
+onMounted(() => {
+  void load();
+  void reading.load();
+});
 useDataChanged(load);
 const { me } = useAuth();
 </script>
