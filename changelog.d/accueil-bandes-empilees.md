@@ -1,0 +1,1 @@
+Accueil sur téléphone : les bandes ORP et Offres s’empilent au défilement sous la barre du logo (--header-h), « À faire » passe par-dessus ; toucher le bord d’une bande y ramène ; rien ne colle avec « réduire les animations » ; un élément qui prend le focus n’est jamais caché.

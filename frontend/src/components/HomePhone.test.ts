@@ -1,5 +1,6 @@
 import { mount, RouterLinkStub } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import type { Offer } from "../api/client";
 import HomePhone from "./HomePhone.vue";
@@ -67,5 +68,36 @@ describe("Le cercle liquide (D6)", () => {
     const circle = mount(LiquidCircle, { props: { count: 5, target: 10 } });
     expect(circle.find("text").text()).toBe("5/10");
     expect(circle.find("g[transform]").attributes("transform")).toBe("translate(0 50)");
+  });
+
+  describe("les bandes qui s’empilent (PR 36)", () => {
+    afterEach(() => vi.unstubAllGlobals());
+    const motion = (reduce: boolean) =>
+      vi.stubGlobal("matchMedia", (query: string) => ({ matches: reduce && query.includes("reduce"), addEventListener() {}, removeEventListener() {} }));
+
+    it("ORP et Offres collent quand elles tiennent dans l’écran ; « À faire » ne colle jamais", async () => {
+      motion(false);
+      const view = home();
+      await nextTick();
+      expect(view.get("[data-test=home-band-orp]").classes()).toContain("home-stick");
+      expect(view.get("[data-test=home-band-offers]").classes()).toContain("home-stick");
+      expect(view.get("[data-test=home-todo]").classes()).not.toContain("home-stick");
+    });
+
+    it("animations réduites : rien ne colle", async () => {
+      motion(true);
+      const view = home();
+      await nextTick();
+      expect(view.find(".home-stick").exists()).toBe(false);
+    });
+
+    it("une bande plus haute que l’écran ne colle pas", async () => {
+      motion(false);
+      vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(5000);
+      const view = home();
+      await nextTick();
+      expect(view.find(".home-stick").exists()).toBe(false);
+      vi.restoreAllMocks();
+    });
   });
 });
