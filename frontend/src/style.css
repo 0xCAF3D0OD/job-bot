@@ -4841,9 +4841,10 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-pill-value { flex: 1 1 auto; }
 .dt-pill-empty .dt-pill-value { color: var(--text-secondary); }
 /* Téléphone (corrections du 9 novembre, maquette RendezVous) : la date et l'heure sur une même ligne, comme dans
-   « Ce qui a été convenu » ; date 1,4, heure 1, pilules de 14 px de marge, le texte coupé d'une ellipse si besoin. */
+   « Ce qui a été convenu » ; date 1,4, heure 1, le texte coupé d'une ellipse si besoin. Prompt du 10 novembre (PR 16) :
+   la marge des pilules passe de 14 à 16 px, sur la grille de 4 (audit-grille.js, état sans rendez-vous). */
 @media (max-width: 820px) {
-  .dt-field { --dt-pad: 14px; --dt-font: 15px; flex-wrap: nowrap; }
+  .dt-field { --dt-pad: 16px; --dt-font: 15px; flex-wrap: nowrap; }
   .dt-field-date { flex: 1.4 1 0; }
   .dt-field-time { flex: 1 1 0; }
   .dt-field .dt-pill { width: 100%; min-width: 0; padding: 0 var(--dt-pad); font-size: var(--dt-font); }

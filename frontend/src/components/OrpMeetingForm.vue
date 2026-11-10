@@ -52,7 +52,7 @@ function checkDay(): void {
   dayError.value = day.value ? "" : "Indique la date du rendez-vous.";
 }
 function checkTime(): void {
-  timeError.value = time.value ? "" : "Indique l'heure.";
+  timeError.value = time.value ? "" : "Indique l’heure.";
 }
 
 async function save(): Promise<void> {
@@ -67,7 +67,7 @@ async function save(): Promise<void> {
     body: { starts_at: new Date(`${day.value}T${time.value}`).toISOString(), place: place.value, advisor: advisor.value },
   });
   if (data) emit("saved", data);
-  else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
+  else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
 }
 </script>
 
@@ -182,11 +182,11 @@ async function save(): Promise<void> {
 </template>
 
 <style>
-/* Maquette : une carte blanche, 16 de marge, écart 14 ; date et heure en 1,4 fr et 1 fr ; champs de 48 px aux
-   bords de 1,5 px ; le bouton de 52 px, en pilule. */
+/* Maquette : une carte blanche, 16 de marge, écart 14 posé sur la grille de 4 : 16 (prompt du 10 novembre, PR 16,
+   audit-grille.js) ; date et heure en 1,4 fr et 1 fr ; champs de 48 px aux bords de 1,5 px ; le bouton de 52 px. */
 .rdv-form {
-  --form-14: 14px; --form-17: 17px; --form-52: 52px;
-  display: flex; flex-direction: column; gap: var(--form-14); padding: var(--space-4); background: var(--surface);
+  --form-17: 17px; --form-52: 52px;
+  display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); background: var(--surface);
   border: 1px solid var(--line); border-radius: var(--radius-card);
 }
 .rdv-form h3 { margin: 0; font-size: var(--form-17); font-weight: var(--weight-bold); }

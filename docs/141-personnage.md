@@ -105,7 +105,8 @@ personnage (PR 4).
   sol à sa droite ; « Créer mes alertes » et « Ajouter une offre » restent.
 - Rendez-vous sans rendez-vous prévu (PR 4) : le personnage debout, 160 px, à la place de `rendez-vous-vide`
   (retirée). Depuis la maquette RendezVous du 7.11.2026, 186 px, dans `OrpMeetingEmpty.vue` avec le formulaire
-  du rendez-vous : la page n'a plus le personnage dans son propre fichier.
+  du rendez-vous : la page n'a plus le personnage dans son propre fichier. Le prompt du 10 novembre
+  (PR 16) réserve le personnage à capuche aux notifications : l'état montre le « 1 » de la troupe (#618).
 - Entretien décroché et refus (PR 4) : un écran plein de même mise en page que l'écran 8 (`MomentScreen.vue`,
   partagé), qui remplace le Suivi jusqu'à l'action. Entretien : « Préparer l'entretien » ouvre la préparation de la
   candidature, « Plus tard » revient au Suivi. Refus : « Réponse de <entreprise>. », « Pas pour cette fois. Chaque
