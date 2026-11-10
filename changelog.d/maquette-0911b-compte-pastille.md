@@ -1,0 +1,1 @@
+Compte sur téléphone : la ligne profil suit CompteImage. L’image de 52 px (celle choisie dans Profil, sinon les initiales) porte la pastille crayon dans un conteneur de sa taille exacte, et toute la ligne mène au Profil. La marge et l’écart font 14 px, et le sous-titre tient sur deux lignes au plus.

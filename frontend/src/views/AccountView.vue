@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
-import AvatarPicker from "../components/AvatarPicker.vue";
 import BlockRow from "../components/BlockRow.vue";
 import PageHero from "../components/PageHero.vue";
 import ProfileImage from "../components/ProfileImage.vue";
@@ -41,7 +40,6 @@ const { running, message: collectMessage, collectNow } = useCollect();
 
 const name = ref("");
 const image = useProfileImage();
-const picking = ref(false);
 const cvCount = ref<number | null>(null);
 const operatorContact = ref<string | null>(null);
 
@@ -111,8 +109,9 @@ onMounted(() => {
       class="container account-page"
       data-test="account-page"
     >
-      <!-- Maquette du 8 novembre (Compte, CompteImage) : l'image de profil avec sa pastille crayon ; un toucher ouvre
-           « Ton image » (AvatarPicker). Le bouton est posé à côté du lien de la carte, pas dedans. -->
+      <!-- La ligne profil (CompteImage.dc.html, demande de Kevin du 9 novembre) : toute la ligne est le lien vers le
+           Profil. L'image de 52 px (celle choisie dans Profil, sinon les initiales), la pastille crayon décorative dans un conteneur de la taille de l'image, le nom, puis « CV,
+           compétences, postes recherchés » sur deux lignes au plus. -->
       <section class="block account-card-wrap">
         <div class="account-group account-profile-group">
           <RouterLink
@@ -121,9 +120,19 @@ onMounted(() => {
             data-test="account-profile-card"
           >
             <span
-              class="account-image-slot"
-              aria-hidden="true"
-            />
+              class="account-image"
+              data-test="account-image"
+            >
+              <ProfileImage
+                :choice="image.choice.value"
+                :initials="initials || image.initials.value"
+                :size="52"
+              />
+              <span
+                class="account-image-badge"
+                aria-hidden="true"
+              ><AppIcon name="pencil" /></span>
+            </span>
             <span class="account-card-text">
               <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
               <span class="account-card-line">CV, compétences, postes recherchés</span>
@@ -133,30 +142,8 @@ onMounted(() => {
               aria-hidden="true"
             ><AppIcon name="arrow-right" /></span>
           </RouterLink>
-          <button
-            type="button"
-            class="account-image-button"
-            aria-label="Changer ton image"
-            aria-haspopup="dialog"
-            data-test="account-image"
-            @click="picking = true"
-          >
-            <ProfileImage
-              :choice="image.choice.value"
-              :initials="initials || image.initials.value"
-              :size="52"
-            />
-            <span
-              class="account-image-badge"
-              aria-hidden="true"
-            ><AppIcon name="pencil" /></span>
-          </button>
         </div>
       </section>
-      <AvatarPicker
-        :open="picking"
-        @close="picking = false"
-      />
 
       <!-- Les profils d'essai de l'exploitant (docs/65), venus du menu du compte (C2) : seulement s'il y en a. -->
       <label
