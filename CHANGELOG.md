@@ -510,3 +510,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.296 | Détail d’une offre sur téléphone : le lien du bas de la carte de la note s’appelle « Le détail de la note », aligné sur le contenu de la carte | livrée |
 | 1.6.297 | Rendez-vous sur téléphone : formulaire et état vide sur la grille de 4, apostrophes typographiques | livrée |
 | 1.6.298 | Annonce complète lue automatiquement : jobA1 lit l’annonce d’une offre d’alerte en arrière-plan, la fiche montre « jobA1 lit l’annonce complète… » ou, si le site bloque, « Coller le texte » et « Ouvrir l’annonce » ; plus de bouton « Lire l’annonce » | livrée |
+| 1.6.299 | Textes de l'interface : apostrophe typographique (’) partout, singulier pour 0 et 1 (« 0 offre »), noms des villes et des organisations en français à l'affichage (Genève, Berne, CICR…), numéros de téléphone suisses espacés (« 076 430 43 21 ») | livrée (les textes du serveur et de l'extension restent à faire) |
