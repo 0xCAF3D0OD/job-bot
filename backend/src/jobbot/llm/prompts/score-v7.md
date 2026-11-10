@@ -14,7 +14,7 @@ Trois lignes, chacune de 120 caractères au plus, sans phrase d'introduction :
 
 ## Note (seulement si des blocs de profil sont fournis ; sinon `score` vaut null et les listes sont vides)
 
-`score` de 0 à 100 = à quel point le profil correspond aux exigences de l'offre :
+`score` de 0 à 100 = à quel point le profil correspond aux exigences de l'offre. La note est la SOMME des cinq parts de `parts` (voir « Détail de la note ») ; repères pour le total :
 - 85-100 : correspond à presque toutes les exigences importantes ;
 - 70-84 : bonne correspondance, un ou deux manques comblables ;
 - 50-69 : correspondance partielle, manques notables ;
@@ -27,6 +27,24 @@ Ne note que l'adéquation au profil, pas l'attrait de l'offre. Sois exigeant : u
 - `gaps` : 2 à 4 manques (exigences de l'offre absentes du profil, ou préférences/rédhibitoires du profil contredits par l'offre). `chunk_ids` cite le bloc concerné s'il y en a un, sinon reste vide.
 
 Chaque point commence par son mot clé suivi de « : » (« Kubernetes : plateforme de 40 services en production. ») et tient en 12 mots au plus. Mets les plus importants en premier : seuls les trois premiers s'affichent. N'affirme jamais sur la personne quelque chose qui n'est pas dans un bloc.
+
+## Détail de la note (seulement si des blocs de profil sont fournis ; sinon `parts` est vide et `tip` vaut null)
+
+`parts` : exactement cinq parts, une par critère, dans cet ordre, chacune notée de 0 à son maximum :
+- `skills` (40 points au plus) : les compétences demandées par l'annonce, présentes ou non dans les blocs ;
+- `experience` (20 au plus) : les années et le type d'expérience demandés, comparés à ceux des blocs ;
+- `location` (15 au plus) : le lieu de travail et le télétravail, comparés aux lieux et préférences des blocs ; sans indication dans les blocs, compte le maximum ;
+- `languages` (15 au plus) : les langues exigées, comparées à celles des blocs ; une langue exigée que les blocs ne mentionnent pas donne `check` vrai ;
+- `terms` (10 au plus) : le taux et le type de contrat, comparés aux préférences des blocs ; sans préférence dans les blocs, compte le maximum.
+
+Pour chaque part :
+- `points` : un entier entre 0 et le maximum. La somme des cinq parts est exactement `score`.
+- `text` : une ou deux phrases courtes en français, 160 caractères au plus, en tutoyant : ce qui est trouvé dans le profil, puis ce qui manque (« Kubernetes et Terraform sont dans ton profil. Ansible est demandé mais n'y figure pas. »). Pas d'anglais quand un mot français existe, pas de jargon (« collent », « fit »). Rien qui ne soit dans un bloc ou dans l'offre. N'écris jamais de temps de trajet : tu ne le connais pas.
+- `check` : true si la part dépend d'un point à vérifier (une information que les blocs ne donnent pas, par exemple une langue ou des années d'expérience non précisées), false sinon.
+
+`tip` : l'action la plus utile pour faire monter la note, ou null si la note est déjà au maximum ou si rien ne dépend de la personne :
+- `text` : une ou deux phrases en tutoyant, 160 caractères au plus, qui part d'un manque réel (« Tu as déjà utilisé Ansible ? Ajoute-le à tes compétences, la note sera refaite. »). Ne suppose jamais que la personne a la compétence : pose la question.
+- `action` : « skills » (ajouter une compétence), « experience » (ajouter une expérience), « languages » (indiquer une langue) ou « criteria » (changer ce que la personne cherche : lieux, taux, contrat).
 
 ## Pourquoi cette note, et le niveau (seulement si des blocs de profil sont fournis ; sinon null)
 

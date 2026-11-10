@@ -317,6 +317,11 @@ class Evaluation(Base):
     why: Mapped[str | None] = mapped_column(Text)
     level: Mapped[str | None] = mapped_column(Text)
     level_detail: Mapped[str | None] = mapped_column(Text)
+    # Les cinq parts de la note et l'action qui la ferait monter (score-v7, PR 18 du 10 novembre).
+    score_parts: Mapped[Any] = mapped_column(
+        JSONB, nullable=False, default=list, server_default="[]"
+    )
+    score_tip: Mapped[Any] = mapped_column(JSONB)
     remote: Mapped[str | None] = mapped_column(Text)
     remote_days: Mapped[int | None] = mapped_column(SmallInteger)
     remote_region: Mapped[str | None] = mapped_column(Text)

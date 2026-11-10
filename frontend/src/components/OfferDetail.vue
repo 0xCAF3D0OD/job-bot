@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
@@ -16,7 +16,7 @@ import ContactsPanel from "./ContactsPanel.vue";
 import DetailTwoColumns from "./DetailTwoColumns.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
-import OfferCompatSheet, { type CompatPoint } from "./OfferCompatSheet.vue";
+import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
@@ -25,6 +25,7 @@ import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
+import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
 
@@ -36,6 +37,7 @@ const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }
 const contactsCount = ref(0);
 // « Trouver un contact chez … » de Postuler (C7) : la fiche s'ouvre sur ses Contacts, dépliés.
 const toContacts = useRoute()?.hash === "#contacts";
+const router = useRouter();
 onMounted(() => {
   if (toContacts) document.getElementById("contacts")?.scrollIntoView?.({ block: "start" });
 });
@@ -228,6 +230,18 @@ const needsProfile = computed(() => !scored.value && profileEmpty.value);
 // « Compléter mon profil » (PR 17, point 4) : le formulaire des premiers pas en panneau ; à l'enregistrement, la fiche
 // reste ouverte et l'offre est notée (le serveur lance la notation au premier élément du profil).
 const completing = ref(false);
+// La partie du profil que le panneau ouvre : tout (« Compléter mon profil »), ou la seule qu'une action de
+// « Pour faire monter la note » vise (PR 18).
+const completionSections = ref<CompletionSection[]>(["experiences", "languages", "identity"]);
+function raiseNote(action: TipAction): void {
+  compatOpen.value = false;
+  if (action === "skills") void router.push({ path: "/profil", query: { onglet: "parcours" } });
+  else if (action === "criteria") void router.push({ path: "/profil" });
+  else {
+    completionSections.value = action === "experience" ? ["experiences"] : ["languages"];
+    completing.value = true;
+  }
+}
 async function profileSaved(): Promise<void> {
   completing.value = false;
   await refreshProfile();
@@ -743,7 +757,11 @@ watch(
       :strengths="compatStrengths"
       :gaps="compatGaps"
       :how="compatHow"
+      :parts="offer.score_parts ?? []"
+      :tip="offer.score_tip ?? null"
+      :scored-at="offer.scored_at ?? null"
       @close="compatOpen = false"
+      @tip="raiseNote"
     />
     <!-- La barre du bas de la sous-page (O8) : « Écarter » (avec « Annuler » 6 s) et l'action principale ;
          une offre expirée mène aux offres proches (O7). -->
@@ -828,7 +846,7 @@ watch(
                 class="match-profile-link"
                 aria-haspopup="dialog"
                 data-test="match-profile-link"
-                @click="completing = true"
+                @click="completionSections = ['experiences', 'languages', 'identity']; completing = true"
               >
                 Compléter mon profil<AppIcon name="chevron" />
               </button>
@@ -1222,6 +1240,7 @@ watch(
     <ProfileCompletionPanel
       :open="completing"
       title="Compléter mon profil"
+      :sections="completionSections"
       @close="completing = false"
       @saved="profileSaved"
     />

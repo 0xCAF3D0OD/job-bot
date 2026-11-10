@@ -19485,6 +19485,24 @@
             ],
             "title": "Level Detail"
           },
+          "score_parts": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePartOut"
+            },
+            "type": "array",
+            "title": "Score Parts",
+            "default": []
+          },
+          "score_tip": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreTipOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "scored_at": {
             "anyOf": [
               {
@@ -21473,6 +21491,47 @@
         "title": "RhythmWeek",
         "description": "Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine."
       },
+      "ScorePartOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "skills",
+              "experience",
+              "location",
+              "languages",
+              "terms"
+            ],
+            "title": "Key"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "max": {
+            "type": "integer",
+            "title": "Max"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "check": {
+            "type": "boolean",
+            "title": "Check",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "points",
+          "max",
+          "text"
+        ],
+        "title": "ScorePartOut",
+        "description": "Une part de la note (PR 18) : `max` vient de PART_MAX, `points` de la notation."
+      },
       "ScorePoint": {
         "properties": {
           "text": {
@@ -21493,6 +21552,36 @@
           "chunk_ids"
         ],
         "title": "ScorePoint"
+      },
+      "ScoreTipOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "skills",
+                  "experience",
+                  "languages",
+                  "criteria"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ScoreTipOut"
       },
       "ScoringStatus": {
         "properties": {
@@ -22111,6 +22200,24 @@
               }
             ],
             "title": "Level Detail"
+          },
+          "score_parts": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePartOut"
+            },
+            "type": "array",
+            "title": "Score Parts",
+            "default": []
+          },
+          "score_tip": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreTipOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "scored_at": {
             "anyOf": [
