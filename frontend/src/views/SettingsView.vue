@@ -20,6 +20,7 @@ import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import DateField from "../components/DateField.vue";
 import BusyButton from "../components/BusyButton.vue";
+import SettingsMore from "../components/SettingsMore.vue";
 import SettingsSection from "../components/SettingsSection.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
 import AppearancePanel from "../components/AppearancePanel.vue";
@@ -78,10 +79,10 @@ async function sendTest(): Promise<void> {
   try {
     const { error, response } = await api.POST("/api/notifications/test");
     if (response.status === 204) {
-      testMessage.value = "Notification envoyée : vérifie ton téléphone.";
+      testMessage.value = "Notification envoyée : vérifie ton téléphone.";
     } else {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
-      testMessage.value = typeof detail === "string" ? `Échec : ${detail}.` : `Échec (HTTP ${response.status}).`;
+      testMessage.value = typeof detail === "string" ? `Échec : ${detail}.` : `Échec (HTTP ${response.status}).`;
     }
   } catch {
     testMessage.value = "API injoignable.";
@@ -131,7 +132,7 @@ function clearError(row: string): void {
 function refusal(error: unknown): string {
   const detail = (error as { detail?: unknown } | undefined)?.detail;
   if (typeof detail === "string") return `${detail.charAt(0).toUpperCase()}${detail.slice(1)}.`;
-  return "Refusé : vérifie la valeur.";
+  return "Refusé : vérifie la valeur.";
 }
 
 async function persist(row: string, patch: Partial<SettingsModel>): Promise<boolean> {
@@ -306,7 +307,8 @@ const active = computed<SectionId>(() => {
 });
 
 // Une rubrique par page (décision de Kevin du 2026-11-05, C10) : la page Compte ouvre chacune, et chacune
-// revient au compte. Sans rubrique, l'adresse mène à la page Compte (router.ts).
+// revient au compte. Sans rubrique, l'adresse mène à la page Compte sur téléphone, aux notifications sur ordinateur
+// (router.ts).
 const grouped = computed(() => (phone.value || wide.value) && groupSet.value.has(active.value));
 const shows = (id: SectionId): boolean => (grouped.value ? groupSet.value.has(id) : active.value === id);
 const label = computed(() =>
@@ -329,12 +331,14 @@ watch(
     :title="label"
   >
     <template #back>
+      <!-- Sur ordinateur, plus de page Compte (PR 20) : chaque rubrique revient aux Réglages. -->
       <RouterLink
-        to="/compte"
+        v-if="phone || active !== 'notifications'"
+        :to="phone ? '/compte' : '/reglages'"
         class="back-link"
         data-test="settings-back"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />Retour au compte</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />{{ phone ? "Retour au compte" : "Retour aux réglages" }}</span>
       </RouterLink>
     </template>
   </PageHero>
@@ -489,7 +493,7 @@ watch(
               <SettingRow
                 v-slot="c"
                 title="Une pause"
-                description="Vacances, maladie : ni offres ni message pendant la pause."
+                description="Vacances, maladie : ni offres ni message pendant la pause."
                 :saved="savedRow === 'pause'"
                 :error="rowErrors.pause"
                 stack
@@ -708,7 +712,7 @@ watch(
               <SettingRow
                 v-else-if="notificationsUnknown"
                 title="Notifications sur le téléphone"
-                description="Impossible de vérifier pour l’instant : la plateforme ne répond pas. Réessaie dans un moment."
+                description="Impossible de vérifier pour l’instant : la plateforme ne répond pas. Réessaie dans un moment."
                 data-test="notifications-unknown"
               />
               <SettingRow
@@ -740,7 +744,7 @@ watch(
             >
               <SettingRow
                 :title="`Formule ${planName}`"
-                description="Ce que l’IA fait chaque mois : les offres notées, les lettres, les CV, l’assistant."
+                description="Ce que l’IA fait chaque mois : les offres notées, les lettres, les CV, l’assistant."
               >
                 <RouterLink
                   :to="{ query: { rubrique: 'formule' } }"
@@ -865,6 +869,9 @@ watch(
         >
           <AgendaPanel />
         </SettingsSection>
+
+        <!-- Ordinateur (PR 20, point 1) : ce qui était sur la page Compte, sous les notifications. -->
+        <SettingsMore v-if="!phone && shows('notifications')" />
 
         <SettingsSection
           v-if="owner && active === 'plateforme'"

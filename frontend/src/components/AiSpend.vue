@@ -47,7 +47,7 @@ const chf = (n: number): string => n.toFixed(2).replace(".", ",");
       class="notice"
       data-test="platform-reached"
     >
-      Le plafond de la plateforme est atteint : l’IA reprend le mois prochain.
+      Le plafond de la plateforme est atteint : l’IA reprend le mois prochain.
     </p>
     <p class="muted">
       {{ status.configured ? `IA configurée · ${status.model}` : "IA non configurée (réglage d’installation)" }}

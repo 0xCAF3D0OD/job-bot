@@ -121,3 +121,29 @@ describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novemb
     expect(rows[0]!.find(".arrow-circle").attributes("aria-hidden")).toBe("true");
   });
 });
+
+describe("Profil téléphone, page unique (maquette ProfilTel, prompt du 10 novembre, PR 20)", () => {
+  const original = globalThis.matchMedia;
+  afterEach(() => {
+    globalThis.matchMedia = original;
+  });
+
+  it("le nom n’est pas un second titre ; la carte du CV finit par « Voir | Remplacer » ; compétences vides avec leur lien", async () => {
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: query.includes("599px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
+    const saved = DATA["/api/profile-chunks"];
+    DATA["/api/profile-chunks"] = [];
+    const wrapper = await mountPage();
+    DATA["/api/profile-chunks"] = saved;
+    expect(wrapper.find("h1").exists()).toBe(false);
+    expect(wrapper.get(".profile-head-name").text()).toBe("Kevin Di Nocera");
+    const card = wrapper.get("[data-test=cv-card]");
+    expect(card.findAll(".profile-cv-split > *").map((e) => e.text())).toEqual(["Voir CV_Kevin.pdf (nouvel onglet)", "Remplacer"]);
+    expect(card.find(".profile-cv .button").exists()).toBe(false);
+    const empty = wrapper.get("[data-test=profile-skills-empty]");
+    expect(empty.text()).toContain("Rien pour l’instant. Relis ton CV ou ajoute-les à la main.");
+    expect(empty.get("[data-test=profile-skill-add]").text()).toBe("Ajouter une compétence");
+    const lines = wrapper.findAll("[data-test=profile-parcours] .criteria-row-value").map((v) => v.text());
+    expect(lines.slice(0, 2)).toEqual(["Aucune pour l’instant", "Aucune pour l’instant"]);
+  });
+});

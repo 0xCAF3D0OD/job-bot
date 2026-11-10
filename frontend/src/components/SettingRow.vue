@@ -34,7 +34,19 @@ const control = computed(() => ({
     data-test="setting-row"
   >
     <div class="setting-row-text">
+      <!-- `aside` (prompt du 10 novembre, PR 20) : une action sur la ligne du titre, à droite (le « … » d'un compte). -->
+      <div
+        v-if="$slots.aside"
+        class="setting-row-head"
+      >
+        <span
+          :id="titleId"
+          class="setting-row-title"
+        >{{ title }}</span>
+        <slot name="aside" />
+      </div>
       <span
+        v-else
         :id="titleId"
         class="setting-row-title"
       >{{ title }}</span>

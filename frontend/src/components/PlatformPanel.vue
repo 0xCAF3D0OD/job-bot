@@ -134,9 +134,9 @@ async function confirmPending(): Promise<void> {
 const confirmMessage = computed(() => {
   const pending = confirming.value;
   if (!pending) return "";
-  if (pending.kind === "suspend") return `Suspendre ${pending.name} ? Il ne pourra plus se connecter ; ses données restent.`;
-  if (pending.kind === "refuse") return `Refuser la demande de ${pending.name} ? Elle sera effacée, avec le compte.`;
-  return `Supprimer ${pending.name} et toutes ses données (offres, candidatures, documents) ? Rien ne sera gardé. Écris son identifiant pour confirmer.`;
+  if (pending.kind === "suspend") return `Suspendre ${pending.name} ? Il ne pourra plus se connecter ; ses données restent.`;
+  if (pending.kind === "refuse") return `Refuser la demande de ${pending.name} ? Elle sera effacée, avec le compte.`;
+  return `Supprimer ${pending.name} et toutes ses données (offres, candidatures, documents) ? Rien ne sera gardé. Écris son identifiant pour confirmer.`;
 });
 
 async function suspend(account: Account, confirmed = false): Promise<void> {
@@ -170,7 +170,7 @@ function clearError(row: string): void {
 function refusal(error: unknown): string {
   const detail = (error as { detail?: unknown } | undefined)?.detail;
   if (typeof detail === "string") return `${detail.charAt(0).toUpperCase()}${detail.slice(1)}.`;
-  return "Refusé : vérifie la valeur.";
+  return "Refusé : vérifie la valeur.";
 }
 
 async function persist<T>(row: string, call: () => Promise<{ data?: T; error?: unknown }>, apply: (data: T) => void): Promise<boolean> {
@@ -295,7 +295,8 @@ onMounted(async () => {
 function accountLine(account: Account): string {
   const state = [account.suspended ? "Suspendu" : "", account.has_password ? "" : "Sans mot de passe"].filter(Boolean);
   const login = account.last_login_at ? `connecté ${onDay(account.last_login_at)}` : "jamais connecté";
-  const usage = `ce mois : IA ${money(account.month_spend_chf)} CHF sur ${money(account.ai_budget_chf)}`;
+  // Prompt du 10 novembre (PR 20, point 6) : la dépense seule, le plafond est dans son champ juste dessous.
+  const usage = `IA ${money(account.month_spend_chf)} CHF utilisés ce mois`;
   const offers = plural(account.month_offers, "offre reçue", "offres reçues", "aucune offre reçue");
   return [...state, `Créé ${onDay(account.created_at)}`, login, usage, offers].join(" · ");
 }
@@ -306,7 +307,7 @@ function requestLine(request: Platform["signup_requests"][number]): string {
 }
 
 function linkLine(value: NonNullable<typeof link.value>): string {
-  return `${value.url} · valable une fois, ${untilDay(value.expires)}. Montré une seule fois : transmets-le toi-même.`;
+  return `${value.url} · valable une fois, ${untilDay(value.expires)}. Montré une seule fois : transmets-le toi-même.`;
 }
 
 // Les sauvegardes (docs/82) : la dernière et l'essai de restauration, dits en mots.
@@ -314,7 +315,7 @@ const backupLate = computed(() => {
   const backup = platform.value?.backup;
   if (!backup?.configured || !backup.late) return null;
   return backup.last_error
-    ? { title: "Sauvegarde en échec", text: `La dernière sauvegarde a échoué : ${backup.last_error}.`, tone: "error" as const }
+    ? { title: "Sauvegarde en échec", text: `La dernière sauvegarde a échoué : ${backup.last_error}.`, tone: "error" as const }
     : { title: "Sauvegarde en retard", text: "Aucune sauvegarde depuis plus de 36 heures.", tone: "todo" as const };
 });
 const backupLast = computed(() => {
@@ -323,14 +324,14 @@ const backupLast = computed(() => {
   const kept = `${plural(backup.count, "sauvegarde gardée", "sauvegardes gardées")} dans ${backup.folder}.`;
   return backup.last_at
     ? `Faite ${dateWithTime(backup.last_at)}, ${size(backup.last_size)} · ${kept}`
-    : `Pas encore de sauvegarde : la première se fait dans l’heure. ${kept}`;
+    : `Pas encore de sauvegarde : la première se fait dans l’heure. ${kept}`;
 });
 const backupTest = computed(() => {
   const backup = platform.value?.backup;
-  if (!backup?.test_at) return { text: "Pas encore d’essai : il se fait chaque dimanche.", state: "À venir", tone: "neutral" } as const;
+  if (!backup?.test_at) return { text: "Pas encore d’essai : il se fait chaque dimanche.", state: "À venir", tone: "neutral" } as const;
   return backup.test_ok
     ? ({ text: `Dernier essai ${dateInList(backup.test_at)}.`, state: "Réussi", tone: "ok" } as const)
-    : ({ text: `Dernier essai ${dateInList(backup.test_at)} : ${backup.test_error}.`, state: "Échec", tone: "error" } as const);
+    : ({ text: `Dernier essai ${dateInList(backup.test_at)} : ${backup.test_error}.`, state: "Échec", tone: "error" } as const);
 });
 
 // Taille d'une sauvegarde (docs/82) : en Mo, ou en Ko sous le Mo.
@@ -357,7 +358,7 @@ function size(bytes: number | null | undefined): string {
       role="alert"
       data-test="platform-database-admin"
     >
-      Le serveur se connecte à la base en administrateur : la séparation des comptes ne tient qu’à lui.
+      Le serveur se connecte à la base en administrateur : la séparation des comptes ne tient qu’à lui.
       Dans le fichier <code>.env</code>, utilise le rôle <code>jobbot_app</code> pour l’API et
       <code>jobbot_worker</code> pour le worker (voir <code>docs/exploitation.md</code>, « Accès à la base »).
     </p>
@@ -366,7 +367,7 @@ function size(bytes: number | null | undefined): string {
       class="notice"
       data-test="platform-auth-disabled"
     >
-      Connexion désactivée : les comptes invités ne peuvent pas se connecter.
+      Connexion désactivée : les comptes invités ne peuvent pas se connecter.
     </p>
 
     <!-- Les demandes en tête (docs/102) : accepter l'active, refuser l'efface avec le compte. -->
@@ -425,14 +426,13 @@ function size(bytes: number | null | undefined): string {
     >
       <SettingRow
         title="Comptes"
-        description="Leur usage seulement : connexion, dépense de l’IA, offres reçues."
+        description="Leur usage seulement : connexion, dépense de l’IA, offres reçues."
       />
       <template
         v-for="account in platform.accounts"
         :key="account.id"
       >
         <SettingRow
-          v-slot="c"
           :title="account.is_owner ? `${account.username} (toi)` : account.username"
           :description="accountLine(account)"
           :saved="savedRow === `account-${account.id}`"
@@ -440,45 +440,59 @@ function size(bytes: number | null | undefined): string {
           :stack="!account.is_owner"
           :data-test="`account-${account.username}`"
         >
-          <template v-if="!account.is_owner">
-            <select
-              :value="account.plan"
-              :aria-labelledby="`${c.labelledby} plan-label-${account.id}`"
-              :aria-describedby="c.describedby"
-              :data-test="`plan-${account.username}`"
-              @change="savePlan(account, ($event.target as HTMLSelectElement).value as 'essentiel' | 'plus')"
-            >
-              <option value="essentiel">
-                Essentiel
-              </option>
-              <option value="plus">
-                Plus
-              </option>
-            </select>
-            <span
-              :id="`plan-label-${account.id}`"
-              class="visually-hidden"
-            >formule</span>
-            <input
-              v-model="caps[account.id]"
-              class="setting-number"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              max="1000"
-              step="0.5"
-              :aria-labelledby="`${c.labelledby} cap-label-${account.id}`"
-              :aria-describedby="c.describedby"
-              :aria-invalid="c.invalid"
-              :data-test="`cap-${account.username}`"
-              @change="saveCap(account)"
-            >
-            <span :id="`cap-label-${account.id}`">CHF d’IA / mois</span>
+          <!-- Le « … » sur la ligne du nom, à droite, 48 px (PR 20, point 6). -->
+          <template
+            v-if="!account.is_owner"
+            #aside
+          >
             <MoreMenu
               :items="accountItems(account)"
               :label="`Plus d’actions sur le compte ${account.username}`"
               :test-id="`account-more-${account.username}`"
             />
+          </template>
+          <template #default="c">
+            <template v-if="!account.is_owner">
+              <select
+                :value="account.plan"
+                :aria-labelledby="`${c.labelledby} plan-label-${account.id}`"
+                :aria-describedby="c.describedby"
+                :data-test="`plan-${account.username}`"
+                @change="savePlan(account, ($event.target as HTMLSelectElement).value as 'essentiel' | 'plus')"
+              >
+                <option value="essentiel">
+                  Essentiel
+                </option>
+                <option value="plus">
+                  Plus
+                </option>
+              </select>
+              <span
+                :id="`plan-label-${account.id}`"
+                class="visually-hidden"
+              >formule</span>
+              <!-- « Plafond IA par mois », « CHF » dans le champ (PR 20, point 6). -->
+              <label class="platform-cap">
+                <span :id="`cap-label-${account.id}`">Plafond IA par mois</span>
+                <span class="field-suffix">
+                  <input
+                    v-model="caps[account.id]"
+                    class="setting-number"
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    max="1000"
+                    step="0.5"
+                    :aria-labelledby="`${c.labelledby} cap-label-${account.id}`"
+                    :aria-describedby="c.describedby"
+                    :aria-invalid="c.invalid"
+                    :data-test="`cap-${account.username}`"
+                    @change="saveCap(account)"
+                  >
+                  <span aria-hidden="true">CHF</span>
+                </span>
+              </label>
+            </template>
           </template>
         </SettingRow>
         <InlineConfirm
@@ -512,8 +526,8 @@ function size(bytes: number | null | undefined): string {
         v-slot="c"
         title="Demandes de compte"
         :description="signupOpen
-          ? 'Ouvertes : on peut demander un compte depuis la page de connexion.'
-          : 'Fermées : seules tes invitations ouvrent un compte.'"
+          ? 'Ouvertes : on peut demander un compte depuis la page de connexion.'
+          : 'Fermées : seules tes invitations ouvrent un compte.'"
         :saved="savedRow === 'signup'"
         :error="rowErrors.signup"
       >
@@ -611,7 +625,7 @@ function size(bytes: number | null | undefined): string {
       <SettingRow
         title="Test utilisateurs"
         :description="!platform.user_test_open
-          ? 'Aucun test en cours : rien n’est enregistré.'
+          ? 'Aucun test en cours : rien n’est enregistré.'
           : platform.milestones?.length
             ? 'Le temps entre l’inscription et la première fois de chaque étape. Gardé jusqu’à la fin du test.'
             : 'Aucun compte invité pour l’instant.'"
@@ -789,28 +803,31 @@ function size(bytes: number | null | undefined): string {
     >
       <SettingRow
         v-slot="c"
-        title="Plafond total de l’IA, tous comptes"
+        title="Plafond total de l’IA par mois, tous comptes"
         description="Au-delà, l’IA s’arrête pour tous jusqu’au mois suivant."
         :saved="savedRow === 'total'"
         :error="rowErrors.total"
         stack
       >
-        <input
-          id="platform-total"
-          v-model="total"
-          class="setting-number"
-          type="number"
-          inputmode="decimal"
-          min="0"
-          max="10000"
-          step="1"
-          :aria-labelledby="c.labelledby"
-          :aria-describedby="c.describedby"
-          :aria-invalid="c.invalid"
-          data-test="platform-total"
-          @change="saveTotal"
-        >
-        <span>CHF / mois</span>
+        <!-- Comme le plafond d'un compte : « CHF » dans le champ (PR 20, point 6). -->
+        <span class="field-suffix">
+          <input
+            id="platform-total"
+            v-model="total"
+            class="setting-number"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="10000"
+            step="1"
+            :aria-labelledby="c.labelledby"
+            :aria-describedby="c.describedby"
+            :aria-invalid="c.invalid"
+            data-test="platform-total"
+            @change="saveTotal"
+          >
+          <span aria-hidden="true">CHF</span>
+        </span>
       </SettingRow>
       <SettingRow
         title="Dépense du mois"

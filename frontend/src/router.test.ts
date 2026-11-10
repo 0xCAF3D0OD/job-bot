@@ -6,6 +6,7 @@ const GET = vi.fn();
 vi.mock("./api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a), POST: vi.fn(), use: vi.fn() } }));
 afterEach(() => {
   vi.resetAllMocks();
+  vi.unstubAllGlobals();
   useAuth().me.value = null;
 });
 
@@ -28,6 +29,8 @@ describe("routes réservées (docs/18 §1)", () => {
 
   it("connecté : la page de connexion renvoie vers l’application", async () => {
     useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
+    // Sur téléphone : la page Compte existe (sur ordinateur, voir le test suivant).
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("max-width"), addEventListener: vi.fn(), removeEventListener: vi.fn() }));
     const { router } = await import("./router");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");
@@ -92,6 +95,23 @@ describe("routes réservées (docs/18 §1)", () => {
     useAuth().me.value = { ...useAuth().me.value!, is_owner: true };
     await router.push("/etat");
     expect(router.currentRoute.value.name).toBe("diagnostic");
+  });
+
+  it("ordinateur : pas de page Compte, /compte ouvre le panneau « Mon compte » (prompt du 10 novembre, PR 20)", async () => {
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+    const { router } = await import("./router");
+    const { accountMenuRequest } = await import("./composables/useAccountMenu");
+    await router.push("/candidatures/alertes");
+    const before = accountMenuRequest.value;
+    await router.push("/compte");
+    // On reste sur la page, le panneau s'ouvre.
+    expect(router.currentRoute.value.path).toBe("/candidatures/alertes");
+    expect(accountMenuRequest.value).toBe(before + 1);
+    // Les Réglages sans rubrique : la page des notifications, plus la page Compte.
+    await router.push("/reglages");
+    expect(router.currentRoute.value.fullPath).toBe("/reglages?rubrique=notifications");
+    vi.unstubAllGlobals();
   });
 });
 
