@@ -151,12 +151,12 @@ const today = todayDay();
           class="wide"
           label="Adresse de l’entreprise"
           optional
+          hint="Ex. : Rue, NPA localité"
         >
           <input
             :id="id"
             v-model="form.company_address"
             type="text"
-            placeholder="Rue, NPA localité"
             :aria-describedby="describedby"
             :aria-invalid="invalid"
           >
@@ -227,12 +227,12 @@ const today = todayDay();
           v-slot="{ id, describedby, invalid }"
           label="Taux"
           optional
+          hint="Ex. : plein temps, temps partiel (80 %)…"
         >
           <input
             :id="id"
             v-model="form.rate_text"
             type="text"
-            placeholder="plein temps, temps partiel (80 %)…"
             :aria-describedby="describedby"
             :aria-invalid="invalid"
           >

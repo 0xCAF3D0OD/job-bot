@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
@@ -295,24 +296,36 @@ onMounted(() => void load());
       data-test="add-alert-search"
       @submit.prevent="add"
     >
-      <label>Mots
+      <FormField
+        v-slot="f"
+        label="Mots"
+        hint="Ex. : DevOps"
+      >
         <input
+          :id="f.id"
           v-model="form.terms"
+          :aria-describedby="f.describedby"
           type="text"
           maxlength="120"
           required
-          placeholder="DevOps"
+         
           data-test="alert-terms"
         >
-      </label>
-      <label>Lieu (facultatif)
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Lieu"
+        optional
+        hint="Ex. : Lausanne"
+      >
         <input
+          :id="f.id"
           v-model="form.location"
+          :aria-describedby="f.describedby"
           type="text"
           maxlength="80"
-          placeholder="Lausanne"
         >
-      </label>
+      </FormField>
       <div class="form-actions">
         <button
           type="submit"

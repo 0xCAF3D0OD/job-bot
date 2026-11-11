@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, onMounted, ref } from "vue";
 
 import {
@@ -524,10 +525,17 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       data-test="chunk-form"
       @submit.prevent="saveChunk"
     >
-      <label>Type
+      <!-- La description toujours visible, comme les CFF (docs/110). -->
+      <FormField
+        v-slot="f"
+        field-id="chunk-kind"
+        label="Type"
+        :hint="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''"
+      >
         <select
-          id="chunk-kind"
+          :id="f.id"
           v-model="editing.form.kind"
+          :aria-describedby="f.describedby"
         >
           <option
             v-for="kind in KINDS"
@@ -537,26 +545,32 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             {{ kind.label }}
           </option>
         </select>
-        <!-- La description toujours visible, comme les CFF (docs/110). -->
-        <span class="setting-desc">{{ KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? "" }}</span>
-      </label>
-      <label>Titre
+      </FormField>
+      <FormField
+        v-slot="f"
+        field-id="chunk-title"
+        label="Titre"
+      >
         <input
-          id="chunk-title"
+          :id="f.id"
           v-model="editing.form.title"
           type="text"
           maxlength="200"
           required
         >
-      </label>
-      <label>Contenu
+      </FormField>
+      <FormField
+        v-slot="f"
+        field-id="chunk-content"
+        label="Contenu"
+      >
         <textarea
-          id="chunk-content"
+          :id="f.id"
           v-model="editing.form.content"
           rows="8"
           required
         />
-      </label>
+      </FormField>
       <div class="chunk-tags">
         <span class="muted">Mots-clés</span>
         <TagInput

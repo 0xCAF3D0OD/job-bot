@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "../components/FormField.vue";
 import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
@@ -123,9 +124,14 @@ async function submit(): Promise<void> {
       <p class="hint">
         Choisis un identifiant et un mot de passe ; l’équipe jobA1 valide ensuite ton compte.
       </p>
-      <label>Identifiant
+      <FormField
+        v-slot="f"
+        label="Identifiant"
+      >
         <input
+          :id="f.id"
           v-model="username"
+          :aria-describedby="f.describedby"
           type="text"
           autocomplete="username"
           autocapitalize="none"
@@ -134,50 +140,72 @@ async function submit(): Promise<void> {
           required
           data-test="signup-username"
         >
-      </label>
-      <label>Mot de passe (12 caractères au moins)
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Mot de passe (12 caractères au moins)"
+      >
         <input
+          :id="f.id"
           v-model="password"
+          :aria-describedby="f.describedby"
           type="password"
           autocomplete="new-password"
           :minlength="MIN_PASSWORD"
           required
           data-test="signup-password"
         >
-      </label>
-      <label>Confirmer le mot de passe
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Confirmer le mot de passe"
+      >
         <input
+          :id="f.id"
           v-model="again"
+          :aria-describedby="f.describedby"
           type="password"
           autocomplete="new-password"
           required
           data-test="signup-again"
         >
-      </label>
-      <label>Un mot pour l’équipe jobA1 (facultatif)
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Un mot pour l’équipe jobA1"
+        optional
+        hint="Ex. : Qui tu es, comment tu as connu jobA1."
+      >
         <textarea
+          :id="f.id"
           v-model="note"
+          :aria-describedby="f.describedby"
           rows="3"
           :maxlength="MAX_NOTE"
-          placeholder="Qui tu es, comment tu as connu jobA1."
+         
           data-test="signup-note"
         />
-      </label>
+      </FormField>
       <div
         class="signup-trap"
         aria-hidden="true"
         data-test="signup-trap"
       >
-        <label>Site web
+        <FormField
+          v-slot="f"
+          label="Site web"
+        >
           <input
+            :id="f.id"
             v-model="website"
+            :aria-describedby="f.describedby"
             type="text"
             name="website"
             tabindex="-1"
             autocomplete="off"
             data-test="signup-website"
           >
-        </label>
+        </FormField>
       </div>
       <label class="check signup-consent">
         <input

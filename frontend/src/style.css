@@ -4236,19 +4236,37 @@ html.search-open { overflow: hidden; }
 }
 
 /* --- Formulaires (planche « Formulaires », règles §4) --- */
-/* Le champ commun : libellé semi-gras au-dessus, « (facultatif) » en gris, aide d'une ligne, champ,
-   puis l'erreur sous le champ. */
-.form-field { display: grid; gap: var(--label-gap); min-width: 0; align-content: start; }
-.form-field-label { font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-normal); }
-.form-field-optional { font-weight: var(--weight-regular); color: var(--muted); }
-.form-field-hint { margin: 0; font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
-.form-field > :is(input, select, textarea) { width: 100%; box-sizing: border-box; }
-.form-field:is(.field-w-5, .field-w-10, .field-w-20, .field-w-30) > :is(input, select) { width: min(100%, var(--field-w)); }
+/* Le champ commun, à libellé flottant (maquettes du 10 novembre, PR 27 ; Material 3 « outlined ») : champ
+   de 56 px, bordure 1,5 px --field-border, rayon 12. Vide, le libellé est dans le champ (16 px,
+   --text-secondary) ; au focus ou rempli, il remonte dans la bordure (12 px gras, --text-lead). Sa moitié
+   basse prend la couleur du champ pour couper la bordure ; la moitié haute laisse voir le conteneur. */
+:root { --ff-h: 56px; --ff-radius: 12px; --ff-pad-x: 14.5px; --ff-label-x: 12px; --ff-rest-top: 18px; --ff-float-top: -8px; --ff-float-size: 12px; --ff-badge-size: 11px; }
+.form-field { display: grid; gap: var(--space-1); min-width: 0; align-content: start; }
+.form-field-box { position: relative; min-width: 0; --ff-bg: var(--surface); }
+.form-field-box:has(:is(input, select, textarea):disabled) { --ff-bg: var(--field-disabled-bg); }
+.form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) { display: block; width: 100%; box-sizing: border-box; min-height: var(--ff-h); padding-inline: var(--ff-pad-x); border-radius: var(--ff-radius); background-color: var(--ff-bg); font-size: var(--font-body); }
+.form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select) { height: var(--ff-h); }
+.form-field-box textarea { padding-block: var(--space-4); }
+.form-field-box :is(input, select, textarea):disabled { border-color: var(--line-strong); background-color: var(--ff-bg); color: var(--text-placeholder); }
+.form-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); display: flex; align-items: center; gap: var(--space-1); max-width: calc(100% - 2 * var(--ff-label-x)); box-sizing: border-box; padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); color: var(--text-secondary); pointer-events: none; white-space: nowrap; transition: top var(--t-state), font-size var(--t-state), color var(--t-state); }
+.form-field-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.form-field-box:focus-within > .form-field-label,
+.form-field-box:has(:is(input, textarea):not(:placeholder-shown)) > .form-field-label,
+.form-field-box:has(select, input:is([type="date"], [type="time"], [type="datetime-local"])) > .form-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--ff-bg) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
+.form-field-box:focus-within > .form-field-label { color: var(--primary-text); }
+.form-field-box:has(:is(input, select, textarea):disabled) > .form-field-label { color: var(--text-placeholder); }
+.form-field-box:has([aria-invalid="true"]) > .form-field-label { color: var(--down-text); }
+.form-field-optional { font-weight: inherit; }
+.form-field-badge { flex: none; display: inline-flex; align-items: center; height: var(--space-4); padding: 0 var(--space-2); border-radius: var(--space-2); background: var(--primary-soft); color: var(--primary-text); font-size: var(--ff-badge-size); font-weight: var(--weight-bold); }
+.form-field-hint { margin: 0; padding-inline: var(--space-4); font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
+/* Le libellé vit dans le champ : seules les largeurs courtes (NPA, date) restent limitées, pour ne pas le couper. */
+.form-field:is(.field-w-5, .field-w-10) > .form-field-box { width: min(100%, var(--field-w)); }
+@media (prefers-reduced-motion: reduce) { .form-field-label { transition: none; } }
 .field-w-5 { --field-w: var(--field-5); }
 .field-w-10 { --field-w: var(--field-10); }
 /* Une date native garde son icône de calendrier à droite : 10 caractères plus l'icône, pour que l'année
    ne soit jamais coupée (« 28.10.2026 »). */
-.field-w-10 > input[type="date"] { --field-w: calc(var(--field-10) + var(--control-h)); }
+.field-w-10:has(input[type="date"]) { --field-w: calc(var(--field-10) + var(--control-h)); }
 .field-w-20 { --field-w: var(--field-20); }
 .field-w-30 { --field-w: var(--field-30); }
 /* L'erreur ne repose pas que sur le rouge (WCAG 1.4.1) : une icône devant, partout où .field-error sert. */

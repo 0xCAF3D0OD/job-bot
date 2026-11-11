@@ -323,13 +323,14 @@ const { phone } = usePhone();
       v-slot="{ id, describedby, invalid }"
       label="Poste"
       :error="errors.title"
+    
+      :hint="tradeName ? `Ex. : ${tradeName}` : ''"
     >
       <input
         :id="id"
         v-model="draft.title"
         maxlength="300"
         required
-        :placeholder="tradeName || undefined"
         type="text"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
@@ -343,13 +344,14 @@ const { phone } = usePhone();
       label="Entreprise"
       optional
       :width="20"
+    
+      hint="Ex. : Entreprise SA"
     >
       <input
         :id="id"
         v-model="draft.company"
         maxlength="300"
         autocomplete="organization"
-        placeholder="Entreprise SA"
         type="text"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
@@ -361,12 +363,13 @@ const { phone } = usePhone();
       label="Lieu et taux"
       optional
       :width="30"
+    
+      hint="Ex. : Lausanne 80-100 %"
     >
       <input
         :id="id"
         v-model="draft.location"
         maxlength="300"
-        placeholder="Lausanne 80-100 %"
         type="text"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
@@ -377,6 +380,7 @@ const { phone } = usePhone();
       v-slot="{ id, describedby, invalid }"
       label="Lien de l’annonce"
       optional
+      :hint="linkExample ? `Ex. : ${linkExample}` : ''"
     >
       <input
         :id="id"
@@ -384,7 +388,6 @@ const { phone } = usePhone();
         type="url"
         inputmode="url"
         maxlength="2000"
-        :placeholder="linkExample"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
         data-test="manual-draft-url"

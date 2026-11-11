@@ -44,6 +44,7 @@ import { api, QUIET, type CriteriaIn, type Identity } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import { postcode as checkPostcode } from "../validators";
 import AppIcon from "./AppIcon.vue";
+import FormField from "./FormField.vue";
 
 // « Complétons ton profil » (prompt du 10 novembre, PR 17 ; maquettes OnboardingProfil et OnboardingOrdinateurProfil) :
 // les expériences (blocs « expérience » du profil), les langues et leur niveau (prérequis `language_levels`), les
@@ -224,47 +225,60 @@ defineExpose({ save, saving, missingForLetter, levels });
         data-test="completion-experience"
       >
         <div class="pc-pair">
-          <div class="pc-field">
-            <label :for="`pc-title-${index}`">Poste</label>
+          <FormField
+            v-slot="f"
+            :field-id="`pc-title-${index}`"
+            label="Poste"
+            :hint="`Ex. : ${titlePlaceholder}`"
+          >
             <input
-              :id="`pc-title-${index}`"
+              :id="f.id"
               v-model="experience.title"
+              :aria-describedby="f.describedby"
               type="text"
               maxlength="120"
-              :placeholder="titlePlaceholder"
               data-test="completion-title"
             >
-          </div>
-          <div class="pc-field">
-            <label :for="`pc-employer-${index}`">Employeur</label>
+          </FormField>
+          <FormField
+            v-slot="f"
+            :field-id="`pc-employer-${index}`"
+            label="Employeur"
+          >
             <input
-              :id="`pc-employer-${index}`"
+              :id="f.id"
               v-model="experience.employer"
+              :aria-describedby="f.describedby"
               type="text"
               maxlength="80"
               data-test="completion-employer"
             >
-          </div>
+          </FormField>
         </div>
         <div class="pc-pair pc-pair-always">
-          <div class="pc-field">
-            <label :for="`pc-start-${index}`">Début</label>
+          <FormField
+            v-slot="f"
+            :field-id="`pc-start-${index}`"
+            label="Début"
+            hint="Ex. : Mars 2021"
+          >
             <input
-              :id="`pc-start-${index}`"
+              :id="f.id"
               v-model="experience.start"
+              :aria-describedby="f.describedby"
               type="text"
               maxlength="30"
-              placeholder="Mars 2021"
               data-test="completion-start"
             >
-          </div>
-          <div class="pc-field">
-            <label
-              :for="`pc-end-${index}`"
-              :class="{ 'pc-off': experience.current }"
-            >Fin</label>
+          </FormField>
+          <FormField
+            v-slot="f"
+            :field-id="`pc-end-${index}`"
+            label="Fin"
+          >
             <input
-              :id="`pc-end-${index}`"
+              :id="f.id"
+              :aria-describedby="f.describedby"
               :value="experience.current ? 'Aujourd’hui' : experience.end"
               type="text"
               maxlength="30"
@@ -272,7 +286,7 @@ defineExpose({ save, saving, missingForLetter, levels });
               data-test="completion-end"
               @input="experience.end = ($event.target as HTMLInputElement).value"
             >
-          </div>
+          </FormField>
         </div>
         <label class="pc-check">
           <input
@@ -372,11 +386,15 @@ defineExpose({ save, saving, missingForLetter, levels });
         Pour l’en-tête de tes lettres. Jamais envoyées sans ton accord.
       </p>
       <div class="pc-card pc-stack">
-        <div class="pc-field">
-          <label for="pc-name">Prénom et nom <span class="pc-required">(obligatoire)</span></label>
+        <FormField
+          v-slot="f"
+          field-id="pc-name"
+          label="Prénom et nom (obligatoire)"
+        >
           <input
-            id="pc-name"
+            :id="f.id"
             v-model="identity.name"
+            :aria-describedby="f.describedby"
             type="text"
             autocomplete="name"
             maxlength="80"
@@ -384,24 +402,32 @@ defineExpose({ save, saving, missingForLetter, levels });
             :aria-invalid="errors.name ? 'true' : undefined"
             data-test="completion-name"
           >
-        </div>
-        <div class="pc-field">
-          <label for="pc-street">Adresse</label>
+        </FormField>
+        <FormField
+          v-slot="f"
+          field-id="pc-street"
+          label="Adresse"
+        >
           <input
-            id="pc-street"
+            :id="f.id"
             v-model="identity.street"
+            :aria-describedby="f.describedby"
             type="text"
             autocomplete="street-address"
             maxlength="80"
             data-test="completion-street"
           >
-        </div>
+        </FormField>
         <div class="pc-npa">
-          <div class="pc-field">
-            <label for="pc-postcode">NPA</label>
+          <FormField
+            v-slot="f"
+            field-id="pc-postcode"
+            label="NPA"
+          >
             <input
-              id="pc-postcode"
+              :id="f.id"
               v-model="identity.postcode"
+              :aria-describedby="f.describedby"
               type="text"
               inputmode="numeric"
               autocomplete="postal-code"
@@ -409,47 +435,55 @@ defineExpose({ save, saving, missingForLetter, levels });
               :aria-invalid="errors.postcode ? 'true' : undefined"
               data-test="completion-postcode"
             >
-          </div>
-          <div class="pc-field">
-            <label for="pc-city">Localité</label>
+          </FormField>
+          <FormField
+            v-slot="f"
+            field-id="pc-city"
+            label="Localité"
+          >
             <input
-              id="pc-city"
+              :id="f.id"
               v-model="identity.city"
+              :aria-describedby="f.describedby"
               type="text"
               autocomplete="address-level2"
               maxlength="80"
               data-test="completion-city"
             >
-          </div>
+          </FormField>
         </div>
         <div class="pc-pair">
-          <div class="pc-field">
-            <label for="pc-phone">Téléphone</label>
+          <FormField
+            v-slot="f"
+            field-id="pc-phone"
+            label="Téléphone"
+          >
             <input
-              id="pc-phone"
+              :id="f.id"
               v-model="identity.phone"
+              :aria-describedby="f.describedby"
               type="tel"
               autocomplete="tel"
               maxlength="80"
               data-test="completion-phone"
             >
-          </div>
-          <div class="pc-field">
-            <label for="pc-email">E-mail</label>
+          </FormField>
+          <FormField
+            v-slot="f"
+            field-id="pc-email"
+            label="E-mail"
+            hint="Celui de ton compte"
+          >
             <input
-              id="pc-email"
+              :id="f.id"
               v-model="identity.email"
+              :aria-describedby="f.describedby"
               type="email"
               autocomplete="email"
               maxlength="80"
-              aria-describedby="pc-email-hint"
               data-test="completion-email"
             >
-            <span
-              id="pc-email-hint"
-              class="pc-small"
-            >Celui de ton compte</span>
-          </div>
+          </FormField>
         </div>
       </div>
     </section>
@@ -485,9 +519,7 @@ defineExpose({ save, saving, missingForLetter, levels });
 .pc-npa { display: grid; grid-template-columns: var(--pc-npa) minmax(0, 1fr); gap: var(--pc-pair-gap); }
 .pc-field { display: flex; flex-direction: column; gap: var(--pc-field-gap); min-width: 0; }
 .pc-field > label { font-size: var(--font-small); line-height: var(--pc-label-lh); font-weight: var(--weight-bold); color: var(--text); }
-.pc-field > label.pc-off { color: var(--text-placeholder); }
-.pc-required { font-weight: var(--pc-medium); color: var(--text-secondary); }
-.pc :is(input[type="text"], input[type="tel"], input[type="email"], select) { width: 100%; padding: 0 var(--pc-input-pad); border-radius: var(--pc-input-radius); }
+.pc :is(.pc-lang input[type="text"], select) { width: 100%; padding: 0 var(--pc-input-pad); border-radius: var(--pc-input-radius); }
 .pc :is(input[type="text"], input[type="tel"], input[type="email"]):disabled { background-color: var(--field-disabled-bg); border-color: var(--line-strong); color: var(--text-placeholder); -webkit-text-fill-color: var(--text-placeholder); }
 .pc textarea { min-height: var(--pc-ta-h); padding: var(--pc-ta-pad) var(--pc-input-pad); border-radius: var(--pc-input-radius); line-height: var(--pc-lead-lh); }
 .pc ::placeholder { color: var(--text-placeholder); }

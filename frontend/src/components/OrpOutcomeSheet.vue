@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, nextTick, ref, toRef, watch } from "vue";
 
 import type { components } from "../api/schema";
@@ -104,16 +105,21 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
           <small v-if="before">{{ before }}</small>
         </div>
       </div>
-      <label class="outcome-field">
-        <span>Mesures décidées <em>(facultatif)</em></span>
+      <FormField
+        v-slot="f"
+        label="Mesures décidées"
+        optional
+        hint="Ex. : cours, stage, programme"
+      >
         <input
+          :id="f.id"
           v-model="measures"
+          :aria-describedby="f.describedby"
           type="text"
           maxlength="1000"
-          placeholder="Cours, stage, programme…"
           data-test="outcome-measures"
         >
-      </label>
+      </FormField>
       <div
         class="outcome-field outcome-next"
         role="group"
@@ -130,16 +136,21 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
         />
         <small>jobA1 le met dans tes Rendez-vous.</small>
       </div>
-      <label class="outcome-field">
-        <span>Autre chose à retenir <em>(facultatif)</em></span>
+      <FormField
+        v-slot="f"
+        label="Autre chose à retenir"
+        optional
+        hint="Ex. : ce que ton conseiller t’a demandé"
+      >
         <textarea
+          :id="f.id"
           v-model="note"
+          :aria-describedby="f.describedby"
           rows="3"
           maxlength="4000"
-          placeholder="Ce que ton conseiller t’a demandé"
           data-test="outcome-note"
         />
-      </label>
+      </FormField>
       <p
         v-if="message"
         role="status"
