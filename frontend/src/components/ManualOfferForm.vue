@@ -2,10 +2,10 @@
 import { computed, nextTick, onMounted, reactive, ref } from "vue";
 
 import { api } from "../api/client";
-import { plural } from "../format";
+import type { ComposerItem } from "../composer";
 import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
-import BusyButton from "./BusyButton.vue";
+import AppIcon from "./AppIcon.vue";
 import Composer from "./Composer.vue";
 import FormField from "./FormField.vue";
 
@@ -13,11 +13,20 @@ const { plan } = usePlan();
 
 // Ajouter une offre trouvée ailleurs (docs/111) : un lien ou un texte, lu par la page
 // (balisage JobPosting) ou par l'IA ; une fiche à relire ; puis l'offre, filtrée et notée
-// comme les autres. Les exemples suivent le métier de la personne, pas un métier inventé. Maquette du 8 novembre
+// comme les autres. Maquette du 8 novembre
 // (docs/143, D25) : la zone de saisie commune de 3 lignes, « Lien ou texte de l'annonce » ; un lien seul est lu comme
-// un lien, tout le reste comme un texte. Pas d'import de PDF ou de capture : aucun fichier ne part à l'IA sans règle
-// (I-1, E-5).
-const props = defineProps<{ initialUrl?: string | null; initialText?: string | null }>();
+// un lien, tout le reste comme un texte.
+// Paquet du 11 novembre, PR 38 (maquette CandidaturesOrdinateurAjouter) : sur ordinateur, un champ à libellé flottant
+// sans flèche d'envoi ; le seul bouton est « Ajouter l'offre », dans le pied du panneau (il envoie ce formulaire par
+// son `formId`). Une fois l'annonce lue, le champ reste, et « Ce que jobA1 a lu » vient dessous : Poste, Entreprise,
+// Lieu, Contrat, puis la ligne repliable « Texte lu ». Changer le champ fait relire : plus de « Recommencer ».
+// « Importer le PDF de l'annonce » (décision de Kevin du 11 novembre) : le serveur en tire le texte, sans IA, et ne
+// garde pas le fichier (E-5, J-1) ; le texte arrive dans le champ, comme un texte collé. Pas de capture d'écran.
+const props = withDefaults(defineProps<{ initialUrl?: string | null; initialText?: string | null; formId?: string }>(), {
+  initialUrl: null,
+  initialText: null,
+  formId: undefined,
+});
 const emit = defineEmits<{
   added: [result: { id: number; existing: boolean; status: string; reasons: string[]; filled?: string[] }];
 }>();
@@ -40,7 +49,11 @@ const trade = ref<string | null>(null);
 const addedToday = ref(0);
 const limit = ref(20);
 
-const draft = reactive({ title: "", company: "", location: "", description: "", url: "" });
+const UNKNOWN_CONTRACT = "Non précisé";
+const draft = reactive({ title: "", company: "", location: "", contract: UNKNOWN_CONTRACT, description: "", url: "" });
+// Ce qui a été lu : tant que le champ ne change pas, « Ajouter l'offre » ajoute ; sinon il relit.
+const readEntry = ref("");
+const textOpen = ref(false);
 const shown = ref(false);
 const readBy = ref<ReadBy>("main");
 const matchesTrade = ref(true);
@@ -69,18 +82,14 @@ onMounted(async () => {
   limit.value = data.daily_limit;
 });
 
-// Exemples tirés du métier : « Menuisier » donne « https://entreprise.ch/emplois/menuisier ».
 const tradeName = computed(() => trade.value?.trim() || "");
-const slug = computed(() =>
-  (tradeName.value || "poste")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, ""),
-);
-const linkExample = computed(() => `https://entreprise.ch/emplois/${slug.value}`);
 const full = computed(() => addedToday.value >= limit.value);
+const left = computed(() => Math.max(0, limit.value - addedToday.value));
+const countLine = computed(() =>
+  full.value
+    ? `${limit.value} offres ajoutées en 24 heures : c’est le maximum, reviens demain.`
+    : `Tu peux encore en ajouter ${left.value === 1 ? "une" : left.value} aujourd’hui.`,
+);
 const textHint = computed(
   () => `${plan.value?.unlimited ? "Lu par l’IA, environ 0,01 $, compté dans ton plafond." : "Lu par l’IA."} Tes coordonnées ne partent pas.`,
 );
@@ -136,7 +145,7 @@ async function read(value: string = entry.value): Promise<void> {
     const body = mode.value === "link" ? { url: url.value.trim() } : { text: text.value };
     const { data } = await api.POST("/api/offers/manual/read", { body });
     if (!data) {
-      problem.value = "Lecture impossible pour l’instant : réessaie, ou remplis la fiche à la main.";
+      problem.value = "Lecture impossible pour l’instant : réessaie, ou remplis la fiche à la main.";
       return;
     }
     if (!data.draft) {
@@ -150,6 +159,7 @@ async function read(value: string = entry.value): Promise<void> {
       title: d.title,
       company: d.company ?? "",
       location: d.location ?? "",
+      contract: d.contract || UNKNOWN_CONTRACT,
       description: d.description ?? "",
       url: d.url ?? (url.value.trim() || ""),
     });
@@ -157,6 +167,13 @@ async function read(value: string = entry.value): Promise<void> {
     matchesTrade.value = d.matches_trade;
     existingId.value = d.existing_offer_id ?? null;
     fillable.value = d.fillable ?? [];
+    // Déjà dans la liste, et rien à lui ajouter : on l'ouvre tout de suite (PR 38), sans fiche à relire.
+    if (existingId.value !== null && !fillable.value.length) {
+      openExisting();
+      return;
+    }
+    readEntry.value = typed;
+    textOpen.value = false;
     shown.value = true;
   } finally {
     reading.value = false;
@@ -169,6 +186,7 @@ function byHand(): void {
     title: "",
     company: "",
     location: "",
+    contract: UNKNOWN_CONTRACT,
     description: mode.value === "text" ? text.value.trim() : "",
     url: url.value.trim(),
   });
@@ -177,12 +195,79 @@ function byHand(): void {
   existingId.value = null;
   fillable.value = [];
   problem.value = "";
+  readEntry.value = entry.value.trim();
+  textOpen.value = true;
   shown.value = true;
 }
 
-function restart(): void {
-  shown.value = false;
-  error.value = "";
+// Le champ a changé après la lecture : la fiche lue ne vaut plus, « Ajouter l'offre » relira.
+function entryChanged(): void {
+  if (entryError.value && entry.value.trim()) entryError.value = "";
+  pdfProblem.value = "";
+  if (shown.value && entry.value.trim() !== readEntry.value) {
+    shown.value = false;
+    error.value = "";
+  }
+}
+
+// Le PDF de l'annonce : son texte, lu par le serveur, arrive dans le champ ; la personne le relit, puis ajoute.
+const PDF_PROBLEMS: Record<string, string> = {
+  "no-text": "Ce PDF ne contient pas de texte. Colle le texte de l’annonce.",
+  "too-big": "Ce PDF est trop lourd (5 Mo au plus). Colle le texte de l’annonce.",
+  "not-pdf": "Ce fichier n’est pas un PDF. Colle le texte de l’annonce.",
+  unreadable: "Ce PDF ne peut pas être lu. Colle le texte de l’annonce.",
+};
+const PDF_ITEMS: ComposerItem[] = [{ id: "pdf", label: "Importer le PDF de l’annonce", icon: "upload" }];
+const MAX_PDF = 5 * 1024 * 1024;
+const picker = ref<HTMLInputElement | null>(null);
+const importing = ref(false);
+const pdfProblem = ref("");
+const pdfDone = ref(false);
+function pickPdf(): void {
+  picker.value?.click();
+}
+async function importPdf(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file || importing.value) return;
+  pdfProblem.value = "";
+  pdfDone.value = false;
+  if (file.size > MAX_PDF) {
+    pdfProblem.value = PDF_PROBLEMS["too-big"]!;
+    return;
+  }
+  importing.value = true;
+  try {
+    const { data, error: refused } = await api.POST("/api/offers/manual/pdf", {
+      body: { file: "" },
+      bodySerializer: () => {
+        const form = new FormData();
+        form.append("file", file);
+        return form;
+      },
+    });
+    if (!data) {
+      const detail = (refused as { detail?: unknown } | undefined)?.detail;
+      pdfProblem.value = typeof detail === "string" ? detail : "Import impossible pour l’instant : réessaie.";
+    } else if (!data.text) {
+      pdfProblem.value = PDF_PROBLEMS[data.problem ?? "unreadable"] ?? PDF_PROBLEMS.unreadable!;
+    } else {
+      entry.value = data.text;
+      mode.value = "text";
+      entryChanged();
+      problem.value = "";
+      pdfDone.value = true;
+    }
+  } finally {
+    importing.value = false;
+  }
+}
+
+async function submit(event: Event): Promise<void> {
+  if (reading.value || saving.value || importing.value) return;
+  if (shown.value) await add(event);
+  else if (!full.value) await read();
 }
 
 async function add(event: Event): Promise<void> {
@@ -195,6 +280,7 @@ async function add(event: Event): Promise<void> {
         title: draft.title,
         company: draft.company.trim() || null,
         location: draft.location.trim() || null,
+        contract: contractValue(),
         description: draft.description.trim() || null,
         url: draft.url.trim() || null,
         read_by: readBy.value,
@@ -203,7 +289,7 @@ async function add(event: Event): Promise<void> {
     });
     if (!data) {
       const detail = (refused as { detail?: unknown } | undefined)?.detail;
-      error.value = typeof detail === "string" ? detail : "Ajout impossible pour l’instant : réessaie.";
+      error.value = typeof detail === "string" ? detail : "Ajout impossible pour l’instant : réessaie.";
       return;
     }
     emit("added", data);
@@ -212,32 +298,73 @@ async function add(event: Event): Promise<void> {
   }
 }
 
+// « Non précisé » est ce que l'écran montre pour un contrat inconnu : il n'est pas enregistré.
+function contractValue(): string | null {
+  const value = draft.contract.trim();
+  return !value || value.toLowerCase() === UNKNOWN_CONTRACT.toLowerCase() ? null : value;
+}
+const chars = computed(() => new Intl.NumberFormat("fr-CH").format(draft.description.trim().length).replace(/[’']/g, "\u202f"));
+const textLine = computed(
+  () => `${chars.value} ${draft.description.trim().length > 1 ? "caractères" : "caractère"}${readBy.value === "page" || (readBy.value === "ia" && mode.value === "link") ? " · cookies et formulaire retirés" : ""}`,
+);
+
 function openExisting(): void {
   if (existingId.value !== null) emit("added", { id: existingId.value, existing: true, status: "", reasons: [] });
 }
 // Maquette du 8 novembre (LISEZMOI, Composer) : 3 lignes sur ordinateur, 4 sur téléphone (AjouterOffreTel).
 const { phone } = usePhone();
+
+// Le bouton du pied du panneau (OffersView) : son libellé et son attente.
+defineExpose({
+  shown,
+  full,
+  busy: computed(() => reading.value || saving.value),
+  label: computed(() => (completing.value && shown.value ? "Compléter l’offre" : "Ajouter l’offre")),
+  busyLabel: computed(() => (reading.value ? "Lecture de l’annonce…" : completing.value ? "Ajout des champs…" : "Ajout…")),
+});
 </script>
 
 <template>
   <form
-    v-if="!shown"
+    :id="formId"
     class="manual-form"
     data-test="manual-form"
     novalidate
-    @submit.prevent="read()"
+    @submit.prevent="submit"
   >
     <Composer
+      v-if="phone"
       v-model="entry"
-      :rows="phone ? 4 : 3"
+      :rows="4"
       placeholder="Lien ou texte de l’annonce"
       send-label="Ajouter l’offre"
       :busy="reading || full"
+      :plus-items="PDF_ITEMS"
       data-test="manual-entry"
+      @update:model-value="entryChanged"
+      @attach="pickPdf"
       @send="read"
     />
+    <FormField
+      v-else
+      v-slot="{ id, describedby, invalid }"
+      label="Lien ou texte de l’annonce"
+      :error="entryError"
+    >
+      <textarea
+        :id="id"
+        v-model="entry"
+        rows="3"
+        maxlength="20000"
+        class="manual-entry"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
+        data-test="manual-entry"
+        @input="entryChanged"
+      />
+    </FormField>
     <p
-      v-if="entryError"
+      v-if="phone && entryError"
       class="field-error"
       role="alert"
       data-test="manual-entry-error"
@@ -245,14 +372,28 @@ const { phone } = usePhone();
       {{ entryError }}
     </p>
     <p
-      v-if="reading"
+      class="hint"
+      data-test="manual-count"
+    >
+      {{ countLine }}
+    </p>
+    <p
+      v-if="reading || importing"
       class="hint"
       role="status"
     >
-      Lecture de l’annonce…
+      {{ importing ? "Lecture du PDF…" : "Lecture de l’annonce…" }}
     </p>
     <p
-      v-else-if="mode === 'text'"
+      v-else-if="pdfDone && !shown"
+      class="hint"
+      role="status"
+      data-test="manual-pdf-done"
+    >
+      Texte du PDF repris. Relis-le, puis ajoute l’offre.
+    </p>
+    <p
+      v-if="mode === 'text' && !shown && !reading"
       class="hint"
       data-test="manual-text-hint"
     >
@@ -274,166 +415,188 @@ const { phone } = usePhone();
         Remplir la fiche à la main
       </button>
     </p>
-    <p
-      class="hint"
-      data-test="manual-count"
+    <input
+      ref="picker"
+      type="file"
+      accept="application/pdf,.pdf"
+      class="visually-hidden"
+      tabindex="-1"
+      aria-hidden="true"
+      data-test="manual-pdf-file"
+      @change="importPdf"
     >
-      {{ full ? `${limit} offres ajoutées en 24 heures : c’est le maximum, reviens demain.` : `${plural(addedToday, "offre ajoutée", "offres ajoutées")} sur ${limit} ces 24 heures.` }}
-    </p>
-  </form>
-  <form
-    v-else
-    class="manual-form"
-    data-test="manual-draft"
-    novalidate
-    @submit.prevent="add"
-  >
-    <p class="setting-desc">
-      {{ readBy === "page" ? "Lue sur la page de l’annonce." : readBy === "ia" ? "Lue par l’IA." : "À remplir toi-même." }}
-      Corrige au besoin, puis ajoute-la.
-    </p>
+    <button
+      v-if="!shown && !phone"
+      type="button"
+      class="secondary manual-pdf"
+      :disabled="importing || full"
+      data-test="manual-pdf"
+      @click="pickPdf"
+    >
+      <AppIcon name="upload" />Importer le PDF de l’annonce
+    </button>
     <p
-      v-if="existingId !== null"
+      v-if="pdfProblem"
       class="notice"
-      data-test="manual-existing"
-    >
-      <template v-if="completing">
-        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
-        sans rien remplacer.
-      </template>
-      <template v-else>
-        Cette offre est déjà dans tes offres.
-      </template>
-      <button
-        type="button"
-        class="link"
-        @click="openExisting"
-      >
-        L’ouvrir
-      </button>
-    </p>
-    <p
-      v-else-if="!matchesTrade && tradeName"
-      class="notice"
-      data-test="manual-off-trade"
-    >
-      Cette annonce ne parle pas de « {{ tradeName }} » : la note dira si elle te correspond.
-    </p>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Poste"
-      :error="errors.title"
-    
-      :hint="tradeName ? `Ex. : ${tradeName}` : ''"
-    >
-      <input
-        :id="id"
-        v-model="draft.title"
-        maxlength="300"
-        required
-        type="text"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-title"
-        @blur="check('title')"
-        @input="clearIfFixed('title')"
-      >
-    </FormField>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Entreprise"
-      optional
-      :width="20"
-    
-      hint="Ex. : Entreprise SA"
-    >
-      <input
-        :id="id"
-        v-model="draft.company"
-        maxlength="300"
-        autocomplete="organization"
-        type="text"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-company"
-      >
-    </FormField>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Lieu et taux"
-      optional
-      :width="30"
-    
-      hint="Ex. : Lausanne 80-100 %"
-    >
-      <input
-        :id="id"
-        v-model="draft.location"
-        maxlength="300"
-        type="text"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-location"
-      >
-    </FormField>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Lien de l’annonce"
-      optional
-      :hint="linkExample ? `Ex. : ${linkExample}` : ''"
-    >
-      <input
-        :id="id"
-        v-model="draft.url"
-        type="url"
-        inputmode="url"
-        maxlength="2000"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-draft-url"
-      >
-    </FormField>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Texte de l’annonce"
-      optional
-      hint="Il sert à la note, à la lettre et au CV adapté."
-    >
-      <textarea
-        :id="id"
-        v-model="draft.description"
-        rows="6"
-        maxlength="20000"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="manual-description"
-      />
-    </FormField>
-    <p
-      v-if="error"
-      class="notice error"
       role="alert"
+      data-test="manual-pdf-problem"
     >
-      {{ error }}
+      {{ pdfProblem }}
     </p>
-    <div class="form-actions">
-      <BusyButton
-        type="submit"
-        class="primary"
-        :busy="saving"
-        :busy-label="completing ? 'Ajout des champs…' : 'Ajout…'"
-        data-test="manual-add"
+    <section
+      v-if="shown"
+      class="manual-read"
+      data-test="manual-draft"
+    >
+      <h3 class="manual-read-cap">
+        {{ readBy === "main" ? "À remplir toi-même" : "Ce que jobA1 a lu" }}
+      </h3>
+      <p
+        v-if="completing"
+        class="notice"
+        data-test="manual-existing"
       >
-        {{ completing ? "Compléter l’offre" : "Ajouter l’offre" }}
-      </BusyButton>
-      <button
-        type="button"
-        class="secondary"
-        data-test="manual-restart"
-        @click="restart"
+        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
+        sans rien remplacer.
+        <button
+          type="button"
+          class="link"
+          @click="openExisting"
+        >
+          L’ouvrir
+        </button>
+      </p>
+      <p
+        v-else-if="!matchesTrade && tradeName"
+        class="notice"
+        data-test="manual-off-trade"
       >
-        Recommencer
-      </button>
-    </div>
+        Cette annonce ne parle pas de « {{ tradeName }} » : la note dira si elle te correspond.
+      </p>
+      <FormField
+        v-slot="{ id, describedby, invalid }"
+        label="Poste"
+        :error="errors.title"
+      >
+        <input
+          :id="id"
+          v-model="draft.title"
+          maxlength="300"
+          required
+          type="text"
+          :aria-describedby="describedby"
+          :aria-invalid="invalid"
+          data-test="manual-title"
+          @blur="check('title')"
+          @input="clearIfFixed('title')"
+        >
+      </FormField>
+      <FormField
+        v-slot="{ id, describedby, invalid }"
+        label="Entreprise"
+      >
+        <input
+          :id="id"
+          v-model="draft.company"
+          maxlength="300"
+          autocomplete="organization"
+          type="text"
+          :aria-describedby="describedby"
+          :aria-invalid="invalid"
+          data-test="manual-company"
+        >
+      </FormField>
+      <div class="manual-read-pair">
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          label="Lieu"
+        >
+          <input
+            :id="id"
+            v-model="draft.location"
+            maxlength="300"
+            type="text"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
+            data-test="manual-location"
+          >
+        </FormField>
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          label="Contrat"
+        >
+          <input
+            :id="id"
+            v-model="draft.contract"
+            maxlength="100"
+            type="text"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
+            data-test="manual-contract"
+          >
+        </FormField>
+      </div>
+      <div class="manual-text">
+        <button
+          type="button"
+          class="manual-text-row"
+          :aria-expanded="textOpen"
+          :aria-controls="`${formId ?? 'manual'}-text`"
+          data-test="manual-text-toggle"
+          @click="textOpen = !textOpen"
+        >
+          <AppIcon name="file" />
+          <span class="manual-text-what">
+            <strong>{{ readBy === "main" ? "Texte de l’annonce" : "Texte lu" }}</strong>
+            <span data-test="manual-text-line">{{ textLine }}</span>
+          </span>
+          <AppIcon
+            name="chevron-down"
+            :class="{ turned: textOpen }"
+          />
+        </button>
+        <div
+          v-show="textOpen"
+          :id="`${formId ?? 'manual'}-text`"
+          class="manual-text-body"
+        >
+          <textarea
+            v-model="draft.description"
+            rows="8"
+            maxlength="20000"
+            aria-label="Texte de l’annonce"
+            data-test="manual-description"
+          />
+          <p class="hint">
+            Il sert à la note, à la lettre et au CV adapté.
+          </p>
+        </div>
+      </div>
+      <p
+        v-if="error"
+        class="notice error"
+        role="alert"
+      >
+        {{ error }}
+      </p>
+    </section>
   </form>
 </template>
+
+<style scoped>
+.manual-form { --manual-13: 13px; --manual-pad: var(--panel-pad-x, var(--sheet-pad, var(--space-6))); }
+.manual-entry { --manual-104: 104px; min-height: var(--manual-104); }
+.manual-pdf { justify-self: start; gap: var(--space-2); }
+.manual-read { display: grid; gap: var(--space-4); }
+.manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }
+.manual-read-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.manual-text { margin: 0 calc(-1 * var(--manual-pad)); border-block: 1px solid var(--line); }
+.manual-text-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--target-min); padding: var(--space-3) var(--manual-pad); border: 0; border-radius: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+@media (hover: hover) { .manual-text-row:hover { background: var(--primary-soft); } }
+.manual-text-what { display: grid; flex: 1; min-width: 0; }
+.manual-text-what span { color: var(--muted); font-size: var(--manual-13); }
+.manual-text-row .turned { transform: rotate(180deg); }
+.manual-text-body { display: grid; gap: var(--space-2); padding: 0 var(--manual-pad) var(--space-4); }
+.manual-text-body .hint { margin: 0; }
+.manual-text-body textarea { --manual-240: 240px; --manual-12: 12px; height: var(--manual-240); border-radius: var(--manual-12); field-sizing: fixed; overflow: auto; }
+</style>

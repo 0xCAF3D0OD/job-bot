@@ -2842,6 +2842,51 @@
         }
       }
     },
+    "/api/offers/manual/pdf": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read Pdf",
+        "description": "Le texte du PDF d'une annonce (paquet du 11 novembre, PR 38). Lu sur le serveur, sans IA ;\nle fichier n'est ni rangé ni journalisé (E-5, J-1) : seul son texte revient à la personne,\nqui le relit avant « Ajouter l'offre ». Rien n'est créé ici.",
+        "operationId": "readManualOfferPdf",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readManualOfferPdf"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualPdfOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/score-correction": {
       "get": {
         "tags": [
@@ -11883,6 +11928,20 @@
         "type": "object",
         "title": "Body_oauthCallbackForm"
       },
+      "Body_readManualOfferPdf": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readManualOfferPdf"
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -17855,6 +17914,18 @@
             ],
             "title": "Url"
           },
+          "contract": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract"
+          },
           "read_by": {
             "type": "string",
             "enum": [
@@ -17996,6 +18067,17 @@
             ],
             "title": "Url"
           },
+          "contract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract"
+          },
           "read_by": {
             "type": "string",
             "enum": [
@@ -18058,6 +18140,40 @@
           "existing_offer_id"
         ],
         "title": "ManualDraft"
+      },
+      "ManualPdfOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-pdf",
+                  "unreadable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          }
+        },
+        "type": "object",
+        "title": "ManualPdfOut"
       },
       "ManualReadIn": {
         "properties": {
@@ -23468,8 +23584,8 @@
           "reason": {
             "type": "string",
             "maxLength": 1500,
-            "minLength": 1,
-            "title": "Reason"
+            "title": "Reason",
+            "default": ""
           },
           "website": {
             "anyOf": [
@@ -23492,8 +23608,7 @@
         "type": "object",
         "required": [
           "company",
-          "title",
-          "reason"
+          "title"
         ],
         "title": "SpontaneousIn"
       },

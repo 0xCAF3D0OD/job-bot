@@ -1168,6 +1168,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/manual/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Pdf
+         * @description Le texte du PDF d'une annonce (paquet du 11 novembre, PR 38). Lu sur le serveur, sans IA ;
+         *     le fichier n'est ni rangé ni journalisé (E-5, J-1) : seul son texte revient à la personne,
+         *     qui le relit avant « Ajouter l'offre ». Rien n'est créé ici.
+         */
+        post: operations["readManualOfferPdf"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/score-correction": {
         parameters: {
             query?: never;
@@ -4290,6 +4312,11 @@ export interface components {
             /** User */
             user?: string | null;
         };
+        /** Body_readManualOfferPdf */
+        Body_readManualOfferPdf: {
+            /** File */
+            file: string;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -6215,6 +6242,8 @@ export interface components {
             description?: string | null;
             /** Url */
             url?: string | null;
+            /** Contract */
+            contract?: string | null;
             /**
              * Read By
              * @default main
@@ -6264,6 +6293,8 @@ export interface components {
             description: string | null;
             /** Url */
             url: string | null;
+            /** Contract */
+            contract?: string | null;
             /**
              * Read By
              * @enum {string}
@@ -6280,6 +6311,13 @@ export interface components {
              * @default []
              */
             fillable: ("company" | "location" | "description" | "url")[];
+        };
+        /** ManualPdfOut */
+        ManualPdfOut: {
+            /** Text */
+            text?: string | null;
+            /** Problem */
+            problem?: ("no-text" | "too-big" | "not-pdf" | "unreadable") | null;
         };
         /** ManualReadIn */
         ManualReadIn: {
@@ -8152,7 +8190,10 @@ export interface components {
             company: string;
             /** Title */
             title: string;
-            /** Reason */
+            /**
+             * Reason
+             * @default
+             */
             reason: string;
             /** Website */
             website?: string | null;
@@ -11091,6 +11132,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    readManualOfferPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_readManualOfferPdf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualPdfOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop de fichiers : « Réessaie dans n minutes » */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

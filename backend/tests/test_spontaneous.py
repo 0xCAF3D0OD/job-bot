@@ -94,6 +94,20 @@ async def test_spontaneous_application(api: AsyncClient, runtime: Runtime) -> No
     assert bad.status_code == 422
 
 
+async def test_spontaneous_reason_is_optional(api: AsyncClient, runtime: Runtime) -> None:
+    """« Pourquoi cette entreprise ? (facultatif) » (paquet du 11 novembre, PR 38)."""
+    created = await api.post(
+        "/api/offers/spontaneous", json={"company": "Atelier Exemple", "title": "Menuisier"}
+    )
+    assert created.status_code == 201
+    async with runtime.sessionmaker() as session:
+        offer = await session.get(Offer, created.json()["id"])
+        assert offer is not None and offer.spontaneous_reason is None
+        assert offer.description == (
+            "Candidature spontanée : aucune annonce publiée.\nPoste visé : Menuisier"
+        )
+
+
 async def test_spontaneous_warns_when_company_already_there(
     api: AsyncClient, runtime: Runtime
 ) -> None:

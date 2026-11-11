@@ -5,15 +5,20 @@ le filtre et la note comme une offre reçue. Dans la démo, le garde des écritu
 deux (docs/72).
 """
 
-from typing import Annotated, Literal
+import asyncio
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
-from jobbot import manual_offers
+from jobbot import accounts, manual_offers
+from jobbot.auth.service import Window
 from jobbot.db.models import Evaluation, Offer
+from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+
+log = get_logger(__name__)
 
 router = APIRouter(prefix="/api/offers/manual", tags=["offers"])
 
@@ -53,6 +58,8 @@ class ManualDraft(BaseModel):
     location: str | None
     description: str | None
     url: str | None
+    # Le contrat lu sur la page, sinon vide : « Non précisé » à l'écran.
+    contract: str | None = None
     read_by: Literal["page", "ia"]
     trade: str | None
     matches_trade: bool
@@ -74,6 +81,7 @@ class ManualAddIn(BaseModel):
     location: Annotated[str, Field(max_length=300)] | None = None
     description: Annotated[str, Field(max_length=manual_offers.MAX_TEXT)] | None = None
     url: Annotated[str, Field(max_length=2000)] | None = None
+    contract: Annotated[str, Field(max_length=100)] | None = None
     read_by: Literal["page", "ia", "main"] = "main"
     # Déjà là : compléter ses champs vides avec cette fiche, sans rien remplacer.
     fill: bool = False
@@ -123,6 +131,7 @@ async def read(request: Request, body: ManualReadIn) -> ManualReadOut:
             location=draft.location,
             description=draft.description,
             url=draft.url,
+            contract=draft.contract,
             read_by="ia" if draft.read_by == "ia" else "page",
             trade=draft.trade,
             matches_trade=draft.matches_trade,
@@ -130,6 +139,41 @@ async def read(request: Request, body: ManualReadIn) -> ManualReadOut:
             fillable=draft.fillable,
         )
     )
+
+
+class ManualPdfOut(BaseModel):
+    # Le texte du PDF, à relire dans le champ comme un texte collé ; sinon ce qui l'a empêché.
+    text: str | None = None
+    # « no-text » : un scan, sans texte ; « too-big » : plus de 5 Mo ; « not-pdf » ; « unreadable ».
+    problem: Literal["no-text", "too-big", "not-pdf", "unreadable"] | None = None
+
+
+# « Importer le PDF de l'annonce » : 20 fichiers par heure et par compte (en mémoire, comme les
+# autres limites de auth.service).
+pdf_per_account = Window(limit=20, period_s=3600)
+PDF_RESPONSES: dict[int | str, dict[str, Any]] = {
+    429: {"description": "Trop de fichiers : « Réessaie dans n minutes »"},
+}
+
+
+@router.post("/pdf", operation_id="readManualOfferPdf", responses=PDF_RESPONSES)
+async def read_pdf(request: Request, file: Annotated[UploadFile, File()]) -> ManualPdfOut:
+    """Le texte du PDF d'une annonce (paquet du 11 novembre, PR 38). Lu sur le serveur, sans IA ;
+    le fichier n'est ni rangé ni journalisé (E-5, J-1) : seul son texte revient à la personne,
+    qui le relit avant « Ajouter l'offre ». Rien n'est créé ici."""
+    account = f"compte-{accounts.current()}"
+    if wait := pdf_per_account.take(account):
+        minutes = max(1, -(-wait // 60))
+        word = "minute" if minutes == 1 else "minutes"
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, f"Réessaie dans {minutes} {word}.")
+    data = await file.read(manual_offers.MAX_PDF_BYTES + 1)
+    try:
+        text = await asyncio.to_thread(manual_offers.pdf_text, data)
+    except manual_offers.ReadProblem as exc:
+        log.info("manual_offer_pdf_refused", reason=exc.reason, size=len(data))
+        return ManualPdfOut(problem=exc.reason)
+    log.info("manual_offer_pdf_read", size=len(data), chars=len(text))
+    return ManualPdfOut(text=text)
 
 
 @router.post("", operation_id="addManualOffer", status_code=status.HTTP_201_CREATED)
@@ -141,6 +185,7 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
         location=body.location,
         description=(body.description or "").strip() or None,
         url=body.url,
+        contract=(body.contract or "").strip() or None,
         read_by=body.read_by,
     )
     filled: list[str] = []
