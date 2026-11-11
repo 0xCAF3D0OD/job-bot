@@ -906,6 +906,126 @@
    "radius": 28,
    "title": "Téléphone · Premiers pas, CV non lu (sombre)",
    "is_interactive": true
+  },
+  "ProfilOrdinateurCV.dc.html": {
+   "x": 0,
+   "y": 25050,
+   "w": 1440,
+   "h": 900,
+   "title": "Ordinateur · Profil, CV à relire (états)",
+   "is_interactive": true
+  },
+  "ProfilOrdinateurCVSombre.dc.html": {
+   "x": 1520,
+   "y": 25050,
+   "w": 1440,
+   "h": 900,
+   "title": "Ordinateur · Profil, CV à relire (sombre)",
+   "is_interactive": true
+  },
+  "CoordonneesOrdinateur.dc.html": {
+   "x": 3040,
+   "y": 25050,
+   "w": 1440,
+   "h": 900,
+   "title": "Ordinateur · Coordonnées reprises du CV",
+   "is_interactive": true
+  },
+  "CoordonneesOrdinateurSombre.dc.html": {
+   "x": 4560,
+   "y": 25050,
+   "w": 1440,
+   "h": 900,
+   "title": "Ordinateur · Coordonnées reprises du CV (sombre)",
+   "is_interactive": true
+  },
+  "ProfilTel.dc.html": {
+   "x": 6080,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "title": "Téléphone · Mon profil, CV à relire (états)",
+   "is_interactive": true,
+   "radius": 28
+  },
+  "ProfilTelSombre.dc.html": {
+   "x": 6550,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "title": "Téléphone · Mon profil (sombre)",
+   "is_interactive": true,
+   "radius": 28
+  },
+  "CoordonneesTel.dc.html": {
+   "x": 7020,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "title": "Téléphone · Coordonnées reprises du CV",
+   "is_interactive": true,
+   "radius": 28
+  },
+  "CoordonneesTelSombre.dc.html": {
+   "x": 7490,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "title": "Téléphone · Coordonnées (sombre)",
+   "is_interactive": true,
+   "radius": 28
+  },
+  "OffreProvisoireSombre.dc.html": {
+   "x": 8000,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "radius": 28,
+   "is_interactive": true,
+   "title": "Téléphone · Offre, annonce illisible (sombre)"
+  },
+  "EnvoyeeDetailContacte.dc.html": {
+   "x": 8470,
+   "y": 25050,
+   "w": 390,
+   "h": 844,
+   "radius": 28,
+   "is_interactive": true,
+   "title": "Téléphone · Envoyée, j’ai contacté quelqu’un"
+  },
+  "Entrainement.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 28,
+   "title": "Téléphone · S’entraîner à l’entretien",
+   "w": 390,
+   "x": 0,
+   "y": 26250
+  },
+  "EntrainementSombre.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 28,
+   "title": "Sombre · S’entraîner à l’entretien",
+   "w": 390,
+   "x": 470,
+   "y": 26250
+  },
+  "EntrainementOrdinateur.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "title": "Ordinateur · S’entraîner à l’entretien",
+   "w": 1440,
+   "x": 940,
+   "y": 26250
+  },
+  "EntrainementOrdinateurSombre.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "title": "Ordinateur sombre · S’entraîner à l’entretien",
+   "w": 1440,
+   "x": 2460,
+   "y": 26250
   }
  },
  "createdOnFiles": {
@@ -1097,7 +1217,21 @@
   "OnboardingOrdinateurProfil.dc.html",
   "OnboardingOrdinateurProfilSombre.dc.html",
   "OnboardingProfil.dc.html",
-  "OnboardingProfilSombre.dc.html"
+  "OnboardingProfilSombre.dc.html",
+  "ProfilOrdinateurCV.dc.html",
+  "ProfilOrdinateurCVSombre.dc.html",
+  "CoordonneesOrdinateur.dc.html",
+  "CoordonneesOrdinateurSombre.dc.html",
+  "ProfilTel.dc.html",
+  "ProfilTelSombre.dc.html",
+  "CoordonneesTel.dc.html",
+  "CoordonneesTelSombre.dc.html",
+  "OffreProvisoireSombre.dc.html",
+  "EnvoyeeDetailContacte.dc.html",
+  "Entrainement.dc.html",
+  "EntrainementSombre.dc.html",
+  "EntrainementOrdinateur.dc.html",
+  "EntrainementOrdinateurSombre.dc.html"
  ],
  "pages": [],
  "title": "jobA1"

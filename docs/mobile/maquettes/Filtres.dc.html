@@ -41,7 +41,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <input type="search" placeholder="Poste, entreprise, lieu" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: #1B1F2A">
 </label>
 <div role="group" aria-label="Statut" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
-<button type="button" aria-pressed="true" style="height: 44px; border: 0; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27, 31, 42, 0.12); font-family: inherit; font-size: 14px; font-weight: 700; color: #1B1F2A; cursor: pointer">À traiter</button>
+<button type="button" aria-pressed="true" style="height: 44px; border: 0; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27, 31, 42, 0.12); font-family: inherit; font-size: 14px; font-weight: 700; color: #1B1F2A; cursor: pointer">Offres</button>
 <button type="button" aria-pressed="false" style="height: 44px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Envoyées</button>
 <button type="button" aria-pressed="false" style="height: 44px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Rendez-vous</button>
 </div>
@@ -125,6 +125,8 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <sc-for list="{{scores}}" as="o" hint-placeholder-count="3"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
 </div>
 </div>
+
+<fieldset style="margin: 0; padding: 0; border: 0"><legend style="padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 700">Note</legend><div role="radiogroup" aria-label="Note" style="display: flex; flex-wrap: wrap; gap: 8px"><button type="button" role="radio" aria-checked="true" style="display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border-radius: 22px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; box-sizing: border-box; border: 1.5px solid #2445C2; background: #E8ECFB; color: #1A3496"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Toutes</button><button type="button" role="radio" aria-checked="false" style="display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border-radius: 22px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; box-sizing: border-box; border: 1.5px solid #D8D4CA; background: #FFFFFF; color: #1B1F2A">Sûres · 104</button><button type="button" role="radio" aria-checked="false" style="display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border-radius: 22px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; box-sizing: border-box; border: 1.5px solid #D8D4CA; background: #FFFFFF; color: #1B1F2A">Provisoires · 312</button></div><p style="margin: 8px 0 0; font-size: 13px; line-height: 18px; color: #596070">Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.</p></fieldset>
 
 <fieldset style="margin: 0; padding: 0; border: 0">
 <legend style="padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 700">Taux d'activité</legend>
