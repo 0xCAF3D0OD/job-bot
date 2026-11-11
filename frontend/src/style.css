@@ -1279,7 +1279,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
 .suivi-declare { display: grid; gap: var(--space-3); }
 /* Carte calme (docs/46 §2) : qui, quoi, le statut ; en bas, une seule prochaine étape. */
-.app-status { grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); color: var(--muted); white-space: nowrap; }
 /* Panneau d'une candidature (docs/46 §3). */
 .application-panel { display: grid; gap: var(--space-4); }
 .application-panel > * { min-width: 0; }
@@ -1423,16 +1422,16 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
    (iconographie 1, 0.90.2). « En attente » : le fond de la page, pas un blanc qui éblouit
    en sombre. Un refus n'est pas une erreur (règles §4) : gris --muted ; « sans réponse » en
    --faint, toujours avec son mot (1.6.20). */
-.day-dots .dot, .suivi-legend .dot, .app-status .dot {
+.day-dots .dot, .suivi-legend .dot {
   width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--faint); position: relative; flex: none;
   display: inline-block; border: 1px solid transparent;
 }
-.day-dots .dot.en_attente, .suivi-legend .dot.en_attente, .app-status .dot.en_attente { background: var(--surface); border: 1.5px solid var(--muted); }
-.day-dots .dot.relancee, .suivi-legend .dot.relancee, .app-status .dot.relancee { background: var(--orange); }
-.day-dots .dot.entretien, .suivi-legend .dot.entretien, .app-status .dot.entretien { background: var(--accent); }
-.day-dots .dot.refus, .suivi-legend .dot.refus, .app-status .dot.refus { background: var(--muted); }
-.day-dots .dot.engagement, .suivi-legend .dot.engagement, .app-status .dot.engagement { background: var(--mint); }
-.day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse, .app-status .dot.sans_reponse { background: var(--faint); }
+.day-dots .dot.en_attente, .suivi-legend .dot.en_attente { background: var(--surface); border: 1.5px solid var(--muted); }
+.day-dots .dot.relancee, .suivi-legend .dot.relancee { background: var(--orange); }
+.day-dots .dot.entretien, .suivi-legend .dot.entretien { background: var(--accent); }
+.day-dots .dot.refus, .suivi-legend .dot.refus { background: var(--muted); }
+.day-dots .dot.engagement, .suivi-legend .dot.engagement { background: var(--mint); }
+.day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse { background: var(--faint); }
 .day-dots .dot.incomplete, .suivi-legend .dot.incomplete { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--orange); }
 .suivi-legend { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--font-small); color: var(--muted); }
 .suivi-legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
@@ -4947,8 +4946,9 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .sent-goal-bar { display: block; height: var(--goal-bar); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); overflow: hidden; }
 .sent-goal-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary-graphic); }
 .sent-goal-left { font-size: var(--label-caps); color: var(--text-secondary); }
-.sent-words { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0 var(--space-1) var(--space-2); font-size: var(--font-small); }
-@media (min-width: 1024px) { .sent-goal, .sent-list, .sent-words { max-width: 560px; } }
+.sent-none { display: grid; justify-items: center; gap: var(--space-3); padding: var(--space-8) 0; font-weight: var(--weight-semibold); }
+.sent-none p { margin: 0; }
+@media (min-width: 1024px) { .sent-goal, .sent-list, .sent-filters, .sent-none { max-width: 560px; } }
 
 /* ---- Composants partagés de la maquette du 8 novembre (docs/143, lot 2) ---- */
 
@@ -5235,7 +5235,7 @@ a.panel-row:hover { background: var(--band); }
   .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) + var(--sent-gap) / 2 - 1px); width: 2px; background: var(--line); }
   .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w)); width: calc(var(--sent-gap) / 2); height: 2px; background: var(--primary-graphic); }
   .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
-  .sent-columns :is(.sent-goal, .sent-list, .sent-words) { max-width: none; }
+  .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
 }
 /* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
 .sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }
