@@ -1,0 +1,10 @@
+/* Un champ à recopier (D32) : le libellé au-dessus, la valeur en gras, le bouton copier à droite. À part de blocks.css
+   pour la fiche d'une offre, qui n'a besoin que de ces lignes (budget de poids). Les variables viennent du parent. */
+.block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
+.block-cap + .block-field { padding-top: var(--space-1); border-top: 0; }
+.block-field-text { flex: 1; min-width: 0; }
+.block-field-label { font-size: var(--block-cap); line-height: var(--field-label-lh); color: var(--text-secondary); }
+.block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.block-field-value.block-field-none { font-weight: var(--weight-regular); color: var(--text-secondary); }
+.block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.block-field .copy-button { flex: none; }

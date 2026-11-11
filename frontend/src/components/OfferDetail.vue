@@ -17,7 +17,7 @@ import DetailTwoColumns from "./DetailTwoColumns.vue";
 import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import "../blocks.css";
+import "../block-fields.css";
 import OfferActionSheet from "./OfferActionSheet.vue";
 import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
@@ -1073,7 +1073,7 @@ watch(
             <div class="offer-company-head">
               <h3
                 id="offer-company-title"
-                class="block-cap"
+                class="offer-company-cap"
               >
                 L’entreprise
               </h3>
