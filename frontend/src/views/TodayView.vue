@@ -160,7 +160,9 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
       detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
-      to: { path: "/bilan/orp", query: { mois: t.orp_due_month } },
+      // La carte « Justificatifs … à remettre » est en tête du Bilan › ORP sur ordinateur, du Suivi ORP sur
+      // téléphone (récapitulatif du 11 novembre, PR 29).
+      to: phone.value ? { path: "/bilan/orp", query: { mois: t.orp_due_month } } : { path: "/bilan" },
     },
   };
 });
