@@ -218,9 +218,10 @@ async function addToPrepare(text: string): Promise<void> {
   if (data) added.value = [...added.value, text];
 }
 
-// Entrée envoie sur ordinateur ; sur téléphone, elle va à la ligne (on répond « comme à l'oral », souvent en dictant).
+// Entrée va à la ligne, partout (on répond « comme à l'oral », souvent en dictant). Sur ordinateur, Ctrl+Entrée
+// envoie (lot du 11 novembre au soir, PR 53 ; ⌘+Entrée sur Mac).
 function onKey(event: KeyboardEvent): void {
-  if (!phone.value && event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+  if (!phone.value && event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) {
     event.preventDefault();
     void send();
   }
@@ -535,7 +536,7 @@ watch(practiceId, (id) => {
             <label for="practice-answer">Ta réponse</label>
           </div>
           <p class="pv-under">
-            <span id="practice-answer-help">{{ phone ? "Réponds comme à l’oral" : "Entrée pour envoyer · Maj+Entrée pour aller à la ligne" }}</span>
+            <span id="practice-answer-help">{{ phone ? "Réponds comme à l’oral" : "Entrée pour aller à la ligne · Ctrl+Entrée pour envoyer" }}</span>
             <span data-test="practice-words">{{ words }}</span>
           </p>
           <div class="pv-actions">

@@ -231,7 +231,7 @@ describe("IdentityForm, « Pour les formulaires de candidature » (récapitulati
     const bar = section.find("[role=progressbar]");
     expect([bar.attributes("aria-valuenow"), bar.attributes("aria-valuemax")]).toEqual(["4", "5"]);
     expect(bar.findAll("span.on")).toHaveLength(4);
-    expect(section.text()).toContain("jobA1 les remplit à ta place dans les formulaires des employeurs.");
+    expect(section.text()).toContain("jobA1 te les donne prêtes à copier quand un formulaire les demande.");
     const rows = section.findAll("li button");
     expect(rows.map((r) => r.find(".identity-answer-label").text())).toEqual([
       "Profil LinkedIn", "Permis de travail", "Disponible dès", "Délai de préavis", "Prétentions salariales", "Site ou portfolio",

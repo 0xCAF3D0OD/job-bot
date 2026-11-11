@@ -135,7 +135,7 @@ describe("PracticeView", () => {
     expect(tip.element.tagName).toBe("DETAILS");
     expect(tip.text()).toBe("ConseilPrésent, passé, puis pourquoi ce poste.");
     expect(wrapper.find("label[for=practice-answer]").text()).toBe("Ta réponse");
-    expect(wrapper.find("#practice-answer-help").text()).toBe("Entrée pour envoyer · Maj+Entrée pour aller à la ligne");
+    expect(wrapper.find("#practice-answer-help").text()).toBe("Entrée pour aller à la ligne · Ctrl+Entrée pour envoyer");
     expect(wrapper.find("[data-test=practice-skip]").text()).toBe("Passer la question");
     expect(wrapper.find("[data-test=practice-send]").text()).toBe("Envoyer la réponse");
     expect(wrapper.find("[data-test=practice-words]").text()).toBe("0 mot");
@@ -157,7 +157,12 @@ describe("PracticeView", () => {
     });
     await wrapper.find("[data-test=practice-input]").setValue("I am an engineer.");
     expect(wrapper.find("[data-test=practice-words]").text()).toBe("4 mots");
+    // Entrée seule va à la ligne ; Ctrl+Entrée envoie (lot du 11 novembre au soir, PR 53).
+    const calls = POST.mock.calls.length;
     await wrapper.find("[data-test=practice-input]").trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    expect(POST.mock.calls.length).toBe(calls);
+    await wrapper.find("[data-test=practice-input]").trigger("keydown", { key: "Enter", ctrlKey: true });
     await flushPromises();
     expect(POST).toHaveBeenLastCalledWith("/api/interview-practices/{practice_id}/answer", {
       params: { path: { practice_id: 5 } },
