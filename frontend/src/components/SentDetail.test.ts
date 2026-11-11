@@ -230,6 +230,29 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     expect(wrapper.find("[data-test=follow-edit]").text()).toBe("Modifier le message");
   });
 
+  it("l’écran Relance (PR 52, RelanceV2) : entreprise en titre, poste, carte « c’est le moment de relancer », pied à deux actions", async () => {
+    const wrapper = mountPhone({ id: 23, contact_email: "rh@lombardodier.example" });
+    await flushPromises();
+    await wrapper.find("[data-test=follow-sheet-open]").trigger("click");
+    const screen = wrapper.findComponent("[data-test=follow-screen]");
+    expect(wrapper.findComponent({ name: "BottomSheet" }).props()).toMatchObject({ title: "Lombard Odier", screen: true, open: true });
+    expect(screen.find(".follow-screen-job b").text()).toBe(application.job_title);
+    expect(screen.find("[data-test=follow-since]").text()).toMatch(/^Envoyée (aujourd’hui|hier|il y a \d+ jours) · sans réponse$/);
+    expect(screen.find(".screen-hand").text()).toBe("c’est le moment de relancer");
+    expect(screen.text()).toContain("Le message est prêt, à ton nom.");
+    expect(screen.find("[data-test=sheet-back]").attributes("aria-label")).toBe("Retour");
+    expect(screen.find(".sheet-actions a[data-test=follow-open]").text()).toBe("Relancer par e-mail");
+    expect(screen.find(".sheet-actions [data-test=follow-edit]").text()).toBe("Modifier le message");
+  });
+
+  it("sur ordinateur aussi, la carte ouvre l’écran Relance (panneau flottant, PR 52)", async () => {
+    const wrapper = mountDetail({ id: 24 });
+    await flushPromises();
+    expect(wrapper.find("[data-test=follow-screen]").attributes("open")).toBeUndefined();
+    await wrapper.find("[data-test=follow-sheet-open]").trigger("click");
+    expect(wrapper.findComponent({ name: "BottomSheet" }).props()).toMatchObject({ screen: true, open: true });
+  });
+
   it("deux lignes « Ce que tu as envoyé » et « Trouver un contact », chacune ouvre sa feuille", async () => {
     const wrapper = mountPhone({ id: 22 });
     await flushPromises();

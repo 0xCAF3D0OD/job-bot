@@ -250,7 +250,7 @@ function onStatus(value: ApplicationStatus): void {
         <FollowUpCard
           v-if="followUp"
           :application="application"
-          :compact="phone"
+          compact
           :linkedin-url="linkedinUrl"
           @edit="emit('edit', application)"
           @done="emit('changed')"

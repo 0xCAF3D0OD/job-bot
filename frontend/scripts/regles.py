@@ -55,6 +55,11 @@ def hand_titles() -> list[str]:
     titles += re.findall(r'\bhand="([^"]+)"', sent)
     # « Envoyée ! » sur téléphone (lot du 11 novembre au soir, PR 51 ; maquette MaCandidatureV2, état `fin`).
     titles += [t.replace("&#8239;", "\u202f") for t in re.findall(r'class="sent-fin-hand">([^<]+)<', sent)]
+    # Les cartes pêche des écrans Relance et Rendez-vous ORP (même lot, PR 52 ; RelanceV2, RendezVousFeuilleV2).
+    follow = (FRONTEND / "src/components/FollowUpCard.vue").read_text("utf-8")
+    eve = (FRONTEND / "src/components/MeetingPrepSheet.vue").read_text("utf-8")
+    titles += re.findall(r'class="screen-hand">([^<]+)<', follow)
+    titles += re.findall(r'\? "(ta feuille[^"]+)" : "(ta feuille[^"]+)"', eve)[0]
     return titles
 
 

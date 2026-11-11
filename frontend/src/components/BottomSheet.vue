@@ -23,11 +23,16 @@ import AppIcon from "./AppIcon.vue";
 // croix de 44 px cerclée, pied collé en bas. Sur téléphone, la feuille du bas sans croix (poignée 40 × 4, rayon 28) :
 // son pied porte « Annuler ».
 // Ses styles sont dans sheet-float.css, importé par le panneau qui s'en sert.
-const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | ""; float?: boolean }>(), {
+// `screen` (même lot, PR 52 ; maquettes RelanceV2, RendezVousFeuilleV2 et leurs versions Ordinateur) : un écran
+// entier. Sur ordinateur, le panneau flottant, en-tête de 68 px, contenu sans marge (l'écran pose les siennes), pied
+// collé en bas sous un trait. Sur téléphone, le plein écran : flèche « Retour » et titre de 20 px dans un en-tête de
+// 56 px, sans poignée ni croix.
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | ""; float?: boolean; screen?: boolean }>(), {
   subtitle: "",
   full: false,
   icon: "",
   float: false,
+  screen: false,
 });
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null);
@@ -119,7 +124,7 @@ function onClick(event: MouseEvent): void {
 <template>
   <dialog
     ref="dialog"
-    :class="['sheet', { 'sheet-full': full, 'sheet-panel': icon, 'sheet-float': float }]"
+    :class="['sheet', { 'sheet-full': full || screen, 'sheet-panel': icon, 'sheet-float': float || screen, 'sheet-screen': screen }]"
     :aria-labelledby="titleId"
     :style="{ ...(dragY ? { transform: `translateY(${dragY}px)` } : {}), ...(icon ? { '--sheet-top': `${top}px` } : {}) }"
     data-test="sheet"
@@ -134,6 +139,16 @@ function onClick(event: MouseEvent): void {
         @pointerup="onDragEnd"
         @pointercancel="onDragEnd"
       >
+        <button
+          v-if="screen"
+          type="button"
+          class="sheet-back"
+          aria-label="Retour"
+          data-test="sheet-back"
+          @click="emit('close')"
+        >
+          <AppIcon name="arrow-left" />
+        </button>
         <span
           v-if="icon"
           class="sheet-badge"

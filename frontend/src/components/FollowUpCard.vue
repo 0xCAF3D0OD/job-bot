@@ -2,6 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Application } from "../api/client";
+import "../sheet-float.css";
+import "../sheet-screen.css";
+import { daysSince } from "../dates";
+import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -41,6 +45,18 @@ const changeItems = computed<MoreMenuItem[]>(() => [
     : []),
   { label: "Modifier le contact", test: "follow-contact-edit", icon: "pencil", run: () => emit("edit") },
 ]);
+// « Envoyée il y a 12 jours » (RelanceV2) ; une candidature déjà relancée compte depuis sa relance.
+const sentSince = computed(() => {
+  const a = props.application;
+  const again = a.status === "relancee" && !!a.followed_up_at;
+  const days = Math.max(0, daysSince(`${again ? a.followed_up_at : a.sent_at}T12:00:00`));
+  const word = again ? "Relancée" : "Envoyée";
+  if (days === 0) return `${word} aujourd’hui`;
+  if (days === 1) return `${word} hier`;
+  return `${word} il y a ${plural(days, "jour", "jours")}`;
+});
+// Le message en paragraphes, à 12 px l'un de l'autre comme sur la maquette.
+const paragraphs = computed(() => (draft.value?.text ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean));
 const mailto = computed(() => {
   const to = props.application.contact_email;
   if (!to || !draft.value) return null;
@@ -278,32 +294,40 @@ function draftCache(): Map<number, { subject: string; text: string }> {
     >
       {{ loading ? "J’écris ton message…" : "Voir et envoyer" }}
     </button>
+    <!-- Lot du 11 novembre au soir, PR 52 (maquettes RelanceV2, RelanceV2Sombre, RelanceOrdinateurV2) : l'écran
+         Relance. Téléphone : plein écran, flèche retour et entreprise en titre. Ordinateur : le panneau flottant de
+         440 px, par-dessus Candidatures. Le poste, « Envoyée il y a n jours · sans réponse », la carte pêche, le
+         message sur une feuille blanche à trait bleu, puis le pied fixe. -->
     <BottomSheet
       :open="sheetOpen"
-      title="Relance"
+      :title="application.company"
+      screen
+      data-test="follow-screen"
       @close="sheetOpen = false"
     >
       <div
         class="follow-sheet"
         data-test="follow-sheet"
       >
-        <p
-          class="follow-card-to"
-          data-test="follow-to"
-        >
-          À : <b>{{ recipient }}</b> · {{ channel === "email" ? "E-mail" : "LinkedIn" }} ·
-          <MoreMenu
-            class="follow-card-change"
-            :items="changeItems"
-            :inline="false"
-            trigger="Changer"
-            label="Changer le destinataire ou le canal"
-            test-id="follow-change"
-          />
-        </p>
+        <div class="follow-screen-job">
+          <b>{{ application.job_title }}</b>
+          <span data-test="follow-since">{{ sentSince }} · sans réponse</span>
+        </div>
+        <div class="screen-hero">
+          <div class="screen-hero-text">
+            <span class="screen-hand">c’est le moment de relancer</span>
+            <span class="screen-hero-lead">Le message est prêt, à ton nom.</span>
+          </div>
+          <img
+            src="/tri/relance.webp"
+            alt=""
+            width="128"
+            height="84"
+          >
+        </div>
         <label
           v-if="draft && editing"
-          class="follow-card-edit"
+          class="follow-card-edit follow-screen-paper"
         >
           <span class="visually-hidden">Message de relance</span>
           <textarea
@@ -315,13 +339,29 @@ function draftCache(): Map<number, { subject: string; text: string }> {
         </label>
         <div
           v-else-if="draft"
-          class="follow-sheet-message"
+          class="follow-screen-paper"
           data-test="follow-quote"
         >
-          {{ draft.text }}
+          <p
+            v-for="(paragraph, i) in paragraphs"
+            :key="i"
+          >
+            {{ paragraph }}
+          </p>
         </div>
-        <p class="follow-card-note">
-          Quand tu reviens, le statut passe à « Relancé » et la prochaine relance est proposée dans 10 jours.
+        <p
+          class="follow-card-to"
+          data-test="follow-to"
+        >
+          À&#8239;: <b>{{ recipient }}</b> · {{ channel === "email" ? "E-mail" : "LinkedIn" }} ·
+          <MoreMenu
+            class="follow-card-change"
+            :items="changeItems"
+            :inline="false"
+            trigger="Changer"
+            label="Changer le destinataire ou le canal"
+            test-id="follow-change"
+          />
         </p>
         <p
           v-if="saveError"
@@ -332,36 +372,34 @@ function draftCache(): Map<number, { subject: string; text: string }> {
         </p>
       </div>
       <template #actions>
-        <div class="follow-sheet-actions">
-          <a
-            v-if="channel === 'email'"
-            :class="['button-link', 'primary-link', { disabled: !mailto }]"
-            :href="mailto ?? undefined"
-            :aria-disabled="!mailto"
-            data-test="follow-open"
-            @click="sentOut = !!mailto"
-          ><span class="with-icon">Ouvrir l’e-mail<AppIcon name="mail" /></span></a>
-          <button
-            v-else
-            type="button"
-            class="primary"
-            :disabled="!draft"
-            data-test="follow-open"
-            @click="copyAndOpen"
-          >
-            <span class="with-icon">Copier et ouvrir LinkedIn<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span>
-          </button>
-          <button
-            type="button"
-            class="link"
-            :disabled="!draft"
-            :aria-pressed="editing"
-            data-test="follow-edit"
-            @click="editing = !editing"
-          >
-            {{ editing ? "Terminé" : "Modifier le message" }}
-          </button>
-        </div>
+        <a
+          v-if="channel === 'email'"
+          :class="['button-link', 'primary-link', { disabled: !mailto }]"
+          :href="mailto ?? undefined"
+          :aria-disabled="!mailto"
+          data-test="follow-open"
+          @click="sentOut = !!mailto"
+        >Relancer par e-mail</a>
+        <button
+          v-else
+          type="button"
+          class="primary"
+          :disabled="!draft"
+          data-test="follow-open"
+          @click="copyAndOpen"
+        >
+          <span class="with-icon">Copier et ouvrir LinkedIn<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span>
+        </button>
+        <button
+          type="button"
+          class="link"
+          :disabled="!draft"
+          :aria-pressed="editing"
+          data-test="follow-edit"
+          @click="editing = !editing"
+        >
+          {{ editing ? "Terminé" : "Modifier le message" }}
+        </button>
       </template>
     </BottomSheet>
   </section>
@@ -393,13 +431,17 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 .follow-card-compact .follow-card-title { font-size: var(--follow-17); line-height: var(--space-6); }
 .follow-card-compact .follow-card-help { margin-top: var(--space-1); font-size: var(--font-label); line-height: var(--follow-22); }
 .follow-card-wide { justify-content: center; width: 100%; min-height: var(--space-12); margin-top: var(--space-5); border-radius: var(--radius-pill); }
-.follow-sheet, .follow-sheet-actions { --follow-18-5: 18.5px; --follow-22: 22px; --follow-52: 52px; }
-.follow-sheet { display: flex; flex-direction: column; gap: var(--space-4); }
+/* L'écran Relance (PR 52 ; RelanceV2) : poste 22/28 gras à 24 px des bords, ligne 15 px grise à 4 px ; feuille
+   blanche à 24 px des bords, 20 px de marge intérieure, trait bleu de 6 px à gauche, 16/24 ; « À : » 14/20 dessous. */
+.follow-sheet { --follow-22: 22px; --follow-15: 15px; --follow-28: 28px; display: flex; flex-direction: column; padding-bottom: var(--space-6); }
+.follow-screen-job { padding: 0 var(--space-6) var(--space-4); }
+.follow-screen-job b { display: block; font-size: var(--follow-22); line-height: var(--follow-28); }
+.follow-screen-job span { display: block; margin-top: var(--space-1); font-size: var(--follow-15); line-height: var(--space-5); color: var(--text-secondary); }
+.follow-screen-paper { display: block; margin: 0 var(--space-6); padding: var(--space-5); border-left: var(--screen-bar) solid var(--primary-graphic); border-radius: var(--screen-paper-radius); background: var(--screen-paper); box-shadow: 0 1px 2px rgb(27 31 42 / 10%), 0 10px 24px rgb(27 31 42 / 8%); font-size: var(--font-body); line-height: var(--space-6); white-space: pre-line; }
+.follow-screen-paper p { margin: 0; }
+.follow-screen-paper p + p { margin-top: var(--space-3); }
+.follow-screen-paper textarea { display: block; width: 100%; margin: 0; font: inherit; }
 .follow-sheet .follow-card-change .more-trigger { min-height: var(--target-min); }
-.follow-sheet .follow-card-to { margin: 0; font-size: var(--font-label); line-height: var(--follow-22); }
-.follow-sheet-message { padding: var(--follow-18-5); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); font-size: var(--font-body); line-height: var(--space-6); white-space: pre-line; }
-.follow-sheet .follow-card-note { margin: 0; }
-.follow-sheet-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); width: 100%; }
-.follow-sheet-actions :is(.primary, .primary-link) { justify-content: center; min-height: var(--follow-52); border-radius: var(--radius-pill); }
-.follow-sheet-actions .link { justify-content: center; text-align: center; min-height: var(--space-12); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.follow-sheet .follow-card-to { margin: var(--space-4) var(--space-6) 0; }
+.follow-sheet .notice { margin: var(--space-4) var(--space-6) 0; }
 </style>

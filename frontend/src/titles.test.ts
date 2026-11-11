@@ -29,6 +29,8 @@ const MAQUETTE = new Set([
   // « Ton » : le ton de la voix, pas un possessif (maquette Entrainement, PR 42).
   "./views/PracticeView.vue : Ton du recruteur",
   "./components/AccountMenu.vue : Mon compte",
+  // Maquettes RendezVousFeuilleV2 et RendezVousFeuilleOrdinateurV2 (lot du 11 novembre au soir, PR 52).
+  "./components/MeetingPrepSheet.vue : Tes questions au conseiller",
   "./views/AlertsView.vue : Mes alertes e-mail",
   "./views/AccountView.vue : Mon parcours",
   "./views/PreparationView.vue : Ta candidature",

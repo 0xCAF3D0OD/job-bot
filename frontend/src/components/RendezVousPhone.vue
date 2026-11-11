@@ -49,7 +49,6 @@ const now = new Date();
 const items = computed(() => upcomingAppointments(props.page.meeting ?? null, props.applications, now));
 const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
-const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
 const prepOpen = ref(false);
 
 // À noter, puis le dernier rendez-vous ORP noté.
@@ -156,7 +155,6 @@ function cal(iso: string): { day: number; month: number } {
         :place="item.meeting.place"
         :lines="lines"
         :questions="prep.questions"
-        :checked="checked"
         :pdf="sheetLink"
         @close="prepOpen = false"
         @toggle="(question, value) => emit('toggle', question, value)"

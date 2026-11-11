@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, ref } from "vue";
-import { RouterLink, type RouteLocationRaw } from "vue-router";
+import { RouterLink, useRouter, type RouteLocationRaw } from "vue-router";
 
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -39,6 +39,22 @@ const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
 const HomePhone = defineAsyncComponent(loadHomePhone);
 const TriageMini = defineAsyncComponent(loadTriageMini);
+// La veille de rendez-vous en panneau (lot du 11 novembre au soir, PR 52) : chargée au premier clic, sur ordinateur.
+const OrpEveSheet = defineAsyncComponent(() => import("../components/OrpEveSheet.vue"));
+const router = useRouter();
+const eveAsked = ref(false);
+const eveOpen = ref(false);
+function onTask(task: { key: string }, event: MouseEvent): void {
+  if (task.key !== "meeting" || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+  event.preventDefault();
+  eveAsked.value = true;
+  eveOpen.value = true;
+}
+// Sans rendez-vous lisible, la page Rendez-vous, comme avant.
+function eveFailed(): void {
+  eveOpen.value = false;
+  void router.push("/candidatures/rendez-vous-orp");
+}
 const today = ref<Today | null>(null);
 // L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
 const { phone } = usePhone();
@@ -489,6 +505,8 @@ const { me } = useAuth();
               v-bind="task.href ? { href: task.href, target: '_blank', rel: 'noopener noreferrer' } : { to: task.to }"
               :class="['today-task', `tone-${task.tone}`]"
               :data-test="task.test"
+              :aria-haspopup="task.key === 'meeting' ? 'dialog' : undefined"
+              @click.capture="onTask(task, $event)"
             >
               <b
                 v-if="group.numbered"
@@ -565,6 +583,12 @@ const { me } = useAuth();
         />
       </section>
     </aside>
+    <OrpEveSheet
+      v-if="eveAsked"
+      :open="eveOpen"
+      @close="eveOpen = false"
+      @failed="eveFailed"
+    />
   </div>
   <section
     v-if="!today"

@@ -94,7 +94,7 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.get("[data-test=rdv-prep-open]").text()).toBe("Préparer le rendez-vous");
     expect(orp.find("[data-test=rdv-pdf]").exists()).toBe(false);
     expect(wrapper.findAll("[data-test=rdv-prep-lines] li").map((li) => li.text())).toEqual([
-      "Ton mois6 recherches sur 10",
+      "6 recherches sur 10Ton mois",
       "Ce qui bloqueFormulaires en ligne : 0 réponse sur 9",
       "Ce qui te manqueTerraform, demandé dans 14 offres sur 22",
     ]);
@@ -142,8 +142,13 @@ describe("Rendez-vous sur téléphone", () => {
     expect(sheet.props("open")).toBe(false);
     await wrapper.get("[data-test=rdv-prep-open]").trigger("click");
     expect(sheet.props("open")).toBe(true);
-    expect(sheet.text()).toContain("Mardi 10 novembre, 9 h 30 · ORP Renens");
-    expect(wrapper.get("[data-test=rdv-prep-questions] h3").text()).toBe("Tes questions au conseiller · 1 cochée");
+    // L'écran « Rendez-vous ORP » (lot du 11 novembre au soir, PR 52 ; RendezVousFeuilleV2).
+    expect(sheet.findComponent({ name: "BottomSheet" }).props()).toMatchObject({ title: "Rendez-vous ORP", screen: true });
+    expect(sheet.get("[data-test=rdv-prep-hand]").text()).toBe("ta feuille est prête");
+    expect(sheet.get("[data-test=rdv-prep-when]").text()).toMatch(/, 9 h 30$/);
+    expect(sheet.text()).toContain("ORP Renens");
+    expect(wrapper.get("[data-test=rdv-prep-questions] h3").text()).toBe("Tes questions au conseiller");
+    expect(wrapper.get("[data-test=rdv-pdf]").text()).toContain("Ouvrir la feuille (PDF)");
     await wrapper.get("[data-test=rdv-question-intermediate]").setValue(true);
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/questions", {
       body: { questions: [PREP.questions[0], { ...PREP.questions[1], checked: true }] },
