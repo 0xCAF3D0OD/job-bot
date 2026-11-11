@@ -7217,6 +7217,17 @@ export interface components {
             language: "fr" | "en" | "de";
             /** Can Practice */
             can_practice: boolean;
+            /**
+             * Language From Offer
+             * @default false
+             */
+            language_from_offer: boolean;
+            /** Company */
+            company?: string | null;
+            /** Job Title */
+            job_title?: string | null;
+            /** Interview At */
+            interview_at?: string | null;
         };
         /** PracticeFeedback */
         PracticeFeedback: {
@@ -7334,6 +7345,8 @@ export interface components {
              * @default false
              */
             skipped: boolean;
+            /** Tip */
+            tip?: string | null;
         };
         /** PreparationOut */
         PreparationOut: {

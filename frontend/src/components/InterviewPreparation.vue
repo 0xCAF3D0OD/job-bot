@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { api, type Application, type InterviewInsights, type Offer, type Practice } from "../api/client";
 import { dateInList, meetingDate } from "../dates";
 import InterviewCoaching from "./InterviewCoaching.vue";
-import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
@@ -13,7 +13,8 @@ import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
 
-const { aiNote, reached, refresh: refreshPlan } = usePlan();
+const { aiNote, reached } = usePlan();
+const router = useRouter();
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
 // rencontrées, ce qui reste à préparer, les questions à poser ; pistes de l'IA à la demande.
@@ -24,10 +25,11 @@ const insights = ref<InterviewInsights | null>(null);
 const offer = ref<Offer | null>(null);
 const busy = ref(false);
 const message = ref("");
-// S'entraîner (docs/75) : un nouvel entraînement, ou en rouvrir un.
+// S'entraîner (docs/75) : un nouvel entraînement, ou en rouvrir un, sur sa page (PR 42).
 const practices = ref<Practice[]>([]);
-const practicing = ref(false);
-const openPractice = ref<number | null>(null);
+function practise(practiceId?: number): void {
+  void router.push({ name: "practice", params: { candidatureId: props.application.id }, query: practiceId ? { seance: String(practiceId) } : {} });
+}
 const KIND_LABELS: Record<string, string> = { rh: "RH", manager: "manager", technique: "technique" };
 function levels(item: Practice): string {
   if (item.status !== "termine" || !item.feedback) return "en cours";
@@ -43,11 +45,6 @@ function levels(item: Practice): string {
 async function loadPractices(): Promise<void> {
   practices.value =
     (await api.GET("/api/interview-practices", { params: { query: { application_id: props.application.id } } })).data ?? [];
-}
-function closePractice(): void {
-  void refreshPlan();
-  practicing.value = false;
-  openPractice.value = null;
 }
 
 const difficult = computed(() => (insights.value?.questions ?? []).filter((q) => q.difficult));
@@ -115,7 +112,7 @@ onMounted(async () => {
           class="primary small"
           data-test="prep-practice"
           :disabled="reached('practice')"
-          @click="practicing = true"
+          @click="practise()"
         >
           <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l’IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
             <span class="with-icon"><AppIcon name="ai" />M’entraîner pour cet entretien</span>
@@ -210,7 +207,7 @@ onMounted(async () => {
               type="button"
               class="link"
               data-test="prep-practice-open"
-              @click="openPractice = item.id"
+              @click="practise(item.id)"
             >
               {{ dateInList(item.created_at) }} · {{ KIND_LABELS[item.kind] }}
             </button>
@@ -248,12 +245,5 @@ onMounted(async () => {
         </BusyButton>
       </div>
     </article>
-    <InterviewPractice
-      v-if="practicing || openPractice"
-      :application="application"
-      :practice-id="openPractice"
-      @changed="loadPractices"
-      @close="closePractice"
-    />
   </div>
 </template>

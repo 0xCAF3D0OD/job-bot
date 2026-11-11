@@ -293,6 +293,9 @@ class PracticeTurn(BaseModel):
     question: int
     relance: bool = False
     skipped: bool = False
+    # Le conseil de méthode affiché sous la question du recruteur (PR 42) ; absent des anciens
+    # entraînements.
+    tip: str | None = None
 
 
 class PracticeQuestionFeedback(BaseModel):
@@ -332,6 +335,14 @@ class PracticeDefaults(BaseModel):
     kind: PracticeKind
     language: Language
     can_practice: bool
+    # Vrai : `language` est la langue de l'annonce (« L'annonce est en anglais. ») ; faux : le
+    # français par défaut, sans annonce à lire.
+    language_from_offer: bool = False
+    # La ligne sous le titre de la page (récapitulatif du 11 novembre, PR 42) : poste, entreprise,
+    # date de l'entretien. Relus sous la RLS du compte (C-5).
+    company: str | None = None
+    job_title: str | None = None
+    interview_at: datetime | None = None
 
 
 async def _practice_out(session: AsyncSession, item: InterviewPractice) -> PracticeOut:
@@ -380,6 +391,8 @@ async def practice_defaults(
     runtime = _runtime(request)
     kind: PracticeKind = "rh"
     language: Language = "fr"
+    from_offer = False
+    application: Application | None = None
     async with runtime.sessionmaker() as session:
         if application_id is not None:
             last = await session.scalar(
@@ -396,8 +409,15 @@ async def practice_defaults(
                     language = practice.guess_language(
                         f"{offer.title} {offer.description or offer.snippet or ''}"
                     )
+                    from_offer = bool(offer.description or offer.snippet)
     return PracticeDefaults(
-        kind=kind, language=language, can_practice=runtime.settings.llm_configured
+        kind=kind,
+        language=language,
+        can_practice=runtime.settings.llm_configured,
+        language_from_offer=from_offer,
+        company=application.company if application else None,
+        job_title=application.job_title if application else None,
+        interview_at=application.interview_at if application else None,
     )
 
 

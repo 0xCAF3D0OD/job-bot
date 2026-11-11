@@ -109,7 +109,7 @@ class Fake:
 
 
 def question(n: int) -> dict[str, str]:
-    return {"action": "question", "text": f"Question {n} ?"}
+    return {"action": "question", "text": f"Question {n} ?", "conseil": f"Conseil {n}."}
 
 
 @pytest.fixture
@@ -155,6 +155,11 @@ async def test_full_practice_then_feedback(client: AsyncClient, runtime: Runtime
         "Question 1 ?",
         "Exemple SA",
     )
+    # Le conseil de méthode suit la question (PR 42), et n'est jamais redonné à l'IA.
+    assert body["turns"][0]["tip"] == "Conseil 1."
+    assert "Conseil 1." not in practice.transcript([{**body["turns"][0]}])
+    assert "language_from_offer" in defaults
+    assert (defaults["company"], "interview_at" in defaults) == ("Exemple SA", True)
 
     body = (
         await client.post(f"/api/interview-practices/{practice_id}/answer", json={"text": "Bof"})
@@ -165,6 +170,7 @@ async def test_full_practice_then_feedback(client: AsyncClient, runtime: Runtime
         "question": 1,
         "relance": True,
         "skipped": False,
+        "tip": None,
     }
     body = (
         await client.post(f"/api/interview-practices/{practice_id}/answer", json={"text": "Voilà"})
@@ -286,6 +292,22 @@ async def test_two_answers_at_once_keep_one(client: AsyncClient, runtime: Runtim
     assert [t["role"] for t in body["turns"]] == ["recruteur", "candidat", "recruteur"]
     assert len(fake.calls) == 2
     await reset(runtime)
+
+
+def test_turn_tip() -> None:
+    """Le conseil : nettoyé, borné, vide s'il manque ou n'est pas un texte."""
+    raw = (
+        '<reponse>{"action": "question", "text": "Q ?", "conseil": "  En  trois temps. "}</reponse>'
+    )
+    assert practice.parse_turn(raw) == ("question", "Q ?", "En trois temps.")
+    assert practice.parse_turn('<reponse>{"text": "Q ?", "conseil": 3}</reponse>') == (
+        "question",
+        "Q ?",
+        "",
+    )
+    long = "x" * 900
+    parsed = practice.parse_turn(f'<reponse>{{"text": "Q ?", "conseil": "{long}"}}</reponse>')
+    assert parsed is not None and len(parsed[2]) == practice.TIP_MAX
 
 
 def test_unreadable_answers() -> None:

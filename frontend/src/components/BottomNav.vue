@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api } from "../api/client";
 import { useAssistant } from "../composables/useAssistant";
+import { useFocusMode } from "../composables/useFocusMode";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
 import AssistantMascot from "./AssistantMascot.vue";
@@ -23,7 +24,8 @@ const { last: lastJobsPage } = useJobsMemory();
 const { available: assistantAvailable, known: assistantKnown } = useAssistant();
 const toReview = ref(0);
 
-const visible = computed(() => assistantKnown.value && !HIDDEN.has(String(route.name)) && !route.meta.bare);
+const { focus } = useFocusMode();
+const visible = computed(() => assistantKnown.value && !HIDDEN.has(String(route.name)) && !route.meta.bare && !focus.value);
 
 type Tab = { name: string; label: string; icon?: "home" | "briefcase" | "trend" | "user"; to: string; active: boolean };
 const tabs = computed<Tab[]>(() => {

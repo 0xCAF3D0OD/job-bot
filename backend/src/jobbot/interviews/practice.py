@@ -24,7 +24,7 @@ from jobbot.scoring.service import active_profile
 
 MODEL = SONNET
 QUESTIONS = 5
-RECRUITER_MAX_TOKENS = 400
+RECRUITER_MAX_TOKENS = 500
 FEEDBACK_MAX_TOKENS = 4_000
 # Un entraînement complet : une douzaine d'échanges et le retour (docs/75 §9). Le départ est
 # refusé s'il ne reste pas de quoi aller jusqu'au retour.
@@ -43,7 +43,7 @@ LANGUAGES: dict[str, str] = {"fr": "français", "en": "anglais", "de": "allemand
 LEVELS: tuple[Level, ...] = get_args(Level)
 # Un point « à travailler » rejoint la liste « À préparer », limitée à cette longueur.
 POINT_MAX = 200
-RECRUITER = resources.files("jobbot.llm").joinpath("prompts/recruiter-v1.md").read_text("utf-8")
+RECRUITER = resources.files("jobbot.llm").joinpath("prompts/recruiter-v2.md").read_text("utf-8")
 FEEDBACK = (
     resources.files("jobbot.llm").joinpath("prompts/practice-feedback-v1.md").read_text("utf-8")
 )
@@ -163,13 +163,19 @@ def _relance_used(turns: list[dict[str, Any]], number: int) -> bool:
     )
 
 
-def parse_turn(text: str) -> tuple[str, str] | None:
+# Le conseil affiché sous la question (PR 42) : une ou deux phrases sur la méthode.
+TIP_MAX = 300
+
+
+def parse_turn(text: str) -> tuple[str, str, str] | None:
     data = parse_reponse(text)
     if data is None:
         return None
     action = str(data["action"]) if data.get("action") in ("relance", "fin") else "question"
     said = " ".join(str(data.get("text") or "").split())
-    return (action, said[:800]) if said or action == "fin" else None
+    tip = data.get("conseil")
+    tip = " ".join(tip.split())[:TIP_MAX] if isinstance(tip, str) else ""
+    return (action, said[:800], tip) if said or action == "fin" else None
 
 
 def parse_feedback(text: str, numbers: set[int]) -> dict[str, Any] | None:
@@ -257,17 +263,20 @@ async def _recruiter_turn(
     parsed = parse_turn(text)
     if parsed is None:
         raise PracticeUnavailable("réponse illisible, réessaie")
-    action, said = parsed
+    action, said, tip = parsed
     # Après la cinquième question, seule une relance est possible ; sinon c'est fini.
     if action == "fin" or (action == "question" and number >= QUESTIONS):
         return None, chf
     relance = action == "relance" and relance_allowed and number > 0
-    return {
+    turn: dict[str, Any] = {
         "role": "recruteur",
         "text": said,
         "question": number if relance else number + 1,
         "relance": relance,
-    }, chf
+    }
+    if tip:
+        turn["tip"] = tip
+    return turn, chf
 
 
 async def start(

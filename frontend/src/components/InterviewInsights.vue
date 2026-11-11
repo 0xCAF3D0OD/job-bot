@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
-import InterviewPractice from "./InterviewPractice.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
@@ -19,15 +19,15 @@ import SavedStatus from "../components/SavedStatus.vue";
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
 
-const { aiNote, reached, refresh: refreshPlan } = usePlan();
+const { aiNote, reached } = usePlan();
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
 // les pistes de l'IA seulement à la demande.
 const data = ref<InterviewInsights | null>(null);
 const busy = ref(false);
 const message = ref("");
-// Un entretien type, sans candidature (docs/75 §3).
-const practicing = ref(false);
+// Un entretien type, sans candidature (docs/75 §3), sur sa page (PR 42).
+const router = useRouter();
 
 async function load(): Promise<void> {
   data.value = (await api.GET("/api/interviews/insights")).data ?? null;
@@ -208,7 +208,7 @@ const summaryValue = computed(() =>
         class="secondary small"
         data-test="insights-practice"
         :disabled="reached('practice')"
-        @click="practicing = true"
+        @click="router.push({ name: 'practice' })"
       >
         <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l’IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
           <span class="with-icon"><AppIcon name="ai" />M’entraîner sur un entretien type</span>
@@ -216,12 +216,5 @@ const summaryValue = computed(() =>
       </button>
     </p>
     <PlanLimit usage="practice" />
-    <Teleport to="body">
-      <InterviewPractice
-        v-if="practicing"
-        @changed="load"
-        @close="practicing = false; refreshPlan()"
-      />
-    </Teleport>
   </component>
 </template>
