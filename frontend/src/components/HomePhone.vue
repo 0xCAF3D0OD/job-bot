@@ -3,6 +3,7 @@ import { computed } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
+import type { IconName } from "../icons";
 import { companyPlace, orpLeftLine, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
@@ -14,7 +15,8 @@ import ScoreRing from "./ScoreRing.vue";
 // « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
 // dose du jour, tant qu'il y en a, et « Tout voir » ; sans bouton « Trier », A3 annulé le 2026-11-05 par
 // Kevin), À faire (un nombre, un libellé). L'ordinateur garde sa page.
-export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw };
+// Une ligne de « À faire » : un nombre et un libellé ; ou, pour « Relire ton CV » (PR 22), une icône et une ligne de détail.
+export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw; icon?: IconName; detail?: string };
 
 const props = defineProps<{
   name: string | null;
@@ -158,10 +160,16 @@ function facts(offer: Offer): string[] {
         >
           <RouterLink
             :to="todo.to"
+            :class="{ 'home-todo-alert': todo.icon }"
             :data-test="todo.test"
           >
-            <strong>{{ todo.count }}</strong>
-            <span>{{ todo.label }}</span>
+            <span
+              v-if="todo.icon"
+              class="home-todo-icon"
+            ><AppIcon :name="todo.icon" /></span>
+            <strong v-else>{{ todo.count }}</strong>
+            <span v-if="todo.detail"><span class="home-todo-title">{{ todo.label }}</span><span class="home-todo-detail">{{ todo.detail }}</span></span>
+            <span v-else>{{ todo.label }}</span>
             <AppIcon name="chevron" />
           </RouterLink>
         </li>
