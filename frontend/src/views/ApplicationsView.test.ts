@@ -553,4 +553,59 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     await flushPromises();
     expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);
   });
+  it("PR 40 : le trait et son point suivent la carte choisie (filtre, défilement), masqués hors de l’écran", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
+    const items = [
+      at("2026-11-05", { id: 12, company: "Récente SA", status: "en_attente" }),
+      at("2026-10-01", { id: 14, company: "Silence SA", status: "sans_reponse" }),
+      at("2026-09-10", { id: 11, company: "Ancienne SA", status: "en_attente" }),
+    ];
+    mockApi(undefined, items);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => (queueMicrotask(run), 1));
+    // Une mise en page simulée : la section commence à `sectionTop`, les cartes de 80 px se suivent tous les 100 px.
+    let sectionTop = 100;
+    const rect = (top: number, height: number) => ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top, toJSON: () => ({}) });
+    const measure = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      if (this.classList.contains("jobs-body")) return rect(sectionTop, 3000);
+      const cards = [...document.querySelectorAll(".sent-list .list-card")];
+      return rect(sectionTop + 200 + Math.max(0, cards.indexOf(this)) * 100, 80);
+    });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/candidatures/suivi", component: ApplicationsView }] });
+    await router.push("/candidatures/suivi?candidature=11&tri=recentes");
+    const wrapper = mount(ApplicationsView, { attachTo: document.body, global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true, SentDetail: true } } });
+    await flushPromises();
+    // Centre du point = haut du trait + 1 px (trait de 2 px), mesuré depuis la section.
+    const gap = () => {
+      const card = wrapper.find(".sent-list .list-card[aria-current=true]").element.getBoundingClientRect();
+      const top = Number.parseFloat((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top);
+      return Math.abs(top + 1 - (card.top + card.height / 2 - sectionTop));
+    };
+    // Troisième de la liste par date, puis seule après le filtre « À relancer ».
+    expect((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top).toBe("439px");
+    expect(gap()).toBeLessThanOrEqual(2);
+    await wrapper.find("[data-test=sent-status-relancer]").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAll(".sent-list .list-card")).toHaveLength(1);
+    expect((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top).toBe("239px");
+    expect(gap()).toBeLessThanOrEqual(2);
+    // La page défile : la carte passe au-dessus de l'écran, le trait disparaît ; elle revient, lui aussi.
+    sectionTop = -400;
+    window.dispatchEvent(new Event("scroll"));
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-link]").exists()).toBe(false);
+    sectionTop = -100;
+    window.dispatchEvent(new Event("scroll"));
+    await flushPromises();
+    expect(gap()).toBeLessThanOrEqual(2);
+    // La carte choisie sort du filtre : plus de trait.
+    await wrapper.find("[data-test=sent-status-sans-reponse]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find(".sent-list .list-card[aria-current=true]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=sent-link]").exists()).toBe(false);
+    measure.mockRestore();
+    vi.unstubAllGlobals();
+    wrapper.unmount();
+  });
 });
