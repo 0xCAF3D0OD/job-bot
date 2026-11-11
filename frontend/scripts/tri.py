@@ -6,6 +6,9 @@ trient sur ordinateur ; « Annuler » remet l'offre sans rien envoyer ; le focus
 La démo refuse d'écrire : les changements d'état sont interceptés et vérifiés (« later » pour gardée, « ignored »
 pour écartée), dans l'ordre.
 
+Candidatures (PR 46) : une offre gardée à 6 étiquettes montre « Gardée », celles qui tiennent, puis « +k », sur une
+seule ligne, à 390 comme à 1440 px.
+
     make audit-tri DEMO_URL=http://localhost:5200
 """
 
@@ -111,6 +114,62 @@ async def run(context: BrowserContext, width: int) -> list[str]:
     return faults
 
 
+async def chips(context: BrowserContext, width: int) -> list[str]:
+    """Candidatures (PR 46) : une offre gardée à 6 étiquettes montre « Gardée », celles qui tiennent, puis « +k »,
+    sur une seule ligne. La démo refuse d'écrire : la liste reçue est modifiée ici (état « later », 6 étiquettes)."""
+    faults: list[str] = []
+    page = await context.new_page()
+
+    async def offers(route: Route) -> None:
+        response = await route.fetch()
+        body = await response.json()
+        fresh = [o for o in body.get("items", []) if o["status"] == "to_review"]
+        if fresh:
+            fresh[0].update(status="later", description="", added_by_you=True, employment_type="Contrat de durée déterminée de 12 mois", rate_min=80, rate_max=100)
+        await route.fulfill(response=response, json=body)
+
+    await page.route("**/api/offers?*", offers)
+    await page.goto(f"{BASE}/candidatures/offres")
+    card = page.locator("[data-test=offer]", has=page.locator(".kept")).first
+    try:
+        await card.wait_for(timeout=15000)
+    except Exception:
+        return [f"{width} px : aucune carte « Gardée » dans Candidatures"]
+    await card.scroll_into_view_if_needed()
+    await page.wait_for_timeout(500)
+    state = await card.evaluate(
+        """(card) => {
+          const row = card.querySelector('[data-test=chip-line]');
+          const shown = [...row.children].filter((c) => getComputedStyle(c).visibility !== 'hidden');
+          const more = row.querySelector('[data-test=chip-more]');
+          return {
+            texts: shown.map((c) => c.textContent.trim()),
+            tops: [...new Set(shown.map((c) => Math.round(c.getBoundingClientRect().top)))].length,
+            inside: shown.every((c) => c.getBoundingClientRect().right <= row.getBoundingClientRect().right + 0.5),
+            scroll: row.scrollWidth > row.clientWidth + 1 && getComputedStyle(row).overflowX !== 'hidden',
+            all: row.querySelectorAll('[data-chip]').length,
+            name: more?.getAttribute('aria-label') ?? '',
+          };
+        }"""
+    )
+
+    def check(ok: bool, what: str) -> None:
+        if not ok:
+            faults.append(f"{width} px : {what}")
+
+    texts = state["texts"]
+    check(bool(texts) and texts[0] == "Gardée", f"« Gardée » n'est pas la première étiquette ({texts})")
+    check(state["tops"] == 1, "les étiquettes sont sur plusieurs lignes")
+    check(state["inside"], "une étiquette dépasse de la rangée")
+    check(not state["scroll"], "la rangée défile")
+    if width < 821:
+        hidden = state["all"] - (len(texts) - 1)
+        check(bool(texts) and texts[-1] == f"+{hidden}", f"pas de pastille « +k » au bout de la rangée ({texts})")
+        check(state["name"] == f"{hidden} autres étiquettes" or (hidden == 1 and state["name"] == "1 autre étiquette"), f"la pastille se nomme « {state['name']} »")
+    await page.close()
+    return faults
+
+
 async def main() -> int:
     faults: list[str] = []
     async with async_playwright() as p:
@@ -120,6 +179,7 @@ async def main() -> int:
             phone = width < 821
             context = await browser.new_context(viewport={"width": width, "height": height}, has_touch=phone, is_mobile=phone)
             faults += await run(context, width)
+            faults += await chips(context, width)
             await context.close()
         await browser.close()
     for fault in faults:

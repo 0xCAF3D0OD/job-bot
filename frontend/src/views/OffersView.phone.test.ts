@@ -116,12 +116,25 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(host.find("[data-test=offers-expired]").attributes("aria-expanded")).toBe("true");
   });
 
-  it("bas de liste (PR 35) : « Afficher n offres de plus · m restantes », 20 par appui, focus sur la première nouvelle", async () => {
+  it("une offre gardée reste dans le groupe de son jour, « Gardée » en première puce (PR 46)", async () => {
+    const wrapper = await mountAt("/offres", [{ ...offer(1, "DevOps"), status: "later", employment_type: "CDI" }, offer(2, "SRE")]);
+    const lists = GET.mock.calls.filter((c) => c[0] === "/api/offers");
+    expect((lists.at(-1)![1] as { params: { query: Record<string, unknown> } }).params.query.kept_first).toBeUndefined();
+    expect(wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text())).toEqual(["Aujourd’hui"]);
+    const chips = wrapper.find("[data-test=offer]").findAll("[data-test=offer-chip]");
+    expect(chips[0]!.text()).toBe("Gardée");
+    expect(chips[0]!.find("svg").attributes("aria-hidden")).toBe("true");
+    // Une seule ligne : la rangée ne revient pas à la ligne, la pastille « +k » n'apparaît que si elle déborde.
+    expect(wrapper.find("[data-test=chip-line]").classes()).toContain("chip-line");
+    expect(wrapper.find("[data-test=chip-more]").exists()).toBe(false);
+  });
+
+  it("bas de liste (PR 35) : « Afficher n offres de plus », sans le reste (PR 46), 20 par appui, focus sur la première nouvelle", async () => {
     const page1 = [offer(1, "DevOps Engineer"), offer(2, "SRE")];
     const page2 = [offer(3, "Data Engineer")];
     const host = await mountAt("/offres", page1, facets, counts, { total: 3, more: page2 });
     const more = host.get("[data-test=offers-more]");
-    expect(more.text()).toBe("Afficher 1 offre de plus · 1 restante");
+    expect(more.text()).toBe("Afficher 1 offre de plus");
     expect(more.get("strong").text()).toBe("Afficher 1 offre de plus");
     await more.trigger("click");
     await flushPromises();

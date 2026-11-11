@@ -9,6 +9,8 @@ import { isBlankLogo } from "../logoImage";
 // la même sur ordinateur et sur téléphone : 104 px de haut, le logo de 44 px, le poste et « entreprise · lieu »
 // sur une ligne chacun (coupés par « … »), les puces en bas, une colonne de 76 px à droite (slot `end` : l'anneau
 // et son mot, ou le statut d'une candidature). Rien d'autre dans la carte.
+// Une offre (lot du 11 novembre au soir, PR 46) met ses étiquettes sous la ligne logo, titre, note, sur toute la
+// largeur (slot `below`) : la carte passe alors à la ligne et grandit (104 px au moins).
 // Toute la carte est un lien (`to`) ; sans touche de modification, le clic émet `select` à la place, pour que la
 // liste garde la main (focus sur la fiche, adresse remplacée…).
 const props = withDefaults(
@@ -47,7 +49,7 @@ function onClick(event: MouseEvent): void {
 <template>
   <a
     :href="href"
-    class="list-card"
+    :class="['list-card', { 'list-card-wrap': $slots.below }]"
     :aria-current="selected ? 'true' : undefined"
     data-test="list-card"
     @click="onClick"
@@ -81,6 +83,7 @@ function onClick(event: MouseEvent): void {
       ><slot name="chips" /></span>
     </span>
     <span class="list-card-end"><slot name="end" /></span>
+    <slot name="below" />
   </a>
 </template>
 
@@ -130,5 +133,12 @@ function onClick(event: MouseEvent): void {
 .list-card-chips > .blue { background: var(--primary-soft); color: var(--primary-text); }
 .list-card-chips > .green { background: var(--success-soft); color: var(--success); }
 .list-card-chips > .warn { background: var(--warning-soft); color: var(--warning); }
+/* Étiquettes sous le logo (maquettes Candidatures et CandidaturesOrdinateurB du 11 novembre) : deux lignes écartées
+   de 8 px, colonnes de 14 px, le logo et le titre centrés sur l'anneau ; 104 px au moins, 14 et 18,5 px de marge. */
+.list-card-wrap { --card-pad-x: 18.5px; flex-wrap: wrap; gap: var(--space-2) var(--card-14); height: auto; min-height: 104px; padding: var(--card-14) var(--card-pad-x); }
+.list-card-wrap[aria-current="true"] { padding: calc(var(--card-14) - 1px) calc(var(--card-pad-x) - 1px); }
+.list-card-wrap .list-card-text { gap: var(--card-2); }
+.list-card-wrap > .list-card-chips { flex: 0 0 100%; min-width: 0; margin-top: 0; }
+@media (max-width: 820px) { .list-card-wrap { --card-pad-y: 18.5px; padding: var(--card-pad-y) var(--card-pad-x); } }
 .list-card-end { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 </style>

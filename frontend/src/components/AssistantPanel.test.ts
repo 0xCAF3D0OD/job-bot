@@ -23,7 +23,7 @@ afterEach(() => {
 const proposal = {
   id: 7,
   kind: "offer_status",
-  label: "Passer « Cloud Architect » (Jura Data SA) en Plus tard",
+  label: "Passer « Cloud Architect » (Jura Data SA) en Gardée",
   state: "proposed",
   created_at: "2026-10-15T10:00:00Z",
 };
@@ -124,7 +124,7 @@ describe("AssistantPanel, propositions (docs/52)", () => {
     expect(wrapper.find("[data-test=assistant-mascot]").attributes("aria-hidden")).toBe("true");
 
     const card = wrapper.find("[data-test=assistant-action]");
-    expect(card.text()).toContain("Passer « Cloud Architect » (Jura Data SA) en Plus tard");
+    expect(card.text()).toContain("Passer « Cloud Architect » (Jura Data SA) en Gardée");
     expect(POST).not.toHaveBeenCalled();
 
     POST.mockResolvedValue({ data: { ...proposal, state: "done", note: null } });

@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
 import { rateText, remoteText } from "../format";
+import ChipLine, { type Chip } from "./ChipLine.vue";
 import ListCard from "./ListCard.vue";
 import ScoreRing from "./ScoreRing.vue";
 import { usePlan } from "../composables/usePlan";
@@ -13,7 +14,7 @@ import { usePhone } from "../composables/usePhone";
 
 // Une offre dans À traiter (maquettes CandidaturesOrdinateur et Candidatures, 7.11.2026) : la carte de liste
 // commune, avec l'anneau et son mot à droite. Ce qui demande attention (écartée, à vérifier, retirée) et la note
-// provisoire deviennent des puces ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
+// provisoire deviennent des puces, sur une ligne sous le logo (ChipLine, PR 46) ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
 // « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par jour », où le titre du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
 defineEmits<{ select: [] }>();
@@ -29,10 +30,11 @@ const to = computed(() =>
     : { path: route.path, query: { ...route.query, offre: String(props.offer.id) } },
 );
 
-type Chip = { text: string; tone?: "peach" | "blue" | "warn"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // « Gardée » (l'état « later », gardée pendant le tri ou par le signet de la fiche) : toujours la première.
+  if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
   else if (o.doubts?.length)
     out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
@@ -45,7 +47,6 @@ const chips = computed<Chip[]>(() => {
   out.push({ text: o.employment_type || "Contrat non précisé" });
   const remote = remoteText(o, phone.value);
   if (remote) out.push({ text: remote });
-  if (o.status === "later") out.push({ text: "Plus tard" });
   if (o.spontaneous) out.push({ text: "Spontanée", tone: "blue" });
   else if (o.added_by_you) out.push({ text: "Ajoutée par toi", tone: "blue" });
   if (props.showDate) out.push({ text: `Reçue ${dateInList(o.first_seen_at)}` });
@@ -68,15 +69,6 @@ const { reached } = usePlan();
     data-test="offer"
     @select="$emit('select')"
   >
-    <template #chips>
-      <span
-        v-for="chip in chips"
-        :key="chip.text"
-        :class="chip.tone"
-        :title="chip.title"
-        data-test="offer-chip"
-      >{{ chip.text }}</span>
-    </template>
     <template #end>
       <ScoreRing
         worded
@@ -84,6 +76,9 @@ const { reached } = usePlan();
         :pending="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
         :stale="offer.score_stale"
       />
+    </template>
+    <template #below>
+      <ChipLine :chips="chips" />
     </template>
   </ListCard>
 </template>

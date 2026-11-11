@@ -29,7 +29,7 @@ NAME = "proposer_action"
 MAX_PER_ANSWER = 3
 
 OFFER_STATUSES = {
-    OfferStatus.LATER: "Plus tard",
+    OfferStatus.LATER: "Gardée",
     OfferStatus.IGNORED: "Ignorée",
     OfferStatus.TO_REVIEW: "À examiner",
 }

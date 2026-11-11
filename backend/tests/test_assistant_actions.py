@@ -67,7 +67,7 @@ async def test_propose_then_confirm_then_undo(
     proposals = [data for kind, data in found if kind == "action"]
     assert len(proposals) == 1
     proposal = proposals[0]
-    assert proposal["label"] == "Passer « Cloud Architect » (Jura Data SA) en Plus tard"
+    assert proposal["label"] == "Passer « Cloud Architect » (Jura Data SA) en Gardée"
     assert proposal["state"] == "proposed"
     # L'outil n'a rien changé : l'IA apprend seulement que c'est en attente.
     result = fake.calls[1]["messages"][-1]["content"][0]

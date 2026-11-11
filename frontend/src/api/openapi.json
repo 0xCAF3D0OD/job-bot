@@ -3714,6 +3714,16 @@
               ],
               "title": "Basis"
             }
+          },
+          {
+            "name": "kept_first",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Kept First"
+            }
           }
         ],
         "responses": {

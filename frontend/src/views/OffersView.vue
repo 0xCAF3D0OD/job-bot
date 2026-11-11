@@ -71,7 +71,7 @@ const VIEW_END: Record<string, [string, string]> = {
   pending: [" à traiter", " à traiter"],
   to_review: [" à examiner", " à examiner"],
   in_progress: [" en cours", " en cours"],
-  later: [" pour plus tard", " pour plus tard"],
+  later: [" gardée", " gardées"],
   filtered_out: [" écartée", " écartées"],
   expired: [" expirée", " expirées"],
   all: ["", ""],
@@ -155,11 +155,10 @@ const shown = computed(() =>
     : items.value,
 );
 // Bas de liste sur téléphone (PR 35) : les offres qui restent à charger dans la liste montrée, et combien le prochain
-// appui en ajoute (« Afficher 12 offres de plus · 12 restantes »).
+// appui en ajoute (« Afficher 12 offres de plus », sans le reste : lot du 11 novembre au soir, PR 46).
 const remaining = computed(() => (items.value.length < total.value ? Math.max(0, shownTotal.value - shown.value.length) : 0));
 const nextCount = computed(() => Math.min(MORE_SIZE, remaining.value));
 const moreLabel = computed(() => `Afficher ${plural(nextCount.value, "offre", "offres")} de plus`);
-const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value > 1 ? "restantes" : "restante"}`);
 
 // Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
 // 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
@@ -170,7 +169,9 @@ const byDay = computed(() => filters.value.sort === "day");
 // À traiter (C2, C8) : les offres en préparation viennent d'abord (le serveur les met en tête) ; triées
 // par jour, elles ont leur propre titre, « En préparation », avant les jours.
 function groupKey(offer: Offer): string {
-  return filters.value.view === "pending" && offer.status === "preparing" ? "preparing" : dayKey(offer.first_seen_at);
+  // Une offre gardée (PR 46) : dans le groupe de son jour sur téléphone, sous « En préparation » sur ordinateur.
+  const ahead = offer.status === "preparing" || (offer.status === "later" && !phone.value);
+  return filters.value.view === "pending" && ahead ? "preparing" : dayKey(offer.first_seen_at);
 }
 const dayCounts = computed(() => {
   const counts = new Map<string, number>();
@@ -422,6 +423,8 @@ async function load(append = false): Promise<void> {
           with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,
+          // Ordinateur : les offres gardées viennent avec « En préparation » (PR 46).
+          kept_first: (f.view === "pending" && !phone.value) || undefined,
         },
       },
     });
@@ -463,7 +466,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   }
   // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge ; sa carte
   // s'efface et les suivantes remontent (docs/60 §3), avec « Annuler » dans le message.
-  // Le signet de la sous-page (« Plus tard » et retour) laisse la fiche ouverte : l'offre reste dans « À traiter ».
+  // Le signet de la sous-page (« Garder » et retour) laisse la fiche ouverte : l'offre reste dans « À traiter ».
   const stays = status === "preparing" || (phone.value && (status === "later" || status === "to_review"));
   if (!stays && selectedId.value === offer.id) selectedId.value = null;
   const previous = offer.status;
@@ -472,7 +475,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
       ? { id: offer.id, status: previous }
       : null;
   const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
-  notice.value = undo.value ? (status === "ignored" ? discarded : `Passée en ${STATUS_TEXT[status]}.`) : "";
+  notice.value = undo.value ? (status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
   // « Annuler » reste 6 s (docs/108), puis le message s'efface.
   clearTimeout(undoTimer);
   if (undo.value) {
@@ -487,7 +490,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
 }
 let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
-const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
+const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "À examiner" };
 const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
 async function undoStatus(): Promise<void> {
   const last = undo.value;
@@ -975,7 +978,7 @@ onUnmounted(() => {
             data-test="offers-more"
             @click="showMoreOffers"
           >
-            <strong>{{ moreLabel }}</strong><span>{{ remainingLabel }}</span>
+            <strong>{{ moreLabel }}</strong>
           </button>
           <h2
             id="offers-other-title"

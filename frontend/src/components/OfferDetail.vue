@@ -168,7 +168,7 @@ async function chooseRegistry(uid: string): Promise<void> {
 
 const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
   preparing: "En préparation",
-  later: "Plus tard",
+  later: "Gardée",
   ignored: "Ignorée",
   filtered_out: "Écartée par le filtre",
   applied: "Candidature envoyée",
@@ -340,7 +340,7 @@ const scoreNote = computed(() => {
     .join(" ");
 });
 // Ordinateur dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB état « actions ») : d'abord les entrées
-// dessinées, dans leur ordre (ouvrir l'annonce, garder pour plus tard, détail de la note, copier le lien, puis
+// dessinées, dans leur ordre (ouvrir l'annonce, garder, détail de la note, copier le lien, puis
 // « Signaler une erreur dans l'offre » après un trait) ; les autres actions de la fiche suivent (docs/143, écarts).
 const { phone: wide } = usePhone("(min-width: 1024px)");
 // À traiter sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 13.1) : la note et le poste à gauche, « L'offre en
@@ -384,7 +384,7 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [];
   if (shareUrl.value) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
   if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
-  else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
+  else if (o.status !== "applied") items.push({ label: "Garder", test: "later", icon: "bookmark", run: () => emit("status", "later") });
   if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
   if (withBar.value && scored.value) {
     items.push({ label: "Signaler une erreur dans l’offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
@@ -409,7 +409,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
       items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
-      items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
+      items.push({ label: "Garder", test: "later", icon: "bookmark", run: () => emit("status", "later") });
       // Un seul mot pour une action (étape 6, O8) : « Écarter », comme dans la feuille de la liste.
       items.push({ label: "Écarter", test: "ignore", icon: "x-circle", run: () => emit("status", "ignored") });
     }
@@ -429,7 +429,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
 });
 
 // La feuille « ⋯ » de la sous-page (O9) : « Écarter l'offre » et « Marquer comme envoyée », puis les actions
-// propres à la fiche. « Plus tard » devient le signet de l'en-tête (O2).
+// propres à la fiche. « Garder » (l'état « Gardée ») devient le signet de l'en-tête (O2).
 const sheetOpen = ref(false);
 const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
@@ -450,12 +450,12 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
-// Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
+// Sauvegarder (O2) : l'état « Gardée » (« later » dans les données) ; le signet est plein quand l'offre y est.
 const saved = computed(() => props.offer.status === "later");
 const canSave = computed(() => ["to_review", "later"].includes(props.offer.status));
 function toggleSaved(): void {
   emit("status", saved.value ? "to_review" : "later");
-  saidAloud.value = saved.value ? "Offre remise à examiner." : "Offre gardée pour plus tard.";
+  saidAloud.value = saved.value ? "Offre remise à examiner." : "Offre gardée.";
 }
 // Partager (O2) : le lien public de l'annonce (employeur, puis site source), jamais l'adresse jobA1, qui est
 // privée. La feuille de partage du téléphone, sinon le lien copié.
@@ -562,8 +562,8 @@ watch(
           type="button"
           class="icon-button icon-only offer-save"
           :aria-pressed="saved"
-          aria-label="Garder pour plus tard"
-          data-label="Garder pour plus tard"
+          aria-label="Garder"
+          data-label="Garder"
           data-test="offer-save"
           @click="toggleSaved"
         >

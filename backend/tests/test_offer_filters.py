@@ -336,6 +336,23 @@ async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Ru
     assert (await api.get("/api/today")).json()["pending"] == page["counts"]["pending"]
 
 
+async def test_pending_view_puts_kept_offers_with_preparation(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+async def test_pending_view_puts_kept_offers_with_preparation(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    await add(runtime, 20, "Récente", ["jobup"])
+    await add(runtime, 15, "Gardée", ["jobup"], status=OfferStatus.LATER)
+    await add(runtime, 14, "En préparation", ["jobup"], status=OfferStatus.PREPARING)
+    params = {"view": "pending", "sort": "recent"}
+    plain = [o["title"] for o in (await api.get("/api/offers", params=params)).json()["items"]]
+    assert plain[0] == "En préparation" and plain.index("Récente") < plain.index("Gardée")
+    first = await api.get("/api/offers", params={**params, "kept_first": True})
+    titles_ = [o["title"] for o in first.json()["items"]]
+    assert set(titles_[:2]) == {"Gardée", "En préparation"} and "Récente" in titles_[2:]
+
+
 async def test_pending_view_can_show_filtered_out(api: AsyncClient, runtime: Runtime) -> None:
     """« Masquer les offres écartées » coupé : À traiter les montre aussi (docs/139, C2)."""
     await add(runtime, 13, "Écartée", ["jobup"], status=OfferStatus.FILTERED_OUT)

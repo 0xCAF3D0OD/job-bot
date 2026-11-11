@@ -1,0 +1,1 @@
+Une offre gardée porte l’étiquette « Gardée » (l’ancien « Plus tard », renommé partout) ; dans Candidatures, les étiquettes passent sous le logo sur une seule ligne, avec « +k » quand elles débordent, et le bouton du bas dit seulement « Afficher 20 offres de plus »

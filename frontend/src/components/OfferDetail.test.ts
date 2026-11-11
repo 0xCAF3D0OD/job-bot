@@ -250,7 +250,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(head.find("[data-test=back-detail]").attributes("aria-label")).toBe("Retour aux candidatures");
     await head.find("[data-test=back-detail]").trigger("click");
     expect(wrapper.emitted("close")).toHaveLength(1);
-    // Le signet est l'état « Plus tard » (O2).
+    // Le signet est l'état « Gardée » (O2, PR 46).
     const save = head.find("[data-test=offer-save]");
     expect(save.attributes("aria-pressed")).toBe("false");
     await save.trigger("click");
@@ -298,11 +298,13 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("le signet est plein pour une offre gardée pour plus tard ; un clic la remet à examiner", async () => {
+  it("le signet est plein pour une offre gardée ; un clic la remet à examiner", async () => {
     phone();
     const wrapper = await mountDetail(offer({ status: "later" }));
     const save = wrapper.find("[data-test=offer-save]");
     expect(save.attributes("aria-pressed")).toBe("true");
+    // Le libellé et le nom accessible du signet : « Garder » (PR 46), plus « Garder pour plus tard ».
+    expect([save.attributes("aria-label"), save.attributes("data-label")]).toEqual(["Garder", "Garder"]);
     await save.trigger("click");
     expect(wrapper.emitted("status")?.[0]).toEqual(["to_review"]);
     vi.unstubAllGlobals();
@@ -339,7 +341,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » : Écarter, J’ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
+  it("la feuille « ⋯ » : Écarter, J’ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Garder »", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
@@ -348,7 +350,7 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(titles.slice(0, 2)).toEqual(["Écarter l’offre", "J’ai déjà postulé"]);
     expect(titles).toContain("Signaler comme expirée");
     expect(titles).toContain("Cette note ne me correspond pas");
-    expect(titles).not.toContain("Plus tard");
+    expect(titles).not.toContain("Garder");
     await sheet.find("[data-test=offer-action-score-correction-menu] button").trigger("click");
     expect(wrapper.find("[data-test=score-correction-sheet] .score-correction-card.bare").exists()).toBe(true);
     vi.unstubAllGlobals();

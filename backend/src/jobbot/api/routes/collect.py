@@ -628,6 +628,7 @@ async def list_offers(
     with_filtered_out: bool = False,
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
+    kept_first: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -662,7 +663,10 @@ async def list_offers(
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
     if view == "pending":
         # À traiter : les offres en préparation d'abord (docs/139, C2), puis l'ordre du tri.
-        first: ColumnElement[Any] = case((Offer.status == OfferStatus.PREPARING, 0), else_=1)
+        # `kept_first` (ordinateur, lot du 11 novembre au soir, PR 46) : les offres gardées avec
+        # elles, sous le même titre « En préparation ».
+        ahead = (OfferStatus.PREPARING, *((OfferStatus.LATER,) if kept_first else ()))
+        first: ColumnElement[Any] = case((Offer.status.in_(ahead), 0), else_=1)
         order = (first, *order)
     conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful)
     # Sans le filtre de note : base de la courbe des notes.

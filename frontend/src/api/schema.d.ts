@@ -11611,6 +11611,7 @@ export interface operations {
                 with_filtered_out?: boolean;
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
+                kept_first?: boolean;
             };
             header?: never;
             path?: never;
