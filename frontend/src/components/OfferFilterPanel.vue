@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { DEFAULT_FILTERS, type OfferFilters, type Sort, type View } from "../composables/useOfferFilters";
+import type { OfferFacets } from "../api/client";
+import { basisChoices, DEFAULT_FILTERS, radioKey, type OfferFilters, type Sort, type View } from "../composables/useOfferFilters";
 import AppIcon from "./AppIcon.vue";
 
 // Le panneau « Filtres » de l'ordinateur (maquette du 8 novembre, CandidaturesOrdinateurB état « filtres », docs/143,
@@ -9,7 +10,11 @@ import AppIcon from "./AppIcon.vue";
 // En tête, « ‹ Retour à la liste » et le titre. Les choix restent si on le ferme d'un clic à l'extérieur. Statut, Trier, Correspondance minimale et Taux minimum en pastilles (aria-pressed), puis le
 // télétravail et les offres écartées. Seul le milieu défile ; le pied reste en bas avec « Tout effacer » et
 // « Afficher n offres », qui referme. Chaque choix s'applique tout de suite (comme la feuille du téléphone).
-const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>; total: number }>();
+const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>; facets: OfferFacets; total: number }>();
+// « Note » (prompt du 10 novembre au soir, PR 26 ; filtres de CandidaturesOrdinateurB) : Toutes, Sûres · n,
+// Provisoires · n, un seul choix (role="radio"), avec les nombres du serveur. La phrase d'explication n'est que dans la
+// feuille du téléphone, comme dans les maquettes.
+const bases = computed(() => basisChoices(props.facets));
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
 const VIEWS: { label: string; value: View }[] = [
@@ -131,6 +136,28 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         </div>
       </div>
       <hr>
+      <div class="filter-panel-group">
+        <span id="pop-basis">Note</span>
+        <div
+          role="radiogroup"
+          aria-labelledby="pop-basis"
+          @keydown="radioKey"
+        >
+          <button
+            v-for="choice in bases"
+            :key="choice.value ?? 'all'"
+            type="button"
+            role="radio"
+            :aria-checked="filters.basis === choice.value"
+            :tabindex="filters.basis === choice.value ? 0 : -1"
+            :data-test="`pop-basis-${choice.value ?? 'all'}`"
+            @click="emit('update', { basis: choice.value })"
+          >
+            {{ choice.label }}
+          </button>
+        </div>
+      </div>
+      <hr>
       <div
         class="filter-panel-group"
         role="group"
@@ -215,7 +242,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
   height: var(--pop-pill); min-height: 0; padding: 0 var(--pop-14); border: 1.5px solid color-mix(in srgb, var(--line) 90%, var(--text-secondary));
   border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold);
 }
-.filter-panel-group button[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
+.filter-panel-group button:is([aria-pressed="true"], [aria-checked="true"]) { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .filter-panel-switch {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--btn-tertiary);
   font-size: var(--pop-15); font-weight: var(--weight-semibold);

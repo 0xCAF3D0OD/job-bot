@@ -2,7 +2,8 @@
 import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
-import type { OfferFilters, Sort } from "../composables/useOfferFilters";
+import { BASIS_HELP, basisChoices, radioKey, type OfferFilters, type Sort } from "../composables/useOfferFilters";
+import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
@@ -15,6 +16,10 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
+
+// « Note » (prompt du 10 novembre au soir, PR 26 ; maquette Filtres) : Toutes, Sûres · n, Provisoires · n, un seul
+// choix (role="radio"), les nombres du serveur, et la phrase qui dit ce qu'est une note provisoire.
+const bases = computed(() => basisChoices(props.facets));
 
 // La correspondance avec les mots de la note (D3), pas en chiffres.
 const SCORES: { label: string; min: number | null }[] = [
@@ -76,6 +81,42 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             {{ choice.label }}
           </button>
         </div>
+      </div>
+
+      <div class="filter-choices">
+        <h3 id="sheet-basis-title">
+          Note
+        </h3>
+        <div
+          class="filter-choices-row"
+          role="radiogroup"
+          aria-labelledby="sheet-basis-title"
+          aria-describedby="sheet-basis-help"
+          @keydown="radioKey"
+        >
+          <button
+            v-for="choice in bases"
+            :key="choice.value ?? 'all'"
+            type="button"
+            class="filter-choice"
+            role="radio"
+            :aria-checked="filters.basis === choice.value"
+            :tabindex="filters.basis === choice.value ? 0 : -1"
+            :data-test="`sheet-basis-${choice.value ?? 'all'}`"
+            @click="emit('update', { basis: choice.value })"
+          >
+            <AppIcon
+              v-if="filters.basis === choice.value"
+              name="tick"
+            />{{ choice.label }}
+          </button>
+        </div>
+        <p
+          id="sheet-basis-help"
+          class="filter-choices-help"
+        >
+          {{ BASIS_HELP }}
+        </p>
       </div>
 
       <div class="filter-choices">

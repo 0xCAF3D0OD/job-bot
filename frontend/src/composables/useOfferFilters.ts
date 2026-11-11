@@ -10,6 +10,10 @@ export type Sort = "day" | "recent" | "popular" | "score" | "activity";
 // Télétravail (docs/26 §4) : au moins partiel, ou complet.
 export type Remote = "partial" | "full";
 
+// Filtre « Note » (prompt du 10 novembre au soir, PR 26) : notée sur l'annonce complète (sûre) ou sur l'extrait de
+// l'alerte seulement (provisoire).
+export type Basis = "sure" | "provisional";
+
 export interface OfferFilters {
   view: View;
   sort: Sort;
@@ -29,6 +33,8 @@ export interface OfferFilters {
   showFilteredOut: boolean;
   // À traiter avec les offres expirées (« Afficher aussi › Expirées », docs/139 5e), ?expirees=montrer.
   showExpired: boolean;
+  // Notes sûres ou provisoires seulement, ?base=sure ou ?base=provisoire ; null : toutes.
+  basis: Basis | null;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -47,6 +53,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   hideDoubtful: false,
   showFilteredOut: false,
   showExpired: false,
+  basis: null,
 };
 
 const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -83,6 +90,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     hideDoubtful: one(query.verifier) === "masquer",
     showFilteredOut: one(query.ecartees) === "montrer",
     showExpired: one(query.expirees) === "montrer",
+    basis: one(query.base) === "sure" ? "sure" : one(query.base) === "provisoire" ? "provisional" : null,
   };
 }
 
@@ -102,6 +110,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.hideDoubtful) query.verifier = "masquer";
   if (filters.showFilteredOut) query.ecartees = "montrer";
   if (filters.showExpired) query.expirees = "montrer";
+  if (filters.basis) query.base = filters.basis === "sure" ? "sure" : "provisoire";
   return query;
 }
 
@@ -117,7 +126,8 @@ export function activeCount(filters: OfferFilters): number {
     (filters.remote ? 1 : 0) +
     (filters.hideDoubtful ? 1 : 0) +
     (filters.showFilteredOut ? 1 : 0) +
-    (filters.showExpired ? 1 : 0)
+    (filters.showExpired ? 1 : 0) +
+    (filters.basis ? 1 : 0)
   );
 }
 
@@ -128,6 +138,28 @@ export const SCORE_CHOICES = [
   { label: "Proche et plus", min: 70 },
   { label: "Très proche", min: 85 },
 ] as const;
+
+/** Les trois choix du groupe « Note », avec les nombres réels du serveur (hors « Toutes »). */
+export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null }[] {
+  return [
+    { label: "Toutes", value: null },
+    { label: `Sûres · ${facets.sure ?? 0}`, value: "sure" },
+    { label: `Provisoires · ${facets.provisional ?? 0}`, value: "provisional" },
+  ];
+}
+export const BASIS_HELP = "Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.";
+
+/** Les flèches d'un groupe de boutons radio : le choix suit le focus (WAI-ARIA, radiogroup). */
+export function radioKey(event: KeyboardEvent): void {
+  const step = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
+  if (!step) return;
+  const radios = Array.from((event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>("[role=radio]"));
+  const next = radios[(radios.indexOf(event.target as HTMLElement) + step + radios.length) % radios.length];
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
+  next.click();
+}
 
 /** La note filtrée en mots ; une adresse d'avant (?note=60-90) garde ses bornes. */
 export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">): string {
@@ -147,6 +179,8 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
   const chips: FilterChip[] = [];
   if (filters.minScore !== null || filters.maxScore !== null)
     chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
+  if (filters.basis)
+    chips.push({ key: "basis", label: filters.basis === "sure" ? "Notes sûres" : "Notes provisoires", patch: { basis: null } });
   if (filters.remote)
     chips.push({
       key: "remote",

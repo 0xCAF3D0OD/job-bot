@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, type OfferFilters } from "../composables/useOfferFilters";
 import OfferFilterSheet from "./OfferFilterSheet.vue";
 
-const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores: [], unscored: 0 };
+const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores: [], unscored: 0, sure: 104, provisional: 312 };
 
 function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
   return mount(OfferFilterSheet, {
@@ -66,5 +66,22 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.find("[data-test=sheet-reset]").text()).toBe("Tout effacer");
     await wrapper.find("[data-test=sheet-reset]").trigger("click");
     expect(wrapper.emitted("reset")).toHaveLength(1);
+  });
+
+  it("groupe « Note » (PR 26) : Toutes, Sûres · n, Provisoires · n en boutons radio, la phrase dessous, un seul choix", async () => {
+    const wrapper = mountSheet();
+    const group = wrapper.find("[role=radiogroup][aria-labelledby=sheet-basis-title]");
+    expect(wrapper.find("#sheet-basis-title").text()).toBe("Note");
+    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes", "Sûres · 104", "Provisoires · 312"]);
+    expect(group.find("[data-test=sheet-basis-all]").attributes("aria-checked")).toBe("true");
+    expect(group.find("[data-test=sheet-basis-all] svg").exists()).toBe(true);
+    expect(group.find("[data-test=sheet-basis-sure]").attributes("aria-checked")).toBe("false");
+    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.");
+    await group.find("[data-test=sheet-basis-provisional]").trigger("click");
+    expect(wrapper.emitted("update")).toEqual([[{ basis: "provisional" }]]);
+    const chosen = mountSheet({ basis: "provisional" });
+    expect(chosen.findAll("[role=radiogroup][aria-labelledby=sheet-basis-title] [aria-checked=true]").map((b) => b.text())).toEqual(["Provisoires · 312"]);
+    // Un seul arrêt de tabulation dans le groupe : le choix coché.
+    expect(chosen.findAll("[data-test^=sheet-basis][tabindex='0']")).toHaveLength(1);
   });
 });
