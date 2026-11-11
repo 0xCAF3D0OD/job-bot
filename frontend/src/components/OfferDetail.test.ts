@@ -157,10 +157,10 @@ describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
     await wrapper.find("[data-test=read-more]").trigger("click");
     expect(wrapper.find("[data-test=description]").exists()).toBe(true);
     expect(wrapper.find("[data-test=read-more]").exists()).toBe(false);
-    // L'entreprise et les contacts, repliés, avec leur résumé (règles §3.4) ; plus de « Contacts » dans ⋯ (O9).
+    // L’entreprise en champs ouverts (PR 33, point 4), les contacts repliés (règles §3.4) ; plus de « Contacts » dans ⋯ (O9).
     const rows = wrapper.findAll(".detail-disclosure > .disclosure-row");
-    expect(rows.map((r) => r.attributes("aria-expanded"))).toEqual(["false", "false"]);
-    expect(wrapper.find("[data-test=company-section] .disclosure-value").text()).toBe("Exemple SA");
+    expect(rows.map((r) => r.attributes("aria-expanded"))).toEqual(["false"]);
+    expect(wrapper.find("[data-test=company-section] .block-field-value").text()).toBe("Exemple SA");
     expect(wrapper.find("[data-test=contacts-section]").exists()).toBe(true);
     expect(wrapper.text()).not.toMatch(/fois, depuis le/);
   });
@@ -174,9 +174,14 @@ describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
 });
 
 describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
-  it("l’adresse dans la partie Entreprise, les actions dans son « ⋯ », « Adresse inconnue · Ajouter »", async () => {
+  it("l’adresse dans la partie Entreprise, les actions dans son « ⋯ », « Non renseignée » et « Compléter »", async () => {
     const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
-    expect(known.find("[data-test=address] dd").text()).toContain("Rue 1, 1201 Genève");
+    // PR 33 (4) : le libellé au-dessus, la valeur en gras dessous, copier à droite ; ni bandeau ni ligne repliable.
+    expect(known.find("[data-test=company-section] .disclosure-row").exists()).toBe(false);
+    expect(known.find("[data-test=company-section] h3").text()).toBe("L’entreprise");
+    expect(known.find("[data-test=address] .block-field-label").text()).toBe("Adresse");
+    expect(known.find("[data-test=address] .block-field-value").text()).toBe("Rue 1, 1201 Genève");
+    expect(known.find("[data-test=address] [data-test=address-copy]").exists()).toBe(true);
     expect(known.find("[data-test=add-address]").exists()).toBe(false);
     const section = known.find("[data-test=company-section]");
     await section.find("[data-test=company-more]").trigger("click");
@@ -184,7 +189,8 @@ describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
     expect(labels).toEqual(["Modifier l’adresse", "Chercher l’adresse", "Chercher l’offre chez l’employeur"]);
 
     const missing = await mountDetail(offer());
-    expect(missing.find("[data-test=address] dd").text().replace(/\s+/g, " ")).toBe("Adresse inconnue · Ajouter");
+    expect(missing.find("[data-test=address] .block-field-value").text()).toBe("Non renseignée");
+    expect(missing.find("[data-test=add-address]").text()).toBe("Compléter");
     await missing.find("[data-test=add-address]").trigger("click");
     expect(missing.find("[data-test=address-input]").exists()).toBe(true);
   });

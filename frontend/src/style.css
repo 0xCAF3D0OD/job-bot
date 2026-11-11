@@ -2854,6 +2854,14 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .detail-post .offer-facts span { padding: 0; background: none; border-radius: 0; font-size: inherit; font-weight: inherit; color: inherit; }
 .detail-post .offer-facts .fact-mark { padding-top: var(--space-1); }
 .detail-more-rows { display: grid; }
+/* Le bloc « L’entreprise » de la fiche d'une offre (récapitulatif du 11 novembre, PR 33 point 4) : des champs à
+   libellé au-dessus (blocks.css), sans bandeau. */
+.offer-company { --block-cap: 13px; --block-cap-lh: 18px; --block-cap-gap: 0; --field-pad: 14px; --field-label-lh: 18px; --field-value-lh: 22px; }
+.offer-company-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--target-min); border-bottom: 1px solid var(--line-soft); }
+.offer-company-head + .block-field { border-top: 0; }
+.offer-company-contacts { margin-top: var(--space-4); }
+.offer-company .block-field .hint { margin-top: calc(var(--space-1) / 2); }
+button.link.offer-company-add { flex: none; min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .detail-rows { margin: 0; display: grid; }
 .detail-rows > div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--divider); line-height: var(--leading-normal); }
 .detail-rows > div:first-child { border-top: 0; }

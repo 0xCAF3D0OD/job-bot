@@ -14,7 +14,10 @@ import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import DetailTwoColumns from "./DetailTwoColumns.vue";
+import CopyButton from "./CopyButton.vue";
+import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import "../blocks.css";
 import OfferActionSheet from "./OfferActionSheet.vue";
 import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
@@ -1059,73 +1062,101 @@ watch(
         </section>
 
         <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
-        <div :class="['detail-more-rows', 'disclosure-list', { 'detail-section': columns }]">
-          <DisclosureRow
-            title="Entreprise"
-            :value="offer.company ?? ''"
-            class="detail-disclosure"
+        <div :class="['detail-more-rows', { 'detail-section': columns }]">
+          <!-- Récapitulatif du 11 novembre, PR 33 point 4 (cible_entreprise) : plus de bandeau bleu ni de ligne
+               repliable ; le libellé gris au-dessus, la valeur en gras dessous, le bouton copier à droite. -->
+          <section
+            class="offer-company"
+            aria-labelledby="offer-company-title"
             data-test="company-section"
           >
-            <template
-              v-if="companyItems.length"
-              #actions
-            >
+            <div class="offer-company-head">
+              <h3
+                id="offer-company-title"
+                class="block-cap"
+              >
+                L’entreprise
+              </h3>
               <MoreMenu
+                v-if="companyItems.length"
                 class="section-more"
                 :items="companyItems"
                 label="Plus d’actions sur l’entreprise"
                 test-id="company-more"
               />
-            </template>
-            <dl class="detail-rows">
-              <div data-test="address">
-                <dt>Adresse</dt>
-                <dd v-if="editingAddress">
-                  <form
-                    class="address-form"
-                    @submit.prevent="saveAddress"
-                  >
-                    <textarea
-                      v-model="addressDraft"
-                      rows="2"
-                      placeholder="Rue et numéro&#10;NPA localité"
-                      aria-label="Adresse de l’entreprise"
-                      data-test="address-input"
-                    />
-                    <div>
-                      <button
-                        type="submit"
-                        class="secondary small"
-                        data-test="save-address"
-                      >
-                        Enregistrer
-                      </button>
-                      <button
-                        type="button"
-                        class="link"
-                        @click="editingAddress = false"
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  </form>
-                </dd>
-                <dd v-else-if="offer.company_address">
-                  {{ offer.company_address.split("\n").join(", ") }}
-                  <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
-                </dd>
-                <dd v-else>
-                  Adresse inconnue · <button
-                    type="button"
-                    class="link"
-                    data-test="add-address"
-                    @click="startAddress"
-                  >
-                    Ajouter
-                  </button>
-                </dd>
+            </div>
+            <CopyField
+              label="Nom"
+              :value="offer.company ?? ''"
+            />
+            <div
+              class="block-field"
+              data-test="address"
+            >
+              <div class="block-field-text">
+                <div class="block-field-label">
+                  Adresse
+                </div>
+                <form
+                  v-if="editingAddress"
+                  class="address-form"
+                  @submit.prevent="saveAddress"
+                >
+                  <textarea
+                    v-model="addressDraft"
+                    rows="2"
+                    placeholder="Rue et numéro&#10;NPA localité"
+                    aria-label="Adresse de l’entreprise"
+                    data-test="address-input"
+                  />
+                  <div>
+                    <button
+                      type="submit"
+                      class="secondary small"
+                      data-test="save-address"
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      type="button"
+                      class="link"
+                      @click="editingAddress = false"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+                <template v-else-if="offer.company_address">
+                  <div class="block-field-value">
+                    {{ offer.company_address.split("\n").join(", ") }}
+                  </div>
+                  <div class="hint">
+                    {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
+                  </div>
+                </template>
+                <div
+                  v-else
+                  class="block-field-value block-field-none"
+                >
+                  Non renseignée
+                </div>
               </div>
-            </dl>
+              <CopyButton
+                v-if="offer.company_address && !editingAddress"
+                :value="offer.company_address.split('\n').join(', ')"
+                label="Copier : adresse"
+                test-id="address-copy"
+              />
+              <button
+                v-else-if="!editingAddress"
+                type="button"
+                class="link offer-company-add"
+                data-test="add-address"
+                @click="startAddress"
+              >
+                Compléter
+              </button>
+            </div>
             <p
               v-if="searching"
               class="hint"
@@ -1185,22 +1216,26 @@ watch(
                 role="status"
               >{{ employerMessage }}</span>
             </p>
-          </DisclosureRow>
-          <DisclosureRow
+          </section>
+          <div
             v-if="offer.company"
-            id="contacts"
-            title="Contacts"
-            :value="contactsCount ? String(contactsCount) : ''"
-            :start-open="toContacts"
-            class="detail-disclosure"
-            data-test="contacts-section"
+            class="disclosure-list offer-company-contacts"
           >
-            <ContactsPanel
-              :key="offer.id"
-              :offer-id="offer.id"
-              @count="contactsCount = $event"
-            />
-          </DisclosureRow>
+            <DisclosureRow
+              id="contacts"
+              title="Contacts"
+              :value="contactsCount ? String(contactsCount) : ''"
+              :start-open="toContacts"
+              class="detail-disclosure"
+              data-test="contacts-section"
+            >
+              <ContactsPanel
+                :key="offer.id"
+                :offer-id="offer.id"
+                @count="contactsCount = $event"
+              />
+            </DisclosureRow>
+          </div>
         </div>
       </template>
       <template #aside>
