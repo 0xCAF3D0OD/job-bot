@@ -524,3 +524,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.310 | Budget de poids : le JavaScript, le CSS et les images mesurés bruts, en gzip et en brotli, page par page (Accueil, Candidatures, Bilan, Compte) ; limites à la taille du jour + 5 %, vérifiées à chaque PR ; illustrations en WebP seulement ; mesure du CSS inutilisé (make css-inutilise) ; tout dans docs/performance.md. | livrée |
 | 1.6.311 | Compte et menu « Mon compte » : une icône à contour de 24 px avant chaque ligne (maquettes Compte du 10 novembre), aussi sous Réglages › Recherche et outils ; « Ce qui part à l’IA » devient « L’IA et tes données ». | livrée |
 | 1.6.312 | Aujourd’hui : « Relire ton CV » en tête de « À faire » tant que le CV n’a jamais été lu | livrée |
+| 1.6.313 | Mon CV : un CV redéposé dit s’il est nouveau, déjà lu ou jamais lu, avec « Relire », « Plus tard » ou « Fermer » | livrée |
+| 1.6.314 | Bas de la liste des offres sur téléphone : « Afficher 20 offres de plus · n restantes » en bouton (20 par appui, focus sur la première nouvelle offre), puis le groupe « Autres offres » (Loin de ton profil, Expirées, Postuler spontanément). | livrée |
