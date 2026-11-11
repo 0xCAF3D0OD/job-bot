@@ -690,6 +690,10 @@ textarea { padding: var(--field-pad-y) var(--field-pad-x); border-radius: var(--
    (padding-right de select) n'est jamais écrasée : aucune règle de page ne fixe le padding d'un champ. */
 :is(input, select).field-compact { min-height: var(--control-h); height: var(--control-h); padding-block: 0; font-size: var(--font-small); }
 select.field-compact { padding-left: var(--space-4); border-radius: var(--radius-pill); }
+/* Contrôle final du 11 novembre (PR 43) : dans un panneau ou un formulaire, aucun champ ovale (rayon de 20 px ou
+   plus) ; les champs, les listes et les zones de texte y ont les coins de 12 des maquettes. La capsule reste aux
+   barres d'outils (tri, filtres) et aux recherches. `:where` : une règle de page garde le dernier mot. */
+:where(dialog, form, [role="dialog"], .side-panel) :is(input:not([type="search"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]), select, textarea):not(:where(.composer *)) { border-radius: var(--ff-radius); }
 /* Liste : la même boîte, le chevron de notre jeu d'icônes à droite. */
 /* `:root select` : au moins aussi fort que la règle commune des champs, pour que son `padding` n'écrase jamais la place du chevron. */
 :root select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
@@ -5067,7 +5071,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-day-picked, .dt-day-picked:hover:not(:disabled) { background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); box-shadow: none; }
 .dt-typed { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
 .dt-typed label { font-size: var(--label-caps); color: var(--text-secondary); white-space: nowrap; }
-.dt-typed .dt-typed-input { flex: 1; min-width: 0; height: 36px; min-height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); font-size: var(--font-label); }
+.dt-typed .dt-typed-input { flex: 1; min-width: 0; height: 36px; min-height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--field-border); border-radius: var(--radius-sm); background: var(--surface); font-size: var(--font-label); }
 .dt-time-title { font-size: var(--font-small); font-weight: var(--weight-bold); }
 .dt-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
 .dt-slot { justify-content: center; height: 40px; min-height: 40px; padding: 0; border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
