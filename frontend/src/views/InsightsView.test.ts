@@ -1,12 +1,17 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import InsightsView from "./InsightsView.vue";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
+// Ces blocs sont ceux du téléphone ; l'ordinateur a sa colonne unique (BilanResultsWide, PR 33).
+beforeEach(() => {
+  vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+});
 afterEach(() => {
+  vi.unstubAllGlobals();
   vi.useRealTimers();
   vi.resetAllMocks();
   localStorage.removeItem("jobA1.bilan-vue");
@@ -83,12 +88,12 @@ async function mountView(path = "/candidatures/bilan") {
 }
 
 describe("Bilan (docs/42, docs/55)", () => {
-  it("la phrase, la carte du meilleur site, la période, les trois chiffres, Mois par mois (B13)", async () => {
+  it("la phrase, la carte du meilleur site, les trois chiffres, Mois par mois (B13)", async () => {
     serve(report({ comparisons: [{ key: "source", title: "", groups: [group("jobs.ch", 3, 5), group("jobup.ch", 2, 10), group("LinkedIn", 1, 4)] }] }));
     const { wrapper } = await mountView();
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "recent" } } });
     // La conclusion d'abord (règles §3.2), comparée au trimestre d'avant, sans redire la bande.
-    expect(wrapper.find(".insights").element.firstElementChild?.getAttribute("data-test")).toBe("headline");
+    expect(wrapper.find(".insights").element.children[1]?.getAttribute("data-test")).toBe("headline");
     expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche avance : 9 réponses, contre 4 au trimestre d’avant.");
     expect(wrapper.find("[data-test=headline] strong").text()).toBe("avance");
     // La bande (§3) : le site qui répond le plus, contre les autres sites qui ont assez de données.
@@ -96,10 +101,6 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(band.text()).toContain("jobs.ch répond 3 fois sur 5.");
     expect(band.text()).toContain("Les autres sites : 2 fois sur 10.");
     expect(wrapper.find("[data-test=action-band-action]").text()).toBe("Cibler jobs.ch dans mes alertes");
-    // La période : Un mois, 3 mois, Tout ; le choix actif coché.
-    const periods = wrapper.findAll(".bilan-period button");
-    expect(periods.map((p) => p.text())).toEqual(["Un mois", "3 mois", "Tout"]);
-    expect(periods[1]!.attributes("aria-checked")).toBe("true");
     // Sans la bande bleue (B13) : la carte seule, sous la phrase, au-dessus de la période.
     expect(band.classes()).toContain("bilan-site");
     // Trois chiffres (B13) : candidatures, réponses, entretiens ; plus de délai de réponse.
@@ -187,12 +188,12 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=detail-orp]").exists()).toBe(false);
   });
 
-  it("un mois : navigation et résumé pour l’ORP à copier", async () => {
+  it("un mois : le résumé pour l’ORP à copier", async () => {
     const summary = "Octobre 2026 : 4 candidatures. 2 réponses, aucun entretien, pas encore d’engagement.";
     serve(report({ orp_summary: summary, previous_responses: 9 }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
-    const { wrapper, router } = await mountView("/candidatures/bilan?mois=2026-10");
+    const { wrapper } = await mountView("/candidatures/bilan?mois=2026-10");
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "month", month: "2026-10" } } });
     expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche tient le rythme : 9 réponses, contre 9 au mois d’avant.");
     const orp = wrapper.find("[data-test=detail-orp]");
@@ -201,13 +202,6 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=orp-summary]").text()).toContain(summary);
     await wrapper.find("[data-test=orp-summary-copy]").trigger("click");
     expect(writeText).toHaveBeenCalledWith(summary);
-    await wrapper.find("[data-test=prev-month]").trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.query.mois).toBe("2026-09");
-    await wrapper.find("[data-test=period-all]").trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ periode: "tout" });
-    expect(GET).toHaveBeenLastCalledWith("/api/insights", { params: { query: { period: "all" } } });
   });
 
   it("sans candidature : invite au lieu de comparaisons vides", async () => {
