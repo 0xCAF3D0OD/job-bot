@@ -267,14 +267,13 @@ onMounted(async () => {
         v-slot="{ id, describedby, invalid }"
         label="Domaine"
         optional
-        hint="Mots-clés séparés par des virgules."
+        hint="Mots-clés séparés par des virgules. Ex. : soins, infirmière, hôpital, EMS"
       >
         <input
           :id="id"
           v-model="form.keywords"
           type="text"
           maxlength="600"
-          placeholder="soins, infirmière, hôpital, EMS"
           :aria-describedby="describedby"
           :aria-invalid="invalid"
           data-test="profile-keywords"

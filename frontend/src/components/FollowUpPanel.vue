@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
@@ -96,19 +97,31 @@ async function markDone(): Promise<void> {
       >
         Modèle simple, sans IA ({{ reason }}).
       </p>
-      <label class="follow-up-field">Objet
+      <FormField
+        v-slot="f"
+        class="follow-up-field"
+        label="Objet"
+      >
         <input
+          :id="f.id"
           v-model="subject"
+          :aria-describedby="f.describedby"
           data-test="follow-up-subject"
         >
-      </label>
-      <label class="follow-up-field">Message
+      </FormField>
+      <FormField
+        v-slot="f"
+        class="follow-up-field"
+        label="Message"
+      >
         <textarea
+          :id="f.id"
           v-model="text"
+          :aria-describedby="f.describedby"
           rows="9"
           data-test="follow-up-text"
         />
-      </label>
+      </FormField>
       <div class="follow-up-actions">
         <a
           v-if="mailto"

@@ -126,13 +126,13 @@ async function save(): Promise<void> {
       v-slot="{ id, describedby, invalid }"
       label="Lieu ou lien"
       optional
+      hint="Ex. : ORP Renens, rue de Lausanne 35"
     >
       <input
         :id="id"
         v-model="place"
         type="text"
         maxlength="200"
-        placeholder="Ex. : ORP Renens, rue de Lausanne 35"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
         data-test="meeting-place"

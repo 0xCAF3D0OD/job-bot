@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, reactive, ref } from "vue";
 
 import { api, type Training } from "../api/client";
@@ -317,11 +318,15 @@ const today = todayDay();
         </div>
       </div>
       <!-- B19 : avec un nombre de modules, le compteur de la carte Suivies ; sans, le texte libre. -->
-      <label
+      <FormField
         v-if="training.mark && training.mark.status !== 'done'"
+        v-slot="f"
         class="training-field"
-      ><span>Nombre de modules<span class="form-field-optional"> (facultatif)</span></span>
+        label="Nombre de modules"
+        optional
+      >
         <input
+          :id="f.id"
           type="number"
           inputmode="numeric"
           min="1"
@@ -330,20 +335,25 @@ const today = todayDay();
           data-test="modules-total"
           @change="setTotal(inputValue($event))"
         >
-      </label>
-      <label
+      </FormField>
+      <FormField
         v-if="training.mark?.status === 'in_progress' && !training.mark.modules_total"
+        v-slot="f"
         class="training-field"
-      >Progression
+        label="Progression"
+        hint="Ex. : module 4/12"
+      >
         <input
+          :id="f.id"
+          :aria-describedby="f.describedby"
           type="text"
           maxlength="80"
-          placeholder="module 4/12"
+         
           :value="training.mark.progress ?? ''"
           data-test="progress"
           @change="emit('mark', 'in_progress', { progress: inputValue($event) })"
         >
-      </label>
+      </FormField>
       <div
         v-if="training.mark?.status === 'done'"
         class="training-field"
@@ -491,29 +501,44 @@ const today = todayDay();
           data-test="block-form"
           @submit.prevent="save"
         >
-          <label>Titre du bloc
+          <FormField
+            v-slot="f"
+            label="Titre du bloc"
+          >
             <input
+              :id="f.id"
               v-model="block.title"
+              :aria-describedby="f.describedby"
               maxlength="200"
               required
               data-test="block-title"
             >
-          </label>
-          <label>Texte
+          </FormField>
+          <FormField
+            v-slot="f"
+            label="Texte"
+          >
             <textarea
+              :id="f.id"
               v-model="block.content"
+              :aria-describedby="f.describedby"
               rows="4"
               maxlength="20000"
               required
               data-test="block-content"
             />
-          </label>
-          <label>Mots-clés (séparés par des virgules)
+          </FormField>
+          <FormField
+            v-slot="f"
+            label="Mots-clés (séparés par des virgules)"
+          >
             <input
+              :id="f.id"
               v-model="block.tags"
+              :aria-describedby="f.describedby"
               data-test="block-tags"
             >
-          </label>
+          </FormField>
           <p
             v-if="error"
             class="notice error"

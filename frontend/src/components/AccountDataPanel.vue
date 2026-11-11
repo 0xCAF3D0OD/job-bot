@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -183,16 +184,21 @@ async function remove(): Promise<void> {
         @confirm="download"
         @cancel="exporting = false"
       >
-        <label class="account-delete-password">
-          Ton mot de passe pour confirmer
+        <FormField
+          v-slot="f"
+          class="account-delete-password"
+          label="Ton mot de passe pour confirmer"
+        >
           <input
+            :id="f.id"
             v-model="exportPassword"
+            :aria-describedby="f.describedby"
             type="password"
             autocomplete="current-password"
             required
             data-test="export-password"
           >
-        </label>
+        </FormField>
         <p
           v-if="exportError"
           class="notice"
@@ -244,17 +250,22 @@ async function remove(): Promise<void> {
           Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta
           feuille ORP avant.
         </p>
-        <label class="account-delete-password">
-          Ton mot de passe pour confirmer
+        <FormField
+          v-slot="f"
+          class="account-delete-password"
+          label="Ton mot de passe pour confirmer"
+        >
           <input
+            :id="f.id"
             ref="passwordInput"
             v-model="password"
+            :aria-describedby="f.describedby"
             type="password"
             autocomplete="current-password"
             required
             data-test="delete-password"
           >
-        </label>
+        </FormField>
         <p
           v-if="error"
           class="notice"

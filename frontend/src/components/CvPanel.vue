@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -852,28 +853,44 @@ onMounted(() => void load());
         <h2>
           {{ selected ? "Nouvelle version" : "Préparer le CV" }}
         </h2>
-        <label>Langue du titre et du résumé
+        <FormField
+          v-slot="f"
+          label="Langue du titre et du résumé"
+        >
           <select
+            :id="f.id"
             v-model="language"
+            :aria-describedby="f.describedby"
             data-test="cv-language"
           >
-            <option value="">Celle de l’annonce</option>
+            <option value="">
+              Celle de l’annonce
+            </option>
             <option
               v-for="(label, code) in LANGUAGES"
               :key="code"
               :value="code"
-            >{{ label }}</option>
+            >
+              {{ label }}
+            </option>
           </select>
-        </label>
-        <label v-if="selected">Consigne (facultative)
+        </FormField>
+        <FormField
+          v-if="selected"
+          v-slot="f"
+          label="Consigne (facultative)"
+          hint="Ex. : mets le projet personnel en premier…"
+        >
           <textarea
+            :id="f.id"
             v-model="instruction"
+            :aria-describedby="f.describedby"
             rows="2"
             maxlength="500"
-            placeholder="mets le projet personnel en premier…"
+           
             data-test="cv-instruction"
           />
-        </label>
+        </FormField>
         <div class="mobile-dock">
           <BusyButton
             :class="primary ? 'primary action-1' : 'secondary action-2'"

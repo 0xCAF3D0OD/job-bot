@@ -332,13 +332,14 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
             label="LinkedIn"
             optional
             :error="errors.linkedin"
+          
+            hint="Ex. : linkedin.com/in/…"
           >
             <input
               :id="id"
               v-model="identity.linkedin"
               type="text"
               inputmode="url"
-              placeholder="linkedin.com/in/…"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
               data-test="identity-linkedin"
@@ -368,12 +369,12 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
             v-slot="{ id, describedby, invalid }"
             label="Disponibilité"
             optional
+            hint="Ex. : dès le 1er novembre, 1 mois de préavis…"
           >
             <input
               :id="id"
               v-model="identity.availability"
               type="text"
-              placeholder="dès le 1er novembre, 1 mois de préavis…"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             >
@@ -383,12 +384,13 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
             label="Prétentions salariales"
             optional
             :width="20"
+          
+            hint="Ex. : CHF 90'000 par an"
           >
             <input
               :id="id"
               v-model="identity.salary"
               type="text"
-              placeholder="CHF 90'000 par an"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             >
@@ -461,10 +463,6 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
 .identity-grid { display: flex; flex-direction: column; gap: var(--space-4); }
 .identity-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 .identity-place { display: grid; grid-template-columns: 6rem 1fr; gap: var(--space-4); }
-.identity-card .identity-grid .form-field { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; max-width: none; }
-.identity-card .identity-grid .form-field-label { display: flex; align-items: center; gap: var(--space-2); min-height: calc(var(--space-5) + 0.125rem); font-size: var(--font-small); font-weight: var(--weight-bold); }
-.identity-card .identity-grid input { height: var(--space-12); width: 100%; max-width: none; padding: 0 0.90625em; border: 1.5px solid var(--field-border); border-radius: var(--space-3); background: var(--surface); font-size: var(--font-body); color: var(--text); box-sizing: border-box; }
-.form-field-badge { display: inline-flex; align-items: center; height: calc(var(--space-5) + 0.125rem); padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .identity-card .identity-more { margin-top: 0; }
 .identity-ai { margin: 0; font-size: 0.8125em; line-height: 1.3846em; color: var(--text-secondary); }
 .identity-actions { display: flex; justify-content: flex-end; gap: var(--space-3); }

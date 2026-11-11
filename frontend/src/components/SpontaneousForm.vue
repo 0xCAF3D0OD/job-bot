@@ -153,6 +153,8 @@ function prepare(): void {
       v-slot="{ id, describedby, invalid }"
       label="Poste visé"
       :error="errors.title"
+    
+      hint="Ex. : Ingénieur DevOps"
     >
       <input
         :id="id"
@@ -160,7 +162,6 @@ function prepare(): void {
         type="text"
         maxlength="200"
         required
-        placeholder="Ingénieur DevOps"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
         data-test="spontaneous-title"
@@ -173,6 +174,8 @@ function prepare(): void {
       label="Site de l’entreprise"
       optional
       :width="30"
+    
+      hint="Ex. : exemple.ch"
     >
       <input
         :id="id"
@@ -180,7 +183,6 @@ function prepare(): void {
         type="text"
         maxlength="300"
         inputmode="url"
-        placeholder="exemple.ch"
         :aria-describedby="describedby"
         :aria-invalid="invalid"
         data-test="spontaneous-website"

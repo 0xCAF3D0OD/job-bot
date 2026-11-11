@@ -1,0 +1,1 @@
+Formulaires : les champs passent au libellé flottant (maquettes du 10 novembre). Vide, le libellé est dans le champ ; au focus ou rempli, il remonte dans la bordure et ne disparaît jamais. Champ de 56 px, rayon 12. L’exemple n’est plus écrit en gris dans le champ : il est dessous (« Ex. : … »)

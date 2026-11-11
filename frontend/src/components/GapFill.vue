@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { ref } from "vue";
 
 import { api } from "../api/client";
@@ -66,25 +67,36 @@ async function add(): Promise<void> {
     data-test="gap-fill-form"
     @submit.prevent="add"
   >
-    <label>Compétence
+    <FormField
+      v-slot="f"
+      label="Compétence"
+    >
       <input
+        :id="f.id"
         v-model="title"
+        :aria-describedby="f.describedby"
         type="text"
         maxlength="200"
         required
         data-test="gap-fill-title"
       >
-    </label>
-    <label>Où et comment, en une phrase
+    </FormField>
+    <FormField
+      v-slot="f"
+      label="Où et comment, en une phrase"
+      hint="Ex. : Trois ans d’infrastructure en Terraform chez…"
+    >
       <input
+        :id="f.id"
         v-model="content"
+        :aria-describedby="f.describedby"
         type="text"
         maxlength="300"
         required
-        placeholder="Trois ans d’infrastructure en Terraform chez…"
+       
         data-test="gap-fill-content"
       >
-    </label>
+    </FormField>
     <p
       v-if="error"
       class="notice error"

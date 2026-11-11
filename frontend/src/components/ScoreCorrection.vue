@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { api } from "../api/client";
@@ -215,18 +216,23 @@ function applyChange(change: Change): void {
             {{ item.label }}
           </button>
         </div>
-        <label
+        <div
           v-if="reason === 'other'"
           class="score-correction-note"
         >
-          En quelques mots
-          <input
-            v-model="note"
-            type="text"
-            maxlength="200"
-            data-test="score-correction-note"
-            @keydown.enter.prevent="propose('other')"
+          <FormField
+            v-slot="f"
+            label="En quelques mots"
           >
+            <input
+              :id="f.id"
+              v-model="note"
+              type="text"
+              maxlength="200"
+              data-test="score-correction-note"
+              @keydown.enter.prevent="propose('other')"
+            >
+          </FormField>
           <button
             type="button"
             class="pill"
@@ -236,7 +242,7 @@ function applyChange(change: Change): void {
           >
             Continuer
           </button>
-        </label>
+        </div>
         <p
           v-if="loading"
           class="hint"
@@ -256,22 +262,32 @@ function applyChange(change: Change): void {
           Ce bloc rejoindra ton profil et comptera dès la prochaine note.
         </p>
         <span class="badge">{{ KIND_LABEL[block.kind] }}</span>
-        <label>Titre
+        <FormField
+          v-slot="f"
+          label="Titre"
+        >
           <input
+            :id="f.id"
             v-model="block.title"
+            :aria-describedby="f.describedby"
             type="text"
             maxlength="200"
             data-test="score-correction-title"
           >
-        </label>
-        <label>Ce que l’IA lira
+        </FormField>
+        <FormField
+          v-slot="f"
+          label="Ce que l’IA lira"
+        >
           <textarea
+            :id="f.id"
             v-model="block.content"
+            :aria-describedby="f.describedby"
             rows="3"
             maxlength="2000"
             data-test="score-correction-content"
           />
-        </label>
+        </FormField>
         <div class="pill-row">
           <button
             type="button"

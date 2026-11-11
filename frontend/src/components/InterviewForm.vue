@@ -377,13 +377,13 @@ function submit(): void {
             class="wide"
             label="Ce qui a bien fonctionné"
             optional
+            hint="Ex. : Un exemple qui a porté, une réponse bien préparée…"
           >
             <textarea
               :id="id"
               v-model="form.went_well"
               rows="2"
               maxlength="2000"
-              placeholder="Un exemple qui a porté, une réponse bien préparée…"
               data-test="went-well"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
@@ -394,13 +394,13 @@ function submit(): void {
             class="wide"
             label="Ce qui a moins bien fonctionné"
             optional
+            hint="Ex. : Une réponse hésitante, un point du CV mal expliqué…"
           >
             <textarea
               :id="id"
               v-model="form.went_badly"
               rows="2"
               maxlength="2000"
-              placeholder="Une réponse hésitante, un point du CV mal expliqué…"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             />
@@ -410,13 +410,12 @@ function submit(): void {
             class="wide"
             label="Ce que tu aurais dû préparer"
             optional
-            hint="Une idée par ligne."
+            hint="Une idée par ligne. Ex. : Un exemple chiffré de projet, Les chiffres de l’entreprise"
           >
             <textarea
               :id="id"
               v-model="form.to_prepare"
               rows="2"
-              placeholder="Un exemple chiffré de projet&#10;Les chiffres de l’entreprise"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             />
@@ -473,13 +472,13 @@ function submit(): void {
             v-slot="{ id, describedby, invalid }"
             label="Points d’attention"
             optional
+            hint="Ex. : Charge, ambiance, flou sur le poste…"
           >
             <textarea
               :id="id"
               v-model="form.warnings"
               rows="2"
               maxlength="2000"
-              placeholder="Charge, ambiance, flou sur le poste…"
               :aria-describedby="describedby"
               :aria-invalid="invalid"
             />

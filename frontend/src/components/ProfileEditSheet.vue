@@ -104,14 +104,15 @@ async function save(): Promise<void> {
         >
       </FormField>
       <FormField
-        v-slot="{ id }"
+        v-slot="{ id, describedby }"
         label="Poste"
+        hint="Ex. : Junior DevOps"
       >
         <input
           :id="id"
           v-model="occupation"
           type="text"
-          placeholder="Ex.&#8239;: Junior DevOps"
+          :aria-describedby="describedby"
           data-test="profile-edit-occupation"
         >
       </FormField>

@@ -112,7 +112,8 @@ describe("Ajouter une offre (docs/111)", () => {
 
     await wrapper.find("[data-test=manual-by-hand]").trigger("click");
     expect((wrapper.find("[data-test=manual-draft-url]").element as HTMLInputElement).value).toBe("https://ch.indeed.com/viewjob?jk=1");
-    expect(wrapper.find("[data-test=manual-title]").attributes("placeholder")).toBe("Menuisier");
+    // L’exemple est sous le champ, plus dans le champ (libellé flottant, PR 27).
+    expect(wrapper.find("[data-test=manual-title]").element.closest(".form-field")?.querySelector(".form-field-hint")?.textContent).toContain("Ex.\u202f: Menuisier");
   });
 
   it("déjà dans les offres : propose de l’ouvrir", async () => {

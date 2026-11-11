@@ -181,7 +181,8 @@ describe("IdentityForm, champs du formulaire (règles §4)", () => {
     expect(wrapper.find(`label[for="${name.attributes("id")}"]`).text()).toBe("Prénom et nom");
     const phone = wrapper.find("[data-test=identity-phone]");
     expect(wrapper.find(`label[for="${phone.attributes("id")}"]`).text()).toBe("Téléphone");
-    expect(wrapper.find("[data-test=identity-website]").attributes("placeholder")).toBeUndefined();
+    // Pas d’exemple en gris dans le champ : une espace seulement, pour le libellé flottant (PR 27).
+    expect(wrapper.find("[data-test=identity-website]").attributes("placeholder")).toBe(" ");
 
     const postcode = wrapper.find("[data-test=identity-postcode]");
     await postcode.setValue("10");

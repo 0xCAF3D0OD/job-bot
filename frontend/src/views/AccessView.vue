@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "../components/FormField.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -98,9 +99,15 @@ async function submit(): Promise<void> {
           target="_blank"
         >ce que la plateforme garde sur toi<span class="visually-hidden"> (nouvel onglet)</span></RouterLink>.
       </p>
-      <label v-if="link.kind === 'invite'">Identifiant
+      <FormField
+        v-if="link.kind === 'invite'"
+        v-slot="f"
+        label="Identifiant"
+      >
         <input
+          :id="f.id"
           v-model="username"
+          :aria-describedby="f.describedby"
           type="text"
           autocomplete="username"
           autocapitalize="none"
@@ -109,26 +116,36 @@ async function submit(): Promise<void> {
           required
           data-test="access-username"
         >
-      </label>
-      <label>Mot de passe (12 caractères au moins)
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Mot de passe (12 caractères au moins)"
+      >
         <input
+          :id="f.id"
           v-model="password"
+          :aria-describedby="f.describedby"
           type="password"
           autocomplete="new-password"
           minlength="12"
           required
           data-test="access-password"
         >
-      </label>
-      <label>Encore une fois
+      </FormField>
+      <FormField
+        v-slot="f"
+        label="Encore une fois"
+      >
         <input
+          :id="f.id"
           v-model="again"
+          :aria-describedby="f.describedby"
           type="password"
           autocomplete="new-password"
           required
           data-test="access-again"
         >
-      </label>
+      </FormField>
       <p
         v-if="error"
         class="notice"

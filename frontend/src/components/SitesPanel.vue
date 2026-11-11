@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
@@ -250,51 +251,57 @@ onMounted(() => void load());
       data-test="add-site-form"
       @submit.prevent="add"
     >
-      <label>Nom
+      <FormField
+        v-slot="f"
+        label="Nom"
+        hint="Ex. : JobScout24"
+      >
         <input
+          :id="f.id"
           v-model="form.name"
+          :aria-describedby="f.describedby"
           type="text"
-          placeholder="JobScout24"
+         
           required
           data-test="site-name"
         >
-      </label>
-      <label>Adresse du site
+      </FormField>
+      <FormField
+        v-slot="f"
+        field-id="site-url"
+        label="Adresse du site"
+        hint="Ex. : https://www.jobscout24.ch"
+        :error="errors.url"
+      >
         <input
-          id="site-url"
+          :id="f.id"
           v-model="form.url"
+          :aria-describedby="f.describedby"
+          :aria-invalid="f.invalid"
           type="text"
-          placeholder="https://www.jobscout24.ch"
-          :aria-invalid="Boolean(errors.url)"
-          :aria-describedby="errors.url ? 'site-url-error' : undefined"
           @blur="check('url')"
           @input="clearIfFixed('url')"
         >
-        <span
-          v-if="errors.url"
-          id="site-url-error"
-          class="field-error"
-        >{{ errors.url }}</span>
-      </label>
-      <label class="wide">Adresses d’expédition des alertes
+      </FormField>
+      <FormField
+        v-slot="f"
+        class="wide"
+        field-id="site-senders"
+        label="Adresses d’expédition des alertes"
+        hint="Ex. : alerts@jobscout24.ch ou jobscout24.ch"
+        :error="errors.senders"
+      >
         <input
-          id="site-senders"
+          :id="f.id"
           v-model="form.senders"
+          :aria-describedby="f.describedby"
+          :aria-invalid="f.invalid"
           type="text"
-          placeholder="alerts@jobscout24.ch ou jobscout24.ch"
           data-test="site-senders"
-          :aria-invalid="Boolean(errors.senders)"
-          :aria-describedby="errors.senders ? 'site-senders-error' : undefined"
           @blur="check('senders')"
           @input="clearIfFixed('senders')"
         >
-        <span
-          v-if="errors.senders"
-          id="site-senders-error"
-          class="field-error"
-          data-test="error-senders"
-        >{{ errors.senders }}</span>
-      </label>
+      </FormField>
       <div class="form-actions wide">
         <button
           type="submit"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormField from "./FormField.vue";
 import { ref } from "vue";
 
 import { api } from "../api/client";
@@ -42,23 +43,29 @@ async function save(): Promise<void> {
     data-test="domain-field"
     @submit.prevent="save"
   >
-    <label for="domain-field-input">Ton domaine, en quelques mots-clés</label>
-    <div class="domain-field-row">
-      <input
-        id="domain-field-input"
-        v-model="value"
-        placeholder="Ton métier, un outil, un diplôme…"
-        enterkeyhint="done"
-        data-test="domain-field-input"
-      >
-      <IconButton
-        icon="plus"
-        type="submit"
-        label="Ajouter"
-        :disabled="saving || !value.trim()"
-        data-test="domain-field-save"
-      />
-    </div>
+    <FormField
+      v-slot="f"
+      field-id="domain-field-input"
+      label="Ton domaine, en quelques mots-clés"
+      hint="Ex. : ton métier, un outil, un diplôme"
+    >
+      <div class="domain-field-row">
+        <input
+          :id="f.id"
+          v-model="value"
+          :aria-describedby="f.describedby"
+          enterkeyhint="done"
+          data-test="domain-field-input"
+        >
+        <IconButton
+          icon="plus"
+          type="submit"
+          label="Ajouter"
+          :disabled="saving || !value.trim()"
+          data-test="domain-field-save"
+        />
+      </div>
+    </FormField>
     <p
       v-if="error"
       class="notice error"
