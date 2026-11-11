@@ -35,12 +35,24 @@ const code = walk(SRC)
 // Une classe est écrite dans le code : en toutes lettres, comme début d'un nom construit (`tone-${x}`, `b${n}`,
 // `icon-${name}`), ou comme classe d'une transition de Vue (<Transition name="detail"> → .detail-enter-active).
 const TRANSITION = /-(enter|leave)-(active|from|to)$|-move$/;
+
+// Les préfixes des gabarits `xxx-${…}` du code, sauf ceux d'un data-test, d'une clé ou d'un id (pas des classes).
+export const BUILT = new Set(
+  [...code.matchAll(/(data-test="|:?key[=:] *"?|\bid[=:] *"?|:id="|aria-[a-z]+="|for=")?`?([a-z][a-z0-9-]*?)-\$\{/g)]
+    .filter((m) => !m[1])
+    .map((m) => m[2]),
+);
+
 function isWritten(c) {
   if (code.includes(c)) return true;
   if (TRANSITION.test(c)) return code.includes(`"${c.replace(TRANSITION, "")}"`);
   if (c.startsWith("icon-")) return code.includes(`"${c.slice(5)}"`);
   const stem = c.replace(/(-[^-]+|\d+)$/, "");
-  return stem !== c && (code.includes(`${stem}-\${`) || code.includes(`${stem}\${`) || code.includes(`"${stem}-`));
+  if (stem !== c && (code.includes(`${stem}\${`) || code.includes(`"${stem}-`))) return true;
+  // Une classe construite par un gabarit, à n'importe quel préfixe : `ft-${kind}` donne ft-orp-meeting.
+  const parts = c.split("-");
+  for (let i = parts.length - 1; i > 0; i--) if (BUILT.has(parts.slice(0, i).join("-"))) return true;
+  return false;
 }
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME || undefined });

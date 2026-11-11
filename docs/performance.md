@@ -81,17 +81,24 @@ Relevé du 2026-11-10 :
 La cause : `style.css` (327 Ko bruts) est chargé en entier dès le premier écran, pour toutes les pages. Le script classe les règles qui ne servent sur aucune des trois pages :
 
 - **Sert ailleurs** : 2787 règles, 275,5 Ko bruts. Une de leurs classes est écrite dans un composant : une autre page, un état, une fenêtre. Elles restent.
-- **À retirer** : 17 règles, 1,4 Ko bruts. Une de leurs classes n'est écrite nulle part dans `src/`. Rien n'a été retiré : la liste attend l'accord de Kevin.
+- **Retiré le 2026-11-11** (accord de Kevin) : 15 règles, 1,2 Ko bruts. Leurs classes ne sont écrites nulle part dans `src/`, ni en toutes lettres ni par un gabarit (`` `xxx-${…}` `` dans un `:class`, une concaténation) :
 
-| Règles (style.css) | Octets bruts | Classe absente du code |
-|---|---:|---|
-| `.bilan-row-more`, `.bilan-row-more svg` | 270 | `bilan-row-more` |
-| `.info-card`, `.info-card .summary-rows`, `.info-card .summary-rows>div+div`, `.info-card>.edit-round`, `.criteria-summary.info-card` | 394 | `info-card` (aussi dans l'exception de `scales.test.ts`) |
-| `.alerts-list-head`, `.alerts-list-head h2` | 229 | `alerts-list-head` |
-| `.orp-rows-link`, `… .orp-row`, `… .orp-row:hover`, `… .orp-what`, `… .orp-what strong` | 369 | `orp-rows-link` |
-| `.ft-orp-meeting .ft-tie`, `.ft-orp-meeting .ft-tie-swing` | 150 | `ft-orp-meeting` |
-| `.offer-bar-spark` (téléphone) | 37 | `offer-bar-spark` |
+| Règles retirées (style.css) | Classe absente du code |
+|---|---|
+| `.bilan-row-more`, `.bilan-row-more svg` | `bilan-row-more` |
+| `.info-card`, `.info-card .summary-rows`, `.info-card .summary-rows>div+div`, `.info-card>.edit-round`, `.criteria-summary.info-card` | `info-card` (son exception dans `scales.test.ts` est retirée aussi) |
+| `.alerts-list-head`, `.alerts-list-head h2` | `alerts-list-head` |
+| `.orp-rows-link`, `… .orp-row`, `… .orp-row:hover`, `… .orp-what`, `… .orp-what strong` | `orp-rows-link` |
+| `.offer-bar-spark` (téléphone) | `offer-bar-spark` |
+
+- **Gardé** : `.ft-orp-meeting .ft-tie` et `.ft-orp-meeting .ft-tie-swing`, qui figuraient dans la première liste. La classe est construite par `` `ft-${kind}` `` dans `FaceTransform.vue`, avec `kind = "orp-meeting"` (la transition vers le rendez-vous ORP). Le script reconnaît désormais un gabarit à n'importe quel préfixe (`ft-` ici, pas seulement `ft-orp-`).
+- **À retirer, en attente d'accord** : 4 règles, 0,3 Ko bruts, trouvées par ce même contrôle plus strict. Avant, le préfixe `orp-row-${…}` d'un `data-test` les faisait passer pour construites ; le script ignore maintenant les gabarits des `data-test`, des clés et des `id`, qui ne sont pas des classes. Leurs classes ont quitté les composants avec la PR 6 du 9 novembre (Bilan et Suivi ORP) :
+
+| Règles (style.css) | Classe absente du code |
+|---|---|
+| `.orp-row-state`, `.orp-row-state.ok`, `.orp-row-state.todo` | `orp-row-state` |
+| `.orp-row-chevron` | `orp-row-chevron` |
 
 Retirer ces règles ferait gagner environ 0,3 Ko en gzip. Le gain important viendrait de découper `style.css` par page, comme le JavaScript (docs/117 §3) : Accueil chargerait environ 33 Ko de CSS brut au lieu de 334. C'est un chantier à part, à proposer.
 
-**Images à retirer** (même règle : rien sans accord) : les 8 avatars `public/avatars/avatar-N-256.png` (610 Ko). L'application ne les lit plus : `useProfileImage.ts` sert les versions WebP.
+**Les 8 avatars PNG** (`public/avatars/avatar-N-256.png`, 610 Ko) : gardés, décision de Kevin en attente. L'avatar affiché (en-tête, menu du compte, choix de l'image) passe par `ProfileImage.vue`, qui appelle `avatarSrc()` de `useProfileImage.ts` : `/avatars/avatar-N-128.webp` jusqu'à 48 px, `/avatars/avatar-N-256.webp` au-delà. Aucun fichier du code ne lit les PNG. Ce sont les mêmes dessins que les WebP (écart moyen de 1,2 à 1,8 sur 255 par pixel, sur fond blanc : la compression), et des copies à l'octet près de `docs/mobile/illustrations/avatars/avatar-N-256.png`.
