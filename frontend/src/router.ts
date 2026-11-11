@@ -147,7 +147,9 @@ export const routes: RouteRecordRaw[] = [
   },
   { path: "/etat", redirect: "/reglages/diagnostic" },
   // L'écran de tri des offres du jour (1.6.50) : un deuxième niveau d'Aujourd'hui.
-  { path: "/aujourdhui/tri", name: "triage", component: TriageView },
+  // Trier les offres (lot du 11 novembre au soir, PR 45) : une route de Candidatures ; l'ancienne adresse suit.
+  { path: "/candidatures/trier", name: "triage", component: TriageView },
+  { path: "/aujourdhui/tri", redirect: "/candidatures/trier" },
   // Les relances une à une (planche « Tri et panneau de commande ») : un deuxième niveau du Suivi.
   { path: "/candidatures/relances", name: "follow-ups", component: FollowUpsView },
   // Formations est dans le Bilan (docs/126 §1) : les anciens liens y mènent, ceux de Progresser

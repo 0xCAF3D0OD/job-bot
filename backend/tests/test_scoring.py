@@ -27,6 +27,7 @@ from jobbot.filtering.service import save_criteria
 from jobbot.llm.client import BatchItem, RawResult, Refused
 from jobbot.llm.pricing import Usage, cost_usd
 from jobbot.llm.scoring import (
+    INSTRUCTIONS,
     OUTPUT_SCHEMA,
     PART_MAX,
     InvalidScore,
@@ -234,7 +235,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v7" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v8" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -442,7 +443,7 @@ async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClie
     await service.run_scoring(ai)
     async with ai.sessionmaker() as session:
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
-        assert evaluation is not None and evaluation.prompt_version == "score-v7"
+        assert evaluation is not None and evaluation.prompt_version == "score-v8"
         assert evaluation.keywords_asks == [
             {"text": "5 ans Linux", "covered": True},
             {"text": "Ansible", "covered": False},
@@ -476,7 +477,7 @@ async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
         rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
     # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
     # annulé est notée comme une nouvelle, sans erreur.
-    assert rows[old].prompt_version == "score-v7" and rows[old].score_error is None
+    assert rows[old].prompt_version == "score-v8" and rows[old].score_error is None
     assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
     assert len(fake.calls) - calls_before == 2
 
@@ -753,3 +754,86 @@ async def test_api_exposes_the_parts_of_the_note(
     ]
     assert offer["score_parts"][1]["check"] is True
     assert offer["score_tip"] == tip
+
+
+# --- Citations de l'annonce (score-v8, lot du 11 novembre au soir, PR 45 et 47) ----------
+
+
+ANNONCE = (
+    "Vous exploitez nos clusters Kubernetes\nmulti-régions.\n\n"
+    "Vous faites évoluer l\u2019infrastructure avec Terraform et\u00a0Ansible.\n"
+    "Piquet une semaine sur six."
+)
+
+
+def with_quotes(quotes: list[str]) -> str:
+    return json.dumps({**json.loads(answer(score=78)), "quotes": quotes})
+
+
+def test_invented_quote_is_never_kept() -> None:
+    output = parse_output(
+        with_quotes(["maîtrise avancée de Kubernetes", "clusters Kubernetes"]), CHUNKS, ANNONCE
+    )
+    assert output.quotes == ["clusters Kubernetes"]
+
+
+def test_quote_is_found_across_apostrophes_line_breaks_and_case() -> None:
+    output = parse_output(
+        with_quotes(
+            [
+                "clusters kubernetes multi-régions",  # un retour à la ligne dans l'annonce
+                "l'infrastructure avec Terraform",  # apostrophe droite, courbe dans l'annonce
+                "Terraform et Ansible",  # espace insécable dans l'annonce
+            ]
+        ),
+        CHUNKS,
+        ANNONCE,
+    )
+    # Le texte gardé est celui de l'annonce, pas celui de l'IA.
+    assert output.quotes == [
+        "clusters Kubernetes\nmulti-régions",
+        "l\u2019infrastructure avec Terraform",
+        "Terraform et\u00a0Ansible",
+    ]
+
+
+def test_quotes_are_two_to_twelve_words_and_five_at_most() -> None:
+    long = (
+        "Vous exploitez nos clusters Kubernetes multi-régions. "
+        "Vous faites évoluer l\u2019infrastructure avec Terraform et Ansible"
+    )
+    output = parse_output(with_quotes(["Kubernetes", long]), CHUNKS, ANNONCE)
+    assert output.quotes == []
+    many = [
+        "Vous exploitez",
+        "nos clusters",
+        "clusters Kubernetes",
+        "faites évoluer",
+        "avec Terraform",
+        "Piquet une semaine",
+        "vous exploitez",  # doublon, à la casse près
+    ]
+    output = parse_output(with_quotes(many), CHUNKS, ANNONCE)
+    assert output.quotes == many[:5]
+
+
+def test_no_quotes_without_profile_or_without_text() -> None:
+    assert parse_output(with_quotes(["clusters Kubernetes"]), [], ANNONCE).quotes == []
+    assert parse_output(with_quotes(["clusters Kubernetes"]), CHUNKS).quotes == []
+    # Une réponse d'avant score-v8 (lot en cours) n'a pas le champ : pas de citation, pas d'erreur.
+    assert parse_output(answer(score=78), CHUNKS, ANNONCE).quotes == []
+
+
+def test_schema_requires_quotes() -> None:
+    assert "quotes" in OUTPUT_SCHEMA["required"]
+    assert "Citations de l'annonce" in INSTRUCTIONS
+
+
+async def test_api_exposes_only_the_quotes_found_in_the_offer(
+    ai: Runtime, fake: FakeClient, api: AsyncClient
+) -> None:
+    await add_offer(ai, 1, description=ANNONCE)
+    fake.responses = {"Offre 1": raw(with_quotes(["clusters kubernetes", "expert Kubernetes"]))}
+    await service.run_scoring(ai)
+    offer = (await api.get("/api/offers", params={"view": "to_review"})).json()["items"][0]
+    assert offer["passages"] == ["clusters Kubernetes"]

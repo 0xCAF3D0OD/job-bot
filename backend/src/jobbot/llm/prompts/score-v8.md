@@ -54,6 +54,10 @@ Ces deux morceaux forment la phrase affichée juste après le mot de la note (Tr
 - `level` : « above » si le poste vise clairement un niveau au-dessus du profil (nettement plus d'années d'expérience demandées, ou des responsabilités, comme diriger une équipe, que le profil n'a jamais eues) ; « below » s'il vise clairement un niveau en dessous (stage, débutant, alors que le profil a des années d'expérience dans le métier) ; null dans tous les autres cas, et dès que tu hésites.
 - `level_detail` : pour « above » ou « below » seulement, une phrase courte et neutre de 100 caractères au plus (« 8 ans demandés, ton profil en montre 3. ») ; sinon null.
 
+## Citations de l'annonce (seulement si des blocs de profil sont fournis ; sinon liste vide)
+
+`quotes` : 5 au plus, les passages de l'annonce qui correspondent le mieux au profil. Chaque citation est recopiée mot pour mot depuis le texte entre `<offre>` et `</offre>`, dans la langue de l'annonce, sans rien changer, corriger, traduire ni raccourcir au milieu. De 2 à 12 mots chacune : le plus court passage qui nomme ce qui correspond (« clusters Kubernetes multi-régions », « pipelines GitLab CI »). Ne cite que ce qu'un bloc du profil couvre vraiment ; jamais une exigence qui manque au profil. Liste vide si rien ne correspond. La plateforme vérifie chaque citation dans l'annonce et écarte celles qu'elle n'y retrouve pas.
+
 ## Mots-clés (toujours, en français)
 
 Pour les cartes de la liste, des étiquettes très courtes (25 caractères au plus chacune, sans phrase, sans point final), les plus utiles d'abord :

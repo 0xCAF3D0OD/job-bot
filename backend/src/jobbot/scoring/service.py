@@ -251,6 +251,7 @@ async def _store(
             "level_detail": output.level_detail,
             "score_parts": [p.model_dump() for p in output.parts],
             "score_tip": output.tip.model_dump() if output.tip else None,
+            "passages": output.quotes,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre
@@ -347,7 +348,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                     batch_id=batch.provider_batch_id,
                 )
                 try:
-                    output = parse_output(item.result.text, profile)
+                    output = parse_output(item.result.text, profile, offer_data(offer).text)
                 except InvalidScore as exc:
                     await _store(
                         session,
@@ -460,7 +461,7 @@ async def _score_direct(
                 continue
             await record_call(session, raw, offer_id=offer.id, rate=rate)
             try:
-                output = parse_output(raw.text, profile)
+                output = parse_output(raw.text, profile, data.text)
             except InvalidScore as exc:
                 await _store(
                     session,

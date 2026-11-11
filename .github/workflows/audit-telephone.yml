@@ -44,6 +44,9 @@ jobs:
       - name: Panneau « Ajouter » (modale, Échap, clic à l'extérieur, focus rendu)
         if: success() || failure()
         run: make audit-panneaux DEMO_URL=http://localhost:8280
+      - name: Trier 3 offres (garder, écarter, garder ; 390 et 1440 px)
+        if: success() || failure()
+        run: make audit-tri DEMO_URL=http://localhost:8280
       - name: Journaux de la démo en cas d'échec
         if: failure()
         run: cd deploy/demo && docker compose -p joba1-demo-local logs --tail=80 api web
