@@ -192,6 +192,23 @@ async def test_match_fill_and_sent(client: AsyncClient, runtime: Runtime) -> Non
         data["identity"]["name"] == "Camille Exemple" and data["identity"]["permit"] == "Permis C"
     )
     assert data["letter_text"] == "Motivé." and data["has_letter"] and not data["has_cv"]
+    # « Me demander avant » (PR 44) : le salaire connu n'est pas donné au formulaire.
+    assert (data["identity"]["salary"], data["identity"]["salary_ask"]) == (None, False)
+    await client.put(
+        "/api/identity",
+        json={
+            "salary": "95000",
+            "salary_mode": "demander",
+            "notice": "2 mois",
+            "availability": "2027-04-01",
+        },
+    )
+    asked = (await client.get(f"/api/extension/offers/{offer_id}", headers=auth)).json()["identity"]
+    assert (asked["salary"], asked["salary_ask"], asked["notice"]) == (None, True, "2 mois")
+    assert asked["availability"] == "01.04.2027"
+    await client.put("/api/identity", json={"salary_mode": "auto"})
+    auto = (await client.get(f"/api/extension/offers/{offer_id}", headers=auth)).json()["identity"]
+    assert (auto["salary"], auto["salary_ask"]) == ("95000", False)
     assert data["letter_filename"] == "Lettre - Exemple SA.pdf"
     pdf = await client.get(f"/api/extension/offers/{offer_id}/letter.pdf", headers=auth)
     assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")

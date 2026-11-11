@@ -1,0 +1,1 @@
+Coordonnées : la rubrique « Pour les formulaires de candidature » montre cinq réponses avec leur progression (LinkedIn, permis, disponibilité, délai de préavis, salaire) et « Site ou portfolio » en option ; chaque réponse se modifie dans son panneau, et le salaire peut attendre ton accord avant d'être rempli

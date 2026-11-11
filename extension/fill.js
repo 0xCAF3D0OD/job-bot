@@ -58,7 +58,9 @@
     ["city", ["address-level2"], /(\bcity\b|\bville\b|localite|\bort\b|wohnort|\btown\b)/],
     ["country", ["country", "country-name"], /(country|\bpays\b|\bland\b)/],
     ["street", ["street-address", "address-line1"], /(street|\brue\b|adresse|address|strasse|anschrift)/],
-    ["availability", [], /(availab|disponib|verfugbar|start ?date|date d.entree|eintritt|notice period|preavis|kundigungsfrist)/],
+    // Le délai de préavis a sa réponse (récapitulatif du 11 novembre, PR 44) ; avant la disponibilité.
+    ["notice", [], /(notice period|preavis|kundigungsfrist)/],
+    ["availability", [], /(availab|disponib|verfugbar|start ?date|date d.entree|eintritt)/],
     ["salary", [], /(salary|salaire|pretention|gehalt|lohn|remuneration)/],
     ["permit", [], /(work permit|permis|bewilligung|work authori|aufenthalt|\bvisa\b)/],
     ["letter", [], /(cover ?letter|lettre de motivation|motivation|anschreiben|motivationsschreiben)/],
@@ -67,9 +69,9 @@
   const COUNTRY = { fr: "Suisse", de: "Schweiz", it: "Svizzera", en: "Switzerland" };
   const COUNTRY_OPTIONS = ["suisse", "switzerland", "schweiz", "svizzera", "ch"];
   const LABELS = {
-    email: "E-mail", linkedin: "LinkedIn", website: "Site personnel", first: "Prénom", last: "Nom",
+    email: "E-mail", linkedin: "LinkedIn", website: "Site ou portfolio", first: "Prénom", last: "Nom",
     full: "Nom et prénom", phone: "Téléphone", postcode: "NPA", city: "Localité", country: "Pays",
-    street: "Rue et numéro", availability: "Disponibilité", salary: "Prétentions salariales",
+    street: "Rue et numéro", availability: "Disponibilité", notice: "Délai de préavis", salary: "Prétentions salariales",
     permit: "Permis de travail", letter: "Lettre de motivation", cv: "CV (PDF)", letterFile: "Lettre (PDF)",
   };
 
@@ -103,7 +105,7 @@
       email: who.email, linkedin: who.linkedin, website: who.website, first, last, full: who.name,
       phone: who.phone, postcode: who.postcode, city: who.city,
       country: who.city ? COUNTRY[lang] || COUNTRY.fr : null,
-      street: who.street, availability: who.availability, salary: who.salary, permit: who.permit,
+      street: who.street, availability: who.availability, notice: who.notice, salary: who.salary, permit: who.permit,
       letter: data.letterText,
     }[kind];
   }
@@ -166,6 +168,12 @@
         }
       }
       if (!empty) continue;
+      // « Me demander avant » (PR 44) : le salaire est connu, mais il ne se remplit pas seul.
+      if (kind === "salary" && data.identity?.salary_ask) {
+        mark(el, TODO);
+        report.todo.push(`${LABELS.salary} (tu as choisi « Me demander avant »)`);
+        continue;
+      }
       const label = labelOf(el).replace(/\s*\*\s*$/, "");
       if (!kind && el.tagName === "TEXTAREA" && label) {
         // Question libre : l'IA peut proposer une réponse, sur demande.

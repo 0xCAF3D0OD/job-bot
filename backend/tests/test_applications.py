@@ -279,6 +279,8 @@ async def test_identity_round_trip(api: AsyncClient) -> None:
         "availability": None,
         "salary": None,
         "permit": None,
+        "notice": None,
+        "salary_mode": "auto",
     }
     identity = {
         "name": "Jean Exemple",
@@ -298,6 +300,15 @@ async def test_identity_round_trip(api: AsyncClient) -> None:
     assert saved["linkedin"] == "https://linkedin.com/in/jean-exemple"
     assert saved["website"] is None and saved["permit"] == "Suisse"
     assert (await api.get("/api/identity")).json() == saved
+    # Une réponse des formulaires s'enregistre seule (PR 44) : les autres gardent leur valeur.
+    alone = (
+        await api.put("/api/identity", json={"notice": " 2 mois ", "salary_mode": "demander"})
+    ).json()
+    assert (alone["notice"], alone["salary_mode"]) == ("2 mois", "demander")
+    assert (alone["name"], alone["salary"]) == ("Jean Exemple", "CHF 95'000 par an")
+    assert (await api.put("/api/identity", json={"salary_mode": "parfois"})).status_code == 422
+    # Un champ envoyé vide est vidé.
+    assert (await api.put("/api/identity", json={"notice": None})).json()["notice"] is None
 
 
 async def test_identity_rejects_bad_postcode(api: AsyncClient) -> None:

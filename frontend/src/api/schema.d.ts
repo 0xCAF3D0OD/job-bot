@@ -2045,7 +2045,11 @@ export interface paths {
         };
         /** Get Identity */
         get: operations["getIdentity"];
-        /** Put Identity */
+        /**
+         * Put Identity
+         * @description Enregistre les champs envoyés ; un champ absent de la demande garde sa valeur (une réponse
+         *     des formulaires de candidature s'enregistre seule, PR 44), un champ `null` est vidé.
+         */
         put: operations["saveIdentity"];
         post?: never;
         delete?: never;
@@ -5201,6 +5205,13 @@ export interface components {
             salary: string | null;
             /** Permit */
             permit: string | null;
+            /** Notice */
+            notice?: string | null;
+            /**
+             * Salary Ask
+             * @default false
+             */
+            salary_ask: boolean;
         };
         /**
          * FillOut
@@ -5686,6 +5697,10 @@ export interface components {
             salary?: string | null;
             /** Permit */
             permit?: string | null;
+            /** Notice */
+            notice?: string | null;
+            /** Salary Mode */
+            salary_mode?: ("auto" | "demander") | null;
         };
         /** Inbox */
         Inbox: {

@@ -196,6 +196,30 @@ async def offer_status(rt: Runtime, offer_id: int) -> str:
         return offer.status
 
 
+async def test_form_answers_never_sent_to_the_model(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    # Récapitulatif du 11 novembre, PR 44 : les réponses pour les formulaires de candidature
+    # (LinkedIn, site, permis, disponibilité, préavis, salaire) ne vont jamais dans ce que lit l'IA.
+    offer_id, chunk_id = await setup_offer(rt)
+    answers = {
+        "linkedin": "linkedin.com/in/sentinelle-linkedin",
+        "website": "sentinelle-site.example",
+        "permit": "Sentinelle permis",
+        "availability": "Sentinelle disponibilité",
+        "notice": "Sentinelle préavis",
+        "salary": "987654",
+        "salary_mode": "demander",
+    }
+    await api.put("/api/identity", json={**IDENTITY, **answers})
+    fake.response = answer(chunk_id)
+    assert (await api.post(f"/api/offers/{offer_id}/letters", json={})).status_code == 201
+    assert fake.params
+    sent = json.dumps(fake.params, ensure_ascii=False, default=str).lower()
+    for marker in ("sentinelle", "987654", "demander"):
+        assert marker not in sent
+
+
 async def test_new_version_with_instruction(
     api: AsyncClient, rt: Runtime, fake: FakeClient
 ) -> None:
