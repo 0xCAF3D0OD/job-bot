@@ -2795,13 +2795,39 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .offer-reading-arc { stroke: var(--primary); }
 @keyframes offer-reading-turn { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .offer-reading-spinner { animation: none; } }
-/* Refus : titre 16/21 gras, phrase 14/20, 12 px entre les lignes ; « Coller le texte » tonal de 48 px (20 de marge) et le
-   lien « Ouvrir l'annonce » de 44 px, 16 d'écart. */
-.offer-text-refused { display: grid; --refused-20: 20px; --refused-21: 21px; gap: var(--space-3); }
-.offer-text-refused h4 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--refused-21); }
-.offer-text-refused p { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--refused-20); color: var(--text-tertiary); }
-.offer-text-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
-.offer-text-actions button { flex: none; min-width: 0; min-height: var(--btn-tertiary); padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
+/* Refus (prompt du 10 novembre au soir, PR 25 ; OffreProvisoire, CandidaturesOrdinateurB) : une ligne, « Annonce
+   illisible » 16/22 gras et la phrase 14/20, puis « Donner l'annonce » teinté de 44 px. Sur ordinateur, la carte se
+   déplie sur place : champ et « Lire » à contour sur une ligne, l'astuce, « Pas de lien ? Colle le texte ». */
+.offer-text-refused { --refused-20: 20px; --refused-22: 22px; --give-read-h: 48px; --give-pad: 18px; --give-pad-fold: 14px; --give-read-pad: 22px; --give-tip: 13px; --give-tip-lh: 18px; }
+.offer-text-head { display: flex; align-items: center; gap: var(--space-3); }
+.offer-text-what { flex: 1; min-width: 0; }
+.offer-text-refused h4 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--refused-22); }
+.offer-text-refused .offer-text-what p { margin: 0; font-size: var(--font-small); line-height: var(--refused-20); color: var(--text-secondary); }
+.offer-give { flex: none; display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; height: var(--target-min); min-height: var(--target-min); padding: 0 var(--give-pad); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
+.offer-give-fold { padding-right: var(--give-pad-fold); }
+.offer-give-fold .icon { width: 20px; height: 20px; }
+.offer-give-zone { display: flex; flex-direction: column; gap: var(--space-2); }
+.offer-give-row { display: flex; align-items: flex-start; gap: var(--space-3); }
+.offer-give-row .form-field { flex: 1; min-width: 0; }
+.offer-give-read { flex: none; height: var(--give-read-h); min-height: var(--give-read-h); margin-top: var(--space-1); padding: 0 var(--give-read-pad); border: var(--action-line) solid var(--action); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.offer-give-zone .form-field-hint, .offer-give-form .form-field-hint { font-size: var(--give-tip); line-height: var(--give-tip-lh); }
+.offer-give-problem { margin: 0; }
+.offer-give-problem:empty { display: none; }
+.offer-give-problem .field-error { margin: 0; padding-inline: var(--space-4); }
+.offer-give-paste { align-self: flex-start; min-height: var(--target-min); padding: 0; border: 0; background: transparent; color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+[aria-disabled="true"].offer-give-read, [aria-disabled="true"].offer-give-submit { cursor: default; opacity: 0.6; }
+/* La fenêtre du bas « Donner l'annonce à jobA1 » : phrase 15/22, champ, « Lire l'annonce » plein de 48 px, « ou »
+   entre deux filets, puis « Coller le texte de l'annonce » en texte, au centre ; 16 px entre les blocs. */
+.offer-give-form { --give-lead-lh: 22px; --give-submit-h: 48px; --give-tip: 13px; --give-tip-lh: 18px; display: flex; flex-direction: column; gap: var(--space-4); }
+.offer-give-lead { margin: 0; font-size: calc(var(--font-small) + 1px); line-height: var(--give-lead-lh); color: var(--text-tertiary); }
+.offer-give-submit { height: var(--give-submit-h); min-height: var(--give-submit-h); justify-content: center; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.offer-give-or { display: flex; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--font-small); }
+.offer-give-or span { flex: 1; height: 1px; background: var(--line); }
+.offer-give-form .offer-give-paste { align-self: center; padding: 0 var(--space-3); }
+/* La fenêtre de collage (OffreProvisoire) : la zone de texte fait 128 px vide et 240 au plus ; le compteur, posé
+   sous la boîte, garde sa place dans la fenêtre (8 px + une ligne de 20). */
+.composer.composer-multi.offer-paste { --paste-min: 128px; --paste-max: 240px; --paste-counter: 28px; margin-bottom: var(--paste-counter); }
+.composer.composer-multi.offer-paste .composer-input { min-height: var(--paste-min); max-height: var(--paste-max); }
 .redone { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .match-detail { margin: 0; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
 .match-detail > .disclosure-row { min-height: var(--target-min); padding: var(--space-3) 0 0; }
@@ -4969,6 +4995,12 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-menu-label { display: block; font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .composer-menu-hint { display: block; font-size: var(--label-caps); color: var(--text-secondary); }
 .composer-counter { margin: var(--space-2) var(--space-1) 0; font-size: var(--label-caps); color: var(--text-secondary); }
+/* « Refaire la note » (OffreProvisoire, PR 25) : un bouton à texte de 44 px ; sous le minimum, pâli et `aria-disabled`.
+   Le compteur passe au vert une fois le minimum atteint (« assez pour noter »). */
+.composer-send.composer-send-text { --send-text-off: #9AA6D8; width: auto; padding: 0 var(--space-5); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
+.composer-send-text[aria-disabled="true"] { background: var(--send-text-off); cursor: default; }
+.composer-counter { font-weight: var(--weight-semibold); }
+.composer-counter-ok { color: var(--success); }
 .composer-multi .composer-counter { position: absolute; top: 100%; left: 0; }
 
 /* Pastilles de suggestions au-dessus du Composer. */

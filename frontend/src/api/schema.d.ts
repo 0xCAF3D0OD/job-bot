@@ -1465,6 +1465,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/read-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Link
+         * @description « Donner l'annonce » : lit la page donnée par la personne, puis refait la note. Le serveur
+         *     va chercher une adresse choisie par un utilisateur : adresses internes refusées, redirections
+         *     comprises (E-6, par `logos._get`), et mêmes limites que la lecture depuis la fiche.
+         */
+        post: operations["readOfferLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/description": {
         parameters: {
             query?: never;
@@ -6662,6 +6684,14 @@ export interface components {
             /** Total */
             total: number;
         };
+        /**
+         * OfferLinkIn
+         * @description Le lien de l'annonce chez l'employeur, donné par la personne (E-1) : https seulement.
+         */
+        OfferLinkIn: {
+            /** Url */
+            url: string;
+        };
         /** OfferLinkOut */
         OfferLinkOut: {
             /** Source */
@@ -11618,6 +11648,55 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferTextOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop de lectures : « Réessaie dans n minutes » */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readOfferLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferLinkIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -33,9 +33,26 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.get("[data-test=composer-send]").attributes("disabled")).toBeUndefined();
     await wrapper.get("[data-test=composer-remove-cv]").trigger("click");
     expect(wrapper.emitted("remove")).toEqual([["cv"]]);
-    await wrapper.setProps({ attachments: [], modelValue: "court", minChars: 200, rows: 5, counterHint: "la flèche enregistre et refait la note" });
+    await wrapper.setProps({ attachments: [], modelValue: "court", minChars: 200, rows: 5 });
     expect(wrapper.get("[data-test=composer-send]").attributes("disabled")).toBeDefined();
-    expect(wrapper.get("[data-test=composer-counter]").text()).toBe("5 caractères, 200 au moins · la flèche enregistre et refait la note");
+    expect(wrapper.get("[data-test=composer-counter]").text()).toBe("5 caractères · il en faut au moins 200");
+  });
+
+  it("`sendText` : un bouton à texte, `aria-disabled` sous le minimum ; le compteur passe au vert (PR 25)", async () => {
+    const wrapper = mount(Composer, { props: { modelValue: "court", placeholder: "Texte", minChars: 200, rows: 5, sendText: "Refaire la note", enough: "assez pour noter" } });
+    const send = wrapper.get("[data-test=composer-send]");
+    expect(send.text()).toBe("Refaire la note");
+    expect(send.attributes("aria-disabled")).toBe("true");
+    expect(send.attributes("disabled")).toBeUndefined();
+    await send.trigger("click");
+    expect(wrapper.emitted("send")).toBeUndefined();
+    await wrapper.setProps({ modelValue: "a".repeat(3482) });
+    const counter = wrapper.get("[data-test=composer-counter]");
+    expect(counter.text()).toBe("3\u202F482 caractères · assez pour noter");
+    expect(counter.classes()).toContain("composer-counter-ok");
+    expect(send.attributes("aria-disabled")).toBeUndefined();
+    await send.trigger("click");
+    expect(wrapper.emitted("send")).toHaveLength(1);
   });
 
   it("le menu + s’ouvre, se parcourt aux flèches et joint l’élément choisi", async () => {

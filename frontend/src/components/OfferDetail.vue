@@ -1251,12 +1251,11 @@ watch(
 .offer-cols .match-card .match-head { gap: var(--space-4); padding-bottom: var(--space-4); }
 .offer-cols .match-card .match-lines { display: flex; flex-wrap: wrap; gap: var(--cols-lines-gap); padding-bottom: var(--space-6); font-size: var(--font-label); }
 .offer-cols .match-card .match-lines li { gap: var(--space-2); }
-/* Lecture refusée (prompt du 10 novembre, PR 13 ; CandidaturesOrdinateurB) : un bloc pêche 16 px sous la carte, rayon 18,
-   18,5 dedans ; titre 15 gras, phrase 14 ; « Coller le texte » tonal de 44 px. */
-.offer-cols .offer-text-refused { --cols-refused-pad: 18.5px; gap: var(--space-4); padding: var(--cols-refused-pad); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--radius-card); }
-.offer-cols .offer-text-refused h4 { font-size: var(--font-label); }
-.offer-cols .offer-text-refused p { font-size: var(--font-small); color: var(--text-tertiary); }
-.offer-cols .offer-text-actions button { min-height: var(--target-min); font-size: var(--font-small); }
+/* Lecture refusée (prompt du 10 novembre au soir, PR 25 ; CandidaturesOrdinateurB) : une carte blanche 16 px sous la
+   carte de la note, trait de 1,5 px, rayon 18 ; la ligne à 16 / 20 dedans ; dépliée, un filet puis 20 / 20 / 8. */
+.offer-cols .offer-text-refused { background: var(--surface); border: var(--action-line) solid var(--card-line); border-radius: var(--radius-card); overflow: hidden; }
+.offer-cols .offer-text-head { gap: var(--space-4); padding: var(--space-4) var(--space-5); }
+.offer-cols .offer-give-zone { padding: var(--space-5) var(--space-5) var(--space-2); border-top: 1px solid var(--line); }
 /* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter » à contour bleu. */
 .offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 .offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }
