@@ -58,7 +58,7 @@ function today(extra: Record<string, unknown> = {}) {
 const OFFER = { id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne", score: 82, why: "Kubernetes : dans ton profil.", first_seen_at: "2026-10-14T08:00:00Z", links: [] };
 
 function mockGet(day: unknown): void {
-  GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/today" ? day : { items: [OFFER] } }));
+  GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/today" ? day : path === "/api/identity" ? { name: "Kevin Exemple" } : { items: [OFFER] } }));
 }
 
 async function mountView() {
@@ -196,7 +196,7 @@ describe("Les premiers pas (docs/128)", () => {
   });
 });
 
-describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
+describe("Aujourd’hui sur ordinateur (maquettes AujourdhuiOrdinateurV2, PR 49)", () => {
   const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: i === 1 ? 2 : 0, paused: false }));
   const rhythm = (extra: Record<string, unknown> = {}) => ({ target: 3, count: 1, days, research_today: true, ...extra });
   // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
@@ -215,19 +215,21 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     clearStorage();
   });
 
-  it("la bande : la date, le titre (l’action du jour, sa fin à la main) en un seul titre, la phrase", async () => {
+  it("l’accroche : « Bonjour », le titre (l’action du jour, sa fin à la main) en un seul titre, la phrase, le personnage", async () => {
     onFirstOfOctober();
-    mockGet(today({ rhythm: rhythm() }));
+    mockGet(today({ rhythm: rhythm(), orp_due_month: null, orp_due_date: null }));
     const wrapper = await mountView();
     const band = wrapper.find("[data-test=today-band]");
-    expect(band.find("[data-test=page-eyebrow]").text()).toMatch(/octobre/);
+    expect(band.find("[data-test=page-eyebrow]").text()).toBe("Bonjour Kevin");
+    // Le personnage est décoratif : aucun texte dans l'image.
+    expect(band.find("img").attributes("alt")).toBe("");
     // 17 candidatures en 22 jours ouvrables : 1 par jour.
     const title = band.find("h1");
     expect(title.text().replace(/\s+/g, " ")).toBe("1 candidature à envoyer.");
     expect(band.findAll("h1")).toHaveLength(1);
     // Un seul accent manuscrit par écran.
-    expect(wrapper.findAll(".today-hand")).toHaveLength(1);
-    expect(title.find(".today-hand").text()).toBe("à envoyer.");
+    expect(wrapper.findAll(".aj-title-hand")).toHaveLength(1);
+    expect(title.find(".aj-title-hand").text()).toBe("à envoyer.");
     expect(band.find("[data-test=today-sub]").text()).toBe("C’est ton rythme pour rester dans l’objectif ORP. 1 offre est à trier.");
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } });
     // Plus de bande d'action ni de « À retenir » : le tri est une tâche.
@@ -245,17 +247,17 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(wrapper.find("[data-test=today-sub]").text()).toContain("Objectif ORP du mois atteint");
     expect(wrapper.find("[data-test=today-tasks]").exists()).toBe(false);
 
-    mockGet(today({ rhythm: rhythm({ research_today: false, count: 3 }) }));
+    mockGet(today({ rhythm: rhythm({ research_today: false, count: 3 }), orp_due_date: isoIn(2) }));
     wrapper = await mountView();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Jour de repos.");
-    expect(wrapper.find(".today-hand").text()).toBe("repos.");
+    expect(wrapper.find(".aj-title-hand").text()).toBe("repos.");
     expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ta semaine est faite. Si tu veux avancer, 2 choses t’attendent.");
     // Un jour de repos, une seule liste, sans tri.
     expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
     expect(wrapper.find("[data-test=today-later]").exists()).toBe(false);
     expect(wrapper.find("[data-test=today-tasks] [data-test=follow-ups]").exists()).toBe(true);
 
-    mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }) }));
+    mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }), orp_due_date: isoIn(-3) }));
     wrapper = await mountView();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("En pause.");
     expect(wrapper.find("[data-test=today-sub]").text()).toBe("Jusqu’au 3 novembre. Pense à l’annoncer à ton conseiller.");
@@ -309,7 +311,18 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(section.find("[data-test=upcoming-interview]").classes()).toContain("tone-interview");
     expect(section.find("[data-test=preparing]").classes()).toContain("tone-normal");
     expect(section.find("[data-test=orp-urgent] strong").text()).toBe("Remettre les justificatifs de septembre");
-    expect(section.find("[data-test=orp-urgent] .today-task-action").text()).toBe("Remettre");
+    expect(section.find("[data-test=orp-urgent] .aj-action").text()).toBe("Remettre");
+    // Les tâches sont numérotées ; celle en retard est la première et le dit (PR 49).
+    expect(section.element.querySelector("ol")).not.toBeNull();
+    expect(section.findAll(".aj-num").map((n) => n.text())).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(section.find("[data-test=orp-urgent]").text()).toMatch(/En retard depuis le \d/);
+    // L'accroche : le retard d'abord, à la main, puis le rythme du jour.
+    const hands = wrapper.findAll("[data-test=today-sentence] .aj-hand").map((h) => h.text());
+    expect(hands[0]).toBe("1 justificatif en retard,");
+    expect(hands[1]).toMatch(/^puis \d+ candidatures?$/);
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Commence par l’ORP\u202f: 2 minutes. Ensuite, ton rythme du jour.");
+    // « Quand tu as le temps » garde son icône, sans numéro.
+    expect(wrapper.find("[data-test=today-later] .aj-num").exists()).toBe(false);
     // La carte des justificatifs est en tête du Bilan › ORP (récapitulatif du 11 novembre, PR 29).
     expect(section.find("[data-test=orp-urgent]").attributes("href")).toBe("/bilan");
     const preparing = section.find("[data-test=preparing]");
@@ -345,20 +358,20 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(row.attributes("href")).toBe("/candidatures/offres/7/preparer");
   });
 
-  it("la carte du mois ORP, à cheval sur la bande : le mois, la semaine, et le lien vers le Bilan", async () => {
+  it("la bande ORP de la colonne de droite : le mois, la semaine, et « Voir le suivi »", async () => {
     onFirstOfOctober();
     mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=orp-month]");
-    expect(card.attributes("href")).toBe("/bilan/orp");
-    expect(card.attributes("aria-label")).toBe("Mois ORP : octobre 3 sur 20, cette semaine 1 sur 3. Voir le bilan");
+    expect(card.find("h2").text()).toBe("ORP");
+    expect(card.find("[data-test=orp-month-link]").text()).toBe("Voir le suivi");
+    expect(card.find("[data-test=orp-month-link]").attributes("href")).toBe("/bilan/orp");
     expect(card.find("[data-test=month-count]").text()).toBe("3 sur 20");
     expect(card.text()).toContain("Mois ORP · octobre");
     expect(card.find("[data-test=month-left]").text()).toContain("dans les temps");
     // La barre ORP (PR 48) : la semaine tient en une ligne, sans les ronds des jours.
     expect(card.find("[data-test=orp-bar-week]").text()).toBe("Cette semaine1 sur 3");
-    // Pas de lien dans le lien.
-    expect(card.find("a").exists()).toBe(false);
+    expect(card.findAll("a")).toHaveLength(1);
   });
 });
 

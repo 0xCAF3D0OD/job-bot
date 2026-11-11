@@ -33,19 +33,23 @@ async function mountView(today: unknown) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({ data: path === "/api/today" ? today : path === "/api/insights" ? { highlight: null } : { items: [OFFER, { ...OFFER, id: 2 }] } }),
   );
-  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/candidatures/trier", name: "triage", component: { template: "<div />" } }, { path: "/:any(.*)*", component: { template: "<div />" } }] });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
+  await flushPromises();
+  // L'Accueil du téléphone est chargé à part (PR 49).
+  await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
 }
 
-describe("Accueil du téléphone : les cartes Offres (maquette AccueilSmile)", () => {
-  it("restent là après le tri du jour, tant qu’il reste des offres ; la ville sans canton", async () => {
+describe("Accueil du téléphone : les offres à trier (maquette AccueilV2, PR 49)", () => {
+  it("restent là après le tri du jour, tant qu’il reste des offres : la meilleure en petite carte, la ville sans canton", async () => {
     localStorage.setItem(`jobA1.tri.${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}`, "1");
     const wrapper = await mountView(day());
-    expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);
+    expect(wrapper.find("#home-offers-title").text()).toBe("2 offres à trier");
+    expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(1);
     expect(wrapper.find("[data-test=home-card]").text()).toContain("Acme SA · Lausanne");
     expect(wrapper.find("[data-test=home-card]").text()).not.toContain("VD");
-    expect(wrapper.find("[data-test=home-triage]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=home-triage]").text()).toBe("Trier les offres");
   });
 });

@@ -36,8 +36,11 @@ async function mountView(documents: unknown[]) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({ data: path === "/api/today" ? DAY : path === "/api/documents" ? documents : path === "/api/insights" ? { highlight: null } : { items: [] } }),
   );
-  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/candidatures/trier", name: "triage", component: { template: "<div />" } }, { path: "/:any(.*)*", component: { template: "<div />" } }] });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
+  await flushPromises();
+  // L'Accueil du téléphone est chargé à part (PR 49).
+  await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
 }
@@ -54,13 +57,13 @@ describe("« Relire ton CV » dans Aujourd’hui (PR 22)", () => {
     expect(first.attributes("href")).toBe("/profil");
   });
 
-  it("téléphone : première ligne, icône document à la place du nombre", async () => {
+  it("téléphone : première ligne de « À faire », numéro 1, en brun", async () => {
     phone.value = true;
     const wrapper = await mountView([CV]);
     const first = wrapper.findAll("[data-test=home-todo] li a")[0]!;
     expect(first.attributes("data-test")).toBe("todo-cv-unread");
-    expect(first.find(".home-todo-icon").exists()).toBe(true);
-    expect(first.find("strong").exists()).toBe(false);
+    expect(first.classes()).toContain("home-todo-late");
+    expect(first.find(".home-todo-num").text()).toBe("1");
     expect(first.text()).toContain("Relire ton CV");
     expect(first.text()).toContain("Sans lui, tes offres ne sont pas notées");
   });

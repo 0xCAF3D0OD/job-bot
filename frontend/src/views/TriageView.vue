@@ -2,7 +2,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 
-import { api, type Offer } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import BookmarkMark from "../components/BookmarkMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -14,9 +13,11 @@ import { useArrowKeys } from "../composables/useArrowKeys";
 import { markTriageDone, useDailyDose } from "../composables/useDailyDose";
 import { useFocusMode } from "../composables/useFocusMode";
 import { usePhone } from "../composables/usePhone";
-import { offerUndo, useUndo } from "../composables/useUndo";
+import { useTriage } from "../composables/useTriage";
+import { useUndo } from "../composables/useUndo";
 import { companyPlace, plural, rateText, remoteText, scoreWord } from "../format";
 import { buildExcerpt, matchedPassages, offerText } from "../offerPassages";
+import "../triage.css";
 
 // Trier les offres (lot du 11 novembre au soir, PR 45 ; maquettes TrierOffresV2 et TrierOffresOrdinateurV2). Les
 // offres du jour, une par une, la meilleure d'abord : une carte sur téléphone, un livre ouvert sur ordinateur, le
@@ -28,24 +29,9 @@ const { focus } = useFocusMode();
 const { dose, restDay, loaded, load } = useDailyDose();
 const { pending, undo, hold, release, flush } = useUndo();
 
-type Choice = "keep" | "dismiss";
-// La pile du jour ne change pas pendant le tri.
-const queue = ref<Offer[]>([]);
-const index = ref(0);
-const choices = ref<Choice[]>([]);
-watch(
-  () => dose.value.map((o) => o.id).join(","),
-  () => {
-    if (index.value === 0) queue.value = [...dose.value];
-  },
-  { immediate: true },
-);
-const total = computed(() => queue.value.length);
-const current = computed(() => queue.value[index.value] ?? null);
-const remaining = computed(() => Math.max(0, total.value - index.value - 1));
-const done = computed(() => loaded.value && total.value > 0 && index.value >= total.value);
-const kept = computed(() => queue.value.filter((_, i) => choices.value[i] === "keep"));
-const dismissed = computed(() => choices.value.filter((c) => c === "dismiss").length);
+// La pile et les choix (useTriage, partagé avec le petit livre d'Aujourd'hui).
+const { index, total, current, remaining, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
+const done = computed(() => loaded.value && finished.value);
 
 // Sur téléphone, la page de tri remplace l'en-tête et la barre du bas (maquette) ; la fin du tri aussi.
 watch(phone, (now) => (focus.value = now), { immediate: true });
@@ -81,31 +67,6 @@ async function focusNext(): Promise<void> {
   else doneScreen.value?.focus();
 }
 
-function decide(choice: Choice): void {
-  const offer = current.value;
-  if (!offer) return;
-  const at = index.value;
-  choices.value[at] = choice;
-  index.value = at + 1;
-  void focusNext();
-  void offerUndo({
-    message: choice === "keep" ? "Offre gardée dans tes candidatures" : "Offre écartée",
-    commit: async (keepalive) => {
-      const { response } = await api.PATCH("/api/offers/{offer_id}/status", {
-        params: { path: { offer_id: offer.id } },
-        // « Garder » : l'état « Gardée » (`later`, décision de Kevin du 11 novembre), pas un second état.
-        body: { status: choice === "keep" ? "later" : "ignored" },
-        keepalive,
-      });
-      return response.ok;
-    },
-    restore: () => {
-      choices.value.length = at;
-      index.value = at;
-      void focusNext();
-    },
-  });
-}
 useArrowKeys({ left: () => decide("dismiss"), right: () => decide("keep") });
 
 // Quitter la page (« Préparer », « Retour à l’accueil ») envoie d'abord le dernier choix.
@@ -386,34 +347,6 @@ onMounted(load);
 </template>
 
 <style>
-/* Les couleurs propres au tri (maquettes TrierOffresV2 et TrierOffresOrdinateurV2, clair et sombre) : la pile, le
-   liseré du livre, l'extrait, le surlignage (§1 du lot), les étiquettes et les pastilles des points. */
-.tri, .tri-done {
-  --tri-edge: #2445C2; --tri-pile-near: #9FB0F2; --tri-pile-far: #C9D3FA; --tri-rim: #DCE2F8;
-  --tri-shadow: 0 12px 24px rgba(36, 69, 194, 0.18); --tri-book-shadow: 0 14px 28px rgba(36, 69, 194, 0.22); --tri-fold: rgba(27, 31, 42, 0.18);
-  --tri-quote: #FFF8E1; --tri-mark: #FFE9A8; --tri-tag: #F1EEE7; --tri-tag-text: #3D4250;
-  --tri-ok: #1F7A4D; --tri-ok-ink: #FFFFFF; --tri-ask: #FBEBDD; --tri-ask-ink: #8A4A12;
-  --tri-rule: #ECE9E1; --tri-dot: #DAD6CC; --tri-outline: #C9C5BA; --tri-dash: #DAD6CC; --tri-spark: #2445C2;
-}
-:root[data-theme="dark"] :is(.tri, .tri-done) {
-  --tri-edge: #4560D8; --tri-pile-near: #3A4A86; --tri-pile-far: #2C3558; --tri-rim: #2C3558;
-  --tri-shadow: none; --tri-book-shadow: none; --tri-fold: rgba(0, 0, 0, 0.5);
-  --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
-  --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
-  --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E; --tri-dash: #4E473E; --tri-spark: #7D95FF;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) :is(.tri, .tri-done) {
-    --tri-edge: #4560D8; --tri-pile-near: #3A4A86; --tri-pile-far: #2C3558; --tri-rim: #2C3558;
-    --tri-shadow: none; --tri-book-shadow: none; --tri-fold: rgba(0, 0, 0, 0.5);
-    --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
-    --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
-    --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E; --tri-dash: #4E473E; --tri-spark: #7D95FF;
-  }
-  /* En sombre, les personnages et l'illustration ont un contour clair (lot, « Fin du tri »). */
-  :root:not([data-theme="light"]) :is(.tri-friend, .tri-done .sent-screen-image) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
-}
-:root[data-theme="dark"] :is(.tri-friend, .tri-done .sent-screen-image) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
 /* Le bandeau « Annuler » du tri remplace celui de l'application le temps qu'il est là. */
 :root:has(.tri-toast) .undo-toast { display: none; }
 </style>

@@ -67,6 +67,8 @@ PRELUDE = r"""(mapping) => {
 # Les écrans téléphone du lot 18 (§10). `{offer}` et `{application}` : une offre à traiter et une candidature
 # envoyée de la démo. Un état (« ouvrir ») est un sélecteur sur lequel cliquer avant l'audit.
 SCREENS: list[tuple[str, str | None]] = [
+    # L'Accueil (lot du 11 novembre au soir, PR 49) : « À faire » numéroté, la barre ORP, les offres à trier.
+    ("aujourdhui", None),
     ("compte", None),
     ("bilan/orp", None),
     ("bilan", None),
@@ -99,6 +101,8 @@ SCREENS: list[tuple[str, str | None]] = [
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
+    # Aujourd'hui en deux colonnes (PR 49) : l'accroche, les tâches, la bande ORP et le petit livre.
+    ("aujourdhui", None),
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
     ("candidatures/offres/{offer}/preparer?doc=cv", None),

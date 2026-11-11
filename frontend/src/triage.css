@@ -1,0 +1,33 @@
+/* Les couleurs propres au tri (maquettes TrierOffresV2 et TrierOffresOrdinateurV2, clair et sombre) : la pile, le
+   liseré du livre, l'extrait, le surlignage (§1 du lot), les étiquettes et les pastilles des points. */
+:is(.tri, .tri-done, .tri-mini, .tri-peek, .tri-none) {
+  --tri-edge: #2445C2; --tri-pile-near: #9FB0F2; --tri-pile-far: #C9D3FA; --tri-rim: #DCE2F8;
+  --tri-shadow: 0 12px 24px rgba(36, 69, 194, 0.18); --tri-book-shadow: 0 14px 28px rgba(36, 69, 194, 0.22); --tri-fold: rgba(27, 31, 42, 0.18);
+  --tri-quote: #FFF8E1; --tri-mark: #FFE9A8; --tri-tag: #F1EEE7; --tri-tag-text: #3D4250;
+  --tri-ok: #1F7A4D; --tri-ok-ink: #FFFFFF; --tri-ask: #FBEBDD; --tri-ask-ink: #8A4A12;
+  --tri-rule: #ECE9E1; --tri-dot: #DAD6CC; --tri-outline: #C9C5BA; --tri-dash: #DAD6CC; --tri-spark: #2445C2;
+}
+:root[data-theme="dark"] :is(.tri, .tri-done, .tri-mini, .tri-peek, .tri-none) {
+  --tri-edge: #4560D8; --tri-pile-near: #3A4A86; --tri-pile-far: #2C3558; --tri-rim: #2C3558;
+  --tri-shadow: none; --tri-book-shadow: none; --tri-fold: rgba(0, 0, 0, 0.5);
+  --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
+  --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
+  --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E; --tri-dash: #4E473E; --tri-spark: #7D95FF;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.tri, .tri-done, .tri-mini, .tri-peek, .tri-none) {
+    --tri-edge: #4560D8; --tri-pile-near: #3A4A86; --tri-pile-far: #2C3558; --tri-rim: #2C3558;
+    --tri-shadow: none; --tri-book-shadow: none; --tri-fold: rgba(0, 0, 0, 0.5);
+    --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
+    --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
+    --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E; --tri-dash: #4E473E; --tri-spark: #7D95FF;
+  }
+  /* En sombre, les personnages et l'illustration ont un contour clair (lot, « Fin du tri »). */
+  :root:not([data-theme="light"]) :is(.tri-friend, .tri-done .sent-screen-image) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+}
+:root[data-theme="dark"] :is(.tri-friend, .tri-done .sent-screen-image) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+/* En sombre, le personnage de l'accroche (Accueil, Aujourd'hui) a un contour clair, comme ceux du tri. */
+:root[data-theme="dark"] :is(.home-late img, .aj-hero img) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.home-late img, .aj-hero img) { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+}

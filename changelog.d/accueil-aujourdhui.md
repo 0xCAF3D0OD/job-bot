@@ -1,0 +1,1 @@
+L’Accueil et Aujourd’hui suivent la maquette du 11 novembre : tâches numérotées avec le justificatif en retard en premier, bande ORP, et les offres à trier en petite carte sur téléphone ou en petit livre où l’on trie sur place sur ordinateur
