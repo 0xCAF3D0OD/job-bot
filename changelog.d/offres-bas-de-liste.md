@@ -1,0 +1,1 @@
+Bas de la liste des offres sur téléphone : « Afficher 20 offres de plus · n restantes » en bouton (20 par appui, focus sur la première nouvelle offre), puis le groupe « Autres offres » (Loin de ton profil, Expirées, Postuler spontanément).

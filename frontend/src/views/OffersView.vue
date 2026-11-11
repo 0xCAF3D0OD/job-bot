@@ -39,6 +39,9 @@ import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
 
 const PAGE_SIZE = 50;
+// Sur téléphone, « Afficher n offres de plus » charge 20 offres par appui (prompt du 10 novembre, fin de soirée, PR 35 ;
+// Kevin : 50 au premier chargement, puis + 20).
+const MORE_SIZE = 20;
 
 const { filters, update, reset } = useOfferFilters();
 const items = ref<Offer[]>([]);
@@ -150,6 +153,12 @@ const shown = computed(() =>
     ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
     : items.value,
 );
+// Bas de liste sur téléphone (PR 35) : les offres qui restent à charger dans la liste montrée, et combien le prochain
+// appui en ajoute (« Afficher 12 offres de plus · 12 restantes »).
+const remaining = computed(() => (items.value.length < total.value ? Math.max(0, shownTotal.value - shown.value.length) : 0));
+const nextCount = computed(() => Math.min(MORE_SIZE, remaining.value));
+const moreLabel = computed(() => `Afficher ${plural(nextCount.value, "offre", "offres")} de plus`);
+const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value > 1 ? "restantes" : "restante"}`);
 
 // Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
 // 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
@@ -357,6 +366,17 @@ function loadMore(): void {
   if (!loading.value) void load(true);
 }
 
+// Téléphone : charge la suite, puis met le focus sur la première nouvelle carte (PR 35).
+async function showMoreOffers(): Promise<void> {
+  if (loading.value) return;
+  const before = new Set(shown.value.map((offer) => offer.id));
+  await load(true);
+  const first = shown.value.find((offer) => !before.has(offer.id));
+  if (!first) return;
+  await nextTick();
+  document.querySelector<HTMLElement>(`[data-offer-row="${first.id}"] .list-card`)?.focus();
+}
+
 async function load(append = false): Promise<void> {
   const current = ++requestId;
   loading.value = true;
@@ -366,7 +386,7 @@ async function load(append = false): Promise<void> {
     const { data } = await api.GET("/api/offers", {
       params: {
         query: {
-          limit: PAGE_SIZE,
+          limit: append && phone.value ? MORE_SIZE : PAGE_SIZE,
           offset: append ? items.value.length : 0,
           sort: f.sort,
           view: f.view,
@@ -896,6 +916,7 @@ onUnmounted(() => {
             :key="row.key"
             :class="{ 'offer-day': row.day }"
             :data-test="row.day ? 'offer-day' : undefined"
+            :data-offer-row="row.offer?.id"
           >
             <!-- Le titre du jour, son nombre en gris (maquette Candidatures, C8) ; « En préparation » d'abord. -->
             <h2
@@ -914,49 +935,91 @@ onUnmounted(() => {
             />
           </li>
         </TransitionGroup>
-        <!-- La suite de la liste, sur place (règles §4, « Afficher plus (N) ») : chargée par pages. -->
+        <!-- Ordinateur : la suite de la liste, sur place (règles §4, « Afficher plus (N) ») : chargée par pages. -->
         <ShowMore
-          v-if="items.length < total"
+          v-if="!phone && items.length < total"
           :model-value="false"
           :hidden="total - items.length"
           test-id="offers-more"
           @update:model-value="loadMore"
         />
-        <button
-          v-if="hidesFar && farCount && !loading && !failed"
-          type="button"
-          class="offers-far"
-          :aria-expanded="showFar"
-          data-test="offers-far"
-          @click="showFar = !showFar"
-        >
-          {{ showFar ? "Masquer les offres loin de ton profil" : `Afficher aussi les offres loin de ton profil (${farCount})` }}
-        </button>
-        <!-- Les offres expirées sur téléphone (Kevin, 6.11) : la feuille Filtres n'a plus « Expirées » ; un lien au
-             bas de la liste, même filtre qu’avant, seulement s’il y en a. -->
-        <button
-          v-if="phone && filters.view === 'pending' && counts.expired > 0 && !loading && !failed"
-          type="button"
-          class="offers-far"
-          :aria-pressed="filters.showExpired"
-          data-test="offers-expired"
-          @click="update({ showExpired: !filters.showExpired })"
-        >
-          {{ filters.showExpired ? "Masquer les offres expirées" : `Voir les offres expirées (${counts.expired})` }}
-        </button>
-        <p
-          v-if="phone && !loading && !failed"
-          class="offers-spontaneous"
-        >
+        <!-- Téléphone, bas de la liste (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
+             CandidaturesSombre, état bas-de-liste) : un bouton contour pleine largeur, puis le groupe « Autres offres ». -->
+        <template v-if="phone && !loading && !failed">
           <button
+            v-if="remaining > 0"
             type="button"
-            class="link"
-            data-test="spontaneous-open"
-            @click="spontaneousOpen = true"
+            class="offers-more-phone"
+            data-test="offers-more"
+            @click="showMoreOffers"
           >
-            Postuler spontanément
+            <strong>{{ moreLabel }}</strong><span>{{ remainingLabel }}</span>
           </button>
-        </p>
+          <h2
+            id="offers-other-title"
+            class="offers-other-cap"
+          >
+            Autres offres
+          </h2>
+          <div
+            class="offers-other"
+            role="group"
+            aria-labelledby="offers-other-title"
+          >
+            <!-- « Loin de ton profil » et « Expirées » : ouvertes, même titre, « n offres affichées », chevron vers le
+                 haut (Kevin, 10.11). Masquées si leur nombre vaut 0. -->
+            <button
+              v-if="hidesFar && farCount"
+              type="button"
+              class="offers-other-row"
+              :aria-expanded="showFar"
+              data-test="offers-far"
+              @click="showFar = !showFar"
+            >
+              <span class="offers-other-text">
+                <strong>Loin de ton profil</strong>
+                <span><span class="visually-hidden">, </span>{{ plural(farCount, "offre", "offres") }}{{ showFar ? (farCount > 1 ? " affichées" : " affichée") : ", notées plus bas" }}</span>
+              </span>
+              <span
+                class="arrow-circle"
+                aria-hidden="true"
+              ><AppIcon :name="showFar ? 'chevron-up' : 'arrow-right'" /></span>
+            </button>
+            <button
+              v-if="filters.view === 'pending' && counts.expired > 0"
+              type="button"
+              class="offers-other-row"
+              :aria-expanded="filters.showExpired"
+              data-test="offers-expired"
+              @click="update({ showExpired: !filters.showExpired })"
+            >
+              <span class="offers-other-text">
+                <strong>Expirées</strong>
+                <span><span class="visually-hidden">, </span>{{ plural(counts.expired, "offre", "offres") }}{{ filters.showExpired ? (counts.expired > 1 ? " affichées" : " affichée") : ", pour mémoire" }}</span>
+              </span>
+              <span
+                class="arrow-circle"
+                aria-hidden="true"
+              ><AppIcon :name="filters.showExpired ? 'chevron-up' : 'arrow-right'" /></span>
+            </button>
+            <button
+              type="button"
+              class="offers-other-row"
+              aria-haspopup="dialog"
+              data-test="spontaneous-open"
+              @click="spontaneousOpen = true"
+            >
+              <span class="offers-other-text">
+                <strong>Postuler spontanément</strong>
+                <span><span class="visually-hidden">, </span>À une entreprise sans offre publiée</span>
+              </span>
+              <span
+                class="arrow-circle"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
+            </button>
+          </div>
+        </template>
       </div>
 
       <Transition name="detail">

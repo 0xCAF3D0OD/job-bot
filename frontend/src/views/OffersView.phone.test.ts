@@ -31,10 +31,25 @@ const offer = (id: number, title: string) => ({
 const counts = { to_review: 1, pending: 1, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 1 };
 const facets = { sources: [], cantons: [], scores: [] as number[], unscored: 0 };
 
-async function mountAt(path: string, items: unknown[], pageFacets: typeof facets = facets, pageCounts: typeof counts = counts) {
-  GET.mockImplementation((p: string) =>
+async function mountAt(
+  path: string,
+  items: unknown[],
+  pageFacets: typeof facets = facets,
+  pageCounts: typeof counts = counts,
+  paged: { total: number; more: unknown[] } | null = null,
+) {
+  GET.mockImplementation((p: string, init?: { params?: { query?: { offset?: number } } }) =>
     Promise.resolve(
-      p === "/api/offers" ? { data: { items, total: items.length, counts: pageCounts, facets: pageFacets } } : { data: null },
+      p === "/api/offers"
+        ? {
+            data: {
+              items: paged && init?.params?.query?.offset ? paged.more : items,
+              total: paged?.total ?? items.length,
+              counts: pageCounts,
+              facets: pageFacets,
+            },
+          }
+        : { data: null },
     ),
   );
   const router = createRouter({
@@ -62,7 +77,7 @@ afterEach(() => {
 });
 
 describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
-  it("les offres « Loin » cachées derrière « Afficher aussi les offres loin de ton profil (n) » (Kevin, 6.11)", async () => {
+  it("les offres « Loin » cachées derrière la ligne « Loin de ton profil » d’« Autres offres » (PR 35)", async () => {
     const close = { ...offer(1, "DevOps Engineer"), score: 82 };
     const far = { ...offer(2, "Data Engineer"), score: 41 };
     const unscored = { ...offer(3, "SRE"), score: null };
@@ -72,7 +87,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     const titles = () => host.findAll("[data-test=offer] [data-test=list-card-title]").map((t) => t.text());
     expect(titles()).toEqual(["DevOps Engineer", "SRE"]);
     const toggle = host.find("[data-test=offers-far]");
-    expect(toggle.text()).toBe("Afficher aussi les offres loin de ton profil (2)");
+    expect(toggle.text()).toBe("Loin de ton profil, 2 offres, notées plus bas");
     expect(toggle.attributes("aria-expanded")).toBe("false");
     // « Afficher n offres » du tri compte la liste montrée : 3 au total, moins les 2 « Loin » cachées.
     const sheetTotal = () => host.findComponent(OfferFilterSheet).props("total");
@@ -80,21 +95,41 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     await toggle.trigger("click");
     expect(titles()).toEqual(["DevOps Engineer", "Data Engineer", "SRE"]);
     expect(sheetTotal()).toBe(3);
-    expect(toggle.text()).toBe("Masquer les offres loin de ton profil");
+    // Ouverte (Kevin, 10.11) : même titre, « n offres affichées », chevron vers le haut.
+    expect(toggle.text()).toBe("Loin de ton profil, 2 offres affichées");
+    expect(toggle.find("[data-icon=chevron-up]").exists()).toBe(true);
     expect(toggle.attributes("aria-expanded")).toBe("true");
   });
 
-  it("les offres expirées : « Voir les offres expirées (n) » au bas de la liste, seulement s’il y en a (Kevin, 6.11)", async () => {
+  it("les offres expirées : la ligne « Expirées » d’« Autres offres », seulement s’il y en a (PR 35)", async () => {
     const none = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
     expect(none.find("[data-test=offers-expired]").exists()).toBe(false);
     document.body.innerHTML = "";
     const host = await mountAt("/offres", [offer(1, "DevOps Engineer")], facets, { ...counts, expired: 3 });
     const link = host.find("[data-test=offers-expired]");
-    expect(link.text()).toBe("Voir les offres expirées (3)");
+    expect(link.text()).toBe("Expirées, 3 offres, pour mémoire");
+    expect(link.attributes("aria-expanded")).toBe("false");
     await link.trigger("click");
     await flushPromises();
     expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { with_expired: true } } });
-    expect(host.find("[data-test=offers-expired]").text()).toBe("Masquer les offres expirées");
+    expect(host.find("[data-test=offers-expired]").text()).toBe("Expirées, 3 offres affichées");
+    expect(host.find("[data-test=offers-expired]").attributes("aria-expanded")).toBe("true");
+  });
+
+  it("bas de liste (PR 35) : « Afficher n offres de plus · m restantes », 20 par appui, focus sur la première nouvelle", async () => {
+    const page1 = [offer(1, "DevOps Engineer"), offer(2, "SRE")];
+    const page2 = [offer(3, "Data Engineer")];
+    const host = await mountAt("/offres", page1, facets, counts, { total: 3, more: page2 });
+    const more = host.get("[data-test=offers-more]");
+    expect(more.text()).toBe("Afficher 1 offre de plus · 1 restante");
+    expect(more.get("strong").text()).toBe("Afficher 1 offre de plus");
+    await more.trigger("click");
+    await flushPromises();
+    expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { limit: 20, offset: 2 } } });
+    expect(document.activeElement?.closest("[data-offer-row]")?.getAttribute("data-offer-row")).toBe("3");
+    // Tout est chargé : plus de bouton ; « Postuler spontanément » reste dans « Autres offres ».
+    expect(host.find("[data-test=offers-more]").exists()).toBe(false);
+    expect(host.get("[data-test=spontaneous-open]").text()).toBe("Postuler spontanément, À une entreprise sans offre publiée");
   });
 
   it("un filtre de note posé : les offres « Loin » restent dans la liste, sans le lien", async () => {
