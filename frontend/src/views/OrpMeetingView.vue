@@ -16,6 +16,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpMeetingEmpty from "../components/OrpMeetingEmpty.vue";
+import NewMeetingSheet from "../components/NewMeetingSheet.vue";
 import OrpMeetingForm from "../components/OrpMeetingForm.vue";
 import OrpOutcomeSheet from "../components/OrpOutcomeSheet.vue";
 import RendezVousDesktop from "../components/RendezVousDesktop.vue";
@@ -177,6 +178,22 @@ function meetingSaved(data: Page): void {
   page.value = data;
   editing.value = false;
 }
+// « Nouveau rendez-vous » (PR 41) : un seul panneau pour une entreprise ou l'ORP.
+const adding = ref(false);
+function openAdd(): void {
+  adding.value = true;
+  if (!applications.value.length) void loadApplications();
+}
+function orpAdded(data: Page): void {
+  adding.value = false;
+  meetingSaved(data);
+  if (wideView.value) void router.replace({ query: { ...route?.query, rdv: "orp" } });
+}
+async function interviewAdded(application: Application): Promise<void> {
+  adding.value = false;
+  await loadApplications();
+  if (wideView.value) void router.replace({ query: { ...route?.query, rdv: `entretien-${application.id}` } });
+}
 
 // Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1, règles §4 : pas de rouge dans « ⋯ »).
 async function removeMeeting(): Promise<void> {
@@ -289,6 +306,7 @@ onMounted(() => void load());
       @note="noting = $event"
       @saved="meetingSaved"
       @cancel="editing = false"
+      @add="openAdd"
     />
     <template v-else>
       <!-- Un rendez-vous passé à noter passe en premier, avant le formulaire (corrections du 9 novembre). -->
@@ -362,7 +380,7 @@ onMounted(() => void load());
              pas avec l’écran « Pas encore de candidature », un seul des trois par écran. -->
         <OrpMeetingEmpty
           v-if="!meeting && !editing && !noApplications"
-          @saved="meetingSaved"
+          @add="openAdd"
         />
         <OrpMeetingForm
           v-else-if="!meeting || editing"
@@ -749,6 +767,14 @@ onMounted(() => void load());
       v-if="preparing"
       :application="preparing"
       @close="preparing = null"
+    />
+    <NewMeetingSheet
+      :open="adding"
+      :applications="applications"
+      :planned="meeting && !started ? meeting : null"
+      @close="adding = false"
+      @orp="orpAdded"
+      @interview="interviewAdded"
     />
   </section>
 </template>

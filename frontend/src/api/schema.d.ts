@@ -4088,6 +4088,8 @@ export interface components {
             interview_at?: string | null;
             /** Interview Place */
             interview_place?: string | null;
+            /** Interview Format */
+            interview_format?: ("sur_place" | "visio" | "telephone") | null;
             /** Id */
             id: number;
             /** Offer Id */
@@ -4214,6 +4216,8 @@ export interface components {
             interview_at?: string | null;
             /** Interview Place */
             interview_place?: string | null;
+            /** Interview Format */
+            interview_format?: ("sur_place" | "visio" | "telephone") | null;
         };
         /** AskKeywordOut */
         AskKeywordOut: {

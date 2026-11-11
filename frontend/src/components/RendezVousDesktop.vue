@@ -9,6 +9,7 @@ import { plural } from "../format";
 import {
   countdown,
   dateText,
+  interviewFormat,
   interviewPlace,
   lastAgreed,
   meetingsToNote,
@@ -29,8 +30,8 @@ import OrpOutcomeInline from "./OrpOutcomeInline.vue";
 // Rendez-vous sur ordinateur, dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB, onglet Rendez-vous) :
 // la liste de 480 px à gauche (À venir, À noter, Passés, en cartes de 104 px), le détail de ce qui est choisi à
 // droite ; les deux colonnes défilent seules. Le choix est dans l'adresse (?rdv=orp, entretien-12, passe-3).
-// Les dates sont dans l'icône calendrier (CalendarDate, D26). Sans rendez-vous ORP prévu, une ligne de texte et
-// « Ajouter » en tête de liste, sans carte (D22) ; le détail montre le formulaire.
+// Les dates sont dans l'icône calendrier (CalendarDate, D26). En tête de liste, « + Nouveau rendez-vous »
+// (PR 41), avec « Aucun rendez-vous à venir » quand rien n'est prévu ; il ouvre le panneau de la page.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -50,6 +51,7 @@ const emit = defineEmits<{
   note: [id: number];
   saved: [page: Page];
   cancel: [];
+  add: [];
 }>();
 
 const route = useRoute();
@@ -71,12 +73,13 @@ const keys = computed(() => [
   ...toNote.value.map(pastKey),
   ...noted.value.map(pastKey),
 ]);
-// Sans rendez-vous ORP prévu : le premier rendez-vous à noter (lot 14), sinon « nouveau » (le formulaire).
+// Sans rendez-vous ORP prévu : le premier rendez-vous à noter (lot 14), sinon le premier de la liste. PR 41 : plus de
+// formulaire dans le détail, un nouveau rendez-vous se saisit dans le panneau « Nouveau rendez-vous ».
 const selected = computed(() => {
   const asked = route.query.rdv;
-  if (typeof asked === "string" && (keys.value.includes(asked) || asked === "nouveau")) return asked;
+  if (typeof asked === "string" && keys.value.includes(asked)) return asked;
   if (nextOrp.value) return "orp";
-  return toNote.value[0] ? pastKey(toNote.value[0]) : "nouveau";
+  return toNote.value[0] ? pastKey(toNote.value[0]) : (keys.value[0] ?? "");
 });
 function select(key: string): void {
   void router.replace({ query: { ...route.query, rdv: key } });
@@ -137,22 +140,23 @@ watch(() => props.page, () => void nextTick(measure));
       role="region"
     >
       <div
-        v-if="!nextOrp"
         class="rdv-list-empty"
         data-test="rdv-list-empty"
       >
         <div>
-          <strong>Aucun rendez-vous à venir</strong>
-          <span>Ajoute le prochain : jobA1 prépare ta feuille la veille.</span>
+          <template v-if="!upcoming.length">
+            <strong>Aucun rendez-vous à venir</strong>
+            <span>jobA1 prépare ta fiche la veille.</span>
+          </template>
         </div>
         <button
           type="button"
           class="secondary action-2"
+          aria-haspopup="dialog"
           data-test="rdv-add"
-          :aria-expanded="selected === 'nouveau'"
-          @click="select('nouveau')"
+          @click="emit('add')"
         >
-          Ajouter
+          <AppIcon name="plus" />Nouveau rendez-vous
         </button>
       </div>
       <template v-if="upcoming.length">
@@ -176,7 +180,7 @@ watch(() => props.page, () => void nextTick(measure));
           <span class="rdv-item-text">
             <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
             <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
-            <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
+            <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
             <span class="list-card-chips">
               <span
                 v-if="item.kind === 'orp'"
@@ -241,6 +245,7 @@ watch(() => props.page, () => void nextTick(measure));
     </div>
 
     <div
+      v-if="selected || (editing && page.meeting)"
       class="rdv-detail"
       data-test="rdv-detail"
     >
@@ -402,8 +407,11 @@ watch(() => props.page, () => void nextTick(measure));
               {{ selectedInterview.application.job_title || "Poste non indiqué" }}
             </h1>
             <p>{{ [selectedInterview.application.company, `${dateText(selectedInterview.at)}, ${timeOfDay(selectedInterview.at)}`].filter(Boolean).join(" · ") }}</p>
-            <p v-if="interviewPlace(selectedInterview.application)">
-              {{ interviewPlace(selectedInterview.application) }}
+            <p
+              v-if="interviewFormat(selectedInterview.application) || interviewPlace(selectedInterview.application)"
+              data-test="rdv-interview-where"
+            >
+              {{ [interviewFormat(selectedInterview.application), interviewPlace(selectedInterview.application)].filter(Boolean).join(" · ") }}
             </p>
           </div>
         </div>
@@ -445,24 +453,17 @@ watch(() => props.page, () => void nextTick(measure));
           :target="page.target"
           :next="nextOrp?.kind === 'orp' ? page.meeting : null"
           @saved="emit('saved', $event)"
-          @add="select('nouveau')"
+          @add="emit('add')"
         />
       </article>
 
-      <!-- Modifier le rendez-vous prévu, ou en ajouter un. -->
+      <!-- Modifier le rendez-vous prévu. -->
       <OrpMeetingForm
         v-else-if="editing && page.meeting"
         :meeting="page.meeting"
         inline
         @saved="emit('saved', $event)"
         @cancel="emit('cancel')"
-      />
-      <OrpMeetingForm
-        v-else
-        inline
-        :can-cancel="keys.length > 0"
-        @saved="emit('saved', $event)"
-        @cancel="select(keys[0] ?? 'nouveau')"
       />
     </div>
   </div>
@@ -549,5 +550,5 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-list-empty > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .rdv-list-empty strong { font-size: var(--rdv-15); }
 .rdv-list-empty span { font-size: var(--font-caption); color: var(--text-secondary); }
-.rdv-list-empty button { flex: none; height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
+.rdv-list-empty button { flex: none; border-color: var(--card-line); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: var(--space-2); height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
 </style>

@@ -16,9 +16,9 @@ type Meeting = components["schemas"]["MeetingOut"];
 
 // `inline` : dans le panneau de détail de l'ordinateur (lot 11.5), sans carte autour, le titre de 26 px et sa phrase ;
 // `canCancel` : « Annuler » aussi pour un nouveau rendez-vous.
-// `sheet` : dans la fenêtre du bas du téléphone (maquette RendezVous, état `addSheet`, PR 28) : la fenêtre porte le
-// titre, pas de carte autour, date et heure en champs à contour.
-const props = defineProps<{ meeting?: Meeting | null; inline?: boolean; canCancel?: boolean; sheet?: boolean }>();
+// Un nouveau rendez-vous se saisit dans « Nouveau rendez-vous » (NewMeetingSheet, PR 41) : ce formulaire sert à modifier
+// le rendez-vous prévu, et au premier rendez-vous d'un compte sans candidature.
+const props = defineProps<{ meeting?: Meeting | null; inline?: boolean; canCancel?: boolean }>();
 const emit = defineEmits<{ saved: [page: Page]; cancel: [] }>();
 
 function pad(n: number): string {
@@ -86,9 +86,8 @@ async function save(): Promise<void> {
   <form
     v-else
     ref="form"
-    :class="['rdv-form', { 'rdv-form-inline': inline, 'rdv-form-sheet': sheet }]"
-    :aria-labelledby="sheet ? undefined : 'rdv-form-title'"
-    :aria-label="sheet ? 'Prochain rendez-vous ORP' : undefined"
+    :class="['rdv-form', { 'rdv-form-inline': inline }]"
+    aria-labelledby="rdv-form-title"
     data-test="meeting-form"
     novalidate
     @submit.prevent="save"
@@ -102,7 +101,7 @@ async function save(): Promise<void> {
       </p>
     </div>
     <h3
-      v-else-if="!sheet"
+      v-else
       id="rdv-form-title"
     >
       {{ meeting ? "Le prochain rendez-vous" : "Prochain rendez-vous ORP" }}
@@ -113,7 +112,6 @@ async function save(): Promise<void> {
         :time="time"
         :open="picking"
         :compact="phone"
-        :outlined="sheet"
         :aria-invalid="dayError || timeError ? 'true' : undefined"
         @open="picking = $event"
       />
@@ -204,9 +202,6 @@ async function save(): Promise<void> {
 .rdv-form.rdv-form-inline { --form-26: 26px; --form-32: 32px; --form-20: 20px; --form-6: 6px; gap: var(--form-20); max-width: 560px; padding: 0; border: 0; border-radius: 0; background: none; animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); }
 .rdv-form-inline h2 { margin: 0; font-size: var(--form-26); line-height: var(--form-32); font-weight: var(--weight-heavy); }
 .rdv-form-sentence { margin: var(--form-6) 0 0; font-size: var(--font-label); color: var(--text-secondary); }
-/* Dans la fenêtre du bas (PR 28) : sans carte, 16 px entre les blocs, le bouton plein de 52 px. */
-.rdv-form.rdv-form-sheet { padding: 0; border: 0; border-radius: 0; background: none; }
-.rdv-form-sheet button[type="submit"] { justify-content: center; }
 .rdv-form-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .rdv-form-actions .primary { padding: 0 var(--space-6); }
 .rdv-form-actions .rdv-form-cancel { padding: 0 var(--space-4); border: 0; background: transparent; color: var(--primary-text); }

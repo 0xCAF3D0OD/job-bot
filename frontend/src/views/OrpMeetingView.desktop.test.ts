@@ -115,14 +115,23 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
 
-  it("aucun rendez-vous : une ligne et « Ajouter » en tête de liste, le formulaire dans le détail, sans personnage", async () => {
+  it("aucun rendez-vous : une ligne et « Nouveau rendez-vous » en tête de liste, qui ouvre le panneau ; plus de formulaire dans le détail (PR 41)", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.find("[data-test=rdv-add]").text()).toBe("Ajouter");
-    const detail = wrapper.get("[data-test=rdv-detail]");
-    expect(detail.find("[data-test=meeting-person]").exists()).toBe(false);
-    expect(detail.find("[data-test=meeting-form]").exists()).toBe(true);
-    expect(detail.find("input[type=date], input[type=time]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("jobA1 prépare ta fiche la veille.");
+    const add = wrapper.get("[data-test=rdv-add]");
+    expect(add.text()).toBe("Nouveau rendez-vous");
+    expect(add.attributes("aria-haspopup")).toBe("dialog");
+    expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
+    expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(false);
+    await add.trigger("click");
+    expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(true);
+    const panel = wrapper.get("[data-test=new-meeting]");
+    expect(panel.find(".sheet-title").text()).toBe("Nouveau rendez-vous");
+    expect(panel.text()).toContain("jobA1 prépare ta fiche la veille");
+    expect(panel.find("[role=radiogroup][aria-label='Avec qui ?']").exists()).toBe(true);
+    expect(panel.find("input[type=date], input[type=time]").exists()).toBe(false);
   });
 });

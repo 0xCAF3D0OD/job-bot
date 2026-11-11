@@ -11157,6 +11157,22 @@
             ],
             "title": "Interview Place"
           },
+          "interview_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sur_place",
+                  "visio",
+                  "telephone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview Format"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -11593,6 +11609,22 @@
               }
             ],
             "title": "Interview Place"
+          },
+          "interview_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sur_place",
+                  "visio",
+                  "telephone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview Format"
           }
         },
         "type": "object",
