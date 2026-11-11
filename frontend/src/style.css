@@ -1024,10 +1024,15 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .more-menu .menu a { display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left; border: 0; background: transparent; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); text-decoration: none; }
 /* docs/74 §5 : jamais hors de l'écran, un filet avant les suppressions, en rouge. */
 .more-menu .menu { max-width: calc(100vw - 2rem); scroll-margin: 0.5rem; }
+/* Lignes d'un menu (récapitulatif du 11 novembre, PR 33 point 5) : pleine largeur, sans rayon ni bordure propre, sans
+   soulignement ; seul un filet sépare les groupes. */
+.more-menu .menu { padding: var(--space-1) 0; overflow: hidden; }
+.more-menu .menu :is(button, a) { border-radius: 0; text-decoration: none; }
+.more-menu .menu :is(button, a):hover { text-decoration: none; }
 .more-menu .menu.up { top: auto; bottom: 2.4rem; }
 .more-menu .menu.align-left { right: auto; left: 0; }
 .more-menu .menu .danger { color: var(--text); }
-.more-menu .menu-separator { height: 1px; margin: var(--space-1) var(--space-2); background: var(--divider); }
+.more-menu .menu-separator { height: 1px; margin: var(--space-1) 0; background: var(--divider); }
 .more-menu .menu-count { color: var(--muted); font-weight: var(--weight-regular); }
 /* L'icône de chaque action (docs/101), grise ; rouge pour une suppression. */
 .more-menu .menu .icon { width: 1.05rem; height: 1.05rem; color: var(--muted); }

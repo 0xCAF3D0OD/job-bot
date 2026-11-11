@@ -236,6 +236,6 @@ const oldest = computed(() => Math.max(0, ...(today.value?.follow_ups ?? []).map
 .bilan-row-what > span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
 .bilan-row > strong { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); }
 .bilan-row > strong.warn { color: var(--peach-text); }
-.bilan-row-action { display: flex; align-items: center; justify-content: space-between; min-height: var(--res-52); padding: 0 var(--space-5); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.bilan-row-action { display: flex; align-items: center; justify-content: space-between; min-height: var(--res-52); padding: 0 var(--space-5); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; border-radius: 0; }
 .bilan-row-action:hover { background: var(--primary-soft); }
 </style>
