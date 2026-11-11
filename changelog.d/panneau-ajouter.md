@@ -1,1 +1,1 @@
-Panneau « Ajouter » refait : un champ « Lien ou texte de l’annonce » et un seul bouton, l’import du PDF d’une annonce (texte lu sur le serveur, fichier non gardé), « Ce que jobA1 a lu » à corriger avant d’ajouter, une lecture des pages sans bandeau de cookies ni formulaire, et une offre déjà dans la liste qui s’ouvre directement
+Panneau « Ajouter » sur ordinateur : il s’ouvre sous l’en-tête (420 px, pastille, titre et sous-titre), et se ferme de nouveau par Échap, la croix ou un clic à l’extérieur, en rendant le focus au bouton « Ajouter »
