@@ -1,12 +1,15 @@
 // Bilan › ORP (docs/139 étape 8a, maquette Explorer ; B3 à B6, Kevin, 2026-11-04).
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 import BilanOrpView from "./BilanOrpView.vue";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a), POST: vi.fn() } }));
+const route = reactive<{ query: Record<string, string> }>({ query: {} });
+const push = vi.fn();
+vi.mock("vue-router", () => ({ useRoute: () => route, useRouter: () => ({ push: (...a: unknown[]) => push(...a) }) }));
 vi.mock("../composables/usePhone", () => ({ usePhone: () => ({ phone: ref(true) }) }));
 afterEach(() => GET.mockReset());
 

@@ -1,0 +1,1 @@
+Sur ordinateur, le Bilan suit la maquette : tout le suivi ORP dans Bilan › ORP avec les mois précédents en bas, les Résultats en une seule colonne avec « Ce qui bloque », et le bloc « L’entreprise » d’une offre en champs lisibles
