@@ -386,3 +386,58 @@ async def test_counts_pending_is_the_badge_and_total_is_the_list(
     in_progress = (await api.get("/api/offers", params={"view": "in_progress"})).json()
     assert in_progress["counts"]["pending"] == badge
     assert in_progress["total"] == len(in_progress["items"])
+
+
+async def test_score_basis_filter(api: AsyncClient, runtime: Runtime) -> None:
+    """Filtre « Note » (PR 26) : sûres (notées sur l'annonce complète) ou provisoires (notées
+    sur l'extrait seulement) ; les deux nombres sont réels et se comptent sans ce filtre."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    cases: list[tuple[str, str | None, int | None, bool]] = [
+        ("Sûre 1", "Texte complet de l'annonce.", 80, False),
+        ("Sûre 2", "Autre texte complet.", 55, False),
+        ("Provisoire 1", None, 61, False),
+        ("Provisoire 2", "", 70, False),
+        ("Provisoire 3", None, 90, False),
+        ("Pas notée", None, None, False),
+        ("Spontanée", None, 66, True),
+    ]
+    async with runtime.sessionmaker.begin() as session:
+        for n, (title, description, score, spontaneous) in enumerate(cases):
+            offer = Offer(
+                fingerprint=f"basis{n}",
+                title=title,
+                description=description,
+                spontaneous=spontaneous,
+                first_seen_at=NOW + timedelta(minutes=n),
+                last_seen_at=NOW,
+                status=OfferStatus.TO_REVIEW,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    score=score,
+                    scored_at=NOW if score is not None else None,
+                )
+            )
+    assert len(await titles(api)) == 7
+    assert sorted(await titles(api, basis="sure")) == ["Spontanée", "Sûre 1", "Sûre 2"]
+    assert sorted(await titles(api, basis="provisional")) == [
+        "Provisoire 1",
+        "Provisoire 2",
+        "Provisoire 3",
+    ]
+    # Les nombres ne dépendent pas du choix fait dans ce groupe, mais suivent les autres filtres.
+    for basis in (None, "sure", "provisional"):
+        params: dict[str, Any] = {"view": "to_review", **({"basis": basis} if basis else {})}
+        facets = (await api.get("/api/offers", params=params)).json()["facets"]
+        assert (facets["sure"], facets["provisional"]) == (3, 3)
+    narrowed = (await api.get("/api/offers", params={"view": "to_review", "min_score": 65})).json()[
+        "facets"
+    ]
+    assert (narrowed["sure"], narrowed["provisional"]) == (2, 2)
+    assert (await api.get("/api/offers", params={"basis": "autre"})).status_code == 422

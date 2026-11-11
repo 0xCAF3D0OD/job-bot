@@ -3649,6 +3649,26 @@
               "default": false,
               "title": "With Expired"
             }
+          },
+          {
+            "name": "basis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sure",
+                    "provisional"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Basis"
+            }
           }
         ],
         "responses": {
@@ -19191,6 +19211,16 @@
           "unscored": {
             "type": "integer",
             "title": "Unscored",
+            "default": 0
+          },
+          "sure": {
+            "type": "integer",
+            "title": "Sure",
+            "default": 0
+          },
+          "provisional": {
+            "type": "integer",
+            "title": "Provisional",
             "default": 0
           }
         },

@@ -6655,6 +6655,16 @@ export interface components {
              * @default 0
              */
             unscored: number;
+            /**
+             * Sure
+             * @default 0
+             */
+            sure: number;
+            /**
+             * Provisional
+             * @default 0
+             */
+            provisional: number;
         };
         /**
          * OfferFiltersVisible
@@ -11477,6 +11487,7 @@ export interface operations {
                 hide_doubtful?: boolean;
                 with_filtered_out?: boolean;
                 with_expired?: boolean;
+                basis?: ("sure" | "provisional") | null;
             };
             header?: never;
             path?: never;

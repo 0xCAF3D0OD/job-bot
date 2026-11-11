@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import ColumnElement, Time, and_, case, cast, func, or_, select
+from sqlalchemy import ColumnElement, Time, and_, case, cast, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
@@ -443,6 +443,10 @@ class OfferFacets(BaseModel):
     # (0-4, 5-9… 95-100), sans le filtre de note lui-même ; et les offres pas encore notées.
     scores: list[int] = []
     unscored: int = 0
+    # Filtre « Note » : offres notées sur l'annonce complète (sûres) ou sur l'extrait de l'alerte
+    # seulement (provisoires), sans ce filtre lui-même.
+    sure: int = 0
+    provisional: int = 0
 
 
 # Accents retirés côté base, sans extension PostgreSQL (unaccent n'est pas toujours installé).
@@ -619,6 +623,7 @@ async def list_offers(
     hide_doubtful: bool = False,
     with_filtered_out: bool = False,
     with_expired: bool = False,
+    basis: Literal["sure", "provisional"] | None = None,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -663,6 +668,17 @@ async def list_offers(
     if max_score is not None:
         conditions.append(score <= max_score)
     view_condition = _view_condition(view, with_filtered_out, with_expired)
+    # « Note » : provisoire = notée sans le texte de l'annonce (la pastille « Provisoire » de la
+    # fiche) ; sûre = notée sur l'annonce complète. Les nombres se comptent sans ce filtre.
+    provisional = and_(
+        score.is_not(None),
+        func.coalesce(Offer.description, "") == "",
+        Offer.spontaneous.is_(False),
+    )
+    sure = and_(score.is_not(None), not_(provisional))
+    without_basis = [*conditions, *([view_condition] if view_condition is not None else [])]
+    if basis is not None:
+        conditions.append(provisional if basis == "provisional" else sure)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
@@ -673,6 +689,9 @@ async def list_offers(
     ):
         without_sources.append(bound)
         without_cantons.append(bound)
+    if basis is not None:
+        for others in (without_score, without_sources, without_cantons):
+            others.append(provisional if basis == "provisional" else sure)
     if view_condition is not None:
         without_score.append(view_condition)
     if view_condition is not None:
@@ -721,6 +740,14 @@ async def list_offers(
                 .group_by(Offer.canton)
             )
         ).all()
+        basis_row = (
+            await session.execute(
+                select(
+                    func.count().filter(sure),
+                    func.count().filter(provisional),
+                ).where(*without_basis)
+            )
+        ).one()
 
     live: dict[str, int] = {}
     for offer_status, expired, count in grouped:
@@ -745,6 +772,8 @@ async def list_offers(
     facets = OfferFacets(
         scores=histogram,
         unscored=unscored,
+        sure=int(basis_row[0]),
+        provisional=int(basis_row[1]),
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[
             Facet(value=str(v), count=c)

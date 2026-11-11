@@ -63,7 +63,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0 });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0 });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres à examiner. », « 1 offre écartée. ».
 const VIEW_END: Record<string, [string, string]> = {
@@ -404,6 +404,7 @@ async function load(append = false): Promise<void> {
           hide_doubtful: f.hideDoubtful || undefined,
           with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
+          basis: f.basis ?? undefined,
         },
       },
     });
@@ -716,6 +717,7 @@ onUnmounted(() => {
         <OfferFilterPanel
           :filters="filters"
           :counts="counts"
+          :facets="facets"
           :total="shownTotal"
           @update="update"
           @reset="reset"

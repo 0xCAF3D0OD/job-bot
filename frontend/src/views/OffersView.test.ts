@@ -54,6 +54,8 @@ function page(items: unknown[]) {
           { value: "VD", count: 4 },
           { value: "GE", count: 1 },
         ],
+        sure: 104,
+        provisional: 312,
       },
     },
   };
@@ -226,11 +228,31 @@ describe("OffersView", () => {
     expect(router.currentRoute.value.query).toEqual({ statut: "to_review" });
   });
 
+  it("groupe « Note » (PR 26) : Toutes, Sûres · n, Provisoires · n en boutons radio ; le choix part à l’API et dans l’adresse", async () => {
+    const wrapper = await mountAt("/offres");
+    await openFilters(wrapper);
+    const group = wrapper.find("[role=radiogroup][aria-labelledby=pop-basis]");
+    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes", "Sûres · 104", "Provisoires · 312"]);
+    expect(wrapper.find("[data-test=pop-basis-all]").attributes("aria-checked")).toBe("true");
+    await wrapper.find("[data-test=pop-basis-provisional]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({ base: "provisoire" });
+    expect(lastQuery()).toMatchObject({ basis: "provisional" });
+    expect(group.findAll("[aria-checked=true]").map((b) => b.text())).toEqual(["Provisoires · 312"]);
+    // Les flèches passent au choix voisin (un seul arrêt de tabulation).
+    await wrapper.find("[data-test=pop-basis-provisional]").trigger("keydown", { key: "ArrowLeft" });
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({ base: "sure" });
+    await wrapper.find("[data-test=filters-reset]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({});
+  });
+
   it("le panneau : un seul conteneur, le milieu défile, le pied reste", async () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const dialog = wrapper.find("[data-test=filters-dialog]");
-    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Taux minimum"]);
+    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Note", "Taux minimum"]);
     expect(dialog.findAll("[aria-pressed]").length).toBe(14);
     expect(dialog.find(".filter-panel-body [data-test=filters-done]").exists()).toBe(false);
     expect(dialog.find(".filter-panel-foot [data-test=filters-done]").exists()).toBe(true);
