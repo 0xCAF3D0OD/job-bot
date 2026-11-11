@@ -27,6 +27,9 @@ READ_RESPONSES: dict[int | str, dict[str, Any]] = {
 # 5 minutes, 20 par heure par compte (en mémoire, comme les autres limites de auth.service).
 per_offer = Window(limit=1, period_s=300)
 per_account = Window(limit=20, period_s=3600)
+# « Donner l'annonce » : la personne peut se tromper de lien et recommencer, 5 essais par offre
+# en 5 minutes, dans la même limite par compte.
+per_given_link = Window(limit=5, period_s=300)
 
 
 def _later(seconds: int) -> HTTPException:
@@ -67,6 +70,20 @@ class OfferTextIn(BaseModel):
         return value
 
 
+class OfferLinkIn(BaseModel):
+    """Le lien de l'annonce chez l'employeur, donné par la personne (E-1) : https seulement."""
+
+    url: Annotated[str, Field(min_length=12, max_length=2000)]
+
+    @field_validator("url")
+    @classmethod
+    def _https(cls, value: str) -> str:
+        value = value.strip()
+        if not value.startswith("https://") or any(c.isspace() for c in value):
+            raise ValueError("le lien commence par https://")
+        return value
+
+
 def _refused(exc: Exception) -> HTTPException:
     if isinstance(exc, manual_offers.NoAnnouncement):
         return HTTPException(status.HTTP_409_CONFLICT, "candidature spontanée : pas d'annonce")
@@ -98,6 +115,32 @@ async def read(request: Request, offer_id: int) -> OfferTextOut:
             paste=exc.paste and not exc.transient,
             retry=exc.transient,
         )
+    return OfferTextOut(saved=True, source="page", score=score)
+
+
+@router.post("/{offer_id}/read-link", operation_id="readOfferLink", responses=READ_RESPONSES)
+async def read_link(request: Request, offer_id: int, body: OfferLinkIn) -> OfferTextOut:
+    """« Donner l'annonce » : lit la page donnée par la personne, puis refait la note. Le serveur
+    va chercher une adresse choisie par un utilisateur : adresses internes refusées, redirections
+    comprises (E-6, par `logos._get`), et mêmes limites que la lecture depuis la fiche."""
+    runtime = _runtime(request)
+    try:
+        # L'offre d'abord (404 pour un autre compte, C-4), puis les limites.
+        await manual_offers.check_offer(runtime, offer_id)
+    except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
+        raise _refused(exc) from None
+    account = f"compte-{accounts.current()}"
+    offer_key = f"{account}:{offer_id}:lien"
+    if wait := max(per_given_link.wait(offer_key), per_account.wait(account)):
+        raise _later(wait)
+    per_given_link.take(offer_key)
+    per_account.take(account)
+    try:
+        score = await manual_offers.read_given_link(runtime, offer_id, body.url)
+    except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
+        raise _refused(exc) from None
+    except manual_offers.ReadProblem as exc:
+        return OfferTextOut(saved=False, problem=exc.message, paste=True)
     return OfferTextOut(saved=True, source="page", score=score)
 
 

@@ -33,6 +33,7 @@ POSTING_PAGE = (
 def fresh_limits() -> None:
     offer_text.per_offer.hits.clear()
     offer_text.per_account.hits.clear()
+    offer_text.per_given_link.hits.clear()
 
 
 @pytest.fixture
@@ -409,3 +410,98 @@ async def test_pasted_text_marks_the_offer_done(
     response = await api.put(f"/api/offers/{offer_id}/description", json={"text": LONG})
     assert response.status_code == 200
     assert await reading_state(api, offer_id) == "done"
+
+
+# --- « Donner l'annonce » : le lien chez l'employeur, donné par la personne (PR 25) -------------
+
+EMPLOYER = "https://www.employeur-exemple.ch/emplois/ingenieur-systemes"
+
+
+async def test_given_link_is_read_and_the_offer_rescored(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    fetched = site(monkeypatch, None)
+
+    response = await api.post(f"/api/offers/{offer_id}/read-link", json={"url": EMPLOYER})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["saved"], body["source"], body["score"]) == (True, "page", 78)
+    # La page donnée est lue, pas le lien de l'alerte.
+    assert fetched == [EMPLOYER]
+    assert (await description(ai, offer_id) or "").startswith("Tu administres nos serveurs")
+    assert await read_columns(ai, offer_id) == ("done", None, 0)
+
+
+async def test_given_link_without_announcement_says_so_and_changes_nothing(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    site(monkeypatch, None, "<html><body><main>Nos valeurs.</main></body></html>")
+
+    body = (await api.post(f"/api/offers/{offer_id}/read-link", json={"url": EMPLOYER})).json()
+
+    assert body["saved"] is False and body["paste"] is True
+    assert body["problem"] == "Cette page ne contient pas d'annonce lisible."
+    assert await description(ai, offer_id) is None
+    assert len(fake.calls) == 1
+
+
+async def test_given_link_must_be_https_and_public(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    refused_links = (
+        "http://www.employeur-exemple.ch/emplois/1",
+        "ftp://exemple.ch/x",
+        "javascript:alert(1)",
+    )
+    for bad in refused_links:
+        refused = await api.post(f"/api/offers/{offer_id}/read-link", json={"url": bad})
+        assert refused.status_code == 422, bad
+
+    # Une adresse interne est refusée par le chargement lui-même (E-6), sans rien enregistrer.
+    async def no_robots(_url: str) -> str | None:
+        return None
+
+    monkeypatch.setattr(manual_offers, "fetch_robots", no_robots)
+    monkeypatch.setattr(logos, "_get", REAL_GET)
+    body = (
+        await api.post(f"/api/offers/{offer_id}/read-link", json={"url": "https://127.0.0.1/admin"})
+    ).json()
+    assert body["saved"] is False
+    assert await description(ai, offer_id) is None
+
+
+async def test_given_link_unknown_offer_spontaneous_and_limit(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Offre inconnue, ou d'un autre compte (invisible par la RLS) : 404 dans les deux cas (C-4).
+    assert (
+        await api.post("/api/offers/999999/read-link", json={"url": EMPLOYER})
+    ).status_code == 404
+    spontaneous = await add_offer(ai, 2, spontaneous=True)
+    conflict = await api.post(f"/api/offers/{spontaneous}/read-link", json={"url": EMPLOYER})
+    assert conflict.status_code == 409
+
+    offer_id = await alert_offer(ai)
+    site(monkeypatch, None, "<html><body><main>Rien.</main></body></html>")
+    for _ in range(5):
+        assert (
+            await api.post(f"/api/offers/{offer_id}/read-link", json={"url": EMPLOYER})
+        ).status_code == 200
+    late = await api.post(f"/api/offers/{offer_id}/read-link", json={"url": EMPLOYER})
+    assert late.status_code == 429 and "Réessaie dans" in late.json()["detail"]

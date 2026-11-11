@@ -1,0 +1,1 @@
+Annonce illisible : la fiche propose « Donner l’annonce » pour coller le lien de l’annonce chez l’employeur, que jobA1 lit avant de refaire la note, ou pour coller le texte (compteur et bouton « Refaire la note »)

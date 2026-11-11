@@ -2,16 +2,22 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
+import { usePhone } from "../composables/usePhone";
+import { sourceLabel } from "../format";
+import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import Composer from "./Composer.vue";
+import FormField from "./FormField.vue";
 
 // Annonce complète lue automatiquement (prompt du 10 novembre, PR 13 ; maquettes OffreProvisoire et
 // CandidaturesOrdinateurB) : l'utilisateur ne va plus chercher le texte lui-même. Une offre venue d'une alerte est lue
 // en arrière-plan ; la carte de la note montre où en est la lecture, sans bouton :
 // - `reading` : « jobA1 lit l'annonce complète… » avec un petit indicateur (role="status", aria-live="polite") ;
-// - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : « jobA1 n'a pas pu lire
-//   l'annonce », « Coller le texte » en tonal (la feuille de collage). Pas de lien ici : le seul lien vers l'annonce est
-//   « Voir l'annonce sur [source] » de la fiche (prompt récapitulatif du 11 novembre, PR 25).
+// - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : une seule ligne « Annonce
+//   illisible · Indeed bloque la lecture. » et le bouton teinté « Donner l'annonce » (prompt du 10 novembre au soir,
+//   PR 25). Sur téléphone, il ouvre la fenêtre du bas « Donner l'annonce à jobA1 » ; sur ordinateur, la carte se
+//   déplie sur place (`aria-expanded`). On y donne le lien de l'annonce chez l'employeur, que jobA1 lit, ou on colle le
+//   texte. Pas de lien vers le site ici : le seul est « Voir l'annonce sur [source] » de la fiche.
 // Plus de « Lire l'annonce » ni de bande « Il manque l'annonce complète ». `done` est montré par la fiche (« Note
 // refaite sur l'annonce complète. »). Si la fiche s'ouvre avant la tâche de fond, la lecture est demandée tout de suite
 // (une fois par offre) ; si le site est lent, jobA1 réessaie une fois de lui-même et la fiche se recharge un moment.
@@ -75,16 +81,83 @@ function start(): void {
   void readNow();
 }
 onMounted(start);
-onBeforeUnmount(() => clearTimeout(timer));
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  clearTimeout(pasteTimer);
+  window.removeEventListener("popstate", showPaste);
+});
+
+const { phone } = usePhone();
+
+// Le nom réel du site d'où vient l'offre (« Indeed bloque la lecture. ») ; inconnu : « Ce site ».
+const blocker = computed(() => {
+  const link = props.offer.links.find((l) => l.source !== "manual" && !l.url.startsWith("https://annonce-collee.invalid/"));
+  return `${link ? (sourceLabel[link.source] ?? "Ce site") : "Ce site"} bloque la lecture.`;
+});
+
+// « Donner l'annonce » : le lien chez l'employeur, lu par le serveur (le lien n'est pas gardé).
+const giving = ref(false);
+const url = ref("");
+const problem = ref("");
+const reading = ref(false);
+const zoneId = "offer-give-zone";
+const problemId = "offer-give-problem";
+function toggleGive(): void {
+  giving.value = !giving.value;
+  problem.value = "";
+}
+async function readLink(): Promise<void> {
+  if (reading.value) return;
+  const link = url.value.trim();
+  if (!/^https:\/\/\S+\.\S+$/.test(link)) {
+    problem.value = "Colle un lien complet, qui commence par https://";
+    return;
+  }
+  reading.value = true;
+  problem.value = "";
+  try {
+    const { data, error: refused } = await api.POST("/api/offers/{offer_id}/read-link", {
+      params: { path: { offer_id: props.offer.id } },
+      body: { url: link },
+    });
+    if (data?.saved) {
+      giving.value = false;
+      url.value = "";
+      emit("changed");
+      return;
+    }
+    const detail = (refused as { detail?: unknown } | undefined)?.detail;
+    problem.value = data?.problem ?? (typeof detail === "string" ? detail : "Cette page ne contient pas d’annonce lisible.");
+  } catch {
+    problem.value = "API injoignable : réessaie dans un moment.";
+  } finally {
+    reading.value = false;
+  }
+}
 
 const pasting = ref(false);
 const text = ref("");
 const error = ref("");
 const saving = ref(false);
 const length = computed(() => text.value.trim().length);
+// Sur téléphone, la fenêtre « Donner l'annonce » se ferme d'abord : elle rend son entrée d'historique (le bouton
+// retour), et la fenêtre de collage ne s'ouvre qu'après, sinon ce retour la refermerait aussitôt. Sur ordinateur, la
+// carte reste dépliée derrière le panneau.
+let pasteTimer: ReturnType<typeof setTimeout> | undefined;
+function showPaste(): void {
+  clearTimeout(pasteTimer);
+  window.removeEventListener("popstate", showPaste);
+  pasting.value = true;
+}
 function openPaste(): void {
   error.value = "";
-  pasting.value = true;
+  if (!phone.value || !giving.value) {
+    pasting.value = true;
+    return;
+  }
+  giving.value = false;
+  window.addEventListener("popstate", showPaste, { once: true });
+  pasteTimer = setTimeout(showPaste, 300);
 }
 async function save(): Promise<void> {
   if (length.value < MIN_TEXT || saving.value) return;
@@ -115,6 +188,9 @@ watch(
     refreshes = 0;
     refusedHere.value = false;
     pasting.value = false;
+    giving.value = false;
+    url.value = "";
+    problem.value = "";
     text.value = "";
     start();
   },
@@ -167,27 +243,162 @@ export function resetRequested(): void {
     aria-labelledby="offer-text-title"
     data-test="text-refused"
   >
-    <div>
-      <h4
-        id="offer-text-title"
-        data-test="refused-title"
+    <div class="offer-text-head">
+      <div class="offer-text-what">
+        <h4
+          id="offer-text-title"
+          data-test="refused-title"
+        >
+          Annonce illisible
+        </h4>
+        <p data-test="refused-text">
+          {{ blocker }}
+        </p>
+      </div>
+      <button
+        v-if="phone"
+        type="button"
+        class="offer-give"
+        aria-haspopup="dialog"
+        data-test="give-offer"
+        @click="toggleGive"
       >
-        jobA1 n’a pas pu lire l’annonce
-      </h4>
-      <p data-test="refused-text">
-        Ce site bloque la lecture automatique. Colle le texte : la note sera refaite tout de suite.
-      </p>
+        Donner l’annonce
+      </button>
+      <button
+        v-else
+        type="button"
+        class="offer-give offer-give-fold"
+        :aria-expanded="giving"
+        :aria-controls="zoneId"
+        data-test="give-offer"
+        @click="toggleGive"
+      >
+        Donner l’annonce<AppIcon :name="giving ? 'chevron-up' : 'chevron-down'" />
+      </button>
     </div>
-    <div class="offer-text-actions">
+    <div
+      v-if="!phone"
+      v-show="giving"
+      :id="zoneId"
+      class="offer-give-zone"
+      data-test="give-zone"
+    >
+      <form
+        class="offer-give-row"
+        novalidate
+        @submit.prevent="readLink"
+      >
+        <FormField
+          v-slot="{ id, describedby }"
+          label="Lien de l’annonce chez l’employeur"
+          hint="Astuce : cherche le titre du poste sur le site carrière de l’entreprise."
+        >
+          <input
+            :id="id"
+            v-model="url"
+            type="url"
+            autocomplete="url"
+            :aria-describedby="`${describedby} ${problemId}`"
+            :aria-invalid="problem ? true : undefined"
+            data-test="give-url"
+          >
+        </FormField>
+        <button
+          type="submit"
+          class="offer-give-read"
+          :aria-disabled="reading ? 'true' : undefined"
+          data-test="give-read"
+        >
+          {{ reading ? "Lecture…" : "Lire" }}
+        </button>
+      </form>
+      <p
+        :id="problemId"
+        class="offer-give-problem"
+        aria-live="polite"
+        data-test="give-problem"
+      >
+        <span
+          v-if="problem"
+          class="field-error"
+        >{{ problem }}</span>
+      </p>
       <button
         type="button"
+        class="offer-give-paste"
         data-test="paste-offer-text"
         @click="openPaste"
       >
-        Coller le texte
+        Pas de lien ? Colle le texte
       </button>
     </div>
   </div>
+  <BottomSheet
+    v-if="phone"
+    :open="giving"
+    title="Donner l’annonce à jobA1"
+    data-test="give-sheet"
+    @close="giving = false"
+  >
+    <form
+      class="offer-give-form"
+      novalidate
+      @submit.prevent="readLink"
+    >
+      <p class="offer-give-lead">
+        Colle le lien de l’annonce chez l’employeur : jobA1 la lira directement.
+      </p>
+      <FormField
+        v-slot="{ id, describedby }"
+        label="Lien chez l’employeur"
+        hint="Astuce : cherche le titre du poste sur le site carrière de l’entreprise."
+      >
+        <input
+          :id="id"
+          v-model="url"
+          type="url"
+          autocomplete="url"
+          :aria-describedby="`${describedby} ${problemId}`"
+          :aria-invalid="problem ? true : undefined"
+          data-test="give-url"
+        >
+      </FormField>
+      <p
+        :id="problemId"
+        class="offer-give-problem"
+        aria-live="polite"
+        data-test="give-problem"
+      >
+        <span
+          v-if="problem"
+          class="field-error"
+        >{{ problem }}</span>
+      </p>
+      <button
+        type="submit"
+        class="primary offer-give-submit"
+        :aria-disabled="reading ? 'true' : undefined"
+        data-test="give-read"
+      >
+        {{ reading ? "Lecture de l’annonce…" : "Lire l’annonce" }}
+      </button>
+      <div
+        class="offer-give-or"
+        aria-hidden="true"
+      >
+        <span />ou<span />
+      </div>
+      <button
+        type="button"
+        class="offer-give-paste"
+        data-test="paste-offer-text"
+        @click="openPaste"
+      >
+        Coller le texte de l’annonce
+      </button>
+    </form>
+  </BottomSheet>
   <BottomSheet
     :open="pasting"
     title="Coller le texte de l’annonce"
@@ -195,16 +406,17 @@ export function resetRequested(): void {
     @close="pasting = false"
   >
     <p class="hint">
-      Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici. jobA1 refait la note tout de suite.
+      Sur la page de l’annonce, sélectionne tout le texte, copie-le et colle-le ici. Tout le texte est accepté, même très long.
     </p>
     <Composer
       v-model="text"
+      class="offer-paste"
       placeholder="Colle ici le texte de l’annonce"
       :rows="5"
       :min-chars="MIN_TEXT"
-      send-label="Enregistrer et refaire la note"
+      send-text="Refaire la note"
+      enough="assez pour noter"
       :busy="saving"
-      counter-hint="la flèche enregistre et refait la note"
       data-test="paste-text"
       @send="save"
     />

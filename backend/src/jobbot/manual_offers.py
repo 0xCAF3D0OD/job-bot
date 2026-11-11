@@ -694,6 +694,41 @@ async def read_full_text(runtime: Runtime, offer_id: int, *, rescore: bool) -> i
     return None
 
 
+NOT_AN_ANNOUNCEMENT = "Cette page ne contient pas d'annonce lisible."
+
+
+async def read_given_link(runtime: Runtime, offer_id: int, url: str) -> int | None:
+    """« Donner l'annonce » (paquet du 11 novembre, PR 25) : la lecture automatique a échoué, la
+    personne donne le lien de l'annonce chez l'employeur. Même moteur que la lecture automatique
+    (https, jamais une adresse privée, robots.txt respecté, 15 secondes au plus), puis l'offre
+    est renotée. Le lien n'est pas gardé : seul le texte lu l'est. ReadProblem si la page ne se
+    lit pas ; l'état de l'offre ne change pas (elle reste « à coller »)."""
+    await check_offer(runtime, offer_id)
+    try:
+        found = await asyncio.wait_for(read_link(url), READ_TIMEOUT_SECONDS)
+    except TimeoutError:
+        problem = ReadProblem(
+            "La page met trop de temps à répondre.", paste=True, reason="timeout", transient=True
+        )
+    except ReadProblem as exc:
+        problem = exc
+        if exc.reason == "no-text":
+            problem = ReadProblem(NOT_AN_ANNOUNCEMENT, paste=True, reason="no-text")
+    else:
+        log.info("offer_text_read", offer=offer_id, domain=_host(url), given=True)
+        return await save_description(runtime, offer_id, found, "page")
+    # La raison par domaine, jamais l'adresse entière ni le texte (J-1).
+    log.info(
+        "offer_text_read_failed",
+        offer=offer_id,
+        domain=_host(url),
+        reason=problem.reason,
+        transient=problem.transient,
+        given=True,
+    )
+    raise problem
+
+
 async def read_offer(runtime: Runtime, offer_id: int) -> int | None:
     """Lecture demandée depuis la fiche : le premier lien lisible, l'offre renotée ; sinon
     ReadProblem."""

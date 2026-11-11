@@ -26,14 +26,17 @@ const props = withDefaults(
     // Les fichiers acceptés au glisser-déposer (« application/pdf,image/png ») ; vide : aucun.
     accept?: string;
     busy?: boolean;
-    // La suite du compteur (« la flèche enregistre et refait la note », maquette OffreProvisoire).
-    counterHint?: string;
+    // Un bouton à texte à la place de la flèche seule (« Refaire la note », maquette OffreProvisoire du 10 novembre au
+    // soir, PR 25) : il reste visible et `aria-disabled` sous `minChars`. `enough` : la fin du compteur une fois le
+    // minimum atteint (« assez pour noter »), en vert.
+    sendText?: string;
+    enough?: string;
     // La boîte de l'Assistant (prompt du 10 novembre, PR 19 ; maquettes Assistant et AssistantOrdinateur, comme la
     // zone de saisie de Claude) : le texte en haut, dès une ligne ; + à gauche, micro et Envoyer à droite en dessous.
     // Envoyer reste visible, gris et `aria-disabled` tant qu'il n'y a rien à envoyer.
     stacked?: boolean;
   }>(),
-  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, counterHint: "", stacked: false },
+  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, sendText: "", enough: "", stacked: false },
 );
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -87,6 +90,10 @@ function acceptAndDictate(): void {
   asking.value = false;
   dictate();
 }
+
+// « 3 482 » : les milliers séparés par une espace fine insécable.
+const count = computed(() => String(length.value).replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"));
+const short = computed(() => props.minChars > 0 && length.value < props.minChars);
 
 function send(): void {
   if (!canSend.value) return;
@@ -294,6 +301,17 @@ defineExpose({ focus: () => area.value?.focus() });
       </button>
       <span class="composer-spacer" />
       <button
+        v-if="sendText"
+        type="button"
+        class="composer-send composer-send-text"
+        :aria-disabled="canSend ? undefined : 'true'"
+        data-test="composer-send"
+        @click="send"
+      >
+        {{ sendText }}
+      </button>
+      <button
+        v-else
         type="button"
         class="composer-send"
         :aria-label="sendLabel"
@@ -349,10 +367,11 @@ defineExpose({ focus: () => area.value?.focus() });
       v-if="minChars > 0"
       :id="counterId"
       class="composer-counter"
+      :class="{ 'composer-counter-ok': !short && enough }"
       aria-live="polite"
       data-test="composer-counter"
     >
-      {{ length < minChars ? `${length} caractères, ${minChars} au moins` : `${length} caractères` }}{{ counterHint ? ` · ${counterHint}` : "" }}
+      {{ short ? `${count} caractères · il en faut au moins ${minChars}` : `${count} caractères${enough ? ` · ${enough}` : ""}` }}
     </p>
   </div>
 </template>

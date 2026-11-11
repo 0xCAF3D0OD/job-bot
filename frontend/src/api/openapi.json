@@ -3877,6 +3877,65 @@
         }
       }
     },
+    "/api/offers/{offer_id}/read-link": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read Link",
+        "description": "« Donner l'annonce » : lit la page donnée par la personne, puis refait la note. Le serveur\nva chercher une adresse choisie par un utilisateur : adresses internes refusées, redirections\ncomprises (E-6, par `logos._get`), et mêmes limites que la lecture depuis la fiche.",
+        "operationId": "readOfferLink",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferLinkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferTextOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "429": {
+            "description": "Trop de lectures : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/description": {
       "put": {
         "tags": [
@@ -19243,6 +19302,22 @@
           "total"
         ],
         "title": "OfferHits"
+      },
+      "OfferLinkIn": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 12,
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "OfferLinkIn",
+        "description": "Le lien de l'annonce chez l'employeur, donné par la personne (E-1) : https seulement."
       },
       "OfferLinkOut": {
         "properties": {

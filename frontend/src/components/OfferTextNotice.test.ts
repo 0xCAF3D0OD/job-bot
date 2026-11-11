@@ -14,7 +14,13 @@ vi.mock("../api/client", () => ({
     PUT: (...a: unknown[]) => PUT(...a),
   },
 }));
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.unstubAllGlobals();
+});
+function onPhone(): void {
+  vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+}
 
 const GAPS = [
   { text: "Exigences : non précisées dans l’extrait", chunk_ids: [] },
@@ -102,20 +108,97 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     vi.useRealTimers();
   });
 
-  it("refus (état du serveur) : le bloc dans la carte, « Coller le texte » tonal, sans lien vers l’annonce (PR 25)", async () => {
+  it("refus (état du serveur) : une ligne « Annonce illisible · LinkedIn bloque la lecture. », « Donner l’annonce », sans lien (PR 25)", async () => {
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
     expect(POST).not.toHaveBeenCalled();
     expect(wrapper.find("[data-test=match-sub]").text()).toBe("Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées.");
     const block = wrapper.find("[data-test=section-for-you] [data-test=text-refused]");
     expect(block.attributes("role")).toBe("group");
-    expect(block.find("[data-test=refused-title]").text()).toBe("jobA1 n’a pas pu lire l’annonce");
-    expect(block.find("[data-test=refused-text]").text()).toBe("Ce site bloque la lecture automatique. Colle le texte : la note sera refaite tout de suite.");
-    expect(block.findAll("button")).toHaveLength(1);
-    expect(block.find("[data-test=paste-offer-text]").text()).toBe("Coller le texte");
+    expect(block.find("[data-test=refused-title]").text()).toBe("Annonce illisible");
+    expect(block.find("[data-test=refused-text]").text()).toBe("LinkedIn bloque la lecture.");
+    expect(block.find("[data-test=give-offer]").text()).toBe("Donner l’annonce");
     // Le seul lien vers l'annonce est « Voir l'annonce sur [source] » de la fiche : aucun dans l'encadré.
     expect(block.find("a").exists()).toBe(false);
     expect(block.text()).not.toContain("Ouvrir l’annonce");
     expect(wrapper.find("[data-test=text-reading]").exists()).toBe(false);
+  });
+
+  it("ordinateur : la carte se déplie sur place, « Lire » lit le lien de l’employeur et la fiche se recharge", async () => {
+    const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+    const toggle = wrapper.find("[data-test=give-offer]");
+    const zone = wrapper.find("[data-test=give-zone]");
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+    expect(toggle.attributes("aria-controls")).toBe(zone.attributes("id"));
+    expect(zone.isVisible()).toBe(false);
+    await toggle.trigger("click");
+    expect(toggle.attributes("aria-expanded")).toBe("true");
+    expect(wrapper.find("[data-test=give-sheet]").exists()).toBe(false);
+    const field = zone.find("[data-test=give-url]");
+    expect(field.attributes("type")).toBe("url");
+    expect(zone.find(`label[for=${field.attributes("id")}]`).text()).toBe("Lien de l’annonce chez l’employeur");
+    expect(zone.text()).toContain("Astuce : cherche le titre du poste sur le site carrière de l’entreprise.");
+    expect(zone.find("[data-test=give-read]").text()).toBe("Lire");
+    expect(zone.find("[data-test=paste-offer-text]").text()).toBe("Pas de lien ? Colle le texte");
+
+    // Un lien incomplet n'est pas envoyé ; le message vient sous le champ, dans une région vivante.
+    await field.setValue("emploi.exemple.ch");
+    await zone.find("form").trigger("submit");
+    expect(POST).not.toHaveBeenCalled();
+    const problem = zone.find("[data-test=give-problem]");
+    expect(problem.attributes("aria-live")).toBe("polite");
+    expect(problem.text()).toBe("Colle un lien complet, qui commence par https://");
+    expect(field.attributes("aria-describedby")).toContain(problem.attributes("id"));
+
+    POST.mockResolvedValueOnce({ data: { saved: false, problem: "Cette page ne contient pas d'annonce lisible.", paste: true, retry: false } });
+    await field.setValue("https://emploi.exemple.ch/postes/42");
+    await zone.find("form").trigger("submit");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/read-link", { params: { path: { offer_id: 7 } }, body: { url: "https://emploi.exemple.ch/postes/42" } });
+    expect(problem.text()).toBe("Cette page ne contient pas d'annonce lisible.");
+    expect(wrapper.emitted("changed")).toBeUndefined();
+
+    POST.mockResolvedValueOnce({ data: { saved: true, source: "page", score: 78, problem: null, paste: false, retry: false } });
+    await zone.find("form").trigger("submit");
+    await flushPromises();
+    expect(wrapper.emitted("changed")).toHaveLength(1);
+  });
+
+  it("trop de lectures : « Réessaie dans n minutes » sous le champ", async () => {
+    const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+    await wrapper.find("[data-test=give-offer]").trigger("click");
+    POST.mockResolvedValueOnce({ data: undefined, error: { detail: "Réessaie dans 4 minutes." } });
+    await wrapper.find("[data-test=give-url]").setValue("https://emploi.exemple.ch/postes/42");
+    await wrapper.find("[data-test=give-zone] form").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=give-problem]").text()).toBe("Réessaie dans 4 minutes.");
+  });
+
+  it("téléphone : la fenêtre du bas « Donner l’annonce à jobA1 », puis « Coller le texte de l’annonce » ouvre le collage", async () => {
+    onPhone();
+    const wrapper = await mountDetail(offer({ text_reading: "refused", links: [{ source: "indeed", url: "https://ch.indeed.com/viewjob?jk=1" }] }));
+    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Indeed bloque la lecture.");
+    const open = wrapper.find("[data-test=give-offer]");
+    expect(open.attributes("aria-haspopup")).toBe("dialog");
+    expect(open.attributes("aria-expanded")).toBeUndefined();
+    expect(wrapper.find("[data-test=give-zone]").exists()).toBe(false);
+    await open.trigger("click");
+    const sheet = wrapper.find("[data-test=give-sheet]");
+    expect(sheet.text()).toContain("Donner l’annonce à jobA1");
+    expect(sheet.text()).toContain("Colle le lien de l’annonce chez l’employeur : jobA1 la lira directement.");
+    const field = sheet.find("[data-test=give-url]");
+    expect(field.attributes("type")).toBe("url");
+    expect(sheet.find(`label[for=${field.attributes("id")}]`).text()).toBe("Lien chez l’employeur");
+    expect(sheet.find("[data-test=give-read]").text()).toBe("Lire l’annonce");
+    expect(sheet.find(".offer-give-or").attributes("aria-hidden")).toBe("true");
+    const paste = sheet.find("[data-test=paste-offer-text]");
+    expect(paste.text()).toBe("Coller le texte de l’annonce");
+    await paste.trigger("click");
+    // La première fenêtre se ferme, puis celle du collage s'ouvre (une seule fenêtre à la fois).
+    await new Promise((done) => setTimeout(done, 350));
+    await flushPromises();
+    expect(wrapper.find("dialog[data-test=give-sheet]").attributes("open")).toBeUndefined();
+    expect(wrapper.find("dialog[data-test=paste-sheet]").attributes("open")).toBeDefined();
+    expect(wrapper.find("[data-test=paste-sheet]").text()).toContain("Tout le texte est accepté, même très long.");
   });
 
   it("refus dit par la lecture demandée d’ici : le bloc remplace la ligne de lecture", async () => {
@@ -126,9 +209,10 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(wrapper.emitted("changed")).toBeUndefined();
   });
 
-  it("refus sans lien lisible : « Coller le texte » seul", async () => {
+  it("refus sans site connu : « Ce site bloque la lecture. »", async () => {
     const wrapper = await mountDetail(offer({ text_reading: "refused", links: [{ source: "manual", url: "https://annonce-collee.invalid/" }] }));
-    expect(wrapper.find("[data-test=paste-offer-text]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Ce site bloque la lecture.");
+    expect(wrapper.find("[data-test=give-offer]").exists()).toBe(true);
     expect(wrapper.find("[data-test=open-offer]").exists()).toBe(false);
   });
 
@@ -145,32 +229,33 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(POST).not.toHaveBeenCalled();
   });
 
-  it("feuille « Coller le texte » : compteur, bouton désactivé sous 200 caractères, puis enregistré", async () => {
+  it("feuille de collage : compteur, « Refaire la note » `aria-disabled` sous 200 caractères, puis enregistré", async () => {
     PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 72, problem: null, paste: false } });
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+    await wrapper.find("[data-test=give-offer]").trigger("click");
     await wrapper.find("[data-test=paste-offer-text]").trigger("click");
     const sheet = wrapper.find("[data-test=paste-sheet]");
     expect(sheet.text()).toContain("Coller le texte de l’annonce");
-    expect(sheet.text()).toContain("Ouvre l’annonce, sélectionne tout le texte, copie-le et colle-le ici.");
-    // Maquette du 8 novembre : le Composer de 5 lignes, sans +, la flèche enregistre (désactivée sous 200).
+    expect(sheet.text()).toContain("Sur la page de l’annonce, sélectionne tout le texte, copie-le et colle-le ici. Tout le texte est accepté, même très long.");
     const area = wrapper.find("[data-test=paste-text] [data-test=composer-input]");
     expect(area.attributes("rows")).toBe("5");
-    expect(wrapper.find("[data-test=paste-text] [data-test=composer-plus]").exists()).toBe(false);
+    expect(area.attributes("maxlength")).toBeUndefined();
     await area.setValue("Trop court.");
     const count = wrapper.find("[data-test=paste-text] [data-test=composer-counter]");
-    expect(count.text()).toBe("11 caractères, 200 au moins · la flèche enregistre et refait la note");
+    expect(count.text()).toBe("11 caractères · il en faut au moins 200");
     expect(count.attributes("aria-live")).toBe("polite");
     const save = wrapper.find("[data-test=paste-text] [data-test=composer-send]");
-    expect(save.attributes("aria-label")).toBe("Enregistrer et refaire la note");
-    expect(save.attributes("disabled")).toBeDefined();
+    expect(save.text()).toBe("Refaire la note");
+    expect(save.attributes("aria-disabled")).toBe("true");
     await save.trigger("click");
     expect(PUT).not.toHaveBeenCalled();
 
     const text = "Tu administres nos serveurs Linux. ".repeat(8);
     await area.setValue(text);
-    expect(wrapper.find("[data-test=paste-text] [data-test=composer-counter]").text()).toBe(`${text.trim().length} caractères · la flèche enregistre et refait la note`);
-    expect(wrapper.find("[data-test=paste-text] [data-test=composer-send]").attributes("disabled")).toBeUndefined();
-    await wrapper.find("[data-test=paste-text] [data-test=composer-send]").trigger("click");
+    expect(count.text()).toBe(`${text.trim().length} caractères · assez pour noter`);
+    expect(count.classes()).toContain("composer-counter-ok");
+    expect(save.attributes("aria-disabled")).toBeUndefined();
+    await save.trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/offers/{offer_id}/description", { params: { path: { offer_id: 7 } }, body: { text: text } });
     expect(wrapper.emitted("changed")).toHaveLength(1);
