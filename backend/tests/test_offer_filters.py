@@ -339,7 +339,7 @@ async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Ru
 async def test_pending_view_puts_kept_offers_with_preparation(
     api: AsyncClient, runtime: Runtime
 ) -> None:
-    """Ordinateur (PR 46) : avec `kept_first`, les offres gardées viennent avec « En préparation »."""
+    """Ordinateur (PR 46) : avec `kept_first`, les offres gardées suivent « En préparation »."""
     await add(runtime, 20, "Récente", ["jobup"])
     await add(runtime, 15, "Gardée", ["jobup"], status=OfferStatus.LATER)
     await add(runtime, 14, "En préparation", ["jobup"], status=OfferStatus.PREPARING)
