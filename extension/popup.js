@@ -572,8 +572,8 @@ function showDone(answer) {
   if (answer.outcome === "added") {
     title = "Offre ajoutée";
     text = note
-      ? `Note : ${note}. Elle t’attend dans Candidatures › À traiter.`
-      : "Elle t’attend dans Candidatures › À traiter. Sa note arrive dans un moment.";
+      ? `Note : ${note}. Elle t’attend dans Candidatures › Offres.`
+      : "Elle t’attend dans Candidatures › Offres. Sa note arrive dans un moment.";
   } else if (answer.filled.includes("description")) {
     title = "Annonce ajoutée à ton offre";
     text = note ? `Note refaite sur l’annonce complète : ${note}.` : "Sa note sera refaite dans un moment.";

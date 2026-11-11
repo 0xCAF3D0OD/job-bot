@@ -64,7 +64,7 @@ describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidature
 
     // Les vues en contrôle segmenté ; la vue ouverte porte aria-current.
     const segments = wrapper.findAll(".jobs-segments a");
-    expect(segments.map((s) => s.text())).toEqual(["À traiter", "Envoyées", "Rendez-vous"]);
+    expect(segments.map((s) => s.text())).toEqual(["Offres", "Envoyées", "Rendez-vous"]);
     expect(segments[0]!.attributes("aria-current")).toBe("page");
 
     // Au-dessus des vues : la recherche (C4) et « Ajouter » compact (C10).

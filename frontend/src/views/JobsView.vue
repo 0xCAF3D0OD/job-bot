@@ -28,7 +28,7 @@ const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 // Le titre reste « Candidatures » (docs/88) : le segment choisi dit où l'on est.
 type View = Exclude<JobsTab, "alertes">;
 const TABS: { key: View; label: string; path: string; hint: string }[] = [
-  { key: "offres", label: "À traiter", path: "/candidatures/offres", hint: "à traiter" },
+  { key: "offres", label: "Offres", path: "/candidatures/offres", hint: "à traiter" },
   { key: "suivi", label: "Envoyées", path: "/candidatures/suivi", hint: "à relancer ou à compléter" },
   { key: "rendez-vous", label: "Rendez-vous", path: "/candidatures/rendez-vous-orp", hint: "" },
 ];

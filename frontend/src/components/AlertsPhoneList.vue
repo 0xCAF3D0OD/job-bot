@@ -79,7 +79,7 @@ const families = computed(() =>
       title: "À confirmer",
       help: `${confirmNames.value.join(" et ")} ${confirmNames.value.length > 1 ? "attendent" : "attend"} ta confirmation avant d’envoyer les offres. Ouvre l’alerte pour confirmer.`,
     },
-    { kind: "active" as const, title: "Actives", help: "Les offres reçues par e-mail arrivent dans « À traiter »." },
+    { kind: "active" as const, title: "Actives", help: "Les offres reçues par e-mail arrivent dans « Offres »." },
     { kind: "todo" as const, title: "À créer", help: "La recherche existe dans jobA1, pas encore sur le site." },
   ]
     .map((family) => ({ ...family, id: `alerts-fam-${family.kind}`, cards: cards.value.filter((c) => c.kind === family.kind) }))

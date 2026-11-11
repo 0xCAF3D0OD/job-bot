@@ -238,7 +238,7 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
     expect(document.getElementById("an-done")?.hidden).toBe(false);
     expect(document.querySelector("#an-done [role=status]")).not.toBeNull();
     expect(document.getElementById("an-done-title")?.textContent).toBe("Offre ajoutée");
-    expect(document.getElementById("an-done-text")?.textContent).toBe("Note : 76, Proche. Elle t’attend dans Candidatures › À traiter.");
+    expect(document.getElementById("an-done-text")?.textContent).toBe("Note : 76, Proche. Elle t’attend dans Candidatures › Offres.");
     expect(document.getElementById("an-open")?.getAttribute("href")).toBe(`${linked.base}/candidatures/offres?offre=12`);
   });
 
@@ -281,7 +281,7 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
     expect(document.getElementById("an-known")?.textContent).toBe("DevOps Engineer, reçue le 30 octobre 2025.");
     await click("an-new");
     expect(sentBodies()[1]).toMatchObject({ choice: "new", offer_id: null });
-    expect(document.getElementById("an-done-text")?.textContent).toBe("Elle t’attend dans Candidatures › À traiter. Sa note arrive dans un moment.");
+    expect(document.getElementById("an-done-text")?.textContent).toBe("Elle t’attend dans Candidatures › Offres. Sa note arrive dans un moment.");
   });
 
   it("30 envois par jour : le message du serveur", async () => {
