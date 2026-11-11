@@ -76,7 +76,7 @@ describe("OrpProofCard", () => {
     await wrapper.get("[data-test=orp-proof-mark]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
-    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Octobre remis à l’ORP");
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("octobre est remis\u202f!");
     expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("Le 10 novembre · 11 recherches");
     expect(wrapper.find("[data-test=orp-proof-mark]").exists()).toBe(false);
     expect(wrapper.emitted("changed")).toHaveLength(1);

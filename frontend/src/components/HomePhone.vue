@@ -4,15 +4,15 @@ import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
 import type { IconName } from "../icons";
-import { companyPlace, orpLeftLine, plural, rateText, remoteText } from "../format";
+import { companyPlace, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
-import LiquidCircle from "./LiquidCircle.vue";
+import OrpBar from "./OrpBar.vue";
 import ScoreRing from "./ScoreRing.vue";
 
 // L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile ; écarts A1 à A9 validés le 2026-11-02) :
-// « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
+// « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (la barre ORP, PR 48), Offres (les cartes de la
 // dose du jour, tant qu'il y en a, et « Tout voir » ; sans bouton « Trier », A3 annulé le 2026-11-05 par
 // Kevin), À faire (un nombre, un libellé). L'ordinateur garde sa page.
 // Une ligne de « À faire » : un nombre et un libellé ; ou, pour « Relire ton CV » (PR 22), une icône et une ligne de détail.
@@ -26,16 +26,16 @@ const props = defineProps<{
   target: number | null;
   /** L'échéance ORP du mois (le 5 du mois suivant, reporté au jour ouvrable du canton). */
   due?: string | null;
+  /** La semaine en cours (lot du 11 novembre au soir, PR 48) : « Cette semaine · 2 sur 3 » sous la barre. */
+  week?: { count: number; target: number } | null;
   offers: Offer[];
   emptyText: string;
   todos: HomeTodo[];
 }>();
 
 // « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
-const orpLine = computed(() => {
-  if (!props.target) return `${plural(props.count, "recherche", "recherches")} ce mois.`;
-  return orpLeftLine(props.count, props.target, props.month, props.due);
-});
+// Sans objectif saisi : le nombre du mois, sans barre. Avec : la barre ORP (OrpBar, PR 48).
+const orpLine = computed(() => `${plural(props.count, "recherche", "recherches")} ce mois.`);
 // Les bandes qui s'empilent au défilement (prompt du 10 novembre, fin de soirée, PR 36 ; maquettes AccueilSmile et
 // AccueilSombre, animation etats/AccueilSmile--bandes-empilees-animation.gif). ORP se colle sous la barre du logo
 // (--header-h), Offres 16 px plus bas, « À faire » passe par-dessus. Le CSS fait l'empilement ; ici :
@@ -140,22 +140,33 @@ function facts(offer: Offer): string[] {
       @click.capture="onBandClick('orp', $event)"
       @focusin="onBandFocus('orp')"
     >
-      <h2 id="home-orp-title">
-        ORP
-      </h2>
-      <RouterLink
-        to="/bilan"
-        class="home-orp-link"
-        data-test="home-orp"
+      <div class="home-block-head">
+        <h2 id="home-orp-title">
+          ORP
+        </h2>
+        <RouterLink
+          to="/bilan"
+          data-test="home-orp"
+        >
+          Voir le suivi
+        </RouterLink>
+      </div>
+      <OrpBar
+        v-if="target"
+        class="home-orp-bar"
+        :month="month"
+        :count="count"
+        :target="target"
+        :due="due"
+        :week="week"
+        pace
+      />
+      <p
+        v-else
+        class="home-orp-none"
       >
-        <LiquidCircle
-          v-if="target"
-          :count="count"
-          :target="target"
-        />
-        <span>{{ orpLine }}</span>
-        <AppIcon name="chevron" />
-      </RouterLink>
+        {{ orpLine }}
+      </p>
     </section>
 
     <div

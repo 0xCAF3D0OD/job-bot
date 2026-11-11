@@ -85,8 +85,8 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Justificatifs d’octobre à remettre");
     expect(wrapper.html().indexOf("data-test=\"orp-proof\"")).toBeLessThan(wrapper.html().indexOf("data-test=\"orp-goal\""));
     const card = wrapper.find("[data-test=orp-goal]");
-    expect(card.find(".orp-month-band-head").text()).toBe("Novembre4 sur 13");
-    expect(card.find(".orp-month-band-line").text()).toBe("Encore 9 d’ici le 7 décembre · dans les temps");
+    expect(card.find(".orp-bar-head").text()).toBe("Mois ORP · novembre4 sur 13");
+    expect(card.find("[data-test=month-left]").text()).toBe("Encore 9 d’ici le 7 décembre · dans les temps");
     expect(card.attributes("aria-label")).toBe("Novembre : 4 recherches sur 13. Voir tout le mois");
   });
 

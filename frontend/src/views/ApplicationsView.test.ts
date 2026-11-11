@@ -348,7 +348,7 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     const { wrapper } = await mountView("/bilan/orp");
     expect(wrapper.find("h1").text()).toBe("Suivi ORP");
     expect(wrapper.find("[data-test=orp-back]").attributes("href")).toBe("/bilan");
-    expect(wrapper.find("[data-test=orp-goal] h2").text()).toBe("4 recherches à faire");
+    expect(wrapper.find("[data-test=orp-goal] [data-test=month-left]").text()).toContain("Encore 4 d’ici le");
     expect(wrapper.find("#orp-month-title").findAll("span").map((x) => x.text())).toEqual(["Recherches du mois", "2 entrées"]);
     const html = wrapper.html();
     const order = ["data-test=\"month\"", "data-test=\"orp-goal\"", "data-test=\"orp-banner\"", "data-test=\"pdf\"", "data-test=\"orp-rows\"", "data-test=\"add-application\"", "data-test=\"declare\"", "data-test=\"detail-calendar\""].map((t) => html.indexOf(t));

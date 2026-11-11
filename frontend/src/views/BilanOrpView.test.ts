@@ -44,11 +44,11 @@ describe("Bilan › ORP sur téléphone, en blocs (lot 18, §10.2)", () => {
     const wrapper = mountView(10);
     await flushPromises();
     const goal = wrapper.find("[data-test=orp-goal]");
-    expect(goal.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("4 recherches sur 10");
-    expect(goal.find(".block-cap").text()).toBe("Octobre");
+    expect(goal.find("[role=progressbar]").attributes("aria-valuenow")).toBe("4");
+    expect(goal.find(".orp-bar-head").text()).toBe("Mois ORP · octobre4 sur 10");
     // Maquette du 9 novembre (§11) : sans date du serveur, le 5 du mois suivant (ORP_DEADLINE_DAY) ; plus de note
     // sur la conseillère.
-    expect(goal.find("h2").text()).toBe("Encore 6 d’ici le 5 novembre");
+    expect(goal.find("[data-test=month-left]").text()).toBe("Encore 6 d’ici le 5 novembre");
     expect(goal.find("[data-test=orp-deadline]").exists()).toBe(false);
     // Aucune n'est déclarée : quatre à déclarer, trois montrées, « Afficher l'autre ».
     const declare = wrapper.find("[data-test=orp-to-declare]");
@@ -71,7 +71,7 @@ describe("Bilan › ORP sur téléphone, en blocs (lot 18, §10.2)", () => {
   it("sans objectif saisi : « Indique ton objectif ORP », pas de « 0 sur 0 »", async () => {
     const wrapper = mountView(null);
     await flushPromises();
-    expect(wrapper.find("[data-test=liquid-circle]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-bar]").exists()).toBe(false);
     expect(wrapper.find("[data-test=orp-goal] h2").text()).toBe("Indique ton objectif ORP");
   });
 });

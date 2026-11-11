@@ -4,7 +4,6 @@ import { nextTick } from "vue";
 
 import type { Offer } from "../api/client";
 import HomePhone from "./HomePhone.vue";
-import LiquidCircle from "./LiquidCircle.vue";
 
 const offer = (id: number, score: number): Offer =>
   ({ id, title: `Poste ${id}`, company: "Alpstack", location: "Lausanne", score, rate_min: 80, rate_max: 100, employment_type: "CDI", has_logo: false }) as unknown as Offer;
@@ -27,12 +26,17 @@ function home(props: Partial<InstanceType<typeof HomePhone>["$props"]> = {}) {
 }
 
 describe("L’Accueil du téléphone (docs/139 étape 4)", () => {
-  it("bonjour, ORP en cercle liquide, les offres et « Tout voir », À faire en nombres", () => {
+  it("bonjour, la barre ORP, les offres et « Tout voir », À faire en nombres", () => {
     const view = home();
     expect(view.find("h1").text()).toBe("Bonjour Kevin.");
     expect(view.find("[data-test=home-tagline]").exists()).toBe(false);
-    expect(view.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("2 recherches sur 10");
-    expect(view.find("[data-test=home-orp]").text()).toContain("Encore 8 d’ici le 5 décembre");
+    // La barre ORP (PR 48) : le mois, le compte, ce qui reste et le rythme ; « Voir le suivi » mène au Bilan.
+    const bar = view.find("[data-test=orp-bar]");
+    expect(bar.text()).toContain("Mois ORP · novembre");
+    expect(bar.find("[data-test=month-count]").text()).toBe("2 sur 10");
+    expect(bar.find("[role=progressbar]").attributes("aria-valuenow")).toBe("2");
+    expect(bar.find("[data-test=month-left]").text()).toMatch(/^Encore 8 d’ici le 5 décembre · (dans les temps|en retard)$/);
+    expect(view.find("[data-test=home-orp]").text()).toBe("Voir le suivi");
     expect(view.findAll("[data-test=home-card]")).toHaveLength(2);
     // L'anneau avec son chiffre, le mot dessous (2026-11-05, Kevin).
     const score = view.find("[data-test=home-card] [data-test=score]");
@@ -59,17 +63,11 @@ describe("L’Accueil du téléphone (docs/139 étape 4)", () => {
   });
 
   it("l’objectif atteint se dit", () => {
-    expect(home({ count: 10 }).find("[data-test=home-orp]").text()).toContain("Objectif du mois atteint");
+    expect(home({ count: 10 }).find("[data-test=month-left]").text()).toBe("Objectif atteint");
   });
 });
 
-describe("Le cercle liquide (D6)", () => {
-  it("écrit toujours « x/y » et monte selon la part faite", () => {
-    const circle = mount(LiquidCircle, { props: { count: 5, target: 10 } });
-    expect(circle.find("text").text()).toBe("5/10");
-    expect(circle.find("g[transform]").attributes("transform")).toBe("translate(0 50)");
-  });
-
+describe("L’Accueil du téléphone : les bandes", () => {
   describe("les bandes qui s’empilent (PR 36)", () => {
     afterEach(() => vi.unstubAllGlobals());
     const motion = (reduce: boolean) =>

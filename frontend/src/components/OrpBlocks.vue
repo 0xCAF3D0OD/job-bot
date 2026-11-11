@@ -2,24 +2,23 @@
 import { computed, ref } from "vue";
 
 import type { OrpMonth, OrpRow } from "../api/client";
-import { formatMonth, orpLeftLine } from "../format";
 import AppIcon from "./AppIcon.vue";
 import BlockRow from "./BlockRow.vue";
-import LiquidCircle from "./LiquidCircle.vue";
+import OrpBar from "./OrpBar.vue";
 import "../blocks.css";
 
-// Maquette du 9 novembre (Orp, OrpSombre, Explorer ; §11) : à côté du cercle, le mois puis « Encore 2 d’ici le
+// Lot du 11 novembre au soir (PR 48) : la barre ORP (OrpBar) remplace le cercle à vague.
+// Maquette du 9 novembre (Orp, OrpSombre, Explorer ; §11) : le mois puis « Encore 2 d’ici le
 // 5 décembre », l'échéance ORP reportée au jour ouvrable du canton ; plus de « n recherches à faire » ni de note
 // sur la conseillère.
 // Le suivi ORP du mois en blocs, sur téléphone (MODIFICATIONS du 8 novembre au soir, lot 18, §10.2 ; maquettes Orp,
-// OrpSombre et l'onglet ORP d'Explorer) : l'objectif et le cercle liquide ; « À déclarer à l'ORP », les candidatures
+// OrpSombre et l'onglet ORP d'Explorer) : l’objectif et la barre ORP ; « À déclarer à l'ORP », les candidatures
 // envoyées pas encore déclarées dans Job-Room, chacune vers sa fiche « Pour l'ORP » ; « Recherches du mois », celles
 // qui sont déclarées, puis « Exporter le formulaire (PDF) ».
 const props = defineProps<{ data: OrpMonth }>();
 const emit = defineEmits<{ open: [applicationId: number]; export: [] }>();
 
 const SHOWN = 3;
-const monthName = computed(() => formatMonth(props.data.month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase()));
 
 const toDeclare = computed(() => props.data.rows.filter((row) => !row.declared_at));
 const declared = computed(() => props.data.rows.filter((row) => row.declared_at));
@@ -45,37 +44,28 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
       class="block info orp-blocks-goal"
       data-test="orp-goal"
     >
-      <LiquidCircle
+      <OrpBar
         v-if="data.target"
+        :month="data.month"
         :count="data.count"
         :target="data.target"
-        :size="96"
+        :due="data.due_date"
+        card
+        thick
       />
-      <div>
-        <p class="block-cap">
-          {{ monthName }}
-        </p>
-        <h2
-          v-if="data.target"
-          class="block-title"
-          data-test="orp-left"
-        >
-          {{ orpLeftLine(data.count, data.target, data.month, data.due_date) }}
+      <div v-else>
+        <h2 class="block-title">
+          Indique ton objectif ORP
         </h2>
-        <template v-else>
-          <h2 class="block-title">
-            Indique ton objectif ORP
-          </h2>
-          <p class="block-help">
-            Le nombre de recherches que l’ORP te demande chaque mois.
-          </p>
-          <RouterLink
-            :to="{ path: '/reglages', query: { rubrique: 'recherche' } }"
-            class="block-link"
-          >
-            Indiquer mon objectif ›
-          </RouterLink>
-        </template>
+        <p class="block-help">
+          Le nombre de recherches que l’ORP te demande chaque mois.
+        </p>
+        <RouterLink
+          :to="{ path: '/reglages', query: { rubrique: 'recherche' } }"
+          class="block-link"
+        >
+          Indiquer mon objectif ›
+        </RouterLink>
       </div>
     </section>
 
@@ -159,8 +149,7 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
 <style>
 /* Valeurs du HTML de la maquette Orp : blocs à 12 des bords, cercle de 96 et 16 d'écart, sur-titre à 4 du titre. */
 .orp-blocks { --orp-blocks-16: 16px; }
-.orp-blocks-goal { display: flex; align-items: center; gap: var(--orp-blocks-16); }
-.orp-blocks-goal .block-cap { margin-bottom: var(--space-1); }
+.orp-blocks-goal { display: block; }
 .orp-blocks-rows { margin-top: var(--space-4); }
 .orp-blocks-more { min-height: var(--target-min); margin-top: var(--space-2); font-weight: var(--weight-bold); }
 .orp-blocks .block-row.small { min-height: var(--row-72); }

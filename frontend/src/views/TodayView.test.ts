@@ -165,7 +165,7 @@ describe("Les premiers pas (docs/128)", () => {
     mockGet(starting(2, { rhythm: { target: 5, count: 0, days: [], research_today: true } }));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("Voir le bilan");
-    expect(wrapper.find(".rhythm-band").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-bar-week]").exists()).toBe(false);
   });
 
   it("masquer : partie tout de suite, enregistrée au bout de 6 secondes", async () => {
@@ -355,11 +355,8 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(card.find("[data-test=month-count]").text()).toBe("3 sur 20");
     expect(card.text()).toContain("Mois ORP · octobre");
     expect(card.find("[data-test=month-left]").text()).toContain("dans les temps");
-    expect(card.find("[data-test=rhythm-count]").text()).toBe("1 sur 3");
-    // Les ronds : un par jour, le nombre envoyé dedans, le week-end en pointillé.
-    expect(card.findAll(".rhythm-band-days li")).toHaveLength(7);
-    expect(card.findAll(".rhythm-band-days li.rest")).toHaveLength(2);
-    expect(card.find(".rhythm-band-days li.sent").text()).toContain("2");
+    // La barre ORP (PR 48) : la semaine tient en une ligne, sans les ronds des jours.
+    expect(card.find("[data-test=orp-bar-week]").text()).toBe("Cette semaine1 sur 3");
     // Pas de lien dans le lien.
     expect(card.find("a").exists()).toBe(false);
   });

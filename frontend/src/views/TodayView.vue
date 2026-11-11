@@ -5,13 +5,12 @@ import type { RouteLocationRaw } from "vue-router";
 
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
-import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
-import OrpMonth from "../components/OrpMonth.vue";
+import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HomePhone, { type HomeTodo } from "../components/HomePhone.vue";
 import { usePhone } from "../composables/usePhone";
@@ -19,7 +18,7 @@ import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpLeftLine, orpPace, plural } from "../format";
+import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
@@ -278,11 +277,10 @@ const starterTasks = computed<DeskTask[]>(() => {
   );
   return list;
 });
-// Le mois de l'inscription : pas de « en retard » tant que les premiers pas ne sont pas faits.
-const orpLine = computed(() => {
-  const t = today.value;
-  if (!t || !starting.value || !t.month_target || t.month_count >= t.month_target) return undefined;
-  return orpLeftLine(t.month_count, t.month_target, t.month, t.month_due_date);
+// « Cette semaine · 2 sur 3 » sous la barre ORP (PR 48) : pas pendant une pause ni les premiers pas.
+const weekCount = computed(() => {
+  const week = today.value?.rhythm;
+  return week && week.target !== null && !week.pause_until && !starting.value ? { count: week.count, target: week.target } : null;
 });
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
@@ -421,6 +419,7 @@ const { me } = useAuth();
     :count="today.month_count"
     :target="today.month_target ?? null"
     :due="today.month_due_date ?? null"
+    :week="weekCount"
     :offers="dose"
     :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
     :todos="todos"
@@ -483,26 +482,16 @@ const { me } = useAuth();
           :aria-label="orpLabel"
           data-test="orp-month"
         >
-          <OrpMonth
-            :title="`Mois ORP · ${monthName}`"
+          <!-- La barre ORP (PR 48) : le mois, le rythme et « Cette semaine » ; plus de ronds par jour. -->
+          <OrpBar
+            :month="today.month"
             :count="today.month_count"
             :target="today.month_target ?? null"
-            :month="today.month"
-            :line="orpLine"
             :due="today.month_due_date ?? null"
-            band
+            :pace="!starting"
+            :week="weekCount"
+            card
           />
-          <template v-if="today.rhythm && !starting">
-            <span
-              class="today-orp-rule"
-              aria-hidden="true"
-            />
-            <RhythmCard
-              :week="today.rhythm"
-              :month-behind="monthBehind"
-              band
-            />
-          </template>
           <AppIcon
             name="chevron"
             class="today-orp-chevron"

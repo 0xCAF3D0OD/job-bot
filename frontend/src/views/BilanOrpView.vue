@@ -9,7 +9,7 @@ import CalendarDate from "../components/CalendarDate.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
-import OrpMonthBar from "../components/OrpMonth.vue";
+import OrpBar from "../components/OrpBar.vue";
 import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
@@ -23,7 +23,7 @@ import { dateText, meetingsToNote, pastTitle, timeAndPlace } from "../rendezVous
 import { isNetworkError } from "../network";
 
 // Bilan › ORP (docs/139 étape 8a, maquette Explorer ; B3 à B6, Kevin, 2026-11-04). De haut en bas :
-// l'objectif du mois (le cercle liquide), l'export, les trois dernières recherches, le lien vers le
+// l'objectif du mois (la barre ORP), l'export, les trois dernières recherches, le lien vers le
 // Suivi ORP du mois. Sans carte Rythme : A5 annulé le 2026-11-05 par Kevin (maquette Explorer).
 // Ordinateur (maquette du 8 novembre, BilanOrdinateur) : la carte du mois à cheval sur la bande, l'export et
 // « Ajouter une recherche », les quatre dernières recherches en lignes (icône calendrier de 36 px), puis les
@@ -194,14 +194,14 @@ watch(viewMonth, () => void load());
           :aria-label="cardLabel"
           data-test="orp-goal"
         >
-          <OrpMonthBar
-            :title="monthName"
+          <OrpBar
+            :month="shownMonth.month"
             :count="shownMonth.count"
             :target="shownMonth.target ?? null"
-            :month="shownMonth.month"
             :due="shownMonth.due_date"
-            :line="cardLine"
-            band
+            :note="cardLine"
+            pace
+            card
           />
           <AppIcon
             name="chevron"
