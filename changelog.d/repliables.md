@@ -1,0 +1,1 @@
+Rendez-vous sans rendez-vous à venir sur téléphone : une carte et « Ajouter », le formulaire dans une fenêtre du bas ; « J’ai contacté quelqu’un » se déplie sur place (ordinateur) ou s’ouvre en fenêtre du bas (téléphone), et la prochaine relance passe à 7 jours après le contact

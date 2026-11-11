@@ -1,7 +1,7 @@
 """Contacts dans l'entreprise (docs/31) : recherches, prises de contact, relance, Aujourd'hui."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
@@ -180,3 +180,50 @@ async def test_message_never_sends_names(
         assert list(await session.scalars(select(LlmCall.purpose))) == ["contact"]
     longer = {**body, "channel": "email"}
     assert (await api.post("/api/contacts/message", json=longer)).json()["limit"] is None
+
+
+async def test_contact_moves_the_next_follow_up(api: AsyncClient, runtime: Runtime) -> None:
+    """Une prise de contact adapte la prochaine relance (PR 28) : 7 jours après le contact,
+    jamais plus tôt que le jour déjà prévu, et seulement pour une candidature en attente."""
+    today = local_today()
+
+    async def application(sent: date, **extra: Any) -> int:
+        async with runtime.sessionmaker.begin() as session:
+            row = Application(
+                sent_at=sent,
+                method="electronique",
+                company="Exemple SA",
+                job_title="DevOps Engineer",
+                orp_month=f"{sent:%Y-%m}",
+                **extra,
+            )
+            session.add(row)
+            await session.flush()
+            return row.id
+
+    async def follow_up(application_id: int) -> date | None:
+        async with runtime.sessionmaker() as session:
+            row = await session.get(Application, application_id)
+            assert row is not None
+            return row.follow_up_on
+
+    async def contact(application_id: int, on: date) -> None:
+        body = {"application_id": application_id, "name": "A. Exemple", "contacted_on": str(on)}
+        assert (await api.post("/api/contacts", json=body)).status_code == 201
+
+    # Envoyée il y a 8 jours (relance prévue dans 2 jours) : contact aujourd'hui, relance dans 7.
+    waiting = await application(today - timedelta(days=8))
+    await contact(waiting, today)
+    assert await follow_up(waiting) == today + timedelta(days=7)
+    # Envoyée aujourd'hui (relance dans 10 jours) : un contact le même jour ne l'avance pas.
+    fresh = await application(today)
+    await contact(fresh, today)
+    assert await follow_up(fresh) is None
+    # Un jour choisi plus tard que contact + 7 reste.
+    chosen = await application(today - timedelta(days=2), follow_up_on=today + timedelta(days=20))
+    await contact(chosen, today)
+    assert await follow_up(chosen) == today + timedelta(days=20)
+    # Une candidature qui a déjà reçu une réponse n'a plus de relance à déplacer.
+    answered = await application(today - timedelta(days=8), status="refus")
+    await contact(answered, today)
+    assert await follow_up(answered) is None

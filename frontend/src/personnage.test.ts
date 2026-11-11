@@ -38,7 +38,6 @@ export const TROUPE_SCREENS: Record<string, string> = {
   "components/CharacterState.vue": "aucune offre",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché",
   "components/GoalReached.vue": "objectif ORP atteint",
-  "components/OrpMeetingEmpty.vue": "aucun rendez-vous prévu (le « 1 » seul)",
   "views/WelcomeView.vue": "premiers pas sur téléphone (le « 1 » seul)",
 };
 

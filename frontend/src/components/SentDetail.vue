@@ -9,6 +9,7 @@ import { sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
 import ApplicationOrp from "./ApplicationOrp.vue";
+import ContactQuickForm from "./ContactQuickForm.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpCard from "./FollowUpCard.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -96,6 +97,19 @@ const sentRows = computed(() => {
 const assistant = useAssistant();
 const statusOpen = ref(false);
 const contactsOpen = ref(false);
+// « J'ai contacté quelqu'un » (PR 28) : sur ordinateur la carte se déplie sous l'historique, sur téléphone le
+// formulaire s'ouvre dans une fenêtre du bas. Enregistré, le contact entre dans l'historique (la fiche se recharge).
+const contactedOpen = ref(false);
+function contactSaved(): void {
+  contactedOpen.value = false;
+  emit("changed");
+}
+watch(
+  () => props.application.id,
+  () => {
+    contactedOpen.value = false;
+  },
+);
 const docsOpen = ref(false);
 const findOpen = ref(false);
 // Les deux lignes de 72 px du téléphone (§8.3) : « Lettre, CV adapté et l’annonce », « 3 pistes chez Sword Services ».
@@ -309,12 +323,48 @@ function onStatus(value: ApplicationStatus): void {
             </li>
           </ul>
           <button
+            v-if="phone"
             type="button"
             class="link sent-contacted"
+            aria-haspopup="dialog"
             data-test="contacted-open"
-            @click="contactsOpen = true"
+            @click="contactedOpen = true"
           >
             <span class="with-icon">J’ai contacté quelqu’un<AppIcon name="chevron" /></span>
+          </button>
+          <template v-else>
+            <button
+              type="button"
+              class="sent-contacted-fold"
+              :aria-expanded="contactedOpen"
+              aria-controls="sent-contacted-zone"
+              data-test="contacted-open"
+              @click="contactedOpen = !contactedOpen"
+            >
+              J’ai contacté quelqu’un<AppIcon :name="contactedOpen ? 'chevron-up' : 'chevron-down'" />
+            </button>
+            <div
+              v-show="contactedOpen"
+              id="sent-contacted-zone"
+              data-test="contacted-zone"
+            >
+              <ContactQuickForm
+                v-if="contactedOpen"
+                :key="`quick-${application.id}`"
+                :application-id="application.id"
+                @saved="contactSaved"
+                @cancel="contactedOpen = false"
+              />
+            </div>
+          </template>
+          <button
+            v-if="application.contacts?.length"
+            type="button"
+            class="link sent-contacts-all"
+            data-test="contacts-open"
+            @click="contactsOpen = true"
+          >
+            Voir les prises de contact
           </button>
         </section>
       </div>
@@ -392,6 +442,21 @@ function onStatus(value: ApplicationStatus): void {
         </label>
       </fieldset>
     </component>
+    <BottomSheet
+      v-if="phone"
+      :open="contactedOpen"
+      title="J’ai contacté quelqu’un"
+      data-test="contacted-sheet"
+      @close="contactedOpen = false"
+    >
+      <ContactQuickForm
+        v-if="contactedOpen"
+        :key="`quick-${application.id}`"
+        sheet
+        :application-id="application.id"
+        @saved="contactSaved"
+      />
+    </BottomSheet>
     <component
       :is="phone ? BottomSheet : SidePanel"
       :open="contactsOpen"
@@ -467,6 +532,10 @@ function onStatus(value: ApplicationStatus): void {
 .sent-history-date { flex: none; width: var(--sent-64); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .sent-history-text { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--font-label); line-height: var(--space-5); }
 .sent-history-detail { display: block; margin-top: var(--sent-2); font-size: var(--font-small); color: var(--text-secondary); }
+/* Ordinateur (PR 28) : le bouton teinté de 44 px avec son chevron, 8 px sous l'historique. */
+.sent-contacted-fold { display: inline-flex; align-items: center; gap: var(--sent-fold-gap, 6px); height: var(--target-min); min-height: var(--target-min); margin-top: var(--space-2); padding: 0 var(--sent-fold-r, 14px) 0 var(--sent-fold-l, 18px); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.sent-contacted-fold .icon { width: 20px; height: 20px; }
+.sent-contacts-all { display: flex; align-items: center; min-height: var(--target-min); font-size: var(--font-small); font-weight: var(--weight-bold); }
 .sent-contacted { min-height: var(--target-min); margin-top: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-status-choices { display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; }
 .sent-status-choices label { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); border-top: 1px solid var(--line-soft); font-size: var(--font-label); font-weight: var(--weight-semibold); }

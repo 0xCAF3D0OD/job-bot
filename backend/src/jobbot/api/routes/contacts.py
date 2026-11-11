@@ -8,7 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import ColumnElement, or_, select
 
 from jobbot.contacts import message, service
-from jobbot.db.models import Application, Contact, Offer
+from jobbot.db.models import Application, ApplicationStatus, Contact, Offer
+from jobbot.followups.remind import remind_on
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["contacts"])
@@ -150,6 +151,14 @@ async def add_contact(request: Request, body: ContactIn) -> ContactOut:
         contact.offer_id = offer_id
         contact.application_id = application_id
         session.add(contact)
+        # Une prise de contact adapte la prochaine relance (prompt du 10 novembre au soir,
+        # PR 28) : 7 jours après le contact, jamais plus tôt que le jour déjà prévu.
+        if application_id is not None:
+            contacted = await session.get(Application, application_id)
+            if contacted is not None and contacted.status == ApplicationStatus.EN_ATTENTE:
+                after_contact = body.contacted_on + service.FOLLOW_UP_AFTER
+                if after_contact > remind_on(contacted):
+                    contacted.follow_up_on = after_contact
         await session.flush()
         return ContactOut.model_validate(contact)
 

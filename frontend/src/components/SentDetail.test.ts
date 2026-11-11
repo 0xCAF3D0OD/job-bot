@@ -125,8 +125,54 @@ describe("Le détail d’Envoyées en cartes (§8.1)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=follow-card]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-history] li").text()).toContain("Réponse : refus");
-    await wrapper.find("[data-test=contacted-open]").trigger("click");
+    expect(wrapper.find("[data-test=contacted-open]").exists()).toBe(true);
+  });
+
+  it("« J’ai contacté quelqu’un » (PR 28) : bouton teinté à chevron, la carte se déplie avec Nom, Rôle et Comment, puis enregistre", async () => {
+    const wrapper = mountDetail({ id: 15 });
+    await flushPromises();
+    const toggle = wrapper.find("[data-test=contacted-open]");
+    expect(toggle.text()).toBe("J’ai contacté quelqu’un");
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+    expect(toggle.attributes("aria-controls")).toBe(wrapper.find("[data-test=contacted-zone]").attributes("id"));
+    expect(wrapper.find("[data-test=contact-quick]").exists()).toBe(false);
+    await toggle.trigger("click");
+    expect(toggle.attributes("aria-expanded")).toBe("true");
+    const form = wrapper.find("[data-test=contacted-zone] [data-test=contact-quick]");
+    expect(form.findAll("label").map((l) => l.text())).toEqual(["Nom", "Rôle (facultatif)", "Comment"]);
+    expect(form.findAll("[data-test=contact-channel] option").map((o) => o.text())).toEqual(["LinkedIn", "E-mail", "Téléphone", "Autre"]);
+    expect(form.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Annuler", "Enregistrer"]);
+    expect(form.find(".contact-quick-lead").exists()).toBe(false);
+    // Sans nom, rien n'est envoyé et l'erreur vient sous le champ.
+    POST.mockClear();
+    await form.trigger("submit");
+    expect(POST).not.toHaveBeenCalled();
+    expect(form.find("[data-test=field-error]").text()).toBe("Indique le nom de la personne.");
+    POST.mockResolvedValueOnce({ data: { id: 1 } });
+    await form.find("[data-test=contact-name]").setValue("Mme Rochat");
+    await form.find("[data-test=contact-role]").setValue("recruiter");
+    await form.find("[data-test=contact-channel]").setValue("email");
+    await form.trigger("submit");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/contacts", {
+      body: { application_id: 15, name: "Mme Rochat", role: "recruiter", channel: "email", contacted_on: "2026-11-08" },
+    });
+    expect(wrapper.emitted("changed")).toHaveLength(1);
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+    // « Annuler » replie sans rien enregistrer.
+    await toggle.trigger("click");
+    await wrapper.find("[data-test=contact-cancel]").trigger("click");
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+  });
+
+  it("des contacts déjà notés : l’historique les montre et « Voir les prises de contact » ouvre leur panneau", async () => {
+    const contact = { id: 3, name: "Mme Rochat", role: "recruiter", channel: "email", contacted_on: "2026-11-02", answered_on: null, note: null };
+    const wrapper = mountDetail({ id: 16, contacts: [contact] });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-history]").text()).toContain("Contact : Mme Rochat");
+    await wrapper.find("[data-test=contacts-open]").trigger("click");
     expect(wrapper.find("contacts-panel-stub").attributes("part")).toBe("follow");
+    expect(mountDetail({ id: 17 }).find("[data-test=contacts-open]").exists()).toBe(false);
   });
 
   it("« Changer le statut » dans « … » ouvre le choix du statut", async () => {
@@ -179,5 +225,20 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     expect(wrapper.find("[data-test=sent-docs-sheet] [data-test=sent-cv]").attributes("href")).toBe("/api/cvs/5/pdf");
     await wrapper.find("[data-test=sent-find-open]").trigger("click");
     expect(wrapper.find("[data-test=sent-find-sheet] [data-test=find-recruiting]").exists()).toBe(true);
+  });
+
+  it("« J’ai contacté quelqu’un » (PR 28) : la fenêtre du bas, la phrase, les mêmes champs et « Enregistrer » plein", async () => {
+    const wrapper = mountPhone({ id: 23 });
+    await flushPromises();
+    const open = wrapper.find("[data-test=contacted-open]");
+    expect(open.attributes("aria-haspopup")).toBe("dialog");
+    expect(wrapper.find("[data-test=contacted-zone]").exists()).toBe(false);
+    await open.trigger("click");
+    const sheet = wrapper.find("[data-test=contacted-sheet]");
+    expect(sheet.find(".sheet-title").text()).toBe("J’ai contacté quelqu’un");
+    expect(sheet.find(".contact-quick-lead").text()).toBe("jobA1 le note dans l’historique et adapte la prochaine relance.");
+    expect(sheet.findAll("label").map((l) => l.text())).toEqual(["Nom", "Rôle (facultatif)", "Comment"]);
+    expect(sheet.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Enregistrer"]);
+    expect(sheet.find("[data-test=contact-save]").classes()).toContain("primary");
   });
 });
