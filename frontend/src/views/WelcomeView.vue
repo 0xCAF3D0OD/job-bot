@@ -1364,7 +1364,7 @@ async function finish(to: string): Promise<void> {
                   class="icon-button welcome-stepper"
                   aria-label="Plus"
                   data-test="target-plus"
-                  @click="target = Math.min(30, target + 1)"
+                  @click="target = Math.min(99, target + 1)"
                 >
                   +
                 </button>

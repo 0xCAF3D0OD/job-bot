@@ -18,10 +18,16 @@ import AppIcon from "./AppIcon.vue";
 // de 18 px, sous-titre de 14 px, croix de 44 px ; corps qui défile, pied fixe (slot `actions`). Sur téléphone, la même
 // feuille monte du bas. Elle reste une <dialog> modale : focus bloqué dedans, rendu au bouton d'origine (WCAG 2.1.2,
 // 2.4.3) ; croix, Échap et clic à l'extérieur la ferment, sans bouton « Annuler ».
-const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | "" }>(), {
+// `float` (lot du 11 novembre au soir, PR 50 ; maquettes ProfilOrdinateurObjectif et ProfilTelObjectif) : sur
+// ordinateur, le panneau flotte à 16 px des bords droit, haut et bas, 440 px, rayon 24, voile rgba(27,31,42,.38),
+// croix de 44 px cerclée, pied collé en bas. Sur téléphone, la feuille du bas sans croix (poignée 40 × 4, rayon 28) :
+// son pied porte « Annuler ».
+// Ses styles sont dans sheet-float.css, importé par le panneau qui s'en sert.
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | ""; float?: boolean }>(), {
   subtitle: "",
   full: false,
   icon: "",
+  float: false,
 });
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null);
@@ -113,7 +119,7 @@ function onClick(event: MouseEvent): void {
 <template>
   <dialog
     ref="dialog"
-    :class="['sheet', { 'sheet-full': full, 'sheet-panel': icon }]"
+    :class="['sheet', { 'sheet-full': full, 'sheet-panel': icon, 'sheet-float': float }]"
     :aria-labelledby="titleId"
     :style="{ ...(dragY ? { transform: `translateY(${dragY}px)` } : {}), ...(icon ? { '--sheet-top': `${top}px` } : {}) }"
     data-test="sheet"

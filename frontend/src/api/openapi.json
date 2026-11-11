@@ -6803,7 +6803,7 @@
           "orp"
         ],
         "summary": "Submit Month",
-        "description": "« Marquer comme remis » : la remise est datée, les modifications repartent de zéro.",
+        "description": "« Marquer comme remis » : la remise est datée, les modifications repartent de zéro.\n\nL'objectif du moment est gardé avec le mois (PR 50) : le changer ensuite ne touche pas ce mois.",
         "operationId": "submitOrpMonth",
         "parameters": [
           {
@@ -20592,7 +20592,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100.0,
+                "maximum": 99.0,
                 "minimum": 1.0
               },
               {
@@ -23261,7 +23261,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100.0,
+                "maximum": 99.0,
                 "minimum": 1.0
               },
               {

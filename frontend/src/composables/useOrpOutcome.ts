@@ -48,7 +48,7 @@ export function useOrpOutcome(meeting: Ref<Meeting | null>, target: Ref<number |
   });
 
   function step(delta: number): void {
-    count.value = Math.min(100, Math.max(1, count.value + delta));
+    count.value = Math.min(99, Math.max(1, count.value + delta));
   }
 
   async function save(): Promise<void> {

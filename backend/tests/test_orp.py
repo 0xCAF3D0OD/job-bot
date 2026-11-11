@@ -183,6 +183,34 @@ async def test_csv_submission_and_changes(api: AsyncClient) -> None:
     assert (await api.get("/api/orp/2026-13/csv")).status_code == 422
 
 
+async def test_submitted_month_keeps_its_target(api: AsyncClient) -> None:
+    """Un mois déjà remis garde son objectif après un changement (PR 50)."""
+    await add(api, "2026-10-02")
+    assert (await api.put("/api/orp/2026-10/submission")).status_code == 204
+    settings = (await api.get("/api/settings")).json()
+    saved = await api.put("/api/settings", json={**settings, "orp_monthly_target": 12})
+    assert saved.status_code == 200 and saved.json()["orp_monthly_target"] == 12
+
+    assert (await api.get("/api/orp", params={"month": "2026-10"})).json()["target"] == 20
+    summary = await api.get("/api/applications/summary", params={"month": "2026-10"})
+    assert summary.json()["target"] == 20
+    # Le mois en cours suit le nouvel objectif.
+    assert (await api.get("/api/orp", params={"month": "2026-11"})).json()["target"] == 12
+    summary = await api.get("/api/applications/summary", params={"month": "2026-11"})
+    assert summary.json()["target"] == 12
+
+    # Remise annulée : le mois suit de nouveau l'objectif du compte.
+    assert (await api.delete("/api/orp/2026-10/submission")).status_code == 204
+    assert (await api.get("/api/orp", params={"month": "2026-10"})).json()["target"] == 12
+
+
+async def test_target_is_between_1_and_99(api: AsyncClient) -> None:
+    settings = (await api.get("/api/settings")).json()
+    for value, code in ((0, 422), (100, 422), (99, 200), (1, 200)):
+        response = await api.put("/api/settings", json={**settings, "orp_monthly_target": value})
+        assert response.status_code == code
+
+
 async def test_default_month_without_previous(api: AsyncClient) -> None:
     # Rien en octobre : la page s'ouvre sur le mois en cours.
     assert (await api.get("/api/orp")).json()["month"] == "2026-11"

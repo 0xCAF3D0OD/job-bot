@@ -2528,6 +2528,8 @@ export interface paths {
         /**
          * Submit Month
          * @description « Marquer comme remis » : la remise est datée, les modifications repartent de zéro.
+         *
+         *     L'objectif du moment est gardé avec le mois (PR 50) : le changer ensuite ne touche pas ce mois.
          */
         put: operations["submitOrpMonth"];
         post?: never;

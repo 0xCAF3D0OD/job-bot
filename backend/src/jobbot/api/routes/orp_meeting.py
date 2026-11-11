@@ -53,7 +53,7 @@ class MeetingOut(BaseModel):
 
 
 class OutcomeIn(BaseModel):
-    target: Annotated[int, Field(ge=1, le=100)] | None = None
+    target: Annotated[int, Field(ge=1, le=99)] | None = None
     measures: Annotated[list[MeasureIO], Field(max_length=20)] = []
     assignments: Annotated[str, Field(max_length=2000)] | None = None
     note: Annotated[str, Field(max_length=4000)] | None = None

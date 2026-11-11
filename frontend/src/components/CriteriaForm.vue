@@ -14,6 +14,7 @@ import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 import FilterOutcome from "./FilterOutcome.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
+import OrpTargetSheet from "./OrpTargetSheet.vue";
 // Le titre du résumé : « Critères » ; « Ce que je cherche » dans le Profil ordinateur (maquette ProfilOrdinateur).
 withDefaults(defineProps<{ heading?: string }>(), { heading: "Critères" });
 const CONTRACTS: { value: ContractType; label: string }[] = [
@@ -67,6 +68,10 @@ const failed = ref(false);
 // « Modifier » (docs/10 §2).
 const savedAt = ref<string | null>(null);
 const editing = ref(false);
+// « Suivi ORP » (lot du 11 novembre au soir, PR 50 ; maquettes ProfilOrdinateur et ProfilTel) : l'objectif du mois,
+// dernière ligne de « Ce que je cherche » ; elle ouvre le panneau « Objectif du mois ».
+const orpTarget = ref<number | null>(null);
+const targetOpen = ref(false);
 
 // Aides « ? » (docs/32 §1) : les mots-clés réels du filtre, en abrégé.
 // La description en une ligne ; les mots-clés au survol (docs/88 règle 5, audit de la 1.1.1).
@@ -103,6 +108,8 @@ const summary = computed(() => {
     .filter(([, level]) => level !== "unknown")
     .map(([name, level]) => `${languageLabel(name)} : ${levelLabel(level as Level).toLowerCase()}`);
   rows.push({ key: "langues", label: "Langues", value: langs.length ? langs.join(", ") : "non renseignées", items: langs.length ? langs : ["Non renseignées"] });
+  const goal = orpTarget.value ? plural(orpTarget.value, "recherche par mois", "recherches par mois") : "non renseigné";
+  rows.push({ key: "orp", label: "Suivi ORP", value: goal, items: [sentence(goal)] });
   return rows;
 });
 
@@ -112,6 +119,10 @@ function sentence(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 async function editAt(key: string): Promise<void> {
+  if (key === "orp") {
+    targetOpen.value = true;
+    return;
+  }
   editing.value = true;
   await nextTick();
   const fieldset = document.getElementById(`criteria-${key}`);
@@ -139,6 +150,9 @@ async function load(): Promise<void> {
     keywords.value = data.keywords;
     savedAt.value = data.saved_at ?? null;
     editing.value = !savedAt.value;
+    // L'objectif ORP est un réglage : sans lui, la ligne dit « Non renseigné ».
+    const settings = await api.GET("/api/settings").catch(() => null);
+    orpTarget.value = settings?.data?.orp_monthly_target ?? null;
   } catch {
     failed.value = true;
   } finally {
@@ -242,6 +256,12 @@ onMounted(() => void load());
         </p>
       </section>
       <FilterOutcome />
+      <OrpTargetSheet
+        :open="targetOpen"
+        :target="orpTarget"
+        @close="targetOpen = false"
+        @saved="orpTarget = $event"
+      />
     </div>
     <form
       v-else

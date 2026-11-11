@@ -164,7 +164,7 @@ async function persist(row: string, patch: Partial<SettingsModel>): Promise<bool
 // Les champs chiffrés et leur règle : une valeur impossible n'est pas envoyée, l'ancienne reste.
 type NumberKey = "orp_monthly_target" | "orp_due_day" | "employer_search_threshold" | "llm_monthly_budget_chf";
 const RULES: Record<NumberKey, { row: string; min: number; max: number; text: string; optional?: boolean; decimal?: boolean }> = {
-  orp_monthly_target: { row: "orp", min: 1, max: 100, text: "Entre 1 et 100.", optional: true },
+  orp_monthly_target: { row: "orp", min: 1, max: 99, text: "Entre 1 et 99.", optional: true },
   orp_due_day: { row: "due", min: 2, max: 28, text: "Entre 2 et 28." },
   employer_search_threshold: { row: "employer", min: 0, max: 100, text: "Entre 0 et 100." },
   llm_monthly_budget_chf: { row: "budget", min: 0, max: 1000, text: "Entre 0 et 1000 CHF.", decimal: true },
@@ -376,7 +376,7 @@ watch(
                   type="number"
                   inputmode="numeric"
                   min="1"
-                  max="100"
+                  max="99"
                   :aria-labelledby="c.labelledby"
                   :aria-describedby="c.describedby"
                   :aria-invalid="c.invalid"

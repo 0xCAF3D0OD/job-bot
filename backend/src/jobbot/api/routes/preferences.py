@@ -89,7 +89,8 @@ class FilterResponse(BaseModel):
 
 
 class SettingsModel(BaseModel):
-    orp_monthly_target: int | None = Field(default=None, ge=1, le=100)
+    # De 1 à 99 partout (décision de Kevin du 11 novembre, PR 50).
+    orp_monthly_target: int | None = Field(default=None, ge=1, le=99)
     notify_score_threshold: int = Field(default=70, ge=0, le=100)
     llm_monthly_budget_chf: float = Field(default=10, ge=0, le=1000)
     # Jour de remise des preuves ORP du mois précédent (docs/09 §5).

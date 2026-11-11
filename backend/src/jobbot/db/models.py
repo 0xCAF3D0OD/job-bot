@@ -680,6 +680,8 @@ class OrpMonth(Base):
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     exported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     changed_after_submit: Mapped[bool] = mapped_column(default=False)
+    # L'objectif du mois au moment de la remise (PR 50) : un changement ultérieur ne le modifie pas.
+    target: Mapped[int | None] = mapped_column(SmallInteger)
     # Rappels ntfy déjà envoyés (0.6.0-b) : {"under_target": date, "due": date, "eve": date}.
     reminders_sent: Mapped[Any] = mapped_column(JSONB, default=dict)
 

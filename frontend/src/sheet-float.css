@@ -1,0 +1,28 @@
+/* Importé par les panneaux qui passent `float` à BottomSheet (hors de la feuille de style du premier écran, pour son
+   budget de poids). */
+/* Le panneau flottant (lot du 11 novembre au soir, PR 50 ; maquettes ProfilOrdinateurObjectif, ProfilTelObjectif) :
+   `float`. Ordinateur : 440 px à 16 px des bords droit, haut et bas, rayon 24, 24 px de marge, voile .38, titre
+   22/28 800, croix de 44 px cerclée de 1,5 px, corps 8 px sous le titre, pied en bas. Téléphone : poignée 40 × 4 à
+   12 px du haut et 16 px du titre, rayon 28 en haut, 24 px de marge, 28 px en bas, sans croix. */
+.sheet-float { --float-gap: 16px; --float-radius: 24px; --float-radius-phone: 28px; --float-pad: 24px; --float-close: 44px; --float-line: #C9C5BA; --float-handle-w: 40px; --float-bottom: 28px; }
+:root[data-theme="dark"] .sheet-float { --float-line: #4E473E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sheet-float { --float-line: #4E473E; } }
+.sheet.sheet-float::backdrop { background: rgb(27 31 42 / 38%); }
+.sheet.sheet-float .sheet-body { gap: 0; }
+@media (max-width: 820px) {
+  .sheet.sheet-float { border-radius: var(--float-radius-phone) var(--float-radius-phone) 0 0; }
+  .sheet.sheet-float .sheet-inner { padding-bottom: calc(var(--float-bottom) + env(safe-area-inset-bottom)); }
+  .sheet.sheet-float .sheet-inner::before { width: var(--float-handle-w); margin: var(--space-3) 0 var(--space-4); background: var(--float-line); }
+  .sheet.sheet-float .sheet-head { padding: 0 var(--float-pad); }
+  .sheet.sheet-float .sheet-close { display: none; }
+  .sheet.sheet-float .sheet-body { padding: var(--space-2) var(--float-pad) 0; }
+  .sheet.sheet-float .sheet-actions { padding: var(--space-6) var(--float-pad) 0; }
+}
+@media (min-width: 821px) {
+  .sheet.sheet-float { inset: var(--float-gap) var(--float-gap) var(--float-gap) auto; height: auto; max-height: none; border-radius: var(--float-radius); box-shadow: none; overflow: hidden; }
+  .sheet.sheet-float .sheet-head { min-height: 0; padding: var(--float-pad) var(--float-pad) 0; }
+  .sheet.sheet-float .sheet-close { width: var(--float-close); height: var(--float-close); border: 1.5px solid var(--float-line); background: var(--surface); }
+  .sheet.sheet-float .sheet-close .icon { width: var(--space-5); height: var(--space-5); }
+  .sheet.sheet-float .sheet-body { padding: var(--space-2) var(--float-pad) var(--float-pad); }
+  .sheet.sheet-float .sheet-actions { padding: 0 var(--float-pad) var(--float-pad); }
+}

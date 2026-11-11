@@ -37,6 +37,7 @@ from jobbot.letters.contact_guess import guess_contact
 from jobbot.letters.document import Identity as LetterIdentity
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
+from jobbot.orp.service import load_month_target
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["applications"])
@@ -409,10 +410,8 @@ async def get_applications_summary(
         count = await session.scalar(
             select(func.count()).select_from(Application).where(Application.orp_month == month)
         )
-        target = await session.scalar(
-            select(Setting.value).where(Setting.key == "orp_monthly_target")
-        )
-    return MonthSummary(month=month, count=count or 0, target=int(target) if target else None)
+        target = await load_month_target(session, month)
+    return MonthSummary(month=month, count=count or 0, target=target)
 
 
 @router.post(

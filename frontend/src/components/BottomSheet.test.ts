@@ -27,6 +27,12 @@ describe("BottomSheet (règles §4)", () => {
     expect(wrapper.find("dialog").classes()).toContain("sheet-full");
   });
 
+  it("panneau flottant avec `float` (PR 50)", () => {
+    const wrapper = mount(BottomSheet, { props: { open: false, title: "Objectif du mois", float: true } });
+    expect(wrapper.find("dialog").classes()).toContain("sheet-float");
+    expect(mount(BottomSheet, { props: { open: false, title: "Filtres" } }).find("dialog").classes()).not.toContain("sheet-float");
+  });
+
   it("panneau à formulaire avec `icon` (PR 37) : pastille, titre, sous-titre, clic à l’extérieur", async () => {
     const wrapper = mount(BottomSheet, {
       props: { open: true, title: "Ajouter", subtitle: "Une offre ou une candidature spontanée", icon: "plus" },

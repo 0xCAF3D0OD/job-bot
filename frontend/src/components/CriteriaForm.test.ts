@@ -90,6 +90,7 @@ describe("CriteriaForm, déjà saisis", () => {
       ["Types d’offres exclus", "Stages"],
       // « Langues » avec les niveaux (PR 17), plus « Langues non parlées ».
       ["Langues", "Français\u202f: langue maternelle, Allemand\u202f: notions"],
+      ["Suivi ORP", "Non renseigné"],
     ]);
     // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
     for (const row of summary.findAll("button.criteria-row")) {
@@ -171,7 +172,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     // de la valeur en gras, cercle à flèche.
     const summary = wrapper.find("[data-test=criteria-summary]");
     const labels = summary.findAll(".criteria-row-label").map((t) => t.text());
-    expect(labels).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Types d’offres exclus", "Langues"]);
+    expect(labels).toEqual(["Lieux", "Télétravail complet", "Taux d’activité", "Types d’offres exclus", "Langues", "Suivi ORP"]);
     expect(summary.find("[data-test=criteria-row-taux] .criteria-row-value").text()).toBe("80 % au moins");
     expect(summary.find(".grouped-value").exists()).toBe(false);
 
@@ -188,5 +189,42 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);
     expect(document.activeElement?.id).toBe("min_rate");
     wrapper.unmount();
+  });
+
+  it("« Suivi ORP » en dernière ligne : l’objectif, qui ouvre « Objectif du mois » et suit l’enregistrement (PR 50)", async () => {
+    const settings = { orp_monthly_target: 10, orp_due_day: 5 };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/settings" ? settings : { criteria: { locations: ["VD"], min_rate: null }, keywords, saved_at: "2026-11-01T08:00:00Z" } }),
+    );
+    PUT.mockImplementation((_path: string, { body }: { body: unknown }) => Promise.resolve({ data: body }));
+    const wrapper = mount(CriteriaView, { attachTo: document.body });
+    await flushPromises();
+    const rows = wrapper.findAll("[data-test=criteria-summary] .criteria-row");
+    const row = rows[rows.length - 1]!;
+    expect(row.attributes("data-test")).toBe("criteria-row-orp");
+    expect(row.find(".criteria-row-label").text()).toBe("Suivi ORP");
+    expect(row.find(".criteria-row-value").text()).toBe("10 recherches par mois");
+    expect(rows[rows.length - 2]!.find(".criteria-row-label").text()).toBe("Langues");
+
+    await row.trigger("click");
+    expect(wrapper.find("[data-test=goal-sheet]").attributes("open")).toBeDefined();
+    expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
+    await wrapper.find("[data-test=goal-more]").trigger("click");
+    await wrapper.find("[data-test=goal-more]").trigger("click");
+    await wrapper.find("[data-test=goal-save]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/settings", { body: { ...settings, orp_monthly_target: 12 } });
+    expect(wrapper.find("[data-test=criteria-row-orp] .criteria-row-value").text()).toBe("12 recherches par mois");
+    expect(wrapper.find("[data-test=goal-sheet]").attributes("open")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("sans objectif : « Non renseigné »", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/settings" ? { orp_monthly_target: null } : { criteria: { locations: ["VD"], min_rate: null }, keywords, saved_at: "2026-11-01T08:00:00Z" } }),
+    );
+    const wrapper = mount(CriteriaView);
+    await flushPromises();
+    expect(wrapper.find("[data-test=criteria-row-orp] .criteria-row-value").text()).toBe("Non renseigné");
   });
 });

@@ -23,9 +23,9 @@ from jobbot.core.orp import (
     to_csv,
     to_row,
 )
-from jobbot.db.models import Application, OrpMonth, Search, Setting, received_alert
+from jobbot.db.models import Application, OrpMonth, Search, received_alert
 from jobbot.letters.service import load_identity
-from jobbot.orp.service import load_canton, load_due_day
+from jobbot.orp.service import load_canton, load_due_day, load_month_target, load_target
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/orp", tags=["orp"])
@@ -172,9 +172,7 @@ async def get_orp_month(
         month = month or await _default_month(session)
         rows = await _rows(session, month)
         record = await session.get(OrpMonth, month)
-        target = await session.scalar(
-            select(Setting.value).where(Setting.key == "orp_monthly_target")
-        )
+        target = await load_month_target(session, month)
         identity = await load_identity(session)
         due_day = await load_due_day(session)
         canton = await load_canton(session)
@@ -211,7 +209,7 @@ async def get_orp_month(
         state=state,
         due_date=due_date(month, due_day, canton),
         count=len(rows),
-        target=int(target) if target else None,
+        target=target,
         incomplete=sum(1 for r in rows if r.missing),
         to_declare=sum(1 for r in rows if r.declared_at is None),
         rows=[
@@ -272,9 +270,18 @@ async def mark_exported(request: Request, month: Month) -> None:
     "/{month}/submission", operation_id="submitOrpMonth", status_code=status.HTTP_204_NO_CONTENT
 )
 async def submit_month(request: Request, month: Month) -> None:
-    """« Marquer comme remis » : la remise est datée, les modifications repartent de zéro."""
+    """« Marquer comme remis » : la remise est datée, les modifications repartent de zéro.
+
+    L'objectif du moment est gardé avec le mois (PR 50) : le changer ensuite ne touche pas ce mois.
+    """
     async with _runtime(request).sessionmaker.begin() as session:
-        await _touch(session, month, submitted_at=datetime.now(UTC), changed_after_submit=False)
+        await _touch(
+            session,
+            month,
+            submitted_at=datetime.now(UTC),
+            changed_after_submit=False,
+            target=await load_target(session),
+        )
 
 
 @router.delete(
@@ -284,4 +291,4 @@ async def submit_month(request: Request, month: Month) -> None:
 )
 async def cancel_submission(request: Request, month: Month) -> None:
     async with _runtime(request).sessionmaker.begin() as session:
-        await _touch(session, month, submitted_at=None, changed_after_submit=False)
+        await _touch(session, month, submitted_at=None, changed_after_submit=False, target=None)

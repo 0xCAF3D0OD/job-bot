@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.holidays import DEFAULT_CANTON, canton_of_postcode
 from jobbot.core.orp import DEFAULT_DUE_DAY
-from jobbot.db.models import Application, Setting
+from jobbot.db.models import Application, OrpMonth, Setting
 
 
 async def load_due_day(session: AsyncSession) -> int:
@@ -25,6 +25,14 @@ async def load_canton(session: AsyncSession) -> str:
 async def load_target(session: AsyncSession) -> int | None:
     value = await session.scalar(select(Setting.value).where(Setting.key == "orp_monthly_target"))
     return int(value) if value else None
+
+
+async def load_month_target(session: AsyncSession, month: str) -> int | None:
+    """L'objectif d'un mois : celui gardé à la remise, sinon l'objectif actuel (PR 50)."""
+    kept = await session.scalar(
+        select(OrpMonth.target).where(OrpMonth.month == month, OrpMonth.submitted_at.is_not(None))
+    )
+    return kept if kept else await load_target(session)
 
 
 @dataclass(frozen=True)
