@@ -443,7 +443,9 @@ watch(() => props.page, () => void nextTick(measure));
           :key="selectedPast.id"
           :meeting="selectedPast"
           :target="page.target"
+          :next="nextOrp?.kind === 'orp' ? page.meeting : null"
           @saved="emit('saved', $event)"
+          @add="select('nouveau')"
         />
       </article>
 
