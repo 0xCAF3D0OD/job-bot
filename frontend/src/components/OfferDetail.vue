@@ -6,7 +6,8 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInList, dateInSentence } from "../dates";
-import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { cityOnly, expiredText, frenchName, gapSkill, plural, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { markSegments, matchedPassages } from "../offerPassages";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
@@ -16,6 +17,7 @@ import ContactsPanel from "./ContactsPanel.vue";
 import DetailTwoColumns from "./DetailTwoColumns.vue";
 import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
+import MarkedText from "./MarkedText.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import "../block-fields.css";
 import OfferActionSheet from "./OfferActionSheet.vue";
@@ -296,6 +298,18 @@ const summaryParts = computed(() =>
   [props.offer.summary_role, props.offer.summary_asks, props.offer.summary_offers].filter((t): t is string => !!t?.trim()),
 );
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
+// Les passages de l'annonce retrouvés dans le profil (PR 47) : la même source que le tri. La légende compte ceux
+// qui sont surlignés dans le texte affiché (résumé, extrait ou annonce dépliée) ; aucun : ni surlignage ni légende.
+const passages = computed(() => matchedPassages(props.offer));
+const shownTexts = computed(() => {
+  const o = props.offer;
+  const texts: string[] = [];
+  if (summaryParts.value.length && !partial.value) texts.push(...summaryParts.value);
+  else if (!o.description && o.snippet) texts.push(o.snippet);
+  if (o.description && (textOpen.value || !summaryParts.value.length)) texts.push(o.description);
+  return texts;
+});
+const markedCount = computed(() => shownTexts.value.reduce((n, text) => n + markSegments(text, passages.value).filter((s) => s.mark).length, 0));
 // Note provisoire : l'offre n'a que l'extrait de l'alerte (pas de texte complet). Ses manques sont alors
 // génériques (« Exigences », « Données », « Conseil ») : la lecture de l'annonce complète les remplace.
 const partial = computed(() => !props.offer.description && !props.offer.spontaneous);
@@ -1002,14 +1016,20 @@ watch(
               class="post-summary"
               data-test="summary"
             >
-              {{ part }}
+              <MarkedText
+                :text="part"
+                :passages="passages"
+              />
             </p>
           </template>
           <p
             v-else-if="!offer.description"
             class="detail-snippet"
           >
-            {{ offer.snippet || "Pas d’extrait dans l’alerte : le texte complet de l’annonce est sur le site." }}
+            <MarkedText
+              :text="offer.snippet || 'Pas d’extrait dans l’alerte : le texte complet de l’annonce est sur le site.'"
+              :passages="passages"
+            />
           </p>
           <div
             v-if="offer.description && (textOpen || !summaryParts.length)"
@@ -1018,8 +1038,22 @@ watch(
             :style="textOpen && textHeight ? { maxHeight: textHeight } : undefined"
             data-test="description"
           >
-            {{ offer.description }}
+            <MarkedText
+              :text="offer.description"
+              :passages="passages"
+            />
           </div>
+          <!-- La légende du surlignage, en texte (WCAG 1.4.1) : seulement quand un passage est surligné à l'écran. -->
+          <p
+            v-if="markedCount"
+            class="passage-legend"
+            data-test="passage-legend"
+          >
+            <span
+              class="passage-legend-mark"
+              aria-hidden="true"
+            />{{ plural(markedCount, "passage qui correspond", "passages qui correspondent") }} à ton profil
+          </p>
           <div class="post-links">
             <button
               v-if="offer.description && !textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"

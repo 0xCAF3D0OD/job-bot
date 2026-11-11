@@ -424,3 +424,36 @@ describe("OfferDetail, langues (prompt du 10 novembre, PR 17)", () => {
     expect(wrapper.text()).not.toContain("Langue à vérifier");
   });
 });
+
+describe("OfferDetail, passages surlignés dans « Le poste » (lot du 11 novembre au soir, PR 47)", () => {
+  const text = "Vous exploitez nos clusters Kubernetes.\nVous écrivez l’infrastructure avec Terraform.";
+
+  it("les passages retrouvés sont surlignés, la légende les compte ; le texte de l'annonce ne change pas", async () => {
+    const wrapper = await mountDetail(offer({ description: text, passages: ["clusters Kubernetes", "l'infrastructure avec Terraform"] }));
+    const shown = wrapper.find("[data-test=description]");
+    expect(shown.findAll("mark").map((m) => m.text())).toEqual(["clusters Kubernetes", "l’infrastructure avec Terraform"]);
+    expect(shown.element.textContent).toBe(text);
+    expect(wrapper.find("[data-test=passage-legend]").text()).toBe("2 passages qui correspondent à ton profil");
+  });
+
+  it("un seul passage : la légende au singulier", async () => {
+    const wrapper = await mountDetail(offer({ description: text, passages: ["clusters Kubernetes"] }));
+    expect(wrapper.find("[data-test=passage-legend]").text()).toBe("1 passage qui correspond à ton profil");
+  });
+
+  it("aucun passage (note plus ancienne) ou passage absent du texte affiché : ni surlignage ni légende", async () => {
+    for (const passages of [undefined, [], ["une citation inventée"]]) {
+      const wrapper = await mountDetail(offer({ description: text, passages }));
+      expect(wrapper.find("[data-test=description] mark").exists()).toBe(false);
+      expect(wrapper.find("[data-test=passage-legend]").exists()).toBe(false);
+    }
+  });
+
+  it("résumé affiché : la légende ne compte que ce qui est surligné à l'écran, puis l'annonce dépliée", async () => {
+    const wrapper = await mountDetail(offer({ description: text, passages: ["clusters Kubernetes"], summary_role: "Faire tourner la plateforme.", score: 80, why: "x" }));
+    expect(wrapper.find("[data-test=passage-legend]").exists()).toBe(false);
+    await wrapper.find("[data-test=read-more]").trigger("click");
+    expect(wrapper.find("[data-test=description] mark").text()).toBe("clusters Kubernetes");
+    expect(wrapper.find("[data-test=passage-legend]").exists()).toBe(true);
+  });
+});
