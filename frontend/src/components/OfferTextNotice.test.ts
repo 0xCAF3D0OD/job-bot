@@ -102,7 +102,7 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     vi.useRealTimers();
   });
 
-  it("refus (état du serveur) : le bloc dans la carte, « Coller le texte » tonal et « Ouvrir l’annonce »", async () => {
+  it("refus (état du serveur) : le bloc dans la carte, « Coller le texte » tonal, sans lien vers l’annonce (PR 25)", async () => {
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
     expect(POST).not.toHaveBeenCalled();
     expect(wrapper.find("[data-test=match-sub]").text()).toBe("Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées.");
@@ -112,10 +112,9 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(block.find("[data-test=refused-text]").text()).toBe("Ce site bloque la lecture automatique. Colle le texte : la note sera refaite tout de suite.");
     expect(block.findAll("button")).toHaveLength(1);
     expect(block.find("[data-test=paste-offer-text]").text()).toBe("Coller le texte");
-    const open = block.find("[data-test=open-offer]");
-    expect(open.text()).toContain("Ouvrir l’annonce");
-    expect(open.attributes("href")).toBe("https://www.linkedin.com/jobs/view/42");
-    expect(open.attributes("target")).toBe("_blank");
+    // Le seul lien vers l'annonce est « Voir l'annonce sur [source] » de la fiche : aucun dans l'encadré.
+    expect(block.find("a").exists()).toBe(false);
+    expect(block.text()).not.toContain("Ouvrir l’annonce");
     expect(wrapper.find("[data-test=text-reading]").exists()).toBe(false);
   });
 

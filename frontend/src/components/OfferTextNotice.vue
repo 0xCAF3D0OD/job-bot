@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import Composer from "./Composer.vue";
 
@@ -11,7 +10,8 @@ import Composer from "./Composer.vue";
 // en arrière-plan ; la carte de la note montre où en est la lecture, sans bouton :
 // - `reading` : « jobA1 lit l'annonce complète… » avec un petit indicateur (role="status", aria-live="polite") ;
 // - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : « jobA1 n'a pas pu lire
-//   l'annonce », « Coller le texte » en tonal (la feuille de collage) et le lien « Ouvrir l'annonce ».
+//   l'annonce », « Coller le texte » en tonal (la feuille de collage). Pas de lien ici : le seul lien vers l'annonce est
+//   « Voir l'annonce sur [source] » de la fiche (prompt récapitulatif du 11 novembre, PR 25).
 // Plus de « Lire l'annonce » ni de bande « Il manque l'annonce complète ». `done` est montré par la fiche (« Note
 // refaite sur l'annonce complète. »). Si la fiche s'ouvre avant la tâche de fond, la lecture est demandée tout de suite
 // (une fois par offre) ; si le site est lent, jobA1 réessaie une fois de lui-même et la fiche se recharge un moment.
@@ -20,13 +20,6 @@ const props = defineProps<{ offer: Offer }>();
 const emit = defineEmits<{ changed: []; refresh: [] }>();
 
 const MIN_TEXT = 200;
-// Le lien d'un texte collé à l'ajout n'est pas une page à lire (manual_offers.NO_LINK).
-const NO_LINK = "https://annonce-collee.invalid/";
-const readable = computed(() =>
-  props.offer.employer_url?.startsWith("https://")
-    ? props.offer.employer_url
-    : props.offer.links.find((l) => l.url.startsWith("https://") && !l.url.startsWith(NO_LINK))?.url,
-);
 
 // Le serveur dit l'état ; la réponse d'une lecture demandée d'ici peut le devancer (refus).
 const refusedHere = ref(false);
@@ -193,14 +186,6 @@ export function resetRequested(): void {
       >
         Coller le texte
       </button>
-      <a
-        v-if="readable"
-        :href="readable"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="offer-text-open"
-        data-test="open-offer"
-      >Ouvrir l’annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
     </div>
   </div>
   <BottomSheet

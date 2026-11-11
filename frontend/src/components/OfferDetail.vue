@@ -101,16 +101,18 @@ async function findEmployer(): Promise<void> {
   }
 }
 
-// Bouton « Postuler » (docs/21 §5) : chez l'employeur si l'annonce y est, sinon sur le site.
+// Le seul lien vers l'annonce de toute la fiche, hors menu « … » (prompt récapitulatif du 11 novembre, PR 25) :
+// « Voir l'annonce sur [source] », dans « Le poste » sur téléphone et dans « L'offre en bref » sur ordinateur.
+// Chez l'employeur si l'annonce y est, sinon sur le site d'où elle vient : la même adresse que « Ouvrir l'annonce sur
+// le site » du menu « … ». L'adresse pour postuler (`apply_url`) n'est pas l'annonce : elle reste dans Préparer.
 const postLink = computed(() => {
   const o = props.offer;
-  if (o.employer_url) return { url: o.employer_url, label: "Postuler chez l’employeur" };
-  if (o.apply_url) {
-    return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l’employeur" : "Postuler sur jobup" };
-  }
-  const link = o.links[0];
-  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l’annonce" };
-  return link ? { url: link.url, label: `Postuler sur ${sourceLabel[link.source]}` } : null;
+  const view = (url: string, where: string) => ({ url, label: `Voir l’annonce sur ${where}` });
+  if (o.employer_url) return view(o.employer_url, "le site de l’employeur");
+  // Le lien d'un texte collé à l'ajout n'est pas une page (manual_offers.NO_LINK).
+  const link = o.links.find((l) => l.url && !l.url.startsWith("https://annonce-collee.invalid/"));
+  if (!link) return null;
+  return view(link.url, link.source === "manual" ? "le site" : (sourceLabel[link.source] ?? link.source));
 });
 
 // Registre IDE (docs/12 §2.2) : propositions quand le nom ne suffit pas à trancher.
@@ -364,13 +366,6 @@ const brief = computed(() => {
     { label: "Reçue", value: receivedText.value, test: "brief-received" },
   ];
 });
-function showNoteDetail(): void {
-  const row = document.querySelector<HTMLElement>("[data-test=note-detail]");
-  const toggle = row?.querySelector<HTMLButtonElement>("button[aria-expanded]");
-  if (toggle?.getAttribute("aria-expanded") === "false") toggle.click();
-  row?.scrollIntoView?.({ block: "nearest" });
-  toggle?.focus({ preventScroll: true });
-}
 async function copyLink(): Promise<void> {
   const url = shareUrl.value;
   if (!url) return;
@@ -387,7 +382,6 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
   if (shareUrl.value) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
   if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
-  if (noteDetail.value) items.push({ label: "Voir le détail de la note", test: "show-note-detail", icon: "eye", run: showNoteDetail });
   if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
   if (withBar.value && scored.value) {
     items.push({ label: "Signaler une erreur dans l’offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
@@ -1034,7 +1028,7 @@ watch(
               Voir l’annonce complète
             </button>
             <a
-              v-if="postLink && offer.status !== 'applied'"
+              v-if="postLink && !columns && offer.status !== 'applied'"
               :href="postLink.url"
               target="_blank"
               rel="noopener noreferrer"
@@ -1227,13 +1221,13 @@ watch(
             </div>
           </dl>
           <a
-            v-if="shareUrl"
-            :href="shareUrl"
+            v-if="postLink"
+            :href="postLink.url"
             target="_blank"
             rel="noopener noreferrer"
             class="detail-link strong offer-brief-link"
             data-test="brief-link"
-          >Voir l’annonce sur le site<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+          >{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
         </section>
       </template>
     </component>
@@ -1258,12 +1252,11 @@ watch(
 .offer-cols .match-card .match-lines { display: flex; flex-wrap: wrap; gap: var(--cols-lines-gap); padding-bottom: var(--space-6); font-size: var(--font-label); }
 .offer-cols .match-card .match-lines li { gap: var(--space-2); }
 /* Lecture refusée (prompt du 10 novembre, PR 13 ; CandidaturesOrdinateurB) : un bloc pêche 16 px sous la carte, rayon 18,
-   18,5 dedans ; titre 15 gras, phrase 14 ; « Coller le texte » tonal de 44 px et « Ouvrir l'annonce » en lien, 16 d'écart. */
+   18,5 dedans ; titre 15 gras, phrase 14 ; « Coller le texte » tonal de 44 px. */
 .offer-cols .offer-text-refused { --cols-refused-pad: 18.5px; gap: var(--space-4); padding: var(--cols-refused-pad); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--radius-card); }
 .offer-cols .offer-text-refused h4 { font-size: var(--font-label); }
 .offer-cols .offer-text-refused p { font-size: var(--font-small); color: var(--text-tertiary); }
 .offer-cols .offer-text-actions button { min-height: var(--target-min); font-size: var(--font-small); }
-.offer-cols .offer-text-open { font-size: var(--font-small); }
 /* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter » à contour bleu. */
 .offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 .offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }

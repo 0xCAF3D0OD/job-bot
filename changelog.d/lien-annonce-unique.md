@@ -1,0 +1,1 @@
+Un seul lien vers l’annonce dans la fiche d’une offre, « Voir l’annonce sur [source] » (« Le poste » sur téléphone, « L’offre en bref » sur ordinateur) : plus d’« Ouvrir l’annonce » dans l’encadré ni de « Postuler sur… » ; « Voir le détail de la note » quitte le menu « … » de l’ordinateur
