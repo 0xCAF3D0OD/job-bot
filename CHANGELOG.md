@@ -523,3 +523,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.309 | Coordonnées : les champs repris du CV sont marqués « Du CV » et rien n’est enregistré avant ta vérification | livrée |
 | 1.6.310 | Budget de poids : le JavaScript, le CSS et les images mesurés bruts, en gzip et en brotli, page par page (Accueil, Candidatures, Bilan, Compte) ; limites à la taille du jour + 5 %, vérifiées à chaque PR ; illustrations en WebP seulement ; mesure du CSS inutilisé (make css-inutilise) ; tout dans docs/performance.md. | livrée |
 | 1.6.311 | Compte et menu « Mon compte » : une icône à contour de 24 px avant chaque ligne (maquettes Compte du 10 novembre), aussi sous Réglages › Recherche et outils ; « Ce qui part à l’IA » devient « L’IA et tes données ». | livrée |
+| 1.6.312 | Aujourd’hui : « Relire ton CV » en tête de « À faire » tant que le CV n’a jamais été lu | livrée |
