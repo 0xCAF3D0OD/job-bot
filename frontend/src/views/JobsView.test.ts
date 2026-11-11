@@ -33,7 +33,7 @@ async function mountJobs(path: string) {
 }
 
 describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
-  it("trois vues À traiter · Envoyées · Rendez-vous, « Alertes » à côté du titre, pastilles, mois conservé", async () => {
+  it("trois vues Offres · Envoyées · Rendez-vous, « Alertes » à côté du titre, pastilles, mois conservé", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/today" ? { to_review: 5, pending: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
     );
@@ -42,7 +42,7 @@ describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
     expect(wrapper.find("h1").text()).toBe("Candidatures");
     const tabs = ["offres", "suivi", "rendez-vous"].map((k) => wrapper.find(`[data-test=jobs-tab-${k}]`));
     // Envoyées : à relancer (2) + lignes ORP à compléter (1), docs/22 §1.
-    expect(tabs.map((t) => t.text())).toEqual(["À traiter 12", "Envoyées 3", "Rendez-vous"]);
+    expect(tabs.map((t) => t.text())).toEqual(["Offres 12", "Envoyées 3", "Rendez-vous"]);
     expect(wrapper.find("[data-test=jobs-tab-alertes]").exists()).toBe(false);
     // Alertes : un lien à côté du titre (C1), marqué quand on y est.
     const alerts = wrapper.find(".jobs-title [data-test=jobs-alerts]");
