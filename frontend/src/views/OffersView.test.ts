@@ -276,7 +276,9 @@ describe("OffersView", () => {
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
-    expect(apply.text()).toContain("Postuler chez l’employeur");
+    // L’annonce elle-même (jobup), pas l’adresse pour postuler, qui reste dans Préparer (PR 25).
+    expect(apply.text()).toContain("Voir l’annonce sur jobup");
+    expect(apply.attributes("href")).toBe("https://www.jobup.ch/fr/emplois/detail/7/");
     expect(apply.attributes("rel")).toBe("noopener noreferrer");
     expect(wrapper.find("[data-test=description]").text()).toBe("Notre client recherche un ingénieur.");
     expect(wrapper.text()).toContain("Temporaire");

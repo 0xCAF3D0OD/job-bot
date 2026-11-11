@@ -87,8 +87,11 @@ describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.emitted("applied")).toHaveLength(1);
     const apply = wrapper.find("[data-test=section-ad] [data-test=apply]");
     expect(apply.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
-    expect(apply.text()).toContain("Postuler sur Indeed");
-    // « Voir sur Indeed » serait le même lien que « Postuler sur Indeed » : il n'apparaît pas.
+    expect(apply.text()).toContain("Voir l’annonce sur Indeed");
+    expect(wrapper.text()).not.toContain("Postuler sur");
+    // Un seul lien visible vers l'adresse de l'annonce, hors menu « … » (PR 25).
+    expect(wrapper.findAll('a[href="https://ch.indeed.com/viewjob?jk=1"]')).toHaveLength(1);
+    // « Voir sur Indeed » serait le même lien : il n'apparaît pas.
     expect(wrapper.text()).not.toContain("Voir sur Indeed");
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     await wrapper.find("[data-test=more]").trigger("click");
@@ -162,11 +165,11 @@ describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.text()).not.toMatch(/fois, depuis le/);
   });
 
-  it("annonce trouvée chez l’employeur : « Postuler chez l’employeur »", async () => {
+  it("annonce trouvée chez l’employeur : « Voir l’annonce sur le site de l’employeur »", async () => {
     const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/jobs/2", employer_status: "found" }));
     const button = wrapper.find("[data-test=employer]");
     expect(button.attributes("href")).toBe("https://exemple.ch/jobs/2");
-    expect(button.text()).toContain("Postuler chez l’employeur");
+    expect(button.text()).toContain("Voir l’annonce sur le site de l’employeur");
   });
 });
 
@@ -371,7 +374,11 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(rows.map((r) => r[0])).toEqual(["Lieu", "Contrat", "Taux d’activité", "Reçue"]);
     expect(rows[1]![1]).toBe("Non précisé");
     expect(rows[3]![1]).toMatch(/, par une alerte e-mail$/);
-    expect(aside.find("[data-test=brief-link]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    const brief = aside.find("[data-test=brief-link]");
+    expect(brief.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(brief.text()).toContain("Voir l’annonce sur Indeed");
+    // Un seul lien visible vers l'annonce sur ordinateur aussi : celui de « L'offre en bref » (PR 25).
+    expect(wrapper.findAll('a[href="https://ch.indeed.com/viewjob?jk=1"]')).toHaveLength(1);
     // Les étiquettes du haut restent.
     expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
   });
