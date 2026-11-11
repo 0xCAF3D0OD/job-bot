@@ -19,7 +19,6 @@ const EXEMPT_RULES: [RegExp, string][] = [
   [/(^|[\s,])\.(dmock|confetti)\b/, "illustrations : la maquette de « La plateforme », les confettis"],
   [/\.hover-note-info\b/, "marges négatives qui compensent la cible de 2,75 rem du bouton d’aide"],
   [/^input, select, textarea$/, "16 px : en dessous, l’iPhone zoome sur le champ"],
-  [/^\.info-card \.summary-rows$/, "la place réservée au bouton de la carte"],
 ];
 
 // Valeurs admises partout : variables, zéro, bordures d'un pixel, unités relatives, calculs
