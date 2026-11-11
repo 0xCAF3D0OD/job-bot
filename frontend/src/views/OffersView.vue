@@ -290,17 +290,20 @@ function selectOffer(id: number): void {
 }
 
 // Android partage souvent le lien dans le texte (« Titre https://… ») : on l'en sort.
-function openShared(): void {
+// L'adresse est nettoyée avant d'ouvrir : le panneau ajoute une entrée d'historique pour le bouton retour, et la
+// retire en se fermant. Ouvert avant le nettoyage, ce retour ramenait sur « ?ajouter=1 » et le panneau se rouvrait
+// (Échap, la croix et le clic à l'extérieur ne le fermaient plus).
+async function openShared(): Promise<void> {
   if (!route.query.ajouter) return;
   const pick = (key: string) => (typeof route.query[key] === "string" ? String(route.query[key]).trim() : "");
   const sharedText = [pick("title"), pick("text")].filter(Boolean).join("\n");
   const found = pick("url") || sharedText.match(/https:\/\/\S+/)?.[0] || "";
   const rest = sharedText.replace(found, "").trim();
   shared.value = { url: found || null, text: found ? null : rest || null };
+  await router.replace({ query: { ...route.query, ajouter: undefined, url: undefined, text: undefined, title: undefined } });
   manualOpen.value = true;
-  void router.replace({ query: { ...route.query, ajouter: undefined, url: undefined, text: undefined, title: undefined } });
 }
-watch(() => route.query.ajouter, () => openShared());
+watch(() => route.query.ajouter, () => void openShared());
 
 function openManual(): void {
   shared.value = { url: null, text: null };
@@ -570,7 +573,7 @@ onMounted(() => {
   window.addEventListener("resize", measureGrid);
   document.addEventListener("pointerdown", onPointerDown);
   void load().then(openFromQuery);
-  openShared();
+  void openShared();
   void loadChunkTitles();
 });
 useDataChanged(() => {
@@ -1055,6 +1058,8 @@ onUnmounted(() => {
     v-if="!phone && (manualOpen || spontaneousOpen)"
     open
     title="Ajouter"
+    subtitle="Une offre ou une candidature spontanée"
+    icon="plus"
     class="add-sheet"
     data-test="add-sheet"
     @close="closeAdd"

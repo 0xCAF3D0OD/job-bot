@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, useId, watch } from "vue";
 
+import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
 // La feuille du bas (règles §4, Material 3 « bottom sheets ») : filtres d'Offres, menu « ⋯ », choix
@@ -12,11 +13,26 @@ import AppIcon from "./AppIcon.vue";
 // 22 px, croix de 48 px, 24 px de marge, montée depuis le bas en 320 ms ; elle se ferme aussi par un glissement vers
 // le bas (sur la poignée ou le titre) et par le bouton retour du téléphone (une entrée d'historique tant qu'elle est
 // ouverte). Le focus revient au déclencheur. On n'ouvre jamais une feuille depuis une autre.
-const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean }>(), { subtitle: "", full: false });
+// `icon` (paquet du 11 novembre, PR 37) : le panneau à formulaire, au format du menu du compte. Sur ordinateur, sous
+// l'en-tête, 420 px, coin haut gauche arrondi, ombre à gauche, sans voile ; en-tête à pastille ronde de 48 px, titre
+// de 18 px, sous-titre de 14 px, croix de 44 px ; corps qui défile, pied fixe (slot `actions`). Sur téléphone, la même
+// feuille monte du bas. Elle reste une <dialog> modale : focus bloqué dedans, rendu au bouton d'origine (WCAG 2.1.2,
+// 2.4.3) ; croix, Échap et clic à l'extérieur la ferment, sans bouton « Annuler ».
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | "" }>(), {
+  subtitle: "",
+  full: false,
+  icon: "",
+});
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null);
 const titleId = useId();
 let returnTo: HTMLElement | null = null;
+// Sous l'en-tête : le haut du panneau suit le bas de l'en-tête (et du bandeau de la démo, s'il est là).
+const top = ref(0);
+function measureTop(): void {
+  const header = document.querySelector<HTMLElement>("[data-test=app-header]");
+  top.value = Math.max(0, header?.getBoundingClientRect().bottom ?? 0);
+}
 
 // Le bouton retour : une entrée d'historique (même adresse, même état du routeur) tant que la feuille est ouverte.
 let historyEntry = false;
@@ -67,6 +83,7 @@ watch(
     if (!el) return;
     if (open && !el.open) {
       returnTo = document.activeElement as HTMLElement | null;
+      if (props.icon) measureTop();
       if (typeof el.showModal === "function") el.showModal();
       else el.setAttribute("open", "");
       pushEntry();
@@ -96,9 +113,9 @@ function onClick(event: MouseEvent): void {
 <template>
   <dialog
     ref="dialog"
-    :class="['sheet', { 'sheet-full': full }]"
+    :class="['sheet', { 'sheet-full': full, 'sheet-panel': icon }]"
     :aria-labelledby="titleId"
-    :style="dragY ? { transform: `translateY(${dragY}px)` } : undefined"
+    :style="{ ...(dragY ? { transform: `translateY(${dragY}px)` } : {}), ...(icon ? { '--sheet-top': `${top}px` } : {}) }"
     data-test="sheet"
     @cancel.prevent="emit('close')"
     @click="onClick"
@@ -111,6 +128,11 @@ function onClick(event: MouseEvent): void {
         @pointerup="onDragEnd"
         @pointercancel="onDragEnd"
       >
+        <span
+          v-if="icon"
+          class="sheet-badge"
+          aria-hidden="true"
+        ><AppIcon :name="icon" /></span>
         <div class="sheet-heading">
           <h2
             :id="titleId"
