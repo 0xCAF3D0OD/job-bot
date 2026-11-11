@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildExcerpt, markSegments, matchedPassages } from "./offerPassages";
+import { buildExcerpt, markSegments, matchedPassages, letterPoints, letterSegments, letterTerms } from "./offerPassages";
 
 describe("passages de l'annonce retrouvés dans le profil", () => {
   it("lit les passages vérifiés par le serveur, rien pour une note plus ancienne", () => {
@@ -52,5 +52,35 @@ describe("passages de l'annonce retrouvés dans le profil", () => {
     expect(excerpt.segments).toHaveLength(1);
     expect(text.startsWith(excerpt.segments[0]!.text)).toBe(true);
     expect(excerpt.segments[0]!.text.length).toBeGreaterThan(300);
+  });
+});
+
+describe("la lettre : « Repris de l’annonce » (PR 51)", () => {
+  const offer = {
+    description: "Vous travaillez avec Kubernetes, Terraform, CI/CD. Go est un plus.",
+    snippet: null,
+    passages: ["Vous travaillez avec Kubernetes, Terraform, CI/CD"],
+    keywords_asks: [{ text: "Kubernetes" }, { text: "Terraform" }, { text: "Go" }, { text: "Ansible" }, { text: "kubernetes" }],
+  };
+
+  it("ne garde que les demandes et les passages qui se lisent dans l’annonce, sans doublon", () => {
+    expect(letterTerms(offer)).toEqual(["Kubernetes", "Terraform", "Go", "Vous travaillez avec Kubernetes, Terraform, CI/CD"]);
+    expect(letterTerms(null)).toEqual([]);
+    // Sans texte d'annonce connu, les demandes relevées avec la note sont gardées telles quelles.
+    expect(letterTerms({ description: null, snippet: null, passages: [], keywords_asks: [{ text: "Ansible" }] })).toEqual(["Ansible"]);
+  });
+
+  it("surligne en mots entiers, sans toucher au texte", () => {
+    const text = "J’ai mis en place une plateforme Kubernetes chez Google, décrite en terraform.";
+    const segments = letterSegments(text, letterTerms(offer));
+    expect(segments.map((s) => s.text).join("")).toBe(text);
+    // « Go » n'est pas surligné dans « Google ».
+    expect(segments.filter((s) => s.mark).map((s) => s.text)).toEqual(["Kubernetes", "terraform"]);
+  });
+
+  it("compte les termes différents repris dans toute la lettre", () => {
+    const paragraphs = ["Kubernetes au quotidien.", "Encore kubernetes, et Terraform.", "Rien ici."];
+    expect(letterPoints(paragraphs, letterTerms(offer))).toBe(2);
+    expect(letterPoints(paragraphs, [])).toBe(0);
   });
 });

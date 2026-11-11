@@ -103,6 +103,36 @@ async function mountView(path = "/offres/7/preparer") {
 }
 
 describe("PreparationView", () => {
+  it("« Repris de l’annonce » : la légende et le surlignage des termes de l’annonce repris dans la lettre (PR 51)", async () => {
+    const asked = offer as Record<string, unknown>;
+    asked.description = "Vous administrez un cluster K3s et vous écrivez en Go.";
+    asked.keywords_asks = [{ text: "K3s", covered: true }, { text: "Go", covered: false }, { text: "Ansible", covered: false }];
+    try {
+      mockGet([letter(11, 1)]);
+      const wrapper = await mountView();
+      expect(wrapper.find("[data-test=letter-legend]").text()).toBe("Repris de l’annonce\u202f: 1 point");
+      const marks = wrapper.findAll("[data-test=letter] .letter-marks");
+      expect(marks).toHaveLength(2);
+      expect(marks[1]!.attributes("aria-hidden")).toBe("true");
+      expect(marks[1]!.classes()).toContain("screen-only");
+      expect(marks[1]!.text()).toBe("J’administre un cluster K3s.");
+      expect(marks[1]!.findAll("mark").map((m) => m.text())).toEqual(["K3s"]);
+      expect(marks[0]!.find("mark").exists()).toBe(false);
+      // Le paragraphe reste la zone de saisie, et l'impression garde son texte seul.
+      expect(wrapper.findAll<HTMLTextAreaElement>("[data-test=paragraph]")[1]!.element.value).toBe("J’administre un cluster K3s.");
+    } finally {
+      delete asked.description;
+      delete asked.keywords_asks;
+    }
+  });
+
+  it("sans terme repris : ni légende ni calque", async () => {
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=letter-legend]").exists()).toBe(false);
+    expect(wrapper.find(".letter-marks").exists()).toBe(false);
+  });
+
   it("sans lettre : propose de la rédiger, puis affiche la lettre assemblée", async () => {
     mockGet([]);
     POST.mockResolvedValue({ data: letter(11, 1) });
@@ -376,7 +406,10 @@ describe("barre de candidature", () => {
     expect(done.find("[role=status]").exists()).toBe(true);
     expect(done.find("[data-illustration=troupe]").attributes("data-scene")).toBe("envoyee");
     expect(done.find("[data-mood-animation]").exists()).toBe(false);
-    expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA. Elle compte pour l’ORP : 9 recherches sur 10 ce mois.");
+    expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA.");
+    // La carte (PR 51) : la barre ORP mise à jour ; la preuve et la relance seulement quand elles sont connues.
+    expect(done.find("[data-test=sent-card] [data-test=month-count]").text()).toBe("9 sur 10");
+    expect(done.find("[data-test=sent-proof]").exists()).toBe(false);
     expect(done.find("[data-test=sent-follow-up]").exists()).toBe(false);
     expect(done.find("[data-test=sent-applications]").attributes("href")).toBe("/candidatures/suivi");
     expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
@@ -462,7 +495,8 @@ describe("barre de candidature", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/applications", { body: expect.objectContaining({ offer_id: 7, sent_at: "2026-10-05" }) });
     expect(wrapper.find("[data-test=sent-moment] h1").text()).toBe("Candidature envoyée.");
-    expect(wrapper.find("[data-test=sent-orp]").text()).toBe("3 recherches");
+    // Sans objectif ORP : pas de barre.
+    expect(wrapper.find("[data-test=sent-moment] [data-test=orp-bar]").exists()).toBe(false);
   });
 
   it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d’étape « Suivre » (Q1)", async () => {

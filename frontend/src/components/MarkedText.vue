@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, h, type PropType } from "vue";
 
-import { markSegments } from "../offerPassages";
+import { letterSegments, markSegments } from "../offerPassages";
 
 // Un texte de l'annonce dont les passages retrouvés dans le profil sont surlignés (lot du 11 novembre au soir,
 // PR 45 et 47) : la même source que le tri (`passages`, vérifiés par le serveur). Le texte affiché ne change pas :
@@ -11,9 +11,11 @@ export default defineComponent({
   props: {
     text: { type: String, required: true },
     passages: { type: Array as PropType<string[]>, required: true },
+    // Dans une lettre (PR 51) : les termes ne sont surlignés qu'en mots entiers.
+    words: { type: Boolean, default: false },
   },
   setup(props) {
-    return () => markSegments(props.text, props.passages).map((part) => (part.mark ? h("mark", { class: "passage-mark" }, part.text) : part.text));
+    return () => (props.words ? letterSegments : markSegments)(props.text, props.passages).map((part) => (part.mark ? h("mark", { class: "passage-mark" }, part.text) : part.text));
   },
 });
 </script>

@@ -114,3 +114,53 @@ export function buildExcerpt(text: string, passages: string[], max = 135): Excer
   if (kept.at(-1)![1] < text.length) segments.push({ text: " (…)", mark: false });
   return { segments, built: true, count: segments.filter((s) => s.mark).length };
 }
+
+// --- La lettre (lot du 11 novembre au soir, PR 51) -------------------------------------------------------------------
+// « Repris de l’annonce » : ce que l'annonce demande (les demandes relevées avec la note, `keywords_asks`) et ses
+// passages vérifiés, quand la lettre les reprend mot pour mot. Rien n'est deviné : un terme n'est gardé que s'il se
+// lit dans l'annonce (quand son texte est connu), et il n'est surligné que s'il se lit dans la lettre, en mot entier.
+type Asked = Pick<Offer, "passages" | "description" | "snippet"> & { keywords_asks?: { text: string }[] | null };
+
+function wholeWords(terms: string[]): RegExp | null {
+  const parts = terms
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .map((t) => escape(t).replace(/\s+/g, "\\s+").replace(/['’‘ʼ]/g, "['’‘ʼ]"));
+  return parts.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${parts.join("|")})(?![\\p{L}\\p{N}])`, "giu") : null;
+}
+
+/** Les termes de l'annonce qu'une lettre peut reprendre. */
+export function letterTerms(offer: Asked | null | undefined): string[] {
+  if (!offer) return [];
+  const terms = [...(offer.keywords_asks ?? []).map((k) => k.text), ...(offer.passages ?? [])].map((t) => t.trim()).filter((t) => t.length > 1);
+  const ad = offerText(offer);
+  const seen = new Map<string, string>();
+  for (const t of terms) if (!seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), t);
+  const unique = [...seen.values()];
+  return ad ? unique.filter((t) => wholeWords([t])!.test(ad)) : unique;
+}
+
+/** Un paragraphe de la lettre découpé, les termes repris marqués. */
+export function letterSegments(text: string, terms: string[]): Segment[] {
+  const re = wholeWords(terms);
+  if (!re) return text ? [{ text, mark: false }] : [];
+  const out: Segment[] = [];
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    if (m.index > last) out.push({ text: text.slice(last, m.index), mark: false });
+    out.push({ text: m[0], mark: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ text: text.slice(last), mark: false });
+  return out;
+}
+
+/** Le nombre de termes différents repris dans la lettre, pour la légende. */
+export function letterPoints(paragraphs: string[], terms: string[]): number {
+  const re = wholeWords(terms);
+  if (!re) return 0;
+  const found = new Set<string>();
+  for (const text of paragraphs) for (const m of text.matchAll(re)) found.add(m[0].toLowerCase().replace(/\s+/g, " "));
+  return found.size;
+}

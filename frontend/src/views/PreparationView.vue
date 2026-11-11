@@ -22,6 +22,8 @@ import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import ApplicationSent from "../components/ApplicationSent.vue";
+import LetterMarks from "../components/LetterMarks.vue";
+import { letterPoints, letterTerms } from "../offerPassages";
 import GoalReached from "../components/GoalReached.vue";
 import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -42,7 +44,7 @@ import SuggestionChips from "../components/SuggestionChips.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInSentence, dateWithTime } from "../dates";
-import { companyPlace, expiredText, scoreWord } from "../format";
+import { companyPlace, expiredText, plural, scoreWord } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
@@ -128,7 +130,7 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 const applyError = ref("");
 const applyBusy = ref(false);
 // L'écran « Candidature envoyée. » (docs/141, 8) : le poste, ce qui compte pour l'ORP, la relance prévue.
-type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null };
+type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; due: string | null; followUpOn: string | null; missing: string[] | null; savedAt: string | null };
 const sent = ref<Sent | null>(null);
 // « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
 const goal = ref<OrpMonth | null>(null);
@@ -152,7 +154,9 @@ async function markApplied(): Promise<void> {
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
     goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
-    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
+    // La ligne de cette candidature dans les justificatifs du mois : ce qui lui manque encore (PR 51).
+    const row = orp?.rows?.find((r) => r.application_id === data.id);
+    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, due: orp?.due_date ?? null, followUpOn: data.follow_up_on ?? null, missing: row ? row.missing : null, savedAt: data.created_at ?? null };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
@@ -605,6 +609,9 @@ const claimOpen = ref(false);
 const claimBusy = ref(false);
 const claimError = ref("");
 const flashed = ref<number | null>(null);
+// « Repris de l’annonce » (PR 51) : ce que l'annonce demande et que la lettre reprend mot pour mot.
+const reusedTerms = computed(() => letterTerms(offer.value));
+const reused = computed(() => letterPoints(draft.value?.paragraphs.map((p) => p.text) ?? [], reusedTerms.value));
 function onSelect(index: number, event: Event): void {
   const el = event.target as HTMLTextAreaElement;
   const { selectionStart: from, selectionEnd: to, value } = el;
@@ -826,9 +833,14 @@ onMounted(() => void load());
     v-else-if="sent"
     :title="sent.title"
     :company="sent.company"
+    :month="sent.month"
     :count="sent.count"
     :target="sent.target"
+    :due="sent.due"
     :follow-up-on="sent.followUpOn"
+    :missing="sent.missing"
+    :saved-at="sent.savedAt"
+    :application-id="sent.id"
     cancellable
     @cancel="cancelApplied"
   />
@@ -1416,12 +1428,24 @@ onMounted(() => void load());
             >
               Consigne : {{ selected.instruction }}
             </p>
+            <!-- « Repris de l’annonce » (PR 51) : la légende en texte du surlignage (WCAG 1.4.1), hors de la feuille. -->
+            <p
+              v-if="doc && draft && reused"
+              class="passage-legend letter-legend screen-only"
+              data-test="letter-legend"
+            >
+              <span
+                class="passage-legend-mark"
+                aria-hidden="true"
+              />Repris de l’annonce : {{ plural(reused, "point", "points") }}
+            </p>
             <DocPreview
               v-if="phone && doc && draft && !letterOpen"
               :template="template"
               :name="previewName"
               :sub="previewSub"
               :paragraphs="previewParagraphs"
+              :terms="reusedTerms"
               label="Ouvrir la lettre entière pour la modifier"
               :class="['doc-preview-tall', { 'doc-preview-composing': composing }]"
               @open="letterOpen = true"
@@ -1515,6 +1539,11 @@ onMounted(() => void load());
                 :key="index"
                 class="letter-paragraph"
               >
+                <LetterMarks
+                  v-if="reusedTerms.length"
+                  :text="paragraph.text"
+                  :terms="reusedTerms"
+                />
                 <textarea
                   v-model="paragraph.text"
                   :class="['screen-only', { 'claim-flash': flashed === index }]"

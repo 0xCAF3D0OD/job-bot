@@ -53,6 +53,8 @@ def hand_titles() -> list[str]:
     # La fin manuscrite de « Candidature envoyée. » sur ordinateur (maquette du 8 novembre, lot 8).
     sent = (FRONTEND / "src/components/ApplicationSent.vue").read_text("utf-8")
     titles += re.findall(r'\bhand="([^"]+)"', sent)
+    # « Envoyée ! » sur téléphone (lot du 11 novembre au soir, PR 51 ; maquette MaCandidatureV2, état `fin`).
+    titles += [t.replace("&#8239;", "\u202f") for t in re.findall(r'class="sent-fin-hand">([^<]+)<', sent)]
     return titles
 
 

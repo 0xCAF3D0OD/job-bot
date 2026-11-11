@@ -2,14 +2,15 @@
 // « justificatif » à la place de « preuve » partout (MODIFICATIONS du 8 novembre au soir, 16.4 et §11.2) :
 // `grep -ri preuve frontend/src` ne doit plus rien trouver d'affiché. Restent permis : les commentaires, les noms
 // internes (l'illustration « preuves-orp », l'ancienne adresse /candidatures/preuves) et le titre officiel du
-// formulaire de l'ORP, que la feuille imprimée reprend mot pour mot.
+// formulaire de l'ORP, que la feuille imprimée reprend mot pour mot. Le lot du 11 novembre (PR 51) écrit de nouveau
+// « preuve » sur l'écran « Candidature envoyée » : ces deux phrases de la maquette sont permises, rien d'autre.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 const SRC = resolve(process.cwd(), "src");
-const ALLOWED = [/"preuves-orp"/, /path: "preuves"/, /Preuves des recherches personnelles effectuées en vue de trouver un emploi/];
+const ALLOWED = [/"preuves-orp"/, /path: "preuves"/, /Preuves des recherches personnelles effectuées en vue de trouver un emploi/, /Preuve pour l’ORP gardée/, /Il manque la preuve pour l’ORP/];
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

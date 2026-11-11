@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { DocTemplate } from "../composables/useDocTemplate";
+import MarkedText from "./MarkedText.vue";
 
 // L'aperçu d'une lettre ou d'un CV dans le modèle choisi (maquette Preparer) : la page, son en-tête (le nom,
 // une ligne dessous) et le début du texte. Vide (pas encore rédigé) : des lignes grises à la place du texte.
-defineProps<{ template: DocTemplate; name: string; sub?: string | null; paragraphs: string[]; label: string }>();
+// `terms` (PR 51) : les termes repris de l'annonce, surlignés dans le texte (mots entiers).
+withDefaults(defineProps<{ template: DocTemplate; name: string; sub?: string | null; paragraphs: string[]; label: string; terms?: string[] }>(), { sub: null, terms: () => [] });
 defineEmits<{ open: [] }>();
 </script>
 
@@ -28,7 +30,11 @@ defineEmits<{ open: [] }>();
         <span
           v-for="(text, index) in paragraphs"
           :key="index"
-        >{{ text }}</span>
+        ><MarkedText
+          :text="text"
+          :passages="terms"
+          words
+        /></span>
       </span>
       <span
         v-else

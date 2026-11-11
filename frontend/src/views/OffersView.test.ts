@@ -441,7 +441,8 @@ describe("tri et candidature", () => {
     const done = wrapper.find("[data-test=sent-moment]");
     expect(done.find("h1").text()).toBe("Candidature envoyée.");
     expect(done.text()).toContain("Ingénieur système chez Acme SA.");
-    expect(done.find("[data-test=sent-follow-up]").text()).toMatch(/^Relance prévue le 16 octobre( 2026)? si pas de réponse\.$/);
+    expect(done.find("[data-test=sent-follow-up] b").text()).toMatch(/^Relance prévue le 16 octobre( 2026)?$/);
+    expect(done.find("[data-test=sent-follow-up]").text()).toContain("jobA1 te la prépare");
     expect(done.find("[data-test=cancel-applied]").exists()).toBe(false);
     // « Préparer la prochaine » referme l'écran : la liste revient.
     await done.find("[data-test=next-offer]").trigger("click");
