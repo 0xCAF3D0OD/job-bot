@@ -31,6 +31,8 @@
   --text-placeholder: #6E7381;
   --file-error: #B4542D;
   --text-lead: #3D4250;
+  /* Les icônes des lignes du Compte et du menu « Mon compte » (PR 34) : #3D4250, sombre #C7BFB3. */
+  --row-icon: #3D4250;
   /* Snackbar (prompt du 9 novembre, PR 1) : fond #1B1F2A, texte blanc, actions #AEBDFF, en clair comme en sombre. */
   --snackbar-bg: #1B1F2A;
   --snackbar-text: #FFFFFF;
@@ -229,6 +231,7 @@
     --text-placeholder: #9A9389;
     --file-error: #F2A766;
     --text-lead: #D6CFC4;
+    --row-icon: #C7BFB3;
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
     --thumb-paper: #171411;
@@ -291,6 +294,7 @@
   --text-placeholder: #9A9389;
   --file-error: #F2A766;
   --text-lead: #D6CFC4;
+  --row-icon: #C7BFB3;
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
   --thumb-paper: #171411;
@@ -5024,13 +5028,15 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .account-head-text { flex: 1 1 auto; min-width: 0; display: grid; }
 .account-head-text h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-heavy); outline: none; overflow-wrap: anywhere; }
 .account-head-email { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
-.panel-row { display: flex; align-items: center; gap: var(--space-3); min-height: 56px; padding: var(--space-2) var(--space-5); border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+.panel-row { display: flex; align-items: center; gap: var(--space-4); min-height: 56px; padding: var(--space-2) var(--space-5); border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
 a.panel-row:hover { background: var(--band); }
-.panel-row > .icon { flex: none; width: 20px; height: 20px; }
+/* Les icônes du menu « Mon compte » comme celles du Compte (PR 34) : 24 px, contour de 2 px, --row-icon, 16 px avant
+   le texte. */
+.panel-row > .icon { flex: none; width: var(--space-6); height: var(--space-6); stroke-width: 2; color: var(--row-icon); }
 .panel-row-text { flex: 1 1 auto; min-width: 0; display: grid; }
 .panel-row-title { font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .panel-row-detail { font-size: var(--label-caps); color: var(--text-secondary); }
-.panel-row > .panel-row-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
+.panel-row > .panel-row-chevron { width: 16px; height: 16px; color: var(--text-secondary); stroke-width: 1.8; }
 .panel-row-static .segmented { flex: none; }
 .account-logout { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-1); border: 0; background: transparent; color: var(--danger); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .account-logout:hover { background: transparent; text-decoration: underline; }

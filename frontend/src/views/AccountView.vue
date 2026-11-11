@@ -183,12 +183,14 @@ onMounted(() => {
           <BlockRow
             title="Formations"
             to="/bilan/formations"
+            icon="graduation"
             data-test="account-trainings"
           />
           <BlockRow
             title="CV et lettres"
             :lines="cvCount === null ? [] : [plural(cvCount, 'document', 'documents')]"
             :to="{ path: '/profil', query: { onglet: 'parcours' } }"
+            icon="file"
             data-test="account-cv"
           />
         </div>
@@ -209,17 +211,20 @@ onMounted(() => {
             title="Critères de recherche"
             :lines="['Postes, lieux, taux d’activité']"
             to="/profil"
+            icon="search"
             data-test="account-criteria"
           />
           <BlockRow
             title="Notifications"
             :to="rubric('notifications')"
+            icon="bell"
             data-test="account-notifications"
           />
           <BlockRow
             title="Apparence"
             :lines="[THEME_LABEL[theme]]"
             :to="rubric('affichage')"
+            icon="moon"
             data-test="account-appearance"
           />
         </div>
@@ -239,33 +244,39 @@ onMounted(() => {
           <BlockRow
             title="Objectif ORP et sites"
             :to="rubric('recherche')"
+            icon="flag"
             data-test="account-orp"
           />
           <BlockRow
             title="Rythme"
             :to="rubric('rythme')"
+            icon="clock"
             data-test="account-rhythm"
           />
           <BlockRow
             title="IA"
             :to="rubric('ia')"
+            icon="ai"
             data-test="account-ai"
           />
           <BlockRow
             title="Agenda"
             :to="rubric('outils')"
+            icon="calendar"
             data-test="account-tools"
           />
           <BlockRow
             title="Formule"
             :lines="[planName]"
             :to="rubric('formule')"
+            icon="tag"
             data-test="account-plan"
           />
           <BlockRow
             v-if="owner"
             title="Administration"
             :to="rubric('plateforme')"
+            icon="settings"
             data-test="account-admin"
           />
           <!-- Venu du menu du compte (C2). La démo ne collecte rien (docs/72). -->
@@ -275,6 +286,7 @@ onMounted(() => {
             :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
             :aria-busy="running || undefined"
             :aria-disabled="running || undefined"
+            icon="refresh"
             data-test="account-collect"
             @click="running || collectNow()"
           />
@@ -304,6 +316,7 @@ onMounted(() => {
           <BlockRow
             title="Mes données"
             :to="rubric('donnees')"
+            icon="database"
             data-test="account-data"
           />
           <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
@@ -311,11 +324,13 @@ onMounted(() => {
             v-if="me?.auth_enabled && !me.demo"
             title="Connexions"
             :to="rubric('connexions')"
+            icon="plug"
             data-test="account-connections"
           />
           <BlockRow
-            title="Ce qui part à l’IA"
+            title="L’IA et tes données"
             :to="{ path: '/tes-donnees', hash: '#ia' }"
+            icon="shield"
             data-test="account-ai-data"
           />
           <a
@@ -324,6 +339,10 @@ onMounted(() => {
             class="block-row small"
             data-test="account-help"
           >
+            <AppIcon
+              name="help"
+              class="block-row-icon"
+            />
             <span class="block-row-text"><span class="block-row-title">Aide et contact</span></span>
             <span
               class="arrow-circle"
@@ -334,12 +353,14 @@ onMounted(() => {
             v-else
             title="Aide et contact"
             to="/a-propos"
+            icon="help"
             data-test="account-help"
           />
           <BlockRow
             v-if="showDiagnostic"
             title="État du service"
             to="/reglages/diagnostic"
+            icon="activity"
             data-test="account-diagnostic"
           />
         </div>

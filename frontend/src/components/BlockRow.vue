@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from "vue-router";
 
+import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
 // Une ligne à flèche (D29, MODIFICATIONS du 8 novembre au soir, §2.1) : toute la ligne est le lien, un seul arrêt
 // de tabulation ; le titre, le statut juste après (D31), les lignes secondaires coupées avec « … » ; à droite le
 // cercle à contour, décoratif. `to` en fait un lien, sinon un bouton. `lead` : une image avant le texte.
+// `icon` (maquettes Compte du 10 novembre, PR 34) : l'icône à contour de 24 px avant le texte, décorative.
 // `aside` (maquettes de l'ordinateur du 9 novembre) : le mot d'état à droite, avant le cercle, en couleur.
 withDefaults(
   defineProps<{
@@ -14,8 +16,9 @@ withDefaults(
     status?: { text: string; tone: "ok" | "todo" } | null;
     aside?: { text: string; tone: "ok" | "todo" | "plain" | "muted" } | null;
     to?: RouteLocationRaw;
+    icon?: IconName;
   }>(),
-  { lines: () => [], status: null, aside: null, to: undefined },
+  { lines: () => [], status: null, aside: null, to: undefined, icon: undefined },
 );
 defineEmits<{ click: [] }>();
 </script>
@@ -29,6 +32,11 @@ defineEmits<{ click: [] }>();
     @click="to ? undefined : $emit('click')"
   >
     <slot name="lead" />
+    <AppIcon
+      v-if="icon"
+      :name="icon"
+      class="block-row-icon"
+    />
     <span class="block-row-text">
       <span class="block-row-title"><span class="block-row-name">{{ title }}</span><span
         v-if="status"

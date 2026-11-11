@@ -29,6 +29,8 @@ a{color:#2445C2}a:hover{color:#1A3496}
 @keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
 .nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
 @media (prefers-reduced-motion: reduce){.nav-active{animation:none}}
+@media (prefers-reduced-motion: reduce){.stk{position:relative!important;top:auto!important}}
+main a,main button{scroll-margin-top:96px}
 </style>
 </helmet>
 <div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
@@ -50,7 +52,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </sc-if>
 </div>
 
-<section aria-labelledby="s-orp" style="position: relative; margin-top: -10px; padding: 26px 22px 64px; background: #E8ECFB; color: #1B1F2A; border-radius: 34px 34px 0 0">
+<section class="stk" aria-labelledby="s-orp" style="position: sticky; top: 0; z-index: 1; margin-top: -10px; padding: 26px 22px 64px; background: #E8ECFB; color: #1B1F2A; border-radius: 34px 34px 0 0">
 <h2 id="s-orp" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">ORP</h2>
 <a href="Orp.dc.html" style="margin-top: 18px; display: flex; align-items: center; gap: 18px; text-decoration: none; color: #1B1F2A">
 <svg width="104" height="104" viewBox="0 0 100 100" role="img" aria-label="2 recherches validées sur 10"><defs><clipPath id="sbOrp"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><g clip-path="url(#sbOrp)"><g class="ja-rise"><g transform="translate(0 72)"><path class="ja-wave" d="M -100 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 L 200 120 L -100 120 Z" fill="#C9D3F6" stroke="#2445C2" stroke-width="2.5"></path></g></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="3.5"></circle><text x="50" y="59" text-anchor="middle" font-family="Figtree, sans-serif" font-size="26" font-weight="800" fill="#1B1F2A" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke">2/10</text></svg>
@@ -59,7 +61,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </a>
 </section>
 
-<section aria-labelledby="s-off" style="position: relative; margin-top: -34px; padding: 26px 0 64px; background: #FDEDE3; border-radius: 34px 34px 0 0">
+<section class="stk" aria-labelledby="s-off" style="position: sticky; top: 16px; z-index: 2; margin-top: -34px; box-shadow: 0 -10px 24px rgba(27,31,42,.10); padding: 26px 0 64px; background: #FDEDE3; border-radius: 34px 34px 0 0">
 <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 12px 0 22px">
 <h2 id="s-off" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">Offres</h2>
 <a href="Candidatures.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 10px; font-size: 15px; font-weight: 700; text-decoration: none; color: #1A3496">Tout voir</a>
@@ -97,7 +99,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 </div>
 </section>
 
-<section aria-labelledby="s-todo" style="position: relative; margin-top: -34px; padding: 26px 22px 30px; background: #F7F5F0; border-radius: 34px 34px 0 0">
+<section aria-labelledby="s-todo" style="position: relative; z-index: 3; margin-top: -34px; box-shadow: 0 -10px 24px rgba(27,31,42,.10); padding: 26px 22px 30px; background: #F7F5F0; border-radius: 34px 34px 0 0">
 <h2 id="s-todo" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">À faire</h2>
 <ul style="margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column">
 <sc-if value="{{cvNonLu}}" hint-placeholder-val="{{ false }}"><li style="border-bottom: 1px solid #E0DCD2"><a href="ProfilTel.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 72px; text-decoration: none; color: #1B1F2A"><span aria-hidden="true" style="width: 30px; display: flex; color: #8A4A16"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"/><path d="M14 3v5h5M12 11v4M12 18h.01"/></svg></span><span style="flex: 1"><span style="display: block; font-size: 16px; font-weight: 700">Relire ton CV</span><span style="display: block; font-size: 14px; color: #8A4A16; font-weight: 600">Sans lui, tes offres ne sont pas notées</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li></sc-if>

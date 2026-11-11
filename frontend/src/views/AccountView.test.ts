@@ -108,8 +108,16 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(href(wrapper, "account-notifications")).toBe("/reglages?rubrique=notifications");
     expect(wrapper.get("[data-test=account-appearance]").text()).toContain("Automatique");
     expect(href(wrapper, "account-ai-data")).toBe("/tes-donnees#ia");
-    expect(wrapper.get("[data-test=account-ai-data]").text()).toBe("Ce qui part à l’IA");
+    expect(wrapper.get("[data-test=account-ai-data]").text()).toBe("L’IA et tes données");
     expect(href(wrapper, "account-help")).toBe("mailto:aide@example.ch");
+    // PR 34 (maquettes Compte du 10 novembre) : une icône décorative avant le texte de chaque ligne, sauf le profil.
+    const icons = (test: string) => wrapper.get(`[data-test=${test}] .block-row-icon`);
+    expect(icons("account-trainings").attributes("data-icon")).toBe("graduation");
+    expect(icons("account-data").attributes("data-icon")).toBe("database");
+    expect(icons("account-ai-data").attributes("data-icon")).toBe("shield");
+    expect(icons("account-help").attributes("data-icon")).toBe("help");
+    expect(icons("account-orp").attributes("aria-hidden")).toBe("true");
+    expect(card.find(".block-row-icon").exists()).toBe(false);
     // L'administration et l'état du service, à l'exploitant seulement.
     expect(wrapper.find("[data-test=account-admin]").exists()).toBe(false);
     expect(wrapper.find("[data-test=account-diagnostic]").exists()).toBe(false);

@@ -833,10 +833,11 @@ watch(
         >
           <SessionPanel />
           <AccountDataPanel />
-          <!-- « Ce qui part à l'IA » (libellé validé par Kevin, 6.11) : la page publique, à sa section IA. -->
+          <!-- « L’IA et tes données » (libellé de Kevin, 10.11, PR 34 ; avant « Ce qui part à l’IA ») : la page publique, à sa
+               section IA. -->
           <SettingCard data-test="ai-data">
             <SettingRow
-              title="Ce qui part à l’IA"
+              title="L’IA et tes données"
               description="Ce que jobA1 envoie à l’IA, et ce qui n’y part jamais."
             >
               <RouterLink

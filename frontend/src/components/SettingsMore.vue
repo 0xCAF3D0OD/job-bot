@@ -41,33 +41,39 @@ onMounted(() => {
     <div class="settings-more-group">
       <BlockRow
         title="Objectif ORP et sites"
+        icon="flag"
         data-test="account-orp"
         @click="go('recherche')"
       />
       <BlockRow
         title="Rythme"
+        icon="clock"
         data-test="account-rhythm"
         @click="go('rythme')"
       />
       <BlockRow
         title="IA"
+        icon="ai"
         data-test="account-ai"
         @click="go('ia')"
       />
       <BlockRow
         title="Agenda"
+        icon="calendar"
         data-test="account-tools"
         @click="go('outils')"
       />
       <BlockRow
         title="Formule"
         :lines="[planName]"
+        icon="tag"
         data-test="account-plan"
         @click="go('formule')"
       />
       <BlockRow
         v-if="owner"
         title="Administration"
+        icon="settings"
         data-test="account-admin"
         @click="go('plateforme')"
       />
@@ -78,6 +84,7 @@ onMounted(() => {
         :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
         :aria-busy="running || undefined"
         :aria-disabled="running || undefined"
+        icon="refresh"
         data-test="account-collect"
         @click="running || collectNow()"
       />
@@ -85,6 +92,7 @@ onMounted(() => {
         v-if="showDiagnostic"
         title="État du service"
         to="/reglages/diagnostic"
+        icon="activity"
         data-test="account-diagnostic"
       />
     </div>
