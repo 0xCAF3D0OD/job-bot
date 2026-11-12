@@ -1,12 +1,22 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 import type { components } from "../api/schema";
-import TroupeScene from "./TroupeScene.vue";
+import BottomSheet from "./BottomSheet.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
 
-// Aucun rendez-vous ORP prévu (maquette RendezVousPreparer, §15 du 9 novembre) : le « 1 » seul, 72 px de haut, posé
-// en bas de l'en-tête, à côté du titre ; le formulaire compact ; les entretiens s'ajoutent depuis leur candidature.
+// Aucun rendez-vous à venir sur téléphone (prompt du 10 novembre au soir, PR 28 ; maquette RendezVous, états `vide` et
+// `addSheet`) : une carte d'une ligne, « Aucun rendez-vous à venir · jobA1 prépare ta feuille la veille. », et le bouton
+// teinté « Ajouter ». Le formulaire s'ouvre dans une fenêtre du bas. Plus de personnage ici (décision de Kevin du
+// 11 novembre). Les entretiens s'ajoutent depuis leur candidature.
 type Page = components["schemas"]["MeetingPage"];
 const emit = defineEmits<{ saved: [page: Page] }>();
+
+const adding = ref(false);
+function saved(page: Page): void {
+  adding.value = false;
+  emit("saved", page);
+}
 </script>
 
 <template>
@@ -15,34 +25,49 @@ const emit = defineEmits<{ saved: [page: Page] }>();
     aria-labelledby="rdv-empty-title"
     data-test="meeting-empty"
   >
-    <div class="rdv-empty-head">
-      <TroupeScene
-        scene="un"
-        :height="72"
-        class="rdv-empty-person"
-        data-test="meeting-person"
-      />
-      <div>
+    <div class="rdv-empty-card">
+      <div class="rdv-empty-text">
         <h2 id="rdv-empty-title">
           Aucun rendez-vous à venir
         </h2>
-        <p>Ajoute ton prochain rendez-vous ORP : jobA1 prépare ta feuille la veille.</p>
+        <p>jobA1 prépare ta feuille la veille.</p>
       </div>
+      <button
+        type="button"
+        class="rdv-empty-add"
+        aria-haspopup="dialog"
+        data-test="meeting-add"
+        @click="adding = true"
+      >
+        Ajouter
+      </button>
     </div>
-    <OrpMeetingForm @saved="emit('saved', $event)" />
     <p class="rdv-empty-note">
-      Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.
+      Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.
     </p>
+    <BottomSheet
+      :open="adding"
+      title="Prochain rendez-vous ORP"
+      data-test="meeting-sheet"
+      @close="adding = false"
+    >
+      <OrpMeetingForm
+        v-if="adding"
+        sheet
+        @saved="saved"
+      />
+    </BottomSheet>
   </section>
 </template>
 
 <style>
-/* Maquette : le « 1 » de 72 px de haut, le titre en 20 très gras, la phrase en 15 ; écart 14 entre les blocs, posé sur
-   la grille de 4 : 16 (prompt du 10 novembre, PR 16, audit-grille.js). */
-.rdv-empty { --empty-15: 15px; --empty-20: 20px; --empty-lh-title: 1.25; --empty-lh-text: 1.4; --empty-lh-note: 1.43; display: flex; flex-direction: column; gap: var(--space-4); }
-.rdv-empty-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-1) 0; }
-.rdv-empty-head h2 { margin: 0; font-size: var(--empty-20); font-weight: var(--weight-heavy); line-height: var(--empty-lh-title); }
-.rdv-empty-head p { margin: var(--space-1) 0 0; font-size: var(--empty-15); line-height: var(--empty-lh-text); color: var(--text-tertiary); }
-.rdv-empty-person { align-self: flex-end; }
-.rdv-empty-note { margin: 0 var(--space-1); font-size: var(--font-small); line-height: var(--empty-lh-note); color: var(--text-secondary); }
+/* Maquette : la carte blanche, trait de 1,5 px, rayon 18, 16 / 18,5 dedans ; le titre 17/22 gras, la phrase 14/20 à
+   2 px (posée sur la grille : 4) ; « Ajouter » teinté de 44 px ; 16 px avant la note (14 dans la maquette). */
+.rdv-empty { --empty-17: 17px; --empty-pad-x: 18.5px; --empty-add-pad: 18px; --empty-lh-title: 22px; --empty-lh-text: 20px; display: flex; flex-direction: column; gap: var(--space-4); }
+.rdv-empty-card { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--empty-pad-x); background: var(--surface); border: var(--action-line) solid var(--card-line); border-radius: var(--radius-card); }
+.rdv-empty-text { flex: 1; min-width: 0; }
+.rdv-empty-text h2 { margin: 0; font-size: var(--empty-17); line-height: var(--empty-lh-title); font-weight: var(--weight-bold); }
+.rdv-empty-text p { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--empty-lh-text); color: var(--text-secondary); }
+.rdv-empty-add { flex: none; height: var(--target-min); min-height: var(--target-min); padding: 0 var(--empty-add-pad); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.rdv-empty-note { margin: 0 var(--space-1); font-size: var(--font-small); line-height: var(--empty-lh-text); color: var(--text-secondary); }
 </style>

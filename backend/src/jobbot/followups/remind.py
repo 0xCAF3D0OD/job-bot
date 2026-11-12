@@ -1,6 +1,7 @@
 """Quand relancer une candidature (docs/38, docs/124 §G) : le jour choisi dans l'étape
 « Suivre » (`follow_up_on`), sinon 10 jours après l'envoi. Une seule règle pour Aujourd'hui, les
-notifications, l'assistant et le bilan."""
+notifications, l'assistant et le bilan. Une prise de contact notée repousse ce jour à 7 jours
+après le contact (routes/contacts.py), en écrivant `follow_up_on`."""
 
 from datetime import date, timedelta
 

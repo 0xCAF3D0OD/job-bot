@@ -162,21 +162,23 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.find("[data-test=rdv-ready]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous : l’illustration et le formulaire d’avant", async () => {
+  it("aucun rendez-vous : la carte « Aucun rendez-vous à venir » et « Ajouter », sans personnage (PR 28)", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-past]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
     expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(false);
+    await wrapper.get("[data-test=meeting-add]").trigger("click");
+    expect(wrapper.find("[data-test=meeting-sheet] [data-test=meeting-form]").exists()).toBe(true);
   });
 
   it("un entretien sans rendez-vous ORP : l’entretien à venir, puis le formulaire du rendez-vous", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] }, [interview(8, "2099-11-08T13:00:00Z")]);
     const { wrapper } = await open();
     expect(wrapper.get("[data-test=rdv-upcoming] h2").text()).toBe("À venir1 rendez-vous");
-    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=meeting-add]").exists()).toBe(true);
   });
 
   it("le lieu ou lien de l’entretien, quand il est saisi, remplace l’adresse de l’entreprise", async () => {

@@ -106,14 +106,31 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous prévu : le « 1 » seul, 72 px de haut ; un seul des trois par écran (docs/141)", async () => {
+  it("aucun rendez-vous prévu : une carte et « Ajouter », le formulaire dans une fenêtre du bas, plus de personnage (PR 28)", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
-    const person = wrapper.find("[data-test=meeting-person]");
-    expect(person.attributes("data-scene")).toBe("un");
-    expect(person.attributes("height")).toBe("72");
-    expect(wrapper.find("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
+    const empty = wrapper.find("[data-test=meeting-empty]");
+    expect(empty.find("h2").text()).toBe("Aucun rendez-vous à venir");
+    expect(empty.find(".rdv-empty-text p").text()).toBe("jobA1 prépare ta feuille la veille.");
+    expect(empty.text()).toContain("Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.");
+    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(false);
+    expect(wrapper.find("[data-illustration=personnage]").exists()).toBe(false);
+    // Le formulaire n'est plus sur la page : « Ajouter » (teinté, aria-haspopup) l'ouvre dans la fenêtre du bas.
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
+    const add = empty.find("[data-test=meeting-add]");
+    expect(add.text()).toBe("Ajouter");
+    expect(add.attributes("aria-haspopup")).toBe("dialog");
+    await add.trigger("click");
+    const sheet = wrapper.find("[data-test=meeting-sheet]");
+    expect(sheet.find(".sheet-title").text()).toBe("Prochain rendez-vous ORP");
+    const form = sheet.find("[data-test=meeting-form]");
+    expect(form.classes()).toContain("rdv-form-sheet");
+    expect(form.find("h3").exists()).toBe(false);
+    expect(form.find("[data-test=date-time-field]").classes()).toContain("dt-field-outlined");
+    expect(form.find("label").text()).toBe("Lieu ou lien (facultatif)");
+    expect(form.find(".form-field-hint").text()).toContain("ORP Renens, rue de Lausanne 35");
+    expect(form.find("[data-test=meeting-save]").text()).toBe("Ajouter le rendez-vous");
     expect(wrapper.find(".face-state").exists()).toBe(false);
     // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le « 1 ».
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
@@ -132,6 +149,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
+    await wrapper.find("[data-test=meeting-add]").trigger("click");
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=sheet-blockers]").text()).toContain("Aucune réponse en 3 mois");
     expect(wrapper.find("[data-test=sheet-missing]").text()).toContain("Terraform");

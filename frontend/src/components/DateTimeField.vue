@@ -16,8 +16,11 @@ const props = withDefaults(
     dateLabel?: string;
     timeLabel?: string;
     withTime?: boolean;
+    // Champ à contour et libellé flottant, comme les autres champs (maquette RendezVous du 10 novembre au soir,
+    // fenêtre du bas) : 56 px, rayon 12, le libellé dans le champ tant qu'il est vide, chevron à droite, sans icône.
+    outlined?: boolean;
   }>(),
-  { open: "", compact: false, dateLabel: "Date", timeLabel: "Heure", withTime: true },
+  { open: "", compact: false, dateLabel: "Date", timeLabel: "Heure", withTime: true, outlined: false },
 );
 const emit = defineEmits<{ open: [which: "date" | "time"] }>();
 
@@ -56,7 +59,7 @@ const timeText = computed(() => (props.time ? clockLabel(props.time) : empty("Ch
 <template>
   <div
     ref="field"
-    class="dt-field"
+    :class="['dt-field', { 'dt-field-outlined': outlined }]"
     data-test="date-time-field"
   >
     <div class="dt-field-part dt-field-date">
@@ -76,7 +79,7 @@ const timeText = computed(() => (props.time ? clockLabel(props.time) : empty("Ch
         <AppIcon name="calendar" />
         <span class="dt-pill-value">{{ dateText }}</span>
         <AppIcon
-          v-if="!compact"
+          v-if="!compact || outlined"
           name="chevron-down"
         />
       </button>
@@ -102,7 +105,7 @@ const timeText = computed(() => (props.time ? clockLabel(props.time) : empty("Ch
         <AppIcon name="clock" />
         <span class="dt-pill-value">{{ timeText }}</span>
         <AppIcon
-          v-if="!compact"
+          v-if="!compact || outlined"
           name="chevron-down"
         />
       </button>

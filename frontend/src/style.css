@@ -5040,6 +5040,19 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   .dt-field .dt-pill { width: 100%; min-width: 0; padding: 0 var(--dt-pad); font-size: var(--dt-font); }
   .dt-field .dt-pill-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
+/* `outlined` (maquette RendezVous, fenêtre du bas, PR 28) : le champ à contour des libellés flottants, date et heure
+   en 1,4 / 1, 12 px entre les deux. */
+.dt-field.dt-field-outlined { flex-wrap: nowrap; gap: var(--space-3); }
+.dt-field-outlined .dt-field-part { position: relative; }
+.dt-field-outlined .dt-field-date { flex: 1.4 1 0; }
+.dt-field-outlined .dt-field-time { flex: 1 1 0; }
+.dt-field.dt-field-outlined .dt-pill { width: 100%; min-width: 0; height: var(--ff-h); min-height: var(--ff-h); padding: 0 var(--ff-pad-x); border-radius: var(--ff-radius); font-size: var(--font-body); }
+.dt-field-outlined .dt-pill > .icon:first-child { display: none; }
+.dt-field-outlined .dt-pill > .icon:last-child { width: 16px; height: 16px; }
+.dt-field-outlined .dt-pill-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.dt-field-outlined .dt-pill-empty .dt-pill-value { visibility: hidden; }
+.dt-field-outlined .dt-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); pointer-events: none; white-space: nowrap; }
+.dt-field-outlined .dt-field-part:has(.dt-pill:not(.dt-pill-empty)) .dt-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--surface) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
 .dt-pill-open, .dt-pill:hover { border: 2px solid var(--primary-graphic); }
 
 /* DateTimePanel : le sélecteur, à la place du formulaire ; plein écran sur téléphone. */
