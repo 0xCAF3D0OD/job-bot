@@ -533,7 +533,7 @@ function onStatus(value: ApplicationStatus): void {
 .sent-history-text { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--font-label); line-height: var(--space-5); }
 .sent-history-detail { display: block; margin-top: var(--sent-2); font-size: var(--font-small); color: var(--text-secondary); }
 /* Ordinateur (PR 28) : le bouton teinté de 44 px avec son chevron, 8 px sous l'historique. */
-.sent-contacted-fold { display: inline-flex; align-items: center; gap: var(--sent-fold-gap, 6px); height: var(--target-min); min-height: var(--target-min); margin-top: var(--space-2); padding: 0 var(--sent-fold-r, 14px) 0 var(--sent-fold-l, 18px); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.sent-contacted-fold { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--target-min); min-height: var(--target-min); margin-top: var(--space-2); padding: 0 var(--space-3) 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-contacted-fold .icon { width: 20px; height: 20px; }
 .sent-contacts-all { display: flex; align-items: center; min-height: var(--target-min); font-size: var(--font-small); font-weight: var(--weight-bold); }
 .sent-contacted { min-height: var(--target-min); margin-top: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); }
