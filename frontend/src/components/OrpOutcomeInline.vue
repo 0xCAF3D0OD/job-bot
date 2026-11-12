@@ -1,208 +1,173 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, toRef, watch } from "vue";
+import { computed, toRef } from "vue";
 
 import type { components } from "../api/schema";
-import { timeOfDay } from "../dates";
 import { useOrpOutcome } from "../composables/useOrpOutcome";
-import { dateText } from "../rendezVous";
-import DateTimeField from "./DateTimeField.vue";
-import DateTimePanel from "./DateTimePanel.vue";
-import DetailTwoColumns from "./DetailTwoColumns.vue";
+import { dateText, timeAndPlace } from "../rendezVous";
+import AppIcon from "./AppIcon.vue";
+import FormField from "./FormField.vue";
 
-// Ce qui a été convenu, dans le détail d'un rendez-vous ORP passé, sur ordinateur (MODIFICATIONS du 8 novembre au
-// soir, lot 14 ; capture CandidaturesOrdinateurB--tab-rv) : à gauche un formulaire en trois parties (objectif,
-// mesures, prochain rendez-vous) et « Enregistrer » ; à droite « Le rendez-vous ». Le sélecteur de date prend toute
-// la place sous l'en-tête, comme avant. La remarque libre n'a pas de champ ici : celle qui est notée est gardée.
+// Ce qui a été convenu, dans le détail d'un rendez-vous ORP passé, sur ordinateur (récapitulatif du 11 novembre,
+// PR 31 ; maquette CandidaturesOrdinateurB, onglet Rendez-vous) : « Objectif de recherches » et « Mesures décidées »
+// côte à côte, puis « Prochain rendez-vous » sur toute la largeur (une ligne et « Ajouter », plus de formulaire ici),
+// et la barre « Enregistrer » collée en bas de la carte. La colonne « Le rendez-vous » est partie : elle répétait
+// l'en-tête. La remarque libre n'a pas de champ ici : celle qui est notée est gardée, comme le prochain rendez-vous
+// déjà noté.
 type Page = components["schemas"]["MeetingPage"];
 type Meeting = components["schemas"]["MeetingOut"];
 
-const props = defineProps<{ meeting: Meeting; target: number | null }>();
-const emit = defineEmits<{ saved: [page: Page] }>();
+const props = defineProps<{ meeting: Meeting; target: number | null; next?: Meeting | null }>();
+const emit = defineEmits<{ saved: [page: Page]; add: [] }>();
 
-const { count, measures, nextDay, nextTime, message, busy, before, step, save } = useOrpOutcome(
+const { count, measures, message, busy, before, step, save } = useOrpOutcome(
   toRef(props, "meeting"),
   toRef(props, "target"),
   (page) => emit("saved", page),
 );
 
-const picking = ref<"" | "date" | "time">("");
-watch(
-  () => props.meeting.id,
-  () => (picking.value = ""),
-);
-function focusPill(which: "date" | "time"): void {
-  void nextTick(() => document.querySelector<HTMLElement>(`[data-test=outcome-inline] [data-test=dt-${which}]`)?.focus());
-}
-function picked(value: { date: string; time: string }): void {
-  nextDay.value = value.date;
-  nextTime.value = value.time;
-  picking.value = "";
-  focusPill("date");
-}
-function cancelPick(): void {
-  const which = picking.value || "date";
-  picking.value = "";
-  focusPill(which);
-}
-
-// « Le rendez-vous » : la date en toutes lettres, l'heure, le lieu, l'objectif jusqu'ici.
-const facts = computed(() => [
-  { label: "Date", value: dateText(props.meeting.starts_at), test: "fact-date" },
-  { label: "Heure", value: timeOfDay(props.meeting.starts_at), test: "fact-time" },
-  { label: "Lieu", value: props.meeting.place?.trim() || "Non précisé", test: "fact-place" },
-  { label: "Objectif jusqu’ici", value: props.target ? `${props.target} recherches par mois` : "Non précisé", test: "fact-target" },
-]);
+// « Vendredi 20 novembre, 10 h · ORP de Lausanne », ou rien de noté.
+const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}, ${timeAndPlace(props.next.starts_at, props.next.place)}` : ""));
 </script>
 
 <template>
-  <div data-test="outcome-inline">
-    <DateTimePanel
-      v-if="picking"
-      :date="nextDay"
-      :time="nextTime || '09:00'"
-      title="Prochain rendez-vous"
-      @confirm="picked"
-      @cancel="cancelPick"
-    />
-    <DetailTwoColumns
-      v-else
-      aside-label="Le rendez-vous"
-      narrow
+  <form
+    class="outcome-inline"
+    aria-labelledby="outcome-inline-title"
+    data-test="outcome-inline"
+    @submit.prevent="save"
+  >
+    <p
+      id="outcome-inline-title"
+      class="detail-overline"
     >
-      <template #main>
-        <form
-          class="outcome-inline"
-          data-test="outcome-inline-form"
-          @submit.prevent="save"
+      Ce qui a été convenu
+    </p>
+    <div class="outcome-pair">
+      <fieldset class="outcome-set">
+        <legend>Objectif de recherches</legend>
+        <p
+          id="outcome-help-target"
+          class="outcome-help"
         >
-          <p class="detail-overline">
-            Ce qui a été convenu
-          </p>
-          <fieldset class="outcome-set">
-            <legend>Objectif de recherches</legend>
-            <p
-              id="outcome-help-target"
-              class="outcome-help"
-            >
-              Le nombre de recherches que l’ORP te demande chaque mois.
-            </p>
-            <div class="outcome-counter">
-              <button
-                type="button"
-                aria-label="Une de moins"
-                aria-describedby="outcome-help-target"
-                data-test="outcome-less"
-                @click="step(-1)"
-              >
-                −
-              </button>
-              <span
-                aria-live="polite"
-                data-test="outcome-target"
-              >{{ count }}</span>
-              <button
-                type="button"
-                aria-label="Une de plus"
-                aria-describedby="outcome-help-target"
-                data-test="outcome-more"
-                @click="step(1)"
-              >
-                +
-              </button>
-              <small v-if="before">{{ before }}</small>
-            </div>
-          </fieldset>
-          <fieldset class="outcome-set">
-            <legend>Mesures décidées <span class="outcome-optional">(facultatif)</span></legend>
-            <p
-              id="outcome-help-measures"
-              class="outcome-help"
-            >
-              Un cours, un stage ou un programme proposé par ta conseillère.
-            </p>
-            <input
-              v-model="measures"
-              type="text"
-              maxlength="1000"
-              placeholder="Cours, stage, programme…"
-              aria-label="Mesures décidées"
-              aria-describedby="outcome-help-measures"
-              data-test="outcome-measures"
-            >
-          </fieldset>
-          <fieldset
-            class="outcome-set"
-            data-test="outcome-next"
+          Le nombre de recherches que l’ORP te demande chaque mois.
+        </p>
+        <div class="outcome-counter">
+          <button
+            type="button"
+            aria-label="Une de moins"
+            aria-describedby="outcome-help-target"
+            data-test="outcome-less"
+            @click="step(-1)"
           >
-            <legend>Prochain rendez-vous <span class="outcome-optional">(facultatif)</span></legend>
-            <p class="outcome-help">
-              jobA1 prépare ta feuille la veille et te le rappelle le matin.
-            </p>
-            <DateTimeField
-              :date="nextDay"
-              :time="nextTime"
-              :open="picking"
-              @open="picking = $event"
-            />
-          </fieldset>
-          <p
-            v-if="message"
-            role="status"
-            class="notice error"
+            −
+          </button>
+          <span
+            aria-live="polite"
+            data-test="outcome-target"
+          >{{ count }}</span>
+          <button
+            type="button"
+            aria-label="Une de plus"
+            aria-describedby="outcome-help-target"
+            data-test="outcome-more"
+            @click="step(1)"
           >
-            {{ message }}
-          </p>
-          <div class="outcome-inline-actions">
-            <button
-              type="submit"
-              class="primary action-1"
-              :disabled="busy"
-              data-test="outcome-save"
-            >
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </template>
-      <template #aside>
-        <section class="detail-section">
-          <h3>Le rendez-vous</h3>
-          <dl class="detail-list">
-            <div
-              v-for="fact in facts"
-              :key="fact.test"
-              :data-test="fact.test"
-            >
-              <dt>{{ fact.label }}</dt>
-              <dd>{{ fact.value }}</dd>
-            </div>
-          </dl>
-        </section>
-      </template>
-    </DetailTwoColumns>
-  </div>
+            +
+          </button>
+          <small v-if="before">{{ before }}</small>
+        </div>
+      </fieldset>
+      <fieldset class="outcome-set">
+        <legend>Mesures décidées <span class="outcome-optional">(facultatif)</span></legend>
+        <p
+          id="outcome-help-measures"
+          class="outcome-help"
+        >
+          Un cours, un stage ou un programme.
+        </p>
+        <FormField
+          v-slot="{ id }"
+          label="Cours, stage ou programme"
+        >
+          <input
+            :id="id"
+            v-model="measures"
+            type="text"
+            maxlength="1000"
+            aria-describedby="outcome-help-measures"
+            data-test="outcome-measures"
+          >
+        </FormField>
+      </fieldset>
+    </div>
+    <div
+      class="outcome-next"
+      data-test="outcome-next"
+    >
+      <span class="outcome-next-text">
+        <strong>Prochain rendez-vous</strong>
+        <span>{{ nextLine || "Pas encore noté. jobA1 prépare ta fiche la veille." }}</span>
+      </span>
+      <button
+        v-if="!next"
+        type="button"
+        class="outcome-next-add"
+        data-test="outcome-next-add"
+        @click="emit('add')"
+      >
+        <AppIcon name="plus" />Ajouter
+      </button>
+    </div>
+    <p
+      v-if="message"
+      role="status"
+      class="notice error"
+    >
+      {{ message }}
+    </p>
+    <div class="outcome-inline-actions">
+      <button
+        type="submit"
+        class="primary action-1"
+        :disabled="busy"
+        data-test="outcome-save"
+      >
+        Enregistrer
+      </button>
+      <span>L’objectif et les mesures se mettent à jour partout.</span>
+    </div>
+  </form>
 </template>
 
 <style>
-/* Valeurs du lot 14 : sur-titre au-dessus des trois parties ; chaque partie à 28/32 avec un trait au-dessus (sauf la
-   première), le titre de 18 en 700, « (facultatif) » en 15 normal, la phrase d’aide en 14 (4 au-dessus, 16
-   dessous) ; compteur en ronds de 44 ; « Enregistrer » plein de 52, après un trait. */
-.outcome-inline { --out-28: 28px; --out-32: 32px; --out-22: 22px; --out-24: 24px; --out-52: 52px; --out-14: 14px; padding-top: var(--cols-pad-top); }
-.outcome-inline > .detail-overline { margin: 0; }
-.outcome-set { margin: 0; padding: var(--out-28) 0 var(--out-32); border: 0; border-top: 1px solid var(--line-soft); min-width: 0; }
-.outcome-inline > .detail-overline + .outcome-set { border-top: 0; }
-.outcome-set legend { float: left; width: 100%; padding: 0; font-size: var(--font-title); line-height: var(--cols-title); font-weight: var(--weight-bold); }
+/* Valeurs de la maquette (CandidaturesOrdinateurB, onglet Rendez-vous, 11 novembre) : un trait puis le sur-titre à
+   24 ; les deux parties côte à côte (écart 40), chacune à 20 du sur-titre, le titre de 18 en 700, « (facultatif) »
+   en 15 normal, la phrase d’aide en 14 (4 au-dessus, 16 dessous) ; compteur en ronds de 44 ; la ligne « Prochain
+   rendez-vous » entre deux traits ; « Enregistrer » plein de 52, collé en bas de la carte. */
+.outcome-inline { --out-28: 28px; --out-22: 22px; --out-52: 52px; --out-14: 14px; --out-6: 6px; --out-18: 18px; margin-top: var(--space-3); padding-top: var(--space-6); border-top: 1px solid var(--line-soft); }
+.outcome-inline > .detail-overline { margin: 0; font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.outcome-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: calc(var(--space-8) + var(--space-2)); padding-bottom: var(--space-6); }
+.outcome-set { margin: 0; padding: var(--space-5) 0 0; border: 0; min-width: 0; }
+.outcome-set legend { float: left; width: 100%; padding: 0; font-size: var(--font-title); height: var(--space-6); line-height: var(--space-6); font-weight: var(--weight-bold); }
 .outcome-set legend + * { clear: both; }
 .outcome-optional { font-size: var(--font-label); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.outcome-help { margin: var(--space-1) 0 var(--space-4); font-size: var(--font-small); color: var(--text-secondary); }
-.outcome-set > input { width: 100%; }
+.outcome-help { margin: var(--space-1) 0 var(--space-4); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .outcome-inline .outcome-counter { display: flex; align-items: center; gap: var(--out-14); }
 .outcome-inline .outcome-counter button {
   display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0;
   border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
 }
-.outcome-inline .outcome-counter > span { min-width: 2.25rem; text-align: center; font-size: var(--out-24); font-weight: var(--weight-heavy); }
+.outcome-inline .outcome-counter > span { min-width: var(--space-8); text-align: center; font-size: var(--out-22); font-weight: var(--weight-heavy); }
 .outcome-inline .outcome-counter small { font-size: var(--font-small); color: var(--text-secondary); }
-.outcome-inline-actions { padding: var(--space-6) 0 var(--space-2); border-top: 1px solid var(--line-soft); }
-.outcome-inline-actions .primary { min-height: var(--out-52); padding: 0 var(--out-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.outcome-next { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) 0; border-top: 1px solid var(--line-soft); }
+.outcome-next-text { flex: 1; min-width: 0; }
+.outcome-next-text strong { display: block; font-size: var(--font-title); line-height: var(--space-6); font-weight: var(--weight-bold); }
+.outcome-next-text span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
+button.outcome-next-add, button.outcome-next-add:hover:not(:disabled) {
+  flex: none; display: inline-flex; align-items: center; gap: var(--out-6); height: var(--target-min); min-height: var(--target-min); padding: 0 var(--out-18);
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold);
+}
+.outcome-inline-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; background: var(--surface); border-top: 1px solid var(--line-soft); }
+.outcome-inline-actions .primary { flex: none; min-height: var(--out-52); padding: 0 var(--out-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.outcome-inline-actions > span { font-size: var(--font-small); color: var(--text-secondary); }
 </style>

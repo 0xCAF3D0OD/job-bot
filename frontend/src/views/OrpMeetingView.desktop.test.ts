@@ -91,27 +91,26 @@ describe("Rendez-vous sur ordinateur", () => {
     const detail = wrapper.get("[data-test=rdv-detail-past]");
     expect(detail.get("h2").text()).toMatch(/^Rendez-vous ORP du 13 octobre/);
     const inline = detail.get("[data-test=outcome-inline]");
-    expect(inline.findAll("fieldset legend").map((l) => l.text())).toEqual([
-      "Objectif de recherches",
-      "Mesures décidées (facultatif)",
-      "Prochain rendez-vous (facultatif)",
-    ]);
-    expect(inline.get("aside").attributes("aria-label")).toBe("Le rendez-vous");
-    expect(inline.findAll("aside dt").map((d) => d.text())).toEqual(["Date", "Heure", "Lieu", "Objectif jusqu’ici"]);
-    expect(inline.get("[data-test=fact-target] dd").text()).toBe("10 recherches par mois");
-    // Le prochain rendez-vous saisi part avec ce qui a été convenu : le serveur crée l'entrée « À venir ».
+    // Récapitulatif du 11 novembre, PR 31 : objectif et mesures côte à côte, plus de colonne « Le rendez-vous ».
+    expect(inline.findAll(".outcome-pair fieldset legend").map((l) => l.text())).toEqual(["Objectif de recherches", "Mesures décidées (facultatif)"]);
+    expect(inline.find("aside").exists()).toBe(false);
+    expect(inline.get("label").text()).toBe("Cours, stage ou programme");
+    // « Prochain rendez-vous » : une ligne et « Ajouter », plus de formulaire dans ce détail.
+    const next = inline.get("[data-test=outcome-next]");
+    expect(next.text()).toContain("Pas encore noté. jobA1 prépare ta fiche la veille.");
+    expect(next.find("[data-test=dt-date]").exists()).toBe(false);
+    expect(next.get("[data-test=outcome-next-add]").text()).toBe("Ajouter");
+    // La barre du bas : « Enregistrer » et ce que ça met à jour.
+    expect(inline.get(".outcome-inline-actions").text()).toBe("Enregistrer L’objectif et les mesures se mettent à jour partout.");
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, past: [{ ...held, outcome_at: "2026-10-13T10:00:00Z" }], target: 10, trainings: [] } });
-    // Le sélecteur prend toute la place sous l'en-tête.
-    await inline.get("[data-test=outcome-next] [data-test=dt-date]").trigger("click");
-    expect(wrapper.find("[data-test=outcome-inline-form]").exists()).toBe(false);
-    wrapper.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2099-11-10", time: "09:30" });
+    await inline.get("[data-test=outcome-more]").trigger("click");
+    await inline.trigger("submit");
     await flushPromises();
-    await wrapper.get("[data-test=outcome-inline-form]").trigger("submit");
-    await flushPromises();
-    const [path, options] = PUT.mock.calls[0] as [string, { body: { target: number; next_starts_at: string } }];
+    const [path, options] = PUT.mock.calls[0] as [string, { body: { target: number; next_starts_at: string | null } }];
     expect(path).toBe("/api/orp-meeting/{meeting_id}/convenu");
-    expect(options.body.target).toBe(10);
-    expect(options.body.next_starts_at).toBe(new Date("2099-11-10T09:30").toISOString());
+    expect(options.body.target).toBe(11);
+    // Le prochain rendez-vous ne part plus d'ici : ce qui était noté est gardé tel quel.
+    expect(options.body.next_starts_at).toBeNull();
     expect(wrapper.find("[data-test=rdv-item-orp]").exists()).toBe(true);
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
