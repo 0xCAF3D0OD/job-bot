@@ -538,3 +538,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.324 | Filtres des offres : nouveau groupe « Note » (Toutes, Sûres, Provisoires) avec le nombre réel d’offres de chaque choix | livrée |
 | 1.6.325 | Rendez-vous sans rendez-vous à venir sur téléphone : une carte et « Ajouter », le formulaire dans une fenêtre du bas ; « J’ai contacté quelqu’un » se déplie sur place (ordinateur) ou s’ouvre en fenêtre du bas (téléphone), et la prochaine relance passe à 7 jours après le contact | livrée |
 | 1.6.326 | Les justificatifs du mois précédent se marquent « Déjà remis » depuis une carte en tête du Bilan et du Suivi ORP, avec la date de remise et un bouton pour annuler | livrée |
+| 1.6.327 | Sur ordinateur, ce qui a été convenu au rendez-vous ORP tient en une colonne : objectif et mesures côte à côte, et « Enregistrer » reste visible en bas de la carte | livrée |
