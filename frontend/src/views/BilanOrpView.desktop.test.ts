@@ -76,6 +76,9 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     await flushPromises();
     // Le serveur donne octobre (à remettre) ; la carte montre le mois en cours.
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: "2026-11" } } });
+    // En tête, les justificatifs du mois précédent (récapitulatif du 11 novembre, PR 29).
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Justificatifs d’octobre à remettre");
+    expect(wrapper.html().indexOf("data-test=\"orp-proof\"")).toBeLessThan(wrapper.html().indexOf("data-test=\"orp-goal\""));
     const card = wrapper.find("[data-test=orp-goal]");
     expect(card.find(".orp-month-band-head").text()).toBe("Novembre4 sur 13");
     expect(card.find(".orp-month-band-line").text()).toBe("Encore 9 d’ici le 7 décembre · dans les temps");

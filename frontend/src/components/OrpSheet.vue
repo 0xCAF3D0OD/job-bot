@@ -12,13 +12,14 @@ const props = defineProps<{ data: OrpMonth }>();
 const emit = defineEmits<{ reload: [] }>();
 
 const withSearches = ref(false);
+const sheet = ref<HTMLElement | null>(null);
 const today = new Intl.DateTimeFormat("fr-CH").format(new Date());
 
 async function printPdf(journal = false): Promise<void> {
   withSearches.value = journal;
   await nextTick();
-  const sheet = document.querySelector<HTMLElement>(".orp-sheet");
-  if (sheet) printSheet(sheet, { title: `Justificatifs ORP - ${props.data.month}`, landscape: true });
+  // La feuille de ce composant : une page peut en porter deux (le mois affiché, le mois à remettre).
+  if (sheet.value) printSheet(sheet.value, { title: `Justificatifs ORP - ${props.data.month}`, landscape: true });
   withSearches.value = false;
   await api.POST("/api/orp/{month}/exported", { params: { path: { month: props.data.month } } });
   emit("reload");
@@ -47,6 +48,7 @@ defineExpose({ printPdf });
 
     <!-- Version imprimée : A4 paysage, proche du formulaire officiel. -->
     <article
+      ref="sheet"
       class="orp-sheet print-sheet"
       aria-hidden="true"
     >

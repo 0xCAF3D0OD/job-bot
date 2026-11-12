@@ -26,6 +26,7 @@ import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import MomentScreen from "../components/MomentScreen.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
+import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpGoalCard from "../components/OrpGoalCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -412,6 +413,12 @@ async function removeInterview(): Promise<void> {
   });
 }
 
+// Sur téléphone, la carte en tête du Suivi ORP porte la remise du mois précédent (PR 29) : le bandeau du mois ne la
+// répète pas, il ne reste que pour « Compléter ».
+const proofCovers = computed(
+  () => phone.value && !!orp.value && orp.value.month === shiftMonth(today().slice(0, 7), -1) && (orp.value.state === "remis" || !firstIncomplete.value),
+);
+
 // Le moment « preuves remises » : la carte qui vient devant (docs/61 §1).
 const submitted = ref<{ month: string; nextDue: string | null } | null>(null);
 // Annuler la remise se confirme dans la page (docs/108 §1).
@@ -581,6 +588,11 @@ onUnmounted(() => assistant.setFocus(null));
           </RouterLink>
           <h1>Suivi ORP</h1>
         </header>
+        <!-- Téléphone : le mois précédent à remettre, ou remis, en tête (récapitulatif du 11 novembre, PR 29). -->
+        <OrpProofCard
+          v-if="phone"
+          @changed="load()"
+        />
         <!-- Les chevrons ‹ › de la maquette Orp ; pas de mois suivant après le mois en cours. -->
         <div class="month-nav orp-page-month">
           <IconButton
@@ -614,7 +626,7 @@ onUnmounted(() => assistant.setFocus(null));
         <!-- L'état des preuves du mois, juste sous l'objectif (B8) : une phrase, une action ; seulement s'il y
              a à faire ou si elles sont remises (docs/134). -->
         <div
-          v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
+          v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete) && !proofCovers"
           :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
           data-test="orp-banner"
         >

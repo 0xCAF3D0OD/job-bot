@@ -10,6 +10,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
 import OrpMonthBar from "../components/OrpMonth.vue";
+import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpFiche from "../components/OrpFiche.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -148,6 +149,8 @@ onMounted(() => void load());
         :heights="['10rem', '3.5rem', '14rem']"
       />
       <template v-else-if="!phone && shownMonth">
+        <!-- Le mois précédent à remettre, ou remis (récapitulatif du 11 novembre, PR 29). -->
+        <OrpProofCard @changed="load()" />
         <RouterLink
           :to="shownMonth.target ? { path: '/bilan/orp', query: { mois: shownMonth.month } } : { path: '/reglages', query: { rubrique: 'recherche' } }"
           class="today-orp-card bilan-orp-card"

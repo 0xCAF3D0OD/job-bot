@@ -310,6 +310,8 @@ describe("Aujourd’hui sur ordinateur (maquette du 8 novembre)", () => {
     expect(section.find("[data-test=preparing]").classes()).toContain("tone-normal");
     expect(section.find("[data-test=orp-urgent] strong").text()).toBe("Remettre les justificatifs de septembre");
     expect(section.find("[data-test=orp-urgent] .today-task-action").text()).toBe("Remettre");
+    // La carte des justificatifs est en tête du Bilan › ORP (récapitulatif du 11 novembre, PR 29).
+    expect(section.find("[data-test=orp-urgent]").attributes("href")).toBe("/bilan");
     const preparing = section.find("[data-test=preparing]");
     expect(preparing.find("strong").text()).toBe("Préparer 2 candidatures");
     expect(preparing.text()).toContain("2 offres gardées attendent leur lettre");
