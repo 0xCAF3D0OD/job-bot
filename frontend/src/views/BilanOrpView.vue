@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type OrpMonth, type OrpRow } from "../api/client";
 import type { components } from "../api/schema";
@@ -12,12 +12,13 @@ import OrpBlocks from "../components/OrpBlocks.vue";
 import OrpMonthBar from "../components/OrpMonth.vue";
 import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
+import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpFiche from "../components/OrpFiche.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SidePanel from "../components/SidePanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
-import { formatMonth, orpChannel, plural, shiftMonth } from "../format";
+import { formatMonth, ofMonth, orpChannel, plural, shiftMonth } from "../format";
 import { dateText, meetingsToNote, pastTitle, timeAndPlace } from "../rendezVous";
 import { isNetworkError } from "../network";
 
@@ -34,6 +35,35 @@ import { isNetworkError } from "../network";
 type MeetingPage = components["schemas"]["MeetingPage"];
 const { phone } = usePhone();
 const router = useRouter();
+const route = useRoute();
+// Récapitulatif du 11 novembre, PR 33 (Kevin, 11.11) : sur ordinateur, plus de page « Suivi ORP » à part. Le mois
+// affiché vient de l'adresse (?orp=2026-09, le mois en cours sinon) ; « Voir tout le mois » déplie toutes les
+// recherches sur place (?tout=1) ; « Mois précédents », en bas, garde l'accès aux anciens mois et à leurs exports.
+const viewMonth = computed(() => {
+  const asked = route.query.orp;
+  return typeof asked === "string" && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth() ? asked : thisMonth();
+});
+const viewingPast = computed(() => viewMonth.value !== thisMonth());
+const expanded = computed(() => route.query.tout === "1");
+const PAST_MONTHS = 6;
+const monthItems = computed<MoreMenuItem[]>(() => {
+  const go = (month: string) => () => void router.push({ path: "/bilan", query: month === thisMonth() ? {} : { orp: month } });
+  const items: MoreMenuItem[] = [];
+  if (viewingPast.value) items.push({ label: `Revenir à ${formatMonth(thisMonth()).toLowerCase()}`, test: "orp-month-current", icon: "calendar", run: go(thisMonth()) });
+  for (let i = 1; i <= PAST_MONTHS; i += 1) {
+    const month = shiftMonth(thisMonth(), -i);
+    if (month !== viewMonth.value) items.push({ label: capitalMonth(month), test: `orp-month-${month}`, icon: "calendar", run: go(month) });
+  }
+  return items;
+});
+const exportItems = computed<MoreMenuItem[]>(() => {
+  const o = shownMonth.value;
+  if (!o) return [];
+  return [
+    { label: "Télécharger en CSV (Excel)", test: "orp-csv", icon: "download", href: `/api/orp/${o.month}/csv`, download: true },
+    ...(o.searches.length ? [{ label: "PDF avec le journal des recherches", test: "orp-pdf-journal", icon: "download" as const, run: () => void sheet.value?.printPdf(true) }] : []),
+  ];
+});
 const meetings = ref<MeetingPage | null>(null);
 const orp = ref<OrpMonth | null>(null);
 const error = ref(false);
@@ -46,6 +76,9 @@ const DECLARE_SHOWN = 3;
 const current = ref<OrpMonth | null>(null);
 const previous = ref<OrpMonth | null>(null);
 const shownMonth = computed(() => current.value ?? orp.value);
+function capitalMonth(month: string): string {
+  return formatMonth(month).replace(/^./, (c) => c.toUpperCase());
+}
 const capital = (month: string) => formatMonth(month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase());
 const monthName = computed(() => (shownMonth.value ? capital(shownMonth.value.month) : ""));
 const cardLabel = computed(() => {
@@ -58,7 +91,7 @@ const cardLine = computed(() => (shownMonth.value?.target ? undefined : "Indique
 type Pending = OrpRow & { month: string };
 const pending = computed<Pending[]>(() =>
   [previous.value, current.value]
-    .filter((m): m is OrpMonth => !!m && m.state !== "remis")
+    .filter((m, index, list): m is OrpMonth => !!m && m.state !== "remis" && list.findIndex((x) => x?.month === m.month) === index)
     .flatMap((m) => m.rows.filter((row) => !row.declared_at).map((row) => ({ ...row, month: m.month }))),
 );
 const pendingMonths = computed(() => {
@@ -66,7 +99,9 @@ const pendingMonths = computed(() => {
   return names.join(" et ");
 });
 const declareAll = ref(false);
-const pendingShown = computed(() => (declareAll.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
+const pendingShown = computed(() => (declareAll.value || expanded.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
+// « Voir tout le mois et les justificatifs » et le chevron de la carte : le mois déplié, sur place.
+const allTo = computed(() => ({ path: "/bilan", query: { ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
 const declared = computed(() => (shownMonth.value?.rows ?? []).filter((row) => row.declared_at));
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);
@@ -104,8 +139,9 @@ async function monthData(month: string, known: OrpMonth): Promise<OrpMonth | nul
   return data ?? null;
 }
 async function loadMonths(known: OrpMonth): Promise<void> {
-  const month = thisMonth();
-  const [cur, prev] = await Promise.all([monthData(month, known), monthData(shiftMonth(month, -1), known)]);
+  // Un mois passé se regarde seul ; le mois en cours garde, dans « À déclarer », les oubliées du mois d'avant.
+  const month = viewMonth.value;
+  const [cur, prev] = await Promise.all([monthData(month, known), viewingPast.value ? Promise.resolve(null) : monthData(shiftMonth(month, -1), known)]);
   current.value = cur;
   previous.value = prev;
 }
@@ -128,6 +164,7 @@ async function load(): Promise<void> {
   }
 }
 onMounted(() => void load());
+watch(viewMonth, () => void load());
 </script>
 
 <template>
@@ -152,7 +189,7 @@ onMounted(() => void load());
         <!-- Le mois précédent à remettre, ou remis (récapitulatif du 11 novembre, PR 29). -->
         <OrpProofCard @changed="load()" />
         <RouterLink
-          :to="shownMonth.target ? { path: '/bilan/orp', query: { mois: shownMonth.month } } : { path: '/reglages', query: { rubrique: 'recherche' } }"
+          :to="shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
           class="today-orp-card bilan-orp-card"
           :aria-label="cardLabel"
           data-test="orp-goal"
@@ -184,14 +221,14 @@ onMounted(() => void load());
             type="button"
             class="secondary action-2"
             data-test="orp-add"
-            @click="router.push({ path: '/bilan/orp', query: { mois: shownMonth.month, ajouter: '1' } })"
+            @click="router.push({ path: '/candidatures/suivi', query: { ajouter: '1' } })"
           >
             Ajouter une recherche
           </button>
         </div>
         <OrpSheet
           ref="sheet"
-          :data="orp"
+          :data="shownMonth"
           @reload="load"
         />
         <section
@@ -230,7 +267,7 @@ onMounted(() => void load());
             ><AppIcon name="arrow-right" /></span>
           </button>
           <button
-            v-if="!declareAll && pending.length > DECLARE_SHOWN"
+            v-if="!declareAll && !expanded && pending.length > DECLARE_SHOWN"
             type="button"
             class="bilan-card-more"
             data-test="orp-declare-more"
@@ -246,7 +283,7 @@ onMounted(() => void load());
         >
           <div class="bilan-section-head">
             <h2 id="orp-last-title">
-              Recherches de {{ monthName.toLowerCase() }}
+              Recherches {{ ofMonth(shownMonth.month) }}
             </h2>
             <span>{{ shownMonth.count }} ce mois</span>
           </div>
@@ -258,13 +295,16 @@ onMounted(() => void load());
           </p>
           <OrpSearchRows
             :rows="declared"
-            :limit="LAST_WIDE"
+            :limit="expanded ? undefined : LAST_WIDE"
             :link="shownMonth.month"
           >
-            <template #last>
+            <template
+              v-if="!expanded"
+              #last
+            >
               <li>
                 <RouterLink
-                  :to="{ path: '/bilan/orp', query: { mois: shownMonth.month } }"
+                  :to="allTo"
                   class="bilan-card-more"
                   data-test="orp-all"
                 >
@@ -274,8 +314,8 @@ onMounted(() => void load());
             </template>
           </OrpSearchRows>
           <RouterLink
-            v-if="!declared.length"
-            :to="{ path: '/bilan/orp', query: { mois: shownMonth.month } }"
+            v-if="!declared.length && !expanded"
+            :to="allTo"
             class="bilan-card-more"
             data-test="orp-all"
           >
@@ -332,6 +372,26 @@ onMounted(() => void load());
             </li>
           </ul>
         </section>
+        <!-- Hors maquette, décidé avec Kevin le 11.11 : les anciens mois et les autres exports, en bas. -->
+        <div
+          class="bilan-orp-more"
+          data-test="orp-more-row"
+        >
+          <MoreMenu
+            :items="monthItems"
+            :inline="false"
+            trigger="Mois précédents"
+            trigger-icon="calendar"
+            test-id="orp-months"
+          />
+          <MoreMenu
+            :items="exportItems"
+            :inline="false"
+            trigger="Autres exports"
+            trigger-icon="download"
+            test-id="orp-exports"
+          />
+        </div>
         <SidePanel
           :open="!!fiche"
           title="Pour l’ORP"

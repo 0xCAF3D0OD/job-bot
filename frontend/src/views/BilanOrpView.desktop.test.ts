@@ -1,18 +1,23 @@
 // Bilan › ORP sur ordinateur (maquette du 9 novembre, BilanOrdinateur et BilanOrdinateurFiche ; §2.5, §10.3, §11).
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 import BilanOrpView from "./BilanOrpView.vue";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a), POST: vi.fn() } }));
+const route = reactive<{ query: Record<string, string> }>({ query: {} });
+const push = vi.fn();
+vi.mock("vue-router", () => ({ useRoute: () => route, useRouter: () => ({ push: (...a: unknown[]) => push(...a) }) }));
 vi.mock("../composables/usePhone", () => ({ usePhone: () => ({ phone: ref(false) }) }));
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-11-09T10:00:00"));
 });
 afterEach(() => {
+  route.query = {};
+  push.mockReset();
   GET.mockReset();
   vi.useRealTimers();
 });
@@ -53,8 +58,8 @@ const november = {
   rows: [row(6, "03.11.2026", "EPFL Lausanne", { declared_at: "2026-11-04" }), row(7, "05.11.2026", "SpeciTec SA", { declared_at: "2026-11-06", missing: ["capture"] })],
 };
 
-function mountView() {
-  GET.mockImplementation((path: string, init?: { params?: { query?: { month?: string } } }) => {
+function mountView(serve = true) {
+  if (serve) GET.mockImplementation((path: string, init?: { params?: { query?: { month?: string } } }) => {
     if (path === "/api/orp") return Promise.resolve({ data: init?.params?.query?.month === "2026-11" ? november : october });
     return Promise.resolve({ data: null });
   });
@@ -121,6 +126,42 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     const states = searches.findAll(".bilan-card-state").map((s) => s.text());
     expect(states).toEqual(["Justificatif à joindre", "Justificatif joint"]);
     expect(searches.find("[data-test=orp-all]").text()).toBe("Voir tout le mois et les justificatifs");
+    // PR 33 : plus de page Suivi ORP à part ; le lien déplie le mois sur place, une ligne ouvre la candidature dans Envoyées.
+    expect(searches.find("[data-test=orp-all]").attributes("data-to")).toBe(JSON.stringify({ path: "/bilan", query: { tout: "1" } }));
+    expect(searches.find("[data-test=orp-row-6]").attributes("data-to")).toBe(JSON.stringify({ path: "/candidatures/suivi", query: { candidature: 6 } }));
+    expect(wrapper.html()).not.toContain("/bilan/orp");
+  });
+
+  it("?tout=1 : tout le mois déplié, sans « Voir tout » ni « Voir les autres »", async () => {
+    route.query = { tout: "1" };
+    const wrapper = mountView();
+    await flushPromises();
+    expect(wrapper.findAll("[data-test^=orp-declare-]").filter((w) => w.element.tagName === "BUTTON" && !w.attributes("data-test")!.endsWith("more"))).toHaveLength(4);
+    expect(wrapper.find("[data-test=orp-declare-more]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-all]").exists()).toBe(false);
+  });
+
+  it("« Mois précédents » : un ancien mois s’affiche dans la même page, avec ses exports", async () => {
+    route.query = { orp: "2026-09" };
+    const september = { ...october, month: "2026-09", state: "remis", due_date: "2026-10-05", rows: [row(9, "14.09.2026", "Swisscom", { declared_at: "2026-09-20" })], count: 1 };
+    GET.mockImplementation((path: string, init?: { params?: { query?: { month?: string } } }) => {
+      if (path !== "/api/orp") return Promise.resolve({ data: null });
+      const month = init?.params?.query?.month;
+      return Promise.resolve({ data: month === "2026-09" ? september : month === "2026-11" ? november : october });
+    });
+    const wrapper = mountView(false);
+    await flushPromises();
+    expect(wrapper.find("[data-test=orp-searches] h2").text()).toBe("Recherches de septembre");
+    expect(wrapper.find("[data-test=orp-to-declare]").exists()).toBe(false);
+    await wrapper.get("[data-test=orp-months]").trigger("click");
+    const months = wrapper.findAll("[data-test=orp-more-row] [role=menuitem]").map((m) => m.text());
+    expect(months[0]).toBe("Revenir à novembre 2026");
+    expect(months).toContain("Octobre 2026");
+    expect(months).not.toContain("Septembre 2026");
+    await wrapper.get("[data-test=orp-month-2026-10]").trigger("click");
+    expect(push).toHaveBeenCalledWith({ path: "/bilan", query: { orp: "2026-10" } });
+    await wrapper.get("[data-test=orp-exports]").trigger("click");
+    expect(wrapper.get("[data-test=orp-csv]").attributes("href")).toBe("/api/orp/2026-09/csv");
   });
 
   it("un mois passé déjà remis n’a plus rien à déclarer", async () => {

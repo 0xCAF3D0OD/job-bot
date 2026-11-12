@@ -9,7 +9,7 @@ import CalendarDate from "./CalendarDate.vue";
 // Les recherches du mois (maquettes Explorer et Orp) : le jour, l'entreprise, « poste · moyen » et l'étiquette
 // « justificatif joint » ou « justificatif à joindre ». Les plus récentes d'abord ; `limit` pour les dernières seulement. Avec `open`,
 // chaque ligne ouvre sa candidature.
-// `link` (maquette du 8 novembre, Bilan sur ordinateur) : chaque ligne mène à sa candidature dans le Suivi ORP du
+// `link` (Bilan sur ordinateur ; PR 33, plus de page Suivi ORP séparée) : chaque ligne mène à sa candidature dans Envoyées. Avant : le Suivi ORP du
 // mois ; l'icône calendrier de 36 px, « justificatif joint » en vert ou « justificatif à joindre » en pêche, puis « › ».
 // Maquette du 9 novembre (BilanOrdinateur) : une carte par recherche, « Justificatif joint » ou « Justificatif à
 // joindre », le cercle à flèche gris.
@@ -43,7 +43,7 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
       :key="row.application_id"
     >
       <RouterLink
-        :to="{ path: '/bilan/orp', query: { mois: link, candidature: row.application_id } }"
+        :to="{ path: '/candidatures/suivi', query: { candidature: row.application_id } }"
         class="bilan-card"
         :data-test="`orp-row-${row.application_id}`"
       >

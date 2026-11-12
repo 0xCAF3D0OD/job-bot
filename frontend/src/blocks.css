@@ -1,3 +1,4 @@
+@import "./block-fields.css";
 /* Le style « blocs » (MODIFICATIONS du 8 novembre au soir, §2.1 à §2.4, lot 18) : une page de lecture est une pile de
    blocs sans bordure ni ombre sur le fond --page-blocks (D28) ; une ligne à flèche est cliquable en entier (D29) ;
    un champ à recopier a son libellé au-dessus et un bouton copier (D32). Importé par les écrans qui l'utilisent,
@@ -52,14 +53,6 @@
 .block-row-aside.muted { color: var(--text-secondary); }
 
 /* D32 : libellé au-dessus de la valeur, bouton copier à droite, trait entre les champs. */
-.block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
-.block-cap + .block-field { padding-top: var(--space-1); border-top: 0; }
-.block-field-text { flex: 1; min-width: 0; }
-.block-field-label { font-size: var(--block-cap); line-height: var(--field-label-lh); color: var(--text-secondary); }
-.block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
-.block-field-value.block-field-none { font-weight: var(--weight-regular); color: var(--text-secondary); }
-.block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.block-field .copy-button { flex: none; }
 a.block-action.action-2 { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 a.block-action.action-2:hover { background: var(--primary-soft); }
 

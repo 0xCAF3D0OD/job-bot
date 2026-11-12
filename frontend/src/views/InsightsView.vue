@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import ActionBand from "../components/ActionBand.vue";
 import AppIcon from "../components/AppIcon.vue";
-import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
 import BilanCompare from "../components/bilan/BilanCompare.vue";
 import BilanFunnel from "../components/bilan/BilanFunnel.vue";
+import BilanResultsWide from "../components/bilan/BilanResultsWide.vue";
 import BilanInterviews from "../components/bilan/BilanInterviews.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
-import { formatMonth, shiftMonth } from "../format";
+import { formatMonth } from "../format";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
-import IconButton from "../components/IconButton.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import {
@@ -36,12 +35,13 @@ type Insights = components["schemas"]["SearchReportOut"];
 type Period = "recent" | "month" | "all";
 
 const route = useRoute();
-const router = useRouter();
 const insights = ref<Insights | null>(null);
 const { phone } = usePhone();
 const error = ref("");
 const offline = ref(false);
-usePageReady("insights", () => !!insights.value || !!error.value);
+// Sur ordinateur, la page est prête quand la colonne unique a ses chiffres.
+const wideReady = ref(false);
+usePageReady("insights", () => (phone.value ? !!insights.value || !!error.value : wideReady.value));
 
 function currentMonth(): string {
   const now = new Date();
@@ -55,18 +55,8 @@ const period = computed<Period>(() => {
 });
 const month = computed(() => (typeof route.query.mois === "string" ? route.query.mois : currentMonth()));
 
-function choose(next: Period): void {
-  const query: Record<string, string> = {};
-  if (next === "month") query.mois = month.value;
-  if (next === "all") query.periode = "tout";
-  void router.push({ query });
-}
-
-function go(delta: number): void {
-  void router.push({ query: { mois: shiftMonth(month.value, delta) } });
-}
-
 async function load(): Promise<void> {
+  if (!phone.value) return;
   error.value = "";
   offline.value = false;
   try {
@@ -97,7 +87,7 @@ const goalLine = computed(() => {
   return target ? `Objectif ORP : ${target} par mois` : "Objectif ORP à indiquer";
 });
 
-watch(() => route.query, () => void load());
+watch([() => route.query, phone], () => void load());
 onMounted(() => void load());
 
 // La conclusion, la bande et la phrase de chaque repliable (1.6.62, planche « 3 et 4. Bilan »).
@@ -113,18 +103,19 @@ const periodLine = computed(() => {
   if (period.value === "month") return `En ${formatMonth(month.value).toLowerCase()}`;
   return period.value === "all" ? "Depuis le début" : "Sur les 3 derniers mois";
 });
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "month", label: "Un mois" },
-  { key: "recent", label: "3 mois" },
-  { key: "all", label: "Tout" },
-];
-const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, label: p.label, test: `period-${p.key}` }));
 </script>
 
 <template>
-  <section class="jobs-body insights">
+  <!-- Ordinateur : une seule colonne (récapitulatif du 11 novembre, PR 33). -->
+  <BilanResultsWide
+    v-if="!phone"
+    @ready="wideReady = true"
+  />
+  <section
+    v-else
+    class="jobs-body insights"
+  >
     <p
-      v-if="phone"
       class="insights-period-line"
       data-test="insights-period-line"
     >
@@ -171,37 +162,6 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
         />
         <!-- La période en contrôle segmenté (D4, 2026-11-03), au-dessus des chiffres. Sur téléphone, plus de
              période (maquette Progresser, Kevin 2026-11-06) : les chiffres des 3 derniers mois, sauf adresse avec un mois. -->
-        <div
-          v-if="!phone"
-          class="insights-head"
-          data-test="insights-period"
-        >
-          <SegmentedControl
-            :model-value="period"
-            :options="periodSegments"
-            label="Période"
-            class="bilan-period"
-            @update:model-value="choose($event as Period)"
-          />
-          <div
-            v-if="period === 'month'"
-            class="month-nav"
-          >
-            <IconButton
-              icon="arrow-left"
-              label="Mois précédent"
-              data-test="prev-month"
-              @click="go(-1)"
-            />
-            <strong data-test="month">{{ formatMonth(month) }}</strong>
-            <IconButton
-              icon="arrow-right"
-              label="Mois suivant"
-              data-test="next-month"
-              @click="go(1)"
-            />
-          </div>
-        </div>
         <FaceState
           v-if="insights.funnel.applications === 0"
           title="Trop tôt pour conclure"

@@ -213,7 +213,19 @@ export const routes: RouteRecordRaw[] = [
     ],
   },
   // Le Suivi ORP du mois (docs/139 étape 8b, maquette Orp) : une sous-page de Bilan › ORP.
-  { path: "/bilan/orp", name: "orp-month", component: ApplicationsView },
+  // Sur ordinateur, plus de page séparée (récapitulatif du 11 novembre, PR 33) : tout est dans Bilan › ORP ; une
+  // candidature s'ouvre dans Envoyées, « Ajouter une recherche » aussi.
+  {
+    path: "/bilan/orp",
+    name: "orp-month",
+    component: ApplicationsView,
+    beforeEnter: (to) => {
+      if (globalThis.matchMedia?.(PHONE_QUERY).matches !== false) return true;
+      if (to.query.candidature) return { path: "/candidatures/suivi", query: { candidature: to.query.candidature } };
+      if (to.query.ajouter) return { path: "/candidatures/suivi", query: { ajouter: "1" } };
+      return { path: "/bilan", query: typeof to.query.mois === "string" ? { orp: to.query.mois, tout: "1" } : {} };
+    },
+  },
   // « Pour l'ORP », une candidature à déclarer (MODIFICATIONS du 8 novembre au soir, lot 18, §10.3) : plein écran.
   { path: "/bilan/orp/candidature/:id", name: "orp-fiche", component: () => import("./views/OrpFicheView.vue"), meta: { bare: true } },
   {

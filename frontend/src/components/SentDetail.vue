@@ -519,8 +519,12 @@ function onStatus(value: ApplicationStatus): void {
 .sent-rows-bare { padding-top: 0; }
 .sent-rows-bare a:first-of-type { border-top: 0; }
 .sent-rows h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); line-height: var(--space-6); }
-.sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line); color: var(--text); text-decoration: none; }
-.sent-rows a:hover b { text-decoration: underline; }
+.sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+/* Lignes-liens d'une carte (PR 33 point 5) : ni rayon ni bordure propre, pas de soulignement ; un filet de 1 px entre
+   les lignes, la dernière suit le rayon de la carte. */
+.sent-rows { overflow: hidden; }
+.sent-rows a { border-radius: 0; }
+.sent-rows a:hover { background: var(--primary-soft); }
 .sent-rows a > .icon { flex: none; color: var(--primary-text); }
 .sent-row-text { flex: 1; min-width: 0; }
 .sent-row-text b { display: block; font-size: var(--font-label); line-height: var(--space-5); }

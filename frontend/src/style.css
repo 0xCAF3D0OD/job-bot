@@ -1024,10 +1024,15 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .more-menu .menu a { display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left; border: 0; background: transparent; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); text-decoration: none; }
 /* docs/74 §5 : jamais hors de l'écran, un filet avant les suppressions, en rouge. */
 .more-menu .menu { max-width: calc(100vw - 2rem); scroll-margin: 0.5rem; }
+/* Lignes d'un menu (récapitulatif du 11 novembre, PR 33 point 5) : pleine largeur, sans rayon ni bordure propre, sans
+   soulignement ; seul un filet sépare les groupes. */
+.more-menu .menu { padding: var(--space-1) 0; overflow: hidden; }
+.more-menu .menu :is(button, a) { border-radius: 0; text-decoration: none; }
+.more-menu .menu :is(button, a):hover { text-decoration: none; }
 .more-menu .menu.up { top: auto; bottom: 2.4rem; }
 .more-menu .menu.align-left { right: auto; left: 0; }
 .more-menu .menu .danger { color: var(--text); }
-.more-menu .menu-separator { height: 1px; margin: var(--space-1) var(--space-2); background: var(--divider); }
+.more-menu .menu-separator { height: 1px; margin: var(--space-1) 0; background: var(--divider); }
 .more-menu .menu-count { color: var(--muted); font-weight: var(--weight-regular); }
 /* L'icône de chaque action (docs/101), grise ; rouge pour une suppression. */
 .more-menu .menu .icon { width: 1.05rem; height: 1.05rem; color: var(--muted); }
@@ -2854,6 +2859,15 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .detail-post .offer-facts span { padding: 0; background: none; border-radius: 0; font-size: inherit; font-weight: inherit; color: inherit; }
 .detail-post .offer-facts .fact-mark { padding-top: var(--space-1); }
 .detail-more-rows { display: grid; }
+/* Le bloc « L’entreprise » de la fiche d'une offre (récapitulatif du 11 novembre, PR 33 point 4) : des champs à
+   libellé au-dessus (blocks.css), sans bandeau. */
+.offer-company { --block-cap: 13px; --block-cap-lh: 18px; --field-pad: 16px; --field-label-lh: 18px; --field-value-lh: 22px; }
+.offer-company-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--target-min); border-bottom: 1px solid var(--line-soft); }
+.offer-company-head + .block-field { border-top: 0; }
+.offer-company-cap { margin: 0; font-size: var(--block-cap); line-height: var(--block-cap-lh); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.offer-company-contacts { margin-top: var(--space-4); }
+.offer-company .block-field .hint { margin-top: var(--space-1); }
+button.link.offer-company-add { flex: none; min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .detail-rows { margin: 0; display: grid; }
 .detail-rows > div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--divider); line-height: var(--leading-normal); }
 .detail-rows > div:first-child { border-top: 0; }
@@ -3850,6 +3864,9 @@ main:focus { outline: none; }
 .bilan-page-resultats, .bilan-page-formations { padding-top: var(--space-6); }
 .bilan-orp-wide { display: flex; flex-direction: column; gap: var(--space-8); }
 .bilan-orp-card { grid-template-columns: minmax(0, 1fr) auto; }
+.bilan-orp-more { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.bilan-orp-more .more-trigger { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+.bilan-orp-more .more-menu .menu { top: auto; bottom: calc(var(--target-min) + var(--space-1)); right: auto; left: 0; }
 /* « Justificatifs déjà remis à l'ORP » (récapitulatif du 11 novembre, PR 29 ; maquettes Orp et BilanOrdinateur) : la
    carte du mois précédent, blanche, filet de 1,5 px, rayon 18 ; sur téléphone les deux boutons passent dessous, à
    parts égales. */
