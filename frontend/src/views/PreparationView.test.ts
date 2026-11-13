@@ -2,7 +2,6 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { useUndo } from "../composables/useUndo";
 import PreparationView from "./PreparationView.vue";
 
@@ -382,14 +381,10 @@ describe("barre de candidature", () => {
     expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
     expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
 
-    // « Je n'ai pas postulé » : l'offre revient en préparation (le menu y ramène) ; la candidature part après 6 s.
+    // « Je n'ai pas postulé » : l'offre revient en préparation ; la candidature part après 6 s.
     expect(done.find("[data-test=cancel-applied]").text()).toBe("Je n’ai pas postulé");
-    useJobsMemory().remember("/candidatures/offres/7/preparer?doc=postuler");
-    useJobsMemory().sent(7);
-    expect(useJobsMemory().last.value).toBe("/candidatures/suivi");
     DELETE.mockResolvedValue({ response: { ok: true } });
     await done.find("[data-test=cancel-applied]").trigger("click");
-    expect(useJobsMemory().last.value).toBe("/candidatures/offres/7/preparer?doc=postuler");
     expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     expect(wrapper.find("[data-test=apply]").classes()).toContain("primary-link");

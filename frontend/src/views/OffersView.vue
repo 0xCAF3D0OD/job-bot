@@ -27,7 +27,6 @@ import CharacterState from "../components/CharacterState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeChips, activeCount, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -547,7 +546,6 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
     return;
   }
   applying.value = null;
-  if (data.offer_id) useJobsMemory().sent(data.offer_id);
   // « Candidature envoyée. » ou, si elle atteint l'objectif ORP du mois, « C'est fait ! » (docs/141, 8 et 9).
   const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
   if (orp && firstGoal(data.orp_month, orp.count, orp.target)) goalMoment.value = { ...orp, month: data.orp_month };

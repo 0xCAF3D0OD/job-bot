@@ -47,6 +47,9 @@ jobs:
       - name: « Nouveau rendez-vous », choix de la date (pas de défilement horizontal ; 1440 à 320 px)
         if: success() || failure()
         run: make audit-rendez-vous DEMO_URL=http://localhost:8280
+      - name: Menu « Candidatures » depuis Mes alertes, Préparer et Relances (1440 et 390 px)
+        if: success() || failure()
+        run: make audit-menu DEMO_URL=http://localhost:8280
       - name: Libellé flottant des champs (aucun trait derrière les lettres ; clair et sombre)
         if: success() || failure()
         run: make audit-libelle DEMO_URL=http://localhost:8280

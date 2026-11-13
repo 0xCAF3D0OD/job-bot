@@ -39,7 +39,6 @@ import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import Composer from "../components/Composer.vue";
 import SuggestionChips from "../components/SuggestionChips.vue";
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInSentence, dateWithTime } from "../dates";
 import { companyPlace, expiredText, scoreWord } from "../format";
@@ -147,7 +146,6 @@ async function markApplied(): Promise<void> {
       applyError.value = detail(err, "Enregistrement impossible pour l’instant : réessaie.");
       return;
     }
-    useJobsMemory().sent(offerId);
     // Le mois ORP d'abord : s'il atteint l'objectif, « C'est fait ! » s'affiche tout de suite, sans passer par
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
@@ -173,8 +171,6 @@ function cancelApplied(): void {
   if (won) forgetGoal(won.month);
   offer.value = { ...before, status: "preparing" };
   opened.value = false;
-  // L'offre revient en préparation : le menu Candidatures y ramène de nouveau.
-  useJobsMemory().remember(`/candidatures/offres/${offerId}/preparer?doc=postuler`);
   void offerUndo({
     message: "Candidature retirée : l’offre revient en préparation.",
     commit: async (keepalive) => {
@@ -188,7 +184,6 @@ function cancelApplied(): void {
       sent.value = done;
       if (won && firstGoal(won.month, won.count, won.target)) goal.value = won;
       offer.value = before;
-      useJobsMemory().sent(offerId);
     },
   });
 }
@@ -354,7 +349,6 @@ async function load(): Promise<void> {
   ]);
   if (!o.data) {
     notFound.value = true;
-    useJobsMemory().forget(route.fullPath);
     return;
   }
   offer.value = o.data;

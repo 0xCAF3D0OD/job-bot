@@ -15,17 +15,10 @@ describe("audit du 22.10.2026", () => {
     expect(pageTitle(undefined)).toBe("jobA1");
   });
 
-  it("une candidature retenue dont l’offre n’existe plus est oubliée", async () => {
+  it("une préparation retenue avant le 13.11.2026 n’est plus reprise : le menu mène aux offres", async () => {
     localStorage.setItem("jobbot-candidatures", "/candidatures/offres/1109/preparer");
     vi.resetModules();
     const { useJobsMemory } = await import("./composables/useJobsMemory");
-    GET.mockResolvedValue({ response: { status: 404 } });
-    const memory = useJobsMemory();
-    expect(memory.last.value).toBe("/candidatures/offres/1109/preparer");
-    await memory.check();
-    expect(memory.last.value).toBe("/candidatures/offres");
-    memory.remember("/candidatures/offres/12/preparer?doc=cv");
-    memory.forget("/candidatures/offres/12/preparer");
-    expect(memory.last.value).toBe("/candidatures/offres");
+    expect(useJobsMemory().last.value).toBe("/candidatures/offres");
   });
 });
