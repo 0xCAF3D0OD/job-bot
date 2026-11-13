@@ -348,7 +348,9 @@ function closeScreen(): void {
     void router.replace({ query });
   }
 }
-// Le trait bleu de la carte choisie (§8.1) : au centre vertical de la carte, mesuré dans la section.
+// Le trait bleu et son point (§8.1) : toujours mesurés sur la carte choisie, jamais posés en dur. Recalculés au
+// défilement, au redimensionnement, au changement de filtre ou de tri ; masqués quand la carte n’est plus à l’écran
+// ou plus dans la liste.
 const body = ref<HTMLElement | null>(null);
 const linkTop = ref<number | null>(null);
 function placeLink(): void {
@@ -360,16 +362,39 @@ function placeLink(): void {
   }
   const a = root.getBoundingClientRect();
   const b = card.getBoundingClientRect();
+  const centre = b.top + b.height / 2;
+  if (centre < Math.max(0, a.top) || centre > Math.min(window.innerHeight, a.bottom)) {
+    linkTop.value = null;
+    return;
+  }
   // Le trait fait 2 px : son bord haut est 1 px au-dessus du centre.
-  linkTop.value = Math.round(b.top - a.top + b.height / 2) - 1;
+  linkTop.value = Math.round(centre - a.top) - 1;
+}
+let linkFrame = 0;
+function placeLinkSoon(): void {
+  if (linkFrame) return;
+  linkFrame = requestAnimationFrame(() => {
+    linkFrame = 0;
+    placeLink();
+  });
 }
 const linkObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => placeLink());
 watch(body, (el, old) => {
   if (old) linkObserver?.unobserve(old);
   if (el) linkObserver?.observe(el);
 });
-watch([shown, twoColumns], () => void nextTick(placeLink), { flush: "post" });
-onUnmounted(() => linkObserver?.disconnect());
+watch([shown, twoColumns, sections], () => void nextTick(placeLink), { flush: "post" });
+onMounted(() => {
+  // En capture : le défilement de la page comme celui d’un bloc qui défile dans la page.
+  window.addEventListener("scroll", placeLinkSoon, { capture: true, passive: true });
+  window.addEventListener("resize", placeLinkSoon, { passive: true });
+});
+onUnmounted(() => {
+  linkObserver?.disconnect();
+  window.removeEventListener("scroll", placeLinkSoon, { capture: true });
+  window.removeEventListener("resize", placeLinkSoon);
+  if (linkFrame) cancelAnimationFrame(linkFrame);
+});
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
   return (...args: T) => {
     openId.value = null;
