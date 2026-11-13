@@ -184,6 +184,21 @@ describe("Le détail d’Envoyées en cartes (§8.1)", () => {
     await wrapper.find("[data-test=panel-status] input[value=entretien]").setValue(true);
     expect(wrapper.emitted("status")?.[0]?.[1]).toBe("entretien");
   });
+
+  it("« J’ai un entretien » dans « … » ouvre « Nouveau rendez-vous », la candidature déjà choisie (PR 41)", async () => {
+    const wrapper = mountDetail({ id: 14 });
+    await flushPromises();
+    const sheet = () => wrapper.findComponent({ name: "NewMeetingSheet" });
+    expect(sheet().props("open")).toBe(false);
+    await wrapper.find("[data-test=panel-more] button, button[data-test=panel-more]").trigger("click");
+    await wrapper.find("[data-test=panel-interview-new]").trigger("click");
+    expect(sheet().props("open")).toBe(true);
+    expect(sheet().props("applicationId")).toBe(14);
+    sheet().vm.$emit("interview", {});
+    await flushPromises();
+    expect(wrapper.emitted("changed")).toBeTruthy();
+    expect(sheet().props("open")).toBe(false);
+  });
 });
 
 describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {

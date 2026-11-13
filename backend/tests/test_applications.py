@@ -203,6 +203,23 @@ async def test_application_lifecycle(api: AsyncClient, rt: Runtime) -> None:
         f"/api/applications/{app['id']}", json={**body, "interview_place": "x" * 1001}
     )
     assert too_long.status_code == 422
+    # Le format de l'entretien (PR 41) : une valeur connue, gardée quand un autre écran ne
+    # l'envoie pas, effacée avec la date.
+    meeting = {**body, "status": "entretien", "interview_at": "2026-10-12T09:30:00+02:00"}
+    visio = await api.put(
+        f"/api/applications/{app['id']}", json={**meeting, "interview_format": "visio"}
+    )
+    assert visio.json()["interview_format"] == "visio"
+    kept = await api.put(f"/api/applications/{app['id']}", json=meeting)
+    assert kept.json()["interview_format"] == "visio"
+    unknown = await api.put(
+        f"/api/applications/{app['id']}", json={**meeting, "interview_format": "pigeon"}
+    )
+    assert unknown.status_code == 422
+    cleared = await api.put(
+        f"/api/applications/{app['id']}", json={**body, "interview_format": "visio"}
+    )
+    assert cleared.json()["interview_format"] is None
 
     assert (await api.delete(f"/api/applications/{app['id']}")).status_code == 204
     assert await offer_status(rt, offer_id) == "preparing"

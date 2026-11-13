@@ -210,6 +210,9 @@ class ApplicationUpdate(ApplicationBase):
     interview_at: datetime | None = None
     # Lieu ou lien de l'entretien (texte libre : adresse, « Visio », lien Teams…).
     interview_place: Annotated[str, Field(max_length=1000)] | None = None
+    # Format de l'entretien (PR 41). Non envoyé : le format enregistré reste ; sans date
+    # d'entretien, il est effacé.
+    interview_format: Literal["telephone", "visio", "sur_place"] | None = None
 
     @field_validator("interview_place")
     @classmethod
@@ -461,6 +464,10 @@ async def update_application(
             raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
         before = application.orp_month
         values = body.model_dump()
+        if values["interview_at"] is None:
+            values["interview_format"] = None
+        elif "interview_format" not in body.model_fields_set:
+            del values["interview_format"]
         if values["status"] != application.status and values["status_at"] is None:
             values["status_at"] = followups.local_today()
         # Passée à la main en « Relancée » : la date de cette relance (docs/38). Effacée au

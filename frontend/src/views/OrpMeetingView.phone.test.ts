@@ -171,7 +171,7 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
     expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(false);
     await wrapper.get("[data-test=meeting-add]").trigger("click");
-    expect(wrapper.find("[data-test=meeting-sheet] [data-test=meeting-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=new-meeting] [data-test=new-meeting-form]").exists()).toBe(true);
   });
 
   it("un entretien sans rendez-vous ORP : l’entretien à venir, puis le formulaire du rendez-vous", async () => {

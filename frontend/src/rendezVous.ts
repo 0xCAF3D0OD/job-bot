@@ -56,8 +56,16 @@ export function timeAndPlace(iso: string, place: string | null | undefined): str
 }
 
 /** Où a lieu l'entretien : le lieu ou le lien saisi sur la candidature, sinon l'adresse de l'entreprise. */
-export function interviewPlace(application: Pick<Application, "interview_place" | "company_address">): string | null {
-  return application.interview_place?.trim() || application.company_address?.trim() || null;
+export function interviewPlace(application: Pick<Application, "interview_place" | "company_address" | "interview_format">): string | null {
+  // Au téléphone ou en visio (PR 41), l'adresse de l'entreprise n'est pas le lieu de l'entretien.
+  const remote = application.interview_format === "telephone" || application.interview_format === "visio";
+  return application.interview_place?.trim() || (remote ? null : application.company_address?.trim()) || null;
+}
+
+/** Le format de l'entretien en mots (PR 41) ; vide s'il n'a pas été indiqué. */
+export function interviewFormat(application: Pick<Application, "interview_format">): string | null {
+  const names = { telephone: "Téléphone", visio: "Visio", sur_place: "Sur place" } as const;
+  return application.interview_format ? names[application.interview_format] : null;
 }
 
 /** Les trois lignes de la carte ORP, tirées de la feuille (docs/83) ; une partie vide ne s'affiche pas. */

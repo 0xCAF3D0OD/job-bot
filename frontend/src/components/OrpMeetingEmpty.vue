@@ -1,22 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
-import type { components } from "../api/schema";
-import BottomSheet from "./BottomSheet.vue";
-import OrpMeetingForm from "./OrpMeetingForm.vue";
-
 // Aucun rendez-vous à venir sur téléphone (prompt du 10 novembre au soir, PR 28 ; maquette RendezVous, états `vide` et
 // `addSheet`) : une carte d'une ligne, « Aucun rendez-vous à venir · jobA1 prépare ta feuille la veille. », et le bouton
-// teinté « Ajouter ». Le formulaire s'ouvre dans une fenêtre du bas. Plus de personnage ici (décision de Kevin du
-// 11 novembre). Les entretiens s'ajoutent depuis leur candidature.
-type Page = components["schemas"]["MeetingPage"];
-const emit = defineEmits<{ saved: [page: Page] }>();
-
-const adding = ref(false);
-function saved(page: Page): void {
-  adding.value = false;
-  emit("saved", page);
-}
+// teinté « Ajouter ». Il ouvre la fenêtre « Nouveau rendez-vous » de la page (PR 41 : une entreprise ou l'ORP). Plus de
+// personnage ici (décision de Kevin du 11 novembre).
+const emit = defineEmits<{ add: [] }>();
 </script>
 
 <template>
@@ -37,7 +24,7 @@ function saved(page: Page): void {
         class="rdv-empty-add"
         aria-haspopup="dialog"
         data-test="meeting-add"
-        @click="adding = true"
+        @click="emit('add')"
       >
         Ajouter
       </button>
@@ -45,18 +32,6 @@ function saved(page: Page): void {
     <p class="rdv-empty-note">
       Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.
     </p>
-    <BottomSheet
-      :open="adding"
-      title="Prochain rendez-vous ORP"
-      data-test="meeting-sheet"
-      @close="adding = false"
-    >
-      <OrpMeetingForm
-        v-if="adding"
-        sheet
-        @saved="saved"
-      />
-    </BottomSheet>
   </section>
 </template>
 

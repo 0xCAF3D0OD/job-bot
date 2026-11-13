@@ -581,6 +581,8 @@ class Application(Base):
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lieu ou lien de l'entretien (texte libre) ; affiché à la place de l'adresse de l'entreprise.
     interview_place: Mapped[str | None] = mapped_column(Text)
+    # Format de l'entretien (PR 41) : « telephone », « visio », « sur_place » ; vide : non indiqué.
+    interview_format: Mapped[str | None] = mapped_column(Text)
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)
     # Saisie dans Job-Room le … (docs/70 §6) : par l'extension ou « Marquer comme déclarée ».

@@ -116,21 +116,19 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(empty.text()).toContain("Un entretien d’embauche ? Ajoute-le depuis la candidature concernée, dans Envoyées.");
     expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(false);
     expect(wrapper.find("[data-illustration=personnage]").exists()).toBe(false);
-    // Le formulaire n'est plus sur la page : « Ajouter » (teinté, aria-haspopup) l'ouvre dans la fenêtre du bas.
+    // Le formulaire n'est plus sur la page : « Ajouter » (teinté, aria-haspopup) ouvre « Nouveau rendez-vous » (PR 41).
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
     const add = empty.find("[data-test=meeting-add]");
     expect(add.text()).toBe("Ajouter");
     expect(add.attributes("aria-haspopup")).toBe("dialog");
     await add.trigger("click");
-    const sheet = wrapper.find("[data-test=meeting-sheet]");
-    expect(sheet.find(".sheet-title").text()).toBe("Prochain rendez-vous ORP");
-    const form = sheet.find("[data-test=meeting-form]");
-    expect(form.classes()).toContain("rdv-form-sheet");
-    expect(form.find("h3").exists()).toBe(false);
+    const sheet = wrapper.find("[data-test=new-meeting]");
+    expect(sheet.find(".sheet-title").text()).toBe("Nouveau rendez-vous");
+    const form = sheet.find("[data-test=new-meeting-form]");
     expect(form.find("[data-test=date-time-field]").classes()).toContain("dt-field-outlined");
-    expect(form.find("label").text()).toBe("Lieu ou lien (facultatif)");
-    expect(form.find(".form-field-hint").text()).toContain("ORP Renens, rue de Lausanne 35");
-    expect(form.find("[data-test=meeting-save]").text()).toBe("Ajouter le rendez-vous");
+    await sheet.find("[data-test=meeting-kind-orp]").trigger("click");
+    expect(form.find("[data-test=meeting-where]").element.closest(".form-field")?.querySelector("label")?.textContent?.trim()).toBe("Lieu ou lien (facultatif)");
+    expect(sheet.find("[data-test=meeting-save]").text()).toContain("Ajouter le rendez-vous");
     expect(wrapper.find(".face-state").exists()).toBe(false);
     // Sans candidature, le visage de « Pas encore de candidature » prend la place : plus le « 1 ».
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
@@ -150,16 +148,19 @@ describe("Rendez-vous ORP (docs/83)", () => {
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     await wrapper.find("[data-test=meeting-add]").trigger("click");
-    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+    await wrapper.find("[data-test=meeting-kind-orp]").trigger("click");
+    expect(wrapper.find("[data-test=new-meeting-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=sheet-blockers]").text()).toContain("Aucune réponse en 3 mois");
     expect(wrapper.find("[data-test=sheet-missing]").text()).toContain("Terraform");
     expect(wrapper.find("[data-test=sheet-missing]").text()).toContain("12 offres bien notées");
     expect(wrapper.find("[data-test='question-funding:3']").attributes("disabled")).toBeDefined();
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE } });
-    await wrapper.find("[data-test=meeting-form] [data-test=dt-date]").trigger("click");
+    // Date et heure vides au départ, jamais aujourd'hui.
+    expect(wrapper.find("[data-test=new-meeting-form] [data-test=dt-date]").classes()).toContain("dt-pill-empty");
+    await wrapper.find("[data-test=new-meeting-form] [data-test=dt-date]").trigger("click");
     wrapper.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2026-10-22", time: "09:30" });
     await flushPromises();
-    await wrapper.find("[data-test=meeting-form]").trigger("submit");
+    await wrapper.find("[data-test=new-meeting-form]").trigger("submit");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp-meeting", {
       body: { starts_at: new Date("2026-10-22T09:30").toISOString(), place: "", advisor: "" },

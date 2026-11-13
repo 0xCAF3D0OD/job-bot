@@ -8,6 +8,7 @@ import { applicationStatusLabel, colorIndex, companyPlace, initials } from "../f
 import { sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
+import NewMeetingSheet from "./NewMeetingSheet.vue";
 import ApplicationOrp from "./ApplicationOrp.vue";
 import ContactQuickForm from "./ContactQuickForm.vue";
 import ContactsPanel from "./ContactsPanel.vue";
@@ -121,10 +122,19 @@ const findSummary = computed(() => {
   const n = findRows.value.length;
   return `${n} ${n > 1 ? "pistes" : "piste"} chez ${props.application.company}`;
 });
+const meetingOpen = ref(false);
+function meetingAdded(): void {
+  meetingOpen.value = false;
+  emit("changed");
+}
 const menuItems = computed<MoreMenuItem[]>(() => {
   const a = props.application;
   return [
     { label: "Changer le statut", test: "panel-status-open", icon: "pencil", run: () => (statusOpen.value = true) },
+    // PR 41 : le même panneau « Nouveau rendez-vous » que l'onglet Rendez-vous, la candidature déjà choisie.
+    ...(a.status === "refus" || a.status === "engagement"
+      ? []
+      : [{ label: "J’ai un entretien", test: "panel-interview-new", icon: "calendar" as const, run: () => (meetingOpen.value = true) }]),
     { label: "Modifier", test: "panel-edit", icon: "pencil", run: () => emit("edit", a) },
     ...(assistant.available.value
       ? [{
@@ -471,6 +481,13 @@ function onStatus(value: ApplicationStatus): void {
         @changed="emit('changed')"
       />
     </component>
+    <NewMeetingSheet
+      :open="meetingOpen"
+      :applications="[application]"
+      :application-id="application.id"
+      @close="meetingOpen = false"
+      @interview="meetingAdded"
+    />
   </div>
 </template>
 

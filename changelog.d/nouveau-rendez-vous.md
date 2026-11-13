@@ -1,0 +1,1 @@
+Rendez-vous : un seul panneau « Nouveau rendez-vous » pour un entretien avec une entreprise (candidature, format, date, heure, lien, numéro ou adresse) ou un rendez-vous ORP ; la candidature passe en « Entretien »

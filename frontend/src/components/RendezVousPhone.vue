@@ -7,6 +7,7 @@ import {
   agreedLines,
   countdown,
   dateText,
+  interviewFormat,
   interviewPlace,
   meetingsToNote,
   notedMeetings,
@@ -175,7 +176,7 @@ function cal(iso: string): { day: number; month: number } {
           <h3 class="rdv-interview-title">
             {{ item.application.job_title || "Poste non indiqué" }}
           </h3>
-          <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ [item.application.company, timeOfDay(item.at)].filter(Boolean).join(" · ") }}</span>
+          <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ [item.application.company, timeOfDay(item.at), interviewFormat(item.application)].filter(Boolean).join(" · ") }}</span>
           <span
             v-if="interviewPlace(item.application)"
             class="rdv-meta rdv-place"
