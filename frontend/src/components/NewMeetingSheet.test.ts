@@ -120,4 +120,25 @@ describe("Nouveau rendez-vous (PR 41)", () => {
     expect(wrapper.emitted("orp")?.[0]).toEqual([page]);
     wrapper.unmount();
   });
+  it("jamais d’échec silencieux : serveur en erreur ou connexion coupée, le panneau garde la saisie et le dit", async () => {
+    const wrapper = open({ kind: "orp" });
+    await wrapper.setProps({ open: false });
+    await wrapper.setProps({ open: true });
+    await wrapper.get("[data-test=dt-time]").trigger("click");
+    wrapper.findComponent({ name: "DateTimePanel" }).vm.$emit("confirm", { date: "2026-12-02", time: "10:15" });
+    await flushPromises();
+    // Une erreur de validation : `detail` est une liste, pas une phrase à montrer.
+    PUT.mockResolvedValueOnce({ error: { detail: [{ msg: "x" }] } });
+    await wrapper.get("[data-test=new-meeting-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.get("[role=alert].notice").text()).toBe("Le rendez-vous n’est pas enregistré. Ta saisie est gardée, réessaie dans un instant.");
+    PUT.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await wrapper.get("[data-test=new-meeting-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.get("[role=alert].notice").text()).toContain("Connexion perdue : le rendez-vous n’est pas enregistré.");
+    expect(wrapper.emitted("orp")).toBeUndefined();
+    expect(wrapper.emitted("close")).toBeUndefined();
+    expect(wrapper.get("[data-test=dt-time]").text()).toContain("10");
+    wrapper.unmount();
+  });
 });

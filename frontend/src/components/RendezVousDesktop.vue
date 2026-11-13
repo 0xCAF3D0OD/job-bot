@@ -51,7 +51,8 @@ const emit = defineEmits<{
   note: [id: number];
   saved: [page: Page];
   cancel: [];
-  add: [];
+  // « orp » : depuis « Prochain rendez-vous » d'une fiche ORP, le panneau s'ouvre sur l'ORP.
+  add: [kind?: "orp"];
 }>();
 
 const route = useRoute();
@@ -453,7 +454,7 @@ watch(() => props.page, () => void nextTick(measure));
           :target="page.target"
           :next="nextOrp?.kind === 'orp' ? page.meeting : null"
           @saved="emit('saved', $event)"
-          @add="emit('add')"
+          @add="emit('add', 'orp')"
         />
       </article>
 
