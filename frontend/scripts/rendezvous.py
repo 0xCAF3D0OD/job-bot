@@ -292,6 +292,30 @@ async def outcome_sheet(context: BrowserContext) -> list[str]:
     return faults
 
 
+async def outcome_inline(context: BrowserContext) -> list[str]:
+    """« Ce qui a été convenu » dans la fiche d'un rendez-vous ORP passé (à partir de 1024 px) : « Mesures décidées »
+    fait 56 px vide et montre tout un texte long (décision du 13 novembre)."""
+    faults: list[str] = []
+    page = await context.new_page()
+    await page.goto(f"{BASE}/candidatures/rendez-vous-orp")
+    past = page.locator("[data-test^=rdv-item-passe-]").first
+    await past.wait_for(timeout=15000)
+    await past.click()
+    measures = page.locator("[data-test=outcome-inline] [data-test=outcome-measures]")
+    await measures.wait_for(timeout=5000)
+    await measures.fill("")
+    short = (await measures.bounding_box() or {}).get("height", 0)
+    if short != 56:
+        faults.append(f"1440 px, « Mesures décidées » de la fiche : {short} px vide, 56 attendus")
+    await measures.fill("Cours de français professionnel trois demi-journées par semaine, stage de six mois dans une entreprise de la région, programme d’emploi temporaire")
+    await page.wait_for_timeout(300)
+    tall = (await measures.bounding_box() or {}).get("height", 0)
+    if tall <= short or await measures.evaluate("(e) => e.scrollHeight > e.clientHeight + 1"):
+        faults.append(f"1440 px, « Mesures décidées » de la fiche : le champ ne grandit pas avec le texte ({short} px puis {tall} px)")
+    await page.close()
+    return faults
+
+
 async def main() -> int:
     faults: list[str] = []
     async with async_playwright() as p:
@@ -311,6 +335,9 @@ async def main() -> int:
         await context.close()
         context = await browser.new_context(viewport={"width": 900, "height": 800}, reduced_motion="reduce")
         faults += await outcome_sheet(context)
+        await context.close()
+        context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+        faults += await outcome_inline(context)
         await context.close()
         await browser.close()
     for fault in faults:

@@ -232,7 +232,8 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
 .outcome-sheet .sheet-actions { justify-content: flex-end; border-top: 1px solid var(--line); }
 .outcome-sheet .sheet-actions > button { white-space: nowrap; }
 @media (min-width: 600px) and (max-width: 820px) { .outcome-sheet .sheet-actions { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4) 0; } }
-/* « Mesures décidées » : une ligne au départ, le champ grandit avec le texte au lieu de le couper. */
-.outcome-sheet textarea[data-test="outcome-measures"] { min-height: var(--ff-h); }
+/* « Mesures décidées » : une ligne de 56 px au départ (le trait compris, comme le champ commun), le champ grandit avec le
+   texte au lieu de le couper. */
+.outcome-sheet textarea[data-test="outcome-measures"] { min-height: var(--ff-h); padding-block: calc(var(--space-4) - 1px); }
 .outcome-sheet .sheet-actions > button { min-height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 </style>
