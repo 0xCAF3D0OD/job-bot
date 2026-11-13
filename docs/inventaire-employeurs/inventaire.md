@@ -6,10 +6,11 @@ Lu le 2026-11-13 par `scripts/inventaire_employeurs.py`. Définition de « lisib
 - **Strict** (les « à vérifier » comptent comme non lisibles) : 3 sur 40 = **8%** (en dessous du seuil de 50 %).
 - **Provisoire** (les « à vérifier » sont exclus) : 3 sur 33 = **9%** (en dessous du seuil de 50 %).
 - Le chiffre final se compare au seuil après la vérification à la main des lignes « à vérifier ».
-- batiment : 0 lisibles sur 8 employeurs (1 à vérifier)
-- bureau : 2 lisibles sur 13 employeurs (3 à vérifier)
-- informatique : 1 lisibles sur 8 employeurs (1 à vérifier)
-- sante : 0 lisibles sur 13 employeurs (2 à vérifier)
+- Par métier (seuil : au moins 3 lisibles ; un métier en dessous est retiré de l'essai) :
+    - batiment : **0 lisibles** sur 8 employeurs, 1 à vérifier ; strict 0/8 = 0%, provisoire 0/7 = 0% ; seuil de 3 : pas atteint ; 1 au plus si toutes les lignes à vérifier passent
+    - bureau : **2 lisibles** sur 13 employeurs, 3 à vérifier ; strict 2/13 = 15%, provisoire 2/10 = 20% ; seuil de 3 : pas atteint ; 5 au plus si toutes les lignes à vérifier passent
+    - informatique : **1 lisibles** sur 8 employeurs, 1 à vérifier ; strict 1/8 = 12%, provisoire 1/7 = 14% ; seuil de 3 : pas atteint ; 2 au plus si toutes les lignes à vérifier passent
+    - sante : **0 lisibles** sur 13 employeurs, 2 à vérifier ; strict 0/13 = 0%, provisoire 0/11 = 0% ; seuil de 3 : pas atteint ; 2 au plus si toutes les lignes à vérifier passent
 - Logiciel sans flux public (SuccessFactors, Refline, Abacus/umantis, Prospective) : 6 sur 40 (Hirslanden, Losinger Marazzi, CFF, UNIL, EPFL, SICPA)
 
 | Employeur | Métier | Page carrière | Balisage | robots.txt | Conditions | Offres en Vaud ce jour | Verdict | Raison |
@@ -40,11 +41,11 @@ Lu le 2026-11-13 par `scripts/inventaire_employeurs.py`. Définition de « lisib
 | Vaudoise Assurances | bureau | [lien](https://www.vaudoise.ch/fr/carrieres/postes-disponibles) (Softgarden) | oui | autorisé | rien ([page](https://www.vaudoise.ch/fr/a-notre-propos/courtiers/documentations/conditions-generales-assurance)) | ≥14 | lisible | oui ; robots.txt autorisé ; conditions : rien |
 | Retraites Populaires | bureau | [lien](https://www.retraitespopulaires.ch/deja-client/offres) | non | autorisé | rien ([page](https://www.retraitespopulaires.ch/impressum)) | ? | non lisible | pas de balisage JobPosting ni de flux public |
 | BCV | bureau | [lien](https://jobs.bcv.ch/search/?q=&searchResultView=LIST) | non | autorisé | rien ([page](https://www.bcv.ch/fr/home/informations-juridiques.html)) | ? | non lisible | pas de balisage JobPosting ni de flux public |
-| La Poste | bureau |  |  | absent |  |  | à vérifier à la main | page de départ en erreur (HTTP 429) |
+| La Poste | bureau |  |  | absent |  |  | à vérifier à la main | page de départ en erreur (HTTP 429) ; 2e tentative en fin de passage : page de départ en erreur (HTTP 429) |
 | CFF | bureau | [lien](https://company.sbb.ch/de/jobs-karriere/jobs/offene-stellen.html) (SuccessFactors) |  | ambigu |  |  | à vérifier à la main | robots.txt interdit les pages d'offres (https://career5.successfactors.eu/career?company=C0007256361P&site=&lang=de_CH&requestParams=&login_ns=register&navBarLevel=MY_PROFILE&_s.crb=MzN2rfcy%2fIQ53vWrOn40geZ2BGVqZVHHlkvVbUh2IUc%3d) |
 | Migros Vaud | bureau | [lien](https://jobs.migros.ch/fr/nos-entreprises/groupe-migros/postes-vacants) | oui | autorisé | rien ([page](https://jobs.migros.ch/fr/impressum)) | ≥3 | lisible | oui ; robots.txt autorisé ; conditions : rien |
 | Coop | bureau | [lien](https://jobs.coopjobs.ch/?lang=fr) | non | autorisé | page interdite par robots.txt ([page](https://www.coop.ch/fr/entreprise/impressum.html)) | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) ; conditions à vérifier (page interdite par robots.txt) |
-| Nestlé | bureau |  |  | autorisé |  |  | à vérifier à la main | page de départ en erreur (HTTP 403) |
+| Nestlé | bureau |  |  | autorisé |  |  | à vérifier à la main | page de départ en erreur (HTTP 403) ; 2e tentative en fin de passage : page de départ en erreur (HTTP 403) |
 | Philip Morris International | bureau | [lien](https://www.pmi.com/careers/explore-our-job-opportunities) | non | autorisé | rien ([page](https://www.pmi.com/legal/conditions-of-use)) | ? | non lisible | pas de balisage JobPosting ni de flux public |
 | UNIL | bureau | [lien](https://www.unil.ch/unil/en/home/menuinst/travailler/metiers-a-l-unil.html) (SuccessFactors) | non | autorisé | rien ([page](https://www.unil.ch/unil/fr/home/menuinst/universite/cadre-legal-et-reglementaire.html)) | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) ; logiciel SuccessFactors |
 | EPFL | bureau, informatique | [lien](https://careers.epfl.ch/go/Admin_Technical-Staff/504474/) (SuccessFactors) | non | autorisé | rien ([page](https://www.epfl.ch/about/overview/regulations-and-guidelines/disclaimer/)) | ? | non lisible | pas de balisage JobPosting ni de flux public ; logiciel SuccessFactors |
