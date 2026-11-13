@@ -16,5 +16,7 @@ Une décision de Kevin donnée dans la conversation après le 13 novembre passe 
 | 2026-11-13 | Panneau des Alertes sur ordinateur (fiche d'un site, Ajouter une recherche) : 440 px. La planche AlertesOrdinateurSite dit 480, c'est une erreur de la maquette, elle sera corrigée. | Les 480 px de AlertesOrdinateurSite. |
 | 2026-11-13 | Rendez-vous ORP, « Ce qui a été convenu » : le champ « Mesures décidées » grandit avec le texte au lieu de le couper, dans le volet et dans la fiche (ordinateur, à partir de 1024 px). | Le champ d'une ligne des planches. |
 | 2026-11-13 | La planche RendezVous dessine l'ancien champ (48 px, libellé au-dessus) : le champ commun de 56 px à libellé flottant fait foi. La planche sera corrigée. | Le champ de 48 px à libellé au-dessus de la planche RendezVous. |
+| 2026-11-13 | Trier les offres, ordinateur : les flèches des deux touches sous le compteur sont des caractères (← →) dans `kbd`, lus « flèche gauche » et « flèche droite » par un lecteur d'écran. | La règle « une icône à la place de tout caractère » (docs/101), pour ces deux touches seulement. |
+| 2026-11-13 | Trier les offres, ordinateur : marges du livre autour des pages à 8 px en haut et 16 px en bas, retrait droit du message « Annuler » à 8 px (grille de 4 px). Les planches seront alignées. | Les 6 et 14 px du livre et les 6 px du message sur TrierOffresOrdinateurV2. |
 
 `tokens.css` reste la source des couleurs et des tailles : il n'est pas dans le paquet du 13 novembre et n'est pas remplacé.

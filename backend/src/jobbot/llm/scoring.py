@@ -14,15 +14,29 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v7"
+PROMPT_VERSION = "score-v8"
 # score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
 # score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
 # valable, elle n'est pas refaite (« Renoter » la refait, sur demande). score-v6 : la phrase
 # « pourquoi » en deux morceaux (ce qui colle, la cause de l'écart), mis dans l'ordre par la note.
 # score-v7 (prompt du 10 novembre, PR 18) : la note devient la somme de cinq parts, chacune avec sa
 # phrase (« Comment la note est calculée ») ; une note plus ancienne garde son chiffre, sans détail.
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5", "score-v6", "score-v7")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v7.md").read_text("utf-8")
+# score-v8 (lot du 11 novembre au soir, PR 45 et 47) : dans le même appel, l'IA cite les passages
+# de l'annonce qui correspondent au profil ; seules les citations retrouvées dans l'annonce sont
+# gardées (`verified_quotes`). Une note plus ancienne reste valable, sans surlignage.
+COMPATIBLE_VERSIONS = (
+    "score-v2",
+    "score-v3",
+    "score-v4",
+    "score-v5",
+    "score-v6",
+    "score-v7",
+    "score-v8",
+)
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v8.md").read_text("utf-8")
+# Citations de l'annonce : 5 au plus, de 2 à 12 mots chacune (décision de Kevin, 11 novembre).
+QUOTE_MAX = 5
+QUOTE_WORDS = (2, 12)
 # Les cinq parts de la note et leur maximum (total 100), dans l'ordre d'affichage.
 PART_MAX: dict[str, int] = {
     "skills": 40,
@@ -94,6 +108,9 @@ class ScoreOutput(BaseModel):
     # score-v7 : les cinq parts de la note et l'action qui la ferait monter.
     parts: list[ScorePart] = Field(default_factory=list, max_length=10)
     tip: ScoreTip | None = None
+    # score-v8 : les passages de l'annonce qui correspondent au profil. À la réception, il ne reste
+    # que ceux retrouvés dans l'annonce, écrits comme dans l'annonce.
+    quotes: list[str] = Field(default_factory=list)
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -161,6 +178,7 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
+        "quotes": {"type": "array", "items": {"type": "string"}},
         "tip": {
             "anyOf": [
                 {
@@ -205,6 +223,7 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "level_detail",
         "parts",
         "tip",
+        "quotes",
     ],
     "additionalProperties": False,
 }
@@ -390,8 +409,58 @@ def score_parts(output: ScoreOutput) -> tuple[list[ScorePart], int | None]:
     return parts, sum(p.points for p in parts)
 
 
-def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
-    """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
+# Apostrophes courbes et accents utilisés comme apostrophes : équivalents à l'apostrophe droite.
+_APOSTROPHES = "\u2019\u2018\u02bc`\u00b4"
+_SPACES = "\u00a0\u202f\u2007\u2009\u200a\u2060"
+
+
+def _normalized(text: str) -> tuple[str, list[int]]:
+    """Le texte pour la comparaison, et pour chaque caractère sa place dans le texte d'origine :
+    espaces, insécables et retours à la ligne réduits à une espace, casse ignorée, apostrophes
+    droite et courbe équivalentes."""
+    out: list[str] = []
+    places: list[int] = []
+    for place, char in enumerate(text):
+        if char.isspace() or char in _SPACES:
+            if out and out[-1] != " ":
+                out.append(" ")
+                places.append(place)
+            continue
+        low = "'" if char in _APOSTROPHES else char.lower()
+        for piece in low:
+            out.append(piece)
+            places.append(place)
+    if out and out[-1] == " ":
+        out.pop()
+        places.pop()
+    return "".join(out), places
+
+
+def verified_quotes(quotes: list[str], offer_text: str | None) -> list[str]:
+    """Les citations de l'IA retrouvées dans l'annonce, écrites comme dans l'annonce (jamais le
+    texte de l'IA). Une citation introuvable, trop courte ou trop longue est écartée, sans
+    erreur."""
+    source = (offer_text or "")[:MAX_OFFER_CHARS]
+    haystack, places = _normalized(source)
+    found: dict[str, str] = {}
+    for quote in quotes:
+        needle, _ = _normalized(quote)
+        if not QUOTE_WORDS[0] <= len(needle.split()) <= QUOTE_WORDS[1]:
+            continue
+        at = haystack.find(needle)
+        if at < 0 or needle in found:
+            continue
+        found[needle] = source[places[at] : places[at + len(needle) - 1] + 1]
+        if len(found) == QUOTE_MAX:
+            break
+    return list(found.values())
+
+
+def parse_output(
+    text: str, chunks: list[ProfileChunkData], offer_text: str | None = None
+) -> ScoreOutput:
+    """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif, ni retrouvé dans
+    l'annonce (citations)."""
     try:
         output = ScoreOutput.model_validate(json.loads(text))
     except (json.JSONDecodeError, ValidationError) as exc:
@@ -415,6 +484,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
             "keywords_role": _keywords(output.keywords_role, 3),
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),
+            "quotes": verified_quotes(output.quotes, offer_text),
             # Une phrase, nettoyée ; le détail du niveau seulement avec un niveau.
             "why": why_sentence(total, output.why_fit, output.why_gap)
             if output.why_fit or output.why_gap
@@ -438,6 +508,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
                 "level_detail": None,
                 "parts": [],
                 "tip": None,
+                "quotes": [],
             }
         )
 

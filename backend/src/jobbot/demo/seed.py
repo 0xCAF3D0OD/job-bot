@@ -8,6 +8,7 @@ a toujours l'air d'être « cette semaine ». Refuse une base qui contient un vr
 
 import hashlib
 from datetime import date, datetime, time, timedelta
+from itertools import takewhile
 from typing import Any
 
 from sqlalchemy import delete, select, update
@@ -295,6 +296,10 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
         else ("Le poste demande plus de développement" if far_from_dev else None)
     )
     why = spec.why or why_sentence(spec.score, fit, gap) or ""
+    # Les passages de l'annonce retrouvés dans le profil (score-v8) : le début de la liste des
+    # demandes, tant qu'elles sont couvertes, écrit comme dans la description de l'offre.
+    run = list(takewhile(lambda a: a in covered, spec.asks))
+    passages = [f"Vous travaillez avec {', '.join(run)}"] if run else []
     return {
         "score": spec.score,
         "why": (why[0].upper() + why[1:]) or None,
@@ -309,6 +314,7 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
         "summary_partial": False,
         "strengths": strengths,
         "gaps": gaps,
+        "passages": passages,
         "keywords_role": ["Données"] if spec.role else ["Plateforme", "Cloud"],
         "keywords_asks": [{"text": a, "covered": a in covered} for a in spec.asks],
         "keywords_offers": [
