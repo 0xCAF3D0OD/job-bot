@@ -14,5 +14,9 @@ Une décision de Kevin donnée dans la conversation après le 13 novembre passe 
 | 2026-11-13 | Attente de l'Assistant, cloche sans notification, espacement de l'en-tête : version de #574 conservée, la maquette sera alignée dessus. | Les deux premières lignes des « États pas encore dessinés » du §6 du LISEZMOI. |
 | 2026-11-13 | Largeur des volets (code gardé tel quel). 420 px : petit volet ancré à un bouton, avec pastille, sans voile (Nouveau rendez-vous, Ajouter, Pour les formulaires, Compte, Notifications). 440 px : volet standard sur toute la hauteur ; c'est le cas par défaut pour tout nouveau volet. 480 px : réservé à l'Assistant, Pour l'ORP et Compléter le profil ; pas de nouveau volet à 480 sans l'accord de Kevin. | Les largeurs des planches quand elles diffèrent. |
 | 2026-11-13 | Panneau des Alertes sur ordinateur (fiche d'un site, Ajouter une recherche) : 440 px. La planche AlertesOrdinateurSite dit 480, c'est une erreur de la maquette, elle sera corrigée. | Les 480 px de AlertesOrdinateurSite. |
+| 2026-11-13 | Première alerte pendant les premiers pas (accueil) : accord sur le principe, rien n'est codé avant la planche de l'étape (téléphone et ordinateur). « J'ai créé l'alerte » est le bouton principal, « Plus tard » le bouton secondaire. | — |
+| 2026-11-13 | Première alerte pendant les premiers pas : un seul site dans l'étape, jobup. Les autres sites se créent ensuite depuis Mes alertes. | Les quatre sites enchaînés de l'assistant des alertes, pour cette étape. |
+| 2026-11-13 | Première alerte pendant les premiers pas : après « Plus tard », la carte « Premiers pas » d'Aujourd'hui garde l'étape ouverte et ramène au même écran. | — |
+| 2026-11-13 | « Des offres dès maintenant » reste affiché jusqu'à la première offre reçue. | — |
 
 `tokens.css` reste la source des couleurs et des tailles : il n'est pas dans le paquet du 13 novembre et n'est pas remplacé.
