@@ -58,7 +58,8 @@ Plus anciennes, déjà retirées, à supprimer aussi si elles traînent dans le 
   - Assistant : attente de la réponse (avant le premier mot) ;
   - en-tête : cloche sans notification, espacement recherche, cloche, avatar ;
   - écran de fin de candidature : champ « adresse de l'entreprise » ;
-  - Alertes reçues : ligne d'une alerte non reconnue.
+  - Alertes reçues : ligne d'une alerte non reconnue ;
+  - Aujourd'hui : carte « Objectif du mois atteint » (l'écran actuel reste tel quel).
 
 ## 7. Liste des planches
 
