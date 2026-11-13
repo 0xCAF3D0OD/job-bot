@@ -92,6 +92,7 @@ const { reached } = usePlan();
 /* L'anneau de 48 px et son mot en 12 px gras (maquette) ; sans note, « Pas encore notée » sur deux lignes. */
 .list-card-end .score-ring { width: 3rem; height: 3rem; font-size: var(--font-body); }
 .list-card-end .score-ring-worded { gap: var(--card-2); }
-.list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--faint); }
+/* Du texte : le gris secondaire (6,3:1 sur la carte), jamais --faint, réservé à ce qui n’est pas du texte. */
+.list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--text-secondary); }
 .list-card.expired { opacity: 0.6; }
 </style>

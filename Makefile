@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille audit-panneaux audit-menu poids css-inutilise
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-menu poids css-inutilise
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -99,6 +99,8 @@ audit-controles: ## rangées de contrôles de même hauteur et listes dont le te
 audit-panneaux: ## panneau « Ajouter » : fenêtre modale, focus gardé, Échap et clic à l'extérieur, focus rendu au bouton (1440 px ; DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/panneaux.py $(or $(DEMO_URL),http://localhost:5200)
 
+audit-rendez-vous: ## « Nouveau rendez-vous » : choix de la date sans défilement horizontal (1440 à 320 px), ajout annoncé et sélectionné, échec jamais silencieux (DEMO_URL)
+	cd backend && uv run --with playwright python ../frontend/scripts/rendezvous.py $(or $(DEMO_URL),http://localhost:5200)
 audit-menu: ## menu « Candidatures » depuis Mes alertes, Préparer et Relances : la liste des offres (1440 et 390 px ; DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/menu.py $(or $(DEMO_URL),http://localhost:5200)
 

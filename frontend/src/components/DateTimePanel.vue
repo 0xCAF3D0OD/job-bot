@@ -383,3 +383,22 @@ onUnmounted(() => {
     </div>
   </section>
 </template>
+
+<style>
+/* Le sélecteur dans un conteneur étroit (volet de 420 px, feuille du bas, formulaire en colonne) : c'est la largeur
+   du conteneur qui décide, pas celle de la fenêtre (défaut du 13 novembre : deux colonnes dans le volet « Nouveau
+   rendez-vous », contenu plus large que le volet, « Valider » hors de vue). Une seule colonne ; les heures en pastilles
+   de 44 px qui passent à la ligne ; « Valider » collé en bas de la zone qui défile. */
+.dt-panel { container: dt-panel / inline-size; }
+@container dt-panel (max-width: 619px) {
+  .dt-panel-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cal" "time" "confirm"; }
+  .dt-slots { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  .dt-slot { height: var(--target-min); min-height: var(--target-min); }
+  .dt-typed .dt-typed-input { height: var(--target-min); min-height: var(--target-min); }
+  .dt-panel:not(.dt-panel-full) .dt-confirm { position: sticky; bottom: 0; z-index: 1; flex-direction: row; align-items: center; justify-content: space-between; box-shadow: 0 0 0 var(--space-2) var(--surface), 0 var(--space-6) 0 var(--space-2) var(--surface); }
+  .dt-panel:not(.dt-panel-full) .dt-confirm-label { display: none; }
+  /* Le titre répète celui du volet ou de la feuille : gardé pour les lecteurs d'écran (il nomme le sélecteur), retiré de la vue. */
+  .dt-panel:not(.dt-panel-full) .dt-panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .dt-panel:not(.dt-panel-full) .dt-confirm-button { flex: none; min-width: 108px; }
+}
+</style>
