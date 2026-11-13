@@ -104,6 +104,25 @@ onBeforeUnmount(() => {
   returnTo?.focus?.();
 });
 
+// La tabulation tourne dans la feuille : après le dernier contrôle, le premier (et l’inverse avec Maj), au lieu de
+// partir vers la barre du navigateur (WCAG 2.4.3).
+const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1'])";
+function onTab(event: KeyboardEvent): void {
+  const el = dialog.value;
+  if (!el) return;
+  const stops = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (stop) => !stop.hasAttribute("disabled") && !stop.closest("[hidden], [inert]") && (stop.checkVisibility?.() ?? true),
+  );
+  const first = stops[0];
+  const last = stops[stops.length - 1];
+  if (!first || !last) return;
+  const at = document.activeElement;
+  if (event.shiftKey ? at === first || at === el : at === last) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  }
+}
+
 // Un toucher sur le voile (hors du contenu) ferme la feuille.
 function onClick(event: MouseEvent): void {
   if (event.target === dialog.value) emit("close");
@@ -119,6 +138,7 @@ function onClick(event: MouseEvent): void {
     data-test="sheet"
     @cancel.prevent="emit('close')"
     @click="onClick"
+    @keydown.tab="onTab"
   >
     <div class="sheet-inner">
       <header
