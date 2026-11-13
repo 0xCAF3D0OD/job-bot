@@ -1,6 +1,6 @@
-# jobA1, maquette de référence (10 novembre 2026)
+# jobA1, maquettes de référence
 
-Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus.
+Plusieurs paquets coexistent dans ce dossier, chacun ajouté par-dessus le précédent (8, 9, 10 et 11 novembre). Quel paquet fait foi : voir CLAUDE.md ; les décisions données après un paquet sont dans `DECISIONS.md`.
 Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
 
 ## Contenu
@@ -28,10 +28,10 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 
 | Page | Fichier | Sombre |
 |---|---|---|
-| Accueil | AccueilSmile | AccueilSombre |
+| Accueil | AccueilV2 | AccueilV2Sombre |
 | Candidatures, à traiter | Candidatures | CandidaturesSombre |
 | Candidatures, envoyées | Envoyees | EnvoyeesSombre |
-| Candidature envoyée, détail | EnvoyeeDetail | feuilles : EnvoyeeDetailRelance, EnvoyeeDetailDocuments, EnvoyeeDetailContacts |
+| Candidature envoyée, détail | EnvoyeeDetail | feuilles : RelanceV2, EnvoyeeDetailDocuments, EnvoyeeDetailContacts |
 | Envoyées, statut mis à jour par e-mail | EnvoyeesStatut | |
 | Candidatures, rendez-vous (états vue, noter, dp) | RendezVous | RendezVousSombre |
 | Détail d'une offre | Offre | OffreSombre |
@@ -44,7 +44,7 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Ajouter une offre (feuille du bas) | AjouterOffreTel | |
 | Filtres (feuille du bas) | Filtres | |
 | Actions sur une offre | ActionsOffre | |
-| Préparer ma candidature | Preparer | PreparerSombre |
+| Préparer ma candidature | MaCandidatureV2 | MaCandidatureV2Sombre |
 | Assistant | Assistant | |
 | Pour l’ORP (une candidature, à recopier dans Job-Room) | OrpFiche | OrpFicheSombre |
 | Suivi ORP | Orp | OrpSombre |
@@ -57,7 +57,7 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 | Réglages | Reglages | |
 | Premiers pas | OnboardingC | |
 | Connexion | Connexion | ConnexionSombre |
-| Candidature envoyée | CandidatureEnvoyee | |
+| Candidature envoyée | MaCandidatureV2, état « fin » | MaCandidatureV2Sombre |
 | Objectif ORP atteint | ObjectifAtteint | |
 | Aucune offre | AucuneOffre | |
 | Erreur et attente | ErreurConnexion | |
@@ -69,11 +69,12 @@ Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se 
 
 | Page | Fichier | États à tester |
 |---|---|---|
-| Aujourd'hui, jour de travail | AujourdhuiOrdinateurTravailD | menu = compte, notif |
+| Aujourd'hui, jour de travail | AujourdhuiOrdinateurV2 (Sombre : AujourdhuiOrdinateurV2Sombre) | états accueil, vide |
+| Candidature envoyée | CandidatureEnvoyeeOrdinateur | |
 | Aujourd'hui, jour de repos | AujourdhuiOrdinateurReposD | menu = compte, notif |
 | Candidatures (à traiter, envoyées, rendez-vous) | CandidaturesOrdinateurB | tab = tr, en, rv ; q ; menu = compte, notif, actions, filtres, ajouter ; ajt = of, sp ; cmp ; ec ; dp = cal |
 | Envoyées, statut mis à jour par e-mail | CandidaturesOrdinateurStatut | |
-| Sombre (ligne artistique) : Aujourd’hui, Candidatures, Préparer, Bilan | AujourdhuiOrdinateurTravailDSombre, CandidaturesOrdinateurBSombre, PreparerOrdinateurSombre, BilanOrdinateurSombre | les autres écrans suivent la même table de couleurs (MODIFICATIONS_9 §12) |
+| Sombre (ligne artistique) : Aujourd’hui, Candidatures, Préparer, Bilan | AujourdhuiOrdinateurV2Sombre, CandidaturesOrdinateurBSombre, PreparerOrdinateurSombre, BilanOrdinateurSombre | les autres écrans suivent la même table de couleurs (MODIFICATIONS_9 §12) |
 | Préparer, CV prêt et panneau des changements | PreparerOrdinateurCVPret, PreparerOrdinateurCVChangements | §14 |
 | Ajouter (panneau : une offre / candidature spontanée) | CandidaturesOrdinateurAjouter, CandidaturesOrdinateurSpontanee | |
 | Préparer, lettre générée | PreparerOrdinateur | |
@@ -187,8 +188,8 @@ Un même élément a le même dessin et le même comportement sur les deux suppo
 ## Partagés
 | Élément | Téléphone | Ordinateur |
 |---|---|---|
-| Composer | Assistant, Preparer, OffreProvisoire, AjouterOffreTel | AssistantOrdinateur, PreparerOrdinateur, CandidaturesOrdinateurB (ajouter) |
-| Pastilles de suggestions | Preparer, PreparerSombre | PreparerOrdinateur |
+| Composer | Assistant, MaCandidatureV2, OffreProvisoire, AjouterOffreTel | AssistantOrdinateur, PreparerOrdinateur, CandidaturesOrdinateurB (ajouter) |
+| Pastilles de suggestions | MaCandidatureV2, MaCandidatureV2Sombre | PreparerOrdinateur |
 | Logo de l'Assistant sans cercle | Assistant | AssistantOrdinateur |
 | Icônes sans fond | partout | partout |
 | CalendarDate | RendezVous | CandidaturesOrdinateurB, Aujourd'hui, Bilan |
@@ -240,7 +241,7 @@ Note : la maquette `OnboardingC` (écran d'accueil des premiers pas) référence
 
 Ce lot complète le paquet de référence, il ne le remplace pas. Texte : `PROMPT_CLAUDE_CODE_11_NOVEMBRE_TRI_ET_VISUEL.md` (PR 45 à 53). Un fichier de même nom dans `maquettes/` a été remplacé par la version de ce lot (59 écrans). Images : `illustrations/tri/`.
 
-Les anciens écrans `AccueilSmile`, `AccueilSombre`, `AujourdhuiOrdinateurTravailD` et `AujourdhuiOrdinateurReposD` sont marqués « Ancien » : ne plus les implémenter.
+L'ancien écran `AujourdhuiOrdinateurReposD` est marqué « Ancien » : ne plus l'implémenter. `AccueilSmile`, `AccueilSombre` et `AujourdhuiOrdinateurTravailD` ont été retirés le 13 novembre (table ci-dessous).
 
 | Page | Fichier | Sombre |
 |---|---|---|
@@ -258,3 +259,15 @@ Les anciens écrans `AccueilSmile`, `AccueilSombre`, `AujourdhuiOrdinateurTravai
 | Relance, ordinateur (panneau) | RelanceOrdinateurV2 | |
 | Veille de rendez-vous, téléphone | RendezVousFeuilleV2 | RendezVousFeuilleV2Sombre |
 | Veille de rendez-vous, ordinateur (panneau) | RendezVousFeuilleOrdinateurV2 | |
+
+# PLANCHES RETIRÉES LE 13 NOVEMBRE 2026
+
+Kevin a retiré ces 8 planches de la maquette : elles ne font plus foi et ne sont plus dans `maquettes/`. Leurs captures dans `captures/` sont gardées pour l'historique seulement.
+
+| Planche retirée | Remplacée par |
+|---|---|
+| Preparer, PreparerSombre | MaCandidatureV2, MaCandidatureV2Sombre |
+| CandidatureEnvoyee | MaCandidatureV2, état « fin » ; sur ordinateur, CandidatureEnvoyeeOrdinateur |
+| EnvoyeeDetailRelance | RelanceV2 |
+| AccueilSmile, AccueilSombre | AccueilV2, AccueilV2Sombre |
+| AujourdhuiOrdinateurTravailD, AujourdhuiOrdinateurTravailDSombre | AujourdhuiOrdinateurV2, AujourdhuiOrdinateurV2Sombre |
