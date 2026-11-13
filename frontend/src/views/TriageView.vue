@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { onBeforeRouteLeave } from "vue-router";
+import { useRouter } from "vue-router";
 
 import { api, type Offer } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -27,6 +27,8 @@ import { buildExcerpt, matchedPassages, offerText } from "../offerPassages";
 // libellé de touche, pas une icône d'action (docs/101).
 const KEY_LEFT = "\u2190";
 const KEY_RIGHT = "\u2192";
+// L'écart du message « Annuler » au bas de la fenêtre, et l'écart gardé au-dessus de lui (12 px, planche).
+const TOAST_GAP = 12;
 const { phone } = usePhone();
 const { focus } = useFocusMode();
 const { dose, restDay, loaded, load } = useDailyDose();
@@ -123,12 +125,39 @@ function decide(choice: Choice): void {
     },
   });
 }
+// Sur ordinateur, le message « Annuler » est fixé en bas de la fenêtre (planche : 12 px du bord) : il reste visible
+// pendant ses 6 secondes, quelle que soit la longueur de la page. Dans une fenêtre basse, la page défile juste
+// assez pour que les boutons restent au-dessus de lui.
+const toast = ref<HTMLElement | null>(null);
+const foot = ref<HTMLElement | null>(null);
+watch(
+  () => pending.value?.id,
+  async (id) => {
+    if (!id || phone.value) return;
+    await nextTick();
+    const actions = foot.value?.querySelector(".tri-actions");
+    if (!toast.value || !foot.value || !actions) return;
+    // La place du message, calculée et non mesurée : pendant l'entrée de la page, une mesure serait fausse.
+    const top = window.innerHeight - toast.value.offsetHeight - 2 * TOAST_GAP;
+    // Les boutons toujours ; le compteur et les touches aussi, tant que le haut du livre reste sous l'en-tête.
+    const buttons = actions.getBoundingClientRect().bottom - top;
+    const all = foot.value.getBoundingClientRect().bottom - top;
+    const header = document.querySelector("[data-test=app-header]")?.getBoundingClientRect().bottom ?? 0;
+    const room = Math.max(0, (foot.value.previousElementSibling?.getBoundingClientRect().top ?? 0) - header);
+    const by = Math.max(buttons, Math.min(all, room));
+    if (by > 0) window.scrollBy({ top: by, behavior: "instant" });
+  },
+);
+
 useArrowKeys({ left: () => decide("dismiss"), right: () => decide("keep") });
 
 // Quitter la page (« Préparer », « Retour à l’accueil ») envoie d'abord le dernier choix.
-onBeforeRouteLeave(async () => {
+// (Une garde du routeur posée ici, pas `onBeforeRouteLeave` : son import détachait un morceau du routeur et ajoutait
+// 0,4 Ko au premier écran.)
+const leaving = useRouter().beforeEach(async () => {
   await flush();
 });
+onBeforeUnmount(leaving);
 
 onMounted(load);
 </script>
@@ -344,10 +373,14 @@ onMounted(load);
           >
         </template>
       </div>
-      <footer class="tri-foot">
+      <footer
+        ref="foot"
+        class="tri-foot"
+      >
         <div
           v-if="pending"
           :key="pending.id"
+          ref="toast"
           class="tri-toast"
           role="status"
           data-test="triage-toast"
@@ -385,10 +418,9 @@ onMounted(load);
         <p
           v-if="!phone"
           class="tri-keys"
-          aria-hidden="true"
           data-test="triage-keys"
         >
-          <kbd>{{ KEY_LEFT }}</kbd>Écarter<kbd>{{ KEY_RIGHT }}</kbd>Garder
+          <kbd><span aria-hidden="true">{{ KEY_LEFT }}</span><span class="visually-hidden">flèche gauche</span></kbd>Écarter<kbd><span aria-hidden="true">{{ KEY_RIGHT }}</span><span class="visually-hidden">flèche droite</span></kbd>Garder
         </p>
         <div class="tri-actions">
           <button
@@ -587,5 +619,11 @@ onMounted(load);
 .tri:not(.tri-phone) .tri-actions button { min-height: var(--t-btn-wide); }
 .tri:not(.tri-phone) .tri-counter { order: 2; }
 .tri:not(.tri-phone) .tri-keys { order: 3; margin-top: calc(var(--space-2) * -1); }
-.tri:not(.tri-phone) .tri-toast { order: 4; min-height: var(--t-toast-wide); padding-left: var(--space-5); }
+/* Le message « Annuler » : fixé en bas de la fenêtre, à 12 px du bord (planche), 440 px de large. La page garde sous
+   les touches la place du message et de ses deux écarts, pour qu'il ne recouvre jamais rien en bas de page. */
+.tri:not(.tri-phone) .tri-toast {
+  position: fixed; left: 50%; bottom: var(--space-3); z-index: 4; box-sizing: border-box; width: min(var(--t-actions), calc(100vw - var(--space-8)));
+  min-height: var(--t-toast-wide); padding-left: var(--space-5); transform: translateX(-50%);
+}
+.tri:not(.tri-phone) { padding-bottom: calc(var(--t-toast-wide) + var(--space-6)); }
 </style>

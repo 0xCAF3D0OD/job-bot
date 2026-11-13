@@ -138,6 +138,11 @@ for (const [name, limit] of Object.entries(LIMITS)) {
   );
 }
 
+// Les polices (woff2, déjà compressées) : relevées pour le tableau de poids des PR, sans limite. Aucune n'est
+// préchargée : le navigateur ne télécharge une police que si un texte affiché l'utilise.
+const fonts = walk(DIST).filter((file) => /\.woff2?$/i.test(file));
+console.log(`    ${"polices".padEnd(17)}${kb(sum(fonts).raw).padStart(10)}   (brut, sans limite : ${fonts.map((file) => `${file.replace(/^assets\//, "").replace(/-[\w-]{8}\./, ".")} ${kb(sizes(file).raw)}`).join(", ")})`);
+
 // Les illustrations en WebP : une image d'un dossier d'illustrations, ou importée par le code (assets/), dans un
 // autre format fait échouer le budget.
 const notWebp = images.filter((file) => (ILLUSTRATIONS.test(file) || file.startsWith("assets/")) && !/\.(webp|svg)$/i.test(file));

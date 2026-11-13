@@ -99,6 +99,9 @@ defineExpose({ focus: () => root.value?.focus() });
    globale « .sent-screen » (écran poussé du téléphone) ne s'applique pas. */
 @media (min-width: 821px) { .tri-done :deep(.sent-screen) { position: static; overflow: visible; background: none; } }
 @media (min-width: 1024px) { .tri-done :deep(.sent-screen-actions) { gap: var(--space-3); } }
+/* Planche FinDuTriOrdinateur : l'ensemble est centré dans la hauteur qui reste sous l'en-tête (24 px en haut, 48 px
+   en bas), pas collé en haut de la page. */
+@media (min-width: 1024px) { .tri-done :deep(.sent-screen) { min-height: calc(100dvh - var(--header-h)); justify-content: center; padding-bottom: var(--space-12); } }
 .tri-done-list { width: 100%; box-sizing: border-box; margin: var(--space-2) 0 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); text-align: left; }
 .tri-done-list li { display: flex; align-items: center; gap: var(--space-3); min-height: var(--td-row); padding: 0 var(--space-2) 0 var(--space-4); }
 .tri-done-list li + li { border-top: 1px solid var(--tri-rule); }

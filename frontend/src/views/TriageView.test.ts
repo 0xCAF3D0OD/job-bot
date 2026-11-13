@@ -115,7 +115,7 @@ describe("Trier les offres (PR 45)", () => {
     expect([keep.element.tagName, keep.text(), keep.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Garder", "ArrowRight"]);
     expect([dismiss.element.tagName, dismiss.text(), dismiss.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Écarter", "ArrowLeft"]);
     // Sur ordinateur, les deux raccourcis sont affichés sous le compteur (touches dessinées).
-    expect(wrapper.find("[data-test=triage-keys]").text().replace(/\s+/g, " ")).toBe("←Écarter→Garder");
+    expect(wrapper.find("[data-test=triage-keys]").text().replace(/\s+/g, " ")).toBe("←flèche gaucheÉcarter→flèche droiteGarder");
     await keep.trigger("click");
     await flushPromises();
     const toast = wrapper.find("[data-test=triage-toast]");

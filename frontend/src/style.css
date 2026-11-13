@@ -3609,7 +3609,7 @@ main:focus { outline: none; }
 /* « Candidature notée » (C9) : le visage, la phrase, l'objectif ORP, puis « Offre suivante » et « Annuler ». */
 /* « C'est fait ! » (ObjectifAtteint, B10 à B12) : le feston et le visage, « à faire » barré une fois, la phrase
    manuscrite, puis l'export et l'accueil en bas. La police n'est chargée que si un titre manuscrit s'affiche ; un seul
-   sous-ensemble (3,8 Ko) pour « C'est fait ! » et les fins de titre des premiers pas (O3, 11b). */
+   sous-ensemble (23 Ko : minuscules, chiffres, accents) pour « C’est fait ! », les fins de titre des premiers pas (O3, 11b) et les titres du tri. */
 @font-face { font-family: "Caveat Brush"; src: url("./assets/fonts/caveat-brush-titres.woff2?no-inline") format("woff2"); font-display: swap; }
 .goal-reached { position: relative; display: flex; flex-direction: column; align-items: center; max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-5) var(--space-6); box-sizing: border-box; text-align: center; color: var(--text-tertiary); }
 .goal-reached-close { position: absolute; top: var(--space-3); right: var(--space-2); width: var(--btn-tertiary); height: var(--btn-tertiary); color: var(--text); }
