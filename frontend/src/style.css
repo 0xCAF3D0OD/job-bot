@@ -1556,6 +1556,10 @@ button, .button-link { max-width: 100%; }
 .side-panel-head h2 { margin: 0; font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-panel-head .side-panel-close { width: 48px; height: 48px; }
 .side-panel-body { flex: 1; overflow-y: auto; padding: var(--space-2) var(--space-6) var(--space-6); display: grid; align-content: start; gap: var(--space-4); }
+.side-panel-titles { --eyebrow-gap: 2px; flex: 1; min-width: 0; }
+.side-panel-titles h2 { margin-top: var(--eyebrow-gap); }
+.side-panel-eyebrow { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.side-panel-foot { flex: none; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-6) var(--space-6); border-top: 1px solid var(--line); }
 .side-slide-enter-active, .side-slide-leave-active { transition: transform 250ms cubic-bezier(.2,.8,.2,1), opacity 250ms cubic-bezier(.2,.8,.2,1); }
 .side-slide-enter-from, .side-slide-leave-to { transform: translateX(40px); opacity: 0; }
 .side-fade-enter-active, .side-fade-leave-active { transition: opacity 0.22s ease; }

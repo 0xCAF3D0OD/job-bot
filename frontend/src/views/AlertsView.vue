@@ -58,9 +58,20 @@ async function backToSummary(): Promise<void> {
   await load();
 }
 
+// Ordinateur (planche AlertesOrdinateurSite, paquet du 13 novembre) : le panneau « Alerte <site> » s'ouvre à droite,
+// au-dessus de la page, qui ne change pas ; le téléphone garde le pas à pas en pleine page.
+const deskFocus = ref<{ site: string; terms: string } | null>(null);
 function create(site: string, terms: string): void {
+  if (!phone.value) {
+    deskFocus.value = { site, terms };
+    return;
+  }
   focus.value = { site, terms };
   mode.value = "wizard";
+}
+async function deskDone(): Promise<void> {
+  deskFocus.value = null;
+  await load();
 }
 
 // Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même.
@@ -276,6 +287,7 @@ onMounted(async () => {
         <AlertsWizard
           :page="page"
           :focus="focus"
+          :desk="!phone"
           @updated="page = $event"
           @done="backToSummary"
         />
@@ -317,6 +329,15 @@ onMounted(async () => {
         <ReceivedAlerts />
         <FirstOffers where="alerts" />
       </template>
+      <AlertsWizard
+        v-if="!phone && deskFocus"
+        :key="`${deskFocus.terms}-${deskFocus.site}`"
+        :page="page"
+        :focus="deskFocus"
+        desk
+        @updated="page = $event"
+        @done="deskDone"
+      />
     </template>
     <!-- Des blocs de chargement gardent la place (règles §6, 1.6.22). -->
     <LoadingBlocks
