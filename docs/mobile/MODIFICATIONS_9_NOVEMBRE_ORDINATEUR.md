@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Version ordinateur, corrections du 9 novembre 2026
 
 Ce document prime sur tout le reste pour la version ordinateur (largeur > 820 px).

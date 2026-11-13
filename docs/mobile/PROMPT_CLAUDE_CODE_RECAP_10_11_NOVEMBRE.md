@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # jobA1, récapitulatif de tout ce qui est demandé depuis le 10 novembre au soir (PR 25 à 44)
 
 Ce paquet regroupe les 5 prompts du 10 au soir au 11 novembre et toutes les maquettes concernées, **dans leur dernière version**. Installe-le dans `docs/mobile/` par-dessus l'existant. Il prime sur les paquets précédents pour ces points.

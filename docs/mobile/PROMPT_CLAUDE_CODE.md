@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt pour Claude Code : maquette jobA1 du 8 novembre 2026
 
 Dépôt : `0xCAF3D0OD/job-bot` (app Vue 3 + Vite, `frontend/`).

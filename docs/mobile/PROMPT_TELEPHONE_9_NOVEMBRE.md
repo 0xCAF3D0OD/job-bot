@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt pour Claude Code : téléphone, version validée du 9 novembre 2026
 
 Remplace `docs/mobile/` par le contenu de `jobA1_maquette_2026-11-08.zip` (maquettes, captures, LISEZMOI, MODIFICATIONS_8_NOVEMBRE_SOIR.md, PROMPT_CLAUDE_CODE.md, outils/). Copie `illustrations/personnage/` dans `frontend/public/personnage/` (mêmes noms ; nouveaux : les 4 bustes et `perso-05-assis`).

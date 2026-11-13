@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt Claude Code, 10 novembre 2026
 
 À installer par-dessus le paquet du 9 novembre. Ce fichier prime sur les précédents pour les points ci-dessous.

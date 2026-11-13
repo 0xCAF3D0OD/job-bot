@@ -1,14 +1,14 @@
 import { ref } from "vue";
 
-import { api } from "../api/client";
-
 // Dernière page de la rubrique Candidatures (docs/19, complément) : en revenant par le menu,
-// on retrouve la candidature commencée, ou l'onglet quitté. Gardée dans ce navigateur.
+// on retrouve l'onglet quitté. Gardée dans ce navigateur.
 const KEY = "jobbot-candidatures";
 const DEFAULT = "/candidatures/offres";
-const PREPARATION = /^\/candidatures\/offres\/(\d+)\/preparer/;
-// Mes alertes e-mail n'est jamais retenue (lot 11.4) : le menu ramène toujours à la liste, avec l'onglet ouvert.
-const SKIPPED = /^\/candidatures\/alertes(?:[/?#]|$)/;
+// Pages jamais retenues : Mes alertes e-mail (lot 11.4), Préparer et Relances (Kevin, 13.11.2026). Sinon, sur
+// l'une d'elles, « Candidatures » dans le menu mène à la page déjà ouverte et le clic ne fait rien.
+const SKIPPED = /^\/candidatures\/(?:alertes|relances|offres\/\d+\/preparer)(?:[/?#]|$)/;
+// Depuis Préparer et Relances, le menu ramène toujours à la liste des offres.
+const TO_OFFERS = /^\/candidatures\/(?:relances|offres\/\d+\/preparer)(?:[/?#]|$)/;
 
 function read(): string {
   try {
@@ -35,25 +35,10 @@ export function useJobsMemory() {
     if (fullPath.startsWith("/candidatures/") && !SKIPPED.test(fullPath)) write(fullPath);
   }
 
-  // Candidature envoyée : plus rien à reprendre, le menu ramène au suivi.
-  function sent(offerId: number): void {
-    const match = PREPARATION.exec(last.value);
-    if (match && Number(match[1]) === offerId) write("/candidatures/suivi");
+  // Le lien « Candidatures » du menu, vu depuis la page ouverte.
+  function menuLink(currentPath: string): string {
+    return TO_OFFERS.test(currentPath) ? DEFAULT : last.value;
   }
 
-  // Une page retenue qui n'existe plus (offre supprimée, démo refaite chaque nuit) : le menu
-  // ramène aux Offres plutôt qu'à « Cette offre n'existe plus » (audit du 22.10.2026).
-  function forget(fullPath: string): void {
-    if (last.value === fullPath || last.value.split("?")[0] === fullPath.split("?")[0]) write("/candidatures/offres");
-  }
-
-  // Au chargement : une candidature retenue dont l'offre n'existe plus est oubliée tout de suite.
-  async function check(): Promise<void> {
-    const match = PREPARATION.exec(last.value);
-    if (!match) return;
-    const { response } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: Number(match[1]) } } });
-    if (response?.status === 404) write(DEFAULT);
-  }
-
-  return { last, remember, sent, forget, check };
+  return { last, remember, menuLink };
 }
