@@ -528,6 +528,19 @@ OFFERS = [
         days_ago=4,
         rate=(40, 40),
     ),
+    # Pas encore notée : la carte « Pas encore notée » se voit et se vérifie dans la démo
+    # (contraste, WCAG 1.4.3). Dernière de la liste, pour garder les numéros ; pas la plus
+    # récente, parce que les audits (grille.py, telephone.py) ouvrent la première offre de la
+    # liste et y attendent une note.
+    OfferSpec(
+        "o37",
+        "Ingénieur·e systèmes Linux",
+        "Maquette Mobilité SA",
+        "Lausanne",
+        "jobup",
+        None,
+        days_ago=2,
+    ),
 ]
 
 # Candidatures saisies à la main (sans offre reçue par alerte), pour l'historique ORP : le
