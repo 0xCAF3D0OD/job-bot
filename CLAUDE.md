@@ -9,4 +9,5 @@
     3. le dessin des planches du paquet ;
     4. le texte des prompts, du plus récent au plus ancien.
     Un écran ou un état dessiné nulle part ne s'invente pas : s'arrêter et demander la maquette.
+  - Contrôle de conformité (décidé le 2026-11-13) : toute PR qui touche l'interface est comparée, avant d'être ouverte, aux planches du paquet du 13 novembre, téléphone et ordinateur, clair et sombre. Son corps contient une section « Conformité maquette du 13.11 » qui liste les planches comparées et chaque écart restant. Un écart n'est permis que s'il s'appuie sur une ligne de docs/mobile/DECISIONS.md ou sur une planche manquante (dans ce cas, s'arrêter et la demander). Une PR déjà ouverte est vérifiée de la même façon avant sa fusion.
 - Données des utilisateurs : toute modification qui lit, écrit, envoie, journalise ou efface une donnée d'un utilisateur suit docs/regles-securite-donnees.md. La PR cite les règles concernées (R-1). Une règle qu'on ne peut pas suivre se signale dans la PR et va dans les « Écarts connus » (§14).

@@ -10,5 +10,6 @@ Une décision de Kevin donnée dans la conversation après le 13 novembre passe 
 | 2026-11-13 | Téléphone, Ma candidature : la ligne "modèle · langue · Changer" de PreparerMiseEnPage est conservée. MaCandidatureV2 sera complétée. | L'absence de cette ligne sur MaCandidatureV2. |
 | 2026-11-13 | Téléphone, échec de l'écriture de la lettre ou du CV : même carte et même texte que PreparerOrdinateurLettreVide (« La lettre n'a pas pu être écrite », l'explication, « Réessayer »). Pas de nouveau dessin. | L'état d'échec, dessiné nulle part sur téléphone. |
 | 2026-11-13 | Ordinateur, étape Postuler : la ligne du certificat dans « À joindre » est conservée. PreparerOrdinateurPostuler sera complétée. | L'absence de cette ligne sur PreparerOrdinateurPostuler. |
+| 2026-11-13 | Chaque PR d'interface est vérifiée contre le paquet du 13 novembre et porte une section « Conformité maquette du 13.11 » (règle dans CLAUDE.md). | — |
 
 `tokens.css` reste la source des couleurs et des tailles : il n'est pas dans le paquet du 13 novembre et n'est pas remplacé.
