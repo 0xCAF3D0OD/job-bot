@@ -58,8 +58,7 @@ Plus anciennes, déjà retirées, à supprimer aussi si elles traînent dans le 
   - Assistant : attente de la réponse (avant le premier mot) ;
   - en-tête : cloche sans notification, espacement recherche, cloche, avatar ;
   - écran de fin de candidature : champ « adresse de l'entreprise » ;
-  - Alertes reçues : ligne d'une alerte non reconnue ;
-  - raccourcis 1, 2 et 4 de la préparation de candidature.
+  - Alertes reçues : ligne d'une alerte non reconnue.
 
 ## 7. Liste des planches
 
