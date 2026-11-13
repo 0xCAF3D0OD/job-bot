@@ -12,7 +12,7 @@ Sans alerte e-mail, jobA1 ne reçoit aucune offre. Google Emplois trouve les sie
 
 > Seuils et périmètre fixés par Kevin le **2026-11-13, avant le résultat**. Un premier passage du 13.11, lancé avant ces seuils, était faux (le script ne suivait pas les liens vers le logiciel de recrutement : 27 employeurs sur 35 « inconnus ») : il est écarté.
 
-**Périmètre** : Vaud ; quatre métiers (santé, bâtiment, bureau, informatique) ; 41 employeurs dans `docs/inventaire-employeurs/employeurs-vaud.csv`. Informatique, ajoutés par Kevin : ELCA, Kudelski / Nagravision, Logitech, Nexthink, SICPA, EPFL, État de Vaud (DGNSI : même page d'offres que l'État de Vaud), Swisscom (sites vaudois). Un employeur sans page lisible ou sans offre en Vaud est noté tel quel, jamais remplacé sans accord.
+**Périmètre** : Vaud ; quatre métiers (santé, bâtiment, bureau, informatique) ; 40 employeurs dans `docs/inventaire-employeurs/employeurs-vaud.csv` (santé 13, bâtiment 8, bureau 13, informatique 8 ; l'État de Vaud et l'EPFL comptent en bureau et en informatique, une seule fois dans le total). Informatique, ajoutés par Kevin : ELCA, Kudelski / Nagravision, Logitech, Nexthink, SICPA, EPFL, État de Vaud (DGNSI : même page d'offres que l'État de Vaud), Swisscom (sites vaudois). Un employeur sans page lisible ou sans offre en Vaud est noté tel quel, jamais remplacé sans accord.
 
 **Seuils**
 
@@ -23,11 +23,15 @@ Sans alerte e-mail, jobA1 ne reçoit aucune offre. Google Emplois trouve les sie
 
 En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pas de sources pour rattraper.
 
-**« Lisible »**, les trois à la fois :
+**Trois verdicts** (définition stricte gardée, complétée le 13.11.2026) :
 
-1. balisage `JobPosting` complet (titre, lieu, date) sur les offres lues, ou flux public d'un logiciel du cas 1 (Personio, Greenhouse, Lever, Recruitee, Workable, SmartRecruiters, Ashby) ; un balisage incomplet (« partiel ») ne suffit pas ;
-2. robots.txt autorise les pages (absent = autorisé) ;
-3. conditions d'utilisation trouvées, sans phrase qui interdit la lecture automatique ; « pas de page trouvée » = non lisible tant qu'on ne l'a pas vérifiée à la main.
+- **lisible**, les trois à la fois : balisage `JobPosting` complet (titre, lieu, date) sur les offres lues, ou flux public d'un logiciel du cas 1 (Personio, Greenhouse, Lever, Recruitee, Workable, SmartRecruiters, Ashby) ; robots.txt qui autorise (absent = autorisé) ; conditions d'utilisation trouvées, sans phrase qui interdit la lecture automatique ;
+- **non lisible** : balisage absent ou incomplet (« partiel »), offres affichées seulement par JavaScript (pas de navigateur piloté), robots.txt qui interdit la page carrières, ou conditions qui interdisent ;
+- **à vérifier à la main** : conditions introuvables, illisibles ou interdites d'accès par robots.txt ; robots.txt injoignable, ou qui permet la liste mais pas les pages d'offres (« ambigu ») ; page de départ en erreur.
+
+En haut du tableau, deux pourcentages : **strict** (les « à vérifier » comptent comme non lisibles) et **provisoire** (ils sont exclus du calcul). Kevin vérifie ces lignes à la main ; le chiffre final, après vérification, se compare au seuil de 50 %.
+
+**Rythme** : 2 s au moins entre deux requêtes sur un même site, plus si son `Crawl-delay` le demande (CHUV : 5 s, EHC : 10 s) ; par employeur, au plus 41 pages (page de départ, 3 liens suivis, 6 fichiers du plan du site, 30 offres ou un flux, la page des conditions), plus un robots.txt par site visité. Une page interdite par robots.txt n'est jamais demandée ; si c'est la page de départ, une page d'offre ou le flux, la lecture de l'employeur s'arrête aussitôt.
 
 **Le script** (`scripts/inventaire_employeurs.py`, sans effet sur l'app ni la base) : pour chaque employeur, robots.txt, puis au plus 3 liens suivis depuis l'adresse de départ jusqu'à la liste des offres (liens vers un logiciel connu d'abord, puis « offres d'emploi », « postes vacants »…), le plan du site quand la liste est dessinée en JavaScript, au plus 30 pages d'offres lues ou le flux public, la page des conditions. Tableau `inventaire.md` (et `.csv`) : employeur, métier, page carrière et logiciel, balisage (oui / partiel / non / flux), robots.txt (autorisé / interdit / absent), conditions (avec la phrase trouvée), offres en Vaud ce jour, verdict et raison, puis le résumé contre le seuil de 50 %.
 
@@ -38,7 +42,7 @@ En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pa
 **Où le lancer** : sur le Mac de Kevin (la machine de Claude ne peut pas ouvrir ces sites) :
 
 ```
-cd ~/Documents/job-bot && git pull && python3 scripts/inventaire_employeurs.py
+cd ~/Documents/job-bot && git pull && python3 scripts/inventaire_employeurs.py --contact contact@joba1.ch
 ```
 
 ## 3. Étape 2 (à valider après l'inventaire) : règle déjà décidée

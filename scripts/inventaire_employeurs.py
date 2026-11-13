@@ -500,6 +500,7 @@ class Employer:
     offres_vaud: str = ""
     verdict: str = ""
     raison: str = ""
+    raison_balisage: str = ""
     exemples: list[str] = field(default_factory=list)
 
 
@@ -516,6 +517,8 @@ def find_list_page(start: Page, web: Polite) -> tuple[Page, list[str], list[dict
             if url.rstrip("/") in visited:
                 continue
             visited.add(url.rstrip("/"))
+            if not web.allowed(url):
+                continue  # jamais demandée ; la page de départ et les offres, elles, arrêtent la lecture
             nxt = web.get(url)
             if nxt is not None and nxt.status == 200:
                 page = nxt
@@ -554,7 +557,7 @@ def sitemap_offers(page: Page, web: Polite) -> list[str]:
 def inspect(employer: Employer, web: Polite) -> Employer:
     rules = web.rules(employer.url)
     if rules is None:
-        return verdict(employer, robots="injoignable", raison="site injoignable")
+        return verdict(employer, robots="injoignable", raison="robots.txt injoignable (site en panne ?)", check=True)
     state = web.robots_state.get(web.host(employer.url), "")
     if not web.allowed(employer.url):
         return verdict(employer, robots="interdit", raison="robots.txt interdit la page carrières")
@@ -563,7 +566,7 @@ def inspect(employer: Employer, web: Polite) -> Employer:
     start = web.get(employer.url)
     if start is None or start.status != 200:
         status = start.status if start else "?"
-        return verdict(employer, raison=f"page de départ en erreur (HTTP {status})")
+        return verdict(employer, raison=f"page de départ en erreur (HTTP {status})", check=True)
     terms = terms_link(start)
 
     page, offers, found = find_list_page(start, web)
@@ -578,6 +581,8 @@ def inspect(employer: Employer, web: Polite) -> Employer:
     account = feed_account(employer.logiciel, page.url, *[u for u, _ in links(page)]) if case == "1" else None
     if account:
         _pattern, url_of, parse = FEEDS[employer.logiciel]
+        if not web.allowed(url_of(account)):
+            return verdict(employer, robots="ambigu", raison=f"robots.txt interdit le flux {employer.logiciel}", check=True)
         feed = web.get(url_of(account))
         if feed is not None and feed.status == 200:
             places = parse(feed.text)
@@ -589,6 +594,9 @@ def inspect(employer: Employer, web: Polite) -> Employer:
         if not found and not offers:
             offers = sitemap_offers(page, web)
         for url in offers[:MAX_OFFERS] if not found else []:
+            if not web.allowed(url):
+                # Arrêt immédiat : la liste est permise mais pas les offres.
+                return verdict(employer, robots="ambigu", raison=f"robots.txt interdit les pages d'offres ({url})", check=True)
             detail = web.get(url)
             if detail is None or detail.status != 200:
                 continue
@@ -606,6 +614,11 @@ def inspect(employer: Employer, web: Polite) -> Employer:
             employer.balisage = "partiel"
         else:
             employer.balisage = "non"
+            if not offers and not found:
+                employer.raison_balisage = (
+                    "offres affichées par JavaScript" if employer.logiciel == "Workday"
+                    else "aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?)"
+                )
 
     employer.offres_lues = len(places) if places else len(marked)
     vaud = [f"{t} ({p.strip()})" for t, p, c in places if in_vaud(p, c)]
@@ -627,26 +640,44 @@ def inspect(employer: Employer, web: Polite) -> Employer:
     return verdict(employer)
 
 
-def verdict(employer: Employer, robots: str = "", raison: str = "") -> Employer:
-    """Lisible = balisage complet ou flux public, robots.txt qui autorise, conditions relues sans interdiction."""
+LISIBLE, NON_LISIBLE, A_VERIFIER = "lisible", "non lisible", "à vérifier à la main"
+
+
+def verdict(employer: Employer, robots: str = "", raison: str = "", check: bool = False) -> Employer:
+    """Trois verdicts (décision du 13.11.2026) :
+
+    - non lisible : ni balisage complet ni flux public, ou robots.txt interdit la page carrières,
+      ou les conditions interdisent la lecture automatique ;
+    - à vérifier à la main : conditions introuvables ou illisibles, robots.txt injoignable ou qui
+      permet la liste mais pas les offres, page de départ en erreur ;
+    - lisible : tout le reste, c'est-à-dire balisage complet ou flux, robots.txt et conditions qui le permettent.
+    """
     if robots:
         employer.robots = robots
-    reasons = [raison] if raison else []
-    if not raison:
-        if not (employer.balisage == "oui" or employer.balisage.startswith("flux")):
-            what = {"partiel": "balisage JobPosting incomplet (titre, lieu ou date manquant)",
-                    "non": "pas de balisage JobPosting ni de flux public"}.get(employer.balisage, "balisage inconnu")
-            if employer.logiciel:
-                what += f" ; logiciel {employer.logiciel}"
-            reasons.append(what)
-        if employer.conditions == "interdite":
-            reasons.append("les conditions interdisent la lecture automatique")
-        elif employer.conditions not in ("rien", "permise"):
-            reasons.append(f"conditions à vérifier ({employer.conditions})")
-    employer.verdict = "non lisible" if reasons else "lisible"
-    employer.raison = " ; ".join(reasons) if reasons else (
-        f"{employer.balisage} ; robots.txt {employer.robots} ; conditions : {employer.conditions}"
-    )
+    if raison:
+        employer.verdict = A_VERIFIER if check else NON_LISIBLE
+        employer.raison = raison
+        return employer
+    blocking, to_check = [], []
+    if not (employer.balisage == "oui" or employer.balisage.startswith("flux")):
+        what = employer.raison_balisage or {
+            "partiel": "balisage JobPosting incomplet (titre, lieu ou date manquant)",
+            "non": "pas de balisage JobPosting ni de flux public",
+        }.get(employer.balisage, "balisage inconnu")
+        if employer.logiciel and employer.logiciel not in what:
+            what += f" ; logiciel {employer.logiciel}"
+        blocking.append(what)
+    if employer.conditions == "interdite":
+        blocking.append("les conditions interdisent la lecture automatique (phrase à relire)")
+    elif employer.conditions not in ("rien", "permise"):
+        to_check.append(f"conditions à vérifier ({employer.conditions})")
+    if blocking:
+        employer.verdict, employer.raison = NON_LISIBLE, " ; ".join(blocking + to_check)
+    elif to_check:
+        employer.verdict, employer.raison = A_VERIFIER, " ; ".join(to_check)
+    else:
+        employer.verdict = LISIBLE
+        employer.raison = f"{employer.balisage} ; robots.txt {employer.robots} ; conditions : {employer.conditions}"
     return employer
 
 
@@ -659,18 +690,31 @@ def metiers(employer: Employer) -> list[str]:
     return [m.strip() for m in employer.metier.split(";") if m.strip()]
 
 
+def _share(part: int, whole: int) -> str:
+    return f"{part / whole:.0%}" if whole else "—"
+
+
 def summary(employers: list[Employer]) -> list[str]:
     total = len(employers)
-    readable = sum(1 for e in employers if e.verdict == "lisible")
-    share = readable / total if total else 0
+    readable = sum(1 for e in employers if e.verdict == LISIBLE)
+    check = sum(1 for e in employers if e.verdict == A_VERIFIER)
+    strict = readable / total if total else 0
+    provisional_base = total - check
+    provisional = readable / provisional_base if provisional_base else 0
     lines = [
-        f"- **{readable} employeurs lisibles sur {total} ({share:.0%})** : seuil de 50 % "
-        + ("**atteint**." if share >= THRESHOLD else "**pas atteint** : on arrête (décision du 13.11.2026)."),
+        f"- Employeurs testés : **{total}** ; lisibles : {readable} ; non lisibles : {total - readable - check} ; "
+        f"à vérifier à la main : {check}.",
+        f"- **Strict** (les « à vérifier » comptent comme non lisibles) : {readable} sur {total} = "
+        f"**{_share(readable, total)}** ({'au-dessus' if strict >= THRESHOLD else 'en dessous'} du seuil de 50 %).",
+        f"- **Provisoire** (les « à vérifier » sont exclus) : {readable} sur {provisional_base} = "
+        f"**{_share(readable, provisional_base)}** ({'au-dessus' if provisional >= THRESHOLD else 'en dessous'} du seuil de 50 %).",
+        "- Le chiffre final se compare au seuil après la vérification à la main des lignes « à vérifier ».",
     ]
     for metier in sorted({m for e in employers for m in metiers(e)}):
         group = [e for e in employers if metier in metiers(e)]
-        ok = sum(1 for e in group if e.verdict == "lisible")
-        lines.append(f"- {metier} : {ok} lisibles sur {len(group)}")
+        ok = sum(1 for e in group if e.verdict == LISIBLE)
+        tc = sum(1 for e in group if e.verdict == A_VERIFIER)
+        lines.append(f"- {metier} : {ok} lisibles sur {len(group)} employeurs ({tc} à vérifier)")
     case3 = [e.nom for e in employers if e.cas == "3"]
     lines.append(
         f"- Logiciel sans flux public (SuccessFactors, Refline, Abacus/umantis, Prospective) : {len(case3)} sur {total}"
@@ -716,6 +760,7 @@ def write(employers: list[Employer], folder: Path) -> Path:
         lines.append("| " + " | ".join(cell(v) for v in row) + " |")
     lines += [
         "",
+        "Verdicts : « lisible », « non lisible », « à vérifier à la main » (définitions : docs/145 §2).",
         "« Offres en Vaud ce jour » : offres lues ce jour-là dont le lieu est une localité vaudoise ;",
         f"« ≥ » quand la page en montrait plus de {MAX_OFFERS} (on n'en lit pas davantage) ; « ? » quand aucun lieu n'a pu être lu.",
     ]

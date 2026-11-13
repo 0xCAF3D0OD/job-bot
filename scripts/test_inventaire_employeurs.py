@@ -137,13 +137,41 @@ class Inventaire(unittest.TestCase):
         result = inv.inspect(Employer("H", "bureau", "https://h.ch/jobs/"), web)
         self.assertEqual((result.balisage, result.verdict), ("partiel", "non lisible"))
 
-    def test_seuil(self):
-        employers = [Employer("A", "sante;informatique", "", verdict="lisible"), Employer("B", "sante", "", verdict="non lisible"),
-                     Employer("C", "bureau", "", verdict="non lisible", cas="3")]
+    def test_conditions_introuvables_a_verifier(self):
+        web, _ = site({
+            "https://k.ch/jobs/": "<a href='/jobs/123-dev'>Dev</a>",
+            "https://k.ch/jobs/123-dev": jobposting(),
+        })
+        result = inv.inspect(Employer("K", "bureau", "https://k.ch/jobs/"), web)
+        self.assertEqual((result.balisage, result.verdict), ("oui", "à vérifier à la main"))
+
+    def test_offre_interdite_arrete_tout_de_suite(self):
+        web, seen = site({
+            "https://m.ch/robots.txt": "User-agent: *\nDisallow: /jobs/1\n",
+            "https://m.ch/liste": "<a href='/jobs/123-a'>A</a><a href='/autre/456-b'>B</a><a href='/jobs/789-c'>C</a>",
+        })
+        result = inv.inspect(Employer("M", "bureau", "https://m.ch/liste"), web)
+        self.assertEqual((result.robots, result.verdict), ("ambigu", "à vérifier à la main"))
+        self.assertNotIn("https://m.ch/jobs/123-a", seen)
+        self.assertNotIn("https://m.ch/jobs/789-c", seen)
+
+    def test_workday_sans_plan_du_site(self):
+        web, _ = site({"https://x.wd103.myworkdayjobs.com/en-US/Ext": "<div id='root'></div>"})
+        result = inv.inspect(Employer("S", "informatique", "https://x.wd103.myworkdayjobs.com/en-US/Ext"), web)
+        self.assertEqual(result.verdict, "non lisible")
+        self.assertTrue(result.raison.startswith("offres affichées par JavaScript"))
+
+    def test_seuil_strict_et_provisoire(self):
+        employers = [
+            Employer("A", "sante;informatique", "", verdict="lisible"),
+            Employer("B", "sante", "", verdict="à vérifier à la main"),
+            Employer("C", "bureau", "", verdict="non lisible", cas="3"),
+        ]
         text = "\n".join(inv.summary(employers))
-        self.assertIn("1 employeurs lisibles sur 3 (33%)", text)
-        self.assertIn("pas atteint", text)
-        self.assertIn("informatique : 1 lisibles sur 1", text)
+        self.assertIn("Employeurs testés : **3**", text)
+        self.assertIn("1 sur 3 = **33%** (en dessous", text)
+        self.assertIn("1 sur 2 = **50%** (au-dessus", text)
+        self.assertIn("sante : 1 lisibles sur 2 employeurs (1 à vérifier)", text)
         self.assertIn("(C)", text)
 
 
