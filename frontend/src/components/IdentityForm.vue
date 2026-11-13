@@ -366,7 +366,7 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
           </div>
         </template>
         <p class="identity-answers-lead">
-          jobA1 les remplit à ta place dans les formulaires des employeurs.
+          jobA1 te les donne prêtes à copier quand un formulaire les demande.
         </p>
         <ul class="identity-answers-list">
           <li

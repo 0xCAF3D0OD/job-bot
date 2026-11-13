@@ -96,13 +96,8 @@ La cause : `style.css` (327 Ko bruts) est chargé en entier dès le premier écr
 | `.offer-bar-spark` (téléphone) | `offer-bar-spark` |
 
 - **Gardé** : `.ft-orp-meeting .ft-tie` et `.ft-orp-meeting .ft-tie-swing`, qui figuraient dans la première liste. La classe est construite par `` `ft-${kind}` `` dans `FaceTransform.vue`, avec `kind = "orp-meeting"` (la transition vers le rendez-vous ORP). Le script reconnaît désormais un gabarit à n'importe quel préfixe (`ft-` ici, pas seulement `ft-orp-`).
-- **À retirer, en attente d'accord** : 4 règles, 0,3 Ko bruts, trouvées par ce même contrôle plus strict. Avant, le préfixe `orp-row-${…}` d'un `data-test` les faisait passer pour construites ; le script ignore maintenant les gabarits des `data-test`, des clés et des `id`, qui ne sont pas des classes. Leurs classes ont quitté les composants avec la PR 6 du 9 novembre (Bilan et Suivi ORP) :
-
-| Règles (style.css) | Classe absente du code |
-|---|---|
-| `.orp-row-state`, `.orp-row-state.ok`, `.orp-row-state.todo` | `orp-row-state` |
-| `.orp-row-chevron` | `orp-row-chevron` |
+- **Déjà retirées** : 4 règles trouvées ensuite par ce contrôle plus strict (`.orp-row-state`, `.orp-row-state.ok`, `.orp-row-state.todo`, `.orp-row-chevron`). Leurs classes avaient quitté les composants avec la PR 6 du 9 novembre ; la PR 38 les a retirées de `style.css`.
 
 Retirer ces règles ferait gagner environ 0,3 Ko en gzip. Le gain important viendrait de découper `style.css` par page, comme le JavaScript (docs/117 §3) : Accueil chargerait environ 33 Ko de CSS brut au lieu de 334. C'est un chantier à part, à proposer.
 
-**Les 8 avatars PNG** (`public/avatars/avatar-N-256.png`, 610 Ko) : gardés, décision de Kevin en attente. L'avatar affiché (en-tête, menu du compte, choix de l'image) passe par `ProfileImage.vue`, qui appelle `avatarSrc()` de `useProfileImage.ts` : `/avatars/avatar-N-128.webp` jusqu'à 48 px, `/avatars/avatar-N-256.webp` au-delà. Aucun fichier du code ne lit les PNG. Ce sont les mêmes dessins que les WebP (écart moyen de 1,2 à 1,8 sur 255 par pixel, sur fond blanc : la compression), et des copies à l'octet près de `docs/mobile/illustrations/avatars/avatar-N-256.png`.
+**Les 8 avatars PNG** (`public/avatars/avatar-N-256.png`, 610 Ko) : retirés le 2026-11-13 avec l'accord de Kevin. L'avatar affiché (en-tête, menu du compte, choix de l'image) passe par `ProfileImage.vue`, qui appelle `avatarSrc()` de `useProfileImage.ts` : `/avatars/avatar-N-128.webp` jusqu'à 48 px, `/avatars/avatar-N-256.webp` au-delà. Aucun code ne lisait les PNG : c'étaient les mêmes dessins que les WebP, et des copies de `docs/mobile/illustrations/avatars/`, qui restent dans la maquette. Il n'y a plus d'exception au WebP dans `poids.mjs`.

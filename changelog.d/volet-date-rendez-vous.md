@@ -1,0 +1,1 @@
+Dans le volet « Nouveau rendez-vous » et les autres panneaux étroits, le choix de la date tient sur une colonne : plus de défilement de côté, les heures passent à la ligne et « Valider » reste visible en bas

@@ -1,36 +1,41 @@
-nom,metier,url
-CHUV,sante,https://www.chuv.ch/fr/carriere/
-eHnv (Nord vaudois),sante,https://www.ehnv.ch/
-Ensemble hospitalier de la Côte,sante,https://www.ehc-vd.ch/
-GHOL (Nyon),sante,https://www.ghol.ch/
-Hôpital Riviera-Chablais,sante,https://www.hopitalrivierachablais.ch/
-Hôpital intercantonal de la Broye,sante,https://www.hopital-broye.ch/
-AVASAD (soins à domicile),sante,https://www.avasad.ch/
-Fondation de Nant,sante,https://www.nant.ch/
-Hôpital de Lavaux,sante,https://www.hopitaldelavaux.ch/
-Clinique La Source,sante,https://www.lasource.ch/
-Unisanté,sante,https://www.unisante.ch/
-Hirslanden,sante,https://careers.hirslanden.ch/
-Swiss Medical Network,sante,https://www.swissmedical.net/
-Implenia,batiment,https://www.implenia.com/
-Losinger Marazzi,batiment,https://www.losinger-marazzi.ch/
-Orllati,batiment,https://www.orllati.ch/
-Induni,batiment,https://www.induni.ch/
-Marti,batiment,https://www.marti.ch/
-Frutiger,batiment,https://www.frutiger.com/
-Romande Energie,batiment,https://www.romande-energie.ch/
-Volet,batiment,https://www.volet.ch/
-État de Vaud,bureau,https://www.vd.ch/
-Ville de Lausanne,bureau,https://www.lausanne.ch/
-Vaudoise Assurances,bureau,https://www.vaudoise.ch/
-Retraites Populaires,bureau,https://www.retraitespopulaires.ch/
-BCV,bureau,https://www.bcv.ch/
-La Poste,bureau,https://www.post.ch/
-CFF,bureau,https://company.sbb.ch/
-Migros Vaud,bureau,https://jobs.migros.ch/
-Coop,bureau,https://jobs.coop.ch/
-Nestlé,bureau,https://www.nestle.com/jobs
-Philip Morris International,bureau,https://www.pmi.com/careers
-UNIL,bureau,https://www.unil.ch/
-EPFL,bureau,https://www.epfl.ch/
-Logitech,bureau,https://www.logitech.com/
+nom,metier,url,remarque
+CHUV,sante,https://www.chuv.ch/fr/carriere/,
+eHnv (Nord vaudois),sante,https://www.ehnv.ch/emplois,
+Ensemble hospitalier de la Côte,sante,https://www.ehc-vd.ch/carriere,
+GHOL (Nyon),sante,https://app.beehire.com/career/ghol,
+Hôpital Riviera-Chablais,sante,https://www.hopitalrivierachablais.ch/,
+Hôpital intercantonal de la Broye,sante,https://hopital-broye.ch/recrutement,
+AVASAD (soins à domicile),sante,https://www.cms-vaud.ch/offres-d-emploi/,
+Fondation de Nant,sante,https://nant.ch/carrieres/,
+Hôpital de Lavaux,sante,https://app.beehire.com/career/hopitaldelavaux,
+Clinique La Source,sante,https://www.lasource.ch/clinique-de-la-source/emploi-et-formation,
+Unisanté,sante,https://emploi.unisante.ch/offres,
+Hirslanden,sante,https://www.hirslanden.ch/,careers.hirslanden.ch injoignable le 13.11
+Swiss Medical Network,sante,https://www.swissmedical.net/fr/carriere,
+Implenia,batiment,https://implenia.com/karriere/jobs/,
+Losinger Marazzi,batiment,https://careers.bouygues-construction.com/go/Losinger-Marazzi-FR/9592101/,
+Orllati,batiment,https://www.orllati.ch/,
+Induni,batiment,https://induni.ch/emploi/,
+Marti,batiment,https://www.marti.ch/,
+Frutiger,batiment,https://www.frutiger-gruppe.com/de/karriere,
+Romande Energie,batiment,https://www.romande-energie.ch/carrieres,
+Volet,batiment,https://www.volet.ch/N8651/offres-d-emploi.html,
+État de Vaud,bureau;informatique,https://www.vd.ch/etat-droit-finances/etat-employeur/offres-demploi,DGNSI : même page que l'État de Vaud (pas de page à part)
+Ville de Lausanne,bureau,https://www.lausanne.ch/officiel/travailler-a-la-ville/nous-rejoindre/offres-emploi.html,
+Vaudoise Assurances,bureau,https://www.vaudoise.ch/fr/carrieres,
+Retraites Populaires,bureau,https://www.retraitespopulaires.ch/emplois,
+BCV,bureau,https://www.bcv.ch/fr/home/la-bcv/carrieres.html,
+La Poste,bureau,https://career.post.ch/fr,
+CFF,bureau,https://company.sbb.ch/de/jobs-karriere.html,
+Migros Vaud,bureau,https://jobs.migros.ch/fr/nos-entreprises/groupe-migros/postes-vacants,
+Coop,bureau,https://www.coopjobs.ch/,
+Nestlé,bureau,https://www.nestle.com/jobs,
+Philip Morris International,bureau,https://www.pmi.com/careers,
+UNIL,bureau,https://www.unil.ch/,
+EPFL,bureau;informatique,https://www.epfl.ch/about/working/job-openings/,
+Logitech,informatique,https://www.logitech.com/de-ch/careers,
+ELCA,informatique,https://www.elca.ch/,
+Kudelski / Nagravision,informatique,https://nagra.vision/company/careers/job-openings,
+Nexthink,informatique,https://nexthink.com/company/careers/jobs,
+SICPA,informatique,https://jobs.sicpa.com/,
+Swisscom (sites vaudois),informatique,https://swisscom.wd103.myworkdayjobs.com/en-US/SwisscomExternalCareers,
