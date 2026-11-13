@@ -547,3 +547,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.333 | S'entraîner pour l'entretien s'ouvre en page (`/entrainement`) : les réglages, puis une question à la fois sans la navigation, avec un conseil de méthode, la progression et le compteur de mots | livrée |
 | 1.6.334 | Coordonnées : la rubrique « Pour les formulaires de candidature » montre cinq réponses avec leur progression (LinkedIn, permis, disponibilité, délai de préavis, salaire) et « Site ou portfolio » en option ; chaque réponse se modifie dans son panneau, et le salaire peut attendre ton accord avant d'être rempli | livrée |
 | 1.6.335 | Les champs des panneaux et des formulaires ont tous des coins de 12 px, plus aucun champ ovale, et un test le vérifie | livrée |
+| 1.6.336 | Les 8 anciens avatars PNG (610 Ko) retirés : l'application ne sert que les WebP | livrée |
