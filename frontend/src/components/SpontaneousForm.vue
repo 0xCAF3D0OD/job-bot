@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, reactive, ref } from "vue";
+import { computed, nextTick, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
@@ -9,11 +9,16 @@ import FormField from "./FormField.vue";
 
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
+// Paquet du 11 novembre, PR 38 (maquette CandidaturesOrdinateurSpontanee) : une phrase d'explication, puis Entreprise,
+// Poste visé et « Pourquoi cette entreprise ? (facultatif) » ; plus de champ « Site de l'entreprise ». Dans le
+// panneau « Ajouter », le seul bouton est dans le pied (`formId`) : « Créer la candidature », puis « Préparer la
+// candidature ».
+const props = withDefaults(defineProps<{ formId?: string }>(), { formId: undefined });
 const router = useRouter();
 // L'offre existe dès « Créer la candidature » : la liste des offres se recharge pour la montrer, même si
 // le panneau est fermé sans passer par « Préparer ».
 const emit = defineEmits<{ created: [id: number]; open: [id: number] }>();
-const form = reactive({ company: "", title: "", website: "", reason: "" });
+const form = reactive({ company: "", title: "", reason: "" });
 const saving = ref(false);
 const error = ref("");
 const offerId = ref<number | null>(null);
@@ -35,11 +40,10 @@ const chosen = ref<string | null>(null);
 
 // Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
 // l'envoi, et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
-type Field = "company" | "title" | "reason";
+type Field = "company" | "title";
 const MISSING: Record<Field, string> = {
   company: "Indique l’entreprise.",
   title: "Indique le poste visé.",
-  reason: "Dis pourquoi cette entreprise.",
 };
 const errors = ref<Partial<Record<Field, string>>>({});
 function check(field: Field): void {
@@ -67,8 +71,7 @@ async function create(event: Event): Promise<void> {
       body: {
         company: form.company,
         title: form.title,
-        reason: form.reason,
-        website: form.website || null,
+        reason: form.reason.trim(),
         force: existing.value !== null,
       },
     });
@@ -119,20 +122,34 @@ async function choose(uid: string): Promise<void> {
 function prepare(): void {
   if (offerId.value !== null) void router.push(`/candidatures/offres/${offerId.value}/preparer`);
 }
+
+// Le bouton du pied du panneau (OffersView).
+defineExpose({
+  created: computed(() => offerId.value !== null),
+  busy: saving,
+  label: computed(() => (offerId.value !== null ? "Préparer la candidature" : existing.value ? "Créer quand même" : "Créer la candidature")),
+  prepare,
+});
 </script>
 
 <template>
   <form
     v-if="offerId === null"
+    :id="props.formId"
     class="spontaneous-form"
     data-test="spontaneous-form"
     novalidate
     @submit.prevent="create"
   >
+    <p
+      class="spontaneous-lead"
+      data-test="spontaneous-lead"
+    >
+      Pour une entreprise qui n’a pas publié d’offre. jobA1 prépare une lettre et un CV adaptés.
+    </p>
     <FormField
       v-slot="{ id, describedby, invalid }"
       label="Entreprise"
-      :width="20"
       :error="errors.company"
     >
       <input
@@ -154,7 +171,7 @@ function prepare(): void {
       label="Poste visé"
       :error="errors.title"
     
-      hint="Ex. : Ingénieur DevOps"
+      hint="Par exemple : Ingénieur DevOps"
     >
       <input
         :id="id"
@@ -171,39 +188,19 @@ function prepare(): void {
     </FormField>
     <FormField
       v-slot="{ id, describedby, invalid }"
-      label="Site de l’entreprise"
+      label="Pourquoi cette entreprise ?"
       optional
-      :width="30"
-    
-      hint="Ex. : exemple.ch"
-    >
-      <input
-        :id="id"
-        v-model="form.website"
-        type="text"
-        maxlength="300"
-        inputmode="url"
-        :aria-describedby="describedby"
-        :aria-invalid="invalid"
-        data-test="spontaneous-website"
-      >
-    </FormField>
-    <FormField
-      v-slot="{ id, describedby, invalid }"
-      label="Pourquoi elle"
-      :error="errors.reason"
+      hint="Ce qui t’attire : produit, équipe, valeurs. jobA1 s’en sert pour la lettre."
     >
       <textarea
         :id="id"
         v-model="form.reason"
         rows="4"
         maxlength="1500"
-        required
         :aria-describedby="describedby"
         :aria-invalid="invalid"
+        class="spontaneous-reason"
         data-test="spontaneous-reason"
-        @blur="check('reason')"
-        @input="clearIfFixed('reason')"
       />
     </FormField>
     <p
@@ -231,6 +228,7 @@ function prepare(): void {
       {{ error }}
     </p>
     <button
+      v-if="!props.formId"
       type="submit"
       class="primary small"
       :disabled="saving"
@@ -300,6 +298,7 @@ function prepare(): void {
       </p>
     </template>
     <button
+      v-if="!props.formId"
       type="button"
       class="primary small"
       data-test="spontaneous-prepare"
@@ -309,3 +308,8 @@ function prepare(): void {
     </button>
   </div>
 </template>
+
+<style scoped>
+.spontaneous-lead { --lead-15: 15px; font-size: var(--lead-15); }
+.spontaneous-reason { --reason-128: 128px; min-height: var(--reason-128); }
+</style>

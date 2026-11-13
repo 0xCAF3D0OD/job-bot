@@ -7,6 +7,7 @@ robots n'est jamais contournée : on propose de coller le texte.
 """
 
 import asyncio
+import io
 import re
 import secrets
 from collections.abc import Awaitable, Callable
@@ -19,7 +20,7 @@ from urllib.robotparser import RobotFileParser
 
 import anthropic
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -86,6 +87,8 @@ class Draft:
     location: str | None = None
     description: str | None = None
     url: str | None = None
+    # Le contrat, quand la page le dit (« Durée indéterminée ») ; sinon la personne le note.
+    contract: str | None = None
     # « page » : lue dans le balisage de la page ; « ia » : lue par l'IA.
     read_by: str = "page"
     # Cohérence avec le poste (docs/111) : les mots du métier trouvés dans l'annonce.
@@ -102,6 +105,36 @@ class Draft:
 job_posting = jobposting.job_posting
 
 
+# Les valeurs de schema.org (employmentType) dites avec les mots de l'app ; une autre valeur
+# est gardée telle quelle si elle se lit (« CDI », « Contrat fixe »).
+CONTRACTS = {
+    "FULL_TIME": "Temps plein",
+    "PART_TIME": "Temps partiel",
+    "CONTRACTOR": "Mandat",
+    "TEMPORARY": "Durée déterminée",
+    "INTERN": "Stage",
+    "VOLUNTEER": "Bénévolat",
+    "PER_DIEM": "À la journée",
+    "PERMANENT": "Durée indéterminée",
+    "CDI": "Durée indéterminée",
+    "CDD": "Durée déterminée",
+}
+
+
+def contract_from_posting(posting: dict[str, Any]) -> str | None:
+    value = posting.get("employmentType")
+    values = value if isinstance(value, list) else [value]
+    words: list[str] = []
+    for item in values:
+        if not isinstance(item, str) or not item.strip():
+            continue
+        word = CONTRACTS.get(item.strip().upper(), " ".join(item.split()))
+        # Un code inconnu (« OTHER ») ne se montre pas.
+        if word not in words and not re.fullmatch(r"[A-Z_]+", word):
+            words.append(word)
+    return ", ".join(words)[:100] or None
+
+
 def draft_from_posting(posting: dict[str, Any], url: str) -> Draft | None:
     title = jobposting.text(posting.get("title") or posting.get("name"))
     if not title:
@@ -115,6 +148,7 @@ def draft_from_posting(posting: dict[str, Any], url: str) -> Draft | None:
         location=jobposting.location(posting),
         description=description[:MAX_TEXT] if description else None,
         url=url,
+        contract=contract_from_posting(posting),
         read_by="page",
     )
 
@@ -171,13 +205,6 @@ async def fetch_page(url: str, before: Callable[[str], Awaitable[None]] | None =
                 transient=True,
             ) from exc
     return data.decode("utf-8", errors="replace")
-
-
-def page_text(page: str) -> str:
-    soup = BeautifulSoup(page, "html.parser")
-    for tag in soup(["script", "style", "nav", "header", "footer", "noscript"]):
-        tag.decompose()
-    return " ".join(soup.get_text(" ").split())
 
 
 async def read_with_ai(runtime: Runtime, text: str, url: str | None) -> Draft:
@@ -338,7 +365,7 @@ async def read(runtime: Runtime, url: str | None, text: str | None) -> Draft:
         posting = job_posting(page)
         draft = draft_from_posting(posting, url) if posting else None
         if draft is None:
-            body = page_text(page)
+            body = main_text(page)
             if len(body) < 200:
                 raise ReadProblem(
                     "Cette page ne montre pas d'annonce lisible : colle le texte de l'annonce.",
@@ -393,6 +420,7 @@ async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
             rate_min=rate_min,
             rate_max=rate_max,
             canton=canton_of(draft.location),
+            employment_type=(draft.contract or "").strip()[:100] or None,
             snippet=(draft.description or "")[:500] or None,
             description=draft.description,
             status=OfferStatus.NEW,
@@ -472,13 +500,138 @@ async def robots_allowed(url: str, cache: dict[str, str | None] | None = None) -
     return parser.can_fetch(ROBOTS_AGENT, url)
 
 
+# Ce qui n'est pas l'annonce (paquet du 11 novembre, PR 38) : menus, pied, formulaire de
+# candidature, colonnes d'à-côté, et les bandeaux de cookies ou de consentement, reconnus à leur
+# rôle ou à leur nom.
+NOISE_TAGS = [
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "svg",
+    "iframe",
+    "nav",
+    "header",
+    "footer",
+    "form",
+    "aside",
+    "dialog",
+    "button",
+    "select",
+]
+NOISE_ROLES = {
+    "navigation",
+    "banner",
+    "contentinfo",
+    "complementary",
+    "search",
+    "form",
+    "dialog",
+    "alertdialog",
+}
+NOISE_NAMES = re.compile(
+    r"cookie|consent|gdpr|rgpd|onetrust|didomi|usercentrics|cookiebot|truste|cmp[-_]|"
+    r"privacy[-_]?(banner|notice|popup)",
+    re.IGNORECASE,
+)
+# Un bloc de texte d'au moins cette taille est un contenu principal possible.
+MIN_MAIN = 200
+
+
+def _noise(tag: Tag) -> bool:
+    if tag.name in ("html", "body", "main", "article"):
+        return False
+    if str(tag.get("role") or "").lower() in NOISE_ROLES:
+        return True
+    if (
+        tag.get("aria-modal") == "true"
+        or tag.get("aria-hidden") == "true"
+        or tag.has_attr("hidden")
+    ):
+        return True
+    classes = tag.get("class")
+    names = " ".join([str(tag.get("id") or ""), *(classes if isinstance(classes, list) else [])])
+    # Un conteneur qui porte l'annonce n'est pas un bandeau, quel que soit son nom.
+    return bool(NOISE_NAMES.search(names)) and tag.find(["main", "article"]) is None
+
+
+def _densest(soup: BeautifulSoup) -> Tag | None:
+    """Sans `<main>` ni `<article>` : le bloc qui porte le plus de texte en paragraphes et en
+    listes (le principe de Readability, en plus simple)."""
+    scores: dict[int, tuple[int, Tag]] = {}
+    for block in soup.find_all(["p", "li"]):
+        size = len(" ".join(block.get_text(" ").split()))
+        parent = block.find_parent(["div", "section", "td"])
+        if parent is None or size < 20:
+            continue
+        for holder, share in ((parent, size), (parent.find_parent(["div", "section"]), size // 2)):
+            if isinstance(holder, Tag):
+                scores[id(holder)] = (scores.get(id(holder), (0, holder))[0] + share, holder)
+    if not scores:
+        return None
+    best, holder = max(scores.values(), key=lambda pair: pair[0])
+    return holder if best >= MIN_MAIN else None
+
+
 def main_text(page: str) -> str:
-    """Le texte principal de la page : `<main>` ou `<article>` s'il y en a, sinon le corps."""
+    """Le texte principal de la page : `<main>` ou `<article>` s'il y en a, sinon le bloc le plus
+    dense, sinon le corps. Menus, pied, formulaires, à-côtés et bandeaux de cookies retirés."""
     soup = BeautifulSoup(page, "html.parser")
-    for tag in soup(["script", "style", "nav", "header", "footer", "noscript", "form", "aside"]):
+    for tag in soup(NOISE_TAGS):
         tag.decompose()
-    root = soup.find("main") or soup.find("article") or soup.body or soup
+    for tag in [t for t in soup.find_all(True) if isinstance(t, Tag)]:
+        # Déjà retiré avec un parent.
+        if tag.decomposed:
+            continue
+        if _noise(tag):
+            tag.decompose()
+    root = (
+        soup.find("main")
+        or soup.find(role="main")
+        or soup.find("article")
+        or _densest(soup)
+        or soup.body
+        or soup
+    )
     return " ".join(root.get_text(" ").split())
+
+
+# --- Le PDF de l'annonce ----------------------------------------------------------------
+# Paquet du 11 novembre, PR 38 (décision de Kevin) : le texte est lu sur le serveur, sans IA ; le
+# fichier n'est ni rangé ni journalisé, et sa taille est limitée (E-5, J-1).
+
+MAX_PDF_BYTES = 5 * 1024 * 1024
+MAX_PDF_PAGES = 30
+# Ce qui empêche de lire le PDF : un code, la phrase est écrite par l'écran.
+PDF_NO_TEXT = "no-text"
+PDF_TOO_BIG = "too-big"
+PDF_NOT_ONE = "not-pdf"
+PDF_UNREADABLE = "unreadable"
+
+
+def pdf_text(data: bytes) -> str:
+    """Le texte d'un PDF d'annonce, resserré. Le type est vérifié sur le contenu (E-5)."""
+    from pypdf import PdfReader
+
+    if len(data) > MAX_PDF_BYTES:
+        raise ReadProblem(PDF_TOO_BIG, paste=True, reason=PDF_TOO_BIG)
+    if not data.startswith(b"%PDF-"):
+        raise ReadProblem(PDF_NOT_ONE, paste=True, reason=PDF_NOT_ONE)
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        pages = reader.pages[:MAX_PDF_PAGES]
+        found = "\n\n".join(page.extract_text() or "" for page in pages)
+    except Exception as exc:
+        raise ReadProblem(PDF_UNREADABLE, paste=True, reason=PDF_UNREADABLE) from exc
+    lines = [" ".join(line.split()) for line in found.replace("\x00", "").splitlines()]
+    kept: list[str] = []
+    for line in lines:
+        if line or (kept and kept[-1]):
+            kept.append(line)
+    clean = "\n".join(kept).strip()
+    if len(clean) < 20:
+        raise ReadProblem(PDF_NO_TEXT, paste=True, reason=PDF_NO_TEXT)
+    return clean[:MAX_TEXT]
 
 
 ROBOTS_REFUSED = "Ce site interdit la lecture par un robot : colle le texte de l'annonce."

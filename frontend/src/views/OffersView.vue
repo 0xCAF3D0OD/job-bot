@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import BusyButton from "../components/BusyButton.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationSent from "../components/ApplicationSent.vue";
 import GoalReached from "../components/GoalReached.vue";
@@ -328,6 +329,9 @@ const addTab = computed<string>({
     manualOpen.value = value !== "spontaneous";
   },
 });
+// Le bouton du pied du panneau parle pour le formulaire affiché (libellé, attente).
+const manualForm = ref<InstanceType<typeof ManualOfferForm> | null>(null);
+const spontaneousForm = ref<InstanceType<typeof SpontaneousForm> | null>(null);
 function closeAdd(): void {
   manualOpen.value = false;
   spontaneousOpen.value = false;
@@ -349,13 +353,26 @@ async function manualAdded(result: {
       ? "Offre complétée : sa note est refaite avec le texte de l’annonce."
       : "Offre complétée."
     : result.existing
-      ? "Cette offre était déjà là : la voici."
+      ? "Elle était déjà dans ta liste"
       : result.status === "filtered_out"
         ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
         : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
   await openFromQuery();
+  if (result.existing && !result.filled?.length) void flash(result.id);
+}
+// L'offre déjà là (PR 38) : la liste défile jusqu'à sa carte, mise en avant 2 secondes.
+const flashId = ref<number | null>(null);
+let flashTimer: ReturnType<typeof setTimeout> | undefined;
+async function flash(id: number): Promise<void> {
+  await nextTick();
+  const row = document.querySelector<HTMLElement>(`[data-offer-row="${id}"]`);
+  const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  row?.scrollIntoView?.({ block: "center", behavior: calm ? "auto" : "smooth" });
+  flashId.value = id;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => (flashId.value = null), 2000);
 }
 // « L'ouvrir » dans l'avis d'une offre déjà là (candidature spontanée) : le panneau se ferme, l'offre s'ouvre.
 async function openExisting(id: number): Promise<void> {
@@ -919,7 +936,7 @@ onUnmounted(() => {
           <li
             v-for="row in rows"
             :key="row.key"
-            :class="{ 'offer-day': row.day }"
+            :class="{ 'offer-day': row.day, 'offer-flash': !!row.offer && row.offer.id === flashId }"
             :data-test="row.day ? 'offer-day' : undefined"
             :data-offer-row="row.offer?.id"
           >
@@ -1073,21 +1090,56 @@ onUnmounted(() => {
       class="add-tabs"
       full
     />
-    <template v-if="manualOpen">
-      <p class="add-sheet-lead">
-        Colle le lien ou le texte de l’annonce. jobA1 la lit et la note.
-      </p>
-      <ManualOfferForm
-        :initial-url="shared.url"
-        :initial-text="shared.text"
-        @added="manualAdded"
-      />
-    </template>
+    <ManualOfferForm
+      v-if="manualOpen"
+      ref="manualForm"
+      form-id="add-offer-form"
+      :initial-url="shared.url"
+      :initial-text="shared.text"
+      @added="manualAdded"
+    />
     <SpontaneousForm
       v-else
+      ref="spontaneousForm"
+      form-id="add-spontaneous-form"
       @created="load()"
       @open="openExisting"
     />
+    <!-- Le seul bouton d'action du panneau, dans le pied (D30, PR 38). -->
+    <template #actions>
+      <BusyButton
+        v-if="manualOpen"
+        type="submit"
+        form="add-offer-form"
+        class="primary"
+        :busy="manualForm?.busy ?? false"
+        :busy-label="manualForm?.busyLabel ?? 'Ajout…'"
+        :disabled="manualForm?.full"
+        data-test="manual-add"
+      >
+        {{ manualForm?.label ?? "Ajouter l’offre" }}
+      </BusyButton>
+      <button
+        v-else-if="spontaneousForm?.created"
+        type="button"
+        class="primary"
+        data-test="spontaneous-prepare"
+        @click="spontaneousForm?.prepare()"
+      >
+        Préparer la candidature
+      </button>
+      <BusyButton
+        v-else
+        type="submit"
+        form="add-spontaneous-form"
+        class="primary"
+        :busy="spontaneousForm?.busy ?? false"
+        busy-label="Création…"
+        data-test="spontaneous-create"
+      >
+        {{ spontaneousForm?.label ?? "Créer la candidature" }}
+      </BusyButton>
+    </template>
   </BottomSheet>
   <SidePanel
     v-if="phone && spontaneousOpen"
@@ -1104,15 +1156,32 @@ onUnmounted(() => {
     v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
-    subtitle="Colle le lien ou le texte de l’annonce. jobA1 la lit et la note."
+    subtitle="Colle le lien ou le texte de l’annonce, ou importe son PDF. jobA1 la lit et la note."
     class="manual-sheet"
     @close="manualOpen = false"
   >
     <ManualOfferForm
+      ref="manualForm"
+      form-id="add-offer-form"
       :initial-url="shared.url"
       :initial-text="shared.text"
       @added="manualAdded"
     />
+    <template
+      v-if="manualForm?.shown"
+      #actions
+    >
+      <BusyButton
+        type="submit"
+        form="add-offer-form"
+        class="primary"
+        :busy="manualForm?.busy ?? false"
+        :busy-label="manualForm?.busyLabel ?? 'Ajout…'"
+        data-test="manual-add"
+      >
+        {{ manualForm?.label ?? "Ajouter l’offre" }}
+      </BusyButton>
+    </template>
   </BottomSheet>
 </template>
 
@@ -1142,6 +1211,6 @@ onUnmounted(() => {
 .offers-empty-spontaneous { --empty-420: 420px; --empty-15: 15px; display: grid; justify-items: center; gap: var(--space-1); width: min(var(--empty-420), 100%); margin: var(--space-8) auto 0; padding-top: var(--space-8); border-top: 1px solid var(--line); }
 .offers-empty-spontaneous p { margin: 0; font-size: var(--empty-15); color: var(--text-secondary); }
 .offers-empty-spontaneous .link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--empty-15); font-weight: var(--weight-bold); color: var(--primary-text); }
-.add-tabs { margin-bottom: var(--space-6); }
-.add-sheet-lead { --add-15: 15px; margin: 0 0 var(--space-4); font-size: var(--add-15); }
+.add-sheet :deep(.sheet-actions > .primary) { --add-52: 52px; flex: 1 1 auto; justify-content: center; min-height: var(--add-52); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.offer-flash :deep(.list-card) { outline: 3px solid var(--accent); outline-offset: 2px; }
 </style>

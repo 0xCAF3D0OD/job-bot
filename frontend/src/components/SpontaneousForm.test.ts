@@ -22,6 +22,13 @@ describe("Candidature spontanée (docs/39)", () => {
     });
     POST.mockResolvedValueOnce({ data: { company_address: "Rue 1\n1000 Lausanne", company_address_source: "registry" } });
     const wrapper = mount(SpontaneousForm, { global: { plugins: [router] } });
+    // Maquette CandidaturesOrdinateurSpontanee (PR 38) : la phrase, trois champs, « Pourquoi » facultatif.
+    expect(wrapper.find("[data-test=spontaneous-lead]").text()).toBe("Pour une entreprise qui n’a pas publié d’offre. jobA1 prépare une lettre et un CV adaptés.");
+    expect(wrapper.findAll(".form-field-label").map((l) => l.text())).toEqual(["Entreprise", "Poste visé", "Pourquoi cette entreprise\u202f? (facultatif)"]);
+    expect(wrapper.findAll(".form-field-hint").map((l) => l.text())).toEqual([
+      "Par exemple\u202f: Ingénieur DevOps",
+      "Ce qui t’attire\u202f: produit, équipe, valeurs. jobA1 s’en sert pour la lettre.",
+    ]);
 
     await wrapper.find("[data-test=spontaneous-company]").setValue("Exemple SA");
     await wrapper.find("[data-test=spontaneous-title]").setValue("Ingénieur DevOps");
@@ -32,7 +39,6 @@ describe("Candidature spontanée (docs/39)", () => {
       company: "Exemple SA",
       title: "Ingénieur DevOps",
       reason: "Leur plateforme cloud.",
-      website: null,
       force: false,
     });
     // La liste des offres se recharge dès la création, même sans passer par « Préparer ».
@@ -56,7 +62,6 @@ describe("Candidature spontanée (docs/39)", () => {
     const wrapper = mount(SpontaneousForm, { global: { plugins: [router] } });
     await wrapper.find("[data-test=spontaneous-company]").setValue("SpeciTec");
     await wrapper.find("[data-test=spontaneous-title]").setValue("Dessinateur");
-    await wrapper.find("[data-test=spontaneous-reason]").setValue("Leur atelier.");
     await wrapper.find("[data-test=spontaneous-form]").trigger("submit");
     await flushPromises();
     expect(wrapper.find("[data-test=spontaneous-existing]").text()).toContain("Tu as déjà une offre chez SpeciTec SA : « Technicien ».");
@@ -68,5 +73,23 @@ describe("Candidature spontanée (docs/39)", () => {
     await flushPromises();
     expect(POST.mock.calls[1]![1].body.force).toBe(true);
     expect(wrapper.emitted("created")).toEqual([[78]]);
+  });
+
+  it("dans le panneau « Ajouter » : pas de bouton dans le formulaire, le pied l’envoie ; « Pourquoi » peut rester vide", async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    POST.mockResolvedValueOnce({ data: { id: 79 } });
+    const wrapper = mount(SpontaneousForm, { props: { formId: "add-spontaneous-form" }, global: { plugins: [router] } });
+    expect(wrapper.find("form").attributes("id")).toBe("add-spontaneous-form");
+    expect(wrapper.find("[data-test=spontaneous-create]").exists()).toBe(false);
+    const exposed = wrapper.vm as unknown as { label: string; created: boolean };
+    expect(exposed.label).toBe("Créer la candidature");
+    await wrapper.find("[data-test=spontaneous-company]").setValue("Exemple SA");
+    await wrapper.find("[data-test=spontaneous-title]").setValue("Menuisier");
+    await wrapper.find("[data-test=spontaneous-form]").trigger("submit");
+    await flushPromises();
+    expect(POST.mock.calls[0]![1].body).toEqual({ company: "Exemple SA", title: "Menuisier", reason: "", force: false });
+    expect(exposed.created).toBe(true);
+    expect(exposed.label).toBe("Préparer la candidature");
+    expect(wrapper.find("[data-test=spontaneous-prepare]").exists()).toBe(false);
   });
 });

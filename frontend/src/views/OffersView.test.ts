@@ -185,9 +185,12 @@ describe("OffersView", () => {
     await wrapper.find("[data-test=add-open]").trigger("click");
     const sheet = wrapper.find("[data-test=add-sheet]");
     expect(sheet.find("[data-test=add-tab-offer]").attributes("aria-checked")).toBe("true");
-    expect(sheet.text()).toContain("Colle le lien ou le texte de l’annonce.");
+    // PR 38 : plus de phrase ni de flèche ; le seul bouton est dans le pied et envoie le formulaire affiché.
+    expect(sheet.text()).not.toContain("Colle le lien ou le texte de l’annonce.");
+    expect(sheet.findAll(".sheet-actions button").map((b) => [b.text().replace(/Lecture.*|Ajout….*/, ""), b.attributes("form")])).toEqual([["Ajouter l’offre", "add-offer-form"]]);
     await sheet.find("[data-test=add-tab-spontaneous]").trigger("click");
     expect(wrapper.find("[data-test=add-sheet] [data-test=add-tab-spontaneous]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=add-sheet] .sheet-actions [data-test=spontaneous-create]").attributes("form")).toBe("add-spontaneous-form");
     expect(wrapper.find("[data-test=add-sheet] [data-test=composer-input]").exists()).toBe(false);
     mockOffers(page([offer(3, "Trois")]));
     const dropped = await mountAt("/offres?statut=filtered_out");
@@ -676,7 +679,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     );
     const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
     expect(wrapper.find("[data-test=offers-toolbar] [data-test=add-open]").exists()).toBe(true);
-    const input = wrapper.find("[data-test=composer-input]").element as HTMLTextAreaElement;
+    const input = wrapper.find("[data-test=manual-entry]").element as HTMLTextAreaElement;
     expect(input.value).toBe("https://bois.ch/emplois/1");
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
   });
@@ -709,6 +712,31 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     expect(wrapper.findAll("[data-test=offer]")[0]!.text()).toContain("Menuisier CFC");
     // Une seule relecture de la liste, celle qui suit l'ajout.
     expect(listLoads() - before).toBe(1);
+  });
+
+  // PR 38 : pas de « Cette offre était déjà là ». Le panneau se ferme, l'offre s'ouvre, sa carte est mise en avant
+  // 2 secondes, et le message dit « Elle était déjà dans ta liste ».
+  it("un doublon : le panneau se ferme, la carte existante est mise en avant 2 secondes", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/manual"
+          ? { data: { trade: "Menuisier", added_today: 0, daily_limit: 20 } }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Une"), offer(2, "Deux")]),
+      ),
+    );
+    const wrapper = await mountAt("/offres?ajouter=1");
+    wrapper.findComponent({ name: "ManualOfferForm" }).vm.$emit("added", { id: 2, existing: true, status: "", reasons: [] });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
+    expect(wrapper.find("[data-test=add-sheet]").exists()).toBe(false);
+    expect(router.currentRoute.value.query.offre).toBe("2");
+    expect(wrapper.text()).toContain("Elle était déjà dans ta liste");
+    expect(wrapper.text()).not.toContain("Cette offre était déjà là");
+    expect(wrapper.find("[data-offer-row='2']").classes()).toContain("offer-flash");
+    await new Promise((resolve) => setTimeout(resolve, 2050));
+    expect(wrapper.find("[data-offer-row='2']").classes()).not.toContain("offer-flash");
   });
 
   it("l’étiquette « Ajoutée par toi » sur la carte", async () => {

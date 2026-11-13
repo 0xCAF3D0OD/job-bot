@@ -1,20 +1,25 @@
 """Ajouter une offre trouvée ailleurs (docs/111) : lien ou texte, fiche à relire, puis l'offre."""
 
+import io
 import json
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
+from reportlab.pdfgen import canvas
 from sqlalchemy import select, text
 
 from jobbot import accounts, manual_offers
 from jobbot.api.app import create_app
+from jobbot.api.routes import manual_offers as manual_offers_routes
 from jobbot.auth import passwords
+from jobbot.auth.service import Window
 from jobbot.core.filter import Criteria
-from jobbot.db.models import LlmCall, Offer, OfferLink, User
+from jobbot.db.models import Document, LlmCall, Offer, OfferLink, User
 from jobbot.enrich.service import expire_stale
 from jobbot.filtering.service import save_criteria
 from jobbot.llm.client import RawResult
@@ -369,3 +374,102 @@ async def test_complete_never_reaches_another_account(
             assert offer is not None and offer.description is None and offer.location is None
     finally:
         accounts.set_current(owner)
+
+
+# --- Paquet du 11 novembre, PR 38 : extraction du contenu principal, contrat, PDF de l'annonce ---
+
+
+def test_main_text_drops_cookies_and_form() -> None:
+    saved = Path(__file__).parent / "fixtures" / "pages" / "annonce_avec_cookies.html"
+    found = manual_offers.main_text(saved.read_text(encoding="utf-8"))
+    assert found.startswith("Ingénieur DevOps Exemple SA cherche")
+    assert "Kubernetes et Terraform" in found and "durée indéterminée" in found
+    lowered = found.lower()
+    for noise in ("cookies", "requis", "offres similaires", "tous les emplois", "mentions"):
+        assert noise not in lowered
+    # Une page qui a son <main> : lui seul, même sous un conteneur au nom de bandeau.
+    wrapped = (
+        "<body><div class='cookie-layout'><main>"
+        + "Le poste de menuisier. " * 12
+        + "</main></div><div id='cookie-bar'>Cookies</div></body>"
+    )
+    assert manual_offers.main_text(wrapped) == ("Le poste de menuisier. " * 12).strip()
+
+
+def test_contract_from_posting() -> None:
+    read = manual_offers.contract_from_posting
+    assert read({"employmentType": "FULL_TIME"}) == "Temps plein"
+    assert read({"employmentType": ["PERMANENT", "PART_TIME"]}) == (
+        "Durée indéterminée, Temps partiel"
+    )
+    assert read({"employmentType": "cdi"}) == "Durée indéterminée"
+    assert read({"employmentType": "Contrat fixe"}) == "Contrat fixe"
+    assert read({"employmentType": "OTHER"}) is None and read({}) is None
+
+
+def _pdf(*lines: str) -> bytes:
+    buffer = io.BytesIO()
+    sheet = canvas.Canvas(buffer)
+    for index, line in enumerate(lines):
+        sheet.drawString(72, 760 - 20 * index, line)
+    sheet.save()
+    return buffer.getvalue()
+
+
+async def test_pdf_is_read_without_ai_and_not_kept(
+    api: AsyncClient, rt: Runtime, ai: FakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manual_offers_routes.pdf_per_account.hits.clear()
+    data = _pdf("Menuisier CFC a 100 %", "Bois & Fils SA, Sion", "Tu poses des cuisines.")
+    sent = await api.post(
+        "/api/offers/manual/pdf", files={"file": ("annonce.pdf", data, "application/pdf")}
+    )
+    assert sent.status_code == 200
+    body = sent.json()
+    assert body["problem"] is None
+    assert body["text"] == "Menuisier CFC a 100 %\nBois & Fils SA, Sion\nTu poses des cuisines."
+    # Sans IA, et rien de créé ni de rangé : le texte revient seulement à la personne.
+    assert ai.calls == []
+    async with rt.sessionmaker() as session:
+        assert list(await session.scalars(select(Offer))) == []
+        assert list(await session.scalars(select(Document))) == []
+    assert (await api.get("/api/offers/manual")).json()["added_today"] == 0
+
+    # Un PDF sans texte (un scan) : l'écran dit la phrase décidée par Kevin.
+    empty = await api.post(
+        "/api/offers/manual/pdf", files={"file": ("scan.pdf", _pdf(), "application/pdf")}
+    )
+    assert empty.json() == {"text": None, "problem": "no-text"}
+    # Le type se lit sur le contenu, pas sur le nom (E-5) ; la taille est limitée.
+    fake = await api.post(
+        "/api/offers/manual/pdf", files={"file": ("annonce.pdf", b"<html>", "application/pdf")}
+    )
+    assert fake.json()["problem"] == manual_offers.PDF_NOT_ONE
+    monkeypatch.setattr(manual_offers, "MAX_PDF_BYTES", 100)
+    big = await api.post(
+        "/api/offers/manual/pdf", files={"file": ("annonce.pdf", data, "application/pdf")}
+    )
+    assert big.json()["problem"] == manual_offers.PDF_TOO_BIG
+
+
+async def test_pdf_limit_per_account(api: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(manual_offers_routes, "pdf_per_account", Window(limit=1, period_s=3600))
+    files = {"file": ("annonce.pdf", _pdf("Une annonce assez longue pour etre lue."), "x")}
+    assert (await api.post("/api/offers/manual/pdf", files=files)).status_code == 200
+    refused = await api.post("/api/offers/manual/pdf", files=files)
+    assert refused.status_code == 429 and refused.json()["detail"].startswith("Réessaie dans")
+
+
+async def test_contract_goes_to_the_offer(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    posting = POSTING_PAGE.replace('"title":', '"employmentType": "PERMANENT", "title":')
+    page(monkeypatch, posting)
+    draft = (await api.post("/api/offers/manual/read", json={"url": "exemple.ch/job/2"})).json()[
+        "draft"
+    ]
+    assert draft["contract"] == "Durée indéterminée"
+    added = (await api.post("/api/offers/manual", json=draft)).json()
+    async with rt.sessionmaker() as session:
+        offer = await session.get(Offer, added["id"])
+        assert offer is not None and offer.employment_type == "Durée indéterminée"

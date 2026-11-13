@@ -30,19 +30,25 @@ def _runtime(request: Request) -> Runtime:
 class SpontaneousIn(BaseModel):
     company: Annotated[str, Field(min_length=1, max_length=200)]
     title: Annotated[str, Field(min_length=1, max_length=200)]
-    # « Pourquoi elle » : ce qui rend la lettre propre à cette entreprise.
-    reason: Annotated[str, Field(min_length=1, max_length=1500)]
+    # « Pourquoi cette entreprise ? » : ce qui rend la lettre propre à cette entreprise. Facultatif
+    # (paquet du 11 novembre, PR 38).
+    reason: Annotated[str, Field(max_length=1500)] = ""
     website: Annotated[str, Field(max_length=300)] | None = None
     # Une offre chez cette entreprise est déjà là, et on crée quand même.
     force: bool = False
 
-    @field_validator("company", "title", "reason")
+    @field_validator("company", "title")
     @classmethod
     def _strip(cls, value: str) -> str:
         stripped = value.strip()
         if not stripped:
             raise ValueError("ne doit pas être vide")
         return stripped
+
+    @field_validator("reason")
+    @classmethod
+    def _reason(cls, value: str) -> str:
+        return value.strip()
 
     @field_validator("website")
     @classmethod
@@ -88,8 +94,9 @@ def description(body: SpontaneousIn) -> str:
     lines = [
         "Candidature spontanée : aucune annonce publiée.",
         f"Poste visé : {body.title}",
-        f"Pourquoi cette entreprise : {body.reason}",
     ]
+    if body.reason:
+        lines.append(f"Pourquoi cette entreprise : {body.reason}")
     if body.website:
         lines.append(f"Site : {body.website}")
     return "\n".join(lines)
@@ -127,7 +134,7 @@ async def create_spontaneous(
             description=description(body),
             company_website=body.website,
             spontaneous=True,
-            spontaneous_reason=body.reason,
+            spontaneous_reason=body.reason or None,
         )
         session.add(offer)
         await session.flush()
