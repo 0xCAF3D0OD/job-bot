@@ -2,15 +2,15 @@
 
 Lu le 2026-11-13 par `scripts/inventaire_employeurs.py`. Définition de « lisible » et seuil : docs/145 §2.
 
-- Employeurs testés : **40** ; lisibles : 3 ; non lisibles : 30 ; à vérifier à la main : 7.
+- Employeurs testés : **40** ; lisibles : 3 ; non lisibles : 33 ; à vérifier à la main : 4.
 - **Strict** (les « à vérifier » comptent comme non lisibles) : 3 sur 40 = **8%** (en dessous du seuil de 50 %).
-- **Provisoire** (les « à vérifier » sont exclus) : 3 sur 33 = **9%** (en dessous du seuil de 50 %).
+- **Provisoire** (les « à vérifier » sont exclus) : 3 sur 36 = **8%** (en dessous du seuil de 50 %).
 - Le chiffre final se compare au seuil après la vérification à la main des lignes « à vérifier ».
 - Par métier (seuil : au moins 3 lisibles ; un métier en dessous est retiré de l'essai) :
-    - batiment : **0 lisibles** sur 8 employeurs, 1 à vérifier ; strict 0/8 = 0%, provisoire 0/7 = 0% ; seuil de 3 : pas atteint ; 1 au plus si toutes les lignes à vérifier passent
-    - bureau : **2 lisibles** sur 13 employeurs, 3 à vérifier ; strict 2/13 = 15%, provisoire 2/10 = 20% ; seuil de 3 : pas atteint ; 5 au plus si toutes les lignes à vérifier passent
+    - batiment : **0 lisibles** sur 8 employeurs, 0 à vérifier ; strict 0/8 = 0%, provisoire 0/8 = 0% ; seuil de 3 : pas atteint
+    - bureau : **2 lisibles** sur 13 employeurs, 2 à vérifier ; strict 2/13 = 15%, provisoire 2/11 = 18% ; seuil de 3 : pas atteint ; 4 au plus si toutes les lignes à vérifier passent
     - informatique : **1 lisibles** sur 8 employeurs, 1 à vérifier ; strict 1/8 = 12%, provisoire 1/7 = 14% ; seuil de 3 : pas atteint ; 2 au plus si toutes les lignes à vérifier passent
-    - sante : **0 lisibles** sur 13 employeurs, 2 à vérifier ; strict 0/13 = 0%, provisoire 0/11 = 0% ; seuil de 3 : pas atteint ; 2 au plus si toutes les lignes à vérifier passent
+    - sante : **0 lisibles** sur 13 employeurs, 1 à vérifier ; strict 0/13 = 0%, provisoire 0/12 = 0% ; seuil de 3 : pas atteint ; 1 au plus si toutes les lignes à vérifier passent
 - Logiciel sans flux public (SuccessFactors, Refline, Abacus/umantis, Prospective) : 6 sur 40 (Hirslanden, Losinger Marazzi, CFF, UNIL, EPFL, SICPA)
 
 | Employeur | Métier | Page carrière | Balisage | robots.txt | Conditions | Offres en Vaud ce jour | Verdict | Raison |
@@ -27,8 +27,8 @@ Lu le 2026-11-13 par `scripts/inventaire_employeurs.py`. Définition de « lisib
 | Clinique La Source | sante | [lien](https://www.lasource.ch/clinique-de-la-source/emploi-et-formation/le-recrutement-a-la-clinique) | non | autorisé | pas de page trouvée | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) ; conditions à vérifier (pas de page trouvée) |
 | Unisanté | sante | [lien](https://emploi.unisante.ch/offres) | oui | autorisé | pas de page trouvée | 13 | à vérifier à la main | conditions à vérifier (pas de page trouvée) |
 | Hirslanden | sante | [lien](https://careers.mediclinic.com/Hirslanden/go/Search-By-Keyword-MCCH-F/5071301/) (SuccessFactors) | non | autorisé | rien ([page](https://www.hirslanden.ch/fr/corporate/conditions-generales-utilisation.html)) | ? | non lisible | pas de balisage JobPosting ni de flux public ; logiciel SuccessFactors ; careers.hirslanden.ch injoignable le 13.11 |
-| Swiss Medical Network | sante | [lien](https://jobs.smartrecruiters.com/SwissMedicalNetwork1/744000161492699-cva-aide-de-cuisine) (SmartRecruiters) |  | ambigu |  |  | à vérifier à la main | robots.txt interdit le flux SmartRecruiters |
-| Implenia | batiment | [lien](https://implenia.com/karriere/jobs/) |  | ambigu |  |  | à vérifier à la main | robots.txt interdit les pages d'offres (https://implenia.com/karriere/jobs/?tx_solr%5Bfilter%5D%5B0%5D=country%3ACHE&tx_solr%5Bfilter%5D%5B1%5D=costs%3A0-20000000-CHF&tx_solr%5Bfilter%5D%5B2%5D=favorites%3A) |
+| Swiss Medical Network | sante | [lien](https://jobs.smartrecruiters.com/SwissMedicalNetwork1/744000161492699-cva-aide-de-cuisine) (SmartRecruiters) |  | ambigu |  |  | non lisible | robots.txt interdit les pages d'offres (reclassé par Kevin le 13.11 ; relevé du script : robots.txt interdit le flux SmartRecruiters) |
+| Implenia | batiment | [lien](https://implenia.com/karriere/jobs/) |  | ambigu |  |  | non lisible | robots.txt interdit les pages d'offres (reclassé par Kevin le 13.11 ; relevé du script : robots.txt interdit les pages d'offres (https://implenia.com/karriere/jobs/?tx_solr%5Bfilter%5D%5B0%5D=country%3ACHE&tx_solr%5Bfilter%5D%5B1%5D=costs%3A0-20000000-CHF&tx_solr%5Bfilter%5D%5B2%5D=favorites%3A)) |
 | Losinger Marazzi | batiment | [lien](https://careers.bouygues-construction.com/go/Losinger-Marazzi-FR/9592101/) (SuccessFactors) | non | autorisé | rien ([page](https://careers.bouygues-construction.com/content/Mentions-Legales/?locale=fr_FR)) | ? | non lisible | pas de balisage JobPosting ni de flux public ; logiciel SuccessFactors |
 | Orllati | batiment | [lien](https://www.orllati.ch/) | non | autorisé | rien ([page](https://www.orllati.ch/conditions-generales/)) | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) |
 | Induni | batiment | [lien](https://induni.ch/emploi/) | non | autorisé | pas de page trouvée | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) ; conditions à vérifier (pas de page trouvée) |
@@ -42,7 +42,7 @@ Lu le 2026-11-13 par `scripts/inventaire_employeurs.py`. Définition de « lisib
 | Retraites Populaires | bureau | [lien](https://www.retraitespopulaires.ch/deja-client/offres) | non | autorisé | rien ([page](https://www.retraitespopulaires.ch/impressum)) | ? | non lisible | pas de balisage JobPosting ni de flux public |
 | BCV | bureau | [lien](https://jobs.bcv.ch/search/?q=&searchResultView=LIST) | non | autorisé | rien ([page](https://www.bcv.ch/fr/home/informations-juridiques.html)) | ? | non lisible | pas de balisage JobPosting ni de flux public |
 | La Poste | bureau |  |  | absent |  |  | à vérifier à la main | page de départ en erreur (HTTP 429) ; 2e tentative en fin de passage : page de départ en erreur (HTTP 429) |
-| CFF | bureau | [lien](https://company.sbb.ch/de/jobs-karriere/jobs/offene-stellen.html) (SuccessFactors) |  | ambigu |  |  | à vérifier à la main | robots.txt interdit les pages d'offres (https://career5.successfactors.eu/career?company=C0007256361P&site=&lang=de_CH&requestParams=&login_ns=register&navBarLevel=MY_PROFILE&_s.crb=MzN2rfcy%2fIQ53vWrOn40geZ2BGVqZVHHlkvVbUh2IUc%3d) |
+| CFF | bureau | [lien](https://company.sbb.ch/de/jobs-karriere/jobs/offene-stellen.html) (SuccessFactors) |  | ambigu |  |  | non lisible | robots.txt interdit les pages d'offres (reclassé par Kevin le 13.11 ; relevé du script : robots.txt interdit les pages d'offres (https://career5.successfactors.eu/career?company=C0007256361P&site=&lang=de_CH&requestParams=&login_ns=register&navBarLevel=MY_PROFILE&_s.crb=MzN2rfcy%2fIQ53vWrOn40geZ2BGVqZVHHlkvVbUh2IUc%3d)) |
 | Migros Vaud | bureau | [lien](https://jobs.migros.ch/fr/nos-entreprises/groupe-migros/postes-vacants) | oui | autorisé | rien ([page](https://jobs.migros.ch/fr/impressum)) | ≥3 | lisible | oui ; robots.txt autorisé ; conditions : rien |
 | Coop | bureau | [lien](https://jobs.coopjobs.ch/?lang=fr) | non | autorisé | page interdite par robots.txt ([page](https://www.coop.ch/fr/entreprise/impressum.html)) | ? | non lisible | aucune offre lisible dans la page ni dans le plan du site (affichage par JavaScript ?) ; conditions à vérifier (page interdite par robots.txt) |
 | Nestlé | bureau |  |  | autorisé |  |  | à vérifier à la main | page de départ en erreur (HTTP 403) ; 2e tentative en fin de passage : page de départ en erreur (HTTP 403) |
