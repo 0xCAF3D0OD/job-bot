@@ -3,9 +3,10 @@
 - Interface : lire docs/regles-ui-ergonomie.md, puis le cadre Figma correspondant avant toute modification. Ne coder que des composants et variables présents dans Figma. Si un écran manque dans Figma, s'arrêter et le signaler.
   - Exception (décidée le 2026-10-23) : la migration des échelles 1.6.x (docs/135) est dispensée de la règle « écran manquant dans Figma », parce qu'elle n'ajoute aucune structure : elle remplace des valeurs par les variables de Figma, page par page. Limite : dès qu'une version 1.6.x ajouterait, retirerait ou déplacerait un élément, la règle s'applique de nouveau et il faut s'arrêter.
   - Exception (décidée le 2026-11-02) : pour le chantier de la nouvelle identité mobile (docs/139), les maquettes de docs/mobile/ font foi à la place de Figma et, en cas de conflit, à la place de docs/regles-ui-ergonomie.md. Références : docs/mobile/tokens.css pour les couleurs et les tailles (source de vérité), docs/mobile/captures/ pour le rendu, le HTML de docs/mobile/maquettes/ pour les valeurs exactes. Limite : un écran absent de ces maquettes suit de nouveau la règle « s'arrêter et le signaler ». Les règles de regles-ui-ergonomie.md ne changent qu'après validation point par point.
-  - Règle des maquettes (décidée le 2026-11-13, remplace l'exception du 2026-11-08) : docs/mobile/ fait foi pour le téléphone et pour l'ordinateur, à la place de Figma. Quand plusieurs paquets coexistent :
-    1. le paquet le plus récent fait foi pour les écrans qu'il contient (aujourd'hui : PR #648, lot « Tri des offres et nouveau visuel » du 11 novembre au soir) ;
-    2. le dessin passe avant le texte ;
-    3. une décision que Kevin donne dans la conversation après le paquet passe avant le paquet ; elle est notée dans docs/mobile/DECISIONS.md avec sa date.
-    Les planches retirées sont listées à la fin de docs/mobile/LISEZMOI.md avec leur remplaçante. Un écran absent des index du LISEZMOI suit la règle « s'arrêter et le signaler ».
+  - Règle des maquettes (décidée le 2026-11-13, remplace l'exception du 2026-11-08) : la maquette de référence du 13 novembre (docs/mobile/LISEZMOI.md, paquet jobA1_maquette_2026-11-13_reference) est la seule référence pour le téléphone et pour l'ordinateur, à la place de Figma. Elle remplace les paquets des 8, 9, 10 et 11 novembre, gardés comme historique. Qui fait foi, dans l'ordre :
+    1. une décision de Kevin donnée dans la conversation après le 13 novembre, notée avec sa date dans docs/mobile/DECISIONS.md ;
+    2. les décisions du point 4 du LISEZMOI ;
+    3. le dessin des planches du paquet ;
+    4. le texte des prompts, du plus récent au plus ancien.
+    Un écran ou un état dessiné nulle part ne s'invente pas : s'arrêter et demander la maquette.
 - Données des utilisateurs : toute modification qui lit, écrit, envoie, journalise ou efface une donnée d'un utilisateur suit docs/regles-securite-donnees.md. La PR cite les règles concernées (R-1). Une règle qu'on ne peut pas suivre se signale dans la PR et va dans les « Écarts connus » (§14).
