@@ -16,7 +16,6 @@ import DismissLayer from "./components/DismissLayer.vue";
 import { closeAllLayers } from "./composables/useDismissLayer";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { LOGIN_PATH, leave, useAuth } from "./composables/useAuth";
-import { useJobsMemory } from "./composables/useJobsMemory";
 import { useCollect } from "./composables/useCollect";
 import { useAutoGrow } from "./composables/useAutoGrow";
 import { useFocusMode } from "./composables/useFocusMode";
@@ -53,9 +52,6 @@ const { phone: wide } = usePhone("(min-width: 1024px)");
 const { focus } = useFocusMode();
 const bare = computed(() => focus.value || (!!route.meta.bare && !(route.name === "not-found" && wide.value && !phone.value && loggedIn.value)));
 const footer = computed(() => !bare.value && (!phone.value || !loggedIn.value || route.path === "/compte"));
-const { check: checkJobsPage } = useJobsMemory();
-// Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
-watch(loggedIn, (now) => now && void checkJobsPage().catch(() => undefined), { immediate: true });
 // Un changement de page ferme le panneau ou le menu ouvert (docs/143, D24).
 watch(() => route.fullPath, () => closeAllLayers());
 function skipToContent(): void {

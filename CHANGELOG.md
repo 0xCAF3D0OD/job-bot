@@ -555,3 +555,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.341 | Après l’ajout d’un rendez-vous, un message l’annonce et il est sélectionné sous « À venir » ; si l’enregistrement échoue, le volet reste ouvert, garde la saisie et le dit | livrée |
 | 1.6.342 | Le libellé posé sur la bordure d’un champ n’a plus de trait derrière ses lettres, au focus comme en erreur, en clair et en sombre | livrée |
 | 1.6.343 | Maquettes : installation de la maquette de référence du 13 novembre, seule référence (planches retirées, historique marqué, règle dans CLAUDE.md) | livrée |
+| 1.6.344 | Le menu « Candidatures » mène à la liste des offres depuis Préparer et Relances ; Mes alertes, Préparer et Relances ne sont plus retenues | livrée |
