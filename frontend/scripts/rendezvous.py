@@ -11,6 +11,9 @@ rendez-vous » puis depuis « Ajouter » de « Prochain rendez-vous » d'une fic
 « status »), sous « À venir », sélectionné, repris dans la fiche passée, et encore là après rechargement. Si
 l'enregistrement échoue, le volet reste ouvert, garde la saisie et le dit.
 
+« Ce qui a été convenu », à 900 px (défaut du 13 novembre) : dans le volet de 440 px, le pied ne dépasse pas,
+« Annuler » et « Enregistrer » sont sur une ligne, et « Mesures décidées » grandit avec un texte long.
+
     make audit-rendez-vous DEMO_URL=http://localhost:5200
 """
 
@@ -247,6 +250,48 @@ async def failed_save(context: BrowserContext) -> list[str]:
     return faults
 
 
+async def outcome_sheet(context: BrowserContext) -> list[str]:
+    """« Ce qui a été convenu » en volet de 440 px (entre 821 et 1023 px de large) : rien ne dépasse de côté, les
+    deux boutons du pied sont dans le volet et sur une ligne, « Mesures décidées » montre tout un texte long."""
+    faults: list[str] = []
+    page = await context.new_page()
+    await page.goto(f"{BASE}/candidatures/rendez-vous-orp?feuille=carnet")
+    edit = page.locator("[data-test^=log-outcome-]").first
+    await edit.wait_for(timeout=15000)
+    await edit.click()
+    sheet = page.locator("dialog[data-test=outcome-sheet][open]")
+    await sheet.wait_for(timeout=5000)
+    await page.wait_for_timeout(400)  # le volet a fini de glisser
+    handle = await sheet.element_handle()
+    assert handle
+    measures = page.locator("[data-test=outcome-measures]")
+    await measures.fill("")
+    short = (await measures.bounding_box() or {}).get("height", 0)
+    await measures.fill("Cours de français professionnel trois demi-journées par semaine, stage de six mois dans une entreprise de la région, programme d’emploi temporaire")
+    await page.wait_for_timeout(300)
+    tall = (await measures.bounding_box() or {}).get("height", 0)
+    if tall <= short or await measures.evaluate("(e) => e.scrollHeight > e.clientHeight + 1"):
+        faults.append(f"900 px, « Mesures décidées » : le champ ne grandit pas avec le texte ({short} px puis {tall} px)")
+    width = (await sheet.bounding_box() or {}).get("width", 0)
+    if width != 440:
+        faults.append(f"900 px, « Ce qui a été convenu » : le volet fait {width} px, 440 attendus")
+    wide = await page.evaluate(OVERFLOW.replace("getComputedStyle(el).overflowX !== 'visible'", "!/^(INPUT|TEXTAREA)$/.test(el.tagName)"), handle)
+    if wide:
+        faults.append(f"900 px, « Ce qui a été convenu » : défilement horizontal : {', '.join(wide)}")
+    buttons = page.locator("dialog[data-test=outcome-sheet] .sheet-actions button")
+    tops = set()
+    for index in range(await buttons.count()):
+        button = buttons.nth(index)
+        name = (await button.text_content() or "").strip()
+        if not await page.evaluate(VISIBLE, [await button.element_handle(), handle]):
+            faults.append(f"900 px, « Ce qui a été convenu » : « {name} » dépasse du volet")
+        tops.add(round((await button.bounding_box() or {}).get("y", 0)))
+    if await buttons.count() != 2 or len(tops) != 1:
+        faults.append("900 px, « Ce qui a été convenu » : « Annuler » et « Enregistrer » ne sont pas sur une ligne")
+    await page.close()
+    return faults
+
+
 async def main() -> int:
     faults: list[str] = []
     async with async_playwright() as p:
@@ -263,6 +308,9 @@ async def main() -> int:
             await context.close()
         context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
         faults += await failed_save(context)
+        await context.close()
+        context = await browser.new_context(viewport={"width": 900, "height": 800}, reduced_motion="reduce")
+        faults += await outcome_sheet(context)
         await context.close()
         await browser.close()
     for fault in faults:

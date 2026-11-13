@@ -4,6 +4,7 @@ import { computed, nextTick, ref, toRef, watch } from "vue";
 
 import type { components } from "../api/schema";
 import { usePhone } from "../composables/usePhone";
+import { grow } from "../composables/useAutoGrow";
 import { useOrpOutcome } from "../composables/useOrpOutcome";
 import { dateText } from "../rendezVous";
 import BottomSheet from "./BottomSheet.vue";
@@ -31,6 +32,20 @@ const picking = ref<"" | "date" | "time">("");
 watch(
   () => props.meeting,
   () => (picking.value = ""),
+);
+// « Mesures décidées » : une zone de texte d'une ligne qui grandit avec le texte. Entrée enregistre, comme dans un
+// champ d'une ligne. Sans field-sizing (Firefox), la hauteur d'un texte déjà saisi est ajustée à l'ouverture.
+const measuresArea = ref<HTMLTextAreaElement | null>(null);
+function submitFrom(event: KeyboardEvent): void {
+  (event.target as HTMLTextAreaElement).form?.requestSubmit();
+}
+watch(
+  () => [props.meeting, picking.value],
+  async () => {
+    await nextTick();
+    const native = typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("field-sizing", "content");
+    if (measuresArea.value && !native) grow(measuresArea.value);
+  },
 );
 function focusPill(which: "date" | "time"): void {
   void nextTick(() => document.querySelector<HTMLElement>(`#orp-outcome [data-test=dt-${which}]`)?.focus());
@@ -111,14 +126,16 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
         optional
         hint="Ex. : cours, stage, programme"
       >
-        <input
+        <textarea
           :id="f.id"
+          ref="measuresArea"
           v-model="measures"
           :aria-describedby="f.describedby"
-          type="text"
+          rows="1"
           maxlength="1000"
           data-test="outcome-measures"
-        >
+          @keydown.enter.prevent="submitFrom"
+        />
       </FormField>
       <div
         class="outcome-field outcome-next"
@@ -210,6 +227,12 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
 .outcome-counter > span { min-width: 2.25rem; text-align: center; font-size: var(--out-24); font-weight: var(--weight-heavy); }
 .outcome-counter small, .outcome-next small { font-size: var(--font-small); color: var(--text-secondary); }
 .outcome-next { display: grid; gap: var(--out-6); }
-.outcome-sheet .sheet-actions { justify-content: flex-end; margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4) 0; border-top: 1px solid var(--line); }
+/* Le pied : sa marge négative ne vaut qu'entre 600 et 820 px, où la feuille a 16 px de marge intérieure. Ailleurs la
+   feuille n'en a pas, et le pied dépassait de 16 px du volet de 440 px (défaut du 13 novembre). */
+.outcome-sheet .sheet-actions { justify-content: flex-end; border-top: 1px solid var(--line); }
+.outcome-sheet .sheet-actions > button { white-space: nowrap; }
+@media (min-width: 600px) and (max-width: 820px) { .outcome-sheet .sheet-actions { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4) 0; } }
+/* « Mesures décidées » : une ligne au départ, le champ grandit avec le texte au lieu de le couper. */
+.outcome-sheet textarea[data-test="outcome-measures"] { min-height: var(--ff-h); }
 .outcome-sheet .sheet-actions > button { min-height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 </style>
