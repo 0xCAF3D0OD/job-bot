@@ -34,6 +34,7 @@ from jobbot.db.models import (
 from jobbot.followups import remind
 from jobbot.followups import service as followups
 from jobbot.letters.contact_guess import guess_contact
+from jobbot.letters.document import Identity as LetterIdentity
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -555,6 +556,10 @@ class Identity(BaseModel):
     availability: ShortText | None = None
     salary: ShortText | None = None
     permit: ShortText | None = None
+    # Récapitulatif du 11 novembre, PR 44 : le délai de préavis ; et le salaire, rempli seul dans un
+    # formulaire (« auto », par défaut) ou seulement après accord (« demander »).
+    notice: ShortText | None = None
+    salary_mode: Literal["auto", "demander"] | None = None
 
     @field_validator(
         "name",
@@ -568,6 +573,7 @@ class Identity(BaseModel):
         "availability",
         "salary",
         "permit",
+        "notice",
     )
     @classmethod
     def _strip(cls, value: str | None) -> str | None:
@@ -596,20 +602,32 @@ class Identity(BaseModel):
 async def get_identity(request: Request) -> Identity:
     async with _runtime(request).sessionmaker() as session:
         identity = await load_identity(session)
-    return Identity(**asdict(identity))
+    return _identity_out(identity)
+
+
+def _identity_out(identity: LetterIdentity) -> Identity:
+    found = asdict(identity)
+    if found.get("salary_mode") not in ("auto", "demander"):
+        found["salary_mode"] = "auto"
+    return Identity(**found)
 
 
 @router.put("/identity", operation_id="saveIdentity")
 async def put_identity(request: Request, body: Identity) -> Identity:
+    """Enregistre les champs envoyés ; un champ absent de la demande garde sa valeur (une réponse
+    des formulaires de candidature s'enregistre seule, PR 44), un champ `null` est vidé."""
     async with _runtime(request).sessionmaker.begin() as session:
         for field, key in IDENTITY_KEYS.items():
+            if field not in body.model_fields_set:
+                continue
             value = getattr(body, field)
             await session.execute(
                 insert(Setting)
                 .values(key=key, value=value)
                 .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
             )
-    return body
+        identity = await load_identity(session)
+    return _identity_out(identity)
 
 
 @router.get("/identity/from-document/{document_id}", operation_id="guessIdentity")

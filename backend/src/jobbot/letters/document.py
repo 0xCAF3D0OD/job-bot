@@ -57,6 +57,8 @@ class Identity:
     availability: str | None = None
     salary: str | None = None
     permit: str | None = None
+    notice: str | None = None
+    salary_mode: str | None = None
 
     @property
     def missing(self) -> list[str]:

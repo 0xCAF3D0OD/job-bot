@@ -5,6 +5,7 @@ vérifié par le middleware). `/api/extension-tokens` : gestion des jetons depui
 Réglages, avec la session habituelle.
 """
 
+import contextlib
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Literal
 
@@ -32,6 +33,7 @@ from jobbot.db.models import (
 )
 from jobbot.extension import announce, service
 from jobbot.followups.service import local_today
+from jobbot.letters.document import Identity as LetterIdentity
 from jobbot.letters.service import current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.mail import addresses, site_codes
@@ -91,6 +93,22 @@ class FillIdentity(BaseModel):
     availability: str | None
     salary: str | None
     permit: str | None
+    notice: str | None = None
+    # Vrai : le salaire est connu mais ne se remplit pas seul (« Me demander avant », PR 44) ;
+    # `salary` est alors vide et l'extension laisse le champ à remplir à la main.
+    salary_ask: bool = False
+
+
+def _fill_identity(identity: LetterIdentity) -> FillIdentity:
+    found = dict(identity.__dict__)
+    ask = found.pop("salary_mode", None) == "demander" and bool(found.get("salary"))
+    if ask:
+        found["salary"] = None
+    # Une date précise de disponibilité (« 2027-04-01 ») s'écrit comme sur un formulaire suisse.
+    available = found.get("availability") or ""
+    with contextlib.suppress(ValueError):
+        found["availability"] = date.fromisoformat(available).strftime("%d.%m.%Y")
+    return FillIdentity(**found, salary_ask=ask)
 
 
 class FillOut(BaseModel):
@@ -178,7 +196,7 @@ async def fill(request: Request, offer_id: int) -> FillOut:
     company = _company(offer)
     return FillOut(
         offer=_brief(offer),
-        identity=FillIdentity(**identity.__dict__),
+        identity=_fill_identity(identity),
         letter_text="\n\n".join(p for p in paragraphs if p) or None,
         has_letter=letter is not None,
         has_cv=cv is not None,

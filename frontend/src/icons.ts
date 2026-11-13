@@ -9,6 +9,11 @@ export const ICONS = {
   // Repères et navigation
   search: circle(11, 11, 6.5) + path("M16 16l4.5 4.5"),
   calendar: '<rect x="4" y="5" width="16" height="15" rx="2"/>' + path("M8 3v4M16 3v4M4 10h16"),
+  // Les réponses pour les formulaires de candidature (maquette CoordonneesOrdinateur, PR 44).
+  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/>' + path("M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"),
+  "id-card": '<rect x="3" y="5" width="18" height="14" rx="2"/>' + circle(9, 12, 2.5) + path("M14 10h4M14 14h4"),
+  timer: circle(12, 13, 8) + path("M12 9v4l3 2M9 2h6"),
+  banknote: '<rect x="2" y="6" width="20" height="12" rx="2"/>' + circle(12, 12, 2.5) + path("M6 10v.01M18 14v.01"),
   inbox: path("M4 13l2.5-7h11L20 13v6H4z") + path("M4 13h4.5l1 2h5l1-2H20"),
   briefcase: '<rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/>' + path("M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12.5h17"),
   "list-check": path("M4 6.5l1.5 1.5L8 5.5M4 12.5l1.5 1.5L8 11.5M4 18.5l1.5 1.5L8 17.5M11 7h9M11 13h9M11 19h9"),

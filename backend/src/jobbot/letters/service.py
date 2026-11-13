@@ -18,6 +18,10 @@ IDENTITY_KEYS = {
     "availability": "apply_availability",
     "salary": "apply_salary",
     "permit": "apply_permit",
+    # Récapitulatif du 11 novembre, PR 44 : le délai de préavis, et si le salaire se remplit seul
+    # (« auto ») ou seulement après accord (« demander »).
+    "notice": "apply_notice",
+    "salary_mode": "apply_salary_mode",
 }
 
 

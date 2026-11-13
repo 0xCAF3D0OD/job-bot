@@ -106,4 +106,18 @@ describe("remplissage du formulaire", () => {
     expect((document.querySelector('[name="land"]') as HTMLInputElement).value).toBe("Schweiz");
     expect(report.frames).toEqual(["https://boards.greenhouse.io/exemple/jobs/1"]);
   });
+
+  it("PR 44 : le délai de préavis a sa réponse ; « Me demander avant » laisse le salaire à remplir, en orange", () => {
+    document.documentElement.lang = "fr";
+    document.body.innerHTML = `
+      <label>Délai de préavis <input name="notice"></label>
+      <label>Disponibilité <input name="start"></label>
+      <label>Prétentions salariales <input name="salary"></label>`;
+    const asked = { ...data, identity: { ...data.identity, notice: "2 mois", availability: "Tout de suite", salary: null, salary_ask: true } };
+    const report = jobbot().fill(asked);
+    expect((document.querySelector('[name="notice"]') as HTMLInputElement).value).toBe("2 mois");
+    expect((document.querySelector('[name="start"]') as HTMLInputElement).value).toBe("Tout de suite");
+    expect((document.querySelector('[name="salary"]') as HTMLInputElement).value).toBe("");
+    expect(report.todo).toEqual(["Prétentions salariales (tu as choisi « Me demander avant »)"]);
+  });
 });

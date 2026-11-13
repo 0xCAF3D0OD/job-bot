@@ -5532,6 +5532,7 @@
           "applications"
         ],
         "summary": "Put Identity",
+        "description": "Enregistre les champs envoyés ; un champ absent de la demande garde sa valeur (une réponse\ndes formulaires de candidature s'enregistre seule, PR 44), un champ `null` est vidé.",
         "operationId": "saveIdentity",
         "requestBody": {
           "content": {
@@ -14629,6 +14630,22 @@
               }
             ],
             "title": "Permit"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice"
+          },
+          "salary_ask": {
+            "type": "boolean",
+            "title": "Salary Ask",
+            "default": false
           }
         },
         "type": "object",
@@ -16021,6 +16038,33 @@
               }
             ],
             "title": "Permit"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice"
+          },
+          "salary_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "demander"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Mode"
           }
         },
         "type": "object",
