@@ -552,3 +552,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.338 | Sous la progression des coordonnées, la phrase dit « jobA1 te les donne prêtes à copier quand un formulaire les demande. » | livrée |
 | 1.6.339 | Dans le volet « Nouveau rendez-vous » et les autres panneaux étroits, le choix de la date tient sur une colonne : plus de défilement de côté, les heures passent à la ligne et « Valider » reste visible en bas | livrée |
 | 1.6.340 | « Pas encore notée » passe au gris secondaire sur les cartes d'offres (6,3:1 au lieu de 3,9:1, WCAG 1.4.3), et la démo reçoit une offre sans note pour le vérifier | livrée |
+| 1.6.341 | Après l’ajout d’un rendez-vous, un message l’annonce et il est sélectionné sous « À venir » ; si l’enregistrement échoue, le volet reste ouvert, garde la saisie et le dit | livrée |
