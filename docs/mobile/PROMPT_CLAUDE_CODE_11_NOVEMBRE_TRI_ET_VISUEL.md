@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # jobA1, PR 45 à 53 : tri des offres et nouveau visuel (11 novembre 2026, soir)
 
 Ce document complète les prompts précédents (PR 21 à 44). Il ne les remplace pas.
