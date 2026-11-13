@@ -509,6 +509,8 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-detail-body { display: flex; flex-direction: column; gap: var(--rdv-22); }
 .rdv-detail-head { display: flex; align-items: flex-start; gap: var(--rdv-18); }
 .rdv-detail-head > div:not(.more-menu) { flex: 1; min-width: 0; }
+/* Le « ⋯ » du détail à la hauteur de « Nouveau rendez-vous », sur la même ligne (44 px, audit des contrôles). */
+.rdv-detail-head .more-button { min-width: var(--target-min); min-height: var(--target-min); }
 .rdv-detail-kicker { font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-detail-head h1 { margin: var(--space-1) 0 0; font-size: var(--rdv-26); line-height: var(--rdv-lh-title); font-weight: var(--weight-heavy); }
 .rdv-detail-head p { margin: var(--space-1) 0 0; font-size: var(--font-body); color: var(--text-secondary); overflow-wrap: anywhere; }
