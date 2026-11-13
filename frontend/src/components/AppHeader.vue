@@ -26,7 +26,8 @@ const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label:
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
 // La page en cours dans le menu : Candidatures couvre tous ses onglets et ses fiches.
 function isCurrent(entry: NavEntry): boolean {
-  if (entry.name === "jobs") return route.path.startsWith("/candidatures");
+  // L'entraînement à l'entretien part d'une candidature (PR 42).
+  if (entry.name === "jobs") return route.path.startsWith("/candidatures") || route.name === "practice";
   if (entry.name === "bilan") return route.path.startsWith("/bilan");
   return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
 }

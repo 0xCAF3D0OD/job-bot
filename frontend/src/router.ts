@@ -226,6 +226,9 @@ export const routes: RouteRecordRaw[] = [
       return { path: "/bilan", query: typeof to.query.mois === "string" ? { orp: to.query.mois, tout: "1" } : {} };
     },
   },
+  // S'entraîner pour l'entretien (récapitulatif du 11 novembre, PR 42) : une page, plus une fenêtre. Sans candidature,
+  // un entretien type ; `?seance=` rouvre un entraînement.
+  { path: "/entrainement/:candidatureId(\\d+)?", name: "practice", component: () => import("./views/PracticeView.vue") },
   // « Pour l'ORP », une candidature à déclarer (MODIFICATIONS du 8 novembre au soir, lot 18, §10.3) : plein écran.
   { path: "/bilan/orp/candidature/:id", name: "orp-fiche", component: () => import("./views/OrpFicheView.vue"), meta: { bare: true } },
   {

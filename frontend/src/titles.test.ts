@@ -26,6 +26,8 @@ const POSSESSIVE = /^(Ton|Ta|Tes|Toi|Mon|Ma|Mes)\b/;
 // maquette PreparerOrdinateur du 9 novembre ; Mon CV, maquette ProfilOrdinateur, et Mon parcours, demandé par Kevin le
 // 10 novembre pour le Profil ordinateur).
 const MAQUETTE = new Set([
+  // « Ton » : le ton de la voix, pas un possessif (maquette Entrainement, PR 42).
+  "./views/PracticeView.vue : Ton du recruteur",
   "./components/AccountMenu.vue : Mon compte",
   "./views/AlertsView.vue : Mes alertes e-mail",
   "./views/AccountView.vue : Mon parcours",

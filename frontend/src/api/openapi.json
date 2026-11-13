@@ -20927,6 +20927,45 @@
           "can_practice": {
             "type": "boolean",
             "title": "Can Practice"
+          },
+          "language_from_offer": {
+            "type": "boolean",
+            "title": "Language From Offer",
+            "default": false
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          },
+          "interview_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview At"
           }
         },
         "type": "object",
@@ -21212,6 +21251,17 @@
             "type": "boolean",
             "title": "Skipped",
             "default": false
+          },
+          "tip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tip"
           }
         },
         "type": "object",

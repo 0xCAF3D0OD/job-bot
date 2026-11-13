@@ -22,7 +22,6 @@ import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewForm from "../components/InterviewForm.vue";
-import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import MomentScreen from "../components/MomentScreen.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
@@ -408,10 +407,7 @@ const prepareFromPanel = fromPanel((application: Application) => {
   preparing.value = application;
 });
 // S'entraîner (docs/75), depuis le « ⋯ » des entretiens.
-const practicing = ref<Application | null>(null);
-const practiceFromPanel = fromPanel((application: Application) => {
-  practicing.value = application;
-});
+const practiceFromPanel = fromPanel((application: Application) => router.push({ name: "practice", params: { candidatureId: application.id } }));
 
 // Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
 const interviewing = ref<{ application: Application; interview: Interview | null } | null>(null);
@@ -1049,11 +1045,6 @@ onUnmounted(() => assistant.setFocus(null));
       @changed="load"
     />
   </SidePanel>
-  <InterviewPractice
-    v-if="practicing"
-    :application="practicing"
-    @close="practicing = null"
-  />
   <InterviewPreparation
     v-if="preparing"
     :application="preparing"

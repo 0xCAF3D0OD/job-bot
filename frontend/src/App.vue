@@ -19,6 +19,7 @@ import { LOGIN_PATH, leave, useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useCollect } from "./composables/useCollect";
 import { useAutoGrow } from "./composables/useAutoGrow";
+import { useFocusMode } from "./composables/useFocusMode";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
 import { usePhone } from "./composables/usePhone";
@@ -48,7 +49,9 @@ const { me, loggedIn, load, expired } = useAuth();
 const { phone } = usePhone();
 // Page introuvable sur ordinateur, connecté (maquette du 8 novembre, PageIntrouvableOrdinateur) : l'en-tête complet.
 const { phone: wide } = usePhone("(min-width: 1024px)");
-const bare = computed(() => !!route.meta.bare && !(route.name === "not-found" && wide.value && !phone.value && loggedIn.value));
+// Le mode concentration (PR 42) cache l'en-tête comme une page nue.
+const { focus } = useFocusMode();
+const bare = computed(() => focus.value || (!!route.meta.bare && !(route.name === "not-found" && wide.value && !phone.value && loggedIn.value)));
 const footer = computed(() => !bare.value && (!phone.value || !loggedIn.value || route.path === "/compte"));
 const { check: checkJobsPage } = useJobsMemory();
 // Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
