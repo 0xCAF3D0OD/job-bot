@@ -1,8 +1,17 @@
 # 145 — Des offres sans alerte : les pages carrières des employeurs
 
-> Statut : **étape 1 (inventaire) validée par Kevin le 2026-11-11**, seuils et 4e métier le 2026-11-13. Étapes 2 et 3 : pas encore.
+> Statut : **piste arrêtée par Kevin le 2026-11-13**, après l'inventaire (étape 1, validée le 2026-11-11 ; seuils et 4e métier le 2026-11-13). Les étapes 2 et 3 ne seront pas faites. Conclusion : §0.
 > Origine : la question de Kevin du 2026-11-11 : « il devrait pouvoir y en avoir sans alerte ? Sur Google n'y en a-t-il pas ? » Recommandation détaillée dans le doc « Sources d'offres sans alerte e-mail » (agrégateurs, comparaison, courriers).
 > Se construit sur docs/104 (recherche jobup, coupée en 0.82.4), docs/111 (`JobPosting`) et docs/144 (Google Emplois, accès partenaires).
+
+## 0. Conclusion (Kevin, 2026-11-13)
+
+« Piste "lecture des pages carrière" arrêtée le 13 novembre 2026. Résultat : 3 lisibles sur 40 (8 %), au mieux 11 sur 40 (27 %). Seuil : 50 % et 3 par métier. Cause principale : 16 employeurs affichent leurs offres en JavaScript, 5 utilisent SuccessFactors sans flux public, 3 l'interdisent dans robots.txt. »
+
+- Le « au mieux » compte les 4 lignes « à vérifier » (Unisanté, La Poste, Nestlé, Swisscom) et les 4 adresses vérifiées à la main lisibles sans JavaScript (Clinique La Source, Frutiger, Ville de Lausanne, Retraites Populaires), comme si elles passaient toutes. Santé, bâtiment et informatique resteraient sous 3 lisibles.
+- Tableau, CSV, répartition par raison et adresses vérifiées à la main : `docs/inventaire-employeurs/inventaire.md` et `.csv`.
+- Le script reste dans `scripts/`, sans nouvelle option ; on ne le relance pas.
+- Pistes non explorées : les interfaces publiques des logiciels de recrutement (SmartRecruiters, Workday, SuccessFactors, Beehire, Oracle). Leur existence et leurs conditions d'utilisation sont à vérifier ; rien n'est codé.
 
 ## 1. Pourquoi
 

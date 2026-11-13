@@ -1,2 +1,2 @@
-L'inventaire des pages carrières corrigé : il suit les liens jusqu'à la liste des offres, ajoute l'informatique (40 employeurs vaudois), donne pour chacun balisage, robots.txt, conditions, offres en Vaud et verdict, et compare au seuil de 50 % ; la liste à l'envers est retirée (index Common Crawl interdit par robots.txt) ; trois verdicts (lisible, non lisible, à vérifier à la main) et deux pourcentages, strict et provisoire
-État : livrée (script) ; tableau à produire sur le Mac de Kevin
+L'inventaire des pages carrières : 40 employeurs vaudois (santé, bâtiment, bureau, informatique), avec pour chacun le balisage, robots.txt, les conditions, les offres en Vaud et un verdict, comparés au seuil de 50 % et de 3 lisibles par métier ; résultat 3 lisibles sur 40 (8 %), au mieux 11 sur 40 (27 %) : la piste « lecture des pages carrière » est arrêtée (docs/145 §0)
+État : arrêtée le 13.11.2026 (tableau et répartition par raison dans docs/inventaire-employeurs/)
