@@ -501,10 +501,6 @@ button.rdv-item:hover { border-color: var(--field-border); }
 }
 .rdv-item .list-card-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
 .rdv-item .list-card-chips > .green { background: var(--success-soft); color: var(--success); }
-.rdv-item-note {
-  flex: none; min-height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
-  background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold);
-}
 .rdv-detail {
   flex: 1; min-width: 0; overflow-y: auto; box-sizing: border-box; padding: var(--space-6) var(--rdv-28);
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--space-6);
@@ -540,9 +536,6 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-questions-box > .link { align-self: flex-start; min-height: var(--target-min); padding: 0 var(--space-1); font-weight: var(--weight-bold); }
 .rdv-question-new { display: flex; gap: var(--space-2); }
 .rdv-question-new input { flex: 1; min-width: 0; }
-.rdv-detail-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); margin: 0; font-size: var(--rdv-15); }
-.rdv-detail-agreed dt { color: var(--text-secondary); }
-.rdv-detail-agreed dd { margin: 0; }
 .rdv-detail .rdv-form { max-width: 560px; }
 /* Aucun rendez-vous à venir : une ligne de texte et « Ajouter » (44 px, en pilule), un trait dessous, sans carte. */
 .rdv-list-empty { flex: none; display: flex; align-items: center; gap: var(--rdv-14); padding: var(--space-1) var(--space-1) var(--space-2); border-bottom: 1px solid var(--line); }

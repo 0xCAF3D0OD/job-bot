@@ -489,23 +489,68 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(wrapper.find("[data-test=application]").attributes("aria-current")).toBe("true");
   });
 
-  it("?q= (recherche globale) : seulement ce qui correspond, sans accents ni casse ; « Tout afficher »", async () => {
+  it("?q= (recherche globale) : seulement ce qui correspond, sans accents ni casse ; « Effacer les filtres »", async () => {
     const others = [
       at("2026-09-10", { id: 11, company: "Témoin Industrie SA", job_title: "Ingénieur DevOps" }),
       at("2026-09-11", { id: 12, company: "Banque Exemple", job_title: "Comptable" }),
     ];
     mockApi(undefined, others);
-    const { wrapper, router } = await mountView("/candidatures/suivi?q=temoin%20INGENIEUR");
-    expect(wrapper.find("[data-test=sent-words]").text()).toContain("Candidatures « temoin INGENIEUR »");
+    const { wrapper } = await mountView("/candidatures/suivi?q=temoin%20INGENIEUR");
+    // PR 39 : la même recherche que l'onglet Offres, remplie par l'adresse.
+    const search = wrapper.find("[data-test=sent-filters] [data-test=search]");
+    expect(search.attributes("placeholder")).toBe("Filtrer par titre ou entreprise");
+    expect((search.element as HTMLInputElement).value).toBe("temoin INGENIEUR");
     expect(wrapper.find("[data-test=sent-list]").text()).toContain("Témoin Industrie SA");
     expect(wrapper.find("[data-test=sent-list]").text()).not.toContain("Banque Exemple");
-    await wrapper.find("[data-test=sent-words-clear]").trigger("click");
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    await flushPromises();
-    expect(router.currentRoute.value.query.q).toBeUndefined();
-    expect(wrapper.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
+    expect(wrapper.find("[data-test=sent-status-toutes]").text()).toBe("Toutes1");
 
-    const { wrapper: none } = await mountView("/candidatures/suivi?q=boulanger");
-    expect(none.find("[data-test=sent-words]").text()).toContain("Aucune candidature pour « boulanger ».");
+    const { wrapper: none, router } = await mountView("/candidatures/suivi?q=boulanger&statut=entretien");
+    expect(none.find("[data-test=sent-none] p").text()).toBe("Aucune candidature ne correspond");
+    await none.find("[data-test=sent-clear]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({});
+    expect(none.find("[data-test=sent-none]").exists()).toBe(false);
+    expect(none.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
+  });
+
+  it("PR 39 : statuts avec leur nombre (0 masqué), un seul choisi, gardé dans l’adresse ; le tri", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
+    const items = [
+      at("2026-09-10", { id: 11, company: "Ancienne SA", status: "en_attente" }),
+      at("2026-11-05", { id: 12, company: "Récente SA", status: "en_attente" }),
+      at("2026-10-20", { id: 13, company: "Entretien SA", status: "entretien", interview_at: "2026-11-12T13:00:00Z" }),
+      at("2026-10-01", { id: 14, company: "Silence SA", status: "sans_reponse" }),
+    ];
+    mockApi(undefined, items);
+    const { wrapper, router } = await mountView("/candidatures/suivi?statut=relancer");
+    const group = wrapper.find("[data-test=sent-filters] [role=group]");
+    expect(group.attributes("aria-label")).toBe("Statut");
+    // « Refusées » à 0 : masqué.
+    expect(group.findAll("button").map((b) => b.text())).toEqual(["Toutes4", "À relancer1", "Sans réponse1", "Entretien1"]);
+    expect(group.findAll("button").map((b) => b.attributes("aria-pressed"))).toEqual(["false", "true", "false", "false"]);
+    const names = () => wrapper.findAll("[data-test=sent-list] [data-test=application]").map((c) => c.text().match(/[A-ZÉ][a-zé]+ SA/)?.[0]);
+    expect(names()).toEqual(["Ancienne SA"]);
+
+    await wrapper.find("[data-test=sent-status-entretien]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.statut).toBe("entretien");
+    expect(names()).toEqual(["Entretien SA"]);
+    await wrapper.find("[data-test=sent-status-toutes]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.statut).toBeUndefined();
+
+    // Le tri : « à relancer d'abord » garde les rubriques ; par date, une seule liste.
+    const sort = wrapper.find("[data-test=sent-sort]");
+    expect(sort.findAll("option").map((o) => o.text())).toEqual(["Trier\u202f: à relancer d’abord", "Trier\u202f: plus récentes", "Trier\u202f: plus anciennes"]);
+    expect(wrapper.find("[data-test=sent-section-follow]").exists()).toBe(true);
+    await sort.setValue("anciennes");
+    await flushPromises();
+    expect(router.currentRoute.value.query.tri).toBe("anciennes");
+    expect(wrapper.findAll("[data-test^=sent-section-]")).toHaveLength(0);
+    expect(names()).toEqual(["Ancienne SA", "Silence SA", "Entretien SA", "Récente SA"]);
+    await sort.setValue("recentes");
+    await flushPromises();
+    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);
   });
 });

@@ -149,8 +149,8 @@ describe("la pastille de la cloche et la sélection d’une offre (1.6.18)", () 
 
 describe("le Suivi (1.6.20)", () => {
   it("un refus n’est pas une erreur : gris ; « sans réponse » en --faint, plus de couleur en dur", () => {
-    expect(css).toContain(".app-status .dot.refus { background: var(--muted); }");
-    expect(css).toContain(".app-status .dot.sans_reponse { background: var(--faint); }");
+    expect(css).toContain(".suivi-legend .dot.refus { background: var(--muted); }");
+    expect(css).toContain(".suivi-legend .dot.sans_reponse { background: var(--faint); }");
     expect(css).not.toContain("#c4c8d2");
   });
 

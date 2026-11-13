@@ -48,7 +48,9 @@ import InlineConfirm from "../components/InlineConfirm.vue";
 import SentCard from "../components/SentCard.vue";
 import SentDetail from "../components/SentDetail.vue";
 import { usePhone } from "../composables/usePhone";
-import { sentSections } from "../sentList";
+import { sentCounts, sentFiltered, sentFilterOf, sentSorted, sentSortOf, type SentFilter, type SentSort } from "../sentFilters";
+import { sentSections, type SentSection } from "../sentList";
+import SentFilters from "../components/SentFilters.vue";
 
 // Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
 // - Candidatures › Envoyées (maquette Envoyees, 7.11.2026) : l'objectif ORP du mois et sa barre, puis les
@@ -87,8 +89,29 @@ function matches(a: Application): boolean {
   const text = plain(`${a.job_title} ${a.company} ${a.location ?? ""}`);
   return wanted.value.every((w) => text.includes(w));
 }
-// Les rubriques d'Envoyées ; venues de la recherche globale avec des mots, seulement ce qui correspond.
-const sections = computed(() => sentSections(wanted.value.length ? all.value.filter(matches) : all.value));
+// Le filtre des Envoyées (paquet du 11 novembre, PR 39) : les mots, un statut et le tri, gardés dans l'adresse
+// (?q=, ?statut=relancer, ?tri=recentes). Les nombres des statuts comptent ce qui correspond aux mots.
+const statusFilter = computed<SentFilter>({
+  get: () => sentFilterOf(route.query.statut),
+  set: (value) => void router.replace({ query: { ...route.query, statut: value === "toutes" ? undefined : value } }),
+});
+const sentSort = computed<SentSort>({
+  get: () => sentSortOf(route.query.tri),
+  set: (value) => void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } }),
+});
+const worded = computed(() => (wanted.value.length ? all.value.filter(matches) : all.value));
+const statusCounts = computed(() => sentCounts(worded.value));
+const filtering = computed(() => wanted.value.length > 0 || statusFilter.value !== "toutes");
+function clearFilters(): void {
+  words.value = "";
+  void router.replace({ query: { ...route.query, q: undefined, statut: undefined } });
+}
+// Les rubriques d'Envoyées (« à relancer d'abord ») ; triées par date, une seule liste sans rubrique.
+const sections = computed<SentSection[]>(() => {
+  const items = sentFiltered(worded.value, statusFilter.value);
+  if (sentSort.value === "relancer") return sentSections(items);
+  return items.length ? [{ key: "earlier", title: "", items: sentSorted(items, sentSort.value) }] : [];
+});
 // L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici l'échéance ORP (§11).
 const goal = computed(() => {
   const data = orp.value;
@@ -783,21 +806,28 @@ onUnmounted(() => assistant.setFocus(null));
       <template v-else-if="loaded">
         <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
         <template v-if="!orpPage">
-          <p
-            v-if="wanted.length"
-            class="sent-words"
-            data-test="sent-words"
+          <SentFilters
+            v-model:words="words"
+            v-model:filter="statusFilter"
+            v-model:sort="sentSort"
+            :counts="statusCounts"
+          />
+          <div
+            v-if="filtering && !sections.length"
+            class="sent-none"
+            role="status"
+            data-test="sent-none"
           >
-            {{ sections.length ? `Candidatures « ${words.trim()} »` : `Aucune candidature pour « ${words.trim()} ».` }}
+            <p>Aucune candidature ne correspond</p>
             <button
               type="button"
-              class="link"
-              data-test="sent-words-clear"
-              @click="words = ''"
+              class="secondary"
+              data-test="sent-clear"
+              @click="clearFilters"
             >
-              Tout afficher
+              Effacer les filtres
             </button>
-          </p>
+          </div>
           <ul
             class="offer-cards sent-list"
             data-test="sent-list"
@@ -807,6 +837,7 @@ onUnmounted(() => assistant.setFocus(null));
               :key="section.key"
             >
               <li
+                v-if="section.title"
                 class="offer-day"
                 :data-test="`sent-section-${section.key}`"
               >
