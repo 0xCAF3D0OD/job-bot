@@ -39,7 +39,7 @@ import urllib.parse
 import urllib.request
 import urllib.robotparser
 from collections.abc import Callable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -52,6 +52,7 @@ MAX_BYTES = 3_000_000
 MAX_HOPS = 3
 MAX_OFFERS = 30
 THRESHOLD = 0.5
+PER_TRADE = 3
 
 
 # --- Lecture des pages -------------------------------------------------------------------
@@ -88,6 +89,7 @@ class Polite:
         self.sleep = sleep
         self.robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
         self.robots_state: dict[str, str] = {}
+        self.robots_code: dict[str, int] = {}
         self.sitemaps: dict[str, list[str]] = {}
         self.last: dict[str, float] = {}
         self.lock = threading.Lock()
@@ -103,6 +105,7 @@ class Polite:
         if host not in self.robots:
             page = self._get(host + "/robots.txt")
             parser = urllib.robotparser.RobotFileParser()
+            self.robots_code[host] = page.status
             if page.status == 0 or page.status >= 500:
                 self.robots[host], self.robots_state[host] = None, "injoignable"
                 return None
@@ -118,6 +121,12 @@ class Polite:
                 self.robots_state[host] = "présent"
             self.robots[host] = parser
         return self.robots[host]
+
+    def forget(self, url: str) -> None:
+        """Oublie les règles d'un site, pour les relire à la seconde tentative."""
+        host = self.host(url)
+        for cache in (self.robots, self.robots_state, self.robots_code, self.sitemaps):
+            cache.pop(host, None)
 
     def allowed(self, url: str) -> bool:
         rules = self.rules(url)
@@ -501,6 +510,7 @@ class Employer:
     verdict: str = ""
     raison: str = ""
     raison_balisage: str = ""
+    erreur: bool = False
     exemples: list[str] = field(default_factory=list)
 
 
@@ -557,7 +567,10 @@ def sitemap_offers(page: Page, web: Polite) -> list[str]:
 def inspect(employer: Employer, web: Polite) -> Employer:
     rules = web.rules(employer.url)
     if rules is None:
-        return verdict(employer, robots="injoignable", raison="robots.txt injoignable (site en panne ?)", check=True)
+        code = web.robots_code.get(web.host(employer.url), 0)
+        employer.erreur = True
+        what = f"HTTP {code}" if code else "pas de réponse"
+        return verdict(employer, robots="injoignable", raison=f"robots.txt injoignable ({what})", check=True)
     state = web.robots_state.get(web.host(employer.url), "")
     if not web.allowed(employer.url):
         return verdict(employer, robots="interdit", raison="robots.txt interdit la page carrières")
@@ -565,8 +578,9 @@ def inspect(employer: Employer, web: Polite) -> Employer:
 
     start = web.get(employer.url)
     if start is None or start.status != 200:
-        status = start.status if start else "?"
-        return verdict(employer, raison=f"page de départ en erreur (HTTP {status})", check=True)
+        employer.erreur = True
+        what = f"HTTP {start.status}" if start and start.status else "pas de réponse"
+        return verdict(employer, raison=f"page de départ en erreur ({what})", check=True)
     terms = terms_link(start)
 
     page, offers, found = find_list_page(start, web)
@@ -681,6 +695,48 @@ def verdict(employer: Employer, robots: str = "", raison: str = "", check: bool 
     return employer
 
 
+def is_error(employer: Employer) -> bool:
+    """Une page en erreur au premier passage (aussi pour un inventaire.csv d'une version précédente)."""
+    return (
+        employer.erreur
+        or employer.raison.startswith(("page de départ en erreur", "robots.txt injoignable", "site injoignable"))
+        or employer.conditions.startswith("page en erreur")
+    )
+
+
+def retry_errors(employers: list[Employer], web: Polite) -> list[Employer]:
+    """Seconde tentative, en fin de passage, des employeurs dont la page était en erreur."""
+    result = []
+    for employer in employers:
+        if not is_error(employer) or "2e tentative" in employer.raison:
+            result.append(employer)
+            continue
+        print(f"… {employer.nom} (2e tentative)", flush=True)
+        first = employer.raison
+        web.forget(employer.url)
+        again = inspect(Employer(employer.nom, employer.metier, employer.url, employer.remarque), web)
+        if again.erreur:
+            again.raison = f"{first} ; 2e tentative en fin de passage : {again.raison}"
+        else:
+            again.raison = f"{again.raison} (1re tentative : {first} ; 2e tentative réussie)"
+        result.append(again)
+    return result
+
+
+def read_results(path: Path) -> list[Employer]:
+    """Relit inventaire.csv (passage fini), pour la seconde tentative et le tableau."""
+    names = {f.name for f in fields(Employer)}
+    employers = []
+    with path.open(encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            values = {k: v for k, v in row.items() if k in names}
+            values["exemples"] = [x for x in (row.get("exemples") or "").split(" ; ") if x]
+            values["offres_lues"] = int(row.get("offres_lues") or 0)
+            values["erreur"] = (row.get("erreur") or "") == "True"
+            employers.append(Employer(**values))
+    return employers
+
+
 def read_employers(path: Path) -> list[Employer]:
     with path.open(encoding="utf-8") as handle:
         return [Employer(row["nom"], row["metier"], row["url"], row.get("remarque") or "") for row in csv.DictReader(handle)]
@@ -710,11 +766,20 @@ def summary(employers: list[Employer]) -> list[str]:
         f"**{_share(readable, provisional_base)}** ({'au-dessus' if provisional >= THRESHOLD else 'en dessous'} du seuil de 50 %).",
         "- Le chiffre final se compare au seuil après la vérification à la main des lignes « à vérifier ».",
     ]
+    lines.append(f"- Par métier (seuil : au moins {PER_TRADE} lisibles ; un métier en dessous est retiré de l'essai) :")
     for metier in sorted({m for e in employers for m in metiers(e)}):
         group = [e for e in employers if metier in metiers(e)]
         ok = sum(1 for e in group if e.verdict == LISIBLE)
         tc = sum(1 for e in group if e.verdict == A_VERIFIER)
-        lines.append(f"- {metier} : {ok} lisibles sur {len(group)} employeurs ({tc} à vérifier)")
+        base = len(group) - tc
+        state = "atteint" if ok >= PER_TRADE else (
+            f"pas atteint ; {ok + tc} au plus si toutes les lignes à vérifier passent" if tc else "pas atteint"
+        )
+        lines.append(
+            f"    - {metier} : **{ok} lisibles** sur {len(group)} employeurs, {tc} à vérifier ; "
+            f"strict {ok}/{len(group)} = {_share(ok, len(group))}, provisoire {ok}/{base} = {_share(ok, base)} ; "
+            f"seuil de {PER_TRADE} : {state}"
+        )
     case3 = [e.nom for e in employers if e.cas == "3"]
     lines.append(
         f"- Logiciel sans flux public (SuccessFactors, Refline, Abacus/umantis, Prospective) : {len(case3)} sur {total}"
@@ -774,15 +839,23 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--csv", type=Path, default=FOLDER / "employeurs-vaud.csv")
     parser.add_argument("--sortie", type=Path, default=FOLDER)
     parser.add_argument("--contact", help="adresse e-mail ajoutée au nom du robot (conseillé)")
+    parser.add_argument(
+        "--reprendre", action="store_true",
+        help="reprend inventaire.csv d'un passage fini : seconde tentative des pages en erreur, puis tableau réécrit",
+    )
     args = parser.parse_args(argv)
     global USER_AGENT
     if args.contact:
         USER_AGENT = f"jobA1-inventaire/1.1 (+https://joba1.ch; {args.contact})"
     web = Polite()
-    employers = []
-    for employer in read_employers(args.csv):
-        print(f"… {employer.nom}", flush=True)
-        employers.append(inspect(employer, web))
+    if args.reprendre:
+        employers = read_results(args.sortie / "inventaire.csv")
+    else:
+        employers = []
+        for employer in read_employers(args.csv):
+            print(f"… {employer.nom}", flush=True)
+            employers.append(inspect(employer, web))
+    employers = retry_errors(employers, web)
     out = write(employers, args.sortie)
     print("\n".join(summary(employers)))
     print(out)

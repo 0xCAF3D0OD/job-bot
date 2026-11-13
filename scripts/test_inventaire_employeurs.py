@@ -171,8 +171,51 @@ class Inventaire(unittest.TestCase):
         self.assertIn("Employeurs testés : **3**", text)
         self.assertIn("1 sur 3 = **33%** (en dessous", text)
         self.assertIn("1 sur 2 = **50%** (au-dessus", text)
-        self.assertIn("sante : 1 lisibles sur 2 employeurs (1 à vérifier)", text)
+        self.assertIn("sante : **1 lisibles** sur 2 employeurs, 1 à vérifier ; strict 1/2 = 50%, provisoire 1/1 = 100%", text)
+        self.assertIn("seuil de 3 : pas atteint ; 2 au plus si toutes les lignes à vérifier passent", text)
         self.assertIn("(C)", text)
+
+    def test_seuil_par_metier_atteint(self):
+        employers = [Employer(n, "batiment", "", verdict="lisible") for n in "ABC"]
+        self.assertIn("seuil de 3 : atteint", "\n".join(inv.summary(employers)))
+
+    def test_seconde_tentative_en_fin_de_passage(self):
+        calls = {"n": 0}
+
+        def fetch(url):
+            if url == "https://r.ch/jobs/":
+                calls["n"] += 1
+                if calls["n"] == 1:
+                    return Page(503, url, "")
+                return Page(200, url, "<a href='/jobs/123-x'>X</a><a href='/cgu'>CGU</a>")
+            if url == "https://r.ch/jobs/123-x":
+                return Page(200, url, jobposting())
+            if url == "https://r.ch/cgu":
+                return Page(200, url, TERMS_OK)
+            return Page(404, url, "")
+
+        web = Polite(fetch, sleep=lambda _s: None)
+        first = inv.inspect(Employer("R", "bureau", "https://r.ch/jobs/"), web)
+        self.assertEqual((first.verdict, first.raison), ("à vérifier à la main", "page de départ en erreur (HTTP 503)"))
+        [again] = inv.retry_errors([first], web)
+        self.assertEqual(again.verdict, "lisible")
+        self.assertIn("1re tentative : page de départ en erreur (HTTP 503) ; 2e tentative réussie", again.raison)
+
+    def test_seconde_tentative_encore_en_erreur(self):
+        web, _ = site({"https://q.ch/robots.txt": Page(0, "https://q.ch/robots.txt", "")})
+        first = inv.inspect(Employer("Q", "sante", "https://q.ch/"), web)
+        [again] = inv.retry_errors([first], web)
+        self.assertEqual(again.verdict, "à vérifier à la main")
+        self.assertEqual(again.raison, "robots.txt injoignable (pas de réponse) ; 2e tentative en fin de passage : robots.txt injoignable (pas de réponse)")
+
+    def test_reprendre_un_csv(self):
+        import tempfile
+        from pathlib import Path
+        employers = [Employer("A", "sante", "https://a.ch/", verdict="lisible", exemples=["Infirmier (Lausanne)"], offres_lues=3)]
+        with tempfile.TemporaryDirectory() as folder:
+            inv.write(employers, Path(folder))
+            [back] = inv.read_results(Path(folder) / "inventaire.csv")
+        self.assertEqual((back.nom, back.verdict, back.exemples, back.offres_lues), ("A", "lisible", ["Infirmier (Lausanne)"], 3))
 
 
 if __name__ == "__main__":

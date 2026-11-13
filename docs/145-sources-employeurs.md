@@ -23,7 +23,7 @@ Sans alerte e-mail, jobA1 ne reçoit aucune offre. Google Emplois trouve les sie
 
 En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pas de sources pour rattraper.
 
-**Seuil par métier** (ajouté par Kevin le **2026-11-13 à 15:30, avant le résultat**) : un métier qui a moins de 3 employeurs lisibles est retiré de l'essai ; les autres métiers continuent, si le seuil de 50 % au total est atteint. Un employeur classé dans deux métiers compte dans chacun.
+**Seuil par métier** (ajouté par Kevin le **2026-11-13 à 16 h 30 (heure suisse), avant le résultat**) : un métier qui a moins de 3 employeurs lisibles est retiré de l'essai ; les autres métiers continuent, si le seuil de 50 % au total est atteint. Un employeur classé dans deux métiers compte dans chacun.
 
 **Trois verdicts** (définition stricte gardée, complétée le 13.11.2026) :
 
@@ -48,6 +48,8 @@ En haut du tableau, deux pourcentages : **strict** (les « à vérifier » compt
 ```
 cd ~/Documents/job-bot && git pull && python3 scripts/inventaire_employeurs.py --contact contact@joba1.ch
 ```
+
+`--reprendre` relit `inventaire.csv` d'un passage fini, fait la seconde tentative des seuls employeurs en erreur et réécrit le tableau, sans relire les autres sites (utilisé pour le passage du 13.11, lancé avant ces deux ajouts).
 
 ## 3. Étape 2 (à valider après l'inventaire) : règle déjà décidée
 
