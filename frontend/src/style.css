@@ -4257,6 +4257,12 @@ html.search-open { overflow: hidden; }
 .form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) { display: block; width: 100%; box-sizing: border-box; min-height: var(--ff-h); padding-inline: var(--ff-pad-x); border-radius: var(--ff-radius); background-color: var(--ff-bg); font-size: var(--font-body); }
 .form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select) { height: var(--ff-h); }
 .form-field-box textarea { padding-block: var(--space-4); }
+/* Le libellé flotte sur la bordure du haut : rien ne doit être dessiné à l'extérieur du champ, sinon un trait passe
+   derrière les lettres (défaut du 13 novembre : l'épaississement du focus était une ombre extérieure de 0,5 px, dans
+   la moitié transparente du libellé). L'épaississement est donc dessiné à l'intérieur, au focus comme en erreur. */
+.form-field-box :is(input, select, textarea):focus { box-shadow: inset 0 0 0 0.5px var(--primary-graphic); }
+.form-field-box :is(input, select, textarea)[aria-invalid="true"] { box-shadow: inset 0 0 0 1px var(--down-text); }
+.form-field-box :is(input, select, textarea)[aria-invalid="true"]:focus { box-shadow: inset 0 0 0 1.5px var(--down-text); }
 .form-field-box :is(input, select, textarea):disabled { border-color: var(--line-strong); background-color: var(--ff-bg); color: var(--text-placeholder); }
 .form-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); display: flex; align-items: center; gap: var(--space-1); max-width: calc(100% - 2 * var(--ff-label-x)); box-sizing: border-box; padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); color: var(--text-secondary); pointer-events: none; white-space: nowrap; transition: top var(--t-state), font-size var(--t-state), color var(--t-state); }
 .form-field-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -5036,6 +5042,9 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-field-outlined .dt-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); pointer-events: none; white-space: nowrap; }
 .dt-field-outlined .dt-field-part:has(.dt-pill:not(.dt-pill-empty)) .dt-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--surface) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
 .dt-pill-open, .dt-pill:hover { border: 2px solid var(--primary-graphic); }
+/* Même règle que les champs : sous un libellé flottant, le focus au clavier se dessine à l'intérieur de la pilule
+   (l'anneau extérieur passait derrière « Date » et « Heure »). */
+.dt-field-outlined .dt-pill:focus-visible { outline: none; border: 2px solid var(--primary-graphic); box-shadow: inset 0 0 0 1px var(--primary-graphic); }
 
 /* DateTimePanel : le sélecteur, à la place du formulaire ; plein écran sur téléphone. */
 /* DateField (lot 10) : ouvert dans une grille de formulaire, le sélecteur prend toute la ligne. */
