@@ -10,11 +10,18 @@ import AppIcon from "./AppIcon.vue";
 // Assistant). Sans voile, sous l'en-tête, coin haut gauche arrondi, ombre --shadow-panel, entrée ja-slide-r ; la page
 // reste utilisable. Focus sur le titre à l'ouverture ; la fermeture (croix, Échap, clic à l'extérieur) passe par
 // useDismissLayer, qui rend le focus au déclencheur. `role="complementary"`.
-const props = withDefaults(defineProps<{ open: boolean; title: string; modeless?: boolean; width?: 420 | 480; closeLabel?: string }>(), {
+// `eyebrow` (planche AlertesOrdinateurSite) : une ligne en capitales au-dessus du titre (« Site 1 sur 5 »).
+// Le pied (`footer`) reste en bas du panneau, sous un trait, quand le contenu défile.
+const props = withDefaults(
+  defineProps<{ open: boolean; title: string; modeless?: boolean; width?: 420 | 480; closeLabel?: string; eyebrow?: string; panelClass?: string }>(),
+  {
   modeless: false,
   width: 420,
   closeLabel: "Fermer",
-});
+  eyebrow: "",
+  panelClass: "",
+  },
+);
 const emit = defineEmits<{ close: [] }>();
 const titleId = useId();
 const heading = ref<HTMLElement | null>(null);
@@ -188,14 +195,25 @@ const openStack: symbol[] = [];
       <div
         v-show="open"
         ref="aside"
-        :class="['side-panel', { 'side-panel-480': width === 480 }]"
+        :class="['side-panel', panelClass, { 'side-panel-480': width === 480 }]"
         role="dialog"
         aria-modal="true"
         :aria-label="title"
         data-test="side-panel"
       >
         <header class="side-panel-head">
-          <h2>{{ title }}</h2>
+          <div
+            v-if="eyebrow"
+            class="side-panel-titles"
+          >
+            <p class="side-panel-eyebrow">
+              {{ eyebrow }}
+            </p>
+            <h2>{{ title }}</h2>
+          </div>
+          <h2 v-else>
+            {{ title }}
+          </h2>
           <!-- Le bouton de IconButton (docs/101), écrit ici pour garder la référence du focus. -->
           <button
             ref="closeButton"
@@ -209,9 +227,16 @@ const openStack: symbol[] = [];
             <AppIcon name="close" />
           </button>
         </header>
+        <slot name="top" />
         <div class="side-panel-body">
           <slot />
         </div>
+        <footer
+          v-if="$slots.footer"
+          class="side-panel-foot"
+        >
+          <slot name="footer" />
+        </footer>
       </div>
     </Transition>
   </Teleport>

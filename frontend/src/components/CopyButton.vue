@@ -8,10 +8,12 @@ import CopyLabel from "./CopyLabel.vue";
 // annoncés aux lecteurs d'écran (WCAG 4.1.3). Inspiré du bouton de copie de GitHub (Primer).
 // `text` (maquette Preparer, étape 7c) : le mot « Copier » dans une pastille, qui devient « Copié » en vert ;
 // le nom du champ reste lu par un lecteur d'écran.
-const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string }>(), {
+// `announce: false` : la page annonce elle-même la copie (panneau des alertes, « Adresse copiée »).
+const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string; announce?: boolean }>(), {
   label: "Copier",
   testId: "copy",
   text: "",
+  announce: true,
 });
 const emit = defineEmits<{ copied: [] }>();
 
@@ -52,6 +54,7 @@ onUnmounted(() => clearTimeout(timer));
     />
   </button>
   <span
+    v-if="announce"
     class="visually-hidden"
     role="status"
   >{{ done ? "Copié" : "" }}</span>
