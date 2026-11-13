@@ -9,12 +9,13 @@ import MomentScreen from "./MomentScreen.vue";
 
 // La fin du tri (lot du 11 novembre au soir, PR 45 ; maquettes FinDuTri et FinDuTriOrdinateur), sur le modèle de
 // « C’est fait ! » et « Candidature envoyée » : l'illustration, « C’est trié ! », le compte des offres gardées et
-// écartées, puis une ligne par offre gardée avec « Préparer ». Sans offre gardée : pas de carte, un seul bouton.
+// écartées, puis une ligne par offre gardée avec « Préparer ». Sans offre gardée (FinDuTriAucune, paquet du 13
+// novembre) : pas de carte, la phrase dit quand viennent les prochaines offres, un seul bouton plein.
 const props = defineProps<{ kept: Offer[]; dismissed: number }>();
 const { phone } = usePhone();
 
 const line = computed(() => {
-  if (!props.kept.length) return "Aucune offre gardée cette fois.";
+  if (!props.kept.length) return "Aucune offre gardée cette fois. Les prochaines offres arrivent demain matin.";
   const parts = [plural(props.kept.length, "offre gardée", "offres gardées")];
   if (props.dismissed) parts.push(plural(props.dismissed, "écartée", "écartées"));
   return `${parts.join(", ")}.`;
@@ -108,9 +109,12 @@ defineExpose({ focus: () => root.value?.focus() });
 .tri-done-prepare { display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); font-size: var(--td-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .tri-done-main { justify-content: center; width: 100%; box-sizing: border-box; min-height: var(--btn-primary); border-radius: var(--radius-pill); font-size: var(--td-17); font-weight: var(--weight-bold); }
 .tri-done-home { display: flex; align-items: center; justify-content: center; min-height: var(--td-48); font-size: var(--td-16); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+/* Sans offre gardée : « Retour à l’accueil » est le seul bouton, plein (54 px sur téléphone, 44 px sur ordinateur). */
+.tri-done-home.tri-done-home-alone { width: 100%; box-sizing: border-box; min-height: var(--btn-primary); border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-size: var(--td-17); }
 @media (min-width: 1024px) {
   .tri-done-list { width: var(--td-card); margin-top: var(--space-5); }
   .tri-done-main { order: 2; width: auto; min-height: var(--target-min); padding: 0 var(--space-5); font-size: var(--td-15); }
   .tri-done-home { order: 1; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--tri-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--td-15); font-weight: var(--weight-semibold); }
+  .tri-done-home.tri-done-home-alone { width: auto; min-height: var(--target-min); padding: 0 var(--space-5); border: 0; background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); }
 }
 </style>

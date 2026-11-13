@@ -69,6 +69,8 @@ async def run(context: BrowserContext, width: int) -> list[str]:
     await toast.wait_for(timeout=3000)
     check(await toast.get_attribute("role") == "status", "le message n'a pas le rôle « status »")
     check("Offre gardée dans tes candidatures" in (await toast.text_content() or ""), "le message ne dit pas « Offre gardée dans tes candidatures »")
+    bar = await toast.locator(".tri-toast-bar").bounding_box()
+    check(bool(bar and round(bar["height"]) == 3), "le message n'a pas son trait de 3 px qui se vide")
     await page.wait_for_timeout(500)  # la carte précédente a fini de partir
     check(await page.evaluate("(s) => document.activeElement === document.querySelector(s)", TITLE), "le focus ne va pas au titre de l'offre suivante")
     await toast.locator("[data-test=undo]").click()

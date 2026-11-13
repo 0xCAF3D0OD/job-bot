@@ -114,11 +114,15 @@ describe("Trier les offres (PR 45)", () => {
     const dismiss = wrapper.find("[data-test=triage-dismiss]");
     expect([keep.element.tagName, keep.text(), keep.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Garder", "ArrowRight"]);
     expect([dismiss.element.tagName, dismiss.text(), dismiss.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Écarter", "ArrowLeft"]);
+    // Sur ordinateur, les deux raccourcis sont affichés sous le compteur (touches dessinées).
+    expect(wrapper.find("[data-test=triage-keys]").text().replace(/\s+/g, " ")).toBe("←Écarter→Garder");
     await keep.trigger("click");
     await flushPromises();
     const toast = wrapper.find("[data-test=triage-toast]");
     expect(toast.attributes("role")).toBe("status");
     expect(toast.text()).toContain("Offre gardée dans tes candidatures");
+    // Le trait qui se vide pendant les 6 secondes : décoratif, caché des lecteurs d'écran.
+    expect(toast.find(".tri-toast-bar").attributes("aria-hidden")).toBe("true");
     expect(wrapper.find("[data-test=triage-offer]").attributes("aria-label")).toBe("Offre 2 sur 2");
     expect(document.activeElement).toBe(wrapper.find("[data-test=triage-title]").element);
     // Rien n'est parti au serveur ; « Annuler » remet l'offre à l'écran.
@@ -152,13 +156,14 @@ describe("Trier les offres (PR 45)", () => {
     expect(sent).toEqual([[1, "later"], [2, "ignored"], [3, "later"]]);
   });
 
-  it("aucune offre gardée : pas de carte, « Aucune offre gardée cette fois. », un seul bouton", async () => {
+  it("aucune offre gardée : pas de carte, la phrase et les prochaines offres, un seul bouton plein", async () => {
     mockApi([offer(1, "DevOps", 90)]);
     const { wrapper } = await mountTriage();
     await wrapper.find("[data-test=triage-dismiss]").trigger("click");
     await flushPromises();
     const done = wrapper.find("[data-test=triage-done]");
-    expect(done.text()).toContain("Aucune offre gardée cette fois.");
+    expect(done.text()).toContain("Aucune offre gardée cette fois. Les prochaines offres arrivent demain matin.");
+    expect(done.find("[data-test=triage-home]").classes()).toContain("tri-done-home-alone");
     expect(done.find("[data-test=triage-kept]").exists()).toBe(false);
     expect(done.find("[data-test=triage-prepare-first]").exists()).toBe(false);
     expect(done.findAll("a")).toHaveLength(1);
