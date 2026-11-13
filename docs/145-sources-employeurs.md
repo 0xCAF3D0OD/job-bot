@@ -18,10 +18,12 @@ Sans alerte e-mail, jobA1 ne reçoit aucune offre. Google Emplois trouve les sie
 
 | Étape | On continue seulement si |
 |---|---|
-| 1. Inventaire | au moins 50 % des employeurs testés sont **lisibles** |
+| 1. Inventaire | au moins 50 % des employeurs testés sont **lisibles** (20 sur 40), **et** au moins 3 employeurs lisibles dans chaque métier |
 | 3. Essai de 14 jours | chaque métier reçoit en moyenne au moins 5 nouvelles offres par jour, après dédoublonnage |
 
 En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pas de sources pour rattraper.
+
+**Seuil par métier** (ajouté par Kevin le **2026-11-13 à 15:30, avant le résultat**) : un métier qui a moins de 3 employeurs lisibles est retiré de l'essai ; les autres métiers continuent, si le seuil de 50 % au total est atteint. Un employeur classé dans deux métiers compte dans chacun.
 
 **Trois verdicts** (définition stricte gardée, complétée le 13.11.2026) :
 
@@ -29,7 +31,9 @@ En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pa
 - **non lisible** : balisage absent ou incomplet (« partiel »), offres affichées seulement par JavaScript (pas de navigateur piloté), robots.txt qui interdit la page carrières, ou conditions qui interdisent ;
 - **à vérifier à la main** : conditions introuvables, illisibles ou interdites d'accès par robots.txt ; robots.txt injoignable, ou qui permet la liste mais pas les pages d'offres (« ambigu ») ; page de départ en erreur.
 
-En haut du tableau, deux pourcentages : **strict** (les « à vérifier » comptent comme non lisibles) et **provisoire** (ils sont exclus du calcul). Kevin vérifie ces lignes à la main ; le chiffre final, après vérification, se compare au seuil de 50 %.
+En haut du tableau, deux pourcentages : **strict** (les « à vérifier » comptent comme non lisibles) et **provisoire** (ils sont exclus du calcul). Le haut du tableau donne aussi, pour chaque métier, le nombre d'employeurs lisibles, strict et provisoire, face au minimum de 3. Kevin vérifie ces lignes à la main ; le chiffre final, après vérification, se compare aux seuils.
+
+**Page en erreur** (ajouté le 2026-11-13) : un employeur dont le robots.txt, la page de départ ou la page des conditions répond en erreur (code HTTP, ou pas de réponse) est relu une seconde fois en fin de passage, avec les mêmes règles de rythme. S'il est encore en erreur, il est classé « à vérifier à la main » et la raison donne le code d'erreur.
 
 **Rythme** : 2 s au moins entre deux requêtes sur un même site, plus si son `Crawl-delay` le demande (CHUV : 5 s, EHC : 10 s) ; par employeur, au plus 41 pages (page de départ, 3 liens suivis, 6 fichiers du plan du site, 30 offres ou un flux, la page des conditions), plus un robots.txt par site visité. Une page interdite par robots.txt n'est jamais demandée ; si c'est la page de départ, une page d'offre ou le flux, la lecture de l'employeur s'arrête aussitôt.
 
