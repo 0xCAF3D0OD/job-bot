@@ -1,0 +1,1 @@
+Le worker reprend une tâche restée « en cours » après un arrêt brutal (une fois, sans double exécution) et s’arrête proprement : la tâche en cours a 20 secondes pour finir, puis elle est relâchée

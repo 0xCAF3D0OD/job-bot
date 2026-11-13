@@ -26,6 +26,7 @@ from jobbot.settings import Settings, libpq
 from jobbot.worker import tasks as _tasks  # noqa: F401  (enregistre les tâches)
 from jobbot.worker.jobs import JOBS, execute
 from jobbot.worker.queue import QUEUE
+from jobbot.worker.recovery import recover_stalled, watch_stalled
 from jobbot.worker.tasks.heartbeat import HEARTBEAT_JOB
 
 log = get_logger(__name__)
@@ -124,6 +125,9 @@ async def run_worker(settings: Settings) -> None:
             return
         papp = build_procrastinate_app(runtime)
         async with papp.open_async():
+            # Tâches laissées « en cours » par un worker tué : reprises avant de servir la file.
+            await recover_stalled(papp)
+            watch_task = asyncio.create_task(watch_stalled(papp, stop), name="stalled-jobs")
             worker_task: asyncio.Task[Any] = asyncio.create_task(
                 papp.run_worker_async(
                     queues=[QUEUE],
@@ -142,9 +146,14 @@ async def run_worker(settings: Settings) -> None:
             # code retour 1 pour que l'orchestrateur relance le processus.
             crashed = not stop.is_set()
             log.info("worker_stopping", crashed=crashed)
+            # Arrêt propre : procrastinate laisse SHUTDOWN_GRACE_SECONDS à la tâche en cours pour
+            # finir, puis l'interrompt et la marque « abandonnée » : son verrou est relâché. Docker
+            # doit laisser plus longtemps (stop_grace_period du worker, deploy/prod).
             worker_task.cancel()
             stop_task.cancel()
+            watch_task.cancel()
             results = await asyncio.gather(worker_task, return_exceptions=True)
+            await asyncio.gather(watch_task, return_exceptions=True)
             if crashed:
                 log.error("worker_crashed", error=repr(results[0]))
                 raise SystemExit(1)

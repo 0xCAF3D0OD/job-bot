@@ -93,6 +93,9 @@ services:
   worker:
     <<: *jobbot
     command: ["jobbot", "worker"]
+    # Arrêt propre (A1 du 13 novembre) : le worker laisse 20 s à la tâche en cours, puis la relâche.
+    # Docker attend 40 s avant de le tuer (10 s par défaut : la tâche restait « en cours » à jamais).
+    stop_grace_period: 40s
     environment:
       <<: *environment
       JOBBOT_WORKER_HTTP_PORT: "8001"
