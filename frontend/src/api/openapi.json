@@ -19980,6 +19980,14 @@
               }
             ]
           },
+          "passages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Passages",
+            "default": []
+          },
           "scored_at": {
             "anyOf": [
               {
@@ -22745,6 +22753,14 @@
                 "type": "null"
               }
             ]
+          },
+          "passages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Passages",
+            "default": []
           },
           "scored_at": {
             "anyOf": [

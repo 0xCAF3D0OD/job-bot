@@ -93,6 +93,9 @@ SCREENS: list[tuple[str, str | None]] = [
     ("profil?onglet=documents", None),
     # Coordonnées reprises du CV (maquette CoordonneesTel du 10 novembre au soir, PR 23) : le formulaire.
     ("profil?onglet=coordonnees", None),
+    # Trier les offres (lot du 11 novembre au soir, PR 45) : la carte, puis la fin du tri.
+    ("candidatures/trier", None),
+    ("candidatures/trier", "[data-test=triage-keep] && [data-test=triage-dismiss] && [data-test=triage-keep]"),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
@@ -124,6 +127,9 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria]"),
     # Les 4 personnages du logo (PR 11, §15).
     ("adresse-inconnue", None),
+    # Trier les offres (lot du 11 novembre au soir, PR 45) : le livre, puis la fin du tri.
+    ("candidatures/trier", None),
+    ("candidatures/trier", "[data-test=triage-keep] && [data-test=triage-dismiss] && [data-test=triage-keep]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
@@ -149,6 +155,8 @@ async def main() -> int:
             phone = width < 821
             page = await browser.new_page(viewport={"width": width, "height": height}, color_scheme=scheme, has_touch=phone, is_mobile=phone)
             await page.route("**/follow-up/draft", lambda route: route.fulfill(json=DRAFT))
+            # La démo refuse d'écrire : le tri (PR 45) garde ses choix à l'écran, l'envoi est accepté ici.
+            await page.route("**/api/offers/*/status", lambda route: route.fulfill(json={}) if route.request.method == "PATCH" else route.continue_())
             for path, opener in screens:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")

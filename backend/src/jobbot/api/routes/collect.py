@@ -129,6 +129,9 @@ class OfferOut(BaseModel):
     # Comment la note est calculée (score-v7, PR 18) : vide pour une note plus ancienne.
     score_parts: list["ScorePartOut"] = []
     score_tip: "ScoreTipOut | None" = None
+    # Passages de l'annonce qui correspondent au profil (score-v8) : retrouvés mot pour mot dans
+    # l'annonce, surlignés dans le tri et dans le détail ; vide pour une note plus ancienne.
+    passages: list[str] = []
     scored_at: datetime | None = None
     # Note faite avec un autre profil que l'actuel : à renoter.
     score_stale: bool = False
@@ -326,6 +329,7 @@ def _evaluation_fields(
                 if part.get("key") in PART_MAX
             ],
             "score_tip": evaluation.score_tip,
+            "passages": evaluation.passages or [],
             "scored_at": evaluation.scored_at,
             "score_stale": current_hash is not None and evaluation.profile_hash != current_hash,
         }
