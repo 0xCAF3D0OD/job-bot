@@ -7,5 +7,8 @@ Une décision de Kevin donnée dans la conversation après le 13 novembre passe 
 | 2026-11-13 | Texte en #8C8478 dans la maquette : erreur de contraste (3,69:1). En texte, utiliser le gris secondaire. La maquette sera corrigée. | Le #8C8478 des planches, pour du texte. |
 | 2026-11-13 | Le point 6 du LISEZMOI (planches Get'emAll gardées) passe avant le point 1 : les quatre planches Get'emAll et `maquettes/canvas.json` restent dans le dépôt. | La suppression de toute planche absente du paquet. |
 | 2026-11-13 | Raccourcis de la préparation de candidature (lettre et CV lancés ensemble, bouton unique "J'ai relu, continuer", "Tout télécharger") : déjà dans main (PR #597, #600), conservés. | La ligne « raccourcis 1, 2 et 4 » du §6 du LISEZMOI, retirée (erreur du paquet). |
+| 2026-11-13 | Téléphone, Ma candidature : la ligne "modèle · langue · Changer" de PreparerMiseEnPage est conservée. MaCandidatureV2 sera complétée. | L'absence de cette ligne sur MaCandidatureV2. |
+| 2026-11-13 | Téléphone, échec de l'écriture de la lettre ou du CV : même carte et même texte que PreparerOrdinateurLettreVide (« La lettre n'a pas pu être écrite », l'explication, « Réessayer »). Pas de nouveau dessin. | L'état d'échec, dessiné nulle part sur téléphone. |
+| 2026-11-13 | Ordinateur, étape Postuler : la ligne du certificat dans « À joindre » est conservée. PreparerOrdinateurPostuler sera complétée. | L'absence de cette ligne sur PreparerOrdinateurPostuler. |
 
 `tokens.css` reste la source des couleurs et des tailles : il n'est pas dans le paquet du 13 novembre et n'est pas remplacé.
