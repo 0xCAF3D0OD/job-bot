@@ -1,1 +1,1 @@
-Alertes sur ordinateur : à l'étape « Crée l'alerte », les liens vers le site ont la même largeur, sur deux colonnes
+Alertes sur ordinateur : à l'étape « Crée l'alerte », les liens vers le site ont la même largeur, sur deux colonnes lues colonne par colonne, et le texte de la carte s'arrête à 80 caractères par ligne

@@ -1205,8 +1205,15 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .wizard-step { margin: 0; font-size: var(--font-caption); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .wizard-links { display: grid; gap: var(--space-2); justify-items: start; }
 /* Ordinateur : les liens « Ouvrir … » de même largeur, sur deux colonnes, pour remplir la carte sans laisser le côté
-   droit vide (regles-ui-ergonomie §3). Le téléphone garde une colonne. */
-@media (min-width: 821px) { .wizard-links { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-items: stretch; } }
+   droit vide (regles-ui-ergonomie §3). Ils se lisent colonne par colonne, dans l'ordre de tabulation : la première
+   de haut en bas, puis la seconde (--wizard-rows, posé par AlertsWizard). Nombre impair : la ligne du bas n'a qu'un
+   lien, à gauche, à la largeur d'une colonne. En dessous de 821 px, une seule colonne. */
+@media (min-width: 821px) {
+  .wizard-links { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--wizard-rows, 1), auto); grid-auto-flow: column; justify-items: stretch; }
+  .wizard-links .button-link { white-space: normal; }
+}
+/* Le texte de la carte reste lisible quand la carte est large : 80 caractères par ligne au plus. */
+.wizard p { max-width: 80ch; }
 /* « J'ai créé l'alerte » et « Plus tard » : côte à côte, à la largeur de leur texte (docs/104 §4, §3). */
 .wizard-site-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .wizard .inline-form input { min-width: 0; }

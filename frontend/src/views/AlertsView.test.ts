@@ -81,6 +81,8 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     expect(wrapper.find("[data-test=wizard-skip]").text()).toBe("Plus tard");
     expect(wrapper.find("[data-test=wizard-skip]").classes()).toContain("secondary");
     expect(wrapper.find("[data-test=wizard-open]").attributes("href")).toBe("https://jobup.example/?term=DevOps");
+    // Ordinateur : les liens se lisent colonne par colonne, la première prend la moitié arrondie au-dessus.
+    expect(wrapper.find(".wizard-links").attributes("style")).toContain("--wizard-rows: 1");
     await wrapper.find("[data-test=wizard-site-done]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", {

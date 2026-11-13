@@ -45,6 +45,11 @@ const remoteLinks = computed(() => {
   return [...seen.entries()].map(([terms, url]) => ({ terms, url }));
 });
 
+// Nombre de lignes de la grille des liens sur ordinateur : la première colonne prend la moitié arrondie au-dessus.
+const linkRows = computed(
+  () => Math.ceil((searches.value.filter((s) => cellUrl(s.id)).length + remoteLinks.value.length) / 2) || 1,
+);
+
 function cellUrl(searchId: number): string | null {
   const search = searches.value.find((s) => s.id === searchId);
   return search?.cells.find((c) => c.site === site.value?.slug)?.url ?? null;
@@ -222,7 +227,10 @@ function copyOnOpen(): void {
           Ouvre la recherche, clique sur « Créer une alerte » et donne ton adresse e-mail.
         </template>
       </p>
-      <div class="wizard-links">
+      <div
+        class="wizard-links"
+        :style="{ '--wizard-rows': linkRows }"
+      >
         <template
           v-for="search in searches"
           :key="search.id"
