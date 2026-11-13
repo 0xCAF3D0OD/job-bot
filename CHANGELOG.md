@@ -554,3 +554,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.340 | « Pas encore notée » passe au gris secondaire sur les cartes d'offres (6,3:1 au lieu de 3,9:1, WCAG 1.4.3), et la démo reçoit une offre sans note pour le vérifier | livrée |
 | 1.6.341 | Après l’ajout d’un rendez-vous, un message l’annonce et il est sélectionné sous « À venir » ; si l’enregistrement échoue, le volet reste ouvert, garde la saisie et le dit | livrée |
 | 1.6.342 | Le libellé posé sur la bordure d’un champ n’a plus de trait derrière ses lettres, au focus comme en erreur, en clair et en sombre | livrée |
+| 1.6.343 | Maquettes : installation de la maquette de référence du 13 novembre, seule référence (planches retirées, historique marqué, règle dans CLAUDE.md) | livrée |
