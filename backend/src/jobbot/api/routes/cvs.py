@@ -24,6 +24,7 @@ from jobbot.llm import cv as cv_llm
 from jobbot.llm.scoring import InvalidScore, ProfileChunkData
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring_service
 from jobbot.scoring.service import active_profile
 
 router = APIRouter(prefix="/api", tags=["cvs"])
@@ -230,6 +231,8 @@ async def write_cv(request: Request, offer_id: int, body: CvRequest) -> CvOut:
             prompt_version=cv_llm.PROMPT_VERSION,
         )
         out = await _render(session, draft)
+    # Préparée avant sa note, ou offre écartée qu'on prépare : la note part maintenant (A2).
+    await scoring_service.score_if_unscored(runtime, offer_id)
     log.info("cv_written", offer_id=offer_id, version=out.version, blocks=len(out.chunk_ids))
     return out
 

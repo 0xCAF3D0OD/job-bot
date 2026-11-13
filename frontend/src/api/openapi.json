@@ -20008,6 +20008,22 @@
             ],
             "title": "Score Error"
           },
+          "score_final": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sans_texte",
+                  "reponse_vide",
+                  "erreur"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Final"
+          },
           "keywords_role": {
             "items": {
               "type": "string"
@@ -22773,6 +22789,22 @@
               }
             ],
             "title": "Score Error"
+          },
+          "score_final": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sans_texte",
+                  "reponse_vide",
+                  "erreur"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Final"
           },
           "keywords_role": {
             "items": {

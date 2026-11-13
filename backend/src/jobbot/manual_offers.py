@@ -50,7 +50,7 @@ from jobbot.sources import jobposting
 
 log = get_logger(__name__)
 
-SOURCE = "manual"
+SOURCE = scoring_service.MANUAL_SOURCE
 MAX_PAGE_BYTES = 2_000_000
 TIMEOUT_SECONDS = 10
 DAILY_LIMIT = 20
@@ -394,7 +394,7 @@ async def added_today(session: AsyncSession) -> int:
 
 
 async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
-    """L'offre ajoutée, puis le filtre (la note suit au prochain passage du worker). Une offre
+    """L'offre ajoutée, puis le filtre ; la notation est mise en file aussitôt. Une offre
     écartée par les critères est gardée : c'est ton choix, la raison s'affiche (docs/111).
     `separate` : « Ajouter comme nouvelle offre » (extension, docs/142 §3) ; même poste chez la
     même entreprise, mais une autre annonce : son empreinte (unique) reçoit un suffixe."""
@@ -436,6 +436,8 @@ async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
         )
         offer_id = offer.id
     await run_filter(runtime)
+    # La note part tout de suite, même écartée par les critères (A2 du 13 novembre).
+    await scoring_service.score_soon(runtime)
     log.info("manual_offer_added", offer=offer_id, read_by=draft.read_by)
     return int(offer_id)
 

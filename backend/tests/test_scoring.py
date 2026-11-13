@@ -273,9 +273,11 @@ async def test_refusal_and_invalid_answer_are_recorded(ai: Runtime, fake: FakeCl
     assert result.failed == 2
     assert (await evaluation(ai, refused)).score_error == "refus"  # type: ignore[union-attr]
     assert "non conforme" in (await evaluation(ai, invalid)).score_error  # type: ignore[union-attr,operator]
-    # Pas de nouvel essai automatique sur ces offres.
-    await service.run_scoring(ai)
-    assert len(fake.calls) == 2
+    # Repris au passage suivant, jusqu'à 3 essais manqués (A2 du 13 novembre) ; ensuite, plus rien.
+    for _ in range(4):
+        await service.run_scoring(ai)
+    assert len(fake.calls) == 2 * service.MAX_ATTEMPTS
+    assert (await evaluation(ai, refused)).score_final == "erreur"  # type: ignore[union-attr]
 
 
 async def test_many_offers_go_through_a_batch(ai: Runtime, fake: FakeClient) -> None:

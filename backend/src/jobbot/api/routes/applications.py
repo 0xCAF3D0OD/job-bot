@@ -38,6 +38,7 @@ from jobbot.letters.document import Identity as LetterIdentity
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.scoring.service import SET_ASIDE, score_if_unscored
 
 router = APIRouter(prefix="/api", tags=["applications"])
 log = get_logger(__name__)
@@ -84,7 +85,11 @@ async def set_offer_status(request: Request, offer_id: int, body: OfferStatusIn)
                 status.HTTP_409_CONFLICT,
                 "une candidature est enregistrée pour cette offre : la supprimer d'abord",
             )
+        recovered = offer.status in SET_ASIDE and body.status not in SET_ASIDE
         offer.status = body.status
+    # Offre écartée que la personne garde ou prépare : sa note part maintenant (A2).
+    if recovered:
+        await score_if_unscored(_runtime(request), offer_id)
     return OfferStatusOut(id=offer_id, status=OfferStatus(body.status))
 
 

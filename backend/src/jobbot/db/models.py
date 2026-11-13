@@ -333,6 +333,14 @@ class Evaluation(Base):
     profile_hash: Mapped[str | None] = mapped_column(Text)
     scored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     score_error: Mapped[str | None] = mapped_column(Text)
+    # Essais de note manqués d'affilée (erreur, réponse vide) ; remis à 0 par une note réussie.
+    score_attempts: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=0, server_default="0"
+    )
+    # État final « Note impossible » (A2 du 13 novembre) : « sans_texte » (rien à lire, aucun
+    # appel), « reponse_vide » ou « erreur » (après MAX_ATTEMPTS essais), ou « a_rattraper »
+    # (jamais notée avant cette version : reprise par `jobbot rattraper-notes`). Plus reprise.
+    score_final: Mapped[str | None] = mapped_column(Text)
     # Notification ntfy envoyée pour cette note (une seule fois par offre).
     notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     evaluated_at: Mapped[datetime] = mapped_column(

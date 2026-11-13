@@ -6885,6 +6885,8 @@ export interface components {
             score_stale: boolean;
             /** Score Error */
             score_error?: string | null;
+            /** Score Final */
+            score_final?: ("sans_texte" | "reponse_vide" | "erreur") | null;
             /**
              * Keywords Role
              * @default []
@@ -7866,6 +7868,8 @@ export interface components {
             score_stale: boolean;
             /** Score Error */
             score_error?: string | null;
+            /** Score Final */
+            score_final?: ("sans_texte" | "reponse_vide" | "erreur") | null;
             /**
              * Keywords Role
              * @default []

@@ -1,0 +1,1 @@
+Toute offre jamais notée finit notée : dès son ajout à la main, même passée en préparation, gardée, envoyée ou écartée par les critères ; une note faite sans profil est refaite quand le profil existe ; 3 essais au plus, puis « Note impossible » avec sa raison ; une offre sans texte n’appelle plus l’IA ; rattrapage des anciennes offres sur demande (jobbot rattraper-notes)

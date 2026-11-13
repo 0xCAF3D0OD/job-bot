@@ -11,6 +11,7 @@ reparse      réanalyse les copies brutes stockées (après un analyseur nouveau
 anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
 set-password crée le compte de connexion ou change son mot de passe (saisie masquée)
 getemall-tester IDENTIFIANT  marque un compte testeur de Get'emAll (--retirer : l'inverse)
+rattraper-notes  compte les offres jamais notées d'avant A2, et leur coût (--lancer : les noter)
 logos --clean-generic  retire les logos génériques (--essai : liste sans rien retirer)
 """
 
@@ -288,6 +289,44 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
 
 def _size(size: int) -> str:
     return f"{size / 1_000_000:.1f} Mo" if size >= 1_000_000 else f"{max(1, round(size / 1000))} Ko"
+
+
+def cmd_rattraper_notes(args: argparse.Namespace) -> int:
+    """Offres jamais notées d'avant A2 (13 novembre) : le nombre et le coût, puis, sur
+    `--lancer`, la note par la tâche des 10 minutes. Rien n'est noté sans `--lancer`."""
+    from decimal import Decimal
+
+    from jobbot.runtime import Runtime
+    from jobbot.scoring import backlog
+
+    settings = _settings()
+
+    async def run() -> int:
+        runtime = Runtime.create(settings, "admin")
+        try:
+            found = await backlog.count(runtime)
+            if args.compte is not None:
+                found = [b for b in found if b.account == args.compte]
+            if not found:
+                print("Aucune offre à rattraper.")
+                return 0
+            print("compte  offres  sans texte  appels IA  coût estimé")
+            for b in found:
+                calls = b.offers - b.without_text
+                counts = f"{b.account:>6}  {b.offers:>6}  {b.without_text:>10}  {calls:>9}"
+                print(f"{counts}  CHF {b.cost_chf}")
+            total = sum((b.cost_chf for b in found), start=Decimal(0))
+            print(f"Total estimé : CHF {total}")
+            if not args.lancer:
+                print("Rien n'est lancé. Ajoute --lancer pour les noter (tâche des 10 minutes).")
+                return 0
+            released = await backlog.release(runtime, args.compte)
+            print(f"{released} offres rendues à la tâche de notation.")
+            return 0
+        finally:
+            await runtime.dispose()
+
+    return asyncio.run(run())
 
 
 def cmd_backup(args: argparse.Namespace) -> int:
@@ -638,10 +677,12 @@ def main(argv: list[str] | None = None) -> int:
     tester.add_argument("username", help="identifiant du compte")
     tester.add_argument("--retirer", action="store_true", help="retire la marque")
     tester.set_defaults(func=cmd_getemall_tester)
+    catch_up = sub.add_parser("rattraper-notes", help="offres jamais notées d'avant A2")
+    catch_up.add_argument("--lancer", action="store_true", help="les rendre à la notation")
+    catch_up.add_argument("--compte", type=int, default=None, help="un seul compte")
+    catch_up.set_defaults(func=cmd_rattraper_notes)
     logos = sub.add_parser("logos", help="logos des entreprises (docs/14 §4)")
-    logos.add_argument(
-        "--clean-generic", action="store_true", help="retire les images génériques"
-    )
+    logos.add_argument("--clean-generic", action="store_true", help="retire les images génériques")
     logos.add_argument("--essai", action="store_true", help="liste sans rien retirer")
     logos.set_defaults(func=cmd_logos)
     args = parser.parse_args(argv)

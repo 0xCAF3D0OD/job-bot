@@ -133,6 +133,9 @@ class OfferOut(BaseModel):
     # Note faite avec un autre profil que l'actuel : à renoter.
     score_stale: bool = False
     score_error: str | None = None
+    # « Note impossible », état final (A2 du 13 novembre) : rien à lire, réponse vide de l'IA ou
+    # erreur après 3 essais. Absent tant que la note peut encore arriver.
+    score_final: Literal["sans_texte", "reponse_vide", "erreur"] | None = None
     # Étiquettes des cartes (docs/11 §3), vides pour une note antérieure à score-v2.
     keywords_role: list[str] = []
     keywords_asks: list["AskKeywordOut"] = []
@@ -304,6 +307,9 @@ def _evaluation_fields(
     fields: dict[str, object] = {
         "filter_reasons": [r["message"] for r in evaluation.filter_reasons],
         "score_error": evaluation.score_error,
+        "score_final": evaluation.score_final
+        if evaluation.score_final in ("sans_texte", "reponse_vide", "erreur")
+        else None,
     }
     if evaluation.scored_at is not None:
         fields |= {

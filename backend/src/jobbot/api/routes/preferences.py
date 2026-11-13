@@ -25,6 +25,7 @@ from jobbot.filtering.service import load_criteria, run_filter, save_criteria
 from jobbot.notify import service as notify_service
 from jobbot.rhythm.service import DEFAULT_DAYS, DEFAULT_HOUR
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring_service
 from jobbot.scoring.service import budget_details
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.filter import FILTER_JOB
@@ -180,6 +181,9 @@ async def put_criteria(request: Request, body: CriteriaIn) -> CriteriaOut:
         saved_at = await session.scalar(select(func.min(Criterion.updated_at)))
     # Toutes les offres écartées sont réévaluées tout de suite, pour dire combien reviennent.
     result = await run_filter(runtime)
+    # Des offres écartées reviennent : leur note part maintenant (A2 du 13 novembre).
+    if result.returned:
+        await scoring_service.score_soon(runtime)
     return CriteriaOut(
         criteria=_criteria_in(criteria),
         keywords=_keywords(),

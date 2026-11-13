@@ -3,7 +3,8 @@
 - Nouvelles offres (peu nombreuses) : appels directs, quelques secondes chacun.
 - Rattrapage ou renotation (nombreuses) : un lot, à moitié prix, relevé plus tard.
 - Plafond mensuel en CHF : plus aucun appel une fois atteint.
-- Seules les offres à examiner sont notées, jamais les écartées.
+- Seules les offres à examiner sont notées, jamais les offres d'alerte écartées ; une offre
+  jamais notée est reprise quel que soit son statut, 3 essais au plus (A2 du 13 novembre).
 """
 
 from dataclasses import dataclass
@@ -12,7 +13,7 @@ from decimal import Decimal
 from typing import Any
 
 import anthropic
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import ColumnElement, and_, case, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +23,7 @@ from jobbot.db.models import (
     LlmBatch,
     LlmCall,
     Offer,
+    OfferLink,
     OfferStatus,
     ProfileChunk,
     Setting,
@@ -52,6 +54,17 @@ DIRECT_LIMIT = 20
 ESTIMATE_USD = Decimal("0.03")
 TO_SCORE = (OfferStatus.NEW, OfferStatus.TO_REVIEW)
 KEPT_ASIDE = (OfferStatus.LATER, OfferStatus.PREPARING)
+# Écartées par les critères ou par la personne : une offre d'alerte n'y est pas notée (le filtre
+# évite de payer l'IA) ; ajoutée à la main, elle l'est quand même (A2 du 13 novembre).
+SET_ASIDE = (OfferStatus.FILTERED_OUT, OfferStatus.IGNORED)
+# La source d'une offre ajoutée à la main (manual_offers.SOURCE, importé ici sans cycle).
+MANUAL_SOURCE = "manual"
+# Essais manqués d'affilée avant l'état final « Note impossible ».
+MAX_ATTEMPTS = 3
+FINAL_NO_TEXT = "sans_texte"
+FINAL_EMPTY = "reponse_vide"
+FINAL_ERROR = "erreur"
+FINAL_BACKLOG = "a_rattraper"
 
 # Remplaçable en test par un faux client.
 make_client = client_factory
@@ -80,6 +93,8 @@ class ScoringResult:
     budget_reached: bool = False
     # Les offres notées du mois sont épuisées (la formule, docs/125).
     limit_reached: bool = False
+    # Offres sans aucun texte, passées en « Note impossible » sans appel.
+    no_text: int = 0
 
 
 # --- Lecture ----------------------------------------------------------------------------
@@ -170,14 +185,41 @@ async def _pending_batch_offers(session: AsyncSession) -> set[int]:
 
 
 async def candidates(
-    session: AsyncSession, current_hash: str, *, include_stale_profile: bool
+    session: AsyncSession,
+    current_hash: str,
+    *,
+    include_stale_profile: bool,
+    has_profile: bool = True,
 ) -> list[Offer]:
     """Offres à examiner sans note à jour (jamais notées, consignes changées, ou texte
     complet arrivé après une note faite sur l'extrait). Avec `include_stale_profile`,
-    aussi celles notées avec un autre profil (renotation sur clic de Kevin)."""
+    aussi celles notées avec un autre profil (renotation sur clic de Kevin).
+
+    Une offre jamais notée est reprise quel que soit son statut (A2 du 13 novembre) : passer en
+    préparation, la garder ou l'envoyer avant sa note ne l'annule plus. Seules les offres d'alerte
+    écartées (par les critères ou par la personne) restent sans note ; ajoutée à la main, l'offre
+    est notée quand même. Une note faite sans profil (note vide) est refaite dès que le profil
+    existe. Un état final (`score_final`) n'est plus repris."""
+    manual = (
+        select(OfferLink.id)
+        .where(OfferLink.offer_id == Offer.id, OfferLink.source == MANUAL_SOURCE)
+        .exists()
+    )
+    eligible = and_(
+        Evaluation.score_final.is_(None),
+        or_(Offer.status.not_in(SET_ASIDE), manual),
+    )
+    never: list[ColumnElement[bool]] = [Evaluation.id.is_(None), Evaluation.scored_at.is_(None)]
+    if has_profile:
+        # Notée sans profil : résumé fait, note vide ; à refaire avec le profil (offre 796).
+        never.append(
+            and_(
+                Evaluation.score.is_(None),
+                Evaluation.scored_at.is_not(None),
+                or_(Evaluation.profile_hash.is_(None), Evaluation.profile_hash != current_hash),
+            )
+        )
     needs = [
-        Evaluation.id.is_(None),
-        and_(Evaluation.scored_at.is_(None), Evaluation.score_error.is_(None)),
         Evaluation.prompt_version.not_in(COMPATIBLE_VERSIONS),
         and_(Offer.description.is_not(None), Evaluation.summary_partial.is_(True)),
     ]
@@ -200,12 +242,51 @@ async def candidates(
             Offer.duplicate_of.is_(None),
             # Candidature spontanée : pas d'annonce à comparer au profil (docs/39 §4).
             Offer.spontaneous.is_(False),
-            or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
+            or_(
+                and_(eligible, or_(*never)),
+                and_(Offer.status.in_(TO_SCORE), or_(*needs)),
+                kept_aside,
+            ),
         )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
     )
     pending = await _pending_batch_offers(session)
     return [offer for offer in rows if offer.id not in pending]
+
+
+async def score_soon(runtime: Runtime) -> None:
+    """La notation de ce compte, mise en file tout de suite au lieu d'attendre le passage des
+    10 minutes (A2 du 13 novembre) : offre ajoutée, ou offre écartée que la personne récupère.
+    Si la mise en file échoue, le passage des 10 minutes la reprend."""
+    if not runtime.settings.llm_configured:
+        return
+    # Import ici : worker.tasks importe ce module.
+    from jobbot.worker.queue import enqueue
+    from jobbot.worker.tasks.score import SCORE_JOB
+
+    try:
+        await enqueue(runtime.settings, SCORE_JOB)
+    except Exception as exc:
+        log.warning("score_not_queued", error=type(exc).__name__)
+
+
+async def score_if_unscored(runtime: Runtime, offer_id: int) -> None:
+    """Notation tout de suite si l'offre attend encore sa note (pas notée, pas d'état final)."""
+    async with runtime.sessionmaker() as session:
+        row = (
+            await session.execute(
+                select(Evaluation.score, Evaluation.scored_at, Evaluation.score_final).where(
+                    Evaluation.offer_id == offer_id
+                )
+            )
+        ).first()
+    if row is None or (row.score is None and row.scored_at is None and row.score_final is None):
+        await score_soon(runtime)
+
+
+def has_text(offer: Offer) -> bool:
+    """Rien à lire (ni texte, ni extrait de l'alerte) : la note est impossible, sans appel."""
+    return bool((offer.description or "").strip() or (offer.snippet or "").strip())
 
 
 # --- Écriture ---------------------------------------------------------------------------
@@ -221,7 +302,11 @@ async def _store(
     partial: bool,
     error: str | None = None,
     prompt_version: str = PROMPT_VERSION,
+    failure: str | None = None,
 ) -> None:
+    """Range la note, ou l'échec. `failure` (FINAL_EMPTY ou FINAL_ERROR) compte un essai manqué :
+    au MAX_ATTEMPTS-ième d'affilée, l'offre passe dans l'état final « Note impossible » avec cette
+    raison, et n'est plus reprise. Une note réussie remet le compte à zéro."""
     now = datetime.now(UTC)
     values: dict[str, Any] = {
         "model": model,
@@ -229,7 +314,16 @@ async def _store(
         "profile_hash": hash_,
         "score_error": error,
     }
+    inserted: dict[str, Any] = {}
+    if output is None and failure is not None:
+        attempts = func.coalesce(Evaluation.score_attempts, 0) + 1
+        values |= {
+            "score_attempts": attempts,
+            "score_final": case((attempts >= MAX_ATTEMPTS, failure), else_=None),
+        }
+        inserted = {"score_attempts": 1, "score_final": failure if MAX_ATTEMPTS <= 1 else None}
     if output is not None:
+        values |= {"score_attempts": 0, "score_final": None}
         values |= {
             "score": output.score,
             "summary_role": output.summary_role,
@@ -255,6 +349,27 @@ async def _store(
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre
     # complétera ses colonnes.
+    await session.execute(
+        insert(Evaluation)
+        .values(
+            offer_id=offer_id,
+            filter_passed=True,
+            filter_reasons=[],
+            criteria_hash="",
+            **(values | inserted),
+        )
+        .on_conflict_do_update(index_elements=["user_id", "offer_id"], set_=values)
+    )
+
+
+def _failure(text: str) -> str:
+    """Réponse vide de l'IA, ou réponse illisible (erreur)."""
+    return FINAL_EMPTY if not text.strip() else FINAL_ERROR
+
+
+async def _store_no_text(session: AsyncSession, offer_id: int, hash_: str) -> None:
+    """Rien à lire : état final direct, sans appel à l'IA (cas de l'offre 619)."""
+    values: dict[str, Any] = {"score_final": FINAL_NO_TEXT, "profile_hash": hash_}
     await session.execute(
         insert(Evaluation)
         .values(
@@ -336,6 +451,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                         partial=partial,
                         error=f"lot : {item.error}",
                         prompt_version=batch.prompt_version,
+                        failure=FINAL_ERROR,
                     )
                     result.failed += 1
                     continue
@@ -358,6 +474,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                         partial=partial,
                         error=str(exc),
                         prompt_version=batch.prompt_version,
+                        failure=_failure(item.result.text),
                     )
                     result.failed += 1
                     continue
@@ -455,6 +572,7 @@ async def _score_direct(
                     hash_=hash_,
                     partial=data.partial,
                     error=error,
+                    failure=FINAL_ERROR,
                 )
                 result.failed += 1
                 continue
@@ -470,6 +588,7 @@ async def _score_direct(
                     hash_=hash_,
                     partial=data.partial,
                     error=str(exc),
+                    failure=_failure(raw.text),
                 )
                 result.failed += 1
                 continue
@@ -488,6 +607,16 @@ async def score_offer(runtime: Runtime, offer_id: int) -> int | None:
         allowed, _ = await within_plan(session, [offer] if offer else [])
     if offer is None:
         return None
+    # Demande explicite (texte arrivé, correction, ajout) : les essais repartent de zéro.
+    async with runtime.sessionmaker.begin() as session:
+        if not has_text(offer):
+            await _store_no_text(session, offer_id, profile_hash(profile))
+            return None
+        await session.execute(
+            update(Evaluation)
+            .where(Evaluation.offer_id == offer_id)
+            .values(score_attempts=0, score_final=None)
+        )
     if not allowed:
         log.info("score_offer_limit_reached", offer_id=offer_id)
         async with runtime.sessionmaker() as session:
@@ -537,9 +666,19 @@ async def run_scoring(runtime: Runtime, *, rescore_profile: bool = False) -> Sco
 
     async with runtime.sessionmaker() as session:
         profile = await active_profile(session)
+        hash_ = profile_hash(profile)
         todo = await candidates(
-            session, profile_hash(profile), include_stale_profile=rescore_profile
+            session, hash_, include_stale_profile=rescore_profile, has_profile=bool(profile)
         )
+    # Rien à lire : « Note impossible » tout de suite, sans appel ni décompte de la formule.
+    blank = [o for o in todo if not has_text(o)]
+    if blank:
+        async with runtime.sessionmaker.begin() as session:
+            for offer in blank:
+                await _store_no_text(session, offer.id, hash_)
+        result.no_text = len(blank)
+        todo = [o for o in todo if has_text(o)]
+    async with runtime.sessionmaker() as session:
         todo, result.limit_reached = await within_plan(session, todo)
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if not todo:
@@ -558,6 +697,7 @@ async def run_scoring(runtime: Runtime, *, rescore_profile: bool = False) -> Sco
         "score_finished",
         scored=result.scored,
         failed=result.failed,
+        no_text=result.no_text,
         batch_submitted=result.batch_submitted,
         batch_collected=result.batch_collected,
         budget_reached=result.budget_reached,
