@@ -1,6 +1,6 @@
 # 145 — Des offres sans alerte : les pages carrières des employeurs
 
-> Statut : **étape 1 (inventaire) validée par Kevin le 2026-11-11**, Vaud seulement. Étapes 2 et 3 : pas encore.
+> Statut : **étape 1 (inventaire) validée par Kevin le 2026-11-11**, seuils et 4e métier le 2026-11-13. Étapes 2 et 3 : pas encore.
 > Origine : la question de Kevin du 2026-11-11 : « il devrait pouvoir y en avoir sans alerte ? Sur Google n'y en a-t-il pas ? » Recommandation détaillée dans le doc « Sources d'offres sans alerte e-mail » (agrégateurs, comparaison, courriers).
 > Se construit sur docs/104 (recherche jobup, coupée en 0.82.4), docs/111 (`JobPosting`) et docs/144 (Google Emplois, accès partenaires).
 
@@ -8,22 +8,38 @@
 
 Sans alerte e-mail, jobA1 ne reçoit aucune offre. Google Emplois trouve les siennes sur les pages carrières des employeurs, par le balisage `JobPosting` ou par le flux du logiciel de recrutement. jobA1 sait déjà lire `JobPosting` (`sources/jobposting.py`). Les agrégateurs (Adzuna, Jooble, Careerjet, JobCloud) demandent tous une licence ou un partenariat (doc de recommandation, piste 1).
 
-## 2. Étape 1 : l'inventaire (cette PR)
+## 2. Étape 1 : l'inventaire
 
-`scripts/inventaire_employeurs.py`, sans effet sur l'app ni sur la base. Il lit des pages publiques et écrit deux tableaux dans `docs/inventaire-employeurs/`.
+> Seuils et périmètre fixés par Kevin le **2026-11-13, avant le résultat**. Un premier passage du 13.11, lancé avant ces seuils, était faux (le script ne suivait pas les liens vers le logiciel de recrutement : 27 employeurs sur 35 « inconnus ») : il est écarté.
 
-- **Liste 1** (`liste1.md`) : ~35 employeurs vaudois choisis par métier (santé, bâtiment, bureau), dans `employeurs-vaud.csv`. Pour chacun : la page carrières, le logiciel reconnu, le cas, le nombre de `JobPosting`, robots.txt et `Crawl-delay`, et la colonne **conditions d'utilisation : permise / interdite / rien**.
-  - Cas 1 : flux public d'un logiciel fait pour être lu (Personio, Greenhouse, Lever, Recruitee, Workable, SmartRecruiters, Ashby).
-  - Cas 2 : `JobPosting` sur la page carrières ou sur une page d'offre.
-  - Cas 3 : SuccessFactors, Refline, Abacus/umantis ou Prospective, sans `JobPosting`.
-  - Le résumé donne aussi la **part des employeurs sur un logiciel du cas 3, même quand leurs pages ont un `JobPosting`** (demande de Kevin : il pense que la plupart des grands employeurs vaudois y tombent).
-- **Liste 2** (`liste2.md`), construite à l'envers : toutes les entreprises qui ont un flux public sur l'une des sept plateformes du cas 1 et au moins une offre dans une localité vaudoise, quel que soit le métier. Les comptes viennent de l'index public de Common Crawl ; chaque flux est lu une fois. Long (plusieurs heures pour Personio) : le script reprend là où il s'est arrêté (`liste2-cache.json`), et `--max-par-plateforme` limite un essai.
+**Périmètre** : Vaud ; quatre métiers (santé, bâtiment, bureau, informatique) ; 41 employeurs dans `docs/inventaire-employeurs/employeurs-vaud.csv`. Informatique, ajoutés par Kevin : ELCA, Kudelski / Nagravision, Logitech, Nexthink, SICPA, EPFL, État de Vaud (DGNSI : même page d'offres que l'État de Vaud), Swisscom (sites vaudois). Un employeur sans page lisible ou sans offre en Vaud est noté tel quel, jamais remplacé sans accord.
 
-**Règles suivies par le script** : robots.txt lu avant chaque page, une page refusée n'est pas lue (403 sur robots.txt = tout refusé) ; 2 s au moins entre deux pages d'un site, plus si `Crawl-delay` le demande ; 2 s entre deux comptes d'une même plateforme ; un robot qui se nomme (`jobA1-inventaire/1.0`) ; seulement des noms d'employeurs, des titres d'offres et des lieux.
+**Seuils**
 
-**Conditions d'utilisation** : le script cherche, dans la page des conditions liée depuis l'accueil, une phrase qui parle de robots ou d'extraction automatique, et propose « interdite », « permise » ou « rien » avec la phrase. Ce n'est qu'une proposition : chaque « interdite » et chaque « permise » se relit à la main, et un site sans page trouvée se vérifie avant l'étape 2.
+| Étape | On continue seulement si |
+|---|---|
+| 1. Inventaire | au moins 50 % des employeurs testés sont **lisibles** |
+| 3. Essai de 14 jours | chaque métier reçoit en moyenne au moins 5 nouvelles offres par jour, après dédoublonnage |
 
-**Où le lancer** : sur le Mac de Kevin ou sur le serveur (`python3 scripts/inventaire_employeurs.py liste1`). La machine de Claude ne peut pas ouvrir ces sites.
+En dessous d'un seuil, on arrête et Kevin reçoit les chiffres ; on n'ajoute pas de sources pour rattraper.
+
+**« Lisible »**, les trois à la fois :
+
+1. balisage `JobPosting` complet (titre, lieu, date) sur les offres lues, ou flux public d'un logiciel du cas 1 (Personio, Greenhouse, Lever, Recruitee, Workable, SmartRecruiters, Ashby) ; un balisage incomplet (« partiel ») ne suffit pas ;
+2. robots.txt autorise les pages (absent = autorisé) ;
+3. conditions d'utilisation trouvées, sans phrase qui interdit la lecture automatique ; « pas de page trouvée » = non lisible tant qu'on ne l'a pas vérifiée à la main.
+
+**Le script** (`scripts/inventaire_employeurs.py`, sans effet sur l'app ni la base) : pour chaque employeur, robots.txt, puis au plus 3 liens suivis depuis l'adresse de départ jusqu'à la liste des offres (liens vers un logiciel connu d'abord, puis « offres d'emploi », « postes vacants »…), le plan du site quand la liste est dessinée en JavaScript, au plus 30 pages d'offres lues ou le flux public, la page des conditions. Tableau `inventaire.md` (et `.csv`) : employeur, métier, page carrière et logiciel, balisage (oui / partiel / non / flux), robots.txt (autorisé / interdit / absent), conditions (avec la phrase trouvée), offres en Vaud ce jour, verdict et raison, puis le résumé contre le seuil de 50 %.
+
+**Règles suivies** : robots.txt avant chaque page (403 = tout refusé) ; 2 s au moins entre deux pages d'un site, plus si `Crawl-delay` le demande ; robot nommé `jobA1-inventaire/1.1 (+https://joba1.ch)`, avec une adresse de contact si on passe `--contact` ; seulement des noms d'employeurs, titres, lieux et dates.
+
+**Abandonné** : la liste « à l'envers » (toutes les entreprises vaudoises à flux public) passait par l'index de Common Crawl, dont le robots.txt interdit la lecture (`Disallow: /`). Le script l'a respecté ; la liste est retirée.
+
+**Où le lancer** : sur le Mac de Kevin (la machine de Claude ne peut pas ouvrir ces sites) :
+
+```
+cd ~/Documents/job-bot && git pull && python3 scripts/inventaire_employeurs.py
+```
 
 ## 3. Étape 2 (à valider après l'inventaire) : règle déjà décidée
 
