@@ -99,7 +99,7 @@ audit-controles: ## rangées de contrôles de même hauteur et listes dont le te
 audit-panneaux: ## panneau « Ajouter » : fenêtre modale, focus gardé, Échap et clic à l'extérieur, focus rendu au bouton (1440 px ; DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/panneaux.py $(or $(DEMO_URL),http://localhost:5200)
 
-audit-rendez-vous: ## « Nouveau rendez-vous », choix de la date : aucun défilement horizontal, heures et « Valider » visibles (1440, 1280, 1024, 390, 320 px ; DEMO_URL)
+audit-rendez-vous: ## « Nouveau rendez-vous » : choix de la date sans défilement horizontal (1440 à 320 px), ajout annoncé et sélectionné, échec jamais silencieux (DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/rendezvous.py $(or $(DEMO_URL),http://localhost:5200)
 
 changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
