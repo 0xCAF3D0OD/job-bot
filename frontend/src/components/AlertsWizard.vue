@@ -470,9 +470,10 @@ function copyOnOpen(): void {
 .alert-site-links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .alert-site-open { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
 .alert-site-open:hover { background: var(--primary-soft); color: var(--primary-text); }
-.alert-site-address { display: flex; align-items: center; gap: var(--space-2); height: 48px; margin-top: var(--space-3); padding: 0 var(--space-1) 0 var(--space-5); box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); }
+.alert-site-address { display: flex; align-items: center; gap: var(--space-2); height: 48px; margin-top: var(--space-3); padding: 0 1px 0 var(--space-5); box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); }
 .alert-site-address > span { flex: 1; min-width: 0; font-size: var(--font-label); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.alert-site-address .copy-button { width: 40px; height: 40px; border: 0; background: var(--primary-soft); color: var(--primary-text); }
+/* 44 × 44 px dans le champ de 48 px (décision de Kevin du 13.11 ; la planche dit 40). */
+.alert-site-address .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: 0; background: var(--primary-soft); color: var(--primary-text); }
 .alert-site-copied { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--success); }
 .alert-site-copied:empty { margin: 0; }
 /* La croix de la planche : 24 px, trait 2,2, couleur du texte. */

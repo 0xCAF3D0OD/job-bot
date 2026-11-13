@@ -191,6 +191,26 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     wrapper.unmount();
   });
 
+  it("après le dernier site depuis une carte : retour à la liste, le focus sur la carte, passée dans « Actives »", async () => {
+    const received = cell("jobup", { status: "received", received_at: new Date().toISOString() });
+    const before = page([search(1, [received, cell("linkedin")])]);
+    const after = page([search(1, [received, cell("linkedin", { status: "created", created_at: new Date().toISOString() })])]);
+    GET.mockResolvedValueOnce({ data: before }).mockResolvedValue({ data: after });
+    PUT.mockResolvedValue({ data: after });
+    const wrapper = mount(AlertsView, { attachTo: document.body, global: { stubs: { teleport: true } } });
+    await flushPromises();
+    const card = wrapper.find<HTMLElement>("[data-test=alert-card-1-linkedin]");
+    card.element.focus();
+    await card.trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=wizard-site-done]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find(".alert-site-panel").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alerts-family-active] [data-test=alert-card-1-linkedin]").exists()).toBe(true);
+    expect(document.activeElement).toBe(wrapper.find("[data-test=alert-card-1-linkedin]").element);
+    wrapper.unmount();
+  });
+
   it("une alerte active : le panneau avec les actions ; « + Ajouter » ajoute une recherche", async () => {
     const one = page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]);
     POST.mockResolvedValue({ data: page([...one.searches, search(2, [cell("jobup")])]) });

@@ -70,8 +70,15 @@ function create(site: string, terms: string): void {
   mode.value = "wizard";
 }
 async function deskDone(): Promise<void> {
+  const from = deskFocus.value;
   deskFocus.value = null;
   await load();
+  // Après le dernier site, la carte d'où l'on venait a pu changer de famille (« À créer » → « Actives ») et le
+  // focus, rendu à un élément retiré, retombe sur la page : on le pose sur la carte de ce site, là où elle est.
+  await nextTick();
+  if (!from || (document.activeElement && document.activeElement !== document.body)) return;
+  const id = page.value?.searches.find((s) => s.terms === from.terms)?.id;
+  document.querySelector<HTMLElement>(`[data-test="alert-card-${id}-${from.site}"]`)?.focus();
 }
 
 // Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même.
