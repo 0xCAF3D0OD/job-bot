@@ -558,3 +558,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.344 | Le menu « Candidatures » mène à la liste des offres depuis Préparer et Relances ; Mes alertes, Préparer et Relances ne sont plus retenues | livrée |
 | 1.6.345 | « Ce qui a été convenu » : dans le volet, le pied ne dépasse plus ; « Mesures décidées » grandit avec le texte, dans le volet et dans la fiche | livrée |
 | 1.6.346 | « Trier les offres » : une offre à la fois (carte sur téléphone, livre ouvert sur ordinateur), « Écarter » et « Garder » au bouton ou aux flèches, les passages de l’annonce retrouvés dans le profil surlignés (citations de l’IA vérifiées par le serveur), puis « C’est trié ! » avec les offres gardées | livrée |
+| 1.6.347 | Ordinateur, Alertes : « Créer l'alerte » s'ouvre dans le panneau de droite « Alerte <site> » (planche AlertesOrdinateurSite, 440 px) | livrée |
