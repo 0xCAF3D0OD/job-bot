@@ -33,18 +33,22 @@ Mesurés sur main après la PR 20 (#628). Chaque limite vaut la taille + 5 %, ar
 | Mesure | Brut | gzip | brotli | Limite |
 |---|---:|---:|---:|---:|
 | js-premier | 290,5 Ko | 106,2 Ko | 94,2 Ko | 111,5 Ko (gzip) |
-| js-total | 1107,4 Ko | 382,2 Ko | 339,9 Ko | 401,3 Ko (gzip) |
+| js-total | 1107,4 Ko | 382,2 Ko | 339,9 Ko | 420,0 Ko (gzip) |
 | js-accueil | 290,5 Ko | 106,2 Ko | 94,2 Ko | 111,5 Ko (gzip) |
-| js-candidatures | 429,1 Ko | 154,7 Ko | 137,2 Ko | 162,4 Ko (gzip) |
+| js-candidatures | 429,1 Ko | 154,7 Ko | 137,2 Ko | 168,0 Ko (gzip) |
 | js-bilan | 290,2 Ko | 108,0 Ko | 95,8 Ko | 113,4 Ko (gzip) |
 | js-compte | 259,5 Ko | 94,2 Ko | 83,2 Ko | 98,8 Ko (gzip) |
 | css-premier | 327,1 Ko | 57,0 Ko | 45,4 Ko | 59,8 Ko (gzip) |
-| css-total | 484,3 Ko | 92,2 Ko | 75,7 Ko | 96,8 Ko (gzip) |
+| css-total | 484,3 Ko | 92,2 Ko | 75,7 Ko | 115,0 Ko (gzip) |
 | css-accueil | 327,1 Ko | 57,0 Ko | 45,4 Ko | 59,8 Ko (gzip) |
 | css-candidatures | 360,1 Ko | 65,1 Ko | 52,3 Ko | 68,3 Ko (gzip) |
 | css-bilan | 335,5 Ko | 59,4 Ko | 47,5 Ko | 62,4 Ko (gzip) |
 | css-compte | 332,6 Ko | 58,3 Ko | 46,5 Ko | 61,2 Ko (gzip) |
 | images | 4660,1 Ko | n/a | n/a | 4893,1 Ko (brut) |
+
+La limite de css-total est relevée de 96,8 Ko à 100,0 Ko le 12 novembre 2026 (décision de Kevin, PR 39) : ce total compte les pages chargées à la demande, et la limite du premier écran (css-premier, 59,8 Ko) ne change pas.
+
+Le 13 novembre 2026 (PR 44), trois limites de totaux sont relevées une fois pour la fin du paquet récapitulatif et le lot « Tri et visuel » du 11 novembre : css-total à 115,0 Ko, js-total à 420,0 Ko, js-candidatures à 168,0 Ko. Mesures à la dernière branche du lot : 111,6 Ko, 414,7 Ko et 165,1 Ko. Les limites du premier écran (js-premier, css-premier) ne changent pas.
 
 Les « 93 Ko » de l'ancien budget étaient la taille **gzip** de tout le CSS. Il pesait alors 92,2 Ko : 484,3 Ko bruts, 75,7 Ko en brotli.
 

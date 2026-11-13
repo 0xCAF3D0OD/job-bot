@@ -22,6 +22,26 @@ describe("BottomSheet (règles §4)", () => {
     wrapper.unmount();
   });
 
+  it("la tabulation tourne dans la feuille : du dernier contrôle au premier, et l’inverse avec Maj", async () => {
+    const wrapper = mount(BottomSheet, {
+      attachTo: document.body,
+      props: { open: true, title: "Filtres" },
+      slots: { default: '<input data-test="champ">', actions: '<button data-test="dernier">Afficher</button>' },
+    });
+    await wrapper.vm.$nextTick();
+    const first = wrapper.find("[data-test=sheet-close]").element as HTMLElement;
+    const last = wrapper.find("[data-test=dernier]").element as HTMLElement;
+    last.focus();
+    await wrapper.find("dialog").trigger("keydown", { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+    await wrapper.find("dialog").trigger("keydown", { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+    (wrapper.find("[data-test=champ]").element as HTMLElement).focus();
+    await wrapper.find("dialog").trigger("keydown", { key: "Tab" });
+    expect(document.activeElement).toBe(wrapper.find("[data-test=champ]").element);
+    wrapper.unmount();
+  });
+
   it("plein écran avec `full` (la cloche)", () => {
     const wrapper = mount(BottomSheet, { props: { open: false, title: "Alertes", full: true } });
     expect(wrapper.find("dialog").classes()).toContain("sheet-full");
