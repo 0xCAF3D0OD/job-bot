@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt Claude Code : CV jamais lu, coordonnées reprises du CV, CV redéposé (10 novembre 2026, soir)
 
 À ajouter par-dessus `docs/mobile/` (ce paquet ne contient que les fichiers nouveaux ou modifiés).

@@ -44,6 +44,12 @@ jobs:
       - name: Panneau « Ajouter » (modale, Échap, clic à l'extérieur, focus rendu)
         if: success() || failure()
         run: make audit-panneaux DEMO_URL=http://localhost:8280
+      - name: « Nouveau rendez-vous », choix de la date (pas de défilement horizontal ; 1440 à 320 px)
+        if: success() || failure()
+        run: make audit-rendez-vous DEMO_URL=http://localhost:8280
+      - name: Libellé flottant des champs (aucun trait derrière les lettres ; clair et sombre)
+        if: success() || failure()
+        run: make audit-libelle DEMO_URL=http://localhost:8280
       - name: Trier 3 offres (garder, écarter, garder ; 390 et 1440 px)
         if: success() || failure()
         run: make audit-tri DEMO_URL=http://localhost:8280

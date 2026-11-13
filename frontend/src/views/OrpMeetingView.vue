@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type Application } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
+import AppToast from "../components/AppToast.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
@@ -180,19 +181,45 @@ function meetingSaved(data: Page): void {
 }
 // « Nouveau rendez-vous » (PR 41) : un seul panneau pour une entreprise ou l'ORP.
 const adding = ref(false);
-function openAdd(): void {
+const addingKind = ref<"orp" | undefined>(undefined);
+function openAdd(kind?: "orp"): void {
+  addingKind.value = kind;
   adding.value = true;
   if (!applications.value.length) void loadApplications();
+}
+// Après l'ajout, un message de statut l'annonce (défaut du 13 novembre : rien ne disait que c'était enregistré).
+const added = ref("");
+function announce(at: string | null | undefined): void {
+  added.value = at ? `Rendez-vous ajouté : ${meetingDate(at)}.` : "Rendez-vous ajouté.";
+}
+// Sélectionner le rendez-vous ajouté. Le panneau, en se fermant, revient d'un cran dans l'historique (il y avait posé
+// une entrée pour le bouton « retour ») : changer l'adresse avant ce retour était annulé par lui, et la sélection
+// restait sur l'ancienne fiche (?rdv=passe-2, défaut du 13 novembre). On attend donc la fin de ce retour.
+async function selectAdded(key: string): Promise<void> {
+  if (!wideView.value) return;
+  await nextTick();
+  await new Promise<void>((resolve) => {
+    const done = (): void => {
+      globalThis.removeEventListener?.("popstate", done);
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(done, 300);
+    globalThis.addEventListener?.("popstate", done);
+  });
+  await router.replace({ query: { ...route?.query, rdv: key } });
 }
 function orpAdded(data: Page): void {
   adding.value = false;
   meetingSaved(data);
-  if (wideView.value) void router.replace({ query: { ...route?.query, rdv: "orp" } });
+  announce(data.meeting?.starts_at);
+  void selectAdded("orp");
 }
 async function interviewAdded(application: Application): Promise<void> {
   adding.value = false;
   await loadApplications();
-  if (wideView.value) void router.replace({ query: { ...route?.query, rdv: `entretien-${application.id}` } });
+  announce(application.interview_at);
+  void selectAdded(`entretien-${application.id}`);
 }
 
 // Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1, règles §4 : pas de rouge dans « ⋯ »).
@@ -770,11 +797,18 @@ onMounted(() => void load());
     />
     <NewMeetingSheet
       :open="adding"
+      :kind="addingKind"
       :applications="applications"
       :planned="meeting && !started ? meeting : null"
       @close="adding = false"
       @orp="orpAdded"
       @interview="interviewAdded"
+    />
+    <AppToast
+      v-if="added"
+      :message="added"
+      data-test="meeting-added"
+      @close="added = ''"
     />
   </section>
 </template>

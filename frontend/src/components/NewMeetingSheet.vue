@@ -165,6 +165,13 @@ const plannedLine = computed(() =>
   props.planned ? `${dateText(props.planned.starts_at)}, ${timeAndPlace(props.planned.starts_at, props.planned.place)}` : "",
 );
 
+const FAILED = "Le rendez-vous n’est pas enregistré. Ta saisie est gardée, réessaie dans un instant.";
+// Le message du serveur quand il en donne un lisible (une phrase), sinon le nôtre.
+function refusal(error: unknown): string {
+  const detail = (error as { detail?: unknown } | undefined)?.detail;
+  return typeof detail === "string" && detail ? detail : FAILED;
+}
+
 async function save(): Promise<void> {
   message.value = "";
   errors.value.application = kind.value === "entreprise" && !picked.value ? "Choisis la candidature." : "";
@@ -181,7 +188,7 @@ async function save(): Promise<void> {
     if (kind.value === "orp") {
       const { data, error } = await api.PUT("/api/orp-meeting", { body: { starts_at: at, place: place.value, advisor: props.planned?.advisor ?? "" } });
       if (data) emit("orp", data);
-      else message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
+      else message.value = refusal(error);
       return;
     }
     const application = picked.value!;
@@ -198,7 +205,11 @@ async function save(): Promise<void> {
       },
     });
     if (data) emit("interview", data);
-    else message.value = "Impossible d’enregistrer pour l’instant.";
+    else message.value = FAILED;
+  } catch {
+    // Le serveur ne répond pas, ou la connexion est coupée : jamais d'échec silencieux (défaut du 13 novembre). Le
+    // panneau reste ouvert et la saisie est gardée.
+    message.value = "Connexion perdue : le rendez-vous n’est pas enregistré. Ta saisie est gardée, réessaie dans un instant.";
   } finally {
     busy.value = false;
   }

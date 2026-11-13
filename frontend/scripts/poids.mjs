@@ -45,9 +45,6 @@ const PAGES = {
 // restent en PNG, comme le demandent les navigateurs.
 const ILLUSTRATIONS = /^(illustrations|personnage|troupe|avatars)\//;
 const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
-// Les anciens avatars en PNG (256 px) : plus lus par l'application (useProfileImage.ts sert les WebP), gardés en
-// attendant l'accord de Kevin pour les retirer (610 Ko). Aucun autre PNG n'est admis dans ces dossiers.
-const OLD_PNG = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((n) => `avatars/avatar-${n}-256.png`));
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const cache = new Map();
@@ -143,7 +140,7 @@ for (const [name, limit] of Object.entries(LIMITS)) {
 
 // Les illustrations en WebP : une image d'un dossier d'illustrations, ou importée par le code (assets/), dans un
 // autre format fait échouer le budget.
-const notWebp = images.filter((file) => (ILLUSTRATIONS.test(file) || file.startsWith("assets/")) && !/\.(webp|svg)$/i.test(file) && !OLD_PNG.has(file));
+const notWebp = images.filter((file) => (ILLUSTRATIONS.test(file) || file.startsWith("assets/")) && !/\.(webp|svg)$/i.test(file));
 if (notWebp.length) {
   failed = true;
   console.log(`TROP illustrations hors WebP : ${notWebp.join(", ")}`);
