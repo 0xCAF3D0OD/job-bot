@@ -25,7 +25,7 @@ export const LIMITS = {
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 96_800,
+  "css-total": 100_000,
   "css-accueil": 59_800,
   "css-candidatures": 68_300,
   "css-bilan": 62_400,

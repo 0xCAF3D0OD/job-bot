@@ -235,3 +235,26 @@ Pages de lecture : le contenu à lire est posé sur le fond crème `--bg`, le m�
 
 
 Note : la maquette `OnboardingC` (écran d'accueil des premiers pas) référence une image du canevas (`/_blob/fb359129…`) qui n'est pas dans `illustrations/`. Garde l'image déjà utilisée en production pour cet écran.
+
+# LOT « TRI DES OFFRES ET NOUVEAU VISUEL » (11 novembre 2026, soir)
+
+Ce lot complète le paquet de référence, il ne le remplace pas. Texte : `PROMPT_CLAUDE_CODE_11_NOVEMBRE_TRI_ET_VISUEL.md` (PR 45 à 53). Un fichier de même nom dans `maquettes/` a été remplacé par la version de ce lot (59 écrans). Images : `illustrations/tri/`.
+
+Les anciens écrans `AccueilSmile`, `AccueilSombre`, `AujourdhuiOrdinateurTravailD` et `AujourdhuiOrdinateurReposD` sont marqués « Ancien » : ne plus les implémenter.
+
+| Page | Fichier | Sombre |
+|---|---|---|
+| Trier les offres, téléphone (états carte, garde, longue) | TrierOffresV2 | TrierOffresV2Sombre |
+| Trier les offres, ordinateur (états livre, garde, longue) | TrierOffresOrdinateurV2 | TrierOffresOrdinateurV2Sombre |
+| Fin du tri, téléphone | FinDuTri | FinDuTriSombre |
+| Fin du tri, ordinateur | FinDuTriOrdinateur | FinDuTriOrdinateurSombre |
+| Accueil, téléphone (états accueil, vide) | AccueilV2 | AccueilV2Sombre |
+| Aujourd’hui, ordinateur (états accueil, vide) | AujourdhuiOrdinateurV2 | AujourdhuiOrdinateurV2Sombre |
+| Ma candidature (états lettre, fin, finpreuve) | MaCandidatureV2 | MaCandidatureV2Sombre |
+| Mois remis à l’ORP | OrpRemisV2 | OrpRemisV2Sombre |
+| Objectif du mois, ordinateur | ProfilOrdinateurObjectif | |
+| Objectif du mois, téléphone | ProfilTelObjectif | ProfilTelObjectifSombre |
+| Relance, téléphone | RelanceV2 | RelanceV2Sombre |
+| Relance, ordinateur (panneau) | RelanceOrdinateurV2 | |
+| Veille de rendez-vous, téléphone | RendezVousFeuilleV2 | RendezVousFeuilleV2Sombre |
+| Veille de rendez-vous, ordinateur (panneau) | RendezVousFeuilleOrdinateurV2 | |
