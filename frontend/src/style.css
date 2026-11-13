@@ -3333,22 +3333,11 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 @media (prefers-reduced-motion: reduce) { .face-transform, .face-transform * { animation: none !important; } }
 /* Les offres du jour, une à la fois (docs/124 §D) : dans la carte « À faire », sans cadre à
    elles ; deux boutons à la largeur de leur texte ; la suivante glisse en place (250 ms). */
-.daily-pick { margin-top: var(--space-4); }
 .pick-card { display: grid; gap: var(--space-4); touch-action: pan-y; line-height: var(--leading-normal); }
 .pick-head { display: flex; align-items: flex-start; gap: var(--space-4); }
 .pick-title { display: grid; gap: var(--space-1); flex: 1; min-width: 0; }
 .pick-title a { color: var(--text); text-decoration: none; }
 .pick-title a:hover strong { text-decoration: underline; }
-.pick-score { display: flex; align-items: flex-start; gap: var(--space-3); }
-.pick-score .score-word { flex: none; justify-items: start; }
-.pick-why { margin: 0; }
-.pick-keep-enter-active, .pick-keep-leave-active, .pick-dismiss-enter-active, .pick-dismiss-leave-active { transition: opacity 125ms ease, transform 125ms ease; }
-.pick-keep-leave-to { opacity: 0; transform: translateX(2rem); }
-.pick-dismiss-leave-to { opacity: 0; transform: translateX(-2rem); }
-.pick-keep-enter-from, .pick-dismiss-enter-from { opacity: 0; transform: translateY(0.5rem); }
-@media (prefers-reduced-motion: reduce) {
-  .pick-keep-enter-active, .pick-keep-leave-active, .pick-dismiss-enter-active, .pick-dismiss-leave-active { transition: none; }
-}
 /* ④ Suivre (docs/124 §G) : trois lignes séparées par un filet, une action au plus chacune. */
 /* La formule (docs/125 §4) : une ligne par usage, le compte et une jauge courte, séparées par un
    filet ; ce que Plus ajoute sur fond gris (ce qu'on consulte, docs/110). */
@@ -3620,7 +3609,7 @@ main:focus { outline: none; }
 /* « Candidature notée » (C9) : le visage, la phrase, l'objectif ORP, puis « Offre suivante » et « Annuler ». */
 /* « C'est fait ! » (ObjectifAtteint, B10 à B12) : le feston et le visage, « à faire » barré une fois, la phrase
    manuscrite, puis l'export et l'accueil en bas. La police n'est chargée que si un titre manuscrit s'affiche ; un seul
-   sous-ensemble (3,8 Ko) pour « C'est fait ! » et les fins de titre des premiers pas (O3, 11b). */
+   sous-ensemble (23 Ko : minuscules, chiffres, accents) pour « C’est fait ! », les fins de titre des premiers pas (O3, 11b) et les titres du tri. */
 @font-face { font-family: "Caveat Brush"; src: url("./assets/fonts/caveat-brush-titres.woff2?no-inline") format("woff2"); font-display: swap; }
 .goal-reached { position: relative; display: flex; flex-direction: column; align-items: center; max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-5) var(--space-6); box-sizing: border-box; text-align: center; color: var(--text-tertiary); }
 .goal-reached-close { position: absolute; top: var(--space-3); right: var(--space-2); width: var(--btn-tertiary); height: var(--btn-tertiary); color: var(--text); }
@@ -3728,12 +3717,10 @@ main:focus { outline: none; }
 .jobs-head.triage-head, .container.triage-page { max-width: calc(var(--page-column) + 2 * var(--space-6)); }
 .band:has(> .triage-page) { background: var(--bg); border-top: 0; padding-top: 0; }
 .triage-pile { display: grid; gap: var(--space-4); }
-.triage-pile .daily-pick { margin-top: 0; }
 .pick-step { display: grid; gap: var(--space-4); }
 .triage-pile .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5); }
 .pick-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .pick-tags li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--band); font-size: var(--font-small); font-weight: var(--weight-semibold); }
-.pick-ad { justify-self: start; }
 .triage-pile .pick-done { padding: 0; justify-items: start; text-align: left; }
 .triage-pile .pick-done .illu.spot { margin-inline: 0; }
 .triage-pile .pick-done .face-state-actions { justify-content: flex-start; }

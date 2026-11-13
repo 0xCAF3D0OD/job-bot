@@ -6876,6 +6876,11 @@ export interface components {
              */
             score_parts: components["schemas"]["ScorePartOut"][];
             score_tip?: components["schemas"]["ScoreTipOut"] | null;
+            /**
+             * Passages
+             * @default []
+             */
+            passages: string[];
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -7857,6 +7862,11 @@ export interface components {
              */
             score_parts: components["schemas"]["ScorePartOut"][];
             score_tip?: components["schemas"]["ScoreTipOut"] | null;
+            /**
+             * Passages
+             * @default []
+             */
+            passages: string[];
             /** Scored At */
             scored_at?: string | null;
             /**

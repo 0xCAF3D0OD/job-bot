@@ -322,6 +322,9 @@ class Evaluation(Base):
         JSONB, nullable=False, default=list, server_default="[]"
     )
     score_tip: Mapped[Any] = mapped_column(JSONB)
+    # Passages de l'annonce qui correspondent au profil (score-v8, lot du 11 novembre au soir) :
+    # les citations de l'IA retrouvées dans l'annonce, écrites comme dans l'annonce.
+    passages: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
     remote: Mapped[str | None] = mapped_column(Text)
     remote_days: Mapped[int | None] = mapped_column(SmallInteger)
     remote_region: Mapped[str | None] = mapped_column(Text)
