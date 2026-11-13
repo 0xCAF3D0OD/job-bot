@@ -11,5 +11,6 @@ Une décision de Kevin donnée dans la conversation après le 13 novembre passe 
 | 2026-11-13 | Téléphone, échec de l'écriture de la lettre ou du CV : même carte et même texte que PreparerOrdinateurLettreVide (« La lettre n'a pas pu être écrite », l'explication, « Réessayer »). Pas de nouveau dessin. | L'état d'échec, dessiné nulle part sur téléphone. |
 | 2026-11-13 | Ordinateur, étape Postuler : la ligne du certificat dans « À joindre » est conservée. PreparerOrdinateurPostuler sera complétée. | L'absence de cette ligne sur PreparerOrdinateurPostuler. |
 | 2026-11-13 | Chaque PR d'interface est vérifiée contre le paquet du 13 novembre et porte une section « Conformité maquette du 13.11 » (règle dans CLAUDE.md). | — |
+| 2026-11-13 | Attente de l'Assistant, cloche sans notification, espacement de l'en-tête : version de #574 conservée, la maquette sera alignée dessus. | Les deux premières lignes des « États pas encore dessinés » du §6 du LISEZMOI. |
 
 `tokens.css` reste la source des couleurs et des tailles : il n'est pas dans le paquet du 13 novembre et n'est pas remplacé.
