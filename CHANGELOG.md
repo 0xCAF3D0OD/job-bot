@@ -544,3 +544,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.330 | Envoyées : recherche « Filtrer par titre ou entreprise », tri (à relancer d’abord, plus récentes, plus anciennes) et filtres de statut avec leur nombre, gardés dans l’adresse | livrée |
 | 1.6.331 | Envoyées sur ordinateur : le trait et le point de la carte choisie suivent la carte au défilement, au redimensionnement et au changement de filtre, et disparaissent quand elle n’est plus à l’écran | livrée |
 | 1.6.332 | Rendez-vous : un seul panneau « Nouveau rendez-vous » pour un entretien avec une entreprise (candidature, format, date, heure, lien, numéro ou adresse) ou un rendez-vous ORP ; la candidature passe en « Entretien » | livrée |
+| 1.6.333 | S'entraîner pour l'entretien s'ouvre en page (`/entrainement`) : les réglages, puis une question à la fois sans la navigation, avec un conseil de méthode, la progression et le compteur de mots | livrée |
