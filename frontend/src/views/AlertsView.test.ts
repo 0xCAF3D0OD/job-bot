@@ -74,20 +74,34 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     expect(wrapper.find("[data-test=wizard-terms]").attributes("placeholder")).toBe("Mots (DevOps)");
     await wrapper.find("[data-test=wizard-next]").trigger("click");
 
-    // Étape 2 : jobup, puis LinkedIn ; l'avancée sur la ligne de l'étape, deux boutons (docs/104 §4).
-    expect(wrapper.text()).toContain("Crée l’alerte sur jobup");
-    expect(wrapper.find("[data-test=wizard-site-count]").text()).toBe("· site 1 sur 2");
+    // Étape 2, sur ordinateur (planche AlertesOrdinateurSite) : le panneau « Alerte jobup » à droite, « Site 1 sur 2 »,
+    // les trois étapes numérotées, « Plus tard » et « J'ai créé l'alerte » ; l'étape 1 reste derrière.
+    const panel = () => wrapper.find(".alert-site-panel");
+    expect(panel().find("h2").text()).toBe("Alerte jobup");
+    expect(panel().attributes("aria-label")).toBe("Alerte jobup");
+    expect(panel().find(".side-panel-eyebrow").text()).toBe("Site 1 sur 2");
+    expect(panel().findAll(".alert-site-progress li").map((li) => li.classes().includes("done"))).toEqual([true, false]);
+    expect(panel().find("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne");
+    expect(panel().findAll(".alert-site-step-title").map((b) => b.text())).toEqual([
+      "Ouvre jobup avec ta recherche",
+      "Mets cette adresse comme destinataire",
+      "Enregistre l’alerte sur jobup, puis reviens ici",
+    ]);
+    expect(panel().find("[data-test=wizard-address]").text()).toBe("moi@exemple.ch");
+    expect(wrapper.find("[data-test=alerts-wizard] h2").text()).toBe("Offres à recevoir");
     expect(wrapper.find("[data-test=wizard-site-done]").text()).toBe("J’ai créé l’alerte");
     expect(wrapper.find("[data-test=wizard-skip]").text()).toBe("Plus tard");
-    expect(wrapper.find("[data-test=wizard-skip]").classes()).toContain("secondary");
     expect(wrapper.find("[data-test=wizard-open]").attributes("href")).toBe("https://jobup.example/?term=DevOps");
+    expect(wrapper.find("[data-test=wizard-open]").text()).toContain("Ouvrir jobup");
     await wrapper.find("[data-test=wizard-site-done]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", {
       params: { path: { search_id: 1, site: "jobup" } },
     });
-    expect(wrapper.text()).toContain("Crée l’alerte sur LinkedIn");
+    expect(panel().find("h2").text()).toBe("Alerte LinkedIn");
+    expect(panel().find(".side-panel-eyebrow").text()).toBe("Site 2 sur 2");
     await wrapper.find("[data-test=wizard-skip]").trigger("click");
+    await flushPromises();
 
     // Étape 3.
     expect(wrapper.text()).toContain("C’est prêt");
@@ -108,7 +122,7 @@ describe("Alertes, assistant : le bouton bleu ajoute aussi (2026-11-05)", () => 
     await wrapper.find("[data-test=wizard-next]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "DevOps", location: null } });
-    expect(wrapper.text()).toContain("Crée l’alerte sur jobup");
+    expect(wrapper.find(".alert-site-panel h2").text()).toBe("Alerte jobup");
   });
 });
 
@@ -138,17 +152,63 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     const todo = wrapper.find("[data-test=alert-card-1-linkedin] .block-row-aside");
     expect(todo.text().replace(/^, /, "")).toBe("Pas encore créée");
     expect(todo.classes()).toContain("muted");
-    // La carte « À créer » ouvre le panneau ; « Créer l'alerte » ouvre le pas à pas sur ce site, pour cette recherche.
+    // Ordinateur (planche AlertesOrdinateurSite) : la carte « À créer » ouvre directement le panneau « Alerte LinkedIn »,
+    // pour cette recherche, au-dessus de la page, qui ne change pas.
     await wrapper.find("[data-test=alert-card-1-linkedin]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=alert-sheet]").text()).toContain("À créer sur LinkedIn");
-    await wrapper.find("[data-test=alert-create]").trigger("click");
-    await flushPromises();
-    expect(wrapper.text()).toContain("Crée l’alerte sur LinkedIn");
-    expect(wrapper.findAll("[data-test=wizard-open]").map((a) => a.text())).toEqual([expect.stringContaining("DevOps")]);
-    await wrapper.find("[data-test=close-wizard]").trigger("click");
-    await flushPromises();
+    expect(wrapper.find("[data-test=alert-sheet]").exists()).toBe(false);
+    const panel = wrapper.find(".alert-site-panel");
+    expect(panel.find("h2").text()).toBe("Alerte LinkedIn");
+    // Seuls les sites encore à créer pour cette recherche : LinkedIn.
+    expect(panel.find(".side-panel-eyebrow").text()).toBe("Site 1 sur 1");
+    expect(panel.find("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne");
+    expect(wrapper.findAll("[data-test=wizard-open]")).toHaveLength(1);
+    expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
     expect(wrapper.find("[data-test=alert-card-1-jobup]").exists()).toBe(true);
+    await panel.find(".side-panel-close").trigger("click");
+    await flushPromises();
+    expect(wrapper.find(".alert-site-panel").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alert-card-1-jobup]").exists()).toBe(true);
+  });
+
+  it("panneau « Alerte <site> » : le focus y entre, Échap le ferme et rend le focus à la carte", async () => {
+    const data = page([search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() }), cell("linkedin")])]);
+    GET.mockResolvedValue({ data });
+    const wrapper = mount(AlertsView, { attachTo: document.body, global: { stubs: { teleport: true } } });
+    await flushPromises();
+    const card = wrapper.find<HTMLElement>("[data-test=alert-card-1-linkedin]");
+    card.element.focus();
+    await card.trigger("click");
+    await flushPromises();
+    const panel = wrapper.find<HTMLElement>(".alert-site-panel");
+    expect(panel.attributes("role")).toBe("dialog");
+    expect(panel.attributes("aria-modal")).toBe("true");
+    expect(panel.element.contains(document.activeElement)).toBe(true);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await flushPromises();
+    expect(wrapper.find(".alert-site-panel").exists()).toBe(false);
+    expect(document.activeElement).toBe(wrapper.find("[data-test=alert-card-1-linkedin]").element);
+    wrapper.unmount();
+  });
+
+  it("après le dernier site depuis une carte : retour à la liste, le focus sur la carte, passée dans « Actives »", async () => {
+    const received = cell("jobup", { status: "received", received_at: new Date().toISOString() });
+    const before = page([search(1, [received, cell("linkedin")])]);
+    const after = page([search(1, [received, cell("linkedin", { status: "created", created_at: new Date().toISOString() })])]);
+    GET.mockResolvedValueOnce({ data: before }).mockResolvedValue({ data: after });
+    PUT.mockResolvedValue({ data: after });
+    const wrapper = mount(AlertsView, { attachTo: document.body, global: { stubs: { teleport: true } } });
+    await flushPromises();
+    const card = wrapper.find<HTMLElement>("[data-test=alert-card-1-linkedin]");
+    card.element.focus();
+    await card.trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=wizard-site-done]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find(".alert-site-panel").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alerts-family-active] [data-test=alert-card-1-linkedin]").exists()).toBe(true);
+    expect(document.activeElement).toBe(wrapper.find("[data-test=alert-card-1-linkedin]").element);
+    wrapper.unmount();
   });
 
   it("une alerte active : le panneau avec les actions ; « + Ajouter » ajoute une recherche", async () => {
@@ -264,7 +324,25 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     await wrapper.find("[data-test=wizard-open]").trigger("click");
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("alertes+lea-abc12345@joba1.ch");
-    expect(wrapper.find("[data-test=alerts-wizard]").text()).toContain("Adresse copiée");
+    const status = wrapper.find(".alert-site-panel [data-test=alert-site-copied]");
+    expect(status.attributes("role")).toBe("status");
+    expect(status.text()).toBe("Adresse copiée");
+  });
+
+  it("le bouton de copie du panneau confirme « Adresse copiée », visible et annoncé une seule fois", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const todo = page([search(1, [cell("jobup"), cell("linkedin")])]);
+    const wrapper = await mountView(todo);
+    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    const panel = wrapper.find(".alert-site-panel");
+    expect(panel.find("[data-test=alert-site-copied]").text()).toBe("");
+    await panel.find("[data-test=alert-site-copy]").trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith("moi@exemple.ch");
+    expect(panel.find("[data-test=alert-site-copied]").text()).toBe("Adresse copiée");
+    expect(panel.findAll("[role=status]")).toHaveLength(1);
   });
 });
 

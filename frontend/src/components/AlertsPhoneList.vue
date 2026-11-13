@@ -92,6 +92,12 @@ const open = ref(false);
 const searchId = useId();
 const actionsId = useId();
 function show(card: Card): void {
+  // Ordinateur, carte « À créer » : directement le panneau « Alerte <site> » (planche AlertesOrdinateurSite) ; le
+  // focus revient sur la carte à la fermeture.
+  if (props.desk && card.kind === "todo") {
+    emit("create", card.site.slug, card.group.terms);
+    return;
+  }
   shown.value = card;
   open.value = true;
 }
