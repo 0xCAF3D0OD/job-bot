@@ -7,6 +7,9 @@ trient sur ordinateur ; « Annuler » remet l'offre sans rien envoyer ; le focus
 La démo refuse d'écrire : les changements d'état sont interceptés et vérifiés (« later » pour gardée, « ignored »
 pour écartée), dans l'ordre.
 
+Le week-end, la démo est en « Jour de repos » et le tri ne s'affiche pas : la réponse de /api/today est reprise
+avec « research_today » à vrai, pour que l'audit donne le même résultat tous les jours de la semaine.
+
     make audit-tri DEMO_URL=http://localhost:5200
 """
 
@@ -22,6 +25,16 @@ KEEP, DISMISS = "[data-test=triage-keep]", "[data-test=triage-dismiss]"
 TITLE = "[data-test=triage-title]"
 
 
+async def research_day(route: Route) -> None:
+    """Un jour de recherche, quel que soit le jour où l'audit tourne : sans cela, le samedi et le dimanche, la page
+    affiche « Jour de repos » et l'audit attend des boutons qui ne viennent pas."""
+    response = await route.fetch()
+    body = await response.json()
+    if isinstance(body.get("rhythm"), dict):
+        body["rhythm"]["research_today"] = True
+    await route.fulfill(response=response, json=body)
+
+
 async def run(context: BrowserContext, width: int) -> list[str]:
     faults: list[str] = []
     sent: list[str] = []
@@ -35,6 +48,7 @@ async def run(context: BrowserContext, width: int) -> list[str]:
         await route.fulfill(json={})
 
     await page.route("**/api/offers/*/status", status)
+    await page.route("**/api/today", research_day)
     await page.goto(f"{BASE}/candidatures/trier")
     await page.wait_for_selector(KEEP, timeout=15000)
 
@@ -129,6 +143,7 @@ async def message_in_window(context: BrowserContext, width: int, height: int) ->
         await route.fulfill(json={})
 
     await page.route("**/api/offers/*/status", status)
+    await page.route("**/api/today", research_day)
     await page.goto(f"{BASE}/candidatures/trier")
     await page.locator(KEEP).wait_for(timeout=15000)
     keys = (await page.locator("[data-test=triage-keys]").text_content() or "").replace("\n", " ")
