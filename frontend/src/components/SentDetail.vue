@@ -122,6 +122,21 @@ const findSummary = computed(() => {
   const n = findRows.value.length;
   return `${n} ${n > 1 ? "pistes" : "piste"} chez ${props.application.company}`;
 });
+// Ordinateur (§8 point 4) : la ligne « Historique » dit le nombre d’étapes et la dernière ; elle déplie la liste,
+// « J’ai contacté quelqu’un » et les prises de contact, dans la même carte.
+const historyOpen = ref(false);
+const historySummary = computed(() => {
+  const n = history.value.length;
+  const last = history.value[0];
+  if (!last) return "";
+  return `${n} ${n > 1 ? "étapes" : "étape"} · dernière le ${last.date}, ${last.title.charAt(0).toLowerCase()}${last.title.slice(1)}`;
+});
+watch(
+  () => props.application.id,
+  () => {
+    historyOpen.value = false;
+  },
+);
 const meetingOpen = ref(false);
 function meetingAdded(): void {
   meetingOpen.value = false;
@@ -182,149 +197,152 @@ function onStatus(value: ApplicationStatus): void {
         test-id="panel-more"
       />
     </header>
-    <div class="sent-card sent-head">
-      <div class="sent-head-top">
-        <span
-          v-if="!phone"
-          :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
-          aria-hidden="true"
-        >{{ initials(company) }}</span>
-        <div class="sent-head-title">
-          <component
-            :is="phone ? 'h1' : 'h2'"
-            data-test="panel-title"
-          >
-            {{ application.job_title }}
-          </component>
-          <p>{{ companyPlace(application.company, application.location) }}</p>
-        </div>
-        <MoreMenu
-          v-if="!phone"
-          :items="menuItems"
-          label="Plus d’actions"
-          test-id="panel-more"
-        />
-      </div>
-      <p
-        class="sent-words"
-        data-test="sent-words"
+    <!-- Ordinateur (maquette du 14 novembre, §8 Envoyées) : une colonne de cartes empilées, 16 px entre elles. 1. titre ;
+         2. le suivi en 5 colonnes égales ; 3. la relance conseillée (ou l’état et les cartes Entretien et ORP) ;
+         4. Documents et contacts en deux colonnes, puis la ligne « Historique ». -->
+    <template v-if="!phone">
+      <div
+        class="sent-card sent-head sd-title"
+        data-test="sent-title-card"
       >
-        <span
-          v-for="word in words"
-          :key="word.test"
-          :class="word.tone"
-          :data-test="word.test"
-        ><AppIcon
-          v-if="word.check"
-          name="done"
-        />{{ word.text }}</span>
-      </p>
-      <!-- Pas de graphique de suivi sur téléphone (§8.3) : les mots disent où on en est. -->
-      <ol
-        v-if="!phone"
-        class="sent-steps"
-        aria-label="Suivi de la candidature"
-        data-test="sent-steps"
-      >
-        <li
-          v-for="(step, i) in steps"
-          :key="step.label"
-          :class="step.state"
-          :aria-current="step.state === 'current' ? 'step' : undefined"
-        >
+        <div class="sent-head-top">
           <span
-            v-if="i < steps.length - 1"
-            :class="['sent-step-line', { on: steps[i + 1]!.state !== 'todo' }]"
+            :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
             aria-hidden="true"
+          >{{ initials(company) }}</span>
+          <div class="sent-head-title">
+            <h2 data-test="panel-title">
+              {{ application.job_title }}
+            </h2>
+            <p>{{ companyPlace(application.company, application.location) }}</p>
+          </div>
+          <MoreMenu
+            :items="menuItems"
+            label="Plus d’actions"
+            test-id="panel-more"
           />
-          <span
-            class="sent-step-dot"
-            aria-hidden="true"
-          ><AppIcon
-            v-if="step.state === 'done'"
-            name="done"
-          /></span>
-          <span class="sent-step-label">{{ step.label }}</span>
-          <span class="sent-step-sub">{{ step.sub }}</span>
-        </li>
-      </ol>
-    </div>
-
-    <div class="sent-grid">
-      <div class="sent-main">
-        <FollowUpCard
-          v-if="followUp"
-          :application="application"
-          :compact="phone"
-          :linkedin-url="linkedinUrl"
-          @edit="emit('edit', application)"
-          @done="emit('changed')"
-        />
-        <div
-          v-else-if="noAnswerDue(application)"
-          class="sent-card sent-plain"
-          data-test="panel-no-answer"
-        >
-          <p>Pas de réponse depuis la relance.</p>
-          <button
-            type="button"
-            class="link"
-            @click="emit('status', application, 'sans_reponse')"
-          >
-            Passer en Sans réponse
-          </button>
         </div>
-        <ApplicationInterviews
-          v-if="hasInterviews"
-          class="sent-card"
-          :application="application"
-          @interview="(app, i) => emit('interview', app, i)"
-          @prepare="emit('prepare', application)"
-          @practice="emit('practice', application)"
-        />
-        <ApplicationOrp
-          v-if="orpTodo || remoteAbroad"
-          class="sent-card"
-          :application="application"
-          :orp-row="orpRow ?? null"
-          @edit="emit('edit', application)"
-          @changed="emit('changed')"
-        />
-        <section
-          v-if="phone && (sentRows.length || findRows.length)"
-          class="sent-card sent-links"
-          aria-label="Documents et contacts"
+        <p
+          class="sent-words"
+          data-test="sent-words"
         >
-          <button
+          <span
+            v-for="word in words"
+            :key="word.test"
+            :class="word.tone"
+            :data-test="word.test"
+          ><AppIcon
+            v-if="word.check"
+            name="done"
+          />{{ word.text }}</span>
+        </p>
+      </div>
+      <div class="sent-card sd-steps-card">
+        <ol
+          class="sent-steps sd-steps"
+          aria-label="Suivi de la candidature"
+          data-test="sent-steps"
+        >
+          <li
+            v-for="(step, i) in steps"
+            :key="step.label"
+            :class="step.state"
+            :aria-current="step.state === 'current' ? 'step' : undefined"
+          >
+            <span
+              v-if="i < steps.length - 1"
+              :class="['sent-step-line', { on: steps[i + 1]!.state !== 'todo' }]"
+              aria-hidden="true"
+            />
+            <span
+              class="sent-step-dot"
+              aria-hidden="true"
+            ><AppIcon
+              v-if="step.state === 'done'"
+              name="done"
+            /></span>
+            <span class="sent-step-label">{{ step.label }}</span>
+            <span class="sent-step-sub">{{ step.sub }}</span>
+          </li>
+        </ol>
+      </div>
+      <FollowUpCard
+        v-if="followUp"
+        :application="application"
+        :linkedin-url="linkedinUrl"
+        @edit="emit('edit', application)"
+        @done="emit('changed')"
+      />
+      <div
+        v-else-if="noAnswerDue(application)"
+        class="sent-card sent-plain"
+        data-test="panel-no-answer"
+      >
+        <p>Pas de réponse depuis la relance.</p>
+        <button
+          type="button"
+          class="link"
+          @click="emit('status', application, 'sans_reponse')"
+        >
+          Passer en Sans réponse
+        </button>
+      </div>
+      <ApplicationInterviews
+        v-if="hasInterviews"
+        class="sent-card"
+        :application="application"
+        @interview="(app, i) => emit('interview', app, i)"
+        @prepare="emit('prepare', application)"
+        @practice="emit('practice', application)"
+      />
+      <ApplicationOrp
+        v-if="orpTodo || remoteAbroad"
+        class="sent-card"
+        :application="application"
+        :orp-row="orpRow ?? null"
+        @edit="emit('edit', application)"
+        @changed="emit('changed')"
+      />
+      <section
+        class="sent-card sd-docs"
+        aria-label="Documents et contacts"
+        data-test="sent-docs-card"
+      >
+        <div
+          v-if="sentRows.length || findRows.length"
+          class="sd-docs-cols"
+        >
+          <SentRows
             v-if="sentRows.length"
-            type="button"
-            data-test="sent-docs-open"
-            @click="docsOpen = true"
-          >
-            <span class="sent-row-text"><b>Ce que tu as envoyé</b><span>{{ sentSummary }}</span></span>
-            <AppIcon name="chevron" />
-          </button>
-          <button
+            title="Ce que tu as envoyé"
+            :rows="sentRows"
+            data-test="section-documents"
+          />
+          <SentRows
             v-if="findRows.length"
-            type="button"
-            data-test="sent-find-open"
-            @click="findOpen = true"
-          >
-            <span class="sent-row-text"><b>Trouver un contact</b><span>{{ findSummary }}</span></span>
-            <AppIcon name="chevron" />
-          </button>
-        </section>
+            title="Trouver un contact"
+            :rows="findRows"
+            data-test="section-contacts"
+          />
+        </div>
+        <button
+          type="button"
+          class="sd-history-row"
+          :aria-expanded="historyOpen"
+          aria-controls="sent-history-zone"
+          data-test="sent-history-open"
+          @click="historyOpen = !historyOpen"
+        >
+          <span class="sent-row-text"><b>Historique</b><span>{{ historySummary }}</span></span>
+          <AppIcon :name="historyOpen ? 'chevron-down' : 'chevron'" />
+        </button>
         <section
-          class="sent-history"
-          aria-labelledby="sent-history-title"
+          v-show="historyOpen"
+          id="sent-history-zone"
+          class="sent-history sd-history"
+          aria-label="Historique"
           data-test="sent-history"
         >
-          <p
-            id="sent-history-title"
-            class="sent-cap"
-          >
-            Historique
-          </p>
           <ul>
             <li
               v-for="(event, i) in history"
@@ -338,40 +356,28 @@ function onStatus(value: ApplicationStatus): void {
             </li>
           </ul>
           <button
-            v-if="phone"
             type="button"
-            class="link sent-contacted"
-            aria-haspopup="dialog"
+            class="sent-contacted-fold"
+            :aria-expanded="contactedOpen"
+            aria-controls="sent-contacted-zone"
             data-test="contacted-open"
-            @click="contactedOpen = true"
+            @click="contactedOpen = !contactedOpen"
           >
-            <span class="with-icon">J’ai contacté quelqu’un<AppIcon name="chevron" /></span>
+            J’ai contacté quelqu’un<AppIcon :name="contactedOpen ? 'chevron-up' : 'chevron-down'" />
           </button>
-          <template v-else>
-            <button
-              type="button"
-              class="sent-contacted-fold"
-              :aria-expanded="contactedOpen"
-              aria-controls="sent-contacted-zone"
-              data-test="contacted-open"
-              @click="contactedOpen = !contactedOpen"
-            >
-              J’ai contacté quelqu’un<AppIcon :name="contactedOpen ? 'chevron-up' : 'chevron-down'" />
-            </button>
-            <div
-              v-show="contactedOpen"
-              id="sent-contacted-zone"
-              data-test="contacted-zone"
-            >
-              <ContactQuickForm
-                v-if="contactedOpen"
-                :key="`quick-${application.id}`"
-                :application-id="application.id"
-                @saved="contactSaved"
-                @cancel="contactedOpen = false"
-              />
-            </div>
-          </template>
+          <div
+            v-show="contactedOpen"
+            id="sent-contacted-zone"
+            data-test="contacted-zone"
+          >
+            <ContactQuickForm
+              v-if="contactedOpen"
+              :key="`quick-${application.id}`"
+              :application-id="application.id"
+              @saved="contactSaved"
+              @cancel="contactedOpen = false"
+            />
+          </div>
           <button
             v-if="application.contacts?.length"
             type="button"
@@ -382,27 +388,230 @@ function onStatus(value: ApplicationStatus): void {
             Voir les prises de contact
           </button>
         </section>
+      </section>
+    </template>
+    <template v-else>
+      <div class="sent-card sent-head">
+        <div class="sent-head-top">
+          <span
+            v-if="!phone"
+            :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
+            aria-hidden="true"
+          >{{ initials(company) }}</span>
+          <div class="sent-head-title">
+            <component
+              :is="phone ? 'h1' : 'h2'"
+              data-test="panel-title"
+            >
+              {{ application.job_title }}
+            </component>
+            <p>{{ companyPlace(application.company, application.location) }}</p>
+          </div>
+          <MoreMenu
+            v-if="!phone"
+            :items="menuItems"
+            label="Plus d’actions"
+            test-id="panel-more"
+          />
+        </div>
+        <p
+          class="sent-words"
+          data-test="sent-words"
+        >
+          <span
+            v-for="word in words"
+            :key="word.test"
+            :class="word.tone"
+            :data-test="word.test"
+          ><AppIcon
+            v-if="word.check"
+            name="done"
+          />{{ word.text }}</span>
+        </p>
+        <!-- Pas de graphique de suivi sur téléphone (§8.3) : les mots disent où on en est. -->
+        <ol
+          v-if="!phone"
+          class="sent-steps"
+          aria-label="Suivi de la candidature"
+          data-test="sent-steps"
+        >
+          <li
+            v-for="(step, i) in steps"
+            :key="step.label"
+            :class="step.state"
+            :aria-current="step.state === 'current' ? 'step' : undefined"
+          >
+            <span
+              v-if="i < steps.length - 1"
+              :class="['sent-step-line', { on: steps[i + 1]!.state !== 'todo' }]"
+              aria-hidden="true"
+            />
+            <span
+              class="sent-step-dot"
+              aria-hidden="true"
+            ><AppIcon
+              v-if="step.state === 'done'"
+              name="done"
+            /></span>
+            <span class="sent-step-label">{{ step.label }}</span>
+            <span class="sent-step-sub">{{ step.sub }}</span>
+          </li>
+        </ol>
       </div>
-      <aside
-        v-if="!phone"
-        class="sent-side"
-        aria-label="Documents et contacts"
-      >
-        <SentRows
-          v-if="sentRows.length"
-          title="Ce que tu as envoyé"
-          :rows="sentRows"
-          data-test="section-documents"
-        />
-        <SentRows
-          v-if="findRows.length"
-          title="Trouver un contact"
-          :rows="findRows"
-          data-test="section-contacts"
-        />
-      </aside>
-    </div>
 
+      <div class="sent-grid">
+        <div class="sent-main">
+          <FollowUpCard
+            v-if="followUp"
+            :application="application"
+            :compact="phone"
+            :linkedin-url="linkedinUrl"
+            @edit="emit('edit', application)"
+            @done="emit('changed')"
+          />
+          <div
+            v-else-if="noAnswerDue(application)"
+            class="sent-card sent-plain"
+            data-test="panel-no-answer"
+          >
+            <p>Pas de réponse depuis la relance.</p>
+            <button
+              type="button"
+              class="link"
+              @click="emit('status', application, 'sans_reponse')"
+            >
+              Passer en Sans réponse
+            </button>
+          </div>
+          <ApplicationInterviews
+            v-if="hasInterviews"
+            class="sent-card"
+            :application="application"
+            @interview="(app, i) => emit('interview', app, i)"
+            @prepare="emit('prepare', application)"
+            @practice="emit('practice', application)"
+          />
+          <ApplicationOrp
+            v-if="orpTodo || remoteAbroad"
+            class="sent-card"
+            :application="application"
+            :orp-row="orpRow ?? null"
+            @edit="emit('edit', application)"
+            @changed="emit('changed')"
+          />
+          <section
+            v-if="phone && (sentRows.length || findRows.length)"
+            class="sent-card sent-links"
+            aria-label="Documents et contacts"
+          >
+            <button
+              v-if="sentRows.length"
+              type="button"
+              data-test="sent-docs-open"
+              @click="docsOpen = true"
+            >
+              <span class="sent-row-text"><b>Ce que tu as envoyé</b><span>{{ sentSummary }}</span></span>
+              <AppIcon name="chevron" />
+            </button>
+            <button
+              v-if="findRows.length"
+              type="button"
+              data-test="sent-find-open"
+              @click="findOpen = true"
+            >
+              <span class="sent-row-text"><b>Trouver un contact</b><span>{{ findSummary }}</span></span>
+              <AppIcon name="chevron" />
+            </button>
+          </section>
+          <section
+            class="sent-history"
+            aria-labelledby="sent-history-title"
+            data-test="sent-history"
+          >
+            <p
+              id="sent-history-title"
+              class="sent-cap"
+            >
+              Historique
+            </p>
+            <ul>
+              <li
+                v-for="(event, i) in history"
+                :key="i"
+              >
+                <span class="sent-history-date">{{ event.date }}</span>
+                <span class="sent-history-text">{{ event.title }}<span
+                  v-if="event.detail"
+                  class="sent-history-detail"
+                >{{ event.detail }}</span></span>
+              </li>
+            </ul>
+            <button
+              v-if="phone"
+              type="button"
+              class="link sent-contacted"
+              aria-haspopup="dialog"
+              data-test="contacted-open"
+              @click="contactedOpen = true"
+            >
+              <span class="with-icon">J’ai contacté quelqu’un<AppIcon name="chevron" /></span>
+            </button>
+            <template v-else>
+              <button
+                type="button"
+                class="sent-contacted-fold"
+                :aria-expanded="contactedOpen"
+                aria-controls="sent-contacted-zone"
+                data-test="contacted-open"
+                @click="contactedOpen = !contactedOpen"
+              >
+                J’ai contacté quelqu’un<AppIcon :name="contactedOpen ? 'chevron-up' : 'chevron-down'" />
+              </button>
+              <div
+                v-show="contactedOpen"
+                id="sent-contacted-zone"
+                data-test="contacted-zone"
+              >
+                <ContactQuickForm
+                  v-if="contactedOpen"
+                  :key="`quick-${application.id}`"
+                  :application-id="application.id"
+                  @saved="contactSaved"
+                  @cancel="contactedOpen = false"
+                />
+              </div>
+            </template>
+            <button
+              v-if="application.contacts?.length"
+              type="button"
+              class="link sent-contacts-all"
+              data-test="contacts-open"
+              @click="contactsOpen = true"
+            >
+              Voir les prises de contact
+            </button>
+          </section>
+        </div>
+        <aside
+          v-if="!phone"
+          class="sent-side"
+          aria-label="Documents et contacts"
+        >
+          <SentRows
+            v-if="sentRows.length"
+            title="Ce que tu as envoyé"
+            :rows="sentRows"
+            data-test="section-documents"
+          />
+          <SentRows
+            v-if="findRows.length"
+            title="Trouver un contact"
+            :rows="findRows"
+            data-test="section-contacts"
+          />
+        </aside>
+      </div>
+    </template>
     <!-- Sur téléphone, des feuilles du bas (BottomSheet) ; sur ordinateur, des panneaux à droite. -->
     <template v-if="phone">
       <BottomSheet
@@ -565,6 +774,25 @@ function onStatus(value: ApplicationStatus): void {
 .sent-contacted { min-height: var(--target-min); margin-top: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-status-choices { display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; }
 .sent-status-choices label { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); border-top: 1px solid var(--line-soft); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+/* Ordinateur, maquette du 14 novembre (§8 Envoyées, §9) : 16 px entre les cartes ; le suivi seul dans sa carte, 5 colonnes
+   égales, cercle et libellés centrés ; Documents et contacts en deux colonnes séparées d’un filet de 1 px, lignes de
+   64 px au moins (12 px en haut et en bas), puis la ligne « Historique » à chevron. */
+.sent-detail-cards:not(.sent-detail-phone) { gap: var(--space-4); }
+.sd-title { padding-bottom: var(--space-6); }
+.sd-steps-card { padding: var(--space-6) var(--space-4) var(--space-5); }
+.sd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; }
+.sd-steps > li, .sd-steps > li:last-child { flex: none; align-items: center; text-align: center; }
+.sd-steps .sent-step-line { left: calc(50% + var(--sent-28) / 2 + var(--sent-8)); right: calc(-50% + var(--sent-28) / 2 + var(--sent-8)); }
+.sd-docs { padding: 0; overflow: hidden; }
+.sd-docs-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.sd-docs-cols > .sent-rows { padding: 0; border: 0; border-radius: 0; background: none; }
+.sd-docs-cols > .sent-rows + .sent-rows { border-left: 1px solid var(--line); }
+.sd-docs .sent-rows h3 { margin: 0; padding: var(--space-4) var(--space-5); font-size: var(--font-body); }
+.sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-5); border-top-color: var(--line); }
+.sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sd-history-row:hover { background: var(--primary-soft); }
+.sd-history-row > .icon { flex: none; color: var(--primary-text); }
+.sd-history { margin: 0; padding: 0 var(--space-5) var(--space-4); }
 /* Écran moyen (1024 à 1279 px) : la colonne de droite passe sous la colonne principale, pour garder des lignes lisibles. */
 @media (max-width: 1279px) {
   .sent-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--sent-8); }

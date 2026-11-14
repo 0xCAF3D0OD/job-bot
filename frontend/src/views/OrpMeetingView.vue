@@ -279,6 +279,17 @@ const meetingItems = computed<MoreMenuItem[]>(() => [
 // ouvert avec ?feuille=carnet. Sans candidature, l'écran reste celui d'avant. Dès 1 024 px, RendezVousDesktop.
 const route = useRoute();
 const router = useRouter();
+// « + Ajouter » de l'en-tête (maquette du 14 novembre, §6) : ?ajouter=1 ouvre le panneau, puis l'adresse est nettoyée
+// avant l'ouverture (le panneau pose sa propre entrée d'historique).
+watch(
+  () => route?.query.ajouter,
+  async (value) => {
+    if (value !== "1") return;
+    await router.replace({ query: { ...route.query, ajouter: undefined } });
+    openAdd();
+  },
+  { immediate: true },
+);
 const { phone } = usePhone();
 // Dès 1 024 px (maquette RendezVousOrdinateur) : la liste et le détail, côte à côte.
 const { phone: wide } = usePhone("(min-width: 1024px)");

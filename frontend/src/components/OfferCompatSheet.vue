@@ -54,6 +54,9 @@ const props = defineProps<{
   verdict: string;
   tone: string;
   subtitle: string;
+  // Sur ordinateur (maquette du 14 novembre, §9) : la phrase « Calculée sur l'extrait de l'alerte… » quitte la carte
+  // de la note et vient ici, sous le résumé.
+  note?: string;
   strengths: CompatPoint[];
   gaps: CompatPoint[];
   // « Comment la note est calculée » : dépliée sur place, puisqu'on n'ouvre pas une feuille depuis une autre.
@@ -106,6 +109,11 @@ const families = computed(() =>
       <div class="compat-sum-text">
         <b :class="['compat-verdict', `is-${tone}`]">{{ verdict }}</b>
         <span class="compat-sum-sub">{{ subtitle }}</span>
+        <span
+          v-if="note"
+          class="compat-sum-sub"
+          data-test="compat-note"
+        >{{ note }}</span>
       </div>
     </div>
     <section

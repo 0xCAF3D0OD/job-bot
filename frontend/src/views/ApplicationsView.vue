@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -49,6 +49,7 @@ import SentDetail from "../components/SentDetail.vue";
 import { usePhone } from "../composables/usePhone";
 import { sentCounts, sentFiltered, sentFilterOf, sentSorted, sentSortOf, type SentFilter, type SentSort } from "../sentFilters";
 import { sentSections, type SentSection } from "../sentList";
+import SentFilterPanel from "../components/SentFilterPanel.vue";
 import SentFilters from "../components/SentFilters.vue";
 import SentPhoneFilters from "../components/SentPhoneFilters.vue";
 
@@ -370,53 +371,15 @@ function closeScreen(): void {
     void router.replace({ query });
   }
 }
-// Le trait bleu et son point (§8.1) : toujours mesurés sur la carte choisie, jamais posés en dur. Recalculés au
-// défilement, au redimensionnement, au changement de filtre ou de tri ; masqués quand la carte n’est plus à l’écran
-// ou plus dans la liste.
-const body = ref<HTMLElement | null>(null);
-const linkTop = ref<number | null>(null);
-function placeLink(): void {
-  const root = body.value;
-  const card = root?.querySelector<HTMLElement>(".sent-list .list-card[aria-current='true']");
-  if (!root || !card || !twoColumns.value) {
-    linkTop.value = null;
-    return;
-  }
-  const a = root.getBoundingClientRect();
-  const b = card.getBoundingClientRect();
-  const centre = b.top + b.height / 2;
-  if (centre < Math.max(0, a.top) || centre > Math.min(window.innerHeight, a.bottom)) {
-    linkTop.value = null;
-    return;
-  }
-  // Le trait fait 2 px : son bord haut est 1 px au-dessus du centre.
-  linkTop.value = Math.round(centre - a.top) - 1;
+// Le volet Filtres des Envoyées sur ordinateur (maquette du 14 novembre, §3) : il remplace la colonne liste.
+const sentFiltersOpen = ref(false);
+watch(twoColumns, (wide) => {
+  if (!wide) sentFiltersOpen.value = false;
+});
+const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
+function resetSentFilters(): void {
+  void router.replace({ query: { ...route.query, statut: undefined, tri: undefined } });
 }
-let linkFrame = 0;
-function placeLinkSoon(): void {
-  if (linkFrame) return;
-  linkFrame = requestAnimationFrame(() => {
-    linkFrame = 0;
-    placeLink();
-  });
-}
-const linkObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => placeLink());
-watch(body, (el, old) => {
-  if (old) linkObserver?.unobserve(old);
-  if (el) linkObserver?.observe(el);
-});
-watch([shown, twoColumns, sections], () => void nextTick(placeLink), { flush: "post" });
-onMounted(() => {
-  // En capture : le défilement de la page comme celui d’un bloc qui défile dans la page.
-  window.addEventListener("scroll", placeLinkSoon, { capture: true, passive: true });
-  window.addEventListener("resize", placeLinkSoon, { passive: true });
-});
-onUnmounted(() => {
-  linkObserver?.disconnect();
-  window.removeEventListener("scroll", placeLinkSoon, { capture: true });
-  window.removeEventListener("resize", placeLinkSoon);
-  if (linkFrame) cancelAnimationFrame(linkFrame);
-});
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
   return (...args: T) => {
     openId.value = null;
@@ -606,22 +569,17 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <section
     v-else
-    ref="body"
-    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns, 'blocks-page orp-page-blocks': orpPage && phone }]"
+    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns, 'sent-panel-open': twoColumns && sentFiltersOpen, 'blocks-page orp-page-blocks': orpPage && phone }]"
   >
-    <!-- Trait entre la liste et le détail, et le lien vers la carte choisie (§8.1) : décoratifs, la sélection est
-         portée par aria-current. -->
-    <span
-      v-if="twoColumns"
-      class="sent-divider"
-      aria-hidden="true"
-    />
-    <span
-      v-if="twoColumns && linkTop !== null"
-      class="sent-link"
-      :style="{ top: `${linkTop}px` }"
-      aria-hidden="true"
-      data-test="sent-link"
+    <!-- Ordinateur (§3) : le volet Filtres à la place de la colonne liste ; le détail reste à droite. -->
+    <SentFilterPanel
+      v-if="twoColumns && sentFiltersOpen && !orpPage"
+      v-model:filter="statusFilter"
+      v-model:sort="sentSort"
+      :counts="statusCounts"
+      :total="shownCount"
+      @reset="resetSentFilters"
+      @close="sentFiltersOpen = false"
     />
     <aside
       v-if="shown"
@@ -869,6 +827,9 @@ onUnmounted(() => assistant.setFocus(null));
             v-model:filter="statusFilter"
             v-model:sort="sentSort"
             :counts="statusCounts"
+            :panel="twoColumns"
+            :open="sentFiltersOpen"
+            @open="sentFiltersOpen = true"
           />
           <div
             v-if="filtering && !sections.length"
@@ -901,7 +862,7 @@ onUnmounted(() => assistant.setFocus(null));
               >
                 <h2 class="offer-day-title">
                   <span class="offer-day-name">{{ section.title }}</span>
-                  <span class="offer-day-count">{{ plural(section.items.length, "candidature", "candidatures") }}</span>
+                  <span class="offer-day-count">{{ twoColumns ? section.items.length : plural(section.items.length, "candidature", "candidatures") }}</span>
                 </h2>
               </li>
               <li
