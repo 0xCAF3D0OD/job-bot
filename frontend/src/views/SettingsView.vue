@@ -930,7 +930,7 @@ watch(
 }
 .settings-grouped :deep(.setting-row + .setting-row) { border-top: var(--rg-1) solid var(--line-soft); }
 .settings-grouped :deep(.setting-row.stack) { flex-wrap: wrap; }
-.settings-grouped :deep(.setting-row-text) { flex: 1 1 auto; gap: var(--rg-2); }
+.settings-grouped :deep(.setting-row-text) { flex: 1 1 auto; gap: var(--space-1); }
 .settings-grouped :deep(.setting-row-title) { font-size: var(--font-body); font-weight: var(--weight-semibold); }
 .settings-grouped :deep(.setting-row-description) { font-size: var(--rg-13); line-height: var(--rg-18); color: var(--text-secondary); }
 .setting-row.notify-threshold, .settings-grouped :deep(.setting-row.notify-threshold) { padding-top: 0; border-top: 0; min-height: 0; }
@@ -954,11 +954,13 @@ watch(
 }
 .settings-grouped :deep(.rg-list > * + *) { border-top: var(--rg-1) solid var(--line-soft); }
 .settings-grouped :deep(.rg-label) { flex: 1; min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
-.settings-grouped :deep(.rg-value) { font-size: var(--rg-15); color: var(--text-secondary); white-space: nowrap; }
+.settings-grouped :deep(.rg-value) { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
+/* À 320 px, le libellé garde sa place et la valeur passe à la ligne (audit téléphone : libellé coupé). */
+.settings-grouped :deep(.rg-link-row) { white-space: normal; }
 .settings-grouped :deep(.rg-link-row > .icon:last-child) { width: var(--rg-18); height: var(--rg-18); color: var(--text-secondary); }
 .settings-grouped :deep(.rg-lead) { width: var(--rg-20); height: var(--rg-20); color: var(--primary-graphic); }
 .settings-grouped :deep(.rg-link-two) { padding-block: var(--rg-12); }
-.settings-grouped :deep(.rg-sub) { display: block; margin-top: var(--rg-2); font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.settings-grouped :deep(.rg-sub) { display: block; margin-top: var(--space-1); font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .settings-grouped :deep(.account-data) { display: grid; gap: var(--space-3); }
 /* Supprimer mon compte, téléphone : bouton bordé rouge de 52 px, rayon 16, 6 px sous la liste. */
 .settings-phone :deep(.rg-danger-button) {
@@ -974,7 +976,7 @@ watch(
 .settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
 .settings-wide :deep(#donnees) { order: 1; }
 .settings-wide :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--rg-10);
+  margin: 0 var(--space-1) var(--space-3);
   font-size: var(--font-title);
   font-weight: var(--weight-bold);
   color: var(--text);
@@ -990,18 +992,18 @@ watch(
 .settings-wide :deep(:is(.setting-row-title, .rg-label)) { font-size: var(--rg-15); }
 .settings-wide :deep(.setting-row-description) { font-size: var(--font-small); line-height: var(--rg-20); }
 .settings-wide :deep(.appearance-row) { padding: var(--rg-12) var(--rg-18-5); }
-.settings-wide :deep(.appearance-row .segmented) { padding: var(--rg-3); gap: 0; border-radius: var(--rg-19); }
-.settings-wide :deep(.appearance-row .segmented > button) { min-height: var(--rg-32); padding: 0 var(--rg-14); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
+.settings-wide :deep(.appearance-row .segmented) { padding: var(--space-1); gap: 0; border-radius: var(--rg-19); }
+.settings-wide :deep(.appearance-row .segmented > button) { min-height: var(--rg-32); padding: 0 var(--space-4); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
 .settings-wide :deep(.rg-link-row) { gap: var(--space-4); min-height: var(--rg-64); padding: var(--rg-12) var(--rg-18-5); }
 .settings-wide :deep(.rg-link-row > .icon:last-child) { width: var(--rg-20); height: var(--rg-20); }
 /* Mes données, ordinateur : lignes à flèche ronde de 36 px (15 normal, sous-ligne 14 grise), puis « Supprimer mon
    compte » en rouge 15/700, 56 px, à 20 px du bord. */
-.settings-wide :deep(.account-data .rg-link-row) { gap: var(--rg-14); min-height: var(--rg-56); }
+.settings-wide :deep(.account-data .rg-link-row) { gap: var(--space-4); min-height: var(--rg-56); }
 .settings-wide :deep(.account-data .rg-label) { font-weight: var(--weight-regular); line-height: var(--rg-21); }
 .settings-wide :deep(.account-data .rg-sub) { font-size: var(--font-small); line-height: var(--rg-20); }
 .settings-wide :deep(.account-data .arrow-circle) { border-width: var(--rg-2); }
 .settings-wide :deep(.rg-danger-row) { min-height: var(--rg-56); padding: 0 var(--rg-20); color: var(--danger); font-size: var(--rg-15); font-weight: var(--weight-bold); }
 .settings-wide :deep(.rg-list > .setting-row-form) { padding: var(--space-4) var(--rg-18-5); }
 /* Connexions : boutons en pilule bordée de 44 px (rayon 22, bord 1,5 px bleu, 15/600). */
-.settings-wide :deep(#connexions .setting-row-control :is(button, a):not(.link)) { min-height: var(--rg-44); padding: 0 var(--rg-18); border-radius: var(--rg-22); font-size: var(--rg-15); }
+.settings-wide :deep(#connexions .setting-row-control :is(button, a):not(.link)) { min-height: var(--rg-44); padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
 </style>
