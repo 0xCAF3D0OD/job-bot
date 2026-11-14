@@ -1,0 +1,1 @@
+Préparer sur ordinateur : l'anneau de compatibilité seul dans l'en-tête, lignes « Ta candidature » et « À recopier » à 64 px, 24 px entre « Postuler » et « J'ai déjà postulé » ; « Postuler sur … » en pilule de 52 sur téléphone (maquette du 14 novembre).

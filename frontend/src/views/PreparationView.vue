@@ -879,7 +879,7 @@ onMounted(() => void load());
     />
   </PageHero>
   <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
-       H1 avec l’entreprise et le lieu, l’anneau de 48 avec le verdict, puis les étapes. « Ma candidature » ne reste
+       H1 avec l’entreprise et le lieu, l’anneau de 48 seul (§9 du 14.11), puis les étapes. « Ma candidature » ne reste
        que dans le titre de l’onglet. -->
   <header
     v-else
@@ -910,12 +910,14 @@ onMounted(() => void load());
         {{ companyPlace(offer.company, offer.location, true) }}
       </p>
     </div>
-    <!-- La note (§2.2) : l'anneau, « Proche de ton profil » puis « Voir la compatibilité › », qui ouvre le panneau. -->
+    <!-- La note (§9, maquette du 14 novembre) : l’anneau de 48 seul, avec ses séparations (§1), qui ouvre le volet
+         Compatibilité. Plus de verdict ni de « Voir la compatibilité » à côté : ils sont sur la carte de l’offre. -->
     <button
       v-if="offer && verdict && offer.score !== null && offer.score !== undefined"
       type="button"
       class="prep-desk-score"
       aria-haspopup="dialog"
+      :aria-label="`Compatibilité, ${MATCH_TITLE[verdict.tone]} : ${Math.round(offer.score)} sur 100, voir le détail`"
       data-test="prep-score"
       @click="compatOpen = true"
     >
@@ -924,10 +926,6 @@ onMounted(() => void load());
         :stale="offer.score_stale"
         bare
       />
-      <span class="prep-desk-score-text">
-        <span :class="['prep-verdict', verdict.tone]">{{ MATCH_TITLE[verdict.tone] }}</span>
-        <span class="prep-desk-compat">Voir la compatibilité<AppIcon name="chevron" /></span>
-      </span>
     </button>
     <StepTabs
       v-if="offer"
@@ -2036,18 +2034,9 @@ onMounted(() => void load());
 .prep-desk-title { flex: 1; min-width: 0; }
 .prep-desk-title h1 { margin: 0; font-size: var(--prep-24); font-weight: var(--weight-heavy); line-height: var(--leading-tight); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prep-desk-title p { margin: 0; font-size: var(--font-label); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* La note (§2.2) : anneau de 48, 12 px, puis le verdict 15/20 700 et, 6 px dessous, « Voir la compatibilité » 14/20 700
-   (ici 4 px et une ligne de 22, même hauteur, grille de 4). */
-.prep-desk-score { flex: none; display: flex; align-items: center; gap: var(--space-3); min-height: var(--prep-48); padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+/* La note (§9) : l'anneau de 48 seul, cliquable ; zone de 48 (cible au moins 44). */
+.prep-desk-score { flex: none; display: flex; align-items: center; justify-content: center; min-width: var(--prep-48); min-height: var(--prep-48); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
 .prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
-.prep-desk-score-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); line-height: var(--space-5); }
-.prep-desk-compat { display: inline-flex; align-items: center; gap: var(--space-1); line-height: var(--prep-22); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--primary-text); }
-.prep-desk-compat .icon { width: 14px; height: 14px; }
-.prep-desk-score:hover .prep-desk-compat { text-decoration: underline; }
-.prep-verdict { font-size: var(--font-label); font-weight: var(--weight-bold); }
-.prep-verdict:is(.very-close, .close) { color: var(--success); }
-.prep-verdict.dig { color: var(--score-dig); }
-.prep-verdict.far { color: var(--neutral); }
 .prep-desk-head > .step-tabs { flex: none; width: auto; }
 
 .prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; --prep-sheet: 520px; --prep-bottom: 150px; --prep-side-top: 5.5rem; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
@@ -2098,12 +2087,12 @@ onMounted(() => void load());
 /* Retoucher (§2.2) : collé en bas de la colonne gauche, 16 au-dessus et 20 dessous, sur un fondu vers le fond. */
 .prep-desk-bottom { position: sticky; bottom: 0; z-index: 5; padding: var(--space-4) 0 var(--space-5); background: linear-gradient(transparent, var(--bg) var(--prep-24)); }
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
-/* « Ta candidature » (§2.2, §7.2) : titre 18/24 et 12 px dessous ; lignes de 56 px pleine largeur, trait --line au-dessus,
+/* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus,
    libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
-.prep-desk .prep-file { --prep-15: 15px; --prep-56: 56px; gap: 0; padding-bottom: 0; }
+.prep-desk .prep-file { --prep-15: 15px; --prep-64: 64px; gap: 0; padding-bottom: 0; }
 .prep-file > h2 { margin: 0 0 var(--space-3); line-height: var(--prep-24); }
 .prep-file-row {
-  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-56); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-2) var(--prep-24); box-sizing: border-box;
+  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-64); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-3) var(--prep-24); box-sizing: border-box;
   border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
 }
 .prep-file-row:hover { background: var(--selected-bg); }
@@ -2134,7 +2123,7 @@ onMounted(() => void load());
    (fichier bleu, nom 15/600, téléchargement), « Tout télécharger » à droite en contour de 40 ; 20 px plus bas le bouton
    plein de 48 et « J’ai déjà postulé » à 20 px. */
 .prep-desk .apply-cards { gap: var(--space-4); }
-.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-56: 56px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-56: 56px; --apply-64: 64px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .apply-cap { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
 .apply-cards .apply-card h2 { margin: 0; font-size: var(--font-title); line-height: var(--apply-24); }
 .apply-card > .apply-cap + h2 { margin-top: var(--space-2); }
@@ -2147,15 +2136,15 @@ onMounted(() => void load());
 .apply-card .apply-attach > .hint { order: 1; flex-basis: 100%; margin: 0; }
 .apply-all { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--apply-40); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--apply-15); font-weight: var(--weight-bold); cursor: pointer; }
 .apply-all:hover { background: var(--selected-bg); }
-.apply-go { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); margin-top: var(--space-5); }
+.apply-go { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); margin-top: var(--space-5); }
 .apply-go > .notice { flex-basis: 100%; margin: 0; }
 .apply-go > .prep-bar-main { min-height: var(--apply-48); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .apply-go > :is(.apply-already, .apply-reopen) { min-height: var(--target-min); display: inline-flex; align-items: center; font-weight: var(--weight-bold); }
-/* À recopier (§1) : lignes de 56, trait --line, libellé 13/16 gris au-dessus de la valeur 16/22 600 ; copier en cercle de 40
+/* À recopier (§1 ; §9 du 14.11) : lignes de 64, 12 en haut et en bas, trait --line, libellé 13/16 gris au-dessus de la valeur 16/22 600 ; copier en cercle de 40
    bordé ; la lettre en texte sur 2 lignes, 15 regular. */
 .apply-copy-desk > .apply-where-text { margin-bottom: var(--space-3); }
 .apply-copy-desk { padding-bottom: var(--space-1); }
-.apply-copy-desk .form-sheet-row { min-height: var(--apply-56); padding: var(--space-1) 0; gap: 0 var(--space-4); border-top-color: var(--line); }
+.apply-copy-desk .form-sheet-row { min-height: var(--apply-64); padding: var(--space-3) 0; gap: 0 var(--space-4); border-top-color: var(--line); }
 .apply-copy-desk .form-sheet dt { font-size: var(--label-caps); line-height: var(--space-4); }
 .apply-copy-desk .form-sheet dd { font-size: var(--font-body); line-height: var(--apply-22); }
 .apply-copy-desk .form-sheet dd.form-sheet-long { font-size: var(--apply-15); font-weight: var(--weight-regular); }
@@ -2163,7 +2152,7 @@ onMounted(() => void load());
 .apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
 /* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
    la source de l’adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
-.apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-56: 56px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+.apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-64: 64px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
 .apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
 .apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }
 .apply-facts dd { margin: 0; font-size: var(--font-body); line-height: var(--apply-22); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
