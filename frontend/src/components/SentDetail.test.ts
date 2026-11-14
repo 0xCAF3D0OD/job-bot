@@ -209,10 +209,11 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     });
   }
 
-  it("barre « ‹ Envoyées » et « … » ; titre en H1, mots de statut, sans avatar ni Suivi", async () => {
+  it("barre « ← Candidature » et « … » (maquette du 14 novembre) ; titre en H1, mots de statut, sans avatar ni Suivi", async () => {
     const wrapper = mountPhone({ id: 20 });
     await flushPromises();
-    expect(wrapper.find("[data-test=sent-back]").text()).toBe("Envoyées");
+    expect(wrapper.find("[data-test=sent-back]").attributes("aria-label")).toBe("Retour aux envoyées");
+    expect(wrapper.find(".sent-screen-title").text()).toBe("Candidature");
     expect(wrapper.find("[data-test=panel-title]").element.tagName).toBe("H1");
     expect(wrapper.find(".sent-head-logo").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-steps]").exists()).toBe(false);
