@@ -140,10 +140,6 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
 <style scoped>
 /* §4 du 14 novembre (feuilles) : libellés de section en capitales 13/700 gris, espacement .05em ; en bas, « Tout effacer »
    et le bouton alignés à droite, 24 px entre eux, le bouton en pilule de 52 px à la largeur de son texte. */
-/* Le champ de la planche Envoyees : 48 px, coins de 14, bord --line, fond blanc, loupe à 14 px, texte 16. */
-.sent-phone-search { --sent-14: 14px; --sent-icon: 20px; --sent-gap: 10px; display: block; }
-.sent-phone-search :deep(.filters-search) { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--sent-14) + var(--sent-icon) + var(--sent-gap)); border: 1px solid var(--line); border-radius: var(--sent-14); background-color: var(--surface); font-size: var(--font-body); }
-.sent-phone-search :deep(.icon) { left: var(--sent-14); width: var(--sent-icon); height: var(--sent-icon); color: var(--text-secondary); }
 .filters-dialog { max-height: calc(100dvh - 9.625rem); }
 .filter-sheet .filter-choices h3 { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .filters-dialog :deep(.sheet-actions) { justify-content: flex-end; gap: var(--space-6); margin: 0 calc(var(--sheet-pad) * -1); padding: var(--space-3) var(--space-5) 0 var(--sheet-pad); border-top: 1px solid var(--line); }

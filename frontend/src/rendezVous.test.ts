@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import type { Application } from "./api/client";
 import type { components } from "./api/schema";
 import {
+  appointmentMatches,
+  meetingMatches,
+  searchWords,
   agreedLines,
   countdown,
   dateBlock,
@@ -129,5 +132,28 @@ describe("« À noter » et « Derniers rendez-vous ORP » (maquettes du 7.11.20
   it("une ligne de la feuille en titre et précision", () => {
     expect(splitLine("Formulaires en ligne : 0 réponse sur 9.")).toEqual({ main: "Formulaires en ligne", sub: "0 réponse sur 9." });
     expect(splitLine("Terraform")).toEqual({ main: "Terraform", sub: "" });
+  });
+});
+
+describe("recherche de l'onglet Rendez-vous (maquette du 14 novembre, §6)", () => {
+  const meeting = { place: "ORP de Lausanne" } as never;
+  const interview = {
+    kind: "entretien",
+    key: "entretien-1",
+    at: "2026-11-19T09:00:00Z",
+    application: { job_title: "Site Reliability Engineer", company: "Essai Systèmes SA", location: "Renens", interview_place: null, company_address: "Rue de l'Exemple 3", interview_format: null },
+  } as never;
+
+  it("découpe sans accents ni casse", () => {
+    expect(searchWords("  Systèmes  RENENS ")).toEqual(["systemes", "renens"]);
+  });
+
+  it("un rendez-vous ORP par « ORP » ou son lieu, un entretien par poste, entreprise ou lieu", () => {
+    expect(meetingMatches(meeting, searchWords("orp lausanne"))).toBe(true);
+    expect(meetingMatches(meeting, searchWords("genève"))).toBe(false);
+    expect(appointmentMatches(interview, searchWords("essai reliability"))).toBe(true);
+    expect(appointmentMatches(interview, searchWords("exemple"))).toBe(true);
+    expect(appointmentMatches(interview, searchWords("orp"))).toBe(false);
+    expect(appointmentMatches(interview, [])).toBe(true);
   });
 });
