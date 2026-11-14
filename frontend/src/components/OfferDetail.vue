@@ -544,14 +544,15 @@ watch(
     :class="['detail-panel', { 'offer-cards': columns, 'offer-blocks': sub }]"
     data-test="offer-detail"
   >
-    <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
+    <!-- La sous-page du téléphone (maquette Offre du 14 novembre, §6) : la flèche de retour à gauche ; Garder et « ⋯ » à
+         droite (Partager est dans le « ⋯ »). -->
     <header
       v-if="sub"
       class="offer-subhead grille-top"
       data-test="offer-subhead"
     >
       <IconButton
-        icon="chevron-left"
+        icon="arrow-left"
         label="Retour aux candidatures"
         data-test="back-detail"
         @click="$emit('close')"
@@ -1645,8 +1646,12 @@ watch(
     --ob-24: 24px; --ob-23: 23px; --ob-21: 21px; --ob-12: 12px; --ob-13: 13px;
   }
   .offers-grid > .detail-column:not(.placeholder) .detail-panel.offer-blocks { gap: 0; padding-left: 0; padding-right: 0; background: var(--bg); }
-  .offer-blocks .offer-subhead { margin: 0; padding: var(--ob-12) var(--ob-margin); background: var(--bg); }
-  .offer-blocks .offer-subhead .icon-button { width: var(--target-min); height: var(--target-min); color: var(--primary-text); }
+  /* Maquette du 14 novembre (Offre, OffreProvisoire, §6) : retour, marque-page et « ⋯ » dans des boutons de 48 px, couleur
+     du texte, la flèche de retour de 24 px ; la barre à 12 px du haut, 8 px des bords, 4 px dessous ; offre sûre ou
+     provisoire, la même barre. */
+  .offer-blocks .offer-subhead { --ob-8: 8px; --ob-4: 4px; margin: 0; padding: var(--ob-12) var(--ob-8) var(--ob-4); background: var(--bg); }
+  .offer-blocks .offer-subhead .icon-button { width: var(--ob-48); height: var(--ob-48); color: var(--text); }
+  .offer-blocks .offer-subhead .icon-button > .icon { width: var(--ob-24); height: var(--ob-24); }
   .offer-blocks > .detail-offer, .offer-blocks .match-card {
     margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--card-line);
     border-radius: var(--radius-card); box-shadow: none;
@@ -1690,7 +1695,8 @@ watch(
   .offer-blocks .post-summary, .offer-blocks .detail-snippet { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: var(--ob-23); color: var(--text-tertiary); }
   .offer-blocks .post-links { margin-top: var(--space-2); }
   .offer-blocks .post-links .link { color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
-  .offer-blocks .offer-bar { z-index: 40; gap: var(--space-2); padding: var(--ob-12) var(--ob-margin) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+  /* §7 du 14 novembre : 12 px entre « Écarter » et « Préparer ma candidature ». */
+  .offer-blocks .offer-bar { z-index: 40; gap: var(--space-3); padding: var(--ob-12) var(--ob-margin) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
   .offer-blocks .offer-bar-discard { flex: none; min-height: var(--ob-48); padding: 0 var(--ob-margin); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offer-blocks .offer-bar-main { flex: 1; min-height: var(--ob-52); background: var(--action); border-color: var(--action); color: var(--on-action); }
   /* §2.9 : chaque lien de la sous-page est une cible de 44 px de haut, et rien n'est poussé par une marge « auto »
