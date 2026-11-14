@@ -541,7 +541,7 @@ watch(
 
 <template>
   <article
-    :class="['detail-panel', { 'offer-cols': columns, 'offer-blocks': sub }]"
+    :class="['detail-panel', { 'offer-cards': columns, 'offer-blocks': sub }]"
     data-test="offer-detail"
   >
     <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
@@ -595,9 +595,322 @@ watch(
       <span class="with-icon"><AppIcon name="arrow-left" /><span><span class="visually-hidden">Retour aux </span>Offres</span></span>
     </button>
 
+    <!-- Ordinateur dès 1 024 px (maquette du 14 novembre, §8 et §9 ; planche CandidaturesOrdinateurB, onglet Offres) :
+         une colonne de cartes empilées à 16 px, le fond de la page entre elles. Chaque carte a un rôle : titre, note,
+         candidature, l’offre en bref ; puis l’entreprise et les contacts, gardés hors de la planche (règle 3). -->
+    <template v-if="columns">
+      <section
+        class="oc-card oc-title"
+        data-test="section-offer"
+      >
+        <div class="oc-title-row">
+          <CompanyLogo
+            :offer="offer"
+            large
+            pair
+          />
+          <div class="oc-title-text">
+            <h2
+              tabindex="-1"
+              data-test="offer-detail-title"
+            >
+              {{ offer.title }}
+            </h2>
+            <p
+              class="oc-sub"
+              data-test="detail-meta"
+            >
+              <span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée"
+              }} · <span class="visually-hidden">Lieu : </span>{{ frenchName(offer.location) || "Lieu non précisé" }}
+            </p>
+          </div>
+          <div class="oc-title-actions">
+            <IconButton
+              icon="close"
+              label="Fermer le détail"
+              class="detail-close"
+              data-test="close-detail"
+              @click="$emit('close')"
+            />
+            <MoreMenu
+              v-if="menuItems.length"
+              :items="menuItems"
+              label="Plus d’actions sur l’offre"
+            />
+          </div>
+        </div>
+        <div
+          v-if="statusLabel && offer.status === 'applied'"
+          class="oc-status"
+        >
+          <StatusPill
+            :tone="pillTone"
+            data-test="status-pill"
+          >
+            {{ statusLabel }}
+          </StatusPill>
+          <RouterLink
+            to="/candidatures/suivi"
+            class="link"
+          >
+            Voir le suivi
+          </RouterLink>
+        </div>
+        <p
+          v-if="offer.expired_at && offer.status !== 'applied'"
+          class="notice expired-notice oc-indent"
+          data-test="expired"
+        >
+          {{ expiredText(offer) }}
+        </p>
+        <ul
+          class="oc-chips"
+          data-test="offer-tags"
+        >
+          <li
+            v-for="tag in tags"
+            :key="tag.test"
+            :data-test="`tag-${tag.test}`"
+          >
+            {{ tag.text }}
+          </li>
+        </ul>
+      </section>
+
+      <section
+        class="oc-card oc-note"
+        aria-labelledby="match-title"
+        data-test="section-for-you"
+      >
+        <div class="oc-note-row">
+          <ScoreRing
+            v-if="scored"
+            :score="offer.score ?? null"
+            :stale="offer.score_stale"
+            :provisional="provisional"
+            bare
+          />
+          <div class="oc-note-text">
+            <div class="oc-note-word">
+              <h3
+                id="match-title"
+                :class="['match-title', `is-${matchTone}`]"
+                data-test="match-title"
+              >
+                {{ matchWord?.word ?? matchTitle }}
+              </h3>
+              <span
+                v-if="provisional"
+                class="provisional-pill"
+                data-test="provisional"
+              >Provisoire</span>
+            </div>
+            <p
+              v-if="!scored"
+              class="oc-note-sub"
+              data-test="match-sub"
+            >
+              {{ matchSub }}
+            </p>
+            <button
+              v-if="needsProfile"
+              type="button"
+              class="match-profile-link"
+              aria-haspopup="dialog"
+              data-test="match-profile-link"
+              @click="completionSections = ['experiences', 'languages', 'identity']; completing = true"
+            >
+              Compléter mon profil<AppIcon name="chevron" />
+            </button>
+          </div>
+          <button
+            v-if="scored"
+            type="button"
+            class="oc-note-link"
+            aria-haspopup="dialog"
+            data-test="compat-open"
+            @click="compatOpen = true"
+          >
+            Voir la compatibilité<AppIcon name="chevron" />
+          </button>
+        </div>
+        <p
+          v-if="redone"
+          class="redone oc-note-redone"
+          role="status"
+          data-test="redone"
+        >
+          <AppIcon name="done" />Note refaite sur l’annonce complète.
+        </p>
+      </section>
+
+      <section
+        class="oc-card oc-apply"
+        aria-labelledby="oc-apply-title"
+        data-test="section-ad"
+      >
+        <h3
+          id="oc-apply-title"
+          class="oc-card-title"
+        >
+          Candidature
+        </h3>
+        <div
+          v-if="partial"
+          class="oc-row oc-row-refused"
+        >
+          <OfferTextNotice
+            :offer="offer"
+            @changed="emit('changed')"
+            @refresh="emit('changed')"
+          />
+        </div>
+        <div class="oc-row oc-post">
+          <div class="oc-post-head">
+            <span
+              id="post-title"
+              class="oc-label"
+            >{{ summaryParts.length && !partial ? "Le poste, résumé par jobA1" : partial ? "Le poste, extrait de l’alerte" : "Le poste" }}</span>
+            <MoreMenu
+              v-if="announceItems.length"
+              class="section-more"
+              :items="announceItems"
+              label="Plus d’actions sur l’annonce"
+              test-id="ad-more"
+            />
+          </div>
+          <template v-if="summaryParts.length && !partial">
+            <p
+              v-for="part in summaryParts"
+              :key="part"
+              class="oc-text"
+              data-test="summary"
+            >
+              {{ part }}
+            </p>
+          </template>
+          <p
+            v-else-if="!offer.description"
+            class="oc-text"
+          >
+            {{ offer.snippet || "Pas d’extrait dans l’alerte : le texte complet est sur le site de l’employeur." }}
+          </p>
+          <div
+            v-if="offer.description && (textOpen || !summaryParts.length)"
+            ref="textEl"
+            :class="['full-text', 'oc-text', { folded: !textOpen && offer.description.length > LONG_TEXT }]"
+            :style="textOpen && textHeight ? { maxHeight: textHeight } : undefined"
+            data-test="description"
+          >
+            {{ offer.description }}
+          </div>
+          <button
+            v-if="offer.description && !textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"
+            type="button"
+            class="link read-more"
+            data-test="read-more"
+            @click="openText"
+          >
+            Voir l’annonce complète
+          </button>
+        </div>
+        <ul
+          v-if="facts.length"
+          class="oc-row offer-facts"
+          data-test="facts"
+        >
+          <li
+            v-for="fact in facts"
+            :key="fact.mark + fact.text"
+            :class="[fact.mark, { scam: fact.scam }]"
+          >
+            <span
+              class="fact-mark"
+              :data-mark="fact.mark"
+            ><AppIcon :name="MARKS[fact.mark]" /></span>
+            <span>
+              {{ fact.text }}
+              <q v-if="fact.excerpt">{{ fact.excerpt }}</q>
+            </span>
+          </li>
+        </ul>
+        <div
+          v-if="offer.status !== 'applied'"
+          class="oc-actions"
+          data-test="triage"
+        >
+          <RouterLink
+            v-if="offer.expired_at && offer.status !== 'preparing'"
+            :to="nearbyLink"
+            class="button-link primary-link"
+            data-test="nearby"
+          >
+            Voir des offres proches
+          </RouterLink>
+          <RouterLink
+            v-else
+            :to="prepareLink"
+            class="button-link primary-link"
+            data-test="prepare"
+          >
+            {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+          </RouterLink>
+          <button
+            v-if="offer.status !== 'ignored'"
+            type="button"
+            class="secondary"
+            data-test="offer-discard"
+            @click="emit('status', 'ignored')"
+          >
+            Écarter
+          </button>
+          <button
+            type="button"
+            class="secondary"
+            data-test="offer-already-applied"
+            @click="emit('applied')"
+          >
+            J’ai déjà postulé
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="oc-card oc-brief"
+        aria-labelledby="oc-brief-title"
+        data-test="offer-brief"
+      >
+        <h3
+          id="oc-brief-title"
+          class="oc-card-title"
+        >
+          L’offre en bref
+        </h3>
+        <dl class="oc-brief-grid">
+          <div
+            v-for="row in brief"
+            :key="row.test"
+            :data-test="row.test"
+          >
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        </dl>
+        <a
+          v-if="postLink"
+          :href="postLink.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="oc-link-row"
+          data-test="brief-link"
+        ><b>{{ postLink.label }}</b><AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+      </section>
+    </template>
+
     <!-- La tête (maquette Offre, étape 6b) : logo, poste, « Entreprise · Lieu », l'état, les étiquettes. Sur
          ordinateur, les deux actions dessous (O10) ; sur téléphone, elles sont dans la barre du bas. -->
     <section
+      v-if="!columns"
       :class="['detail-offer', { 'grille-info': sub }]"
       data-test="section-offer"
     >
@@ -749,9 +1062,10 @@ watch(
       :score="offer.score ?? null"
       :provisional="provisional"
       :stale="offer.score_stale"
-      :verdict="matchTitle"
+      :verdict="columns ? (matchWord?.word ?? matchTitle) : matchTitle"
       :tone="matchTone"
       :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
+      :note="columns ? matchSub : undefined"
       :strengths="compatStrengths"
       :gaps="compatGaps"
       :how="compatHow"
@@ -800,6 +1114,7 @@ watch(
          action) ; le détail de la note replié. -->
     <component
       :is="layout"
+      v-if="!columns"
       v-bind="layoutProps"
     >
       <template #main>
@@ -1061,212 +1376,184 @@ watch(
             </li>
           </ul>
         </section>
-
-        <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
-        <div :class="['detail-more-rows', { 'detail-section': columns }]">
-          <!-- Récapitulatif du 11 novembre, PR 33 point 4 (cible_entreprise) : plus de bandeau bleu ni de ligne
-               repliable ; le libellé gris au-dessus, la valeur en gras dessous, le bouton copier à droite. -->
-          <section
-            class="offer-company"
-            aria-labelledby="offer-company-title"
-            data-test="company-section"
-          >
-            <div class="offer-company-head">
-              <h3
-                id="offer-company-title"
-                class="offer-company-cap"
-              >
-                L’entreprise
-              </h3>
-              <MoreMenu
-                v-if="companyItems.length"
-                class="section-more"
-                :items="companyItems"
-                label="Plus d’actions sur l’entreprise"
-                test-id="company-more"
-              />
-            </div>
-            <CopyField
-              label="Nom"
-              :value="offer.company ?? ''"
-            />
-            <div
-              class="block-field"
-              data-test="address"
-            >
-              <div class="block-field-text">
-                <div class="block-field-label">
-                  Adresse
-                </div>
-                <form
-                  v-if="editingAddress"
-                  class="address-form"
-                  @submit.prevent="saveAddress"
-                >
-                  <textarea
-                    v-model="addressDraft"
-                    rows="2"
-                    placeholder="Rue et numéro&#10;NPA localité"
-                    aria-label="Adresse de l’entreprise"
-                    data-test="address-input"
-                  />
-                  <div>
-                    <button
-                      type="submit"
-                      class="secondary small"
-                      data-test="save-address"
-                    >
-                      Enregistrer
-                    </button>
-                    <button
-                      type="button"
-                      class="link"
-                      @click="editingAddress = false"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </form>
-                <template v-else-if="offer.company_address">
-                  <div class="block-field-value">
-                    {{ offer.company_address.split("\n").join(", ") }}
-                  </div>
-                  <div class="hint">
-                    {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
-                  </div>
-                </template>
-                <div
-                  v-else
-                  class="block-field-value block-field-none"
-                >
-                  Non renseignée
-                </div>
-              </div>
-              <CopyButton
-                v-if="offer.company_address && !editingAddress"
-                :value="offer.company_address.split('\n').join(', ')"
-                label="Copier : adresse"
-                test-id="address-copy"
-              />
-              <button
-                v-else-if="!editingAddress"
-                type="button"
-                class="link offer-company-add"
-                data-test="add-address"
-                @click="startAddress"
-              >
-                Compléter
-              </button>
-            </div>
-            <p
-              v-if="searching"
-              class="hint"
-              role="status"
-            >
-              Recherche dans le registre IDE…
-            </p>
-            <div
-              v-if="registryMessage || proposals.length"
-              class="registry-proposals"
-              data-test="registry"
-            >
-              <p
-                v-if="registryMessage"
-                class="hint"
-              >
-                {{ registryMessage }}
-              </p>
-              <ul v-if="proposals.length">
-                <li
-                  v-for="proposal in proposals"
-                  :key="proposal.uid"
-                >
-                  <span>
-                    <strong>{{ proposal.name }}</strong><br>
-                    <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-                  </span>
-                  <button
-                    type="button"
-                    class="secondary small"
-                    data-test="choose-registry"
-                    @click="chooseRegistry(proposal.uid)"
-                  >
-                    Choisir
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <p
-              v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
-              class="hint employer-line"
-              data-test="employer-line"
-            >
-              <span
-                v-if="employerBusy"
-                role="status"
-              >Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
-              <span
-                v-else-if="offer.employer_url && offer.employer_checked_at"
-              >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
-                {{ dateInSentence(offer.employer_checked_at) }}.</span>
-              <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
-              <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
-              <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
-              <span
-                v-if="employerMessage"
-                role="status"
-              >{{ employerMessage }}</span>
-            </p>
-          </section>
-          <div
-            v-if="offer.company"
-            class="disclosure-list offer-company-contacts"
-          >
-            <DisclosureRow
-              id="contacts"
-              title="Contacts"
-              :value="contactsCount ? String(contactsCount) : ''"
-              :start-open="toContacts"
-              class="detail-disclosure"
-              data-test="contacts-section"
-            >
-              <ContactsPanel
-                :key="offer.id"
-                :offer-id="offer.id"
-                @count="contactsCount = $event"
-              />
-            </DisclosureRow>
-          </div>
-        </div>
-      </template>
-      <template #aside>
-        <section
-          v-if="columns"
-          class="detail-section"
-          data-test="offer-brief"
-        >
-          <h3>L’offre en bref</h3>
-          <dl class="detail-list">
-            <div
-              v-for="row in brief"
-              :key="row.test"
-              :data-test="row.test"
-            >
-              <dt>{{ row.label }}</dt>
-              <dd>{{ row.value }}</dd>
-            </div>
-          </dl>
-          <a
-            v-if="postLink"
-            :href="postLink.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="detail-link strong offer-brief-link"
-            data-test="brief-link"
-          >{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
-        </section>
       </template>
     </component>
+    <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
+    <div :class="['detail-more-rows', { 'oc-card oc-company': columns }]">
+      <!-- Récapitulatif du 11 novembre, PR 33 point 4 (cible_entreprise) : plus de bandeau bleu ni de ligne
+           repliable ; le libellé gris au-dessus, la valeur en gras dessous, le bouton copier à droite. -->
+      <section
+        class="offer-company"
+        aria-labelledby="offer-company-title"
+        data-test="company-section"
+      >
+        <div class="offer-company-head">
+          <h3
+            id="offer-company-title"
+            class="offer-company-cap"
+          >
+            L’entreprise
+          </h3>
+          <MoreMenu
+            v-if="companyItems.length"
+            class="section-more"
+            :items="companyItems"
+            label="Plus d’actions sur l’entreprise"
+            test-id="company-more"
+          />
+        </div>
+        <CopyField
+          label="Nom"
+          :value="offer.company ?? ''"
+        />
+        <div
+          class="block-field"
+          data-test="address"
+        >
+          <div class="block-field-text">
+            <div class="block-field-label">
+              Adresse
+            </div>
+            <form
+              v-if="editingAddress"
+              class="address-form"
+              @submit.prevent="saveAddress"
+            >
+              <textarea
+                v-model="addressDraft"
+                rows="2"
+                placeholder="Rue et numéro&#10;NPA localité"
+                aria-label="Adresse de l’entreprise"
+                data-test="address-input"
+              />
+              <div>
+                <button
+                  type="submit"
+                  class="secondary small"
+                  data-test="save-address"
+                >
+                  Enregistrer
+                </button>
+                <button
+                  type="button"
+                  class="link"
+                  @click="editingAddress = false"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+            <template v-else-if="offer.company_address">
+              <div class="block-field-value">
+                {{ offer.company_address.split("\n").join(", ") }}
+              </div>
+              <div class="hint">
+                {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
+              </div>
+            </template>
+            <div
+              v-else
+              class="block-field-value block-field-none"
+            >
+              Non renseignée
+            </div>
+          </div>
+          <CopyButton
+            v-if="offer.company_address && !editingAddress"
+            :value="offer.company_address.split('\n').join(', ')"
+            label="Copier : adresse"
+            test-id="address-copy"
+          />
+          <button
+            v-else-if="!editingAddress"
+            type="button"
+            class="link offer-company-add"
+            data-test="add-address"
+            @click="startAddress"
+          >
+            Compléter
+          </button>
+        </div>
+        <p
+          v-if="searching"
+          class="hint"
+          role="status"
+        >
+          Recherche dans le registre IDE…
+        </p>
+        <div
+          v-if="registryMessage || proposals.length"
+          class="registry-proposals"
+          data-test="registry"
+        >
+          <p
+            v-if="registryMessage"
+            class="hint"
+          >
+            {{ registryMessage }}
+          </p>
+          <ul v-if="proposals.length">
+            <li
+              v-for="proposal in proposals"
+              :key="proposal.uid"
+            >
+              <span>
+                <strong>{{ proposal.name }}</strong><br>
+                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+              </span>
+              <button
+                type="button"
+                class="secondary small"
+                data-test="choose-registry"
+                @click="chooseRegistry(proposal.uid)"
+              >
+                Choisir
+              </button>
+            </li>
+          </ul>
+        </div>
+        <p
+          v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
+          class="hint employer-line"
+          data-test="employer-line"
+        >
+          <span
+            v-if="employerBusy"
+            role="status"
+          >Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
+          <span
+            v-else-if="offer.employer_url && offer.employer_checked_at"
+          >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+            {{ dateInSentence(offer.employer_checked_at) }}.</span>
+          <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
+          <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
+          <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
+          <span
+            v-if="employerMessage"
+            role="status"
+          >{{ employerMessage }}</span>
+        </p>
+      </section>
+      <div
+        v-if="offer.company"
+        class="disclosure-list offer-company-contacts"
+      >
+        <DisclosureRow
+          id="contacts"
+          title="Contacts"
+          :value="contactsCount ? String(contactsCount) : ''"
+          :start-open="toContacts"
+          class="detail-disclosure"
+          data-test="contacts-section"
+        >
+          <ContactsPanel
+            :key="offer.id"
+            :offer-id="offer.id"
+            @count="contactsCount = $event"
+          />
+        </DisclosureRow>
+      </div>
+    </div>
     <ProfileCompletionPanel
       :open="completing"
       title="Compléter mon profil"
@@ -1278,52 +1565,72 @@ watch(
 </template>
 
 <style>
-/* À traiter sur ordinateur, deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 13.1 ; HTML de
-   CandidaturesOrdinateurB, onglet À traiter) : la note sans carte, l’anneau de 64 et le verdict, les critères en ligne
-   (12 × 24), le bandeau pêche en bloc (18/20, boutons de 44 à 10 d’écart), « Le détail de la note » à 16 dessous ;
-   « Le poste » en 15/23 ; « L’offre en bref » en <dl>, puis le lien vers l’annonce, 12 dessous. */
-.offer-cols { --cols-match-gap: 16px; --cols-lines-gap: 12px 24px; --cols-band-pad: 18px 20px; --cols-band-gap: 14px; --cols-band-btn: 10px; --cols-text: 23px; --cols-48: 48px; --cols-2: 2px; }
-.offer-cols .match-card.detail-section { display: block; padding: var(--cols-pad-top) 0 var(--cols-pad-bottom); background: none; border: 0; border-radius: 0; }
-.offer-cols .match-card .match-head { gap: var(--space-4); padding-bottom: var(--space-4); }
-.offer-cols .match-card .match-lines { display: flex; flex-wrap: wrap; gap: var(--cols-lines-gap); padding-bottom: var(--space-6); font-size: var(--font-label); }
-.offer-cols .match-card .match-lines li { gap: var(--space-2); }
-/* Lecture refusée (prompt du 10 novembre au soir, PR 25 ; CandidaturesOrdinateurB) : une carte blanche 16 px sous la
-   carte de la note, trait de 1,5 px, rayon 18 ; la ligne à 16 / 20 dedans ; dépliée, un filet puis 20 / 20 / 8. */
-.offer-cols .offer-text-refused { background: var(--surface); border: var(--action-line) solid var(--card-line); border-radius: var(--radius-card); overflow: hidden; }
-.offer-cols .offer-text-head { gap: var(--space-4); padding: var(--space-4) var(--space-5); }
-.offer-cols .offer-give-zone { padding: var(--space-5) var(--space-5) var(--space-2); border-top: 1px solid var(--line); }
-/* Niveaux d'action D30 (§2.2) : « Préparer ma candidature » plein, « Écarter » à contour bleu. */
-.offer-cols .detail-actions button.secondary { border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
-.offer-cols .detail-actions .button-link.primary-link { background: var(--action); border-color: var(--action); color: var(--on-action); }
-/* La note en carte d'information (MODIFICATIONS du 9 novembre, §2.1 ; HTML de CandidaturesOrdinateurB) : fond --bg sur le
-   blanc du détail, trait de 1,5 px --card-line, rayon 18, 18,5 dedans ; anneau de 64, verdict 18 ; puis, 16 px dessous et
-   après un trait --line, « Voir la compatibilité » 15/700 sur 56 px, calé sur le texte du verdict (18,5 + 64 + 16), chevron
-   de 24. Le bandeau pêche vient 16 px sous la carte. La tête et la ligne forment la carte, sans enveloppe en plus. */
-.offer-cols .match-card.detail-section { --cols-info-pad: 18.5px; --cols-info-text: 98.5px; --cols-56: 56px; --cols-24: 24px; display: flex; flex-direction: column; gap: 0; }
-.offer-cols .match-card .match-head { order: 1; padding: var(--cols-info-pad) var(--cols-info-pad) var(--space-4); background: var(--bg); border: 1.5px solid var(--card-line); border-bottom: 0; border-radius: var(--radius-card) var(--radius-card) 0 0; }
-.offer-cols .match-card .match-head:only-child, .offer-cols .match-card .match-head.match-head-alone { padding-bottom: var(--cols-info-pad); border-bottom: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.offer-cols .match-card .match-title { font-size: var(--font-title); }
 /* « Compléter mon profil » sous la phrase, quand le profil manque : le style du lien « Ce qui part à l’IA ». */
 .match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; cursor: pointer; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .match-profile-link:hover { text-decoration: underline; }
 .match-profile-link .icon { width: 14px; height: 14px; }
-.offer-cols .match-card .match-sub { font-size: var(--font-small); color: var(--text-secondary); }
-.offer-cols .match-card .compat-open {
-  order: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; max-width: none; min-height: var(--cols-56); margin: 0; padding: 0 var(--cols-info-pad) 0 var(--cols-info-text);
-  background: var(--bg); border: 1.5px solid var(--card-line); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius-card) var(--radius-card);
-  color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
+/* Ordinateur, maquette du 14 novembre (§8, §9 ; HTML de CandidaturesOrdinateurB, onglet Offres) : le détail en cartes
+   blanches empilées, trait de 1 px --line, coins de 24. Tête 24 / 28, logo 56, poste 24/30, puces à 14 px sous
+   l'entreprise et à 72 px du bord (après le logo) ; note sur une ligne de 76 px (anneau 48) ; « Candidature » et
+   « L'offre en bref » : titre 18/24, lignes à 12 / 24 séparées d'un filet, étiquette 13 px grise au-dessus d'une
+   valeur 15/700 ; pied de pilules de 52 px à 12 px d'écart (§7), le secondaire en trait gris. */
+.oc-card {
+  --oc-x: 24px; --oc-title-x: 28px; --oc-head-top: 18.5px; --oc-logo: 56px; --oc-indent: 72px; --oc-chips-top: 14px;
+  --oc-h2: 24px; --oc-h2-lh: 30px; --oc-card-title: 18px; --oc-card-lh: 24px; --oc-label: 13px; --oc-label-lh: 16px; --oc-text-lh: 22px;
+  --oc-pill: 52px; --oc-pill-r: 22px; --oc-r: 24px; --oc-2: 2px; --oc-6: 6px; --oc-10: 10px; --oc-14: 14px; --oc-20: 20px; --oc-22: 22px; --oc-ring: 48px; --oc-row-min: 64px; --oc-chip-r: 6px; --oc-initials: 19px;
+  margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--oc-r); color: var(--text);
 }
-.offer-cols .match-card .compat-open:hover { text-decoration: underline; }
-.offer-cols .match-card .compat-open > .icon { flex: none; width: var(--cols-24); height: var(--cols-24); }
-.offer-cols .match-card > :not(.match-head, .compat-open) { order: 3; margin-top: var(--space-4); }
-.offer-cols .match-card .match-detail { margin-top: var(--space-4); border-top: 0; }
-.offer-cols .match-card .match-detail > .disclosure-row { min-height: var(--cols-48); padding: 0; }
-.offer-cols .detail-post.detail-section { display: grid; gap: var(--space-3); padding-bottom: var(--space-2); }
-.offer-cols .detail-post :is(.post-summary, .detail-snippet, .full-text) { font-size: var(--font-label); line-height: var(--cols-text); color: var(--text-tertiary); }
-.offer-cols .detail-more-rows.detail-section { padding-bottom: var(--space-2); }
-.offer-brief-link { margin-top: var(--space-3); }
-/* La colonne principale est plus étroite : « Écrire à » et « Canal » des contacts passent l’un sous l’autre. */
-.offer-cols .contact-writer-form { grid-template-columns: minmax(0, 1fr); }
+.oc-title { padding: var(--space-6) var(--oc-title-x); }
+.oc-title-row { display: flex; align-items: flex-start; gap: var(--space-4); }
+.oc-title-row > .logo { flex: none; width: var(--oc-logo); height: var(--oc-logo); border-radius: var(--oc-10); font-size: var(--oc-initials); }
+.oc-title-text { flex: 1; min-width: 0; }
+.oc-title-text h2 { margin: 0; font-size: var(--oc-h2); line-height: var(--oc-h2-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
+.oc-sub { margin: var(--space-1) 0 0; font-size: var(--font-label); color: var(--text-secondary); }
+.oc-title-actions { flex: none; display: flex; align-items: center; }
+.oc-status, .oc-indent { margin: var(--oc-chips-top) 0 0 var(--oc-indent); }
+.oc-status { display: flex; align-items: center; gap: var(--space-3); }
+.oc-chips { display: flex; flex-wrap: wrap; gap: var(--card-6, 6px); margin: var(--oc-chips-top) 0 0 var(--oc-indent); padding: 0; list-style: none; }
+.oc-chips li { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); font-weight: var(--weight-semibold); white-space: nowrap; }
+.oc-note { padding: var(--oc-14) var(--oc-x); }
+.oc-note-row { display: flex; align-items: center; gap: var(--space-4); }
+.oc-note .score-ring-wrap { flex: none; padding: 0; }
+.oc-note .score-ring { width: var(--oc-ring); height: var(--oc-ring); font-size: var(--font-body); }
+.oc-note-text { flex: 1; min-width: 0; }
+.oc-note-word { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.oc-note .match-title { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.oc-note .provisional-pill { padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
+.oc-note-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
+.oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
+.oc-note-link:hover { text-decoration: underline; }
+.oc-note-link .icon { width: 20px; height: 20px; }
+.oc-note-redone { margin: var(--space-2) 0 0; }
+.oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
+.oc-row { margin: 0; padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); }
+.oc-post { padding-bottom: var(--space-4); }
+.oc-post-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--oc-6); }
+.oc-post-head .section-more { margin: calc(-1 * var(--space-3)) 0; }
+.oc-label { display: block; font-size: var(--oc-label); line-height: var(--oc-label-lh); color: var(--text-secondary); }
+.oc-text { margin: 0; font-size: var(--font-label); line-height: var(--oc-text-lh); color: var(--text); }
+.oc-text + .oc-text { margin-top: var(--space-2); }
+.oc-post .read-more { display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); color: var(--primary-text); }
+.oc-row.offer-facts { list-style: none; }
+.oc-row-refused .offer-text-head { gap: var(--space-4); }
+.oc-row-refused .offer-give-zone { margin: var(--space-3) calc(-1 * var(--oc-x)) calc(-1 * var(--space-3)); padding: var(--space-5) var(--space-5) var(--space-2); border-top: 1px solid var(--line); }
+.oc-row-refused .offer-reading { min-height: var(--target-min); }
+.oc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--oc-14) var(--oc-x) var(--oc-head-top); border-top: 1px solid var(--line); }
+.oc-actions > :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: var(--oc-pill); padding: 0 var(--oc-22); border-radius: var(--oc-pill-r); font-size: var(--font-label); white-space: nowrap; }
+.oc-actions > .button-link.primary-link { padding: 0 var(--space-6); border: 0; background: var(--action); color: var(--on-action); font-weight: var(--weight-bold); }
+.oc-actions > button.secondary { border: var(--action-line, 1.5px) solid var(--line-strong); background: var(--surface); color: var(--text); font-weight: var(--weight-semibold); }
+.oc-brief .oc-card-title { padding-bottom: var(--space-2); }
+.oc-brief-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0; padding-bottom: var(--space-2); }
+.oc-brief-grid > div { box-sizing: border-box; min-height: var(--oc-row-min); padding: var(--space-3) var(--oc-x); }
+.oc-brief-grid dt { font-size: var(--oc-label); line-height: var(--oc-label-lh); color: var(--text-secondary); }
+.oc-brief-grid dd { margin: var(--oc-2) 0 0; font-size: var(--font-label); line-height: var(--oc-20); font-weight: var(--weight-bold); }
+.oc-link-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); box-sizing: border-box; min-height: var(--oc-row-min); padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.oc-link-row b { font-size: var(--font-label); line-height: var(--oc-20); }
+.oc-link-row:hover b { text-decoration: underline; }
+.oc-link-row .icon { flex: none; width: 20px; height: 20px; }
+.oc-company { padding: var(--oc-head-top) var(--oc-x); }
 /* Le détail d'une offre sur téléphone, version du 9 novembre (MODIFICATIONS §10.1, D35 ; HTML des maquettes Offre,
    OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d’information (D35) blanches à
    trait de 1,5 px --card-line, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste

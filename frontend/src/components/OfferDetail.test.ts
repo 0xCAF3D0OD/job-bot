@@ -366,27 +366,27 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
   const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("la note et le poste à gauche ; « L’offre en bref » à droite, en <dl>, avec le lien vers l’annonce", async () => {
+  it("le détail en cartes empilées (maquette du 14 novembre, §8) : titre, note, Candidature, L’offre en bref", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
-    const main = wrapper.find("[data-test=detail-columns-main]");
-    expect(main.find("[data-test=section-for-you]").exists()).toBe(true);
-    expect(main.find("[data-test=section-ad]").exists()).toBe(true);
-    // La lecture de l'annonce complète (prompt du 10 novembre) reste dans la note.
-    expect(main.find("[data-test=section-for-you] [data-test=text-reading]").exists()).toBe(true);
-    const aside = wrapper.find("aside[data-test=detail-columns-aside]");
-    expect(aside.attributes("aria-label")).toBe("L’offre en bref");
-    const rows = aside.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
+    const cards = wrapper.findAll(".oc-card").map((card) => card.attributes("data-test"));
+    expect(cards.slice(0, 4)).toEqual(["section-offer", "section-for-you", "section-ad", "offer-brief"]);
+    // La lecture de l'annonce complète est une ligne de la carte « Candidature » (§8, Offres, 3).
+    expect(wrapper.find("[data-test=section-ad] [data-test=text-reading]").exists()).toBe(true);
+    const brief = wrapper.get("[data-test=offer-brief]");
+    const rows = brief.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
     expect(rows.map((r) => r[0])).toEqual(["Lieu", "Contrat", "Taux d’activité", "Reçue"]);
     expect(rows[1]![1]).toBe("Non précisé");
     expect(rows[3]![1]).toMatch(/, par une alerte e-mail$/);
-    const brief = aside.find("[data-test=brief-link]");
-    expect(brief.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
-    expect(brief.text()).toContain("Voir l’annonce sur Indeed");
+    const link = brief.get("[data-test=brief-link]");
+    expect(link.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(link.text()).toContain("Voir l’annonce sur Indeed");
     // Un seul lien visible vers l'annonce sur ordinateur aussi : celui de « L'offre en bref » (PR 25).
     expect(wrapper.findAll('a[href="https://ch.indeed.com/viewjob?jk=1"]')).toHaveLength(1);
-    // Les étiquettes du haut restent.
+    // Les puces de la carte titre restent.
     expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
+    // Les actions sont le pied de la carte « Candidature ».
+    expect(wrapper.find("[data-test=section-ad] [data-test=triage] [data-test=prepare]").exists()).toBe(true);
   });
 
   it("la note en carte d’information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
