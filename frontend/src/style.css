@@ -4152,24 +4152,13 @@ html.search-open { overflow: hidden; }
   :root[data-theme="dark"] .logo.c1 { background: var(--line); color: var(--text); }
   :root[data-theme="dark"] .logo.c2 { color: var(--bg); }
 }
-/* Ordinateur sombre (MODIFICATIONS du 9 novembre §12, maquette CandidaturesOrdinateurBSombre) : les carrés aux
-   initiales s'inversent, fond clair et lettres foncées ; la pêche garde des lettres foncées. */
-/* Planches CandidaturesOrdinateur* du 13.11 : hors téléphone, les carrés des cartes et de la tête de la fiche prennent
-   cinq tons, les mêmes en clair et en sombre par les jetons : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
-   foncé, pêche (lettres foncées en sombre aussi : les lettres claires de la planche n'ont que 1,6:1). */
+/* Ordinateur sombre : le carré bleu d'initiales s'éclaircit. Les cinq tons des Candidatures (planches du 13.11) sont
+   dans ListCard.vue, chargés avec la page. */
 @media (min-width: 821px) and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .logo.c0 { background: var(--primary-text); color: var(--surface); }
 }
 @media (min-width: 821px) {
   :root[data-theme="dark"] .logo.c0 { background: var(--primary-text); color: var(--surface); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo) { --head-r: 10px; border-radius: var(--head-r); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo):not(.image) { border: 1px solid transparent; }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t0:not(.image) { color: var(--danger); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t1:not(.image) { color: var(--primary-graphic); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
 }
 /* La feuille d'actions d'une offre : le lieu sous le titre, « Écarter » en rouge (maquette ActionsOffre). */
 .offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }
@@ -5107,6 +5096,8 @@ a.panel-row:hover { background: var(--band); }
 @media (min-width: 1024px) {
   .jobs-head, .jobs-head.wide { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
   .jobs-band > .offers-page, .jobs-band > .jobs-body:not(.orp-page) { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
+  /* Gabarit commun des planches du 13.11 (#679) : 1 280 px de contenu, comme l'en-tête. */
+  :is(.jobs-head.jobs-candidatures, .jobs-candidatures-band > .offers-page, .jobs-candidatures-band > .jobs-body:not(.orp-page)) { max-width: var(--header-max); }
   .jobs-head .jobs-segments { order: 2; }
   .jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
   .jobs-actions .jobs-alerts-link { gap: var(--space-2); font-size: var(--font-label); color: var(--primary-text); }
@@ -5116,7 +5107,7 @@ a.panel-row:hover { background: var(--band); }
   .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   /* Planche CandidaturesOrdinateurB du 13.11 : titre de 32 px, 20 px entre les éléments de la rangée ; le nombre des
      groupes seul. */
-  .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); }
+  .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); padding-top: var(--space-2); padding-bottom: var(--space-5); }
   .offer-day-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .offers-list .offer-day { margin-top: var(--space-1); }
   .offers-list .offer-day-title { line-height: normal; }

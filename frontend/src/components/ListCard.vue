@@ -151,4 +151,17 @@ function onClick(event: MouseEvent): void {
   .list-card > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--card-2) var(--card-8); border-radius: var(--chip-r); line-height: normal; }
   .list-card > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
 }
+/* Planches CandidaturesOrdinateur* du 13.11 : hors téléphone, les carrés des cartes et de la tête de la fiche prennent
+   cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
+   foncé, pêche (lettres foncées en sombre aussi : les lettres claires de la planche n'ont que 1,6:1). */
+@media (min-width: 821px) {
+  :is(.list-card-logo, .offers-grid .detail-head > .logo) { --head-r: 10px; border-radius: var(--head-r); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo):not(.image) { border: 1px solid transparent; }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo).t0:not(.image) { color: var(--danger); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo).t1:not(.image) { color: var(--primary-graphic); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
+  :is(.list-card-logo, .offers-grid .detail-head > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
+}
 </style>

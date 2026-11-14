@@ -154,7 +154,7 @@ onMounted(() => void refresh());
       </button>
     </div>
   </div>
-  <section class="band jobs-band">
+  <section class="band jobs-band jobs-candidatures-band">
     <RouterView />
   </section>
 </template>
