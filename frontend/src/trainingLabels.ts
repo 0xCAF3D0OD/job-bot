@@ -38,6 +38,14 @@ export const STATUSES: Record<string, string> = {
 };
 
 // Pages officielles sur les formations financées par l'assurance chômage (vérifiées le 2026-10-06).
+// Où en est le financement d'une formation suivie (B16) : l'étiquette de la ligne et des gardées.
+export const FUNDING: Record<string, string> = {
+  requested: "Financement demandé",
+  accepted: "Financement accordé",
+  granted: "Financement accordé",
+  refused: "Financement refusé",
+};
+
 export const ORP_LINKS = [
   {
     label: "Mesures relatives au marché du travail (arbeit.swiss)",
