@@ -92,7 +92,7 @@ describe("Les premiers pas (docs/128)", () => {
     const card = wrapper.find("[data-test=first-steps]");
     expect(card.text()).toContain("2 sur 5");
     expect(card.find("h2").text()).toBe("Alertes sur les sites d’emploi");
-    expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/alertes");
+    expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/bienvenue?etape=alerte");
     expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
     expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
     expect(wrapper.find("h1").text()).toBe("Commence par les premiers pas.");

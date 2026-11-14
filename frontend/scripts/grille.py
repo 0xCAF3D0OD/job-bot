@@ -127,6 +127,8 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=criteria-roles]"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria]"),
+    # L'étape « Alerte » (corrections du 13.11 au soir, §1) est entre les critères et le tri : « Plus tard » mène au tri.
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria] && [data-test=welcome-alert-later]"),
     # Les 4 personnages du logo (PR 11, §15).
     ("adresse-inconnue", None),
     # Trier les offres (lot du 11 novembre au soir, PR 45) : le livre, puis la fin du tri.

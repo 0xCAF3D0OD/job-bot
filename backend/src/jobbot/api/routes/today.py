@@ -337,7 +337,7 @@ async def get_today(request: Request) -> TodayOut:
     ) <= timedelta(days=1)
     return TodayOut(
         first_steps=[
-            FirstStepsOut(key=key, done=i < steps.reached)
+            FirstStepsOut(key=key, done=steps.done(i))
             for i, key in enumerate(first_steps_service.STEPS)
         ],
         first_steps_dismissed=steps.dismissed,
