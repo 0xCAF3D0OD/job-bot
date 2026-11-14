@@ -435,10 +435,20 @@ watch(viewMonth, () => void load());
           data-test="orp-fiche-panel"
           @close="fiche = null"
         >
+          <template #head-actions>
+            <a
+              href="https://www.job-room.ch"
+              target="_blank"
+              rel="noopener"
+              class="orp-fiche-job-room"
+              data-test="orp-fiche-job-room"
+            >Ouvrir Job-Room<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+          </template>
           <OrpFiche
             v-if="fiche"
             :application-id="fiche.application_id"
             :month="fiche.month"
+            wide
             @declared="onDeclared"
           />
         </SidePanel>

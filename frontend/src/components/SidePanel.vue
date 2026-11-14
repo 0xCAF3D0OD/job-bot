@@ -214,6 +214,8 @@ const openStack: symbol[] = [];
           <h2 v-else>
             {{ title }}
           </h2>
+          <!-- Une action à côté du titre (planche BilanOrdinateurFiche : « Ouvrir Job-Room »). -->
+          <slot name="head-actions" />
           <!-- Le bouton de IconButton (docs/101), écrit ici pour garder la référence du focus. -->
           <button
             ref="closeButton"
