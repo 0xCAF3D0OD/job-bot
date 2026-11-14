@@ -1,0 +1,1 @@
+Candidatures sur ordinateur, Envoyées et panneau Ajouter alignés sur la maquette du 13 novembre : colonnes à 24 px, nombre seul dans les groupes, onglets du panneau en pilule, zones de texte à leur hauteur

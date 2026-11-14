@@ -1210,6 +1210,10 @@ onUnmounted(() => {
 .offers-empty-spontaneous { --empty-420: 420px; --empty-15: 15px; display: grid; justify-items: center; gap: var(--space-1); width: min(var(--empty-420), 100%); margin: var(--space-8) auto 0; padding-top: var(--space-8); border-top: 1px solid var(--line); }
 .offers-empty-spontaneous p { margin: 0; font-size: var(--empty-15); color: var(--text-secondary); }
 .offers-empty-spontaneous .link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--empty-15); font-weight: var(--weight-bold); color: var(--primary-text); }
+/* Onglets du panneau (CandidaturesOrdinateurAjouter du 13.11) : pilule de 52 px (44 + 4 de chaque côté), sans écart,
+   15 px en encre pour les deux, 700 pour l'onglet choisi et 600 pour l'autre. */
+.add-tabs { gap: 0; border-radius: var(--radius-pill); }
+.add-tabs :deep(> button) { border-radius: var(--radius-pill); color: var(--text); font-size: var(--font-label); }
 .add-sheet :deep(.sheet-actions > .primary) { --add-52: 52px; flex: 1 1 auto; justify-content: center; min-height: var(--add-52); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .offer-flash :deep(.list-card) { outline: 3px solid var(--accent); outline-offset: 2px; }
 </style>
