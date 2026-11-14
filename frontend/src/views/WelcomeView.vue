@@ -1920,11 +1920,14 @@ async function finish(to: string): Promise<void> {
 .wdk-offer-text .tone-dig { color: var(--peach-text); }
 .wdk-small { height: var(--wdk-40); min-height: var(--wdk-40); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
 .wdk-offer-done { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
-/* L'alerte sur ordinateur (OnboardingOrdinateurAlerte) : carte 6/22,5 px, rappel 14 px, étapes 16 px ; pied à droite
-   « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux ; Orange 260 px de large ; le pied à 8 px de la carte. */
-.wdk-alert { --wdk-alert-x: 22.5px; --wdk-alert-top: 6px; --wdk-alert-bottom: 2px; --wdk-alert-row: 14px; margin-top: var(--wdk-28); padding: var(--wdk-alert-top) var(--wdk-alert-x) var(--wdk-alert-bottom); }
-.wdk-alert .alert-site-search { margin: var(--wdk-alert-row) 0; }
+/* L'alerte sur ordinateur (OnboardingOrdinateurAlerte) : carte 6/22,5/2 px, rappel 14 px, titres d'étape à 5 px dans la
+   planche, ramenés sur la grille de 4 px que le contrôle « grille » exige (bordure de 1,5 px comprise : 8/24/4 px,
+   rappel 12/16, titres à 4) ; pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux ; Orange 260 px
+   de large ; le pied à 8 px de la carte. */
+.wdk-alert { --wdk-alert-x: 22.5px; --wdk-alert-top: 6.5px; --wdk-alert-bottom: 2.5px; margin-top: var(--wdk-28); padding: var(--wdk-alert-top) var(--wdk-alert-x) var(--wdk-alert-bottom); }
+.wdk-alert .alert-site-search { margin: var(--space-3) 0 var(--space-4); }
 .wdk-alert .alert-site-steps > li { padding: var(--space-4) 0; }
+.wdk-alert .alert-site-step-title { padding-top: var(--space-1); }
 .wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
 .wdk-foot-end .wdk-link { font-size: var(--font-body); }
 .wdk-alert + .wdk-foot { margin-top: var(--space-2); }
