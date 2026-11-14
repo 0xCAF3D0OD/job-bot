@@ -59,6 +59,11 @@ ONLY = {
     "frontend/src/components/BottomNav.vue": PHONE,  # .tab-bar en display: none au-delà de 820 px
     "frontend/src/components/RendezVousPhone.vue": PHONE,  # OrpMeetingView : v-if="compact" (téléphone)
     "frontend/src/components/RendezVousDesktop.vue": DESK,  # OrpMeetingView : wideView, dès 1024 px
+    "frontend/src/components/OfferFilterSheet.vue": PHONE,  # OffersView : v-if="phone"
+    "frontend/src/components/LayoutSheetLink.vue": PHONE,  # PreparationView et CvPanel : v-if="phone"
+    "frontend/src/components/TriageMini.vue": DESK,  # TodayView, dans le bloc v-if="!phone && today"
+    "frontend/src/components/TriageNone.vue": DESK,  # TodayView (même bloc) et TriageMini
+    "frontend/src/components/bilan/BilanResultsWide.vue": DESK,  # InsightsView : v-if="!phone"
     "frontend/scripts/telephone.py": PHONE,  # 320, 360 et 390 px seulement
     "frontend/scripts/panneaux.py": DESK,  # 1440 px seulement
 }
