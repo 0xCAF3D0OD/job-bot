@@ -4772,36 +4772,18 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
     transition: none;
   }
   .offers-grid .offers-list { flex: none; width: 560px; max-width: none; overflow-y: auto; padding: 0 var(--space-2) var(--space-4) 0; }
+  /* Le détail en cartes (maquette du 14 novembre, §8) : plus de grande carte blanche autour, le fond de la page entre
+     les cartes, 16 px entre elles ; 4 px à droite pour la barre de défilement, 24 px sous la dernière. */
   .offers-grid > .detail-column, .offers-grid > .detail-column:not(.placeholder) {
     position: static; inset: auto; flex: 1; min-width: 0; max-height: none; overflow-y: auto; display: block;
-    padding: var(--detail-pad-top) var(--detail-pad); background: var(--surface); border: 1px solid var(--line); border-radius: var(--detail-radius);
+    padding: 0 var(--space-1) var(--space-6) 0; background: none; border: 0; border-radius: 0;
   }
-  .offers-grid > .detail-column .detail-panel { position: static; width: auto; height: auto; padding: 0; background: none; overflow: visible; }
+  .offers-grid > .detail-column .detail-panel { position: static; width: auto; height: auto; padding: 0; background: none; overflow: visible; gap: var(--space-4); }
   .offers-grid > .detail-column .detail-back, .offers-grid > .detail-column .detail-close { display: none; }
   .detail-enter-active, .detail-leave-active { transition: none; }
   .jobs-band { border-top: 0; }
   /* Les deux colonnes tiennent dans la fenêtre : pas de pied de page dessous (la maquette n'en a pas). */
   :root:has(.offers-grid) .app-footer { display: none; }
-  /* La tête de la fiche (maquette) : logo de 64 px à gauche, poste en 26 px et « entreprise · lieu » à côté, « ⋯ »
-     au bout ; puis les puces grises, les deux boutons de 48 px en pilule. */
-  /* Planche CandidaturesOrdinateurB du 13.11 : logo de 56 px aux coins de 10, poste en 24/30, « entreprise · lieu » en
-     15 px, 18 px entre les rangées ; puces à 6 px (2 et 8 px dedans, coins de 6) ; boutons de 44 px à 10 px. Le
-     secondaire garde son contour bleu (D30), en attendant l'avis de Kevin sur le trait gris de la planche. */
-  .offers-grid .detail-offer { --head-logo: 56px; --head-title: 24px; --head-line: 30px; --head-gap: 16px; --btn-h: var(--target-min); --head-rows: 18px; --chip-pad: 2px 8px; --head-initials: 19px; --chip-gap: 6px; --chip-r: 6px; --actions-gap: 10px; --btn-pad: 18px;
-    grid-template-columns: auto minmax(0, 1fr) auto; column-gap: var(--head-gap); row-gap: var(--head-rows); }
-  .offers-grid .detail-head { display: contents; }
-  .offers-grid .detail-offer > * { grid-column: 1 / -1; }
-  .offers-grid .detail-head > .logo { grid-column: 1; grid-row: 1; width: var(--head-logo); height: var(--head-logo); border-radius: var(--head-r); font-size: var(--head-initials); }
-  .offers-grid .detail-title .detail-sub { font-size: var(--font-label); }
-  .offers-grid .detail-top-actions { grid-column: 3; grid-row: 1; align-self: start; }
-  .offers-grid .detail-offer > .detail-title { grid-column: 2; grid-row: 1; align-content: start; gap: var(--space-1); }
-  .offers-grid .detail-title h2 { font-size: var(--head-title); line-height: var(--head-line); font-weight: var(--weight-heavy); letter-spacing: -0.3px; }
-  .offers-grid .status-line:not(:has(a)) { display: none; }
-  .offers-grid .offer-tags { gap: var(--chip-gap); }
-  .offers-grid .offer-tags li { padding: var(--chip-pad); border: 0; border-radius: var(--chip-r); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); }
-  .offers-grid .detail-actions { margin: 0; gap: var(--actions-gap); }
-  .offers-grid .detail-actions > :is(a, button) { min-height: var(--btn-h); padding: 0 var(--btn-pad); border-radius: var(--radius-pill); font-size: var(--font-label); }
-  .offers-grid .detail-actions > a { padding: 0 var(--space-5); }
 }
 
 /* --- Barres de défilement (maquettes du 7.11.2026, partout) : fines, 8 px, pouce #C9C5BA (#A9A397 au survol), piste
