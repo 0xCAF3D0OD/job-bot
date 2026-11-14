@@ -3,7 +3,13 @@
 Chaque étape se lit dans ce qui existe déjà. Une étape faite le reste : une étape plus loin
 coche celles d'avant, et la plus haute atteinte est gardée dans `first_steps_reached`, si bien
 qu'une offre gardée puis écartée laisse l'étape 3 faite. La fonction SQL
-`first_steps_progress` (migration 0070) applique les mêmes règles pour le chiffre de l'équipe.
+`first_steps_progress` (migration 0070, règle des alertes revue en 0084) applique les mêmes
+règles pour le chiffre de l'équipe.
+
+L'étape des alertes fait exception (corrections du 13.11 au soir, §1, décision de Kevin du
+14.11) : elle n'est faite qu'avec une alerte créée (« J'ai créé l'alerte ») ou reçue, jamais par
+les offres de la recherche publique. Après « Plus tard », elle reste ouverte sur la carte même si
+une étape plus loin est faite, jusqu'à la première candidature envoyée.
 """
 
 from dataclasses import dataclass
@@ -15,7 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.base import READ_ONLY
 from jobbot.db.models import (
-    IGNORED_KIND,
     AlertSetup,
     Application,
     Criterion,
@@ -25,6 +30,7 @@ from jobbot.db.models import (
     OfferStatus,
     Search,
     Setting,
+    received_alert,
 )
 
 StepKey = Literal["profile", "alerts", "keep", "prepare", "sent"]
@@ -48,10 +54,27 @@ class FirstSteps:
     offer_id: int | None
     # Les cinq étapes sont faites et la réussite n'a pas encore été montrée.
     just_finished: bool
+    # Une alerte créée ou reçue (l'étape des alertes, qui ne se coche pas autrement).
+    alerts_done: bool = True
+
+    def done(self, index: int) -> bool:
+        """L'étape `index` (0 à 4) est faite : les `reached` premières, sauf les alertes tant
+        qu'aucune n'est créée ni reçue, et qu'aucune candidature n'est partie."""
+        if STEPS[index] == "alerts" and not self.alerts_done and self.reached < len(STEPS):
+            return False
+        return index < self.reached
 
 
 async def _found(session: AsyncSession, query: Select[Any]) -> bool:
     return bool(await session.scalar(select(query.exists())))
+
+
+async def _alerts(session: AsyncSession) -> bool:
+    """Une alerte créée (« J'ai créé l'alerte ») ou reçue ; ni la recherche publique, ni un code
+    ou un message d'un site (docs/112), ni une offre."""
+    return await _found(session, select(AlertSetup.search_id)) or await _found(
+        session, select(Search.id).where(received_alert())
+    )
 
 
 async def _computed(session: AsyncSession) -> int:
@@ -59,11 +82,7 @@ async def _computed(session: AsyncSession) -> int:
     rules = (
         await _found(session, select(Criterion.kind))
         and await _found(session, select(Document.id)),
-        await _found(session, select(AlertSetup.search_id))
-        or await _found(
-            session, select(Search.id).where(Search.kind.is_distinct_from(IGNORED_KIND))
-        )
-        or await _found(session, select(Offer.id)),
+        await _alerts(session),
         await _found(session, select(Offer.id).where(Offer.status.in_(KEPT))),
         await _found(session, select(Draft.id)),
         await _found(session, select(Application.id)),
@@ -118,12 +137,14 @@ async def load(session: AsyncSession) -> FirstSteps:
     ) or await session.scalar(
         select(func.max(Offer.id)).where(Offer.status == OfferStatus.PREPARING)
     )
+    alerts_done = await _alerts(session)
     return FirstSteps(
         reached=reached,
         dismissed=bool(values.get(DISMISSED_KEY)),
         has_offers=has_offers,
         offer_id=offer_id,
         just_finished=reached == len(STEPS) and not celebrated,
+        alerts_done=alerts_done,
     )
 
 

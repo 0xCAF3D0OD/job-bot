@@ -21,7 +21,7 @@ const VIEWS: { label: string; value: View }[] = [
   { label: "À traiter", value: "pending" },
   { label: "À examiner", value: "to_review" },
   { label: "En préparation", value: "in_progress" },
-  { label: "Plus tard", value: "later" },
+  { label: "Gardées", value: "later" },
 ];
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par jour", value: "day" },

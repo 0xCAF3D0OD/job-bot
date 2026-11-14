@@ -28,7 +28,7 @@ Elle remplace, en haut d'Aujourd'hui, l'action sous la phrase du jour (docs/inte
 | # | Le titre | La ligne | Le bouton | Faite quand |
 |---|---|---|---|---|
 | 1 | Dis ce que tu cherches | jobA1 trie les offres avec tes critères. | Compléter mon profil | des critères et un CV (l'accueil le fait ; déjà cochée pour presque tous) |
-| 2 | Crée tes alertes | Les offres arrivent ici, notées pour toi. | Créer mes alertes | une alerte reconnue, **ou** une offre ajoutée à la main |
+| 2 | Crée tes alertes | Les offres arrivent ici, notées pour toi. | Créer mes alertes | une alerte reconnue, **ou** une offre ajoutée à la main (avant le 14.11.2026 : depuis, une alerte créée ou reçue seulement, voir la fin) |
 | 3 | Garde ta première offre | Celles qui te vont passent en « À préparer ». | Voir les offres du jour | une offre « À préparer » ou envoyée |
 | 4 | Prépare ta candidature | Lettre et CV adaptés à l'offre, en quelques minutes. | Préparer | une lettre ou un CV rédigé pour une offre |
 | 5 | Marque-la comme envoyée | Elle compte pour ton mois ORP. | Ouvrir la préparation | une candidature au Suivi |
@@ -124,3 +124,7 @@ Les audits passés sur un vrai compte (l'exploitant, sans connexion, une base je
 - Les trois audits à zéro sur la démo **et** sur un compte neuf de l'exploitant.
 - Captures à 1440 et 390 px : la carte « Premiers pas », les profils d'essai, les sites suivis, les langues du Profil.
 - Tests : 449 de l'interface, lint, vue-tsc ; 632 backend (dont la consigne de l'assistant), ruff, mypy.
+
+## Étape des alertes revue (14.11.2026)
+
+Corrections du 13 novembre au soir, §1, décision de Kevin du 14.11 : l'étape 2 n'est faite qu'avec **une alerte créée** (« J'ai créé l'alerte », dans Mes alertes ou dans la nouvelle étape « Alerte » des premiers pas) **ou une alerte reçue**. Une offre (recherche publique, ajout à la main) ne la coche plus. Après « Plus tard », la carte garde l'étape ouverte même si une étape plus loin est faite, jusqu'à la première candidature envoyée ; son bouton mène à `/bienvenue?etape=alerte`. La fonction `first_steps_progress` suit la même règle (migration 0084).

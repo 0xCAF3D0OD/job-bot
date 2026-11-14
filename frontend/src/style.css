@@ -4147,17 +4147,13 @@ html.search-open { overflow: hidden; }
   :root[data-theme="dark"] .logo.c1 { background: var(--line); color: var(--text); }
   :root[data-theme="dark"] .logo.c2 { color: var(--bg); }
 }
-/* Ordinateur sombre (MODIFICATIONS du 9 novembre §12, maquette CandidaturesOrdinateurBSombre) : les carrés aux
-   initiales s'inversent, fond clair et lettres foncées ; la pêche garde des lettres foncées. */
+/* Ordinateur sombre : le carré bleu d'initiales s'éclaircit. Les cinq tons des Candidatures (planches du 13.11) sont
+   dans ListCard.vue, chargés avec la page. */
 @media (min-width: 821px) and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) :is(.logo, .list-card-logo).c0 { background: var(--primary-text); color: var(--surface); }
-  :root:not([data-theme="light"]) .list-card-logo.c1 { background: var(--text); color: var(--bg); }
-  :root:not([data-theme="light"]) .list-card-logo.c2 { background: var(--peach); color: var(--on-peach); }
+  :root:not([data-theme="light"]) .logo.c0 { background: var(--primary-text); color: var(--surface); }
 }
 @media (min-width: 821px) {
-  :root[data-theme="dark"] :is(.logo, .list-card-logo).c0 { background: var(--primary-text); color: var(--surface); }
-  :root[data-theme="dark"] .list-card-logo.c1 { background: var(--text); color: var(--bg); }
-  :root[data-theme="dark"] .list-card-logo.c2 { background: var(--peach); color: var(--on-peach); }
+  :root[data-theme="dark"] .logo.c0 { background: var(--primary-text); color: var(--surface); }
 }
 /* La feuille d'actions d'une offre : le lieu sous le titre, « Écarter » en rouge (maquette ActionsOffre). */
 .offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }
@@ -4766,29 +4762,19 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   .jobs-head h1 { margin: 0; font-size: var(--jobs-h1); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
   .jobs-head .jobs-segments { order: 2; margin: 0; padding: var(--space-1); border-radius: var(--jobs-seg-radius); }
   .jobs-head .jobs-segments > :is(a, button) { min-height: var(--btn-compact); padding: 0 var(--jobs-seg-pad); border: 0; border-radius: var(--radius-card); font-size: var(--jobs-btn-text); color: var(--text); }
-  .jobs-head .jobs-tools { order: 3; margin-left: auto; }
-  .jobs-tools .offers-toolbar { margin: 0; gap: var(--space-3); }
-  .jobs-tools .offers-toolbar-search { flex: none; width: 340px; }
-  .jobs-tools .offers-toolbar .filters-search {
-    height: var(--field-h); padding-left: var(--space-8); border: 1.5px solid color-mix(in srgb, var(--line) 75%, var(--text-secondary));
-    border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-body);
-  }
-  .jobs-tools :is(.offers-toolbar-button, .more-trigger) {
-    min-height: var(--field-h); padding: 0 var(--space-4); border: 1.5px solid color-mix(in srgb, var(--line) 70%, var(--text-secondary));
-    border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--jobs-btn-text); font-weight: var(--weight-bold);
-  }
-  .jobs-tools .offers-toolbar-button[aria-expanded="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); }
+  /* Les outils de la vue (.jobs-tools) ne s'affichent pas sur ordinateur (bloc du 8 novembre, plus bas) : leurs règles
+     d'ici sont retirées (CSS mort, 14.11). */
   .jobs-band > .offers-page { max-width: none; padding: 0 var(--space-8); }
   .jobs-band > .jobs-body:not(.orp-page, .alerts-wide) { max-width: none; margin: 0; padding: 0 var(--space-8) var(--space-12); }
   .offers-grid, .offers-grid.has-selection {
-    --detail-pad: 28px; --detail-radius: 24px;
+    --detail-pad: 32px; --detail-pad-top: 28px; --detail-radius: 24px;
     display: flex; align-items: stretch; gap: var(--space-6); height: calc(100dvh - var(--offers-top, 0px) - var(--space-6)); min-height: 20rem;
     transition: none;
   }
   .offers-grid .offers-list { flex: none; width: 560px; max-width: none; overflow-y: auto; padding: 0 var(--space-2) var(--space-4) 0; }
   .offers-grid > .detail-column, .offers-grid > .detail-column:not(.placeholder) {
     position: static; inset: auto; flex: 1; min-width: 0; max-height: none; overflow-y: auto; display: block;
-    padding: var(--space-6) var(--detail-pad); background: var(--surface); border: 1px solid var(--line); border-radius: var(--detail-radius);
+    padding: var(--detail-pad-top) var(--detail-pad); background: var(--surface); border: 1px solid var(--line); border-radius: var(--detail-radius);
   }
   .offers-grid > .detail-column .detail-panel { position: static; width: auto; height: auto; padding: 0; background: none; overflow: visible; }
   .offers-grid > .detail-column .detail-back, .offers-grid > .detail-column .detail-close { display: none; }
@@ -4798,19 +4784,24 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   :root:has(.offers-grid) .app-footer { display: none; }
   /* La tête de la fiche (maquette) : logo de 64 px à gauche, poste en 26 px et « entreprise · lieu » à côté, « ⋯ »
      au bout ; puis les puces grises, les deux boutons de 48 px en pilule. */
-  .offers-grid .detail-offer { --head-logo: 64px; --head-title: 26px; --head-line: 32px; --head-gap: 16px; --btn-h: 48px; --head-rows: 20px; --chip-pad: 3px 9px;
+  /* Planche CandidaturesOrdinateurB du 13.11 : logo de 56 px aux coins de 10, poste en 24/30, « entreprise · lieu » en
+     15 px, 18 px entre les rangées ; puces à 6 px (2 et 8 px dedans, coins de 6) ; boutons de 44 px à 10 px. Le
+     secondaire garde son contour bleu (D30), en attendant l'avis de Kevin sur le trait gris de la planche. */
+  .offers-grid .detail-offer { --head-logo: 56px; --head-title: 24px; --head-line: 30px; --head-gap: 16px; --btn-h: var(--target-min); --head-rows: 18px; --chip-pad: 2px 8px; --head-initials: 19px; --chip-gap: 6px; --chip-r: 6px; --actions-gap: 10px; --btn-pad: 18px;
     grid-template-columns: auto minmax(0, 1fr) auto; column-gap: var(--head-gap); row-gap: var(--head-rows); }
   .offers-grid .detail-head { display: contents; }
   .offers-grid .detail-offer > * { grid-column: 1 / -1; }
-  .offers-grid .detail-head > .logo { grid-column: 1; grid-row: 1; width: var(--head-logo); height: var(--head-logo); border-radius: var(--radius-card); }
+  .offers-grid .detail-head > .logo { grid-column: 1; grid-row: 1; width: var(--head-logo); height: var(--head-logo); border-radius: var(--head-r); font-size: var(--head-initials); }
+  .offers-grid .detail-title .detail-sub { font-size: var(--font-label); }
   .offers-grid .detail-top-actions { grid-column: 3; grid-row: 1; align-self: start; }
   .offers-grid .detail-offer > .detail-title { grid-column: 2; grid-row: 1; align-content: start; gap: var(--space-1); }
   .offers-grid .detail-title h2 { font-size: var(--head-title); line-height: var(--head-line); font-weight: var(--weight-heavy); letter-spacing: -0.3px; }
   .offers-grid .status-line:not(:has(a)) { display: none; }
-  .offers-grid .offer-tags { gap: var(--space-2); }
-  .offers-grid .offer-tags li { padding: var(--chip-pad); border: 0; background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); font-size: var(--font-caption); }
-  .offers-grid .detail-actions { margin: 0; gap: var(--space-3); }
-  .offers-grid .detail-actions > :is(a, button) { min-height: var(--btn-h); padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-body); }
+  .offers-grid .offer-tags { gap: var(--chip-gap); }
+  .offers-grid .offer-tags li { padding: var(--chip-pad); border: 0; border-radius: var(--chip-r); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); }
+  .offers-grid .detail-actions { margin: 0; gap: var(--actions-gap); }
+  .offers-grid .detail-actions > :is(a, button) { min-height: var(--btn-h); padding: 0 var(--btn-pad); border-radius: var(--radius-pill); font-size: var(--font-label); }
+  .offers-grid .detail-actions > a { padding: 0 var(--space-5); }
 }
 
 /* --- Barres de défilement (maquettes du 7.11.2026, partout) : fines, 8 px, pouce #C9C5BA (#A9A397 au survol), piste
@@ -5100,20 +5091,29 @@ a.panel-row:hover { background: var(--band); }
 @media (min-width: 1024px) {
   .jobs-head, .jobs-head.wide { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
   .jobs-band > .offers-page, .jobs-band > .jobs-body:not(.orp-page) { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
+  /* Gabarit commun des planches du 13.11 (#679) : 1 280 px de contenu, comme l'en-tête. */
+  :is(.jobs-head.jobs-candidatures, .jobs-candidatures-band > .offers-page, .jobs-candidatures-band > .jobs-body:not(.orp-page)) { max-width: var(--header-max); }
   .jobs-head .jobs-segments { order: 2; }
   .jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
   .jobs-actions .jobs-alerts-link { gap: var(--space-2); font-size: var(--font-label); color: var(--primary-text); }
   .jobs-actions .jobs-alerts-link .icon { width: 18px; height: 18px; }
-  .jobs-alerts-count { margin-right: var(--space-6); font-size: var(--font-label); color: var(--text-secondary); }
-  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+  .jobs-actions { --alerts-gap: 28px; --add-pad: 18px; }
+  .jobs-alerts-count { margin-right: var(--alerts-gap); font-size: var(--font-label); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  /* Planche CandidaturesOrdinateurB du 13.11 : titre de 32 px, 20 px entre les éléments de la rangée ; le nombre des
+     groupes seul. */
+  .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); padding-top: var(--space-2); padding-bottom: var(--space-5); }
+  .offer-day-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .offers-list .offer-day { margin-top: var(--space-1); }
+  .offers-list .offer-day-title { line-height: normal; }
   .jobs-head .jobs-tools { display: none; }
   .offers-list-tools .offers-toolbar { display: flex; flex-wrap: nowrap; gap: var(--space-2); margin: 0 0 var(--space-5); }
   .offers-list-tools .offers-toolbar-search { flex: 1 1 auto; min-width: 0; }
-  .offers-list-tools .offers-toolbar .filters-search { height: var(--field-h); padding-left: calc(var(--space-8) + var(--space-2)); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-label); }
+  .offers-list-tools .offers-toolbar .filters-search { height: var(--target-min); padding-left: calc(var(--space-8) + var(--space-2)); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-label); }
   .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
   /* Lot 17 : un champ en pilule a le même focus que le Composer, un seul anneau qui suit son arrondi. */
   .offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
-  .offers-list-tools .offers-toolbar-button { min-height: var(--field-h); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
   /* Lot 17 : 3 px de marge dans la liste qui défile, pour que l'anneau du filtre ne soit pas coupé. */
   .offers-grid .offers-list { --focus-room: 3px; width: calc(480px + var(--focus-room)); margin: calc(-1 * var(--focus-room)) 0 0 calc(-1 * var(--focus-room)); padding-top: var(--focus-room); padding-left: var(--focus-room); }

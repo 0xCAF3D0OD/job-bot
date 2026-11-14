@@ -87,7 +87,7 @@ onMounted(() => void refresh());
        une page à elle, sans les vues. -->
   <div
     v-if="!((wide || phone) && tab === 'alertes')"
-    :class="['jobs-head', { wide: tab === 'offres' }]"
+    :class="['jobs-head', 'jobs-candidatures', { wide: tab === 'offres' }]"
   >
     <div class="jobs-title">
       <h1>Candidatures</h1>
@@ -154,7 +154,7 @@ onMounted(() => void refresh());
       </button>
     </div>
   </div>
-  <section class="band jobs-band">
+  <section class="band jobs-band jobs-candidatures-band">
     <RouterView />
   </section>
 </template>

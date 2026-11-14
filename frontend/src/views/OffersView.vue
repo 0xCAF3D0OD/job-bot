@@ -471,7 +471,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
       ? { id: offer.id, status: previous }
       : null;
   const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
-  notice.value = undo.value ? (status === "ignored" ? discarded : `Passée en ${STATUS_TEXT[status]}.`) : "";
+  notice.value = undo.value ? (status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
   // « Annuler » reste 6 s (docs/108), puis le message s'efface.
   clearTimeout(undoTimer);
   if (undo.value) {
@@ -486,7 +486,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
 }
 let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
-const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
+const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "À examiner" };
 const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
 async function undoStatus(): Promise<void> {
   const last = undo.value;
@@ -944,7 +944,8 @@ onUnmounted(() => {
               class="offer-day-title"
             >
               <span class="offer-day-name">{{ row.day.name }}</span>
-              <span class="offer-day-count">{{ row.day.count }}</span>
+              <!-- Ordinateur (CandidaturesOrdinateurB du 13.11) : le nombre seul ; « offres » reste pour le lecteur d’écran. -->
+              <span class="offer-day-count">{{ row.day.n }}<span class="offer-day-unit">{{ row.day.count.slice(String(row.day.n).length) }}</span></span>
             </h2>
             <OfferCard
               v-else-if="row.offer"

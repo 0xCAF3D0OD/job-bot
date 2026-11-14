@@ -383,7 +383,7 @@ describe("tri et candidature", () => {
     wrapper.unmount();
   });
 
-  it("« Plus tard » change le statut et ferme le détail", async () => {
+  it("« Gardée » (ex « Plus tard ») change le statut et ferme le détail", async () => {
     PATCH.mockResolvedValue({ data: { id: 1, status: "later" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
@@ -396,7 +396,7 @@ describe("tri et candidature", () => {
     });
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
     // Le message propose d'annuler (docs/60 §3) : l'offre revient à son statut d'avant.
-    expect(wrapper.text()).toContain("Passée en Plus tard.");
+    expect(wrapper.text()).toContain("Offre gardée.");
     await wrapper.find("[data-test=undo-status]").trigger("click");
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", {
@@ -503,7 +503,7 @@ describe("détail allégé et adresse", () => {
     );
     const wrapper = await mountAt("/offres?statut=later");
     await wrapper.find("[data-test=offer]").trigger("click");
-    expect(wrapper.find("[data-test=status-pill]").text()).toBe("Plus tard");
+    expect(wrapper.find("[data-test=status-pill]").text()).toBe("Gardée");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
     expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
@@ -833,7 +833,7 @@ describe("Offres, illustrations (planche « Illustrations »)", () => {
 });
 
 describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
-  it("en préparation d’abord, sous son titre ; « Plus tard » et les faits en puces", async () => {
+  it("en préparation d’abord, sous son titre ; « Gardée » en tête et les faits en puces", async () => {
     const now = new Date().toISOString();
     mockOffers(
       page([
@@ -848,7 +848,7 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     expect(titles).toEqual(["En préparation", "Aujourd’hui"]);
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[0]!.text()).not.toContain("En préparation");
-    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["80–100 %", "CDI", "Plus tard"]);
+    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["Gardée", "80–100 %", "CDI"]);
     // La carte de la maquette : logo, poste, « entreprise · lieu », puces, anneau ; rien d'autre.
     expect(cards[0]!.findAll("button")).toHaveLength(0);
     expect(cards[0]!.element.tagName).toBe("A");
