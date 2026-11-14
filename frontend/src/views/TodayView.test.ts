@@ -71,7 +71,7 @@ async function mountView() {
   });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
   await flushPromises();
-  // L'Accueil du téléphone, le petit livre et les styles du jour de repos sont chargés à part.
+  // L'Accueil du téléphone et le petit livre sont chargés à part.
   await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
@@ -199,7 +199,7 @@ describe("Les premiers pas (docs/128)", () => {
   });
 });
 
-describe("Aujourd’hui sur ordinateur (maquettes AujourdhuiOrdinateurV2 et ReposD du 13 novembre)", () => {
+describe("Aujourd’hui sur ordinateur (maquette AujourdhuiOrdinateurV2 du 13 novembre, état « repos » du 14)", () => {
   const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: i === 1 ? 2 : 0, paused: false }));
   const rhythm = (extra: Record<string, unknown> = {}) => ({ target: 3, count: 1, days, research_today: true, ...extra });
   // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
@@ -257,15 +257,17 @@ describe("Aujourd’hui sur ordinateur (maquettes AujourdhuiOrdinateurV2 et Repo
     mockGet(today({ rhythm: rhythm({ research_today: false, count: 3 }), orp_due_date: isoIn(2) }));
     wrapper = await mountView();
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Jour de repos.");
-    // Le jour de repos garde l'ancienne mise en page (planche AujourdhuiOrdinateurReposD) : la date au-dessus du titre.
-    expect(wrapper.find(".today-hand").text()).toBe("repos.");
-    expect(wrapper.find(".aj").exists()).toBe(false);
-    expect(wrapper.findAll(".rhythm-band-days li")).toHaveLength(7);
+    // Le jour de repos suit le gabarit commun (planche AujourdhuiOrdinateurV2, état « repos », 14 novembre) : tout le
+    // titre à la main, la liste « Si tu veux avancer », la barre ORP et « 3 sur 3, faite », les offres à trier.
+    expect(wrapper.find(".aj").exists()).toBe(true);
+    expect(wrapper.find("[data-test=today-sentence] .aj-hand").text()).toBe("Jour de repos.");
+    expect(wrapper.find("[data-test=page-eyebrow]").text()).toBe("Bonjour Kevin");
     expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ta semaine est faite. Si tu veux avancer, 2 choses t’attendent.");
-    // Un jour de repos, une seule liste, sans tri.
-    expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=today-later]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=today-tasks] [data-test=follow-ups]").exists()).toBe(true);
+    expect(wrapper.find("#today-todo-title").text()).toBe("Si tu veux avancer");
+    expect(wrapper.findAll("[data-test=today-tasks] li").map((li) => li.find("a").attributes("data-test"))).toEqual(["orp-urgent", "triage"]);
+    expect(wrapper.find("[data-test=today-later] [data-test=follow-ups]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=orp-bar-week] span").text()).toBe("3 sur 3, faite");
+    expect(wrapper.find(".rhythm-band-days").exists()).toBe(false);
 
     mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }), orp_due_date: isoIn(-3) }));
     wrapper = await mountView();

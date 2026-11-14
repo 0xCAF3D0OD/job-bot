@@ -29,6 +29,8 @@ const props = defineProps<{
   offers: Offer[];
   emptyText: string;
   todos: HomeTodo[];
+  /** Un jour de repos (planche AccueilV2, état « repos », 14 novembre) : la phrase sous « Jour de repos. ». */
+  restSub?: string | null;
 }>();
 
 // « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
@@ -115,7 +117,21 @@ function facts(offer: Offer): string[] {
     data-test="home-phone"
   >
     <div class="home-hello">
-      <h1>Bonjour{{ name ? ` ${name}` : "" }}.</h1>
+      <!-- Un jour de repos : « Jour de repos. » à la main, puis la phrase (planche AccueilV2, état « repos »). -->
+      <template v-if="restSub != null">
+        <h1
+          class="home-rest"
+          data-test="home-rest"
+        >
+          <span>Jour de repos.</span>
+        </h1>
+        <p class="home-rest-sub">
+          {{ restSub }}
+        </p>
+      </template>
+      <h1 v-else>
+        Bonjour{{ name ? ` ${name}` : "" }}.
+      </h1>
       <!-- L'accroche, à la première ouverture seulement (A8). -->
       <p
         v-if="firstDay"
@@ -238,7 +254,7 @@ function facts(offer: Offer): string[] {
       data-test="home-todo"
     >
       <h2 id="home-todo-title">
-        À faire
+        {{ restSub != null ? "Si tu veux avancer" : "À faire" }}
       </h2>
       <ul>
         <li
@@ -271,6 +287,11 @@ function facts(offer: Offer): string[] {
 .home h1, .home h2 { margin: 0; font-weight: var(--weight-bold); letter-spacing: -0.03em; line-height: var(--leading-none); }
 .home-hello { display: grid; gap: var(--space-4); padding: var(--space-5) var(--space-5) var(--space-12); }
 .home-hello h1 { font-size: var(--title-hello); }
+/* Un jour de repos (AccueilV2, état « repos ») : 25 px à la main, bleu, penché de 2° ; la phrase 15/22 dessous. */
+.home-hello { --home-25: 1.5625rem; --home-15: 0.9375rem; --home-lh-22: 1.4667; }
+.home-hello h1.home-rest { font-size: var(--home-25); font-weight: var(--weight-regular); letter-spacing: 0; }
+.home-rest span { display: inline-block; font-family: var(--font-hand); color: var(--primary-text); transform: rotate(-2deg); }
+.home-rest-sub { margin: 0; font-size: var(--home-15); line-height: var(--home-lh-22); color: var(--text-lead); }
 .home-tagline { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); color: var(--text-tertiary); }
 .home-tagline s { text-decoration: line-through wavy var(--scribble) 3px; }
 .home-tagline span { color: var(--primary-text); font-size: var(--font-page); }
