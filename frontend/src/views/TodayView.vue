@@ -12,6 +12,7 @@ import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
+import type { OrpMonth } from "../api/client";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
 import { usePhone } from "../composables/usePhone";
@@ -40,6 +41,8 @@ import { usePageReady } from "../composables/usePageTransition";
 const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
 const HomePhone = defineAsyncComponent(loadHomePhone);
+// « C'est fait ! » : chargé seulement le jour où l'objectif du mois est atteint.
+const GoalReached = defineAsyncComponent(() => import("../components/GoalReached.vue"));
 const TriageMini = defineAsyncComponent(loadTriageMini);
 const today = ref<Today | null>(null);
 // L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
@@ -399,7 +402,9 @@ const hello = computed(() => {
 });
 
 // R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil (useGoalMoment).
-const goalWon = ref(false);
+// L'écran plein « C'est fait ! » (ObjectifAtteintOrdinateur et ObjectifAtteint ; DECISIONS §6, et choix de Kevin du
+// 14.11 : il remplace l'ancienne carte « Objectif du mois atteint »). Le mois ORP sert à l'export de la feuille.
+const goalMoment = ref<(OrpMonth & { month: string }) | null>(null);
 // Les cinq premiers pas faits (docs/128 §1) : le serveur le dit une seule fois.
 const stepsWon = ref(false);
 
@@ -421,9 +426,14 @@ async function fetchAll(): Promise<void> {
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
   ]);
+  // « C'est fait ! » avant d'afficher la page : pas d'Aujourd'hui qui clignote avant l'écran plein.
+  const won = day.data;
+  if (won && firstGoal(won.month, won.month_count, won.month_target)) {
+    const orp = (await api.GET("/api/orp", { params: { query: { month: won.month } } }).catch(() => null))?.data;
+    goalMoment.value = orp ? { ...orp, month: won.month } : null;
+  }
   today.value = day.data ?? null;
   triageDone.value = triageDoneToday();
-  goalWon.value = !!today.value && firstGoal(today.value.month, today.value.month_count, today.value.month_target);
   // Montrée une fois : on le dit au serveur, elle ne revient plus (docs/128 §1).
   if (today.value?.first_steps_finished && !stepsWon.value) {
     stepsWon.value = true;
@@ -465,107 +475,27 @@ const { me } = useAuth();
 </script>
 
 <template>
-  <HomePhone
-    v-if="phone && today"
-    :name="firstName || null"
-    :first-day="starting"
-    :month="today.month"
-    :count="today.month_count"
-    :target="today.month_target ?? null"
-    :due="today.month_due_date ?? null"
-    :offers="dose"
-    :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
-    :todos="todos"
-    :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
-  >
-    <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
-    <RouterLink
-      v-if="me?.welcome === 'postponed'"
-      to="/bienvenue"
-      class="notice today-welcome"
-      data-test="finish-welcome"
+  <GoalReached
+    v-if="goalMoment"
+    :data="goalMoment"
+    :cancellable="false"
+    @home="goalMoment = null"
+  />
+  <template v-else>
+    <HomePhone
+      v-if="phone && today"
+      :name="firstName || null"
+      :first-day="starting"
+      :month="today.month"
+      :count="today.month_count"
+      :target="today.month_target ?? null"
+      :due="today.month_due_date ?? null"
+      :offers="dose"
+      :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
+      :todos="todos"
+      :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
     >
-      <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
-    </RouterLink>
-    <FirstSteps
-      v-if="starting"
-      :steps="today.first_steps"
-      :has-offers="today.has_offers ?? true"
-      :offer-id="today.first_steps_offer_id ?? null"
-      :pick-ready="!restDay && !rhythmPaused && best.length > 0"
-      @dismiss="dismissSteps"
-    />
-  </HomePhone>
-  <div
-    v-if="!phone && today"
-    class="aj"
-  >
-    <div class="aj-main">
-      <section
-        class="aj-hero"
-        aria-labelledby="today-title"
-        data-test="today-band"
-      >
-        <div>
-          <p
-            class="aj-hello"
-            data-test="page-eyebrow"
-          >
-            {{ hello }}
-          </p>
-          <h1
-            v-if="lateCatch"
-            id="today-title"
-            class="aj-late"
-            data-test="today-sentence"
-          >
-            <span class="aj-hand aj-hand-late">{{ lateCatch.hand }}</span><template v-if="lateCatch.then">
-              <br><span class="aj-hand">{{ lateCatch.then }}</span>
-            </template>
-          </h1>
-          <h1
-            v-else-if="goalReached"
-            id="today-title"
-            class="aj-late"
-            data-test="today-sentence"
-          >
-            <span class="aj-hand aj-hand-reached">Objectif du mois atteint,</span><br><span class="aj-hand">la suite est en plus</span>
-          </h1>
-          <h1
-            v-else-if="!heading.lead && heading.hand"
-            id="today-title"
-            class="aj-late"
-            data-test="today-sentence"
-          >
-            <span class="aj-hand">{{ heading.hand }}</span>
-          </h1>
-          <h1
-            v-else
-            id="today-title"
-            class="aj-title"
-            data-test="today-sentence"
-          >
-            {{ heading.lead }}<template v-if="heading.hand">
-              {{ " " }}<span class="aj-title-hand">{{ heading.hand }}</span>
-            </template>
-          </h1>
-          <p
-            v-if="lateCatch || goalReached || heading.sub"
-            class="aj-sub"
-            data-test="today-sub"
-          >
-            {{ lateCatch ? lateCatch.sub : goalReached ? reachedSub : heading.sub }}
-          </p>
-        </div>
-        <img
-          src="/tri/orange-liste.webp"
-          alt=""
-          width="174"
-          height="168"
-        >
-      </section>
-
-      <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
+      <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
       <RouterLink
         v-if="me?.welcome === 'postponed'"
         to="/bienvenue"
@@ -574,8 +504,6 @@ const { me } = useAuth();
       >
         <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
       </RouterLink>
-
-      <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
       <FirstSteps
         v-if="starting"
         :steps="today.first_steps"
@@ -584,148 +512,228 @@ const { me } = useAuth();
         :pick-ready="!restDay && !rhythmPaused && best.length > 0"
         @dismiss="dismissSteps"
       />
-
-      <section
-        v-for="group in [
-          { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start', numbered: false },
-          { key: 'todo', title: restDay ? 'Si tu veux avancer' : 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
-          { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later', numbered: false },
-        ].filter((g) => g.items.length)"
-        :key="group.key"
-        class="aj-section"
-        :aria-labelledby="`today-${group.key}-title`"
-        :data-test="group.test"
-      >
-        <h2 :id="`today-${group.key}-title`">
-          {{ group.title }}
-        </h2>
-        <component
-          :is="group.numbered ? 'ol' : 'ul'"
-          class="today-tasks"
+    </HomePhone>
+    <div
+      v-if="!phone && today"
+      class="aj"
+    >
+      <div class="aj-main">
+        <section
+          class="aj-hero"
+          aria-labelledby="today-title"
+          data-test="today-band"
         >
-          <li
-            v-for="(task, i) in group.items"
-            :key="task.key"
-          >
-            <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
-            <component
-              :is="task.href ? 'a' : RouterLink"
-              v-bind="task.href ? { href: task.href, target: '_blank', rel: 'noopener noreferrer' } : { to: task.to }"
-              :class="['today-task', `tone-${task.tone}`]"
-              :data-test="task.test"
+          <div>
+            <p
+              class="aj-hello"
+              data-test="page-eyebrow"
             >
-              <b
-                v-if="group.numbered"
-                class="aj-num"
-                aria-hidden="true"
-              >{{ i + 1 }}</b>
-              <AppIcon
-                v-else
-                :name="task.icon"
-                class="aj-icon"
-              />
-              <span class="aj-task-main">
-                <strong>{{ task.title }}<span
-                  v-if="task.href"
-                  class="visually-hidden"
-                > (nouvel onglet)</span></strong>
-                <span>{{ task.detail }}</span>
-              </span>
-              <span class="aj-action">{{ task.action }}<span
-                class="arrow-circle aj-arrow"
-                aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span></span>
-            </component>
-          </li>
-        </component>
-      </section>
-    </div>
-
-    <aside class="aj-side">
-      <section
-        class="aj-orp"
-        aria-labelledby="aj-orp-title"
-        data-test="orp-month"
-      >
-        <div class="aj-orp-head">
-          <h2 id="aj-orp-title">
-            ORP
-          </h2>
-          <RouterLink
-            to="/bilan/orp"
-            data-test="orp-month-link"
+              {{ hello }}
+            </p>
+            <h1
+              v-if="lateCatch"
+              id="today-title"
+              class="aj-late"
+              data-test="today-sentence"
+            >
+              <span class="aj-hand aj-hand-late">{{ lateCatch.hand }}</span><template v-if="lateCatch.then">
+                <br><span class="aj-hand">{{ lateCatch.then }}</span>
+              </template>
+            </h1>
+            <h1
+              v-else-if="goalReached"
+              id="today-title"
+              class="aj-late"
+              data-test="today-sentence"
+            >
+              <span class="aj-hand aj-hand-reached">Objectif du mois atteint,</span><br><span class="aj-hand">la suite est en plus</span>
+            </h1>
+            <h1
+              v-else-if="!heading.lead && heading.hand"
+              id="today-title"
+              class="aj-late"
+              data-test="today-sentence"
+            >
+              <span class="aj-hand">{{ heading.hand }}</span>
+            </h1>
+            <h1
+              v-else
+              id="today-title"
+              class="aj-title"
+              data-test="today-sentence"
+            >
+              {{ heading.lead }}<template v-if="heading.hand">
+                {{ " " }}<span class="aj-title-hand">{{ heading.hand }}</span>
+              </template>
+            </h1>
+            <p
+              v-if="lateCatch || goalReached || heading.sub"
+              class="aj-sub"
+              data-test="today-sub"
+            >
+              {{ lateCatch ? lateCatch.sub : goalReached ? reachedSub : heading.sub }}
+            </p>
+          </div>
+          <img
+            src="/tri/orange-liste.webp"
+            alt=""
+            width="174"
+            height="168"
           >
-            Voir le suivi
-          </RouterLink>
-        </div>
-        <!-- La barre ORP (PR 48) : le mois, le rythme et « Cette semaine ». -->
-        <OrpBar
-          :month="today.month"
-          :count="today.month_count"
-          :target="today.month_target ?? null"
-          :due="today.month_due_date ?? null"
-          :pace="!starting"
-          :week="weekCount"
+        </section>
+
+        <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
+        <RouterLink
+          v-if="me?.welcome === 'postponed'"
+          to="/bienvenue"
+          class="notice today-welcome"
+          data-test="finish-welcome"
+        >
+          <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
+        </RouterLink>
+
+        <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
+        <FirstSteps
+          v-if="starting"
+          :steps="today.first_steps"
+          :has-offers="today.has_offers ?? true"
+          :offer-id="today.first_steps_offer_id ?? null"
+          :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+          @dismiss="dismissSteps"
         />
-      </section>
-      <TriageMini
-        v-if="miniOpen && !starting"
-        :offers="dose"
-        @done="onMiniDone(true)"
-        @resumed="onMiniDone(false)"
-      />
-      <section
-        v-else-if="!starting"
-        class="aj-none"
-        aria-labelledby="aj-none-title"
-        data-test="today-no-triage"
-      >
-        <h2 id="aj-none-title">
-          Offres à trier
-        </h2>
-        <TriageNone
-          :title="emptyTitle"
-          :widen="widen"
+
+        <section
+          v-for="group in [
+            { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start', numbered: false },
+            { key: 'todo', title: restDay ? 'Si tu veux avancer' : 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
+            { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later', numbered: false },
+          ].filter((g) => g.items.length)"
+          :key="group.key"
+          class="aj-section"
+          :aria-labelledby="`today-${group.key}-title`"
+          :data-test="group.test"
+        >
+          <h2 :id="`today-${group.key}-title`">
+            {{ group.title }}
+          </h2>
+          <component
+            :is="group.numbered ? 'ol' : 'ul'"
+            class="today-tasks"
+          >
+            <li
+              v-for="(task, i) in group.items"
+              :key="task.key"
+            >
+              <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
+              <component
+                :is="task.href ? 'a' : RouterLink"
+                v-bind="task.href ? { href: task.href, target: '_blank', rel: 'noopener noreferrer' } : { to: task.to }"
+                :class="['today-task', `tone-${task.tone}`]"
+                :data-test="task.test"
+              >
+                <b
+                  v-if="group.numbered"
+                  class="aj-num"
+                  aria-hidden="true"
+                >{{ i + 1 }}</b>
+                <AppIcon
+                  v-else
+                  :name="task.icon"
+                  class="aj-icon"
+                />
+                <span class="aj-task-main">
+                  <strong>{{ task.title }}<span
+                    v-if="task.href"
+                    class="visually-hidden"
+                  > (nouvel onglet)</span></strong>
+                  <span>{{ task.detail }}</span>
+                </span>
+                <span class="aj-action">{{ task.action }}<span
+                  class="arrow-circle aj-arrow"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span></span>
+              </component>
+            </li>
+          </component>
+        </section>
+      </div>
+
+      <aside class="aj-side">
+        <section
+          class="aj-orp"
+          aria-labelledby="aj-orp-title"
+          data-test="orp-month"
+        >
+          <div class="aj-orp-head">
+            <h2 id="aj-orp-title">
+              ORP
+            </h2>
+            <RouterLink
+              to="/bilan/orp"
+              data-test="orp-month-link"
+            >
+              Voir le suivi
+            </RouterLink>
+          </div>
+          <!-- La barre ORP (PR 48) : le mois, le rythme et « Cette semaine ». -->
+          <OrpBar
+            :month="today.month"
+            :count="today.month_count"
+            :target="today.month_target ?? null"
+            :due="today.month_due_date ?? null"
+            :pace="!starting"
+            :week="weekCount"
+          />
+        </section>
+        <TriageMini
+          v-if="miniOpen && !starting"
+          :offers="dose"
+          @done="onMiniDone(true)"
+          @resumed="onMiniDone(false)"
         />
-      </section>
-    </aside>
-  </div>
-  <section
-    v-if="!today"
-    class="band"
-  >
-    <div class="container today">
-      <NetworkError
-        v-if="offline"
-        @retry="load()"
-      />
-      <LoadingBlocks
-        v-else
-        :heights="['7rem', '7rem', '12rem']"
-      />
+        <section
+          v-else-if="!starting"
+          class="aj-none"
+          aria-labelledby="aj-none-title"
+          data-test="today-no-triage"
+        >
+          <h2 id="aj-none-title">
+            Offres à trier
+          </h2>
+          <TriageNone
+            :title="emptyTitle"
+            :widen="widen"
+          />
+        </section>
+      </aside>
     </div>
-  </section>
-  <SuccessCard
-    v-if="goalWon && today"
-    name="reussite"
-    keep-focus
-    title="Objectif du mois atteint"
-    test-id="goal-moment"
-    @close="goalWon = false"
-  >
-    <p>{{ today.month_count }} candidatures sur {{ today.month_target }}.</p>
-  </SuccessCard>
-  <SuccessCard
-    v-else-if="stepsWon"
-    face
-    wink
-    keep-focus
-    title="Première candidature notée"
-    test-id="first-steps-done"
-    @close="stepsWon = false"
-  >
-    <p>Elle compte pour ton mois ORP.</p>
-  </SuccessCard>
+    <section
+      v-if="!today"
+      class="band"
+    >
+      <div class="container today">
+        <NetworkError
+          v-if="offline"
+          @retry="load()"
+        />
+        <LoadingBlocks
+          v-else
+          :heights="['7rem', '7rem', '12rem']"
+        />
+      </div>
+    </section>
+    <SuccessCard
+      v-if="stepsWon"
+      face
+      wink
+      keep-focus
+      title="Première candidature notée"
+      test-id="first-steps-done"
+      @close="stepsWon = false"
+    >
+      <p>Elle compte pour ton mois ORP.</p>
+    </SuccessCard>
+  </template>
 </template>
 
 <style scoped>

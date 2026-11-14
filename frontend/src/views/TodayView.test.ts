@@ -245,6 +245,8 @@ describe("Aujourd’hui sur ordinateur (maquette AujourdhuiOrdinateurV2 du 13 no
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/today" ? today({ ...nothing, month_count: 20, rhythm: rhythm({ count: 3 }) }) : { items: [] } }),
     );
+    // « C'est fait ! » déjà vu ce mois-ci sur cet appareil : la page, dans son état « atteint ».
+    localStorage.setItem("jobA1.orp-goal.2026-10", "1");
     let wrapper = await mountView();
     // L'objectif du mois atteint (lot du 13 novembre au soir, §6) : en vert, puis la suite en bleu.
     const hands = wrapper.findAll("[data-test=today-sentence] .aj-hand");
@@ -393,16 +395,24 @@ describe("Aujourd’hui, les moments (docs/123 §2)", () => {
     clearStorage();
   });
 
-  it("R : l’objectif atteint, une victoire une seule fois par mois", async () => {
-    mockGet(today({ month_count: 20, month_target: 20 }));
+  it("R : l’objectif atteint, l’écran plein « C’est fait ! » une seule fois par mois", async () => {
+    const day = today({ month_count: 20, month_target: 20 });
+    const orp = { month: "2026-10", count: 20, target: 20, rows: [], holder: { name: "Kevin Exemple" } };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/today" ? day : path === "/api/orp" ? orp : path === "/api/identity" ? { name: "Kevin" } : { items: [OFFER] } }),
+    );
     const first = await mountView();
-    expect(document.body.querySelector("[data-test=goal-moment]")?.textContent).toContain("Objectif du mois atteint");
-    // L'illustration de la réussite à la place du visage (planche « Illustrations »).
-    expect(document.body.querySelector("[data-test=goal-moment] .illu")).not.toBeNull();
-    expect(document.body.querySelector("[data-test=goal-moment] .face-mark")).toBeNull();
-    first.unmount();
-    document.body.innerHTML = "";
-    await mountView();
+    // L'écran plein (ObjectifAtteintOrdinateur, choix de Kevin du 14.11) à la place de l'ancienne carte, sans
+    // « Je n'ai pas postulé » ; « Retour à l'accueil » rend la page.
+    expect(first.find("[data-test=goal-reached]").text()).toContain("Objectif ORP d’octobre atteint, 20 recherches sur 20.");
+    expect(first.find("[data-test=cancel-applied]").exists()).toBe(false);
+    expect(first.find(".aj").exists()).toBe(false);
     expect(document.body.querySelector("[data-test=goal-moment]")).toBeNull();
+    await first.find("[data-test=goal-home]").trigger("click");
+    expect(first.find("[data-test=goal-reached]").exists()).toBe(false);
+    expect(first.find(".aj").exists()).toBe(true);
+    first.unmount();
+    const again = await mountView();
+    expect(again.find("[data-test=goal-reached]").exists()).toBe(false);
   });
 });

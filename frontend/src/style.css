@@ -5245,7 +5245,8 @@ html.text-large { font-size: 125%; }
   .maintenance-retry:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
   .goal-reached-actions > .goal-reached-cancel { order: 3; flex-basis: 100%; }
   .goal-reached-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
-  .goal-reached { max-width: 880px; padding-top: var(--space-6); color: var(--text-secondary); }
+  /* ObjectifAtteintOrdinateur : le bloc centré dans la hauteur sous l'en-tête de 76 px, 88 px de marge basse (48 + 40). */
+  .goal-reached { --goal-head: 76px; max-width: 880px; min-height: calc(100dvh - var(--goal-head)); justify-content: center; padding-top: var(--space-6); padding-bottom: calc(var(--space-6) + 2 * var(--space-8)); color: var(--text-secondary); }
   .goal-reached-close, .goal-reached-todo { display: none; }
   .goal-reached-body { flex: 0 0 auto; padding: 0; }
   .goal-reached-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--state-10); width: auto; margin-top: var(--state-28-gap); }

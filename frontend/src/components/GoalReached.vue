@@ -14,7 +14,8 @@ import OrpSheet from "./OrpSheet.vue";
 // avec les titres des premiers pas, 3,8 Ko), l'export de la feuille, puis l'accueil.
 // « Je n'ai pas postulé » reste, en lien discret.
 withDefaults(defineProps<{ data: OrpMonth; cancellable?: boolean }>(), { cancellable: true });
-const emit = defineEmits<{ cancel: [] }>();
+// `home` : « Retour à l'accueil » ou la croix, pour Aujourd'hui, qui est déjà l'accueil (le lien n'y change pas de page).
+const emit = defineEmits<{ cancel: []; home: [] }>();
 const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
 
 // Le gribouillis qui barre « à faire » : le tracé de la maquette.
@@ -33,6 +34,7 @@ const SCRIBBLE =
       class="icon-button icon-only goal-reached-close"
       aria-label="Fermer"
       data-test="goal-close"
+      @click="emit('home')"
     >
       <AppIcon name="close" />
     </RouterLink>
@@ -79,6 +81,7 @@ const SCRIBBLE =
         to="/"
         class="goal-reached-home"
         data-test="goal-home"
+        @click="emit('home')"
       >
         Retour à l’accueil
       </RouterLink>
