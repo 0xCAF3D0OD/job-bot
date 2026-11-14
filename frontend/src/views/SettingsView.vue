@@ -909,22 +909,22 @@ watch(
 .settings-grouped .settings-sections { gap: 0; }
 .settings-grouped .settings-section > .section-title { margin: 0 var(--space-1) var(--space-2); font-size: var(--rg-13); font-weight: var(--weight-bold); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; }
 .settings-grouped .settings-section + .settings-section { margin-top: var(--rg-22); }
-.settings-grouped .setting-cards, .settings-grouped .appearance, .settings-grouped .account-data { display: grid; gap: var(--space-3); }
-.settings-grouped :is(.setting-card, .rg-list) { background: var(--surface); border: 1px solid var(--line); border-radius: var(--rg-18); overflow: hidden; }
-.settings-grouped .setting-row { flex-wrap: nowrap; gap: var(--space-3); min-height: 64px; box-sizing: border-box; padding: var(--rg-10) var(--rg-14); }
+.settings-grouped :is(.setting-cards, .appearance, .account-data) { display: grid; gap: var(--space-3); }
+.settings-grouped :is(.setting-card, .rg-list) { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+.settings-grouped .setting-row { flex-wrap: nowrap; gap: var(--space-3); min-height: 64px; padding: var(--rg-10) var(--rg-14); }
 .settings-grouped :is(.setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--line-soft); }
 .settings-grouped .setting-row.stack { flex-wrap: wrap; }
-.settings-grouped .setting-row-text { flex: 1 1 auto; gap: var(--space-1); }
+.settings-grouped .setting-row-text { flex: 1 1 auto; }
 .settings-grouped :is(.setting-row-title, .rg-label) { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
 .settings-grouped :is(.setting-row-description, .rg-sub) { font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .settings-phone input[type="checkbox"][role="switch"] { width: 52px; height: 32px; }
 .settings-phone input[type="checkbox"][role="switch"]::after { top: 3px; left: 3px; width: 26px; height: 26px; }
 .settings-phone input[type="checkbox"][role="switch"]:checked::after { transform: translateX(20px); }
-.settings-grouped .appearance-row { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; box-sizing: border-box; padding: var(--rg-12) var(--rg-14); }
+.settings-grouped .appearance-row { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; padding: var(--rg-12) var(--rg-14); }
 .settings-phone .appearance-row { flex-direction: column; align-items: stretch; gap: var(--space-3); padding: var(--rg-14); }
 .settings-phone .appearance-row .segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: var(--rg-14); }
 .settings-phone .appearance-row .segmented > button { min-height: 44px; border: 0; border-radius: var(--rg-10); font-size: var(--rg-14); }
-.settings-grouped :is(.rg-link-row, .rg-danger-row) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; box-sizing: border-box; margin: 0; padding: 0 var(--rg-14); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; white-space: normal; cursor: pointer; }
+.settings-grouped :is(.rg-link-row, .rg-danger-row) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; margin: 0; padding: 0 var(--rg-14); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; white-space: normal; cursor: pointer; }
 .settings-grouped .rg-label { flex: 1; min-width: 0; }
 .settings-grouped .rg-value { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
 .settings-grouped .rg-link-row > .icon:last-child { width: 18px; height: 18px; color: var(--text-secondary); }
@@ -939,7 +939,7 @@ watch(
 .settings-wide .settings-section + .settings-section { margin-top: 0; }
 .settings-wide #donnees { order: 1; }
 .settings-wide .settings-section > .section-title { margin: 0 var(--space-1) var(--space-3); font-size: var(--font-title); color: var(--text); text-transform: none; letter-spacing: normal; }
-.settings-wide .setting-cards { border-radius: var(--rg-18); }
+.settings-wide .setting-cards { border-radius: var(--radius-card); }
 .settings-wide :is(.setting-card, .rg-list) { border: 0; border-radius: 0; }
 .settings-wide :is(.setting-cards > * + *, .setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--surface-muted); }
 .settings-wide :is(.account-data, .appearance) { gap: 0; }
