@@ -1,8 +1,8 @@
-# Règles de design (maquette du 14 novembre 2026)
+# Règles de design (maquette du 14 novembre 2026, mise à jour « liaison Candidatures »)
 
-Source : `docs/maquette/2026-11-14/LISEZMOI_CORRECTIONS_14_NOVEMBRE.md`, paquet `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip` (144 planches dans `docs/maquette/2026-11-14/maquettes/`, captures dans `docs/maquette/2026-11-14/captures/`).
+Source : `docs/maquette/2026-11-15/LISEZMOI_CORRECTIONS.md`, paquet `jobA1_maquette_2026-11-14_liaison_candidatures.zip` (145 planches dans `docs/maquette/2026-11-15/maquettes/`, captures dans `docs/maquette/2026-11-15/captures/`). Il remplace le paquet `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip`, gardé comme historique dans `docs/maquette/2026-11-14/`.
 
-Les 9 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles.
+Les 12 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles. En cas de doute entre ce texte et une planche, la planche gagne (Kevin, 15.11).
 
 ---
 
@@ -57,7 +57,7 @@ Ordinateur
 - Lien de retour (« ‹ Candidatures », « ‹ Mon profil ») toujours en bleu `#1A3496`.
 
 Les deux
-- Réglages : même liste et même ordre des notifications partout : Nouvelles offres, Relances, Objectif ORP, Actualités et formations, E-mail en plus des notifications. Apparence : Clair / Sombre / Auto.
+- Réglages : même liste et même ordre des notifications partout : Nouvelles offres, Relances, Objectif ORP, E-mail en plus des notifications (4 interrupteurs, pas de réglage pour un envoi qui n'existe pas). Apparence : Clair / Sombre / Auto.
 
 ## 7. Espace entre deux boutons voisins
 
@@ -89,3 +89,53 @@ Les lignes à étiquette (étiquette grise 13 px au-dessus d'une valeur 15/700, 
 - Détail d'une offre (ordinateur) : les puces (contrat, reçue hier) sont à 14 px sous l'entreprise et alignées sur le texte (72 px, après le logo). La carte note tient sur une ligne de 76 px : anneau 48 px, libellé (« À creuser ») + pastille (« Provisoire »), « Voir la compatibilité › » à droite. La phrase « Calculée sur l'extrait de l'alerte… » va dans le volet Compatibilité.
 - Lignes à deux textes (étiquette + valeur, ou titre + sous-titre) dans une carte : 12 px en haut et en bas, hauteur minimale 64 px. Avant : 6 à 8 px. Concerne : À recopier sur le formulaire (Postuler), Pour l'ORP (panneau), Premiers pas étape 2, Ta candidature (Préparer), feuilles Ce que tu as envoyé / Trouver un contact, et les cartes Relance, Documents, Contacts, L'offre en bref. Les menus (compte, notifications) restent à 56 px, c'est un menu, pas une liste de lecture.
 - Trier (livre) : 12 px sous la dernière ligne du verdict.
+
+## 10. Filtres des envoyées
+
+- Le tri « À relancer d'abord » et les puces de statut, retirés de la rangée Envoyées, vivent dans le volet Filtres de cet onglet : Statut (Toutes · 26, Sans réponse · 22, Réponse reçue · 3, Entretien · 1) et Trier (À relancer d'abord par défaut, Plus récentes d'abord). Pied : « Tout effacer » et « Afficher 26 candidatures ».
+- Ordinateur : même volet que les filtres d'Offres, à la place de la liste (CandidaturesOrdinateurB, état tab=en + menu=filtres).
+- Téléphone : feuille du bas FiltresEnvoyees.dc.html, même construction que Filtres.dc.html. Le fond de Filtres.dc.html est mis à jour (cartes sans libellé sous l'anneau, lien Alertes).
+- Les groupes « À relancer » / « Cette semaine » de la liste ne changent pas.
+
+## 11. Candidatures ordinateur : liaison carte → détail (flèche et encoche)
+
+Remplace la partie « détail à droite » de la section 8 pour Offres et Envoyées. Planches : CandidaturesOrdinateurB et BSombre (onglets Offres et Envoyées), Statut, Ajouter, Spontanée. Captures : CandidaturesOrdinateurB(.png, --envoyees.png), BSombre, Liaison-fleche-encoche-zoom.png.
+
+Règle de mise en page : liste + détail = zone de détail ouverte reliée par une flèche ; page seule = cartes empilées (inchangé ailleurs).
+
+Liste (colonne de gauche, 532 px)
+- Cartes non sélectionnées : 480 px de large, 52 px d'écart avec la zone de détail. Le champ de filtre, « Plus de filtres » et la carte Objectif ORP s'alignent sur ce bord.
+- Carte sélectionnée : s'allonge de 28 px vers la droite (margin-right -28 px), fond #EEF1FC (sombre #232B45), contour 2 px #2445C2 (sombre #7D95FF), plus d'ombre.
+- Flèche : SVG 22 × 44 px soudé au contour de la carte, centré verticalement, pointe arrondie. Trait 2 px de la couleur du contour, remplissage du fond de la carte (tracé exact dans les planches, attribut data-arrow).
+- Barre de recherche et filtres (et Objectif ORP sur Envoyées) : fixes, seules les cartes défilent dessous. Dès que la liste a défilé, ombre légère sous la barre (0 10px 12px -12px rgba(27,31,42,.35)) ; aucune ombre en haut de liste.
+- Pastilles qui disent seulement qu'une information manque (« Contrat non précisé ») : retirées des cartes. L'information reste dans « L'offre en bref ».
+
+Zone de détail (colonne de droite)
+- Plus de fond ni de cadre : un trait 1,5 px #D5D1C7 (sombre #4E473E) à gauche et en haut, coin haut gauche arrondi 24 px. À droite, le trait du haut s'efface en dégradé sur 160 px ; il n'y a pas de trait à droite ni en bas.
+- Bas : la zone va jusqu'au bas de la fenêtre ; fondu de 72 px vers la couleur du fond de page (comme la lettre dans Préparer), 48 px d'air sous la dernière carte.
+- Encoche : creusée dans le trait de gauche, même pente et même arrondi que la flèche, 6 px d'écart constant avec elle (SVG data-notch). Halo bleu très léger côté zone uniquement (#2445C2 à 26 %, flou 5 px ; sombre #7D95FF à 22 %).
+- L'encoche se positionne à la hauteur du centre de la flèche de la carte sélectionnée (à recalculer au défilement de la liste et au redimensionnement). Si la carte sélectionnée sort de la partie visible de la liste, l'encoche et la flèche se masquent et le trait redevient droit.
+- Le contenu de la zone défile dans la zone ; le trait, l'encoche et le fondu restent fixes.
+
+En-tête (à plat, sans carte, sous le trait du haut)
+- Plus de logo (il est sur la carte). Intitulé complet 24/800 et entreprise complète : la carte les tronque, l'en-tête les donne en entier.
+- Offres : sous un filet, une seule ligne « À creuser · 60 sur 100 » + pastille « Provisoire » + « Voir la compatibilité › » à droite. La carte Note séparée et le grand anneau sont supprimés. Les puces (contrat, reçue hier) sont supprimées de l'en-tête.
+- Sans note : « Pas encore notée » + « Donner l'annonce pour la noter › » au même endroit.
+- Envoyées : ligne de statut inchangée (« Sans réponse · 57 jours », « Déclarée à l'ORP »), alignée sur l'intitulé.
+
+Cartes sous l'en-tête
+- Offres : Candidature, L'offre en bref. Envoyées : Suivi (frise), Relance conseillée, Documents et contacts. Cartes blanches posées sur le fond de page, 16 px entre elles, 24 px de retrait depuis le trait de gauche, texte intérieur à 24 px (tout s'aligne sur l'intitulé).
+- Champ manquant dans « L'offre en bref » : « Non précisé » en 15/500 gris (#596070, sombre #ABA398) au lieu de 15/700.
+
+Sombre : correction de contraste au passage, le libellé de note et les chiffres des anneaux « À creuser » passent de #6B6157 (environ 3:1) à #ABA398, l'arc à #8C8279 (WCAG 1.4.3 et 1.4.11).
+
+Hors champ : les onglets Envoyées des planches Ajouter et Spontanée sont d'une ancienne version et n'ont pas été modifiés. Référence pour Envoyées : CandidaturesOrdinateurB.
+
+## 12. Trier les offres du jour (ordinateur)
+
+Planches TrierOffresOrdinateurV2 et Sombre, états e = ferme (défaut) / etale / dos. Captures TrierOffresOrdinateurV2.png et --etats.png.
+- Éventail de 3 cartes 320 × 430 px : la meilleure offre devant au centre, les deux autres à −7° et +7° derrière. Hauts des trois cartes alignés, éventail centré dans son bloc.
+- Survol : les cartes s'étalent sur un même plan (écart 340 px). Clic sur une carte : elle se retourne (dos = extrait de l'annonce surligné, 3 verdicts, lien « Voir l'annonce complète »).
+- Face : logo et anneau de note sur la même ligne, notes manuscrites (Caveat Brush) au centre, poste et entreprise en bas, puces en capitales.
+- Sous l'éventail : titre manuscrit (« 3 offres pour toi »), puis Écarter / Garder 52 px, 12 px entre eux, puis points de progression et compteur. Pas de phrase d'explication sous le titre (règle : texte hors carte = titre ou lien seulement).
+- Garder : badge « Gardée » sur la carte et toast « Offre gardée dans tes candidatures » avec Annuler.
