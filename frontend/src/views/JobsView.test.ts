@@ -68,4 +68,22 @@ describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
     await flushPromises();
     expect(wrapper.find(".jobs-head").classes()).not.toContain("wide");
   });
+
+  it("maquette du 14 novembre (§6) : sur Rendez-vous, « + Ajouter » de l’en-tête ouvre « Nouveau rendez-vous » ; ailleurs, l’ajout d’une offre", async () => {
+    GET.mockResolvedValue({ data: undefined });
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper, router } = await mountJobs("/candidatures/rendez-vous-orp");
+    const add = wrapper.get("[data-test=manual-open]");
+    expect(add.attributes("aria-haspopup")).toBe("dialog");
+    await add.trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/rendez-vous-orp?ajouter=1");
+    await router.push("/candidatures/suivi");
+    await flushPromises();
+    expect(wrapper.get("[data-test=manual-open]").attributes("aria-haspopup")).toBeUndefined();
+    await wrapper.get("[data-test=manual-open]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres?ajouter=1");
+    vi.unstubAllGlobals();
+  });
 });

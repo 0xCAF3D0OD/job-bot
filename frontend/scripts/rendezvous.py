@@ -68,7 +68,7 @@ async def date_step(context: BrowserContext, width: int) -> list[str]:
 
         await page.route("**/api/orp-meeting", no_meeting)
     await page.goto(f"{BASE}/candidatures/rendez-vous-orp")
-    opener = page.locator("[data-test=rdv-add]" if width >= 1024 else "[data-test=meeting-add]")
+    opener = page.locator("[data-test=manual-open]" if width >= 1024 else "[data-test=meeting-add]")
     await opener.first.wait_for(timeout=15000)
     await opener.first.click()
     await page.wait_for_selector("[data-test=new-meeting-form]", timeout=5000)
@@ -118,7 +118,7 @@ async def date_step(context: BrowserContext, width: int) -> list[str]:
 
 async def add_meeting(context: BrowserContext, opener: str) -> list[str]:
     """Défaut 2 du 13 novembre : ajouter un rendez-vous ORP pour « Demain » à 10 h, depuis « Nouveau rendez-vous »
-    (`rdv-add`) ou depuis « Ajouter » de « Prochain rendez-vous » d'une fiche passée (`outcome-next-add`). Le volet se
+    (`manual-open`, le « + Ajouter » de l’en-tête) ou depuis « Ajouter » de « Prochain rendez-vous » d'une fiche passée (`outcome-next-add`). Le volet se
     ferme, un message de statut l'annonce, le rendez-vous est sous « À venir » et sélectionné, la fiche passée affiche
     sa date sans rechargement, et il est encore là après rechargement.
 
@@ -150,7 +150,7 @@ async def add_meeting(context: BrowserContext, opener: str) -> list[str]:
 
     await page.route("**/api/orp-meeting", meeting)
     await page.goto(f"{BASE}/candidatures/rendez-vous-orp")
-    await page.locator("[data-test=rdv-add]").wait_for(timeout=15000)
+    await page.locator("[data-test=rdv-desktop]").wait_for(timeout=15000)
     past = page.locator("[data-test^=rdv-item-passe-]").first
     await past.click()
     next_line = page.locator("[data-test=outcome-inline] [data-test=outcome-next]")
@@ -199,7 +199,7 @@ async def add_meeting(context: BrowserContext, opener: str) -> list[str]:
     check("Pas encore noté" not in line and "10 h" in line, f"« Prochain rendez-vous » de la fiche passée dit « {line} »")
     # Après rechargement : toujours là.
     await page.reload()
-    await page.locator("[data-test=rdv-add]").wait_for(timeout=15000)
+    await page.locator("[data-test=rdv-desktop]").wait_for(timeout=15000)
     check(await page.locator("[data-test=rdv-item-orp]").count() == 1, "après rechargement, le rendez-vous n'est plus sous « À venir »")
     await page.locator("[data-test^=rdv-item-passe-]").first.click()
     line = " ".join((await next_line.text_content() or "").split())
@@ -225,7 +225,7 @@ async def failed_save(context: BrowserContext) -> list[str]:
 
     await page.route("**/api/orp-meeting", refuse)
     await page.goto(f"{BASE}/candidatures/rendez-vous-orp")
-    await page.locator("[data-test=rdv-add]").click()
+    await page.locator("[data-test=manual-open]").click()
     await page.wait_for_selector("[data-test=new-meeting-form]", timeout=5000)
     await page.locator(f"{SHEET} [data-test=meeting-kind-orp]").click()
     await page.locator(f"{SHEET} [data-test=dt-date]").click()
@@ -328,7 +328,7 @@ async def main() -> int:
             faults += await date_step(context, width)
             await context.close()
         # Le reste se passe à l'ordinateur (900 px compris) : rien de plus pour le téléphone.
-        for opener in ("rdv-add", "outcome-next-add") if checked(1440) else ():
+        for opener in ("manual-open", "outcome-next-add") if checked(1440) else ():
             # L'heure s'affiche à l'heure suisse : le navigateur du test aussi.
             context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce", timezone_id="Europe/Zurich")
             faults += await add_meeting(context, opener)

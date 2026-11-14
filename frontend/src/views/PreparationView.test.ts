@@ -610,15 +610,16 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
   });
 
-  it("ordinateur (§2.2) : la note dit « Proche de ton profil » et ouvre le panneau Compatibilité", async () => {
+  it("ordinateur (§9 du 14.11) : l'anneau seul, nommé avec la note, ouvre le panneau Compatibilité", async () => {
     const scored = { ...offer, score: 80, strengths: [{ text: "Kubernetes : 40 services" }], gaps: [{ text: "Allemand : B2 demandé" }] };
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/offers/{offer_id}" ? scored : path === "/api/offers/{offer_id}/letters" ? [letter(11, 1)] : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
     );
     const wrapper = await mountView();
     const score = wrapper.get("[data-test=prep-score]");
-    expect(score.text()).toContain("Proche de ton profil");
-    expect(score.text()).toContain("Voir la compatibilité");
+    expect(score.text()).not.toContain("Proche de ton profil");
+    expect(score.text()).not.toContain("Voir la compatibilité");
+    expect(score.attributes("aria-label")).toBe("Compatibilité, Proche de ton profil : 80 sur 100, voir le détail");
     expect(score.attributes("aria-haspopup")).toBe("dialog");
     await score.trigger("click");
     const sheet = wrapper.get("[data-test=compat-sheet]");

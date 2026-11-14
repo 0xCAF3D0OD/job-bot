@@ -586,3 +586,7 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.372 | Préparer : la page de la lettre et du CV prend le modèle choisi dans « Mise en page » (Moderne, Bandeau, Classique), comme les PDF | livrée |
 | 1.6.373 | Les décisions de Kevin sur la maquette du 14 novembre dans DECISIONS.md et la planche Animations retirée | livrée |
 | 1.6.374 | Offres sur ordinateur : le détail en cartes empilées et l'anneau des cartes de liste sans libellé (maquette du 14 novembre) | livrée |
+| 1.6.375 | Feuilles et panneaux (maquette du 14 novembre, §4) : panneaux de l’ordinateur en carte flottante à 16 px des bords, croix ronde de 44 px avec trait, titres 20 px, libellés de section en capitales 13 px | livrée |
+| 1.6.376 | Envoyées sur ordinateur (maquette du 14 novembre) : détail en quatre cartes (titre, suivi, relance conseillée, documents et contacts avec l’historique), statuts et tri dans le volet Filtres, plus de trait bleu | livrée |
+| 1.6.377 | Rendez-vous sur ordinateur (maquette du 14 novembre) : un seul bouton d’ajout, le « + Ajouter » de l’en-tête, qui ouvre « Nouveau rendez-vous » ; en-têtes de liste avec le nombre seul | livrée |
+| 1.6.378 | Préparer, maquette du 14 novembre : anneau seul dans l'en-tête sur ordinateur, lignes de lecture à 64 px, et étape Postuler du téléphone refaite d'après sa planche (capture, Tes documents avec Partager, À copier, Si le formulaire le demande) | livrée |
