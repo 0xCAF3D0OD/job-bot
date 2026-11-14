@@ -20,7 +20,7 @@ import os
 import sys
 from pathlib import Path
 
-from playwright.async_api import async_playwright
+from playwright.async_api import Route, async_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 AUDIT = (Path(__file__).resolve().parents[2] / "docs/mobile/outils/audit-grille.js").read_text(encoding="utf-8")
@@ -137,6 +137,14 @@ SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
 DRAFT = {"subject": "Relance", "text": "Bonjour, je me permets de revenir vers vous au sujet de ma candidature.", "language": "fr", "ai": False, "reason": "démo"}
 
 
+async def research_day(route: Route) -> None:
+    response = await route.fetch()
+    body = await response.json()
+    if isinstance(body.get("rhythm"), dict):
+        body["rhythm"]["research_today"] = True
+    await route.fulfill(response=response, json=body)
+
+
 async def main() -> int:
     total = 0
     async with async_playwright() as p:
@@ -157,6 +165,8 @@ async def main() -> int:
             await page.route("**/follow-up/draft", lambda route: route.fulfill(json=DRAFT))
             # La démo refuse d'écrire : le tri (PR 45) garde ses choix à l'écran, l'envoi est accepté ici.
             await page.route("**/api/offers/*/status", lambda route: route.fulfill(json={}) if route.request.method == "PATCH" else route.continue_())
+            # Le week-end, la démo est en « Jour de repos » et le tri ne s'affiche pas : un jour de recherche, toujours.
+            await page.route("**/api/today", research_day)
             for path, opener in screens:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")
