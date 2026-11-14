@@ -3811,6 +3811,27 @@ export interface components {
             /** Web Unavailable */
             web_unavailable?: string | null;
         };
+        /** AdviceOut */
+        AdviceOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "channel" | "site" | "skill";
+            /** Title */
+            title: string;
+            /** Text */
+            text: string;
+            /** Base */
+            base: number;
+            /**
+             * Base Unit
+             * @enum {string}
+             */
+            base_unit: "applications" | "offers";
+            /** Link */
+            link?: string | null;
+        };
         /** AiReadingOut */
         AiReadingOut: {
             /** Grade */
@@ -7986,6 +8007,11 @@ export interface components {
             /** Headline */
             headline: string | null;
             highlight?: components["schemas"]["HighlightOut"] | null;
+            /**
+             * Advice
+             * @default []
+             */
+            advice: components["schemas"]["AdviceOut"][];
             /** Orp Summary */
             orp_summary: string | null;
             /**

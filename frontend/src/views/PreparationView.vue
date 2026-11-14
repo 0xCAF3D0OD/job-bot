@@ -127,7 +127,7 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 const applyError = ref("");
 const applyBusy = ref(false);
 // L'écran « Candidature envoyée. » (docs/141, 8) : le poste, ce qui compte pour l'ORP, la relance prévue.
-type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null; addressMissing?: boolean };
+type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; dueDate: string | null; followUpOn: string | null; addressMissing?: boolean };
 const sent = ref<Sent | null>(null);
 // « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
 const goal = ref<OrpMonth | null>(null);
@@ -150,7 +150,7 @@ async function markApplied(): Promise<void> {
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
     goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
-    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null, addressMissing: !data.company_address?.trim() };
+    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, dueDate: orp?.due_date ?? null, followUpOn: data.follow_up_on ?? null, addressMissing: !data.company_address?.trim() };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
@@ -822,6 +822,8 @@ onMounted(() => void load());
     :company="sent.company"
     :count="sent.count"
     :target="sent.target"
+    :month="sent.month"
+    :due-date="sent.dueDate"
     :follow-up-on="sent.followUpOn"
     :application-id="sent.id"
     :address-missing="sent.addressMissing"
@@ -2194,4 +2196,29 @@ onMounted(() => void load());
 .review-group li > .icon.todo { color: var(--peach-text); }
 .review-k { display: block; font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
 .review-v { display: block; margin-top: var(--space-1); font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
+
+/* Maquette du 13 novembre (PreparerOrdinateur et suivantes) : en-tête de 64 à 4 px sous la barre et 16 px au-dessus
+   des cartes, sans bande ni trait ; cartes au bord 1,5 --card-line, coins de 18, marges 18,5 ; tête de la lettre de 68 ;
+   étapes en 15 ; langue en pastilles de 36 (blanche pour la choisie) ; lettre de 560 sur le fond grisé, à 48 / 40 ;
+   suggestions de 40 en 15 ; champ de demande de 56 au bord 1,5. */
+.prep-desk-head.container { --prep-4: 4px; padding-top: var(--prep-4); padding-bottom: 0; margin-bottom: var(--space-4); }
+.band.prep-desk-band { background: var(--bg); border-top: 0; padding-top: 0; }
+.prep-desk-head > .step-tabs > a { flex: none; padding-inline: var(--space-4); font-size: var(--font-label); color: var(--text); }
+.prep-layout.prep-desk { --prep-card: 18.5px; --prep-sheet: 560px; --prep-40: 40px; }
+.prep-desk :is(.side-card, .doc-card) { border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.prep-desk .side-card { padding: var(--prep-card); }
+.prep-desk .prep-file { padding-bottom: 0; }
+.prep-desk .prep-file-row { width: calc(100% + 2 * var(--prep-card)); margin: 0 calc(-1 * var(--prep-card)); padding: var(--space-2) var(--prep-card); }
+.prep-desk .doc-card-head { --prep-68: 68px; min-height: var(--prep-68); padding: 0 var(--prep-card); box-sizing: border-box; }
+.prep-desk .doc-card > .letter-sheet { margin: var(--prep-48) auto var(--prep-40); }
+.prep-desk .doc-language { background: var(--surface-muted); }
+.prep-desk .doc-language > button { --prep-52: 52px; --prep-36: 36px; min-inline-size: var(--prep-52); min-height: var(--prep-36); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); }
+.prep-desk .doc-language > button[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: var(--weight-bold); box-shadow: 0 1px 2px rgb(27 31 42 / 12%); }
+.prep-desk .layout-card-thumbs button { gap: var(--space-1); padding: var(--space-2) 0; }
+.prep-desk .apply-card { padding: var(--prep-card); }
+.prep-desk .apply-copy-desk { padding-bottom: var(--space-1); }
+.prep-desk .apply-go > .prep-bar-main { font-size: var(--font-body); }
+.prep-desk .apply-go > :is(.apply-already, .apply-reopen) { font-size: var(--font-label); }
+.prep-desk-bottom .suggestion-chip { border-color: var(--card-line); font-size: var(--font-label); }
+.prep-desk-bottom .composer-pill { --prep-20: 20px; --prep-56: 56px; min-height: var(--prep-56); padding: 0 var(--space-2) 0 var(--prep-20); border: 1.5px solid var(--field-border); }
 </style>

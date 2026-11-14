@@ -59,7 +59,7 @@ const counts = ref<Record<View, number>>({
 const noOffersYet = computed(() => counts.value.all === 0 && counts.value.expired === 0 && !activeCount(filters.value));
 const applying = ref<ApplicationFormValue | null>(null);
 // L'écran qui suit « Marquer comme envoyée » (docs/141, 8 et 9), à la place de la page.
-const sentMoment = ref<{ title: string; company: string; count: number | null; target: number | null; followUpOn: string | null; applicationId: number; addressMissing: boolean } | null>(null);
+const sentMoment = ref<{ title: string; company: string; count: number | null; target: number | null; month: string; dueDate: string | null; followUpOn: string | null; applicationId: number; addressMissing: boolean } | null>(null);
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
@@ -551,7 +551,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   // « Candidature envoyée. » ou, si elle atteint l'objectif ORP du mois, « C'est fait ! » (docs/141, 8 et 9).
   const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
   if (orp && firstGoal(data.orp_month, orp.count, orp.target)) goalMoment.value = { ...orp, month: data.orp_month };
-  else sentMoment.value = { title: data.job_title, company: data.company, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null, applicationId: data.id, addressMissing: !data.company_address?.trim() };
+  else sentMoment.value = { title: data.job_title, company: data.company, count: orp?.count ?? null, target: orp?.target ?? null, month: data.orp_month, dueDate: orp?.due_date ?? null, followUpOn: data.follow_up_on ?? null, applicationId: data.id, addressMissing: !data.company_address?.trim() };
   window.scrollTo?.({ top: 0 });
   await load();
 }

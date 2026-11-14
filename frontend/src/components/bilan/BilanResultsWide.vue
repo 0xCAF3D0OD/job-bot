@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { RouterLink } from "vue-router";
 
 import { api } from "../../api/client";
 import type { components } from "../../api/schema";
@@ -20,6 +21,17 @@ type MonthFacts = components["schemas"]["MonthFactsOut"];
 type Today = components["schemas"]["TodayOut"];
 
 const SOURCES_SHOWN = 4;
+// Le texte du serveur garde l'apostrophe droite ; l'écran montre la typographique.
+const curly = (text: string) => text.replace(/'/g, "\u2019");
+const advice = computed(() =>
+  (insights.value?.advice ?? []).map((a) => ({
+    kind: a.kind,
+    link: a.link ?? null,
+    title: curly(a.title),
+    text: curly(a.text),
+    base: `d\u2019après ${plural(a.base, a.base_unit === "offers" ? "offre" : "candidature", a.base_unit === "offers" ? "offres" : "candidatures")}`,
+  })),
+);
 const insights = ref<Insights | null>(null);
 const months = ref<MonthFacts[]>([]);
 const today = ref<Today | null>(null);
@@ -210,6 +222,44 @@ const oldest = computed(() => Math.max(0, ...(today.value?.follow_ups ?? []).map
           </li>
         </ul>
       </section>
+      <!-- « Ce que jobA1 conseille » (planche BilanOrdinateur ; Kevin, 2026-11-14) : sans IA, au moins 5 candidatures
+           ou 5 offres, chaque conseil avec sa base ; sans conseil, le bloc est caché. -->
+      <section
+        v-if="advice.length"
+        class="bilan-section"
+        aria-labelledby="bilan-advice-title"
+        data-test="bilan-advice"
+      >
+        <div class="bilan-section-head">
+          <h2 id="bilan-advice-title">
+            Ce que jobA1 conseille
+          </h2>
+        </div>
+        <ul class="bilan-rows">
+          <li
+            v-for="item in advice"
+            :key="item.kind"
+            :data-test="`bilan-advice-${item.kind}`"
+          >
+            <component
+              :is="item.link ? RouterLink : 'div'"
+              :to="item.link ?? undefined"
+              :class="['bilan-row', { 'bilan-row-link': item.link }]"
+            >
+              <span class="bilan-row-what">{{ item.title }}<span>{{ item.text }}</span></span>
+              <span
+                class="bilan-advice-base"
+                data-test="bilan-advice-base"
+              >{{ item.base }}</span>
+              <span
+                v-if="item.link"
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
+            </component>
+          </li>
+        </ul>
+      </section>
     </template>
   </div>
 </template>
@@ -238,4 +288,7 @@ const oldest = computed(() => Math.max(0, ...(today.value?.follow_ups ?? []).map
 .bilan-row > strong.warn { color: var(--peach-text); }
 .bilan-row-action { display: flex; align-items: center; justify-content: space-between; min-height: var(--res-52); padding: 0 var(--space-5); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; border-radius: 0; }
 .bilan-row-action:hover { background: var(--primary-soft); }
+.bilan-row-link { color: var(--text); text-decoration: none; border-radius: 0; }
+.bilan-row-link:hover { background: var(--surface-muted); }
+.bilan-advice-base { flex: none; font-size: var(--font-small); color: var(--text-secondary); }
 </style>
