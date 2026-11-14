@@ -464,7 +464,7 @@ watch(() => props.page, () => void nextTick(measure));
 /* Valeurs de la maquette (CandidaturesOrdinateurB, onglet Rendez-vous) : liste de 480, écart 24 ; cartes de 104 aux
    marges 14/16, écart 14 ; icône calendrier de 44 (56 dans le détail) ; détail blanc aux coins de 24, marges 24/28. */
 .rdv-grid {
-  --rdv-3: 3px; --rdv-11: 11px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
+  --rdv-3: 3px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
   display: flex; gap: var(--space-6); height: calc(100dvh - var(--rdv-top, 0px) - var(--space-6)); min-height: 20rem;
 }
 .rdv-list { flex: none; width: 480px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-2) var(--space-4) 0; }
