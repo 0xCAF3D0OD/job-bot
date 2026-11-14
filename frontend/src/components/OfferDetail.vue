@@ -168,7 +168,7 @@ async function chooseRegistry(uid: string): Promise<void> {
 
 const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
   preparing: "En préparation",
-  later: "Plus tard",
+  later: "Gardée",
   ignored: "Ignorée",
   filtered_out: "Écartée par le filtre",
   applied: "Candidature envoyée",
@@ -605,6 +605,7 @@ watch(
         <CompanyLogo
           :offer="offer"
           large
+          pair
         />
         <div class="detail-top-actions">
           <!-- Fermer (croix) sur écran moyen ; sur téléphone, le retour de l'en-tête. -->

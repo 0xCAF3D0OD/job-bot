@@ -29,10 +29,13 @@ const to = computed(() =>
     : { path: route.path, query: { ...route.query, offre: String(props.offer.id) } },
 );
 
-type Chip = { text: string; tone?: "peach" | "blue" | "warn"; title?: string };
+type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
+  // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
+  if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
   else if (o.doubts?.length)
     out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
@@ -45,7 +48,6 @@ const chips = computed<Chip[]>(() => {
   out.push({ text: o.employment_type || "Contrat non précisé" });
   const remote = remoteText(o, phone.value);
   if (remote) out.push({ text: remote });
-  if (o.status === "later") out.push({ text: "Plus tard" });
   if (o.spontaneous) out.push({ text: "Spontanée", tone: "blue" });
   else if (o.added_by_you) out.push({ text: "Ajoutée par toi", tone: "blue" });
   if (props.showDate) out.push({ text: `Reçue ${dateInList(o.first_seen_at)}` });
@@ -75,7 +77,18 @@ const { reached } = usePlan();
         :class="chip.tone"
         :title="chip.title"
         data-test="offer-chip"
-      >{{ chip.text }}</span>
+      ><svg
+        v-if="chip.tone === 'kept'"
+        class="chip-mark"
+        width="9"
+        height="12"
+        viewBox="0 0 12 15"
+        aria-hidden="true"
+        focusable="false"
+      ><path
+        d="M1 1.5A1.5 1.5 0 0 1 2.5 0h7A1.5 1.5 0 0 1 11 1.5V15L6 11.5 1 15z"
+        fill="#F2853A"
+      /></svg>{{ chip.text }}</span>
     </template>
     <template #end>
       <ScoreRing
@@ -95,4 +108,11 @@ const { reached } = usePlan();
 /* Du texte : le gris secondaire (6,3:1 sur la carte), jamais --faint, réservé à ce qui n’est pas du texte. */
 .list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--text-secondary); }
 .list-card.expired { opacity: 0.6; }
+.list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
+.chip-mark { flex: none; }
+/* Ordinateur (CandidaturesOrdinateurB du 13.11) : l'anneau de 40 px, son mot à 1 px. */
+@media (min-width: 1024px) {
+  .list-card-end .score-ring { width: 2.5rem; height: 2.5rem; }
+  .list-card-end .score-ring-worded { gap: 1px; line-height: normal; }
+}
 </style>
