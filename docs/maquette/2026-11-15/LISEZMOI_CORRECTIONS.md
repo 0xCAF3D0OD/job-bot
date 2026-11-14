@@ -142,3 +142,26 @@ Planches TrierOffresOrdinateurV2 et Sombre, états e = ferme (défaut) / etale /
 - Face : logo et anneau de note sur la même ligne, notes manuscrites (Caveat Brush) au centre, poste et entreprise en bas, puces en capitales.
 - Sous l'éventail : titre manuscrit (« 3 offres pour toi »), puis Écarter / Garder 52 px, 12 px entre eux, puis points de progression et compteur. Pas de phrase d'explication sous le titre (règle : texte hors carte = titre ou lien seulement).
 - Garder : badge « Gardée » sur la carte et toast « Offre gardée dans tes candidatures » avec Annuler.
+
+## 13. États vides
+
+Règle générale
+- Quand une liste est vide, on ne garde pas la mise en page liste + détail : l'illustration, le titre et les actions sont centrés sur toute la largeur de l'écran, au milieu de l'espace sous l'en-tête de page (un peu au-dessus du centre exact, 72 px de marge basse sur ordinateur).
+- L'en-tête de page ne change jamais (titre, onglets, alertes, Ajouter) : les éléments restent au même endroit d'une page à l'autre.
+- Liste vide parce qu'il n'y a encore rien : pas de champ de recherche ni de filtres (ordinateur et téléphone, y compris l'icône Filtres du téléphone). Liste vide à cause des filtres : la barre de filtres reste.
+- Texte hors carte = titre ou lien seulement. Une explication devient une pastille : 14 px / 600, 6 px 12 px, rayon 999 px, icône 16 px, fond #E8ECFB texte #1A3496 (sombre fond #232B45 texte #C9D3FF).
+- Ordinateur : illustration 400 px de large (Offres), titre 28/800, pastille 12 px dessous, boutons 52 px côte à côte 28 px dessous, lien 20 px dessous. Téléphone : titre 22/800, boutons 48 px empilés pleine largeur (300 px max), 12 px entre eux.
+
+Nouvelles planches (clair et sombre)
+- Premier passage, Offres, aucune alerte : CandidaturesOrdinateurVide, CandidaturesVide. Titre « Pas encore d'offre », pastille « Offres collectées chaque jour », boutons « Créer mes alertes » (principal) et « Ajouter une offre », lien « Faire une candidature spontanée ». L'en-tête affiche « Aucune recherche suivie ».
+- Premier passage, Offres, alertes créées mais rien de collecté : CandidaturesOrdinateurVideAlertes, CandidaturesVideAlertes. Titre « Tes alertes sont prêtes », pastille « Première collecte ce soir vers 18 h » (heure réelle de la prochaine collecte), boutons « Ajouter une offre » (principal) et « Voir mes alertes ». Le bouton « Créer mes alertes » ne doit jamais s'afficher si des recherches sont suivies (incohérence vue en production : « 4 recherches suivies » + « Créer mes alertes »).
+- Envoyées sans candidature : EnvoyeesOrdinateurVide, EnvoyeesVide. Titre « Pas encore de candidature envoyée », pastille « Objectif ORP de novembre : 10 candidatures » (mois et objectif réels), bouton « Voir les offres à préparer ».
+- Rendez-vous sans rendez-vous : RendezVousOrdinateurVide, RendezVousVide. Titre « Aucun rendez-vous », pastille « jobA1 prépare ta feuille la veille », bouton « Ajouter un rendez-vous ».
+
+Planches corrigées
+- Aucune offre avec ces filtres (AucuneOffreOrdinateur, AucuneOffre) : en-tête Candidatures et barre de filtres conservés, « Plus de filtres » avec le nombre de filtres actifs. Les phrases sont remplacées par les filtres actifs en pastilles retirables (bouton, aria-label « Retirer le filtre … »), puis « Tout effacer » et « Modifier les filtres », puis le lien « Élargir à « À creuser et + » : 38 offres » (valeurs réelles). Téléphone : pastilles, « Modifier les filtres », lien « Tout effacer ».
+- Fin du tri sans offre gardée (FinDuTriAucune, FinDuTriAucuneOrdinateur, clair et sombre) : la phrase devient la pastille « Prochaines offres demain matin ».
+- Rendez-vous, haut de liste (Candidatures ordinateur, Relance) : « Aucun rendez-vous à venir » devient une pastille avec icône calendrier, la phrase d'explication est supprimée.
+- Mes alertes e-mail vide (AlertesOrdinateurVide, AlertesOrdinateurSite) : la phrase sous le titre devient la pastille « Aucune alerte pour l'instant ».
+
+Trier avec peu d'offres (complète la section 12) : TrierOffresOrdinateurV2Deux et TrierOffresOrdinateurV2Une (clair et sombre), états e = ferme, etale, dos. À 1 offre, l'état « etale » est un simple focus (contour), sans toast.
