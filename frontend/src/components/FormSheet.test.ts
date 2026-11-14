@@ -67,35 +67,35 @@ describe("FormSheet", () => {
     expect(button.find(".copy-label").classes()).toContain("copy-done");
   });
 
-  it("sur téléphone, « Copier » devient « Copié » ; le nom du champ est lu avec (maquette Preparer)", async () => {
+  it("sur téléphone (MaCandidatureV2, 14.11) : toute la ligne copie, la coche et « Copié » annoncé", async () => {
     vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     const wrapper = mount(FormSheet, { global: { stubs: { RouterLink: RouterLinkStub } } });
     await flushPromises();
-    const button = wrapper.findAll("[data-test=sheet-copy]")[2]!;
-    expect(button.text()).toBe("Copier : E-mail");
-    await button.trigger("click");
+    const row = wrapper.findAll("[data-test=sheet-copy]")[2]!;
+    expect(row.element.tagName).toBe("BUTTON");
+    expect(row.text()).toContain("E-mail");
+    expect(row.text()).toContain("Copier : e-mail");
+    await row.trigger("click");
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("camille@example.ch");
-    expect(button.text()).toBe("Copié : E-mail");
-    expect(button.classes()).toContain("copy-done");
+    expect(row.text()).toContain("Copié");
+    expect(wrapper.get("[role=status]").text()).toBe("Copié");
   });
 
-  it("sur téléphone : les cinq champs courants, les autres sous « Autres champs » replié (Kevin, 6.11)", async () => {
+  it("sur téléphone : les cinq champs courants dans « À copier », les autres dans « Si le formulaire le demande », tous visibles", async () => {
     vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
     const wrapper = mount(FormSheet, {
       props: { letterText: "Madame, Monsieur…" },
       global: { stubs: { RouterLink: RouterLinkStub } },
     });
     await flushPromises();
-    const first = wrapper.find(".form-sheet > dl").findAll("dt").map((d) => d.text());
-    expect(first).toEqual(["Prénom", "Nom", "E-mail", "Localité"]); // pas de téléphone dans le profil
-    const more = wrapper.find("[data-test=sheet-more]");
-    expect(more.find(".disclosure-row").text()).toContain("Autres champs");
-    expect(more.find(".disclosure-row").text()).toContain("6");
-    expect(more.find(".disclosure-row").attributes("aria-expanded")).toBe("false");
-    expect(more.findAll("dt").map((d) => d.text())).toEqual([
+    const cards = wrapper.findAll(".apl-card");
+    expect(cards.map((c) => c.get(".apl-cap").text())).toEqual(["À copier · touche une ligne", "Si le formulaire le demande"]);
+    expect(cards[0]!.findAll(".apl-row-label").map((d) => d.text())).toEqual(["Prénom", "Nom", "E-mail", "Localité"]); // pas de téléphone dans le profil
+    const more = wrapper.get("[data-test=sheet-more]");
+    expect(more.findAll(".apl-row-label").map((d) => d.text())).toEqual([
       "Rue et numéro",
       "NPA",
       "Pays",
