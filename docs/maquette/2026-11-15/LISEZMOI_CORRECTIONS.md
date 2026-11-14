@@ -97,6 +97,8 @@ Les lignes à étiquette (étiquette grise 13 px au-dessus d'une valeur 15/700, 
 
 Remplace la partie « détail à droite » de la section 8 pour Offres et Envoyées. Planches : CandidaturesOrdinateurB et BSombre (onglets Offres et Envoyées), Statut, Ajouter, Spontanée. Captures : CandidaturesOrdinateurB(.png, --envoyees.png), BSombre, Liaison-fleche-encoche-zoom.png.
 
+Jetons à créer : trait de liaison (clair #D5D1C7, sombre #4E473E) et fond de carte sélectionnée dans une liste reliée à un détail (clair #EEF1FC, sombre #232B45). Ne pas changer la sélection ailleurs.
+
 Règle de mise en page : liste + détail = zone de détail ouverte reliée par une flèche ; page seule = cartes empilées (inchangé ailleurs).
 
 Liste (colonne de gauche, 532 px)
@@ -104,7 +106,7 @@ Liste (colonne de gauche, 532 px)
 - Carte sélectionnée : s'allonge de 28 px vers la droite (margin-right -28 px), fond #EEF1FC (sombre #232B45), contour 2 px #2445C2 (sombre #7D95FF), plus d'ombre.
 - Flèche : SVG 22 × 44 px soudé au contour de la carte, centré verticalement, pointe arrondie. Trait 2 px de la couleur du contour, remplissage du fond de la carte (tracé exact dans les planches, attribut data-arrow).
 - Barre de recherche et filtres (et Objectif ORP sur Envoyées) : fixes, seules les cartes défilent dessous. Dès que la liste a défilé, ombre légère sous la barre (0 10px 12px -12px rgba(27,31,42,.35)) ; aucune ombre en haut de liste.
-- Pastilles qui disent seulement qu'une information manque (« Contrat non précisé ») : retirées des cartes. L'information reste dans « L'offre en bref ».
+- Pastilles qui disent seulement qu'une information manque (« Contrat non précisé ») : retirées des cartes, ordinateur et téléphone (règle portée par le composant carte). L'information reste dans « L'offre en bref ».
 
 Zone de détail (colonne de droite)
 - Plus de fond ni de cadre : un trait 1,5 px #D5D1C7 (sombre #4E473E) à gauche et en haut, coin haut gauche arrondi 24 px. À droite, le trait du haut s'efface en dégradé sur 160 px ; il n'y a pas de trait à droite ni en bas.
@@ -123,11 +125,16 @@ Cartes sous l'en-tête
 - Offres : Candidature, L'offre en bref. Envoyées : Suivi (frise), Relance conseillée, Documents et contacts. Cartes blanches posées sur le fond de page, 16 px entre elles, 24 px de retrait depuis le trait de gauche, texte intérieur à 24 px (tout s'aligne sur l'intitulé).
 - Champ manquant dans « L'offre en bref » : « Non précisé » en 15/500 gris (#596070, sombre #ABA398) au lieu de 15/700.
 
-Sombre : correction de contraste au passage, le libellé de note et les chiffres des anneaux « À creuser » passent de #6B6157 (environ 3:1) à #ABA398, l'arc à #8C8279 (WCAG 1.4.3 et 1.4.11).
+Sombre : « À creuser » (libellé de note, chiffres et arc des anneaux) reste en #B39A82, la valeur déjà utilisée dans le code (6,9:1 sur #171411, 6,2:1 sur #221E1A, 5,2:1 sur #232B45). La maquette est alignée sur cette valeur.
 
 Hors champ : les onglets Envoyées des planches Ajouter et Spontanée sont d'une ancienne version et n'ont pas été modifiés. Référence pour Envoyées : CandidaturesOrdinateurB.
 
 ## 12. Trier les offres du jour (ordinateur)
+
+Réponses aux questions (15 novembre) :
+- Clavier : ← Écarter, → Garder (inchangé). Tab / Maj+Tab entre les cartes, Entrée ou Espace pour retourner la carte qui a le focus. Écarter affiche aussi un toast avec « Annuler ».
+- 2 offres : éventail à 2 cartes, −4° et +4°, mêmes règles d'alignement et de centrage, étalées à 340 px au survol. 1 offre : une carte droite centrée, sans rotation ni étalement, retournement conservé. 0 offre : état « Rien à trier pour l'instant ». Titre manuscrit accordé (« 2 offres pour toi », « 1 offre pour toi »).
+
 
 Planches TrierOffresOrdinateurV2 et Sombre, états e = ferme (défaut) / etale / dos. Captures TrierOffresOrdinateurV2.png et --etats.png.
 - Éventail de 3 cartes 320 × 430 px : la meilleure offre devant au centre, les deux autres à −7° et +7° derrière. Hauts des trois cartes alignés, éventail centré dans son bloc.
