@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
 import { usePhone } from "../composables/usePhone";
 import CopyButton from "./CopyButton.vue";
-import DisclosureRow from "./DisclosureRow.vue";
+import AppIcon from "./AppIcon.vue";
 import { phoneDisplay } from "../format";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
@@ -52,10 +52,28 @@ const rows = computed(() => {
   return all.filter((row): row is [string, string] => Boolean(row[1]?.trim()));
 });
 // Sur téléphone (maquette Preparer, Kevin 2026-11-06) : les cinq champs de presque tous les formulaires
-// d'abord, les autres sous « Autres champs », replié.
+// d'abord ; les autres dans « Si le formulaire le demande » (planche MaCandidatureV2, 14.11 ; avant : « Autres
+// champs », replié).
 const FIRST = new Set(["Prénom", "Nom", "E-mail", "Téléphone", "Localité"]);
 const shown = computed(() => (phone.value ? rows.value.filter(([label]) => FIRST.has(label)) : rows.value));
 const more = computed(() => (phone.value ? rows.value.filter(([label]) => !FIRST.has(label)) : []));
+
+// Téléphone : toute la ligne copie sa valeur (« À copier · touche une ligne ») ; la coche et « Copié » 2 s, annoncés.
+const copied = ref("");
+let timer: ReturnType<typeof setTimeout> | undefined;
+async function copyRow(label: string, value: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    return;
+  }
+  copied.value = label;
+  clearTimeout(timer);
+  timer = setTimeout(() => (copied.value = ""), 2000);
+}
+onUnmounted(() => clearTimeout(timer));
+// Les prétentions salariales sont marquées d'un cadenas (planche) : une valeur à ne donner que si on la demande.
+const PRIVATE = new Set(["Prétentions salariales"]);
 
 const missing = computed(() => {
   const who = identity.value;
@@ -65,7 +83,64 @@ const missing = computed(() => {
 </script>
 
 <template>
+  <!-- Téléphone (planche MaCandidatureV2, état « formulaire ») : deux cartes, chaque ligne est un bouton qui copie. -->
   <div
+    v-if="phone"
+    class="form-sheet apl-sheet"
+    data-test="form-sheet"
+  >
+    <section
+      v-for="group in [{ key: 'first', title: 'À copier · touche une ligne', items: shown }, { key: 'more', title: 'Si le formulaire le demande', items: more }].filter((g) => g.items.length)"
+      :key="group.key"
+      class="apl-card"
+      :aria-label="group.key === 'first' ? 'À recopier sur le formulaire' : 'Si le formulaire le demande'"
+      :data-test="group.key === 'more' ? 'sheet-more' : undefined"
+    >
+      <h2 class="apl-cap">
+        {{ group.title }}
+      </h2>
+      <button
+        v-for="[label, value] in group.items"
+        :key="label"
+        type="button"
+        class="apl-row"
+        data-test="sheet-copy"
+        @click="copyRow(label, value)"
+      >
+        <span class="apl-row-text">
+          <span class="apl-row-label">{{ label }}</span>
+          <span :class="['apl-row-value', { 'form-sheet-long': value.length > 80 }]">{{ label === "Téléphone" ? phoneDisplay(value) : value }}<AppIcon
+            v-if="PRIVATE.has(label)"
+            name="lock"
+            class="apl-row-lock"
+          /></span>
+        </span>
+        <AppIcon
+          :name="copied === label ? 'done' : 'copy'"
+          :class="['apl-row-icon', { done: copied === label }]"
+        />
+        <span class="visually-hidden">{{ copied === label ? "Copié" : `Copier : ${label.toLowerCase()}` }}</span>
+      </button>
+    </section>
+    <span
+      class="visually-hidden"
+      role="status"
+    >{{ copied ? "Copié" : "" }}</span>
+    <p
+      v-if="missing"
+      class="hint"
+    >
+      Il manque des coordonnées :
+      <RouterLink
+        to="/profil?onglet=coordonnees"
+        class="link"
+      >
+        compléter dans Profil
+      </RouterLink>
+    </p>
+  </div>
+  <div
+    v-else
     class="form-sheet"
     data-test="form-sheet"
   >
@@ -81,37 +156,11 @@ const missing = computed(() => {
         </dd>
         <CopyButton
           :value="value"
-          :text="phone ? label : ''"
           :label="`Copier : ${label.toLowerCase()}`"
           test-id="sheet-copy"
         />
       </div>
     </dl>
-    <DisclosureRow
-      v-if="more.length"
-      title="Autres champs"
-      :value="String(more.length)"
-      class="form-sheet-more"
-      data-test="sheet-more"
-    >
-      <dl>
-        <div
-          v-for="[label, value] in more"
-          :key="label"
-          class="form-sheet-row"
-        >
-          <dt>{{ label }}</dt>
-          <dd :class="{ 'form-sheet-long': value.length > 80 }">
-            {{ label === "Téléphone" ? phoneDisplay(value) : value }}
-          </dd>
-          <CopyButton
-            :value="value"
-            :text="label"
-            test-id="sheet-copy"
-          />
-        </div>
-      </dl>
-    </DisclosureRow>
     <p
       v-if="missing"
       class="hint"
@@ -128,9 +177,18 @@ const missing = computed(() => {
 </template>
 
 <style scoped>
-/* « Autres champs » : une ligne de la fiche comme les autres (trait du haut, même hauteur), pas une carte dans la
-   carte ; le titre en gras comme les valeurs. */
-.form-sheet-more { border: 0; border-top: 1px solid var(--line-soft); border-radius: 0; background: none; }
-.form-sheet-more :deep(.disclosure-row) { min-height: 3.25rem; padding: var(--space-1) var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.form-sheet-more :deep(.disclosure-value) { font-weight: var(--weight-regular); color: var(--text-secondary); }
+/* Planche MaCandidatureV2 (état « formulaire ») : libellé 13/700 gris au-dessus de la valeur 15 ; lignes de 64 px,
+   12 px en haut et en bas (§9 du 14.11, la planche dessinait 56 et 8) ; l'icône copier 20 px grise à droite. */
+.apl-sheet { display: contents; }
+.apl-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 4rem; padding: var(--space-3) var(--space-4); box-sizing: border-box; border: 0; border-top: 1px solid var(--line-soft); background: transparent; color: var(--text); font: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.apl-row:hover { background: var(--selected-bg); }
+.apl-row:last-child { border-radius: 0 0 var(--apl-radius, 16px) var(--apl-radius, 16px); }
+.apl-row-text { flex: 1; min-width: 0; }
+.apl-row-label { display: block; font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.apl-row-value { --apl-6: 6px; display: flex; align-items: center; gap: var(--apl-6); font-size: var(--font-label); overflow-wrap: anywhere; }
+.apl-row-value.form-sheet-long { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.apl-row-lock { flex: none; width: 14px; height: 14px; color: var(--text-secondary); }
+.apl-row-icon { flex: none; width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
+.apl-row-icon.done { color: var(--success); }
+.apl-sheet > .hint { margin: 0 var(--space-5) var(--space-4); }
 </style>
