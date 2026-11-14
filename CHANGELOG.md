@@ -590,3 +590,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.376 | Envoyées sur ordinateur (maquette du 14 novembre) : détail en quatre cartes (titre, suivi, relance conseillée, documents et contacts avec l’historique), statuts et tri dans le volet Filtres, plus de trait bleu | livrée |
 | 1.6.377 | Rendez-vous sur ordinateur (maquette du 14 novembre) : un seul bouton d’ajout, le « + Ajouter » de l’en-tête, qui ouvre « Nouveau rendez-vous » ; en-têtes de liste avec le nombre seul | livrée |
 | 1.6.378 | Préparer, maquette du 14 novembre : anneau seul dans l'en-tête sur ordinateur, lignes de lecture à 64 px, et étape Postuler du téléphone refaite d'après sa planche (capture, Tes documents avec Partager, À copier, Si le formulaire le demande) | livrée |
+| 1.6.379 | Budget de poids : la limite du JavaScript total passe de 420 à 425 Ko (gzip), décision de Kevin du 14 novembre ; l'allègement reste suivi dans le ticket #664 | livrée |
