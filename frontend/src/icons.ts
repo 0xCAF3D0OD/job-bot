@@ -82,6 +82,10 @@ export const ICONS = {
   refresh: path("M19 12a7 7 0 1 1-2.1-5") + path("M19 4.5V9h-4.5"),
   download: path("M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"),
   upload: path("M12 15.5V4.5M7.5 9L12 4.5 16.5 9M5 19.5h14"),
+  // Partager un fichier (planche MaCandidatureV2, « Tes documents ») : la flèche qui sort de la boîte.
+  share: path("M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"),
+  // La capture de la confirmation (planche MaCandidatureV2, état formulaire).
+  camera: path("M4 8h3l2-3h6l2 3h3v11H4z") + circle(12, 13, 3.5),
   copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/>' + path("M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"),
   trash: path("M4.5 7h15M10 4h4M6.5 7l.8 12a1.5 1.5 0 0 0 1.5 1.5h6.4a1.5 1.5 0 0 0 1.5-1.5l.8-12M10 11v5.5M14 11v5.5"),
   pencil: path("M15 5l4 4L8.5 19.5H4.5v-4z") + path("M13 7l4 4"),
