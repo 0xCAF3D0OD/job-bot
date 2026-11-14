@@ -566,3 +566,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.352 | Corrections de style du 13.11 au soir : mois du calendrier passé en gris lisible, Sourire de « Tout est lu », Orange des Alertes vides sur ordinateur | livrée |
 | 1.6.353 | En-tête sur ordinateur selon les planches du 13 novembre : le menu collé au logo, 1280 px de contenu, onglets de 44 px | livrée |
 | 1.6.354 | Bilan sur ordinateur : bandeau vert « octobre est remis ! » et calendrier vide du prochain rendez-vous, comme la maquette du 13 novembre | livrée |
+| 1.6.355 | Écran de fin : la ligne « Il manque l’adresse de l’entreprise », qui ouvre la candidature sur son adresse | livrée |
