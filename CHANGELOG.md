@@ -578,3 +578,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.364 | Bilan › Résultats sur ordinateur : « Ce que jobA1 conseille », une façon de postuler ou un site sans réponse et une compétence absente du profil, sans IA, à partir de 5 candidatures ou 5 offres | livrée ; textes des conseils à valider par Kevin avant la fusion |
 | 1.6.365 | Préparer ma candidature sur ordinateur : en-tête, cartes, lettre, sélecteur de langue, modèles, raccourcis et zone de demande aux mesures des planches du 13 novembre | livrée |
 | 1.6.366 | Écran « Candidature envoyée » sur ordinateur refait d'après la planche du 13 novembre : carte « Mois ORP » avec la barre, l'échéance, la relance et l'adresse manquante | livrée |
+| 1.6.367 | CI : les audits d'écran en deux contrôles, « Téléphone » et « Ordinateur », lancés seulement si la PR touche leur format (scripts/ci_formats.py) ; aucun pour une PR de documentation | livrée |
