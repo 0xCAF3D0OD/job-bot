@@ -2201,7 +2201,7 @@ onMounted(() => void load());
    suggestions de 40 en 15 ; champ de demande de 56 au bord 1,5. */
 .prep-desk-head.container { --prep-4: 4px; padding-top: var(--prep-4); padding-bottom: 0; margin-bottom: var(--space-4); }
 .band.prep-desk-band { background: var(--bg); border-top: 0; padding-top: 0; }
-.prep-desk-head > .step-tabs > a { --prep-18: 18px; flex: none; padding-inline: var(--prep-18); font-size: var(--font-label); color: var(--text); }
+.prep-desk-head > .step-tabs > a { flex: none; padding-inline: var(--space-4); font-size: var(--font-label); color: var(--text); }
 .prep-layout.prep-desk { --prep-card: 18.5px; --prep-sheet: 560px; --prep-40: 40px; }
 .prep-desk :is(.side-card, .doc-card) { border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .prep-desk .side-card { padding: var(--prep-card); }
@@ -2212,7 +2212,7 @@ onMounted(() => void load());
 .prep-desk .doc-language { background: var(--surface-muted); }
 .prep-desk .doc-language > button { --prep-52: 52px; --prep-36: 36px; min-inline-size: var(--prep-52); min-height: var(--prep-36); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); }
 .prep-desk .doc-language > button[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: var(--weight-bold); box-shadow: 0 1px 2px rgb(27 31 42 / 12%); }
-.prep-desk .layout-card-thumbs button { --prep-6: 6px; gap: var(--prep-6); padding: var(--space-2) 0 var(--prep-6); }
+.prep-desk .layout-card-thumbs button { gap: var(--space-1); padding: var(--space-2) 0; }
 .prep-desk .apply-card { padding: var(--prep-card); }
 .prep-desk .apply-copy-desk { padding-bottom: var(--space-1); }
 .prep-desk .apply-go > .prep-bar-main { font-size: var(--font-body); }
