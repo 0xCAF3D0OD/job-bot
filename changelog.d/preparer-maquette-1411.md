@@ -1,2 +1,1 @@
-Préparer sur ordinateur : l'anneau de compatibilité seul dans l'en-tête, lignes « Ta candidature » et « À recopier » à 64 px, 24 px entre « Postuler » et « J'ai déjà postulé » ; « Postuler sur … » en pilule de 52 sur téléphone (maquette du 14 novembre).
-Préparer sur téléphone, étape Postuler refaite d'après la planche MaCandidatureV2 : rappel de la capture, « Tes documents » avec Partager, « À copier · touche une ligne » et « Si le formulaire le demande » ; certificats, modèle, contact et « J'ai déjà postulé » gardés.
+Préparer, maquette du 14 novembre : anneau seul dans l'en-tête sur ordinateur, lignes de lecture à 64 px, et étape Postuler du téléphone refaite d'après sa planche (capture, Tes documents avec Partager, À copier, Si le formulaire le demande)
