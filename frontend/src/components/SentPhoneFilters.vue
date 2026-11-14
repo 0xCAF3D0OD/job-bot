@@ -142,7 +142,7 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
    et le bouton alignés à droite, 24 px entre eux, le bouton en pilule de 52 px à la largeur de son texte. */
 /* Le champ de la planche Envoyees : 48 px, coins de 14, bord --line, fond blanc, loupe à 14 px, texte 16. */
 .sent-phone-search { --sent-14: 14px; --sent-icon: 20px; --sent-gap: 10px; display: block; }
-.sent-phone-search :deep(.filters-search) { box-sizing: border-box; height: var(--field-h); padding: 0 var(--sent-14) 0 calc(var(--sent-14) + var(--sent-icon) + var(--sent-gap)); border: 1px solid var(--line); border-radius: var(--sent-14); background-color: var(--surface); font-size: var(--font-body); }
+.sent-phone-search :deep(.filters-search) { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--sent-14) + var(--sent-icon) + var(--sent-gap)); border: 1px solid var(--line); border-radius: var(--sent-14); background-color: var(--surface); font-size: var(--font-body); }
 .sent-phone-search :deep(.icon) { left: var(--sent-14); width: var(--sent-icon); height: var(--sent-icon); color: var(--text-secondary); }
 .filters-dialog { max-height: calc(100dvh - 9.625rem); }
 .filter-sheet .filter-choices h3 { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
