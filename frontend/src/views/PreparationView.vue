@@ -2324,4 +2324,7 @@ onMounted(() => void load());
 .apl-docs > .hint, .apl-note { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); font-size: var(--font-small); color: var(--text-secondary); }
 .apl-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--apl-56); padding: 0 var(--space-4); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
 .apl-contact > .icon { flex: none; color: var(--text-secondary); }
+/* « Postuler sur … » en bas sur téléphone (PreparerMiseEnPage du 14.11) : pilule de 52 ; ici plutôt que dans style.css,
+   qui est chargé au premier écran. */
+@media (max-width: 820px) { .prep-bar > a.prep-bar-main { min-height: var(--btn-secondary); } }
 </style>
