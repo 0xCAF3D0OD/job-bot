@@ -569,3 +569,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.355 | Écran de fin : la ligne « Il manque l’adresse de l’entreprise », qui ouvre la candidature sur son adresse | livrée |
 | 1.6.356 | Candidatures sur ordinateur, vue Offres alignée sur la maquette du 13 novembre : cartes, logos en cinq tons, « Gardée », tête de la fiche | livrée |
 | 1.6.357 | Bilan sur ordinateur : le panneau « Pour l’ORP » suit la maquette du 13 novembre, avec « Compléter » quand l’adresse manque | livrée |
+| 1.6.358 | Les premiers pas ont une étape « Alerte » entre les critères et les premières offres : créer l'alerte jobup de sa première recherche, ou « Plus tard » ; la carte Premiers pas d'Aujourd'hui y mène directement et garde l'étape ouverte tant qu'aucune alerte n'est créée ni reçue (migration 0084). | livrée |
