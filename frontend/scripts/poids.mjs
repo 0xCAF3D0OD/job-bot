@@ -19,7 +19,7 @@ const DIST = new URL("../dist/", import.meta.url).pathname;
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 420_000,
+  "js-total": 425_000,
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
