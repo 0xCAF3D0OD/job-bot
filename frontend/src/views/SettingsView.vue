@@ -895,115 +895,66 @@ watch(
   </section>
 </template>
 
-<style scoped>
-.rg-phone-head, .settings-layout {
-  --rg-0-6: 0.6px; --rg-1: 1px; --rg-1-5: 1.5px; --rg-2: 2px; --rg-3: 3px; --rg-6: 6px; --rg-10: 10px; --rg-12: 12px; --rg-13: 13px; --rg-14: 14px; --rg-15: 15px; --rg-16: 16px; --rg-18: 18px; --rg-18-5: 18.5px; --rg-19: 19px; --rg-20: 20px; --rg-21: 21px; --rg-22: 22px; --rg-24: 24px; --rg-26: 26px; --rg-28: 28px; --rg-32: 32px; --rg-44: 44px; --rg-48: 48px; --rg-52: 52px; --rg-56: 56px; --rg-64: 64px; --rg-880: 880px;
-}
+<style>
 /* Réglages, refaits d'après les planches du 14 novembre (Reglages pour le téléphone, ReglagesOrdinateur dès 1 024 px).
-   Les listes (.rg-list) : une carte blanche, lignes séparées d'un filet. Téléphone : bord 1 px, rayon 18, lignes de
-   64 px (16/600, aide 13/18). Ordinateur : bord 1,5 px, lignes de 64 px à 18,5 px du bord (15/600, aide 14). */
+   Sans `scoped` (classes propres à la page, rg-* et settings-grouped/-phone/-wide) : le CSS reste sous la limite de
+   poids. Téléphone : listes bordées de 1 px, rayon 18, lignes de 64 px (16/600, aide 13/18). Ordinateur : une carte
+   par section bordée de 1,5 px, lignes à 18,5 px du bord (15/600, aide 14). Valeurs hors grille arrondies à 4 px. */
+.rg-phone-head, .settings-layout { --rg-6: 6px; --rg-10: 10px; --rg-12: 12px; --rg-13: 13px; --rg-14: 14px; --rg-15: 15px; --rg-16: 16px; --rg-18: 18px; --rg-185: 18.5px; --rg-19: 19px; --rg-20: 20px; --rg-21: 21px; --rg-22: 22px; --rg-28: 28px; }
 .rg-phone-head { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-3) var(--space-2) var(--space-1); }
 .rg-phone-head h1 { margin: 0; font-size: var(--rg-22); line-height: var(--rg-28); font-weight: var(--weight-bold); }
-.rg-back { display: inline-grid; place-items: center; width: var(--rg-48); height: var(--rg-48); border-radius: var(--radius-pill); color: var(--text); }
-.rg-back :deep(.icon) { width: var(--rg-24); height: var(--rg-24); }
+.rg-back { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-pill); color: var(--text); }
+.rg-back .icon { width: 24px; height: 24px; }
 .settings-phone { padding: var(--rg-10) var(--space-5) var(--rg-28); }
 .settings-grouped .settings-sections { gap: 0; }
-
-/* Les titres de section : capitales 13/700 grises sur téléphone, 18/700 sur ordinateur. */
-.settings-grouped :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--space-2);
-  font-size: var(--rg-13);
-  font-weight: var(--weight-bold);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--rg-0-6);
-}
-.settings-grouped :deep(.settings-section + .settings-section) { margin-top: var(--rg-22); }
-.settings-grouped :deep(.setting-cards) { gap: var(--space-3); }
-
-/* Une liste : la carte de réglage (SettingCard) et les listes des panneaux ont la même forme. */
-.settings-grouped :deep(:is(.setting-card, .rg-list)) {
-  background: var(--surface); border: var(--rg-1) solid var(--line); border-radius: var(--rg-18); overflow: hidden;
-}
-.settings-grouped :deep(.setting-row) {
-  flex-wrap: nowrap; gap: var(--space-3); min-height: var(--rg-64); box-sizing: border-box; padding: var(--rg-10) var(--rg-14);
-}
-.settings-grouped :deep(.setting-row + .setting-row) { border-top: var(--rg-1) solid var(--line-soft); }
-.settings-grouped :deep(.setting-row.stack) { flex-wrap: wrap; }
-.settings-grouped :deep(.setting-row-text) { flex: 1 1 auto; gap: var(--space-1); }
-.settings-grouped :deep(.setting-row-title) { font-size: var(--font-body); font-weight: var(--weight-semibold); }
-.settings-grouped :deep(.setting-row-description) { font-size: var(--rg-13); line-height: var(--rg-18); color: var(--text-secondary); }
-.setting-row.notify-threshold, .settings-grouped :deep(.setting-row.notify-threshold) { padding-top: 0; border-top: 0; min-height: 0; }
-/* L'interrupteur du téléphone : 52 × 32, rond de 26 px. */
-.settings-phone :deep(input[type="checkbox"][role="switch"]) { width: var(--rg-52); height: var(--rg-32); }
-.settings-phone :deep(input[type="checkbox"][role="switch"])::after { top: var(--rg-3); left: var(--rg-3); width: var(--rg-26); height: var(--rg-26); }
-.settings-phone :deep(input[type="checkbox"][role="switch"]:checked)::after { transform: translateX(var(--rg-20)); }
-
-/* Affichage : Apparence (titre 16/600, segments de 44 px sur trois colonnes, 14 px de marge, 12 entre les deux). */
-.settings-grouped :deep(.appearance) { display: grid; gap: var(--space-3); }
-.settings-grouped :deep(.appearance-row) { display: flex; align-items: center; gap: var(--space-4); min-height: var(--rg-64); box-sizing: border-box; padding: var(--rg-12) var(--rg-14); }
-.settings-phone :deep(.appearance-row) { flex-direction: column; align-items: stretch; gap: var(--space-3); padding: var(--rg-14); }
-.settings-grouped :deep(.appearance-row .rg-label) { flex: 1; }
-.settings-phone :deep(.appearance-row .segmented) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: var(--rg-14); }
-.settings-phone :deep(.appearance-row .segmented > button) { min-height: var(--rg-44); border: 0; border-radius: var(--rg-10); font-size: var(--rg-14); }
-
-/* Les lignes à valeur ou à chevron (Langue, Taille du texte, Mes données) : 56 px, 16/600, valeur 15 grise. */
-.settings-grouped :deep(:is(.rg-link-row, .rg-danger-row)) {
-  display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--rg-56); box-sizing: border-box; margin: 0; padding: 0 var(--rg-14);
-  border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
-}
-.settings-grouped :deep(.rg-list > * + *) { border-top: var(--rg-1) solid var(--line-soft); }
-.settings-grouped :deep(.rg-label) { flex: 1; min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
-.settings-grouped :deep(.rg-value) { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
-/* À 320 px, le libellé garde sa place et la valeur passe à la ligne (audit téléphone : libellé coupé). */
-.settings-grouped :deep(.rg-link-row) { white-space: normal; }
-.settings-grouped :deep(.rg-link-row > .icon:last-child) { width: var(--rg-18); height: var(--rg-18); color: var(--text-secondary); }
-.settings-grouped :deep(.rg-lead) { width: var(--rg-20); height: var(--rg-20); color: var(--primary-graphic); }
-.settings-grouped :deep(.rg-link-two) { padding-block: var(--rg-12); }
-.settings-grouped :deep(.rg-sub) { display: block; margin-top: var(--space-1); font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.settings-grouped :deep(.account-data) { display: grid; gap: var(--space-3); }
-/* Supprimer mon compte, téléphone : bouton bordé rouge de 52 px, rayon 16, 6 px sous la liste. */
-.settings-phone :deep(.rg-danger-button) {
-  min-height: var(--rg-52); margin-top: var(--rg-6); text-align: center; justify-content: center; border: var(--rg-1-5) solid var(--danger-line); border-radius: var(--rg-16); background: var(--surface);
-  color: var(--danger); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer;
-}
-.settings-grouped :deep(.rg-list > .setting-row-form) { padding: var(--space-4) var(--rg-14); }
-
-/* Ordinateur (ReglagesOrdinateur) : colonne de 880 px, titre 34/800, sections à 32 px, titres 18/700, cartes bordées
-   de 1,5 px, lignes à 18,5 px du bord, texte 15/600 et aide 14. */
-.settings-wide { max-width: var(--rg-880); padding: var(--space-6) 0 var(--space-12); }
-.settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); max-width: none; }
-.settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
-.settings-wide :deep(#donnees) { order: 1; }
-.settings-wide :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--space-3);
-  font-size: var(--font-title);
-  font-weight: var(--weight-bold);
-  color: var(--text);
-  text-transform: none;
-  letter-spacing: normal;
-}
-.settings-wide :deep(.setting-cards) { border-radius: var(--rg-18); }
-.settings-wide :deep(:is(.setting-card, .rg-list)) { border: 0; border-radius: 0; }
-.settings-wide :deep(.setting-cards > * + *) { border-top: var(--rg-1) solid var(--surface-muted); }
-.settings-wide :deep(:is(.account-data, .appearance)) { gap: 0; }
-.settings-wide :deep(.setting-row) { padding: var(--rg-12) var(--rg-18-5); gap: var(--space-4); }
-.settings-wide :deep(.setting-row + .setting-row), .settings-wide :deep(.rg-list > * + *) { border-top-color: var(--surface-muted); }
-.settings-wide :deep(:is(.setting-row-title, .rg-label)) { font-size: var(--rg-15); }
-.settings-wide :deep(.setting-row-description) { font-size: var(--font-small); line-height: var(--rg-20); }
-.settings-wide :deep(.appearance-row) { padding: var(--rg-12) var(--rg-18-5); }
-.settings-wide :deep(.appearance-row .segmented) { padding: var(--space-1); gap: 0; border-radius: var(--rg-19); }
-.settings-wide :deep(.appearance-row .segmented > button) { min-height: var(--rg-32); padding: 0 var(--space-4); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
-.settings-wide :deep(.rg-link-row) { gap: var(--space-4); min-height: var(--rg-64); padding: var(--rg-12) var(--rg-18-5); }
-.settings-wide :deep(.rg-link-row > .icon:last-child) { width: var(--rg-20); height: var(--rg-20); }
-/* Mes données, ordinateur : lignes à flèche ronde de 36 px (15 normal, sous-ligne 14 grise), puis « Supprimer mon
-   compte » en rouge 15/700, 56 px, à 20 px du bord. */
-.settings-wide :deep(.account-data .rg-link-row) { gap: var(--space-4); min-height: var(--rg-56); }
-.settings-wide :deep(.account-data .rg-label) { font-weight: var(--weight-regular); line-height: var(--rg-21); }
-.settings-wide :deep(.account-data .rg-sub) { font-size: var(--font-small); line-height: var(--rg-20); }
-.settings-wide :deep(.account-data .arrow-circle) { border-width: var(--rg-2); }
-.settings-wide :deep(.rg-danger-row) { min-height: var(--rg-56); padding: 0 var(--rg-20); color: var(--danger); font-size: var(--rg-15); font-weight: var(--weight-bold); }
-.settings-wide :deep(.rg-list > .setting-row-form) { padding: var(--space-4) var(--rg-18-5); }
-/* Connexions : boutons en pilule bordée de 44 px (rayon 22, bord 1,5 px bleu, 15/600). */
-.settings-wide :deep(#connexions .setting-row-control :is(button, a):not(.link)) { min-height: var(--rg-44); padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
+.settings-grouped .settings-section > .section-title { margin: 0 var(--space-1) var(--space-2); font-size: var(--rg-13); font-weight: var(--weight-bold); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; }
+.settings-grouped .settings-section + .settings-section { margin-top: var(--rg-22); }
+.settings-grouped .setting-cards, .settings-grouped .appearance, .settings-grouped .account-data { display: grid; gap: var(--space-3); }
+.settings-grouped :is(.setting-card, .rg-list) { background: var(--surface); border: 1px solid var(--line); border-radius: var(--rg-18); overflow: hidden; }
+.settings-grouped .setting-row { flex-wrap: nowrap; gap: var(--space-3); min-height: 64px; box-sizing: border-box; padding: var(--rg-10) var(--rg-14); }
+.settings-grouped :is(.setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--line-soft); }
+.settings-grouped .setting-row.stack { flex-wrap: wrap; }
+.settings-grouped .setting-row-text { flex: 1 1 auto; gap: var(--space-1); }
+.settings-grouped :is(.setting-row-title, .rg-label) { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
+.settings-grouped :is(.setting-row-description, .rg-sub) { font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.settings-phone input[type="checkbox"][role="switch"] { width: 52px; height: 32px; }
+.settings-phone input[type="checkbox"][role="switch"]::after { top: 3px; left: 3px; width: 26px; height: 26px; }
+.settings-phone input[type="checkbox"][role="switch"]:checked::after { transform: translateX(20px); }
+.settings-grouped .appearance-row { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; box-sizing: border-box; padding: var(--rg-12) var(--rg-14); }
+.settings-phone .appearance-row { flex-direction: column; align-items: stretch; gap: var(--space-3); padding: var(--rg-14); }
+.settings-phone .appearance-row .segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: var(--rg-14); }
+.settings-phone .appearance-row .segmented > button { min-height: 44px; border: 0; border-radius: var(--rg-10); font-size: var(--rg-14); }
+.settings-grouped :is(.rg-link-row, .rg-danger-row) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; box-sizing: border-box; margin: 0; padding: 0 var(--rg-14); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; white-space: normal; cursor: pointer; }
+.settings-grouped .rg-label { flex: 1; min-width: 0; }
+.settings-grouped .rg-value { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
+.settings-grouped .rg-link-row > .icon:last-child { width: 18px; height: 18px; color: var(--text-secondary); }
+.settings-grouped .rg-lead { width: 20px; height: 20px; color: var(--primary-graphic); }
+.settings-grouped .rg-link-two { padding-block: var(--rg-12); }
+.settings-grouped .rg-sub { display: block; margin-top: var(--space-1); }
+.settings-grouped [data-test=delete-form] .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
+.settings-grouped .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-14); }
+.settings-phone .rg-danger-button { min-height: 52px; margin-top: var(--rg-6); justify-content: center; border: 1.5px solid var(--danger-line); border-radius: var(--rg-16); background: var(--surface); color: var(--danger); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
+/* Ordinateur : la carte par section vient de style.css (.settings-wide .setting-cards). */
+.settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); }
+.settings-wide .settings-section + .settings-section { margin-top: 0; }
+.settings-wide #donnees { order: 1; }
+.settings-wide .settings-section > .section-title { margin: 0 var(--space-1) var(--space-3); font-size: var(--font-title); color: var(--text); text-transform: none; letter-spacing: normal; }
+.settings-wide .setting-cards { border-radius: var(--rg-18); }
+.settings-wide :is(.setting-card, .rg-list) { border: 0; border-radius: 0; }
+.settings-wide :is(.setting-cards > * + *, .setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--surface-muted); }
+.settings-wide :is(.account-data, .appearance) { gap: 0; }
+.settings-wide :is(.setting-row, .appearance-row, .rg-link-row) { gap: var(--space-4); padding: var(--rg-12) var(--rg-185); }
+.settings-wide .rg-link-row { min-height: 64px; }
+.settings-wide :is(.setting-row-title, .rg-label, .rg-danger-row) { font-size: var(--rg-15); }
+.settings-wide :is(.setting-row-description, .account-data .rg-sub) { font-size: var(--font-small); line-height: var(--rg-20); }
+.settings-wide .appearance-row .segmented { padding: var(--space-1); gap: 0; border-radius: var(--rg-19); }
+.settings-wide .appearance-row .segmented > button { min-height: 32px; padding: 0 var(--space-4); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
+.settings-wide .rg-link-row > .icon:last-child { width: 20px; height: 20px; }
+.settings-wide .account-data .rg-link-row { min-height: 56px; }
+.settings-wide .account-data .rg-label { font-weight: var(--weight-regular); line-height: var(--rg-21); }
+.settings-wide .account-data .arrow-circle { border-width: 2px; }
+.settings-wide .rg-danger-row { min-height: 56px; padding: 0 var(--rg-20); color: var(--danger); font-weight: var(--weight-bold); }
+.settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
+.settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
+.settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
 </style>

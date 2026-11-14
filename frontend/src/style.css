@@ -1372,8 +1372,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 
 /* --- Champs à recopier sur le site de l'employeur (docs/25 §5, docs/47) --- */
 .form-sheet-long { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.identity-more { margin-top: var(--space-4); }
-.identity-fields, .profile-form, .add-search-form { display: grid; gap: var(--space-4); }
+.profile-form, .add-search-form { display: grid; gap: var(--space-4); }
 .extension-steps { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); }
 .extension-token { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
 .extension-token code { overflow-wrap: anywhere; font-size: var(--font-small); }
@@ -1697,11 +1696,6 @@ html.side-open { overflow: hidden; }
 
 /* Relancer une candidature (docs/38) */
 .follow-up-line { color: var(--orange-text); }
-.follow-up-panel { display: grid; gap: var(--space-3); justify-items: start; }
-.follow-up-panel .muted { margin: 0; }
-.follow-up-field { display: grid; gap: var(--space-1); width: 100%; font-size: var(--font-small); }
-.follow-up-field input, .follow-up-field textarea { width: 100%; font: inherit; }
-.follow-up-actions { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; }
 
 /* Candidatures spontanées (docs/39) */
 /* Le code d'un site, en tête de la page Alertes (docs/112). */
@@ -1911,22 +1905,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 @keyframes hover-note-in { from { opacity: 0; transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .hover-note-bubble { animation: none; } }
 
-/* Colonne de gauche : ta semaine (docs/86), puis la dose du jour. */
-.rhythm-card { gap: var(--space-3); }
-.rhythm-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
-.rhythm-head h2 { margin: 0; font-size: var(--font-title); }
-.rhythm-count { margin: 0; color: var(--muted); }
-.rhythm-count strong { color: var(--text); font-size: var(--font-section); }
-.rhythm-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); text-align: center; font-size: var(--font-caption); color: var(--muted); }
-.rhythm-days li { display: grid; justify-items: center; gap: var(--space-1); }
-.rhythm-dot { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--faint); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: #fff; }
-.rhythm-days li.sent .rhythm-dot { background: var(--primary); border-color: var(--primary); color: var(--on-accent); }
-.rhythm-days li.rest .rhythm-dot { border-style: dashed; opacity: 0.6; }
-.rhythm-days li.paused .rhythm-dot { border-style: dotted; background: var(--band); }
-.rhythm-days li.today { color: var(--text); font-weight: var(--weight-semibold); }
-.rhythm-days li.today .rhythm-dot { box-shadow: 0 0 0 3px var(--accent); }
-.rhythm-sentence { margin: 0; }
-.rhythm-card.done .rhythm-sentence { color: var(--accent); font-weight: var(--weight-semibold); }
 .dash-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 
 
@@ -1975,6 +1953,7 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --ease-standard: cubic-bezier(.2, 0, 0, 1);
   --spring-soft: linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1);
   --spring-strong: linear(0, 0.5 6%, 1.2 16%, 1.32 22%, 1.2 32%, 0.96 46%, 1.03 60%, 0.99 76%, 1);
+  
   --t-fast: 200ms;
   --t-standard: 300ms;
   --t-joy: 400ms;
@@ -2532,7 +2511,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
      Le creux : un demi-cercle de 41 px de rayon découpé dans la barre au centre de l'onglet actif (--notch-x), ses
      deux bords adoucis par un arrondi de 12 px (2026-11-05, Kevin) ; son filet suit la même forme (::after). Le rond de 56 px de l'onglet actif dépasse de 22 px
      au-dessus de la barre : --nav-spacer garde cette zone vide sous le contenu. */
-  :root { --tabbar-h: var(--nav-height); --notch-r: 41px; }
+  :root { --tabbar-h: var(--nav-height); }
   .tab-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; align-items: start; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding: var(--space-2) 0 env(safe-area-inset-bottom); }
   .tab-bar::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--surface); border-top: 1px solid var(--line); }
   .tab-bar.has-notch::before {
@@ -2589,13 +2568,12 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
    gardent leur forme. */
 :root { --control-h: 2.5rem; }
 /* Les icônes de l'iconographie posées en CSS (docs/101) : un masque, la couleur du texte. */
-:root { --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E"); --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+:root { --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
 @media (max-width: 820px) { :root { --control-h: 2.75rem; } }
 /* La hauteur de la barre du haut sur téléphone (logo, titre, boutons : --control-h et 12 px au-dessus et au-dessous),
    avec la zone de l'encoche : là où s'arrêtent les bandes collantes de l'Accueil (PR 36). */
 :root { --header-h: calc(var(--control-h) + 2 * var(--space-3) + env(safe-area-inset-top)); }
 /* Une pastille dans un rail (1.6.41) : le rail garde --control-h, la pastille la hauteur moins sa marge. */
-:root { --control-inner-h: calc(var(--control-h) - 2 * var(--space-1)); }
 button:where(.primary, .secondary, .small, :not([class])), .button-link {
   box-sizing: border-box; min-height: var(--control-h); padding-block: 0;
 }
@@ -2628,11 +2606,8 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .first-steps-dots span.current { width: 1.6rem; background: var(--accent); border-color: var(--accent); }
 /* Les lignes de liste (docs/129, Candidatures) : trois colonnes fixes (le logo, le texte, l'action),
    à la même place partout. */
-.today-sub-title { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--muted); }
 .today-rows { list-style: none; margin: 0; padding: 0; }
 .today-rows li + li { border-top: 1px solid var(--divider); }
-.rhythm-nested { display: grid; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider); }
-.rhythm-nested .rhythm-head { align-items: center; }
 @media (max-width: 820px) {
   .offers-sentence { font-size: var(--font-section); }
   .first-steps { gap: var(--space-4); }
@@ -2906,19 +2881,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Une rubrique, une carte : les cartes du contenu perdent leur cadre, les parties sont séparées
    par leur titre, pas par un filet ni par une autre carte. */
 .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-8) var(--space-8); }
-.settings-card .form-card, .settings-card .ai-spend { background: none; border: 0; border-radius: 0; padding: 0; }
 .settings-card > * + * { margin-top: 0; }
 .settings-card > * + * { padding-top: var(--space-2); }
-.settings-card fieldset { border-bottom: 0; }
-.settings-card .ai-spend { padding-top: var(--space-6); }
 /* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
-.settings-card .disclosure-body { margin-left: 0; padding-left: 0; border-left: 0; }
 /* Téléphone (docs/106, complément 0.76.1) : la ligne dépliable est la carte ; son contenu garde
    une marge égale des deux côtés, sans barre, et les parties se resserrent. */
 /* Les titres de partie ne sont pas soulignés ; la description au survol (docs/53) reste. */
-.settings-card legend .hover-note { text-decoration: none; }
 /* Un « Enregistrer » plein, collé au formulaire. */
-.settings-card .form-actions { padding-top: var(--space-4); }
 /* « Enregistré », une seconde à côté du réglage qui vient de changer. */
 /* Réglages, une carte par réglage (1.6.65, planche « 5. Réglages », inspirée de la structure des
    pages des CFF) : titre en gras, phrase dessous, contrôle à droite sur la même ligne ; les lignes
@@ -3006,7 +2975,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
    jamais en dernier ni au-dessus d'un bouton ; les parties serrées autour de leur titre. */
 /* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. */
 .settings-card.settings-card > * + * { margin-top: 0; padding-top: 0; border-top: 1px solid var(--divider); }
-.settings-card fieldset + fieldset { border-top: 1px solid var(--divider); }
 /* Deux réglages côte à côte (docs/130 §D) : pas de filet au-dessus du second, seulement au-dessus
 
 /* Fermer son compte (docs/105, complément 0.77.4) : le mot de passe sur toute la largeur. */
@@ -3018,7 +2986,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* L'aération des Réglages, comme les CFF (docs/106, complément 0.77.6) : 1,5 rem de marge dans
    la carte, 1,75 rem de chaque côté d'un filet, un titre à 0,75 rem de son contenu, des textes à
    l'interligne de 1,6. Sur téléphone, le titre de la ligne s'aligne sur son contenu. */
-.settings-card fieldset { padding: var(--space-8) 0; gap: var(--space-3); }
 .settings-card .hint { line-height: var(--leading-normal); }
 /* Une ligne sous le titre de sa partie : l'écart du titre à son contenu (0,75 rem), pas plus. */
 
@@ -3027,9 +2994,7 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
    description grise toujours visible dessous. */
 .settings-section > .section-title { margin: 0 0 var(--space-4); }
 .settings-sections > .settings-section + .settings-section { margin-top: var(--space-6); }
-.settings-card legend { font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); }
 .setting-desc { display: block; margin: 0; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-regular); }
-.settings-card legend + .setting-desc { margin-top: calc(var(--space-2) * -1); }
 /* L'interrupteur à droite, centré sur le titre et sa description. */
 /* Les jours en pastilles : de vraies cases, cachées, la pastille dit l'état. */
 .rhythm-week { display: flex; flex-wrap: nowrap; gap: var(--space-1); }
@@ -3052,23 +3017,17 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Les marqueurs (téléphone) : une rangée de pastilles collée sous la barre du haut. */
 @media (max-width: 820px) {
   .settings-card { padding: 0 var(--space-6); border-radius: var(--radius); }
-  .settings-card fieldset { padding: var(--space-6) 0; }
   .rhythm-pause { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .day-pill { transition: none; } }
 /* Les actions d'une section : des pilules bordées ; pleine largeur sur téléphone (docs/110). */
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h); padding: 0 var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-weight: var(--weight-semibold); font-size: var(--font-body); text-decoration: none; cursor: pointer; transition: border-color 150ms, color 150ms; }
 .pill:hover { border-color: var(--accent); color: var(--accent); }
-@media (max-width: 820px) {
-  .settings-card .link.danger[data-test="delete-account"] { justify-self: center; margin: var(--space-1) auto 0; display: flex; }
-}
 .choice-label { font-size: var(--font-body); color: var(--text); }
-.settings-card .ai-spend { background: var(--band); border-radius: var(--radius); padding: var(--space-4) var(--space-5); margin: 0 0 var(--space-6); }
 @media (max-width: 820px) {
   /* Les sept jours sur une ligne ; les actions en pilules sur toute la largeur. */
   .rhythm-week { gap: var(--space-1); flex-wrap: nowrap; }
   .day-pill { min-width: 0; flex: 1; padding: 0; }
-  .settings-card .form-actions > .pill { min-height: var(--control-h); }
 }
 /* Les marqueurs (docs/110, complément 0.78.1) : quand la rangée défile pour montrer le marqueur
    en cours, il garde sa marge ; un espace au bout, et un fondu sur les bords dit qu'elle défile. */
@@ -3111,7 +3070,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 
 /* --- Retours d'affichage du 2026-10-20 (0.78.3) --- */
 /* « Enregistrer » en fin de partie garde sa marge du bas : il ne touche ni le filet ni le bord. */
-.settings-card form > .form-actions:last-child { padding-bottom: var(--space-6); }
 /* « / 100 » ne se coupe pas ; « Enregistré » ou l'erreur passent sous les pastilles. */
 /* Une pilule sur une ligne, même avec l'état du téléchargement (✓ · 24 Ko). */
 .pill { white-space: nowrap; }
@@ -3386,7 +3344,6 @@ main:focus { outline: none; }
    - Les semaines du Bilan : plage, compte et état groupés à gauche, alignés d'une ligne à l'autre.
    - Les champs à la taille du contenu prévu (Baymard). */
 @media (min-width: 821px) {
-  .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
   /* Les champs du premier rendez-vous passent à la ligne dans la colonne (1.6.30) : la date à sa taille, le lieu
      30 caractères, le conseiller 20. */
   input[type="number"] { width: var(--field-5); }
@@ -3396,20 +3353,11 @@ main:focus { outline: none; }
    réglage, le titre et sa description à gauche (2/7), les contrôles dans une carte à droite (5/7). Le titre et la
    description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
 @media (min-width: 861px) {
-  .settings-card { --annotation: calc((100% - var(--space-8)) * 2 / 7 + var(--space-8)); background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
+  .settings-card { background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
   .settings-card > * + * { padding-top: 0; }
-  .settings-card .form-card fieldset { display: block; position: relative; isolation: isolate; padding: var(--space-6) 0; }
-  .settings-card .form-card fieldset::before { content: ""; position: absolute; inset: 0 0 0 var(--annotation); z-index: -1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-  .settings-card .form-card fieldset > legend { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: 0; }
-  .settings-card .form-card fieldset > legend + .setting-desc { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: var(--space-1) 0 0; }
-  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) { margin-left: calc(var(--annotation) + var(--space-6)); margin-right: var(--space-6); }
-  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) ~ :not(legend, legend + .setting-desc) { margin-top: var(--space-3); }
-  .settings-card .form-card > .form-actions { margin-left: var(--annotation); }
   /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
   .settings-card.settings-card > * + * { border-top: 0; }
-  .settings-card .form-card fieldset + fieldset { border-top: 0; margin-top: var(--space-6); }
   /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
-  .settings-card > p.hint, .settings-card .ai-spend { margin-left: var(--annotation); }
 }
 
 /* --- Contrôle segmenté (§4 « Sélection unique », D4 tranchée par Kevin le 2026-11-03 ; maquettes docs/mobile) ---
@@ -3607,8 +3555,6 @@ main:focus { outline: none; }
 .form-sheet > .hint { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); }
 .copy-text { min-width: 4.75rem; min-height: 2.75rem; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-weight: var(--weight-bold); }
 .copy-text.copy-done { background: var(--success-soft); color: var(--success); }
-.apply-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 3.5rem; padding: 0 var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); font-weight: var(--weight-semibold); text-decoration: none; }
-.apply-contact .icon { color: var(--text-secondary); }
 .prep-bar > :is(.apply-reopen, .apply-already) { align-self: center; min-height: 2.75rem; display: inline-flex; align-items: center; }
 .remind-edit { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
 .remind-edit label { display: inline-flex; align-items: center; gap: var(--space-2); }
@@ -3741,7 +3687,7 @@ main:focus { outline: none; }
 
 /* --- L'ancienne bande d'Aujourd'hui (maquette du 8 novembre), gardée pour le Bilan (.today-band) et le Suivi ORP
    (.today-orp-card, .orp-month-band) : bande --primary-soft, la carte du mois à cheval sur son bord bas. */
-.today-band { --today-17: 17px; --today-40: calc(var(--space-8) + var(--space-2)); --today-lh-title: 1.25; --today-lh-sub: 1.55; --today-lh-hand: 0;
+.today-band { 
   background: var(--primary-soft); padding: var(--space-6) var(--space-6) calc(var(--space-8) + var(--space-12)); }
 .today-band-inner { max-width: 880px; margin: 0 auto; }
 .today-orp-card {
@@ -3750,7 +3696,6 @@ main:focus { outline: none; }
   box-shadow: var(--shadow-band-card); color: var(--text); text-decoration: none;
 }
 .today-orp-card:hover { border-color: var(--primary-graphic); }
-.today-orp-rule { width: 1px; height: 64px; background: var(--surface-muted); }
 .today-orp-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
 .today-orp-card:not(:has(.today-orp-rule)) { grid-template-columns: minmax(0, 1fr) auto; }
 .orp-month-band { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
@@ -4738,8 +4683,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-logout-row .block-row-title { color: var(--logout-text); }
 .account-switch { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 /* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */
-.account-delete-card { border-color: var(--danger-line); }
-.account-delete-card .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
 .account-delete-text { color: var(--text-secondary); font-size: var(--font-small); }
 button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
 
@@ -4764,7 +4707,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   .jobs-band > .offers-page { max-width: none; padding: 0 var(--space-8); }
   .jobs-band > .jobs-body:not(.orp-page, .alerts-wide) { max-width: none; margin: 0; padding: 0 var(--space-8) var(--space-12); }
   .offers-grid, .offers-grid.has-selection {
-    --detail-pad: 32px; --detail-pad-top: 28px; --detail-radius: 24px;
     display: flex; align-items: stretch; gap: var(--space-6); height: calc(100dvh - var(--offers-top, 0px) - var(--space-6)); min-height: 20rem;
     transition: none;
   }
@@ -5148,7 +5090,7 @@ a.panel-row:hover { background: var(--band); }
 /* Mes alertes e-mail sur ordinateur (maquette du 8 novembre, AlertesOrdinateur) : 880 px ; le titre, la phrase et
    « + Ajouter une recherche » ; le bandeau pêche au bouton tonal ; la liste des recherches suivies, sans cadre par
    recherche : une carte, des lignes de 72 px séparées d'un filet. */
-.jobs-band > .jobs-body.alerts-wide { display: grid; margin-inline: auto; grid-template-columns: minmax(0, 1fr); box-sizing: content-box; padding-inline: var(--space-6); --alerts-34: 34px; --alerts-40: 40px; --alerts-17: 17px; --alerts-26: 26px; --alerts-10: 10px; --alerts-72: 72px; --alerts-3: 3px; --alerts-16: 16px; max-width: 880px; margin-inline: auto; gap: var(--space-8); padding-top: var(--space-6); padding-bottom: var(--space-12); }
+.jobs-band > .jobs-body.alerts-wide { display: grid; margin-inline: auto; grid-template-columns: minmax(0, 1fr); box-sizing: content-box; padding-inline: var(--space-6); --alerts-34: 34px; --alerts-40: 40px; --alerts-17: 17px; --alerts-26: 26px; --alerts-16: 16px; max-width: 880px; margin-inline: auto; gap: var(--space-8); padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .alerts-back-wide { --back-gap: 6px; --back-pull: 28px; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--back-gap); min-height: var(--target-min); margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--back-pull)) calc(-1 * var(--space-1)); padding: 0 var(--space-1); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
 .alerts-back-wide .icon { width: 18px; height: 18px; }
 .alerts-head-wide { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
@@ -5170,7 +5112,7 @@ a.panel-row:hover { background: var(--band); }
 
 /* Alertes e-mail sur téléphone (AlertesTel) : le retour et le titre de 26 à la place de l'en-tête ; la phrase de 16 ;
    le bandeau en colonne, bouton dessous ; lignes de 68 px ; « + Ajouter » et « Créer » en pilules de 40 px. */
-.jobs-band > .jobs-body.alerts-phone { --alerts-26: 26px; --alerts-32: 32px; --alerts-23: 23px; --alerts-68: 68px; --alerts-40: 40px; gap: var(--space-4); padding: var(--space-3) var(--space-4) var(--space-6); }
+.jobs-band > .jobs-body.alerts-phone { --alerts-26: 26px; --alerts-32: 32px; --alerts-23: 23px; --alerts-40: 40px; gap: var(--space-4); padding: var(--space-3) var(--space-4) var(--space-6); }
 @media (max-width: 820px) { :root:has(.alerts-head-phone) .topbar { display: none; } }
 .alerts-head-phone { display: flex; align-items: center; gap: var(--space-1); margin-left: calc(-1 * var(--space-2)); }
 .alerts-head-phone h1 { margin: 0; font-size: var(--alerts-26); line-height: var(--alerts-32); font-weight: var(--weight-heavy); }
@@ -5182,12 +5124,10 @@ a.panel-row:hover { background: var(--band); }
 
 /* Réglages sur ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : 880 px, le titre de 34 sans bandeau, une
    carte par section, ses réglages en lignes séparées d'un filet (D22). */
-.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; --settings-88: 88px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
+.settings-layout.settings-wide { --settings-34: 34px; --settings-40: 40px; box-sizing: content-box; max-width: 880px; padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .settings-wide-title { margin: 0 0 var(--space-8); font-size: var(--settings-34); line-height: var(--settings-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 /* MODIFICATIONS_9 §2.10 : les groupes bordés de 1,5 px (--card-line, comme les cartes du prompt du 9 novembre). */
 .settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.settings-wide .setting-card { border: 0; border-radius: 0; }
-.settings-wide .setting-card + .setting-card { border-top: 1px solid var(--line-soft); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
 /* Panneau à boutons radio (ChoicePanel, panneaux lg et tx) : sur-titre 13/16 en capitales grises, lignes de 68 px
    séparées d'un filet, cercle de 24 px (bleu plein quand il est choisi), libellé 16/22 et précision 14/20. */
