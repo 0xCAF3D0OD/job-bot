@@ -1,0 +1,1 @@
+Aujourd’hui sur ordinateur suit la maquette du 13 novembre : deux colonnes, l’accroche (justificatif en retard, objectif du mois atteint), les tâches numérotées, la barre ORP et le petit livre où l’on trie sur place ; le jour de repos garde sa planche

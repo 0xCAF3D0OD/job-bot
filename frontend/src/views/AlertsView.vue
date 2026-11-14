@@ -46,6 +46,8 @@ const nothingYet = computed(
   () => !!page.value && page.value.searches.every((s) => !s.active || s.cells.every((c) => c.status === "todo")),
 );
 const view = computed(() => (mode.value !== "auto" ? mode.value : nothingYet.value ? "wizard" : "summary"));
+// Ordinateur, rien en place et l’assistant ouvert sans site choisi : l’en-tête de AlertesOrdinateurVide.
+const deskEmpty = computed(() => !phone.value && view.value === "wizard" && nothingYet.value && !focus.value);
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
@@ -202,12 +204,26 @@ onMounted(async () => {
     </RouterLink>
     <header
       v-if="!phone && page"
-      class="alerts-head-wide"
+      :class="['alerts-head-wide', { 'alerts-head-empty': deskEmpty }]"
     >
+      <!-- Rien en place (AlertesOrdinateurVide, corrections du 13.11 au soir, §2) : Orange, 112 px de haut, à gauche
+           du titre ; la phrase dit qu’il n’y a encore aucune alerte. Plus d’illustration de l’ancienne série. -->
+      <img
+        v-if="deskEmpty"
+        class="alerts-head-orange"
+        src="/illustrations/orange-salut-112.webp"
+        srcset="/illustrations/orange-salut-112.webp 1x, /illustrations/orange-salut-224.webp 2x"
+        width="88"
+        height="112"
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        data-test="alerts-orange"
+      >
       <div>
         <h1>Mes alertes e-mail</h1>
         <p data-test="alerts-sentence">
-          {{ deskSentence }}
+          {{ deskEmpty ? "Aucune alerte pour l’instant. Crée-les une fois, les offres arrivent ensuite ici toutes seules." : deskSentence }}
         </p>
       </div>
       <button
@@ -264,10 +280,10 @@ onMounted(async () => {
         </button>
       </div>
       <template v-if="view === 'wizard'">
-        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : le logo transformé « cloche » au-dessus de
-             l’assistant, pas le personnage. -->
+        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : sur téléphone, le logo transformé « cloche »
+             au-dessus de l’assistant ; sur ordinateur, Orange est dans l’en-tête (corrections du 13.11, §2). -->
         <div
-          v-if="nothingYet && !focus"
+          v-if="phone && nothingYet && !focus"
           class="face-state alerts-empty"
           data-test="alerts-empty"
         >

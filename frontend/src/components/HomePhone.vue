@@ -264,3 +264,66 @@ function facts(offer: Offer): string[] {
     </section>
   </div>
 </template>
+
+<style>
+/* Les styles de l'Accueil du téléphone, chargés avec lui (ils étaient dans style.css) : l'ordinateur ne les reçoit pas. */
+/* --- L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile) --- */
+.home h1, .home h2 { margin: 0; font-weight: var(--weight-bold); letter-spacing: -0.03em; line-height: var(--leading-none); }
+.home-hello { display: grid; gap: var(--space-4); padding: var(--space-5) var(--space-5) var(--space-12); }
+.home-hello h1 { font-size: var(--title-hello); }
+.home-tagline { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); color: var(--text-tertiary); }
+.home-tagline s { text-decoration: line-through wavy var(--scribble) 3px; }
+.home-tagline span { color: var(--primary-text); font-size: var(--font-page); }
+.home-block { margin-top: calc(-1 * var(--radius-block)); padding: var(--space-6) var(--space-5) calc(var(--space-12) + var(--space-4)); border-radius: var(--radius-block) var(--radius-block) 0 0; }
+.home-block h2 { font-size: var(--title-block); }
+.home-orp { background: var(--primary-soft); }
+.home-offers { background: var(--peach-soft); padding-inline: 0; }
+.home-todo { background: var(--bg); padding-bottom: var(--space-6); }
+/* Les bandes qui s'empilent au défilement (prompt du 10 novembre, fin de soirée, PR 36 ; maquettes AccueilSmile et
+   AccueilSombre). ORP colle sous la barre du logo (--header-h), Offres 16 px plus bas avec une ombre vers le haut ; « À
+   faire » ne colle pas et passe par-dessus. Une bande ne colle que si elle tient dans l'écran (.home-stick, posée par
+   HomePhone.vue). Animations réduites : rien ne colle. Un lien ou un bouton qui prend le focus s'arrête sous la barre
+   et le bord des bandes empilées (WCAG 2.4.11). */
+@media (max-width: 820px) {
+  .home { --home-stack-step: var(--space-4); --home-band-shadow: 0 -10px 24px rgb(27 31 42 / 10%); }
+  .home-orp { position: relative; z-index: 1; }
+  .home-offers { position: relative; z-index: 2; }
+  .home-orp.home-stick { position: sticky; top: var(--header-h); }
+  .home-offers.home-stick { position: sticky; top: calc(var(--header-h) + var(--home-stack-step)); }
+  .home-offers, .home-todo { box-shadow: var(--home-band-shadow); }
+  .home-todo { position: relative; z-index: 3; }
+  .home :is(a, button, [tabindex]) {
+    scroll-margin-top: calc(var(--header-h) + var(--home-stack-step) + var(--space-3));
+    /* Ni sous la barre de navigation du bas (les dernières lignes de « À faire »). */
+    scroll-margin-bottom: calc(var(--tabbar-h, 0px) + var(--space-3) + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+  .home-orp.home-stick, .home-offers.home-stick { position: relative; top: auto; }
+}
+.home-orp-link { display: flex; align-items: center; gap: var(--space-5); margin-top: var(--space-4); color: var(--text); font-size: var(--font-title); font-weight: var(--weight-bold); text-decoration: none; }
+.home-orp-link > span { flex: 1; }
+.home-block-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-3) 0 var(--space-5); }
+.home-block-head a { display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); font-weight: var(--weight-bold); text-decoration: none; }
+.home-cards { display: flex; gap: var(--space-3); margin-top: var(--space-3); padding: 0 var(--space-5) var(--space-1); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--space-5); overscroll-behavior-x: contain; scrollbar-width: none; }
+.home-card { flex: none; width: 17rem; display: grid; gap: var(--space-1); align-content: start; padding: var(--space-4); scroll-snap-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
+.home-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-2); }
+.home-card-where { font-size: var(--font-small); color: var(--text-secondary); }
+.home-card-facts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.home-card-facts span { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
+.home-empty { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-4) var(--space-5) 0; color: var(--text-secondary); }
+.home-todo ul { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
+.home-todo li + li { border-top: 1px solid var(--line); }
+.home-todo a { display: flex; align-items: center; gap: var(--space-4); min-height: 4rem; color: var(--text); font-weight: var(--weight-semibold); text-decoration: none; }
+.home-todo strong { min-width: var(--space-8); font-size: var(--font-figure); color: var(--primary-text); }
+.home-todo a > span { flex: 1; }
+.home-todo .icon, .home-orp-link .icon { color: var(--text-secondary); }
+/* « Relire ton CV » (AccueilSmile, variable cvNonLu ; PR 22) : l'icône document en pêche à la place du nombre, le titre
+   de 16 gras et la ligne « Sans lui… » de 14 en pêche ; 72 de haut. */
+.home-todo a.home-todo-alert { min-height: 4.5rem; gap: 0.875em; }
+.home-todo a > .home-todo-icon { display: flex; flex: none; width: calc(var(--space-8) - 0.125rem); }
+.home-todo .home-todo-icon .icon { color: var(--peach-text); width: var(--space-6); height: var(--space-6); }
+.home-todo-title { display: block; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.home-todo-detail { display: block; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--peach-text); }
+.home-card { animation: content-in var(--t-standard) var(--ease-standard) backwards; }
+</style>

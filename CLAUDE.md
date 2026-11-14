@@ -10,4 +10,8 @@
     4. le texte des prompts, du plus récent au plus ancien.
     Un écran ou un état dessiné nulle part ne s'invente pas : s'arrêter et demander la maquette.
   - Contrôle de conformité (décidé le 2026-11-13) : toute PR qui touche l'interface est comparée, avant d'être ouverte, aux planches du paquet du 13 novembre, téléphone et ordinateur, clair et sombre. Son corps contient une section « Conformité maquette du 13.11 » qui liste les planches comparées et chaque écart restant. Un écart n'est permis que s'il s'appuie sur une ligne de docs/mobile/DECISIONS.md ou sur une planche manquante (dans ce cas, s'arrêter et la demander). Une PR déjà ouverte est vérifiée de la même façon avant sa fusion.
+  - Style ou comportement (décidé le 2026-11-14) :
+    1. Changement de style seul (couleur, taille, rayon, espacement, illustration, libellé) dessiné sur une planche : coder directement, sans inventaire préalable. La section « Conformité maquette » de la PR sert d'inventaire, avec les captures côte à côte et la liste des écarts.
+    2. Changement de comportement, de données ou de parcours (nouvelle étape, route, enregistrement, appel à l'IA, migration) : annoncer d'abord ce qui change en cinq lignes au plus, attendre l'accord de Kevin, puis coder.
+    3. Si suivre la planche ferait retirer ou modifier une fonction qui marche dans main, s'arrêter et poser la question. Ne rien retirer. La planche peut avoir tort.
 - Données des utilisateurs : toute modification qui lit, écrit, envoie, journalise ou efface une donnée d'un utilisateur suit docs/regles-securite-donnees.md. La PR cite les règles concernées (R-1). Une règle qu'on ne peut pas suivre se signale dans la PR et va dans les « Écarts connus » (§14).

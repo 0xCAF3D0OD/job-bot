@@ -376,7 +376,7 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-5: 5.5rem;
   /* 10 caractères : une date jj.mm.aaaa (planche « Formulaires »). */
   --field-10: 8rem;
-  --header-max: 84rem;
+  --header-max: 83rem;
 }
 /* Entre deux paragraphes de texte courant : deux fois la taille du texte (§4, Aération). */
 p + p { margin-block-start: var(--paragraph-gap); }
@@ -2004,7 +2004,7 @@ button .hover-note { text-decoration: none; cursor: inherit; }
    gris du chargement aussi. `backwards` : une fois fini, l'animation ne tient plus la transformation (l'appui et
    le survol gardent la leur). Rien quand l'appareil demande moins d'animations (les durées passent à 0). */
 @keyframes content-in { from { opacity: 0; transform: translateY(6px); } }
-#contenu > *, .jobs-band > *, :is(.grouped, .dash-card, .form-card, .settings-card, .offer-line, .home-card) {
+#contenu > *, .jobs-band > *, :is(.grouped, .dash-card, .form-card, .settings-card, .offer-line) {
   animation: content-in var(--t-standard) var(--ease-standard) backwards;
 }
 
@@ -3455,17 +3455,21 @@ main:focus { outline: none; }
    sans accent ; l'actif garde sa pastille. Rien ne glisse (Apple HIG : pas de mouvement sur une interaction
    fréquente). L'en-tête garde 73 px : --control-h + 2 × --space-4 et la ligne du bas. */
 @media (min-width: 821px) {
-  .topbar-inner { padding-block: 0; height: calc(var(--control-h) + 2 * var(--space-4)); }
+  /* Planches ordinateur du 13 novembre (en-tête commun) : 1280 px de contenu (--header-max moins les marges), 76 px de
+     haut, logo 20 px très gras, onglets de 44 px à 4 px l'un de l'autre, 16 px de marge, texte 16 en 500 (actif en
+     700, --primary-text sur --primary-soft). */
+  .topbar-inner { --nav-500: 500; --brand-20: 1.25rem; padding-block: 0; height: calc(var(--target-min) + 2 * var(--space-4)); }
+  .topbar .brand { font-size: var(--brand-20); font-weight: var(--weight-heavy); }
   .topbar nav.main-nav { align-self: stretch; display: flex; justify-content: center; }
-  .topbar .nav { height: 100%; align-items: center; gap: var(--space-2); }
+  .topbar .nav { height: 100%; align-items: center; gap: var(--space-1); }
   .topbar .nav li { display: flex; }
   .topbar .nav a {
-    display: inline-flex; align-items: center; box-sizing: border-box; height: var(--control-h); padding: 0 var(--space-5);
-    border: 0; border-radius: var(--radius-pill); color: var(--muted); font-weight: var(--weight-regular); transition: background-color 150ms;
+    display: inline-flex; align-items: center; box-sizing: border-box; height: var(--target-min); padding: 0 var(--space-4);
+    border: 0; border-radius: var(--radius-pill); color: var(--text); font-size: var(--font-body); font-weight: var(--nav-500); transition: background-color 150ms;
   }
   .topbar .nav a .with-icon { gap: var(--space-2); }
   .topbar .nav a:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
-  .topbar .nav a.router-link-active { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
+  .topbar .nav a.router-link-active { background: var(--primary-soft); color: var(--primary-text); font-weight: var(--weight-bold); }
   .topbar .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   /* La ligne du bas : absente en haut de page, elle revient quand le contenu défile dessous (§6). */
   .topbar { border-bottom-color: transparent; transition: border-bottom-color 250ms; }
@@ -3741,11 +3745,6 @@ main:focus { outline: none; }
 .today-band { --today-17: 17px; --today-40: calc(var(--space-8) + var(--space-2)); --today-lh-title: 1.25; --today-lh-sub: 1.55; --today-lh-hand: 0;
   background: var(--primary-soft); padding: var(--space-6) var(--space-6) calc(var(--space-8) + var(--space-12)); }
 .today-band-inner { max-width: 880px; margin: 0 auto; }
-.today-eyebrow { margin: 0; font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
-.today-title { margin: var(--space-2) 0 0; font-size: var(--font-page); font-weight: var(--weight-heavy); line-height: var(--today-lh-title); letter-spacing: -0.4px; color: var(--text); }
-.today-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: var(--today-lh-hand); letter-spacing: 0; color: var(--primary-graphic); }
-.today-band-sub { margin: var(--space-3) 0 0; font-size: var(--font-title); line-height: var(--today-lh-sub); color: var(--text-tertiary); }
-.today-page { --today-17: 17px; --today-28: 28px; display: flex; flex-direction: column; gap: calc(var(--space-8) + var(--space-2)); max-width: 880px; margin: 0 auto; padding: 0 var(--space-6) var(--space-12); box-sizing: content-box; }
 .today-orp-card {
   margin-top: calc(-1 * var(--space-12)); display: grid; grid-template-columns: minmax(0, 1fr) 1px auto auto; align-items: center; gap: var(--today-28);
   padding: var(--space-4) var(--space-6); background: var(--surface); border: 1px solid var(--water); border-radius: var(--radius-card);
@@ -3771,27 +3770,6 @@ main:focus { outline: none; }
 .rhythm-band-dot { display: grid; place-items: center; width: 34px; height: 34px; box-sizing: border-box; border: 2px solid var(--field-border); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .rhythm-band-days li.rest .rhythm-band-dot { border-style: dashed; }
 .rhythm-band-days li.sent .rhythm-band-dot { background: var(--primary-graphic); border-color: var(--primary-graphic); color: var(--on-primary); }
-.today-page .today-section { display: flex; flex-direction: column; gap: var(--space-3); }
-.today-page .today-section > h2 { margin: 0 var(--space-1); font-size: var(--font-title); font-weight: var(--weight-bold); }
-.today-page .today-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.today-task {
-  --tone: var(--primary-graphic); --tone-text: var(--primary-text);
-  display: flex; align-items: center; gap: var(--space-4); min-height: 88px; box-sizing: border-box; padding: var(--space-4) var(--space-5);
-  background: var(--surface); border: 0; border-radius: var(--radius-card); color: var(--text); text-decoration: none;
-}
-/* Sous la bande, le fond crème de la page (MODIFICATIONS_9 §1 « Crème #F7F5F0 partout », AujourdhuiOrdinateurTravailD) ;
-   cartes blanches sans bordure ; l'action est le mot dans la couleur du ton, puis le cercle gris D29 de 40 px, 12 px
-   entre les deux. */
-.today-page-bg { background: var(--bg); }
-.today-task.tone-late { --tone: var(--peach-text); --tone-text: var(--peach-text); }
-.today-task.tone-interview { --tone: var(--success); --tone-text: var(--success); }
-.today-task-icon { flex: none; width: 24px; height: 24px; color: var(--tone); }
-.today-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.today-task-main strong { font-size: var(--today-17); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
-.today-task-main span { font-size: var(--font-small); color: var(--text-secondary); overflow-wrap: anywhere; }
-.today-task.tone-late .today-task-main span { color: var(--peach-text); font-weight: var(--weight-semibold); }
-.today-task-action { flex: none; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
-.today-page .today-welcome, .today-page .first-steps { margin: 0; }
 /* --- Bilan sur ordinateur (maquette du 8 novembre, BilanOrdinateur) ---
    La bande d'Aujourd'hui : « Bilan » à gauche, les onglets à droite ; la carte du mois à cheval ; des sections en
    lignes séparées par un trait, dans une carte blanche ; écart 32 entre les blocs. */
@@ -4038,9 +4016,11 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
    le menu principal reste centré (trois colonnes, les deux côtés égaux). Les résultats dans un
    panneau de 560 px, aligné sur le bord droit du champ. Écran étroit : la loupe, puis le plein écran. */
 @media (min-width: 1100px) {
-  .topbar-inner { grid-template-columns: 1fr auto 1fr; }
+  /* Planches ordinateur du 13 novembre : le menu collé au logo, 32 px après lui, les outils à droite. */
+  .topbar-inner { grid-template-columns: auto auto minmax(0, 1fr) auto; column-gap: var(--space-8); }
   .topbar-inner > .brand { justify-self: start; }
-  .topbar-actions { justify-self: end; }
+  .topbar nav.main-nav { justify-content: flex-start; }
+  .topbar-actions { grid-column: 4; justify-self: end; }
 }
 .global-search { position: relative; }
 .global-search-box:not(.sheet) { position: relative; }
@@ -4539,42 +4519,6 @@ html.search-open { overflow: hidden; }
 }
 @media (max-width: 599px) { .milestones-table :is(th, td):not(:first-child):not(:last-child) { padding-inline: var(--space-2); } }
 
-/* --- L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile) --- */
-.home h1, .home h2 { margin: 0; font-weight: var(--weight-bold); letter-spacing: -0.03em; line-height: var(--leading-none); }
-.home-hello { display: grid; gap: var(--space-4); padding: var(--space-5) var(--space-5) var(--space-12); }
-.home-hello h1 { font-size: var(--title-hello); }
-.home-tagline { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); color: var(--text-tertiary); }
-.home-tagline s { text-decoration: line-through wavy var(--scribble) 3px; }
-.home-tagline span { color: var(--primary-text); font-size: var(--font-page); }
-.home-block { margin-top: calc(-1 * var(--radius-block)); padding: var(--space-6) var(--space-5) calc(var(--space-12) + var(--space-4)); border-radius: var(--radius-block) var(--radius-block) 0 0; }
-.home-block h2 { font-size: var(--title-block); }
-.home-orp { background: var(--primary-soft); }
-.home-offers { background: var(--peach-soft); padding-inline: 0; }
-.home-todo { background: var(--bg); padding-bottom: var(--space-6); }
-/* Les bandes qui s'empilent au défilement (prompt du 10 novembre, fin de soirée, PR 36 ; maquettes AccueilSmile et
-   AccueilSombre). ORP colle sous la barre du logo (--header-h), Offres 16 px plus bas avec une ombre vers le haut ; « À
-   faire » ne colle pas et passe par-dessus. Une bande ne colle que si elle tient dans l'écran (.home-stick, posée par
-   HomePhone.vue). Animations réduites : rien ne colle. Un lien ou un bouton qui prend le focus s'arrête sous la barre
-   et le bord des bandes empilées (WCAG 2.4.11). */
-@media (max-width: 820px) {
-  .home { --home-stack-step: var(--space-4); --home-band-shadow: 0 -10px 24px rgb(27 31 42 / 10%); }
-  .home-orp { position: relative; z-index: 1; }
-  .home-offers { position: relative; z-index: 2; }
-  .home-orp.home-stick { position: sticky; top: var(--header-h); }
-  .home-offers.home-stick { position: sticky; top: calc(var(--header-h) + var(--home-stack-step)); }
-  .home-offers, .home-todo { box-shadow: var(--home-band-shadow); }
-  .home-todo { position: relative; z-index: 3; }
-  .home :is(a, button, [tabindex]) {
-    scroll-margin-top: calc(var(--header-h) + var(--home-stack-step) + var(--space-3));
-    /* Ni sous la barre de navigation du bas (les dernières lignes de « À faire »). */
-    scroll-margin-bottom: calc(var(--tabbar-h, 0px) + var(--space-3) + env(safe-area-inset-bottom));
-  }
-}
-@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
-  .home-orp.home-stick, .home-offers.home-stick { position: relative; top: auto; }
-}
-.home-orp-link { display: flex; align-items: center; gap: var(--space-5); margin-top: var(--space-4); color: var(--text); font-size: var(--font-title); font-weight: var(--weight-bold); text-decoration: none; }
-.home-orp-link > span { flex: 1; }
 .liquid-circle { flex: none; }
 .liquid-circle-bg { fill: var(--surface); }
 .liquid-circle-ring { fill: none; stroke: var(--primary-graphic); stroke-width: 3.5; }
@@ -4631,28 +4575,8 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .orp-page .add-application { justify-self: start; }
 .orp-rows button.orp-row:hover { background: var(--accent-soft); }
 @media (max-width: 820px) { :root:has(.orp-page-head) .topbar { display: none; } }
-.home-block-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-3) 0 var(--space-5); }
-.home-block-head a { display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); font-weight: var(--weight-bold); text-decoration: none; }
-.home-cards { display: flex; gap: var(--space-3); margin-top: var(--space-3); padding: 0 var(--space-5) var(--space-1); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--space-5); overscroll-behavior-x: contain; scrollbar-width: none; }
-.home-card { flex: none; width: 17rem; display: grid; gap: var(--space-1); align-content: start; padding: var(--space-4); scroll-snap-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
-.home-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-2); }
-.home-card-where { font-size: var(--font-small); color: var(--text-secondary); }
-.home-card-facts, .offer-facts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
-.home-card-facts span, .offer-facts span { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
-.home-empty { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-4) var(--space-5) 0; color: var(--text-secondary); }
-.home-todo ul { margin: var(--space-4) 0 0; padding: 0; list-style: none; }
-.home-todo li + li { border-top: 1px solid var(--line); }
-.home-todo a { display: flex; align-items: center; gap: var(--space-4); min-height: 4rem; color: var(--text); font-weight: var(--weight-semibold); text-decoration: none; }
-.home-todo strong { min-width: var(--space-8); font-size: var(--font-figure); color: var(--primary-text); }
-.home-todo a > span { flex: 1; }
-.home-todo .icon, .home-orp-link .icon { color: var(--text-secondary); }
-/* « Relire ton CV » (AccueilSmile, variable cvNonLu ; PR 22) : l'icône document en pêche à la place du nombre, le titre
-   de 16 gras et la ligne « Sans lui… » de 14 en pêche ; 72 de haut. */
-.home-todo a.home-todo-alert { min-height: 4.5rem; gap: 0.875em; }
-.home-todo a > .home-todo-icon { display: flex; flex: none; width: calc(var(--space-8) - 0.125rem); }
-.home-todo .home-todo-icon .icon { color: var(--peach-text); width: var(--space-6); height: var(--space-6); }
-.home-todo-title { display: block; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.home-todo-detail { display: block; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--peach-text); }
+.offer-facts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.offer-facts span { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
 .score-ring-worded { display: inline-grid; justify-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--ring-text, var(--ok-text)); }
 .score-ring-worded.very-close, .score-ring-worded.close { --ring-text: var(--ok-text); }
 .score-ring-worded.dig { --ring-text: var(--score-dig); }
@@ -4995,10 +4919,12 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 /* CalendarDate (D26) : l'icône calendrier qui contient la date. */
 .calendar-date { flex: none; --cal-tone: var(--primary-graphic); --cal-day: var(--text); }
 .calendar-date-orp { --cal-tone: var(--warning); }
-.calendar-date-past { --cal-tone: var(--field-border); --cal-day: var(--text-secondary); }
+/* Passé : le cadre et les traits en --field-border (#8C8478, permis pour les traits), le mois écrit en
+   --text-secondary comme le jour (#596070, #ABA398 en sombre : corrections du 13.11, §3, pas de #8C8478 en texte). */
+.calendar-date-past { --cal-tone: var(--field-border); --cal-month: var(--text-secondary); --cal-day: var(--text-secondary); }
 .calendar-date-frame { fill: var(--surface); stroke: var(--cal-tone); }
 .calendar-date-line { stroke: var(--cal-tone); fill: none; }
-.calendar-date-month { fill: var(--cal-tone); font-family: inherit; }
+.calendar-date-month { fill: var(--cal-month, var(--cal-tone)); font-family: inherit; }
 .calendar-date-day { fill: var(--cal-day); font-family: inherit; }
 
 /* DateTimeField : les pilules date et heure. */
@@ -5264,6 +5190,10 @@ a.panel-row:hover { background: var(--band); }
 .alerts-head-wide h1 { margin: 0; font-size: var(--alerts-34); line-height: var(--alerts-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
 .alerts-head-wide button { flex: none; white-space: nowrap; }
+/* AlertesOrdinateurVide (corrections du 13.11, §2) : Orange en bas à gauche du titre (112 px, 4 px vers la droite,
+   descendu de 4 px comme sur la planche), puis 24 px jusqu'à la suite. */
+.alerts-head-empty { justify-content: flex-start; margin-bottom: var(--space-6); }
+.alerts-head-orange { flex: none; width: auto; height: 112px; margin: 0 var(--space-1) calc(-1 * var(--space-1)) 0; }
 .alerts-banner { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--alerts-16); }
 .alerts-banner > .icon { flex: none; width: 1.5rem; height: 1.5rem; color: var(--peach-text); }
 .alerts-banner-text { display: grid; flex: 1; min-width: 0; }
@@ -5377,6 +5307,11 @@ html.text-large { font-size: 125%; }
 .notifications-families .block-row { margin: 0; }
 .notifications-page:not(.notifications-wide) .notifications-settings { min-height: var(--btn-tertiary); color: var(--primary-text); font-size: var(--font-label); }
 .notifications-perso { --perso-shadow: color-mix(in srgb, var(--text) 10%, transparent); --perso-shadow-lift: -6px; display: flex; flex-direction: column; align-items: center; }
+/* Le Sourire de « Tout est lu » (corrections du 13.11, §7) : 140 px de haut ; en sombre, un liseré clair (--text,
+   #F3EEE6) deux fois, pour que le trait foncé du personnage se détache du fond. */
+.notifications-sourire { display: block; width: auto; height: 140px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); } }
+:root[data-theme="dark"] .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); }
 .notifications-perso-shadow { position: relative; top: var(--perso-shadow-lift); width: 120px; height: 12px; border-radius: 50%; background: var(--perso-shadow); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); } }
 :root[data-theme="dark"] .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); }
