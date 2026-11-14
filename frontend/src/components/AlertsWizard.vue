@@ -2,8 +2,8 @@
 import { computed, nextTick, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import AlertSiteSteps from "./AlertSiteSteps.vue";
 import AppIcon from "./AppIcon.vue";
-import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 import MailboxAddress from "./MailboxAddress.vue";
@@ -142,6 +142,15 @@ const panelSearch = computed(() =>
 // Sur ordinateur, l'étape 1 reste affichée derrière le panneau de l'étape 2.
 const shownStep = computed(() => (props.desk && step.value === 2 ? 1 : step.value));
 const panelLinks = computed(() => searches.value.filter((s) => cellUrl(s.id)));
+// Les liens du panneau pour AlertSiteSteps : un par recherche, puis ceux du télétravail.
+const panelSiteLinks = computed(() => {
+  const name = site.value?.name ?? "";
+  const many = panelLinks.value.length > 1;
+  return [
+    ...panelLinks.value.map((search) => ({ key: `search-${search.id}`, url: cellUrl(search.id)!, label: `Ouvrir ${name}${many ? ` : ${search.terms}` : ""}` })),
+    ...remoteLinks.value.map((link) => ({ key: `remote-${link.terms}`, url: link.url, label: `Ouvrir ${name} en télétravail${many ? ` : ${link.terms}` : ""}` })),
+  ];
+});
 
 // Ouvrir un site copie l'adresse d'avance (docs/121 §B.2) : il ne reste qu'à la coller.
 const copiedOnOpen = ref(false);
@@ -350,86 +359,13 @@ function copyOnOpen(): void {
         />
       </ol>
     </template>
-    <p
-      class="alert-site-search"
-      data-test="alert-site-search"
-    >
-      Recherche : <b>{{ panelSearch }}</b>
-    </p>
-    <ol class="alert-site-steps">
-      <li>
-        <span
-          class="alert-site-num"
-          aria-hidden="true"
-        >1</span>
-        <div>
-          <b class="alert-site-step-title">Ouvre {{ site.name }} avec ta recherche</b>
-          <div class="alert-site-links">
-            <a
-              v-for="search in panelLinks"
-              :key="search.id"
-              :href="cellUrl(search.id)!"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="alert-site-open"
-              data-test="wizard-open"
-              @click="copyOnOpen"
-            >Ouvrir {{ site.name }}<template v-if="panelLinks.length > 1"> : {{ search.terms }}</template><AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
-            <a
-              v-for="link in remoteLinks"
-              :key="link.terms"
-              :href="link.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="alert-site-open"
-              data-test="wizard-open-remote"
-              @click="copyOnOpen"
-            >Ouvrir {{ site.name }} en télétravail<template v-if="panelLinks.length > 1"> : {{ link.terms }}</template><AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
-          </div>
-        </div>
-      </li>
-      <li v-if="page.mailbox">
-        <span
-          class="alert-site-num"
-          aria-hidden="true"
-        >2</span>
-        <div>
-          <b class="alert-site-step-title">Mets cette adresse comme destinataire</b>
-          <p class="alert-site-help">
-            Elle est déjà copiée quand tu ouvres le site : colle-la dans le champ e-mail de l’alerte.
-          </p>
-          <div class="alert-site-address">
-            <span data-test="wizard-address">{{ page.mailbox }}</span>
-            <CopyButton
-              :value="page.mailbox"
-              label="Copier l’adresse"
-              test-id="alert-site-copy"
-              :announce="false"
-              @copied="copiedOnOpen = true"
-            />
-          </div>
-          <p
-            class="alert-site-copied"
-            role="status"
-            data-test="alert-site-copied"
-          >
-            {{ copiedOnOpen ? "Adresse copiée" : "" }}
-          </p>
-        </div>
-      </li>
-      <li>
-        <span
-          class="alert-site-num"
-          aria-hidden="true"
-        >{{ page.mailbox ? 3 : 2 }}</span>
-        <div>
-          <b class="alert-site-step-title">Enregistre l’alerte sur {{ site.name }}, puis reviens ici</b>
-          <p class="alert-site-help">
-            La première alerte arrive souvent dès le lendemain.
-          </p>
-        </div>
-      </li>
-    </ol>
+    <AlertSiteSteps
+      :key="site.slug"
+      :site-name="site.name"
+      :search-label="panelSearch"
+      :links="panelSiteLinks"
+      :mailbox="page.mailbox"
+    />
     <template #footer>
       <button
         type="button"
@@ -458,24 +394,7 @@ function copyOnOpen(): void {
 .alert-site-progress li { flex: 1; height: 4px; border-radius: var(--radius-pill); background: var(--line-strong); }
 .alert-site-progress li.done { background: var(--primary-graphic); }
 /* Interligne de 22 px et décalage du titre d'étape (5 px, centré sur le rond de 32 px) : valeurs de la planche. */
-.alert-site-panel { --as-22: 22px; --as-step-top: 5px; }
 .alert-site-panel .side-panel-body { display: block; padding-top: var(--space-1); }
-.alert-site-search { margin: 0 0 var(--space-4); font-size: var(--font-label); line-height: var(--as-22); color: var(--text-lead); }
-.alert-site-steps { margin: 0; padding: 0; list-style: none; }
-.alert-site-steps > li { display: flex; gap: var(--space-4); padding: var(--space-5) 0; border-top: 1px solid var(--line); }
-.alert-site-steps > li > div { flex: 1; min-width: 0; }
-.alert-site-num { flex: none; width: 32px; height: 32px; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-heavy); display: flex; align-items: center; justify-content: center; }
-.alert-site-step-title { display: block; font-size: var(--font-body); line-height: var(--as-22); padding-top: var(--as-step-top); }
-.alert-site-help { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.alert-site-links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.alert-site-open { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
-.alert-site-open:hover { background: var(--primary-soft); color: var(--primary-text); }
-.alert-site-address { display: flex; align-items: center; gap: var(--space-2); height: 48px; margin-top: var(--space-3); padding: 0 1px 0 var(--space-5); box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); }
-.alert-site-address > span { flex: 1; min-width: 0; font-size: var(--font-label); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* 44 × 44 px dans le champ de 48 px (décision de Kevin du 13.11 ; la planche dit 40). */
-.alert-site-address .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: 0; background: var(--primary-soft); color: var(--primary-text); }
-.alert-site-copied { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--success); }
-.alert-site-copied:empty { margin: 0; }
 /* La croix de la planche : 24 px, trait 2,2, couleur du texte. */
 .alert-site-panel .side-panel-close { color: var(--text); }
 .alert-site-panel .side-panel-close .icon { width: 24px; height: 24px; stroke-width: 2.2; }

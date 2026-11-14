@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
-import { api, QUIET, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
+import { api, QUIET, type AlertsPage, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
+import AlertSiteSteps from "../components/AlertSiteSteps.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -28,12 +29,15 @@ import { whyLine } from "../whyLine";
 // 1. La page bleue : « Moins chercher plus vivre. ».
 // 2. Le CV : lu par l'IA quand elle est branchée (sans les coordonnées, llm/redact.py) ; ses compétences.
 // 3. Les critères : postes en puces (pré-remplis par le CV), lieux en puces, l'ORP et ses recherches par mois.
-// 4. Le tri : jusqu'à 3 offres déjà notées, à garder ou écarter ; sinon, directement « Tout est prêt. ».
+// 4. L'alerte (corrections du 13.11 au soir, §1 ; décisions de Kevin du 14.11) : une alerte jobup pour la première
+//    recherche enregistrée, en trois étapes ; « J'ai créé l'alerte » la note créée, « Plus tard » passe. Rouverte
+//    depuis la carte Premiers pas d'Aujourd'hui (`?etape=alerte`), ses boutons y ramènent.
+// 5. Le tri : jusqu'à 3 offres déjà notées, à garder ou écarter ; sinon, directement « Tout est prêt. ».
 // Ce qui n'est plus demandé prend une valeur par défaut (O1), rappelée en une ligne à la fin, modifiable dans
 // Compte : taux peu importe, langues du CV (sinon le français), télétravail accepté, remise le 5, téléphone
 // désactivé.
 type Understanding = components["schemas"]["Understanding"];
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3 | 4;
 const MAX_ROLES = 3;
 const DUE_DAY = 5;
 // Le gribouillis qui barre le premier mot de chaque titre : le tracé de la maquette (comme « C'est fait ! »).
@@ -44,10 +48,12 @@ const TITLES: { lead: string; struck: string; hand: string }[] = [
   { lead: "Moins", struck: "chercher", hand: "plus vivre." },
   { lead: "", struck: "Tout réécrire", hand: "Ton CV suffit." },
   { lead: "", struck: "Toutes les offres", hand: "Juste les tiennes." },
+  { lead: "", struck: "Chercher", hand: "Recevoir." },
   { lead: "Lire", struck: "312 offres", hand: "En trier 3." },
 ];
 
-// Ordinateur dès 1 024 px (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur… du 9 novembre) : trois étapes sur la
+// Ordinateur dès 1 024 px (MODIFICATIONS_9 §5, maquettes OnboardingOrdinateur… du 9 novembre ; 4 étapes depuis
+// OnboardingOrdinateurAlerte, corrections du 13.11) : les étapes sur la
 // grille commune (1 080 px, 640 + 80 + 360), une scène par étape à droite, plus de « Passer » ; la lecture du CV ne
 // bloque pas l'écran.
 const { phone } = usePhone();
@@ -55,6 +61,7 @@ const { phone: wideQuery } = usePhone("(min-width: 1024px)");
 const desk = computed(() => wideQuery.value && !phone.value);
 
 const router = useRouter();
+const route = useRoute();
 const { me } = useAuth();
 const assistant = useAssistant();
 
@@ -112,13 +119,29 @@ const fromCv = computed(() => !!understanding.value && (understanding.value.role
 const cvUnread = computed(() => !!cvName.value && !reading.value && !paused.value && !understanding.value);
 const rateFromCv = computed(() => !!understanding.value?.min_rate && rate.value === understanding.value.min_rate);
 
-// Étape 4, le tri.
+// Étape 4, l'alerte jobup : la première recherche enregistrée (pas une recherche écrite en dur) et l'adresse jobA1.
+const ALERT_SITE = "jobup";
+const alerts = ref<AlertsPage | null>(null);
+const alertBusy = ref(false);
+// Rouverte depuis la carte Premiers pas d'Aujourd'hui : « Retour », « Plus tard » et « J'ai créé l'alerte » y ramènent.
+const fromToday = route?.query.etape === "alerte";
+const alertSearch = computed(() => alerts.value?.searches.find((s) => s.active) ?? null);
+const alertSiteName = computed(() => alerts.value?.sites.find((site) => site.slug === ALERT_SITE)?.name ?? "jobup");
+const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.url ?? null);
+const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
+const alertLinks = computed(() => (alertUrl.value ? [{ key: "jobup", url: alertUrl.value, label: `Ouvrir ${alertSiteName.value}` }] : []));
+async function loadAlerts(): Promise<void> {
+  const { data } = await api.GET("/api/alert-searches");
+  if (data) alerts.value = data;
+}
+
+// Étape 5, le tri.
 const offers = ref<Offer[]>([]);
 const position = ref(0);
 const kept = ref(0);
 const dismissed = ref(0);
 const deciding = ref(false);
-const sorting = computed(() => step.value === 3 && position.value < offers.value.length);
+const sorting = computed(() => step.value === 4 && position.value < offers.value.length);
 const current = computed(() => offers.value[position.value] ?? null);
 
 function focusTitle(el: Element): void {
@@ -148,16 +171,21 @@ onMounted(async () => {
     picked.value = [...roles.value];
     if (state.data.goal === "job") orp.value = false;
     // Reprendre là où on s'était arrêté, sans revenir au tri (il se recharge à l'étape 3).
-    if (state.data.status !== "done") step.value = Math.max(0, Math.min(state.data.step - 1, 2)) as Step;
+    // Une personne arrêtée au tri (étape 4 avant l'alerte, 5 depuis) reprend à l'alerte, qui y mène.
+    if (state.data.status !== "done") step.value = Math.max(0, Math.min(state.data.step - 1, 3)) as Step;
   }
   // Sur ordinateur, la page bleue n'existe pas : on commence au CV.
   if (desk.value && step.value === 0) step.value = 1;
+  if (fromToday) step.value = 3;
+  if (step.value === 3) await loadAlerts();
   loaded.value = true;
 });
 
 function go(next: Step): void {
   step.value = next;
   void remember({ step: next + 1 });
+  // Retour du tri vers l'alerte : la recherche et l'adresse sont relues si elles manquent.
+  if (next === 3 && !alerts.value) void loadAlerts();
 }
 
 async function onCv(event: Event): Promise<void> {
@@ -283,7 +311,7 @@ const readState = computed<"reading" | "paused" | "done" | "">(() =>
 // La scène de la colonne de droite (MODIFICATIONS_9 §6) : une par étape, et par état de la lecture à l'étape 1.
 const scene = computed<SceneName>(() => {
   if (step.value === 2) return "lieux-carte";
-  if (step.value === 3) return "reussite";
+  if (step.value === 4) return "reussite";
   if (readState.value === "paused") return "connexion-perdue";
   if (readState.value === "reading") return "lecture-calme";
   if (readState.value === "done") return "formations-vide";
@@ -353,7 +381,9 @@ function addRole(): void {
 // Les langues que le CV mentionne : « Courant » au départ, à corriger à l'étape 2 (PR 17).
 const cvLanguages = computed(() => understanding.value?.languages ?? []);
 
-// « Voir mes offres » : les critères, les réglages et les postes partent ensemble, avec les valeurs par défaut.
+// « Continuer » (« Voir mes offres » avant l'étape de l'alerte) : les critères, les réglages et les postes partent
+// ensemble, avec les valeurs par défaut ; puis l'alerte, une fois tout enregistré (les recherches proposées en
+// découlent).
 // Un poste tapé sans le « + » compte aussi : le bouton bleu est celui qu'on presse (2026-11-05, Kevin).
 async function confirmCriteria(): Promise<void> {
   if (newRole.value.trim()) addRole();
@@ -367,14 +397,40 @@ async function confirmCriteria(): Promise<void> {
       // « Non renseigné » n'écarte jamais une offre (PR 17) : plus de langue écartée d'office.
       language_levels: levelsForm.value?.levels ?? languageLevels.value ?? criteria.value.language_levels ?? {},
     };
-    void api.PUT("/api/criteria", { body: criteria.value });
   }
+  const saving: Promise<unknown>[] = [];
+  if (criteria.value) saving.push(api.PUT("/api/criteria", { body: criteria.value }));
   if (settings.value) {
     settings.value = { ...settings.value, orp_monthly_target: orp.value ? target.value : null, orp_due_day: DUE_DAY };
-    void api.PUT("/api/settings", { body: settings.value });
+    saving.push(api.PUT("/api/settings", { body: settings.value }));
   }
+  saving.push(remember({ step: 4, goal: orp.value ? "orp" : "job", roles: picked.value, ...(picked.value[0] ? { trade: picked.value[0] } : {}) }));
   step.value = 3;
-  void remember({ step: 4, goal: orp.value ? "orp" : "job", roles: picked.value, ...(picked.value[0] ? { trade: picked.value[0] } : {}) });
+  await Promise.all(saving);
+  await loadAlerts();
+}
+
+// « J'ai créé l'alerte » : jobup noté créé pour la première recherche, comme dans Mes alertes ; « Plus tard » ne note
+// rien. Les deux mènent aux premières offres, ou à Aujourd'hui quand l'étape a été rouverte de là.
+async function alertDone(): Promise<void> {
+  const search = alertSearch.value;
+  if (search && !alertBusy.value) {
+    alertBusy.value = true;
+    try {
+      await api.PUT("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: search.id, site: ALERT_SITE } } });
+    } finally {
+      alertBusy.value = false;
+    }
+  }
+  await afterAlert();
+}
+async function afterAlert(): Promise<void> {
+  if (fromToday) {
+    await router.replace("/aujourdhui");
+    return;
+  }
+  step.value = 4;
+  void remember({ step: 5 });
   const { data } = await api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
   offers.value = (data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined).slice(0, 3);
 }
@@ -444,7 +500,7 @@ async function undoOffer(offer: Offer): Promise<void> {
 }
 const initials = (name: string | null | undefined): string =>
   (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
-const DESK_EYEBROWS: Record<number, string> = { 1: "Premiers pas", 2: "Ce que tu cherches", 3: "Tes premières offres" };
+const DESK_EYEBROWS: Record<number, string> = { 1: "Premiers pas", 2: "Ce que tu cherches", 3: "Tes prochaines offres", 4: "Tes premières offres" };
 
 async function undoDismiss(): Promise<void> {
   const last = undo.value;
@@ -544,18 +600,18 @@ async function finish(to: string): Promise<void> {
       <span
         class="wdk-step"
         data-test="welcome-eyebrow"
-      >Étape {{ step }} sur 3</span>
+      >Étape {{ step }} sur 4</span>
       <span
         class="wdk-bars"
         role="progressbar"
-        :aria-label="`Étape ${step} sur 3`"
+        :aria-label="`Étape ${step} sur 4`"
         aria-valuemin="1"
-        aria-valuemax="3"
+        aria-valuemax="4"
         :aria-valuenow="step"
         data-test="welcome-dots"
       >
         <span
-          v-for="i in 3"
+          v-for="i in 4"
           :key="i"
           :class="{ on: i <= step, current: i === step }"
         />
@@ -586,6 +642,12 @@ async function finish(to: string): Promise<void> {
             class="wdk-title"
           >
             Tes critères
+          </h1>
+          <h1
+            v-else-if="step === 3"
+            class="wdk-title"
+          >
+            Une alerte, et elles arrivent seules
           </h1>
           <h1
             v-else
@@ -970,6 +1032,54 @@ async function finish(to: string): Promise<void> {
             </SidePanel>
           </template>
 
+          <template v-else-if="step === 3">
+            <p class="wdk-lead">
+              {{ alertSiteName }} t’envoie ses nouvelles offres par e-mail, jobA1 les trie pour toi chaque matin. Environ 2
+              minutes.
+            </p>
+            <div
+              class="wdk-card wdk-alert"
+              data-test="welcome-alert"
+            >
+              <AlertSiteSteps
+                v-if="alerts"
+                :site-name="alertSiteName"
+                :search-label="alertLabel"
+                :links="alertLinks"
+                :mailbox="alerts.mailbox"
+              />
+            </div>
+            <div class="wdk-foot">
+              <button
+                type="button"
+                class="secondary wdk-back"
+                data-test="welcome-back"
+                @click="fromToday ? router.replace('/aujourdhui') : go(2)"
+              >
+                Retour
+              </button>
+              <span class="wdk-foot-end">
+                <button
+                  type="button"
+                  class="wdk-link"
+                  data-test="welcome-alert-later"
+                  @click="afterAlert"
+                >
+                  Plus tard
+                </button>
+                <button
+                  type="button"
+                  class="primary wdk-cta"
+                  :disabled="alertBusy"
+                  data-test="welcome-alert-done"
+                  @click="alertDone"
+                >
+                  J’ai créé l’alerte
+                </button>
+              </span>
+            </div>
+          </template>
+
           <template v-else>
             <p class="wdk-lead">
               {{ offers.length ? "jobA1 a lu les offres publiées cette semaine. Celles-ci te correspondent le mieux. Garde ou écarte : jobA1 apprend de tes choix." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t’attendront dans Candidatures." }}
@@ -1039,7 +1149,7 @@ async function finish(to: string): Promise<void> {
                 type="button"
                 class="secondary wdk-back"
                 data-test="welcome-back"
-                @click="go(2)"
+                @click="go(3)"
               >
                 Retour
               </button>
@@ -1056,7 +1166,21 @@ async function finish(to: string): Promise<void> {
         </div>
       </Transition>
       <div class="wdk-scene">
+        <!-- L'alerte (OnboardingOrdinateurAlerte) : Orange, 260 px, à la place d'une scène. -->
+        <img
+          v-if="step === 3"
+          class="wdk-orange"
+          src="/illustrations/orange-salut-260.webp"
+          srcset="/illustrations/orange-salut-260.webp 1x, /illustrations/orange-salut-520.webp 2x"
+          width="260"
+          height="333"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          data-test="welcome-orange"
+        >
         <SceneIllustration
+          v-else
           :name="scene"
           sizes="360px"
         />
@@ -1090,11 +1214,11 @@ async function finish(to: string): Promise<void> {
           icon="arrow-left"
           label="Étape précédente"
           data-test="welcome-back"
-          @click="go((step - 1) as Step)"
+          @click="fromToday && step === 3 ? router.replace('/aujourdhui') : go((step - 1) as Step)"
         />
         <span class="welcome-brand"><BrandMark :size="30" />jobA1</span>
         <button
-          v-if="!(step === 3 && !sorting)"
+          v-if="!(step === 4 && !sorting)"
           type="button"
           class="link welcome-later"
           data-test="welcome-later"
@@ -1106,13 +1230,13 @@ async function finish(to: string): Promise<void> {
       <div
         class="welcome-progress"
         role="progressbar"
-        :aria-label="`Étape ${step + 1} sur 4`"
+        :aria-label="`Étape ${step + 1} sur 5`"
         aria-valuemin="1"
-        aria-valuemax="4"
+        aria-valuemax="5"
         :aria-valuenow="step + 1"
       >
         <span
-          v-for="i in 4"
+          v-for="i in 5"
           :key="i"
           :class="{ done: i <= step + 1 }"
         />
@@ -1364,7 +1488,7 @@ async function finish(to: string): Promise<void> {
                   class="icon-button welcome-stepper"
                   aria-label="Plus"
                   data-test="target-plus"
-                  @click="target = Math.min(30, target + 1)"
+                  @click="target = Math.min(99, target + 1)"
                 >
                   +
                 </button>
@@ -1382,6 +1506,25 @@ async function finish(to: string): Promise<void> {
             />
           </template>
 
+          <template v-else-if="step === 3">
+            <p class="welcome-lead">
+              Crée une alerte sur {{ alertSiteName }} : ses offres arrivent ici chaque matin, déjà triées. Environ 2 minutes.
+            </p>
+            <div
+              class="welcome-alert"
+              data-test="welcome-alert"
+            >
+              <AlertSiteSteps
+                v-if="alerts"
+                :site-name="alertSiteName"
+                :search-label="alertLabel"
+                :links="alertLinks"
+                :mailbox="alerts.mailbox"
+                address-help="Copie-la, puis colle-la dans le champ e-mail de l’alerte."
+                save-title="Enregistre l’alerte, puis reviens ici"
+              />
+            </div>
+          </template>
           <template v-else>
             <template v-if="sorting && current">
               <p class="welcome-lead">
@@ -1526,8 +1669,30 @@ async function finish(to: string): Promise<void> {
           data-test="welcome-continue"
           @click="confirmCriteria"
         >
-          Voir mes offres<AppIcon name="arrow-right" />
+          Continuer<AppIcon name="arrow-right" />
         </button>
+        <div
+          v-else-if="step === 3"
+          class="welcome-alert-actions"
+        >
+          <button
+            type="button"
+            class="primary welcome-cta"
+            :disabled="alertBusy"
+            data-test="welcome-alert-done"
+            @click="alertDone"
+          >
+            J’ai créé l’alerte
+          </button>
+          <button
+            type="button"
+            class="link welcome-alert-later"
+            data-test="welcome-alert-later"
+            @click="afterAlert"
+          >
+            Plus tard
+          </button>
+        </div>
         <div
           v-else-if="sorting"
           class="welcome-sort"
@@ -1577,7 +1742,7 @@ async function finish(to: string): Promise<void> {
 .welcome-blue .welcome-brand .brand-logo { --logo-line: var(--on-primary); }
 .welcome-later { min-height: var(--target-min); padding: 0 var(--space-2); font-size: var(--font-body); color: inherit; }
 .welcome-blue .welcome-later { color: var(--on-primary); }
-.welcome-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-1); padding-top: var(--space-2); }
+.welcome-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-1); padding-top: var(--space-2); }
 .welcome-progress span { height: 5px; border-radius: var(--radius-pill); background: var(--line); transition: background-color 0.4s; }
 .welcome-progress span.done { background: var(--primary-graphic); }
 .welcome-blue .welcome-progress span { background: color-mix(in srgb, var(--on-primary) 32%, transparent); }
@@ -1656,6 +1821,13 @@ async function finish(to: string): Promise<void> {
 .welcome-blue .welcome-actions { background: var(--primary); }
 .welcome-cta { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 58px; padding: 0 var(--space-5) 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-title); font-weight: var(--weight-bold); }
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
+/* L'alerte sur téléphone (OnboardingC, étape 3) : le rappel 16/12 px, les étapes à 14 px ; « Plus tard » de 44 px sous
+   le bouton principal. */
+.welcome-alert { --wa-14: 14px; }
+.welcome-alert .alert-site-search { margin: 0 0 var(--space-3); }
+.welcome-alert .alert-site-steps > li { padding: var(--wa-14) 0; }
+.welcome-alert-actions { display: flex; flex-direction: column; }
+.welcome-alert-later { align-self: center; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 @media (prefers-reduced-motion: reduce) {
@@ -1748,6 +1920,15 @@ async function finish(to: string): Promise<void> {
 .wdk-offer-text .tone-dig { color: var(--peach-text); }
 .wdk-small { height: var(--wdk-40); min-height: var(--wdk-40); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
 .wdk-offer-done { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
+/* L'alerte sur ordinateur (OnboardingOrdinateurAlerte) : carte 6/22,5 px, rappel 14 px, étapes 16 px ; pied à droite
+   « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux ; Orange 260 px de large ; le pied à 8 px de la carte. */
+.wdk-alert { --wdk-alert-x: 22.5px; --wdk-alert-top: 6px; --wdk-alert-bottom: 2px; --wdk-alert-row: 14px; margin-top: var(--wdk-28); padding: var(--wdk-alert-top) var(--wdk-alert-x) var(--wdk-alert-bottom); }
+.wdk-alert .alert-site-search { margin: var(--wdk-alert-row) 0; }
+.wdk-alert .alert-site-steps > li { padding: var(--space-4) 0; }
+.wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
+.wdk-foot-end .wdk-link { font-size: var(--font-body); }
+.wdk-alert + .wdk-foot { margin-top: var(--space-2); }
+.wdk-orange { width: 260px; height: auto; }
 .wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
 .wdk-scene .illu { width: var(--wdk-scene); }
 .wdk-scene .illu img { width: 100%; height: auto; }
