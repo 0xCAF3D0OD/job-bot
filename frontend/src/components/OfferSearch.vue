@@ -8,7 +8,9 @@ import type { IconName } from "../icons";
 // Candidatures (docs/139 étape 5a, C4). Appliquée 300 ms après la dernière frappe.
 // `icon` : l'entonnoir de l'ordinateur (maquette du 8 novembre : « Filtrer par titre ou entreprise », la recherche
 // globale étant dans l'en-tête, pas de seconde loupe).
-const props = defineProps<{ value: string; placeholder?: string; icon?: IconName }>();
+// `label` : le nom lu par les lecteurs d'écran, quand le texte visible est le même partout (« Poste, entreprise, lieu ») :
+// « Rechercher une candidature », « Rechercher un rendez-vous » (décision de Kevin du 14.11).
+const props = defineProps<{ value: string; placeholder?: string; icon?: IconName; label?: string }>();
 const emit = defineEmits<{ search: [value: string] }>();
 
 const search = ref(props.value);
@@ -33,7 +35,7 @@ watch(
       v-model="search"
       class="field-compact filters-search"
       type="search"
-      :aria-label="icon === 'filter' ? 'Filtrer par titre ou entreprise' : 'Rechercher une offre'"
+      :aria-label="label ?? (icon === 'filter' ? 'Filtrer par titre ou entreprise' : 'Rechercher une offre')"
       :placeholder="placeholder ?? 'Titre, entreprise, mot-clé…'"
       data-test="search"
     >
