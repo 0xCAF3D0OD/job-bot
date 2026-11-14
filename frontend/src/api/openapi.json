@@ -5677,7 +5677,59 @@
           "applications"
         ],
         "summary": "Draft Follow Up",
+        "description": "Le message gardé, ou un nouveau (gardé à son tour) ; `rewrite` : « Réécrire ».",
         "operationId": "draftFollowUp",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "rewrite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Rewrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpDraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Keep Follow Up",
+        "description": "« Modifier le message » : la version de la personne remplace celle qui est gardée.",
+        "operationId": "keepFollowUp",
         "parameters": [
           {
             "name": "application_id",
@@ -5689,13 +5741,23 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpDraftIn"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FollowUpDraftOut"
+                  "$ref": "#/components/schemas/FollowUpDraftIn"
                 }
               }
             }
@@ -15254,6 +15316,27 @@
         "type": "object",
         "title": "FollowUpDateIn"
       },
+      "FollowUpDraftIn": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Subject"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "text"
+        ],
+        "title": "FollowUpDraftIn"
+      },
       "FollowUpDraftOut": {
         "properties": {
           "subject": {
@@ -15287,6 +15370,16 @@
               }
             ],
             "title": "Reason"
+          },
+          "kept": {
+            "type": "boolean",
+            "title": "Kept",
+            "default": false
+          },
+          "failed": {
+            "type": "boolean",
+            "title": "Failed",
+            "default": false
           }
         },
         "type": "object",

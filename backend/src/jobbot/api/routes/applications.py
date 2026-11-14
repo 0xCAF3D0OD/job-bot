@@ -682,11 +682,18 @@ class FollowUpDraftOut(BaseModel):
     # Faux : modèle simple, sans IA ; `reason` dit pourquoi.
     ai: bool
     reason: str | None
+    # Vrai : le message gardé depuis une ouverture précédente, sans nouvel appel à l'IA.
+    kept: bool = False
+    # Vrai : l'IA n'a pas pu écrire ; le modèle simple n'est pas gardé (« Réessayer »).
+    failed: bool = False
 
 
 @router.post("/applications/{application_id}/follow-up/draft", operation_id="draftFollowUp")
-async def draft_follow_up(request: Request, application_id: int) -> FollowUpDraftOut:
-    result = await followups.draft(_runtime(request), application_id)
+async def draft_follow_up(
+    request: Request, application_id: int, rewrite: bool = False
+) -> FollowUpDraftOut:
+    """Le message gardé, ou un nouveau (gardé à son tour) ; `rewrite` : « Réécrire »."""
+    result = await followups.draft(_runtime(request), application_id, rewrite=rewrite)
     if result is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
     return FollowUpDraftOut(
@@ -695,7 +702,24 @@ async def draft_follow_up(request: Request, application_id: int) -> FollowUpDraf
         language=result.language,
         ai=result.ai,
         reason=result.reason,
+        kept=result.kept,
+        failed=result.failed,
     )
+
+
+class FollowUpDraftIn(BaseModel):
+    subject: str = Field(max_length=300)
+    text: str = Field(min_length=1, max_length=5_000)
+
+
+@router.put("/applications/{application_id}/follow-up/draft", operation_id="keepFollowUp")
+async def keep_follow_up(
+    request: Request, application_id: int, body: FollowUpDraftIn
+) -> FollowUpDraftIn:
+    """« Modifier le message » : la version de la personne remplace celle qui est gardée."""
+    if not await followups.keep(_runtime(request), application_id, body.subject, body.text):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+    return body
 
 
 class FollowUpDateIn(BaseModel):

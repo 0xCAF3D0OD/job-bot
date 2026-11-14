@@ -68,6 +68,11 @@ class FollowUpDraft:
     # Faux : modèle simple, sans IA (non configurée, plafond atteint ou réponse refusée).
     ai: bool
     reason: str | None = None
+    # Vrai : le message gardé depuis une ouverture précédente (aucun appel à l'IA).
+    kept: bool = False
+    # Vrai : l'IA devait écrire et n'a pas pu (refus, indisponible, réponse vide) ; le modèle
+    # simple est rendu mais pas gardé, et l'écran propose « Réessayer ».
+    failed: bool = False
 
 
 def local_today() -> date:
@@ -100,7 +105,48 @@ def _sign(text: str, name: str | None) -> str:
     return f"{text.rstrip()}\n\n{name or '[ton prénom et nom]'}"
 
 
-async def draft(runtime: Runtime, application_id: int) -> FollowUpDraft | None:
+async def draft(
+    runtime: Runtime, application_id: int, *, rewrite: bool = False
+) -> FollowUpDraft | None:
+    """Le message de relance : celui qui est gardé, sinon un nouveau, gardé à son tour.
+
+    Décision de Kevin du 14.11 : écrit à la première ouverture, puis gardé avec la candidature ;
+    rouvrir ne refait pas d'appel à l'IA. `rewrite` (« Réécrire ») en demande un nouveau.
+    """
+    if not rewrite:
+        async with runtime.sessionmaker() as session:
+            application = await session.get(Application, application_id)
+            if application is None:
+                return None
+            if application.follow_up_subject is not None and application.follow_up_text:
+                offer_id = application.offer_id
+                offer = await session.get(Offer, offer_id) if offer_id else None
+                language = await _language(session, application, offer)
+                return FollowUpDraft(
+                    application.follow_up_subject,
+                    application.follow_up_text,
+                    language,
+                    ai=True,
+                    kept=True,
+                )
+    result = await _write(runtime, application_id)
+    if result is not None and not result.failed:
+        await keep(runtime, application_id, result.subject, result.text)
+    return result
+
+
+async def keep(runtime: Runtime, application_id: int, subject: str, text: str) -> bool:
+    """Garde l'objet et le message de la relance avec la candidature (relue sous la RLS)."""
+    async with runtime.sessionmaker.begin() as session:
+        application = await session.get(Application, application_id)
+        if application is None:
+            return False
+        application.follow_up_subject = subject
+        application.follow_up_text = text
+    return True
+
+
+async def _write(runtime: Runtime, application_id: int) -> FollowUpDraft | None:
     settings = runtime.settings
     async with runtime.sessionmaker() as session:
         application = await session.get(Application, application_id)
@@ -120,9 +166,11 @@ async def draft(runtime: Runtime, application_id: int) -> FollowUpDraft | None:
     subject = SUBJECTS[language].format(title=title)
     sent = format_date(application.sent_at, language)
 
-    def template(reason: str) -> FollowUpDraft:
+    def template(reason: str, *, failed: bool = False) -> FollowUpDraft:
         text = TEMPLATES[language].format(sent=sent, title=title)
-        return FollowUpDraft(subject, _sign(text, identity.name), language, ai=False, reason=reason)
+        return FollowUpDraft(
+            subject, _sign(text, identity.name), language, ai=False, reason=reason, failed=failed
+        )
 
     if not settings.llm_configured:
         return template("IA non configurée")
@@ -150,17 +198,17 @@ async def draft(runtime: Runtime, application_id: int) -> FollowUpDraft | None:
     try:
         raw = await scoring_service.make_client(settings).score(params)
     except Refused:
-        return template("réponse refusée par l'IA")
+        return template("réponse refusée par l'IA", failed=True)
     except (anthropic.RateLimitError, anthropic.APIConnectionError):
-        return template("IA momentanément indisponible")
+        return template("IA momentanément indisponible", failed=True)
     except anthropic.APIStatusError as exc:
         # Clé refusée, crédit épuisé, ou IA surchargée : le modèle gratuit (docs/38 §2).
-        return template(account_problem(exc) or "IA momentanément indisponible")
+        return template(account_problem(exc) or "IA momentanément indisponible", failed=True)
     async with runtime.sessionmaker.begin() as session:
         await record_call(session, raw, offer_id=application.offer_id, rate=rate, purpose="relance")
     text = raw.text.strip().strip('"«» ').strip()
     if not text:
-        return template("réponse vide")
+        return template("réponse vide", failed=True)
     return FollowUpDraft(subject, _sign(text, identity.name), language, ai=True)
 
 

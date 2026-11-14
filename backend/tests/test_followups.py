@@ -8,8 +8,10 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
+from jobbot import accounts
 from jobbot.api.app import create_app
-from jobbot.db.models import Application, Evaluation, LlmCall, Offer
+from jobbot.auth import passwords
+from jobbot.db.models import Application, Evaluation, LlmCall, Offer, User
 from jobbot.followups import remind, service
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
@@ -163,3 +165,101 @@ async def test_follow_up_date_chosen_between_5_and_30_days(
     async with runtime.sessionmaker() as session:
         due = select(Application.id).where(remind.remind_due(date(2026, 9, 22)))
         assert list(await session.scalars(due)) == [application_id]
+
+
+# --- Le message gardé (décision de Kevin du 14.11) ------------------------------------------------
+
+
+class Counting:
+    calls = 0
+
+    async def score(self, params: dict[str, Any]) -> RawResult:
+        Counting.calls += 1
+        return RawResult(
+            f"Message {Counting.calls}", service.MODEL, Usage(600, 0, 0, 60), "end_turn"
+        )
+
+
+@pytest.fixture
+def ai(runtime: Runtime, monkeypatch: pytest.MonkeyPatch) -> type[Counting]:
+    Counting.calls = 0
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Counting())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    return Counting
+
+
+async def test_message_written_once_then_kept(
+    api: AsyncClient, runtime: Runtime, ai: type[Counting]
+) -> None:
+    application_id = await add(runtime, "Nous cherchons un ingénieur DevOps.")
+    url = f"/api/applications/{application_id}/follow-up/draft"
+    first = (await api.post(url)).json()
+    assert first["text"].startswith("Message 1") and first["kept"] is False
+    # Rouvrir le panneau : le même message, sans nouvel appel à l'IA.
+    again = (await api.post(url)).json()
+    assert again["text"] == first["text"] and again["subject"] == first["subject"]
+    assert again["kept"] is True and ai.calls == 1
+    # « Réécrire » : un nouvel appel, et le nouveau message est gardé à son tour.
+    rewritten = (await api.post(url, params={"rewrite": "true"})).json()
+    assert rewritten["text"].startswith("Message 2") and ai.calls == 2
+    assert (await api.post(url)).json()["text"] == rewritten["text"]
+    assert ai.calls == 2
+
+
+async def test_edited_message_replaces_the_kept_one(
+    api: AsyncClient, runtime: Runtime, ai: type[Counting]
+) -> None:
+    application_id = await add(runtime, "Nous cherchons un ingénieur DevOps.")
+    url = f"/api/applications/{application_id}/follow-up/draft"
+    await api.post(url)
+    saved = await api.put(url, json={"subject": "Relance DevOps", "text": "Bonjour, …"})
+    assert saved.status_code == 200
+    kept = (await api.post(url)).json()
+    assert (kept["subject"], kept["text"], kept["kept"]) == ("Relance DevOps", "Bonjour, …", True)
+    assert ai.calls == 1
+    empty = await api.put(url, json={"subject": "x", "text": ""})
+    assert empty.status_code == 422
+
+
+async def test_failed_writing_is_not_kept(
+    api: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    application_id = await add(runtime, "Nous cherchons un ingénieur DevOps.")
+
+    class Empty:
+        async def score(self, params: dict[str, Any]) -> RawResult:
+            return RawResult("  ", service.MODEL, Usage(600, 0, 0, 0), "end_turn")
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Empty())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    url = f"/api/applications/{application_id}/follow-up/draft"
+    failed = (await api.post(url)).json()
+    assert failed["failed"] is True and failed["ai"] is False
+    async with runtime.sessionmaker() as session:
+        application = await session.get(Application, application_id)
+        assert application is not None and application.follow_up_text is None
+
+
+async def test_kept_message_never_reaches_another_account(
+    api: AsyncClient, runtime: Runtime, ai: type[Counting]
+) -> None:
+    application_id = await add(runtime, "Nous cherchons un ingénieur DevOps.")
+    url = f"/api/applications/{application_id}/follow-up/draft"
+    await api.post(url)
+    owner = accounts.current()
+    async with runtime.sessionmaker.begin() as session:
+        other = User(username="relance-autre", password_hash=passwords.hash_password("x" * 12))
+        session.add(other)
+        await session.flush()
+        other_id = other.id
+    # Sous la RLS d'un autre compte, la candidature n'existe pas : ni lue, ni écrite (la route
+    # répond alors 404).
+    accounts.set_current(other_id)
+    try:
+        assert await service.draft(runtime, application_id) is None
+        assert await service.keep(runtime, application_id, "x", "y") is False
+    finally:
+        accounts.set_current(owner)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": other_id})
+    assert ai.calls == 1
