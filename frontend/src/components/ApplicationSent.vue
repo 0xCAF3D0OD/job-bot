@@ -6,7 +6,6 @@ import { formatMonth } from "../format";
 import { usePhone } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
 import MomentScreen from "./MomentScreen.vue";
-import TroupeScene from "./TroupeScene.vue";
 
 // « Candidature envoyée. » : après « J'ai postulé » dans Ma candidature ou « Marquer comme envoyée », quand
 // l'objectif ORP du mois n'est pas atteint (sinon « C'est fait ! »).
@@ -58,22 +57,14 @@ const showCard = computed(() => props.count !== null || !!props.followUpOn || ad
 </script>
 
 <template>
-  <section
-    v-if="desk"
-    class="sent-desk"
+  <MomentScreen
+    scene="envoyee"
+    title="Candidature"
+    hand="envoyée."
+    :class="{ 'sent-desk': desk }"
     data-test="sent-moment"
   >
-    <div
-      class="sent-desk-body"
-      role="status"
-    >
-      <TroupeScene
-        scene="envoyee"
-        full
-      />
-      <h1 class="sent-desk-title">
-        Candidature <span class="sent-desk-hand">envoyée.</span>
-      </h1>
+    <template v-if="desk">
       <p class="sent-desk-line">
         {{ title }} chez {{ company }}.
       </p>
@@ -138,78 +129,47 @@ const showCard = computed(() => props.count !== null || !!props.followUpOn || ad
           </RouterLink>
         </div>
       </div>
-      <div class="sent-desk-actions">
+    </template>
+    <template v-else>
+      <p>
+        {{ title }} chez {{ company }}.<template v-if="searches">
+          Elle compte pour l’ORP : <strong data-test="sent-orp">{{ searches }}</strong> ce mois.
+        </template>
+      </p>
+      <p
+        v-if="followUpOn"
+        class="sent-screen-small"
+        data-test="sent-follow-up"
+      >
+        Relance prévue {{ dateInSentence(followUpOn) }} si pas de réponse.
+      </p>
+      <!-- §8 (MaCandidatureV2 « finadresse ») : seulement si l’adresse manque, jamais bloquant. « Ajouter » ouvre
+           « Modifier la candidature », le curseur dans l’adresse (décision de Kevin du 14.11). -->
+      <div
+        v-if="addressRow"
+        class="sent-address"
+        data-test="sent-address"
+      >
+        <AppIcon
+          name="pin"
+          class="sent-address-icon"
+        />
+        <span class="sent-address-text">
+          <strong>Il manque l’adresse de l’entreprise</strong>
+          <span>Il la faut pour ton suivi ORP</span>
+        </span>
         <RouterLink
-          to="/candidatures/suivi"
-          class="sent-desk-button"
-          data-test="sent-applications"
+          :to="{ path: '/candidatures/suivi', query: { candidature: String(applicationId), modifier: 'adresse' } }"
+          class="sent-address-add"
+          data-test="sent-address-add"
           @click="emit('leave')"
         >
-          Voir mes candidatures
-        </RouterLink>
-        <RouterLink
-          to="/candidatures/offres"
-          class="sent-desk-button sent-desk-button-primary"
-          data-test="next-offer"
-          @click="emit('leave')"
-        >
-          Préparer la prochaine
+          Ajouter<span class="visually-hidden"> l’adresse de l’entreprise</span>
         </RouterLink>
       </div>
-      <button
-        v-if="cancellable"
-        type="button"
-        class="link sent-desk-cancel"
-        data-test="cancel-applied"
-        @click="emit('cancel')"
-      >
-        Je n’ai pas postulé
-      </button>
-    </div>
-  </section>
-  <MomentScreen
-    v-else
-    scene="envoyee"
-    title="Candidature"
-    hand="envoyée."
-    data-test="sent-moment"
-  >
-    <p>
-      {{ title }} chez {{ company }}.<template v-if="searches">
-        Elle compte pour l’ORP : <strong data-test="sent-orp">{{ searches }}</strong> ce mois.
-      </template>
-    </p>
-    <p
-      v-if="followUpOn"
-      class="sent-screen-small"
-      data-test="sent-follow-up"
-    >
-      Relance prévue {{ dateInSentence(followUpOn) }} si pas de réponse.
-    </p>
-    <!-- §8 (MaCandidatureV2 « finadresse ») : seulement si l’adresse manque, jamais bloquant. « Ajouter » ouvre
-         « Modifier la candidature », le curseur dans l’adresse (décision de Kevin du 14.11). -->
-    <div
-      v-if="addressRow"
-      class="sent-address"
-      data-test="sent-address"
-    >
-      <AppIcon
-        name="pin"
-        class="sent-address-icon"
-      />
-      <span class="sent-address-text">
-        <strong>Il manque l’adresse de l’entreprise</strong>
-        <span>Il la faut pour ton suivi ORP</span>
-      </span>
-      <RouterLink
-        :to="{ path: '/candidatures/suivi', query: { candidature: String(applicationId), modifier: 'adresse' } }"
-        class="sent-address-add"
-        data-test="sent-address-add"
-        @click="emit('leave')"
-      >
-        Ajouter<span class="visually-hidden"> l’adresse de l’entreprise</span>
-      </RouterLink>
-    </div>
+    </template>
+    <!-- Sur ordinateur, MomentScreen range les deux liens côte à côte : « Voir mes candidatures » au contour, puis
+         « Préparer la prochaine » plein (planche) ; « Je n’ai pas postulé » dessous. -->
     <template #actions>
       <RouterLink
         to="/candidatures/suivi"
@@ -248,21 +208,21 @@ const showCard = computed(() => props.count !== null || !!props.followUpOn || ad
 .sent-address-text strong { display: block; font-size: var(--font-label); color: var(--text); }
 .sent-address-add { flex: none; display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 
-/* Ordinateur : valeurs du HTML de CandidatureEnvoyeeOrdinateur (13.11). Colonne de 880 px, contenu centré ; scène de
-   471 px ; titre 34/42 en 800, fin manuscrite à 1,45 em ; phrase 18/28 ; carte de 480 px (padding 16/20/4, bordure 1 px,
-   rayon 18) ; barre de 12 px ; lignes de 60 px séparées d'un filet ; boutons de 44 px, 10 px d'écart. */
-.sent-desk { --sd-880: 880px; --sd-471: 471px; --sd-480: 480px; --sd-560: 560px; --sd-34: 34px; --sd-42: 42px; --sd-18: 18px; --sd-28: 28px; --sd-12: 12px; --sd-60: 60px; --sd-10: 10px; --sd-20: 20px; --sd-24: 24px; --sd-48: 48px;
-  box-sizing: border-box; width: min(100%, var(--sd-880)); margin: 0 auto; padding: var(--sd-24) 0 var(--sd-48); color: var(--text); }
-.sent-desk-body { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: var(--space-2); }
-.sent-desk-title { margin: var(--sd-24) 0 0; font-size: var(--sd-34); line-height: var(--sd-42); font-weight: var(--weight-heavy); letter-spacing: normal; }
-.sent-desk-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
-.sent-desk-line { max-width: var(--sd-560); margin: var(--sd-12) 0 0; font-size: var(--sd-18); line-height: var(--sd-28); color: var(--text-lead); }
+/* Ordinateur : valeurs du HTML de CandidatureEnvoyeeOrdinateur (13.11). MomentScreen donne la colonne de 880 px, la
+   scène de 471 px, le titre 34/42 et sa fin manuscrite ; ici la phrase 18/28 en gris de tête, la carte de 480 px
+   (padding 16/20/4, bordure 1 px, rayon 18), la barre de 12 px, les lignes de 60 px séparées d'un filet, et 20 px
+   au-dessus des boutons. */
+/* La règle globale « .sent-screen » (écran poussé du détail sur téléphone, style.css) fixait l'écran par-dessus
+   l'en-tête : sur ordinateur il reste dans la page, sous l'en-tête et le bandeau (comme TriageDone). */
+.sent-desk { --sd-480: 480px; --sd-12: 12px; --sd-60: 60px; --sd-20: 20px; --sd-24: 24px; position: static; overflow: visible; background: none; }
+.sent-desk :deep(.sent-screen-actions) { padding-top: var(--sd-20); }
+.sent-desk .sent-screen-cancel { justify-content: center; text-align: center; }
+.sent-desk .sent-desk-line { color: var(--text-lead); }
 .sent-desk-card { box-sizing: border-box; width: min(100%, var(--sd-480)); margin-top: var(--sd-24); padding: var(--space-4) var(--sd-20) var(--space-1); border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); text-align: left; }
-.sent-desk-month { display: flex; justify-content: space-between; gap: var(--space-3); margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.sent-desk-bar { height: var(--sd-12); margin-top: var(--sd-12); border-radius: var(--radius-pill); background: var(--primary-soft); overflow: hidden; }
+.sent-desk-card p.sent-desk-month { display: flex; justify-content: space-between; gap: var(--space-3); max-width: none; margin: 0; font-size: var(--font-body); line-height: var(--space-6); font-weight: var(--weight-bold); color: var(--text); }
+.sent-desk-bar { height: var(--sd-12); margin: var(--sd-12) 0; border-radius: var(--radius-pill); background: var(--primary-soft); overflow: hidden; }
 .sent-desk-bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); }
-.sent-desk-left { margin: var(--sd-12) 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-lead); }
-.sent-desk-month + .sent-desk-bar:last-child, .sent-desk-month:last-child { margin-bottom: var(--sd-12); }
+.sent-desk-card p.sent-desk-left { max-width: none; margin: 0 0 var(--sd-12); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-lead); }
 .sent-desk-row { display: flex; align-items: center; gap: var(--sd-12); min-height: var(--sd-60); border-top: 1px solid var(--surface-muted); }
 .sent-desk-card > .sent-desk-row:first-child { border-top: 0; }
 .sent-desk-icon { flex: none; width: var(--sd-24); height: var(--sd-24); color: var(--text); }
@@ -271,8 +231,4 @@ const showCard = computed(() => props.count !== null || !!props.followUpOn || ad
 .sent-desk-text > * { display: block; }
 .sent-desk-text strong { font-size: var(--font-label); color: var(--text); }
 .sent-desk-add { flex: none; display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
-.sent-desk-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sd-10); margin-top: var(--sd-20); }
-.sent-desk-button { box-sizing: border-box; display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; }
-.sent-desk-button-primary { padding: 0 var(--sd-20); border-color: transparent; background: var(--action); color: var(--on-action); font-weight: var(--weight-bold); }
-.sent-desk-cancel { min-height: var(--target-min); margin-top: var(--space-2); color: var(--text-secondary); font-weight: var(--weight-regular); }
 </style>
