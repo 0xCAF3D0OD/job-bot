@@ -2105,8 +2105,15 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Draft Follow Up */
+        /**
+         * Keep Follow Up
+         * @description « Modifier le message » : la version de la personne remplace celle qui est gardée.
+         */
+        put: operations["keepFollowUp"];
+        /**
+         * Draft Follow Up
+         * @description Le message gardé, ou un nouveau (gardé à son tour) ; `rewrite` : « Réécrire ».
+         */
         post: operations["draftFollowUp"];
         delete?: never;
         options?: never;
@@ -5418,6 +5425,13 @@ export interface components {
             /** Follow Up On */
             follow_up_on?: string | null;
         };
+        /** FollowUpDraftIn */
+        FollowUpDraftIn: {
+            /** Subject */
+            subject: string;
+            /** Text */
+            text: string;
+        };
         /** FollowUpDraftOut */
         FollowUpDraftOut: {
             /** Subject */
@@ -5433,6 +5447,16 @@ export interface components {
             ai: boolean;
             /** Reason */
             reason: string | null;
+            /**
+             * Kept
+             * @default false
+             */
+            kept: boolean;
+            /**
+             * Failed
+             * @default false
+             */
+            failed: boolean;
         };
         /** FollowedTrainingOut */
         FollowedTrainingOut: {
@@ -13243,9 +13267,46 @@ export interface operations {
             };
         };
     };
-    draftFollowUp: {
+    keepFollowUp: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FollowUpDraftIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowUpDraftIn"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftFollowUp: {
+        parameters: {
+            query?: {
+                rewrite?: boolean;
+            };
             header?: never;
             path: {
                 application_id: number;

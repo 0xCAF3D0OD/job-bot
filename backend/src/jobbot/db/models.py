@@ -584,6 +584,11 @@ class Application(Base):
     followed_up_at: Mapped[date | None] = mapped_column(Date)
     # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
     follow_up_on: Mapped[date | None] = mapped_column(Date)
+    # Le message de relance écrit (décision de Kevin du 14.11) : écrit à la première ouverture,
+    # gardé ensuite, modifiable ; « Réécrire » en demande un nouveau. Niveau : personnelle (D-1),
+    # comme la candidature ; exporté et effacé avec elle.
+    follow_up_subject: Mapped[str | None] = mapped_column(Text)
+    follow_up_text: Mapped[str | None] = mapped_column(Text)
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lieu ou lien de l'entretien (texte libre) ; affiché à la place de l'adresse de l'entreprise.
     interview_place: Mapped[str | None] = mapped_column(Text)

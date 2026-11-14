@@ -261,7 +261,7 @@ const onStatus = (event: Event): void =>
     <SidePanel
       v-if="followUpOpen"
       open
-      :title="`Relancer ${application.company}`"
+      :title="application.company"
       @close="followUpOpen = false"
     >
       <FollowUpPanel
