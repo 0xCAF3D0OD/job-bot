@@ -99,6 +99,8 @@ SCREENS: list[tuple[str, str | None]] = [
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
+    # Aujourd'hui en deux colonnes (PR 49) : l'accroche, les tâches, la bande ORP et le petit livre.
+    ("aujourdhui", None),
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
     ("candidatures/offres/{offer}/preparer?doc=cv", None),
