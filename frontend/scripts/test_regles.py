@@ -127,7 +127,8 @@ def test_police_manuscrite_contient_chaque_caractere_des_titres():
     titles = hand_titles()
     assert titles == [
         "plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "En trier 3.", "fait !", "te revoir.",
-        "pause.", "repos.", "à envoyer.", "à jour.", "à jour.", "envoyée.",
+        "1 justificatif en retard,", "1 justificatif en retard", "pause.", "repos.", "à envoyer.", "à jour.", "à jour.",
+        "puis 0123456789 candidatures", "envoyée.",
     ]
     assert missing_glyphs() == []
     # Les titres manuscrits composés à l'écran (lot du 11 novembre au soir : « 3 offres pour toi », « octobre est

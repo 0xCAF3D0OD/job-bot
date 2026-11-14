@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import type { RouteLocationRaw } from "vue-router";
+import { computed, defineAsyncComponent, onMounted, ref } from "vue";
+import { RouterLink, type RouteLocationRaw } from "vue-router";
 
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -11,13 +11,15 @@ import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
+import OrpBar from "../components/OrpBar.vue";
 import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
-import HomePhone, { type HomeTodo } from "../components/HomePhone.vue";
+import type { HomeTodo } from "../components/HomePhone.vue";
+import TriageNone from "../components/TriageNone.vue";
 import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
-import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
+import { DOSE, DOSE_CATCH_UP, markTriageDone, triageDoneToday, unmarkTriageDone } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
 import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpLeftLine, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
@@ -26,20 +28,33 @@ import { firstGoal } from "../composables/useGoalMoment";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
-// Aujourd'hui sur ordinateur (maquette du 8 novembre, AujourdhuiOrdinateurTravailD et ReposD) : une bande bleu pâle
-// sous l'en-tête, avec la date, le titre (l'action du jour, sa fin à la main) et une phrase ; la carte du mois ORP à
-// cheval sur son bord bas ; puis les tâches sur une colonne de 880 px : en retard, envoyer, trier, préparer un
-// entretien, et « Quand tu as le temps » (les relances). Le téléphone a sa propre page (HomePhone).
+// Aujourd'hui sur ordinateur (maquettes AujourdhuiOrdinateurV2 et AujourdhuiOrdinateurV2Sombre du 13 novembre, états
+// « accueil », « vide » et « atteint »), en deux colonnes. À gauche : l'accroche sur un fond pêche (« Bonjour Kevin »,
+// le titre du jour et sa fin à la main ; avec un justificatif en retard, deux lignes manuscrites, le retard d'abord ;
+// l'objectif du mois atteint, en vert puis en bleu), « À faire » (une carte par tâche, numérotée, celle en retard en
+// numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : le livre en
+// petit, où l'on trie sur place. Un jour de repos garde l'ancienne mise en page (planche AujourdhuiOrdinateurReposD,
+// gardée telle quelle par le paquet du 13 novembre) : la bande bleu pâle, la carte du mois et les ronds de la semaine.
+// Le téléphone a sa propre page (HomePhone).
+// L'Accueil du téléphone et le petit livre de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
+// moitié (budget de poids du premier affichage). Le chargement part tout de suite, en même temps que les données.
+const loadHomePhone = () => import("../components/HomePhone.vue");
+const loadTriageMini = () => import("../components/TriageMini.vue");
+const HomePhone = defineAsyncComponent(loadHomePhone);
+const TriageMini = defineAsyncComponent(loadTriageMini);
 const today = ref<Today | null>(null);
 // L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
 const { phone } = usePhone();
+void (phone.value ? loadHomePhone() : loadTriageMini());
 // Le prénom de « Bonjour Kevin. » : le premier mot du nom des Coordonnées.
 const firstName = ref<string | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
-// Le tri du jour fini sur cet appareil (l'écran de tri le note à la fin de la pile).
+// Le tri du jour fini sur cet appareil (l'écran de tri et le petit livre le notent à la fin de la pile).
 const triageDone = ref(false);
+// Le petit livre reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
+const miniOpen = ref(false);
 // Un jour de repos (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
 // Le mois ORP en retard sur son rythme (format.orpPace).
@@ -158,13 +173,42 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
       title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
-      detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
+      detail: days < 0 ? (restDay.value ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}` : `En retard depuis ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`) : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
       // La carte « Justificatifs … à remettre » est en tête du Bilan › ORP sur ordinateur, du Suivi ORP sur
       // téléphone (récapitulatif du 11 novembre, PR 29).
       to: phone.value ? { path: "/bilan/orp", query: { mois: t.orp_due_month } } : { path: "/bilan" },
     },
   };
+});
+
+// Un justificatif en retard (échéance passée) : il passe en premier dans l'accroche et dans « À faire ».
+const orpLate = computed(() => {
+  const due = today.value?.orp_due_date;
+  return !!orpTask.value && !!due && localDate(due).getTime() < startOfDay(new Date());
+});
+// L'accroche d'un jour de retard (AujourdhuiOrdinateurV2, état « accueil ») : « 1 justificatif en retard, » en brun,
+// puis « puis 2 candidatures » en bleu (le rythme du jour, s'il y en a un). Cinq mots au plus par ligne.
+type LateCatch = { hand: string; then: string | null; sub: string };
+const lateCatch = computed<LateCatch | null>(() => {
+  const t = today.value;
+  // En pause ou un jour de repos, le titre reste le leur : le justificatif en retard garde sa place en tête de « À faire ».
+  if (!t || starting.value || rhythmPaused.value || restDay.value || !orpLate.value) return null;
+  const perDay = dailyPace(t.month_count, t.month_target, t.month);
+  return perDay
+    ? { hand: "1 justificatif en retard,", then: `puis ${plural(perDay, "candidature", "candidatures")}`, sub: "Commence par l’ORP\u202f: 2 minutes. Ensuite, ton rythme du jour." }
+    : { hand: "1 justificatif en retard", then: null, sub: "Commence par l’ORP\u202f: 2 minutes." };
+});
+// L'objectif du mois atteint (lot de corrections du 13 novembre au soir, §6 ; état « atteint ») : deux lignes à la main,
+// « Objectif du mois atteint, » en vert puis « la suite est en plus » en bleu, et la phrase du mois.
+const goalReached = computed(() => {
+  const t = today.value;
+  return !!t && !starting.value && !rhythmPaused.value && !restDay.value && !!t.month_target && t.month_count >= t.month_target;
+});
+const reachedSub = computed(() => {
+  const t = today.value;
+  if (!t?.month_target) return "";
+  return `Tes ${plural(t.month_target, "recherche", "recherches")} ${ofMonth(t.month)} ${t.month_target === 1 ? "est faite" : "sont faites"}. Ce que tu envoies maintenant compte en plus.`;
 });
 
 // Le titre de la bande : l'action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP ; sa fin en
@@ -200,7 +244,7 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
   const todo: DeskTask[] = [];
   const later: DeskTask[] = [];
   const orp = orpTask.value;
-  const late = !!orp && !!t.orp_due_date && localDate(t.orp_due_date).getTime() < startOfDay(new Date());
+  const late = orpLate.value;
   if (cvUnread.value) todo.push({ ...CV_TASK, detail: "Sans lui, tes offres ne sont pas notées · 30 secondes", tone: "late" });
   if (orp?.urgent) todo.push({ ...orp.task, tone: late ? "late" : "normal" });
   if (preparing.value.length) {
@@ -284,6 +328,11 @@ const orpLine = computed(() => {
   if (!t || !starting.value || !t.month_target || t.month_count >= t.month_target) return undefined;
   return orpLeftLine(t.month_count, t.month_target, t.month, t.month_due_date);
 });
+// « Cette semaine · 2 sur 3 » sous la barre ORP : pas pendant une pause ni les premiers pas.
+const weekCount = computed(() => {
+  const week = today.value?.rhythm;
+  return week && week.target !== null && !week.pause_until && !starting.value ? { count: week.count, target: week.target } : null;
+});
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
 // La carte du mois ORP : toute la carte mène au Bilan ; sa phrase lue remplace le détail dessiné.
@@ -335,17 +384,37 @@ const homeEmpty = computed(() => {
   return triageDone.value ? "Tri terminé · À demain" : "Rien à trier · À demain";
 });
 
+// Sans offre à trier, le bloc « Rien à trier pour l’instant » dit pourquoi quand il y a une raison.
+const emptyTitle = computed(() => {
+  if (rhythmPaused.value) return "En pause\u202f: rien à trier";
+  return triageDone.value ? "Tri terminé · À demain" : undefined;
+});
+// « Élargir ma recherche » : seulement quand la recherche n'a rien trouvé.
+const widen = computed(() => !emptyTitle.value && !best.value.length);
+// Le petit livre finit le tri (ou « Annuler » le reprend) : la tâche « Trier » suit.
+function onMiniDone(done: boolean): void {
+  triageDone.value = done;
+  if (done) markTriageDone();
+  else unmarkTriageDone();
+}
+
 const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" }).format(
   new Date(),
 );
-// L'étiquette au-dessus du titre : la date et la dernière collecte.
-const eyebrow = computed(() => {
-  // La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
+// La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
+const collectNote = computed(() => {
   const last = today.value?.last_collect_at;
   const late = !!last && Date.now() - new Date(last).getTime() > DAY_MS;
   // dates.ts, jamais « il y a 136 heures » : « collecte hier », sinon « collecte le 22 octobre ».
-  const collect = message.value || (late ? `collecte ${dateInList(last!) === "hier" ? "hier" : dateInSentence(last!)}` : "");
-  return collect ? `${dateTitle} · ${collect}` : dateTitle;
+  return message.value || (late ? `collecte ${dateInList(last!) === "hier" ? "hier" : dateInSentence(last!)}` : "");
+});
+// L'étiquette au-dessus du titre d'un jour de repos : la date et la dernière collecte.
+const eyebrow = computed(() => (collectNote.value ? `${dateTitle} · ${collectNote.value}` : dateTitle));
+// Au-dessus du titre : « Bonjour Kevin », et la collecte quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
+const hello = computed(() => {
+  const collect = collectNote.value;
+  const who = firstName.value ? `Bonjour ${firstName.value}` : "Bonjour";
+  return collect ? `${who} · ${collect}` : who;
 });
 
 // R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil (useGoalMoment).
@@ -371,6 +440,9 @@ async function fetchAll(): Promise<void> {
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
   ]);
+  // Un jour de repos, l'ancienne mise en page et ses styles (today-rest.css, chargés seulement ce jour-là, avant
+  // l'affichage : pas d'écran sans style).
+  if (day.data?.rhythm?.research_today === false && !phone.value) await import("../today-rest.css");
   today.value = day.data ?? null;
   triageDone.value = triageDoneToday();
   goalWon.value = !!today.value && firstGoal(today.value.month, today.value.month_count, today.value.month_target);
@@ -381,7 +453,9 @@ async function fetchAll(): Promise<void> {
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
-  if (phone.value && firstName.value === null) {
+  // Le petit livre s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
+  miniOpen.value ||= triagePending.value;
+  if (firstName.value === null) {
     const who = await api.GET("/api/identity").catch(() => null);
     firstName.value = who?.data?.name?.trim().split(/\s+/)[0] || "";
   }
@@ -443,7 +517,194 @@ const { me } = useAuth();
       @dismiss="dismissSteps"
     />
   </HomePhone>
-  <template v-if="!phone && today">
+  <div
+    v-if="!phone && today && !restDay"
+    class="aj"
+  >
+    <div class="aj-main">
+      <section
+        class="aj-hero"
+        aria-labelledby="today-title"
+        data-test="today-band"
+      >
+        <div>
+          <p
+            class="aj-hello"
+            data-test="page-eyebrow"
+          >
+            {{ hello }}
+          </p>
+          <h1
+            v-if="lateCatch"
+            id="today-title"
+            class="aj-late"
+            data-test="today-sentence"
+          >
+            <span class="aj-hand aj-hand-late">{{ lateCatch.hand }}</span><template v-if="lateCatch.then">
+              <br><span class="aj-hand">{{ lateCatch.then }}</span>
+            </template>
+          </h1>
+          <h1
+            v-else-if="goalReached"
+            id="today-title"
+            class="aj-late"
+            data-test="today-sentence"
+          >
+            <span class="aj-hand aj-hand-reached">Objectif du mois atteint,</span><br><span class="aj-hand">la suite est en plus</span>
+          </h1>
+          <h1
+            v-else
+            id="today-title"
+            class="aj-title"
+            data-test="today-sentence"
+          >
+            {{ heading.lead }}<template v-if="heading.hand">
+              {{ " " }}<span class="aj-title-hand">{{ heading.hand }}</span>
+            </template>
+          </h1>
+          <p
+            v-if="lateCatch || goalReached || heading.sub"
+            class="aj-sub"
+            data-test="today-sub"
+          >
+            {{ lateCatch ? lateCatch.sub : goalReached ? reachedSub : heading.sub }}
+          </p>
+        </div>
+        <img
+          src="/tri/orange-liste.webp"
+          alt=""
+          width="174"
+          height="168"
+        >
+      </section>
+
+      <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
+      <RouterLink
+        v-if="me?.welcome === 'postponed'"
+        to="/bienvenue"
+        class="notice today-welcome"
+        data-test="finish-welcome"
+      >
+        <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
+      </RouterLink>
+
+      <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
+      <FirstSteps
+        v-if="starting"
+        :steps="today.first_steps"
+        :has-offers="today.has_offers ?? true"
+        :offer-id="today.first_steps_offer_id ?? null"
+        :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+        @dismiss="dismissSteps"
+      />
+
+      <section
+        v-for="group in [
+          { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start', numbered: false },
+          { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
+          { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later', numbered: false },
+        ].filter((g) => g.items.length)"
+        :key="group.key"
+        class="aj-section"
+        :aria-labelledby="`today-${group.key}-title`"
+        :data-test="group.test"
+      >
+        <h2 :id="`today-${group.key}-title`">
+          {{ group.title }}
+        </h2>
+        <component
+          :is="group.numbered ? 'ol' : 'ul'"
+          class="today-tasks"
+        >
+          <li
+            v-for="(task, i) in group.items"
+            :key="task.key"
+          >
+            <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
+            <component
+              :is="task.href ? 'a' : RouterLink"
+              v-bind="task.href ? { href: task.href, target: '_blank', rel: 'noopener noreferrer' } : { to: task.to }"
+              :class="['today-task', `tone-${task.tone}`]"
+              :data-test="task.test"
+            >
+              <b
+                v-if="group.numbered"
+                class="aj-num"
+                aria-hidden="true"
+              >{{ i + 1 }}</b>
+              <AppIcon
+                v-else
+                :name="task.icon"
+                class="aj-icon"
+              />
+              <span class="aj-task-main">
+                <strong>{{ task.title }}<span
+                  v-if="task.href"
+                  class="visually-hidden"
+                > (nouvel onglet)</span></strong>
+                <span>{{ task.detail }}</span>
+              </span>
+              <span class="aj-action">{{ task.action }}<span
+                class="arrow-circle aj-arrow"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span></span>
+            </component>
+          </li>
+        </component>
+      </section>
+    </div>
+
+    <aside class="aj-side">
+      <section
+        class="aj-orp"
+        aria-labelledby="aj-orp-title"
+        data-test="orp-month"
+      >
+        <div class="aj-orp-head">
+          <h2 id="aj-orp-title">
+            ORP
+          </h2>
+          <RouterLink
+            to="/bilan/orp"
+            data-test="orp-month-link"
+          >
+            Voir le suivi
+          </RouterLink>
+        </div>
+        <!-- La barre ORP (PR 48) : le mois, le rythme et « Cette semaine ». -->
+        <OrpBar
+          :month="today.month"
+          :count="today.month_count"
+          :target="today.month_target ?? null"
+          :due="today.month_due_date ?? null"
+          :pace="!starting"
+          :week="weekCount"
+        />
+      </section>
+      <TriageMini
+        v-if="miniOpen && !starting"
+        :offers="dose"
+        @done="onMiniDone(true)"
+        @resumed="onMiniDone(false)"
+      />
+      <section
+        v-else-if="!starting"
+        class="aj-none"
+        aria-labelledby="aj-none-title"
+        data-test="today-no-triage"
+      >
+        <h2 id="aj-none-title">
+          Offres à trier
+        </h2>
+        <TriageNone
+          :title="emptyTitle"
+          :widen="widen"
+        />
+      </section>
+    </aside>
+  </div>
+  <!-- Un jour de repos : l'ancienne mise en page (planche AujourdhuiOrdinateurReposD, gardée telle quelle). -->
+  <template v-if="!phone && today && restDay">
     <section
       class="today-band"
       aria-labelledby="today-title"
@@ -632,3 +893,64 @@ const { me } = useAuth();
     <p>Elle compte pour ton mois ORP.</p>
   </SuccessCard>
 </template>
+
+<style scoped>
+/* Les valeurs des maquettes AujourdhuiOrdinateurV2 et AujourdhuiOrdinateurV2Sombre, écrites avec les échelles ; les
+   tailles hors échelle sont nommées ici. Sous 1100 px de large, la colonne de droite passe sous celle de gauche. */
+.aj {
+  --aj-w: 1280px; --aj-side: 440px; --aj-40: 40px; --aj-r: 32px; --aj-28: 28px; --aj-44: 2.75rem; --aj-17: 1.0625rem; --aj-26: 1.625rem; --aj-22: 1.375rem; --aj-18: 1.125rem; --aj-16: 1rem; --aj-15: 0.9375rem;
+  --aj-img: 168px; --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25; --aj-none-r: 18px;
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--aj-side); gap: var(--aj-40); box-sizing: border-box; max-width: calc(var(--aj-w) + 2 * var(--space-6)); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12);
+}
+.aj-main { display: flex; flex-direction: column; min-width: 0; }
+.aj-hero { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-8) var(--aj-40); border-radius: var(--aj-r); background: var(--peach-soft); }
+.aj-hero > div { flex: 1; min-width: 0; }
+.aj-hero img { flex: none; width: auto; height: var(--aj-img); }
+/* En sombre, le personnage de l'accroche a un contour clair, comme ceux du tri. */
+:root[data-theme="dark"] .aj-hero img { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aj-hero img { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
+}
+.aj-hello { margin: 0; font-size: var(--aj-16); color: var(--text-lead); }
+.aj-late, .aj-title { margin: var(--space-3) 0 0; }
+.aj-late { font-size: var(--aj-44); line-height: var(--leading-none); font-weight: var(--weight-regular); }
+.aj-hand { display: inline-block; font-family: var(--font-hand); font-size: var(--aj-44); line-height: var(--leading-none); color: var(--primary-text); transform: rotate(-2deg); }
+.aj-hand-late { color: var(--peach-text); }
+/* L'objectif du mois atteint (§6 du lot du 13 novembre au soir) : la première ligne en vert (#17734A, #62D497 en sombre). */
+.aj-hand-reached { color: var(--success); }
+.aj-title { font-size: var(--font-page); font-weight: var(--weight-heavy); line-height: var(--aj-lh-title); letter-spacing: -0.4px; color: var(--text); }
+.aj-title-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; letter-spacing: 0; color: var(--primary-text); }
+.aj-sub { margin: var(--space-4) 0 0; font-size: var(--aj-17); line-height: var(--aj-26); color: var(--text-lead); }
+.aj-main > .today-welcome, .aj-main > :deep(.first-steps) { margin: var(--space-6) 0 0; }
+.aj-section > h2, .aj-orp h2, .aj-none h2 { margin: 0; font-size: var(--aj-22); font-weight: var(--weight-heavy); }
+.aj-section > h2 { margin: var(--space-8) 0 var(--space-3); }
+.today-tasks { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.today-task {
+  --tone-text: var(--primary-text);
+  display: flex; align-items: center; gap: var(--space-4); min-height: var(--aj-row); box-sizing: border-box; padding: var(--space-3) var(--space-4) var(--space-3) var(--space-5);
+  border-radius: var(--space-5); background: var(--surface); color: var(--text); text-decoration: none;
+}
+.today-task.tone-late { --tone-text: var(--peach-text); }
+.today-task.tone-interview { --tone-text: var(--success); }
+.aj-num { flex: none; display: grid; place-items: center; width: var(--aj-num); height: var(--aj-num); border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: var(--aj-16); font-weight: var(--weight-bold); }
+.tone-late .aj-num { background: var(--peach-text); color: var(--surface); }
+.aj-icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--tone-text); }
+.aj-task-main { flex: 1; min-width: 0; }
+.aj-task-main strong { display: block; font-size: var(--aj-18); line-height: var(--space-6); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.aj-task-main > span { display: block; margin-top: var(--space-1); font-size: var(--aj-15); line-height: var(--aj-22); color: var(--text-secondary); overflow-wrap: anywhere; }
+.tone-late .aj-task-main > span { color: var(--peach-text); font-weight: var(--weight-semibold); }
+.aj-action { flex: none; display: flex; align-items: center; gap: var(--space-4); font-size: var(--aj-16); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
+.aj-arrow { --circle: var(--aj-circle); }
+
+.aj-side { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.aj-orp { padding: var(--aj-28) var(--space-8); border-radius: var(--space-6); background: var(--primary-soft); }
+.aj-orp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-5); }
+.aj-orp-head a { display: inline-flex; align-items: center; min-height: var(--target-min); margin: calc(-1 * var(--space-3)) 0; font-size: var(--aj-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.aj-orp-head a:hover { text-decoration: underline; }
+.aj-none { padding-top: var(--space-1); }
+.aj-none h2 { margin: 0 var(--space-1) var(--space-5); }
+.aj-side > :deep(.tri-mini) { padding-top: var(--space-1); }
+@media (max-width: 1099px) {
+  .aj { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
