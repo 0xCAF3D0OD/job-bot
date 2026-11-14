@@ -33,6 +33,24 @@ describe("Les premières offres (docs/104, 0.80.0)", () => {
     expect(wrapper.find("[data-test=first-offers-line]").exists()).toBe(false);
   });
 
+  it("par le web : la ligne dit que ces offres ne sont pas notées, la carte aussi", async () => {
+    const now = new Date().toISOString();
+    GET.mockResolvedValueOnce({ data: state({ status: "done", provider: "web", at: now, found: 6, new: 6, queries: ["ASSC · Lausanne"] }) });
+    const line = mount(FirstOffers, { props: { where: "offers" } });
+    await flushPromises();
+    const text = line.find("[data-test=first-offers-line]").text();
+    expect(text).toContain("6 premières offres trouvées sur le web (ASSC · Lausanne)");
+    expect(text).toContain("Elles ne sont pas notées : les notes arrivent avec les offres de tes alertes");
+    expect(text).not.toContain("jobup");
+
+    GET.mockResolvedValueOnce({ data: state({ provider: "web" }) });
+    const card = mount(FirstOffers, { props: { where: "alerts" } });
+    await flushPromises();
+    expect(card.find("[data-test=first-offers]").text()).toContain("sur le web");
+    expect(card.find("[data-test=first-offers]").text()).toContain("Ces offres ne sont pas notées.");
+    expect(card.find("[data-test=first-offers-start]").text()).toContain("Chercher sur le web maintenant");
+  });
+
   it("page Offres : rien après trois jours, ni sans offre nouvelle", async () => {
     const old = new Date(Date.now() - 4 * 86_400_000).toISOString();
     GET.mockResolvedValueOnce({ data: state({ status: "done", at: old, new: 5 }) });

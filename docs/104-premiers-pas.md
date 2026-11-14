@@ -148,3 +148,28 @@ D'autres lectures automatiques de jobup, plus anciennes, tombent sous la même c
 | **« Ajouter une offre » par un lien jobup ou jobs.ch** | docs/111 | la page lue une fois, à la demande de la personne |
 
 jobs.ch appartient au même groupe (JobCloud) : mêmes règles. Les alertes e-mail de jobup, elles, restent permises : c'est jobup qui les envoie.
+
+## Premières offres par la recherche web (décision de Kevin, 2026-11-14)
+
+Ta demande du 2026-11-14 : « il faut des offres dès son inscription », puis « fais-le avec l'outil de jobA1, je veux que ça fonctionne ».
+
+### Ce qui change
+
+- Réglage `JOBBOT_WEB_FIRST_OFFERS_ENABLED`, **faux par défaut**. Allumé, et la recherche de jobup restant coupée, la tâche `first_offers` passe par l'outil de recherche web de l'IA (le même que pour l'adresse d'une entreprise) : deux métiers au plus par compte, deux recherches web par métier, dix offres gardées par métier.
+- L'IA ne reçoit que le métier et le lieu (règle I-1). Elle rend un titre, une entreprise et un lieu s'ils sont affichés dans le résultat, et le lien.
+- **Rien n'est inventé** : une offre n'est gardée que si son lien figure parmi les résultats rendus par le moteur (règle I-2). Les pages de liste, les codes à la place du titre et les doublons sont écartés.
+- **jobA1 n'ouvre aucune page** : ni lecture de l'annonce, ni note. Ces offres portent le lien `web` ; elles restent « pas encore notées » tant qu'aucune alerte ne ramène la même offre.
+- L'écran le dit : « Elles ne sont pas notées : les notes arrivent avec les offres de tes alertes, dès que tu les as créées. »
+- Coût : compté et plafonné comme les autres appels (objet `first_offers`, règle I-5).
+
+### Essayer sans rien enregistrer
+
+`jobbot premieres-offres-web "infirmier" "Lausanne"` affiche les offres gardées, le nombre de résultats du moteur et le coût.
+
+### Écarts et points ouverts
+
+- Aucune planche ne dessine cet état dans le paquet du 13 novembre : le composant existant est repris, seul le texte change. À valider ou à dessiner.
+- Les liens trouvés mènent souvent à jobup et jobs.ch. jobA1 ne lit pas ces pages, mais afficher ces liens n'a pas été validé par un juriste.
+- Deux offres au même titre et au même lieu, sans entreprise affichée, n'en font qu'une.
+- Non essayé contre l'IA réelle depuis l'atelier (pas de clé) : à essayer avec la commande ci-dessus avant d'allumer le réglage.
+

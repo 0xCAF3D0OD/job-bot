@@ -16,12 +16,14 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from urllib.parse import urlencode
 
+import anthropic
 import httpx
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.alerts.service import is_canton
+from jobbot.collect import web_offers
 from jobbot.collect.service import ingest_offers
 from jobbot.db.models import (
     PUBLIC_SEARCH_PREFIX,
@@ -32,10 +34,13 @@ from jobbot.db.models import (
     Source,
 )
 from jobbot.filtering.service import load_criteria
+from jobbot.llm.client import Refused
 from jobbot.log import get_logger
 from jobbot.logos import service as logos
 from jobbot.news import domain
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring
+from jobbot.settings import Settings
 from jobbot.sources.base import RawOffer
 from jobbot.sources.jobposting import LD_JSON, location, text, types
 from jobbot.worker.queue import enqueue
@@ -51,6 +56,20 @@ MAX_SEARCHES = 4
 DELAY_SECONDS = 2.0
 MAX_PAGE_BYTES = 3_000_000
 _UUID_LEN = 36
+# Par le web : deux demandes à l'IA au plus (le métier, dans les deux premiers lieux).
+MAX_WEB_QUERIES = 2
+
+Provider = Literal["jobup", "web"]
+
+
+def provider(settings: Settings) -> Provider | None:
+    """D'où viennent les premières offres : la recherche publique de jobup (coupée depuis la
+    0.82.4), sinon la recherche web de l'IA ; None : aucune des deux n'est allumée."""
+    if settings.public_search_enabled:
+        return "jobup"
+    if settings.web_first_offers_enabled and settings.llm_configured:
+        return "web"
+    return None
 
 
 @dataclass
@@ -163,19 +182,40 @@ async def mark_queued(session: AsyncSession) -> None:
     await _save(session, {**await state(session), "status": "queued"})
 
 
-async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
-    """La recherche publique pour le compte en cours ; une recherche par (mots, lieu), 20
-    offres au plus pour jobup. Les offres entrent comme celles d'une alerte."""
-    result = FirstOffersResult()
-    if not runtime.settings.public_search_enabled:
-        return result
-    async with runtime.sessionmaker() as session:
-        wanted = await queries(session)
-    if not wanted:
+async def _search_web(
+    runtime: Runtime, wanted: list[tuple[str, str | None]], result: FirstOffersResult
+) -> dict[str, RawOffer]:
+    """La recherche web de l'IA : une demande par (métier, lieu), deux au plus. Le plafond
+    mensuel de l'IA s'applique ; chaque appel est compté comme les autres."""
+    collected: dict[str, RawOffer] = {}
+    client = scoring.make_client(runtime.settings)
+    for terms, place in wanted[:MAX_WEB_QUERIES]:
+        async with runtime.sessionmaker() as session:
+            spend, budget, rate = await scoring.budget_state(session, datetime.now(UTC))
+        if spend + web_offers.ESTIMATE_USD * rate > budget:
+            log.info("first_offers_web_stopped", reason="plafond mensuel atteint")
+            break
+        try:
+            raw = await client.score(web_offers.request_params(terms, place))
+        except Refused:
+            continue
+        except (anthropic.APIError, httpx.HTTPError) as exc:
+            log.warning("first_offers_failed", error=type(exc).__name__)
+            continue
         async with runtime.sessionmaker.begin() as session:
-            await _save(session, {"status": "no_trade"})
-        return result
-    now = datetime.now(UTC)
+            await scoring.record_call(
+                session, raw, offer_id=None, rate=rate, purpose="first_offers"
+            )
+        result.searches += 1
+        result.queries.append(f"{terms} · {place}" if place else terms)
+        for offer in web_offers.parse_answer(raw):
+            collected.setdefault(offer.url, offer)
+    return collected
+
+
+async def _search_public(
+    wanted: list[tuple[str, str | None]], result: FirstOffersResult
+) -> dict[str, RawOffer]:
     collected: dict[str, RawOffer] = {}
     async with httpx.AsyncClient(
         timeout=10, follow_redirects=False, headers={"User-Agent": logos.USER_AGENT}
@@ -195,36 +235,61 @@ async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
             result.queries.append(f"{terms} · {location}" if location else terms)
             for offer in found:
                 collected.setdefault(offer.url, offer)
+    return collected
+
+
+async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
+    """Les premières offres du compte en cours : la recherche publique de jobup (une recherche
+    par (mots, lieu), 20 offres au plus), ou la recherche web de l'IA. Les offres entrent
+    comme celles d'une alerte ; celles du web ne sont ni lues ni notées."""
+    result = FirstOffersResult()
+    source = provider(runtime.settings)
+    if source is None:
+        return result
+    async with runtime.sessionmaker() as session:
+        wanted = await queries(session)
+    if not wanted:
+        async with runtime.sessionmaker.begin() as session:
+            await _save(session, {"status": "no_trade"})
+        return result
+    now = datetime.now(UTC)
+    web = source == "web"
+    collected = (
+        await _search_web(runtime, wanted, result) if web else await _search_public(wanted, result)
+    )
     offers = list(collected.values())
     result.found = len(offers)
+    link_source = web_offers.LINK_SOURCE if web else Source.JOBUP
     key = f"public/{uuid.uuid4()}.json"
     runtime.storage.put(
         key,
         json.dumps(
-            {"source": "jobup", "queries": result.queries, "offers": [o.url for o in offers]},
+            {"source": link_source, "queries": result.queries, "offers": [o.url for o in offers]},
             ensure_ascii=False,
         ).encode(),
     )
     async with runtime.sessionmaker.begin() as session:
         if result.searches:
+            label = "Recherche web" if web else "Recherche publique jobup"
             search = Search(
-                source=Source.JOBUP,
+                source=link_source,
                 message_id=f"{PUBLIC_SEARCH_PREFIX}{uuid.uuid4()}",
                 received_at=now,
-                subject=f"Recherche publique jobup : {', '.join(result.queries)}",
+                subject=f"{label} : {', '.join(result.queries)}",
                 alert_label="Premières offres",
                 raw_key=key,
                 parse_status=ParseStatus.PARSED if offers else ParseStatus.EMPTY,
-                parser_version="public-1",
+                parser_version=web_offers.PROMPT_VERSION if web else "public-1",
                 results_count=len(offers),
             )
             session.add(search)
             await session.flush()
-            result.new_offers = await ingest_offers(session, search, Source.JOBUP, offers)
+            result.new_offers = await ingest_offers(session, search, link_source, offers)
             search.new_offers_count = result.new_offers
         await _save(
             session,
             {
+                "provider": source,
                 "status": "done" if result.searches else "failed",
                 "at": now.isoformat(),
                 "found": result.found,
@@ -244,8 +309,9 @@ Requested = Literal["queued", "already_queued", "no_trade", "too_soon", "disable
 async def request(runtime: Runtime, *, first_only: bool = False) -> Requested:
     """Met la recherche en file pour le compte en cours. `first_only` : seulement si elle n'a
     jamais été faite (fin de l'accueil)."""
-    # Coupée (0.82.4) : les conditions de jobup interdisent la lecture automatique.
-    if not runtime.settings.public_search_enabled:
+    # jobup est coupée (0.82.4 : ses conditions interdisent la lecture automatique) ; la
+    # recherche web de l'IA la remplace quand elle est allumée.
+    if provider(runtime.settings) is None:
         return "disabled"
     async with runtime.sessionmaker.begin() as session:
         current = await state(session)

@@ -578,6 +578,41 @@ def cmd_logos(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
+    """Essai de la recherche web des premières offres (docs/104) : affiche ce qu'elle trouve
+    pour un métier et un lieu. Rien n'est enregistré, aucun compte n'est touché ; l'appel à
+    l'IA est payé par la clé du serveur (environ 0,05 CHF)."""
+    from jobbot.collect import web_offers
+    from jobbot.llm.client import Refused, client_factory
+    from jobbot.llm.pricing import cost_usd
+
+    settings = _settings()
+    if not settings.llm_configured:
+        print("IA non configurée (JOBBOT_ANTHROPIC_API_KEY).", file=sys.stderr)
+        return 1
+
+    try:
+        raw = asyncio.run(
+            client_factory(settings).score(web_offers.request_params(args.metier, args.lieu))
+        )
+    except Refused:
+        print("L'IA a refusé de répondre.", file=sys.stderr)
+        return 1
+    offers = web_offers.parse_answer(raw)
+    lieu = args.lieu or "Suisse romande"
+    print(f"{args.metier} · {lieu} : {plural(len(offers), 'offre gardée', 'offres gardées')}")
+    print(
+        f"({plural(len(raw.web_urls), 'résultat rendu', 'résultats rendus')} par le moteur, "
+        f"{plural(raw.usage.web_searches, 'recherche', 'recherches')}, "
+        f"{cost_usd(raw.model, raw.usage):.4f} USD)"
+    )
+    for number, offer in enumerate(offers, start=1):
+        details = " · ".join(v for v in (offer.company, offer.location) if v)
+        print(f"{number:>2}. {offer.title}" + (f" ({details})" if details else ""))
+        print(f"    {offer.url}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -639,11 +674,15 @@ def main(argv: list[str] | None = None) -> int:
     tester.add_argument("--retirer", action="store_true", help="retire la marque")
     tester.set_defaults(func=cmd_getemall_tester)
     logos = sub.add_parser("logos", help="logos des entreprises (docs/14 §4)")
-    logos.add_argument(
-        "--clean-generic", action="store_true", help="retire les images génériques"
-    )
+    logos.add_argument("--clean-generic", action="store_true", help="retire les images génériques")
     logos.add_argument("--essai", action="store_true", help="liste sans rien retirer")
     logos.set_defaults(func=cmd_logos)
+    web = sub.add_parser(
+        "premieres-offres-web", help="essai de la recherche web des premières offres (docs/104)"
+    )
+    web.add_argument("metier", help="le métier cherché, par exemple « électricien de montage »")
+    web.add_argument("lieu", nargs="?", help="le lieu (par défaut : Suisse romande)")
+    web.set_defaults(func=cmd_premieres_offres_web)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

@@ -5286,6 +5286,8 @@ export interface components {
              * @default []
              */
             queries: string[];
+            /** Provider */
+            provider?: ("jobup" | "web") | null;
         };
         /** FirstOffersStart */
         FirstOffersStart: {
@@ -5311,6 +5313,8 @@ export interface components {
              * @default []
              */
             queries: string[];
+            /** Provider */
+            provider?: ("jobup" | "web") | null;
             /**
              * Result
              * @enum {string}

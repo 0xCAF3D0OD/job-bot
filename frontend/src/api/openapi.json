@@ -14828,6 +14828,21 @@
             "type": "array",
             "title": "Queries",
             "default": []
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jobup",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           }
         },
         "type": "object",
@@ -14879,6 +14894,21 @@
             "type": "array",
             "title": "Queries",
             "default": []
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jobup",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           },
           "result": {
             "type": "string",

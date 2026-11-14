@@ -8,10 +8,13 @@ import BusyButton from "./BusyButton.vue";
 // Les premières offres (docs/104, 0.80.0) : à la fin de l'accueil, jobA1 lit la recherche
 // publique de jobup pour le métier et les lieux du compte. Sur la page Offres, une ligne dit
 // ce qui se passe ; sur la page Alertes, une carte permet de relancer la recherche.
+// Par le web (docs/104, « Premières offres par le web ») : même ligne et même carte, mais les
+// offres viennent d'une recherche web, sans texte d'annonce : elles ne sont pas notées, et la
+// ligne le dit.
 const props = defineProps<{ where: "offers" | "alerts" }>();
 const emit = defineEmits<{ arrived: [] }>();
 
-type State = { status: "none" | "queued" | "done" | "failed" | "no_trade" | "disabled"; at?: string | null; found: number; new: number; queries: string[] };
+type State = { status: "none" | "queued" | "done" | "failed" | "no_trade" | "disabled"; at?: string | null; found: number; new: number; queries: string[]; provider?: "jobup" | "web" | null };
 const state = ref<State | null>(null);
 const message = ref("");
 const busy = ref(false);
@@ -45,6 +48,9 @@ function poll(): void {
 }
 
 const searched = computed(() => state.value?.queries?.join(", ") ?? "");
+const web = computed(() => state.value?.provider === "web");
+// Où jobA1 cherche : « sur jobup », ou « sur le web » (intitulé et lien, pas de note).
+const place = computed(() => (web.value ? "sur le web" : "sur jobup"));
 const recent = computed(() => {
   const at = state.value?.at;
   return !!at && Date.now() - new Date(at).getTime() < RECENT_MS && dismissed.value !== at;
@@ -52,18 +58,23 @@ const recent = computed(() => {
 const offersLine = computed(() => {
   const s = state.value;
   if (!s) return null;
-  if (s.status === "queued") return "Je cherche tes premières offres sur jobup… Elles arrivent dans une minute.";
+  if (s.status === "queued") return `Je cherche tes premières offres ${place.value}… Elles arrivent dans une minute.`;
   if (s.status === "done" && s.new > 0 && recent.value) {
-    return `${plural(s.new, "première offre trouvée", "premières offres trouvées")} sur jobup (${searched.value}). Tes alertes prennent le relais dès qu’elles arrivent.`;
+    const found = `${plural(s.new, "première offre trouvée", "premières offres trouvées")} ${place.value} (${searched.value}).`;
+    if (web.value) return `${found} Elles ne sont pas notées : les notes arrivent avec les offres de tes alertes, dès que tu les as créées.`;
+    return `${found} Tes alertes prennent le relais dès qu’elles arrivent.`;
   }
   return null;
 });
 const alertsText = computed(() => {
   const s = state.value;
-  if (!s || s.status === "none") return "jobA1 peut chercher tout de suite sur jobup, avec ton métier et tes lieux, sans attendre tes alertes.";
-  if (s.status === "queued") return "Recherche en cours sur jobup…";
+  if (!s || s.status === "none") {
+    const now = `jobA1 peut chercher tout de suite ${place.value}, avec ton métier et tes lieux, sans attendre tes alertes.`;
+    return web.value ? `${now} Ces offres ne sont pas notées.` : now;
+  }
+  if (s.status === "queued") return `Recherche en cours ${place.value}…`;
   if (s.status === "no_trade") return "Indique d’abord ton métier : c’est lui que jobA1 cherche.";
-  if (s.status === "failed") return "jobup n’a pas répondu à la dernière recherche. Réessaie plus tard.";
+  if (s.status === "failed") return web.value ? "La dernière recherche sur le web n’a pas abouti. Réessaie plus tard." : "jobup n’a pas répondu à la dernière recherche. Réessaie plus tard.";
   return `Dernière recherche (${searched.value}) : ${plural(s.found, "offre trouvée", "offres trouvées")}, dont ${plural(s.new, "nouvelle", "nouvelles")}.`;
 });
 
@@ -145,7 +156,7 @@ onUnmounted(() => clearTimeout(timer));
           data-test="first-offers-start"
           @click="start"
         >
-          Chercher sur jobup maintenant
+          {{ web ? "Chercher sur le web maintenant" : "Chercher sur jobup maintenant" }}
         </BusyButton>
       </div>
     </div>

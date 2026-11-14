@@ -24,6 +24,9 @@ class RawResult:
     model: str
     usage: Usage
     stop_reason: str | None
+    # Les adresses des résultats de la recherche web, telles que le moteur les a rendues : ce
+    # que l'IA cite se vérifie contre elles (premières offres, docs/104).
+    web_urls: tuple[str, ...] = ()
 
 
 class Refused(Exception):
@@ -47,6 +50,19 @@ class ScoreClient(Protocol):
     def batch_results(self, batch_id: str) -> AsyncIterator[BatchItem]: ...
 
 
+def _web_urls(message: Any) -> tuple[str, ...]:
+    urls: list[str] = []
+    for block in message.content:
+        if block.type != "web_search_tool_result":
+            continue
+        results = getattr(block, "content", None)
+        for item in results if isinstance(results, list) else []:
+            url = getattr(item, "url", None)
+            if isinstance(url, str):
+                urls.append(url)
+    return tuple(dict.fromkeys(urls))
+
+
 def _raw(message: Any) -> RawResult:
     text = "".join(block.text for block in message.content if block.type == "text")
     usage = message.usage
@@ -54,6 +70,7 @@ def _raw(message: Any) -> RawResult:
         text=text,
         model=message.model,
         stop_reason=message.stop_reason,
+        web_urls=_web_urls(message),
         usage=Usage(
             input_tokens=usage.input_tokens or 0,
             cache_read_tokens=usage.cache_read_input_tokens or 0,

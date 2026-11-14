@@ -11,6 +11,8 @@ export const SITE_NAMES: Record<string, string> = {
   gmail: "Gmail",
   // Offre ajoutée par toi (docs/111) : son lien mène à l'annonce elle-même.
   manual: "l’annonce",
+  // Trouvée par la recherche web des premières offres (docs/104) : un intitulé et un lien.
+  web: "le web",
   unknown: "inconnu",
 };
 
