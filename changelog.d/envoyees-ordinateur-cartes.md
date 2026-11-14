@@ -1,0 +1,1 @@
+Envoyées sur ordinateur (maquette du 14 novembre) : détail en quatre cartes (titre, suivi, relance conseillée, documents et contacts avec l’historique), statuts et tri dans le volet Filtres, plus de trait bleu

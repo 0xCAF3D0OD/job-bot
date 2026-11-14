@@ -5123,12 +5123,12 @@ a.panel-row:hover { background: var(--band); }
 @media (min-width: 1024px) {
   /* Envoyées (§8.1 du 9 novembre) : la liste de 480 px à gauche, un trait de 2 px --line au milieu de l'écart, le détail
      en cartes séparées sur le crème à droite (plus de grand cadre). Le trait bleu part de la carte choisie. */
-  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-8); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
-  .sent-columns > :not(.sent-detail, .sent-divider, .sent-link) { grid-column: 1; }
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-6); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
+  .sent-columns > :not(.sent-detail) { grid-column: 1; }
+  /* Le volet Filtres (maquette du 14 novembre, §3) prend la place de la colonne liste. */
+  .jobs-body.sent-panel-open > :not(.sent-detail, .sent-filter-panel) { display: none; }
+  .sent-columns > .sent-filter-panel { position: sticky; top: var(--space-4); height: auto; max-height: calc(100dvh - 12rem); }
   .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding-bottom: var(--space-6); }
-  .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) + var(--sent-gap) / 2 - 1px); width: 2px; background: var(--line); }
-  .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w)); width: calc(var(--sent-gap) / 2); height: 2px; background: var(--primary-graphic); }
-  .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
   .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
 }
 /* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
