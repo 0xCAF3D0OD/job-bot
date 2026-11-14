@@ -1,0 +1,1 @@
+Feuilles et panneaux (maquette du 14 novembre, §4) : panneaux de l’ordinateur en carte flottante à 16 px des bords, croix ronde de 44 px avec trait, titres 20 px, libellés de section en capitales 13 px
