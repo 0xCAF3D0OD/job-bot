@@ -94,4 +94,28 @@ describe("Bilan › Résultats sur ordinateur", () => {
     expect(wrapper.get("[data-test=insights-empty]").text()).toContain("Trop tôt pour conclure");
     expect(wrapper.find("[data-test=bilan-blocks]").exists()).toBe(false);
   });
+
+  it("« Ce que jobA1 conseille » : chaque conseil avec sa base, le conseil de compétence mène aux formations", async () => {
+    serve({
+      ...report(),
+      advice: [
+        { kind: "channel", title: "Les formulaires en ligne ne répondent pas", text: "Essaie l'e-mail direct au service RH quand l'annonce en donne un.", base: 8, base_unit: "applications", link: null },
+        { kind: "skill", title: "Terraform revient dans 14 offres sur 22", text: "La formation peut être financée par l'ORP.", base: 22, base_unit: "offers", link: "/bilan/formations?onglet=catalogue" },
+      ],
+    });
+    const wrapper = await mountWide();
+    expect(wrapper.findAll("h2").map((h) => h.text())).toEqual(["Le mois en bref", "Ce qui bloque", "Ce que jobA1 conseille"]);
+    const channel = wrapper.get("[data-test=bilan-advice-channel]");
+    expect(channel.text()).toBe("Les formulaires en ligne ne répondent pasEssaie l’e-mail direct au service RH quand l’annonce en donne un.d’après 8 candidatures");
+    expect(channel.find("a").exists()).toBe(false);
+    const skill = wrapper.get("[data-test=bilan-advice-skill]");
+    expect(skill.get("[data-test=bilan-advice-base]").text()).toBe("d’après 22 offres");
+    expect(skill.get("a").attributes("href")).toBe("/bilan/formations?onglet=catalogue");
+  });
+
+  it("sans conseil, le bloc est caché", async () => {
+    serve({ ...report(), advice: [] });
+    const wrapper = await mountWide();
+    expect(wrapper.find("[data-test=bilan-advice]").exists()).toBe(false);
+  });
 });

@@ -10259,6 +10259,59 @@
         ],
         "title": "AddressCandidates"
       },
+      "AdviceOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "channel",
+              "site",
+              "skill"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "base": {
+            "type": "integer",
+            "title": "Base"
+          },
+          "base_unit": {
+            "type": "string",
+            "enum": [
+              "applications",
+              "offers"
+            ],
+            "title": "Base Unit"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "text",
+          "base",
+          "base_unit"
+        ],
+        "title": "AdviceOut"
+      },
       "AiReadingOut": {
         "properties": {
           "grade": {
@@ -23229,6 +23282,14 @@
                 "type": "null"
               }
             ]
+          },
+          "advice": {
+            "items": {
+              "$ref": "#/components/schemas/AdviceOut"
+            },
+            "type": "array",
+            "title": "Advice",
+            "default": []
           },
           "orp_summary": {
             "anyOf": [

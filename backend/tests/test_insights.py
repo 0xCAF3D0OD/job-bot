@@ -149,6 +149,10 @@ async def test_insights_and_orp_summary(api: AsyncClient, runtime: Runtime) -> N
         "Les offres de jobup obtiennent plus souvent une réponse (4 sur 6, contre 0 sur 5)."
     )
     assert found["orp_summary"] is None
+    # « Ce que jobA1 conseille » : 5 candidatures Indeed sans réponse, jobup répond.
+    assert [(a["title"], a["base"]) for a in found["advice"]] == [
+        ("Les offres de Indeed ne répondent pas", 5)
+    ]
     # Par mois (docs/55) : le mois en cours et les deux précédents, toutes les candidatures.
     assert found["unit"] == "month" and len(found["buckets"]) == 3
     assert sum(b["applications"] for b in found["buckets"]) == 13
