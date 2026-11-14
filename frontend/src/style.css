@@ -4245,8 +4245,8 @@ html.search-open { overflow: hidden; }
 .form-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); display: flex; align-items: center; gap: var(--space-1); max-width: calc(100% - 2 * var(--ff-label-x)); box-sizing: border-box; padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); color: var(--text-secondary); pointer-events: none; white-space: nowrap; transition: top var(--t-state), font-size var(--t-state), color var(--t-state); }
 .form-field-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .form-field-box:focus-within > .form-field-label,
-.form-field-box:has(:is(input, textarea):not(:placeholder-shown)) > .form-field-label,
-.form-field-box:has(select, input:is([type="date"], [type="time"], [type="datetime-local"])) > .form-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--ff-bg) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
+.form-field-box:has(input:not(:placeholder-shown)) > .form-field-label,
+.form-field-box:has(select, textarea, input:is([type="date"], [type="time"], [type="datetime-local"])) > .form-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--ff-bg) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
 .form-field-box:focus-within > .form-field-label { color: var(--primary-text); }
 .form-field-box:has(:is(input, select, textarea):disabled) > .form-field-label { color: var(--text-placeholder); }
 .form-field-box:has([aria-invalid="true"]) > .form-field-label { color: var(--down-text); }
