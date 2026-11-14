@@ -115,18 +115,18 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
 
-  it("aucun rendez-vous : une ligne et « Nouveau rendez-vous » en tête de liste, qui ouvre le panneau ; plus de formulaire dans le détail (PR 41)", async () => {
+  it("aucun rendez-vous : une ligne en tête de liste, sans bouton d’ajout ; le « + Ajouter » de l’en-tête (?ajouter=1) ouvre le panneau (maquette du 14 novembre, §6)", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
-    const { wrapper } = await open();
+    const { wrapper, router } = await open();
     expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
     expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("jobA1 prépare ta fiche la veille.");
-    const add = wrapper.get("[data-test=rdv-add]");
-    expect(add.text()).toBe("Nouveau rendez-vous");
-    expect(add.attributes("aria-haspopup")).toBe("dialog");
+    expect(wrapper.find("[data-test=rdv-add]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
     expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(false);
-    await add.trigger("click");
+    await router.push("/candidatures/rendez-vous-orp?ajouter=1");
+    await flushPromises();
+    expect(router.currentRoute.value.query.ajouter).toBeUndefined();
     expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(true);
     const panel = wrapper.get("[data-test=new-meeting]");
     expect(panel.find(".sheet-title").text()).toBe("Nouveau rendez-vous");

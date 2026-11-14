@@ -5,7 +5,6 @@ import { useRoute, useRouter } from "vue-router";
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import { timeOfDay } from "../dates";
-import { plural } from "../format";
 import {
   countdown,
   dateText,
@@ -30,8 +29,9 @@ import OrpOutcomeInline from "./OrpOutcomeInline.vue";
 // Rendez-vous sur ordinateur, dès 1 024 px (maquette du 8 novembre, CandidaturesOrdinateurB, onglet Rendez-vous) :
 // la liste de 480 px à gauche (À venir, À noter, Passés, en cartes de 104 px), le détail de ce qui est choisi à
 // droite ; les deux colonnes défilent seules. Le choix est dans l'adresse (?rdv=orp, entretien-12, passe-3).
-// Les dates sont dans l'icône calendrier (CalendarDate, D26). En tête de liste, « + Nouveau rendez-vous »
-// (PR 41), avec « Aucun rendez-vous à venir » quand rien n'est prévu ; il ouvre le panneau de la page.
+// Les dates sont dans l'icône calendrier (CalendarDate, D26). En tête de liste, « Aucun rendez-vous à venir » quand
+// rien n'est prévu. Maquette du 14 novembre (§6) : plus de « + Nouveau rendez-vous » ici, le seul bouton d'ajout est
+// le « + Ajouter » de l'en-tête (et « Prochain rendez-vous › Ajouter » dans une fiche ORP).
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -141,28 +141,18 @@ watch(() => props.page, () => void nextTick(measure));
       role="region"
     >
       <div
+        v-if="!upcoming.length"
         class="rdv-list-empty"
         data-test="rdv-list-empty"
       >
         <div>
-          <template v-if="!upcoming.length">
-            <strong>Aucun rendez-vous à venir</strong>
-            <span>jobA1 prépare ta fiche la veille.</span>
-          </template>
+          <strong>Aucun rendez-vous à venir</strong>
+          <span>jobA1 prépare ta fiche la veille.</span>
         </div>
-        <button
-          type="button"
-          class="secondary action-2"
-          aria-haspopup="dialog"
-          data-test="rdv-add"
-          @click="emit('add')"
-        >
-          <AppIcon name="plus" />Nouveau rendez-vous
-        </button>
       </div>
       <template v-if="upcoming.length">
         <h2 class="rdv-list-title">
-          À venir<span>{{ plural(upcoming.length, "rendez-vous", "rendez-vous") }}</span>
+          À venir<span>{{ upcoming.length }}</span>
         </h2>
         <button
           v-for="item in upcoming"
@@ -197,7 +187,7 @@ watch(() => props.page, () => void nextTick(measure));
       </template>
       <template v-if="toNote.length">
         <h2 class="rdv-list-title">
-          À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
+          À noter<span>{{ toNote.length }}</span>
         </h2>
         <button
           v-for="item in toNote"
@@ -546,5 +536,4 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-list-empty > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .rdv-list-empty strong { font-size: var(--rdv-15); }
 .rdv-list-empty span { font-size: var(--font-caption); color: var(--text-secondary); }
-.rdv-list-empty button { flex: none; border-color: var(--card-line); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: var(--space-2); height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
 </style>
