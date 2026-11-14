@@ -43,11 +43,11 @@ watch(
 </template>
 
 <style>
-/* Téléphone, maquette du 14 novembre (§6, planches Envoyees et RendezVous) : le champ « Poste, entreprise, lieu » posé seul
-   au-dessus des onglets (Envoyées, Rendez-vous) : 48 px, coins de 14, bord --line, fond blanc, loupe de 20 à 14 px. */
+/* Téléphone, maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : le champ « Poste, entreprise, lieu »
+   au-dessus des onglets : 48 px, coins de 14, bord --line, fond blanc, loupe de 20 à 14 px, 16 px à droite (grille de 4). */
 @media (max-width: 820px) {
-  .jobs-tools > .filters-search-wrap { --search-14: 14px; --search-icon: 20px; --search-gap: 10px; }
-  .jobs-tools > .filters-search-wrap .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
-  .jobs-tools > .filters-search-wrap > .icon { left: var(--search-14); width: var(--search-icon); height: var(--search-icon); color: var(--text-secondary); }
+  .jobs-tools .filters-search-wrap { --search-14: 14px; --search-icon: 20px; --search-gap: 10px; display: block; }
+  .jobs-tools .filters-search-wrap .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
+  .jobs-tools .filters-search-wrap > .icon { left: var(--search-14); width: var(--search-icon); height: var(--search-icon); color: var(--text-secondary); }
 }
 </style>
