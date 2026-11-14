@@ -323,6 +323,9 @@ function remove(): void {
 .alert-sheet { display: contents; }
 .alerts-desk-note { margin: 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .alert-sheet-state { font-weight: var(--weight-bold); }
+/* Panneau « Alerte » sur ordinateur (AlertesOrdinateur, état ouvert) : la valeur sous l'étiquette, 15/700, 4 px dessous
+   l'étiquette (le téléphone, AlertesTelAlerte, la garde en graisse normale). */
+.side-panel .alert-sheet .sheet-text { margin-top: var(--space-1); font-weight: var(--weight-bold); }
 .alert-sheet-state.active { color: var(--success); }
 .alert-sheet-state.confirm { color: var(--peach-text); }
 /* Ordinateur (AlertesOrdinateur, §2.8) : 32 px entre les familles, 8 px entre les cartes ; carte de 72 px, 20 px de
