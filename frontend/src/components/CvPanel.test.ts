@@ -99,6 +99,9 @@ describe("CvPanel", () => {
     expect(card.find("[role=radiogroup], [aria-label='Langue du CV']").exists()).toBe(true);
     expect(card.find("[data-test=cv-highlights]").exists()).toBe(false);
     expect(wrapper.find("[data-test=cv-docx]").attributes("href")).toBe("/api/cvs/21/docx");
+    // La page du CV porte le modèle choisi (Moderne par défaut), comme son PDF.
+    expect(wrapper.find("[data-test=cv]").classes()).toContain("tpl-moderne");
+    expect(wrapper.find("[data-test=cv] .cv-head .cv-name").exists()).toBe(true);
   });
 
   it("sans langue choisie, le CV prend celle de la lettre (§14)", async () => {
