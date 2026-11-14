@@ -582,3 +582,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.368 | Relance sur ordinateur refaite d'après la planche du 13 novembre : message écrit à la première ouverture puis gardé (migration 0085), « Réécrire », lecture puis « Modifier le message », « Relancer par e-mail » en bouton principal | livrée |
 | 1.6.369 | Écran « Aucune offre avec ces filtres » sur ordinateur centré sur toute la largeur, comme la planche du 13 novembre, et « Tout effacer » en contour gris | livrée |
 | 1.6.370 | Bilan › Résultats sur ordinateur refait à zéro d’après la planche BilanOrdinateur, sans changer la logique | livrée |
+| 1.6.371 | La maquette du 14 novembre dans docs/maquette/2026-11-14, ses règles dans docs/design/regles.md et la règle des captures dans CLAUDE.md | documentation seule, les pages suivent dans des PR séparées |
