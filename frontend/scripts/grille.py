@@ -22,6 +22,8 @@ from pathlib import Path
 
 from playwright.async_api import Route, async_playwright
 
+from formats import checked
+
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 AUDIT = (Path(__file__).resolve().parents[2] / "docs/mobile/outils/audit-grille.js").read_text(encoding="utf-8")
 
@@ -162,7 +164,7 @@ async def main() -> int:
             "offer": offers["items"][0]["id"] if offers.get("items") else 0,
             "application": applications[0]["id"] if applications else 0,
         }
-        runs = [(390, 844, SCREENS, AUDIT), (1440, 900, DESK_SCREENS, AUDIT_DESK)]
+        runs = [r for r in ((390, 844, SCREENS, AUDIT), (1440, 900, DESK_SCREENS, AUDIT_DESK)) if checked(r[0])]
         for scheme, (width, height, screens, audit) in ((s, r) for s in ("light", "dark") for r in runs):
             phone = width < 821
             page = await browser.new_page(viewport={"width": width, "height": height}, color_scheme=scheme, has_touch=phone, is_mobile=phone)

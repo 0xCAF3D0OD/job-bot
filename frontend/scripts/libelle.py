@@ -25,6 +25,8 @@ import sys
 from PIL import Image
 from playwright.async_api import Page, Route, async_playwright
 
+from formats import checked
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200").rstrip("/")
 SCALE = 2
 STATES = ("repos", "focus", "erreur", "erreur et focus")
@@ -99,13 +101,16 @@ async def main() -> int:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
         for scheme, tone in (("light", "clair"), ("dark", "sombre")):
-            context = await browser.new_context(viewport={"width": 1440, "height": 900}, color_scheme=scheme, device_scale_factor=SCALE, reduced_motion="reduce")
-            page = await context.new_page()
-            await page.goto(f"{BASE}/candidatures/offres")
-            await page.locator("[data-test=manual-open]").first.click()
-            faults += await audit(page, "dialog[open] [data-test=manual-entry]", f"1440 px, {tone}, « Lien ou texte de l’annonce »")
-            await context.close()
+            if checked(1440):
+                context = await browser.new_context(viewport={"width": 1440, "height": 900}, color_scheme=scheme, device_scale_factor=SCALE, reduced_motion="reduce")
+                page = await context.new_page()
+                await page.goto(f"{BASE}/candidatures/offres")
+                await page.locator("[data-test=manual-open]").first.click()
+                faults += await audit(page, "dialog[open] [data-test=manual-entry]", f"1440 px, {tone}, « Lien ou texte de l’annonce »")
+                await context.close()
 
+            if not checked(390):
+                continue
             context = await browser.new_context(viewport={"width": 390, "height": 844}, color_scheme=scheme, device_scale_factor=SCALE, reduced_motion="reduce")
             page = await context.new_page()
 

@@ -24,6 +24,8 @@ import sys
 
 from playwright.async_api import BrowserContext, Route, async_playwright
 
+from formats import checked
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200").rstrip("/")
 SHEET = "[data-test=new-meeting]"
 SIZES = ((1440, 900), (1280, 800), (1024, 768), (390, 844), (320, 640))
@@ -321,24 +323,26 @@ async def main() -> int:
     async with async_playwright() as p:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
-        for width, height in SIZES:
+        for width, height in (s for s in SIZES if checked(s[0])):
             context = await browser.new_context(viewport={"width": width, "height": height}, reduced_motion="reduce")
             faults += await date_step(context, width)
             await context.close()
-        for opener in ("rdv-add", "outcome-next-add"):
+        # Le reste se passe à l'ordinateur (900 px compris) : rien de plus pour le téléphone.
+        for opener in ("rdv-add", "outcome-next-add") if checked(1440) else ():
             # L'heure s'affiche à l'heure suisse : le navigateur du test aussi.
             context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce", timezone_id="Europe/Zurich")
             faults += await add_meeting(context, opener)
             await context.close()
-        context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
-        faults += await failed_save(context)
-        await context.close()
-        context = await browser.new_context(viewport={"width": 900, "height": 800}, reduced_motion="reduce")
-        faults += await outcome_sheet(context)
-        await context.close()
-        context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
-        faults += await outcome_inline(context)
-        await context.close()
+        if checked(1440):
+            context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+            faults += await failed_save(context)
+            await context.close()
+            context = await browser.new_context(viewport={"width": 900, "height": 800}, reduced_motion="reduce")
+            faults += await outcome_sheet(context)
+            await context.close()
+            context = await browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+            faults += await outcome_inline(context)
+            await context.close()
         await browser.close()
     for fault in faults:
         print(fault)

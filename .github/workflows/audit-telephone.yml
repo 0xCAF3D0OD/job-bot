@@ -1,8 +1,13 @@
-# L'audit téléphone de la démo (frontend/scripts/telephone.py) : en 320, 360 et 390 px, sur chaque
-# page et avec le panneau de la cloche ouvert, rien ne sort de l'écran et chaque cible tactile fait au
-# moins 24 × 24 px (WCAG 2.2, 2.5.8). Puis l'audit des contrôles (frontend/scripts/controles.py), en 1440,
-# 320, 360 et 390 px : une rangée de contrôles a une seule hauteur à 1 px près, et le texte d'une liste de
-# choix ne passe pas sous son chevron. La démo tourne dans Docker, comme en ligne (make demo-image).
+# Les audits d'écran de la démo, en deux contrôles (décision de Kevin du 14.11.2026) : le téléphone (320 à 820 px) et
+# l'ordinateur (dès 821 px) placent les éléments très différemment, chacun a donc le sien.
+# - Téléphone : l'audit téléphone (frontend/scripts/telephone.py : en 320, 360 et 390 px, rien ne sort de l'écran et
+#   chaque cible tactile fait au moins 24 × 24 px, WCAG 2.2, 2.5.8), puis les autres audits à leurs largeurs téléphone.
+# - Ordinateur : les mêmes audits à leurs largeurs ordinateur (1024 à 1440 px), et le panneau « Ajouter ».
+# Sur une PR, chaque contrôle ne tourne que si elle touche son format (scripts/ci_formats.py) : une PR de
+# documentation n'en lance aucun, un style placé dans « @media (max-width: 820px) » ne lance que le téléphone, un
+# fichier partagé (stores, services, serveur, styles hors @media) lance les deux. Le détail est dans le résumé du
+# contrôle « Formats touchés ». Un contrôle sauté compte comme réussi : il ne bloque pas la fusion, même requis.
+# Sur main et à la demande, les deux tournent toujours. La démo tourne dans Docker, comme en ligne (make demo-image).
 name: Audit téléphone
 
 on:
@@ -19,10 +24,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  formats:
+    name: Formats touchés
+    runs-on: ubuntu-latest
+    outputs:
+      telephone: ${{ steps.formats.outputs.telephone }}
+      ordinateur: ${{ steps.formats.outputs.ordinateur }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Comme le contrôle « Historique » (tests.yml) : sur une PR, la CI travaille sur le commit de fusion de test,
+      # dont le premier parent est main au moment du passage ; on compare à lui.
+      - name: Téléphone, ordinateur, les deux ou aucun
+        id: formats
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            printf 'telephone=true\nordinateur=true\n' >> "$GITHUB_OUTPUT"
+            echo "Envoi sur main ou lancement à la main : les deux formats."
+            exit 0
+          fi
+          if git rev-parse -q --verify HEAD^2 >/dev/null; then base=$(git rev-parse HEAD^1)
+          else git fetch -q origin "${{ github.base_ref }}" && base=$(git merge-base FETCH_HEAD HEAD); fi
+          # Si le tri échoue, on ne saute rien : les deux formats.
+          if ! python3 scripts/ci_formats.py "$base" HEAD; then
+            echo "::warning::Le choix des formats a échoué : les deux contrôles tournent."
+            printf 'telephone=true\nordinateur=true\n' >> "$GITHUB_OUTPUT"
+          fi
+
   telephone:
     name: Téléphone (320, 360, 390 px)
+    needs: formats
+    if: needs.formats.outputs.telephone == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      AUDIT_FORMAT: telephone
+      DEMO_URL: http://localhost:8280
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -34,28 +72,70 @@ jobs:
       - name: La démo (Docker, http://localhost:8280)
         run: make demo-image
       - name: Audit téléphone de la démo
-        run: make audit-telephone DEMO_URL=http://localhost:8280
+        run: make audit-telephone DEMO_URL=$DEMO_URL
       - name: Grille et alignements des écrans du lot 18 (audit-grille.js, 390 px, 0 écart)
         if: success() || failure()
-        run: make audit-grille DEMO_URL=http://localhost:8280
-      - name: Rangées de contrôles et listes de choix (1440, 320, 360, 390 px)
+        run: make audit-grille DEMO_URL=$DEMO_URL
+      - name: Rangées de contrôles et listes de choix (320, 360, 390 px)
         if: success() || failure()
-        run: make audit-controles DEMO_URL=http://localhost:8280
+        run: make audit-controles DEMO_URL=$DEMO_URL
+      - name: « Nouveau rendez-vous », choix de la date dans la feuille du bas (390 et 320 px)
+        if: success() || failure()
+        run: make audit-rendez-vous DEMO_URL=$DEMO_URL
+      - name: Menu « Candidatures » (barre du bas, 390 px)
+        if: success() || failure()
+        run: make audit-menu DEMO_URL=$DEMO_URL
+      - name: Libellé flottant du lieu du rendez-vous (390 px ; clair et sombre)
+        if: success() || failure()
+        run: make audit-libelle DEMO_URL=$DEMO_URL
+      - name: Trier 3 offres (garder, écarter, garder ; 390 px)
+        if: success() || failure()
+        run: make audit-tri DEMO_URL=$DEMO_URL
+      - name: Journaux de la démo en cas d'échec
+        if: failure()
+        run: cd deploy/demo && docker compose -p joba1-demo-local logs --tail=80 api web
+      - name: Arrêter la démo
+        if: always()
+        run: make demo-image-stop
+
+  ordinateur:
+    name: Ordinateur (1024 à 1440 px)
+    needs: formats
+    if: needs.formats.outputs.ordinateur == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AUDIT_FORMAT: ordinateur
+      DEMO_URL: http://localhost:8280
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Navigateur de Playwright
+        working-directory: backend
+        run: uv run --with playwright playwright install --with-deps chromium
+      - name: La démo (Docker, http://localhost:8280)
+        run: make demo-image
+      - name: Grille et alignements des écrans ordinateur (audit-grille.js, 1440 px, 0 écart)
+        if: success() || failure()
+        run: make audit-grille DEMO_URL=$DEMO_URL
+      - name: Rangées de contrôles et listes de choix (1440 px)
+        if: success() || failure()
+        run: make audit-controles DEMO_URL=$DEMO_URL
       - name: Panneau « Ajouter » (modale, Échap, clic à l'extérieur, focus rendu)
         if: success() || failure()
-        run: make audit-panneaux DEMO_URL=http://localhost:8280
-      - name: « Nouveau rendez-vous », choix de la date (pas de défilement horizontal ; 1440 à 320 px)
+        run: make audit-panneaux DEMO_URL=$DEMO_URL
+      - name: « Nouveau rendez-vous », choix de la date dans le volet (1440, 1280, 1024 px), ajout et échec
         if: success() || failure()
-        run: make audit-rendez-vous DEMO_URL=http://localhost:8280
-      - name: Menu « Candidatures » depuis Mes alertes, Préparer et Relances (1440 et 390 px)
+        run: make audit-rendez-vous DEMO_URL=$DEMO_URL
+      - name: Menu « Candidatures » depuis Mes alertes, Préparer et Relances (menu du haut, 1440 px)
         if: success() || failure()
-        run: make audit-menu DEMO_URL=http://localhost:8280
-      - name: Libellé flottant des champs (aucun trait derrière les lettres ; clair et sombre)
+        run: make audit-menu DEMO_URL=$DEMO_URL
+      - name: Libellé flottant de « Lien ou texte de l'annonce » (1440 px ; clair et sombre)
         if: success() || failure()
-        run: make audit-libelle DEMO_URL=http://localhost:8280
-      - name: Trier 3 offres (garder, écarter, garder ; 390 et 1440 px)
+        run: make audit-libelle DEMO_URL=$DEMO_URL
+      - name: Trier 3 offres (garder, écarter, garder ; 1440 px) et « Annuler » dans la fenêtre (1440 et 1024 px)
         if: success() || failure()
-        run: make audit-tri DEMO_URL=http://localhost:8280
+        run: make audit-tri DEMO_URL=$DEMO_URL
       - name: Journaux de la démo en cas d'échec
         if: failure()
         run: cd deploy/demo && docker compose -p joba1-demo-local logs --tail=80 api web
