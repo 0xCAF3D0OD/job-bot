@@ -1,0 +1,1 @@
+Allègement du CSS commun : règles et variables jamais utilisées retirées (suivi, rythme, anciennes cartes de candidature), styles de ScoreWord et KeyHints rangés dans leurs composants ; CSS total −0,8 Ko et CSS Candidatures −0,7 Ko (gzip), sans changement visible
