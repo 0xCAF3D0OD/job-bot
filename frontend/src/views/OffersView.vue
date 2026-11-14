@@ -59,7 +59,7 @@ const counts = ref<Record<View, number>>({
 const noOffersYet = computed(() => counts.value.all === 0 && counts.value.expired === 0 && !activeCount(filters.value));
 const applying = ref<ApplicationFormValue | null>(null);
 // L'écran qui suit « Marquer comme envoyée » (docs/141, 8 et 9), à la place de la page.
-const sentMoment = ref<{ title: string; company: string; count: number | null; target: number | null; followUpOn: string | null } | null>(null);
+const sentMoment = ref<{ title: string; company: string; count: number | null; target: number | null; followUpOn: string | null; applicationId: number; addressMissing: boolean } | null>(null);
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
@@ -471,7 +471,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
       ? { id: offer.id, status: previous }
       : null;
   const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
-  notice.value = undo.value ? (status === "ignored" ? discarded : `Passée en ${STATUS_TEXT[status]}.`) : "";
+  notice.value = undo.value ? (status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
   // « Annuler » reste 6 s (docs/108), puis le message s'efface.
   clearTimeout(undoTimer);
   if (undo.value) {
@@ -486,7 +486,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
 }
 let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
-const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
+const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "À examiner" };
 const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
 async function undoStatus(): Promise<void> {
   const last = undo.value;
@@ -549,7 +549,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   // « Candidature envoyée. » ou, si elle atteint l'objectif ORP du mois, « C'est fait ! » (docs/141, 8 et 9).
   const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
   if (orp && firstGoal(data.orp_month, orp.count, orp.target)) goalMoment.value = { ...orp, month: data.orp_month };
-  else sentMoment.value = { title: data.job_title, company: data.company, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
+  else sentMoment.value = { title: data.job_title, company: data.company, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null, applicationId: data.id, addressMissing: !data.company_address?.trim() };
   window.scrollTo?.({ top: 0 });
   await load();
 }
@@ -944,7 +944,8 @@ onUnmounted(() => {
               class="offer-day-title"
             >
               <span class="offer-day-name">{{ row.day.name }}</span>
-              <span class="offer-day-count">{{ row.day.count }}</span>
+              <!-- Ordinateur (CandidaturesOrdinateurB du 13.11) : le nombre seul ; « offres » reste pour le lecteur d’écran. -->
+              <span class="offer-day-count">{{ row.day.n }}<span class="offer-day-unit">{{ row.day.count.slice(String(row.day.n).length) }}</span></span>
             </h2>
             <OfferCard
               v-else-if="row.offer"

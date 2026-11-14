@@ -49,11 +49,20 @@ const OFFER = {
   keywords_asks: [],
 };
 
+const ALERTS = {
+  mailbox: "lea+0mwdr89t@alertes.joba1.ch",
+  sites: [{ slug: "jobup", name: "jobup" }],
+  searches: [
+    { id: 5, active: true, terms: "DevOps", location: "Lausanne et 30 km", cells: [{ site: "jobup", url: "https://www.jobup.ch/fr/emplois/?term=DevOps" }] },
+    { id: 6, active: true, terms: "SRE", location: "", cells: [{ site: "jobup", url: "https://www.jobup.ch/fr/emplois/?term=SRE" }] },
+  ],
+};
+
 type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[] };
 
 async function mountWelcome(
   state: State = { status: "pending", step: 1, goal: null, trade: null },
-  options: { offers?: unknown[]; realTransition?: boolean } = {},
+  options: { offers?: unknown[]; realTransition?: boolean; path?: string } = {},
 ) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
@@ -66,7 +75,9 @@ async function mountWelcome(
               ? SETTINGS
               : path === "/api/offers"
                 ? { items: options.offers ?? [], total: (options.offers ?? []).length }
-                : {},
+                : path === "/api/alert-searches"
+                  ? ALERTS
+                  : {},
     }),
   );
   PUT.mockResolvedValue({ data: {}, response: { ok: true } });
@@ -78,7 +89,7 @@ async function mountWelcome(
       { path: "/:any(.*)*", component: { template: "<div />" } },
     ],
   });
-  await router.push("/bienvenue");
+  await router.push(options.path ?? "/bienvenue");
   const wrapper = mount(WelcomeView, {
     attachTo: options.realTransition ? document.body : undefined,
     global: { plugins: [router], stubs: options.realTransition ? { transition: false } : {} },
@@ -91,17 +102,23 @@ function calls(path: string): Record<string, unknown>[] {
   return PUT.mock.calls.filter((c) => c[0] === path).map((c) => (c[1] as { body: Record<string, unknown> }).body);
 }
 
+// Des critères aux premières offres : « Continuer », puis « Plus tard » à l'étape de l'alerte.
+async function toOffers(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"], from = "welcome-continue"): Promise<void> {
+  await click(wrapper, from);
+  await click(wrapper, "welcome-alert-later");
+}
+
 async function click(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"], test: string): Promise<void> {
   await wrapper.find(`[data-test=${test}]`).trigger("click");
   await flushPromises();
 }
 
 describe("les premiers pas (OnboardingC, 11b)", () => {
-  it("quatre étapes : la barre le dit, « Moins chercher plus vivre. » sur la page bleue", async () => {
+  it("cinq étapes : la barre le dit, « Moins chercher plus vivre. » sur la page bleue", async () => {
     const { wrapper } = await mountWelcome();
     expect(wrapper.find(".welcome-blue").exists()).toBe(true);
     const bar = wrapper.find("[role=progressbar]");
-    expect(bar.attributes("aria-label")).toBe("Étape 1 sur 4");
+    expect(bar.attributes("aria-label")).toBe("Étape 1 sur 5");
     expect(bar.findAll("span.done")).toHaveLength(1);
     // Le mot barré reste lu par les lecteurs d'écran ; le gribouillis est décoratif.
     expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Moins chercher plus vivre.");
@@ -109,7 +126,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
     await click(wrapper, "welcome-start");
     expect(wrapper.find(".welcome-blue").exists()).toBe(false);
-    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 2 sur 4");
+    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 2 sur 5");
     expect(calls("/api/welcome")).toContainEqual({ step: 2 });
     expect(wrapper.find("[data-test=welcome-back]").exists()).toBe(true);
   });
@@ -193,7 +210,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(languages.findAll("[data-test=completion-language] b").map((b) => b.text())).toEqual(["Français", "Allemand", "Italien", "Anglais"]);
     expect((languages.find("[data-test=completion-level-anglais]").element as HTMLSelectElement).value).toBe("fluent");
     await languages.find("[data-test=completion-level-francais]").setValue("native");
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     expect(calls("/api/criteria").at(-1)).toMatchObject({
       language_levels: { francais: "native", allemand: "unknown", italien: "unknown", anglais: "fluent" },
     });
@@ -261,7 +278,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     // Retour aux critères, sans redemander les langues ; elles partent avec les critères.
     expect(wrapper.find("[data-test=welcome-profile]").exists()).toBe(false);
     expect(wrapper.find("[data-test=completion-languages]").exists()).toBe(false);
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     expect(calls("/api/criteria").at(-1)).toMatchObject({ language_levels: { francais: "native", allemand: "notions" } });
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français");
   });
@@ -317,9 +334,10 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
     await wrapper.find("[data-test=orp-switch]").setValue(false);
     expect(wrapper.find("[data-test=target]").exists()).toBe(false);
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: null });
-    expect(calls("/api/welcome").at(-1)).toMatchObject({ goal: "job" });
+    expect(calls("/api/welcome").at(-2)).toMatchObject({ step: 4, goal: "job" });
+    expect(calls("/api/welcome").at(-1)).toEqual({ step: 5 });
     const line = wrapper.find("[data-test=welcome-defaults]").text();
     expect(line).toBe("Taux : peu importe · Langues : à renseigner dans Profil · Télétravail : accepté depuis la Suisse · Téléphone : désactivé");
   });
@@ -327,7 +345,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
   it("le tri : les offres déjà notées, une à la fois ; Garder et Écarter comme dans Candidatures", async () => {
     const offers = [OFFER, { ...OFFER, id: 8, title: "SRE", score: 55 }];
     const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     expect(wrapper.text()).toContain("Garde ou écarte. Celles que tu gardes t’attendent dans Candidatures.");
     expect(wrapper.text()).not.toContain("apprend");
     expect(wrapper.find("[data-test=welcome-offer]").text()).toContain("D’après ton CV : Kubernetes et Terraform demandés.");
@@ -350,7 +368,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
   it("« Écarter » laisse « Annuler » 6 s : l’offre reprend son statut et le tri revient sur elle", async () => {
     const offers = [{ ...OFFER, status: "to_review" }, { ...OFFER, id: 8, title: "SRE", score: 55, status: "later" }];
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     await click(wrapper, "welcome-dismiss");
     expect(wrapper.find("[data-test=welcome-notice]").text()).toContain("Offre écartée.");
     expect(wrapper.text()).toContain("Offre 2 sur 2");
@@ -382,7 +400,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("sans offre notée : directement « Tout est prêt. », et « Modifier dans Compte » termine l’accueil", async () => {
     const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
-    await click(wrapper, "welcome-continue");
+    await toOffers(wrapper);
     expect(wrapper.find("[data-test=welcome-offer]").exists()).toBe(false);
     expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("Tes premières offres arrivent après la prochaine collecte.");
     await click(wrapper, "welcome-account");
@@ -390,9 +408,55 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(router.currentRoute.value.path).toBe("/compte");
   });
 
+  it("l’alerte (étape 4 sur 5) : la première recherche, jobup, l’adresse ; « J’ai créé l’alerte » note jobup", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer");
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4 });
+    expect(wrapper.get("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");
+    expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");
+    const alert = wrapper.get("[data-test=welcome-alert]");
+    expect(wrapper.text()).toContain("Crée une alerte sur jobup : ses offres arrivent ici chaque matin, déjà triées. Environ 2 minutes.");
+    // Une seule recherche, la première ; les autres restent dans Mes alertes (décision de Kevin du 14.11).
+    expect(alert.get("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne et 30 km");
+    expect(alert.text()).not.toContain("SRE");
+    const open = alert.get("[data-test=wizard-open]");
+    expect(open.attributes("href")).toBe("https://www.jobup.ch/fr/emplois/?term=DevOps");
+    expect(open.text()).toContain("Ouvrir jobup");
+    expect(alert.get("[data-test=wizard-address]").text()).toBe("lea+0mwdr89t@alertes.joba1.ch");
+    expect(alert.text()).toContain("Copie-la, puis colle-la dans le champ e-mail de l’alerte.");
+    expect(alert.text()).toContain("Enregistre l’alerte, puis reviens ici");
+    expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
+
+    await click(wrapper, "welcome-alert-done");
+    expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: 5, site: "jobup" } } });
+    expect(calls("/api/welcome").at(-1)).toEqual({ step: 5 });
+    expect(wrapper.get("[data-test=welcome-offer]").text()).toContain("DevOps Engineer");
+  });
+
+  it("l’alerte : « Plus tard » ne note rien et mène aux premières offres ; le retour du tri y revient", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await toOffers(wrapper);
+    expect(PUT.mock.calls.some((c) => String(c[0]).startsWith("/api/alert-searches"))).toBe(false);
+    expect(wrapper.find("[data-test=welcome-offer]").exists()).toBe(true);
+    await click(wrapper, "welcome-back");
+    expect(wrapper.find("[data-test=welcome-alert]").exists()).toBe(true);
+  });
+
+  it("l’alerte rouverte depuis Aujourd’hui : « Retour », « Plus tard » et « J’ai créé l’alerte » y ramènent", async () => {
+    for (const test of ["welcome-back", "welcome-alert-later", "welcome-alert-done"]) {
+      const { wrapper, router } = await mountWelcome({ status: "done", step: 9, goal: "job", trade: null }, { path: "/bienvenue?etape=alerte" });
+      expect(wrapper.find("[data-test=welcome-alert]").exists()).toBe(true);
+      await click(wrapper, test);
+      expect(router.currentRoute.value.path).toBe("/aujourdhui");
+      expect(calls("/api/welcome")).toEqual([]);
+      wrapper.unmount();
+    }
+  });
+
   it("« Passer » remet à plus tard ; un accueil repris revient à son étape", async () => {
     const { wrapper, router } = await mountWelcome({ status: "postponed", step: 9, goal: null, trade: null });
-    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 3 sur 4");
+    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");
     await click(wrapper, "welcome-later");
     expect(calls("/api/welcome").at(-1)).toEqual({ postponed: true });
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
@@ -420,10 +484,10 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     vi.useRealTimers();
   });
 
-  it("étape 1 : en-tête « Étape 1 sur 3 », plus de « Passer », zone de dépôt, scène offres-profils décorative ; un seul des trois (la scène, pas le personnage)", async () => {
+  it("étape 1 : en-tête « Étape 1 sur 4 », plus de « Passer », zone de dépôt, scène offres-profils décorative ; un seul des trois (la scène, pas le personnage)", async () => {
     const { wrapper } = await mountWelcome();
     expect(wrapper.findComponent({ name: "Illustration" }).exists()).toBe(false);
-    expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 1 sur 3");
+    expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 1 sur 4");
     expect(wrapper.find("[data-test=welcome-later]").exists()).toBe(false);
     expect(wrapper.get("[data-test=cv-upload]").text()).toContain("Glisse ton CV ici");
     expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer sans CV");
@@ -484,8 +548,7 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=target]").text()).toBe("10");
     await click(wrapper, "target-plus");
     expect(wrapper.get("[data-test=target]").text()).toBe("11");
-    await click(wrapper, "welcome-criteria");
-    await flushPromises();
+    await toOffers(wrapper, "welcome-criteria");
     expect(wrapper.get("[data-test=welcome-offers-title]").text()).toBe("1 offre pour toi");
     expect(wrapper.get("[data-test=welcome-offer]").text()).toContain("Très proche · 88");
     await click(wrapper, "welcome-keep");
@@ -495,5 +558,21 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await click(wrapper, "undo-status");
     await flushPromises();
     expect(wrapper.find("[data-test=welcome-keep]").exists()).toBe(true);
+  });
+  it("étape 3 sur 4 : « Une alerte, et elles arrivent seules », les trois étapes dans une carte, Orange à droite", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
+    expect(wrapper.get("h1").text()).toBe("Une alerte, et elles arrivent seules");
+    expect(wrapper.text()).toContain("jobup t’envoie ses nouvelles offres par e-mail, jobA1 les trie pour toi chaque matin. Environ 2 minutes.");
+    const card = wrapper.get("[data-test=welcome-alert]");
+    expect(card.classes()).toContain("wdk-card");
+    expect(card.text()).toContain("Enregistre l’alerte sur jobup, puis reviens ici");
+    const orange = wrapper.get("[data-test=welcome-orange]");
+    expect(orange.attributes("alt")).toBe("");
+    expect(orange.attributes("width")).toBe("260");
+    expect(wrapper.find("[data-illustration]").exists()).toBe(false);
+    await click(wrapper, "welcome-back");
+    expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 2 sur 4");
   });
 });

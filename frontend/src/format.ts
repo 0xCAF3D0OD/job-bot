@@ -96,6 +96,14 @@ export function colorIndex(name: string): number {
   return hash % 3;
 }
 
+/** Ton du carré d'initiales des Candidatures sur ordinateur (planches CandidaturesOrdinateur* du 13.11.2026) : cinq
+ * tons, blanc à lettres rouges, blanc à lettres bleues, encre, bleu foncé, pêche. Même nom, même ton partout. */
+export function logoTone(name: string): number {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash % 5;
+}
+
 /** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
 // La note en mots (docs/121 §C.5), sur les seuils des couleurs : 85, 75, 50 (Proche dès 75, 2026-11-05, Kevin).
 export type ScoreTone = "very-close" | "close" | "dig" | "far";
