@@ -74,4 +74,15 @@ describe("ApplicationForm (règles §4, Champ de formulaire et Formulaire)", () 
     expect(wrapper.findAll("button.primary")).toHaveLength(1);
     wrapper.unmount();
   });
+
+  it("ouvert depuis « Il manque l’adresse » (écran de fin, §8) : le curseur est dans l’adresse", async () => {
+    const wrapper = mount(ApplicationForm, {
+      props: { title: "Modifier la candidature", initial, withStatus: true, focusAddress: true },
+      attachTo: document.body,
+    });
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(wrapper.find("[data-test=application-address]").element);
+    wrapper.unmount();
+  });
 });
