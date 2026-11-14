@@ -1598,7 +1598,7 @@ button, .button-link { max-width: 100%; }
   /* Le champ et « Ajouter » comme dans la maquette : fond blanc, bord clair. */
   /* Planche Candidatures du 14 novembre : 48 px, coins de 14, trait de 1 px, loupe de 20 px à 14 px du bord. */
   .jobs-tools .offers-toolbar { --search-14: 14px; --search-icon: 20px; --search-gap: 10px; }
-  .jobs-tools .offers-toolbar .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--search-14) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
+  .jobs-tools .offers-toolbar .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
   .jobs-tools .offers-toolbar .filters-search-wrap > .icon { left: var(--search-14); width: var(--search-icon); height: var(--search-icon); color: var(--text-secondary); }
   .jobs-tools .offers-add-compact { border-color: var(--line); background: var(--surface); }
   /* Ni trait sous l'en-tête d'une page d'onglet, ni sous les vues de Candidatures (maquette). */
