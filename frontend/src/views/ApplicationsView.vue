@@ -69,7 +69,7 @@ const orpPage = route.name === "orp-month";
 const orp = ref<OrpMonth | null>(null);
 usePageReady(orpPage ? "orp-month" : "applications", () => !!orp.value);
 const all = ref<Application[]>([]);
-const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
+const editing = ref<{ id: number | null; value: ApplicationFormValue; focusAddress?: boolean } | null>(null);
 const error = ref("");
 const loaded = ref(false);
 const busy = ref(false);
@@ -332,6 +332,21 @@ watch(
   { immediate: true },
 );
 const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
+// « Ajouter » de « Il manque l’adresse de l’entreprise », sur l’écran de fin (corrections du 13.11 au soir, §8) :
+// `?candidature=ID&modifier=adresse` ouvre « Modifier la candidature », le curseur dans l’adresse ; c’est elle que
+// lit le suivi ORP. Une seule fois : le paramètre est retiré de l’adresse.
+watch(
+  () => [route.query.modifier, opened.value] as const,
+  ([modifier, application]) => {
+    if (modifier !== "adresse" || !application) return;
+    error.value = "";
+    editing.value = { id: application.id, value: { ...application }, focusAddress: true };
+    const query = { ...route.query };
+    delete query.modifier;
+    void router.replace({ query });
+  },
+  { immediate: true },
+);
 const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
 // À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
 const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
@@ -1066,6 +1081,7 @@ onUnmounted(() => assistant.setFocus(null));
     :title="editing.id === null ? 'Ajouter une candidature' : 'Modifier la candidature'"
     :initial="editing.value"
     :with-status="editing.id !== null"
+    :focus-address="editing.focusAddress"
     :error="error"
     @submit="save"
     @close="editing = null"
