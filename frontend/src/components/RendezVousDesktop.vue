@@ -5,7 +5,6 @@ import { useRoute, useRouter } from "vue-router";
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import { timeOfDay } from "../dates";
-import { plural } from "../format";
 import {
   countdown,
   dateText,
@@ -162,7 +161,7 @@ watch(() => props.page, () => void nextTick(measure));
       </div>
       <template v-if="upcoming.length">
         <h2 class="rdv-list-title">
-          À venir<span>{{ plural(upcoming.length, "rendez-vous", "rendez-vous") }}</span>
+          À venir<span>{{ upcoming.length }}<span class="offer-day-unit"> rendez-vous</span></span>
         </h2>
         <button
           v-for="item in upcoming"
@@ -197,7 +196,7 @@ watch(() => props.page, () => void nextTick(measure));
       </template>
       <template v-if="toNote.length">
         <h2 class="rdv-list-title">
-          À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
+          À noter<span>{{ toNote.length }}<span class="offer-day-unit"> rendez-vous</span></span>
         </h2>
         <button
           v-for="item in toNote"
@@ -471,29 +470,30 @@ watch(() => props.page, () => void nextTick(measure));
 </template>
 
 <style>
-/* Valeurs de la maquette (CandidaturesOrdinateurB, onglet Rendez-vous) : liste de 480, écart 24 ; cartes de 104 aux
-   marges 14/16, écart 14 ; icône calendrier de 44 (56 dans le détail) ; détail blanc aux coins de 24, marges 24/28. */
+/* Valeurs de la maquette (CandidaturesOrdinateurB du 13.11, onglet Rendez-vous) : liste de 480, écart 24 ; cartes de
+   104 aux marges 14/18,5, bord 1,5 --card-line, écart 10, titre 16/21 ; icône calendrier de 44 (56 dans le détail) ;
+   détail blanc aux coins de 24, marges 28/32, écart 18. */
 .rdv-grid {
-  --rdv-3: 3px; --rdv-11: 11px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
+  --rdv-2: 2px; --rdv-3: 3px; --rdv-6: 6px; --rdv-10: 10px; --rdv-11: 11px; --rdv-18-5: 18.5px; --rdv-sel-y: 13.5px; --rdv-sel-x: 18px; --rdv-lh-card: 21px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
   display: flex; gap: var(--space-6); height: calc(100dvh - var(--rdv-top, 0px) - var(--space-6)); min-height: 20rem;
 }
-.rdv-list { flex: none; width: 480px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-2) var(--space-4) 0; }
-.rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) var(--space-1); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-list { flex: none; width: 480px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--rdv-10); padding: 0 var(--space-2) var(--space-4) 0; }
+.rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-1) var(--space-1) calc(var(--space-2) - var(--rdv-10)); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-item {
-  flex: none; display: flex; align-items: center; gap: var(--rdv-14); box-sizing: border-box; height: 104px; width: 100%; padding: var(--rdv-14) var(--space-4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); font: inherit; text-align: left;
+  flex: none; display: flex; align-items: center; gap: var(--rdv-14); box-sizing: border-box; height: 104px; width: 100%; padding: var(--rdv-14) var(--rdv-18-5);
+  background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); color: var(--text); font: inherit; text-align: left;
 }
 button.rdv-item { cursor: pointer; }
 button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-item[aria-current="true"] {
-  padding: calc(var(--rdv-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
+  padding: var(--rdv-sel-y) var(--rdv-sel-x); border: 2px solid var(--primary-graphic);
   background: color-mix(in srgb, var(--primary-soft) 45%, var(--surface));
 }
-.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-3); }
+.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-2); }
 .rdv-item-kicker { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-item-title, .rdv-item-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.rdv-item-title { font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-item-title { font-size: var(--font-body); line-height: var(--rdv-lh-card); font-weight: var(--weight-bold); }
 .rdv-item-sub { font-size: var(--font-small); color: var(--text-secondary); }
 .rdv-item .list-card-chips { display: flex; gap: var(--space-1); margin-top: var(--rdv-3); overflow: hidden; }
 /* Les puces de ListCard (son CSS n'est pas chargé sur cette page). */
@@ -504,10 +504,10 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-item .list-card-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
 .rdv-item .list-card-chips > .green { background: var(--success-soft); color: var(--success); }
 .rdv-detail {
-  flex: 1; min-width: 0; overflow-y: auto; box-sizing: border-box; padding: var(--space-6) var(--rdv-28);
+  flex: 1; min-width: 0; overflow-y: auto; box-sizing: border-box; padding: var(--rdv-28) var(--space-8);
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--space-6);
 }
-.rdv-detail-body { display: flex; flex-direction: column; gap: var(--rdv-22); }
+.rdv-detail-body { display: flex; flex-direction: column; gap: var(--rdv-18); }
 .rdv-detail-head { display: flex; align-items: flex-start; gap: var(--rdv-18); }
 .rdv-detail-head > div:not(.more-menu) { flex: 1; min-width: 0; }
 /* Le « ⋯ » du détail à la hauteur de « Nouveau rendez-vous », sur la même ligne (44 px, audit des contrôles). */
@@ -542,9 +542,9 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-question-new input { flex: 1; min-width: 0; }
 .rdv-detail .rdv-form { max-width: 560px; }
 /* Aucun rendez-vous à venir : une ligne de texte et « Ajouter » (44 px, en pilule), un trait dessous, sans carte. */
-.rdv-list-empty { flex: none; display: flex; align-items: center; gap: var(--rdv-14); padding: var(--space-1) var(--space-1) var(--space-2); border-bottom: 1px solid var(--line); }
+.rdv-list-empty { flex: none; display: flex; align-items: center; gap: var(--rdv-14); padding: var(--space-1) var(--space-1) var(--rdv-10); border-bottom: 1px solid var(--line); }
 .rdv-list-empty > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .rdv-list-empty strong { font-size: var(--rdv-15); }
 .rdv-list-empty span { font-size: var(--font-caption); color: var(--text-secondary); }
-.rdv-list-empty button { flex: none; border-color: var(--card-line); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: var(--space-2); height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
+.rdv-list-empty button { flex: none; border-color: var(--card-line); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: var(--rdv-6); height: 44px; padding: 0 var(--rdv-18); border-radius: var(--radius-pill); font-size: var(--rdv-15); font-weight: var(--weight-semibold); }
 </style>
