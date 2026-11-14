@@ -2573,7 +2573,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 /* La hauteur de la barre du haut sur téléphone (logo, titre, boutons : --control-h et 12 px au-dessus et au-dessous),
    avec la zone de l'encoche : là où s'arrêtent les bandes collantes de l'Accueil (PR 36). */
 :root { --header-h: calc(var(--control-h) + 2 * var(--space-3) + env(safe-area-inset-top)); }
-/* Une pastille dans un rail (1.6.41) : le rail garde --control-h, la pastille la hauteur moins sa marge. */
 button:where(.primary, .secondary, .small, :not([class])), .button-link {
   box-sizing: border-box; min-height: var(--control-h); padding-block: 0;
 }
@@ -3126,21 +3125,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
    un gris un peu plus sombre, dans les deux thèmes. */
 .dmock-bar strong, .dmock-grow small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
 /* Un lien dans une phrase se voit sans la couleur : souligné. */
-/* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
-   note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
-   sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
-.score-word { display: inline-grid; justify-items: end; gap: var(--space-2); flex: none; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
-.score-word-label { display: inline-flex; align-items: center; gap: var(--space-2); }
-/* La jauge discrète, pour la nuance à l'intérieur d'un niveau (rétablie en 1.6.6) ; la piste sur --border. */
-.score-gauge { display: block; width: 4.5rem; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, currentColor calc(var(--p, 0) * 1%), var(--border) 0); }
-.score-word.very-close { color: var(--ok-text); }
-.score-word.close { color: var(--accent); }
-.score-word.dig { color: var(--score-dig); }
-.score-word.far, .score-word.pending { color: var(--muted); }
-/* « Loin » : le mot en --text-secondary, la jauge en --neutral-graphic, distincte du gris chaud d'« À creuser ». */
-.score-word.far .score-gauge { color: var(--neutral-graphic); }
-.score-word.pending { font-weight: var(--weight-regular); font-size: var(--font-small); }
-.score-word.stale { opacity: 0.7; }
 .face-mark { flex: none; }
 .face-mark .face-line { fill: none; stroke: currentColor; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
 .face-mark .face-eye { fill: currentColor; }
@@ -3545,8 +3529,6 @@ main:focus { outline: none; }
 .apply-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .apply-files > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .apply-files .icon { color: var(--primary-graphic); }
-.apply-copy { gap: 0; padding: var(--space-4) 0 0; overflow: hidden; }
-.apply-copy h2 { padding: 0 var(--space-4) var(--space-2); font-size: var(--font-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
 .form-sheet dl { margin: 0; }
 .form-sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 var(--space-3); min-height: 3.25rem; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4); border-top: 1px solid var(--line-soft); }
 .form-sheet dt { font-size: var(--font-small); color: var(--text-secondary); }
@@ -3687,17 +3669,16 @@ main:focus { outline: none; }
 
 /* --- L'ancienne bande d'Aujourd'hui (maquette du 8 novembre), gardée pour le Bilan (.today-band) et le Suivi ORP
    (.today-orp-card, .orp-month-band) : bande --primary-soft, la carte du mois à cheval sur son bord bas. */
-.today-band { 
+.today-band {
   background: var(--primary-soft); padding: var(--space-6) var(--space-6) calc(var(--space-8) + var(--space-12)); }
 .today-band-inner { max-width: 880px; margin: 0 auto; }
 .today-orp-card {
-  margin-top: calc(-1 * var(--space-12)); display: grid; grid-template-columns: minmax(0, 1fr) 1px auto auto; align-items: center; gap: var(--today-28);
+  margin-top: calc(-1 * var(--space-12)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--today-28);
   padding: var(--space-4) var(--space-6); background: var(--surface); border: 1px solid var(--water); border-radius: var(--radius-card);
   box-shadow: var(--shadow-band-card); color: var(--text); text-decoration: none;
 }
 .today-orp-card:hover { border-color: var(--primary-graphic); }
 .today-orp-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
-.today-orp-card:not(:has(.today-orp-rule)) { grid-template-columns: minmax(0, 1fr) auto; }
 .orp-month-band { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .orp-month-band-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); font-size: var(--font-label); }
 .orp-month-band-bar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
@@ -3712,7 +3693,6 @@ main:focus { outline: none; }
 .bilan-page { max-width: 880px; margin: 0 auto; padding: 0 var(--space-6) var(--space-12); box-sizing: content-box; }
 .bilan-page-resultats, .bilan-page-formations { padding-top: var(--space-6); }
 .bilan-orp-wide { display: flex; flex-direction: column; gap: var(--space-8); }
-.bilan-orp-card { grid-template-columns: minmax(0, 1fr) auto; }
 .bilan-orp-more { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .bilan-orp-more .more-trigger { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .bilan-orp-more .more-menu .menu { top: auto; bottom: calc(var(--target-min) + var(--space-1)); right: auto; left: 0; }
@@ -4294,7 +4274,7 @@ html.search-open { overflow: hidden; }
    avec `icon`. En-tête : pastille ronde de 48 px, titre 18 gras, sous-titre 14, croix de 44 px, trait dessous.
    Ordinateur : sous l'en-tête, 420 px, coin haut gauche de 24 px, ombre à gauche, sans voile ; corps à 20 et 22 px,
    pied fixe. Téléphone : la feuille du bas, coins de 24 px en haut. */
-.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-close: var(--panel-close-size); --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
+.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
 .sheet-badge { flex: none; display: flex; align-items: center; justify-content: center; width: var(--panel-badge); height: var(--panel-badge); border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); }
 .sheet-badge .icon { width: var(--panel-icon); height: var(--panel-icon); stroke-width: 2.4; }
 .sheet.sheet-panel .sheet-head { gap: var(--panel-head-gap); padding: var(--panel-head-pad) var(--panel-close-edge) var(--panel-head-pad) var(--panel-pad-x); border-bottom: 1px solid var(--line-soft); }
@@ -4383,11 +4363,6 @@ html.search-open { overflow: hidden; }
 .step-progress-bar.continuous { border-radius: var(--radius-pill); background: var(--border); }
 .step-progress-bar.continuous .step-progress-segment { flex: none; }
 
-/* Raccourcis ← → sous deux actions : avec clavier et souris seulement. */
-.key-hints { display: flex; justify-content: space-between; margin: 0; color: var(--muted); font-size: var(--font-small); }
-.key-hints > span { display: inline-flex; align-items: center; gap: var(--space-1); }
-.key-hints kbd { display: inline-flex; font: inherit; }
-@media not ((hover: hover) and (pointer: fine)) { .key-hints { display: none; } }
 
 /* Case et radio dessinées (planche « Champs ») : 20 px, cochées en --accent, non cochées en --field-border
    (4,0:1 sur la carte), rayon 6 px pour la case ; la ligne entière est l'étiquette. */
