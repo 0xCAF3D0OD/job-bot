@@ -187,7 +187,10 @@ watch(viewMonth, () => void load());
       />
       <template v-else-if="!phone && shownMonth">
         <!-- Le mois précédent à remettre, ou remis (récapitulatif du 11 novembre, PR 29). -->
-        <OrpProofCard @changed="load()" />
+        <OrpProofCard
+          wide
+          @changed="load()"
+        />
         <RouterLink
           :to="shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
           class="today-orp-card bilan-orp-card"
@@ -362,6 +365,39 @@ watch(viewMonth, () => void load());
                 class="bilan-card"
                 data-test="bilan-rdv-next"
               >
+                <!-- Maquette du 13.11 (BilanOrdinateur) : pas encore fixé, le calendrier vide en pointillés ; fixé (non dessiné), la date à venir en bleu. -->
+                <CalendarDate
+                  v-if="nextMeeting"
+                  v-bind="cal(nextMeeting.starts_at)"
+                  tone="blue"
+                  :size="36"
+                />
+                <svg
+                  v-else
+                  class="bilan-cal-empty"
+                  width="36"
+                  height="39"
+                  viewBox="0 0 48 52"
+                  aria-hidden="true"
+                  data-test="bilan-rdv-empty"
+                >
+                  <rect
+                    x="3"
+                    y="7"
+                    width="42"
+                    height="42"
+                    rx="10"
+                    fill="none"
+                    stroke-width="2.5"
+                    stroke-dasharray="5 4"
+                  />
+                  <path
+                    d="M14 2.5 V9 M34 2.5 V9"
+                    fill="none"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  />
+                </svg>
                 <span class="bilan-card-what"><strong>Prochain rendez-vous</strong></span>
                 <span class="bilan-card-state">{{ nextMeeting ? `${dateText(nextMeeting.starts_at)}, ${timeAndPlace(nextMeeting.starts_at, null)}` : "Pas encore fixé" }}</span>
                 <span
