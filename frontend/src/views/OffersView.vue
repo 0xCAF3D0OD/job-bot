@@ -107,6 +107,8 @@ const emptyFiltersLine = computed(() => {
   const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];
   return `${parts.join(", ")}. Élargis un critère pour voir plus d’offres.`;
 });
+// Aucune offre avec des filtres : sur ordinateur, l'écran prend toute la largeur (AucuneOffreOrdinateur).
+const emptyWithFilters = computed(() => !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
 const filterLabel = computed(() => {
   const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
   if (phone.value) return `Filtres${active}`;
@@ -720,7 +722,7 @@ onUnmounted(() => {
 
     <div
       ref="grid"
-      :class="['offers-grid', { 'has-selection': selected }]"
+      :class="['offers-grid', { 'has-selection': selected, 'offers-grid-empty': emptyWithFilters && wide && !phone }]"
       :style="wide ? { '--offers-top': `${gridTop}px` } : undefined"
     >
       <!-- Ordinateur : « Plus de filtres » remplace la colonne liste ; la liste reste montée, ses choix gardés. -->
@@ -870,7 +872,7 @@ onUnmounted(() => {
             <button
               v-if="wide && !phone"
               type="button"
-              class="secondary"
+              class="secondary offers-empty-reset"
               data-test="offers-reset"
               @click="reset"
             >
@@ -1207,6 +1209,14 @@ onUnmounted(() => {
 .network-waiting :deep(button.primary) { min-height: 3.25rem; padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 /* Aucune offre (§2.7, AucuneOffreOrdinateur) : trait de 420 px à 32 px sous les boutons, phrase 15 grise à 32 dessous,
    lien 15/700 de 44 px. Le panneau « Ajouter » (§2.6) : les onglets, puis la phrase 15 à 24 dessous. */
+/* Sur ordinateur, sans offre avec ces filtres : pas de colonne de fiche, l'écran est centré sur toute la largeur ;
+   « Tout effacer » en contour gris, texte foncé (planche : trait #C9C5BA, absent des jetons : --line-strong). */
+@media (min-width: 1024px) {
+  .offers-grid.offers-grid-empty .offers-list { --empty-tools: 472px; flex: 1; width: auto; }
+  .offers-grid-empty .offers-list-tools { max-width: var(--empty-tools); }
+  .offers-grid-empty .offers-list :deep(.character-state-wide) { margin-inline: auto; }
+  .offers-empty-reset { border-color: var(--line-strong); background: var(--surface); color: var(--text); }
+}
 .offers-empty-spontaneous { --empty-420: 420px; --empty-15: 15px; display: grid; justify-items: center; gap: var(--space-1); width: min(var(--empty-420), 100%); margin: var(--space-8) auto 0; padding-top: var(--space-8); border-top: 1px solid var(--line); }
 .offers-empty-spontaneous p { margin: 0; font-size: var(--empty-15); color: var(--text-secondary); }
 .offers-empty-spontaneous .link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--empty-15); font-weight: var(--weight-bold); color: var(--primary-text); }
