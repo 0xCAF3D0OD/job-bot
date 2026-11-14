@@ -573,3 +573,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.359 | Le jour de repos sur ordinateur suit le gabarit commun d'Aujourd'hui (état « repos » du 14 novembre) ; sur téléphone, ses textes sur l'Accueil actuel | livrée |
 | 1.6.360 | Zones de texte des formulaires : le libellé reste toujours dans la bordure, même vide (planches du 13 novembre) | livrée |
 | 1.6.361 | Des premières offres dès l'inscription par la recherche web de l'IA, sans note, derrière un réglage éteint par défaut | livrée, réglage `JOBBOT_WEB_FIRST_OFFERS_ENABLED` à allumer sur le serveur après un essai avec `jobbot premieres-offres-web` |
+| 1.6.362 | Bilan › Formations sur ordinateur : la carte de l’ORP, les formations en cours et les gardées d’abord, puis « Chercher d’autres formations » qui ouvre le catalogue inchangé | livrée |
+| 1.6.363 | Premières offres par le web : moins de 14 jours quand la date est connue, titre, entreprise et lieu recopiés du résultat de recherche, une relance par jour, texte « Pas encore notées » | livrée |
