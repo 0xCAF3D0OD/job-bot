@@ -28,6 +28,8 @@ import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import RendezVousPhone from "../components/RendezVousPhone.vue";
+import OfferSearch from "../components/OfferSearch.vue";
+import { appointmentMatches, meetingMatches, meetingsToNote, notedMeetings, searchWords, upcomingAppointments } from "../rendezVous";
 import { usePhone } from "../composables/usePhone";
 
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
@@ -292,6 +294,18 @@ async function loadApplications(): Promise<void> {
   if (Array.isArray(data)) applications.value = data;
 }
 watch(() => phone.value || wide.value, (value) => value && void loadApplications(), { immediate: true });
+// La recherche (maquette du 14 novembre, RendezVous, §6 ; décision de Kevin du 14.11) : « Poste, entreprise, lieu »
+// au-dessus des onglets, comme sur Offres et Envoyées, lue « Rechercher un rendez-vous ». Elle filtre « À noter »,
+// « À venir » et le dernier rendez-vous noté ; rien ne correspond : une phrase et « Effacer la recherche ».
+const query = ref("");
+const words = computed(() => searchWords(query.value));
+const searchEmpty = computed(() => {
+  if (!compact.value || !page.value || !words.value.length) return false;
+  const now = new Date();
+  const upcoming = upcomingAppointments(page.value.meeting ?? null, applications.value, now).some((item) => appointmentMatches(item, words.value));
+  const past = [...meetingsToNote(page.value, now), ...notedMeetings(page.value, now)].some((m) => meetingMatches(m, words.value));
+  return !upcoming && !past;
+});
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
@@ -312,6 +326,19 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body orp-meeting">
+    <Teleport
+      v-if="phone && !sheetView"
+      to="#jobs-tools"
+      defer
+    >
+      <OfferSearch
+        class="rdv-search"
+        :value="query"
+        placeholder="Poste, entreprise, lieu"
+        label="Rechercher un rendez-vous"
+        @search="query = $event"
+      />
+    </Teleport>
     <p
       v-if="failed"
       class="notice error"
@@ -343,6 +370,7 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
+        :words="words"
         @note="noting = $event"
       />
       <RendezVousPhone
@@ -352,9 +380,26 @@ onMounted(() => void load());
         :applications="applications"
         :sheet-link="sheetLink"
         :meeting-items="editing ? [] : phoneMeetingItems"
+        :words="words"
         @toggle="toggle"
         @prepare="preparing = $event"
       />
+      <div
+        v-if="searchEmpty"
+        class="sent-none"
+        role="status"
+        data-test="rdv-search-none"
+      >
+        <p>Aucun rendez-vous ne correspond</p>
+        <button
+          type="button"
+          class="secondary"
+          data-test="rdv-search-clear"
+          @click="query = ''"
+        >
+          Effacer la recherche
+        </button>
+      </div>
       <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
            en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
       <div
@@ -622,6 +667,7 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
+        :words="words"
         @note="noting = $event"
         @log="openSheet('carnet')"
       />

@@ -64,7 +64,7 @@ async function open(query = "") {
     routes: [{ path: "/candidatures/rendez-vous-orp", component: OrpMeetingView }],
   });
   await router.push(`/candidatures/rendez-vous-orp${query}`);
-  const wrapper = mount(OrpMeetingView, { global: { plugins: [router], stubs: { InterviewPreparation: true } } });
+  const wrapper = mount(OrpMeetingView, { global: { plugins: [router], stubs: { InterviewPreparation: true, teleport: true } } });
   await flushPromises();
   return { wrapper, router };
 }

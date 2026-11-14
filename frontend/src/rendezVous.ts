@@ -153,3 +153,27 @@ export function splitLine(text: string): { main: string; sub: string } {
   const sub = text.slice(at + 2).trim();
   return { main: text.slice(0, at), sub: sub.charAt(0).toUpperCase() + sub.slice(1) };
 }
+
+// La recherche de l'onglet Rendez-vous sur téléphone (maquette du 14 novembre, RendezVous, §6 ; décision de Kevin du
+// 14.11) : « Poste, entreprise, lieu », sans accents ni casse, tous les mots doivent se trouver. Un rendez-vous ORP se
+// trouve par « Rendez-vous ORP », « ORP » ou son lieu ; un entretien par le poste, l'entreprise, le lieu de l'offre ou
+// celui de l'entretien.
+function plainText(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+export function searchWords(query: string): string[] {
+  return plainText(query).split(/\s+/).filter(Boolean);
+}
+function hasAll(text: string, words: string[]): boolean {
+  const plain = plainText(text);
+  return words.every((word) => plain.includes(word));
+}
+export function meetingMatches(meeting: Pick<Meeting, "place">, words: string[]): boolean {
+  return !words.length || hasAll(`Rendez-vous ORP ${meeting.place ?? ""}`, words);
+}
+export function appointmentMatches(item: Upcoming, words: string[]): boolean {
+  if (!words.length) return true;
+  if (item.kind === "orp") return meetingMatches(item.meeting, words);
+  const a = item.application;
+  return hasAll(`${a.job_title} ${a.company} ${a.location ?? ""} ${interviewPlace(a) ?? ""}`, words);
+}
