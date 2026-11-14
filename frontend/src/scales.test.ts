@@ -164,13 +164,6 @@ describe("Les largeurs (1.6.32)", () => {
 describe("Réglages et mesure (1.6.35)", () => {
   const css = () => rules(join(SRC, "style.css"));
 
-  it("les Réglages : le titre et la description à gauche (2/7), la carte des contrôles à droite", () => {
-    const card = css().find(([sel, body]) => sel === ".settings-card" && /--annotation/.test(body));
-    expect(card?.[1]).toMatch(/--annotation:\s*calc\(\(100% - var\(--space-8\)\) \* 2 \/ 7 \+ var\(--space-8\)\)/);
-    const drawn = css().find(([sel]) => sel === ".settings-card .form-card fieldset::before");
-    expect(drawn?.[1]).toMatch(/inset:\s*0 0 0 var\(--annotation\)/);
-  });
-
   it("la mesure : 31 em à toutes les tailles d’écran (75 caractères, Baymard avant Material)", () => {
     const roots = css().filter(([sel]) => sel === ":root").map(([, body]) => body.match(/--measure:\s*([^;]+)/)?.[1]?.trim()).filter(Boolean);
     expect(roots).toEqual(["31em"]);

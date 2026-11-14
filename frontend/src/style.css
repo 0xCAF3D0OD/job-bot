@@ -1905,7 +1905,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 @keyframes hover-note-in { from { opacity: 0; transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .hover-note-bubble { animation: none; } }
 
-/* Colonne de gauche : ta semaine (docs/86), puis la dose du jour. */
 .dash-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 
 
@@ -1954,6 +1953,7 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --ease-standard: cubic-bezier(.2, 0, 0, 1);
   --spring-soft: linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1);
   --spring-strong: linear(0, 0.5 6%, 1.2 16%, 1.32 22%, 1.2 32%, 0.96 46%, 1.03 60%, 0.99 76%, 1);
+  
   --t-fast: 200ms;
   --t-standard: 300ms;
   --t-joy: 400ms;
@@ -2880,19 +2880,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Une rubrique, une carte : les cartes du contenu perdent leur cadre, les parties sont séparées
    par leur titre, pas par un filet ni par une autre carte. */
 .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-8) var(--space-8); }
-.settings-card .form-card, .settings-card .ai-spend { background: none; border: 0; border-radius: 0; padding: 0; }
 .settings-card > * + * { margin-top: 0; }
 .settings-card > * + * { padding-top: var(--space-2); }
-.settings-card fieldset { border-bottom: 0; }
-.settings-card .ai-spend { padding-top: var(--space-6); }
 /* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
-.settings-card .disclosure-body { margin-left: 0; padding-left: 0; border-left: 0; }
 /* Téléphone (docs/106, complément 0.76.1) : la ligne dépliable est la carte ; son contenu garde
    une marge égale des deux côtés, sans barre, et les parties se resserrent. */
 /* Les titres de partie ne sont pas soulignés ; la description au survol (docs/53) reste. */
-.settings-card legend .hover-note { text-decoration: none; }
 /* Un « Enregistrer » plein, collé au formulaire. */
-.settings-card .form-actions { padding-top: var(--space-4); }
 /* « Enregistré », une seconde à côté du réglage qui vient de changer. */
 /* Réglages, une carte par réglage (1.6.65, planche « 5. Réglages », inspirée de la structure des
    pages des CFF) : titre en gras, phrase dessous, contrôle à droite sur la même ligne ; les lignes
@@ -2980,7 +2974,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
    jamais en dernier ni au-dessus d'un bouton ; les parties serrées autour de leur titre. */
 /* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. */
 .settings-card.settings-card > * + * { margin-top: 0; padding-top: 0; border-top: 1px solid var(--divider); }
-.settings-card fieldset + fieldset { border-top: 1px solid var(--divider); }
 /* Deux réglages côte à côte (docs/130 §D) : pas de filet au-dessus du second, seulement au-dessus
 
 /* Fermer son compte (docs/105, complément 0.77.4) : le mot de passe sur toute la largeur. */
@@ -2992,7 +2985,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* L'aération des Réglages, comme les CFF (docs/106, complément 0.77.6) : 1,5 rem de marge dans
    la carte, 1,75 rem de chaque côté d'un filet, un titre à 0,75 rem de son contenu, des textes à
    l'interligne de 1,6. Sur téléphone, le titre de la ligne s'aligne sur son contenu. */
-.settings-card fieldset { padding: var(--space-8) 0; gap: var(--space-3); }
 .settings-card .hint { line-height: var(--leading-normal); }
 /* Une ligne sous le titre de sa partie : l'écart du titre à son contenu (0,75 rem), pas plus. */
 
@@ -3001,9 +2993,7 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
    description grise toujours visible dessous. */
 .settings-section > .section-title { margin: 0 0 var(--space-4); }
 .settings-sections > .settings-section + .settings-section { margin-top: var(--space-6); }
-.settings-card legend { font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); }
 .setting-desc { display: block; margin: 0; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-regular); }
-.settings-card legend + .setting-desc { margin-top: calc(var(--space-2) * -1); }
 /* L'interrupteur à droite, centré sur le titre et sa description. */
 /* Les jours en pastilles : de vraies cases, cachées, la pastille dit l'état. */
 .rhythm-week { display: flex; flex-wrap: nowrap; gap: var(--space-1); }
@@ -3026,23 +3016,17 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Les marqueurs (téléphone) : une rangée de pastilles collée sous la barre du haut. */
 @media (max-width: 820px) {
   .settings-card { padding: 0 var(--space-6); border-radius: var(--radius); }
-  .settings-card fieldset { padding: var(--space-6) 0; }
   .rhythm-pause { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .day-pill { transition: none; } }
 /* Les actions d'une section : des pilules bordées ; pleine largeur sur téléphone (docs/110). */
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h); padding: 0 var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-weight: var(--weight-semibold); font-size: var(--font-body); text-decoration: none; cursor: pointer; transition: border-color 150ms, color 150ms; }
 .pill:hover { border-color: var(--accent); color: var(--accent); }
-@media (max-width: 820px) {
-  .settings-card .link.danger[data-test="delete-account"] { justify-self: center; margin: var(--space-1) auto 0; display: flex; }
-}
 .choice-label { font-size: var(--font-body); color: var(--text); }
-.settings-card .ai-spend { background: var(--band); border-radius: var(--radius); padding: var(--space-4) var(--space-5); margin: 0 0 var(--space-6); }
 @media (max-width: 820px) {
   /* Les sept jours sur une ligne ; les actions en pilules sur toute la largeur. */
   .rhythm-week { gap: var(--space-1); flex-wrap: nowrap; }
   .day-pill { min-width: 0; flex: 1; padding: 0; }
-  .settings-card .form-actions > .pill { min-height: var(--control-h); }
 }
 /* Les marqueurs (docs/110, complément 0.78.1) : quand la rangée défile pour montrer le marqueur
    en cours, il garde sa marge ; un espace au bout, et un fondu sur les bords dit qu'elle défile. */
@@ -3085,7 +3069,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 
 /* --- Retours d'affichage du 2026-10-20 (0.78.3) --- */
 /* « Enregistrer » en fin de partie garde sa marge du bas : il ne touche ni le filet ni le bord. */
-.settings-card form > .form-actions:last-child { padding-bottom: var(--space-6); }
 /* « / 100 » ne se coupe pas ; « Enregistré » ou l'erreur passent sous les pastilles. */
 /* Une pilule sur une ligne, même avec l'état du téléchargement (✓ · 24 Ko). */
 .pill { white-space: nowrap; }
@@ -3354,20 +3337,11 @@ main:focus { outline: none; }
    réglage, le titre et sa description à gauche (2/7), les contrôles dans une carte à droite (5/7). Le titre et la
    description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
 @media (min-width: 861px) {
-  .settings-card { --annotation: calc((100% - var(--space-8)) * 2 / 7 + var(--space-8)); background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
+  .settings-card { background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
   .settings-card > * + * { padding-top: 0; }
-  .settings-card .form-card fieldset { display: block; position: relative; isolation: isolate; padding: var(--space-6) 0; }
-  .settings-card .form-card fieldset::before { content: ""; position: absolute; inset: 0 0 0 var(--annotation); z-index: -1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-  .settings-card .form-card fieldset > legend { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: 0; }
-  .settings-card .form-card fieldset > legend + .setting-desc { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: var(--space-1) 0 0; }
-  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) { margin-left: calc(var(--annotation) + var(--space-6)); margin-right: var(--space-6); }
-  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) ~ :not(legend, legend + .setting-desc) { margin-top: var(--space-3); }
-  .settings-card .form-card > .form-actions { margin-left: var(--annotation); }
   /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
   .settings-card.settings-card > * + * { border-top: 0; }
-  .settings-card .form-card fieldset + fieldset { border-top: 0; margin-top: var(--space-6); }
   /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
-  .settings-card > p.hint, .settings-card .ai-spend { margin-left: var(--annotation); }
 }
 
 /* --- Contrôle segmenté (§4 « Sélection unique », D4 tranchée par Kevin le 2026-11-03 ; maquettes docs/mobile) ---
@@ -4684,8 +4658,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-logout-row .block-row-title { color: var(--logout-text); }
 .account-switch { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 /* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */
-.account-delete-card { border-color: var(--danger-line); }
-.account-delete-card .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
 .account-delete-text { color: var(--text-secondary); font-size: var(--font-small); }
 button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
 
@@ -5132,16 +5104,7 @@ a.panel-row:hover { background: var(--band); }
 .settings-wide-title { margin: 0 0 var(--space-8); font-size: var(--settings-34); line-height: var(--settings-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 /* MODIFICATIONS_9 §2.10 : les groupes bordés de 1,5 px (--card-line, comme les cartes du prompt du 9 novembre). */
 .settings-wide .setting-cards { gap: 0; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.settings-wide .setting-card { border: 0; border-radius: 0; }
-.settings-wide .setting-card + .setting-card { border-top: 1px solid var(--line-soft); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
-/* Langue et Taille du texte (ReglagesOrdinateur) : toute la ligne s'ouvre, le libellé à gauche, la valeur en gris et le
-   chevron de 20 px à droite, au bord des autres contrôles. */
-.setting-link-row { --setting-link-h: 64px; --setting-link-icon: 20px; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--setting-link-h); padding: var(--space-5) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.setting-link-row:hover { background: var(--surface-muted); }
-.setting-link-title { flex: 1; font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
-.setting-link-value { font-size: var(--font-label); color: var(--text-secondary); }
-.setting-link-row .icon { flex: none; width: var(--setting-link-icon); height: var(--setting-link-icon); color: var(--text-secondary); }
 /* Panneau à boutons radio (ChoicePanel, panneaux lg et tx) : sur-titre 13/16 en capitales grises, lignes de 68 px
    séparées d'un filet, cercle de 24 px (bleu plein quand il est choisi), libellé 16/22 et précision 14/20. */
 .choice-panel { --choice-68: 68px; --choice-lh-22: 22px; --choice-lh-20: 20px; --choice-lh-16: 16px; --choice-dot: 24px; --choice-inner: 11px; --choice-gap-2: 2px; display: grid; gap: var(--space-1); }
