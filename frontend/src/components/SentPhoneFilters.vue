@@ -142,7 +142,7 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
    et le bouton alignés à droite, 24 px entre eux, le bouton en pilule de 52 px à la largeur de son texte. */
 .filters-dialog { max-height: calc(100dvh - 9.625rem); }
 .filter-sheet .filter-choices h3 { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
-.filters-dialog :deep(.sheet-actions) { justify-content: flex-end; gap: var(--space-6); margin: 0 calc(var(--sheet-pad, 24px) * -1); padding: var(--space-3) var(--space-5) 0 var(--sheet-pad, 24px); border-top: 1px solid var(--line); }
+.filters-dialog :deep(.sheet-actions) { justify-content: flex-end; gap: var(--space-6); margin: 0 calc(var(--sheet-pad) * -1); padding: var(--space-3) var(--space-5) 0 var(--sheet-pad); border-top: 1px solid var(--line); }
 .filters-dialog :deep(.sheet-actions > .primary) { flex: none; }
 .filters-clear { min-height: var(--target-min); padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .filters-show { --sent-52: 52px; min-height: var(--sent-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }

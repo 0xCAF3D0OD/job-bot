@@ -785,7 +785,7 @@ onUnmounted(() => assistant.setFocus(null));
         </button>
       </template>
       <template v-else>
-        <!-- L'objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. Téléphone
+        <!-- L’objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. Téléphone
              (planche du 14 novembre) : sans chevron ni « voir le bilan », la carte reste un lien. -->
         <RouterLink
           :to="goal ? '/bilan/orp' : { path: '/reglages', query: { rubrique: 'recherche' } }"
@@ -852,8 +852,8 @@ onUnmounted(() => assistant.setFocus(null));
       <template v-else-if="loaded">
         <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
         <template v-if="!orpPage">
-          <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l'icône
-               Filtres dans l'en-tête, statuts et tri dans la feuille Filtres. -->
+          <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l’icône
+               Filtres dans l’en-tête, statuts et tri dans la feuille Filtres. -->
           <SentPhoneFilters
             v-if="phone"
             v-model:words="words"
