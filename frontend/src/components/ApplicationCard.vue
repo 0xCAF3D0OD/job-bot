@@ -99,7 +99,7 @@ function run(): void {
   <SidePanel
     v-if="followUpOpen"
     open
-    :title="`Relancer ${application.company}`"
+    :title="application.company"
     @close="followUpOpen = false"
   >
     <FollowUpPanel

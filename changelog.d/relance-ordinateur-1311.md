@@ -1,0 +1,1 @@
+Relance sur ordinateur refaite d'après la planche du 13 novembre : message écrit à la première ouverture puis gardé (migration 0085), « Réécrire », lecture puis « Modifier le message », « Relancer par e-mail » en bouton principal
