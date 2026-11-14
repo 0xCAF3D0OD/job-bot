@@ -40,14 +40,14 @@ describe("Les premières offres (docs/104, 0.80.0)", () => {
     await flushPromises();
     const text = line.find("[data-test=first-offers-line]").text();
     expect(text).toContain("6 premières offres trouvées sur le web (ASSC · Lausanne)");
-    expect(text).toContain("Elles ne sont pas notées : les notes arrivent avec les offres de tes alertes");
+    expect(text).toContain("Pas encore notées. Les notes arrivent avec les offres de tes alertes.");
     expect(text).not.toContain("jobup");
 
     GET.mockResolvedValueOnce({ data: state({ provider: "web" }) });
     const card = mount(FirstOffers, { props: { where: "alerts" } });
     await flushPromises();
     expect(card.find("[data-test=first-offers]").text()).toContain("sur le web");
-    expect(card.find("[data-test=first-offers]").text()).toContain("Ces offres ne sont pas notées.");
+    expect(card.find("[data-test=first-offers]").text()).toContain("Pas encore notées. Les notes arrivent avec les offres de tes alertes.");
     expect(card.find("[data-test=first-offers-start]").text()).toContain("Chercher sur le web maintenant");
   });
 

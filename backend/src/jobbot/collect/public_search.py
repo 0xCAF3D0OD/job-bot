@@ -208,7 +208,7 @@ async def _search_web(
             )
         result.searches += 1
         result.queries.append(f"{terms} · {place}" if place else terms)
-        for offer in web_offers.parse_answer(raw):
+        for offer in web_offers.parse_answer(raw, datetime.now(UTC).date()):
             collected.setdefault(offer.url, offer)
     return collected
 
@@ -301,8 +301,10 @@ async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
     return result
 
 
-# On peut relancer la recherche depuis Alertes, mais pas plus d'une fois par heure.
+# On peut relancer la recherche depuis Alertes, mais pas plus d'une fois par heure ; par le
+# web (appels payants à l'IA), pas plus d'une fois par jour.
 RELAUNCH_AFTER = timedelta(hours=1)
+RELAUNCH_AFTER_WEB = timedelta(days=1)
 Requested = Literal["queued", "already_queued", "no_trade", "too_soon", "disabled"]
 
 
@@ -311,14 +313,16 @@ async def request(runtime: Runtime, *, first_only: bool = False) -> Requested:
     jamais été faite (fin de l'accueil)."""
     # jobup est coupée (0.82.4 : ses conditions interdisent la lecture automatique) ; la
     # recherche web de l'IA la remplace quand elle est allumée.
-    if provider(runtime.settings) is None:
+    source = provider(runtime.settings)
+    if source is None:
         return "disabled"
+    wait = RELAUNCH_AFTER_WEB if source == "web" else RELAUNCH_AFTER
     async with runtime.sessionmaker.begin() as session:
         current = await state(session)
         if first_only and current:
             return "already_queued"
         at = current.get("at")
-        if isinstance(at, str) and datetime.now(UTC) - datetime.fromisoformat(at) < RELAUNCH_AFTER:
+        if isinstance(at, str) and datetime.now(UTC) - datetime.fromisoformat(at) < wait:
             return "too_soon"
         if not await queries(session):
             await _save(session, {**current, "status": "no_trade"})

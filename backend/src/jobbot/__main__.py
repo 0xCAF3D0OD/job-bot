@@ -582,6 +582,8 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
     """Essai de la recherche web des premières offres (docs/104) : affiche ce qu'elle trouve
     pour un métier et un lieu. Rien n'est enregistré, aucun compte n'est touché ; l'appel à
     l'IA est payé par la clé du serveur (environ 0,05 CHF)."""
+    from datetime import UTC, datetime
+
     from jobbot.collect import web_offers
     from jobbot.llm.client import Refused, client_factory
     from jobbot.llm.pricing import cost_usd
@@ -598,11 +600,15 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
     except Refused:
         print("L'IA a refusé de répondre.", file=sys.stderr)
         return 1
-    offers = web_offers.parse_answer(raw)
+    chosen = web_offers.select_offers(raw, datetime.now(UTC).date())
+    offers = chosen.offers
     lieu = args.lieu or "Suisse romande"
     print(f"{args.metier} · {lieu} : {plural(len(offers), 'offre gardée', 'offres gardées')}")
     print(
-        f"({plural(len(raw.web_urls), 'résultat rendu', 'résultats rendus')} par le moteur, "
+        f"({plural(chosen.results, 'résultat rendu', 'résultats rendus')} par le moteur, "
+        f"dont {chosen.dated} avec une date ; "
+        f"{plural(chosen.too_old, 'offre écartée', 'offres écartées')} car de plus de 14 jours ; "
+        f"{plural(chosen.undated_kept, 'offre gardée', 'offres gardées')} sans date connue ; "
         f"{plural(raw.usage.web_searches, 'recherche', 'recherches')}, "
         f"{cost_usd(raw.model, raw.usage):.4f} USD)"
     )

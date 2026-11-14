@@ -61,7 +61,7 @@ const offersLine = computed(() => {
   if (s.status === "queued") return `Je cherche tes premières offres ${place.value}… Elles arrivent dans une minute.`;
   if (s.status === "done" && s.new > 0 && recent.value) {
     const found = `${plural(s.new, "première offre trouvée", "premières offres trouvées")} ${place.value} (${searched.value}).`;
-    if (web.value) return `${found} Elles ne sont pas notées : les notes arrivent avec les offres de tes alertes, dès que tu les as créées.`;
+    if (web.value) return `${found} Pas encore notées. Les notes arrivent avec les offres de tes alertes.`;
     return `${found} Tes alertes prennent le relais dès qu’elles arrivent.`;
   }
   return null;
@@ -70,7 +70,7 @@ const alertsText = computed(() => {
   const s = state.value;
   if (!s || s.status === "none") {
     const now = `jobA1 peut chercher tout de suite ${place.value}, avec ton métier et tes lieux, sans attendre tes alertes.`;
-    return web.value ? `${now} Ces offres ne sont pas notées.` : now;
+    return web.value ? `${now} Pas encore notées. Les notes arrivent avec les offres de tes alertes.` : now;
   }
   if (s.status === "queued") return `Recherche en cours ${place.value}…`;
   if (s.status === "no_trade") return "Indique d’abord ton métier : c’est lui que jobA1 cherche.";
@@ -88,7 +88,7 @@ async function start(): Promise<void> {
       return;
     }
     state.value = data;
-    if (data.result === "too_soon") message.value = "Déjà cherché il y a moins d’une heure : réessaie un peu plus tard.";
+    if (data.result === "too_soon") message.value = web.value ? "Déjà cherché aujourd’hui : réessaie demain." : "Déjà cherché il y a moins d’une heure : réessaie un peu plus tard.";
     else if (data.result === "already_queued") message.value = "La recherche est déjà en route.";
     poll();
   } finally {
