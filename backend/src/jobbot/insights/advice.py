@@ -45,8 +45,8 @@ CHANNELS: dict[str, tuple[str, str]] = {
         "Essaie le formulaire en ligne ou l'e-mail quand l'annonce en donne un.",
     ),
 }
-SITE_TEXT = "Tes réponses viennent d'ailleurs : garde plus de temps pour les autres sites."
-SKILL_TEXT = "La formation peut être financée par l'ORP."
+SITE_TEXT = "Garde plus de temps pour les sites qui te répondent."
+SKILL_TEXT = "Une formation peut compter pour l'ORP : à voir avec ton conseiller."
 
 
 @dataclass

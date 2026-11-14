@@ -96,7 +96,7 @@ async def test_skill_advice_in_the_bilan(api: AsyncClient, runtime: Runtime) -> 
         {
             "kind": "skill",
             "title": "Terraform revient dans 5 offres sur 8",
-            "text": "La formation peut être financée par l'ORP.",
+            "text": "Une formation peut compter pour l'ORP : à voir avec ton conseiller.",
             "base": 8,
             "base_unit": "offers",
             "link": "/bilan/formations?onglet=catalogue",
