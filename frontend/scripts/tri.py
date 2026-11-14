@@ -20,6 +20,8 @@ import sys
 
 from playwright.async_api import BrowserContext, Route, async_playwright
 
+from formats import checked
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200").rstrip("/")
 KEEP, DISMISS = "[data-test=triage-keep]", "[data-test=triage-dismiss]"
 TITLE = "[data-test=triage-title]"
@@ -180,12 +182,12 @@ async def main() -> int:
     async with async_playwright() as p:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
-        for width, height in ((390, 844), (1440, 900)):
+        for width, height in (s for s in ((390, 844), (1440, 900)) if checked(s[0])):
             phone = width < 821
             context = await browser.new_context(viewport={"width": width, "height": height}, has_touch=phone, is_mobile=phone)
             faults += await run(context, width)
             await context.close()
-        for width, height in ((1440, 900), (1024, 700)):
+        for width, height in (s for s in ((1440, 900), (1024, 700)) if checked(s[0])):
             context = await browser.new_context(viewport={"width": width, "height": height})
             faults += await message_in_window(context, width, height)
             await context.close()

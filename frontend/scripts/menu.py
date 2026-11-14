@@ -18,6 +18,8 @@ import sys
 
 from playwright.async_api import Page, async_playwright
 
+from formats import checked
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200").rstrip("/")
 CAPTURES = os.environ.get("CAPTURES")
 OFFERS = "/candidatures/offres"
@@ -61,7 +63,7 @@ async def main() -> int:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
         for scheme in ("clair", "sombre") if CAPTURES else ("clair",):
-            for device in (DESK, PHONE):
+            for device in (d for d in (DESK, PHONE) if checked(d["viewport"]["width"])):
                 context = await browser.new_context(
                     viewport=device["viewport"],
                     reduced_motion="reduce",
