@@ -1588,11 +1588,17 @@ button, .button-link { max-width: 100%; }
   .topbar .offers-filter-icon .icon { width: 1.5rem; height: 1.5rem; }
   .offers-filter-icon .count-badge { position: absolute; top: var(--space-1); right: var(--space-1); }
   /* Candidatures (maquette Candidatures) : la recherche et « Ajouter », puis les trois vues en contrôle segmenté. */
+  /* Maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : la recherche sous la ligne du titre,
+     puis les onglets, sur les trois onglets ; 8 et 12 px au lieu de 6 et 14 (grille de 4, segments à la même hauteur). */
+  .jobs-head.jobs-candidatures { padding-top: var(--space-2); }
   .jobs-head .jobs-tools { margin: 0 0 var(--space-3); }
   .jobs-tools .offers-toolbar { flex-wrap: nowrap; margin: 0; }
   .jobs-tools .offers-toolbar-search { flex: 1 1 auto; }
   /* Le champ et « Ajouter » comme dans la maquette : fond blanc, bord clair. */
-  .jobs-tools .offers-toolbar .filters-search { height: var(--field-h); border-color: var(--line); border-radius: var(--radius-card); background-color: var(--surface); font-size: var(--font-body); }
+  /* Planche Candidatures du 14 novembre : 48 px, coins de 14, trait de 1 px, loupe de 20 px à 14 px du bord. */
+  .jobs-tools .offers-toolbar { --search-14: 14px; --search-icon: 20px; --search-gap: 10px; }
+  .jobs-tools .offers-toolbar .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
+  .jobs-tools .offers-toolbar .filters-search-wrap > .icon { left: var(--search-14); width: var(--search-icon); height: var(--search-icon); color: var(--text-secondary); }
   .jobs-tools .offers-add-compact { border-color: var(--line); background: var(--surface); }
   /* Ni trait sous l'en-tête d'une page d'onglet, ni sous les vues de Candidatures (maquette). */
   .topbar:is([data-variant="tab"], [data-variant="home"]) { border-bottom: 0; }

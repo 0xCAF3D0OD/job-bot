@@ -66,7 +66,7 @@ const { reached } = usePlan();
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
     :to="to"
     :selected="selected"
-    :class="{ expired: offer.expired_at && offer.status !== 'applied' }"
+    :class="['list-card-offer', { expired: offer.expired_at && offer.status !== 'applied' }]"
     data-test="offer"
     @select="$emit('select')"
   >
@@ -118,5 +118,23 @@ const { reached } = usePlan();
   .list-card-end:has(.score-ring) { align-self: start; width: auto; }
   .list-card-end .score-ring-word { display: none; }
   .list-card[aria-current="true"] { --ring-gap: var(--selected-bg); }
+}
+/* Téléphone, maquette du 14 novembre (Candidatures, §1) : logo, poste et « entreprise · lieu », l'anneau de 48 px en haut à
+   droite sans son mot (il reste dans le nom de l'anneau et dans la fiche), à 20 px du haut et de la droite comme de la
+   gauche (marge de 20 px, trait de 1 px --line) ; les puces sur toute la largeur dessous, à 8 px, 6 px entre elles. */
+@media (max-width: 820px) {
+  .list-card.list-card-offer {
+    --offer-20: 20px; --offer-19: 19px; --offer-18: 18px; --offer-8: 8px; --offer-2: 2px; --offer-3: 3px; --offer-r: 6px;
+    grid-template-areas: "logo text end" "chips chips chips"; row-gap: var(--offer-8); height: auto;
+    padding: var(--offer-19); border: 1px solid var(--line);
+  }
+  .list-card.list-card-offer[aria-current="true"] { padding: var(--offer-18); }
+  .list-card-offer .list-card-text { align-self: center; gap: var(--offer-2); }
+  .list-card-offer .list-card-end:has(.score-ring) { align-self: start; justify-self: end; align-items: flex-end; width: auto; margin: calc(-1 * var(--offer-2)) calc(-1 * var(--offer-2)) 0 0; }
+  .list-card-offer .list-card-end .score-ring-word { display: none; }
+  .list-card-offer .list-card-end .score-ring-wrap { justify-items: end; padding: 0; }
+  .list-card-offer > .list-card-chips { margin-top: 0; }
+  .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--offer-8); border-radius: var(--offer-r); line-height: normal; }
+  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
 }
 </style>

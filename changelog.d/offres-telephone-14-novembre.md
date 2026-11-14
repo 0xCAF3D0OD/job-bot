@@ -1,0 +1,1 @@
+Offres sur téléphone (maquette du 14 novembre, §6 et §7) : carte d’offre à bord fin avec la note seule à droite et les puces dessous, recherche de 48 px à coins de 14 au-dessus des onglets, fiche d’offre avec flèche de retour, icônes de 24 et boutons du bas espacés de 12
