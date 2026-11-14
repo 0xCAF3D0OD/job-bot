@@ -108,7 +108,7 @@ function clearFilters(): void {
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined } });
 }
 // « Tout effacer » de la feuille Filtres (téléphone) : les mots, le statut et le tri.
-function resetSentFilters(): void {
+function resetPhoneSentFilters(): void {
   words.value = "";
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined, tri: undefined } });
 }
@@ -118,8 +118,6 @@ const sections = computed<SentSection[]>(() => {
   if (sentSort.value === "relancer") return sentSections(items);
   return items.length ? [{ key: "earlier", title: "", items: sentSorted(items, sentSort.value) }] : [];
 });
-// Le nombre de candidatures montrées, pour « Afficher N candidatures » (feuille Filtres, téléphone).
-const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
 // L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici l'échéance ORP (§11).
 const goal = computed(() => {
   const data = orp.value;
@@ -819,7 +817,7 @@ onUnmounted(() => assistant.setFocus(null));
             v-model:sort="sentSort"
             :counts="statusCounts"
             :total="shownCount"
-            @reset="resetSentFilters"
+            @reset="resetPhoneSentFilters"
           />
           <SentFilters
             v-else
