@@ -1589,10 +1589,10 @@ button, .button-link { max-width: 100%; }
   .topbar .offers-filter-icon .icon { width: 1.5rem; height: 1.5rem; }
   .offers-filter-icon .count-badge { position: absolute; top: var(--space-1); right: var(--space-1); }
   /* Candidatures (maquette Candidatures) : la recherche et « Ajouter », puis les trois vues en contrôle segmenté. */
-  /* Maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : la recherche à 14 px sous la ligne du
-     titre (en-tête de 68 px + 6), puis 14 px jusqu'aux onglets, sur les trois onglets. */
-  .jobs-head.jobs-candidatures { --jobs-6: 6px; padding-top: var(--jobs-6); }
-  .jobs-head .jobs-tools { --jobs-14: 14px; margin: 0 0 var(--jobs-14); }
+  /* Maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : la recherche sous la ligne du titre,
+     puis les onglets, sur les trois onglets ; 8 et 12 px au lieu de 6 et 14 (grille de 4, segments à la même hauteur). */
+  .jobs-head.jobs-candidatures { padding-top: var(--space-2); }
+  .jobs-head .jobs-tools { margin: 0 0 var(--space-3); }
   .jobs-tools .offers-toolbar { flex-wrap: nowrap; margin: 0; }
   .jobs-tools .offers-toolbar-search { flex: 1 1 auto; }
   /* Le champ et « Ajouter » comme dans la maquette : fond blanc, bord clair. */
