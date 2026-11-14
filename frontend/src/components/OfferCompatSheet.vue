@@ -256,7 +256,7 @@ const families = computed(() =>
 .compat-verdict.is-far, .compat-verdict.is-none { color: var(--text-secondary); }
 .compat-sum-sub { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .compat-family { padding-top: var(--space-5); }
-.compat-family-title { margin: 0 0 var(--space-1); font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.compat-family-title { margin: 0 0 var(--space-1); font-size: var(--panel-caps-size, 13px); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .compat-family.gap .compat-family-title { color: var(--peach-text); }
 .compat-points { margin: 0; padding: 0; list-style: none; }
 .compat-point { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--line-soft); }

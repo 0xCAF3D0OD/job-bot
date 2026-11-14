@@ -227,7 +227,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 }
 @media (prefers-reduced-motion: no-preference) { .filter-panel { animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); } }
 .filter-panel-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: 0 var(--space-6); padding: var(--pop-18) 0 var(--space-3); border-bottom: 1px solid var(--line-soft); }
-.filter-panel-head h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-heavy); outline: none; }
+.filter-panel-head h2 { margin: 0; font-size: var(--panel-title-size, 20px); font-weight: var(--weight-heavy); outline: none; }
 .filter-panel-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; font-size: var(--pop-15); font-weight: var(--weight-bold); }
 .filter-panel-back .icon { width: 18px; height: 18px; }
 .filter-panel-body {
@@ -236,7 +236,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 }
 .filter-panel-body hr { margin: 0; border: 0; border-top: 1px solid var(--line-soft); }
 .filter-panel-group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) 0 var(--pop-2); }
-.filter-panel-group > span { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.filter-panel-group > span { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .filter-panel-group > div { display: flex; flex-wrap: wrap; gap: var(--pop-6); }
 .filter-panel-group button {
   height: var(--pop-pill); min-height: 0; padding: 0 var(--pop-14); border: 1.5px solid color-mix(in srgb, var(--line) 90%, var(--text-secondary));
@@ -248,7 +248,8 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
   font-size: var(--pop-15); font-weight: var(--weight-semibold);
 }
 .filter-panel-switch small { display: block; font-size: var(--label-caps); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.filter-panel-foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--pop-14) var(--space-6) var(--pop-18); border-top: 1px solid var(--line); }
+/* §4 du 14 novembre : le lien et le bouton alignés à droite, 24 px entre eux ; le bouton prend la largeur de son texte. */
+.filter-panel-foot { flex: none; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-6); padding: var(--pop-14) var(--space-6) var(--pop-18); border-top: 1px solid var(--line); }
 .filter-panel-foot .link { min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--pop-15); font-weight: var(--weight-bold); }
-.filter-panel-foot .primary { min-height: var(--btn-tertiary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.filter-panel-foot .primary { --pop-52: 52px; min-height: var(--pop-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>
