@@ -562,3 +562,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.348 | Les audits du tri et de la grille passent aussi le week-end, quand la démo est en jour de repos | livrée |
 | 1.6.349 | La règle « style ou comportement » pour suivre les planches, écrite dans CLAUDE.md | livrée |
 | 1.6.350 | Décisions de Kevin sur l'étape « première alerte » des premiers pas (jobup seul, « Plus tard », retour par la carte Premiers pas, « Des offres dès maintenant » jusqu'à la première offre), notées dans docs/mobile/DECISIONS.md | décision (planche livrée le 13 novembre au soir) |
+| 1.6.351 | Aujourd’hui sur ordinateur suit la maquette du 13 novembre : deux colonnes, l’accroche (justificatif en retard, objectif du mois atteint), les tâches numérotées, la barre ORP et le petit livre où l’on trie sur place ; le jour de repos garde sa planche | livrée |
