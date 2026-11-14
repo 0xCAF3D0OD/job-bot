@@ -864,7 +864,7 @@ onUnmounted(() => assistant.setFocus(null));
               >
                 <h2 class="offer-day-title">
                   <span class="offer-day-name">{{ section.title }}</span>
-                  <span class="offer-day-count">{{ plural(section.items.length, "candidature", "candidatures") }}</span>
+                  <span class="offer-day-count">{{ section.items.length }}<span class="offer-day-unit">{{ section.items.length > 1 ? " candidatures" : " candidature" }}</span></span>
                 </h2>
               </li>
               <li

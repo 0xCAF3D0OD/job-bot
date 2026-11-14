@@ -190,6 +190,7 @@ defineExpose({
       v-slot="{ id, describedby, invalid }"
       label="Pourquoi cette entreprise ?"
       optional
+      class="spontaneous-reason-field"
       hint="Ce qui t’attire : produit, équipe, valeurs. jobA1 s’en sert pour la lettre."
     >
       <textarea
@@ -311,5 +312,14 @@ defineExpose({
 
 <style scoped>
 .spontaneous-lead { --lead-15: 15px; font-size: var(--lead-15); }
-.spontaneous-reason { --reason-128: 128px; min-height: var(--reason-128); }
+/* La zone de 4 lignes (128 px ; le champ commun la ramenait à 56). */
+.form-field-box .spontaneous-reason { --reason-128: 128px; min-height: var(--reason-128); }
+/* Ordinateur, planche CandidaturesOrdinateurSpontanee du 13.11 : 20 px entre les champs, la phrase d'entrée en
+   --text-lead. */
+@media (min-width: 1024px) {
+  .spontaneous-form { gap: var(--space-5); }
+  .spontaneous-lead { color: var(--text-lead); }
+  /* L'aide sous « Pourquoi » : au bord, 14/20, à 6 px (l'aide du poste reste en retrait). */
+  .spontaneous-reason-field :deep(.form-field-hint) { --reason-hint: 14px; --reason-hint-lh: 20px; --reason-6: 6px; margin-top: calc(var(--reason-6) - var(--space-1)); padding-inline: 0; font-size: var(--reason-hint); line-height: var(--reason-hint-lh); }
+}
 </style>

@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import { api, type Application, type ApplicationStatus, type ContactsPage, type Interview, type OrpRow } from "../api/client";
 import { followUpDue, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
-import { applicationStatusLabel, colorIndex, companyPlace, initials } from "../format";
+import { applicationStatusLabel, colorIndex, companyPlace, initials, logoTone } from "../format";
 import { sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
@@ -181,7 +181,7 @@ function onStatus(value: ApplicationStatus): void {
       <div class="sent-head-top">
         <span
           v-if="!phone"
-          :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
+          :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)} t${logoTone(company)}`]"
           aria-hidden="true"
         >{{ initials(company) }}</span>
         <div class="sent-head-title">

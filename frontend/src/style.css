@@ -5109,8 +5109,8 @@ a.panel-row:hover { background: var(--band); }
      groupes seul. */
   .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); padding-top: var(--space-2); padding-bottom: var(--space-5); }
   .offer-day-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .offers-list .offer-day { margin-top: var(--space-1); }
-  .offers-list .offer-day-title { line-height: normal; }
+  :is(.offers-list, .sent-list) .offer-day { margin-top: var(--space-1); }
+  :is(.offers-list, .sent-list) .offer-day-title { line-height: normal; }
   .jobs-head .jobs-tools { display: none; }
   .offers-list-tools .offers-toolbar { display: flex; flex-wrap: nowrap; gap: var(--space-2); margin: 0 0 var(--space-5); }
   .offers-list-tools .offers-toolbar-search { flex: 1 1 auto; min-width: 0; }
@@ -5131,13 +5131,17 @@ a.panel-row:hover { background: var(--band); }
 @media (min-width: 1024px) {
   /* Envoyées (§8.1 du 9 novembre) : la liste de 480 px à gauche, un trait de 2 px --line au milieu de l'écart, le détail
      en cartes séparées sur le crème à droite (plus de grand cadre). Le trait bleu part de la carte choisie. */
-  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-8); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-6); --sent-scroll: 8px; --sent-goal-pad: 18px; position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
   .sent-columns > :not(.sent-detail, .sent-divider, .sent-link) { grid-column: 1; }
   .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding-bottom: var(--space-6); }
-  .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) + var(--sent-gap) / 2 - 1px); width: 2px; background: var(--line); }
-  .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w)); width: calc(var(--sent-gap) / 2); height: 2px; background: var(--primary-graphic); }
+  .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) - var(--sent-scroll) + (var(--sent-gap) + var(--sent-scroll)) / 2 - 1px); width: 2px; background: var(--line); }
+  .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w) - var(--sent-scroll)); width: calc((var(--sent-gap) + var(--sent-scroll)) / 2); height: 2px; background: var(--primary-graphic); }
   .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
   .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
+  /* Planche CandidaturesOrdinateurStatut du 13.11 : 24 px entre les colonnes, les cartes à 8 px du bord de la colonne
+     (place de la barre de défilement), le trait au milieu ; l'objectif à 18 px dedans. */
+  .sent-columns > .sent-list { padding-right: var(--sent-scroll); }
+  .sent-columns .sent-goal { padding-inline: var(--sent-goal-pad); }
 }
 /* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
 .sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }

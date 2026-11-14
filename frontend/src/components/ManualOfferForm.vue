@@ -584,9 +584,13 @@ defineExpose({
 </template>
 
 <style scoped>
-.manual-form { --manual-13: 13px; --manual-pad: var(--panel-pad-x, var(--sheet-pad, var(--space-6))); }
-.manual-entry { --manual-104: 104px; min-height: var(--manual-104); }
-.manual-pdf { justify-self: start; gap: var(--space-2); }
+.manual-form { --manual-13: 13px; --manual-6: 6px; --manual-pad: var(--panel-pad-x, var(--sheet-pad, var(--space-6))); }
+/* Planche CandidaturesOrdinateurAjouter du 13.11 : la zone de 3 lignes (104 px ; le champ commun la ramenait à 56) ;
+   le compte 6 px dessous ; « Importer le PDF de l'annonce » en pilule de 44 px, 20 px sous le compte. */
+.form-field-box .manual-entry { --manual-104: 104px; min-height: var(--manual-104); }
+.manual-pdf { --manual-18: 18px; justify-self: start; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--manual-18); border-radius: var(--radius-pill); font-size: var(--font-label); }
+.manual-form > .form-field + [data-test="manual-count"] { margin-top: calc(var(--manual-6) - var(--space-4)); }
+.manual-form > .manual-pdf { margin-top: var(--space-1); }
 .manual-read { display: grid; gap: var(--space-4); }
 .manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }
 .manual-read-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
