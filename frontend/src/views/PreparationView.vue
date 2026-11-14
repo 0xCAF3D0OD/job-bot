@@ -111,6 +111,20 @@ const contactsOpen = ref(false);
 const contactsCount = ref(0);
 // « Tout télécharger » : chaque pièce de la ligne « À joindre » qui se télécharge (Lettre.pdf, CV.pdf).
 const attachRow = ref<HTMLElement | null>(null);
+// « Partager » (MaCandidatureV2, état formulaire) : la feuille de partage du téléphone avec le PDF, pour le
+// joindre dans l'appli du site ; sans partage de fichiers (ordinateur, Firefox), le lien télécharge comme avant.
+async function sharePdf(event: MouseEvent, href: string, name: string): Promise<void> {
+  const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
+  const probe = typeof File === "function" ? new File([""], name, { type: "application/pdf" }) : null;
+  if (!probe || !nav.share || !nav.canShare?.({ files: [probe] })) return;
+  event.preventDefault();
+  try {
+    const blob = await (await fetch(href, { credentials: "same-origin" })).blob();
+    await nav.share({ files: [new File([blob], name, { type: "application/pdf" })], title: name });
+  } catch {
+    // Partage annulé ou refusé : rien à dire.
+  }
+}
 function downloadAll(): void {
   attachRow.value?.querySelectorAll<HTMLAnchorElement>("a[download]").forEach((link) => link.click());
 }
@@ -993,8 +1007,74 @@ onMounted(() => void load());
           v-if="offer.status !== 'applied'"
           class="prep-main apply-cards"
         >
+          <!-- Téléphone (planche MaCandidatureV2, état « formulaire », refaite le 14.11) : le rappel de la capture,
+               « Tes documents » (Partager), « À copier · touche une ligne » et « Si le formulaire le demande »,
+               puis le contact ; les certificats, le modèle et « J’ai déjà postulé » de main sont gardés. -->
+          <template v-if="phone">
+            <p
+              class="apl-proof"
+              data-test="apply-proof"
+            >
+              <AppIcon name="camera" />
+              <span><strong>À la fin, fais une capture de la confirmation.</strong><span>Elle sert de justificatif pour l’ORP.</span></span>
+            </p>
+            <section
+              class="apl-card apl-docs"
+              aria-labelledby="apply-where-title"
+              data-test="apply-where"
+            >
+              <h2
+                id="apply-where-title"
+                class="apl-cap"
+              >
+                Tes documents
+              </h2>
+              <PrepCertificates>
+                <span
+                  v-if="currentLetterId"
+                  class="apl-doc"
+                ><AppIcon name="file" /><b>Lettre.pdf</b><a
+                  :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
+                  download="Lettre.pdf"
+                  class="apl-share"
+                  data-test="sheet-letter"
+                  @click="sharePdf($event, pdfHref(`/api/letters/${currentLetterId}/pdf`, template), 'Lettre.pdf')"
+                ><AppIcon name="share" />Partager<span class="visually-hidden"> Lettre.pdf</span></a></span>
+                <span
+                  v-if="currentCvId"
+                  class="apl-doc"
+                ><AppIcon name="file" /><b>CV.pdf</b><a
+                  :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
+                  download="CV.pdf"
+                  class="apl-share"
+                  data-test="sheet-cv"
+                  @click="sharePdf($event, pdfHref(`/api/cvs/${currentCvId}/pdf`, template), 'CV.pdf')"
+                ><AppIcon name="share" />Partager<span class="visually-hidden"> CV.pdf</span></a></span>
+              </PrepCertificates>
+              <p
+                v-if="templateNote"
+                class="apl-note"
+                data-test="apply-template-note"
+              >
+                {{ templateNote }}
+              </p>
+            </section>
+            <FormSheet
+              :letter-text="currentLetterText"
+              data-test="apply-sheet"
+            />
+            <RouterLink
+              v-if="offer.company"
+              :to="`/candidatures/offres/${offer.id}#contacts`"
+              class="apl-card apl-contact"
+              data-test="find-contact"
+            >
+              <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
+            </RouterLink>
+          </template>
           <section
-            :class="phone ? 'doc-card' : 'apply-card'"
+            v-if="!phone"
+            class="apply-card"
             aria-labelledby="apply-where-title"
             data-test="apply-where"
           >
@@ -1051,13 +1131,6 @@ onMounted(() => void load());
                 <AppIcon name="download" />Tout télécharger
               </button>
             </div>
-            <p
-              v-if="phone && templateNote"
-              class="apply-where-text apply-template-note"
-              data-test="apply-template-note"
-            >
-              {{ templateNote }}
-            </p>
             <div
               v-if="!phone"
               class="apply-go"
@@ -1073,7 +1146,8 @@ onMounted(() => void load());
             </div>
           </section>
           <section
-            :class="phone ? 'doc-card apply-copy' : 'apply-card apply-copy-desk'"
+            v-if="!phone"
+            class="apply-card apply-copy-desk"
             aria-labelledby="apply-copy-title"
             data-test="apply-sheet"
           >
@@ -1088,14 +1162,6 @@ onMounted(() => void load());
             </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
-          <RouterLink
-            v-if="phone && offer.company"
-            :to="`/candidatures/offres/${offer.id}#contacts`"
-            class="apply-contact"
-            data-test="find-contact"
-          >
-            <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
-          </RouterLink>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
           <ActionBar
             v-if="phone"
@@ -2238,4 +2304,24 @@ onMounted(() => void load());
 .doc-card > .print-sheet.tpl-classique .doc-head strong, .doc-card > .print-sheet.tpl-classique .cv-name { font-weight: var(--weight-semibold); }
 .doc-card > .print-sheet.tpl-classique .cv-headline { text-align: center; }
 .doc-card > .print-sheet:is(.tpl-bandeau, .tpl-classique) :is(.cv-name, .cv-headline, h3) { color: var(--tpl-ink); }
+/* Postuler sur téléphone (planche MaCandidatureV2, état « formulaire », refaite le 14.11) : cartes blanches de 16 px
+   de rayon, bordure --line, 16 px entre elles ; titre de carte en capitales 13/700 gris, 16 16 8 ; lignes de 56 au
+   moins pour les documents (icône 20, nom 15/600, « Partager » 15/700 bleu dans 44 px) ; le rappel de la capture sur
+   --peach-wash, appareil 22 px --peach-text, 15/22. */
+.apl-proof { display: flex; gap: var(--space-3); margin: 0; padding: var(--space-4); border-radius: var(--apl-radius); background: var(--peach-wash); font-size: var(--font-label); line-height: var(--apl-22); }
+.apl-proof > .icon { flex: none; width: var(--apl-22); height: var(--apl-22); color: var(--peach-text); }
+.apl-proof strong { display: block; }
+.apl-proof span span { color: var(--text-lead); }
+.apl-card, .apl-proof { --apl-radius: 16px; --apl-22: 22px; --apl-56: 56px; }
+.apl-card { display: block; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--apl-radius); overflow: hidden; }
+.apl-card > .apl-cap, .apl-card .apl-cap { margin: 0; padding: var(--space-4) var(--space-4) var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-bold); line-height: var(--space-4); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+.apl-docs .apply-files { display: block; margin: 0; }
+.apl-docs .apply-files > :is(.apl-doc, a) { display: flex; align-items: center; gap: var(--space-3); min-height: var(--apl-56); margin: 0; padding: 0 var(--space-2) 0 var(--space-4); border-top: 1px solid var(--line-soft); border-radius: 0; background: transparent; color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.apl-docs .apply-files > :is(.apl-doc, a) > .icon:first-child { flex: none; width: var(--space-5); height: var(--space-5); color: var(--text-lead); }
+.apl-doc > b { flex: 1; min-width: 0; font-weight: var(--weight-semibold); }
+.apl-share { --apl-6: 6px; display: flex; align-items: center; gap: var(--apl-6); min-height: var(--target-min); padding: 0 var(--space-3); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
+.apl-share .icon { width: 18px; height: 18px; }
+.apl-docs > .hint, .apl-note { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); font-size: var(--font-small); color: var(--text-secondary); }
+.apl-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--apl-56); padding: 0 var(--space-4); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.apl-contact > .icon { flex: none; color: var(--text-secondary); }
 </style>
