@@ -20,6 +20,7 @@ from jobbot.db.models import (
     Draft,
     Offer,
     OfferStatus,
+    Search,
 )
 from jobbot.runtime import Runtime
 
@@ -206,3 +207,66 @@ async def test_search_url_until_the_first_offer(client: AsyncClient, fresh: Runt
         now = datetime.now(UTC)
         session.add(Offer(fingerprint="g1", title="Comptable", first_seen_at=now, last_seen_at=now))
     assert (await client.get("/api/today")).json()["search_url"] is None
+
+
+def _search(message_id: str, kind: str | None = None) -> Search:
+    return Search(
+        source="jobup",
+        message_id=message_id,
+        received_at=datetime.now(UTC),
+        raw_key=message_id,
+        parse_status="parsed",
+        kind=kind,
+    )
+
+
+async def test_alerts_need_an_alert_created_or_received(
+    client: AsyncClient, fresh: Runtime
+) -> None:
+    """Étape « Alerte » (corrections du 13.11 au soir, §1, décision de Kevin du 14.11) : ni la
+    recherche publique, ni ses offres, ni une offre gardée ne cochent les alertes ; « Plus tard »
+    laisse l'étape ouverte jusqu'à une alerte créée ou reçue, ou à la première candidature."""
+    now = datetime.now(UTC)
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("public:jobup:1"))
+        session.add(_search("<code@jobup.ch>", kind="code"))
+        session.add(
+            Offer(
+                fingerprint="pub1",
+                title="DevOps",
+                first_seen_at=now,
+                last_seen_at=now,
+                status=OfferStatus.PREPARING,
+            )
+        )
+    page = (await client.get("/api/today")).json()
+    # Une offre gardée fait l'étape 3, mais l'étape des alertes reste ouverte.
+    assert done(page) == ["profile", "keep"]
+
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("<alerte@jobup.ch>"))
+    assert done((await client.get("/api/today")).json()) == ["profile", "alerts", "keep"]
+
+    async with fresh.sessionmaker.begin() as session:
+        await session.execute(text("DELETE FROM searches"))
+        search = AlertSearch(terms="DevOps")
+        session.add(search)
+        await session.flush()
+        session.add(AlertSetup(search_id=search.id, site="jobup"))
+    assert done((await client.get("/api/today")).json()) == ["profile", "alerts", "keep"]
+
+
+async def test_the_team_count_follows_the_alert_rule(fresh: Runtime) -> None:
+    """La fonction SQL (migration 0084) compte comme `first_steps._computed` : les offres de la
+    recherche publique ne font pas l'étape des alertes."""
+    now = datetime.now(UTC)
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("public:jobup:2"))
+        session.add(Offer(fingerprint="pub2", title="DevOps", first_seen_at=now, last_seen_at=now))
+    async with fresh.sessionmaker() as session:
+        assert await first_steps.reached(session) == 0
+    async with admin_engine().connect() as conn:
+        body = await conn.scalar(
+            text("select prosrc from pg_proc where proname = 'first_steps_progress'")
+        )
+    assert "not like 'public:%'" in body and "offers t where t.user_id = u.id)" not in body
