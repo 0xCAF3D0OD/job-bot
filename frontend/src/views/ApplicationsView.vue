@@ -50,6 +50,7 @@ import { usePhone } from "../composables/usePhone";
 import { sentCounts, sentFiltered, sentFilterOf, sentSorted, sentSortOf, type SentFilter, type SentSort } from "../sentFilters";
 import { sentSections, type SentSection } from "../sentList";
 import SentFilters from "../components/SentFilters.vue";
+import SentPhoneFilters from "../components/SentPhoneFilters.vue";
 
 // Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
 // - Candidatures › Envoyées (maquette Envoyees, 7.11.2026) : l'objectif ORP du mois et sa barre, puis les
@@ -105,12 +106,19 @@ function clearFilters(): void {
   words.value = "";
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined } });
 }
+// « Tout effacer » de la feuille Filtres (téléphone) : les mots, le statut et le tri.
+function resetSentFilters(): void {
+  words.value = "";
+  void router.replace({ query: { ...route.query, q: undefined, statut: undefined, tri: undefined } });
+}
 // Les rubriques d'Envoyées (« à relancer d'abord ») ; triées par date, une seule liste sans rubrique.
 const sections = computed<SentSection[]>(() => {
   const items = sentFiltered(worded.value, statusFilter.value);
   if (sentSort.value === "relancer") return sentSections(items);
   return items.length ? [{ key: "earlier", title: "", items: sentSorted(items, sentSort.value) }] : [];
 });
+// Le nombre de candidatures montrées, pour « Afficher N candidatures » (feuille Filtres, téléphone).
+const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
 // L'objectif du mois (maquette Envoyees) : « 6 sur 10 », la barre, et ce qui reste d'ici l'échéance ORP (§11).
 const goal = computed(() => {
   const data = orp.value;
@@ -777,7 +785,8 @@ onUnmounted(() => assistant.setFocus(null));
         </button>
       </template>
       <template v-else>
-        <!-- L'objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. -->
+        <!-- L'objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. Téléphone
+             (planche du 14 novembre) : sans chevron ni « voir le bilan », la carte reste un lien. -->
         <RouterLink
           :to="goal ? '/bilan/orp' : { path: '/reglages', query: { rubrique: 'recherche' } }"
           class="sent-goal"
@@ -789,6 +798,7 @@ onUnmounted(() => assistant.setFocus(null));
               class="sent-goal-count"
               data-test="goal-count"
             >{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}<AppIcon
+              v-if="!phone"
               name="chevron"
               class="sent-goal-chevron"
             /></span>
@@ -802,7 +812,7 @@ onUnmounted(() => assistant.setFocus(null));
             aria-label="Objectif ORP"
             class="sent-goal-bar"
           ><span :style="{ width: `${goal.percent}%` }" /></span>
-          <span class="sent-goal-left">{{ goal ? `${goal.left} · voir le bilan` : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
+          <span class="sent-goal-left">{{ goal ? (phone ? goal.left : `${goal.left} · voir le bilan`) : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
         </RouterLink>
       </template>
 
@@ -842,7 +852,19 @@ onUnmounted(() => assistant.setFocus(null));
       <template v-else-if="loaded">
         <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
         <template v-if="!orpPage">
+          <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l'icône
+               Filtres dans l'en-tête, statuts et tri dans la feuille Filtres. -->
+          <SentPhoneFilters
+            v-if="phone"
+            v-model:words="words"
+            v-model:filter="statusFilter"
+            v-model:sort="sentSort"
+            :counts="statusCounts"
+            :total="shownCount"
+            @reset="resetSentFilters"
+          />
           <SentFilters
+            v-else
             v-model:words="words"
             v-model:filter="statusFilter"
             v-model:sort="sentSort"

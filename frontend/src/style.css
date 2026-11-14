@@ -4829,6 +4829,8 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .sent-none { display: grid; justify-items: center; gap: var(--space-3); padding: var(--space-8) 0; font-weight: var(--weight-semibold); }
 .sent-none p { margin: 0; }
 @media (min-width: 1024px) { .sent-goal, .sent-list, .sent-filters, .sent-none { max-width: 560px; } }
+/* Téléphone, planche Envoyees du 14 novembre : 20 px de marge intérieure de chaque côté. */
+@media (max-width: 820px) { .sent-goal { padding-inline: var(--space-5); } }
 
 /* ---- Composants partagés de la maquette du 8 novembre (docs/143, lot 2) ---- */
 

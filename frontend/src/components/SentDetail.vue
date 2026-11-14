@@ -158,19 +158,24 @@ function onStatus(value: ApplicationStatus): void {
     :class="['sent-detail-cards', { 'sent-detail-phone': phone }]"
     data-test="application-panel"
   >
-    <!-- Téléphone (§8.3, EnvoyeeDetail) : l'écran poussé a sa barre « ‹ Envoyées » et « … », sans barre d'onglets. -->
+    <!-- Téléphone (EnvoyeeDetail du 14 novembre, §6) : l'écran poussé a sa barre « ← Candidature » et « … », sans barre
+         d'onglets ; la flèche de 24 px dans un bouton de 48, couleur du texte. -->
     <header
       v-if="phone"
       class="sent-screen-top"
     >
-      <button
-        type="button"
-        class="sent-screen-back"
-        data-test="sent-back"
-        @click="emit('close')"
-      >
-        <AppIcon name="chevron-left" />Envoyées
-      </button>
+      <div class="sent-screen-title">
+        <button
+          type="button"
+          class="sent-screen-back"
+          aria-label="Retour aux envoyées"
+          data-test="sent-back"
+          @click="emit('close')"
+        >
+          <AppIcon name="arrow-left" />
+        </button>
+        <span>Candidature</span>
+      </div>
       <MoreMenu
         :items="menuItems"
         label="Plus d’options"
@@ -564,11 +569,13 @@ function onStatus(value: ApplicationStatus): void {
 @media (max-width: 1279px) {
   .sent-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--sent-8); }
 }
-/* Téléphone (EnvoyeeDetail, §8.3) : barre de 56 « ‹ Envoyées » et « … », marges de 20, 12 px entre les cartes, titre
+/* Téléphone (EnvoyeeDetail, §8.3 ; retour du 14 novembre, §6) : barre de 56 « ← Candidature » et « … », marges de 20, 12 px entre les cartes, titre
    22/28 800, mots à 20 px du titre ; carte de deux lignes de 72 à chevron gris ; Historique 8 px plus bas. */
 .sent-detail-phone { --sent-72-row: 72px; --sent-22: 22px; --sent-28-line: 28px; gap: var(--space-3); padding: 0 var(--space-5) var(--space-8); }
 .sent-screen-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; height: var(--sent-56); margin: 0 calc(-1 * var(--space-3)); padding: 0 var(--space-2) 0 0; background: var(--bg); }
-.sent-screen-back { display: inline-flex; align-items: center; gap: 0; min-height: var(--target-min); padding: 0 var(--space-3) 0 var(--space-1); border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.sent-screen-title { --sent-48: 48px; --sent-17: 17px; display: flex; align-items: center; gap: 2px; font-size: var(--sent-17); font-weight: var(--weight-bold); }
+.sent-screen-back { display: inline-flex; align-items: center; justify-content: center; width: var(--sent-48); height: var(--sent-48); min-height: var(--sent-48); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text); }
+.sent-screen-back .icon { width: 24px; height: 24px; }
 .sent-detail-phone .sent-head { padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
 .sent-detail-phone .sent-head-title h1 { margin: 0; font-size: var(--sent-22); line-height: var(--sent-28-line); font-weight: var(--weight-heavy); }
 .sent-detail-phone .sent-head-title p { margin: 0; line-height: var(--space-5); }
