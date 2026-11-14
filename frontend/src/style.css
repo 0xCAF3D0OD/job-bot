@@ -4993,10 +4993,12 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 /* CalendarDate (D26) : l'icône calendrier qui contient la date. */
 .calendar-date { flex: none; --cal-tone: var(--primary-graphic); --cal-day: var(--text); }
 .calendar-date-orp { --cal-tone: var(--warning); }
-.calendar-date-past { --cal-tone: var(--field-border); --cal-day: var(--text-secondary); }
+/* Passé : le cadre et les traits en --field-border (#8C8478, permis pour les traits), le mois écrit en
+   --text-secondary comme le jour (#596070, #ABA398 en sombre : corrections du 13.11, §3, pas de #8C8478 en texte). */
+.calendar-date-past { --cal-tone: var(--field-border); --cal-month: var(--text-secondary); --cal-day: var(--text-secondary); }
 .calendar-date-frame { fill: var(--surface); stroke: var(--cal-tone); }
 .calendar-date-line { stroke: var(--cal-tone); fill: none; }
-.calendar-date-month { fill: var(--cal-tone); font-family: inherit; }
+.calendar-date-month { fill: var(--cal-month, var(--cal-tone)); font-family: inherit; }
 .calendar-date-day { fill: var(--cal-day); font-family: inherit; }
 
 /* DateTimeField : les pilules date et heure. */
@@ -5255,6 +5257,10 @@ a.panel-row:hover { background: var(--band); }
 .alerts-head-wide h1 { margin: 0; font-size: var(--alerts-34); line-height: var(--alerts-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
 .alerts-head-wide button { flex: none; white-space: nowrap; }
+/* AlertesOrdinateurVide (corrections du 13.11, §2) : Orange en bas à gauche du titre (112 px, 4 px vers la droite,
+   descendu de 4 px comme sur la planche), puis 24 px jusqu'à la suite. */
+.alerts-head-empty { justify-content: flex-start; margin-bottom: var(--space-6); }
+.alerts-head-orange { flex: none; width: auto; height: 112px; margin: 0 var(--space-1) calc(-1 * var(--space-1)) 0; }
 .alerts-banner { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--alerts-16); }
 .alerts-banner > .icon { flex: none; width: 1.5rem; height: 1.5rem; color: var(--peach-text); }
 .alerts-banner-text { display: grid; flex: 1; min-width: 0; }
@@ -5368,6 +5374,11 @@ html.text-large { font-size: 125%; }
 .notifications-families .block-row { margin: 0; }
 .notifications-page:not(.notifications-wide) .notifications-settings { min-height: var(--btn-tertiary); color: var(--primary-text); font-size: var(--font-label); }
 .notifications-perso { --perso-shadow: color-mix(in srgb, var(--text) 10%, transparent); --perso-shadow-lift: -6px; display: flex; flex-direction: column; align-items: center; }
+/* Le Sourire de « Tout est lu » (corrections du 13.11, §7) : 140 px de haut ; en sombre, un liseré clair (--text,
+   #F3EEE6) deux fois, pour que le trait foncé du personnage se détache du fond. */
+.notifications-sourire { display: block; width: auto; height: 140px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); } }
+:root[data-theme="dark"] .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); }
 .notifications-perso-shadow { position: relative; top: var(--perso-shadow-lift); width: 120px; height: 12px; border-radius: 50%; background: var(--perso-shadow); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); } }
 :root[data-theme="dark"] .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); }
