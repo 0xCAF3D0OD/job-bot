@@ -560,3 +560,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.346 | « Trier les offres » : une offre à la fois (carte sur téléphone, livre ouvert sur ordinateur), « Écarter » et « Garder » au bouton ou aux flèches, les passages de l’annonce retrouvés dans le profil surlignés (citations de l’IA vérifiées par le serveur), puis « C’est trié ! » avec les offres gardées | livrée |
 | 1.6.347 | Ordinateur, Alertes : « Créer l'alerte » s'ouvre dans le panneau de droite « Alerte <site> » (planche AlertesOrdinateurSite, 440 px) | livrée |
 | 1.6.348 | Les audits du tri et de la grille passent aussi le week-end, quand la démo est en jour de repos | livrée |
+| 1.6.349 | La règle « style ou comportement » pour suivre les planches, écrite dans CLAUDE.md | livrée |
