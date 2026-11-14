@@ -144,6 +144,10 @@ function onClick(event: MouseEvent): void {
     padding: var(--card-14) var(--card-pad-x); border: 1.5px solid var(--card-line);
   }
   .list-card[aria-current="true"] { padding: var(--card-sel-y) var(--card-sel-x); }
+  /* Maquette du 14 novembre (§1) : la carte d'une offre a 16 px de marge partout (trait compris), pour que l'anneau soit
+     à la même distance du haut et de la droite ; hauteur minimale 104 inchangée. */
+  .list-card[data-test="offer"] { --card-offer-pad: 14.5px; padding: var(--card-offer-pad); }
+  .list-card[data-test="offer"][aria-current="true"] { padding: var(--card-14); }
   .list-card-logo { font-size: var(--font-label); box-sizing: border-box; }
   .list-card-text { align-self: center; gap: var(--card-2); }
   .list-card-end { width: 72px; }
@@ -155,13 +159,13 @@ function onClick(event: MouseEvent): void {
    cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
    foncé, pêche (lettres foncées en sombre aussi : les lettres claires de la planche n'ont que 1,6:1). */
 @media (min-width: 821px) {
-  :is(.list-card-logo, .offers-grid .detail-head > .logo) { --head-r: 10px; border-radius: var(--head-r); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo):not(.image) { border: 1px solid transparent; }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t0:not(.image) { color: var(--danger); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t1:not(.image) { color: var(--primary-graphic); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
-  :is(.list-card-logo, .offers-grid .detail-head > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
+  :is(.list-card-logo, .oc-title-row > .logo) { --head-r: 10px; border-radius: var(--head-r); }
+  :is(.list-card-logo, .oc-title-row > .logo):not(.image) { border: 1px solid transparent; }
+  :is(.list-card-logo, .oc-title-row > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
+  :is(.list-card-logo, .oc-title-row > .logo).t0:not(.image) { color: var(--danger); }
+  :is(.list-card-logo, .oc-title-row > .logo).t1:not(.image) { color: var(--primary-graphic); }
+  :is(.list-card-logo, .oc-title-row > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
+  :is(.list-card-logo, .oc-title-row > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
+  :is(.list-card-logo, .oc-title-row > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
 }
 </style>

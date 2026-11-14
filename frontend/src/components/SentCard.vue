@@ -59,4 +59,10 @@ const status = computed(() => sentStatus(props.application, props.section));
 .sent-status.green { color: var(--success); }
 .sent-status.grey { color: var(--text-tertiary); }
 .sent-status.muted { color: var(--text-secondary); }
+/* Ordinateur, maquette du 14 novembre (§2) : la puce reste dans la colonne du titre (logo, colonne titre · entreprise ·
+   puce, statut) ; le logo et le statut sont centrés sur toute la hauteur de la carte. */
+@media (min-width: 1024px) {
+  .list-card[data-test="application"] { grid-template-areas: "logo text end" "logo chips end"; }
+  .list-card[data-test="application"] > .list-card-end { align-self: center; }
+}
 </style>

@@ -110,9 +110,13 @@ const { reached } = usePlan();
 .list-card.expired { opacity: 0.6; }
 .list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
 .chip-mark { flex: none; }
-/* Ordinateur (CandidaturesOrdinateurB du 13.11) : l'anneau de 40 px, son mot à 1 px. */
+/* Ordinateur, maquette du 14 novembre (§1 ; CandidaturesOrdinateurB) : l'anneau de 40 px en haut à droite, sans son
+   mot (il reste dans le nom de l'anneau, « Proche : 92 sur 100 », et dans la fiche) ; même marge de 16 px en haut et
+   à droite (ListCard). Les séparations prennent le fond de la carte, bleu pâle quand elle est choisie. */
 @media (min-width: 1024px) {
   .list-card-end .score-ring { width: 2.5rem; height: 2.5rem; }
-  .list-card-end .score-ring-worded { gap: 1px; line-height: normal; }
+  .list-card-end:has(.score-ring) { align-self: start; width: auto; }
+  .list-card-end .score-ring-word { display: none; }
+  .list-card[aria-current="true"] { --ring-gap: var(--selected-bg); }
 }
 </style>
