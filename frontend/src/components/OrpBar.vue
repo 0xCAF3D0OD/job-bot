@@ -5,7 +5,8 @@ import { formatMonth, orpLeftLine, orpPace } from "../format";
 
 // La barre ORP (lot du 11 novembre au soir, PR 48), le seul dessin du mois ORP dans toute l'application : « Mois
 // ORP · novembre » et « 7 sur 10 », la barre, puis « Encore 3 d’ici le 5 décembre ». Accueil et Aujourd'hui
-// ajoutent le rythme (« · dans les temps », « · en retard », calcul existant) et la ligne « Cette semaine ».
+// ajoutent le rythme (« · dans les temps », « · en retard », calcul existant) et la ligne « Cette semaine » (« 3 sur 3, faite »
+// quand la semaine est faite : état « repos » des planches du 14 novembre).
 // Objectif atteint ou dépassé : la barre pleine, en vert, et « Objectif atteint ».
 // `card` : sur une carte blanche, le fond de la barre est bleu pâle ; sinon (bande bleue) il est blanc.
 // `thick` : 12 px au lieu de 10 (Suivi ORP).
@@ -68,7 +69,7 @@ const line = computed(() => {
       class="orp-bar-week"
       data-test="orp-bar-week"
     >
-      <b>Cette semaine</b><span>{{ week.count }} sur {{ week.target }}</span>
+      <b>Cette semaine</b><span>{{ week.count }} sur {{ week.target }}{{ week.count >= week.target ? ", faite" : "" }}</span>
     </p>
   </div>
 </template>

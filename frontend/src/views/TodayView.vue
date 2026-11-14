@@ -5,14 +5,12 @@ import { RouterLink, type RouteLocationRaw } from "vue-router";
 
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
-import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
-import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
@@ -21,7 +19,7 @@ import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
 import { DOSE, DOSE_CATCH_UP, markTriageDone, triageDoneToday, unmarkTriageDone } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { dailyPace, daysBefore, formatMonth, localDate, ofMonth, orpLeftLine, orpPace, plural } from "../format";
+import { dailyPace, daysBefore, localDate, ofMonth, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
@@ -33,8 +31,9 @@ import { usePageReady } from "../composables/usePageTransition";
 // le titre du jour et sa fin à la main ; avec un justificatif en retard, deux lignes manuscrites, le retard d'abord ;
 // l'objectif du mois atteint, en vert puis en bleu), « À faire » (une carte par tâche, numérotée, celle en retard en
 // numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : le livre en
-// petit, où l'on trie sur place. Un jour de repos garde l'ancienne mise en page (planche AujourdhuiOrdinateurReposD,
-// gardée telle quelle par le paquet du 13 novembre) : la bande bleu pâle, la carte du mois et les ronds de la semaine.
+// petit, où l'on trie sur place. Un jour de repos suit le même gabarit (état « repos » de la planche, 14 novembre ; la
+// planche AujourdhuiOrdinateurReposD est retirée) : « Jour de repos. » à la main, « Si tu veux avancer » à la place de
+// « À faire », « Cette semaine : 3 sur 3, faite » sous la barre ORP, et les offres à trier s'il y en a.
 // Le téléphone a sa propre page (HomePhone).
 // L'Accueil du téléphone et le petit livre de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
 // moitié (budget de poids du premier affichage). Le chargement part tout de suite, en même temps que les données.
@@ -55,7 +54,7 @@ const preparing = ref<Offer[]>([]);
 const triageDone = ref(false);
 // Le petit livre reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
 const miniOpen = ref(false);
-// Un jour de repos (docs/86) : aucune liste à traiter.
+// Un jour de repos (docs/86) : tout est facultatif, la liste devient « Si tu veux avancer ».
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
 // Le mois ORP en retard sur son rythme (format.orpPace).
 const monthBehind = computed(() => {
@@ -90,8 +89,9 @@ const starting = computed(() => {
   const t = today.value;
   return !!t && !t.first_steps_dismissed && t.first_steps.some((s) => !s.done);
 });
-// Le tri à faire : une tâche « Trier » sur ordinateur, les offres de la dose sur téléphone.
-const triagePending = computed(() => !restDay.value && !rhythmPaused.value && dose.value.length > 0 && !triageDone.value);
+// Le tri à faire : une tâche « Trier » sur ordinateur, les offres de la dose sur téléphone. Un jour de repos aussi
+// (planches AujourdhuiOrdinateurV2 et AccueilV2, état « repos », 14 novembre) : « Offres à trier » comme en semaine.
+const triagePending = computed(() => !rhythmPaused.value && dose.value.length > 0 && !triageDone.value);
 // « Relire ton CV » (maquette du 10 novembre, PR 22) : en tête de « À faire » tant qu'un CV lisible n'a jamais été lu ;
 // la ligne part dès que la lecture a trouvé quelque chose (état « lu »).
 const reading = useCvReading();
@@ -173,7 +173,7 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
       title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
-      detail: days < 0 ? (restDay.value ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}` : `En retard depuis ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`) : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
+      detail: days < 0 ? `En retard depuis ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
       // La carte « Justificatifs … à remettre » est en tête du Bilan › ORP sur ordinateur, du Suivi ORP sur
       // téléphone (récapitulatif du 11 novembre, PR 29).
@@ -220,11 +220,12 @@ const heading = computed<Heading>(() => {
   if (starting.value) return { lead: "Commence par les premiers pas.", hand: "", sub: "" };
   const pause = t.rhythm?.pause_until;
   if (pause) return { lead: "En", hand: "pause.", sub: `Jusqu’au ${untilDay(pause)}. Pense à l’annoncer à ton conseiller.` };
-  const waiting = deskTodo.value.length + deskLater.value.length;
+  // « N choses t’attendent » : la liste « Si tu veux avancer » (état « repos » : 3 tâches, la relance reste à part).
+  const waiting = phone.value ? todos.value.length : deskTodo.value.length;
   const more = waiting ? `Si tu veux avancer, ${waiting === 1 ? "une chose t’attend" : `${waiting} choses t’attendent`}.` : "Profite de ta journée.";
   if (restDay.value) {
     const weekDone = !!t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
-    return { lead: "Jour de", hand: "repos.", sub: weekDone ? `Ta semaine est faite. ${more}` : more };
+    return { lead: "", hand: "Jour de repos.", sub: weekDone ? `Ta semaine est faite. ${more}` : more };
   }
   const perDay = dailyPace(t.month_count, t.month_target, t.month);
   const offers = triagePending.value ? ` ${plural(dose.value.length, "offre est", "offres sont")} à trier.` : "";
@@ -298,8 +299,8 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
       to: "/candidatures/suivi",
       tone: "normal",
     };
-    // Un jour de repos, tout est facultatif : une seule liste.
-    (restDay.value || rhythmPaused.value ? todo : later).push(follow);
+    // En pause, tout est facultatif : une seule liste. Un jour de repos garde « Quand tu as le temps » (état « repos »).
+    (rhythmPaused.value ? todo : later).push(follow);
   }
   return { todo, later };
 });
@@ -322,12 +323,6 @@ const starterTasks = computed<DeskTask[]>(() => {
   );
   return list;
 });
-// Le mois de l'inscription : pas de « en retard » tant que les premiers pas ne sont pas faits.
-const orpLine = computed(() => {
-  const t = today.value;
-  if (!t || !starting.value || !t.month_target || t.month_count >= t.month_target) return undefined;
-  return orpLeftLine(t.month_count, t.month_target, t.month, t.month_due_date);
-});
 // « Cette semaine · 2 sur 3 » sous la barre ORP : pas pendant une pause ni les premiers pas.
 const weekCount = computed(() => {
   const week = today.value?.rhythm;
@@ -335,15 +330,6 @@ const weekCount = computed(() => {
 });
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
-// La carte du mois ORP : toute la carte mène au Bilan ; sa phrase lue remplace le détail dessiné.
-const monthName = computed(() => (today.value ? formatMonth(today.value.month).split(" ")[0]!.toLowerCase() : ""));
-const orpLabel = computed(() => {
-  const t = today.value;
-  if (!t) return "";
-  const month = t.month_target ? `${t.month_count} sur ${t.month_target}` : plural(t.month_count, "candidature", "candidatures");
-  const week = t.rhythm && t.rhythm.target !== null ? `, cette semaine ${t.rhythm.count} sur ${t.rhythm.target}` : "";
-  return `Mois ORP : ${monthName.value} ${month}${week}. Voir le bilan`;
-});
 
 // « À faire » du téléphone (A4) : les mêmes tâches, un nombre et un libellé ; toute la ligne est le lien.
 const todos = computed<HomeTodo[]>(() => {
@@ -398,9 +384,6 @@ function onMiniDone(done: boolean): void {
   else unmarkTriageDone();
 }
 
-const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" }).format(
-  new Date(),
-);
 // La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
 const collectNote = computed(() => {
   const last = today.value?.last_collect_at;
@@ -408,8 +391,6 @@ const collectNote = computed(() => {
   // dates.ts, jamais « il y a 136 heures » : « collecte hier », sinon « collecte le 22 octobre ».
   return message.value || (late ? `collecte ${dateInList(last!) === "hier" ? "hier" : dateInSentence(last!)}` : "");
 });
-// L'étiquette au-dessus du titre d'un jour de repos : la date et la dernière collecte.
-const eyebrow = computed(() => (collectNote.value ? `${dateTitle} · ${collectNote.value}` : dateTitle));
 // Au-dessus du titre : « Bonjour Kevin », et la collecte quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
 const hello = computed(() => {
   const collect = collectNote.value;
@@ -440,9 +421,6 @@ async function fetchAll(): Promise<void> {
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
   ]);
-  // Un jour de repos, l'ancienne mise en page et ses styles (today-rest.css, chargés seulement ce jour-là, avant
-  // l'affichage : pas d'écran sans style).
-  if (day.data?.rhythm?.research_today === false && !phone.value) await import("../today-rest.css");
   today.value = day.data ?? null;
   triageDone.value = triageDoneToday();
   goalWon.value = !!today.value && firstGoal(today.value.month, today.value.month_count, today.value.month_target);
@@ -498,6 +476,7 @@ const { me } = useAuth();
     :offers="dose"
     :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
     :todos="todos"
+    :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
   >
     <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
     <RouterLink
@@ -518,7 +497,7 @@ const { me } = useAuth();
     />
   </HomePhone>
   <div
-    v-if="!phone && today && !restDay"
+    v-if="!phone && today"
     class="aj"
   >
     <div class="aj-main">
@@ -551,6 +530,14 @@ const { me } = useAuth();
             data-test="today-sentence"
           >
             <span class="aj-hand aj-hand-reached">Objectif du mois atteint,</span><br><span class="aj-hand">la suite est en plus</span>
+          </h1>
+          <h1
+            v-else-if="!heading.lead && heading.hand"
+            id="today-title"
+            class="aj-late"
+            data-test="today-sentence"
+          >
+            <span class="aj-hand">{{ heading.hand }}</span>
           </h1>
           <h1
             v-else
@@ -601,7 +588,7 @@ const { me } = useAuth();
       <section
         v-for="group in [
           { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start', numbered: false },
-          { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
+          { key: 'todo', title: restDay ? 'Si tu veux avancer' : 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
           { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later', numbered: false },
         ].filter((g) => g.items.length)"
         :key="group.key"
@@ -703,159 +690,6 @@ const { me } = useAuth();
       </section>
     </aside>
   </div>
-  <!-- Un jour de repos : l'ancienne mise en page (planche AujourdhuiOrdinateurReposD, gardée telle quelle). -->
-  <template v-if="!phone && today && restDay">
-    <section
-      class="today-band"
-      aria-labelledby="today-title"
-      data-test="today-band"
-    >
-      <div class="today-band-inner">
-        <p
-          class="today-eyebrow"
-          data-test="page-eyebrow"
-        >
-          {{ eyebrow }}
-        </p>
-        <h1
-          id="today-title"
-          class="today-title"
-          data-test="today-sentence"
-        >
-          {{ heading.lead }}<template v-if="heading.hand">
-            {{ " " }}<span class="today-hand">{{ heading.hand }}</span>
-          </template>
-        </h1>
-        <p
-          v-if="heading.sub"
-          class="today-band-sub"
-          data-test="today-sub"
-        >
-          {{ heading.sub }}
-        </p>
-      </div>
-    </section>
-    <!-- Sous la bande, le fond crème de la page sur toute la largeur (MODIFICATIONS_9 §1). -->
-    <div class="today-page-bg">
-      <div class="today-page">
-        <RouterLink
-          to="/bilan/orp"
-          class="today-orp-card"
-          :aria-label="orpLabel"
-          data-test="orp-month"
-        >
-          <OrpMonth
-            :title="`Mois ORP · ${monthName}`"
-            :count="today.month_count"
-            :target="today.month_target ?? null"
-            :month="today.month"
-            :line="orpLine"
-            :due="today.month_due_date ?? null"
-            band
-          />
-          <template v-if="today.rhythm && !starting">
-            <span
-              class="today-orp-rule"
-              aria-hidden="true"
-            />
-            <RhythmCard
-              :week="today.rhythm"
-              :month-behind="monthBehind"
-              band
-            />
-          </template>
-          <AppIcon
-            name="chevron"
-            class="today-orp-chevron"
-          />
-        </RouterLink>
-
-        <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
-        <RouterLink
-          v-if="me?.welcome === 'postponed'"
-          to="/bienvenue"
-          class="notice today-welcome"
-          data-test="finish-welcome"
-        >
-          <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
-        </RouterLink>
-
-        <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
-        <FirstSteps
-          v-if="starting"
-          :steps="today.first_steps"
-          :has-offers="today.has_offers ?? true"
-          :offer-id="today.first_steps_offer_id ?? null"
-          :pick-ready="!restDay && !rhythmPaused && best.length > 0"
-          @dismiss="dismissSteps"
-        />
-
-        <section
-          v-for="group in [
-            { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start' },
-            { key: 'todo', title: 'À faire', items: deskTodo, test: 'today-tasks' },
-            { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later' },
-          ].filter((g) => g.items.length)"
-          :key="group.key"
-          class="today-section"
-          :aria-labelledby="`today-${group.key}-title`"
-          :data-test="group.test"
-        >
-          <h2 :id="`today-${group.key}-title`">
-            {{ group.title }}
-          </h2>
-          <ul class="today-tasks">
-            <li
-              v-for="task in group.items"
-              :key="task.key"
-            >
-              <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
-              <a
-                v-if="task.href"
-                :href="task.href"
-                target="_blank"
-                rel="noopener noreferrer"
-                :class="['today-task', `tone-${task.tone}`]"
-                :data-test="task.test"
-              >
-                <AppIcon
-                  :name="task.icon"
-                  class="today-task-icon"
-                />
-                <span class="today-task-main">
-                  <strong>{{ task.title }}<span class="visually-hidden"> (nouvel onglet)</span></strong>
-                  <span>{{ task.detail }}</span>
-                </span>
-                <span class="today-task-action">{{ task.action }}<span
-                  class="arrow-circle"
-                  aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span></span>
-              </a>
-              <RouterLink
-                v-else
-                :to="task.to"
-                :class="['today-task', `tone-${task.tone}`]"
-                :data-test="task.test"
-              >
-                <AppIcon
-                  :name="task.icon"
-                  class="today-task-icon"
-                />
-                <span class="today-task-main">
-                  <strong>{{ task.title }}</strong>
-                  <span>{{ task.detail }}</span>
-                </span>
-                <span class="today-task-action">{{ task.action }}<span
-                  class="arrow-circle"
-                  aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span></span>
-              </RouterLink>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </div>
-  </template>
   <section
     v-if="!today"
     class="band"

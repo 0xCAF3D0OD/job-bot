@@ -36,7 +36,7 @@ async function mountView(today: unknown) {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
   await flushPromises();
-  // L'Accueil du téléphone, le petit livre et les styles du jour de repos sont chargés à part.
+  // L'Accueil du téléphone et le petit livre sont chargés à part.
   await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
@@ -50,5 +50,21 @@ describe("Accueil du téléphone : les cartes Offres (maquette AccueilSmile)", (
     expect(wrapper.find("[data-test=home-card]").text()).toContain("Acme SA · Lausanne");
     expect(wrapper.find("[data-test=home-card]").text()).not.toContain("VD");
     expect(wrapper.find("[data-test=home-triage]").exists()).toBe(false);
+  });
+});
+
+describe("Accueil du téléphone un jour de repos (planche AccueilV2, état « repos », textes seulement)", () => {
+  it("« Jour de repos. » à la main, la phrase, « Si tu veux avancer » et les offres à trier", async () => {
+    const wrapper = await mountView(
+      day({
+        rhythm: { research_today: false, count: 3, target: 3, pause_until: null },
+        to_follow_up: 2,
+        follow_ups: [],
+      }),
+    );
+    expect(wrapper.find("[data-test=home-rest]").text()).toBe("Jour de repos.");
+    expect(wrapper.find(".home-rest-sub").text()).toBe("Ta semaine est faite. Si tu veux avancer, une chose t’attend.");
+    expect(wrapper.find("#home-todo-title").text()).toBe("Si tu veux avancer");
+    expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);
   });
 });

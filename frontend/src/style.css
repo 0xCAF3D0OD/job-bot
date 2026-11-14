@@ -3739,9 +3739,8 @@ main:focus { outline: none; }
 /* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
 @media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
 
-/* --- Aujourd'hui sur ordinateur (maquette du 8 novembre, AujourdhuiOrdinateurTravailD et ReposD) ---
-   Bande --primary-soft sous l'en-tête (date 13 en capitales, titre 32/40 très gras, fin manuscrite à 1,45 em,
-   phrase 18/28) ; la carte du mois à cheval sur son bord bas ; colonne de 880, écart 40 ; cartes de tâche de 88 px. */
+/* --- L'ancienne bande d'Aujourd'hui (maquette du 8 novembre), gardée pour le Bilan (.today-band) et le Suivi ORP
+   (.today-orp-card, .orp-month-band) : bande --primary-soft, la carte du mois à cheval sur son bord bas. */
 .today-band { --today-17: 17px; --today-40: calc(var(--space-8) + var(--space-2)); --today-lh-title: 1.25; --today-lh-sub: 1.55; --today-lh-hand: 0;
   background: var(--primary-soft); padding: var(--space-6) var(--space-6) calc(var(--space-8) + var(--space-12)); }
 .today-band-inner { max-width: 880px; margin: 0 auto; }
@@ -3759,17 +3758,6 @@ main:focus { outline: none; }
 .orp-month-band-bar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
 .orp-month-band-bar span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); }
 .orp-month-band-line { font-size: var(--label-caps); color: var(--text-secondary); }
-.rhythm-band { display: flex; align-items: center; gap: var(--space-4); }
-.rhythm-band-text { display: flex; flex-direction: column; }
-.rhythm-band-text strong { font-size: var(--font-label); }
-.rhythm-band-text span { font-size: var(--label-caps); color: var(--text-secondary); }
-.rhythm-band.done .rhythm-band-text span { color: var(--success); font-weight: var(--weight-bold); }
-.rhythm-band-days { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, 32px); gap: var(--space-2); text-align: center; }
-.rhythm-band-days li { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
-.rhythm-band-days li.today { font-weight: var(--weight-heavy); color: var(--text); }
-.rhythm-band-dot { display: grid; place-items: center; width: 34px; height: 34px; box-sizing: border-box; border: 2px solid var(--field-border); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
-.rhythm-band-days li.rest .rhythm-band-dot { border-style: dashed; }
-.rhythm-band-days li.sent .rhythm-band-dot { background: var(--primary-graphic); border-color: var(--primary-graphic); color: var(--on-primary); }
 /* --- Bilan sur ordinateur (maquette du 8 novembre, BilanOrdinateur) ---
    La bande d'Aujourd'hui : « Bilan » à gauche, les onglets à droite ; la carte du mois à cheval ; des sections en
    lignes séparées par un trait, dans une carte blanche ; écart 32 entre les blocs. */
