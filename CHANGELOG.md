@@ -580,3 +580,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.366 | Écran « Candidature envoyée » sur ordinateur refait d'après la planche du 13 novembre : carte « Mois ORP » avec la barre, l'échéance, la relance et l'adresse manquante | livrée |
 | 1.6.367 | CI : les audits d'écran en deux contrôles, « Téléphone » et « Ordinateur », lancés seulement si la PR touche leur format (scripts/ci_formats.py) ; aucun pour une PR de documentation | livrée |
 | 1.6.368 | Relance sur ordinateur refaite d'après la planche du 13 novembre : message écrit à la première ouverture puis gardé (migration 0085), « Réécrire », lecture puis « Modifier le message », « Relancer par e-mail » en bouton principal | livrée |
+| 1.6.369 | Écran « Aucune offre avec ces filtres » sur ordinateur centré sur toute la largeur, comme la planche du 13 novembre, et « Tout effacer » en contour gris | livrée |
