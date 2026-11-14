@@ -548,23 +548,27 @@ onMounted(() => void load());
           v-if="doc && selected && (!phone || cvOpen)"
           ref="sheet"
           class="cv-sheet print-sheet"
-          :class="{ 'fresh-lines': fresh, busy: writing || saving }"
+          :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing || saving }]"
+          :data-template="template"
           :lang="doc.language"
           data-test="cv"
         >
-          <p class="cv-name">
-            {{ doc.name || "Ton nom" }}
-          </p>
-          <input
-            v-model="edit.headline"
-            class="cv-headline screen-only"
-            aria-label="Titre du profil"
-            data-test="headline"
-            @input="dirty = true"
-          >
-          <p class="cv-headline print-only">
-            {{ edit.headline }}
-          </p>
+          <!-- L’en-tête (le nom et le titre) que le modèle habille : bande, bandeau ou filet, comme dans le PDF. -->
+          <div class="doc-head cv-head">
+            <p class="cv-name">
+              {{ doc.name || "Ton nom" }}
+            </p>
+            <input
+              v-model="edit.headline"
+              class="cv-headline screen-only"
+              aria-label="Titre du profil"
+              data-test="headline"
+              @input="dirty = true"
+            >
+            <p class="cv-headline print-only">
+              {{ edit.headline }}
+            </p>
+          </div>
           <p class="cv-contacts">
             {{ doc.contacts.join(" · ") }}
           </p>

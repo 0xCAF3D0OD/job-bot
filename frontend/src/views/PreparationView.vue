@@ -1460,10 +1460,20 @@ onMounted(() => void load());
             <article
               v-if="doc && draft && (!phone || letterOpen)"
               class="letter-sheet print-sheet"
-              :class="{ 'fresh-lines': fresh, busy: writing }"
+              :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing }]"
+              :data-template="template"
               :lang="doc.language"
               data-test="letter"
             >
+              <!-- Le nom en tête, à la manière du modèle choisi, comme dans le PDF (letters/pdf.py) : le Sobre garde le
+                   nom dans l’expéditeur. -->
+              <p
+                v-if="template !== 'sobre' && doc.sender[0]"
+                class="doc-head"
+                data-test="letter-head"
+              >
+                <strong>{{ doc.sender[0] }}</strong>
+              </p>
               <div class="letter-sender">
                 <span
                   v-for="line in doc.sender"
@@ -2221,4 +2231,22 @@ onMounted(() => void load());
 .prep-desk .apply-go > :is(.apply-already, .apply-reopen) { font-size: var(--font-label); }
 .prep-desk-bottom .suggestion-chip { border-color: var(--card-line); font-size: var(--font-label); }
 .prep-desk-bottom .composer-pill { --prep-20: 20px; --prep-56: 56px; min-height: var(--prep-56); padding: 0 var(--space-2) 0 var(--prep-20); border: 1.5px solid var(--field-border); }
+/* Le modèle choisi dans « Mise en page » habille la page de la lettre et du CV comme leur PDF (letters/pdf.py) et
+   comme la planche PreparerMiseEnPage : Moderne, la bande bleue à gauche et le nom en bleu ; Bandeau, le nom dans un
+   bandeau pêche en haut de la page ; Classique, le papier crème, une police à empattements et le nom centré sur un
+   filet. Le Sobre reste la page d’origine. Le papier garde ses couleurs en sombre, comme la page Sobre. */
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet) { --tpl-blue: #2445C2; --tpl-peach: #F3B08A; --tpl-ink: #1B1F2A; --tpl-cream: #FFFDF8; }
+.print-sheet .doc-head { margin: 0 0 var(--space-5); }
+.cv-sheet .cv-head { margin: 0; }
+.cv-sheet:not(.tpl-sobre) .cv-head { margin-bottom: var(--space-2); }
+.letter-sheet .doc-head strong { font-size: 1.35em; font-weight: var(--weight-heavy); line-height: 1.2; }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-moderne { border-left: 14px solid var(--tpl-blue); }
+.doc-card > .print-sheet.tpl-moderne :is(.doc-head, .cv-name, .cv-headline, h3) { color: var(--tpl-blue); }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-bandeau { overflow: hidden; }
+.doc-card > .print-sheet.tpl-bandeau .doc-head { padding-bottom: var(--space-3); background: var(--tpl-peach); color: var(--tpl-ink); box-shadow: 0 0 0 100vmax var(--tpl-peach); clip-path: inset(-100vmax -100vmax 0 -100vmax); }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-classique { background: var(--tpl-cream); font-family: Georgia, "Times New Roman", serif; }
+.doc-card > .print-sheet.tpl-classique .doc-head { display: grid; justify-items: center; padding-bottom: var(--space-2); border-bottom: 1px solid var(--tpl-ink); text-align: center; }
+.doc-card > .print-sheet.tpl-classique .doc-head strong, .doc-card > .print-sheet.tpl-classique .cv-name { font-weight: var(--weight-semibold); }
+.doc-card > .print-sheet.tpl-classique .cv-headline { text-align: center; }
+.doc-card > .print-sheet:is(.tpl-bandeau, .tpl-classique) :is(.cv-name, .cv-headline, h3) { color: var(--tpl-ink); }
 </style>

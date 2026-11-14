@@ -1,3 +1,4 @@
+import { useDocTemplate } from "../composables/useDocTemplate";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
@@ -125,6 +126,27 @@ describe("PreparationView", () => {
     );
     expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx?modele=moderne");
     expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=moderne");
+  });
+
+  it("la page de la lettre suit le modèle choisi : le nom en tête hors du Sobre", async () => {
+    mockGet([]);
+    POST.mockResolvedValue({ data: letter(11, 1) });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=letter-card] [data-test=language-fr]").trigger("click");
+    await wrapper.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    const { template } = useDocTemplate();
+    const sheet = () => wrapper.find("[data-test=letter]");
+    template.value = "bandeau";
+    await flushPromises();
+    expect(sheet().classes()).toContain("tpl-bandeau");
+    expect(sheet().attributes("data-template")).toBe("bandeau");
+    expect(wrapper.find("[data-test=letter-head]").exists()).toBe(true);
+    template.value = "sobre";
+    await flushPromises();
+    expect(sheet().classes()).toContain("tpl-sobre");
+    expect(wrapper.find("[data-test=letter-head]").exists()).toBe(false);
+    template.value = "moderne";
   });
 
   it("la version modifiée en dernier est celle affichée ; les corrections s’enregistrent", async () => {
