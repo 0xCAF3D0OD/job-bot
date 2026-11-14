@@ -70,8 +70,11 @@ async function refresh(): Promise<void> {
   };
 }
 
+// « + Ajouter » de l'en-tête (maquette du 14 novembre, §6) : sur Rendez-vous, le seul bouton d'ajout ; il ouvre le
+// panneau « Nouveau rendez-vous » de la page. Ailleurs, l'ajout d'une offre.
 function addOffer(): void {
-  void router.push({ path: "/candidatures/offres", query: { ajouter: "1" } });
+  if (tab.value === "rendez-vous") void router.push({ path: "/candidatures/rendez-vous-orp", query: { ...route.query, ajouter: "1" } });
+  else void router.push({ path: "/candidatures/offres", query: { ajouter: "1" } });
 }
 
 // Pastilles relues à chaque changement d'onglet (une offre traitée, une candidature ajoutée…).
@@ -147,6 +150,7 @@ onMounted(() => void refresh());
       <button
         type="button"
         class="secondary jobs-add"
+        :aria-haspopup="tab === 'rendez-vous' ? 'dialog' : undefined"
         data-test="manual-open"
         @click="addOffer"
       >
