@@ -148,3 +148,30 @@ D'autres lectures automatiques de jobup, plus anciennes, tombent sous la même c
 | **« Ajouter une offre » par un lien jobup ou jobs.ch** | docs/111 | la page lue une fois, à la demande de la personne |
 
 jobs.ch appartient au même groupe (JobCloud) : mêmes règles. Les alertes e-mail de jobup, elles, restent permises : c'est jobup qui les envoie.
+
+## Premières offres par la recherche web (décision de Kevin, 2026-11-14)
+
+Ta demande du 2026-11-14 : « il faut des offres dès son inscription », puis « fais-le avec l'outil de jobA1, je veux que ça fonctionne ».
+
+### Ce qui change
+
+- Réglage `JOBBOT_WEB_FIRST_OFFERS_ENABLED`, **faux par défaut**. Allumé, et la recherche de jobup restant coupée, la tâche `first_offers` passe par l'outil de recherche web de l'IA (le même que pour l'adresse d'une entreprise) : deux métiers au plus par compte, deux recherches web par métier, dix offres gardées par métier.
+- L'IA ne reçoit que le métier et le lieu (règle I-1). Elle rend un titre, une entreprise et un lieu s'ils sont affichés dans le résultat, et le lien.
+- **Rien n'est inventé ni reformulé** : une offre n'est gardée que si son lien figure parmi les résultats rendus par le moteur (règle I-2). L'intitulé, l'entreprise et le lieu sont des morceaux du titre rendu par le moteur, recopiés par le code. Ce que l'IA propose et qui n'y figure pas mot pour mot est rejeté : l'intitulé devient alors le titre entier du moteur, l'entreprise et le lieu restent vides. Les pages de liste, les codes à la place du titre et les doublons sont écartés.
+- **Fraîcheur** : un résultat que le moteur date de plus de 14 jours est écarté. Sans date connue, il est gardé.
+- **jobA1 n'ouvre aucune page** : ni lecture de l'annonce, ni note. Ces offres portent le lien `web` ; elles restent « pas encore notées » tant qu'aucune alerte ne ramène la même offre.
+- L'écran le dit : « Pas encore notées. Les notes arrivent avec les offres de tes alertes. »
+- Coût et plafond : 2 appels au plus par recherche (un par métier), 2 recherches web et 4 000 jetons de réponse au plus par appel. Estimation : 0,06 USD par appel, soit 0,12 USD au plus par inscription (à mesurer à l'essai). Une relance par jour au plus depuis la page Alertes. Chaque appel est compté dans le plafond mensuel de l'IA (objet `first_offers`, règle I-5) ; plafond atteint, la recherche ne part pas.
+
+### Essayer sans rien enregistrer
+
+`jobbot premieres-offres-web "infirmier" "Lausanne"` affiche les offres gardées, le nombre de résultats du moteur, combien portent une date, combien sont écartées pour leur âge, et le coût.
+
+### Écarts et points ouverts
+
+- Aucune planche ne dessine cet état dans le paquet du 13 novembre : le composant existant est repris, seul le texte change. À valider ou à dessiner.
+- Les liens trouvés mènent souvent à jobup et jobs.ch. jobA1 ne lit pas ces pages, mais afficher ces liens n'a pas été validé par un juriste.
+- Deux offres au même titre et au même lieu, sans entreprise affichée, n'en font qu'une.
+- jobA1 ne vérifie pas qu'une offre est encore ouverte : il faudrait ouvrir la page, ce que les conditions de jobup et jobs.ch interdisent à un robot.
+- Non essayé contre l'IA réelle depuis l'atelier (pas de clé) : à essayer avec la commande ci-dessus avant d'allumer le réglage.
+

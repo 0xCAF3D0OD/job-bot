@@ -19,11 +19,27 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 
 @dataclass(frozen=True)
+class WebResult:
+    """Un résultat de la recherche web, tel que le moteur l'a rendu."""
+
+    url: str
+    title: str = ""
+    page_age: str | None = None
+
+
+@dataclass(frozen=True)
 class RawResult:
     text: str
     model: str
     usage: Usage
     stop_reason: str | None
+    # Les résultats de la recherche web, tels que le moteur les a rendus (adresse, titre, âge
+    # de la page) : ce que l'IA cite se vérifie contre eux (premières offres, docs/104).
+    web_results: tuple[WebResult, ...] = ()
+
+    @property
+    def web_urls(self) -> tuple[str, ...]:
+        return tuple(result.url for result in self.web_results)
 
 
 class Refused(Exception):
@@ -47,6 +63,28 @@ class ScoreClient(Protocol):
     def batch_results(self, batch_id: str) -> AsyncIterator[BatchItem]: ...
 
 
+def _web_results(message: Any) -> tuple[WebResult, ...]:
+    found: dict[str, WebResult] = {}
+    for block in message.content:
+        if block.type != "web_search_tool_result":
+            continue
+        results = getattr(block, "content", None)
+        for item in results if isinstance(results, list) else []:
+            url = getattr(item, "url", None)
+            if not isinstance(url, str):
+                continue
+            title, age = getattr(item, "title", None), getattr(item, "page_age", None)
+            found.setdefault(
+                url,
+                WebResult(
+                    url=url,
+                    title=title if isinstance(title, str) else "",
+                    page_age=age if isinstance(age, str) else None,
+                ),
+            )
+    return tuple(found.values())
+
+
 def _raw(message: Any) -> RawResult:
     text = "".join(block.text for block in message.content if block.type == "text")
     usage = message.usage
@@ -54,6 +92,7 @@ def _raw(message: Any) -> RawResult:
         text=text,
         model=message.model,
         stop_reason=message.stop_reason,
+        web_results=_web_results(message),
         usage=Usage(
             input_tokens=usage.input_tokens or 0,
             cache_read_tokens=usage.cache_read_input_tokens or 0,

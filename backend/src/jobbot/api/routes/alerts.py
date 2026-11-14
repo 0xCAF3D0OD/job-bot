@@ -340,16 +340,20 @@ class FirstOffersOut(BaseModel):
     found: int = 0
     new: int = 0
     queries: list[str] = []
+    # D'où viennent ces offres : la recherche publique de jobup, ou la recherche web de l'IA
+    # (intitulé et lien seulement, offres non notées).
+    provider: Literal["jobup", "web"] | None = None
 
 
 class FirstOffersStart(FirstOffersOut):
     result: Literal["queued", "already_queued", "no_trade", "too_soon", "disabled"]
 
 
-def _first_out(value: dict[str, object]) -> FirstOffersOut:
+def _first_out(value: dict[str, object], provider: str | None) -> FirstOffersOut:
     found, new, queries, at = (value.get(k) for k in ("found", "new", "queries", "at"))
     raw = value.get("status")
     return FirstOffersOut(
+        provider=provider if provider in ("jobup", "web") else None,
         status=raw if raw in ("queued", "done", "failed", "no_trade") else "none",
         at=datetime.fromisoformat(at) if isinstance(at, str) else None,
         found=found if isinstance(found, int) else 0,
@@ -367,7 +371,8 @@ async def get_first_offers(request: Request) -> FirstOffersOut:
     """
     runtime = _runtime(request)
     # Coupée (0.82.4) : ni recherche ni carte ; les offres déjà trouvées restent.
-    if not runtime.settings.public_search_enabled:
+    provider = public_search.provider(runtime.settings)
+    if provider is None:
         return FirstOffersOut(status="disabled")
     async with runtime.sessionmaker() as session:
         current = await public_search.state(session)
@@ -381,7 +386,7 @@ async def get_first_offers(request: Request) -> FirstOffersOut:
         await public_search.request(runtime, first_only=True)
         async with runtime.sessionmaker() as session:
             current = await public_search.state(session)
-    return _first_out(current)
+    return _first_out(current, provider)
 
 
 @router.post("/first-offers", operation_id="startFirstOffers", status_code=status.HTTP_202_ACCEPTED)
@@ -390,7 +395,9 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
     runtime = _runtime(request)
     result = await public_search.request(runtime)
     async with runtime.sessionmaker() as session:
-        current = _first_out(await public_search.state(session))
+        current = _first_out(
+            await public_search.state(session), public_search.provider(runtime.settings)
+        )
     return FirstOffersStart(**current.model_dump(), result=result)
 
 

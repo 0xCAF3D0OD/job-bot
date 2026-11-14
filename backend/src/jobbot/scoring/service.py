@@ -18,10 +18,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts, plans, platform
 from jobbot.db.models import (
+    WEB_LINK_SOURCE,
     Evaluation,
     LlmBatch,
     LlmCall,
     Offer,
+    OfferLink,
     OfferStatus,
     ProfileChunk,
     Setting,
@@ -191,6 +193,12 @@ async def candidates(
     if include_stale_profile:
         needs.append(Evaluation.profile_hash != current_hash)
         needs.append(Evaluation.score_error.is_not(None))
+    web_link = select(OfferLink.offer_id).where(
+        OfferLink.offer_id == Offer.id, OfferLink.source == WEB_LINK_SOURCE
+    )
+    other_link = select(OfferLink.offer_id).where(
+        OfferLink.offer_id == Offer.id, OfferLink.source != WEB_LINK_SOURCE
+    )
     rows = await session.scalars(
         select(Offer)
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
@@ -200,6 +208,10 @@ async def candidates(
             Offer.duplicate_of.is_(None),
             # Candidature spontanée : pas d'annonce à comparer au profil (docs/39 §4).
             Offer.spontaneous.is_(False),
+            # Trouvée par la recherche web des premières offres et par rien d'autre : un
+            # intitulé et un lien, pas d'annonce à noter (docs/104). Revue dans une alerte ou
+            # complétée à la main, elle a un autre lien et se note comme les autres.
+            or_(~web_link.exists(), other_link.exists()),
             or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
         )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())

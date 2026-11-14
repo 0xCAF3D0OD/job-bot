@@ -154,6 +154,9 @@ class Search(Base):
 # n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche. De
 # même pour un code ou un message d'un site (docs/112).
 PUBLIC_SEARCH_PREFIX = "public:"
+# Le lien d'une offre trouvée par la recherche web des premières offres (docs/104) : un
+# intitulé et une adresse, jamais lus ni notés tant qu'aucune autre source ne la montre.
+WEB_LINK_SOURCE = "web"
 # L'e-mail d'un expéditeur qui n'est aucun site (Stripe, une banque…) : ni copie, ni objet, ni
 # lien ; seul son Message-ID reste, pour que la collecte ne le relise pas. Hors du journal.
 IGNORED_KIND = "ignored"

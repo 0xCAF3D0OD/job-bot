@@ -98,6 +98,7 @@ onMounted(async () => {
         <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
         <li>Le texte de ton CV, sans tes coordonnées ni ta date de naissance, pour proposer tes blocs de profil.</li>
         <li>Le contenu des alertes des sites que l’IA lit.</li>
+        <li>Le métier et la région que tu cherches, pour trouver tes premières offres sur le web.</li>
         <li>Un document que tu joins à une question de l’Assistant (« + »), sans tes coordonnées.</li>
         <li>
           <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la
