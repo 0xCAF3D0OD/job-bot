@@ -127,7 +127,7 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 const applyError = ref("");
 const applyBusy = ref(false);
 // L'écran « Candidature envoyée. » (docs/141, 8) : le poste, ce qui compte pour l'ORP, la relance prévue.
-type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null };
+type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null; addressMissing?: boolean };
 const sent = ref<Sent | null>(null);
 // « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
 const goal = ref<OrpMonth | null>(null);
@@ -150,7 +150,7 @@ async function markApplied(): Promise<void> {
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
     goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
-    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
+    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null, addressMissing: !data.company_address?.trim() };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
@@ -823,6 +823,8 @@ onMounted(() => void load());
     :count="sent.count"
     :target="sent.target"
     :follow-up-on="sent.followUpOn"
+    :application-id="sent.id"
+    :address-missing="sent.addressMissing"
     cancellable
     @cancel="cancelApplied"
   />
