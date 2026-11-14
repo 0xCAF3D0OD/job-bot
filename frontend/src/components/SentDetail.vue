@@ -573,7 +573,7 @@ function onStatus(value: ApplicationStatus): void {
    22/28 800, mots à 20 px du titre ; carte de deux lignes de 72 à chevron gris ; Historique 8 px plus bas. */
 .sent-detail-phone { --sent-72-row: 72px; --sent-22: 22px; --sent-28-line: 28px; gap: var(--space-3); padding: 0 var(--space-5) var(--space-8); }
 .sent-screen-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; height: var(--sent-56); margin: 0 calc(-1 * var(--space-3)); padding: 0 var(--space-2) 0 0; background: var(--bg); }
-.sent-screen-title { --sent-48: 48px; --sent-17: 17px; --sent-2: 2px; display: flex; align-items: center; gap: var(--sent-2); font-size: var(--sent-17); font-weight: var(--weight-bold); }
+.sent-screen-title { --sent-48: 48px; --sent-17: 17px; display: flex; align-items: center; gap: var(--space-1); font-size: var(--sent-17); font-weight: var(--weight-bold); }
 .sent-screen-back { display: inline-flex; align-items: center; justify-content: center; width: var(--sent-48); height: var(--sent-48); min-height: var(--sent-48); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text); }
 .sent-screen-back .icon { width: 24px; height: 24px; }
 .sent-detail-phone .sent-head { padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
