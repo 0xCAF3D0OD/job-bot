@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import type { Offer } from "../api/client";
 import { usePhone } from "../composables/usePhone";
 import { isBlankLogo } from "../logoImage";
-import { colorIndex, initials } from "../format";
+import { colorIndex, initials, logoTone } from "../format";
 
 // Logo de l'entreprise servi par la plateforme (docs/14 §4) ; la lettre en secours, deux initiales sur
 // téléphone (maquettes Accueil et Offre, comme la Ligne d'offre) et, avec « pair », aussi sur ordinateur (le livre
@@ -27,7 +27,7 @@ const showImage = computed(() => Boolean(props.offer.has_logo) && !failed.value)
 
 <template>
   <span
-    :class="['logo', { large, image: showImage }, showImage ? '' : `c${colorIndex(name)}`]"
+    :class="['logo', { large, image: showImage }, showImage ? '' : `c${colorIndex(name)} t${logoTone(name)}`]"
     aria-hidden="true"
     data-test="company-logo"
   >
