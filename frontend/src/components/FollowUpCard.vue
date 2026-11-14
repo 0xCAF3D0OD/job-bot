@@ -128,24 +128,46 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 </script>
 
 <template>
+  <!-- Ordinateur (maquette du 14 novembre, §8 Envoyées point 3 ; planche CandidaturesOrdinateurStatut) : en-tête
+       « Relance conseillée » et sa pastille, ligne « À » avec « Changer », ligne « Message », pied à deux pilules de
+       52 px (le libellé suit le canal : « Relancer par e-mail » ou « Copier et ouvrir LinkedIn »), puis « Après l’envoi ». -->
   <section
     v-if="!compact"
-    class="follow-card-wrap"
+    class="sent-card follow-card fc-card"
     aria-labelledby="follow-card-title"
     data-test="follow-card"
   >
-    <div class="sent-card follow-card">
-      <p
+    <header class="fc-head">
+      <h3
         id="follow-card-title"
-        class="follow-card-cap"
+        class="follow-card-title"
       >
-        Relance conseillée
-      </p>
-      <b class="follow-card-title">{{ failed ? "Le message n’a pas pu être écrit" : "Ton message est prêt" }}</b>
+        {{ failed ? "Le message n’a pas pu être écrit" : "Relance conseillée" }}
+      </h3>
       <span
-        v-if="!failed"
-        class="follow-card-help"
-      >Court et poli, à envoyer au même endroit que ta candidature.</span>
+        v-if="draft && !failed"
+        class="fc-pill"
+      >Message prêt</span>
+    </header>
+    <div
+      class="fc-row fc-to"
+      data-test="follow-to"
+    >
+      <span class="fc-row-text"><span class="fc-label">À</span><b>{{ recipient }} · {{ channel === "email" ? "E-mail" : "LinkedIn" }}</b></span>
+      <MoreMenu
+        class="follow-card-change"
+        :items="changeItems"
+        :inline="false"
+        trigger="Changer"
+        label="Changer le destinataire ou le canal"
+        test-id="follow-change"
+      />
+    </div>
+    <div
+      v-if="loading || draft"
+      class="fc-row fc-message"
+    >
+      <span class="fc-label">Message</span>
       <p
         v-if="loading"
         class="follow-card-quote follow-card-wait"
@@ -166,77 +188,64 @@ function draftCache(): Map<number, { subject: string; text: string }> {
           @input="keep"
         />
       </label>
-      <blockquote
+      <p
         v-else-if="draft"
         class="follow-card-quote"
         data-test="follow-quote"
       >
         {{ draft.text }}
-      </blockquote>
-      <p
-        class="follow-card-to"
-        data-test="follow-to"
-      >
-        À : <b>{{ recipient }}</b> · {{ channel === "email" ? "E-mail" : "LinkedIn" }} ·
-        <MoreMenu
-          class="follow-card-change"
-          :items="changeItems"
-          :inline="false"
-          trigger="Changer"
-          label="Changer le destinataire ou le canal"
-          test-id="follow-change"
-        />
-      </p>
-      <div class="follow-card-actions">
-        <button
-          v-if="failed"
-          type="button"
-          class="primary"
-          data-test="follow-retry"
-          @click="write"
-        >
-          Réessayer
-        </button>
-        <template v-else>
-          <a
-            v-if="channel === 'email'"
-            :class="['button-link', 'primary-link', { disabled: !mailto }]"
-            :href="mailto ?? undefined"
-            :aria-disabled="!mailto"
-            data-test="follow-open"
-            @click="sentOut = !!mailto"
-          ><span class="with-icon">Ouvrir l’e-mail<AppIcon name="mail" /></span></a>
-          <button
-            v-else
-            type="button"
-            class="primary"
-            :disabled="!draft"
-            data-test="follow-open"
-            @click="copyAndOpen"
-          >
-            <span class="with-icon">Copier et ouvrir LinkedIn<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span>
-          </button>
-          <button
-            type="button"
-            class="link"
-            :disabled="!draft"
-            :aria-pressed="editing"
-            data-test="follow-edit"
-            @click="editing = !editing"
-          >
-            {{ editing ? "Terminé" : "Modifier" }}
-          </button>
-        </template>
-      </div>
-      <p
-        v-if="saveError"
-        class="notice error"
-        role="alert"
-      >
-        {{ saveError }}
       </p>
     </div>
-    <p class="follow-card-note">
+    <div class="fc-actions">
+      <button
+        v-if="failed"
+        type="button"
+        class="primary"
+        data-test="follow-retry"
+        @click="write"
+      >
+        Réessayer
+      </button>
+      <template v-else>
+        <a
+          v-if="channel === 'email'"
+          :class="['button-link', 'primary-link', { disabled: !mailto }]"
+          :href="mailto ?? undefined"
+          :aria-disabled="!mailto"
+          data-test="follow-open"
+          @click="sentOut = !!mailto"
+        ><span class="with-icon">Relancer par e-mail<AppIcon name="mail" /></span></a>
+        <button
+          v-else
+          type="button"
+          class="primary"
+          :disabled="!draft"
+          data-test="follow-open"
+          @click="copyAndOpen"
+        >
+          <span class="with-icon">Copier et ouvrir LinkedIn<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span>
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          :disabled="!draft"
+          :aria-pressed="editing"
+          data-test="follow-edit"
+          @click="editing = !editing"
+        >
+          {{ editing ? "Terminé" : "Modifier le message" }}
+        </button>
+      </template>
+    </div>
+    <p
+      v-if="saveError"
+      class="notice error fc-error"
+      role="alert"
+    >
+      {{ saveError }}
+    </p>
+    <p class="fc-after">
+      <span class="fc-after-pill">Après l’envoi</span>
       Quand tu reviens, le statut passe à « Relancé » et la prochaine relance est proposée dans 10 jours.
     </p>
   </section>
@@ -387,6 +396,28 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 .follow-card-actions :is(.primary, .primary-link) { min-height: var(--space-12); padding: 0 var(--space-5); border-radius: var(--radius-pill); }
 .follow-card-actions .link { min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .follow-card-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+/* Ordinateur, maquette du 14 novembre (§8, §9 ; planche CandidaturesOrdinateurStatut) : en-tête de 20 px de marge,
+   titre 18/700, pastille verte ; lignes à étiquette 13 grise au-dessus de la valeur 15/700, 12 px en haut et en bas,
+   64 px au moins, filet de 1 px ; pilules de 52 px, 12 px entre elles ; « Après l’envoi » en pastille grise. */
+.sent-card.fc-card { --fc-x: 20px; --fc-r: 6px; --fc-52: 52px; --fc-64: 64px; padding: 0; overflow: hidden; }
+.fc-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4) var(--fc-x); border-bottom: 1px solid var(--line); }
+.fc-head .follow-card-title { margin: 0; font-size: var(--follow-18); line-height: var(--space-6); font-weight: var(--weight-bold); }
+.fc-pill, .fc-after-pill { flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--fc-r); font-size: var(--follow-13); line-height: var(--follow-16); font-weight: var(--weight-bold); }
+.fc-pill { background: var(--success-soft); color: var(--success); }
+.fc-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; min-height: var(--fc-64); padding: var(--space-3) var(--fc-x); border-bottom: 1px solid var(--line); }
+.fc-row-text { flex: 1; min-width: 0; }
+.fc-label { display: block; font-size: var(--follow-13); line-height: var(--space-5); color: var(--text-secondary); }
+.fc-row b { display: block; font-size: var(--font-label); line-height: var(--space-5); }
+.fc-message { flex-direction: column; align-items: stretch; gap: var(--space-1); }
+.fc-card .follow-card-quote { margin: 0; padding: 0; border: 0; font-size: var(--font-label); line-height: var(--follow-22); color: var(--text); }
+.fc-card .follow-card-edit textarea { margin-top: 0; }
+.fc-card .follow-card-change .more-trigger { min-height: var(--target-min); font-size: var(--font-label); }
+.fc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--fc-x); border-bottom: 1px solid var(--line); }
+.fc-actions :is(.primary, .primary-link, .secondary) { min-height: var(--fc-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.fc-actions .secondary { border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
+.fc-error { margin: var(--space-3) var(--fc-x) 0; }
+.fc-after { display: flex; align-items: center; gap: var(--space-3); margin: 0; padding: var(--space-3) var(--fc-x); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.fc-after-pill { background: color-mix(in srgb, var(--text) 7%, var(--surface)); color: var(--text); }
 /* Téléphone (EnvoyeeDetail, EnvoyeeDetailRelance) : titre 17/24, phrase 15/22, bouton plein pleine largeur de 48 à
    20 px ; dans la feuille, « À : » 15/22, message dans une carte blanche 16/24, pied à deux boutons empilés. */
 .follow-card-compact .follow-card-cap { margin-bottom: var(--space-2); }

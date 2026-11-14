@@ -1551,10 +1551,10 @@ button, .button-link { max-width: 100%; }
    crème, voile rgba(27,31,42,.45), titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. */
 .side-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(27 31 42 / 45%); }
 .side-panel { --sheet-title-lh: 28px; position: fixed; top: 0; right: 0; bottom: 0; z-index: 46; width: min(440px, 100vw); display: flex; flex-direction: column; background: var(--bg); box-shadow: -10px 0 30px rgb(27 31 42 / 18%); }
+@media (min-width: 821px) { .side-panel { top: var(--panel-float); right: var(--panel-float); bottom: var(--panel-float); border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); box-shadow: var(--panel-float-shadow); overflow: hidden; } }
 .side-panel.side-panel-480 { width: min(480px, 100vw); }
-.side-panel-head { flex: none; display: flex; align-items: center; gap: var(--space-2); min-height: 76px; padding: 0 var(--space-3) 0 var(--space-6); }
-.side-panel-head h2 { margin: 0; font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.side-panel-head .side-panel-close { width: 48px; height: 48px; }
+.side-panel-head { flex: none; display: flex; align-items: center; gap: var(--space-2); min-height: 76px; padding: 0 var(--panel-close-edge) 0 var(--space-6); }
+.side-panel-head h2 { margin: 0; font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-panel-body { flex: 1; overflow-y: auto; padding: var(--space-2) var(--space-6) var(--space-6); display: grid; align-content: start; gap: var(--space-4); }
 .side-panel-titles { --eyebrow-gap: 2px; flex: 1; min-width: 0; }
 .side-panel-titles h2 { margin-top: var(--eyebrow-gap); }
@@ -4303,8 +4303,8 @@ html.search-open { overflow: hidden; }
 .sheet-heading { flex: 1 1 auto; min-width: 0; }
 .sheet-title { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
 .sheet-subtitle { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
-.sheet-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: 50%; background: var(--panel); color: var(--text); }
-.sheet-close:hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
+.sheet-close, .side-panel-head .side-panel-close { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--panel-close-size); height: var(--panel-close-size); min-height: 0; padding: 0; border: var(--panel-close-bw) solid var(--panel-close-line); border-radius: 50%; background: var(--surface); color: var(--text); }
+.sheet-close:hover, .side-panel-head .side-panel-close:hover { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
 .sheet-close .icon { width: 1.1rem; height: 1.1rem; }
 /* Lot 17 : 4 px de marge dans le corps qui défile, pour que l'anneau des champs (et de la pilule du Composer) ne soit pas coupé. */
 .sheet-body { --focus-room: 4px; overflow: auto; display: grid; gap: var(--space-4); margin: calc(-1 * var(--focus-room)); padding: var(--focus-room); }
@@ -4321,14 +4321,13 @@ html.search-open { overflow: hidden; }
   .sheet[open] { animation: sheet-up var(--t-state) var(--ease-out); }
   /* Version du 9 novembre (§10.1, §10.7 ; maquette OffreCompatibilite) : poignée 36 × 4, rayon 34 en haut (D7),
      titre 22/28 800 à 24 px du bord, croix de 48 px, corps à 24 px des bords, montée de 320 ms. */
-  .sheet { --sheet-handle-top: 12px; --sheet-handle-gap: 4px; --sheet-handle-w: 36px; --sheet-handle-h: 4px; --sheet-pad: 24px; --sheet-close: 48px; --sheet-title-lh: 28px;
+  .sheet { --sheet-handle-top: 12px; --sheet-handle-gap: 4px; --sheet-handle-w: 36px; --sheet-handle-h: 4px; --sheet-pad: 24px; --sheet-title-lh: 28px;
     border-radius: var(--radius-block) var(--radius-block) 0 0; }
   .sheet-inner { gap: 0; padding: 0 0 calc(var(--sheet-pad) + env(safe-area-inset-bottom)); }
   .sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
-  .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-1) var(--sheet-pad); touch-action: none; }
+  .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--panel-close-edge) var(--space-1) var(--sheet-pad); touch-action: none; }
   /* `.sheet .sheet-title` : plus fort qu'un `h2` de page (par exemple `.orp-meeting h2`) qui contient la feuille. */
-  .sheet .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
-  .sheet-close { width: var(--sheet-close); height: var(--sheet-close); background: transparent; }
+  .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
   .sheet-body { margin: 0; padding: var(--space-2) var(--sheet-pad) 0; }
   .sheet-actions { padding: var(--space-4) var(--sheet-pad) 0; }
@@ -4341,13 +4340,12 @@ html.search-open { overflow: hidden; }
    feuille s'ouvre en panneau à droite, 440 px, sur toute la hauteur, fond crème, voile rgba(27,31,42,.45), entrée
    ja-panel de 250 ms ; titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. Seul le panneau défile. */
 @media (min-width: 821px) {
-  .sheet { --sheet-pad: 24px; --sheet-head-h: 76px; --sheet-title-lh: 28px; position: fixed; inset: 0 0 0 auto; width: 440px; max-width: 440px; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; background: var(--bg); box-shadow: -10px 0 30px rgb(27 31 42 / 18%); }
+  .sheet { --sheet-pad: 24px; --sheet-head-h: 76px; --sheet-title-lh: 28px; position: fixed; inset: var(--panel-float) var(--panel-float) var(--panel-float) auto; width: 440px; max-width: 440px; height: auto; max-height: calc(100dvh - 2 * var(--panel-float)); margin: 0; border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); background: var(--bg); box-shadow: var(--panel-float-shadow); overflow: hidden; }
   .sheet::backdrop { background: rgb(27 31 42 / 45%); }
   .sheet[open] { animation: ja-panel 250ms cubic-bezier(.2,.8,.2,1) both; }
   .sheet-inner { gap: 0; height: 100%; padding: 0; }
-  .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--space-3) 0 var(--sheet-pad); }
-  .sheet .sheet-title { font-size: var(--font-section); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
-  .sheet-close { width: 48px; height: 48px; background: transparent; }
+  .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--panel-close-edge) 0 var(--sheet-pad); }
+  .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
   .sheet-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: var(--space-2) var(--sheet-pad) var(--sheet-pad); align-content: start; }
   .sheet-actions { flex: none; padding: var(--space-4) var(--sheet-pad) var(--sheet-pad); }
@@ -4357,13 +4355,12 @@ html.search-open { overflow: hidden; }
    avec `icon`. En-tête : pastille ronde de 48 px, titre 18 gras, sous-titre 14, croix de 44 px, trait dessous.
    Ordinateur : sous l'en-tête, 420 px, coin haut gauche de 24 px, ombre à gauche, sans voile ; corps à 20 et 22 px,
    pied fixe. Téléphone : la feuille du bas, coins de 24 px en haut. */
-.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-close: 44px; --panel-title: 18px; --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
+.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-close: var(--panel-close-size); --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
 .sheet-badge { flex: none; display: flex; align-items: center; justify-content: center; width: var(--panel-badge); height: var(--panel-badge); border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); }
 .sheet-badge .icon { width: var(--panel-icon); height: var(--panel-icon); stroke-width: 2.4; }
-.sheet.sheet-panel .sheet-head { gap: var(--panel-head-gap); padding: var(--panel-head-pad) var(--space-3) var(--panel-head-pad) var(--panel-pad-x); border-bottom: 1px solid var(--line-soft); }
+.sheet.sheet-panel .sheet-head { gap: var(--panel-head-gap); padding: var(--panel-head-pad) var(--panel-close-edge) var(--panel-head-pad) var(--panel-pad-x); border-bottom: 1px solid var(--line-soft); }
 .sheet.sheet-panel .sheet-title { font-size: var(--panel-title); line-height: var(--space-6); font-weight: var(--weight-heavy); }
 .sheet.sheet-panel .sheet-subtitle { margin: 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.sheet.sheet-panel .sheet-close { width: var(--panel-close); height: var(--panel-close); background: transparent; }
 .sheet.sheet-panel .sheet-close .icon { width: var(--space-5); height: var(--space-5); }
 .sheet.sheet-panel .sheet-body { padding: var(--panel-pad-y) var(--panel-pad-x); gap: var(--space-6); }
 .sheet.sheet-panel .sheet-actions { padding: var(--space-4) var(--panel-pad-x); border-top: 1px solid var(--line-soft); }
@@ -4372,7 +4369,7 @@ html.search-open { overflow: hidden; }
   .sheet.sheet-panel .sheet-actions { padding-bottom: 0; }
 }
 @media (min-width: 821px) {
-  .sheet.sheet-panel { inset: var(--sheet-top, 76px) 0 0 auto; width: 420px; max-width: 420px; height: auto; max-height: none; background: var(--surface); border-left: 1px solid var(--line); border-top-left-radius: var(--panel-radius); box-shadow: var(--shadow-panel); overflow: hidden; }
+  .sheet.sheet-panel { inset: var(--panel-float-top) var(--panel-float) var(--panel-float) auto; width: 420px; max-width: 420px; height: auto; max-height: calc(100dvh - var(--panel-float-top) - var(--panel-float)); background: var(--surface); border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); box-shadow: var(--panel-float-shadow); overflow: hidden; }
   .sheet.sheet-panel::backdrop { background: transparent; }
   .sheet.sheet-panel[open] { animation: ja-slide-r 220ms cubic-bezier(.05,.7,.1,1); }
   .sheet.sheet-panel .sheet-head { min-height: 0; }
@@ -4385,7 +4382,7 @@ html.search-open { overflow: hidden; }
 .sheet-sum-text b { display: block; font-size: var(--font-title); line-height: var(--space-6); }
 .sheet-sum-text span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .sheet-group { padding-top: var(--space-5); }
-.sheet-group-title { margin: 0 0 var(--space-1); font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.sheet-group-title { margin: 0 0 var(--space-1); font-size: var(--panel-caps-size); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .sheet-items { margin: 0; padding: 0; list-style: none; }
 .sheet-item { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
 .sheet-check { align-items: center; min-height: var(--target-min); box-sizing: border-box; cursor: pointer; }
@@ -5114,12 +5111,12 @@ a.panel-row:hover { background: var(--band); }
 @media (min-width: 1024px) {
   /* Envoyées (§8.1 du 9 novembre) : la liste de 480 px à gauche, un trait de 2 px --line au milieu de l'écart, le détail
      en cartes séparées sur le crème à droite (plus de grand cadre). Le trait bleu part de la carte choisie. */
-  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-8); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
-  .sent-columns > :not(.sent-detail, .sent-divider, .sent-link) { grid-column: 1; }
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-6); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
+  .sent-columns > :not(.sent-detail) { grid-column: 1; }
+  /* Le volet Filtres (maquette du 14 novembre, §3) prend la place de la colonne liste. */
+  .jobs-body.sent-panel-open > :not(.sent-detail, .sent-filter-panel) { display: none; }
+  .sent-columns > .sent-filter-panel { position: sticky; top: var(--space-4); height: auto; max-height: calc(100dvh - 12rem); }
   .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding-bottom: var(--space-6); }
-  .sent-columns > .sent-divider { position: absolute; top: 0; bottom: 0; left: calc(var(--space-6) + var(--sent-list-w) + var(--sent-gap) / 2 - 1px); width: 2px; background: var(--line); }
-  .sent-columns > .sent-link { position: absolute; left: calc(var(--space-6) + var(--sent-list-w)); width: calc(var(--sent-gap) / 2); height: 2px; background: var(--primary-graphic); }
-  .sent-columns > .sent-link::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-graphic); }
   .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
 }
 /* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
@@ -5301,3 +5298,15 @@ html.text-large { font-size: 125%; }
   .notifications-page:not(.notifications-wide) .notifications-empty .face-state-line { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-tertiary); }
   .notifications-page:not(.notifications-wide) .notifications-empty [data-test=show-all] { min-height: var(--btn-secondary); margin-top: var(--space-2); padding: 0 var(--space-6); border-radius: var(--radius-pill); }
 }
+
+/* --- Feuilles et panneaux, maquette du 14 novembre (§4 ; référence : le panneau « Rendez-vous ORP »,
+   RendezVousFeuilleOrdinateurV2). Toutes les feuilles du téléphone et tous les panneaux de l'ordinateur : titre 20/800 ;
+   croix ronde de 44 px, trait de 1,5 px --line-strong (#C9C5BA ; sombre --line, #38322B), fond --surface, à 20 px du
+   bord droit ; libellés de section en capitales 13/700 gris, espacement .05em. Ordinateur : le panneau est une carte
+   flottante, à 16 px du haut, de la droite et du bas, coins de 24 px, ombre 0 12 32 rgba(27,31,42,.2) (sombre : trait de
+   1 px --line, ombre rgba(0,0,0,.45)) ; les volets ancrés à un bouton (Ajouter, Nouveau rendez-vous) gardent 420 px et
+   commencent à 84 px du haut. Les menus de l'en-tête (Compte, Notifications) ne changent pas. --- */
+:root { --panel-float: 16px; --panel-float-top: 84px; --panel-float-r: 24px; --panel-float-shadow: 0 12px 32px rgba(27,31,42,.2); --panel-float-line: transparent;
+  --panel-close-size: 44px; --panel-close-line: var(--line-strong); --panel-close-edge: 20px; --panel-title-size: 20px; --panel-caps-size: 13px; --panel-close-bw: 1.5px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); } }
+:root[data-theme="dark"] { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); }
