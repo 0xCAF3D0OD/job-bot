@@ -398,6 +398,9 @@ function copyOnOpen(): void {
 /* La croix de la planche : 24 px, trait 2,2, couleur du texte. */
 .alert-site-panel .side-panel-close { color: var(--text); }
 .alert-site-panel .side-panel-close .icon { width: 24px; height: 24px; stroke-width: 2.2; }
-.alert-site-later { flex: none; min-height: var(--target-min); padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); }
-.alert-site-done { flex: 1; justify-content: center; text-align: center; height: var(--btn-secondary); border-radius: var(--radius-pill); font-size: var(--font-body); }
+/* Pied (maquette du 14.11, §4) : un lien secondaire à côté du bouton principal, les deux alignés à droite, 24 px entre
+   eux ; le bouton prend la largeur de son texte (0 24 px), pilule de 52 px ; « Plus tard » garde 4 px de chaque côté. */
+.alert-site-panel .side-panel-foot { justify-content: flex-end; gap: var(--space-6); }
+.alert-site-later { flex: none; min-height: var(--target-min); padding: 0 var(--space-1); border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); }
+.alert-site-done { flex: none; justify-content: center; text-align: center; height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
 </style>

@@ -1,0 +1,1 @@
+Mes alertes e-mail (maquette du 14 novembre) : pied du panneau « Alerte <site> » aligné à droite, « Plus tard » à 24 px du bouton à la largeur de son texte ; valeurs en gras dans le panneau « Alerte » sur ordinateur ; marges de 20 px sur téléphone

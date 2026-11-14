@@ -5188,9 +5188,10 @@ a.panel-row:hover { background: var(--band); }
 
 /* Alertes e-mail sur téléphone (AlertesTel) : le retour et le titre de 26 à la place de l'en-tête ; la phrase de 16 ;
    le bandeau en colonne, bouton dessous ; lignes de 68 px ; « + Ajouter » et « Créer » en pilules de 40 px. */
-.jobs-band > .jobs-body.alerts-phone { --alerts-26: 26px; --alerts-32: 32px; --alerts-23: 23px; --alerts-68: 68px; --alerts-40: 40px; gap: var(--space-4); padding: var(--space-3) var(--space-4) var(--space-6); }
+/* Marges de 20 px à gauche et à droite, comme toutes les pages téléphone de la maquette du 14.11 (main : 0 20px). */
+.jobs-band > .jobs-body.alerts-phone { --alerts-26: 26px; --alerts-32: 32px; --alerts-23: 23px; --alerts-68: 68px; --alerts-40: 40px; gap: var(--space-4); padding: var(--space-3) var(--space-5) var(--space-6); }
 @media (max-width: 820px) { :root:has(.alerts-head-phone) .topbar { display: none; } }
-.alerts-head-phone { display: flex; align-items: center; gap: var(--space-1); margin-left: calc(-1 * var(--space-2)); }
+.alerts-head-phone { display: flex; align-items: center; gap: var(--space-1); margin-left: calc(-1 * var(--space-3)); }
 .alerts-head-phone h1 { margin: 0; font-size: var(--alerts-26); line-height: var(--alerts-32); font-weight: var(--weight-heavy); }
 .alerts-head-phone .icon-button { display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); color: var(--text); }
 .alerts-sentence-phone { margin: 0 var(--space-1); font-size: var(--font-body); line-height: var(--alerts-23); color: var(--text-secondary); }
