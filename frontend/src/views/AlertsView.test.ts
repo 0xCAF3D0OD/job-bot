@@ -61,8 +61,11 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     DELETE.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
     const wrapper = await mountView(todo);
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(true);
-    // La liste vide : le logo transformé « cloche », jamais le personnage (docs/141 §3).
-    expect(wrapper.find("[data-test=alerts-empty] [data-transform=alerts]").exists()).toBe(true);
+    // Ordinateur, rien en place (AlertesOrdinateurVide, corrections du 13.11, §2) : Orange à gauche du titre, plus
+    // le logo transformé ; jamais le personnage de l'ancienne série.
+    expect(wrapper.find("[data-test=alerts-orange]").attributes("height")).toBe("112");
+    expect(wrapper.find("[data-test=alerts-sentence]").text()).toContain("Aucune alerte pour l’instant.");
+    expect(wrapper.find("[data-test=alerts-empty]").exists()).toBe(false);
     expect(wrapper.find("[data-illustration=personnage]").exists()).toBe(false);
 
     // Étape 1 : retirer une recherche.

@@ -20,6 +20,14 @@ export function markTriageDone(): void {
     // Stockage refusé : Aujourd'hui reproposera le tri, sans gêne.
   }
 }
+// « Annuler » sur la dernière offre : le tri du jour reprend.
+export function unmarkTriageDone(): void {
+  try {
+    localStorage.removeItem(doneKey());
+  } catch {
+    // Rien à défaire.
+  }
+}
 export function triageDoneToday(): boolean {
   try {
     return localStorage.getItem(doneKey()) === "1";
