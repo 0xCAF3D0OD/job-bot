@@ -584,3 +584,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.370 | Bilan › Résultats sur ordinateur refait à zéro d’après la planche BilanOrdinateur, sans changer la logique | livrée |
 | 1.6.371 | La maquette du 14 novembre dans docs/maquette/2026-11-14, ses règles dans docs/design/regles.md et la règle des captures dans CLAUDE.md | documentation seule, les pages suivent dans des PR séparées |
 | 1.6.372 | Préparer : la page de la lettre et du CV prend le modèle choisi dans « Mise en page » (Moderne, Bandeau, Classique), comme les PDF | livrée |
+| 1.6.373 | Les décisions de Kevin sur la maquette du 14 novembre dans DECISIONS.md et la planche Animations retirée | livrée |
