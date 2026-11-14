@@ -742,7 +742,6 @@ button.link { border: none; background: none; padding: 0; font: inherit; font-si
 button.link { border-radius: var(--radius-sm); transition: color 0.15s, background-color 0.15s; }
 .link:hover { color: var(--accent-strong); background-color: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
 .link.danger { color: var(--down-text); }
-.link.danger:hover { background-color: rgb(229 72 77 / 10%); }
 .doc-text {
   white-space: pre-wrap;
   font-size: var(--font-small);
@@ -2120,9 +2119,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .card-enter-active { transition: opacity var(--t-enter), transform var(--t-enter) var(--ease-out); }
 .card-enter-from { opacity: 0; transform: translateY(8px); }
 @media (prefers-reduced-motion: reduce) { .card-move, .card-leave-active, .card-enter-active { transition: none; } }
-/* Entrée des chiffres et des barres (docs/60 §3) : une fois par visite. */
-@keyframes bar-rise { from { transform: scaleY(0); } }
-@keyframes bar-grow { from { transform: scaleX(0); } }
 
 /* Réussite (docs/61 §1) : une carte qui vient devant, souple ; l'image posée sur son bord. */
 .success-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--space-4); background: color-mix(in srgb, var(--bg) 55%, transparent); animation: overlay-in var(--t-state) ease-out; }
@@ -4249,8 +4245,7 @@ html.search-open { overflow: hidden; }
 .sheet-actions { display: flex; gap: var(--space-3); align-items: center; }
 @media (max-width: 599px) {
   .sheet { width: 100%; max-width: 100%; }
-  .sheet-inner { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
-  .sheet-inner::before { content: ""; align-self: center; margin-bottom: calc(var(--space-2) * -1); border-radius: var(--radius-pill); }
+  .sheet-inner::before { content: ""; align-self: center; border-radius: var(--radius-pill); }
   .sheet-full { height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
   .sheet-full .sheet-inner { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
   .sheet-full .sheet-inner::before { display: none; }
@@ -4335,7 +4330,6 @@ html.search-open { overflow: hidden; }
 /* L'action principale d'une feuille (niveau 1) : pilule de 52 px, 16 px au-dessus. */
 .sheet-cta { --sheet-cta-h: 52px; display: flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--sheet-cta-h); margin-top: var(--space-4); border-radius: var(--radius-pill); background: var(--action); color: var(--on-action); font-size: var(--font-body); font-weight: var(--weight-bold); text-decoration: none; }
 .sheet-cta > .icon { width: var(--space-5); height: var(--space-5); }
-@keyframes sheet-up { from { transform: translateY(2rem); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
 
 /* Panneau de commande : on lit en haut, on agit en bas. Sous 600 px, il reste en bas, au-dessus de la

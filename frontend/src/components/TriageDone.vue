@@ -94,7 +94,7 @@ defineExpose({ focus: () => root.value?.focus() });
 </template>
 
 <style scoped>
-.tri-done { --td-logo: 44px; --td-row: 68px; --td-card: 480px; --td-16: 1rem; --td-21: 1.3125rem; --td-14: 0.875rem; --td-15: 0.9375rem; --td-17: 1.0625rem; --td-48: 48px; --td-10: 10px; outline: none; }
+.tri-done { --td-logo: 44px; --td-row: 68px; --td-card: 480px; --td-16: 1rem; --td-21: 1.3125rem; --td-14: 0.875rem; --td-15: 0.9375rem; --td-17: 1.0625rem; --td-48: 48px; outline: none; }
 /* Sur ordinateur, la fin du tri reste dans la page, sous l'en-tête (maquette FinDuTriOrdinateur) : la règle
    globale « .sent-screen » (écran poussé du téléphone) ne s'applique pas. */
 @media (min-width: 821px) { .tri-done :deep(.sent-screen) { position: static; overflow: visible; background: none; } }

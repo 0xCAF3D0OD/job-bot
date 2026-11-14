@@ -2105,17 +2105,17 @@ onMounted(() => void load());
 .prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
 .prep-desk-head > .step-tabs { flex: none; width: auto; }
 
-.prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; --prep-sheet: 520px; --prep-bottom: 150px; --prep-side-top: 5.5rem; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
+.prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
 /* Une seule zone défile, la page (§1) : la colonne de droite reste en place, sans défilement à elle. */
 .prep-desk .prep-side { gap: var(--space-4); }
-.prep-desk .side-card { gap: var(--space-1); padding: var(--prep-20) var(--prep-24); }
+.prep-desk .side-card { gap: var(--space-1); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
-.prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+.prep-desk .doc-card-head { background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
-.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
+.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
 /* Le CV prêt (§14, PreparerOrdinateurCVPret) : une page A4 de 560 px sur le fond grisé, à 32 px du haut et 40 du bas ;
    nom 20/800, titre 12/700 bleu, coordonnées 10,5, rubriques 10 en capitales bleues soulignées, texte 10,5/15. */
@@ -2155,7 +2155,7 @@ onMounted(() => void load());
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
 /* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus,
    libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
-.prep-desk .prep-file { --prep-15: 15px; --prep-64: 64px; gap: 0; padding-bottom: 0; }
+.prep-desk .prep-file { --prep-15: 15px; --prep-64: 64px; gap: 0; }
 .prep-file > h2 { margin: 0 0 var(--space-3); line-height: var(--prep-24); }
 .prep-file-row {
   display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-64); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-3) var(--prep-24); box-sizing: border-box;
@@ -2189,7 +2189,7 @@ onMounted(() => void load());
    (fichier bleu, nom 15/600, téléchargement), « Tout télécharger » à droite en contour de 40 ; 20 px plus bas le bouton
    plein de 48 et « J’ai déjà postulé » à 20 px. */
 .prep-desk .apply-cards { gap: var(--space-4); }
-.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-56: 56px; --apply-64: 64px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-64: 64px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .apply-cap { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
 .apply-cards .apply-card h2 { margin: 0; font-size: var(--font-title); line-height: var(--apply-24); }
 .apply-card > .apply-cap + h2 { margin-top: var(--space-2); }
@@ -2218,7 +2218,7 @@ onMounted(() => void load());
 .apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
 /* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
    la source de l’adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
-.apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-64: 64px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+.apply-company { --apply-22: 22px; --apply-15: 15px; --prep-15: 15px; --prep-64: 64px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
 .apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
 .apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }
 .apply-facts dd { margin: 0; font-size: var(--font-body); line-height: var(--apply-22); font-weight: var(--weight-bold); overflow-wrap: anywhere; }

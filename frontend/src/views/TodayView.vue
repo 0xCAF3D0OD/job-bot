@@ -733,7 +733,7 @@ const { me } = useAuth();
    tailles hors échelle sont nommées ici. Sous 1100 px de large, la colonne de droite passe sous celle de gauche. */
 .aj {
   --aj-w: 1280px; --aj-side: 440px; --aj-40: 40px; --aj-r: 32px; --aj-28: 28px; --aj-44: 2.75rem; --aj-17: 1.0625rem; --aj-26: 1.625rem; --aj-22: 1.375rem; --aj-18: 1.125rem; --aj-16: 1rem; --aj-15: 0.9375rem;
-  --aj-img: 168px; --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25; --aj-none-r: 18px;
+  --aj-img: 168px; --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25;
   display: grid; grid-template-columns: minmax(0, 1fr) var(--aj-side); gap: var(--aj-40); box-sizing: border-box; max-width: calc(var(--aj-w) + 2 * var(--space-6)); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12);
 }
 .aj-main { display: flex; flex-direction: column; min-width: 0; }
