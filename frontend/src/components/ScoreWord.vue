@@ -53,3 +53,22 @@ const label = computed(() =>
     class="visually-hidden"
   > ({{ label }})</span></span>
 </template>
+
+<!-- Styles gardés ici : le composant n’est monté nulle part dans l’application (allègement du CSS commun, 14.11). -->
+<style>
+/* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
+   note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
+   sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
+.score-word { display: inline-grid; justify-items: end; gap: var(--space-2); flex: none; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.score-word-label { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* La jauge discrète, pour la nuance à l'intérieur d'un niveau (rétablie en 1.6.6) ; la piste sur --border. */
+.score-gauge { display: block; width: 4.5rem; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, currentColor calc(var(--p, 0) * 1%), var(--border) 0); }
+.score-word.very-close { color: var(--ok-text); }
+.score-word.close { color: var(--accent); }
+.score-word.dig { color: var(--score-dig); }
+.score-word.far, .score-word.pending { color: var(--muted); }
+/* « Loin » : le mot en --text-secondary, la jauge en --neutral-graphic, distincte du gris chaud d'« À creuser ». */
+.score-word.far .score-gauge { color: var(--neutral-graphic); }
+.score-word.pending { font-weight: var(--weight-regular); font-size: var(--font-small); }
+.score-word.stale { opacity: 0.7; }
+</style>

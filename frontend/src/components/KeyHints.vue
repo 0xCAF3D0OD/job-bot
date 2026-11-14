@@ -17,3 +17,12 @@ defineProps<{ left: string; right: string }>();
     <span><kbd><AppIcon name="arrow-right" /></kbd> {{ right }}</span>
   </p>
 </template>
+
+<!-- Styles gardés ici : le composant n’est monté nulle part dans l’application (allègement du CSS commun, 14.11). -->
+<style>
+/* Raccourcis ← → sous deux actions : avec clavier et souris seulement. */
+.key-hints { display: flex; justify-content: space-between; margin: 0; color: var(--muted); font-size: var(--font-small); }
+.key-hints > span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.key-hints kbd { display: inline-flex; font: inherit; }
+@media not ((hover: hover) and (pointer: fine)) { .key-hints { display: none; } }
+</style>
