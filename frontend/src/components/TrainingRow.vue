@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 import type { Training } from "../api/client";
 import { languageLabel } from "../newsLabels";
-import { FORMATS, SHORT_FORMATS } from "../trainingLabels";
+import { FORMATS, FUNDING, SHORT_FORMATS } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 
@@ -13,12 +13,6 @@ import IconButton from "./IconButton.vue";
 const props = defineProps<{ training: Training }>();
 const emit = defineEmits<{ open: []; interest: []; review: [keep: boolean] }>();
 
-const FUNDING: Record<string, string> = {
-  requested: "Financement demandé",
-  accepted: "Financement accordé",
-  granted: "Financement accordé",
-  refused: "Financement refusé",
-};
 
 const cert = computed(() => props.training.kind === "certification");
 const status = computed(() => props.training.mark?.status ?? null);
