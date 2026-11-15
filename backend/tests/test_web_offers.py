@@ -153,6 +153,44 @@ def test_offers_older_than_14_days_are_dropped_when_the_date_is_known() -> None:
     assert (chosen.results, chosen.dated) == (3, 1)
 
 
+def test_each_result_says_why_it_is_dropped() -> None:
+    """Essai de Kevin (2026-11-15) : 17 résultats, 0 offre gardée, sans dire pourquoi.
+    Chaque résultat du moteur reçoit un motif, affiché par la commande d'essai."""
+    old = WebResult(CHUV, "Un·e ASSC aux urgences, Lausanne", "October 1, 2026")
+    raw = answer(
+        [
+            {"title": "ASSC", "url": ASSC},
+            {"title": "ASSC", "url": CHUV},
+            {"title": "Inventée", "url": "https://www.exemple-emploi.ch/offres/assc-999"},
+        ],
+        (RESULTS[0], old, RESULTS[2]),
+    )
+    chosen = web_offers.select_offers(raw, TODAY)
+    assert [(v.url, v.reason) for v in chosen.verdicts] == [
+        (ASSC, web_offers.KEPT),
+        (CHUV, web_offers.TOO_OLD),
+        ("https://www.exemple-emploi.ch/emplois?q=assc", web_offers.NOT_PROPOSED),
+        ("https://www.exemple-emploi.ch/offres/assc-999", web_offers.UNKNOWN_LINK),
+    ]
+    assert chosen.problem is None and chosen.note == "Voici."
+    # Sans balise, ou coupée par la limite de jetons : le motif est dit.
+    silent = RawResult("Je cherche…", "m", Usage(1, 0, 0, 1), "max_tokens", RESULTS)
+    chosen = web_offers.select_offers(silent, TODAY)
+    assert chosen.problem is not None and "<reponse>" in chosen.problem
+    assert "limite de jetons" in chosen.problem
+    assert {v.reason for v in chosen.verdicts} == {web_offers.NOT_PROPOSED}
+
+
+def test_answer_in_a_code_block_and_link_without_www_are_read() -> None:
+    body = json.dumps({"offers": [{"title": "ASSC", "url": ASSC.replace("www.", "") + "/"}]})
+    raw = RawResult(
+        f"<reponse>\n```json\n{body}\n```\n</reponse>",
+        web_offers.MODEL, Usage(1, 0, 0, 1), "end_turn", RESULTS,
+    )  # fmt: skip
+    # Le lien gardé est toujours celui du moteur, jamais celui recopié par l'IA.
+    assert [o.url for o in web_offers.parse_answer(raw, TODAY)] == [ASSC]
+
+
 async def test_first_offers_by_web_are_listed_but_never_scored(
     web: Runtime, monkeypatch: pytest.MonkeyPatch
 ) -> None:

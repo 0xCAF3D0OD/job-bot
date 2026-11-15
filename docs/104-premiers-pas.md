@@ -167,6 +167,10 @@ Ta demande du 2026-11-14 : « il faut des offres dès son inscription », puis �
 
 `jobbot premieres-offres-web "infirmier" "Lausanne"` affiche les offres gardées, le nombre de résultats du moteur, combien portent une date, combien sont écartées pour leur âge, et le coût.
 
+Essai de Kevin du 2026-11-15 en production : « infirmier » à Lausanne et « électricien de montage » en Suisse romande rendent 17 et 18 résultats, 0 offre gardée, sans dire pourquoi. Depuis, l'essai liste aussi **chaque résultat écarté**, avec son titre, sa date, son lien et son motif : non retenu par l'IA (page de liste, offre hors sujet…), daté de plus de 14 jours, lien proposé par l'IA mais absent des résultats du moteur, lien sans https ou page d'accueil, titre manquant ou réduit à un identifiant, au-delà de 10 offres. Si la réponse de l'IA n'a pas pu être lue (balise `<reponse>` absente, JSON illisible, réponse coupée par la limite de jetons), il le dit. Quand rien n'est gardé, il affiche la note de l'IA (son texte avant la balise).
+
+Deux causes possibles d'écart silencieux sont corrigées : une réponse placée dans un bloc de code (« ```json ») est lue, et un lien recopié sans « www. » ou avec une barre finale retrouve son résultat, s'il n'y en a qu'un. Le lien gardé reste celui du moteur. Le réglage reste éteint tant que l'essai ne rend pas de bonnes offres.
+
 ### Écarts et points ouverts
 
 - Aucune planche ne dessine cet état dans le paquet du 13 novembre : le composant existant est repris, seul le texte change. À valider ou à dessiner.
