@@ -6,7 +6,7 @@ import { api, type Training } from "../api/client";
 import { onDay } from "../format";
 import { todayDay } from "../dates";
 import { highlight, languageLabel } from "../newsLabels";
-import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
+import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES, progressLabel } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
 import DateField from "./DateField.vue";
 import BusyButton from "./BusyButton.vue";
@@ -164,15 +164,13 @@ function setTotal(value: string): void {
   emit("mark", mark.status, { modules_total: capped, modules_done: Math.min(mark.modules_done ?? 0, capped) });
 }
 
-// La pastille d'état de la carte : « En cours · module 6/12 », « Terminée · certificat ».
+// La pastille d'état de la carte : « En cours · Module 6 sur 12 », « Terminée · certificat ».
 const stateText = computed(() => {
   const mark = props.training.mark;
   if (!mark) return "";
   const detail =
     mark.status === "in_progress"
-      ? mark.modules_total
-        ? `module ${mark.modules_done ?? 0} sur ${mark.modules_total}`
-        : mark.progress
+      ? progressLabel(mark)
       : mark.status === "done" && mark.certified
         ? "certificat"
         : null;
@@ -341,7 +339,7 @@ const today = todayDay();
         v-slot="f"
         class="training-field"
         label="Progression"
-        hint="Ex. : module 4/12"
+        hint="Ex. : Module 4 sur 12"
       >
         <input
           :id="f.id"

@@ -137,7 +137,7 @@ describe("TrainingsView", () => {
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
     // Sur la ligne : l'avancement noté, en étiquette (B19).
-    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · module 4/12");
+    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · Module 4 sur 12");
     expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
