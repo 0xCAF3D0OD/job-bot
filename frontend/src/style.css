@@ -5216,3 +5216,14 @@ html.text-large { font-size: 125%; }
   --panel-close-size: 44px; --panel-close-line: var(--line-strong); --panel-close-edge: 20px; --panel-title-size: 20px; --panel-caps-size: 13px; --panel-close-bw: 1.5px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); } }
 :root[data-theme="dark"] { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); }
+
+/* Un champ à recopier (D32) : le libellé au-dessus, la valeur en gras, le bouton copier à droite. Ici une seule fois
+   pour la fiche d'une offre et pour les pages « blocs » (auparavant block-fields.css, copié dans deux fichiers). */
+.block-field { display: flex; align-items: center; gap: var(--space-3); padding: var(--field-pad) 0; border-top: 1px solid var(--line-soft); }
+.block-cap + .block-field { padding-top: var(--space-1); border-top: 0; }
+.block-field-text { flex: 1; min-width: 0; }
+.block-field-label { font-size: var(--block-cap); line-height: var(--field-label-lh); color: var(--text-secondary); }
+.block-field-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--field-value-lh); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.block-field-value.block-field-none { font-weight: var(--weight-regular); color: var(--text-secondary); }
+.block-tick { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); padding: var(--field-tick-pad); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--field-tick); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.block-field .copy-button { flex: none; }

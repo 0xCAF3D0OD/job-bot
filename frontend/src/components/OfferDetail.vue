@@ -17,7 +17,6 @@ import DetailTwoColumns from "./DetailTwoColumns.vue";
 import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import "../block-fields.css";
 import OfferActionSheet from "./OfferActionSheet.vue";
 import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
