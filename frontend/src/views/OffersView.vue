@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, Teleport, watch } from "vue";
+import { computed, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
@@ -26,6 +26,7 @@ import BottomSheet from "../components/BottomSheet.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
 import CharacterState from "../components/CharacterState.vue";
+import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
@@ -114,6 +115,14 @@ const emptyFiltersLine = computed(() => {
 });
 // Aucune offre avec des filtres : sur ordinateur, l'écran prend toute la largeur (AucuneOffreOrdinateur).
 const emptyWithFilters = computed(() => !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
+// Aucune offre du tout (§13 du 15 novembre) : l'état vide commun, centré sur toute la largeur, sans colonne de fiche.
+const noneYet = computed(() => !loading.value && !failed.value && items.value.length === 0 && noOffersYet.value);
+// Rien encore (décision de Kevin du 15.11, b) : ni recherche, ni filtres, ni « + » tant qu'aucune offre n'est arrivée.
+const bare = computed(() => noOffersYet.value && !failed.value && items.value.length === 0);
+// Au moins une recherche suivie (décision de Kevin du 15.11, a) : « Tes alertes sont prêtes ». L'heure de la prochaine
+// collecte n'est pas connue du serveur : la pastille reste « Offres collectées chaque jour », jamais une heure inventée.
+const followedSearches = inject<Ref<number | null>>("followedSearches", ref(null));
+const alertsReady = computed(() => (followedSearches.value ?? 0) > 0);
 const filterLabel = computed(() => {
   const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
   if (phone.value) return `Filtres${active}`;
@@ -645,6 +654,7 @@ onUnmounted(() => {
          des vues (#jobs-tools), le bouton des filtres dans l’en-tête, à côté d'« Alertes ». -->
     <component
       :is="phone || wide ? Teleport : 'div'"
+      v-if="!bare"
       v-bind="phone || wide ? { to: phone ? '#jobs-tools' : '#offers-list-tools', defer: true } : { class: 'in-place' }"
     >
       <div
@@ -733,7 +743,7 @@ onUnmounted(() => {
 
     <div
       ref="grid"
-      :class="['offers-grid', { 'has-selection': selected, 'offers-grid-empty': emptyWithFilters && wide && !phone }]"
+      :class="['offers-grid', { 'has-selection': selected, 'offers-grid-empty': (emptyWithFilters || bare) && wide && !phone }]"
       :style="wide ? { '--offers-top': `${gridTop}px` } : undefined"
     >
       <!-- Ordinateur : « Plus de filtres » remplace la colonne liste ; la liste reste montée, ses choix gardés. -->
@@ -755,10 +765,10 @@ onUnmounted(() => {
       <div
         v-show="!(!phone && filtersOpen)"
         ref="listEl"
-        :class="['offers-list', { 'linked-list': linked }]"
+        :class="['offers-list', { 'linked-list': linked && !bare, 'offers-list-bare': bare }]"
       >
         <div
-          v-if="wide && !phone"
+          v-if="wide && !phone && !bare"
           id="offers-list-tools"
           class="offers-list-tools"
           data-linked-tools
@@ -826,30 +836,60 @@ onUnmounted(() => {
         />
         <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
         <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
-        <CharacterState
-          v-else-if="!loading && items.length === 0 && noOffersYet"
+        <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
+             l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
+        <EmptyState
+          v-else-if="noneYet"
           scene="aucune-offre"
-          title="Pas encore d’offre"
+          :title="alertsReady ? 'Tes alertes sont prêtes' : 'Pas encore d’offre'"
+          pill="Offres collectées chaque jour"
           data-test="offers-none-yet"
         >
-          <p>Tes premières offres arrivent après la prochaine collecte.</p>
-          <div class="face-state-actions">
-            <RouterLink
-              to="/candidatures/alertes"
-              class="button-link primary-link"
-            >
-              <span class="with-icon"><AppIcon name="bell" />Créer mes alertes</span>
-            </RouterLink>
-            <button
-              type="button"
-              class="button-link"
-              data-test="offers-none-add"
-              @click="manualOpen = true"
-            >
-              <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
-            </button>
-          </div>
-        </CharacterState>
+          <template #actions>
+            <template v-if="alertsReady">
+              <button
+                type="button"
+                class="primary"
+                data-test="offers-none-add"
+                @click="manualOpen = true"
+              >
+                <AppIcon name="plus" />Ajouter une offre
+              </button>
+              <RouterLink
+                to="/candidatures/alertes"
+                class="button-link secondary"
+                data-test="offers-none-alerts"
+              >
+                <AppIcon name="bell" />Voir mes alertes
+              </RouterLink>
+            </template>
+            <template v-else>
+              <RouterLink
+                to="/candidatures/alertes"
+                class="button-link primary-link"
+                data-test="offers-none-alerts"
+              >
+                <AppIcon name="bell" />Créer mes alertes
+              </RouterLink>
+              <button
+                type="button"
+                class="secondary"
+                data-test="offers-none-add"
+                @click="manualOpen = true"
+              >
+                <AppIcon name="plus" />Ajouter une offre
+              </button>
+            </template>
+          </template>
+          <button
+            type="button"
+            class="link"
+            data-test="offers-none-spontaneous"
+            @click="spontaneousOpen = true"
+          >
+            Faire une candidature spontanée<AppIcon name="chevron" />
+          </button>
+        </EmptyState>
         <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
         <FaceState
           v-else-if="!loading && items.length === 0 && allReviewed"
@@ -1017,7 +1057,7 @@ onUnmounted(() => {
         />
         <!-- Téléphone, bas de la liste (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
              CandidaturesSombre, état bas-de-liste) : un bouton contour pleine largeur, puis le groupe « Autres offres ». -->
-        <template v-if="phone && !loading && !failed && !phoneEmptyFiltered">
+        <template v-if="phone && !loading && !failed && !phoneEmptyFiltered && !bare">
           <button
             v-if="remaining > 0"
             type="button"
@@ -1258,7 +1298,11 @@ onUnmounted(() => {
 .offers-empty-chips + .face-state-actions .primary { --empty-52: 52px; min-height: var(--empty-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
 /* Le message « Offre écartée » du téléphone (§10.1, captures Offre--ecartee et OffreSombre--ecartee) : au-dessus de la
    barre du bas, à 20 px des bords, fond --text, texte --bg, « Annuler » en --inverse-link (jamais en orange, D30). */
+/* Rien encore (§13) : l'état vide occupe la hauteur sous l'en-tête. Téléphone (CandidaturesVide) : du haut de la liste
+   (144 px sans le bandeau Démo) à 130 px du bas de l'écran, la marge basse de la page au-dessus de la barre d'onglets. */
+.offers-list-bare { display: flex; flex-direction: column; }
 @media (max-width: 820px) {
+  .offers-list-bare { --bare-chrome: 274px; min-height: calc(100dvh - var(--bare-chrome)); }
   .notice.undo-snackbar {
     --snack-margin: 20px; --snack-bottom: 12px;
     position: fixed; left: var(--snack-margin); right: var(--snack-margin); bottom: calc(var(--tabbar-h, 0px) + var(--snack-bottom) + env(safe-area-inset-bottom)); z-index: 45;
@@ -1281,7 +1325,7 @@ onUnmounted(() => {
 /* Sur ordinateur, sans offre avec ces filtres : pas de colonne de fiche, l'écran est centré sur toute la largeur ;
    « Tout effacer » en contour gris, texte foncé (planche : trait #C9C5BA, absent des jetons : --line-strong). */
 @media (min-width: 1024px) {
-  .offers-grid.offers-grid-empty .offers-list { --empty-tools: 472px; flex: 1; width: auto; }
+.offers-grid.offers-grid-empty .offers-list { --empty-tools: 472px; flex: 1; width: auto; }
   .offers-grid-empty .offers-list-tools { max-width: var(--empty-tools); }
   .offers-grid-empty .offers-list :deep(.character-state-wide) { margin-inline: auto; }
   .offers-empty-reset { border-color: var(--line-strong); background: var(--surface); color: var(--text); }

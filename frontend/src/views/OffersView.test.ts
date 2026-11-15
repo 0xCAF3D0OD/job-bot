@@ -1,3 +1,4 @@
+import { ref } from "vue";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
@@ -69,7 +70,7 @@ function mockOffers(response: unknown): void {
   );
 }
 
-async function mountAt(path: string) {
+async function mountAt(path: string, provide: Record<string, unknown> = {}) {
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -78,7 +79,7 @@ async function mountAt(path: string) {
     ],
   });
   await router.push(path);
-  const wrapper = mount(OffersView, { global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
+  const wrapper = mount(OffersView, { global: { plugins: [router], provide, stubs: { teleport: true, ContactsPanel: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -139,7 +140,12 @@ describe("OffersView", () => {
     mockOffers({ data: { ...page([]).data, counts: none } });
     const wrapper = await mountAt("/offres");
     const empty = wrapper.find("[data-test=offers-none-yet]");
-    expect(empty.text()).toContain("Tes premières offres arrivent après la prochaine collecte.");
+    // §13 du 15 novembre : aucune recherche suivie, la phrase devient la pastille et « Créer mes alertes » est le
+    // bouton principal ; pas de recherche ni de filtres tant qu'il n'y a rien.
+    expect(empty.find("h2").text()).toBe("Pas encore d’offre");
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(empty.find("[data-test=offers-none-alerts]").text()).toBe("Créer mes alertes");
+    expect(wrapper.find("[data-test=offers-toolbar]").exists()).toBe(false);
     expect(empty.find("[data-scene=aucune-offre]").exists()).toBe(true);
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
@@ -154,6 +160,19 @@ describe("OffersView", () => {
     // Aucun résultat avec des filtres (règles §4) : une ligne grise et le lien « Effacer les filtres ».
     expect(filtered.find("[data-test=offers-empty]").text()).toContain("Aucune offre avec ces filtres.");
     expect(filtered.find("[data-test=offers-reset]").classes()).toContain("link");
+  });
+
+  it("compte neuf avec des recherches suivies : « Tes alertes sont prêtes », jamais « Créer mes alertes » (§13 du 15 novembre)", async () => {
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    mockOffers({ data: { ...page([]).data, counts: none } });
+    const wrapper = await mountAt("/offres", { followedSearches: ref(3) });
+    const empty = wrapper.find("[data-test=offers-none-yet]");
+    expect(empty.find("h2").text()).toBe("Tes alertes sont prêtes");
+    // L'heure de la prochaine collecte n'est pas connue : la pastille ne l'invente pas.
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(empty.find("[data-test=offers-none-add]").classes()).toContain("primary");
+    expect(empty.find("[data-test=offers-none-alerts]").text()).toBe("Voir mes alertes");
+    expect(empty.text()).not.toContain("Créer mes alertes");
   });
 
   it("ordinateur large, aucune offre avec ces filtres (§2.7 du 9 novembre) : « Faire une candidature spontanée » ouvre « Ajouter »", async () => {

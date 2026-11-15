@@ -112,9 +112,14 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 | 2026-11-15 | Pastilles d'information : une valeur absente ou inconnue ne donne pas de pastille (règle dans le composant de carte, téléphone et ordinateur), au lieu d'une liste de libellés interdits. | Kevin, réponse 4 du 15.11 |
 | 2026-11-15 | Sombre : « À creuser » garde #B39A82 (la planche BSombre avec #6B6157 est périmée sur ce point). | Kevin, réponse 2 du 15.11 |
 
+## États vides, Offres (Kevin, 15.11.2026, 10 h 25 et 10 h 34)
+
+- a) Dès qu'au moins une recherche est suivie : titre « Tes alertes sont prêtes », bouton principal « Ajouter une offre », secondaire « Voir mes alertes ». « Créer mes alertes » n'apparaît que si aucune recherche n'est suivie (l'en-tête dit alors « Aucune recherche suivie »). Heure de la prochaine collecte inconnue : pastille « Offres collectées chaque jour », jamais une heure inventée.
+- b) Vide parce qu'il n'y a encore rien : pas de recherche ni de filtres (ordinateur et téléphone, bouton « + » compris). Vide à cause des filtres : la barre de filtres reste, avec les filtres actifs en pastilles retirables. Dans les deux cas, la scène est centrée sur toute la largeur, sans rail ni colonne de détail.
+- Poids : limite CSS relevée une seule fois de 0,5 Ko (total 117,5 Ko, Candidatures 69,5 Ko) pour les états vides et la liaison rail (section 18).
+
 ## Liaison rail (§18, paquet jobA1_maquette_2026-11-15_rail)
 
 | Date | Décision | Remplace |
 |---|---|---|
 | 2026-11-15 | La section 18 remplace la liaison de §11 et §14 : colonne de 504 px, cartes de 480, plus de prolongement de 28 px, flèche 22 × 60 au contact de la pointe du rail (1,5 px, 9 px après la colonne), détail entièrement en cartes, carte compacte épinglée (CandidaturesOrdinateurEpinglee) sur les trois onglets. | Liaison de #722 (§11, §14). |
-| 2026-11-15 | Poids : CSS total 117,5 Ko et Candidatures 69,5 Ko, relevés une fois pour les états vides (§13) et le rail (§18). | Kevin, carte « Relever de 0,5 Ko, une fois ». |

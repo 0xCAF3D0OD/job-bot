@@ -616,6 +616,18 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
         details = " · ".join(v for v in (offer.company, offer.location) if v)
         print(f"{number:>2}. {offer.title}" + (f" ({details})" if details else ""))
         print(f"    {offer.url}")
+    if chosen.problem:
+        print(f"\nRéponse de l'IA illisible : {chosen.problem}.")
+    dropped = [v for v in chosen.verdicts if v.reason != web_offers.KEPT]
+    if dropped:
+        print(f"\nÉcartés ({len(dropped)}) :")
+    for verdict in dropped:
+        age = f" · {verdict.page_age}" if verdict.page_age else ""
+        print(f"  - {verdict.reason} : {verdict.title or '(sans titre)'}{age}")
+        print(f"    {verdict.url}")
+    if not offers and chosen.note:
+        note = chosen.note if len(chosen.note) <= 800 else chosen.note[:800] + "…"
+        print(f"\nNote de l'IA : {note}")
     return 0
 
 

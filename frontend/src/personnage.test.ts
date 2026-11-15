@@ -34,6 +34,7 @@ export const TROUPE_SCREENS: Record<string, string> = {
   "components/MaintenanceOverlay.vue": "hors ligne, maintenance, mise à jour",
   "views/NotFoundView.vue": "page introuvable",
   "components/CharacterState.vue": "aucune offre",
+  "components/EmptyState.vue": "états vides (§13 du 15 novembre)",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché",
   "components/GoalReached.vue": "objectif ORP atteint",
   "views/WelcomeView.vue": "premiers pas sur téléphone (le « 1 » seul)",
