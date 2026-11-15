@@ -12,11 +12,12 @@ import CompanyLogo from "./CompanyLogo.vue";
 // Les cartes sont décoratives : le parent nomme le groupe (aria-label) et porte les boutons.
 const props = defineProps<{ offers: Offer[]; mini?: boolean }>();
 
-// Les places de la planche, dans une scène de 1000 × 470 px : [gauche, haut, angle, plan].
+// Les places de la planche (scène de 1000 px), ramenées à la largeur des cartes, 560 px (la planche moins 220 px à
+// gauche) : l'éventail reste centré et ne déborde pas de la page. [gauche, haut, angle, plan].
 const PLACES: Record<number, [number, number, number, number][]> = {
-  1: [[340, 0, 0, 1]],
-  2: [[390, 0, 4, 2], [290, 0, -4, 1]],
-  3: [[340, 0, 0, 3], [250, 16, -7, 2], [430, 16, 7, 1]],
+  1: [[120, 0, 0, 1]],
+  2: [[170, 0, 4, 2], [70, 0, -4, 1]],
+  3: [[120, 0, 0, 3], [30, 16, -7, 2], [210, 16, 7, 1]],
 };
 const TONES = ["fan-blue", "fan-orange", "fan-yellow"] as const;
 // L'anneau de note de la planche : rayon 42, circonférence 263,89.
@@ -68,37 +69,40 @@ const cards = computed(() => {
           <svg
             class="fan-ring"
             viewBox="0 0 100 100"
+            fill="none"
+            stroke-width="10"
           >
             <circle
               cx="50"
               cy="50"
               r="42"
-              class="fan-ring-track"
+              stroke="#000"
+              stroke-opacity=".14"
             />
             <circle
               v-if="card.score != null"
               cx="50"
               cy="50"
               r="42"
-              class="fan-ring-arc"
+              stroke="currentColor"
               :stroke-dasharray="`${((card.score / 100) * RING).toFixed(2)} ${RING}`"
               transform="rotate(-90 50 50)"
             />
             <path
               d="M50 1V15M85 50H99M50 85V99M1 50H15"
-              class="fan-ring-ticks"
+              stroke-width="3.5"
             />
             <text
               x="50"
               y="62"
               text-anchor="middle"
+              fill="currentColor"
+              font-size="32"
+              font-weight="800"
             >{{ card.score ?? "?" }}</text>
           </svg>
         </div>
-        <div
-          v-if="card.notes.length"
-          class="fan-notes"
-        >
+        <div class="fan-notes">
           <span
             v-for="(note, i) in card.notes"
             :key="i"
@@ -114,39 +118,25 @@ const cards = computed(() => {
 </template>
 
 <style scoped>
-/* Les valeurs des planches, en pixels de la scène (l'éventail en petit les réduit toutes par scale). Hors grille de 4,
-   gardés tels que dessinés parce qu'ils sont réduits à 66 % : rayon 26, marges 22 / 26 / 30, notes 22 / 26. */
-.fan {
-  --fan-w: 320px; --fan-h: 430px; --fan-stage-w: 1000px; --fan-stage-h: 470px; --fan-r: 26px; --fan-logo: 48px; --fan-logo-r: 14px;
-  --fan-ring: 56px; --fan-note: 22px; --fan-note-lh: 26px; --fan-title: 26px; --fan-title-lh: 30px; --fan-place: 15px; --fan-place-lh: 21px; --fan-22: 22px; --fan-6: 6px; --fan-score: 32px;
-  --fan-chip: rgb(0 0 0 / 18%); --fan-track: rgb(0 0 0 / 14%); --fan-shadow: 0 18px 40px rgb(27 31 42 / 18%);
-  position: relative; height: var(--fan-stage-h);
-}
-.fan-stage { position: absolute; left: 50%; top: 0; width: var(--fan-stage-w); height: var(--fan-stage-h); transform: translateX(-50%); }
+/* Les valeurs des planches, en pixels de la scène (l'éventail en petit les réduit toutes par scale). Ramenés à la
+   grille de 4 : haut de la carte et écart des notes 22 px (24), écart de l'entreprise en petit 6 px (4). Gardés tels
+   que dessinés (tailles de texte et rayon, pas des espacements) : rayon 26, notes 22 / 26, titre 26 / 30. */
+.fan { --fan-r: 26px; --fan-14: 14px; --fan-22: 22px; --fan-26: 26px; --fan-30: 30px; --fan-place: 15px; --fan-place-lh: 21px; position: relative; height: 470px; }
+.fan-stage { position: absolute; left: 50%; width: 560px; height: 100%; transform: translateX(-50%); }
 /* §20 : 66 %, origine en haut au centre, bloc de 318 px ; l'entreprise écrite à 20 px (13 px affichés). */
-.fan-mini { --fan-place: 20px; --fan-place-lh: 26px; height: 318px; }
-.fan-mini .fan-stage { transform: translateX(-50%) scale(0.66); transform-origin: 50% 0; }
-.fan-card {
-  position: absolute; display: flex; flex-direction: column; box-sizing: border-box; width: var(--fan-w); height: var(--fan-h);
-  padding: var(--fan-22) var(--space-6) var(--space-6); border-radius: var(--fan-r); background: var(--fan-bg); color: var(--fan-ink);
-  transform-origin: 50% 100%; box-shadow: var(--fan-shadow); text-align: start;
-}
+.fan-mini { --fan-place: 20px; --fan-place-lh: var(--fan-26); height: 318px; }
+.fan-mini .fan-stage { height: 470px; transform: translateX(-50%) scale(0.66); transform-origin: 50% 0; }
+.fan-card { position: absolute; display: flex; flex-direction: column; box-sizing: border-box; width: 320px; height: 430px; padding: var(--space-6); border-radius: var(--fan-r); background: var(--fan-bg); color: var(--fan-ink); transform-origin: 50% 100%; box-shadow: 0 18px 40px rgb(27 31 42 / 18%); }
 .fan-blue { --fan-bg: var(--primary); --fan-ink: var(--on-primary); }
 .fan-orange { --fan-bg: var(--fan-orange); --fan-ink: var(--on-peach); }
 .fan-yellow { --fan-bg: var(--fan-yellow); --fan-ink: var(--on-peach); }
-.fan-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.fan-logo { width: var(--fan-logo); height: var(--fan-logo); border-radius: var(--fan-logo-r); font-size: var(--font-label); font-weight: var(--weight-heavy); }
-.fan .fan-card .fan-logo:not(.image) { background: var(--fan-chip); color: var(--fan-ink); }
-.fan-ring { flex: none; width: var(--fan-ring); height: var(--fan-ring); }
-.fan-ring circle { fill: none; stroke-width: 10; }
-.fan-ring-track { stroke: var(--fan-track); }
-.fan-ring-arc { stroke: var(--fan-ink); }
-.fan-ring-ticks { stroke: var(--fan-bg); stroke-width: 3.5; }
-.fan-ring text { fill: var(--fan-ink); font-family: inherit; font-size: var(--fan-score); font-weight: var(--weight-heavy); }
-.fan-notes { margin-top: var(--fan-22); font-family: var(--font-hand); font-size: var(--fan-note); line-height: var(--fan-note-lh); letter-spacing: 0.02em; opacity: 0.85; }
-.fan-notes span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.fan-names { margin-top: auto; }
-.fan-names b { display: -webkit-box; font-size: var(--fan-title); line-height: var(--fan-title-lh); letter-spacing: -0.3px; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.fan-names span { display: block; margin-top: var(--space-1); font-size: var(--fan-place); line-height: var(--fan-place-lh); opacity: 0.9; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.fan-mini .fan-names span { margin-top: var(--fan-6); }
+.fan-top { display: flex; justify-content: space-between; }
+.fan .fan-logo { width: 48px; height: 48px; border-radius: var(--fan-14); font-size: var(--font-label); font-weight: var(--weight-heavy); }
+.fan .fan-logo:not(.image) { background: rgb(0 0 0 / 18%); color: inherit; }
+.fan-ring { width: 56px; height: 56px; }
+.fan-ring path { stroke: var(--fan-bg); }
+.fan-notes { flex: auto; overflow: hidden; margin-top: var(--space-6); font: var(--fan-22) / var(--fan-26) var(--font-hand); letter-spacing: 0.02em; opacity: 0.85; }
+.fan-notes span, .fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fan-names b { display: -webkit-box; font-size: var(--fan-26); line-height: var(--fan-30); letter-spacing: -0.3px; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.fan-names span { margin-top: var(--space-1); font-size: var(--fan-place); line-height: var(--fan-place-lh); opacity: 0.9; }
 </style>
