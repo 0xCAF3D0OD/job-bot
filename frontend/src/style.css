@@ -44,6 +44,10 @@
   --paper-shadow: 0 2px 8px rgb(27 31 42 / 12%);
   /* Carte sélectionnée (§12 du 9 novembre) : #F5F7FE en clair, #232B45 en sombre. */
   --selected-bg: #F5F7FE;
+  /* Liste reliée à un détail (Candidatures ordinateur, §11 du 15 novembre) : le trait de la zone de détail et de son
+     encoche, et le fond de la carte choisie. Ailleurs, la sélection garde --selected-bg. */
+  --linked-line: #D5D1C7;
+  --linked-selected-bg: #EEF1FC;
   /* Vignettes de modèle (PreparerOrdinateur) : la feuille blanche et ses lignes grises ; en sombre, le fond et #5E574F. */
   --thumb-paper: #FFFFFF;
   --thumb-line: #B9B4A8;
@@ -236,6 +240,8 @@
     --row-icon: #C7BFB3;
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
+    --linked-line: #4E473E;
+    --linked-selected-bg: #232B45;
     --thumb-paper: #171411;
     --thumb-line: #5E574F;
     --field-border: #8C8478;
@@ -299,6 +305,8 @@
   --row-icon: #C7BFB3;
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
+  --linked-line: #4E473E;
+  --linked-selected-bg: #232B45;
   --thumb-paper: #171411;
   --thumb-line: #5E574F;
   --field-border: #8C8478;
@@ -4671,15 +4679,14 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
   .jobs-band > .offers-page { max-width: none; padding: 0 var(--space-8); }
   .jobs-band > .jobs-body:not(.orp-page, .alerts-wide) { max-width: none; margin: 0; padding: 0 var(--space-8) var(--space-12); }
   .offers-grid, .offers-grid.has-selection {
-    display: flex; align-items: stretch; gap: var(--space-6); height: calc(100dvh - var(--offers-top, 0px) - var(--space-6)); min-height: 20rem;
+    display: flex; align-items: stretch; gap: 0; height: calc(100dvh - var(--offers-top, 0px)); min-height: 20rem;
     transition: none;
   }
-  .offers-grid .offers-list { flex: none; max-width: none; overflow-y: auto; padding: 0 var(--space-2) var(--space-4) 0; }
-  /* Le détail en cartes (maquette du 14 novembre, §8) : plus de grande carte blanche autour, le fond de la page entre
-     les cartes, 16 px entre elles ; 4 px à droite pour la barre de défilement, 24 px sous la dernière. */
+  /* Liste reliée au détail (§11 du 15 novembre) : pas d'écart entre les colonnes (la zone rentre de 18 px sous la
+     liste), la zone de détail (LinkedDetail) descend jusqu'au bas de la fenêtre et défile seule. */
   .offers-grid > .detail-column, .offers-grid > .detail-column:not(.placeholder) {
-    position: static; inset: auto; flex: 1; min-width: 0; max-height: none; overflow-y: auto; display: block;
-    padding: 0 var(--space-1) var(--space-6) 0; background: none; border: 0; border-radius: 0;
+    position: static; inset: auto; flex: 1; min-width: 0; max-height: none; overflow: visible; display: flex; flex-direction: column;
+    padding: 0; background: none; border: 0; border-radius: 0;
   }
   .offers-grid > .detail-column .detail-panel { position: static; width: auto; height: auto; padding: 0; background: none; overflow: visible; gap: var(--space-4); }
   .offers-grid > .detail-column .detail-back, .offers-grid > .detail-column .detail-close { display: none; }
@@ -4994,7 +5001,7 @@ a.panel-row:hover { background: var(--band); }
   .offers-list .offer-day { margin-top: var(--space-1); }
   .offers-list .offer-day-title { line-height: normal; }
   .jobs-head .jobs-tools { display: none; }
-  .offers-list-tools .offers-toolbar { display: flex; flex-wrap: nowrap; gap: var(--space-2); margin: 0 0 var(--space-5); }
+  .offers-list-tools .offers-toolbar { display: flex; flex-wrap: nowrap; gap: var(--space-2); margin: 0 0 var(--space-4); }
   .offers-list-tools .offers-toolbar-search { flex: 1 1 auto; min-width: 0; }
   .offers-list-tools .offers-toolbar .filters-search { height: var(--target-min); padding-left: calc(var(--space-8) + var(--space-2)); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-label); }
   .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
@@ -5002,24 +5009,31 @@ a.panel-row:hover { background: var(--band); }
   .offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
   .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
-  /* Lot 17 : 3 px de marge dans la liste qui défile, pour que l'anneau du filtre ne soit pas coupé. */
-  .offers-grid .offers-list { --focus-room: 3px; width: calc(480px + var(--focus-room)); margin: calc(-1 * var(--focus-room)) 0 0 calc(-1 * var(--focus-room)); padding-top: var(--focus-room); padding-left: var(--focus-room); }
 }
 @media (min-width: 1024px) {
   /* Le menu « ⋯ » de la fiche (maquette du 8 novembre) : 280 px, ombre --shadow-menu, ja-pop depuis le coin haut droit. */
   .offers-grid .detail-top-actions .more-menu .menu { width: 280px; padding: var(--space-1) 0; border-color: var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); transform-origin: top right; animation: none; }
   @media (prefers-reduced-motion: no-preference) { .offers-grid .detail-top-actions .more-menu .menu { animation: ja-pop 150ms ease-out; } }
 }
+.sent-col { display: contents; }
 @media (min-width: 1024px) {
-  /* Envoyées (§8.1 du 9 novembre) : la liste de 480 px à gauche, un trait de 2 px --line au milieu de l'écart, le détail
-     en cartes séparées sur le crème à droite (plus de grand cadre). Le trait bleu part de la carte choisie. */
-  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 480px; --sent-gap: var(--space-6); position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); column-gap: var(--sent-gap); align-items: start; }
+  /* Envoyées reliée au détail (§11 du 15 novembre) : colonne liste de 532 px qui défile sous l'objectif et les filtres
+     (collés en haut), la zone de détail (LinkedDetail) jusqu'au bas de la fenêtre. */
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 532px; position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); align-items: stretch; height: calc(100dvh - var(--linked-top, 0px)); padding-bottom: 0; }
+  .sent-columns > .sent-col.linked-list { display: block; grid-row: 1; }
   .sent-columns > :not(.sent-detail) { grid-column: 1; }
   /* Le volet Filtres (maquette du 14 novembre, §3) prend la place de la colonne liste. */
   .jobs-body.sent-panel-open > :not(.sent-detail, .sent-filter-panel) { display: none; }
   .sent-columns > .sent-filter-panel { position: sticky; top: var(--space-4); height: auto; max-height: calc(100dvh - 12rem); }
-  .sent-columns > .sent-detail { grid-column: 2; grid-row: 1 / span 40; position: sticky; top: var(--space-4); max-height: calc(100dvh - 12rem); overflow-y: auto; padding-bottom: var(--space-6); }
+  .sent-columns > .sent-detail { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; min-height: 0; }
   .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
+  .linked-list .sent-goal { --goal-18: 18px; --goal-16: 16px; padding-inline: var(--goal-18); margin-bottom: var(--goal-14); }
+  .linked-list .sent-goal-head { line-height: var(--goal-18); }
+  .linked-list .sent-goal-left { margin-top: calc(var(--goal-16) - var(--goal-18)); line-height: var(--goal-16); }
+  .linked-list > .sent-tools > .sent-filters { margin-bottom: var(--space-1); }
+  .linked-list > .sent-tools .sent-filters-row .filters-search { --search-40: 40px; border: 1.5px solid var(--field-border); padding-left: var(--search-40); }
+  .linked-list > .sent-tools .sent-filters-row .filters-search-wrap .icon { left: 14px; }
+  :root:has(.sent-columns) .app-footer { display: none; }
 }
 /* Téléphone (§8.3) : l'écran poussé du détail d'une candidature envoyée, par-dessus la barre d'onglets. */
 .sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }

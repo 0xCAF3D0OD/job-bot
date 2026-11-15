@@ -33,7 +33,7 @@ Mesurés sur main après la PR 20 (#628). Chaque limite vaut la taille + 5 %, ar
 | Mesure | Brut | gzip | brotli | Limite |
 |---|---:|---:|---:|---:|
 | js-premier | 290,5 Ko | 106,2 Ko | 94,2 Ko | 111,5 Ko (gzip) |
-| js-total | 1107,4 Ko | 382,2 Ko | 339,9 Ko | 425,0 Ko (gzip) |
+| js-total | 1107,4 Ko | 382,2 Ko | 339,9 Ko | 426,0 Ko (gzip) |
 | js-accueil | 290,5 Ko | 106,2 Ko | 94,2 Ko | 111,5 Ko (gzip) |
 | js-candidatures | 429,1 Ko | 154,7 Ko | 137,2 Ko | 168,0 Ko (gzip) |
 | js-bilan | 290,2 Ko | 108,0 Ko | 95,8 Ko | 113,4 Ko (gzip) |
@@ -51,6 +51,8 @@ La limite de css-total est relevée de 96,8 Ko à 100,0 Ko le 12 novembre 2026 (
 Le 13 novembre 2026 (PR 44), trois limites de totaux sont relevées une fois pour la fin du paquet récapitulatif et le lot « Tri et visuel » du 11 novembre : css-total à 115,0 Ko, js-total à 420,0 Ko, js-candidatures à 168,0 Ko. Mesures à la dernière branche du lot : 111,6 Ko, 414,7 Ko et 165,1 Ko. Les limites du premier écran (js-premier, css-premier) ne changent pas.
 
 Le 14 novembre 2026, js-total passe à 425,0 Ko (décision de Kevin) : main mesurait 421,0 Ko après les PR #708 et #712 de la maquette du 14 novembre. Les autres limites ne changent pas ; l'allègement reste suivi dans le ticket #664.
+
+Le 15 novembre 2026 (#722, liaison carte → détail sur Candidatures ordinateur), css-total passe à 116,0 Ko et js-total à 426,0 Ko, une seule fois (décision de Kevin). Mesures avec main et #721 : 115,5 Ko et 425,4 Ko. Le CSS mort avait déjà été retiré par #720. Pas de nouveau relèvement automatique : une PR qui dépasse s'arrête, et on dit à Kevin de combien et pourquoi avant de toucher à une limite.
 
 Le 15 novembre 2026 (#726, ticket #664), css-total passe à 117,0 Ko et css-candidatures à 69,0 Ko, une seule fois (décision de Kevin : « liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS »). Mesures sur main + #722 + #724 + #723 + #725 : 116,7 Ko et 68,3 Ko. Les pistes CSS essayées sont dans « Regrouper ce qui se charge ensemble » ; le thème Auto posé par le JS et le regroupement des composants de Candidatures sont écartés, parce qu'ils dégradent l'écran ou d'autres pages. Pas de nouveau relèvement automatique.
 

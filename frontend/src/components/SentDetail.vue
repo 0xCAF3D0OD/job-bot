@@ -201,15 +201,11 @@ function onStatus(value: ApplicationStatus): void {
          2. le suivi en 5 colonnes égales ; 3. la relance conseillée (ou l’état et les cartes Entretien et ORP) ;
          4. Documents et contacts en deux colonnes, puis la ligne « Historique ». -->
     <template v-if="!phone">
-      <div
-        class="sent-card sent-head sd-title"
+      <header
+        class="sd-title"
         data-test="sent-title-card"
       >
         <div class="sent-head-top">
-          <span
-            :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
-            aria-hidden="true"
-          >{{ initials(company) }}</span>
           <div class="sent-head-title">
             <h2 data-test="panel-title">
               {{ application.job_title }}
@@ -236,7 +232,7 @@ function onStatus(value: ApplicationStatus): void {
             name="done"
           />{{ word.text }}</span>
         </p>
-      </div>
+      </header>
       <div class="sent-card sd-steps-card">
         <ol
           class="sent-steps sd-steps"
@@ -711,15 +707,15 @@ function onStatus(value: ApplicationStatus): void {
    8 px entre elles ; en-tête 22,5 de marge, logo 56, titre 24/30 800, « entreprise · ville » 15 ; mots 15/20 700
    décalés de 72 ; Suivi : cercles de 28 à trait 2, libellés 14/18 700 à gauche, dates 13/16, traits de 2 à 8 px des
    cercles ; colonne droite de 280, lignes de 56 ; Historique sur le crème, 20 px plus bas. */
-.sent-detail-cards { --sent-8: 8px; --sent-18-5: 18.5px; --sent-22-5: 22.5px; --sent-26-5: 26.5px; --sent-56: 56px; --sent-72: 72px; --sent-19: 19px; --sent-30: 30px; --sent-28: 28px; --sent-14: 14px; --sent-13: 13px; --sent-16: 16px; --sent-18: 18px; --sent-2: 2px; --sent-280: 280px; --sent-64: 64px; --sent-6: 6px; display: flex; flex-direction: column; gap: var(--sent-8); }
+.sent-detail-cards { --sent-8: 8px; --sent-18-5: 18.5px; --sent-22-5: 22.5px; --sent-56: 56px; --sent-72: 72px; --sent-19: 19px; --sent-30: 30px; --sent-28: 28px; --sent-14: 14px; --sent-13: 13px; --sent-16: 16px; --sent-18: 18px; --sent-2: 2px; --sent-64: 64px; display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-card { padding: var(--sent-18-5); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.sent-head { display: flex; flex-direction: column; padding: var(--sent-22-5) var(--sent-22-5) var(--sent-26-5); }
+.sent-head { display: flex; flex-direction: column; padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
 .sent-head-top { display: flex; align-items: flex-start; gap: var(--space-4); }
 .sent-head-top .sent-head-logo { width: var(--sent-56); height: var(--sent-56); font-size: var(--sent-19); }
 .sent-head-title { flex: 1; min-width: 0; }
 .sent-head-title h2 { margin: 0; font-size: var(--space-6); line-height: var(--sent-30); font-weight: var(--weight-heavy); }
-.sent-head-title p { margin: var(--space-1) 0 0; font-size: var(--font-label); color: var(--text-secondary); }
-.sent-words { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin: var(--space-3) 0 0; padding-left: var(--sent-72); font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
+.sent-head-title p { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
+.sent-words { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin: calc(-1 * var(--space-1)) 0 0; font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
 .sent-words > span { display: inline-flex; align-items: center; gap: var(--space-1); }
 .sent-words .icon { width: var(--sent-16); height: var(--sent-16); stroke-width: 2.6; }
 .sent-words .peach { color: var(--peach-text); }
@@ -740,7 +736,7 @@ function onStatus(value: ApplicationStatus): void {
 .sent-steps .current .sent-step-label { color: var(--primary-text); }
 .sent-steps .todo .sent-step-label { color: var(--text-secondary); }
 .sent-step-sub { font-size: var(--sent-13); line-height: var(--sent-16); color: var(--text-secondary); }
-.sent-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--sent-280); column-gap: var(--sent-8); align-items: start; }
+.sent-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sent-8); align-items: start; }
 .sent-main { display: flex; flex-direction: column; gap: var(--sent-8); min-width: 0; }
 .sent-main > .sent-card > h3, .sent-main .panel-section-head h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); }
 .sent-plain p { margin: 0; color: var(--peach-text); font-size: var(--font-label); }
@@ -778,25 +774,21 @@ function onStatus(value: ApplicationStatus): void {
    égales, cercle et libellés centrés ; Documents et contacts en deux colonnes séparées d’un filet de 1 px, lignes de
    64 px au moins (12 px en haut et en bas), puis la ligne « Historique » à chevron. */
 .sent-detail-cards:not(.sent-detail-phone) { gap: var(--space-4); }
-.sd-title { padding-bottom: var(--space-6); }
-.sd-steps-card { padding: var(--space-6) var(--space-4) var(--space-5); }
+.sd-title { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6) var(--sent-28) var(--space-1) var(--space-6); }
+.sd-steps-card { padding: var(--space-5) var(--space-6); border-width: 1px; border-color: var(--line); border-radius: var(--space-6); }
 .sd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; }
 .sd-steps > li, .sd-steps > li:last-child { flex: none; align-items: center; text-align: center; }
 .sd-steps .sent-step-line { left: calc(50% + var(--sent-28) / 2 + var(--sent-8)); right: calc(-50% + var(--sent-28) / 2 + var(--sent-8)); }
-.sd-docs { padding: 0; overflow: hidden; }
+.sd-docs { padding: var(--sent-18-5) 0 0; overflow: hidden; }
 .sd-docs-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
 .sd-docs-cols > .sent-rows { padding: 0; border: 0; border-radius: 0; background: none; }
 .sd-docs-cols > .sent-rows + .sent-rows { border-left: 1px solid var(--line); }
-.sd-docs .sent-rows h3 { margin: 0; padding: var(--space-4) var(--space-5); font-size: var(--font-body); }
-.sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-5); border-top-color: var(--line); }
-.sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sd-docs .sent-rows h3 { --sd-22: 22px; margin: 0; padding: 0 var(--space-6) var(--space-3); font-size: var(--font-body); line-height: var(--sd-22); }
+.sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-6); border-top-color: var(--line); }
+.sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
 .sd-history-row:hover { background: var(--primary-soft); }
 .sd-history-row > .icon { flex: none; color: var(--primary-text); }
-.sd-history { margin: 0; padding: 0 var(--space-5) var(--space-4); }
-/* Écran moyen (1024 à 1279 px) : la colonne de droite passe sous la colonne principale, pour garder des lignes lisibles. */
-@media (max-width: 1279px) {
-  .sent-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--sent-8); }
-}
+.sd-history { margin: 0; padding: 0 var(--space-6) var(--space-4); }
 /* Téléphone (EnvoyeeDetail, §8.3 ; retour du 14 novembre, §6) : barre de 56 « ← Candidature » et « … », marges de 20, 12 px entre les cartes, titre
    22/28 800, mots à 20 px du titre ; carte de deux lignes de 72 à chevron gris ; Historique 8 px plus bas. */
 .sent-detail-phone { --sent-72-row: 72px; --sent-22: 22px; --sent-28-line: 28px; gap: var(--space-3); padding: 0 var(--space-5) var(--space-8); }
@@ -804,11 +796,9 @@ function onStatus(value: ApplicationStatus): void {
 .sent-screen-title { --sent-48: 48px; --sent-17: 17px; display: flex; align-items: center; gap: var(--space-1); font-size: var(--sent-17); font-weight: var(--weight-bold); }
 .sent-screen-back { display: inline-flex; align-items: center; justify-content: center; width: var(--sent-48); height: var(--sent-48); min-height: var(--sent-48); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text); }
 .sent-screen-back .icon { width: 24px; height: 24px; }
-.sent-detail-phone .sent-head { padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
 .sent-detail-phone .sent-head-title h1 { margin: 0; font-size: var(--sent-22); line-height: var(--sent-28-line); font-weight: var(--weight-heavy); }
 .sent-detail-phone .sent-head-title p { margin: 0; line-height: var(--space-5); }
-.sent-detail-phone .sent-words { margin-top: var(--space-5); padding-left: 0; }
-.sent-detail-phone .sent-grid { grid-template-columns: minmax(0, 1fr); }
+.sent-detail-phone .sent-words { margin-top: var(--space-5); }
 .sent-detail-phone .sent-main { gap: var(--space-3); }
 .sent-links { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .sent-links button { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-72-row); padding: var(--space-3) var(--sent-18-5); border: 0; background: none; color: var(--text); font: inherit; text-align: left; }
