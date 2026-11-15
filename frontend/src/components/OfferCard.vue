@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import type { Offer } from "../api/client";
@@ -40,9 +40,9 @@ type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: s
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
-  // Ordinateur, §21 du 15 novembre : sans note, la pastille neutre « Pas encore notée » en tête (le cercle vide est à
-  // droite). Sans profil, « Profil à compléter » le dit à sa place.
-  if (!phone.value && unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
+  // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
+  // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
+  if (unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
   // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
   // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
   if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
@@ -67,10 +67,34 @@ const chips = computed<Chip[]>(() => {
 
 // La limite de la formule (docs/125) explique une offre sans note.
 const { reached } = usePlan();
+
+// Téléphone (Kevin, 15.11 ; planche Candidatures) : les puces qui ne tiennent pas sur la ligne passent dans « +N »,
+// jamais coupées. Mesuré après rendu, et de nouveau quand la carte change de largeur.
+const card = ref<{ $el: HTMLElement } | null>(null);
+const fits = ref(99);
+async function fit(): Promise<void> {
+  fits.value = 99;
+  if (!phone.value) return;
+  await nextTick();
+  const box = card.value?.$el.querySelector(".list-card-chips");
+  const edge = box?.getBoundingClientRect().right ?? 0;
+  while (box && fits.value > 1 && [...box.children].some((c) => c.getBoundingClientRect().right > edge + 0.5)) {
+    fits.value = Math.min(fits.value, chips.value.length) - 1;
+    await nextTick();
+  }
+}
+let watcher: ResizeObserver | undefined;
+onMounted(() => {
+  void fit();
+  if (typeof ResizeObserver !== "undefined" && card.value) (watcher = new ResizeObserver(() => void fit())).observe(card.value.$el);
+});
+onUnmounted(() => watcher?.disconnect());
+watch([chips, phone], () => void fit());
 </script>
 
 <template>
   <ListCard
+    ref="card"
     :title="offer.title"
     :company="offer.company ?? 'Entreprise non indiquée'"
     :location="offer.location"
@@ -83,7 +107,7 @@ const { reached } = usePlan();
   >
     <template #chips>
       <span
-        v-for="chip in chips"
+        v-for="chip in chips.slice(0, fits)"
         :key="chip.text"
         :class="chip.tone"
         :title="chip.title"
@@ -100,10 +124,15 @@ const { reached } = usePlan();
         d="M1 1.5A1.5 1.5 0 0 1 2.5 0h7A1.5 1.5 0 0 1 11 1.5V15L6 11.5 1 15z"
         fill="#F2853A"
       /></svg>{{ chip.text }}</span>
+      <span
+        v-if="fits < chips.length"
+        class="more"
+        data-test="offer-chip"
+      >+{{ chips.length - fits }}</span>
     </template>
     <template #end>
       <svg
-        v-if="!phone && unscored"
+        v-if="unscored"
         class="score-ring score-unrated"
         viewBox="0 0 100 100"
         role="img"
@@ -140,6 +169,9 @@ const { reached } = usePlan();
 /* Du texte : le gris secondaire (6,3:1 sur la carte), jamais --faint, réservé à ce qui n’est pas du texte. */
 .list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--text-secondary); }
 .list-card.expired { opacity: 0.6; }
+/* §21 du 15 novembre (ordinateur 40 px, téléphone 48 px) : sans note, un cercle vide en pointillés et un tiret. */
+.score-unrated circle { stroke: var(--linked-line); }
+.score-unrated path { stroke: var(--unrated-dash); }
 .list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
 .chip-mark { flex: none; }
 /* Ordinateur, maquette du 14 novembre (§1 ; CandidaturesOrdinateurB) : l'anneau de 40 px en haut à droite, sans son
@@ -148,9 +180,6 @@ const { reached } = usePlan();
 @media (min-width: 1024px) {
   .list-card-end .score-ring { width: 2.5rem; height: 2.5rem; }
   .list-card-end:has(.score-ring) { align-self: start; width: auto; }
-  /* §21 du 15 novembre : sans note, un cercle vide en pointillés et un tiret, à la place de l'anneau. */
-  .score-unrated circle { stroke: var(--linked-line); }
-  .score-unrated path { stroke: var(--unrated-dash); }
   .list-card-end .score-ring-word { display: none; }
   .list-card[aria-current="true"] { --ring-gap: var(--selected-bg); }
 }
@@ -171,5 +200,6 @@ const { reached } = usePlan();
   .list-card-offer > .list-card-chips { margin-top: 0; }
   .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
   .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
+  .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
 }
 </style>

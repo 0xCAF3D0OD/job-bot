@@ -40,7 +40,7 @@ L'interface s'ouvre sur http://localhost:5173 et l'API sur http://127.0.0.1:8000
 |---|---|
 | `make demo` | la démo avec des données fictives, sur http://localhost:5200 |
 | `make test` | tous les tests |
-| `make audits-ci` | **avant chaque push** : les mêmes contrôles que la CI (tests, types, lint, poids, historique, audits ordinateur et téléphone), sur la démo lancée par `make demo` (`DEMO_URL` pour une autre adresse) |
+| `make audits-ci` | **avant chaque push** : les mêmes contrôles que la CI (tests, types, lint, poids et son écart avec main, historique, audits ordinateur et téléphone), sur la démo lancée par `make demo` (`DEMO_URL` pour une autre adresse) |
 | `make lint` | ruff, mypy, eslint |
 | `make update` | met à jour (git pull, dépendances, migrations) |
 | `make openapi` | régénère les types de l'interface depuis l'API |
@@ -55,6 +55,17 @@ L'interface s'ouvre sur http://localhost:5173 et l'API sur http://127.0.0.1:8000
 | Les notifications sur le téléphone | `JOBBOT_NTFY_TOPIC` |
 
 La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
+
+## Limites de poids
+
+`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`).
+
+**Règle (Kevin, 15.11.2026)** : toute PR qui ajoute plus de 0,5 Ko de JS ou de CSS (gzip, total) le justifie dans sa description, avec le détail de ce qui pèse.
+
+| Date | Limite | Avant | Après | Raison |
+|---|---|---|---|---|
+| 15.11.2026 | JS total (gzip) | 426 000 o | 428 000 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
+| 15.11.2026 | CSS total (gzip) | 117 500 o | 118 500 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
 
 ## Pour aller plus loin
 
