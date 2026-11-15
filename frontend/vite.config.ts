@@ -9,7 +9,27 @@ const apiTarget = process.env.JOBBOT_DEV_API_URL ?? "http://127.0.0.1:8000";
 export default defineConfig({
   plugins: [vue()],
   // Le manifeste dit quels fichiers chaque page charge : le budget de poids le lit (docs/117 §3).
-  build: { manifest: true },
+  build: {
+    manifest: true,
+    rolldownOptions: {
+      output: {
+        // Un seul fichier pour ce que toute page charge avec l'application (#664) : Vue, vue-router, openapi-fetch,
+        // et nos modules que l'entrée importe toujours (client de l'API, icônes, dates, logo). Séparés, ils
+        // faisaient autant de fichiers compressés chacun à part et une ligne d'import longue dans chaque page.
+        // Le budget (scripts/poids.mjs) compte tous les fichiers : regrouper ce qui se charge ensemble l'allège,
+        // découper l'alourdirait. Rien ne change dans ce que chaque page télécharge.
+        codeSplitting: {
+          includeDependenciesRecursively: false,
+          groups: [
+            {
+              name: "commun",
+              test: /node_modules[\\/].*\.m?js$|src[\\/](api[\\/]client\.ts|icons\.ts|dates\.ts|brandPaths\.ts|components[\\/]AppIcon\.vue)/,
+            },
+          ],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {
