@@ -12,7 +12,7 @@ import { ref, toRef } from "vue";
 import { useLinkedNotch } from "../composables/useLinkedNotch";
 
 // La zone de détail reliée à la liste (Candidatures sur ordinateur, §18 du 15 novembre) : pas de fond ni de cadre, un
-// rail vertical de 1,5 px (--linked-line) à 9 px de la colonne de liste, en fondu sur 56 px en haut et 72 px en bas ;
+// rail vertical de 1,5 px (--linked-line) à 8 px de la colonne de liste (9 sur la planche), en fondu sur 56 px en haut et 72 px en bas ;
 // en face de la carte choisie, le rail fait une pointe vers la gauche qui touche la pointe de la flèche (data-notch,
 // tracé de la planche), le trait droit interrompu sur sa hauteur. Le rail et sa pointe restent fixes : seul le contenu défile.
 const props = defineProps<{ list: HTMLElement | null }>();
@@ -60,11 +60,11 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 
 <style>
 /* Valeurs de la planche CandidaturesOrdinateurB (§18, trois onglets) : colonne de liste de 504 px, cartes de 480 px
-   (24 px avant la fin de la colonne), rail 9 px après la colonne (33 px après le bord des cartes) ; contenu de la zone
+   (24 px avant la fin de la colonne), rail 9 px après la colonne sur la planche, 8 ici pour la grille de 4 (32 px après le bord des cartes ; la flèche avance d'autant, le contact reste exact) ; contenu de la zone
    à 24 px du rail, 16 px entre les cartes, 48 px sous la dernière ; barre de défilement fine, --card-line sur fond
    transparent. */
 .linked-detail {
-  --linked-w: 1.5px; --linked-fade-top: 56px; --linked-fade-y: 72px; --linked-into: 9px;
+  --linked-w: 1.5px; --linked-fade-top: 56px; --linked-fade-y: 72px; --linked-into: 8px;
   position: relative; z-index: 0; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0;
   margin-left: var(--linked-into); border-left: var(--linked-w) solid var(--linked-line);
 }
@@ -100,5 +100,5 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 .linked-list .list-card[aria-current="true"]:not(:focus-visible) { outline: var(--linked-sel) solid var(--primary-graphic); outline-offset: calc(-1 * var(--linked-sel)); }
 /* La flèche part du bord extérieur de la carte : son décalage tient compte du trait réel de la carte (mesuré, voir
    useLinkedNotch ; Chrome arrondit 1,5 px à 1 px). */
-.linked-list .list-card-arrow { --linked-arrow: 20px; display: block; position: absolute; top: 50%; right: calc(-1 * (var(--linked-arrow) + var(--linked-card-border))); translate: 0 -50%; overflow: visible; }
+.linked-list .list-card-arrow { --linked-arrow: 19px; display: block; position: absolute; top: 50%; right: calc(-1 * (var(--linked-arrow) + var(--linked-card-border))); translate: 0 -50%; overflow: visible; }
 </style>

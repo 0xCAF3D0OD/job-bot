@@ -55,10 +55,12 @@ describe("flèche et pointe du rail, au contact", () => {
     const col = px(detail, "--linked-col");
     const gap = px(detail, "--linked-gap");
     const into = px(detail, "--linked-into");
+    // La flèche est décalée de --linked-arrow (20 px de référence) au-delà du trait de la carte.
+    const shift = px(detail, "--linked-arrow") - 20;
     const cardRight = col - gap;
     // La flèche : à 22 px à droite du bord intérieur de la carte (contour de 2), trait de 2.
-    const arrowEdge = cardRight - 2 + tip(arrowLine) + 1;
-    // La pointe : le rail commence 9 px après la colonne, trait de 1,5.
+    const arrowEdge = cardRight - 2 + tip(arrowLine) + 1 + shift;
+    // La pointe : le rail commence --linked-into après la colonne, trait de 1,5.
     const notchEdge = col + into + tip(notchLine) - 0.75;
     expect(Math.abs(notchEdge - arrowEdge)).toBeLessThanOrEqual(1);
   });
