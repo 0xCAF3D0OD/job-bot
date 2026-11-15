@@ -183,6 +183,14 @@ Kevin choisit un essai, un seul (prompt `first-offers-web-v2`) :
 
 **Seuil fixé avant le résultat** : au moins 3 offres de moins de 14 jours par métier, sur les deux métiers d'essai (« infirmier » à Lausanne, « électricien de montage » en Suisse romande). En dessous, la piste web s'arrête et `JOBBOT_WEB_FIRST_OFFERS_ENABLED` reste éteint.
 
+**Résultat (essai de Kevin du 2026-11-15, 12 h 30, en production) : seuil non atteint, piste web arrêtée.**
+
+- « infirmier » à Lausanne : 0 offre de moins de 14 jours. Les requêtes ciblées rendent bien des pages d'offre (9 résultats sur 19), mais 4 sont datées de 157 à 236 jours et 5 n'ont pas de date ; les 10 autres résultats sont des pages de liste ou d'agence.
+- « électricien de montage » : 0 offre de moins de 14 jours. 10 pages d'offre sur 19, dont 4 hors de Suisse romande ; les seules datées ont 70 à 654 jours ; 5 résultats viennent de France ou du Québec.
+- Le moteur de recherche de l'IA n'indexe pas les offres récentes, ou ne les date pas : ni le tri ni les requêtes n'y changent rien.
+
+`JOBBOT_WEB_FIRST_OFFERS_ENABLED` reste éteint. Le code reste en place, éteint, tant que Kevin n'a pas décidé de le retirer.
+
 ### Écarts et points ouverts
 
 - Aucune planche ne dessine cet état dans le paquet du 13 novembre : le composant existant est repris, seul le texte change. À valider ou à dessiner.
