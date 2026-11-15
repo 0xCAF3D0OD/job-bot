@@ -174,6 +174,15 @@ const hidesFar = computed(() => phone.value && filters.value.minScore === null &
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
 // Le nombre que disent la phrase et « Afficher n offres » : la liste montrée, sans les offres « Loin » cachées.
 const shownTotal = computed(() => (hidesFar.value && !showFar.value ? Math.max(0, total.value - farCount.value) : total.value));
+// Le compteur au-dessus de la liste (ordinateur, décision de Kevin du 15.11). Seul « À traiter » a un total sans
+// filtre (counts.pending) : « 12 sur 38 offres » ; les autres vues disent le nombre seul.
+const countLabel = computed(() => {
+  const base = counts.value.pending;
+  if (filters.value.view === "pending" && activeCount(filters.value) && shownTotal.value < base) {
+    return `${shownTotal.value} sur ${plural(base, "offre", "offres")}`;
+  }
+  return shownTotal.value ? plural(shownTotal.value, "offre", "offres") : "Aucune offre";
+});
 const shown = computed(() =>
   hidesFar.value && !showFar.value
     ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
@@ -383,12 +392,24 @@ async function manualAdded(result: {
     : result.existing
       ? "Elle était déjà dans ta liste"
       : result.status === "filtered_out"
-        ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+        ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ». Sa note arrive dans un instant.`
         : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
   await openFromQuery();
   if (result.existing && !result.filled?.length) void flash(result.id);
+  else if (!result.existing) awaitScore(result.id);
+}
+// Ajoutée, l'offre est notée tout de suite, même écartée (Kevin, 15.11) : « Pas encore notée », puis la carte et la
+// fiche prennent la note, relue toutes les 5 s pendant 2 min au plus.
+let scoreTimer: ReturnType<typeof setTimeout> | undefined;
+function awaitScore(id: number, tries = 24): void {
+  clearTimeout(scoreTimer);
+  scoreTimer = setTimeout(async () => {
+    const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
+    if (data) items.value = items.value.map((o) => (o.id === id ? data : o));
+    if (tries > 1 && data?.score == null && !data?.score_error) awaitScore(id, tries - 1);
+  }, 5000);
 }
 // L'offre déjà là (PR 38) : la liste défile jusqu'à sa carte, mise en avant 2 secondes.
 const flashId = ref<number | null>(null);
@@ -625,6 +646,7 @@ useDataChanged(() => {
   void load();
 });
 onUnmounted(() => {
+  clearTimeout(scoreTimer);
   clearTimeout(undoTimer);
   window.removeEventListener("keydown", onKeydown);
   window.removeEventListener("resize", measureGrid);
@@ -792,6 +814,15 @@ onUnmounted(() => {
           :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
         />
         <div class="linked-cards">
+          <!-- Le compteur (décision de Kevin du 15.11, au-dessus de la liste, ordinateur) : les offres de la liste montrée,
+               filtres compris ; avec un filtre qui en retire, « 12 sur 38 offres », 38 étant « À traiter » sans filtre. -->
+          <p
+            v-if="wide && !phone && !bare && !failed && shownTotal > 0"
+            class="offers-count"
+            data-test="offers-count"
+          >
+            {{ countLabel }}
+          </p>
           <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
                pendant 6 secondes (Material 3, snackbar). -->
           <p
@@ -1322,6 +1353,7 @@ onUnmounted(() => {
 /* Rien encore (§13) : l'état vide occupe la hauteur sous l'en-tête. Téléphone (CandidaturesVide) : du haut de la liste
    (144 px sans le bandeau Démo) à 130 px du bas de l'écran, la marge basse de la page au-dessus de la barre d'onglets. */
 .offers-list-bare { display: flex; flex-direction: column; }
+.offers-count { margin: 0 0 var(--space-3); padding-inline: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
 @media (max-width: 820px) {
   .offers-list-bare { --bare-chrome: 274px; min-height: calc(100dvh - var(--bare-chrome)); }
   .notice.undo-snackbar {

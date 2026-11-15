@@ -616,3 +616,7 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.402 | « Plus de filtres » sur ordinateur (Offres et Envoyées) : marges intérieures de 16 px comme sur la planche, le bouton passe de 160 à 152 px | livrée |
 | 1.6.403 | Contour des boutons secondaires gris : nouveau jeton --button-outline (#C9C5BA, sombre #4E473E) comme sur les planches, --line-strong reste aux champs, à la barre de recherche et aux séparateurs | livrée |
 | 1.6.404 | Carte épinglée de Rendez-vous sur ordinateur : la date dans l'icône calendrier de la liste (40 px, même couleur que la carte), et le texte de la carte épinglée n'est plus écrasé | livrée |
+| 1.6.405 | Relance : pastilles « Copier » (le message) et « Objet » (l’objet), qui disent « Copié ». | livrée |
+| 1.6.406 | Offres sur ordinateur : un compteur au-dessus de la liste, « 12 sur 38 offres » avec un filtre. | livrée |
+| 1.6.407 | Trier les offres sur ordinateur : l'éventail de cartes remplace le livre. Au survol, les cartes s'étalent ; un clic (ou Entrée, Espace) retourne une carte et montre l'extrait surligné, les verdicts et « Voir l'annonce complète ». Une offre gardée reste dans l'éventail avec son badge « Gardée » ; « Écarter » affiche aussi « Annuler ». Le dernier reste du livre (images, styles, jetons) est retiré ; le marque-page du téléphone s'appelle désormais « signet ». | livrée |
+| 1.6.408 | Offre ajoutée à la main notée tout de suite, même écartée ou déjà préparée ; cercle « Pas encore notée » (§21) ; commande noter-offres-manuelles pour les anciennes | livrée |

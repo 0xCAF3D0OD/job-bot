@@ -28,6 +28,7 @@ from jobbot.logos import service as logos
 from jobbot.news import domain
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
+from jobbot.worker.tasks.score import SCORE_JOB
 
 from .conftest import admin_engine, make_settings
 
@@ -78,6 +79,19 @@ async def rt() -> AsyncIterator[Runtime]:
     async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
     await runtime.dispose()
+
+
+@pytest.fixture(autouse=True)
+def queued(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Les tâches mises en file par l'ajout (la note part tout de suite, 2026-11-15)."""
+    names: list[str] = []
+
+    async def enqueue(_settings: Any, name: str) -> bool:
+        names.append(name)
+        return True
+
+    monkeypatch.setattr(manual_offers_routes, "enqueue", enqueue)
+    return names
 
 
 @pytest.fixture
@@ -227,7 +241,9 @@ async def test_page_without_offer_asks_for_text(
     assert out["draft"] is None and out["paste"] is True and ai.calls == []
 
 
-async def test_filtered_out_offer_is_kept_with_reason(api: AsyncClient, rt: Runtime) -> None:
+async def test_filtered_out_offer_is_kept_with_reason(
+    api: AsyncClient, rt: Runtime, queued: list[str]
+) -> None:
     async with rt.sessionmaker.begin() as session:
         await save_criteria(session, Criteria(banned_words=("menuisier",)))
     added = (
@@ -237,6 +253,13 @@ async def test_filtered_out_offer_is_kept_with_reason(api: AsyncClient, rt: Runt
         )
     ).json()
     assert added["status"] == "filtered_out" and added["reasons"]
+    # Écartée, elle est quand même notée, tout de suite (décision de Kevin du 2026-11-15).
+    assert queued == [SCORE_JOB]
+    again = await api.post(
+        "/api/offers/manual",
+        json={"title": "Menuisier CFC", "company": "Bois & Fils", "location": "Sion"},
+    )
+    assert again.json()["existing"] is True and queued == [SCORE_JOB]
     # Ajoutée par son texte : l'étiquette, et aucun lien vide à ouvrir.
     offer = (await api.get(f"/api/offers/{added['id']}")).json()
     assert offer["added_by_you"] is True and offer["links"] == []
