@@ -15,10 +15,12 @@ from sqlalchemy import func, select, text, update
 from jobbot.api.app import create_app
 from jobbot.core.filter import Criteria, RemotePolicy
 from jobbot.db.models import (
+    MANUAL_LINK_SOURCE,
     Evaluation,
     LlmBatch,
     LlmCall,
     Offer,
+    OfferLink,
     OfferStatus,
     ProfileChunk,
     Setting,
@@ -40,7 +42,7 @@ from jobbot.llm.scoring import (
     why_sentence,
 )
 from jobbot.runtime import Runtime
-from jobbot.scoring import remote, service
+from jobbot.scoring import manual_backlog, remote, service
 from jobbot.settings import Settings
 
 from .conftest import admin_engine, make_settings
@@ -203,11 +205,10 @@ async def add_offer(rt: Runtime, n: int, status: str = OfferStatus.TO_REVIEW, **
         offer = Offer(
             fingerprint=f"o{n}",
             title=f"Offre {n}",
-            first_seen_at=NOW + timedelta(minutes=n),
             last_seen_at=NOW,
             status=status,
             snippet="Extrait",
-            **extra,
+            **({"first_seen_at": NOW + timedelta(minutes=n)} | extra),
         )
         session.add(offer)
         await session.flush()
@@ -837,3 +838,93 @@ async def test_api_exposes_only_the_quotes_found_in_the_offer(
     await service.run_scoring(ai)
     offer = (await api.get("/api/offers", params={"view": "to_review"})).json()["items"][0]
     assert offer["passages"] == ["clusters Kubernetes"]
+
+
+AFTER = service.MANUAL_SCORED_SINCE + timedelta(hours=1)
+
+
+async def test_manual_offer_is_scored_whatever_its_status(ai: Runtime, fake: FakeClient) -> None:
+    """Ajoutée à la main : notée même écartée, gardée, en préparation ou envoyée, tant
+    qu'elle n'a jamais eu de note (décision de Kevin du 2026-11-15). Une offre d'alerte
+    écartée reste sans note, et une note manquée ne se relance pas sans fin."""
+    manual = {}
+    for n, status in enumerate(
+        (
+            OfferStatus.FILTERED_OUT,
+            OfferStatus.LATER,
+            OfferStatus.PREPARING,
+            OfferStatus.APPLIED,
+        ),
+        start=1,
+    ):
+        manual[status] = await add_offer(ai, n, status=status, first_seen_at=AFTER)
+    alert_filtered = await add_offer(ai, 10, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
+    failed = await add_offer(ai, 11, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
+    # Ajoutée avant MANUAL_SCORED_SINCE : laissée à `jobbot noter-offres-manuelles`.
+    older = await add_offer(ai, 12, status=OfferStatus.FILTERED_OUT)
+    async with ai.sessionmaker.begin() as session:
+        for offer_id in (*manual.values(), failed, older):
+            session.add(OfferLink(offer_id=offer_id, source=MANUAL_LINK_SOURCE, url=""))
+        session.add(OfferLink(offer_id=alert_filtered, source="jobup", url="https://jobup.ch/1"))
+        session.add(
+            Evaluation(
+                offer_id=failed,
+                filter_passed=False,
+                filter_reasons=[],
+                criteria_hash="x",
+                score_error="réponse vide",
+                profile_hash=profile_hash(CHUNKS),
+            )
+        )
+
+    result = await service.run_scoring(ai)
+
+    assert result.scored == 4
+    for offer_id in manual.values():
+        stored = await evaluation(ai, offer_id)
+        assert stored is not None and stored.score is not None
+    assert await evaluation(ai, alert_filtered) is None
+    assert await evaluation(ai, older) is None
+    async with ai.sessionmaker() as session:
+        assert (
+            await service.candidates(session, profile_hash(CHUNKS), include_stale_profile=False)
+            == []
+        )
+
+
+async def test_manual_backlog_counts_then_scores_once(ai: Runtime, fake: FakeClient) -> None:
+    """`jobbot noter-offres-manuelles` : d'abord le nombre et le coût, sans appel ; puis la
+    note et le bilan (notées, jetons). Une seconde exécution ne trouve plus rien."""
+    old_manual = await add_offer(ai, 1, status=OfferStatus.FILTERED_OUT)
+    alert_filtered = await add_offer(ai, 2, status=OfferStatus.FILTERED_OUT)
+    scored = await add_offer(ai, 3, status=OfferStatus.APPLIED)
+    async with ai.sessionmaker.begin() as session:
+        for offer_id in (old_manual, scored):
+            session.add(OfferLink(offer_id=offer_id, source=MANUAL_LINK_SOURCE, url=""))
+        session.add(
+            Evaluation(
+                offer_id=scored,
+                filter_passed=True,
+                filter_reasons=[],
+                criteria_hash="x",
+                score=70,
+                scored_at=NOW,
+                prompt_version="score-v2",
+                profile_hash=profile_hash(CHUNKS),
+            )
+        )
+
+    found = await manual_backlog.count(ai)
+    assert [f.offers for f in found] == [1] and found[0].cost_chf > 0
+    assert fake.calls == []
+
+    done = await manual_backlog.score_all(ai)
+
+    assert (done.scored, done.failed, done.skipped) == (1, 0, 0)
+    assert done.input_tokens > 0 and done.output_tokens > 0
+    stored = await evaluation(ai, old_manual)
+    assert stored is not None and stored.score is not None
+    assert await evaluation(ai, alert_filtered) is None
+    assert await manual_backlog.count(ai) == []
+    assert (await manual_backlog.score_all(ai)).scored == 0
+    assert len(fake.calls) == 1
