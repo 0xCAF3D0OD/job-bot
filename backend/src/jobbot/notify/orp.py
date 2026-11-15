@@ -109,7 +109,11 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
     submitted = bool(previous_record and previous_record.submitted_at)
     if not submitted and today < deadline:
         key = "eve" if today == deadline - timedelta(days=1) else "due"
-        if key not in previous_sent and (key == "eve" or "eve" not in previous_sent):
+        # Un jour de repos : seulement si la date limite tombe au plus tard le prochain jour
+        # normal ; sinon le rappel attend ce jour-là (notify.deadline_reminder_due).
+        async with runtime.sessionmaker() as session:
+            now_due = await notify.deadline_reminder_due(session, deadline, today)
+        if now_due and key not in previous_sent and (key == "eve" or "eve" not in previous_sent):
             details = plural(prev_counts.count, "candidature", "candidatures")
             if prev_counts.incomplete:
                 details += f", {plural(prev_counts.incomplete, 'ligne', 'lignes')} à compléter"

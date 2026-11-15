@@ -116,7 +116,7 @@ describe("Aujourd’hui et Trier comptent les mêmes offres", () => {
     mockApi(true, false, []);
     const triage = await mountAt(TriageView);
     const empty = triage.find("[data-test=triage-empty]");
-    expect(empty.text()).toContain("Rien à trier");
+    expect(empty.text()).toContain("Rien à trier pour l’instant");
     expect(triage.text()).not.toContain("Jour de repos");
   });
 });

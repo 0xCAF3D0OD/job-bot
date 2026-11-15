@@ -357,6 +357,8 @@ def test_every_reminder_kind_is_known() -> None:
     technical = {"budget"}
     assert kinds - technical == set(OPTIONAL_REMINDERS) | set(DATED_REMINDERS) | {"offers"}
     assert set(OPTIONAL_REMINDERS) | {"offers"} <= notify.QUIET_KINDS
+    assert set(DATED_REMINDERS) == notify.DEADLINE_KINDS
+    assert not notify.DEADLINE_KINDS & notify.QUIET_KINDS
 
 
 @pytest.mark.parametrize("kind", OPTIONAL_REMINDERS)

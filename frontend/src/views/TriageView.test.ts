@@ -172,7 +172,13 @@ describe("Trier les offres (PR 45)", () => {
   it("rien à trier : un écran vide ; un jour de repos ne bloque jamais le tri (planche AujourdhuiOrdinateurV2, is_repos)", async () => {
     mockApi([]);
     const empty = (await mountTriage()).wrapper;
-    expect(empty.find("[data-test=triage-empty]").text()).toContain("Rien à trier");
+    const scene = empty.find("[data-test=triage-empty]");
+    expect(scene.find("h2").text()).toBe("Rien à trier pour l’instant");
+    expect(scene.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(scene.find("[data-test=triage-empty-jobs]").text()).toBe("Voir mes candidatures");
+    expect(scene.find("[data-test=triage-empty-alerts]").attributes("href")).toBe("/candidatures/alertes");
+    expect(empty.find("[data-test=triage-offer]").exists()).toBe(false);
+    expect(empty.text()).not.toMatch(/Écarter|Garder/);
     mockApi([offer(1, "DevOps", 90)], { ...TODAY, rhythm: { research_today: false } });
     const rest = (await mountTriage()).wrapper;
     expect(rest.find("[data-test=triage-empty]").exists()).toBe(false);

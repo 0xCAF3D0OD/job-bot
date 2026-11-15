@@ -7,7 +7,8 @@ import TroupeScene from "./TroupeScene.vue";
 // L'état vide commun (maquette du 15 novembre, §13) : l'illustration, le titre, une pastille à la place d'une phrase
 // d'explication (« texte hors carte = titre ou lien seulement »), les boutons, puis un lien. Centré sur toute la
 // largeur, au milieu de l'espace sous l'en-tête de page, un peu au-dessus du centre exact. Un seul composant pour tous
-// les écrans vides (règle de Kevin du 15.11) : Offres, Envoyées, Rendez-vous, filtres, fin du tri, alertes.
+// les écrans vides (règle de Kevin du 15.11) : Offres, Envoyées, Rendez-vous, filtres, fin du tri, alertes. Le titre
+// peut venir d'un emplacement `title` (titre manuscrit de Trier) ; `title` reste son nom accessible par défaut.
 withDefaults(
   defineProps<{
     title: string;
@@ -35,7 +36,9 @@ withDefaults(
       :is="heading"
       class="empty-state-title"
     >
-      {{ title }}
+      <slot name="title">
+        {{ title }}
+      </slot>
     </component>
     <span
       v-if="pill"
