@@ -88,7 +88,7 @@ const titleId = useId();
    16/18 avec trait, logo de 40 px ; lignes de 58 px (56 sur la grille de 4), icône de 22 px bleue à 14 px (16) du
    texte 17/600, trait entre elles ; « Annuler » 17/700 bleu texte. */
 .offer-actions-sheet {
-  --act-10: 10px; --act-22: 22px; --act-40: 40px; --act-17: 1.0625rem; --act-row: 56px;
+  --act-10: 10px; --act-22: 22px; --act-17: 1.0625rem; --act-row: 56px;
   inset: auto var(--act-10) var(--space-6); width: auto; max-width: none; margin: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .offer-actions-sheet :deep(.sheet-inner) { gap: var(--space-2); padding: 0; }
@@ -97,7 +97,7 @@ const titleId = useId();
 .offer-actions-card, .offer-actions-cancel { overflow: hidden; border-radius: var(--act-22); background: var(--surface); }
 .offer-actions-card { display: flex; flex-direction: column; }
 .offer-actions-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border-bottom: 1px solid var(--line-soft); }
-.offer-actions-head :deep(.logo) { flex: none; width: var(--act-40); height: var(--act-40); }
+.offer-actions-head :deep(.logo) { flex: none; width: var(--btn-compact); height: var(--btn-compact); }
 .offer-actions-name { display: flex; flex-direction: column; min-width: 0; }
 .offer-actions-title { font-size: var(--font-body); font-weight: var(--weight-bold); }
 .offer-actions-where { font-size: var(--label-caps); color: var(--text-secondary); }
