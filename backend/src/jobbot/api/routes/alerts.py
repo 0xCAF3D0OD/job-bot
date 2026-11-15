@@ -405,7 +405,7 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
 
 
 class ExpectCodeOut(BaseModel):
-    # False : six relevés rapides dans l'heure, c'est le maximum.
+    # Toujours True depuis le relevé partagé (15.11) : plus de limite par compte.
     queued: bool
 
 
@@ -418,7 +418,8 @@ async def expect_code(request: Request) -> ExpectCodeOut:
 @router.post("/watch-code", operation_id="watchSiteCode", status_code=status.HTTP_202_ACCEPTED)
 async def watch_code(request: Request) -> ExpectCodeOut:
     """L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
-    le relevé toutes les 15 secondes de 75 secondes, 10 minutes au plus (une seule attente)."""
+    son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
+    attend."""
     return ExpectCodeOut(queued=await site_codes.expect(_runtime(request), watch=True))
 
 

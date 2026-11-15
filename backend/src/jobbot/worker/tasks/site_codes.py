@@ -14,40 +14,41 @@ from jobbot.worker.tasks.enrich import ENRICH_JOB
 from jobbot.worker.tasks.filter import FILTER_JOB
 from jobbot.worker.tasks.score import SCORE_JOB
 
-# Un relevé toutes les 15 secondes, tant que le compte attend son code (5 minutes pour « J'attends
-# un code » et l'extension ; tant que l'étape du code relance, 10 minutes au plus), sous le
-# plafond de la plateforme.
+# Le relevé partagé (décision de Kevin du 15.11) : un relevé toutes les 15 secondes tant qu'au
+# moins un compte attend un code, une heure au plus par passage (une relance le reprend), sous
+# le plafond de la plateforme.
 FAST_EVERY_SECONDS = 15.0
-MAX_ROUNDS = 41
+MAX_ROUNDS = 240
 PURGE_JOB = "site_codes_purge"
 log = get_logger(__name__)
 
 
-# Demandé par « J'attends un code », par l'étape du code ou par l'extension ; une seule boîte.
+# Demandé par « J'attends un code », par l'étape du code ou par l'extension ; une seule boîte,
+# un seul relevé pour tous les comptes : chaque code est rangé selon son adresse.
 @register(site_codes.FAST_COLLECT_JOB, scope="platform")
 async def collect_fast_job(runtime: Runtime, ctx: RunContext) -> None:
     fetched = new_offers = 0
     offer_accounts: set[int] = set()
     errors: list[MailboxError] = []
-    me = accounts.current()
-    for round_ in range(MAX_ROUNDS):
-        if round_:
-            await asyncio.sleep(FAST_EVERY_SECONDS)
-            until = await site_codes.fast_until(runtime)
+    with accounts.use(None):
+        for round_ in range(MAX_ROUNDS):
+            if round_:
+                await asyncio.sleep(FAST_EVERY_SECONDS)
+            until = await site_codes.waits_until(runtime)
             if until is None or datetime.now(UTC) >= until:
                 break
-        if not await site_codes.take_fast_read(runtime):
-            log.warning("collect_fast_capped")
-            break
-        # Une boîte illisible n'arrête pas le relevé : l'autre reste lue à chaque tour.
-        result = await collect(runtime, ctx.run_id, raise_errors=False)
-        errors += result.errors
-        fetched += result.fetched
-        new_offers += result.new_offers
-        offer_accounts |= result.accounts
-        # Le code du compte est arrivé : le relevé rapide s'arrête là.
-        if result.code_accounts and (me is None or me in result.code_accounts):
-            break
+            if not await site_codes.take_fast_read(runtime):
+                log.warning("collect_fast_capped")
+                break
+            # Une boîte illisible n'arrête pas le relevé : l'autre reste lue à chaque tour.
+            result = await collect(runtime, ctx.run_id, raise_errors=False)
+            errors += result.errors
+            fetched += result.fetched
+            new_offers += result.new_offers
+            offer_accounts |= result.accounts
+            # Un compte qui a reçu son code n'attend plus.
+            for account in result.code_accounts:
+                await site_codes.code_received(runtime, account)
     ctx.items_in, ctx.items_out = fetched, new_offers
     # Une alerte arrivée entre-temps suit son chemin habituel.
     for account in sorted(offer_accounts):

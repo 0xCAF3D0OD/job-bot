@@ -12,7 +12,7 @@ from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.auth import passwords
 from jobbot.collect import service
-from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search, Setting, User
+from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search, User
 from jobbot.mail import confirm, site_codes
 from jobbot.mail.codes import find_code, valid_minutes
 from jobbot.mail.imap import MailboxError
@@ -410,21 +410,24 @@ async def test_purge_forgets_mail_from_no_site(clean: Runtime) -> None:
     assert not any(clean.storage.exists(key) for key in keys.values())
 
 
-async def test_expect_code_is_limited(clean: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
-    queued: list[str] = []
+async def test_expect_code_always_queued(clean: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Plus de limite par compte (décision de Kevin du 15.11) : le relevé est partagé."""
+    queued: list[tuple[str, int | None]] = []
 
     async def enqueue(_settings: object, name: str) -> bool:
-        queued.append(name)
+        queued.append((name, accounts.current()))
         return True
 
     monkeypatch.setattr(site_codes, "enqueue", enqueue)
     app = create_app(clean.settings, clean)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         answers = [
-            (await api.post("/api/alert-searches/expect-code")).json()["queued"] for _ in range(7)
+            (await api.post(f"/api/alert-searches/{route}-code")).json()["queued"]
+            for route in ["expect"] * 7 + ["watch"] * 3
         ]
-    assert answers == [True] * 6 + [False]
-    assert queued == ["collect_fast"] * 6
+    assert answers == [True] * 10
+    # Mis en file sans compte : un seul relevé pour toute la plateforme.
+    assert queued == [("collect_fast", None)] * 10
 
 
 class Clock:
@@ -465,50 +468,42 @@ def queued(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 def fake_collect(
-    monkeypatch: pytest.MonkeyPatch, code_at_round: int | None, account: int | None = None
+    monkeypatch: pytest.MonkeyPatch,
+    codes: dict[int, int],
+    renew: Any = None,
 ) -> list[int]:
+    """Le relevé simulé : `codes` donne, par tour, le compte dont le code arrive ; `renew` est
+    appelé à chaque tour (la page qui relance)."""
     rounds: list[int] = []
 
     async def collect(
         _runtime: Runtime, _run_id: object = None, *, raise_errors: bool = True
     ) -> service.CollectResult:
+        assert accounts.current() is None
         rounds.append(1)
-        got = code_at_round is not None and len(rounds) == code_at_round
+        if renew is not None:
+            await renew(len(rounds))
+        got = codes.get(len(rounds))
         return service.CollectResult(
-            fetched=1,
-            codes=int(got),
-            code_accounts={account if account is not None else accounts.current() or 0}
-            if got
-            else set(),
+            fetched=1, codes=int(got is not None), code_accounts={got} if got else set()
         )
 
     monkeypatch.setattr(fast_task, "collect", collect)
     return rounds
 
 
-async def test_watch_code_counts_one_wait(clean: Runtime, queued: list[str]) -> None:
-    """Les relances de l'étape du code (chaque minute) ne comptent qu'une attente."""
-    app = create_app(clean.settings, clean)
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
-        watched = [
-            (await api.post("/api/alert-searches/watch-code")).json()["queued"] for _ in range(10)
-        ]
-        pressed = [
-            (await api.post("/api/alert-searches/expect-code")).json()["queued"] for _ in range(6)
-        ]
-    # Une attente pour les 10 relances, puis 5 « J'attends un code » : la septième est refusée.
-    assert watched == [True] * 10
-    assert pressed == [True] * 5 + [False]
-    assert queued == ["collect_fast"] * 15
+async def run_fast(clean: Runtime) -> None:
+    with accounts.use(None):
+        await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
 
 
-async def test_fast_collect_stops_at_the_first_code(
-    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
+async def test_fast_collect_stops_at_the_code(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str], account: int
 ) -> None:
     Clock(monkeypatch)
     assert await site_codes.expect(clean)
-    rounds = fake_collect(monkeypatch, code_at_round=3)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    rounds = fake_collect(monkeypatch, {3: account})
+    await run_fast(clean)
     assert len(rounds) == 3
 
 
@@ -518,18 +513,8 @@ async def test_fast_collect_lasts_five_minutes_without_code(
     """« J'attends un code » et l'extension : 5 minutes de relevé, un toutes les 15 s."""
     Clock(monkeypatch)
     assert await site_codes.expect(clean)
-    rounds = fake_collect(monkeypatch, code_at_round=None)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
-    assert len(rounds) == 20
-
-
-async def test_other_account_code_does_not_stop_the_wait(
-    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
-) -> None:
-    Clock(monkeypatch)
-    assert await site_codes.expect(clean)
-    rounds = fake_collect(monkeypatch, code_at_round=2, account=-1)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
     assert len(rounds) == 20
 
 
@@ -542,48 +527,41 @@ async def test_code_step_watch(
     clean: Runtime,
     monkeypatch: pytest.MonkeyPatch,
     queued: list[str],
+    account: int,
     code_after: int | None,
     rounds_read: int,
 ) -> None:
-    """L'étape « Recopie le code » relance chaque minute (décision de Kevin du 15.11) : la boîte
-    est relevée toutes les 15 s jusqu'au code, 10 minutes au plus, et une seule attente compte
-    dans la limite de 6 par heure."""
+    """L'étape « Recopie le code » relance chaque minute : la boîte est relevée toutes les 15 s
+    jusqu'au code, 10 minutes au plus."""
     clock = Clock(monkeypatch)
     start = clock.now
-    rounds: list[int] = []
+    renewed: list[float] = [0]
+    code_round: dict[int, int] = {}
 
-    async def collect(
-        _runtime: Runtime, _run_id: object = None, *, raise_errors: bool = True
-    ) -> service.CollectResult:
-        rounds.append(1)
-        # La page relance chaque minute, comme JobupCodeBox, tant qu'elle attend.
+    async def renew(round_: int) -> None:
         elapsed = (clock.now - start).total_seconds()
-        got = code_after is not None and elapsed >= code_after
-        if not got and elapsed // 60 >= len(queued):
-            assert await site_codes.expect(clean, watch=True)
-        return service.CollectResult(
-            fetched=1, codes=int(got), code_accounts={accounts.current() or 0} if got else set()
-        )
+        if code_after is not None and elapsed >= code_after and not code_round:
+            code_round[round_] = account
+        # Comme JobupCodeBox : une relance par minute, tant qu'il n'y a pas de code.
+        if not code_round and elapsed - renewed[-1] >= 60:
+            renewed.append(elapsed)
+            with accounts.use(account):
+                await site_codes.expect(clean, watch=True)
 
-    monkeypatch.setattr(fast_task, "collect", collect)
+    rounds = fake_collect(monkeypatch, code_round, renew)
     assert await site_codes.expect(clean, watch=True)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    await run_fast(clean)
     assert len(rounds) == rounds_read
-    async with clean.sessionmaker() as session:
-        value = await session.scalar(
-            select(Setting.value).where(Setting.key == site_codes.EXPECT_KEY)
-        )
-    assert value is not None and len(value["starts"]) == 1
 
 
-async def test_watch_stops_a_minute_after_the_last_renewal(
+async def test_watch_stops_after_the_last_renewal(
     clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
 ) -> None:
-    """Onglet caché ou page fermée : plus de relance, le relevé s'arrête de lui-même."""
+    """Onglet caché ou page fermée : plus de relance, l'attente finit d'elle-même."""
     Clock(monkeypatch)
     assert await site_codes.expect(clean, watch=True)
-    rounds = fake_collect(monkeypatch, code_at_round=None)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
     # 0, 15, 30, 45, 60 s : la relance donnait 75 s.
     assert len(rounds) == 5
 
@@ -592,18 +570,19 @@ async def test_fast_reads_capped_for_the_platform(
     clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
 ) -> None:
     Clock(monkeypatch)
+    assert site_codes.FAST_READS_PER_HOUR == 240
     monkeypatch.setattr(site_codes, "FAST_READS_PER_HOUR", 7)
     assert await site_codes.expect(clean)
-    rounds = fake_collect(monkeypatch, code_at_round=None)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
     assert len(rounds) == 7
     rounds.clear()
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    await run_fast(clean)
     assert rounds == []
 
 
 async def test_fast_collect_goes_on_when_a_box_fails(
-    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str], account: int
 ) -> None:
     """Une boîte en panne n'arrête pas le relevé : l'erreur est relancée à la fin."""
     Clock(monkeypatch)
@@ -618,13 +597,13 @@ async def test_fast_collect_goes_on_when_a_box_fails(
         got = len(rounds) == 4
         return service.CollectResult(
             codes=int(got),
-            code_accounts={accounts.current() or 0} if got else set(),
+            code_accounts={account} if got else set(),
             errors=[MailboxError("auth", "authentification IMAP refusée")],
         )
 
     monkeypatch.setattr(fast_task, "collect", collect)
     with pytest.raises(MailboxError):
-        await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+        await run_fast(clean)
     assert len(rounds) == 4
 
 

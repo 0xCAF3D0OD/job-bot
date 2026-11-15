@@ -13,13 +13,16 @@ from jobbot.api.app import create_app
 from jobbot.auth import passwords
 from jobbot.collect import service
 from jobbot.db.models import Search, User
-from jobbot.mail import addresses
+from jobbot.mail import addresses, site_codes
 from jobbot.mail.imap import MailboxError
 from jobbot.runtime import Runtime
+from jobbot.worker import tasks as _tasks  # noqa: F401  (enregistre les tâches)
+from jobbot.worker.jobs import execute
 
 from .conftest import admin_engine, make_settings
 from .emails import make_email
 from .test_collect import FakeMailbox
+from .test_site_codes import Clock
 
 NOW = datetime.now(UTC)
 
@@ -139,6 +142,77 @@ async def test_guest_box_read_when_gmail_fails(
         result = await service.collect(rt, raise_errors=False)
     assert [e.kind for e in result.errors] == ["connection"]
     assert await _messages(rt, account) == ["<kevin@x>"]
+
+
+async def test_three_waits_one_shared_reading(
+    rt: Runtime,
+    boxes: tuple[FakeMailbox, FakeGuestBox],
+    account: int,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Décision de Kevin du 15.11 : trois pages attendent en même temps ; un seul relevé lit la
+    boîte des invités toutes les 15 s, et chaque code arrive sur la page de son compte."""
+    _owner_box, guest_box = boxes
+    clock = Clock(monkeypatch)
+    monkeypatch.setattr(site_codes, "enqueue", _no_enqueue)
+    names = {"lea-trois": "trois001", "max-trois": "trois002", "zoe-trois": "trois003"}
+    ids: dict[str, int] = {}
+    async with rt.sessionmaker.begin() as session:
+        for name, code in names.items():
+            user = User(username=name, password_hash="!", mail_code=code)
+            session.add(user)
+            await session.flush()
+            ids[name] = user.id
+    # Le code de chacun arrive à son tour : Léa au 2e relevé, Max au 4e, Zoé au 7e.
+    arrivals = {2: ("lea-trois", "111111"), 4: ("max-trois", "222222"), 7: ("zoe-trois", "333333")}
+    fetches = guest_box.since_calls
+    real_fetch = guest_box.fetch_since
+
+    def fetch_since(*args: object, **kwargs: object) -> object:
+        arrival = arrivals.get(len(fetches) + 1)
+        if arrival:
+            name, code = arrival
+            mid = f"<{name}@x>"
+            guest_box.add(_code(mid, f"alertes+{name}-{names[name]}@example.ch", code), mid)
+        return real_fetch(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(guest_box, "fetch_since", fetch_since)
+    try:
+        for user_id in ids.values():
+            with accounts.use(user_id):
+                await site_codes.expect(rt)
+        with accounts.use(None):
+            assert await execute(rt, site_codes.FAST_COLLECT_JOB)
+        # Sept relevés, un toutes les 15 s, un seul relevé pour les trois attentes ; le dernier
+        # code reçu, plus personne n'attend : le relevé s'arrête.
+        assert len(fetches) == 7
+        assert clock.sleeps == 7
+        for name, code in [
+            ("lea-trois", "111111"),
+            ("max-trois", "222222"),
+            ("zoe-trois", "333333"),
+        ]:
+            with accounts.use(ids[name]):
+                found = await site_codes.last(rt, "jobup")
+            assert found is not None and found.code == code
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE username LIKE '%-trois'"))
+
+
+async def _no_enqueue(_settings: object, _name: str) -> bool:
+    return True
+
+
+def _code(message_id: str, to: str, code: str) -> bytes:
+    return make_email(
+        message_id=message_id,
+        sender="no-reply@jobup.ch",
+        received_at=NOW,
+        subject="Votre code de vérification",
+        html=f"<p>Votre code de vérification est <b>{code}</b>. Il expire dans 10 minutes.</p>",
+        to=to,
+    )
 
 
 async def test_guest_address_without_owner_box(tmp_path: Path) -> None:
