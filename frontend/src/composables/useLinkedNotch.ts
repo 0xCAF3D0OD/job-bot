@@ -5,7 +5,8 @@ import { onBeforeUnmount, ref, watch, type Ref } from "vue";
 // sur le centre de la flèche : top = centre − haut de la zone − 30 (la moitié du dessin).
 // Quand la carte choisie sort de la partie visible de la liste, une carte compacte (LinkedPin, 76 px) se fixe à 12 px
 // sous la barre de filtres (sortie par le haut) ou à 12 px du bas (sortie par le bas) : elle porte la flèche, et la
-// pointe se place en face d'elle. La flèche et la pointe ne sont donc jamais masquées.
+// pointe se place en face d'elle (la flèche de la vraie carte est alors masquée). La flèche et la pointe ne sont donc
+// jamais masquées, et jamais en double.
 export const NOTCH_HALF = 30;
 export const PIN_GAP = 12;
 export const PIN_HEIGHT = 76;
@@ -82,7 +83,7 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     const card = arrow?.parentElement;
     if (card) card.style.setProperty("--linked-card-border", getComputedStyle(card).borderRightWidth);
     const box = arrow?.getBoundingClientRect();
-    if (!box || !box.height) {
+    if (!arrow || !box?.height) {
       visible.value = false;
       setPinned(l, null);
       return;
@@ -90,6 +91,9 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     const center = box.top + box.height / 2;
     const side = pinSide(center, visibleTop, own.bottom);
     setPinned(l, side);
+    // Une seule flèche : celle de la vraie carte, qui dépasse dans la marge à droite des cartes (hors du fondu de la
+    // carte compacte), est masquée tant que la carte compacte la remplace ; sa place reste mesurée (Kevin, 15.11).
+    arrow.style.visibility = side ? "hidden" : "";
     visible.value = true;
     // La carte compacte vient d'apparaître : sa flèche est mesurée tout de suite (le navigateur la place avant de
     // répondre), sinon sa place prévue.
