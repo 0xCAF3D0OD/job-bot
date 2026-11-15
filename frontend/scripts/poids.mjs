@@ -8,24 +8,29 @@
 //
 //     npm run poids                      (construit, puis mesure)
 //     node scripts/poids.mjs --releve    (après un build : les limites à + 5 % des tailles d'aujourd'hui)
-import { readdirSync, readFileSync, statSync } from "node:fs";
+//     node scripts/poids.mjs --dist D --json F   (mesure le build D, écrit les tailles dans F ; scripts/poids-delta.sh)
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
-const DIST = new URL("../dist/", import.meta.url).pathname;
+const arg = (name) => {
+  const at = process.argv.indexOf(name);
+  return at > 0 ? process.argv[at + 1] : undefined;
+};
+const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 
 // Les limites : la taille mesurée le 2026-11-10 (main après la PR 20) + 5 %, arrondie à la centaine d'octets
 // inférieure (décision de Kevin du 10.11 : « budget = taille compressée actuelle + 5 % maximum »). Pour en relever
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 426_780, // dos des cartes Trier ordinateur : verdicts, étiquettes, anneau (Kevin, 15.11 : 426 000 → 426 700 à 17 h 45, puis le reste avec 739 et 740, → 426 780 à 18 h 05)
+  "js-total": 428_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +2 Ko, une fois, 426 780 → 428 780 ; README, Limites de poids)
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 117_780, // dos des cartes Trier ordinateur : verdicts, étiquettes, anneau (Kevin, 15.11 : 117 500 → 117 750 à 17 h 45, puis le reste avec 739 et 740, → 117 780 à 18 h 05)
+  "css-total": 118_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +1 Ko, une fois, 117 780 → 118 780 ; README, Limites de poids)
   "css-accueil": 59_800,
   "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
   "css-bilan": 62_400,
@@ -112,6 +117,11 @@ for (const [page, paths] of Object.entries(PAGES)) {
 const kb = (bytes) => `${(bytes / 1000).toFixed(1)} Ko`;
 const measured = Object.fromEntries(Object.entries(groups).map(([name, files]) => [name, sum(files)]));
 const limited = (name) => (name === "images" ? measured[name].raw : measured[name].gzip);
+
+if (arg("--json")) {
+  writeFileSync(arg("--json"), JSON.stringify(Object.fromEntries(Object.keys(LIMITS).map((name) => [name, limited(name)]))));
+  process.exit(0);
+}
 
 if (process.argv.includes("--releve")) {
   for (const name of Object.keys(LIMITS)) {
