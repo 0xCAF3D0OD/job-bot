@@ -17,7 +17,8 @@ import FormField from "./FormField.vue";
 // - « Relancer par e-mail » : bouton principal (la messagerie s'ouvre, rien n'est envoyé par jobA1), l'illustration
 //   dans le bandeau ; « Marquer comme relancée » : lien sous le bouton ;
 // - si l'écriture échoue : la carte « Réessayer » de la lettre.
-// Gardés de main, absents de la planche : « Copier la relance » (seul moyen sans e-mail du contact) et la mention
+// Gardés de main, absents de la planche : « Copier la relance » (seul moyen sans e-mail du contact), les pastilles
+// « Copier » et « Objet » (décision de Kevin du 15.11) et la mention
 // « Modèle simple, sans IA (raison) ».
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits<{ done: [] }>();
@@ -307,6 +308,27 @@ watch(
             test-id="follow-up-copy"
           />
         </div>
+        <!-- Décision de Kevin du 15.11 : « Copier » (le message) et « Objet » (l'objet), en pastilles secondaires,
+             qui disent « Copié » 2 s. Sans e-mail du contact, le bouton principal copie déjà la relance entière. -->
+        <div
+          v-if="ready"
+          class="fu-copies"
+        >
+          <CopyButton
+            v-if="mailto"
+            :value="text"
+            text="message"
+            aria-label="Copier le message de relance"
+            test-id="follow-up-copy-message"
+          />
+          <CopyButton
+            :value="subject"
+            word="Objet"
+            text="objet"
+            aria-label="Copier l’objet"
+            test-id="follow-up-copy-subject"
+          />
+        </div>
         <div class="fu-links">
           <button
             v-if="ready"
@@ -317,17 +339,6 @@ watch(
           >
             Modifier le message
           </button>
-          <span
-            v-if="ready && mailto"
-            class="fu-copy"
-          >
-            <CopyButton
-              :value="`${subject}\n\n${text}`"
-              label="Copier"
-              text="la relance"
-              test-id="follow-up-copy"
-            />
-          </span>
           <button
             type="button"
             class="link fu-link"
@@ -380,8 +391,8 @@ watch(
 .fu-main-wrap :deep(button) { width: 100%; min-height: var(--fu-52); border-radius: var(--radius-pill); font-size: var(--font-body); }
 .fu-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 var(--space-4); margin-top: var(--space-1); }
 .fu-link { min-height: var(--fu-48); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
-.fu-copy { display: inline-flex; }
-.fu-copy :deep(.copy-text) { min-width: 0; min-height: var(--fu-48); padding: 0; background: none; font-size: var(--font-label); }
+.fu-copies { display: flex; justify-content: center; gap: var(--space-2); margin-top: var(--space-3); }
+.fu-copies :deep(.copy-text:not(.copy-done)) { border: 1.5px solid var(--card-line); background: var(--surface); color: var(--text); }
 .fu-main-copy :deep(.copy-text) { display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--fu-52); font-size: var(--font-body); }
 .fu-main-copy :deep(.copy-text:not(.copy-done)) { background: var(--action); color: var(--on-action); }
 .fu-head, .fu-band, .fu-letter, .fu-under, .fu-failed, .fu-edit { flex: none; }

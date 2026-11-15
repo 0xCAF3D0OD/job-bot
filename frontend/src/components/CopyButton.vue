@@ -9,8 +9,12 @@ import CopyLabel from "./CopyLabel.vue";
 // `text` (maquette Preparer, étape 7c) : le mot « Copier » dans une pastille, qui devient « Copié » en vert ;
 // le nom du champ reste lu par un lecteur d'écran.
 // `announce: false` : la page annonce elle-même la copie (panneau des alertes, « Adresse copiée »).
-const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string; announce?: boolean }>(), {
+// `word` : le mot de la pastille à la place de « Copier » (« Objet » dans la Relance) ; `ariaLabel` : le nom lu par
+// un lecteur d'écran, à la place du mot et de `text`.
+const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string; announce?: boolean; word?: string; ariaLabel?: string }>(), {
   label: "Copier",
+  word: "Copier",
+  ariaLabel: undefined,
   testId: "copy",
   text: "",
   announce: true,
@@ -42,10 +46,14 @@ onUnmounted(() => clearTimeout(timer));
     type="button"
     :class="text ? ['copy-text', { 'copy-done': done }] : 'copy-button'"
     :data-test="testId"
+    :aria-label="ariaLabel"
     @click="copy"
   >
     <template v-if="text">
-      {{ done ? "Copié" : "Copier" }}<span class="visually-hidden"> : {{ text }}</span>
+      {{ done ? "Copié" : word }}<span
+        v-if="!ariaLabel"
+        class="visually-hidden"
+      > : {{ text }}</span>
     </template>
     <CopyLabel
       v-else
