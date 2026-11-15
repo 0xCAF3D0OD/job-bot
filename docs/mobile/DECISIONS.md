@@ -121,6 +121,6 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 ## Pied de page et changement de page (Kevin, 15.11.2026, 11 h 09)
 
 - Pied de page « sticky footer » sur le gabarit commun, pas page par page : `#app` en colonne, `min-height: 100dvh` (repli `100vh`), `main` en `flex: 1 0 auto`, pied de page en `flex-shrink: 0`. Page longue : le pied de page suit le contenu ; page courte : il touche le bas de l'écran. Jamais fixe ni collant : il ne recouvre pas le contenu.
-- La place de la barre de défilement reste réservée (`scrollbar-gutter: stable`) : le logo et l'en-tête ne bougent plus entre une page courte et une page longue, ni pendant le chargement d'une page.
+- Avec des barres de défilement classiques (Windows, Linux, Mac avec souris), leur place reste réservée, vide (`scrollbar-gutter: stable`, classe `scrollbars-classic` posée par main.ts) : le logo et l'en-tête ne bougent plus entre une page courte et une page longue, ni pendant le chargement d'une page. Pas de `overflow-y: scroll`, qui laisserait une barre vide en permanence (Kevin, 11 h 31).
 - Bouton « Assistant » : au moins 12 px entre lui et les liens du pied de page ; la marge du bas du pied de page (hauteur du bouton + 16 px, règle existante) suffit.
 - Carte de formation : l'avancement s'écrit « Module 6 sur 12 », comme sur la planche BilanOrdinateur, y compris quand il a été noté en texte libre « module 6/12 » (affichage seulement).
