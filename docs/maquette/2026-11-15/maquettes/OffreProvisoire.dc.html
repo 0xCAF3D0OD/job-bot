@@ -40,7 +40,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 <p style="margin: 4px 0 0; font-size: 16px; color: #596070">Sword Services · Genève</p>
 </div>
 <div style="display: flex; gap: 6px; flex-wrap: wrap">
-<span style="padding: 5px 10px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E5E2D9; font-size: 13px; font-weight: 600; color: #3D4250">{{contract}}</span>
+<sc-if value="{{hasContract}}" hint-placeholder-val="{{ false }}"><span style="padding: 5px 10px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E5E2D9; font-size: 13px; font-weight: 600; color: #3D4250">{{contract}}</span></sc-if>
 <span style="padding: 5px 10px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E5E2D9; font-size: 13px; font-weight: 600; color: #3D4250">Reçue le 30 octobre</span>
 </div>
 </div>
@@ -69,7 +69,7 @@ a{color:#2445C2}a:hover{color:#1A3496}
 
 <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #E3F3EA; color: #17734A; font-size: 14px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Note refaite sur l’annonce complète.</p></sc-if>
 
-<a href="#detail" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; margin: {{detailMargin}}; padding-top: 6px; border-top: 1px solid #EFECE5; font-size: 15px; font-weight: 700; color: #1B1F2A; text-decoration: none">Le détail de la note<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
+<a href="#detail" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; margin: {{detailMargin}}; padding-top: 6px; border-top: 1px solid #EFECE5; font-size: 15px; font-weight: 700; color: #1B1F2A; text-decoration: none">Voir la compatibilité<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
 </section>
 
 <section aria-labelledby="desc" style="display: flex; flex-direction: column; gap: 8px">
@@ -125,7 +125,8 @@ ringText: prov ? '#6B6157' : '#17734A', ringColor: '#17734A',
 title: prov ? 'À creuser' : 'Proche de ton profil', titleColor: prov ? '#6B6157' : '#17734A',
 basis: prov ? (st === 'reading' ? 'Calculée sur l’extrait de l’alerte, en attendant l’annonce complète.' : 'Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées.') : 'Selon ton profil et tes préférences, sur l’annonce complète',
 p1: prov ? 'DevOps, CI/CD et automatisation' : 'Kubernetes, GitLab CI et Terraform demandés',
-contract: prov ? 'Contrat non précisé' : 'CDI · 100 %',
+contract: prov ? '' : 'CDI · 100 %',
+hasContract: !prov,
 provTitle: st === 'refused' ? 'Ce site bloque la lecture automatique' : 'Il manque l’annonce complète',
 provText: st === 'reading' ? 'Lecture de l’annonce…' : (st === 'refused' ? 'Copie le texte de l’annonce et colle-le ici : la note sera refaite tout de suite.' : 'Pour une note sûre, jobA1 doit lire le texte entier de l’annonce.'),
 readLabel: st === 'reading' ? 'Lecture…' : 'Lire l’annonce',

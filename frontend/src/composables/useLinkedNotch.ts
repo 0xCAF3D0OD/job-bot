@@ -1,26 +1,43 @@
 import { onBeforeUnmount, ref, watch, type Ref } from "vue";
 
-// Liste reliée à une zone de détail (Candidatures sur ordinateur, maquette du 15 novembre, §11) : la flèche de la
-// carte choisie (svg[data-arrow], 22 × 44) entre dans l'encoche du trait gauche de la zone (svg[data-notch], 24 × 43).
-// L'encoche se place sur le centre de la flèche : top = centre − haut de la zone − 21,3 − 1,5 (le milieu de l'encoche
-// dans son dessin, puis l'épaisseur du trait du haut). Si le centre sort de la partie visible de la liste (24 px de
-// marge en haut et en bas, sous la barre fixe), la flèche et l'encoche se masquent et le trait redevient droit.
-export const NOTCH_MIDDLE = 21.3;
-export const LINE_WIDTH = 1.5;
-export const VISIBLE_MARGIN = 24;
+// Liste reliée à une zone de détail (Candidatures sur ordinateur, §18 du 15 novembre) : la flèche de la carte choisie
+// (svg[data-arrow], 22 × 60) touche la pointe du rail (svg[data-notch], le même tracé en miroir). La pointe se place
+// sur le centre de la flèche : top = centre − haut de la zone − 30 (la moitié du dessin).
+// Quand la carte choisie sort de la partie visible de la liste, une carte compacte (LinkedPin, 76 px) se fixe à 12 px
+// sous la barre de filtres (sortie par le haut) ou à 12 px du bas (sortie par le bas) : elle porte la flèche, et la
+// pointe se place en face d'elle. La flèche et la pointe ne sont donc jamais masquées.
+export const NOTCH_HALF = 30;
+export const PIN_GAP = 12;
+export const PIN_HEIGHT = 76;
+
+export type PinSide = "top" | "bottom" | null;
 
 export function notchTop(arrowCenter: number, zoneTop: number): number {
-  return Math.round((arrowCenter - zoneTop - NOTCH_MIDDLE - LINE_WIDTH) * 10) / 10;
+  return Math.round((arrowCenter - zoneTop - NOTCH_HALF) * 10) / 10;
 }
 
-export function arrowShown(center: number, visibleTop: number, visibleBottom: number): boolean {
-  return center >= visibleTop + VISIBLE_MARGIN && center <= visibleBottom - VISIBLE_MARGIN;
+// La carte choisie s'épingle dès que son centre passe la ligne où se trouverait le centre de la carte compacte : la
+// flèche passe de l'une à l'autre sans saut.
+export function pinSide(center: number, visibleTop: number, visibleBottom: number): PinSide {
+  const half = PIN_GAP + PIN_HEIGHT / 2;
+  if (center < visibleTop + half) return "top";
+  if (center > visibleBottom - half) return "bottom";
+  return null;
 }
 
-// `list` : l'élément qui défile (la barre de recherche et de filtres y est collée en haut, [data-linked-tools]) ;
+// Le centre de la flèche de la carte compacte, d'après sa place fixe (elle n'est pas encore dessinée à ce moment-là).
+export function pinCenter(side: Exclude<PinSide, null>, visibleTop: number, visibleBottom: number): number {
+  const half = PIN_GAP + PIN_HEIGHT / 2;
+  return side === "top" ? visibleTop + half : visibleBottom - half;
+}
+
+// `list` : la colonne de liste. La barre de recherche et de filtres ([data-linked-tools]) y reste en haut, hors de ce
+// qui défile ; seules les cartes défilent, dans `.linked-cards` (la barre de défilement commence donc sous les filtres) ;
 // `zone` : la zone de détail. Recalcul au défilement de la liste (écouteur passif), au changement de sélection et des
 // cartes (MutationObserver), au redimensionnement de la fenêtre, de la liste, de la zone ou des cartes
 // (ResizeObserver, barre d'outils comprise : elle pousse les cartes), une fois par image (requestAnimationFrame). Aucun minuteur.
+// Sur la liste : data-scrolled (ombre sous la barre), data-pinned="top|bottom" (la carte compacte montrée) et
+// --linked-pin-top (sa place sous la barre).
 export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElement | null>) {
   const top = ref(0);
   const visible = ref(false);
@@ -28,6 +45,17 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
   let resize: ResizeObserver | null = null;
   let mutation: MutationObserver | null = null;
   let bound: HTMLElement | null = null;
+  let scroller: HTMLElement | null = null;
+
+  // Ce qui défile dans la colonne : `.linked-cards`, ou la colonne elle-même à défaut.
+  function cardsOf(l: HTMLElement): HTMLElement {
+    return l.querySelector<HTMLElement>(":scope > .linked-cards") ?? l;
+  }
+
+  function setPinned(l: HTMLElement, side: PinSide): void {
+    if (side) l.setAttribute("data-pinned", side);
+    else l.removeAttribute("data-pinned");
+  }
 
   function measure(): void {
     frame = 0;
@@ -37,25 +65,37 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
       visible.value = false;
       return;
     }
-    l.toggleAttribute("data-scrolled", l.scrollTop > 0);
+    const s = cardsOf(l);
+    l.toggleAttribute("data-scrolled", s.scrollTop > 0);
     // La hauteur des colonnes part du haut de la grille (bandeau de démo, en-tête) jusqu'au bas de la fenêtre.
     const grid = l.parentElement;
     if (grid) grid.style.setProperty("--linked-top", `${Math.round(grid.getBoundingClientRect().top + window.scrollY)}px`);
-    const arrow = l.querySelector<SVGElement>('[aria-current="true"] [data-arrow]');
+    const own = s.getBoundingClientRect();
+    const tools = l.querySelector<HTMLElement>("[data-linked-tools]");
+    // Le bas de ce que montre la barre (le champ de filtre, les filtres actifs), sans ses marges : la carte compacte
+    // se place 12 px dessous, jamais collée.
+    const shown = tools ? [...tools.children].map((c) => c.getBoundingClientRect()).filter((r) => r.height) : [];
+    const visibleTop = shown.length ? Math.max(...shown.map((r) => r.bottom)) : own.top;
+    l.style.setProperty("--linked-pin-top", `${Math.round(visibleTop - l.getBoundingClientRect().top + PIN_GAP)}px`);
+    const arrow = l.querySelector<SVGElement>('[aria-current="true"] > [data-arrow]');
+    // Le trait réel de la carte choisie (1,5 px déclaré, arrondi par certains navigateurs) : la flèche s'y accroche.
+    const card = arrow?.parentElement;
+    if (card) card.style.setProperty("--linked-card-border", getComputedStyle(card).borderRightWidth);
     const box = arrow?.getBoundingClientRect();
     if (!box || !box.height) {
       visible.value = false;
-      l.setAttribute("data-arrow-off", "");
+      setPinned(l, null);
       return;
     }
     const center = box.top + box.height / 2;
-    const own = l.getBoundingClientRect();
-    const tools = l.querySelector<HTMLElement>("[data-linked-tools]");
-    const visibleTop = tools ? Math.max(own.top, tools.getBoundingClientRect().bottom) : own.top;
-    const shown = arrowShown(center, visibleTop, own.bottom);
-    visible.value = shown;
-    l.toggleAttribute("data-arrow-off", !shown);
-    top.value = notchTop(center, z.getBoundingClientRect().top);
+    const side = pinSide(center, visibleTop, own.bottom);
+    setPinned(l, side);
+    visible.value = true;
+    // La carte compacte vient d'apparaître : sa flèche est mesurée tout de suite (le navigateur la place avant de
+    // répondre), sinon sa place prévue.
+    const pinned = side ? l.querySelector<SVGElement>(`.linked-pin[data-side="${side}"] [data-arrow]`)?.getBoundingClientRect() : null;
+    const target = side ? (pinned?.height ? pinned.top + pinned.height / 2 : pinCenter(side, visibleTop, own.bottom)) : center;
+    top.value = notchTop(target, z.getBoundingClientRect().top);
   }
 
   function schedule(): void {
@@ -66,6 +106,7 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     if (!resize || !bound) return;
     resize.disconnect();
     resize.observe(bound);
+    if (scroller && scroller !== bound) resize.observe(scroller);
     if (zone.value) resize.observe(zone.value);
     const tools = bound.querySelector("[data-linked-tools]");
     if (tools) resize.observe(tools);
@@ -73,11 +114,13 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
   }
 
   function unbind(): void {
-    bound?.removeEventListener("scroll", schedule);
+    scroller?.removeEventListener("scroll", schedule);
     bound?.removeEventListener("transitionend", schedule);
     resize?.disconnect();
     mutation?.disconnect();
+    if (bound) setPinned(bound, null);
     bound = null;
+    scroller = null;
   }
 
   function bind(): void {
@@ -85,14 +128,18 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     const l = list.value;
     if (!l || !zone.value) return;
     bound = l;
-    l.addEventListener("scroll", schedule, { passive: true });
+    scroller = cardsOf(l);
+    scroller.addEventListener("scroll", schedule, { passive: true });
     // Les cartes entrent en glissant (TransitionGroup « card ») : position finale connue à la fin de la transition.
     l.addEventListener("transitionend", schedule, { passive: true });
     if (typeof ResizeObserver !== "undefined") resize = new ResizeObserver(schedule);
     if (typeof MutationObserver !== "undefined") {
+      // Au changement de sélection, mesure tout de suite (le rappel passe avant le dessin) : la flèche et la pointe du
+      // rail apparaissent dans la même image, sans saut d'une image à l'autre.
       mutation = new MutationObserver(() => {
         observeCards();
-        schedule();
+        if (frame) cancelAnimationFrame(frame);
+        measure();
       });
       mutation.observe(l, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-current"] });
     }

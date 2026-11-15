@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRouter, type RouteLocationRaw } from "vue-router";
+import LinkedArrow from "./LinkedArrow.vue";
 
 import { colorIndex, companyPlace, initials, logoTone } from "../format";
 import { isBlankLogo } from "../logoImage";
@@ -81,30 +82,8 @@ function onClick(event: MouseEvent): void {
       v-if="$slots.chips"
       class="list-card-chips"
     ><slot name="chips" /></span>
-    <!-- La flèche de la carte choisie dans une liste reliée au détail (ordinateur, §11 du 15 novembre) : tracé de la
-         planche (data-arrow), soudé au contour ; décorative, la sélection est dite par aria-current. -->
-    <svg
-      v-if="selected"
-      data-arrow
-      aria-hidden="true"
-      class="list-card-arrow"
-      width="22"
-      height="44"
-      viewBox="0 0 22 44"
-    >
-      <path
-        class="list-card-arrow-fill"
-        d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
-      />
-      <path
-        class="list-card-arrow-line"
-        d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
-        fill="none"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
+    <!-- La flèche de la carte choisie dans une liste reliée au détail (ordinateur, §18 du 15 novembre). -->
+    <LinkedArrow v-if="selected" />
   </a>
 </template>
 
@@ -165,15 +144,17 @@ function onClick(event: MouseEvent): void {
    « entreprise · lieu » à 2 px ; colonne de droite de 72 px ; puces à 6 px, 2 et 8 px dedans, coins de 6. */
 @media (min-width: 1024px) {
   .list-card {
-    --card-14: 14px; --card-pad-x: 18.5px; --card-2: 2px; --card-8: 8px; --card-sel-y: 13.5px; --card-sel-x: 18px; --chip-r: 6px;
+    --card-14: 14px; --card-pad-x: 18.5px; --card-2: 2px; --card-8: 8px; --chip-r: 6px;
     grid-template-areas: "logo text end" "chips chips chips"; height: auto; min-height: 104px;
     padding: var(--card-14) var(--card-pad-x); border: 1.5px solid var(--card-line);
   }
-  .list-card[aria-current="true"] { padding: var(--card-sel-y) var(--card-sel-x); }
+  /* §18 du 15 novembre : la carte choisie garde le trait et les marges des autres (le contour de 2 px est un outline,
+     LinkedDetail) : changer de sélection ne change pas sa taille. */
+  .list-card[aria-current="true"] { padding: var(--card-14) var(--card-pad-x); border-width: 1.5px; }
   /* Maquette du 14 novembre (§1) : la carte d'une offre a 16 px de marge partout (trait compris), pour que l'anneau soit
      à la même distance du haut et de la droite ; hauteur minimale 104 inchangée. */
   .list-card[data-test="offer"] { --card-offer-pad: 14.5px; padding: var(--card-offer-pad); }
-  .list-card[data-test="offer"][aria-current="true"] { padding: var(--card-14); }
+  .list-card[data-test="offer"][aria-current="true"] { padding: var(--card-offer-pad); }
   .list-card-logo { font-size: var(--font-label); box-sizing: border-box; }
   .list-card-text { align-self: center; gap: var(--card-2); }
   .list-card-end { width: 72px; }

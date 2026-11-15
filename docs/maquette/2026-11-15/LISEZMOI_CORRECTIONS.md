@@ -189,3 +189,37 @@ Planches : OnboardingOrdinateurAlerteCode, …CodeRecu, …CodeExpire (et Sombre
 ## 16. Candidatures téléphone : bouton Ajouter
 
 Planches Candidatures et CandidaturesSombre (onglet Offres). Bouton rond 48 × 48 px à droite du champ de recherche, 8 px d'écart, contour 1,5 px #2445C2 (sombre #7D95FF), fond carte, icône + 22 px, aria-label « Ajouter une offre ». Le titre reste à 30 px. Masqué avec la recherche sur les écrans vides.
+
+## 17. Sous-pages Offres (téléphone)
+
+- ActionsOffre : le menu s'ouvre depuis le ⋯ de la page de l'offre, jamais depuis la carte de la liste. 5 actions, dans cet ordre : J'ai déjà postulé, Écarter l'offre (rouge, toast avec Annuler), Signaler comme expirée, Cette note ne me correspond pas, Partager. Pas de « Marquer comme envoyée » ni de « Justificatif ORP ».
+- AjouterOffreTel : flèche d'envoi grise (#E5E2D9, icône #8C8478) et aria-disabled tant que le champ est vide, bleue dès qu'il y a du texte ou un fichier. Texte d'aide « Fonctionne avec jobup, jobs.ch, LinkedIn… » relié au champ (aria-describedby). Quota « Plus que N ajouts aujourd'hui » seulement quand N ≤ 5, en pastille orange à la place du texte d'aide.
+- OffreProvisoire (clair et sombre) : lien « Voir la compatibilité » (même libellé partout). Points cochés seulement s'ils viennent de l'extrait de l'alerte. Pas de pastille « Contrat non précisé » dans l'en-tête.
+- AucuneOffre : planche de la section 13, sans le bloc « Autres offres / Postuler spontanément ».
+- ExtAlerte : adresse au format alertes+<nom>-<code>@joba1.ch.
+
+## 18. Liaison carte → détail, version finale (remplace les parties « liaison » des sections 11 et 14)
+
+Planches : CandidaturesOrdinateurB et BSombre (3 onglets), Statut, Ajouter, Spontanée, RelanceOrdinateurV2 et Sombre, CandidaturesOrdinateurEpinglee et EpingleeSombre (nouvelles). Captures CandidaturesOrdinateurB(Sombre)(--envoyees, --rendez-vous).png, CandidaturesOrdinateurEpinglee(Sombre).png, Liaison-rail-zoom.png.
+
+Ce qui est abandonné par rapport aux sections 11 et 14 : la carte choisie allongée de 28 px, le trait en haut de la zone et son coin arrondi, l'encoche en creux, le halo, l'en-tête à plat.
+
+Liste
+- Colonne de 504 px. Toutes les cartes font 480 px, la carte choisie aussi (plus d'allongement). Le champ de filtre, « Plus de filtres », l'objectif ORP et les cartes ont le même bord droit, 24 px avant la fin de la colonne.
+- Carte choisie : fond #EEF1FC (sombre #232B45), contour 2 px #2445C2 (sombre #7D95FF), flèche à droite.
+- Flèche : SVG data-arrow 22 × 60 px, centrée verticalement. Le contour de la carte s'incurve vers la pointe (congés), pente à 45°, pointe arrondie, un seul trait continu de 2 px. Reprends le tracé exact de la planche.
+- Barre de défilement de la liste : à gauche, dans la marge (direction rtl sur le conteneur, ltr sur son contenu ; margin-left -14 px et padding-left 14 px pour que les cartes restent alignées), fine (scrollbar-width: thin, 6 px), couleur #CFCBC1 (sombre #4E473E) sur fond transparent. Elle ne doit jamais passer sur le rail. Barre du détail : à droite, fine, mêmes couleurs.
+
+Rail
+- Un seul trait vertical de 1,5 px (jeton --linked-line) entre la liste et le détail, 9 px après la colonne de liste (33 px après le bord des cartes). Pas de trait horizontal, pas de coin. Il apparaît en fondu sur 56 px en haut et disparaît en fondu sur 72 px en bas.
+- En face de la carte choisie, le rail fait une pointe vers la gauche qui vient toucher la pointe de la flèche (SVG data-notch, même tracé que la flèche en miroir, 1 px d'écart au plus). Le tracé droit du rail est interrompu sur la hauteur de la pointe. Pas de halo.
+- Position de la pointe : top = centre vertical de la flèche − haut de la zone − 30 px. À recalculer au défilement de la liste, au changement de sélection et au redimensionnement (écouteur passif, ResizeObserver, requestAnimationFrame).
+
+Détail
+- Tout est en cartes, sur les trois onglets. Première carte = en-tête (24 px sous le haut de la zone, rayon 24 px, marges 22 px 28 px) : intitulé complet, entreprise, puis la ligne de note (Offres), le statut (Envoyées) ou la date (Rendez-vous) et le menu ⋯. Puis les autres cartes, 16 px entre elles, 24 px après le rail.
+
+Carte choisie toujours visible (CandidaturesOrdinateurEpinglee)
+- Quand la carte choisie sort de la partie visible de la liste par le haut, une version compacte se fixe sous les filtres, à 12 px de la barre de recherche (jamais collée) : 76 px de haut, rayon 14 px, mêmes fond et contour, logo 40 px, intitulé sur une ligne (ellipse), « <Entreprise> · Sélection affichée » en 13 px, chevron vers le haut, ombre 0 8px 20px rgba(27,31,42,.14). Elle porte la flèche, et la pointe du rail se place en face d'elle. Les cartes défilent dessous (fondu de la couleur de page sous la carte épinglée).
+- Si la carte sort par le bas : même carte compacte fixée en bas de la liste, chevron vers le bas.
+- C'est un bouton (aria-label « Revenir à la candidature sélectionnée dans la liste ») : au clic, la liste défile jusqu'à la vraie carte (scrollIntoView, block: nearest, sans animation si prefers-reduced-motion) et la carte compacte disparaît.
+- La flèche et la pointe du rail ne sont donc jamais masquées : le détail affiché est toujours relié à une carte visible.
