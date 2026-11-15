@@ -19,13 +19,13 @@ const DIST = new URL("../dist/", import.meta.url).pathname;
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 425_000,
+  "js-total": 426_000, // liaison carte → détail, #722 (Kevin, 15.11 : relevé une seule fois, plus de relèvement automatique)
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 115_000,
+  "css-total": 116_000, // liaison carte → détail, #722 (Kevin, 15.11 : relevé une seule fois, plus de relèvement automatique)
   "css-accueil": 59_800,
   "css-candidatures": 68_300,
   "css-bilan": 62_400,
