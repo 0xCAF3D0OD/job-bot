@@ -2801,6 +2801,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/google-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Google Jobs
+         * @description Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la
+         *     carte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).
+         */
+        get: operations["getGoogleJobs"];
+        /**
+         * Set Google Jobs
+         * @description « Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.
+         */
+        put: operations["setGoogleJobs"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/insights": {
         parameters: {
             query?: never;
@@ -5717,6 +5742,26 @@ export interface components {
             applications: components["schemas"]["ApplicationHits"];
             companies: components["schemas"]["CompanyHits"];
         };
+        /**
+         * GoogleJobsIn
+         * @description « Masquer » sur la carte Google Emplois (ou l'annuler).
+         */
+        GoogleJobsIn: {
+            /** Hidden */
+            hidden: boolean;
+        };
+        /**
+         * GoogleJobsOut
+         * @description « <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux.
+         */
+        GoogleJobsOut: {
+            /** Terms */
+            terms: string;
+            /** Location */
+            location?: string | null;
+            /** Url */
+            url: string;
+        };
         /** GroupOut */
         GroupOut: {
             /** Key */
@@ -8410,8 +8455,7 @@ export interface components {
              * @default false
              */
             first_steps_finished: boolean;
-            /** Search Url */
-            search_url?: string | null;
+            google_jobs?: components["schemas"]["GoogleJobsOut"] | null;
             /** To Review */
             to_review: number;
             /**
@@ -14722,6 +14766,57 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["FirstStepsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getGoogleJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleJobsOut"] | null;
+                };
+            };
+        };
+    };
+    setGoogleJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleJobsIn"];
             };
         };
         responses: {
