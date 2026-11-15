@@ -1,8 +1,8 @@
-# Règles de design (maquette du 14 novembre 2026, mise à jour « liaison Candidatures »)
+# Règles de design (maquette du 14 novembre 2026, mise à jour « rendez-vous et code »)
 
-Source : `docs/maquette/2026-11-15/LISEZMOI_CORRECTIONS.md`, paquet `jobA1_maquette_2026-11-15_etats_vides.zip` (165 planches dans `docs/maquette/2026-11-15/maquettes/`, captures dans `docs/maquette/2026-11-15/captures/`). Il remplace les paquets `jobA1_maquette_2026-11-15_liaison_candidatures.zip`, `jobA1_maquette_2026-11-14_liaison_candidatures.zip` et `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip`, ce dernier gardé comme historique dans `docs/maquette/2026-11-14/`.
+Source : `docs/maquette/2026-11-15/LISEZMOI_CORRECTIONS.md`, paquet `jobA1_maquette_2026-11-15_rendezvous_code.zip` (177 planches dans `docs/maquette/2026-11-15/maquettes/`, captures dans `docs/maquette/2026-11-15/captures/`). Il remplace les paquets `jobA1_maquette_2026-11-15_etats_vides.zip`, `jobA1_maquette_2026-11-15_liaison_candidatures.zip`, `jobA1_maquette_2026-11-14_liaison_candidatures.zip` et `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip`, ce dernier gardé comme historique dans `docs/maquette/2026-11-14/`.
 
-Les 13 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles. En cas de doute entre ce texte et une planche, la planche gagne (Kevin, 15.11).
+Les 16 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles. En cas de doute entre ce texte et une planche, la planche gagne (Kevin, 15.11).
 
 ---
 
@@ -169,3 +169,27 @@ Planches corrigées
 - Mes alertes e-mail vide (AlertesOrdinateurVide, AlertesOrdinateurSite) : la phrase sous le titre devient la pastille « Aucune alerte pour l'instant ».
 
 Trier avec peu d'offres (complète la section 12) : TrierOffresOrdinateurV2Deux et TrierOffresOrdinateurV2Une (clair et sombre), états e = ferme, etale, dos. À 1 offre, l'état « etale » est un simple focus (contour), sans toast.
+
+## 14. Rendez-vous : même liaison qu'Offres et Envoyées
+
+Planches : CandidaturesOrdinateurB et BSombre (onglet Rendez-vous), Statut, Ajouter, Spontanée, RelanceOrdinateurV2 et Sombre. Captures CandidaturesOrdinateurB(Sombre)--rendez-vous.png.
+- Mêmes règles que la section 11 : liste 532 px, carte choisie allongée de 28 px avec la flèche, encoche en face (data-notch « r »), trait fin en haut et à gauche, fondu en bas. La pastille « Aucun rendez-vous à venir » (et le bouton Ajouter à côté) s'aligne sur les cartes non sélectionnées.
+- Détail : sous le trait fin, deux cartes empilées. Carte en-tête (calendrier, titre, date et lieu, menu ⋯), 24 px sous le trait, marges 24 px 28 px 24 px 32 px. Puis, 16 px dessous, la carte de contenu (rayon 24 px, 32 px de marge intérieure). Le séparateur qui ouvrait « Ce qui a été convenu » est supprimé. Le trait fin regroupe les deux cartes et les relie à la carte choisie.
+- L'état « à venir » (Voir ma feuille, Ce que tu apportes, Tes questions au conseiller) suit la même structure : carte en-tête, puis chaque bloc en carte.
+- Offres et Envoyées gardent pour l'instant leur en-tête à plat (section 11).
+- RelanceOrdinateurV2 et Sombre : les onglets Offres et Envoyées du fond reçoivent aussi la liaison (section 11). Le panneau Relance ne change pas.
+
+## 15. Saisie du code jobup (étape Alertes)
+
+Planches : OnboardingOrdinateurAlerteCode, …CodeRecu, …CodeExpire (et Sombre), OnboardingAlerteCode, …CodeRecu, …CodeExpire (et Sombre) ; AlertesOrdinateurSite (panneau « Alerte jobup » de Mes alertes, état code reçu).
+- Adresse au format sous-adressage : alertes+<nom>-<code>@joba1.ch (exemple alertes+kevin-0mwdr89t@joba1.ch). Téléphone : l'adresse passe à la ligne (overflow-wrap: anywhere), jamais tronquée.
+- Nouvelle étape 3 « Recopie le code de jobup », l'ancienne 3 devient 4 « Termine l'alerte sur jobup, puis reviens ici ».
+- Attente : cadre pointillé 56 px, roue de chargement, « En attente du code de jobup… ». Le cadre a role="status" aria-live="polite" : l'arrivée du code est annoncée.
+- Reçu : cadre plein, contour bleu 1,5 px, code 26/800 espacé (letter-spacing .14em, chiffres tabulaires), bouton « Copier » ; pastille verte « Reçu à 14 h 02 · valable 10 minutes » (heure réelle, durée réelle de jobup).
+- Expiré : cadre orange clair (#FDEDE3, texte #8A4A16 ; sombre #3A2A1E / #F2A766), « Code expiré », lien « Renvoyer » (aria-label « Renvoyer le code depuis jobup ») qui rouvre jobup. Le nouveau code remplace l'ancien dès réception.
+- Ordinateur : texte d'aide sous le titre de l'étape 3. Téléphone : pas de texte d'aide (place), l'étape 4 se lit en défilant.
+- La phrase d'explication sous le grand titre de l'étape est supprimée (ordinateur et téléphone), règle du texte flottant.
+
+## 16. Candidatures téléphone : bouton Ajouter
+
+Planches Candidatures et CandidaturesSombre (onglet Offres). Bouton rond 48 × 48 px à droite du champ de recherche, 8 px d'écart, contour 1,5 px #2445C2 (sombre #7D95FF), fond carte, icône + 22 px, aria-label « Ajouter une offre ». Le titre reste à 30 px. Masqué avec la recherche sur les écrans vides.
