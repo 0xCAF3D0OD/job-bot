@@ -1773,7 +1773,7 @@ html.side-open { overflow: hidden; }
 .page-head .page-head-sub { margin: calc(var(--space-2) * -1) 0 var(--space-4); color: var(--muted); font-size: var(--font-body); }
 /* docs/88 : une petite précision au-dessus du titre (la date d'Aujourd'hui), en capitales. */
 .page-head .page-head-eyebrow { margin: 0 0 var(--space-1); color: var(--muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; }
-.page-head:not(:has(.prep-tabs)) { padding-bottom: var(--space-2); }
+.page-head { padding-bottom: var(--space-2); }
 @media (max-width: 820px) {
   .page-head .page-head-sub { display: none; }
 }
