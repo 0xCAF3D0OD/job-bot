@@ -81,6 +81,30 @@ function onClick(event: MouseEvent): void {
       v-if="$slots.chips"
       class="list-card-chips"
     ><slot name="chips" /></span>
+    <!-- La flèche de la carte choisie dans une liste reliée au détail (ordinateur, §11 du 15 novembre) : tracé de la
+         planche (data-arrow), soudé au contour ; décorative, la sélection est dite par aria-current. -->
+    <svg
+      v-if="selected"
+      data-arrow
+      aria-hidden="true"
+      class="list-card-arrow"
+      width="22"
+      height="44"
+      viewBox="0 0 22 44"
+    >
+      <path
+        class="list-card-arrow-fill"
+        d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
+      />
+      <path
+        class="list-card-arrow-line"
+        d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
+        fill="none"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
   </a>
 </template>
 
@@ -105,6 +129,8 @@ function onClick(event: MouseEvent): void {
   padding: calc(var(--card-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
   background: var(--selected-bg);
 }
+/* Sans liste reliée (téléphone, autres listes), pas de flèche. */
+.list-card-arrow { display: none; }
 .list-card-logo {
   grid-area: logo; flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); overflow: hidden;
   border-radius: var(--card-12); font-size: var(--font-body); font-weight: var(--weight-bold);
@@ -159,13 +185,13 @@ function onClick(event: MouseEvent): void {
    cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
    foncé, pêche (lettres foncées en sombre aussi : les lettres claires de la planche n'ont que 1,6:1). */
 @media (min-width: 821px) {
-  :is(.list-card-logo, .oc-title-row > .logo) { --head-r: 10px; border-radius: var(--head-r); }
-  :is(.list-card-logo, .oc-title-row > .logo):not(.image) { border: 1px solid transparent; }
-  :is(.list-card-logo, .oc-title-row > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
-  :is(.list-card-logo, .oc-title-row > .logo).t0:not(.image) { color: var(--danger); }
-  :is(.list-card-logo, .oc-title-row > .logo).t1:not(.image) { color: var(--primary-graphic); }
-  :is(.list-card-logo, .oc-title-row > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
-  :is(.list-card-logo, .oc-title-row > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
-  :is(.list-card-logo, .oc-title-row > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
+  .list-card-logo { --head-r: 10px; border-radius: var(--head-r); }
+  .list-card-logo:not(.image) { border: 1px solid transparent; }
+  .list-card-logo:is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
+  .list-card-logo.t0:not(.image) { color: var(--danger); }
+  .list-card-logo.t1:not(.image) { color: var(--primary-graphic); }
+  .list-card-logo.t2:not(.image) { background: var(--text); color: var(--surface); }
+  .list-card-logo.t3:not(.image) { background: var(--primary-text); color: var(--surface); }
+  .list-card-logo.t4:not(.image) { background: var(--spark); color: var(--on-peach); }
 }
 </style>

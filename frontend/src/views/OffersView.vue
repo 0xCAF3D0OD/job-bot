@@ -11,6 +11,7 @@ import GoalReached from "../components/GoalReached.vue";
 import { firstGoal } from "../composables/useGoalMoment";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
+import LinkedDetail, { Plain } from "../components/LinkedDetail.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
@@ -213,6 +214,9 @@ const assistant = useAssistant();
 // Ordinateur (≥ 1 024 px) : les deux colonnes tiennent dans la fenêtre, sous l'en-tête ; la hauteur part du haut
 // de la grille, relu au chargement et au redimensionnement (bandeau de démo, pastilles de filtres).
 const grid = ref<HTMLElement | null>(null);
+// Liste reliée au détail (§11 du 15 novembre) : la flèche de la carte choisie entre dans l'encoche de la zone de détail.
+const listEl = ref<HTMLElement | null>(null);
+const linked = computed(() => wide.value && !phone.value);
 const gridTop = ref(0);
 function measureGrid(): void {
   if (grid.value) gridTop.value = Math.round(grid.value.getBoundingClientRect().top + window.scrollY);
@@ -749,12 +753,14 @@ onUnmounted(() => {
       </div>
       <div
         v-show="!(!phone && filtersOpen)"
-        class="offers-list"
+        ref="listEl"
+        :class="['offers-list', { 'linked-list': linked }]"
       >
         <div
           v-if="wide && !phone"
           id="offers-list-tools"
           class="offers-list-tools"
+          data-linked-tools
         />
         <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
              pendant 6 secondes (Material 3, snackbar). -->
@@ -1085,16 +1091,21 @@ onUnmounted(() => {
           class="detail-column"
           @click.self="selectedId = null"
         >
-          <OfferDetail
-            :offer="selected"
-            :chunk-titles="chunkTitles"
-            @close="selectedId = null"
-            @status="setStatus"
-            @applied="openApplication"
-            @expiry="setExpiry"
-            @address="setAddress"
-            @changed="load()"
-          />
+          <component
+            :is="linked ? LinkedDetail : Plain"
+            :list="listEl"
+          >
+            <OfferDetail
+              :offer="selected"
+              :chunk-titles="chunkTitles"
+              @close="selectedId = null"
+              @status="setStatus"
+              @applied="openApplication"
+              @expiry="setExpiry"
+              @address="setAddress"
+              @changed="load()"
+            />
+          </component>
         </div>
       </Transition>
     </div>

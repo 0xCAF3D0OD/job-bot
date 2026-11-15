@@ -299,6 +299,8 @@ const summaryParts = computed(() =>
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
 // Note provisoire : l'offre n'a que l'extrait de l'alerte (pas de texte complet). Ses manques sont alors
 // génériques (« Exigences », « Données », « Conseil ») : la lecture de l'annonce complète les remplace.
+// « Donner l’annonce pour la noter » (tête à plat, §11 du 15 novembre) déplie « Donner l’annonce » de la carte Candidature.
+const textNotice = ref<InstanceType<typeof OfferTextNotice> | null>(null);
 const partial = computed(() => !props.offer.description && !props.offer.spontaneous);
 const gaps = computed(() => (partial.value ? [] : (props.offer.gaps ?? []).slice(0, POINTS_MAX)));
 // Notée sur l'extrait seulement : pastille « Provisoire », anneau pâli, sous-titre qui le dit.
@@ -363,12 +365,14 @@ const receivedText = computed(() => {
 });
 const brief = computed(() => {
   const o = props.offer;
-  return [
+  const rows = [
     { label: "Lieu", value: o.location || "Non précisé", test: "brief-place" },
     { label: "Contrat", value: o.employment_type || "Non précisé", test: "brief-contract" },
     { label: "Taux d’activité", value: rateText(o.rate_min, o.rate_max) || "Non précisé", test: "brief-rate" },
     { label: "Reçue", value: receivedText.value, test: "brief-received" },
   ];
+  // Un champ manquant se dit en gris, sans gras (§11 du 15 novembre).
+  return rows.map((row) => ({ ...row, missing: row.value === "Non précisé" }));
 });
 async function copyLink(): Promise<void> {
   const url = shareUrl.value;
@@ -597,20 +601,16 @@ watch(
       <span class="with-icon"><AppIcon name="arrow-left" /><span><span class="visually-hidden">Retour aux </span>Offres</span></span>
     </button>
 
-    <!-- Ordinateur dès 1 024 px (maquette du 14 novembre, §8 et §9 ; planche CandidaturesOrdinateurB, onglet Offres) :
-         une colonne de cartes empilées à 16 px, le fond de la page entre elles. Chaque carte a un rôle : titre, note,
-         candidature, l’offre en bref ; puis l’entreprise et les contacts, gardés hors de la planche (règle 3). -->
+    <!-- Ordinateur dès 1 024 px (maquette du 15 novembre, §11 ; planche CandidaturesOrdinateurB, onglet Offres) : la
+         tête à plat, sans carte ni logo (il est sur la carte de la liste) : l’intitulé et l’entreprise en entier, puis,
+         sous un filet, la note sur une ligne avec « Voir la compatibilité ». Dessous, les cartes Candidature et L’offre
+         en bref, puis l’entreprise et les contacts, gardés hors de la planche (règle 3). -->
     <template v-if="columns">
-      <section
-        class="oc-card oc-title"
+      <header
+        class="oc-head"
         data-test="section-offer"
       >
-        <div class="oc-title-row">
-          <CompanyLogo
-            :offer="offer"
-            large
-            pair
-          />
+        <div class="oc-head-row">
           <div class="oc-title-text">
             <h2
               tabindex="-1"
@@ -660,71 +660,27 @@ watch(
         </div>
         <p
           v-if="offer.expired_at && offer.status !== 'applied'"
-          class="notice expired-notice oc-indent"
+          class="notice expired-notice"
           data-test="expired"
         >
           {{ expiredText(offer) }}
         </p>
-        <ul
-          class="oc-chips"
-          data-test="offer-tags"
+        <div
+          class="oc-note-line"
+          data-test="section-for-you"
         >
-          <li
-            v-for="tag in tags"
-            :key="tag.test"
-            :data-test="`tag-${tag.test}`"
+          <h3
+            id="match-title"
+            :class="['match-title', `is-${matchTone}`]"
+            data-test="match-title"
           >
-            {{ tag.text }}
-          </li>
-        </ul>
-      </section>
-
-      <section
-        class="oc-card oc-note"
-        aria-labelledby="match-title"
-        data-test="section-for-you"
-      >
-        <div class="oc-note-row">
-          <ScoreRing
-            v-if="scored"
-            :score="offer.score ?? null"
-            :stale="offer.score_stale"
-            :provisional="provisional"
-            bare
-          />
-          <div class="oc-note-text">
-            <div class="oc-note-word">
-              <h3
-                id="match-title"
-                :class="['match-title', `is-${matchTone}`]"
-                data-test="match-title"
-              >
-                {{ matchWord?.word ?? matchTitle }}
-              </h3>
-              <span
-                v-if="provisional"
-                class="provisional-pill"
-                data-test="provisional"
-              >Provisoire</span>
-            </div>
-            <p
-              v-if="!scored"
-              class="oc-note-sub"
-              data-test="match-sub"
-            >
-              {{ matchSub }}
-            </p>
-            <button
-              v-if="needsProfile"
-              type="button"
-              class="match-profile-link"
-              aria-haspopup="dialog"
-              data-test="match-profile-link"
-              @click="completionSections = ['experiences', 'languages', 'identity']; completing = true"
-            >
-              Compléter mon profil<AppIcon name="chevron" />
-            </button>
-          </div>
+            {{ matchWord ? `${matchWord.word} · ${offer.score} sur 100` : matchTitle }}
+          </h3>
+          <span
+            v-if="provisional"
+            class="provisional-pill"
+            data-test="provisional"
+          >Provisoire</span>
           <button
             v-if="scored"
             type="button"
@@ -735,7 +691,34 @@ watch(
           >
             Voir la compatibilité<AppIcon name="chevron" />
           </button>
+          <button
+            v-else-if="needsProfile"
+            type="button"
+            class="oc-note-link"
+            aria-haspopup="dialog"
+            data-test="match-profile-link"
+            @click="completionSections = ['experiences', 'languages', 'identity']; completing = true"
+          >
+            Compléter mon profil<AppIcon name="chevron" />
+          </button>
+          <button
+            v-else-if="partial && !offer.score_error"
+            type="button"
+            class="oc-note-link"
+            aria-controls="offer-give-zone"
+            data-test="give-to-score"
+            @click="textNotice?.give()"
+          >
+            Donner l’annonce pour la noter<AppIcon name="chevron" />
+          </button>
         </div>
+        <p
+          v-if="!scored && (needsProfile || offer.score_error)"
+          class="oc-note-sub"
+          data-test="match-sub"
+        >
+          {{ matchSub }}
+        </p>
         <p
           v-if="redone"
           class="redone oc-note-redone"
@@ -744,7 +727,7 @@ watch(
         >
           <AppIcon name="done" />Note refaite sur l’annonce complète.
         </p>
-      </section>
+      </header>
 
       <section
         class="oc-card oc-apply"
@@ -762,6 +745,7 @@ watch(
           class="oc-row oc-row-refused"
         >
           <OfferTextNotice
+            ref="textNotice"
             :offer="offer"
             @changed="emit('changed')"
             @refresh="emit('changed')"
@@ -895,7 +879,9 @@ watch(
             :data-test="row.test"
           >
             <dt>{{ row.label }}</dt>
-            <dd>{{ row.value }}</dd>
+            <dd :class="{ 'oc-missing': row.missing }">
+              {{ row.value }}
+            </dd>
           </div>
         </dl>
         <a
@@ -1572,40 +1558,33 @@ watch(
 .match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; cursor: pointer; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .match-profile-link:hover { text-decoration: underline; }
 .match-profile-link .icon { width: 14px; height: 14px; }
-/* Ordinateur, maquette du 14 novembre (§8, §9 ; HTML de CandidaturesOrdinateurB, onglet Offres) : le détail en cartes
-   blanches empilées, trait de 1 px --line, coins de 24. Tête 24 / 28, logo 56, poste 24/30, puces à 14 px sous
-   l'entreprise et à 72 px du bord (après le logo) ; note sur une ligne de 76 px (anneau 48) ; « Candidature » et
-   « L'offre en bref » : titre 18/24, lignes à 12 / 24 séparées d'un filet, étiquette 13 px grise au-dessus d'une
-   valeur 15/700 ; pied de pilules de 52 px à 12 px d'écart (§7), le secondaire en trait gris. */
-.oc-card {
-  --oc-x: 24px; --oc-title-x: 28px; --oc-head-top: 18.5px; --oc-logo: 56px; --oc-indent: 72px; --oc-chips-top: 14px;
-  --oc-h2: 24px; --oc-h2-lh: 30px; --oc-card-title: 18px; --oc-card-lh: 24px; --oc-label: 13px; --oc-label-lh: 16px; --oc-text-lh: 22px;
-  --oc-pill: 52px; --oc-pill-r: 22px; --oc-r: 24px; --oc-2: 2px; --oc-6: 6px; --oc-10: 10px; --oc-14: 14px; --oc-20: 20px; --oc-22: 22px; --oc-ring: 48px; --oc-row-min: 64px; --oc-chip-r: 6px; --oc-initials: 19px;
-  margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--oc-r); color: var(--text);
+/* Ordinateur, maquette du 15 novembre (§11 ; HTML de CandidaturesOrdinateurB, onglet Offres) : la tête à plat dans la
+   zone de détail, à 24 px du bord (28 à droite), intitulé 24/30 800, entreprise 15 grise à 4 px ; la note sur une ligne,
+   sous un filet de 1 px à 12 px, « Voir la compatibilité » à droite. Puis les cartes blanches, trait de 1 px --line,
+   coins de 24 : titre 18/24, lignes à 12 / 24 séparées d'un filet, étiquette 13 px grise au-dessus d'une valeur 15/700 ;
+   pied de pilules de 52 px à 12 px d'écart (§7), le secondaire en trait gris. */
+.offer-cards {
+  --oc-x: 24px; --oc-title-x: 28px; --oc-head-top: 18.5px; --oc-h2: 24px; --oc-h2-lh: 30px; --oc-card-title: 18px; --oc-card-lh: 24px;
+  --oc-label: 13px; --oc-label-lh: 16px; --oc-text-lh: 22px; --oc-pill: 52px; --oc-pill-r: 22px; --oc-r: 24px; --oc-2: 2px; --oc-6: 6px;
+  --oc-10: 10px; --oc-14: 14px; --oc-20: 20px; --oc-22: 22px; --oc-row-min: 64px; --oc-chip-r: 6px;
 }
-.oc-title { padding: var(--space-6) var(--oc-title-x); }
-.oc-title-row { display: flex; align-items: flex-start; gap: var(--space-4); }
-.oc-title-row > .logo { flex: none; width: var(--oc-logo); height: var(--oc-logo); border-radius: var(--oc-10); font-size: var(--oc-initials); }
+.oc-card { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--oc-r); color: var(--text); }
+.oc-head { padding: var(--space-6) var(--oc-title-x) var(--space-1) var(--space-6); }
+.oc-head-row { display: flex; align-items: flex-start; gap: var(--space-4); }
 .oc-title-text { flex: 1; min-width: 0; }
 .oc-title-text h2 { margin: 0; font-size: var(--oc-h2); line-height: var(--oc-h2-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
-.oc-sub { margin: var(--space-1) 0 0; font-size: var(--font-label); color: var(--text-secondary); }
+.oc-sub { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
 .oc-title-actions { flex: none; display: flex; align-items: center; }
-.oc-status, .oc-indent { margin: var(--oc-chips-top) 0 0 var(--oc-indent); }
+.oc-head > .oc-status, .oc-head > .expired-notice { margin: var(--space-3) 0 0; }
 .oc-status { display: flex; align-items: center; gap: var(--space-3); }
-.oc-chips { display: flex; flex-wrap: wrap; gap: var(--card-6, 6px); margin: var(--oc-chips-top) 0 0 var(--oc-indent); padding: 0; list-style: none; }
-.oc-chips li { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); font-weight: var(--weight-semibold); white-space: nowrap; }
-.oc-note { padding: var(--oc-14) var(--oc-x); }
-.oc-note-row { display: flex; align-items: center; gap: var(--space-4); }
-.oc-note .score-ring-wrap { flex: none; padding: 0; }
-.oc-note .score-ring { width: var(--oc-ring); height: var(--oc-ring); font-size: var(--font-body); }
-.oc-note-text { flex: 1; min-width: 0; }
-.oc-note-word { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.oc-note .match-title { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.oc-note .provisional-pill { padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
-.oc-note-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
-.oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
+.oc-note-line { display: flex; align-items: center; gap: var(--oc-10); margin-top: var(--space-3); padding-top: var(--space-1); border-top: 1px solid var(--line); }
+.oc-note-line .match-title { margin: 0; font-size: var(--font-label); font-weight: var(--weight-bold); }
+.oc-note-line .match-title.is-none { color: var(--text-secondary); }
+.oc-note-line .provisional-pill { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
+.oc-note-sub { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
+.oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
 .oc-note-link:hover { text-decoration: underline; }
-.oc-note-link .icon { width: 20px; height: 20px; }
+.oc-note-link .icon { width: 18px; height: 18px; }
 .oc-note-redone { margin: var(--space-2) 0 0; }
 .oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
 .oc-row { margin: 0; padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); }
@@ -1629,6 +1608,7 @@ watch(
 .oc-brief-grid > div { box-sizing: border-box; min-height: var(--oc-row-min); padding: var(--space-3) var(--oc-x); }
 .oc-brief-grid dt { font-size: var(--oc-label); line-height: var(--oc-label-lh); color: var(--text-secondary); }
 .oc-brief-grid dd { margin: var(--oc-2) 0 0; font-size: var(--font-label); line-height: var(--oc-20); font-weight: var(--weight-bold); }
+.oc-brief-grid dd.oc-missing { font-weight: var(--weight-medium, 500); color: var(--text-secondary); }
 .oc-link-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); box-sizing: border-box; min-height: var(--oc-row-min); padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); color: var(--text); text-decoration: none; }
 .oc-link-row b { font-size: var(--font-label); line-height: var(--oc-20); }
 .oc-link-row:hover b { text-decoration: underline; }

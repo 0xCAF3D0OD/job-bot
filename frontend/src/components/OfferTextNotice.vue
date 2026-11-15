@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
 import { usePhone } from "../composables/usePhone";
@@ -106,6 +106,14 @@ function toggleGive(): void {
   giving.value = !giving.value;
   problem.value = "";
 }
+// La tête de la fiche sur ordinateur (« Donner l’annonce pour la noter ») ouvre la zone et y met le curseur.
+async function give(): Promise<void> {
+  giving.value = true;
+  problem.value = "";
+  await nextTick();
+  document.getElementById(zoneId)?.querySelector("input")?.focus();
+}
+defineExpose({ give });
 async function readLink(): Promise<void> {
   if (reading.value) return;
   const link = url.value.trim();

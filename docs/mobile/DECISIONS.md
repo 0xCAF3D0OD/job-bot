@@ -94,3 +94,11 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 | 2026-11-15 | Rendez-vous sur téléphone : pas d'icône Filtres sur cet onglet ; la recherche reste. | — |
 | 2026-11-15 | Offres sur téléphone : « + Ajouter » est gardé à côté de la recherche, place définitive : bouton rond 48 × 48 px (hauteur du champ), contour 1,5 px bleu (#2445C2, sombre #7D95FF), fond carte, icône « + » de 22 px, nommé « Ajouter une offre », 8 px entre le champ et le bouton. Le titre garde 30 px, « Alertes » ne bouge pas. Sur un écran vide où la recherche est masquée, le « + » l'est aussi (le bouton « Ajouter une offre » de l'écran vide le remplace). Sa planche arrive avec le prochain lot. | « Ajouter » compact à côté de la recherche (C10). |
 | 2026-11-15 | Offre provisoire sur téléphone : « L'entreprise » reste, sous « Le poste », dans le même style de section (titre 16/700, texte 15 px), masquée si on n'a aucune information sur l'entreprise ; pas de carte en plus. | L'absence de « L'entreprise » sur OffreProvisoire. |
+
+## Liaison carte → détail (ordinateur), réponses du 15 novembre
+
+| Date | Décision | Source |
+|---|---|---|
+| 2026-11-15 | Liaison carte → détail (§11) : deux jetons propres à la liaison, `--linked-line` (#D5D1C7, sombre #4E473E) pour le trait de la zone et de l'encoche, `--linked-selected-bg` (#EEF1FC, sombre #232B45) pour la carte choisie de la liste reliée. La sélection ailleurs garde `--selected-bg`. | Kevin, réponse 3 du 15.11 |
+| 2026-11-15 | Pastilles d'information : une valeur absente ou inconnue ne donne pas de pastille (règle dans le composant de carte, téléphone et ordinateur), au lieu d'une liste de libellés interdits. | Kevin, réponse 4 du 15.11 |
+| 2026-11-15 | Sombre : « À creuser » garde #B39A82 (la planche BSombre avec #6B6157 est périmée sur ce point). | Kevin, réponse 2 du 15.11 |
