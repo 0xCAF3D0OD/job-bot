@@ -2810,13 +2810,13 @@ export interface paths {
         };
         /**
          * Get Google Jobs
-         * @description Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la
-         *     carte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).
+         * @description Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;
+         *     « Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).
          */
         get: operations["getGoogleJobs"];
         /**
          * Set Google Jobs
-         * @description « Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.
+         * @description « Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.
          */
         put: operations["setGoogleJobs"];
         post?: never;
@@ -5752,7 +5752,8 @@ export interface components {
         };
         /**
          * GoogleJobsOut
-         * @description « <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux.
+         * @description « <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,
+         *     qui ouvre le panneau Google Emplois.
          */
         GoogleJobsOut: {
             /** Terms */
@@ -7792,6 +7793,8 @@ export interface components {
             text: string;
             /** Chunk Ids */
             chunk_ids: number[];
+            /** Short */
+            short?: string | null;
         };
         /** ScoreTipOut */
         ScoreTipOut: {

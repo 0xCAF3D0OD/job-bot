@@ -64,7 +64,9 @@ const cards = computed(() => {
         "--sx": `${SPREAD[n]?.[i] ?? left}px`,
         zIndex: plane,
       },
-      notes: points.map((p) => p.text),
+      // La forme courte de l'IA (score-v9) si elle tient en 28 caractères, sinon le texte complet, coupé à 2 lignes
+      // (Kevin, 15.11 : forme courte absente, vide ou trop longue).
+      notes: points.map((p) => (p.short && p.short.length < 29 ? p.short : p.text)),
       points,
       score,
       company,

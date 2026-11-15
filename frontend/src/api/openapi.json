@@ -7548,7 +7548,7 @@
           "today"
         ],
         "summary": "Get Google Jobs",
-        "description": "Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la\ncarte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).",
+        "description": "Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;\n« Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).",
         "operationId": "getGoogleJobs",
         "responses": {
           "200": {
@@ -7576,7 +7576,7 @@
           "today"
         ],
         "summary": "Set Google Jobs",
-        "description": "« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.",
+        "description": "« Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.",
         "operationId": "setGoogleJobs",
         "requestBody": {
           "content": {
@@ -16174,7 +16174,7 @@
           "url"
         ],
         "title": "GoogleJobsOut",
-        "description": "« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."
+        "description": "« <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,\nqui ouvre le panneau Google Emplois."
       },
       "GroupOut": {
         "properties": {
@@ -22439,6 +22439,17 @@
             },
             "type": "array",
             "title": "Chunk Ids"
+          },
+          "short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short"
           }
         },
         "type": "object",
