@@ -1224,7 +1224,7 @@ onUnmounted(() => {
 /* AucuneOffre (téléphone) : pastilles de 36 px bleu clair, 14/600, croix de 14 px, 8 px entre elles, centrées ; puis le
    bouton et le lien « Tout effacer » de 44 px. */
 .offers-empty-chips { --chip-36: 36px; --chip-14: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin-top: var(--space-2); }
-.offers-empty-chip { display: inline-flex; align-items: center; gap: var(--space-1); height: var(--chip-36); min-height: 0; padding: 0 var(--space-2) 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.offers-empty-chip { gap: var(--space-1); height: var(--chip-36); min-height: 0; padding: 0 var(--space-2) 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .offers-empty-chip .icon { width: var(--chip-14); height: var(--chip-14); stroke-width: 2.6; }
 .offers-empty-clear { min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .offers-empty-chips + .face-state-actions .primary { --empty-52: 52px; min-height: var(--empty-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }

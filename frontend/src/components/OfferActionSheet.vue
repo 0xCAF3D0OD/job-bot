@@ -101,7 +101,7 @@ const titleId = useId();
 .offer-actions-name { display: flex; flex-direction: column; min-width: 0; }
 .offer-actions-title { font-size: var(--font-body); font-weight: var(--weight-bold); }
 .offer-actions-where { font-size: var(--label-caps); color: var(--text-secondary); }
-.offer-action, .offer-actions-cancel { display: flex; align-items: center; min-height: var(--act-row); border: 0; font: inherit; font-size: var(--act-17); }
+.offer-action, .offer-actions-cancel { display: flex; min-height: var(--act-row); border: 0; font-size: var(--act-17); }
 .offer-action {
   gap: var(--space-4); padding: 0 var(--space-4); border-radius: 0; background: transparent; color: var(--text); font-weight: var(--weight-semibold); text-align: left;
 }
