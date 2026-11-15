@@ -11,8 +11,10 @@ const reference = readFileSync(resolve(process.cwd(), "../docs/mobile/tokens.css
 const css = readFileSync(resolve(process.cwd(), "src/style.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 // Ce que le projet a déjà sous un autre nom : la police (Figtree Variable, servie par l'app) ; la police
-// manuscrite arrive avec le trait crayon (onboarding, objectif atteint).
-const NOT_COPIED = new Set(["font", "font-hand"]);
+// manuscrite arrive avec le trait crayon (onboarding, objectif atteint). « Loin » s'écrit en --text-secondary et
+// --neutral-graphic, et l'application n'a pas de ressort fort : --neutral et --spring-strong ne sont lus nulle part,
+// ils sont retirés de style.css pour le poids (accord de Kevin, 15.11.2026).
+const NOT_COPIED = new Set(["font", "font-hand", "neutral", "spring-strong"]);
 
 function declarations(block: string): Map<string, string> {
   const found = new Map<string, string>();
@@ -53,6 +55,7 @@ describe("les variables de docs/mobile/tokens.css (docs/139)", () => {
   it("chaque valeur sombre est reprise telle quelle dans le premier bloc sombre de style.css", () => {
     expect(referenceDark.size).toBeGreaterThan(20);
     for (const [name, value] of referenceDark) {
+      if (NOT_COPIED.has(name)) continue;
       expect(styleDark.get(name) && normalize(styleDark.get(name)!), `--${name}`).toBe(normalize(value));
     }
   });
@@ -72,7 +75,7 @@ describe("le choix forcé clair ou sombre (Compte › Apparence, Q7)", () => {
   it("le sombre forcé porte exactement les valeurs du sombre automatique, donc celles de tokens.css", () => {
     expect(css.indexOf(FORCED)).toBeGreaterThan(0);
     expect([...styleForced.entries()]).toEqual([...styleDark.entries()]);
-    for (const [name, value] of referenceDark) expect(styleForced.get(name), `--${name}`).toBe(value);
+    for (const [name, value] of referenceDark) if (!NOT_COPIED.has(name)) expect(styleForced.get(name), `--${name}`).toBe(value);
   });
 
   it("chaque règle sombre a son double forcé, et ne s’applique pas quand le clair est forcé", () => {
