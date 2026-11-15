@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, provide, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
@@ -20,6 +20,8 @@ import { usePhone } from "../composables/usePhone";
 const route = useRoute();
 const router = useRouter();
 const followed = ref<number | null>(null);
+// L'état vide des Offres (§13 du 15 novembre) change selon qu'une recherche est suivie ou non.
+provide("followedSearches", followed);
 const { phone } = usePhone();
 const { phone: wide } = usePhone("(min-width: 1024px)");
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
