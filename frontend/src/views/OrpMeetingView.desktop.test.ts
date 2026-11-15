@@ -119,7 +119,8 @@ describe("Rendez-vous sur ordinateur", () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper, router } = await open();
     expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("jobA1 prépare ta fiche la veille.");
+    // La pastille seule (maquette du 15 novembre, §14) : la phrase « jobA1 prépare ta fiche la veille. » n'y est plus.
+    expect(wrapper.get("[data-test=rdv-list-empty]").text()).not.toContain("la veille");
     expect(wrapper.find("[data-test=rdv-add]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
