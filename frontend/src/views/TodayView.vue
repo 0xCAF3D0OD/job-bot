@@ -30,12 +30,12 @@ import { usePageReady } from "../composables/usePageTransition";
 // « accueil », « vide » et « atteint »), en deux colonnes. À gauche : l'accroche sur un fond pêche (« Bonjour Kevin »,
 // le titre du jour et sa fin à la main ; avec un justificatif en retard, deux lignes manuscrites, le retard d'abord ;
 // l'objectif du mois atteint, en vert puis en bleu), « À faire » (une carte par tâche, numérotée, celle en retard en
-// numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : le livre en
-// petit, où l'on trie sur place. Un jour de repos suit le même gabarit (état « repos » de la planche, 14 novembre ; la
+// numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : l'éventail
+// de Trier en petit (§20 du 15 novembre), où l'on trie sur place. Un jour de repos suit le même gabarit (état « repos » de la planche, 14 novembre ; la
 // planche AujourdhuiOrdinateurReposD est retirée) : « Jour de repos. » à la main, « Si tu veux avancer » à la place de
 // « À faire », « Cette semaine : 3 sur 3, faite » sous la barre ORP, et les offres à trier s'il y en a.
 // Le téléphone a sa propre page (HomePhone).
-// L'Accueil du téléphone et le petit livre de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
+// L'Accueil du téléphone et l'éventail en petit de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
 // moitié (budget de poids du premier affichage). Le chargement part tout de suite, en même temps que les données.
 const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
@@ -50,9 +50,9 @@ const firstName = ref<string | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
-// Le tri du jour fini sur cet appareil (l'écran de tri et le petit livre le notent à la fin de la pile).
+// Le tri du jour fini sur cet appareil (l'écran de tri et l'éventail en petit le notent à la fin de la pile).
 const triageDone = ref(false);
-// Le petit livre reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
+// L'éventail en petit reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
 const miniOpen = ref(false);
 // Un jour de repos (docs/86) : tout est facultatif, la liste devient « Si tu veux avancer ».
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
@@ -377,7 +377,7 @@ const emptyTitle = computed(() => {
 });
 // « Élargir ma recherche » : seulement quand la recherche n'a rien trouvé.
 const widen = computed(() => !emptyTitle.value && !best.value.length);
-// Le petit livre finit le tri (ou « Annuler » le reprend) : la tâche « Trier » suit.
+// L'éventail en petit finit le tri (ou « Annuler » le reprend) : la tâche « Trier » suit.
 function onMiniDone(done: boolean): void {
   triageDone.value = done;
   if (done) markTriageDone();
@@ -431,7 +431,7 @@ async function fetchAll(): Promise<void> {
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
-  // Le petit livre s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
+  // L'éventail en petit s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
   miniOpen.value ||= triagePending.value;
   if (firstName.value === null) {
     const who = await api.GET("/api/identity").catch(() => null);

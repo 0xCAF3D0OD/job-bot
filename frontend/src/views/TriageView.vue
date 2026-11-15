@@ -48,7 +48,7 @@ function releaseToast(): void {
   release();
 }
 
-// La pile et les choix (useTriage, partagé avec le petit livre d'Aujourd'hui).
+// La pile et les choix (useTriage, partagé avec l'éventail en petit d'Aujourd'hui).
 const { index, total, current, remaining, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
 const done = computed(() => loaded.value && finished.value);
 
