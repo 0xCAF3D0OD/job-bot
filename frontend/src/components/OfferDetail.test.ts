@@ -265,8 +265,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
     // §10.1 (9 novembre) : la carte de la note ne garde que l'anneau, le verdict et « Voir la compatibilité » ; la
     // phrase passe dans la feuille (« Comment la note est calculée ») ; la correction passe par la feuille « ⋯ ».
-    // Sans l'annonce complète, le lien sous la bande s'appelle « Le détail de la note » (corrections du 9 novembre).
-    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Le détail de la note");
+    // Sous la bande, le lien s'appelle « Voir la compatibilité », comme sur ordinateur (décision de Kevin du 15.11).
+    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Voir la compatibilité");
     expect(wrapper.findComponent({ name: "OfferCompatSheet" }).props("how")).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
     vi.unstubAllGlobals();
@@ -285,8 +285,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     );
     const sheet = wrapper.findComponent({ name: "OfferCompatSheet" });
     expect(sheet.props("open")).toBe(false);
-    // Prompt du 10 novembre, PR 15 : sur téléphone, le lien s'appelle « Le détail de la note », note provisoire ou non.
-    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Le détail de la note");
+    // Sur téléphone, le lien s'appelle « Voir la compatibilité », note provisoire ou non (décision de Kevin du 15.11).
+    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Voir la compatibilité");
     await wrapper.find("[data-test=compat-open]").trigger("click");
     expect(sheet.props("open")).toBe(true);
     expect(sheet.props("strengths")).toEqual([

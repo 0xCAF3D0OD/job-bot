@@ -67,10 +67,11 @@ describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidature
     expect(segments.map((s) => s.text())).toEqual(["Offres", "Envoyées", "Rendez-vous"]);
     expect(segments[0]!.attributes("aria-current")).toBe("page");
 
-    // Au-dessus des vues : la recherche (C4) et « Ajouter » compact (C10).
+    // Au-dessus des vues : la recherche (C4) et le « + » rond (décision de Kevin du 15.11).
     const tools = wrapper.find("#jobs-tools");
     expect(tools.find("[data-test=search]").attributes("placeholder")).toBe("Poste, entreprise, lieu");
-    expect(tools.find("[data-test=manual-open]").text()).toBe("Ajouter");
+    expect(tools.find("[data-test=manual-open]").attributes("aria-label")).toBe("Ajouter une offre");
+    expect(tools.find("[data-test=manual-open]").text()).toBe("");
     expect(tools.find("[data-test=add-menu]").exists()).toBe(false);
     // « Postuler spontanément » : une ligne du groupe « Autres offres », au bas de la liste (PR 35).
     expect(wrapper.find("[data-test=spontaneous-open]").classes()).toContain("offers-other-row");
