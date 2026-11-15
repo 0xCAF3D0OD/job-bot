@@ -64,6 +64,8 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 |---|---|---|---|---|
 | 15.11.2026 | JS total (gzip) | 426 000 o | 426 700 o | dos des cartes Trier ordinateur : verdicts, étiquettes, anneau |
 | 15.11.2026 | CSS total (gzip) | 117 500 o | 117 750 o | dos des cartes Trier ordinateur : verdicts, étiquettes, anneau |
+| 15.11.2026 | JS total (gzip) | 426 700 o | 426 780 o | même raison : le reste, mesuré avec les PR 739 et 740 ouvertes |
+| 15.11.2026 | CSS total (gzip) | 117 750 o | 117 780 o | même raison : le reste, mesuré avec les PR 739 et 740 ouvertes |
 
 ## Pour aller plus loin
 
