@@ -8,7 +8,7 @@ import "./ListCard.vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
-import { dateInSentence, dayAndMonth, timeOfDay } from "../dates";
+import { dateInSentence, timeOfDay } from "../dates";
 import {
   countdown,
   dateText,
@@ -104,23 +104,22 @@ function pastLine(m: Meeting): string {
 }
 const lastNoted = computed(() => noted.value[0] ?? null);
 // La carte compacte épinglée (LinkedPin, §18 du 15 novembre ; Kevin, 15.11) : le titre de la carte choisie,
-// « <Entreprise> · Sélection affichée » (l'ORP pour ses rendez-vous), la date dans le carré du logo, et un nom de bouton
-// qui dit la date complète.
+// « <Entreprise> · Sélection affichée » (l'ORP pour ses rendez-vous), la date dans l'icône calendrier de la liste, à 40 px,
+// du même ton que la carte représentée (Kevin, 15.11), et un nom de bouton qui dit la date complète.
 const pinned = computed(() => {
   const key = selected.value;
   const interview = selectedInterview.value;
   const past = selectedPast.value;
   const found =
     key === "orp" && nextOrp.value
-      ? { title: "Rendez-vous ORP", name: "ORP", at: nextOrp.value.at }
+      ? { title: "Rendez-vous ORP", name: "ORP", at: nextOrp.value.at, tone: "orp" as const }
       : interview
-        ? { title: interview.application.job_title || "Poste non indiqué", name: interview.application.company || "Entreprise non indiquée", at: interview.at }
+        ? { title: interview.application.job_title || "Poste non indiqué", name: interview.application.company || "Entreprise non indiquée", at: interview.at, tone: "blue" as const }
         : past
-          ? { title: pastTitle(past.starts_at, now), name: "ORP", at: past.starts_at }
+          ? { title: pastTitle(past.starts_at, now), name: "ORP", at: past.starts_at, tone: past.outcome_at ? ("past" as const) : ("orp" as const) }
           : null;
   if (!found) return null;
-  const [day, month] = dayAndMonth(found.at);
-  return { ...found, day, month, label: `Revenir au rendez-vous du ${dateInSentence(found.at).slice(3)}, ${found.name}, dans la liste` };
+  return { ...found, label: `Revenir au rendez-vous du ${dateInSentence(found.at).slice(3)}, ${found.name}, dans la liste` };
 });
 // Le jour et le mois de l'icône calendrier.
 function cal(iso: string): { day: number; month: number } {
@@ -170,10 +169,11 @@ const list = ref<HTMLElement | null>(null);
         :label="pinned.label"
       >
         <template #logo>
-          <span
-            class="list-card-logo rdv-pin-date"
-            aria-hidden="true"
-          ><b>{{ pinned.day }}</b>{{ pinned.month }}</span>
+          <CalendarDate
+            v-bind="cal(pinned.at)"
+            :tone="pinned.tone"
+            :size="40"
+          />
         </template>
       </LinkedPin>
       <div class="linked-cards">
@@ -272,10 +272,11 @@ const list = ref<HTMLElement | null>(null);
         :label="pinned.label"
       >
         <template #logo>
-          <span
-            class="list-card-logo rdv-pin-date"
-            aria-hidden="true"
-          ><b>{{ pinned.day }}</b>{{ pinned.month }}</span>
+          <CalendarDate
+            v-bind="cal(pinned.at)"
+            :tone="pinned.tone"
+            :size="40"
+          />
         </template>
       </LinkedPin>
     </div>
@@ -518,9 +519,8 @@ const list = ref<HTMLElement | null>(null);
   display: flex; align-items: stretch; gap: 0; height: calc(100dvh - var(--linked-top, 0px)); min-height: 20rem; box-sizing: border-box; padding-top: var(--space-1);
 }
 .rdv-list.linked-list > .linked-cards { display: flex; flex-direction: column; }
-/* Carte épinglée : la date dans le carré de 40 px du logo, fond neutre, jour en gras, mois abrégé dessous. */
-.rdv-pin-date { background: var(--neutral-soft); font-size: var(--label-caps); font-weight: var(--weight-semibold); line-height: var(--leading-none); }
-.rdv-pin-date b { font-size: var(--font-body); }
+/* Carte épinglée : l'icône calendrier de la liste, à 40 px, à la place du logo. */
+.linked-pin-card > .calendar-date { flex: none; }
 .rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: 0; padding: var(--rdv-14) var(--space-1) var(--space-2); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-item + .rdv-item { margin-top: calc(var(--space-2) + var(--rdv-2)); }

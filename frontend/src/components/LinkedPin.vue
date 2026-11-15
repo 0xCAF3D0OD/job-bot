@@ -91,7 +91,7 @@ function back(): void {
 }
 [data-side="bottom"] > .linked-pin-card { bottom: 0; }
 .linked-pin-card:active { transform: none; }
-.linked-pin-card > :first-of-type:not(svg) { flex: none; width: var(--btn-compact); height: var(--btn-compact); }
+.linked-pin-card > .list-card-logo { flex: none; width: var(--btn-compact); height: var(--btn-compact); }
 .linked-pin-card .list-card-text { flex: 1; }
 .linked-pin-card .list-card-sub { font-size: var(--label-caps); line-height: var(--pin-18); }
 .linked-pin-card > .icon { flex: none; width: var(--space-5); height: var(--space-5); color: var(--primary-text); transform: rotate(-90deg); }
