@@ -101,6 +101,28 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(toggle.attributes("aria-expanded")).toBe("true");
   });
 
+  // Kevin, 15.11 : sans note, le cercle vide en pointillés (48 px) à la place de l'anneau, comme sur ordinateur (§21) ;
+  // les puces qui ne tiennent pas sur la ligne passent dans « +N », jamais coupées (planche Candidatures).
+  it("sans note : le cercle vide, et les puces de trop dans « +N »", async () => {
+    const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const right = this.classList.contains("list-card-chips") ? 200 : ([...(this.parentElement?.children ?? [])].indexOf(this) + 1) * 80;
+      return { right } as DOMRect;
+    });
+    try {
+      const host = await mountAt("/offres", [{ ...offer(3, "SRE"), score: null, employment_type: "CDI" }]);
+      await flushPromises();
+      const card = host.find("[data-test=offer]");
+      const score = card.find("[data-test=score]");
+      expect(score.classes()).toContain("score-unrated");
+      expect(score.attributes("aria-label")).toBe("Pas encore notée");
+      const chips = card.findAll("[data-test=offer-chip]").map((c) => c.text());
+      expect(chips).toHaveLength(2);
+      expect(chips[1]).toMatch(/^\+\d$/);
+    } finally {
+      rect.mockRestore();
+    }
+  });
+
   it("les offres expirées : la ligne « Expirées » d’« Autres offres », seulement s’il y en a (PR 35)", async () => {
     const none = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
     expect(none.find("[data-test=offers-expired]").exists()).toBe(false);

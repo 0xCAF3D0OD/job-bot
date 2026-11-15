@@ -17,6 +17,8 @@ from jobbot.auth.service import Window
 from jobbot.db.models import Evaluation, Offer
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.worker.queue import enqueue
+from jobbot.worker.tasks.score import SCORE_JOB
 
 log = get_logger(__name__)
 
@@ -196,6 +198,10 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
             offer_id = await manual_offers.add(runtime, draft)
         except manual_offers.ReadProblem as exc:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, exc.message) from exc
+        # La note part tout de suite, sans attendre la relève des 10 minutes ; l'offre est
+        # notée même écartée par les critères (décision de Kevin du 2026-11-15).
+        if runtime.settings.llm_configured:
+            await enqueue(runtime.settings, SCORE_JOB)
     else:
         offer_id = existing
         if body.fill:
