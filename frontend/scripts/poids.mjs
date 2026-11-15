@@ -25,9 +25,9 @@ export const LIMITS = {
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 117_000, // liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS (Kevin, 15.11 : relevé une seule fois)
+  "css-total": 117_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois, après 117 Ko pour la liaison et le code jobup)
   "css-accueil": 59_800,
-  "css-candidatures": 69_000, // liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS (Kevin, 15.11 : relevé une seule fois)
+  "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
   "css-bilan": 62_400,
   "css-compte": 61_200,
   images: 4_893_100,
