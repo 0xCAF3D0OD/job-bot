@@ -34,7 +34,8 @@ MAX_SEARCHES = 2
 MAX_OFFERS = 10
 # Deux recherches web (0,01 USD chacune) et les résultats lus par un petit modèle.
 ESTIMATE_USD = Decimal("0.06")
-_ANSWER = re.compile(r"<reponse>\s*(\{.*\})\s*</reponse>", re.S)
+# La réponse, éventuellement dans un bloc de code (« ```json … ``` »).
+_ANSWER = re.compile(r"<reponse>\s*(?:```(?:json)?\s*)?(\{.*\})\s*(?:```\s*)?</reponse>", re.S)
 # Un titre qui n'est qu'un identifiant (« 61d4c807 8a3c 4113 9b3a 6791d579b573 »).
 _CODE = re.compile(r"^[0-9a-f]{8}[ -]?([0-9a-f]{4}[ -]?){3}[0-9a-f]{12}$", re.I)
 
@@ -141,6 +142,27 @@ def verbatim(wanted: str | None, shown: str) -> str | None:
     return shown[start : start + len(wanted)]
 
 
+# Les motifs d'écart, affichés par la commande d'essai.
+KEPT = "gardée"
+TOO_OLD = "datée de plus de 14 jours"
+OVER_LIMIT = "au-delà de 10 offres"
+NOT_PROPOSED = "non retenue par l'IA"
+UNKNOWN_LINK = "lien absent des résultats du moteur"
+BAD_LINK = "lien sans https ou page d'accueil"
+NO_TITLE = "le moteur ne donne pas de titre"
+CODE_TITLE = "titre réduit à un identifiant"
+
+
+@dataclass(frozen=True)
+class Verdict:
+    """Ce qu'il advient d'un résultat du moteur, ou d'un lien proposé par l'IA hors résultats."""
+
+    url: str
+    title: str
+    page_age: str | None
+    reason: str
+
+
 @dataclass
 class Selection:
     """Ce que la recherche a rendu et ce qui en est gardé (affiché par la commande d'essai)."""
@@ -151,51 +173,92 @@ class Selection:
     proposed: int = 0  # offres proposées par l'IA dont le lien vient bien du moteur
     too_old: int = 0  # écartées : datées de plus de 14 jours
     undated_kept: int = 0  # gardées sans date connue
+    # Un verdict par résultat du moteur, dans son ordre, puis les liens inconnus de l'IA.
+    verdicts: list[Verdict] = field(default_factory=list)
+    # Pourquoi la réponse de l'IA n'a pas pu être lue (None : elle a été lue).
+    problem: str | None = None
+    note: str = ""  # le texte de l'IA avant sa balise <reponse>
+
+
+def _answer_items(text: str) -> tuple[list[Any] | None, str | None]:
+    """La liste « offers » de la dernière balise <reponse>, ou le motif qui l'empêche."""
+    matches = _ANSWER.findall(text)
+    if not matches:
+        return None, "pas de balise <reponse> dans la réponse de l'IA"
+    try:
+        data = json.loads(matches[-1])
+    except json.JSONDecodeError:
+        return None, "le contenu de <reponse> n'est pas du JSON lisible"
+    items = data.get("offers") if isinstance(data, dict) else None
+    if not isinstance(items, list):
+        return None, "pas de liste « offers » dans <reponse>"
+    return items, None
+
+
+def _loose(url: str) -> str:
+    """Une adresse sans « www. » ni barre finale : deuxième chance de la retrouver."""
+    parts = urlsplit(url.strip())
+    host = parts.netloc.lower().removeprefix("www.")
+    return f"{host}{parts.path.rstrip('/')}?{parts.query}"
 
 
 def select_offers(raw: RawResult, today: date) -> Selection:
     """Les offres de la dernière balise <reponse> dont le lien figure parmi les résultats du
     moteur. Titre, entreprise et lieu viennent du titre du résultat ; une offre datée de plus
-    de 14 jours est écartée. Rien si la balise manque ou si le moteur n'a rien rendu."""
+    de 14 jours est écartée. Rien si la balise manque ou si le moteur n'a rien rendu. Chaque
+    résultat reçoit un verdict, pour que l'essai montre pourquoi il est écarté."""
     selection = Selection(results=len(raw.web_results))
     dates = {result.url: page_date(result.page_age, today) for result in raw.web_results}
     selection.dated = sum(1 for value in dates.values() if value is not None)
-    matches = _ANSWER.findall(raw.text)
-    if not matches or not raw.web_results:
-        return selection
-    try:
-        data = json.loads(matches[-1])
-    except json.JSONDecodeError:
-        return selection
-    items = data.get("offers") if isinstance(data, dict) else None
-    if not isinstance(items, list):
-        return selection
+    reasons: dict[str, str] = {}  # adresse du moteur -> motif
+    unknown: list[Verdict] = []
+    items, selection.problem = _answer_items(raw.text)
+    selection.note = _squash(raw.text.split("<reponse>")[0])
+    if selection.problem and raw.stop_reason == "max_tokens":
+        selection.problem += " (réponse coupée : limite de jetons atteinte)"
     known: dict[str, WebResult] = {}
+    loose: dict[str, list[WebResult]] = {}
     for result in raw.web_results:
         known.setdefault(_same(result.url), result)
+        loose.setdefault(_loose(result.url), []).append(result)
     offers: dict[str, RawOffer] = {}
-    for item in items:
+    for item in items or []:
         if not isinstance(item, dict) or not isinstance(item.get("url"), str):
             continue
-        parts = urlsplit(item["url"].strip())
-        if parts.scheme != "https" or not parts.netloc or parts.path in ("", "/"):
-            continue
         hit = known.get(_same(item["url"]))
-        shown = _squash(hit.title) if hit else ""
-        if hit is None or not shown or hit.url in offers:
+        if hit is None and len(near := loose.get(_loose(item["url"]), [])) == 1:
+            hit = near[0]
+        if hit is None:
+            said = item.get("title")
+            title = said if isinstance(said, str) else ""
+            unknown.append(Verdict(item["url"].strip(), title, None, UNKNOWN_LINK))
+            continue
+        if hit.url in reasons:
+            continue  # même résultat proposé deux fois : le premier verdict compte
+        parts = urlsplit(hit.url)
+        if parts.scheme != "https" or not parts.netloc or parts.path in ("", "/"):
+            reasons[hit.url] = BAD_LINK
+            continue
+        shown = _squash(hit.title)
+        if not shown:
+            reasons[hit.url] = NO_TITLE
             continue
         # L'intitulé : le morceau du titre du moteur que l'IA désigne, sinon ce titre entier.
         title = (verbatim(item.get("title"), shown) or shown)[:300]
         if _CODE.match(title):
+            reasons[hit.url] = CODE_TITLE
             continue
         selection.proposed += 1
         when = dates[hit.url]
         if when is not None and today - when > MAX_AGE:
             selection.too_old += 1
+            reasons[hit.url] = TOO_OLD
             continue
         if len(offers) >= MAX_OFFERS:
+            reasons[hit.url] = OVER_LIMIT
             continue
         selection.undated_kept += when is None
+        reasons[hit.url] = KEPT
         offers[hit.url] = RawOffer(
             title=title,
             url=hit.url,
@@ -203,6 +266,10 @@ def select_offers(raw: RawResult, today: date) -> Selection:
             location=verbatim(item.get("location"), shown),
         )
     selection.offers = list(offers.values())
+    selection.verdicts = [
+        Verdict(r.url, _squash(r.title), r.page_age, reasons.get(r.url, NOT_PROPOSED))
+        for r in raw.web_results
+    ] + unknown
     return selection
 
 
