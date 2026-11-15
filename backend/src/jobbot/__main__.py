@@ -11,6 +11,8 @@ reparse      réanalyse les copies brutes stockées (après un analyseur nouveau
 anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
 set-password crée le compte de connexion ou change son mot de passe (saisie masquée)
 getemall-tester IDENTIFIANT  marque un compte testeur de Get'emAll (--retirer : l'inverse)
+noter-offres-manuelles  anciennes offres ajoutées à la main sans note : nombre et coût
+             (--lancer : les noter)
 logos --clean-generic  retire les logos génériques (--essai : liste sans rien retirer)
 """
 
@@ -288,6 +290,53 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
 
 def _size(size: int) -> str:
     return f"{size / 1_000_000:.1f} Mo" if size >= 1_000_000 else f"{max(1, round(size / 1000))} Ko"
+
+
+def cmd_noter_offres_manuelles(args: argparse.Namespace) -> int:
+    """Anciennes offres ajoutées à la main et jamais notées (dont la 726) : le nombre et le
+    coût estimé par compte, puis, sur `--lancer`, la note, avec le bilan à la fin (notées, en
+    échec, jetons). Idempotente : une offre notée n'est plus reprise."""
+    from decimal import Decimal
+
+    from jobbot.runtime import Runtime
+    from jobbot.scoring import manual_backlog
+
+    settings = _settings()
+    if args.lancer and not settings.llm_configured:
+        print("IA non configurée (JOBBOT_ANTHROPIC_API_KEY).", file=sys.stderr)
+        return 1
+
+    async def run() -> int:
+        # Comme une tâche du worker : un passage par compte (docs/78 §3.1).
+        runtime = Runtime.create(settings, "worker")
+        try:
+            found = await manual_backlog.count(runtime, args.compte)
+            if not found:
+                print("Aucune offre ajoutée à la main sans note.")
+                return 0
+            print("compte  offres  coût estimé")
+            for item in found:
+                print(f"{item.account:>6}  {item.offers:>6}  CHF {item.cost_chf}")
+            total = sum((item.cost_chf for item in found), start=Decimal(0))
+            offers = sum(item.offers for item in found)
+            print(f"Total : {plural(offers, 'offre', 'offres')}, CHF {total} estimés.")
+            if not args.lancer:
+                print("Rien n'est lancé. Ajoute --lancer pour les noter.")
+                return 0
+            done = await manual_backlog.score_all(runtime, args.compte)
+            print(
+                f"{plural(done.scored, 'offre notée', 'offres notées')}, "
+                f"{done.failed} en échec, {done.skipped} non traitées ; "
+                f"jetons : {done.input_tokens} en entrée, {done.output_tokens} en sortie "
+                f"(CHF {done.cost_chf.quantize(Decimal('0.01'))})."
+            )
+            if done.budget_reached or done.limit_reached:
+                print("Plafond du mois ou limite de la formule atteint : relance plus tard.")
+            return 0
+        finally:
+            await runtime.dispose()
+
+    return asyncio.run(run())
 
 
 def cmd_backup(args: argparse.Namespace) -> int:
@@ -693,6 +742,12 @@ def main(argv: list[str] | None = None) -> int:
     tester.add_argument("username", help="identifiant du compte")
     tester.add_argument("--retirer", action="store_true", help="retire la marque")
     tester.set_defaults(func=cmd_getemall_tester)
+    manual = sub.add_parser(
+        "noter-offres-manuelles", help="anciennes offres ajoutées à la main sans note"
+    )
+    manual.add_argument("--lancer", action="store_true", help="les noter")
+    manual.add_argument("--compte", type=int, default=None, help="un seul compte")
+    manual.set_defaults(func=cmd_noter_offres_manuelles)
     logos = sub.add_parser("logos", help="logos des entreprises (docs/14 §4)")
     logos.add_argument("--clean-generic", action="store_true", help="retire les images génériques")
     logos.add_argument("--essai", action="store_true", help="liste sans rien retirer")

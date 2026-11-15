@@ -55,6 +55,8 @@
   /* Liste reliée à un détail (Candidatures ordinateur, §11 du 15 novembre) : le trait de la zone de détail et de son
      encoche, et le fond de la carte choisie. Ailleurs, la sélection garde --selected-bg. */
   --linked-line: #D5D1C7;
+  /* Tiret du cercle « Pas encore notée » (§21 du 15 novembre). */
+  --unrated-dash: #8C8478;
   --linked-selected-bg: #EEF1FC;
   /* Vignettes de modèle (PreparerOrdinateur) : la feuille blanche et ses lignes grises ; en sombre, le fond et #5E574F. */
   --thumb-paper: #FFFFFF;
@@ -248,6 +250,7 @@
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
     --linked-line: #4E473E;
+    --unrated-dash: #ABA398;
     --linked-selected-bg: #232B45;
     --thumb-paper: #171411;
     --thumb-line: #5E574F;
@@ -312,6 +315,7 @@
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
   --linked-line: #4E473E;
+  --unrated-dash: #ABA398;
   --linked-selected-bg: #232B45;
   --thumb-paper: #171411;
   --thumb-line: #5E574F;
@@ -4164,6 +4168,7 @@ html.search-open { overflow: hidden; }
   .sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
   .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--panel-close-edge) var(--space-1) var(--sheet-pad); touch-action: none; }
   /* `.sheet .sheet-title` : plus fort qu'un `h2` de page (par exemple `.orp-meeting h2`) qui contient la feuille. */
+  /* Volontaire : deux tailles d'écran (≤ 599 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
   .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
   .sheet-body { margin: 0; padding: var(--space-2) var(--sheet-pad) 0; }
@@ -4182,6 +4187,7 @@ html.search-open { overflow: hidden; }
   .sheet[open] { animation: ja-panel 250ms cubic-bezier(.2,.8,.2,1) both; }
   .sheet-inner { gap: 0; height: 100%; padding: 0; }
   .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--panel-close-edge) 0 var(--sheet-pad); }
+  /* Volontaire : deux tailles d'écran (≤ 599 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
   .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
   .sheet-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: var(--space-2) var(--sheet-pad) var(--sheet-pad); align-content: start; }
