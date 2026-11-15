@@ -692,16 +692,18 @@ onUnmounted(() => {
             @close="closeFilters"
           />
         </div>
-        <!-- Téléphone (C10) : « Ajouter » compact, à côté de la recherche ; « Postuler spontanément » est un
-             lien au bas de la liste. Ordinateur : un seul « + Ajouter » et son menu (1.6.47). -->
+        <!-- Téléphone (décision de Kevin du 15.11, place définitive) : « + » rond de 48 px à 8 px du champ, nommé
+             « Ajouter une offre » ; il suit la recherche (masqué avec elle sur un écran vide). « Postuler spontanément »
+             est un lien au bas de la liste. Ordinateur : un seul « + Ajouter » et son menu (1.6.47). -->
         <button
           v-if="phone"
           type="button"
-          class="secondary offers-add-compact"
+          class="offers-add-compact"
+          aria-label="Ajouter une offre"
           data-test="manual-open"
           @click="openManual"
         >
-          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+          <AppIcon name="plus" />
         </button>
         <button
           v-else-if="!wide"

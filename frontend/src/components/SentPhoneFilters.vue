@@ -5,6 +5,8 @@ import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CountBadge from "./CountBadge.vue";
 import OfferSearch from "./OfferSearch.vue";
+import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
+import { radioKey } from "../composables/useOfferFilters";
 import { plural } from "../format";
 import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
 
@@ -14,6 +16,8 @@ import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
 // - l'icône Filtres dans l'en-tête, à côté d'« Alertes », qui ouvre la feuille Filtres ;
 // - dans la feuille : les statuts (avant en puces sous la recherche) et le tri, « À relancer d'abord » par défaut ou
 //   « Plus récentes d'abord » (décision de Kevin du 14.11) ; « Tout effacer » et « Afficher N candidatures » en bas.
+// Alignée sur la planche FiltresEnvoyees (§10, paquet du 15 novembre ; décision de Kevin du 15.11) : titre « Filtres des
+// envoyées », statut choisi coché, tri en contrôle segmenté sur toute la largeur.
 // La logique (mots, statut et tri gardés dans l'adresse) reste dans ApplicationsView.
 const props = defineProps<{ words: string; filter: SentFilter; sort: SentSort; counts: Record<SentFilter, number>; total: number }>();
 const emit = defineEmits<{ "update:words": [value: string]; "update:filter": [value: SentFilter]; "update:sort": [value: SentSort]; reset: [] }>();
@@ -21,10 +25,11 @@ const emit = defineEmits<{ "update:words": [value: string]; "update:filter": [va
 const open = ref(false);
 // Un statut à 0 est masqué, sauf celui qui est choisi (pour pouvoir le quitter), comme sur ordinateur.
 const shown = computed(() => SENT_FILTERS.filter((f) => f.value === "toutes" || props.counts[f.value] > 0 || f.value === props.filter));
-const SORTS: { value: SentSort; label: string }[] = [
-  { value: "relancer", label: "À relancer d’abord" },
-  { value: "recentes", label: "Plus récentes d’abord" },
+const SORTS: SegmentOption[] = [
+  { value: "relancer", label: "À relancer d’abord", test: "sent-sort-relancer" },
+  { value: "recentes", label: "Plus récentes d’abord", test: "sent-sort-recentes" },
 ];
+const sortModel = computed({ get: () => props.sort as string, set: (value: string) => emit("update:sort", value as SentSort) });
 const active = computed(() => (props.filter !== "toutes" ? 1 : 0) + (props.sort !== "relancer" ? 1 : 0));
 const toggleLabel = computed(() => (active.value ? `Filtres, ${active.value} actif${active.value > 1 ? "s" : ""}` : "Filtres"));
 const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", "candidatures")}`);
@@ -65,7 +70,7 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
   </Teleport>
   <BottomSheet
     :open="open"
-    title="Filtres"
+    title="Filtres des envoyées"
     class="filters-dialog"
     data-test="sent-filters-sheet"
     @close="open = false"
@@ -77,19 +82,25 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
         </h3>
         <div
           class="filter-choices-row"
-          role="group"
+          role="radiogroup"
           aria-labelledby="sent-sheet-status"
+          @keydown="radioKey"
         >
           <button
             v-for="choice in shown"
             :key="choice.value"
             type="button"
             class="filter-choice"
-            :aria-pressed="filter === choice.value"
+            role="radio"
+            :aria-checked="filter === choice.value"
+            :tabindex="filter === choice.value ? 0 : -1"
             :data-test="`sent-status-${choice.value}`"
             @click="emit('update:filter', choice.value)"
           >
-            {{ choice.label }} · {{ counts[choice.value] }}
+            <AppIcon
+              v-if="filter === choice.value"
+              name="tick"
+            />{{ choice.label }} · {{ counts[choice.value] }}
           </button>
         </div>
       </div>
@@ -97,23 +108,12 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
         <h3 id="sent-sheet-sort">
           Trier
         </h3>
-        <div
-          class="filter-choices-row"
-          role="group"
-          aria-labelledby="sent-sheet-sort"
-        >
-          <button
-            v-for="choice in SORTS"
-            :key="choice.value"
-            type="button"
-            class="filter-choice"
-            :aria-pressed="sort === choice.value"
-            :data-test="`sent-sort-${choice.value}`"
-            @click="emit('update:sort', choice.value)"
-          >
-            {{ choice.label }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="sortModel"
+          :options="SORTS"
+          label="Trier"
+          full
+        />
       </div>
     </div>
     <template #actions>

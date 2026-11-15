@@ -1203,9 +1203,9 @@ watch(
             data-test="compat-open"
             @click="compatOpen = true"
           >
-            <!-- Téléphone (prompt du 10 novembre, PR 15) : « Le détail de la note », aligné sur le contenu de la carte,
-                 chevron à droite, que la note soit provisoire ou non. Ordinateur : « Voir la compatibilité ». -->
-            {{ sub ? "Le détail de la note" : "Voir la compatibilité" }}
+            <!-- « Voir la compatibilité » sur téléphone comme sur ordinateur (décision de Kevin du 15.11) ; sur téléphone,
+                 aligné sur le contenu de la carte, chevron à droite, que la note soit provisoire ou non. -->
+            Voir la compatibilité
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
@@ -1676,7 +1676,7 @@ watch(
   .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
   .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }
   .offer-blocks .match-sub { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
-  /* « Le détail de la note » (prompt du 10 novembre, PR 15) : toute la ligne est le bouton, le texte au même retrait que
+  /* « Voir la compatibilité » (prompt du 10 novembre, PR 15 ; libellé du 15.11) : toute la ligne est le bouton, le texte au même retrait que
      le contenu de la carte (18,5 px, pas le retrait du verdict ni les 98,5 px de l'ordinateur), le chevron à droite. */
   .offer-blocks .compat-open {
     display: flex; align-items: center; justify-content: space-between; gap: var(--ob-gap); width: calc(100% + 2 * var(--ob-pad)); max-width: none; min-height: var(--ob-56);
@@ -1687,7 +1687,7 @@ watch(
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
      retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
      refus séparé par un filet, 16 px dessus (14 dans la maquette, sur la grille de 4), 12 px entre ses lignes ; puis
-     « Le détail de la note » sans vide. */
+     « Voir la compatibilité » sans vide. */
   .offer-blocks .match-card .offer-reading, .offer-blocks .match-card .redone { margin-top: var(--ob-gap); }
   .offer-blocks .match-card .offer-text-refused { margin-top: var(--ob-gap); padding-top: var(--ob-gap); border-top: 1px solid var(--line-soft); }
   .offer-blocks .detail-post { display: block; }

@@ -25,6 +25,11 @@ describe("SentPhoneFilters", () => {
     const wrapper = mountIt();
     expect(wrapper.find("[data-test=sent-status-entretien]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-status-relancer]").text()).toBe("À relancer · 2");
+    // Planche FiltresEnvoyees : le statut choisi coché, le tri en contrôle segmenté.
+    expect(wrapper.find("[data-test=sent-status-toutes]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=sent-status-toutes] .icon").exists()).toBe(true);
+    expect(wrapper.find("[data-test=sent-status-relancer] .icon").exists()).toBe(false);
+    expect(wrapper.find("[data-test=sent-sort-relancer]").attributes("aria-checked")).toBe("true");
     expect(wrapper.findAll("[data-test^=sent-sort-]").map((b) => b.text())).toEqual(["À relancer d’abord", "Plus récentes d’abord"]);
     expect(wrapper.find("[data-test=sent-sheet-show]").text()).toBe("Afficher 9 candidatures");
     await wrapper.find("[data-test=sent-sort-recentes]").trigger("click");
