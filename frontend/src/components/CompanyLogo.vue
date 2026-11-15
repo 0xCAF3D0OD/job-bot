@@ -7,8 +7,8 @@ import { isBlankLogo } from "../logoImage";
 import { colorIndex, initials, logoTone } from "../format";
 
 // Logo de l'entreprise servi par la plateforme (docs/14 §4) ; la lettre en secours, deux initiales sur
-// téléphone (maquettes Accueil et Offre, comme la Ligne d'offre) et, avec « pair », aussi sur ordinateur (le livre
-// du tri et la fin du tri, maquettes TrierOffresOrdinateurV2 et FinDuTriOrdinateur).
+// téléphone (maquettes Accueil et Offre, comme la Ligne d'offre) et, avec « pair », aussi sur ordinateur (les cartes
+// du tri et la fin du tri, maquettes TrierOffresOrdinateurV2, AujourdhuiOrdinateurV2 et FinDuTriOrdinateur).
 const props = defineProps<{ offer: Offer; large?: boolean; pair?: boolean }>();
 
 const failed = ref(false);
