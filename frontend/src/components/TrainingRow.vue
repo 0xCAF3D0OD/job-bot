@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 import type { Training } from "../api/client";
 import { languageLabel } from "../newsLabels";
-import { FORMATS, FUNDING, SHORT_FORMATS } from "../trainingLabels";
+import { FORMATS, FUNDING, SHORT_FORMATS, progressLabel } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 
@@ -21,11 +21,11 @@ const meta = computed(() => {
   const format = SHORT_FORMATS[t.format] ?? t.format;
   return `${t.provider} · ${format.charAt(0).toUpperCase()}${format.slice(1)} · ${languageLabel(t.language)}`;
 });
-// L'avancement (B19) : « module 6 sur 12 », sinon le texte libre tel quel.
+// L'avancement (B19) : « Module 6 sur 12 », sinon le texte libre.
 const progress = computed(() => {
   const mark = props.training.mark;
   if (mark?.status === "in_progress") {
-    const detail = mark.modules_total ? `module ${mark.modules_done ?? 0} sur ${mark.modules_total}` : mark.progress;
+    const detail = progressLabel(mark);
     return detail ? `En cours · ${detail}` : "En cours";
   }
   if (mark?.status === "done") return "Terminée";

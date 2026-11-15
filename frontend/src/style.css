@@ -355,6 +355,13 @@ body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smooth
    et pousse hors du cadre ce qui est fixé à droite (l'assistant). « clip » ne crée pas de zone
    de défilement : les en-têtes collants restent collants. */
 html, body { overflow-x: clip; }
+/* Pas de tremblement entre deux pages (Kevin, 15.11.2026) : la place de la barre de défilement reste réservée.
+   Le pied de page touche le bas de l'écran sur une page courte et pendant qu'une page charge, sans être fixe :
+   il ne recouvre jamais le contenu (gabarit commun, « sticky footer »). */
+html { scrollbar-gutter: stable; }
+#app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+#app > main { flex: 1 0 auto; }
+#app > .app-footer { flex-shrink: 0; }
 
 h1, h2, h3 { font-weight: var(--weight-semibold); letter-spacing: -0.02em; margin: 0; }
 /* Liens sans soulignement : couleur d'accent, surlignage léger au survol des liens de texte

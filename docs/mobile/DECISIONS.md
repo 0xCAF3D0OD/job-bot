@@ -117,3 +117,10 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - a) Dès qu'au moins une recherche est suivie : titre « Tes alertes sont prêtes », bouton principal « Ajouter une offre », secondaire « Voir mes alertes ». « Créer mes alertes » n'apparaît que si aucune recherche n'est suivie (l'en-tête dit alors « Aucune recherche suivie »). Heure de la prochaine collecte inconnue : pastille « Offres collectées chaque jour », jamais une heure inventée.
 - b) Vide parce qu'il n'y a encore rien : pas de recherche ni de filtres (ordinateur et téléphone, bouton « + » compris). Vide à cause des filtres : la barre de filtres reste, avec les filtres actifs en pastilles retirables. Dans les deux cas, la scène est centrée sur toute la largeur, sans rail ni colonne de détail.
 - Poids : limite CSS relevée une seule fois de 0,5 Ko (total 117,5 Ko, Candidatures 69,5 Ko) pour les états vides et la liaison rail (section 18).
+
+## Pied de page et changement de page (Kevin, 15.11.2026, 11 h 09)
+
+- Pied de page « sticky footer » sur le gabarit commun, pas page par page : `#app` en colonne, `min-height: 100dvh` (repli `100vh`), `main` en `flex: 1 0 auto`, pied de page en `flex-shrink: 0`. Page longue : le pied de page suit le contenu ; page courte : il touche le bas de l'écran. Jamais fixe ni collant : il ne recouvre pas le contenu.
+- La place de la barre de défilement reste réservée (`scrollbar-gutter: stable`) : le logo et l'en-tête ne bougent plus entre une page courte et une page longue, ni pendant le chargement d'une page.
+- Bouton « Assistant » : au moins 12 px entre lui et les liens du pied de page ; la marge du bas du pied de page (hauteur du bouton + 16 px, règle existante) suffit.
+- Carte de formation : l'avancement s'écrit « Module 6 sur 12 », comme sur la planche BilanOrdinateur, y compris quand il a été noté en texte libre « module 6/12 » (affichage seulement).
