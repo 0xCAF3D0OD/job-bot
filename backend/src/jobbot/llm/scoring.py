@@ -15,6 +15,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationError
 
 PROMPT_VERSION = "score-v8"
+# Le prompt suivant, mesuré par `jobbot mesure-notes-courtes` avant de remplacer PROMPT_VERSION.
+NEXT_VERSION = "score-v9"
 # score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
 # score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
 # valable, elle n'est pas refaite (« Renoter » la refait, sur demande). score-v6 : la phrase
@@ -24,6 +26,10 @@ PROMPT_VERSION = "score-v8"
 # score-v8 (lot du 11 novembre au soir, PR 45 et 47) : dans le même appel, l'IA cite les passages
 # de l'annonce qui correspondent au profil ; seules les citations retrouvées dans l'annonce sont
 # gardées (`verified_quotes`). Une note plus ancienne reste valable, sans surlignage.
+# score-v9 (Kevin, 15.11) : chaque point fort et chaque manque a aussi sa forme courte (`short`,
+# 28 caractères au plus, le doute en « ? »), écrite sur les cartes de Trier. Stockée à côté du
+# texte, sans migration ; une note plus ancienne n'en a pas et l'écran montre le texte complet.
+# Il n'est mis en service qu'après la mesure de son coût sur 20 offres (NEXT_VERSION).
 COMPATIBLE_VERSIONS = (
     "score-v2",
     "score-v3",
@@ -32,8 +38,10 @@ COMPATIBLE_VERSIONS = (
     "score-v6",
     "score-v7",
     "score-v8",
+    "score-v9",
 )
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v8.md").read_text("utf-8")
+_PROMPTS = resources.files("jobbot.llm").joinpath("prompts")
+INSTRUCTIONS = _PROMPTS.joinpath(f"{PROMPT_VERSION}.md").read_text("utf-8")
 # Citations de l'annonce : 5 au plus, de 2 à 12 mots chacune (décision de Kevin, 11 novembre).
 QUOTE_MAX = 5
 QUOTE_WORDS = (2, 12)
@@ -52,9 +60,15 @@ MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
 
 
+# La forme courte d'un point (score-v9) : l'écran ne l'affiche qu'à 28 caractères au plus.
+SHORT_MAX = 28
+
+
 class Point(BaseModel):
     text: str = Field(max_length=300)
     chunk_ids: list[int] = Field(default_factory=list)
+    # Forme courte (score-v9) ; gardée telle quelle, même trop longue : l'écran la vérifie.
+    short: str | None = Field(default=None, max_length=300)
 
 
 class AskKeyword(BaseModel):
@@ -227,6 +241,21 @@ OUTPUT_SCHEMA: dict[str, Any] = {
     ],
     "additionalProperties": False,
 }
+# score-v9 : le même schéma, chaque point avec sa forme courte (`short`).
+_SHORT_POINT_SCHEMA = {
+    **_POINT_SCHEMA,
+    "properties": {**_POINT_SCHEMA["properties"], "short": {"type": "string"}},  # type: ignore[dict-item]
+    "required": ["text", "chunk_ids", "short"],
+}
+NEXT_OUTPUT_SCHEMA: dict[str, Any] = {
+    **OUTPUT_SCHEMA,
+    "properties": {
+        **OUTPUT_SCHEMA["properties"],
+        "strengths": {"type": "array", "items": _SHORT_POINT_SCHEMA},
+        "gaps": {"type": "array", "items": _SHORT_POINT_SCHEMA},
+    },
+}
+NEXT_INSTRUCTIONS = _PROMPTS.joinpath(f"{NEXT_VERSION}.md").read_text("utf-8")
 
 
 @dataclass(frozen=True)
@@ -282,21 +311,30 @@ def offer_message(offer: OfferData) -> str:
 
 
 def request_params(
-    model: str, effort: str, chunks: list[ProfileChunkData], offer: OfferData
+    model: str,
+    effort: str,
+    chunks: list[ProfileChunkData],
+    offer: OfferData,
+    *,
+    next_prompt: bool = False,
 ) -> dict[str, Any]:
-    """Paramètres communs aux appels directs et aux lots."""
+    """Paramètres communs aux appels directs et aux lots. `next_prompt` : le prompt suivant
+    (NEXT_VERSION), pour la mesure avant sa mise en service."""
+    instructions, schema = (
+        (NEXT_INSTRUCTIONS, NEXT_OUTPUT_SCHEMA) if next_prompt else (INSTRUCTIONS, OUTPUT_SCHEMA)
+    )
     return {
         "model": model,
         "max_tokens": MAX_TOKENS,
         "system": [
-            {"type": "text", "text": INSTRUCTIONS},
+            {"type": "text", "text": instructions},
             # Consignes + profil : préfixe stable, mis en cache entre les offres.
             {"type": "text", "text": profile_block(chunks), "cache_control": {"type": "ephemeral"}},
         ],
         "messages": [{"role": "user", "content": offer_message(offer)}],
         "output_config": {
             "effort": effort,
-            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+            "format": {"type": "json_schema", "schema": schema},
         },
     }
 
@@ -456,6 +494,11 @@ def verified_quotes(quotes: list[str], offer_text: str | None) -> list[str]:
     return list(found.values())
 
 
+def _short(point: Point) -> str | None:
+    """La forme courte, espaces resserrés ; vide, elle n'existe pas."""
+    return " ".join((point.short or "").split()) or None
+
+
 def parse_output(
     text: str, chunks: list[ProfileChunkData], offer_text: str | None = None
 ) -> ScoreOutput:
@@ -516,9 +559,14 @@ def parse_output(
     for point in output.strengths:
         ids = [i for i in point.chunk_ids if i in valid]
         if ids:  # un point fort sans bloc qui le prouve est retiré (docs/06 §2)
-            strengths.append(point.model_copy(update={"chunk_ids": ids}))
+            strengths.append(point.model_copy(update={"chunk_ids": ids, "short": _short(point)}))
     gaps = [
-        point.model_copy(update={"chunk_ids": [i for i in point.chunk_ids if i in valid]})
+        point.model_copy(
+            update={
+                "chunk_ids": [i for i in point.chunk_ids if i in valid],
+                "short": _short(point),
+            }
+        )
         for point in output.gaps
     ]
     return output.model_copy(update={"strengths": strengths[:4], "gaps": gaps[:4]})

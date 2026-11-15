@@ -623,3 +623,7 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.409 | Candidatures sur ordinateur : une seule flèche quand la carte choisie est épinglée en haut ou en bas de la liste | livrée |
 | 1.6.410 | Préparer, carte « Ce CV » : les lignes tiennent dans la carte même avec un texte long, « à vérifier » en orange d'alerte | livrée |
 | 1.6.411 | Préparer : la vignette « Bandeau » de la carte Mise en page sur ordinateur passe en pêche, la couleur du document, en clair comme en sombre | livrée |
+| 1.6.412 | Formations : « Module terminé » retiré sur ordinateur ; le nombre de modules faits se note dans « Noter l'avancement » | livrée |
+| 1.6.413 | Envoyées et Rendez-vous vides : l’état vide commun centré, avec le dessin, la pastille et un bouton ; le formulaire de rendez-vous n’apparaît qu’après « Ajouter un rendez-vous ». | livrée |
+| 1.6.414 | Notes courtes sur les cartes de Trier : forme courte de l’IA (score-v9, 28 caractères au plus) et commande de mesure jobbot mesure-notes-courtes | livrée en partie ; la note reste en score-v8 jusqu’à la mesure du coût sur 20 offres, puis une PR met score-v9 en service |
+| 1.6.415 | Liste liée des candidatures : la flèche de la carte choisie n’a plus de double trait à la jonction avec le contour (décalage d’un pixel corrigé). | livrée |

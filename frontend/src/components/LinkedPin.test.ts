@@ -41,7 +41,7 @@ describe("flèche et pointe du rail, au contact", () => {
   const read = (file: string) => readFileSync(resolve(__dirname, file), "utf8");
   // Pointe d'une courbe « Qcx cy ex ey » qui part de (sx, sy) : le milieu de la courbe.
   const tip = (d: string): number => {
-    const m = /([-\d.]+) [-\d.]+ Q([-\d.]+) [-\d.]+ ([-\d.]+) [-\d.]+ L/.exec(d.slice(d.indexOf("L16") >= 0 ? d.indexOf("L16") + 1 : d.indexOf("L-14") + 1));
+    const m = /([-\d.]+) [-\d.]+ Q([-\d.]+) 30 ([-\d.]+) [-\d.]+ L/.exec(d);
     if (!m) throw new Error(`tracé illisible : ${d}`);
     return 0.25 * Number(m[1]) + 0.5 * Number(m[2]) + 0.25 * Number(m[3]);
   };
