@@ -9108,6 +9108,58 @@
         }
       }
     },
+    "/api/alert-searches/codes/last": {
+      "get": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Last Code",
+        "description": "Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail.",
+        "operationId": "lastSiteCode",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "jobup",
+              "title": "Site"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LastCodeOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Lastsitecode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alert-searches/messages": {
       "get": {
         "tags": [
@@ -17545,6 +17597,31 @@
         ],
         "title": "LanguageLevel",
         "description": "Niveau d'une langue (prompt du 10 novembre, PR 17). « Non renseigné » n'écarte jamais une\noffre ; « Notions » l'écarte si elle exige la langue couramment (décision de Kevin, 10.11)."
+      },
+      "LastCodeOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "valid_minutes": {
+            "type": "integer",
+            "title": "Valid Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "received_at",
+          "valid_minutes"
+        ],
+        "title": "LastCodeOut",
+        "description": "Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée."
       },
       "LetterDocumentOut": {
         "properties": {

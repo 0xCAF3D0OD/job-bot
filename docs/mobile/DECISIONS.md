@@ -82,3 +82,12 @@ Décisions de Kevin du 14.11.2026 (20 h 05) sur les questions posées avant l'é
 | 2026-11-14 | Cercle liquide : remplacé par la barre dans la PR de chaque page concernée (accueil du téléphone, Bilan), sans attendre la PR 48 du lot Tri. Une page refaite d'après sa planche ne garde pas un élément retiré. | Le cercle ORP de l'accueil réservé à la PR 48. |
 | 2026-11-14 | Planches retirées par Kevin (Animations, AujourdhuiOrdinateurReposD, RelierFermee, RelierLienInvalide, RelierPasTesteur) : supprimées du dépôt. Seule `Animations` y était encore. | — |
 | 2026-11-14 | Réglages, notifications : trois interrupteurs pour l'instant (Nouvelles offres, Relances, Objectif ORP). « E-mail en plus des notifications » attend qu'un envoi d'e-mail existe : jobA1 n'en envoie aucun aujourd'hui. Remplace le quatrième interrupteur de la ligne précédente. | « E-mail en plus des notifications » de Reglages et ReglagesOrdinateur. |
+
+## Code jobup dans l'étape Alertes (Kevin, 14 et 15.11.2026)
+
+- 14.11 : le code de vérification de jobup s'affiche dans l'étape Alertes des Premiers pas (choix « Code dans l'étape Alertes »).
+- 14.11 : format d'adresse avec sous-adressage, `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch` → `alertes+nom-code@joba1.ch` ; Kevin règle le serveur.
+- 15.11 : la relecture toutes les 5 s ne tourne que pendant l'attente et quand l'écran est visible ; elle s'arrête dès que le code arrive ou au bout de 10 minutes sans code (état expiré, « Renvoyer »).
+- 15.11 : la route ne renvoie que le dernier code du compte connecté, sans contenu de l'e-mail ; le code n'est pas journalisé.
+- 15.11 : durée de validité lue dans l'e-mail de jobup, 10 minutes par défaut ; l'étape du code seulement pour jobup.
+- 15.11 : l'état expiré réutilise les jetons existants `--peach-soft` / `--peach-text` (valeurs claires de la planche).

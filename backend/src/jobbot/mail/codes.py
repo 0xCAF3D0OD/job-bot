@@ -79,6 +79,27 @@ def find_code(email: ParsedEmail) -> FoundCode | None:
     return FoundCode(best[1]) if best else None
 
 
+# La durée de validité que le site écrit (« valable 10 minutes », « gültig für 15 Minuten »,
+# « valid for 10 minutes », « valido per 10 minuti ») ; sans elle, 10 minutes (section 15 du
+# paquet du 15.11, décision de Kevin).
+DEFAULT_VALID_MINUTES = 10
+VALIDITY = re.compile(
+    r"(?:valable|valide|expire|gültig|gueltig|valid|expires?|valido|scade)\D{0,30}?"
+    r"(\d{1,3})\s*(?:min|minute|minuten|minuti)",
+    re.I,
+)
+
+
+def valid_minutes(email: ParsedEmail) -> int:
+    """La durée de validité du code, en minutes, lue dans l'e-mail ; 10 par défaut."""
+    match = VALIDITY.search(_text(email))
+    if match is None:
+        return DEFAULT_VALID_MINUTES
+    minutes = int(match.group(1))
+    # Un nombre absurde (0, ou plus d'un jour) : pas une durée de code.
+    return minutes if 1 <= minutes <= 24 * 60 else DEFAULT_VALID_MINUTES
+
+
 def spaced(code: str) -> str:
     """« 482913 » se lit « 482 913 »."""
     return f"{code[:3]} {code[3:]}" if len(code) == 6 else code

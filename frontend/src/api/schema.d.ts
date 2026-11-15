@@ -3393,6 +3393,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-searches/codes/last": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Last Code
+         * @description Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail.
+         */
+        get: operations["lastSiteCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alert-searches/messages": {
         parameters: {
             query?: never;
@@ -6113,6 +6133,21 @@ export interface components {
          * @enum {string}
          */
         LanguageLevel: "unknown" | "notions" | "fluent" | "native";
+        /**
+         * LastCodeOut
+         * @description Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée.
+         */
+        LastCodeOut: {
+            /** Code */
+            code: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Valid Minutes */
+            valid_minutes: number;
+        };
         /**
          * LetterDocumentOut
          * @description La lettre telle qu'elle sera envoyée, en-tête compris.
@@ -15906,6 +15941,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpectCodeOut"];
+                };
+            };
+        };
+    };
+    lastSiteCode: {
+        parameters: {
+            query?: {
+                site?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LastCodeOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

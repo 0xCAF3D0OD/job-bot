@@ -1032,11 +1032,8 @@ async function finish(to: string): Promise<void> {
             </SidePanel>
           </template>
 
+          <!-- Section 15 du paquet du 15.11 : plus de phrase sous le titre ; l'étape « Recopie le code de jobup ». -->
           <template v-else-if="step === 3">
-            <p class="wdk-lead">
-              {{ alertSiteName }} t’envoie ses nouvelles offres par e-mail, jobA1 les trie pour toi chaque matin. Environ 2
-              minutes.
-            </p>
             <div
               class="wdk-card wdk-alert"
               data-test="welcome-alert"
@@ -1047,6 +1044,8 @@ async function finish(to: string): Promise<void> {
                 :search-label="alertLabel"
                 :links="alertLinks"
                 :mailbox="alerts.mailbox"
+                code
+                code-help="jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici."
               />
             </div>
             <div class="wdk-foot">
@@ -1507,9 +1506,6 @@ async function finish(to: string): Promise<void> {
           </template>
 
           <template v-else-if="step === 3">
-            <p class="welcome-lead">
-              Crée une alerte sur {{ alertSiteName }} : ses offres arrivent ici chaque matin, déjà triées. Environ 2 minutes.
-            </p>
             <div
               class="welcome-alert"
               data-test="welcome-alert"
@@ -1521,7 +1517,7 @@ async function finish(to: string): Promise<void> {
                 :links="alertLinks"
                 :mailbox="alerts.mailbox"
                 address-help="Copie-la, puis colle-la dans le champ e-mail de l’alerte."
-                save-title="Enregistre l’alerte, puis reviens ici"
+                code
               />
             </div>
           </template>

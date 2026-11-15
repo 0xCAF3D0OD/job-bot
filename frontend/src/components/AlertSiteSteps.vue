@@ -3,6 +3,7 @@ import { ref } from "vue";
 
 import AppIcon from "./AppIcon.vue";
 import CopyButton from "./CopyButton.vue";
+import JobupCodeBox from "./JobupCodeBox.vue";
 
 // Les trois étapes pour créer l'alerte d'un site (planche AlertesOrdinateurSite, paquet du 13 novembre) : le rappel
 // de la recherche, puis « Ouvre <site> avec ta recherche », « Mets cette adresse comme destinataire » (l'adresse et
@@ -18,16 +19,25 @@ const props = withDefaults(
     // Le texte sous « Mets cette adresse… » et le titre de la 3e étape : plus courts sur téléphone (OnboardingC).
     addressHelp?: string;
     saveTitle?: string;
+    // L'étape « Recopie le code de jobup » (section 15 du paquet du 15.11) : jobup seulement (Kevin, 15.11).
+    // `codeHelp` : le texte sous son titre, sur ordinateur ; pas de texte sur téléphone (planche OnboardingAlerteCode).
+    code?: boolean;
+    codeHelp?: string;
   }>(),
   {
     mailbox: null,
+    code: false,
+    codeHelp: "",
     addressHelp: "Elle est déjà copiée quand tu ouvres le site : colle-la dans le champ e-mail de l’alerte.",
     saveTitle: "",
   },
 );
 
 const copied = ref(false);
+const codeBox = ref<InstanceType<typeof JobupCodeBox> | null>(null);
 function copyOnOpen(): void {
+  // Ouvrir jobup : la boîte relevée vite, l'étape du code attend le nouveau code.
+  codeBox.value?.restart();
   const address = props.mailbox;
   if (!address) return;
   void navigator.clipboard
@@ -95,13 +105,37 @@ function copyOnOpen(): void {
         </p>
       </div>
     </li>
+    <li
+      v-if="code && mailbox"
+      data-test="alert-site-code"
+    >
+      <span
+        class="alert-site-num"
+        aria-hidden="true"
+      >3</span>
+      <div>
+        <b class="alert-site-step-title">Recopie le code de {{ siteName }}</b>
+        <p
+          v-if="codeHelp"
+          class="alert-site-help"
+        >
+          {{ codeHelp }}
+        </p>
+        <div class="alert-site-code">
+          <JobupCodeBox
+            ref="codeBox"
+            :site-url="links[0]?.url ?? null"
+          />
+        </div>
+      </div>
+    </li>
     <li>
       <span
         class="alert-site-num"
         aria-hidden="true"
-      >{{ mailbox ? 3 : 2 }}</span>
+      >{{ (mailbox ? 3 : 2) + (code && mailbox ? 1 : 0) }}</span>
       <div>
-        <b class="alert-site-step-title">{{ saveTitle || `Enregistre l’alerte sur ${siteName}, puis reviens ici` }}</b>
+        <b class="alert-site-step-title">{{ code && mailbox ? `Termine l’alerte sur ${siteName}, puis reviens ici` : saveTitle || `Enregistre l’alerte sur ${siteName}, puis reviens ici` }}</b>
         <p class="alert-site-help">
           La première alerte arrive souvent dès le lendemain.
         </p>
@@ -122,8 +156,10 @@ function copyOnOpen(): void {
 .alert-site-links { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .alert-site-open { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
 .alert-site-open:hover { background: var(--primary-soft); color: var(--primary-text); }
-.alert-site-address { display: flex; align-items: center; gap: var(--space-2); height: 48px; margin-top: var(--space-3); padding: 0 1px 0 var(--space-5); box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); }
-.alert-site-address > span { flex: 1; min-width: 0; font-size: var(--font-label); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-site-address { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; margin-top: var(--space-3); padding: 1px 1px 1px var(--space-5); box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); }
+/* L'adresse n'est jamais coupée : elle passe à la ligne (section 15 du paquet du 15.11). */
+.alert-site-address > span { flex: 1; min-width: 0; font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.alert-site-code { margin-top: var(--space-3); }
 /* 44 × 44 px dans le champ de 48 px (décision de Kevin du 13.11 ; la planche dit 40). */
 .alert-site-address .copy-button { flex: none; width: var(--target-min); height: var(--target-min); border: 0; background: var(--primary-soft); color: var(--primary-text); }
 .alert-site-copied { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--success); }
