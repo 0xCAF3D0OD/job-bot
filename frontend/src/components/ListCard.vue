@@ -185,13 +185,13 @@ function onClick(event: MouseEvent): void {
    cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
    foncé, pêche (lettres foncées en sombre aussi : les lettres claires de la planche n'ont que 1,6:1). */
 @media (min-width: 821px) {
-  :is(.list-card-logo, .oc-title-row > .logo) { --head-r: 10px; border-radius: var(--head-r); }
-  :is(.list-card-logo, .oc-title-row > .logo):not(.image) { border: 1px solid transparent; }
-  :is(.list-card-logo, .oc-title-row > .logo):is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
-  :is(.list-card-logo, .oc-title-row > .logo).t0:not(.image) { color: var(--danger); }
-  :is(.list-card-logo, .oc-title-row > .logo).t1:not(.image) { color: var(--primary-graphic); }
-  :is(.list-card-logo, .oc-title-row > .logo).t2:not(.image) { background: var(--text); color: var(--surface); }
-  :is(.list-card-logo, .oc-title-row > .logo).t3:not(.image) { background: var(--primary-text); color: var(--surface); }
-  :is(.list-card-logo, .oc-title-row > .logo).t4:not(.image) { background: var(--spark); color: var(--on-peach); }
+  .list-card-logo { --head-r: 10px; border-radius: var(--head-r); }
+  .list-card-logo:not(.image) { border: 1px solid transparent; }
+  .list-card-logo:is(.t0, .t1):not(.image) { background: var(--surface); border-color: var(--line); }
+  .list-card-logo.t0:not(.image) { color: var(--danger); }
+  .list-card-logo.t1:not(.image) { color: var(--primary-graphic); }
+  .list-card-logo.t2:not(.image) { background: var(--text); color: var(--surface); }
+  .list-card-logo.t3:not(.image) { background: var(--primary-text); color: var(--surface); }
+  .list-card-logo.t4:not(.image) { background: var(--spark); color: var(--on-peach); }
 }
 </style>
