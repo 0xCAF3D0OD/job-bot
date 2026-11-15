@@ -90,7 +90,8 @@ class GoogleJobs:
     url: str
 
 
-# « Masquer » sur la carte Google Emplois : retenu pour le compte, elle ne revient plus.
+# « Masquer » sur la carte Google Emplois d'Aujourd'hui : retenu pour le compte, elle ne revient
+# plus ; le lien de Candidatures vide n'est pas concerné.
 GOOGLE_JOBS_HIDDEN_KEY = "google_jobs_hidden"
 
 
@@ -112,15 +113,18 @@ async def first_search(session: AsyncSession) -> GoogleJobs | None:
     return GoogleJobs(terms=terms, location=location, url=google_jobs_url(terms, location))
 
 
-async def google_jobs(session: AsyncSession, has_offers: bool | None = None) -> GoogleJobs | None:
-    """La carte Google Emplois : tant qu'aucune offre n'est arrivée (la même règle que les premiers
-    pas), si la personne ne l'a pas masquée et qu'un métier (ou une alerte) donne une recherche."""
+async def google_jobs(
+    session: AsyncSession, has_offers: bool | None = None, *, card: bool = True
+) -> GoogleJobs | None:
+    """Google Emplois tant qu'aucune offre n'est arrivée (la même règle que les premiers pas) et
+    qu'un métier (ou une alerte) donne une recherche. « Masquer » ne vaut que pour la carte
+    d'Aujourd'hui (card) : le lien de Candidatures vide reste (Kevin, 15.11)."""
     if has_offers is None:
         visible = select(Offer.id).where(Offer.status != OfferStatus.FILTERED_OUT).limit(1)
         has_offers = await session.scalar(visible) is not None
     if has_offers:
         return None
-    hidden = await session.scalar(
+    hidden = card and await session.scalar(
         select(Setting.value).where(Setting.key == GOOGLE_JOBS_HIDDEN_KEY)
     )
     return None if hidden else await first_search(session)

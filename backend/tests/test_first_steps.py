@@ -29,7 +29,10 @@ from .test_platform import client as account_client
 from .test_platform import invite, secured  # noqa: F401
 
 TABLES = "offers, applications, searches, drafts, criteria, documents, alert_searches"
-KEYS = "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated')"
+KEYS = (
+    "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated',"
+    " 'google_jobs_hidden')"
+)
 
 
 @pytest.fixture
@@ -218,8 +221,8 @@ async def test_google_jobs_until_the_first_offer(client: AsyncClient, fresh: Run
 
 
 async def test_google_jobs_hidden_for_the_account(client: AsyncClient, fresh: Runtime) -> None:
-    """« Masquer » (accord de Kevin du 15.11) : retenu côté serveur, la carte et le lien de
-    Candidatures vide ne reviennent plus, même premiers pas fermés ; l'annuler les rend."""
+    """« Masquer » (Kevin, 15.11) : retenu côté serveur pour la carte d'Aujourd'hui, même premiers
+    pas fermés ; le lien de Candidatures vide reste ; l'annuler rend la carte."""
     async with fresh.sessionmaker.begin() as session:
         session.add(AlertSearch(terms="Comptable", location=None))
     assert (await client.get("/api/today")).json()["google_jobs"]["location"] is None
@@ -227,9 +230,32 @@ async def test_google_jobs_hidden_for_the_account(client: AsyncClient, fresh: Ru
     assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
     assert (await client.put("/api/google-jobs", json={"hidden": True})).status_code == 204
     assert (await client.get("/api/today")).json()["google_jobs"] is None
-    assert (await client.get("/api/google-jobs")).json() is None
-    assert (await client.put("/api/google-jobs", json={"hidden": False})).status_code == 204
     assert (await client.get("/api/google-jobs")).json()["terms"] == "Comptable"
+    assert (await client.put("/api/google-jobs", json={"hidden": False})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+
+
+async def test_google_jobs_hidden_stays_with_its_account(
+    runtime: Runtime,
+    fresh: Runtime,
+    secured: Runtime,  # noqa: F811
+) -> None:
+    """« Masquer » est un réglage du compte, sous sa RLS (docs/regles-securite-donnees.md C-1,
+    C-4) : un autre compte qui n'a rien masqué garde sa carte."""
+    async with account_client(runtime) as owner, account_client(secured) as guest:
+        guest_id = await invite(owner, guest)
+        assert (await owner.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        accounts.set_current(guest_id)
+        try:
+            async with secured.sessionmaker.begin() as session:
+                session.add(AlertSearch(terms="Comptable", location="Sion"))
+        finally:
+            accounts.set_current(None)
+        assert (await guest.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+        assert (await guest.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        assert (await guest.get("/api/today")).json()["google_jobs"] is None
+        # Le lien de Candidatures vide reste pour lui.
+        assert (await guest.get("/api/google-jobs")).json()["terms"] == "Comptable"
 
 
 def _search(message_id: str, kind: str | None = None) -> Search:

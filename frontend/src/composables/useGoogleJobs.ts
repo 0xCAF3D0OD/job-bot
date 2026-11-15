@@ -6,15 +6,17 @@ import { api, type GoogleJobs } from "../api/client";
 
 export const GOOGLE_JOBS_TITLE = "Des offres pour toi, en attendant";
 export const GOOGLE_JOBS_ACTION = "Voir les offres sur Google Emplois";
-export const GOOGLE_JOBS_LINK_LABEL = `${GOOGLE_JOBS_ACTION} (nouvel onglet)`;
+// Le bouton de la carte d'Aujourd'hui, raccourci (Kevin, 15.11) ; son aria-label reste le libellé long.
+export const GOOGLE_JOBS_BUTTON = "Voir sur Google Emplois";
 export const GOOGLE_JOBS_HIDE_LABEL = "Masquer les offres Google Emplois";
 
-// La pastille : « Comptable · Sion · publiées ces 4 derniers jours », sans lieu s'il n'y en a pas.
+// La pastille : « Comptable · Sion », sans lieu s'il n'y en a pas. Aucune promesse de date : la
+// recherche ne filtre pas par date (Kevin, 15.11).
 export function googleJobsPill(search: GoogleJobs): string {
-  return [search.terms, search.location, "publiées ces 4 derniers jours"].filter(Boolean).join(" · ");
+  return [search.terms, search.location].filter(Boolean).join(" · ");
 }
 
-// Candidatures vide, sans alerte : le lien, aux mêmes conditions que la carte ; null sinon ou hors ligne.
+// Candidatures vide : le lien, sans offre et avec un métier ; « Masquer » ne le cache pas. null sinon ou hors ligne.
 export async function loadGoogleJobs(): Promise<GoogleJobs | null> {
   try {
     const { data } = await api.GET("/api/google-jobs");
@@ -24,7 +26,7 @@ export async function loadGoogleJobs(): Promise<GoogleJobs | null> {
   }
 }
 
-// « Masquer » : retenu pour le compte, la carte et le lien ne reviennent plus.
+// « Masquer » : retenu pour le compte, la carte d'Aujourd'hui ne revient plus.
 export async function hideGoogleJobs(keepalive = false): Promise<boolean> {
   const { response } = await api.PUT("/api/google-jobs", { body: { hidden: true }, keepalive });
   return response.ok;

@@ -107,7 +107,8 @@ class RhythmWeek(BaseModel):
 
 
 class GoogleJobsOut(BaseModel):
-    """« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."""
+    """« <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,
+    qui ouvre le panneau Google Emplois."""
 
     terms: str
     location: str | None = None
@@ -413,14 +414,14 @@ async def set_first_steps(request: Request, body: FirstStepsIn) -> None:
 
 @router.get("/google-jobs", operation_id="getGoogleJobs")
 async def get_google_jobs(request: Request) -> GoogleJobsOut | None:
-    """Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la
-    carte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte)."""
+    """Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;
+    « Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11)."""
     async with _runtime(request).sessionmaker() as session:
-        return _google_jobs(await alert_service.google_jobs(session))
+        return _google_jobs(await alert_service.google_jobs(session, card=False))
 
 
 @router.put("/google-jobs", operation_id="setGoogleJobs", status_code=status.HTTP_204_NO_CONTENT)
 async def set_google_jobs(request: Request, body: GoogleJobsIn) -> None:
-    """« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus."""
+    """« Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte."""
     async with _runtime(request).sessionmaker.begin() as session:
         await alert_service.hide_google_jobs(session, body.hidden)
