@@ -88,10 +88,10 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     mount(JobupCodeBox, { props: { siteUrl: null } });
     await flushPromises();
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(GET).toHaveBeenCalledTimes(1);
+    expect(GET).not.toHaveBeenCalled();
     visibility = "visible";
     document.dispatchEvent(new Event("visibilitychange"));
     await flushPromises();
-    expect(GET).toHaveBeenCalledTimes(2);
+    expect(GET).toHaveBeenCalledTimes(1);
   });
 });

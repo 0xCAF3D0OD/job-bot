@@ -14,107 +14,65 @@ import AppIcon from "./AppIcon.vue";
 // validité vient de l'e-mail de jobup (10 minutes sinon). Un nouveau code remplace l'ancien.
 const props = defineProps<{ siteUrl: string | null }>();
 
-type State = "waiting" | "received" | "expired";
 type Code = { code: string; received_at: string; valid_minutes: number };
-
-const POLL_MS = 5000;
-const WAIT_MS = 10 * 60 * 1000;
-
-const state = ref<State>("waiting");
+const state = ref<"waiting" | "received" | "expired">("waiting");
 const code = ref<Code | null>(null);
 const copied = ref(false);
-let waitStart = Date.now();
-let poll: ReturnType<typeof setTimeout> | undefined;
-let expiry: ReturnType<typeof setTimeout> | undefined;
-let copiedTimer: ReturnType<typeof setTimeout> | undefined;
-// Le code déjà connu au départ de l'attente : seul un code plus récent compte.
-let seenAt = "";
+// Début de l'attente, dernier code déjà vu (seul un code plus récent compte), minuteurs.
+let since = 0;
+let seen = "";
+let timer = 0;
+let expiry = 0;
+const ends = (c: Code): number => Date.parse(c.received_at) + c.valid_minutes * 60_000;
 
-function expiresAt(found: Code): number {
-  return new Date(found.received_at).getTime() + found.valid_minutes * 60_000;
+function stop(next: "waiting" | "received" | "expired"): void {
+  clearInterval(timer);
+  state.value = next;
 }
 
-function show(found: Code): void {
-  code.value = found;
-  seenAt = found.received_at;
-  state.value = "received";
-  clearTimeout(poll);
+async function tick(): Promise<void> {
+  if (Date.now() - since > 10 * 60_000) return stop("expired");
+  if (document.visibilityState !== "visible") return;
+  const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
+  if (state.value !== "waiting" || !data || data.received_at === seen) return;
+  seen = data.received_at;
+  if (!(ends(data) > Date.now())) return;
+  code.value = data;
+  stop("received");
+  expiry = window.setTimeout(() => (state.value = "expired"), ends(data) - Date.now());
+}
+
+function wait(): void {
   clearTimeout(expiry);
-  expiry = setTimeout(() => (state.value = "expired"), Math.max(0, expiresAt(found) - Date.now()));
-}
-
-async function check(): Promise<void> {
-  poll = undefined;
-  if (state.value !== "waiting") return;
-  if (Date.now() - waitStart >= WAIT_MS) {
-    state.value = "expired";
-    return;
-  }
-  if (document.visibilityState === "visible") {
-    const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
-    if (state.value !== "waiting") return;
-    if (data && data.received_at !== seenAt && expiresAt(data) > Date.now()) {
-      show(data);
-      return;
-    }
-  }
-  schedule();
-}
-
-function schedule(): void {
-  clearTimeout(poll);
-  if (state.value === "waiting" && document.visibilityState === "visible") poll = setTimeout(check, POLL_MS);
+  stop("waiting");
+  since = Date.now();
+  timer = window.setInterval(tick, 5000);
+  void tick();
 }
 
 // « Ouvrir jobup » ou « Renvoyer » : la boîte relevée vite (15 s pendant 5 min), l'écran attend le nouveau code.
 function restart(): void {
-  if (state.value === "received") seenAt = code.value?.received_at ?? seenAt;
-  state.value = "waiting";
-  waitStart = Date.now();
-  clearTimeout(expiry);
   void api.POST("/api/alert-searches/expect-code");
-  schedule();
+  wait();
 }
 
-function onVisibility(): void {
-  if (document.visibilityState === "visible" && state.value === "waiting" && !poll) void check();
-  else if (document.visibilityState !== "visible") {
-    clearTimeout(poll);
-    poll = undefined;
-  }
+const onVisible = (): void => void (state.value === "waiting" && tick());
+
+function copy(): void {
+  void navigator.clipboard?.writeText(code.value?.code ?? "").then(() => {
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  }, () => undefined);
 }
 
-async function copy(): Promise<void> {
-  if (!code.value) return;
-  try {
-    await navigator.clipboard.writeText(code.value.code);
-  } catch {
-    return;
-  }
-  copied.value = true;
-  clearTimeout(copiedTimer);
-  copiedTimer = setTimeout(() => (copied.value = false), 2000);
-}
-
-function spaced(value: string): string {
-  return value.length === 6 ? `${value.slice(0, 3)} ${value.slice(3)}` : value;
-}
-
-onMounted(async () => {
-  document.addEventListener("visibilitychange", onVisibility);
-  // Un code encore valable, reçu avant d'arriver sur l'écran : montré tout de suite.
-  const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
-  if (data && expiresAt(data) > Date.now()) show(data);
-  else {
-    if (data) seenAt = data.received_at;
-    schedule();
-  }
+onMounted(() => {
+  document.addEventListener("visibilitychange", onVisible);
+  wait();
 });
 onUnmounted(() => {
-  document.removeEventListener("visibilitychange", onVisibility);
-  clearTimeout(poll);
+  document.removeEventListener("visibilitychange", onVisible);
+  stop(state.value);
   clearTimeout(expiry);
-  clearTimeout(copiedTimer);
 });
 
 defineExpose({ restart });
@@ -155,7 +113,7 @@ defineExpose({ restart });
       <span
         class="code-box-value"
         data-test="code-box-value"
-      >{{ spaced(code.code) }}</span>
+      >{{ code.code.replace(/^(\d{3})(\d{3})$/, "$1 $2") }}</span>
       <button
         type="button"
         class="code-box-copy"
