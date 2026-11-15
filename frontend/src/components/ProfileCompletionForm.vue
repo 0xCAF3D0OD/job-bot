@@ -23,6 +23,7 @@ const TASK_EXAMPLES: [RegExp, string][] = [
   [/vent|vend|commerc|caiss|magasin|boutique|retail/i, "accueil des clients, caisse, commandes, inventaire"],
   [/soin|soign|infirm|aide|accompagn|asspe|socio/i, "soins de base, accompagnement, transmissions, hygiène"],
   [/cuisin|restaur|serv|barman|h[oô]tel|r[ée]ception/i, "mise en place, service, encaissement, hygiène"],
+  // « livreu » : détection du métier de livreur, sans rapport avec l'ancien visuel livre (à ne pas supprimer au nettoyage).
   [/logisti|magasinier|entrep[oô]t|chauffeur|livreu|cariste/i, "réception des marchandises, préparation des commandes, inventaire"],
   [/bureau|administr|secr[ée]tar|comptab|employ[ée]e? de commerce|assistant/i, "accueil téléphonique, courrier, saisie, classement"],
   [/nettoy|entretien|concierg/i, "nettoyage des locaux, produits, horaires, contrôle qualité"],

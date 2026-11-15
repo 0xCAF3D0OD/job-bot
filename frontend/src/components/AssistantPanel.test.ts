@@ -210,7 +210,7 @@ describe("AssistantPanel, effacer la discussion (règles §4, menu « ⋯ »)", 
 });
 
 describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
-  // Un flux qu'on fait avancer à la main : chaque appel à `push` livre un morceau, `end` le ferme.
+  // Un flux qu'on fait avancer à la main : chaque appel à `push` envoie un morceau, `end` le ferme.
   function manualStream() {
     const pending: ((chunk: { done: boolean; value?: Uint8Array }) => void)[] = [];
     const queue: { done: boolean; value?: Uint8Array }[] = [];

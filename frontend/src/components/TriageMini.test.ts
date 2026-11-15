@@ -1,4 +1,4 @@
-// Le livre en petit d'Aujourd'hui sur ordinateur (lot du 11 novembre au soir, PR 49) : on trie sur place.
+// L'éventail en petit d'Aujourd'hui sur ordinateur (§20 du 15 novembre) : on trie sur place.
 import { flushPromises, mount, RouterLinkStub } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,7 +10,7 @@ const PATCH = vi.fn();
 vi.mock("../api/client", () => ({ api: { PATCH: (...a: unknown[]) => PATCH(...a) } }));
 
 const offer = (id: number, title: string, score: number): Offer =>
-  ({ id, title, company: "Acme SA", location: "Lausanne", score, description: "Vous exploitez nos clusters Kubernetes au quotidien.", snippet: null, passages: ["clusters Kubernetes"], has_logo: false }) as unknown as Offer;
+  ({ id, title, company: "Acme SA", location: "Lausanne", score, description: "Vous exploitez nos clusters Kubernetes au quotidien.", snippet: null, passages: ["clusters Kubernetes"], has_logo: false, strengths: [{ text: "Kubernetes · Terraform" }], gaps: [{ text: "Anglais ? à vérifier" }] }) as unknown as Offer;
 
 beforeEach(() => PATCH.mockResolvedValue({ response: { ok: true } }));
 afterEach(async () => {
@@ -21,17 +21,24 @@ afterEach(async () => {
 const mini = () =>
   mount(TriageMini, { props: { offers: [offer(1, "DevOps", 90), offer(2, "SRE", 80)] }, global: { stubs: { RouterLink: RouterLinkStub } }, attachTo: document.body });
 
-describe("Le petit livre d’Aujourd’hui (PR 49)", () => {
-  it("« {n} offres à trier », le compteur, l’offre ouverte : titre, entreprise, note, extrait surligné et sa légende", () => {
+describe("L’éventail en petit d’Aujourd’hui (§20)", () => {
+  it("« {n} offres à trier », le compteur, l’éventail : un groupe nommé, une carte par offre, sans pastilles", () => {
     const view = mini();
     expect(view.find("h2").text()).toBe("2 offres à trier");
     expect(view.find("[data-test=triage-mini-count]").text()).toBe("1 sur 2");
-    expect(view.find("[data-test=triage-mini-title]").text()).toBe("DevOps");
-    expect(view.text()).toContain("Acme SA · Lausanne");
-    expect(view.text()).toContain("Très proche");
-    expect(view.findAll("[data-test=triage-mini-excerpt] mark").map((m) => m.text())).toEqual(["clusters Kubernetes"]);
-    // Le surlignage a toujours sa légende en texte (§1 du lot).
-    expect(view.find("[data-test=triage-mini-legend]").text()).toBe("1 point retrouvé");
+    const group = view.find("[data-test=triage-mini-group]");
+    expect(group.attributes("role")).toBe("group");
+    expect(group.attributes("aria-label")).toBe("2 offres à trier, la première : DevOps chez Acme SA");
+    const cards = view.findAll("[data-test=fan-card]");
+    const [best] = cards;
+    expect(cards.map((c) => c.find("b").text())).toEqual(["DevOps", "SRE"]);
+    expect(best?.text()).toContain("Acme SA · Lausanne");
+    expect(best?.text()).toContain("Kubernetes · Terraform");
+    expect(best?.text()).toContain("Anglais ? à vérifier");
+    // Deux offres : −4° et +4° (§12) ; la meilleure en bleu.
+    expect(cards.map((c) => (c.element as HTMLElement).style.transform)).toEqual(["rotate(4deg)", "rotate(-4deg)"]);
+    expect(best?.classes()).toContain("fan-blue");
+    expect(view.find(".fan-mini").exists()).toBe(true);
     view.unmount();
   });
 
@@ -43,13 +50,15 @@ describe("Le petit livre d’Aujourd’hui (PR 49)", () => {
     await keep.trigger("click");
     await flushPromises();
     expect(view.find("[data-test=triage-mini-count]").text()).toBe("2 sur 2");
-    expect(document.activeElement).toBe(view.find("[data-test=triage-mini-title]").element);
+    expect(document.activeElement).toBe(view.find("[data-test=triage-mini-group]").element);
+    expect(view.find("[data-test=triage-mini-group]").attributes("aria-label")).toBe("1 offre à trier, la première : SRE chez Acme SA");
+    expect(view.findAll("[data-test=fan-card]")).toHaveLength(1);
     expect(useUndo().pending.value?.message).toBe("Offre gardée dans tes candidatures");
     // Rien n'est parti au serveur ; « Annuler » remet l'offre à l'écran.
     expect(PATCH).not.toHaveBeenCalled();
     await useUndo().undo();
     await flushPromises();
-    expect(view.find("[data-test=triage-mini-title]").text()).toBe("DevOps");
+    expect(view.find("[data-test=fan-card] b").text()).toBe("DevOps");
     await view.find("[data-test=triage-mini-keep]").trigger("click");
     await view.find("[data-test=triage-mini-dismiss]").trigger("click");
     await flushPromises();
@@ -70,7 +79,7 @@ describe("Le petit livre d’Aujourd’hui (PR 49)", () => {
     await useUndo().undo();
     await flushPromises();
     expect(view.emitted("resumed")).toHaveLength(1);
-    expect(view.find("[data-test=triage-mini-title]").text()).toBe("DevOps");
+    expect(view.find("[data-test=fan-card] b").text()).toBe("DevOps");
     expect(PATCH).not.toHaveBeenCalled();
   });
 });

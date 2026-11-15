@@ -23,6 +23,8 @@ import { dailyPace, daysBefore, localDate, ofMonth, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
+import { GOOGLE_JOBS_BUTTON, GOOGLE_JOBS_HIDE_LABEL, GOOGLE_JOBS_TITLE, googleJobsPill, hideGoogleJobs } from "../composables/useGoogleJobs";
+import IconButton from "../components/IconButton.vue";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -30,12 +32,12 @@ import { usePageReady } from "../composables/usePageTransition";
 // « accueil », « vide » et « atteint »), en deux colonnes. À gauche : l'accroche sur un fond pêche (« Bonjour Kevin »,
 // le titre du jour et sa fin à la main ; avec un justificatif en retard, deux lignes manuscrites, le retard d'abord ;
 // l'objectif du mois atteint, en vert puis en bleu), « À faire » (une carte par tâche, numérotée, celle en retard en
-// numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : le livre en
-// petit, où l'on trie sur place. Un jour de repos suit le même gabarit (état « repos » de la planche, 14 novembre ; la
+// numéro 1), « Quand tu as le temps ». À droite : la bande ORP (la barre ORP), puis « {n} offres à trier » : l'éventail
+// de Trier en petit (§20 du 15 novembre), où l'on trie sur place. Un jour de repos suit le même gabarit (état « repos » de la planche, 14 novembre ; la
 // planche AujourdhuiOrdinateurReposD est retirée) : « Jour de repos. » à la main, « Si tu veux avancer » à la place de
 // « À faire », « Cette semaine : 3 sur 3, faite » sous la barre ORP, et les offres à trier s'il y en a.
 // Le téléphone a sa propre page (HomePhone).
-// L'Accueil du téléphone et le petit livre de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
+// L'Accueil du téléphone et l'éventail en petit de l'ordinateur sont chargés à part : chaque appareil ne reçoit que sa
 // moitié (budget de poids du premier affichage). Le chargement part tout de suite, en même temps que les données.
 const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
@@ -50,9 +52,9 @@ const firstName = ref<string | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
-// Le tri du jour fini sur cet appareil (l'écran de tri et le petit livre le notent à la fin de la pile).
+// Le tri du jour fini sur cet appareil (l'écran de tri et l'éventail en petit le notent à la fin de la pile).
 const triageDone = ref(false);
-// Le petit livre reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
+// L'éventail en petit reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
 const miniOpen = ref(false);
 // Un jour de repos (docs/86) : tout est facultatif, la liste devient « Si tu veux avancer ».
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
@@ -234,7 +236,7 @@ const heading = computed<Heading>(() => {
 
 // Les tâches de l'ordinateur : une carte cliquable chacune, l'icône seule dans la couleur du ton, le libellé d'action
 // coloré suivi de « › » (pas de bouton). Retard en pêche, entretien en vert, le reste en bleu.
-type DeskTask = Task & { tone: "late" | "normal" | "interview"; href?: string };
+type DeskTask = Task & { tone: "late" | "normal" | "interview" };
 const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
   const t = today.value;
   if (!t || starting.value) return { todo: [], later: [] };
@@ -300,25 +302,13 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
   }
   return { todo, later };
 });
-// Des offres dès l'inscription (docs/144) : tant qu'aucune offre n'est arrivée, trois façons d'en
-// trouver tout de suite, sans attendre le premier e-mail d'alerte des sites.
-const starterTasks = computed<DeskTask[]>(() => {
-  const t = today.value;
-  if (!t || !starting.value || (t.has_offers ?? true)) return [];
-  const list: DeskTask[] = [];
-  if (t.search_url) {
-    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d’autres sites, réunies", action: "Ouvrir", to: "", href: t.search_url, tone: "normal" });
-  }
-  // Alertes prêtes : la carte des premiers pas propose déjà « Ajouter une offre ».
-  const alertsDone = t.first_steps.some((s) => s.key === "alerts" && s.done);
-  if (!alertsDone) {
-    list.push({ key: "add", test: "start-add", icon: "link", title: "Ajouter une offre vue ailleurs", detail: "Colle son lien : jobA1 la lit et la note", action: "Ajouter", to: "/ajouter-une-offre", tone: "normal" });
-  }
-  list.push(
-    { key: "forward", test: "start-forward", icon: "reply", title: "Transférer mes alertes existantes", detail: "Déjà des alertes jobup ou Indeed : elles arrivent ici", action: "Transférer", to: "/candidatures/alertes", tone: "normal" },
-  );
-  return list;
-});
+// Des offres pour toi, en attendant (docs/144, planches AujourdhuiOrdinateurNouveau et AccueilNouveau, §22 du 15.11) :
+// le serveur n'envoie la recherche que sans offre, sans « Masquer » et avec un métier. « Ajouter une offre vue
+// ailleurs » part quand les alertes sont prêtes : la carte des premiers pas la propose déjà.
+const googleJobs = computed(() => today.value?.google_jobs ?? null);
+// Les deux liens dessous restent sans carte pendant les premiers pas, comme avant (docs/144).
+const googleShown = computed(() => !!googleJobs.value || (starting.value && today.value?.has_offers === false));
+const googleAdd = computed(() => !today.value?.first_steps.some((s) => s.key === "alerts" && s.done));
 // « Cette semaine · 2 sur 3 » sous la barre ORP : pas pendant une pause ni les premiers pas.
 const weekCount = computed(() => {
   const week = today.value?.rhythm;
@@ -373,7 +363,7 @@ const emptyTitle = computed(() => {
 });
 // « Élargir ma recherche » : seulement quand la recherche n'a rien trouvé.
 const widen = computed(() => !emptyTitle.value && !best.value.length);
-// Le petit livre finit le tri (ou « Annuler » le reprend) : la tâche « Trier » suit.
+// L'éventail en petit finit le tri (ou « Annuler » le reprend) : la tâche « Trier » suit.
 function onMiniDone(done: boolean): void {
   triageDone.value = done;
   if (done) markTriageDone();
@@ -427,12 +417,27 @@ async function fetchAll(): Promise<void> {
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
-  // Le petit livre s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
+  // L'éventail en petit s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
   miniOpen.value ||= triagePending.value;
   if (firstName.value === null) {
     const who = await api.GET("/api/identity").catch(() => null);
     firstName.value = who?.data?.name?.trim().split(/\s+/)[0] || "";
   }
+}
+
+// Masquer la carte Google Emplois : comme les premiers pas, « Annuler » pendant 6 secondes, puis retenu pour le
+// compte (Kevin, 15.11). Le lien de Candidatures vide reste.
+function hideGoogle(): void {
+  const kept = today.value?.google_jobs;
+  if (!today.value || !kept) return;
+  today.value = { ...today.value, google_jobs: null };
+  void offerUndo({
+    message: "Carte masquée",
+    commit: hideGoogleJobs,
+    restore: () => {
+      if (today.value) today.value = { ...today.value, google_jobs: kept };
+    },
+  });
 }
 
 // Masquer les premiers pas : la carte s'en va tout de suite, « Annuler » pendant 6 secondes
@@ -491,6 +496,51 @@ const { me } = useAuth();
       :pick-ready="!rhythmPaused && best.length > 0"
       @dismiss="dismissSteps"
     />
+    <section
+      v-if="googleJobs"
+      class="today-task aj-google aj-google-phone"
+      aria-labelledby="google-title"
+      data-test="google-jobs"
+    >
+      <span class="aj-task-main">
+        <strong id="google-title">{{ GOOGLE_JOBS_TITLE }}</strong>
+        <span data-test="google-jobs-search">{{ googleJobsPill(googleJobs) }}</span>
+      </span>
+      <a
+        class="aj-google-go"
+        :href="googleJobs.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Voir les offres sur Google Emplois (nouvel onglet)"
+        data-test="google-jobs-open"
+      >{{ GOOGLE_JOBS_BUTTON }}<AppIcon name="trend" /></a>
+      <IconButton
+        icon="close"
+        class="aj-google-x"
+        :label="GOOGLE_JOBS_HIDE_LABEL"
+        data-test="google-jobs-hide"
+        @click="hideGoogle"
+      />
+    </section>
+    <div
+      v-if="googleShown"
+      :class="['aj-google-links', { 'aj-google-phone': true }]"
+      data-test="google-jobs-links"
+    >
+      <RouterLink
+        v-if="googleAdd"
+        to="/ajouter-une-offre"
+        data-test="start-add"
+      >
+        Ajouter une offre vue ailleurs<AppIcon name="chevron" />
+      </RouterLink>
+      <RouterLink
+        to="/candidatures/alertes"
+        data-test="start-forward"
+      >
+        Transférer mes alertes<AppIcon name="chevron" />
+      </RouterLink>
+    </div>
   </HomePhone>
   <div
     v-if="!phone && today"
@@ -580,10 +630,58 @@ const { me } = useAuth();
         :pick-ready="!rhythmPaused && best.length > 0"
         @dismiss="dismissSteps"
       />
+      <section
+        v-if="googleJobs"
+        class="today-task aj-google"
+        aria-labelledby="google-title"
+        data-test="google-jobs"
+      >
+        <b
+          class="aj-num"
+          aria-hidden="true"
+        ><AppIcon name="search" /></b>
+        <span class="aj-task-main">
+          <strong id="google-title">{{ GOOGLE_JOBS_TITLE }}</strong>
+          <span data-test="google-jobs-search">{{ googleJobsPill(googleJobs) }}</span>
+        </span>
+        <a
+          class="aj-google-go"
+          :href="googleJobs.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Voir les offres sur Google Emplois (nouvel onglet)"
+          data-test="google-jobs-open"
+        >{{ GOOGLE_JOBS_BUTTON }}<AppIcon name="trend" /></a>
+        <IconButton
+          icon="close"
+          class="aj-google-x"
+          :label="GOOGLE_JOBS_HIDE_LABEL"
+          data-test="google-jobs-hide"
+          @click="hideGoogle"
+        />
+      </section>
+      <div
+        v-if="googleShown"
+        :class="['aj-google-links', { 'aj-google-phone': false }]"
+        data-test="google-jobs-links"
+      >
+        <RouterLink
+          v-if="googleAdd"
+          to="/ajouter-une-offre"
+          data-test="start-add"
+        >
+          Ajouter une offre vue ailleurs<AppIcon name="chevron" />
+        </RouterLink>
+        <RouterLink
+          to="/candidatures/alertes"
+          data-test="start-forward"
+        >
+          Transférer mes alertes<AppIcon name="chevron" />
+        </RouterLink>
+      </div>
 
       <section
         v-for="group in [
-          { key: 'start', title: 'Des offres dès maintenant', items: starterTasks, test: 'today-start', numbered: false },
           { key: 'todo', title: restDay ? 'Si tu veux avancer' : 'À faire', items: deskTodo, test: 'today-tasks', numbered: true },
           { key: 'later', title: 'Quand tu as le temps', items: deskLater, test: 'today-later', numbered: false },
         ].filter((g) => g.items.length)"
@@ -603,10 +701,8 @@ const { me } = useAuth();
             v-for="(task, i) in group.items"
             :key="task.key"
           >
-            <!-- Google Emplois s'ouvre dans un nouvel onglet ; le reste reste dans jobA1. -->
-            <component
-              :is="task.href ? 'a' : RouterLink"
-              v-bind="task.href ? { href: task.href, target: '_blank', rel: 'noopener noreferrer' } : { to: task.to }"
+            <RouterLink
+              :to="task.to"
               :class="['today-task', `tone-${task.tone}`]"
               :data-test="task.test"
             >
@@ -621,17 +717,14 @@ const { me } = useAuth();
                 class="aj-icon"
               />
               <span class="aj-task-main">
-                <strong>{{ task.title }}<span
-                  v-if="task.href"
-                  class="visually-hidden"
-                > (nouvel onglet)</span></strong>
+                <strong>{{ task.title }}</strong>
                 <span>{{ task.detail }}</span>
               </span>
               <span class="aj-action">{{ task.action }}<span
                 class="arrow-circle aj-arrow"
                 aria-hidden="true"
               ><AppIcon name="arrow-right" /></span></span>
-            </component>
+            </RouterLink>
           </li>
         </component>
       </section>
@@ -772,10 +865,23 @@ const { me } = useAuth();
 .aj-action { flex: none; display: flex; align-items: center; gap: var(--space-4); font-size: var(--aj-16); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
 .aj-arrow { --circle: var(--aj-circle); }
 
+/* Carte Google Emplois (§22 du 15.11) : une ligne des premiers pas sur le fond de la carte ORP. */
+.aj-google { margin-top: var(--space-8); padding-right: var(--space-3); background: var(--primary-soft); }
+.aj-google .aj-num, .aj-google-go { background: var(--surface); color: var(--primary-text); }
+.aj-google-go { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--btn-tertiary); --aj-22px: 22px; padding: 0 var(--aj-22px); border-radius: var(--radius-pill); color: var(--text); font-weight: var(--weight-bold); text-decoration: none; white-space: nowrap; }
+.aj-google-x { width: var(--target-min); height: var(--target-min); }
+.aj-google .aj-task-main > span, .aj-google-x { color: var(--text-lead); }
+.aj-google-links { display: flex; gap: var(--space-6); margin-top: var(--space-2); }
+.aj-google-phone.aj-google { flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); padding: var(--space-4); }
+.aj-google-phone .aj-google-go { order: 1; flex: 1 0 100%; justify-content: center; }
+.aj-google-phone .aj-google-x { margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0; }
+.aj-google-phone.aj-google-links { flex-direction: column; align-items: flex-start; gap: 0; }
+
 .aj-side { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 .aj-orp { padding: var(--aj-28) var(--space-8); border-radius: var(--space-6); background: var(--primary-soft); }
 .aj-orp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-5); }
-.aj-orp-head a { display: inline-flex; align-items: center; min-height: var(--target-min); margin: calc(-1 * var(--space-3)) 0; font-size: var(--aj-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.aj-orp-head a, .aj-google-links a { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.aj-orp-head a { margin: calc(-1 * var(--space-3)) 0; }
 .aj-orp-head a:hover { text-decoration: underline; }
 .aj-none { padding-top: var(--space-1); }
 .aj-none h2 { margin: 0 var(--space-1) var(--space-5); }

@@ -4,7 +4,7 @@ import { api, type Offer } from "../api/client";
 import { offerUndo } from "./useUndo";
 
 // Le tri des offres du jour, une par une (lot du 11 novembre au soir, PR 45 et 49) : la page « Trier les offres » et le
-// petit livre d'Aujourd'hui sur ordinateur trient de la même façon. La pile ne change pas pendant le tri ; « Garder »
+// l'éventail en petit d'Aujourd'hui sur ordinateur trient de la même façon. La pile ne change pas pendant le tri ; « Garder »
 // passe l'offre à l'état « Gardée » (`later`, décision de Kevin du 11 novembre), « Écarter » à `ignored` ; rien ne
 // part au serveur avant la fin des 6 secondes d'« Annuler ».
 export type TriageChoice = "keep" | "dismiss";

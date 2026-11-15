@@ -29,7 +29,10 @@ from .test_platform import client as account_client
 from .test_platform import invite, secured  # noqa: F401
 
 TABLES = "offers, applications, searches, drafts, criteria, documents, alert_searches"
-KEYS = "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated')"
+KEYS = (
+    "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated',"
+    " 'google_jobs_hidden')"
+)
 
 
 @pytest.fixture
@@ -195,18 +198,64 @@ async def test_read_only_demo_reads_without_writing(fresh: Runtime) -> None:
     assert stored == 0
 
 
-async def test_search_url_until_the_first_offer(client: AsyncClient, fresh: Runtime) -> None:
-    """Sans offre (docs/144) : la recherche Google Emplois de la première alerte ; plus rien
-    dès qu'une offre arrive."""
-    assert (await client.get("/api/today")).json()["search_url"] is None  # ni métier ni alerte
+async def test_google_jobs_until_the_first_offer(client: AsyncClient, fresh: Runtime) -> None:
+    """Sans offre (docs/144) : la recherche Google Emplois de la première alerte, avec le métier
+    et le lieu de la pastille ; plus rien dès qu'une offre arrive, ni sur Aujourd'hui ni sous
+    Candidatures vide."""
+    assert (await client.get("/api/today")).json()["google_jobs"] is None  # ni métier ni alerte
+    assert (await client.get("/api/google-jobs")).json() is None
     async with fresh.sessionmaker.begin() as session:
         session.add(AlertSearch(terms="Comptable", location="Sion"))
-    page = (await client.get("/api/today")).json()
-    assert page["search_url"] == "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8"
+    card = {
+        "terms": "Comptable",
+        "location": "Sion",
+        "url": "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8",
+    }
+    assert (await client.get("/api/today")).json()["google_jobs"] == card
+    assert (await client.get("/api/google-jobs")).json() == card
     async with fresh.sessionmaker.begin() as session:
         now = datetime.now(UTC)
         session.add(Offer(fingerprint="g1", title="Comptable", first_seen_at=now, last_seen_at=now))
-    assert (await client.get("/api/today")).json()["search_url"] is None
+    assert (await client.get("/api/today")).json()["google_jobs"] is None
+    assert (await client.get("/api/google-jobs")).json() is None
+
+
+async def test_google_jobs_hidden_for_the_account(client: AsyncClient, fresh: Runtime) -> None:
+    """« Masquer » (Kevin, 15.11) : retenu côté serveur pour la carte d'Aujourd'hui, même premiers
+    pas fermés ; le lien de Candidatures vide reste ; l'annuler rend la carte."""
+    async with fresh.sessionmaker.begin() as session:
+        session.add(AlertSearch(terms="Comptable", location=None))
+    assert (await client.get("/api/today")).json()["google_jobs"]["location"] is None
+    assert (await client.put("/api/first-steps", json={"dismissed": True})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+    assert (await client.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"] is None
+    assert (await client.get("/api/google-jobs")).json()["terms"] == "Comptable"
+    assert (await client.put("/api/google-jobs", json={"hidden": False})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+
+
+async def test_google_jobs_hidden_stays_with_its_account(
+    runtime: Runtime,
+    fresh: Runtime,
+    secured: Runtime,  # noqa: F811
+) -> None:
+    """« Masquer » est un réglage du compte, sous sa RLS (docs/regles-securite-donnees.md C-1,
+    C-4) : un autre compte qui n'a rien masqué garde sa carte."""
+    async with account_client(runtime) as owner, account_client(secured) as guest:
+        guest_id = await invite(owner, guest)
+        assert (await owner.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        accounts.set_current(guest_id)
+        try:
+            async with secured.sessionmaker.begin() as session:
+                session.add(AlertSearch(terms="Comptable", location="Sion"))
+        finally:
+            accounts.set_current(None)
+        assert (await guest.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+        assert (await guest.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        assert (await guest.get("/api/today")).json()["google_jobs"] is None
+        # Le lien de Candidatures vide reste pour lui.
+        assert (await guest.get("/api/google-jobs")).json()["terms"] == "Comptable"
 
 
 def _search(message_id: str, kind: str | None = None) -> Search:
