@@ -31,7 +31,8 @@ export function pinCenter(side: Exclude<PinSide, null>, visibleTop: number, visi
   return side === "top" ? visibleTop + half : visibleBottom - half;
 }
 
-// `list` : l'élément qui défile (la barre de recherche et de filtres y est collée en haut, [data-linked-tools]) ;
+// `list` : la colonne de liste. La barre de recherche et de filtres ([data-linked-tools]) y reste en haut, hors de ce
+// qui défile ; seules les cartes défilent, dans `.linked-cards` (la barre de défilement commence donc sous les filtres) ;
 // `zone` : la zone de détail. Recalcul au défilement de la liste (écouteur passif), au changement de sélection et des
 // cartes (MutationObserver), au redimensionnement de la fenêtre, de la liste, de la zone ou des cartes
 // (ResizeObserver, barre d'outils comprise : elle pousse les cartes), une fois par image (requestAnimationFrame). Aucun minuteur.
@@ -44,6 +45,12 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
   let resize: ResizeObserver | null = null;
   let mutation: MutationObserver | null = null;
   let bound: HTMLElement | null = null;
+  let scroller: HTMLElement | null = null;
+
+  // Ce qui défile dans la colonne : `.linked-cards`, ou la colonne elle-même à défaut.
+  function cardsOf(l: HTMLElement): HTMLElement {
+    return l.querySelector<HTMLElement>(":scope > .linked-cards") ?? l;
+  }
 
   function setPinned(l: HTMLElement, side: PinSide): void {
     if (side) l.setAttribute("data-pinned", side);
@@ -58,17 +65,18 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
       visible.value = false;
       return;
     }
-    l.toggleAttribute("data-scrolled", l.scrollTop > 0);
+    const s = cardsOf(l);
+    l.toggleAttribute("data-scrolled", s.scrollTop > 0);
     // La hauteur des colonnes part du haut de la grille (bandeau de démo, en-tête) jusqu'au bas de la fenêtre.
     const grid = l.parentElement;
     if (grid) grid.style.setProperty("--linked-top", `${Math.round(grid.getBoundingClientRect().top + window.scrollY)}px`);
-    const own = l.getBoundingClientRect();
+    const own = s.getBoundingClientRect();
     const tools = l.querySelector<HTMLElement>("[data-linked-tools]");
     // Le bas de ce que montre la barre (le champ de filtre, les filtres actifs), sans ses marges : la carte compacte
     // se place 12 px dessous, jamais collée.
     const shown = tools ? [...tools.children].map((c) => c.getBoundingClientRect()).filter((r) => r.height) : [];
-    const visibleTop = Math.max(own.top, ...shown.map((r) => r.bottom));
-    l.style.setProperty("--linked-pin-top", `${Math.round(visibleTop - own.top + PIN_GAP)}px`);
+    const visibleTop = shown.length ? Math.max(...shown.map((r) => r.bottom)) : own.top;
+    l.style.setProperty("--linked-pin-top", `${Math.round(visibleTop - l.getBoundingClientRect().top + PIN_GAP)}px`);
     const arrow = l.querySelector<SVGElement>('[aria-current="true"] > [data-arrow]');
     // Le trait réel de la carte choisie (1,5 px déclaré, arrondi par certains navigateurs) : la flèche s'y accroche.
     const card = arrow?.parentElement;
@@ -98,6 +106,7 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     if (!resize || !bound) return;
     resize.disconnect();
     resize.observe(bound);
+    if (scroller && scroller !== bound) resize.observe(scroller);
     if (zone.value) resize.observe(zone.value);
     const tools = bound.querySelector("[data-linked-tools]");
     if (tools) resize.observe(tools);
@@ -105,12 +114,13 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
   }
 
   function unbind(): void {
-    bound?.removeEventListener("scroll", schedule);
+    scroller?.removeEventListener("scroll", schedule);
     bound?.removeEventListener("transitionend", schedule);
     resize?.disconnect();
     mutation?.disconnect();
     if (bound) setPinned(bound, null);
     bound = null;
+    scroller = null;
   }
 
   function bind(): void {
@@ -118,7 +128,8 @@ export function useLinkedNotch(list: Ref<HTMLElement | null>, zone: Ref<HTMLElem
     const l = list.value;
     if (!l || !zone.value) return;
     bound = l;
-    l.addEventListener("scroll", schedule, { passive: true });
+    scroller = cardsOf(l);
+    scroller.addEventListener("scroll", schedule, { passive: true });
     // Les cartes entrent en glissant (TransitionGroup « card ») : position finale connue à la fin de la transition.
     l.addEventListener("transitionend", schedule, { passive: true });
     if (typeof ResizeObserver !== "undefined") resize = new ResizeObserver(schedule);

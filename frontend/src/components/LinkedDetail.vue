@@ -72,25 +72,24 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 .linked-detail::before { content: ""; position: absolute; top: 0; left: -2px; z-index: 2; width: 3px; height: var(--linked-fade-top); background: linear-gradient(var(--bg), transparent); }
 .linked-detail::after { content: ""; position: absolute; left: -2px; right: 0; bottom: 0; z-index: 2; height: var(--linked-fade-y); background: linear-gradient(180deg, transparent, var(--bg) 85%); pointer-events: none; }
 .linked-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: 0 0 var(--space-12) var(--space-6); }
-.linked-scroll, .linked-list { scrollbar-width: thin; scrollbar-color: var(--card-line) transparent; }
-/* La liste reliée (OffersView, ApplicationsView, RendezVousDesktop) : colonne de 504 px, cartes de 480 px ; la barre
-   de défilement à gauche, dans la marge (rtl sur la liste, ltr sur son contenu, 14 px de marge pour que les cartes restent
-   alignées sur le champ de filtre) ; la barre de recherche et de filtres collée en haut, seules les cartes défilent
-   dessous, avec une ombre légère dès que la liste a défilé. La carte choisie : fond --linked-selected-bg, contour de 2 px,
-   la flèche à droite. */
+.linked-scroll, .linked-cards { scrollbar-width: thin; scrollbar-color: var(--card-line) transparent; }
+/* La liste reliée (OffersView, ApplicationsView, RendezVousDesktop) : colonne de 504 px, cartes de 480 px. La barre de
+   recherche et de filtres reste en haut, hors de ce qui défile ; seules les cartes défilent dessous (.linked-cards), avec
+   une ombre légère sous la barre dès qu'elles ont défilé. La barre de défilement, à gauche (rtl sur .linked-cards, ltr
+   sur son contenu, 14 px de marge pour que les cartes restent alignées sur le champ de filtre), commence sous les filtres.
+   La carte choisie : fond --linked-selected-bg, contour de 2 px, la flèche à droite. Hors liste reliée (téléphone),
+   .linked-cards ne compte pas pour la mise en page. */
+.linked-cards { display: contents; }
 :is(.offers-grid, .jobs-body, .rdv-grid) > .linked-list {
   --linked-col: 504px; --linked-gap: 24px; --linked-bar: 14px; --linked-room: 3px;
-  position: relative; z-index: 2; flex: none; box-sizing: border-box; width: calc(var(--linked-col) + var(--linked-bar)); min-height: 0;
-  overflow-y: auto; direction: rtl; margin: calc(-1 * var(--linked-room)) 0 0 calc(-1 * var(--linked-bar));
-  padding: var(--linked-room) var(--linked-gap) var(--space-3) var(--linked-bar);
+  position: relative; z-index: 2; flex: none; display: flex; flex-direction: column; width: calc(var(--linked-col) + var(--linked-bar)); min-height: 0;
+  margin: calc(-1 * var(--linked-room)) 0 0 calc(-1 * var(--linked-bar));
 }
-.linked-list > * { direction: ltr; }
-.linked-list > [data-linked-tools] {
-  position: sticky; top: calc(-1 * var(--linked-room)); z-index: 3; margin: calc(-1 * var(--linked-room)) calc(-1 * var(--linked-gap)) 0 calc(-1 * var(--linked-bar));
-  padding: var(--linked-room) var(--linked-gap) var(--space-1) var(--linked-bar); background: var(--bg);
-}
+.linked-list > .linked-cards { display: block; flex: 1; min-height: 0; overflow-y: auto; direction: rtl; padding: var(--linked-room) var(--linked-gap) var(--space-3) var(--linked-bar); }
+.linked-cards > * { direction: ltr; }
+.linked-list > [data-linked-tools] { position: relative; z-index: 3; padding: var(--linked-room) var(--linked-gap) calc(var(--space-1) - var(--linked-room)) var(--linked-bar); background: var(--bg); }
 .linked-list[data-scrolled] > [data-linked-tools] { box-shadow: 0 10px 12px -12px rgb(27 31 42 / 35%); }
-.linked-list .list-card { scroll-margin-block: var(--linked-pin-top, 0); }
+.linked-list .list-card { scroll-margin-block: var(--space-3); }
 /* Pas d'enfoncement au clic sur une carte de la liste (comme sur la planche, où seuls les boutons s'enfoncent) : réduite
    de 3 % puis choisie, la carte tremblait. */
 .linked-list .list-card:active { transform: none; }

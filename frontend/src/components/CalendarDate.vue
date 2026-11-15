@@ -7,7 +7,7 @@ import { monthCaps } from "../dates";
 // docs/mobile/calendrier-date.html) : au trait, mois abrégé en capitales en haut, jour en gras au centre. Remplace les
 // carrés de date colorés. Tons : à venir (bleu), ORP ou à noter, passé. Décorative si la date est écrite à côté.
 const props = withDefaults(
-  defineProps<{ day: number; month: number; tone?: "blue" | "orp" | "past"; size?: 36 | 40 | 44 | 48 | 56; label?: string }>(),
+  defineProps<{ day: number; month: number; tone?: "blue" | "orp" | "past"; size?: 36 | 44 | 48 | 56; label?: string }>(),
   { tone: "blue", size: 48, label: "" },
 );
 const height = computed(() => Math.round((props.size * 52) / 48));

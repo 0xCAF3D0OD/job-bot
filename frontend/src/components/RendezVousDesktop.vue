@@ -3,10 +3,12 @@ import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import LinkedArrow from "./LinkedArrow.vue";
 import LinkedPin from "./LinkedPin.vue";
+// Les styles des cartes (ListCard) servent aussi à la carte épinglée : chargés avec cet onglet.
+import "./ListCard.vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
-import { timeOfDay } from "../dates";
+import { dateInSentence, dayAndMonth, timeOfDay } from "../dates";
 import {
   countdown,
   dateText,
@@ -101,15 +103,24 @@ function pastLine(m: Meeting): string {
   return `${dateText(m.starts_at)}, ${timeAndPlace(m.starts_at, m.place)}`;
 }
 const lastNoted = computed(() => noted.value[0] ?? null);
-// La carte compacte épinglée (LinkedPin, §18 du 15 novembre) : ce que dit la carte choisie, en court.
+// La carte compacte épinglée (LinkedPin, §18 du 15 novembre ; Kevin, 15.11) : le titre de la carte choisie,
+// « <Entreprise> · Sélection affichée » (l'ORP pour ses rendez-vous), la date dans le carré du logo, et un nom de bouton
+// qui dit la date complète.
 const pinned = computed(() => {
   const key = selected.value;
-  if (key === "orp" && nextOrp.value) return { title: "Rendez-vous ORP", sub: dateText(nextOrp.value.at), at: nextOrp.value.at, tone: "orp" as const };
   const interview = selectedInterview.value;
-  if (interview) return { title: interview.application.job_title || "Poste non indiqué", sub: interview.application.company || "Entretien d’embauche", at: interview.at, tone: "blue" as const };
   const past = selectedPast.value;
-  if (past) return { title: pastTitle(past.starts_at, now), sub: dateText(past.starts_at), at: past.starts_at, tone: toNote.value.includes(past) ? ("orp" as const) : ("past" as const) };
-  return null;
+  const found =
+    key === "orp" && nextOrp.value
+      ? { title: "Rendez-vous ORP", name: "ORP", at: nextOrp.value.at }
+      : interview
+        ? { title: interview.application.job_title || "Poste non indiqué", name: interview.application.company || "Entreprise non indiquée", at: interview.at }
+        : past
+          ? { title: pastTitle(past.starts_at, now), name: "ORP", at: past.starts_at }
+          : null;
+  if (!found) return null;
+  const [day, month] = dayAndMonth(found.at);
+  return { ...found, day, month, label: `Revenir au rendez-vous du ${dateInSentence(found.at).slice(3)}, ${found.name}, dans la liste` };
 });
 // Le jour et le mois de l'icône calendrier.
 function cal(iso: string): { day: number; month: number } {
@@ -155,114 +166,116 @@ const list = ref<HTMLElement | null>(null);
         v-if="pinned"
         side="top"
         :title="pinned.title"
-        :sub="pinned.sub"
+        :sub="pinned.name"
+        :label="pinned.label"
       >
         <template #logo>
-          <CalendarDate
-            v-bind="cal(pinned.at)"
-            :tone="pinned.tone"
-            :size="40"
-          />
+          <span
+            class="list-card-logo rdv-pin-date"
+            aria-hidden="true"
+          ><b>{{ pinned.day }}</b>{{ pinned.month }}</span>
         </template>
       </LinkedPin>
-      <template v-if="upcoming.length">
-        <h2 class="rdv-list-title">
-          À venir<span>{{ upcoming.length }}</span>
-        </h2>
-        <button
-          v-for="item in upcoming"
-          :key="item.key"
-          type="button"
-          class="rdv-item list-card"
-          :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
-          :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
-          @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
-        >
-          <CalendarDate
-            v-bind="cal(item.at)"
-            :tone="item.kind === 'orp' ? 'orp' : 'blue'"
-            :size="44"
-          />
-          <span class="rdv-item-text">
-            <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
-            <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
-            <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
-            <span class="rdv-chips">
-              <span
-                v-if="item.kind === 'orp'"
-                :class="lines.length ? 'green' : ''"
-              >{{ lines.length ? "Ta feuille est prête" : "Feuille à compléter" }}</span>
-              <span
-                v-else
-                class="peach"
-              >À préparer</span>
+      <div class="linked-cards">
+        <template v-if="upcoming.length">
+          <h2 class="rdv-list-title">
+            À venir<span>{{ upcoming.length }}</span>
+          </h2>
+          <button
+            v-for="item in upcoming"
+            :key="item.key"
+            type="button"
+            class="rdv-item list-card"
+            :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
+            :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
+            @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
+          >
+            <CalendarDate
+              v-bind="cal(item.at)"
+              :tone="item.kind === 'orp' ? 'orp' : 'blue'"
+              :size="44"
+            />
+            <span class="rdv-item-text">
+              <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
+              <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
+              <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
+              <span class="rdv-chips">
+                <span
+                  v-if="item.kind === 'orp'"
+                  :class="lines.length ? 'green' : ''"
+                >{{ lines.length ? "Ta feuille est prête" : "Feuille à compléter" }}</span>
+                <span
+                  v-else
+                  class="peach"
+                >À préparer</span>
+              </span>
             </span>
-          </span>
-          <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
-        </button>
-      </template>
-      <template v-if="toNote.length">
-        <h2 class="rdv-list-title">
-          À noter<span>{{ toNote.length }}</span>
-        </h2>
-        <button
-          v-for="item in toNote"
-          :key="item.id"
-          type="button"
-          class="rdv-item list-card"
-          :aria-current="selected === pastKey(item) ? 'true' : undefined"
-          :data-test="`rdv-to-note-${item.id}`"
-          @click="select(pastKey(item))"
-        >
-          <CalendarDate
-            v-bind="cal(item.starts_at)"
-            tone="orp"
-            :size="44"
-          />
-          <span class="rdv-item-text">
-            <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
-            <span class="rdv-item-sub">{{ pastLine(item) }}</span>
-          </span>
-          <LinkedArrow v-if="selected === pastKey(item)" />
-        </button>
-      </template>
-      <template v-if="noted.length">
-        <h2 class="rdv-list-title">
-          Passés<span>{{ noted.length }}</span>
-        </h2>
-        <button
-          v-for="item in noted"
-          :key="item.id"
-          type="button"
-          class="rdv-item list-card"
-          :aria-current="selected === pastKey(item) ? 'true' : undefined"
-          :data-test="`rdv-item-passe-${item.id}`"
-          @click="select(pastKey(item))"
-        >
-          <CalendarDate
-            v-bind="cal(item.starts_at)"
-            tone="past"
-            :size="44"
-          />
-          <span class="rdv-item-text">
-            <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
-            <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
-          </span>
-          <LinkedArrow v-if="selected === pastKey(item)" />
-        </button>
-      </template>
+            <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
+          </button>
+        </template>
+        <template v-if="toNote.length">
+          <h2 class="rdv-list-title">
+            À noter<span>{{ toNote.length }}</span>
+          </h2>
+          <button
+            v-for="item in toNote"
+            :key="item.id"
+            type="button"
+            class="rdv-item list-card"
+            :aria-current="selected === pastKey(item) ? 'true' : undefined"
+            :data-test="`rdv-to-note-${item.id}`"
+            @click="select(pastKey(item))"
+          >
+            <CalendarDate
+              v-bind="cal(item.starts_at)"
+              tone="orp"
+              :size="44"
+            />
+            <span class="rdv-item-text">
+              <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
+              <span class="rdv-item-sub">{{ pastLine(item) }}</span>
+            </span>
+            <LinkedArrow v-if="selected === pastKey(item)" />
+          </button>
+        </template>
+        <template v-if="noted.length">
+          <h2 class="rdv-list-title">
+            Passés<span>{{ noted.length }}</span>
+          </h2>
+          <button
+            v-for="item in noted"
+            :key="item.id"
+            type="button"
+            class="rdv-item list-card"
+            :aria-current="selected === pastKey(item) ? 'true' : undefined"
+            :data-test="`rdv-item-passe-${item.id}`"
+            @click="select(pastKey(item))"
+          >
+            <CalendarDate
+              v-bind="cal(item.starts_at)"
+              tone="past"
+              :size="44"
+            />
+            <span class="rdv-item-text">
+              <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
+              <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
+            </span>
+            <LinkedArrow v-if="selected === pastKey(item)" />
+          </button>
+        </template>
+      </div>
       <LinkedPin
         v-if="pinned"
         side="bottom"
         :title="pinned.title"
-        :sub="pinned.sub"
+        :sub="pinned.name"
+        :label="pinned.label"
       >
         <template #logo>
-          <CalendarDate
-            v-bind="cal(pinned.at)"
-            :tone="pinned.tone"
-            :size="40"
-          />
+          <span
+            class="list-card-logo rdv-pin-date"
+            aria-hidden="true"
+          ><b>{{ pinned.day }}</b>{{ pinned.month }}</span>
         </template>
       </LinkedPin>
     </div>
@@ -504,7 +517,10 @@ const list = ref<HTMLElement | null>(null);
   --rdv-15: 15px; --rdv-lh-text: 1.45;
   display: flex; align-items: stretch; gap: 0; height: calc(100dvh - var(--linked-top, 0px)); min-height: 20rem; box-sizing: border-box; padding-top: var(--space-1);
 }
-.rdv-list { display: flex; flex-direction: column; }
+.rdv-list.linked-list > .linked-cards { display: flex; flex-direction: column; }
+/* Carte épinglée : la date dans le carré de 40 px du logo, fond neutre, jour en gras, mois abrégé dessous. */
+.rdv-pin-date { background: var(--neutral-soft); font-size: var(--label-caps); font-weight: var(--weight-semibold); line-height: var(--leading-none); }
+.rdv-pin-date b { font-size: var(--font-body); }
 .rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: 0; padding: var(--rdv-14) var(--space-1) var(--space-2); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-item + .rdv-item { margin-top: calc(var(--space-2) + var(--rdv-2)); }
@@ -528,8 +544,8 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
 .rdv-chips > .green { background: var(--success-soft); color: var(--success); }
 /* « Aucun rendez-vous à venir » : la pastille en haut de la liste, alignée sur les cartes, un trait dessous (480 px). */
-.linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-gap) + var(--space-1)) calc(var(--space-2) + var(--rdv-2)) calc(var(--linked-bar) + var(--space-1)); }
-.rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-bar); right: var(--linked-gap); bottom: 0; border-bottom: 1px solid var(--line); }
+.linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-gap) + var(--space-1)) calc(var(--space-2) + var(--rdv-2) - var(--linked-room)) calc(var(--linked-bar) + var(--space-1)); }
+.rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-bar); right: var(--linked-gap); bottom: calc(-1 * var(--linked-room)); border-bottom: 1px solid var(--line); }
 .rdv-list-empty + .rdv-list-title { margin-top: calc(var(--space-1) + var(--rdv-2)); }
 .rdv-empty-pill {
   display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); white-space: nowrap;

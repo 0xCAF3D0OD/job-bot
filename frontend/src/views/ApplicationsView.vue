@@ -609,431 +609,433 @@ onUnmounted(() => assistant.setFocus(null));
       ref="sentList"
       :class="['sent-col', { 'linked-list': twoColumns }]"
     >
-      <template v-if="orp">
-        <template v-if="orpPage">
-          <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
-          <header class="orp-page-head">
-            <RouterLink
-              to="/bilan"
-              class="icon-button icon-only"
-              aria-label="Retour au Bilan"
-              data-test="orp-back"
-            >
-              <AppIcon name="chevron-left" />
-            </RouterLink>
-            <h1>Suivi ORP</h1>
-          </header>
-          <!-- Téléphone : le mois précédent à remettre, ou remis, en tête (récapitulatif du 11 novembre, PR 29). -->
-          <OrpProofCard
-            v-if="phone"
-            @changed="load()"
-          />
-          <!-- Les chevrons ‹ › de la maquette Orp ; pas de mois suivant après le mois en cours. -->
-          <div class="month-nav orp-page-month">
-            <IconButton
-              icon="chevron"
-              label="Mois précédent"
-              class="orp-month-prev"
-              data-test="prev-month"
-              @click="go(-1)"
-            />
-            <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
-            <IconButton
-              icon="chevron"
-              label="Mois suivant"
-              :disabled="orp.month >= today().slice(0, 7)"
-              data-test="next-month"
-              @click="go(1)"
-            />
-          </div>
-          <!-- Téléphone (lot 18, §10.2 ; maquette Orp) : l'objectif, « À déclarer à l'ORP » et « Recherches du mois » en
-               blocs, l’export dans le dernier bloc. -->
-          <OrpBlocks
-            v-if="phone"
-            :data="orp"
-            @open="openId = $event"
-            @export="sheet?.printPdf()"
-          />
-          <OrpGoalCard
-            v-else
-            :data="orp"
-          />
-          <!-- L'état des preuves du mois, juste sous l'objectif (B8) : une phrase, une action ; seulement s'il y
-               a à faire ou si elles sont remises (docs/134). -->
-          <div
-            v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete) && !proofCovers"
-            :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
-            data-test="orp-banner"
-          >
-            <span data-test="state">{{ bannerText }}</span>
-            <!-- Une action ORP à la fois (docs/22 §2). -->
-            <button
-              v-if="orp.state === 'remis'"
-              type="button"
-              class="link"
-              :disabled="busy"
-              data-test="cancel-submit"
-              @click="confirmingCancel = true"
-            >
-              Annuler la remise
-            </button>
-            <button
-              v-else-if="firstIncomplete"
-              type="button"
-              class="link"
-              data-test="complete-next"
-              @click="edit(firstIncomplete)"
-            >
-              Compléter
-            </button>
-            <button
-              v-else
-              type="button"
-              class="link"
-              :disabled="busy"
-              data-test="submit"
-              @click="submit(true)"
-            >
-              Marquer comme remis
-            </button>
-          </div>
-          <InlineConfirm
-            v-if="confirmingCancel && orp.state === 'remis'"
-            message="Annuler la remise de ce mois ? Les justificatifs repassent « à remettre »."
-            confirm-label="Annuler la remise"
-            cancel-label="Garder la remise"
-            @confirm="submit(false)"
-            @cancel="confirmingCancel = false"
-          />
-          <!-- L'export du formulaire ; le CSV et le PDF avec le journal restent dans le « ⋯ » (docs/85 §3). -->
-          <div class="orp-export-row">
-            <button
-              v-if="!phone"
-              type="button"
-              class="secondary orp-export"
-              data-test="pdf"
-              @click="sheet?.printPdf()"
-            >
-              <AppIcon name="download" />Exporter le formulaire (PDF)
-            </button>
-            <MoreMenu
-              v-if="orp.count"
-              :items="monthMenu.slice(1)"
-              label="Plus d’actions sur le mois"
-              test-id="orp-more"
-            />
-          </div>
-          <OrpSheet
-            ref="sheet"
-            :data="orp"
-            @reload="load"
-          />
-          <section
-            v-if="!phone"
-            class="orp-last orp-month-list"
-            aria-labelledby="orp-month-title"
-          >
-            <h2 id="orp-month-title">
-              <span>Recherches du mois</span>
-              <span>{{ plural(orp.rows.length, "entrée", "entrées") }}</span>
-            </h2>
-            <OrpSearchRows
-              :rows="orp.rows"
-              open
-              @open="openId = $event"
-            />
-          </section>
-          <button
-            type="button"
-            class="pill add-application"
-            data-test="add-application"
-            @click="addManual"
-          >
-            <span class="with-icon"><AppIcon name="plus" />Ajouter une recherche</span>
-          </button>
-        </template>
-        <div
-          v-else
-          class="sent-tools"
-          :data-linked-tools="twoColumns || undefined"
+      <div
+        v-if="orp && !orpPage"
+        class="sent-tools"
+        :data-linked-tools="twoColumns || undefined"
+      >
+        <!-- L’objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. Téléphone
+             (planche du 14 novembre) : sans chevron ni « voir le bilan », la carte reste un lien. -->
+        <RouterLink
+          :to="goal ? '/bilan/orp' : { path: '/reglages', query: { rubrique: 'recherche' } }"
+          class="sent-goal"
+          data-test="goal"
         >
-          <!-- L’objectif du mois, vers le Suivi ORP (maquette Envoyees) : le nombre, la barre, ce qui reste. Téléphone
-               (planche du 14 novembre) : sans chevron ni « voir le bilan », la carte reste un lien. -->
-          <RouterLink
-            :to="goal ? '/bilan/orp' : { path: '/reglages', query: { rubrique: 'recherche' } }"
-            class="sent-goal"
-            data-test="goal"
-          >
-            <span class="sent-goal-head">
-              <span>Objectif ORP {{ ofMonth(orp.month) }}</span>
-              <span
-                class="sent-goal-count"
-                data-test="goal-count"
-              >{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}<AppIcon
-                v-if="!phone"
-                name="chevron"
-                class="sent-goal-chevron"
-              /></span>
-            </span>
+          <span class="sent-goal-head">
+            <span>Objectif ORP {{ ofMonth(orp.month) }}</span>
             <span
-              v-if="goal"
-              role="progressbar"
-              :aria-valuenow="orp.count"
-              aria-valuemin="0"
-              :aria-valuemax="orp.target ?? 0"
-              aria-label="Objectif ORP"
-              class="sent-goal-bar"
-            ><span :style="{ width: `${goal.percent}%` }" /></span>
-            <span class="sent-goal-left">{{ goal ? (phone ? goal.left : `${goal.left} · voir le bilan`) : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
-          </RouterLink>
-          <SentFilters
-            v-if="twoColumns && loaded && all.length"
-            v-model:words="words"
-            v-model:filter="statusFilter"
-            v-model:sort="sentSort"
-            :counts="statusCounts"
-            :panel="twoColumns"
-            :open="sentFiltersOpen"
-            @open="sentFiltersOpen = true"
-          />
-        </div>
-        <LinkedPin
-          v-if="twoColumns && shown"
-          side="top"
-          :title="shown.job_title"
-          :sub="shown.company ?? 'Entreprise non indiquée'"
-          :name="shown.company ?? shown.job_title"
+              class="sent-goal-count"
+              data-test="goal-count"
+            >{{ goal ? `${orp.count} sur ${orp.target}` : "À indiquer" }}<AppIcon
+              v-if="!phone"
+              name="chevron"
+              class="sent-goal-chevron"
+            /></span>
+          </span>
+          <span
+            v-if="goal"
+            role="progressbar"
+            :aria-valuenow="orp.count"
+            aria-valuemin="0"
+            :aria-valuemax="orp.target ?? 0"
+            aria-label="Objectif ORP"
+            class="sent-goal-bar"
+          ><span :style="{ width: `${goal.percent}%` }" /></span>
+          <span class="sent-goal-left">{{ goal ? (phone ? goal.left : `${goal.left} · voir le bilan`) : "Le nombre de recherches que l’ORP te demande chaque mois" }}</span>
+        </RouterLink>
+        <SentFilters
+          v-if="twoColumns && loaded && all.length"
+          v-model:words="words"
+          v-model:filter="statusFilter"
+          v-model:sort="sentSort"
+          :counts="statusCounts"
+          :panel="twoColumns"
+          :open="sentFiltersOpen"
+          @open="sentFiltersOpen = true"
         />
-
-        <EngagementMoment
-          v-if="celebrating"
-          :company="celebrating"
-          @close="celebrating = null"
-        />
-        <SuccessCard
-          v-if="submitted"
-          name="preuves-orp"
-          :title="`Justificatifs ${ofMonth(submitted.month)} remis`"
-          test-id="submitted-moment"
-          @close="submitted = null"
-        >
-          <p v-if="submitted.nextDue">
-            Prochaine remise avant {{ dateInSentence(`${submitted.nextDue}T12:00:00`) }}.
-          </p>
-        </SuccessCard>
-
-        <!-- Aucune candidature du tout (docs/128 §3) : ce qui remplit le Suivi. -->
-        <FaceState
-          v-if="!orpPage && loaded && !all.length"
-          title="Pas encore de candidature"
-          data-test="applications-none-yet"
-        >
-          <p>Une candidature envoyée s’ajoute ici.</p>
-          <div class="face-state-actions">
-            <RouterLink
-              to="/candidatures/offres"
-              class="button-link primary-link"
-            >
-              <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
-            </RouterLink>
-          </div>
-        </FaceState>
-        <template v-else-if="loaded">
-          <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
-          <template v-if="!orpPage">
-            <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l’icône
-                 Filtres dans l’en-tête, statuts et tri dans la feuille Filtres. -->
-            <SentPhoneFilters
-              v-if="phone"
-              v-model:words="words"
-              v-model:filter="statusFilter"
-              v-model:sort="sentSort"
-              :counts="statusCounts"
-              :total="shownCount"
-              @reset="resetPhoneSentFilters"
-            />
-            <SentFilters
-              v-else-if="!twoColumns"
-              v-model:words="words"
-              v-model:filter="statusFilter"
-              v-model:sort="sentSort"
-              :counts="statusCounts"
-              :panel="twoColumns"
-              :open="sentFiltersOpen"
-              @open="sentFiltersOpen = true"
-            />
-            <div
-              v-if="filtering && !sections.length"
-              class="sent-none"
-              role="status"
-              data-test="sent-none"
-            >
-              <p>Aucune candidature ne correspond</p>
-              <button
-                type="button"
-                class="secondary"
-                data-test="sent-clear"
-                @click="clearFilters"
+      </div>
+      <LinkedPin
+        v-if="twoColumns && shown"
+        side="top"
+        :title="shown.job_title"
+        :sub="shown.company ?? 'Entreprise non indiquée'"
+        :name="shown.company ?? shown.job_title"
+      />
+      <div class="linked-cards">
+        <template v-if="orp">
+          <template v-if="orpPage">
+            <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
+            <header class="orp-page-head">
+              <RouterLink
+                to="/bilan"
+                class="icon-button icon-only"
+                aria-label="Retour au Bilan"
+                data-test="orp-back"
               >
-                Effacer les filtres
+                <AppIcon name="chevron-left" />
+              </RouterLink>
+              <h1>Suivi ORP</h1>
+            </header>
+            <!-- Téléphone : le mois précédent à remettre, ou remis, en tête (récapitulatif du 11 novembre, PR 29). -->
+            <OrpProofCard
+              v-if="phone"
+              @changed="load()"
+            />
+            <!-- Les chevrons ‹ › de la maquette Orp ; pas de mois suivant après le mois en cours. -->
+            <div class="month-nav orp-page-month">
+              <IconButton
+                icon="chevron"
+                label="Mois précédent"
+                class="orp-month-prev"
+                data-test="prev-month"
+                @click="go(-1)"
+              />
+              <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
+              <IconButton
+                icon="chevron"
+                label="Mois suivant"
+                :disabled="orp.month >= today().slice(0, 7)"
+                data-test="next-month"
+                @click="go(1)"
+              />
+            </div>
+            <!-- Téléphone (lot 18, §10.2 ; maquette Orp) : l'objectif, « À déclarer à l'ORP » et « Recherches du mois » en
+                 blocs, l’export dans le dernier bloc. -->
+            <OrpBlocks
+              v-if="phone"
+              :data="orp"
+              @open="openId = $event"
+              @export="sheet?.printPdf()"
+            />
+            <OrpGoalCard
+              v-else
+              :data="orp"
+            />
+            <!-- L'état des preuves du mois, juste sous l'objectif (B8) : une phrase, une action ; seulement s'il y
+                 a à faire ou si elles sont remises (docs/134). -->
+            <div
+              v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete) && !proofCovers"
+              :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
+              data-test="orp-banner"
+            >
+              <span data-test="state">{{ bannerText }}</span>
+              <!-- Une action ORP à la fois (docs/22 §2). -->
+              <button
+                v-if="orp.state === 'remis'"
+                type="button"
+                class="link"
+                :disabled="busy"
+                data-test="cancel-submit"
+                @click="confirmingCancel = true"
+              >
+                Annuler la remise
+              </button>
+              <button
+                v-else-if="firstIncomplete"
+                type="button"
+                class="link"
+                data-test="complete-next"
+                @click="edit(firstIncomplete)"
+              >
+                Compléter
+              </button>
+              <button
+                v-else
+                type="button"
+                class="link"
+                :disabled="busy"
+                data-test="submit"
+                @click="submit(true)"
+              >
+                Marquer comme remis
               </button>
             </div>
-            <ul
-              class="offer-cards sent-list"
-              data-test="sent-list"
-            >
-              <template
-                v-for="section in sections"
-                :key="section.key"
-              >
-                <li
-                  v-if="section.title"
-                  class="offer-day"
-                  :data-test="`sent-section-${section.key}`"
-                >
-                  <h2 class="offer-day-title">
-                    <span class="offer-day-name">{{ section.title }}</span>
-                    <span class="offer-day-count">{{ twoColumns ? section.items.length : plural(section.items.length, "candidature", "candidatures") }}</span>
-                  </h2>
-                </li>
-                <li
-                  v-for="application in section.items"
-                  :key="application.id"
-                >
-                  <SentCard
-                    :application="application"
-                    :section="section.key"
-                    :selected="(shown?.id ?? openId) === application.id"
-                    @select="openId = application.id"
-                  />
-                </li>
-              </template>
-            </ul>
-          </template>
-          <section
-            v-if="orpPage && orp.count && !phone"
-            class="dash-card suivi-todo suivi-declare"
-            aria-label="À déclarer dans Job-Room"
-            data-test="declare"
-          >
-            <CardHead
-              title="À déclarer"
-              :count="toDeclare.length || undefined"
+            <InlineConfirm
+              v-if="confirmingCancel && orp.state === 'remis'"
+              message="Annuler la remise de ce mois ? Les justificatifs repassent « à remettre »."
+              confirm-label="Annuler la remise"
+              cancel-label="Garder la remise"
+              @confirm="submit(false)"
+              @cancel="confirmingCancel = false"
             />
-            <p
-              v-if="!toDeclare.length"
-              class="hint"
-              data-test="declare-done"
-            >
-              Tout est déclaré.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
-            >
-              <li
-                v-for="item in declareShown"
-                :key="item.id"
+            <!-- L'export du formulaire ; le CSV et le PDF avec le journal restent dans le « ⋯ » (docs/85 §3). -->
+            <div class="orp-export-row">
+              <button
+                v-if="!phone"
+                type="button"
+                class="secondary orp-export"
+                data-test="pdf"
+                @click="sheet?.printPdf()"
               >
-                <!-- La Ligne d'offre compacte (planche « Ligne d'offre ») : « Déclarer » à droite. -->
-                <OfferLine
-                  :title="item.title"
-                  :company="item.company"
-                  :location="all.find((x) => x.id === item.id)?.location ?? null"
-                  :state="`Envoyée ${item.day}${item.incomplete ? ' · à compléter' : ''}`"
-                  :urgent="item.incomplete"
-                  action="Déclarer"
-                  :action-test="`declare-${item.id}`"
-                  @select="openId = item.id"
-                  @action="openId = item.id"
-                />
-              </li>
-            </ul>
-            <ShowMore
-              v-if="toDeclare.length > TODO_ROWS"
-              v-model="showAllDeclare"
-              :hidden="toDeclare.length - TODO_ROWS"
-              test-id="declare-all"
-            />
-          </section>
-
-          <!-- Le calendrier replié (règles §3.4), dans le Suivi ORP ; sur téléphone, le Suivi ORP s'arrête à
-               « À déclarer » (Kevin, 6.11). -->
-          <section
-            v-if="orpPage && !phone"
-            class="bilan-detail suivi-detail"
-            data-test="suivi-detail"
-          >
-            <DisclosureRow
-              :key="calendarKey"
-              :title="`Calendrier ${ofMonth(orp.month)}`"
-              icon="calendar"
-              :description="calendarLine"
-              :start-open="!!selectedDay"
-              data-test="detail-calendar"
-            >
-              <SuiviCalendar
-                :month="orp.month"
-                :applications="all"
-                :incomplete="incomplete"
-                :selected="selectedDay"
-                @select="selectedDay = selectedDay === $event ? null : $event"
+                <AppIcon name="download" />Exporter le formulaire (PDF)
+              </button>
+              <MoreMenu
+                v-if="orp.count"
+                :items="monthMenu.slice(1)"
+                label="Plus d’actions sur le mois"
+                test-id="orp-more"
               />
-              <!-- Le jour choisi : ses candidatures, sous le calendrier. -->
-              <section
-                v-if="selectedDay"
-                class="suivi-day"
-                data-test="day-panel"
+            </div>
+            <OrpSheet
+              ref="sheet"
+              :data="orp"
+              @reload="load"
+            />
+            <section
+              v-if="!phone"
+              class="orp-last orp-month-list"
+              aria-labelledby="orp-month-title"
+            >
+              <h2 id="orp-month-title">
+                <span>Recherches du mois</span>
+                <span>{{ plural(orp.rows.length, "entrée", "entrées") }}</span>
+              </h2>
+              <OrpSearchRows
+                :rows="orp.rows"
+                open
+                @open="openId = $event"
+              />
+            </section>
+            <button
+              type="button"
+              class="pill add-application"
+              data-test="add-application"
+              @click="addManual"
+            >
+              <span class="with-icon"><AppIcon name="plus" />Ajouter une recherche</span>
+            </button>
+          </template>
+
+          <EngagementMoment
+            v-if="celebrating"
+            :company="celebrating"
+            @close="celebrating = null"
+          />
+          <SuccessCard
+            v-if="submitted"
+            name="preuves-orp"
+            :title="`Justificatifs ${ofMonth(submitted.month)} remis`"
+            test-id="submitted-moment"
+            @close="submitted = null"
+          >
+            <p v-if="submitted.nextDue">
+              Prochaine remise avant {{ dateInSentence(`${submitted.nextDue}T12:00:00`) }}.
+            </p>
+          </SuccessCard>
+
+          <!-- Aucune candidature du tout (docs/128 §3) : ce qui remplit le Suivi. -->
+          <FaceState
+            v-if="!orpPage && loaded && !all.length"
+            title="Pas encore de candidature"
+            data-test="applications-none-yet"
+          >
+            <p>Une candidature envoyée s’ajoute ici.</p>
+            <div class="face-state-actions">
+              <RouterLink
+                to="/candidatures/offres"
+                class="button-link primary-link"
               >
-                <h3 class="suivi-panel-title">
-                  {{ dayTitle.format(new Date(`${selectedDay}T12:00:00`)) }}
-                </h3>
-                <p
-                  v-if="!dayCards.length"
-                  class="hint"
+                <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+              </RouterLink>
+            </div>
+          </FaceState>
+          <template v-else-if="loaded">
+            <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
+            <template v-if="!orpPage">
+              <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l’icône
+                   Filtres dans l’en-tête, statuts et tri dans la feuille Filtres. -->
+              <SentPhoneFilters
+                v-if="phone"
+                v-model:words="words"
+                v-model:filter="statusFilter"
+                v-model:sort="sentSort"
+                :counts="statusCounts"
+                :total="shownCount"
+                @reset="resetPhoneSentFilters"
+              />
+              <SentFilters
+                v-else-if="!twoColumns"
+                v-model:words="words"
+                v-model:filter="statusFilter"
+                v-model:sort="sentSort"
+                :counts="statusCounts"
+                :panel="twoColumns"
+                :open="sentFiltersOpen"
+                @open="sentFiltersOpen = true"
+              />
+              <div
+                v-if="filtering && !sections.length"
+                class="sent-none"
+                role="status"
+                data-test="sent-none"
+              >
+                <p>Aucune candidature ne correspond</p>
+                <button
+                  type="button"
+                  class="secondary"
+                  data-test="sent-clear"
+                  @click="clearFilters"
                 >
-                  Aucune candidature ce jour-là.
-                  <button
-                    type="button"
-                    class="link"
-                    @click="addManual"
-                  >
-                    En ajouter une
-                  </button>
-                </p>
-                <ul
-                  v-else
-                  class="today-rows"
+                  Effacer les filtres
+                </button>
+              </div>
+              <ul
+                class="offer-cards sent-list"
+                data-test="sent-list"
+              >
+                <template
+                  v-for="section in sections"
+                  :key="section.key"
                 >
                   <li
-                    v-for="application in dayCards"
+                    v-if="section.title"
+                    class="offer-day"
+                    :data-test="`sent-section-${section.key}`"
+                  >
+                    <h2 class="offer-day-title">
+                      <span class="offer-day-name">{{ section.title }}</span>
+                      <span class="offer-day-count">{{ twoColumns ? section.items.length : plural(section.items.length, "candidature", "candidatures") }}</span>
+                    </h2>
+                  </li>
+                  <li
+                    v-for="application in section.items"
                     :key="application.id"
                   >
-                    <ApplicationCard
+                    <SentCard
                       :application="application"
-                      :orp-row="rowsById.get(application.id) ?? null"
-                      @open="openId = $event.id"
-                      @status="setStatus"
-                      @edit="edit"
-                      @interview="openInterview"
-                      @prepare="preparing = $event"
-                      @changed="load"
+                      :section="section.key"
+                      :selected="(shown?.id ?? openId) === application.id"
+                      @select="openId = application.id"
                     />
                   </li>
-                </ul>
-              </section>
-            </DisclosureRow>
-          </section>
+                </template>
+              </ul>
+            </template>
+            <section
+              v-if="orpPage && orp.count && !phone"
+              class="dash-card suivi-todo suivi-declare"
+              aria-label="À déclarer dans Job-Room"
+              data-test="declare"
+            >
+              <CardHead
+                title="À déclarer"
+                :count="toDeclare.length || undefined"
+              />
+              <p
+                v-if="!toDeclare.length"
+                class="hint"
+                data-test="declare-done"
+              >
+                Tout est déclaré.
+              </p>
+              <ul
+                v-else
+                class="today-rows"
+              >
+                <li
+                  v-for="item in declareShown"
+                  :key="item.id"
+                >
+                  <!-- La Ligne d'offre compacte (planche « Ligne d'offre ») : « Déclarer » à droite. -->
+                  <OfferLine
+                    :title="item.title"
+                    :company="item.company"
+                    :location="all.find((x) => x.id === item.id)?.location ?? null"
+                    :state="`Envoyée ${item.day}${item.incomplete ? ' · à compléter' : ''}`"
+                    :urgent="item.incomplete"
+                    action="Déclarer"
+                    :action-test="`declare-${item.id}`"
+                    @select="openId = item.id"
+                    @action="openId = item.id"
+                  />
+                </li>
+              </ul>
+              <ShowMore
+                v-if="toDeclare.length > TODO_ROWS"
+                v-model="showAllDeclare"
+                :hidden="toDeclare.length - TODO_ROWS"
+                test-id="declare-all"
+              />
+            </section>
+
+            <!-- Le calendrier replié (règles §3.4), dans le Suivi ORP ; sur téléphone, le Suivi ORP s'arrête à
+                 « À déclarer » (Kevin, 6.11). -->
+            <section
+              v-if="orpPage && !phone"
+              class="bilan-detail suivi-detail"
+              data-test="suivi-detail"
+            >
+              <DisclosureRow
+                :key="calendarKey"
+                :title="`Calendrier ${ofMonth(orp.month)}`"
+                icon="calendar"
+                :description="calendarLine"
+                :start-open="!!selectedDay"
+                data-test="detail-calendar"
+              >
+                <SuiviCalendar
+                  :month="orp.month"
+                  :applications="all"
+                  :incomplete="incomplete"
+                  :selected="selectedDay"
+                  @select="selectedDay = selectedDay === $event ? null : $event"
+                />
+                <!-- Le jour choisi : ses candidatures, sous le calendrier. -->
+                <section
+                  v-if="selectedDay"
+                  class="suivi-day"
+                  data-test="day-panel"
+                >
+                  <h3 class="suivi-panel-title">
+                    {{ dayTitle.format(new Date(`${selectedDay}T12:00:00`)) }}
+                  </h3>
+                  <p
+                    v-if="!dayCards.length"
+                    class="hint"
+                  >
+                    Aucune candidature ce jour-là.
+                    <button
+                      type="button"
+                      class="link"
+                      @click="addManual"
+                    >
+                      En ajouter une
+                    </button>
+                  </p>
+                  <ul
+                    v-else
+                    class="today-rows"
+                  >
+                    <li
+                      v-for="application in dayCards"
+                      :key="application.id"
+                    >
+                      <ApplicationCard
+                        :application="application"
+                        :orp-row="rowsById.get(application.id) ?? null"
+                        @open="openId = $event.id"
+                        @status="setStatus"
+                        @edit="edit"
+                        @interview="openInterview"
+                        @prepare="preparing = $event"
+                        @changed="load"
+                      />
+                    </li>
+                  </ul>
+                </section>
+              </DisclosureRow>
+            </section>
+          </template>
         </template>
-      </template>
-      <NetworkError
-        v-else-if="offline"
-        @retry="load()"
-      />
-      <LoadingBlocks
-        v-else
-        :heights="['3rem', '22rem']"
-      />
+        <NetworkError
+          v-else-if="offline"
+          @retry="load()"
+        />
+        <LoadingBlocks
+          v-else
+          :heights="['3rem', '22rem']"
+        />
+      </div>
       <LinkedPin
         v-if="twoColumns && shown"
         side="bottom"

@@ -781,357 +781,359 @@ onUnmounted(() => {
           :name="selected.company ?? selected.title"
           :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
         />
-        <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
-             pendant 6 secondes (Material 3, snackbar). -->
-        <p
-          v-if="notice"
-          :class="['notice', { 'undo-snackbar': phone && undo }]"
-          role="status"
-        >
-          {{ notice }}
-          <button
-            v-if="undo"
-            type="button"
-            class="link"
-            data-test="undo-status"
-            @click="undoStatus"
+        <div class="linked-cards">
+          <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
+               pendant 6 secondes (Material 3, snackbar). -->
+          <p
+            v-if="notice"
+            :class="['notice', { 'undo-snackbar': phone && undo }]"
+            role="status"
           >
-            Annuler
-          </button>
-        </p>
-        <!-- Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup. -->
-        <FirstOffers
-          where="offers"
-          @arrived="load()"
-        />
-        <PlanLimit usage="score" />
-        <!-- Téléphone (maquette ErreurConnexion, C9) : le visage, la phrase des offres, « Réessayer ». -->
-        <FaceState
-          v-if="retrying && loading"
-          title="Chargement…"
-          animation="attente"
-          role="status"
-          class="network-waiting"
-          data-test="network-waiting"
-        >
-          <p>On récupère tes offres.</p>
-        </FaceState>
-        <NetworkError
-          v-else-if="failed && offline"
-          :class="{ 'network-waiting': phone }"
-          :title="phone ? 'Connexion perdue' : undefined"
-          :line="phone ? 'Impossible de charger les offres. Vérifie ta connexion, puis réessaie.' : undefined"
-          @retry="retrying = true; load()"
-        />
-        <p
-          v-else-if="failed"
-          class="notice error"
-        >
-          Impossible de charger les offres.
-        </p>
-        <!-- La liste charge : des blocs gardent sa place (comme Aujourd'hui). -->
-        <LoadingBlocks
-          v-else-if="loading && !items.length"
-          :heights="['4.5rem', '4.5rem', '4.5rem']"
-        />
-        <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
-        <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
-        <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
-             l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
-        <EmptyState
-          v-else-if="noneYet"
-          scene="aucune-offre"
-          :title="alertsReady ? 'Tes alertes sont prêtes' : 'Pas encore d’offre'"
-          pill="Offres collectées chaque jour"
-          data-test="offers-none-yet"
-        >
-          <template #actions>
-            <template v-if="alertsReady">
+            {{ notice }}
+            <button
+              v-if="undo"
+              type="button"
+              class="link"
+              data-test="undo-status"
+              @click="undoStatus"
+            >
+              Annuler
+            </button>
+          </p>
+          <!-- Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup. -->
+          <FirstOffers
+            where="offers"
+            @arrived="load()"
+          />
+          <PlanLimit usage="score" />
+          <!-- Téléphone (maquette ErreurConnexion, C9) : le visage, la phrase des offres, « Réessayer ». -->
+          <FaceState
+            v-if="retrying && loading"
+            title="Chargement…"
+            animation="attente"
+            role="status"
+            class="network-waiting"
+            data-test="network-waiting"
+          >
+            <p>On récupère tes offres.</p>
+          </FaceState>
+          <NetworkError
+            v-else-if="failed && offline"
+            :class="{ 'network-waiting': phone }"
+            :title="phone ? 'Connexion perdue' : undefined"
+            :line="phone ? 'Impossible de charger les offres. Vérifie ta connexion, puis réessaie.' : undefined"
+            @retry="retrying = true; load()"
+          />
+          <p
+            v-else-if="failed"
+            class="notice error"
+          >
+            Impossible de charger les offres.
+          </p>
+          <!-- La liste charge : des blocs gardent sa place (comme Aujourd'hui). -->
+          <LoadingBlocks
+            v-else-if="loading && !items.length"
+            :heights="['4.5rem', '4.5rem', '4.5rem']"
+          />
+          <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
+          <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
+          <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
+               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
+          <EmptyState
+            v-else-if="noneYet"
+            scene="aucune-offre"
+            :title="alertsReady ? 'Tes alertes sont prêtes' : 'Pas encore d’offre'"
+            pill="Offres collectées chaque jour"
+            data-test="offers-none-yet"
+          >
+            <template #actions>
+              <template v-if="alertsReady">
+                <button
+                  type="button"
+                  class="primary"
+                  data-test="offers-none-add"
+                  @click="manualOpen = true"
+                >
+                  <AppIcon name="plus" />Ajouter une offre
+                </button>
+                <RouterLink
+                  to="/candidatures/alertes"
+                  class="button-link secondary"
+                  data-test="offers-none-alerts"
+                >
+                  <AppIcon name="bell" />Voir mes alertes
+                </RouterLink>
+              </template>
+              <template v-else>
+                <RouterLink
+                  to="/candidatures/alertes"
+                  class="button-link primary-link"
+                  data-test="offers-none-alerts"
+                >
+                  <AppIcon name="bell" />Créer mes alertes
+                </RouterLink>
+                <button
+                  type="button"
+                  class="secondary"
+                  data-test="offers-none-add"
+                  @click="manualOpen = true"
+                >
+                  <AppIcon name="plus" />Ajouter une offre
+                </button>
+              </template>
+            </template>
+            <button
+              type="button"
+              class="link"
+              data-test="offers-none-spontaneous"
+              @click="spontaneousOpen = true"
+            >
+              Faire une candidature spontanée<AppIcon name="chevron" />
+            </button>
+          </EmptyState>
+          <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
+          <FaceState
+            v-else-if="!loading && items.length === 0 && allReviewed"
+            title="Tout est examiné"
+            illustration="reussite"
+            data-test="offers-all-reviewed"
+          >
+            <p>Les nouvelles arrivent chaque matin.</p>
+          </FaceState>
+          <!-- Rien en préparation (planche « Illustrations ») : garder une offre dans le tri. -->
+          <FaceState
+            v-else-if="!loading && items.length === 0 && filters.view === 'in_progress' && !activeCount(filters)"
+            title="Rien à préparer pour l’instant"
+            illustration="preparer-vide"
+            data-test="offers-nothing-to-prepare"
+          >
+            <p>Garde une offre dans le tri : sa lettre et son CV se préparent ici.</p>
+            <div class="face-state-actions">
+              <RouterLink
+                :to="{ name: 'triage' }"
+                class="button-link primary-link"
+              >
+                Commencer le tri
+              </RouterLink>
+            </div>
+          </FaceState>
+          <!-- Téléphone (maquette AucuneOffre, §15 du 9 novembre) : la scène « aucune-offre » (330 px), ce qui filtre,
+               en mots, et « Modifier les filtres ». -->
+          <!-- Ordinateur (maquette AucuneOffreOrdinateur) : le même écran, la scène à 482 px,
+               « Tout effacer » puis « Modifier les filtres ». -->
+          <CharacterState
+            v-else-if="!loading && items.length === 0 && activeCount(filters) && (phone || wide)"
+            scene="aucune-offre"
+            title="Aucune offre avec ces filtres"
+            :full="wide && !phone"
+            :class="{ 'character-state-wide': wide && !phone }"
+            data-test="offers-empty"
+          >
+            <div
+              v-if="phone"
+              class="offers-empty-chips"
+              role="group"
+              aria-label="Filtres actifs"
+            >
+              <button
+                v-for="chip in chips"
+                :key="chip.key"
+                type="button"
+                class="offers-empty-chip"
+                :aria-label="`Retirer le filtre ${chip.label}`"
+                @click="update(chip.patch)"
+              >
+                {{ chip.label }}<AppIcon name="close" />
+              </button>
+            </div>
+            <p v-else>
+              {{ emptyFiltersLine }}
+            </p>
+            <div class="face-state-actions">
+              <button
+                v-if="wide && !phone"
+                type="button"
+                class="secondary offers-empty-reset"
+                data-test="offers-reset"
+                @click="reset"
+              >
+                Tout effacer
+              </button>
               <button
                 type="button"
                 class="primary"
-                data-test="offers-none-add"
-                @click="manualOpen = true"
+                data-test="offers-edit-filters"
+                @click="openFilters()"
               >
-                <AppIcon name="plus" />Ajouter une offre
+                Modifier les filtres
               </button>
-              <RouterLink
-                to="/candidatures/alertes"
-                class="button-link secondary"
-                data-test="offers-none-alerts"
-              >
-                <AppIcon name="bell" />Voir mes alertes
-              </RouterLink>
-            </template>
-            <template v-else>
-              <RouterLink
-                to="/candidatures/alertes"
-                class="button-link primary-link"
-                data-test="offers-none-alerts"
-              >
-                <AppIcon name="bell" />Créer mes alertes
-              </RouterLink>
-              <button
-                type="button"
-                class="secondary"
-                data-test="offers-none-add"
-                @click="manualOpen = true"
-              >
-                <AppIcon name="plus" />Ajouter une offre
-              </button>
-            </template>
-          </template>
-          <button
-            type="button"
-            class="link"
-            data-test="offers-none-spontaneous"
-            @click="spontaneousOpen = true"
-          >
-            Faire une candidature spontanée<AppIcon name="chevron" />
-          </button>
-        </EmptyState>
-        <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
-        <FaceState
-          v-else-if="!loading && items.length === 0 && allReviewed"
-          title="Tout est examiné"
-          illustration="reussite"
-          data-test="offers-all-reviewed"
-        >
-          <p>Les nouvelles arrivent chaque matin.</p>
-        </FaceState>
-        <!-- Rien en préparation (planche « Illustrations ») : garder une offre dans le tri. -->
-        <FaceState
-          v-else-if="!loading && items.length === 0 && filters.view === 'in_progress' && !activeCount(filters)"
-          title="Rien à préparer pour l’instant"
-          illustration="preparer-vide"
-          data-test="offers-nothing-to-prepare"
-        >
-          <p>Garde une offre dans le tri : sa lettre et son CV se préparent ici.</p>
-          <div class="face-state-actions">
-            <RouterLink
-              :to="{ name: 'triage' }"
-              class="button-link primary-link"
-            >
-              Commencer le tri
-            </RouterLink>
-          </div>
-        </FaceState>
-        <!-- Téléphone (maquette AucuneOffre, §15 du 9 novembre) : la scène « aucune-offre » (330 px), ce qui filtre,
-             en mots, et « Modifier les filtres ». -->
-        <!-- Ordinateur (maquette AucuneOffreOrdinateur) : le même écran, la scène à 482 px,
-             « Tout effacer » puis « Modifier les filtres ». -->
-        <CharacterState
-          v-else-if="!loading && items.length === 0 && activeCount(filters) && (phone || wide)"
-          scene="aucune-offre"
-          title="Aucune offre avec ces filtres"
-          :full="wide && !phone"
-          :class="{ 'character-state-wide': wide && !phone }"
-          data-test="offers-empty"
-        >
-          <div
-            v-if="phone"
-            class="offers-empty-chips"
-            role="group"
-            aria-label="Filtres actifs"
-          >
+            </div>
             <button
-              v-for="chip in chips"
-              :key="chip.key"
+              v-if="phone"
               type="button"
-              class="offers-empty-chip"
-              :aria-label="`Retirer le filtre ${chip.label}`"
-              @click="update(chip.patch)"
-            >
-              {{ chip.label }}<AppIcon name="close" />
-            </button>
-          </div>
-          <p v-else>
-            {{ emptyFiltersLine }}
-          </p>
-          <div class="face-state-actions">
-            <button
-              v-if="wide && !phone"
-              type="button"
-              class="secondary offers-empty-reset"
+              class="link offers-empty-clear"
               data-test="offers-reset"
               @click="reset"
             >
               Tout effacer
             </button>
-            <button
-              type="button"
-              class="primary"
-              data-test="offers-edit-filters"
-              @click="openFilters()"
+            <!-- Sous un trait de 420 px (§2.7, AucuneOffreOrdinateur) : la candidature spontanée, qui ouvre « Ajouter ». -->
+            <div
+              v-if="wide && !phone"
+              class="offers-empty-spontaneous"
             >
-              Modifier les filtres
-            </button>
-          </div>
-          <button
-            v-if="phone"
-            type="button"
-            class="link offers-empty-clear"
-            data-test="offers-reset"
-            @click="reset"
+              <p>Tu vises une entreprise précise, même sans offre ?</p>
+              <button
+                type="button"
+                class="link"
+                data-test="empty-spontaneous"
+                @click="spontaneousOpen = true"
+              >
+                Faire une candidature spontanée<AppIcon name="chevron" />
+              </button>
+            </div>
+          </CharacterState>
+          <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
+          <p
+            v-else-if="!loading && items.length === 0 && activeCount(filters)"
+            class="muted empty"
+            data-test="offers-empty"
           >
-            Tout effacer
-          </button>
-          <!-- Sous un trait de 420 px (§2.7, AucuneOffreOrdinateur) : la candidature spontanée, qui ouvre « Ajouter ». -->
-          <div
-            v-if="wide && !phone"
-            class="offers-empty-spontaneous"
-          >
-            <p>Tu vises une entreprise précise, même sans offre ?</p>
+            Aucune offre avec ces filtres.
             <button
               type="button"
               class="link"
-              data-test="empty-spontaneous"
-              @click="spontaneousOpen = true"
+              data-test="offers-reset"
+              @click="reset"
             >
-              Faire une candidature spontanée<AppIcon name="chevron" />
+              Effacer les filtres
             </button>
-          </div>
-        </CharacterState>
-        <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
-        <p
-          v-else-if="!loading && items.length === 0 && activeCount(filters)"
-          class="muted empty"
-          data-test="offers-empty"
-        >
-          Aucune offre avec ces filtres.
-          <button
-            type="button"
-            class="link"
-            data-test="offers-reset"
-            @click="reset"
+          </p>
+          <FaceState
+            v-else-if="!loading && shown.length === 0 && !(hidesFar && farCount)"
+            title="Aucune offre"
+            data-test="offers-empty"
           >
-            Effacer les filtres
-          </button>
-        </p>
-        <FaceState
-          v-else-if="!loading && shown.length === 0 && !(hidesFar && farCount)"
-          title="Aucune offre"
-          data-test="offers-empty"
-        >
-          <p>Rien ne correspond pour l’instant.</p>
-        </FaceState>
-        <!-- Connexion perdue ou nouvel essai : l'écran d'erreur seul, sans l'ancienne liste dessous. -->
-        <TransitionGroup
-          v-if="!(failed && offline) && !(retrying && loading)"
-          tag="ul"
-          name="card"
-          class="offer-cards"
-        >
-          <li
-            v-for="row in rows"
-            :key="row.key"
-            :class="{ 'offer-day': row.day, 'offer-flash': !!row.offer && row.offer.id === flashId }"
-            :data-test="row.day ? 'offer-day' : undefined"
-            :data-offer-row="row.offer?.id"
+            <p>Rien ne correspond pour l’instant.</p>
+          </FaceState>
+          <!-- Connexion perdue ou nouvel essai : l'écran d'erreur seul, sans l'ancienne liste dessous. -->
+          <TransitionGroup
+            v-if="!(failed && offline) && !(retrying && loading)"
+            tag="ul"
+            name="card"
+            class="offer-cards"
           >
-            <!-- Le titre du jour, son nombre en gris (maquette Candidatures, C8) ; « En préparation » d'abord. -->
+            <li
+              v-for="row in rows"
+              :key="row.key"
+              :class="{ 'offer-day': row.day, 'offer-flash': !!row.offer && row.offer.id === flashId }"
+              :data-test="row.day ? 'offer-day' : undefined"
+              :data-offer-row="row.offer?.id"
+            >
+              <!-- Le titre du jour, son nombre en gris (maquette Candidatures, C8) ; « En préparation » d'abord. -->
+              <h2
+                v-if="row.day"
+                class="offer-day-title"
+              >
+                <span class="offer-day-name">{{ row.day.name }}</span>
+                <!-- Ordinateur (CandidaturesOrdinateurB du 13.11) : le nombre seul ; « offres » reste pour le lecteur d’écran. -->
+                <span class="offer-day-count">{{ row.day.n }}<span class="offer-day-unit">{{ row.day.count.slice(String(row.day.n).length) }}</span></span>
+              </h2>
+              <OfferCard
+                v-else-if="row.offer"
+                :offer="row.offer"
+                :selected="row.offer.id === selectedId"
+                :show-date="!byDay || row.offer.id === pinnedId"
+                @select="selectOffer(row.offer.id)"
+              />
+            </li>
+          </TransitionGroup>
+          <!-- Ordinateur : la suite de la liste, sur place (règles §4, « Afficher plus (N) ») : chargée par pages. -->
+          <ShowMore
+            v-if="!phone && items.length < total"
+            :model-value="false"
+            :hidden="total - items.length"
+            test-id="offers-more"
+            @update:model-value="loadMore"
+          />
+          <!-- Téléphone, bas de la liste (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
+               CandidaturesSombre, état bas-de-liste) : un bouton contour pleine largeur, puis le groupe « Autres offres ». -->
+          <template v-if="phone && !loading && !failed && !phoneEmptyFiltered && !bare">
+            <button
+              v-if="remaining > 0"
+              type="button"
+              class="offers-more-phone"
+              data-test="offers-more"
+              @click="showMoreOffers"
+            >
+              <strong>{{ moreLabel }}</strong><span>{{ remainingLabel }}</span>
+            </button>
             <h2
-              v-if="row.day"
-              class="offer-day-title"
+              id="offers-other-title"
+              class="offers-other-cap"
             >
-              <span class="offer-day-name">{{ row.day.name }}</span>
-              <!-- Ordinateur (CandidaturesOrdinateurB du 13.11) : le nombre seul ; « offres » reste pour le lecteur d’écran. -->
-              <span class="offer-day-count">{{ row.day.n }}<span class="offer-day-unit">{{ row.day.count.slice(String(row.day.n).length) }}</span></span>
+              Autres offres
             </h2>
-            <OfferCard
-              v-else-if="row.offer"
-              :offer="row.offer"
-              :selected="row.offer.id === selectedId"
-              :show-date="!byDay || row.offer.id === pinnedId"
-              @select="selectOffer(row.offer.id)"
-            />
-          </li>
-        </TransitionGroup>
-        <!-- Ordinateur : la suite de la liste, sur place (règles §4, « Afficher plus (N) ») : chargée par pages. -->
-        <ShowMore
-          v-if="!phone && items.length < total"
-          :model-value="false"
-          :hidden="total - items.length"
-          test-id="offers-more"
-          @update:model-value="loadMore"
-        />
-        <!-- Téléphone, bas de la liste (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
-             CandidaturesSombre, état bas-de-liste) : un bouton contour pleine largeur, puis le groupe « Autres offres ». -->
-        <template v-if="phone && !loading && !failed && !phoneEmptyFiltered && !bare">
-          <button
-            v-if="remaining > 0"
-            type="button"
-            class="offers-more-phone"
-            data-test="offers-more"
-            @click="showMoreOffers"
-          >
-            <strong>{{ moreLabel }}</strong><span>{{ remainingLabel }}</span>
-          </button>
-          <h2
-            id="offers-other-title"
-            class="offers-other-cap"
-          >
-            Autres offres
-          </h2>
-          <div
-            class="offers-other"
-            role="group"
-            aria-labelledby="offers-other-title"
-          >
-            <!-- « Loin de ton profil » et « Expirées » : ouvertes, même titre, « n offres affichées », chevron vers le
-                 haut (Kevin, 10.11). Masquées si leur nombre vaut 0. -->
-            <button
-              v-if="hidesFar && farCount"
-              type="button"
-              class="offers-other-row"
-              :aria-expanded="showFar"
-              data-test="offers-far"
-              @click="showFar = !showFar"
+            <div
+              class="offers-other"
+              role="group"
+              aria-labelledby="offers-other-title"
             >
-              <span class="offers-other-text">
-                <strong>Loin de ton profil</strong>
-                <span><span class="visually-hidden">, </span>{{ plural(farCount, "offre", "offres") }}{{ showFar ? (farCount > 1 ? " affichées" : " affichée") : ", notées plus bas" }}</span>
-              </span>
-              <span
-                class="arrow-circle"
-                aria-hidden="true"
-              ><AppIcon :name="showFar ? 'chevron-up' : 'arrow-right'" /></span>
-            </button>
-            <button
-              v-if="filters.view === 'pending' && counts.expired > 0"
-              type="button"
-              class="offers-other-row"
-              :aria-expanded="filters.showExpired"
-              data-test="offers-expired"
-              @click="update({ showExpired: !filters.showExpired })"
-            >
-              <span class="offers-other-text">
-                <strong>Expirées</strong>
-                <span><span class="visually-hidden">, </span>{{ plural(counts.expired, "offre", "offres") }}{{ filters.showExpired ? (counts.expired > 1 ? " affichées" : " affichée") : ", pour mémoire" }}</span>
-              </span>
-              <span
-                class="arrow-circle"
-                aria-hidden="true"
-              ><AppIcon :name="filters.showExpired ? 'chevron-up' : 'arrow-right'" /></span>
-            </button>
-            <button
-              type="button"
-              class="offers-other-row"
-              aria-haspopup="dialog"
-              data-test="spontaneous-open"
-              @click="spontaneousOpen = true"
-            >
-              <span class="offers-other-text">
-                <strong>Postuler spontanément</strong>
-                <span><span class="visually-hidden">, </span>À une entreprise sans offre publiée</span>
-              </span>
-              <span
-                class="arrow-circle"
-                aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
-            </button>
-          </div>
-        </template>
+              <!-- « Loin de ton profil » et « Expirées » : ouvertes, même titre, « n offres affichées », chevron vers le
+                   haut (Kevin, 10.11). Masquées si leur nombre vaut 0. -->
+              <button
+                v-if="hidesFar && farCount"
+                type="button"
+                class="offers-other-row"
+                :aria-expanded="showFar"
+                data-test="offers-far"
+                @click="showFar = !showFar"
+              >
+                <span class="offers-other-text">
+                  <strong>Loin de ton profil</strong>
+                  <span><span class="visually-hidden">, </span>{{ plural(farCount, "offre", "offres") }}{{ showFar ? (farCount > 1 ? " affichées" : " affichée") : ", notées plus bas" }}</span>
+                </span>
+                <span
+                  class="arrow-circle"
+                  aria-hidden="true"
+                ><AppIcon :name="showFar ? 'chevron-up' : 'arrow-right'" /></span>
+              </button>
+              <button
+                v-if="filters.view === 'pending' && counts.expired > 0"
+                type="button"
+                class="offers-other-row"
+                :aria-expanded="filters.showExpired"
+                data-test="offers-expired"
+                @click="update({ showExpired: !filters.showExpired })"
+              >
+                <span class="offers-other-text">
+                  <strong>Expirées</strong>
+                  <span><span class="visually-hidden">, </span>{{ plural(counts.expired, "offre", "offres") }}{{ filters.showExpired ? (counts.expired > 1 ? " affichées" : " affichée") : ", pour mémoire" }}</span>
+                </span>
+                <span
+                  class="arrow-circle"
+                  aria-hidden="true"
+                ><AppIcon :name="filters.showExpired ? 'chevron-up' : 'arrow-right'" /></span>
+              </button>
+              <button
+                type="button"
+                class="offers-other-row"
+                aria-haspopup="dialog"
+                data-test="spontaneous-open"
+                @click="spontaneousOpen = true"
+              >
+                <span class="offers-other-text">
+                  <strong>Postuler spontanément</strong>
+                  <span><span class="visually-hidden">, </span>À une entreprise sans offre publiée</span>
+                </span>
+                <span
+                  class="arrow-circle"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span>
+              </button>
+            </div>
+          </template>
+        </div>
         <LinkedPin
           v-if="linked && selected"
           side="bottom"
