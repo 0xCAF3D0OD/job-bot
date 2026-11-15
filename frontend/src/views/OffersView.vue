@@ -392,12 +392,24 @@ async function manualAdded(result: {
     : result.existing
       ? "Elle était déjà dans ta liste"
       : result.status === "filtered_out"
-        ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+        ? `Offre ajoutée. Tes critères l’écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ». Sa note arrive dans un instant.`
         : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
   await openFromQuery();
   if (result.existing && !result.filled?.length) void flash(result.id);
+  else if (!result.existing) awaitScore(result.id);
+}
+// Ajoutée, l'offre est notée tout de suite, même écartée (Kevin, 15.11) : « Pas encore notée », puis la carte et la
+// fiche prennent la note, relue toutes les 5 s pendant 2 min au plus.
+let scoreTimer: ReturnType<typeof setTimeout> | undefined;
+function awaitScore(id: number, tries = 24): void {
+  clearTimeout(scoreTimer);
+  scoreTimer = setTimeout(async () => {
+    const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
+    if (data) items.value = items.value.map((o) => (o.id === id ? data : o));
+    if (tries > 1 && data?.score == null && !data?.score_error) awaitScore(id, tries - 1);
+  }, 5000);
 }
 // L'offre déjà là (PR 38) : la liste défile jusqu'à sa carte, mise en avant 2 secondes.
 const flashId = ref<number | null>(null);
@@ -634,6 +646,7 @@ useDataChanged(() => {
   void load();
 });
 onUnmounted(() => {
+  clearTimeout(scoreTimer);
   clearTimeout(undoTimer);
   window.removeEventListener("keydown", onKeydown);
   window.removeEventListener("resize", measureGrid);

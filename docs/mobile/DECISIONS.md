@@ -168,6 +168,24 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
 - Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
 
+## Trier ordinateur, l'éventail remplace le livre (Kevin, 15.11.2026, 11 h 44)
+
+- Chaque carte est un bouton (`aria-pressed` faux à l'endroit, vrai au dos), nommé « poste, entreprise. notes entières. Retourner pour voir l'extrait ». Focus : contour de 2 px `--primary-graphic`, décalé de 3 px, qui suit l'arrondi de la carte.
+- Clavier : ← Écarter et → Garder inchangés ; Tab et Maj+Tab passent d'une carte à l'autre ; Entrée ou Espace retourne la carte ; Entrée sur « Voir l'annonce complète » ouvre l'annonce sans retourner la carte (le lien est à côté du bouton, pas dedans).
+- Mouvement réduit : ni étalement animé ni rotation 3D, un fondu de 150 ms au plus.
+- « Écarter » affiche « Offre écartée » et « Annuler », le même bandeau et la même durée que « Garder ».
+- Badge « Gardée » : le style de la puce de la liste Candidatures, icône signet orange #F2853A ; fond et texte `--peach-soft` / `--peach-text`.
+- Signet : gardé sur la carte du téléphone ; fichier, composant et classes renommés « signet » (SignetMark). L'écran « Rien à trier » est refait à part (#735).
+- La ligne des touches ← → sous le compteur est retirée (Kevin, 15.11, 12 h 40) : les boutons portent `aria-keyshortcuts` et le titre « Écarter (←) » / « Garder (→) ».
+
+## Offre ajoutée à la main, notée comme les autres (Kevin, 15.11.2026, 16 h 33 et 16 h 39)
+
+- Une offre ajoutée à la main est notée comme les autres, quel que soit son statut (écartée par les critères, gardée, en préparation, envoyée). La note part dès l'ajout.
+- Pendant la notation, la carte de la liste ordinateur montre le cercle vide en pointillés et la pastille « Pas encore notée » (§21, paquet jobA1_maquette_2026-11-15_reglages), puis la note s'affiche sans recharger la page.
+- Les offres ajoutées à la main avant le 16 novembre et jamais notées ne sont pas reprises au passage automatique : une commande ponctuelle, idempotente, donne d'abord leur nombre et le coût estimé, puis les note sur accord.
+- Téléphone (Kevin, 15.11.2026, 17 h 25) : même traitement que l'ordinateur. Cercle vide en pointillés de 48 px à la place de l'anneau (aria-label « Pas encore notée ») et pastille neutre « Pas encore notée » en première position. Les pastilles qui ne tiennent pas sur la ligne passent dans « +N » (planche Candidatures), jamais coupées.
+- « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
+
 ## Code jobup : relevé partagé de la boîte tant qu'une page attend (Kevin, 15.11.2026, 18 h 24 et 18 h 49)
 
 - L'étape « Recopie le code de jobup » signale son attente dès son affichage, puis chaque minute tant qu'elle attend et que l'onglet est visible, 10 minutes au plus ; l'attente finit 75 s après la dernière relance, ou dès que le code du compte est arrivé. « J'attends un code » et l'extension attendent 5 minutes.

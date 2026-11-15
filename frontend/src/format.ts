@@ -1,4 +1,4 @@
-import type { ParseStatus } from "./api/client";
+import type { Offer, ParseStatus } from "./api/client";
 import { dateInList, dateInSentence, dateWithTime } from "./dates";
 
 export const SITE_NAMES: Record<string, string> = {
@@ -330,4 +330,9 @@ export function dailyPace(count: number, target: number | null | undefined, mont
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (today > last) return left;
   return Math.ceil(left / Math.max(1, workdays(today < first ? first : today, last)));
+}
+
+// Les étiquettes d'une offre à trier (carte du téléphone, éventail) : contrat, taux, puis télétravail.
+export function triageTags(offer: Offer): string[] {
+  return [offer.employment_type ?? "", rateText(offer.rate_min, offer.rate_max), remoteText(offer) ?? ""].filter(Boolean);
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BookmarkMark from "./BookmarkMark.vue";
+import SignetMark from "./SignetMark.vue";
 
 // « Rien à trier pour l’instant » (lot du 11 novembre au soir, PR 49 ; état « vide » d'AccueilV2 et
 // d'AujourdhuiOrdinateurV2) : un bloc à bordure pointillée, le contour du marque-page à droite, puis « Élargir ma
@@ -18,7 +18,7 @@ defineProps<{ title?: string; widen?: boolean }>();
         <b>{{ title ?? "Rien à trier pour l’instant" }}</b>
         <span>jobA1 cherche chaque matin. Les prochaines offres arrivent demain.</span>
       </p>
-      <BookmarkMark
+      <SignetMark
         outline
         :width="38"
       />

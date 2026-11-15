@@ -101,7 +101,7 @@ SCREENS: list[tuple[str, str | None]] = [
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
-    # Aujourd'hui en deux colonnes (PR 49) : l'accroche, les tâches, la bande ORP et le petit livre.
+    # Aujourd'hui en deux colonnes (PR 49) : l'accroche, les tâches, la bande ORP et l'éventail en petit.
     ("aujourdhui", None),
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
@@ -133,7 +133,7 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria] && [data-test=welcome-alert-later]"),
     # Les 4 personnages du logo (PR 11, §15).
     ("adresse-inconnue", None),
-    # Trier les offres (lot du 11 novembre au soir, PR 45) : le livre, puis la fin du tri.
+    # Trier les offres (lot du 11 novembre au soir, PR 45) : l'éventail, puis la fin du tri.
     ("candidatures/trier", None),
     ("candidatures/trier", "[data-test=triage-keep] && [data-test=triage-dismiss] && [data-test=triage-keep]"),
 ]
