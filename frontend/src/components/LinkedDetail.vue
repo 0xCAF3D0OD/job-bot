@@ -95,12 +95,12 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 .linked-detail::before { content: ""; position: absolute; top: calc(-1 * var(--linked-w)); right: 0; z-index: 2; width: var(--linked-fade-x); height: 2px; background: linear-gradient(90deg, transparent, var(--bg)); }
 .linked-detail::after { content: ""; position: absolute; left: -2px; right: 0; bottom: 0; z-index: 2; height: var(--linked-fade-y); background: linear-gradient(180deg, transparent, var(--bg) 85%); pointer-events: none; }
 .linked-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: 0 0 var(--space-12) var(--space-6); }
-/* La liste reliée (OffersView, ApplicationsView) : colonne de 532 px, cartes de 480 px à 52 px de la zone ; la barre
+/* La liste reliée (OffersView, ApplicationsView, RendezVousDesktop) : colonne de 532 px, cartes de 480 px à 52 px de la zone ; la barre
    de recherche et de filtres collée en haut (son fond couvre la carte choisie, 28 px de plus, sans toucher le trait de
    la zone, 18 px avant la fin de la colonne), seules les cartes défilent dessous, avec une ombre légère dès que la liste
    a défilé. La carte choisie s'allonge de 28 px vers la droite (fond --linked-selected-bg, contour de 2 px, sans
    ombre) et porte la flèche ; masquée quand son centre sort de la partie visible (data-arrow-off). */
-:is(.offers-grid, .jobs-body) > .linked-list {
+:is(.offers-grid, .jobs-body, .rdv-grid) > .linked-list {
   --linked-col: 532px; --linked-gap: 52px; --linked-grow: 28px; --linked-room: 3px;
   position: relative; z-index: 2; flex: none; box-sizing: border-box; width: calc(var(--linked-col) + var(--linked-room)); min-height: 0;
   overflow-y: auto; margin: calc(-1 * var(--linked-room)) 0 0 calc(-1 * var(--linked-room)); padding: var(--linked-room) var(--linked-gap) var(--space-3) var(--linked-room);
