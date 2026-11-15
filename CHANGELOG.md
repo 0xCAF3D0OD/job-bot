@@ -623,3 +623,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.409 | Candidatures sur ordinateur : une seule flèche quand la carte choisie est épinglée en haut ou en bas de la liste | livrée |
 | 1.6.410 | Préparer, carte « Ce CV » : les lignes tiennent dans la carte même avec un texte long, « à vérifier » en orange d'alerte | livrée |
 | 1.6.411 | Préparer : la vignette « Bandeau » de la carte Mise en page sur ordinateur passe en pêche, la couleur du document, en clair comme en sombre | livrée |
+| 1.6.412 | Formations : « Module terminé » retiré sur ordinateur ; le nombre de modules faits se note dans « Noter l'avancement » | livrée |
