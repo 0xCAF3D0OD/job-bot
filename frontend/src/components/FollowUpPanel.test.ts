@@ -99,4 +99,26 @@ describe("Relancer une candidature (docs/38, décision du 14.11)", () => {
     expect(wrapper.find("[data-test=follow-up-copy]").exists()).toBe(true);
     expect(wrapper.find("[data-test=follow-up-template]").exists()).toBe(false);
   });
+
+  it("« Copier » copie le message, « Objet » copie l’objet, puis « Copié » (décision de Kevin du 15.11)", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    POST.mockResolvedValueOnce(draft());
+    const wrapper = mount(FollowUpPanel, { props: { application: application as never } });
+    await flushPromises();
+    const message = wrapper.find("[data-test=follow-up-copy-message]");
+    const subject = wrapper.find("[data-test=follow-up-copy-subject]");
+    expect(message.attributes("aria-label")).toBe("Copier le message de relance");
+    expect(subject.attributes("aria-label")).toBe("Copier l’objet");
+    expect(message.text()).toBe("Copier");
+    expect(subject.text()).toBe("Objet");
+    await message.trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenLastCalledWith("Madame, Monsieur, …\n\nCamille");
+    expect(message.text()).toBe("Copié");
+    await subject.trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenLastCalledWith("Relance – candidature DevOps Engineer");
+    expect(subject.text()).toBe("Copié");
+  });
 });

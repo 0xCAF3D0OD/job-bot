@@ -19,13 +19,13 @@ const DIST = new URL("../dist/", import.meta.url).pathname;
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 426_000, // liaison carte → détail, #722 (Kevin, 15.11 : relevé une seule fois, plus de relèvement automatique)
+  "js-total": 426_780, // dos des cartes Trier ordinateur : verdicts, étiquettes, anneau (Kevin, 15.11 : 426 000 → 426 700 à 17 h 45, puis le reste avec 739 et 740, → 426 780 à 18 h 05)
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 117_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois, après 117 Ko pour la liaison et le code jobup)
+  "css-total": 117_780, // dos des cartes Trier ordinateur : verdicts, étiquettes, anneau (Kevin, 15.11 : 117 500 → 117 750 à 17 h 45, puis le reste avec 739 et 740, → 117 780 à 18 h 05)
   "css-accueil": 59_800,
   "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
   "css-bilan": 62_400,

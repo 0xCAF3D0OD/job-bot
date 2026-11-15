@@ -36,7 +36,7 @@ describe("L’éventail en petit d’Aujourd’hui (§20)", () => {
     expect(best?.text()).toContain("Kubernetes · Terraform");
     expect(best?.text()).toContain("Anglais ? à vérifier");
     // Deux offres : −4° et +4° (§12) ; la meilleure en bleu.
-    expect(cards.map((c) => (c.element as HTMLElement).style.transform)).toEqual(["rotate(4deg)", "rotate(-4deg)"]);
+    expect(cards.map((c) => (c.element as HTMLElement).style.getPropertyValue("--r"))).toEqual(["4deg", "-4deg"]);
     expect(best?.classes()).toContain("fan-blue");
     expect(view.find(".fan-mini").exists()).toBe(true);
     view.unmount();

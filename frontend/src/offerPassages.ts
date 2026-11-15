@@ -114,3 +114,11 @@ export function buildExcerpt(text: string, passages: string[], max = 135): Excer
   if (kept.at(-1)![1] < text.length) segments.push({ text: " (…)", mark: false });
   return { segments, built: true, count: segments.filter((s) => s.mark).length };
 }
+
+// Les points d'une offre à trier (carte du téléphone, éventail) : au plus trois, d'abord ce qui est retrouvé dans le
+// profil, puis au plus un point à vérifier.
+export function triagePoints(offer: Pick<Offer, "strengths" | "gaps">): { text: string; ok: boolean }[] {
+  const check = offer.gaps?.[0]?.text;
+  const found = (offer.strengths ?? []).slice(0, check ? 2 : 3).map((s) => ({ text: s.text, ok: true }));
+  return check ? [...found, { text: check, ok: false }] : found;
+}
