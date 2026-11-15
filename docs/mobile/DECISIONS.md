@@ -167,3 +167,8 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
 - Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
+
+## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
+
+- « N changements, à vérifier » prend l'orange d'alerte `--warning` (clair #A8540E, sombre #F2A766) : c'est une action à faire, pas une réussite. Remplace le vert de la planche PreparerOrdinateurCVPret.
+- Les lignes de « Ce CV » (et de « Ta candidature », qui partage les mêmes lignes) tiennent dans la carte : largeur 100 %, sans marge négative ; la carte n'a pas de marge sur les côtés, le titre et les lignes portent les 18,5 px. Un texte long est coupé sur une ligne avec points de suspension ; dans « Ce CV », le texte complet est dans l'aria-label de la ligne.
