@@ -115,12 +115,18 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
 
-  it("aucun rendez-vous : une ligne en tête de liste, sans bouton d’ajout ; le « + Ajouter » de l’en-tête (?ajouter=1) ouvre le panneau (maquette du 14 novembre, §6)", async () => {
+  it("rien à venir : une ligne en tête de liste ; aucun rendez-vous : l’état vide ; le « + Ajouter » de l’en-tête (?ajouter=1) ouvre le panneau (maquette du 14 novembre, §6)", async () => {
+    // Un rendez-vous passé, rien à venir : la pastille en tête de liste (§13 du 15 novembre, planches corrigées).
+    serve({ meeting: null, preparation: PREP, past: [NOTED], target: 10, trainings: [] });
+    const before = await open();
+    expect(before.wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
+    // La pastille seule (maquette du 15 novembre, §14) : la phrase « jobA1 prépare ta fiche la veille. » n'y est plus.
+    expect(before.wrapper.get("[data-test=rdv-list-empty]").text()).not.toContain("la veille");
+    // Aucun rendez-vous du tout (RendezVousOrdinateurVide) : l’état vide commun, centré, et son bouton d’ajout.
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper, router } = await open();
-    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
-    // La pastille seule (maquette du 15 novembre, §14) : la phrase « jobA1 prépare ta fiche la veille. » n'y est plus.
-    expect(wrapper.get("[data-test=rdv-list-empty]").text()).not.toContain("la veille");
+    expect(wrapper.get("[data-test=rdv-none-yet] h2").text()).toBe("Aucun rendez-vous");
+    expect(wrapper.find("[data-test=rdv-list-empty]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-add]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);

@@ -116,9 +116,11 @@ export function buildExcerpt(text: string, passages: string[], max = 135): Excer
 }
 
 // Les points d'une offre à trier (carte du téléphone, éventail) : au plus trois, d'abord ce qui est retrouvé dans le
-// profil, puis au plus un point à vérifier.
-export function triagePoints(offer: Pick<Offer, "strengths" | "gaps">): { text: string; ok: boolean }[] {
-  const check = offer.gaps?.[0]?.text;
-  const found = (offer.strengths ?? []).slice(0, check ? 2 : 3).map((s) => ({ text: s.text, ok: true }));
-  return check ? [...found, { text: check, ok: false }] : found;
+// profil, puis au plus un point à vérifier. Chacun garde sa forme courte (`short`, score-v9) pour l'éventail.
+export function triagePoints(
+  offer: Pick<Offer, "strengths" | "gaps">,
+): { text: string; short?: string | null; ok: boolean }[] {
+  const check = offer.gaps?.[0];
+  const found = (offer.strengths ?? []).slice(0, check ? 2 : 3).map((s) => ({ ...s, ok: true }));
+  return check ? [...found, { ...check, ok: false }] : found;
 }

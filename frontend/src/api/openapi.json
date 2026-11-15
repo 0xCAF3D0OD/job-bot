@@ -22499,6 +22499,17 @@
             },
             "type": "array",
             "title": "Chunk Ids"
+          },
+          "short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short"
           }
         },
         "type": "object",

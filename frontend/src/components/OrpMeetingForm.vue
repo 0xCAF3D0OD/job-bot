@@ -197,6 +197,8 @@ async function save(): Promise<void> {
 .rdv-form input { width: 100%; min-width: 0; }
 .rdv-form button { min-height: var(--form-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-form > div:last-child:not(.rdv-form-actions) { display: contents; }
+/* « Ajouter le rendez-vous » sur toute la largeur : le texte centré (décision de Kevin du 15.11). */
+.rdv-form .action-1 { justify-content: center; }
 /* Ordinateur, dans le panneau de détail (lot 11.5, CandidaturesOrdinateurB `ajrv`) : pas de carte autour du formulaire,
    560 px au plus, le titre de 26 px et sa phrase, 20 px entre les blocs ; « Annuler » en bouton texte. */
 .rdv-form.rdv-form-inline { --form-26: 26px; --form-32: 32px; --form-20: 20px; --form-6: 6px; gap: var(--form-20); max-width: 560px; padding: 0; border: 0; border-radius: 0; background: none; animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); }

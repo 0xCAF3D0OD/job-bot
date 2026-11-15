@@ -162,15 +162,19 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.find("[data-test=rdv-ready]").exists()).toBe(true);
   });
 
-  it("aucun rendez-vous : la carte « Aucun rendez-vous à venir » et « Ajouter », sans personnage (PR 28)", async () => {
+  it("aucun rendez-vous (RendezVousVide, §13 du 15 novembre) : l’état vide, « Ajouter un rendez-vous » ouvre le panneau", async () => {
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-past]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
-    expect(wrapper.get("[data-test=meeting-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.find("[data-test=meeting-person]").exists()).toBe(false);
-    await wrapper.get("[data-test=meeting-add]").trigger("click");
+    expect(wrapper.find("[data-test=meeting-empty]").exists()).toBe(false);
+    const empty = wrapper.get("[data-test=rdv-none-yet]");
+    expect(empty.find("h2").text()).toBe("Aucun rendez-vous");
+    expect(empty.get("[data-test=empty-pill]").text()).toBe("jobA1 prépare ta feuille la veille");
+    // Rien encore : pas de recherche (§13).
+    expect(wrapper.find(".rdv-search").exists()).toBe(false);
+    await empty.get("[data-test=rdv-none-add]").trigger("click");
     expect(wrapper.find("[data-test=new-meeting] [data-test=new-meeting-form]").exists()).toBe(true);
   });
 
@@ -203,10 +207,13 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.findComponent({ name: "OrpOutcomeSheet" }).props("meeting")).toMatchObject({ id: 1 });
   });
 
-  it("pas encore de candidature : l’écran d’avant", async () => {
+  it("pas encore de candidature : l’état vide, puis le formulaire sur place après le bouton", async () => {
     serve({ meeting: null, preparation: { ...PREP, has_applications: false }, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
     expect(wrapper.find("[data-test=rdv-upcoming]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
+    await wrapper.get("[data-test=rdv-none-add]").trigger("click");
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=sheet-none-yet]").exists()).toBe(true);
   });
 });

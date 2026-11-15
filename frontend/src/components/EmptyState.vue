@@ -9,6 +9,7 @@ import TroupeScene from "./TroupeScene.vue";
 // largeur, au milieu de l'espace sous l'en-tête de page, un peu au-dessus du centre exact. Un seul composant pour tous
 // les écrans vides (règle de Kevin du 15.11) : Offres, Envoyées, Rendez-vous, filtres, fin du tri, alertes. Le titre
 // peut venir d'un emplacement `title` (titre manuscrit de Trier) ; `title` reste son nom accessible par défaut.
+// `width` et `desktopWidth` : la largeur du dessin de la planche (260 et 400 par défaut, comme Offres).
 withDefaults(
   defineProps<{
     title: string;
@@ -16,8 +17,10 @@ withDefaults(
     pill?: string;
     pillIcon?: IconName;
     heading?: "h1" | "h2";
+    width?: number;
+    desktopWidth?: number;
   }>(),
-  { scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2" },
+  { scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2", width: 260, desktopWidth: 400 },
 );
 </script>
 
@@ -27,8 +30,8 @@ withDefaults(
       <TroupeScene
         v-if="scene"
         :scene="scene"
-        :width="260"
-        :desktop-width="400"
+        :width="width"
+        :desktop-width="desktopWidth"
         class="empty-state-scene"
       />
     </slot>

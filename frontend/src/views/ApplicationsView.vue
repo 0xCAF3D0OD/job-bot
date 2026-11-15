@@ -31,7 +31,7 @@ import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import CardHead from "../components/CardHead.vue";
-import FaceState from "../components/FaceState.vue";
+import EmptyState from "../components/EmptyState.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import EngagementMoment from "../components/EngagementMoment.vue";
 import ShowMore from "../components/ShowMore.vue";
@@ -78,6 +78,8 @@ const all = ref<Application[]>([]);
 const editing = ref<{ id: number | null; value: ApplicationFormValue; focusAddress?: boolean } | null>(null);
 const error = ref("");
 const loaded = ref(false);
+// Aucune candidature du tout (§13 du 15 novembre) : l’état vide, sans colonnes, sans objectif ni filtres.
+const noneSent = computed(() => !orpPage && loaded.value && !all.value.length);
 const busy = ref(false);
 // ?jour=AAAA-MM-JJ (lien du rappel « fais le point », docs/23 §1) : le jour s'ouvre d'emblée.
 const selectedDay = ref<string | null>(typeof route.query.jour === "string" ? route.query.jour : null);
@@ -586,7 +588,7 @@ onUnmounted(() => assistant.setFocus(null));
   </MomentScreen>
   <section
     v-else
-    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns, 'sent-panel-open': twoColumns && sentFiltersOpen, 'blocks-page orp-page-blocks': orpPage && phone }]"
+    :class="['jobs-body', { 'orp-page': orpPage, 'sent-columns': twoColumns && !noneSent, 'jobs-empty': noneSent, 'sent-panel-open': twoColumns && sentFiltersOpen, 'blocks-page orp-page-blocks': orpPage && phone }]"
   >
     <!-- Ordinateur (§3) : le volet Filtres à la place de la colonne liste ; le détail reste à droite. -->
     <SentFilterPanel
@@ -622,10 +624,10 @@ onUnmounted(() => assistant.setFocus(null));
          haut, seules les cartes défilent. Ailleurs, la colonne n’existe pas pour la mise en page (display: contents). -->
     <div
       ref="sentList"
-      :class="['sent-col', { 'linked-list': twoColumns }]"
+      :class="['sent-col', { 'linked-list': twoColumns && !noneSent }]"
     >
       <div
-        v-if="orp && !orpPage"
+        v-if="orp && !orpPage && !(noneSent && orp.target)"
         class="sent-tools"
         :data-linked-tools="twoColumns || undefined"
       >
@@ -838,22 +840,27 @@ onUnmounted(() => assistant.setFocus(null));
             </p>
           </SuccessCard>
 
-          <!-- Aucune candidature du tout (docs/128 §3) : ce qui remplit le Suivi. -->
-          <FaceState
-            v-if="!orpPage && loaded && !all.length"
-            title="Pas encore de candidature"
+          <!-- Aucune candidature du tout (§13 du 15 novembre, EnvoyeesOrdinateurVide / EnvoyeesVide) : l’état vide commun,
+               centré sur toute la largeur, sans la carte de l’objectif ni les filtres ; l’objectif devient la pastille. -->
+          <EmptyState
+            v-if="noneSent"
+            scene="envoyees-vide"
+            :width="161"
+            :desktop-width="248"
+            title="Pas encore de candidature envoyée"
+            :pill="orp?.target ? `Objectif ORP ${ofMonth(orp.month)} : ${plural(orp.target, 'candidature', 'candidatures')}` : undefined"
+            pill-icon="target"
             data-test="applications-none-yet"
           >
-            <p>Une candidature envoyée s’ajoute ici.</p>
-            <div class="face-state-actions">
+            <template #actions>
               <RouterLink
                 to="/candidatures/offres"
                 class="button-link primary-link"
               >
-                <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+                <AppIcon name="arrow-right" />Voir les offres à préparer
               </RouterLink>
-            </div>
-          </FaceState>
+            </template>
+          </EmptyState>
           <template v-else-if="loaded">
             <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
             <template v-if="!orpPage">

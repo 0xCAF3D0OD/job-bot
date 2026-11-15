@@ -7811,6 +7811,8 @@ export interface components {
             text: string;
             /** Chunk Ids */
             chunk_ids: number[];
+            /** Short */
+            short?: string | null;
         };
         /** ScoreTipOut */
         ScoreTipOut: {
