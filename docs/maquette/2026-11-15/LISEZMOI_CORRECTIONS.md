@@ -189,3 +189,11 @@ Planches : OnboardingOrdinateurAlerteCode, …CodeRecu, …CodeExpire (et Sombre
 ## 16. Candidatures téléphone : bouton Ajouter
 
 Planches Candidatures et CandidaturesSombre (onglet Offres). Bouton rond 48 × 48 px à droite du champ de recherche, 8 px d'écart, contour 1,5 px #2445C2 (sombre #7D95FF), fond carte, icône + 22 px, aria-label « Ajouter une offre ». Le titre reste à 30 px. Masqué avec la recherche sur les écrans vides.
+
+## 17. Sous-pages Offres (téléphone)
+
+- ActionsOffre : le menu s'ouvre depuis le ⋯ de la page de l'offre, jamais depuis la carte de la liste. 5 actions, dans cet ordre : J'ai déjà postulé, Écarter l'offre (rouge, toast avec Annuler), Signaler comme expirée, Cette note ne me correspond pas, Partager. Pas de « Marquer comme envoyée » ni de « Justificatif ORP ».
+- AjouterOffreTel : flèche d'envoi grise (#E5E2D9, icône #8C8478) et aria-disabled tant que le champ est vide, bleue dès qu'il y a du texte ou un fichier. Texte d'aide « Fonctionne avec jobup, jobs.ch, LinkedIn… » relié au champ (aria-describedby). Quota « Plus que N ajouts aujourd'hui » seulement quand N ≤ 5, en pastille orange à la place du texte d'aide.
+- OffreProvisoire (clair et sombre) : lien « Voir la compatibilité » (même libellé partout). Points cochés seulement s'ils viennent de l'extrait de l'alerte. Pas de pastille « Contrat non précisé » dans l'en-tête.
+- AucuneOffre : planche de la section 13, sans le bloc « Autres offres / Postuler spontanément ».
+- ExtAlerte : adresse au format alertes+<nom>-<code>@joba1.ch.

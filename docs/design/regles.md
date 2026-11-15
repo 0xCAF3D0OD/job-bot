@@ -1,8 +1,8 @@
 # Règles de design (maquette du 14 novembre 2026, mise à jour « rendez-vous et code »)
 
-Source : `docs/maquette/2026-11-15/LISEZMOI_CORRECTIONS.md`, paquet `jobA1_maquette_2026-11-15_rendezvous_code.zip` (177 planches dans `docs/maquette/2026-11-15/maquettes/`, captures dans `docs/maquette/2026-11-15/captures/`). Il remplace les paquets `jobA1_maquette_2026-11-15_etats_vides.zip`, `jobA1_maquette_2026-11-15_liaison_candidatures.zip`, `jobA1_maquette_2026-11-14_liaison_candidatures.zip` et `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip`, ce dernier gardé comme historique dans `docs/maquette/2026-11-14/`.
+Source : `docs/maquette/2026-11-15/LISEZMOI_CORRECTIONS.md`, paquet `jobA1_maquette_2026-11-15_rendezvous_code.zip` (177 planches et 70 captures ; 177 planches dans `docs/maquette/2026-11-15/maquettes/`, captures dans `docs/maquette/2026-11-15/captures/`). Il remplace les paquets `jobA1_maquette_2026-11-15_etats_vides.zip`, `jobA1_maquette_2026-11-15_liaison_candidatures.zip`, `jobA1_maquette_2026-11-14_liaison_candidatures.zip` et `jobA1_maquette_2026-11-14_cartes_filtres_panneaux.zip`, ce dernier gardé comme historique dans `docs/maquette/2026-11-14/`.
 
-Les 16 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles. En cas de doute entre ce texte et une planche, la planche gagne (Kevin, 15.11).
+Les 17 sections ci-dessous sont recopiées mot pour mot, sans reformulation. Ce paquet remplace les paquets précédents pour tout ce qu'il couvre ; le paquet de référence du 13 novembre (`docs/mobile/maquettes/`) reste valable pour le reste. Les planches sans « Ordinateur » dans leur nom sont le téléphone, les autres l'ordinateur. Une décision de Kevin notée avec sa date dans `docs/mobile/DECISIONS.md` passe avant ces règles. En cas de doute entre ce texte et une planche, la planche gagne (Kevin, 15.11).
 
 ---
 
@@ -193,3 +193,11 @@ Planches : OnboardingOrdinateurAlerteCode, …CodeRecu, …CodeExpire (et Sombre
 ## 16. Candidatures téléphone : bouton Ajouter
 
 Planches Candidatures et CandidaturesSombre (onglet Offres). Bouton rond 48 × 48 px à droite du champ de recherche, 8 px d'écart, contour 1,5 px #2445C2 (sombre #7D95FF), fond carte, icône + 22 px, aria-label « Ajouter une offre ». Le titre reste à 30 px. Masqué avec la recherche sur les écrans vides.
+
+## 17. Sous-pages Offres (téléphone)
+
+- ActionsOffre : le menu s'ouvre depuis le ⋯ de la page de l'offre, jamais depuis la carte de la liste. 5 actions, dans cet ordre : J'ai déjà postulé, Écarter l'offre (rouge, toast avec Annuler), Signaler comme expirée, Cette note ne me correspond pas, Partager. Pas de « Marquer comme envoyée » ni de « Justificatif ORP ».
+- AjouterOffreTel : flèche d'envoi grise (#E5E2D9, icône #8C8478) et aria-disabled tant que le champ est vide, bleue dès qu'il y a du texte ou un fichier. Texte d'aide « Fonctionne avec jobup, jobs.ch, LinkedIn… » relié au champ (aria-describedby). Quota « Plus que N ajouts aujourd'hui » seulement quand N ≤ 5, en pastille orange à la place du texte d'aide.
+- OffreProvisoire (clair et sombre) : lien « Voir la compatibilité » (même libellé partout). Points cochés seulement s'ils viennent de l'extrait de l'alerte. Pas de pastille « Contrat non précisé » dans l'en-tête.
+- AucuneOffre : planche de la section 13, sans le bloc « Autres offres / Postuler spontanément ».
+- ExtAlerte : adresse au format alertes+<nom>-<code>@joba1.ch.
