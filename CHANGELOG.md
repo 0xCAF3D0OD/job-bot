@@ -607,3 +607,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.393 | Premiers pas et Mes alertes : le code de jobup s'affiche dans l'étape de l'alerte (attente, reçu, expiré) | livrée |
 | 1.6.394 | L'essai des premières offres par le web dit pourquoi chaque résultat est écarté, et lit une réponse placée dans un bloc de code | livrée ; réglage JOBBOT_WEB_FIRST_OFFERS_ENABLED toujours éteint, à rallumer après un essai concluant |
 | 1.6.395 | États vides de Candidatures, premier lot : un seul composant d'état vide, et l'écran Offres sans offre centré sur toute la largeur, sans recherche ni filtres, avec « Tes alertes sont prêtes » quand une recherche est suivie | livrée |
+| 1.6.396 | Premières offres par le web : requêtes qui visent les pages d'offre, offres sans date écartées, requêtes affichées par l'essai | livrée pour un essai ; réglage toujours éteint, seuil de 3 offres fraîches par métier fixé avant le résultat |
