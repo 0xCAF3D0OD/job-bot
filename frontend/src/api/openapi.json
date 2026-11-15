@@ -7548,7 +7548,7 @@
           "today"
         ],
         "summary": "Get Google Jobs",
-        "description": "Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la\ncarte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).",
+        "description": "Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;\n« Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).",
         "operationId": "getGoogleJobs",
         "responses": {
           "200": {
@@ -7576,7 +7576,7 @@
           "today"
         ],
         "summary": "Set Google Jobs",
-        "description": "« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.",
+        "description": "« Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.",
         "operationId": "setGoogleJobs",
         "requestBody": {
           "content": {
@@ -15193,11 +15193,11 @@
           "key": {
             "type": "string",
             "enum": [
-              "profile",
+              "cv",
+              "criteria",
               "alerts",
               "keep",
-              "prepare",
-              "sent"
+              "send"
             ],
             "title": "Key"
           },
@@ -15240,6 +15240,56 @@
         ],
         "title": "FirstStepsStats",
         "description": "Les premiers pas des comptes créés depuis 30 jours (docs/128 §4) : des nombres seulement."
+      },
+      "FirstStepsSummaryOut": {
+        "properties": {
+          "skills": {
+            "type": "integer",
+            "title": "Skills"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "min_rate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skills",
+          "trade",
+          "place",
+          "min_rate"
+        ],
+        "title": "FirstStepsSummaryOut",
+        "description": "Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux."
       },
       "FocusIn": {
         "properties": {
@@ -16174,7 +16224,7 @@
           "url"
         ],
         "title": "GoogleJobsOut",
-        "description": "« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."
+        "description": "« <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,\nqui ouvre le panneau Google Emplois."
       },
       "GroupOut": {
         "properties": {
@@ -24299,6 +24349,16 @@
             "type": "array",
             "title": "First Steps",
             "default": []
+          },
+          "first_steps_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FirstStepsSummaryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "first_steps_dismissed": {
             "type": "boolean",

@@ -19,15 +19,19 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import welcome
+from jobbot.alerts.service import is_canton
 from jobbot.db.base import READ_ONLY
 from jobbot.db.models import (
     AlertSetup,
     Application,
+    ChunkKind,
     Criterion,
     Document,
     Draft,
     Offer,
     OfferStatus,
+    ProfileChunk,
     Search,
     Setting,
     received_alert,
@@ -35,12 +39,28 @@ from jobbot.db.models import (
 
 StepKey = Literal["profile", "alerts", "keep", "prepare", "sent"]
 STEPS: tuple[StepKey, ...] = ("profile", "alerts", "keep", "prepare", "sent")
+# Les cinq lignes d'Aujourd'hui (§22 du 15.11, option B de Kevin) : le CV et les critères
+# séparés, « préparer » et « envoyer » réunis. Les étapes gardées (STEPS, `first_steps_reached`,
+# la fonction SQL, l'API des partenaires) ne changent pas : les lignes s'en déduisent.
+RowKey = Literal["cv", "criteria", "alerts", "keep", "send"]
 REACHED_KEY = "first_steps_reached"
 DISMISSED_KEY = "first_steps_dismissed"
 # La carte de réussite a été montrée (l'interface le dit) ; d'office pour un compte qui avait
 # déjà tout fait avant la 1.1.0.
 CELEBRATED_KEY = "first_steps_celebrated"
 KEPT = (OfferStatus.PREPARING, OfferStatus.APPLIED)
+
+
+@dataclass(frozen=True)
+class Summary:
+    """Les sous-titres des lignes faites : « 12 compétences reprises », « DevOps · Lausanne ·
+    80 à 100 % ». Le métier tel que la personne l'a écrit à l'accueil, le premier lieu qui n'est
+    pas un canton, le taux minimum des critères."""
+
+    skills: int
+    trade: str | None
+    place: str | None
+    min_rate: int | None
 
 
 @dataclass(frozen=True)
@@ -56,6 +76,20 @@ class FirstSteps:
     just_finished: bool
     # Une alerte créée ou reçue (l'étape des alertes, qui ne se coche pas autrement).
     alerts_done: bool = True
+    # Un CV déposé, des critères enregistrés : les deux moitiés de l'étape 1.
+    cv_done: bool = False
+    criteria_done: bool = False
+
+    def rows(self) -> list[tuple[RowKey, bool]]:
+        """Les cinq lignes d'Aujourd'hui, faites ou non."""
+        first = self.done(0)
+        return [
+            ("cv", first or self.cv_done),
+            ("criteria", first or self.criteria_done),
+            ("alerts", self.done(1)),
+            ("keep", self.done(2)),
+            ("send", self.done(4)),
+        ]
 
     def done(self, index: int) -> bool:
         """L'étape `index` (0 à 4) est faite : les `reached` premières, sauf les alertes tant
@@ -139,12 +173,33 @@ async def load(session: AsyncSession) -> FirstSteps:
     )
     alerts_done = await _alerts(session)
     return FirstSteps(
+        cv_done=await _found(session, select(Document.id)),
+        criteria_done=await _found(session, select(Criterion.kind)),
         reached=reached,
         dismissed=bool(values.get(DISMISSED_KEY)),
         has_offers=has_offers,
         offer_id=offer_id,
         just_finished=reached == len(STEPS) and not celebrated,
         alerts_done=alerts_done,
+    )
+
+
+async def summary(session: AsyncSession) -> Summary:
+    skills = await session.scalar(
+        select(func.count())
+        .select_from(ProfileChunk)
+        .where(ProfileChunk.kind == ChunkKind.COMPETENCE, ProfileChunk.active.is_(True))
+    )
+    trade = (await welcome.state(session)).get("trade")
+    rows = {c.kind: c.value for c in await session.scalars(select(Criterion))}
+    locations = [v for v in rows.get("locations") or [] if isinstance(v, str)]
+    places = [v for v in locations if not is_canton(v)]
+    rate = rows.get("min_rate")
+    return Summary(
+        skills=skills or 0,
+        trade=trade.strip() or None if isinstance(trade, str) else None,
+        place=places[0] if places else None,
+        min_rate=rate if isinstance(rate, int) else None,
     )
 
 

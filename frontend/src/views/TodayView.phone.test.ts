@@ -16,7 +16,7 @@ afterEach(() => {
 const OFFER = { id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne, VD", score: 82, links: [] };
 function day(extra: Record<string, unknown> = {}) {
   return {
-    first_steps: ["profile", "alerts", "keep", "prepare", "sent"].map((key) => ({ key, done: true })),
+    first_steps: ["cv", "criteria", "alerts", "keep", "send"].map((key) => ({ key, done: true })),
     first_steps_dismissed: false,
     has_offers: true,
     to_review: 12,

@@ -23,11 +23,11 @@ const emit = defineEmits<{ dismiss: [] }>();
 
 // Les titres sont des noms (docs/interface.md, Titres 2) ; l'action est sur le bouton.
 const STEPS: Record<Key, { title: string; why: string; action: string; icon: IconName }> = {
-  profile: { title: "Critères et CV", why: "jobA1 trie les offres avec tes critères.", action: "Compléter mon profil", icon: "user" },
+  cv: { title: "Ton CV", why: "jobA1 en tire tes compétences.", action: "Compléter mon profil", icon: "user" },
+  criteria: { title: "Tes critères", why: "jobA1 trie les offres avec tes critères.", action: "Compléter mon profil", icon: "user" },
   alerts: { title: "Alertes sur les sites d’emploi", why: "Les offres arrivent ici, notées pour toi.", action: "Créer mes alertes", icon: "bell" },
   keep: { title: "Première offre gardée", why: "Celles qui te vont passent en « À préparer ».", action: "Voir les offres du jour", icon: "briefcase" },
-  prepare: { title: "Lettre et CV pour l’offre", why: "Adaptés à l’offre gardée, en quelques minutes.", action: "Préparer", icon: "mail" },
-  sent: { title: "Candidature envoyée", why: "Marque-la comme envoyée : elle compte pour ton mois ORP.", action: "Ouvrir la préparation", icon: "send" },
+  send: { title: "Lettre, CV et envoi", why: "Adaptés à l’offre gardée ; l’envoi compte pour ton mois ORP.", action: "Préparer", icon: "mail" },
 };
 
 const doneCount = computed(() => props.steps.filter((s) => s.done).length);
@@ -39,7 +39,8 @@ const waiting = computed(() => next.value?.key === "keep" && !props.hasOffers);
 const target = computed<RouteLocationRaw>(() => {
   const preparation = props.offerId ? `/candidatures/offres/${props.offerId}/preparer` : "/candidatures/offres";
   switch (next.value?.key) {
-    case "profile":
+    case "cv":
+    case "criteria":
       return "/profil";
     case "alerts":
       // L'étape « Alerte » des premiers pas, rouverte seule (corrections du 13.11 au soir, §1) : « Retour » et
@@ -48,10 +49,8 @@ const target = computed<RouteLocationRaw>(() => {
     case "keep":
       // Le tri du jour a son écran (1.6.50) : « Garder » s'y fait.
       return props.pickReady ? { name: "triage" } : "/candidatures/offres";
-    case "prepare":
-      return preparation;
     default:
-      return props.offerId ? { path: preparation, query: { doc: "postuler" } } : "/candidatures/offres";
+      return preparation;
   }
 });
 </script>

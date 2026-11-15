@@ -16,7 +16,7 @@ vi.mock("../api/client", () => ({
 }));
 afterEach(() => vi.resetAllMocks());
 
-const STEP_KEYS = ["profile", "alerts", "keep", "prepare", "sent"] as const;
+const STEP_KEYS = ["cv", "criteria", "alerts", "keep", "send"] as const;
 // Un compte neuf : les `done` premières étapes faites.
 function starting(done: number, extra: Record<string, unknown> = {}) {
   return today({ first_steps: STEP_KEYS.map((key, i) => ({ key, done: i < done })), ...extra });
@@ -87,13 +87,13 @@ function clearStorage(): void {
 
 describe("Les premiers pas (docs/128)", () => {
   it("une seule prochaine action, à la place de la phrase du jour", async () => {
-    mockGet(starting(1));
+    mockGet(starting(2));
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=first-steps]");
-    expect(card.text()).toContain("2 sur 5");
+    expect(card.text()).toContain("3 sur 5");
     expect(card.find("h2").text()).toBe("Alertes sur les sites d’emploi");
     expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/bienvenue?etape=alerte");
-    expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
+    expect(wrapper.find("[data-test=first-step-cv]").classes()).toContain("done");
     expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
     expect(wrapper.find("h1").text()).toBe("Commence par les premiers pas.");
     // Le tri, « À faire » et « À retenir » attendent (docs/interface.md n° 17).
@@ -107,7 +107,7 @@ describe("Les premiers pas (docs/128)", () => {
 
   it("alertes créées, aucune offre encore : on attend, ou on en ajoute une", async () => {
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? starting(2, { has_offers: false, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+      Promise.resolve({ data: path === "/api/today" ? starting(3, { has_offers: false, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
     );
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=first-steps]");
@@ -121,7 +121,7 @@ describe("Les premiers pas (docs/128)", () => {
   it("aucune offre encore : la carte Google Emplois sous les premiers pas, sans « en retard » (§22 du 15.11)", async () => {
     const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? starting(1, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url }, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+      Promise.resolve({ data: path === "/api/today" ? starting(2, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url }, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
     );
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=google-jobs]");
@@ -145,7 +145,7 @@ describe("Les premiers pas (docs/128)", () => {
 
   it("premiers pas fermés : la carte vient en premier", async () => {
     const url = "https://www.google.com/search?q=Comptable+emploi&udm=8";
-    mockGet(starting(2, { has_offers: false, first_steps_dismissed: true, google_jobs: { terms: "Comptable", location: null, url } }));
+    mockGet(starting(3, { has_offers: false, first_steps_dismissed: true, google_jobs: { terms: "Comptable", location: null, url } }));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=first-steps]").exists()).toBe(false);
     expect(wrapper.find("[data-test=google-jobs-search]").text()).toBe("Comptable");
@@ -154,7 +154,7 @@ describe("Les premiers pas (docs/128)", () => {
   it("« Masquer » : la carte part tout de suite, retenue pour le compte au bout de 6 secondes", async () => {
     vi.useFakeTimers();
     const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
-    mockGet(starting(1, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url } }));
+    mockGet(starting(2, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url } }));
     PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=google-jobs-hide]").trigger("click");
@@ -168,34 +168,30 @@ describe("Les premiers pas (docs/128)", () => {
   });
 
   it("alertes prêtes, sans métier : pas de carte ni de second « Ajouter », et plus rien dès la première offre", async () => {
-    mockGet(starting(2, { has_offers: false, google_jobs: null }));
+    mockGet(starting(3, { has_offers: false, google_jobs: null }));
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=google-jobs]").exists()).toBe(false);
     expect(wrapper.find("[data-test=start-add]").exists()).toBe(false);
     expect(wrapper.find("[data-test=start-forward]").exists()).toBe(true);
-    mockGet(starting(2, { has_offers: true, google_jobs: null }));
+    mockGet(starting(3, { has_offers: true, google_jobs: null }));
     wrapper = await mountView();
     expect(wrapper.find("[data-test=google-jobs-links]").exists()).toBe(false);
   });
 
   it("garder une offre : le bouton ouvre l’écran de tri", async () => {
-    mockGet(starting(2));
+    mockGet(starting(3));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/aujourdhui/tri");
   });
 
-  it("préparer puis marquer envoyée : la dernière offre gardée", async () => {
-    mockGet(starting(3, { first_steps_offer_id: 7 }));
-    let wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
+  it("préparer et envoyer : la dernière offre gardée", async () => {
     mockGet(starting(4, { first_steps_offer_id: 7 }));
-    wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps]").find("h2").text()).toBe("Candidature envoyée");
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer?doc=postuler");
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
   });
 
   it("pendant les premiers pas, pas de rythme ni de lien vers le bilan", async () => {
-    mockGet(starting(2, { rhythm: { target: 5, count: 0, days: [], research_today: true } }));
+    mockGet(starting(3, { rhythm: { target: 5, count: 0, days: [], research_today: true } }));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("Voir le bilan");
     expect(wrapper.find("[data-test=orp-bar-week]").exists()).toBe(false);
@@ -203,7 +199,7 @@ describe("Les premiers pas (docs/128)", () => {
 
   it("masquer : partie tout de suite, enregistrée au bout de 6 secondes", async () => {
     vi.useFakeTimers();
-    mockGet(starting(1));
+    mockGet(starting(2));
     PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=first-steps-dismiss]").trigger("click");

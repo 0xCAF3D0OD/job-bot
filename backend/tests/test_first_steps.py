@@ -20,6 +20,7 @@ from jobbot.db.models import (
     Draft,
     Offer,
     OfferStatus,
+    ProfileChunk,
     Search,
 )
 from jobbot.runtime import Runtime
@@ -28,7 +29,9 @@ from .conftest import admin_engine
 from .test_platform import client as account_client
 from .test_platform import invite, secured  # noqa: F401
 
-TABLES = "offers, applications, searches, drafts, criteria, documents, alert_searches"
+TABLES = (
+    "offers, applications, searches, drafts, criteria, documents, alert_searches, profile_chunks"
+)
 KEYS = (
     "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated',"
     " 'google_jobs_hidden')"
@@ -54,13 +57,27 @@ def done(page: dict[str, Any]) -> list[str]:
 async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     page = (await client.get("/api/today")).json()
     keys = [s["key"] for s in page["first_steps"]]
-    assert keys == ["profile", "alerts", "keep", "prepare", "sent"]
+    assert keys == ["cv", "criteria", "alerts", "keep", "send"]
     assert done(page) == []
+    assert page["first_steps_summary"] == {
+        "skills": 0,
+        "trade": None,
+        "place": None,
+        "min_rate": None,
+    }
     assert page["has_offers"] is False and page["first_steps_dismissed"] is False
 
     now = datetime.now(UTC)
+    # Les critères seuls : la ligne du CV reste à faire (§22 du 15.11, CV et critères séparés).
     async with fresh.sessionmaker.begin() as session:
-        session.add(Criterion(kind="locations", value=["VD"]))
+        session.add(Criterion(kind="locations", value=["VD", "Lausanne"]))
+        session.add(Criterion(kind="min_rate", value=80))
+    page = (await client.get("/api/today")).json()
+    assert done(page) == ["criteria"]
+    summary = page["first_steps_summary"]
+    assert summary["place"] == "Lausanne" and summary["min_rate"] == 80
+
+    async with fresh.sessionmaker.begin() as session:
         session.add(
             Document(
                 filename="cv.pdf",
@@ -71,7 +88,14 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
                 text_status="ok",
             )
         )
-    assert done((await client.get("/api/today")).json()) == ["profile"]
+        # Les compétences actives du profil : « 2 compétences reprises ».
+        session.add(ProfileChunk(kind="competence", title="Kubernetes", content="k3s"))
+        session.add(ProfileChunk(kind="competence", title="Terraform", content="AWS"))
+        session.add(ProfileChunk(kind="competence", title="Cobol", content="…", active=False))
+        session.add(ProfileChunk(kind="experience", title="Acme", content="…"))
+    page = (await client.get("/api/today")).json()
+    assert done(page) == ["cv", "criteria"]
+    assert page["first_steps_summary"]["skills"] == 2
 
     # Les alertes créées, aucune offre encore : on attend les premières.
     async with fresh.sessionmaker.begin() as session:
@@ -80,7 +104,7 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
         await session.flush()
         session.add(AlertSetup(search_id=search.id, site="jobup"))
     page = (await client.get("/api/today")).json()
-    assert done(page) == ["profile", "alerts"] and page["has_offers"] is False
+    assert done(page) == ["cv", "criteria", "alerts"] and page["has_offers"] is False
 
     async with fresh.sessionmaker.begin() as session:
         offer = Offer(
@@ -99,14 +123,15 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
 
     async with fresh.sessionmaker.begin() as session:
         session.add(Draft(offer_id=offer_id, kind="letter", version=1, language="fr", content={}))
-    assert done((await client.get("/api/today")).json())[-1] == "prepare"
+    # « Préparer et envoyer » ne se coche qu'à l'envoi : une lettre ne suffit pas.
+    assert done((await client.get("/api/today")).json())[-1] == "keep"
 
     # Écartée ensuite : les étapes faites le restent.
     await client.patch(f"/api/offers/{offer_id}/status", json={"status": "ignored"})
     async with fresh.sessionmaker.begin() as session:
         await session.execute(text("DELETE FROM drafts"))
     page = (await client.get("/api/today")).json()
-    assert done(page)[-1] == "prepare" and page["first_steps_finished"] is False
+    assert done(page)[-1] == "keep" and page["first_steps_finished"] is False
 
     async with fresh.sessionmaker.begin() as session:
         session.add(
@@ -120,6 +145,7 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
         )
     page = (await client.get("/api/today")).json()
     assert len(done(page)) == 5 and page["first_steps_finished"] is True
+    assert page["first_steps_summary"] is None
     # D'autres lectures d'Aujourd'hui (la barre d'onglets) ne la consomment pas ; une fois
     # montrée, l'interface le dit et elle ne revient plus.
     assert (await client.get("/api/today")).json()["first_steps_finished"] is True
@@ -290,11 +316,11 @@ async def test_alerts_need_an_alert_created_or_received(
         )
     page = (await client.get("/api/today")).json()
     # Une offre gardée fait l'étape 3, mais l'étape des alertes reste ouverte.
-    assert done(page) == ["profile", "keep"]
+    assert done(page) == ["cv", "criteria", "keep"]
 
     async with fresh.sessionmaker.begin() as session:
         session.add(_search("<alerte@jobup.ch>"))
-    assert done((await client.get("/api/today")).json()) == ["profile", "alerts", "keep"]
+    assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "alerts", "keep"]
 
     async with fresh.sessionmaker.begin() as session:
         await session.execute(text("DELETE FROM searches"))
@@ -302,7 +328,7 @@ async def test_alerts_need_an_alert_created_or_received(
         session.add(search)
         await session.flush()
         session.add(AlertSetup(search_id=search.id, site="jobup"))
-    assert done((await client.get("/api/today")).json()) == ["profile", "alerts", "keep"]
+    assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "alerts", "keep"]
 
 
 async def test_the_team_count_follows_the_alert_rule(fresh: Runtime) -> None:
