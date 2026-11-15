@@ -1589,12 +1589,14 @@ button, .button-link { max-width: 100%; }
   .jobs-head .jobs-tools { margin: 0 0 var(--space-3); }
   .jobs-tools .offers-toolbar { flex-wrap: nowrap; margin: 0; }
   .jobs-tools .offers-toolbar-search { flex: 1 1 auto; }
-  /* Le champ et « Ajouter » comme dans la maquette : fond blanc, bord clair. */
-  .jobs-tools .offers-add-compact { border-color: var(--line); background: var(--surface); }
   /* Ni trait sous l'en-tête d'une page d'onglet, ni sous les vues de Candidatures (maquette). */
   .topbar:is([data-variant="tab"], [data-variant="home"]) { border-bottom: 0; }
   .jobs-band { border-top: 0; }
-  .jobs-tools .offers-add-compact { flex: none; min-height: var(--field-h); padding: 0 var(--space-4); border-radius: var(--radius-card); }
+  /* « + » (décision de Kevin du 15.11) : rond de 48 px, à la hauteur du champ et 8 px après lui, contour bleu de 1,5 px. */
+  .jobs-tools .offers-toolbar { gap: var(--space-2); }
+  .jobs-tools .offers-filter { display: contents; }
+  .jobs-tools .offers-add-compact { --add-22: 22px; display: grid; flex: none; place-items: center; width: var(--field-h); height: var(--field-h); padding: 0; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); }
+  .jobs-tools .offers-add-compact .icon { width: var(--add-22); height: var(--add-22); stroke-width: 2.4; }
   .jobs-segments { margin-bottom: var(--space-2); }
   /* Bas de la liste des offres (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
      CandidaturesSombre) : « Afficher n offres de plus » en bouton contour pleine largeur (48 px, bord de 1,5 px), puis le
