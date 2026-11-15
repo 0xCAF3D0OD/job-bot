@@ -8,7 +8,6 @@ import {
   searchWords,
   agreedLines,
   countdown,
-  dateBlock,
   dateText,
   interviewPlace,
   meetingsToNote,
@@ -57,8 +56,7 @@ describe("la liste « À venir » (ORP et entretiens d’embauche)", () => {
 });
 
 describe("les textes de la carte", () => {
-  it("le bloc date, la date en texte et le compte à rebours", () => {
-    expect(dateBlock("2026-11-10T08:30:00Z")).toEqual({ weekday: "mar.", day: "10", month: "nov." });
+  it("la date en texte et le compte à rebours", () => {
     expect(dateText("2026-11-10T08:30:00Z")).toBe("Mardi 10 novembre");
     expect(countdown("2026-11-10T08:30:00Z", NOW)).toBe("Dans 4 jours");
     expect(countdown("2026-11-07T08:30:00Z", NOW)).toBe("Demain");

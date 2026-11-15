@@ -65,6 +65,16 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Ajouter l’offre");
     expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(true);
     expect(wrapper.find("[data-test=manual-pdf]").exists()).toBe(false);
+    // §17 du 15 novembre : flèche aria-disabled tant que le champ est vide ; l'aide liée au champ, pas de quota au-dessus de 5.
+    expect(wrapper.find("[data-test=composer-send]").attributes("aria-disabled")).toBe("true");
+    const help = wrapper.find("[data-test=manual-help]");
+    expect(help.text()).toBe("Fonctionne avec jobup, jobs.ch, LinkedIn et les sites d’entreprises.");
+    expect(wrapper.find("[data-test=composer-input]").attributes("aria-describedby")).toBe(help.attributes("id"));
+    expect(wrapper.find("[data-test=manual-count]").exists()).toBe(false);
+    wrapper.unmount();
+    const low = await mountForm({}, "Menuisier", 17);
+    expect(low.find("[data-test=manual-count]").text()).toBe("Plus que 3 ajouts aujourd’hui");
+    expect(low.find("[data-test=manual-help]").exists()).toBe(false);
   });
 
   it("un texte collé est lu comme un texte ; champ vide : l’erreur sous le champ", async () => {

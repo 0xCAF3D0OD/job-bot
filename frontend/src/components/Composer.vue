@@ -22,6 +22,8 @@ const props = withDefaults(
     plusItems?: ComposerItem[];
     plusDirection?: "up" | "down";
     minChars?: number;
+    // L’id d’un texte d’aide lié au champ (AjouterOffreTel, §17 du 15 novembre).
+    describedby?: string;
     attachments?: ComposerAttachment[];
     // Les fichiers acceptés au glisser-déposer (« application/pdf,image/png ») ; vide : aucun.
     accept?: string;
@@ -36,7 +38,7 @@ const props = withDefaults(
     // Envoyer reste visible, gris et `aria-disabled` tant qu'il n'y a rien à envoyer.
     stacked?: boolean;
   }>(),
-  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, sendText: "", enough: "", stacked: false },
+  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, sendText: "", enough: "", stacked: false, describedby: "" },
 );
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -252,7 +254,7 @@ defineExpose({ focus: () => area.value?.focus() });
         :value="modelValue"
         :placeholder="placeholder"
         :aria-label="placeholder"
-        :aria-describedby="minChars > 0 ? counterId : undefined"
+        :aria-describedby="[minChars > 0 ? counterId : '', describedby].filter(Boolean).join(' ') || undefined"
         data-test="composer-input"
         @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
         @keydown="onKeydown"
@@ -273,7 +275,7 @@ defineExpose({ focus: () => area.value?.focus() });
           type="button"
           class="composer-send"
           :aria-label="sendLabel"
-          :disabled="!canSend"
+          :aria-disabled="canSend ? undefined : 'true'"
           data-test="composer-send"
           @click="send"
         >
@@ -315,7 +317,7 @@ defineExpose({ focus: () => area.value?.focus() });
         type="button"
         class="composer-send"
         :aria-label="sendLabel"
-        :disabled="!canSend"
+        :aria-disabled="canSend ? undefined : 'true'"
         data-test="composer-send"
         @click="send"
       >

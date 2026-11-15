@@ -94,6 +94,10 @@ export const ICONS = {
   paperclip: path("M20 11.5l-8.2 8.2a5 5 0 0 1-7-7L13.4 4a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15 7.1"),
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/>' + path("M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"),
   close: path("M6 6l12 12M18 6L6 18"),
+  // La feuille d'actions d'une offre (ActionsOffre, §17 du 15 novembre) : expirée, la note ne correspond pas, partager.
+  "clock-off": circle(12, 12, 9) + path("M12 7v5l3 2M4 4l16 16"),
+  "thumbs-down": path("M10 15v4a3 3 0 0 0 3 3l4-9V2H6a2 2 0 0 0-2 2l-1.4 9a2 2 0 0 0 2 2zM17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"),
+  "share-nodes": circle(18, 5, 2.5) + circle(6, 12, 2.5) + circle(18, 19, 2.5) + path("M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"),
   "arrow-left": path("M19 12H5M11 6l-6 6 6 6"),
   "arrow-right": path("M5 12h14M13 6l6 6-6 6"),
   "arrow-up": path("M12 19V5M6 11l6-6 6 6"),

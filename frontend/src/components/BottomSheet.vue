@@ -18,8 +18,11 @@ import AppIcon from "./AppIcon.vue";
 // de 18 px, sous-titre de 14 px, croix de 44 px ; corps qui défile, pied fixe (slot `actions`). Sur téléphone, la même
 // feuille monte du bas. Elle reste une <dialog> modale : focus bloqué dedans, rendu au bouton d'origine (WCAG 2.1.2,
 // 2.4.3) ; croix, Échap et clic à l'extérieur la ferment, sans bouton « Annuler ».
-const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | "" }>(), {
+// `labelledBy` : la feuille dessine son propre en-tête (ActionsOffre, §17 du 15 novembre) ; pas de titre ni de croix,
+// le nom vient de l’élément désigné.
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | ""; labelledBy?: string }>(), {
   subtitle: "",
+  labelledBy: "",
   full: false,
   icon: "",
 });
@@ -133,7 +136,7 @@ function onClick(event: MouseEvent): void {
   <dialog
     ref="dialog"
     :class="['sheet', { 'sheet-full': full, 'sheet-panel': icon }]"
-    :aria-labelledby="titleId"
+    :aria-labelledby="labelledBy || titleId"
     :style="{ ...(dragY ? { transform: `translateY(${dragY}px)` } : {}), ...(icon ? { '--sheet-top': `${top}px` } : {}) }"
     data-test="sheet"
     @cancel.prevent="emit('close')"
@@ -142,6 +145,7 @@ function onClick(event: MouseEvent): void {
   >
     <div class="sheet-inner">
       <header
+        v-if="!labelledBy"
         class="sheet-head"
         @pointerdown="onDragStart"
         @pointermove="onDragMove"

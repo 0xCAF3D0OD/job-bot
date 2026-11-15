@@ -63,7 +63,6 @@
   --text: #1B1F2A;
   --text-secondary: #596070;
   --text-tertiary: #474C59;
-  --btn-disabled: #D9DCE6;
   /* Le bleu : --primary pour les boutons pleins (texte --on-primary), --primary-graphic pour les traits, anneaux et
      icônes, --primary-text pour les liens et boutons texte ; en sombre, les trois diffèrent. */
   --primary: #2445C2;
@@ -253,7 +252,6 @@
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
-    --btn-disabled: #36312B;
     --primary: #2445C2;
     --primary-graphic: #7D95FF;
     --action: #7D95FF;
@@ -318,7 +316,6 @@
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
-  --btn-disabled: #36312B;
   --primary: #2445C2;
   --primary-graphic: #7D95FF;
   --action: #7D95FF;
@@ -1784,7 +1781,7 @@ html.side-open { overflow: hidden; }
 .page-head .page-head-sub { margin: calc(var(--space-2) * -1) 0 var(--space-4); color: var(--muted); font-size: var(--font-body); }
 /* docs/88 : une petite précision au-dessus du titre (la date d'Aujourd'hui), en capitales. */
 .page-head .page-head-eyebrow { margin: 0 0 var(--space-1); color: var(--muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; }
-.page-head:not(:has(.prep-tabs)) { padding-bottom: var(--space-2); }
+.page-head { padding-bottom: var(--space-2); }
 @media (max-width: 820px) {
   .page-head .page-head-sub { display: none; }
 }
@@ -2945,7 +2942,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .undo-toast { align-items: center; }
 .undo-toast > button.link { margin-left: auto; font-size: var(--font-body); font-weight: var(--weight-semibold); min-height: 2.75rem; padding: 0 var(--space-2); }
 /* Snackbar du 9 novembre (PR 1) : fond sombre, rayon 12, actions en bleu clair ; 6 s (UNDO_MS), role="status". */
-.undo-toast, .snackbar { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
+.undo-toast { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
 :is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
@@ -4081,9 +4078,6 @@ html.search-open { overflow: hidden; }
 @media (min-width: 821px) {
   :root[data-theme="dark"] .logo.c0 { background: var(--primary-text); color: var(--surface); }
 }
-/* La feuille d'actions d'une offre : le lieu sous le titre, « Écarter » en rouge (maquette ActionsOffre). */
-.offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }
-.offer-actions-discard .grouped-row, .offer-actions-discard .grouped-icon { color: var(--danger); }
 @media (prefers-reduced-motion: reduce) { .offer-line { transition: none; } }
 /* --- Tête de carte, Copier et « ⋯ » (règles §4) --- */
 /* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
@@ -4750,7 +4744,8 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-icon[aria-expanded="true"] { background: var(--surface-muted); }
 .composer-icon .icon, .composer-send .icon { width: 22px; height: 22px; }
 .composer-send { background: var(--action); color: var(--on-action); }
-.composer-send:disabled { background: var(--btn-disabled); color: var(--text-secondary); }
+/* Rien à envoyer (AjouterOffreTel, §17 du 15 novembre) : gris #E5E2D9, flèche #8C8478, aria-disabled. */
+.composer-send[aria-disabled="true"], .composer-send-round[aria-disabled="true"] .composer-send-dot { background: var(--line); color: var(--field-border); }
 .composer-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-2) 0; list-style: none; }
 /* La pièce jointe de la zone de saisie : la croix fait 44 px (cible tactile), la puce suit. */
 .composer-file { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-1) 0 var(--space-3); border-radius: var(--radius-sm); background: var(--surface-muted); font-size: var(--font-small); font-weight: var(--weight-semibold); }
@@ -4761,7 +4756,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
    et `aria-disabled` à vide, bleu avec du texte. Focus : bordure 1,5 px bleue à l'intérieur, rien ne dépasse.
    Valeurs de la maquette ramenées sur la grille de 4 : padding 14 16 9 → 16 16 8, écart 6 → 8, marges de la barre
    -12 / -10 → -12. */
-.composer-stacked { --composer-r: 24px; --composer-send-dot: 36px; --composer-send-off: #8A8F9C; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-2); border-radius: var(--composer-r); }
+.composer-stacked { --composer-r: 24px; --composer-send-dot: 36px; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-2); border-radius: var(--composer-r); }
 .composer-stacked:focus-within { outline: none; border-color: var(--primary-graphic); box-shadow: inset 0 0 0 0.5px var(--primary-graphic), var(--shadow-composer); }
 .composer-stacked .composer-row { display: block; }
 .composer.composer-stacked .composer-input { display: block; width: 100%; min-height: var(--space-6); max-height: calc(6 * var(--space-6)); margin: 0; padding: 0; font-size: var(--font-body); line-height: var(--space-6); }
@@ -4770,8 +4765,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-send.composer-send-round { background: transparent; color: var(--on-action); }
 .composer-send-dot { display: inline-flex; align-items: center; justify-content: center; width: var(--composer-send-dot); height: var(--composer-send-dot); border-radius: var(--radius-pill); background: var(--action); }
 .composer-send-round .composer-send-dot .icon { width: 18px; height: 18px; }
-.composer-send-round[aria-disabled="true"] { cursor: default; }
-.composer-send-round[aria-disabled="true"] .composer-send-dot { background: var(--line); color: var(--composer-send-off); }
 .composer-menu { position: absolute; left: 0; z-index: 40; width: min(320px, 100%); padding: var(--space-1) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); animation: ja-pop 150ms ease-out; }
 .composer-menu-up { bottom: 100%; margin-bottom: var(--space-2); transform-origin: bottom left; }
 .composer-menu-down { top: 100%; margin-top: var(--space-2); transform-origin: top left; }

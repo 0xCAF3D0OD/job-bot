@@ -27,17 +27,6 @@ export function upcomingAppointments(meeting: Meeting | null, applications: Appl
   return items.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 }
 
-const ZONE = "Europe/Zurich";
-const weekday = new Intl.DateTimeFormat("fr-CH", { weekday: "short", timeZone: ZONE });
-const day = new Intl.DateTimeFormat("fr-CH", { day: "numeric", timeZone: ZONE });
-const month = new Intl.DateTimeFormat("fr-CH", { month: "short", timeZone: ZONE });
-
-/** Le bloc date de la maquette : « mar. », « 10 », « nov. » (décoratif ; la date est aussi écrite en texte). */
-export function dateBlock(iso: string): { weekday: string; day: string; month: string } {
-  const at = new Date(iso);
-  return { weekday: weekday.format(at), day: day.format(at), month: month.format(at) };
-}
-
 /** La date en texte pour les lecteurs d'écran : « Mardi 10 novembre ». */
 export function dateText(iso: string): string {
   const text = meetingDate(iso).replace(/ à .*$/, "");

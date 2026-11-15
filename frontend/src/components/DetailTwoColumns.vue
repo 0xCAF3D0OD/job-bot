@@ -31,7 +31,7 @@ withDefaults(defineProps<{ asideLabel: string; narrow?: boolean }>(), { narrow: 
    colonne d’appui à 40 du trait de gauche ; titres de 18/24 en 700, sur-titres de 13 en capitales. */
 .detail-columns {
   --cols-aside: 240px; --cols-gap: 48px; --cols-aside-pad: 40px; --cols-pad-top: 32px; --cols-pad-bottom: 36px; --cols-top: 12px;
-  --cols-title: 24px; --cols-dd-gap: 2px;
+  --cols-title: 24px;
   display: grid; grid-template-columns: minmax(0, 1fr) var(--cols-aside); column-gap: var(--cols-gap);
   margin-top: var(--cols-top); border-top: 1px solid var(--line-soft);
 }
@@ -48,9 +48,4 @@ withDefaults(defineProps<{ asideLabel: string; narrow?: boolean }>(), { narrow: 
 .detail-link .icon { width: 15px; height: 15px; }
 .detail-link.strong { font-weight: var(--weight-bold); }
 .detail-link.strong .icon { width: 18px; height: 18px; }
-.detail-list { margin: 0; }
-.detail-list > div { padding: var(--space-3) 0; }
-.detail-list > div + div { border-top: 1px solid var(--line-soft); }
-.detail-list dt { font-size: var(--font-small); color: var(--text-secondary); }
-.detail-list dd { margin: var(--cols-dd-gap) 0 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>

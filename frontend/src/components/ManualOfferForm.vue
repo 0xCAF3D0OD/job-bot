@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, useId } from "vue";
 
 import { api } from "../api/client";
 import type { ComposerItem } from "../composer";
@@ -85,6 +85,8 @@ onMounted(async () => {
 const tradeName = computed(() => trade.value?.trim() || "");
 const full = computed(() => addedToday.value >= limit.value);
 const left = computed(() => Math.max(0, limit.value - addedToday.value));
+const low = computed(() => left.value <= 5);
+const helpId = useId();
 const countLine = computed(() =>
   full.value
     ? `${limit.value} offres ajoutées en 24 heures : c’est le maximum, reviens demain.`
@@ -340,6 +342,7 @@ defineExpose({
       send-label="Ajouter l’offre"
       :busy="reading || full"
       :plus-items="PDF_ITEMS"
+      :describedby="helpId"
       data-test="manual-entry"
       @update:model-value="entryChanged"
       @attach="pickPdf"
@@ -371,11 +374,23 @@ defineExpose({
     >
       {{ entryError }}
     </p>
+    <!-- Téléphone (AjouterOffreTel, §17 du 15 novembre) : l'aide « Fonctionne avec… » liée au champ ; à 5 ajouts ou
+         moins, la pastille orange du quota à sa place. Ordinateur : la ligne du quota, comme avant. -->
     <p
-      class="hint"
+      v-if="!phone || low"
+      :id="phone ? helpId : undefined"
+      :class="phone ? 'manual-quota' : 'hint'"
       data-test="manual-count"
     >
-      {{ countLine }}
+      {{ phone && !full ? `Plus que ${left} ajout${left > 1 ? "s" : ""} aujourd’hui` : countLine }}
+    </p>
+    <p
+      v-else
+      :id="helpId"
+      class="hint manual-help"
+      data-test="manual-help"
+    >
+      Fonctionne avec jobup, jobs.ch, LinkedIn et les sites d’entreprises.
     </p>
     <p
       v-if="reading || importing"
@@ -586,6 +601,11 @@ defineExpose({
 <style scoped>
 .manual-form { --manual-13: 13px; --manual-pad: var(--panel-pad-x, var(--sheet-pad, var(--space-6))); }
 .manual-entry { --manual-104: 104px; min-height: var(--manual-104); }
+/* AjouterOffreTel : champ de 104 px (4 lignes de 24 et ses marges), aide 13 px 8 px dessous (10 sur la planche), quota en
+   pastille orange (avertissement). */
+.manual-form :deep(.composer textarea) { --manual-104: 104px; min-height: var(--manual-104); }
+.manual-help, .manual-quota { margin: calc(var(--space-2) - var(--space-4)) var(--space-1) 0; font-size: var(--manual-13); }
+.manual-quota { justify-self: start; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--warning-soft); color: var(--warning); font-weight: var(--weight-semibold); }
 .manual-pdf { justify-self: start; gap: var(--space-2); }
 .manual-read { display: grid; gap: var(--space-4); }
 .manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }

@@ -28,13 +28,13 @@ describe("Composer (docs/143, D25)", () => {
 
   it("Envoyer est désactivé si le champ est vide et sans pièce jointe, ou sous minChars", async () => {
     const wrapper = mount(Composer, { props: { modelValue: "  ", placeholder: "Message" } });
-    expect(wrapper.get("[data-test=composer-send]").attributes("disabled")).toBeDefined();
+    expect(wrapper.get("[data-test=composer-send]").attributes("aria-disabled")).toBe("true");
     await wrapper.setProps({ attachments: [{ id: "cv", label: "CV.pdf" }] });
-    expect(wrapper.get("[data-test=composer-send]").attributes("disabled")).toBeUndefined();
+    expect(wrapper.get("[data-test=composer-send]").attributes("aria-disabled")).toBeUndefined();
     await wrapper.get("[data-test=composer-remove-cv]").trigger("click");
     expect(wrapper.emitted("remove")).toEqual([["cv"]]);
     await wrapper.setProps({ attachments: [], modelValue: "court", minChars: 200, rows: 5 });
-    expect(wrapper.get("[data-test=composer-send]").attributes("disabled")).toBeDefined();
+    expect(wrapper.get("[data-test=composer-send]").attributes("aria-disabled")).toBe("true");
     expect(wrapper.get("[data-test=composer-counter]").text()).toBe("5 caractères · il en faut au moins 200");
   });
 
