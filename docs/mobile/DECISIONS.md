@@ -124,3 +124,10 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Avec des barres de défilement classiques (Windows, Linux, Mac avec souris), leur place reste réservée, vide (`scrollbar-gutter: stable`, classe `scrollbars-classic` posée par main.ts) : le logo et l'en-tête ne bougent plus entre une page courte et une page longue, ni pendant le chargement d'une page. Pas de `overflow-y: scroll`, qui laisserait une barre vide en permanence (Kevin, 11 h 31).
 - Bouton « Assistant » : au moins 12 px entre lui et les liens du pied de page ; la marge du bas du pied de page (hauteur du bouton + 16 px, règle existante) suffit.
 - Carte de formation : l'avancement s'écrit « Module 6 sur 12 », comme sur la planche BilanOrdinateur, y compris quand il a été noté en texte libre « module 6/12 » (affichage seulement).
+
+## Jour de repos et tri (Kevin, 15.11.2026, 12 h 24)
+
+- Le jour de repos ne bloque jamais une action choisie par l'utilisateur (planche AujourdhuiOrdinateurV2, état is_repos). Il change seulement le ton d'Aujourd'hui (« Jour de repos. Ta semaine est faite. Si tu veux avancer, N choses t'attendent. ») et coupe les rappels et les notifications de ce jour-là.
+- Trier n'a pas d'écran « Jour de repos ». Aujourd'hui, Trier et l'assistant comptent les offres à trier avec la même règle (useDailyDose : pickDose, isTriagePending).
+- Rappels d'échéance obligatoire (remise des preuves ORP, veille d'un rendez-vous ORP) : jamais coupés par le jour de repos. Un jour de repos, ils partent si l'échéance tombe au plus tard le prochain jour normal ; sinon ils sont décalés au prochain jour normal, à la même heure (Kevin, 15.11.2026, 12 h 45).
+- Trier à 0 offre : « Rien à trier pour l'instant » sur l'état vide commun (§13) : mascotte de FinDuTriAucune, titre manuscrit, pastille « Offres collectées chaque jour », boutons « Voir mes candidatures » (principal) et « Gérer mes alertes » (contour) ; ni éventail vide ni Écarter / Garder (Kevin, 15.11.2026, 12 h 45).

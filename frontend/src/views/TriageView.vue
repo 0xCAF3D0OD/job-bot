@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import AppIcon from "../components/AppIcon.vue";
 import BookmarkMark from "../components/BookmarkMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
-import FaceState from "../components/FaceState.vue";
+import EmptyState from "../components/EmptyState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import TriageDone from "../components/TriageDone.vue";
@@ -32,7 +32,7 @@ const KEY_RIGHT = "\u2192";
 const TOAST_GAP = 12;
 const { phone } = usePhone();
 const { focus } = useFocusMode();
-const { dose, restDay, loaded, load } = useDailyDose();
+const { dose, loaded, load } = useDailyDose();
 const { pending, undo, hold, release, flush } = useUndo();
 // Le trait du bandeau suit le compte de useUndo : arrêté tant que la souris ou le focus est sur le bandeau, il
 // repart de plein quand ils le quittent (le compte de 6 secondes repart lui aussi).
@@ -154,25 +154,42 @@ onMounted(load);
       class="tri-wait"
       :heights="['2.5rem', '20rem']"
     />
-    <div
-      v-else-if="restDay || !total"
-      class="tri-wait"
+    <!-- 0 offre à trier (LISEZMOI §12, Kevin 15.11) : l'état vide commun (§13), la mascotte de FinDuTriAucune, le titre
+         manuscrit, la pastille, deux boutons. Ni éventail vide, ni « Écarter » / « Garder ». -->
+    <EmptyState
+      v-else-if="!total"
+      title="Rien à trier pour l’instant"
+      pill="Offres collectées chaque jour"
+      data-test="triage-empty"
     >
-      <FaceState
-        :title="restDay ? 'Jour de repos' : 'Rien à trier'"
-        data-test="triage-empty"
-      >
-        <p>{{ restDay ? "Pas de tri aujourd’hui." : "Les nouvelles offres arrivent chaque matin." }}</p>
-        <div class="face-state-actions">
-          <RouterLink
-            :to="{ name: 'today' }"
-            class="button-link"
-          >
-            Retour à l’accueil
-          </RouterLink>
-        </div>
-      </FaceState>
-    </div>
+      <template #illustration>
+        <img
+          src="/tri/fin-du-tri.webp"
+          alt=""
+          :width="phone ? 260 : 400"
+          :height="phone ? 150 : 230"
+        >
+      </template>
+      <template #title>
+        <span class="tri-hand">Rien à trier pour l’instant</span>
+      </template>
+      <template #actions>
+        <RouterLink
+          to="/candidatures"
+          class="button-link primary-link"
+          data-test="triage-empty-jobs"
+        >
+          Voir mes candidatures
+        </RouterLink>
+        <RouterLink
+          to="/candidatures/alertes"
+          class="button-link secondary"
+          data-test="triage-empty-alerts"
+        >
+          Gérer mes alertes
+        </RouterLink>
+      </template>
+    </EmptyState>
     <template v-else-if="current">
       <p class="tri-catch">
         <span

@@ -328,3 +328,21 @@ async def test_the_sheet_written_by_the_ai(
     assert "Lausanne" not in content and "Dupont" not in content
     async with admin_engine().begin() as conn:
         await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'orp_sheet'"))
+
+
+async def test_the_eve_reminder_on_a_rest_day(rt: Runtime) -> None:
+    """Rendez-vous ORP le lundi 16 novembre 2026 : la veille est un dimanche, le rappel part
+    (une obligation, jamais coupée par le jour de repos, Kevin 15.11.2026)."""
+    from jobbot.notify.orp_meeting import notify_orp_meeting
+
+    monday = datetime(2026, 11, 16, 9, 30, tzinfo=LOCAL_TZ)
+    await _meeting_at(rt, monday, place="ORP")
+    sunday = datetime(2026, 11, 15, 9, 0, tzinfo=LOCAL_TZ)
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM notifications WHERE kind = 'orp_meeting'"))
+    assert await notify_orp_meeting(rt, sunday) == 1
+    async with rt.sessionmaker() as session:
+        titles = await session.scalars(
+            text("select title from notifications where kind = 'orp_meeting'")
+        )
+        assert titles.all() == ["Demain à 09:30 : rendez-vous ORP"]

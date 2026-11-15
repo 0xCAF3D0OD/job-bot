@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import OrpMeeting
-from jobbot.notify.service import Message, deliver
+from jobbot.notify.service import Message, deadline_reminder_due, deliver
 from jobbot.runtime import Runtime
 
 LINK = "/candidatures/rendez-vous-orp"
@@ -27,6 +27,15 @@ async def notify_orp_meeting(runtime: Runtime, now: datetime | None = None) -> i
                 )
             )
             if m.reminded_for != m.starts_at
+        ]
+        # Une obligation : la veille part même un jour de repos (le rendez-vous est demain, donc
+        # au plus tard le prochain jour normal). Le filtre commun le dit et le garde.
+        due = [
+            m
+            for m in due
+            if await deadline_reminder_due(
+                session, m.starts_at.astimezone(LOCAL_TZ).date(), moment.date()
+            )
         ]
     base = runtime.settings.public_url.rstrip("/")
     for meeting in due:
