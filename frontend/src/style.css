@@ -101,7 +101,6 @@
   --warning: #A8540E;
   --warning-soft: #FCEEDD;
   --score-dig: #6F6459;
-  --neutral: #596070;
   /* L'anneau et la jauge de « Loin » : un gris froid plus clair que le mot (en --text-secondary), 3:1 au moins sur
      la carte (WCAG 1.4.11) et distinct du gris chaud d'« À creuser » (1,75:1 entre eux, et deux teintes). */
   --neutral-graphic: #878E9B;
@@ -275,7 +274,6 @@
     --warning: #F2A766;
     --score-dig: #B39A82;
     --warning-soft: #3A2A1C;
-    --neutral: #ABA398;
     --neutral-graphic: #6B707C;
     --neutral-soft: #2E2A26;
     --danger: #FF8A73;
@@ -339,7 +337,6 @@
   --warning: #F2A766;
   --score-dig: #B39A82;
   --warning-soft: #3A2A1C;
-  --neutral: #ABA398;
   --neutral-graphic: #6B707C;
   --neutral-soft: #2E2A26;
   --danger: #FF8A73;
@@ -359,6 +356,15 @@ body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smooth
    et pousse hors du cadre ce qui est fixé à droite (l'assistant). « clip » ne crée pas de zone
    de défilement : les en-têtes collants restent collants. */
 html, body { overflow-x: clip; }
+/* Pas de tremblement entre deux pages (Kevin, 15.11.2026) : avec des barres de défilement classiques (Windows, Linux,
+   Mac avec souris), leur place reste réservée, vide, même sur une page courte ou vide le temps qu'elle charge (main.ts
+   pose la classe). Barres superposées (téléphone, Mac au trackpad) : rien à réserver.
+   Le pied de page touche le bas de l'écran sur une page courte et pendant qu'une page charge, sans être fixe :
+   il ne recouvre jamais le contenu (gabarit commun, « sticky footer »). */
+html.scrollbars-classic { scrollbar-gutter: stable; }
+#app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+#app > main { flex: 1 0 auto; }
+#app > .app-footer { flex-shrink: 0; }
 
 h1, h2, h3 { font-weight: var(--weight-semibold); letter-spacing: -0.02em; margin: 0; }
 /* Liens sans soulignement : couleur d'accent, surlignage léger au survol des liens de texte
@@ -1959,7 +1965,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --ease-out: ease-out;
   --ease-standard: cubic-bezier(.2, 0, 0, 1);
   --spring-soft: linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1);
-  --spring-strong: linear(0, 0.5 6%, 1.2 16%, 1.32 22%, 1.2 32%, 0.96 46%, 1.03 60%, 0.99 76%, 1);
   
   --t-fast: 200ms;
   --t-standard: 300ms;
