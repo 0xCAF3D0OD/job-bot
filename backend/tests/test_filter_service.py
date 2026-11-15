@@ -13,6 +13,8 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
 from .conftest import admin_engine
+from .test_platform import client as account_client
+from .test_platform import invite, secured  # noqa: F401
 
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
@@ -288,3 +290,18 @@ async def test_api_sent_sort(api: AsyncClient, fresh: Runtime) -> None:
     assert (await api.put("/api/sent-sort", json={"sort": "hasard"})).status_code == 422
     async with fresh.engine.begin() as conn:
         await conn.execute(text("DELETE FROM settings WHERE key = 'sent_sort'"))
+
+
+async def test_api_sent_sort_stays_with_its_account(
+    runtime: Runtime,
+    fresh: Runtime,
+    secured: Runtime,  # noqa: F811
+) -> None:
+    """Le tri des Envoyées est un réglage du compte, sous sa RLS (docs/regles-securite-donnees.md
+    C-1, C-4) : un autre compte garde le tri par défaut."""
+    async with account_client(runtime) as owner, account_client(secured) as guest:
+        await invite(owner, guest)
+        assert (await owner.put("/api/sent-sort", json={"sort": "anciennes"})).status_code == 200
+        assert (await guest.get("/api/sent-sort")).json() == {"sort": "relancer"}
+        assert (await guest.put("/api/sent-sort", json={"sort": "recentes"})).status_code == 200
+        assert (await owner.get("/api/sent-sort")).json() == {"sort": "anciennes"}
