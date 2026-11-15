@@ -40,6 +40,7 @@ L'interface s'ouvre sur http://localhost:5173 et l'API sur http://127.0.0.1:8000
 |---|---|
 | `make demo` | la démo avec des données fictives, sur http://localhost:5200 |
 | `make test` | tous les tests |
+| `make audits-ci` | **avant chaque push** : les mêmes contrôles que la CI (tests, types, lint, poids, historique, audits ordinateur et téléphone), sur la démo lancée par `make demo` (`DEMO_URL` pour une autre adresse) |
 | `make lint` | ruff, mypy, eslint |
 | `make update` | met à jour (git pull, dépendances, migrations) |
 | `make openapi` | régénère les types de l'interface depuis l'API |
