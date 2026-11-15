@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import LinkedArrow from "./LinkedArrow.vue";
+import LinkedPin from "./LinkedPin.vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
@@ -99,6 +101,16 @@ function pastLine(m: Meeting): string {
   return `${dateText(m.starts_at)}, ${timeAndPlace(m.starts_at, m.place)}`;
 }
 const lastNoted = computed(() => noted.value[0] ?? null);
+// La carte compacte épinglée (LinkedPin, §18 du 15 novembre) : ce que dit la carte choisie, en court.
+const pinned = computed(() => {
+  const key = selected.value;
+  if (key === "orp" && nextOrp.value) return { title: "Rendez-vous ORP", sub: dateText(nextOrp.value.at), at: nextOrp.value.at, tone: "orp" as const };
+  const interview = selectedInterview.value;
+  if (interview) return { title: interview.application.job_title || "Poste non indiqué", sub: interview.application.company || "Entretien d’embauche", at: interview.at, tone: "blue" as const };
+  const past = selectedPast.value;
+  if (past) return { title: pastTitle(past.starts_at, now), sub: dateText(past.starts_at), at: past.starts_at, tone: toNote.value.includes(past) ? ("orp" as const) : ("past" as const) };
+  return null;
+});
 // Le jour et le mois de l'icône calendrier.
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);
@@ -139,6 +151,20 @@ const list = ref<HTMLElement | null>(null);
       >
         <span class="rdv-empty-pill"><AppIcon name="calendar" />Aucun rendez-vous à venir</span>
       </div>
+      <LinkedPin
+        v-if="pinned"
+        side="top"
+        :title="pinned.title"
+        :sub="pinned.sub"
+      >
+        <template #logo>
+          <CalendarDate
+            v-bind="cal(pinned.at)"
+            :tone="pinned.tone"
+            :size="40"
+          />
+        </template>
+      </LinkedPin>
       <template v-if="upcoming.length">
         <h2 class="rdv-list-title">
           À venir<span>{{ upcoming.length }}</span>
@@ -172,25 +198,7 @@ const list = ref<HTMLElement | null>(null);
               >À préparer</span>
             </span>
           </span>
-          <svg
-            v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
-            data-arrow
-            aria-hidden="true"
-            class="list-card-arrow"
-            width="22"
-            height="44"
-            viewBox="0 0 22 44"
-          ><path
-            class="list-card-arrow-fill"
-            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
-          /><path
-            class="list-card-arrow-line"
-            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
-            fill="none"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          /></svg>
+          <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
         </button>
       </template>
       <template v-if="toNote.length">
@@ -215,25 +223,7 @@ const list = ref<HTMLElement | null>(null);
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ pastLine(item) }}</span>
           </span>
-          <svg
-            v-if="selected === pastKey(item)"
-            data-arrow
-            aria-hidden="true"
-            class="list-card-arrow"
-            width="22"
-            height="44"
-            viewBox="0 0 22 44"
-          ><path
-            class="list-card-arrow-fill"
-            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
-          /><path
-            class="list-card-arrow-line"
-            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
-            fill="none"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          /></svg>
+          <LinkedArrow v-if="selected === pastKey(item)" />
         </button>
       </template>
       <template v-if="noted.length">
@@ -258,27 +248,23 @@ const list = ref<HTMLElement | null>(null);
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
           </span>
-          <svg
-            v-if="selected === pastKey(item)"
-            data-arrow
-            aria-hidden="true"
-            class="list-card-arrow"
-            width="22"
-            height="44"
-            viewBox="0 0 22 44"
-          ><path
-            class="list-card-arrow-fill"
-            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
-          /><path
-            class="list-card-arrow-line"
-            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
-            fill="none"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          /></svg>
+          <LinkedArrow v-if="selected === pastKey(item)" />
         </button>
       </template>
+      <LinkedPin
+        v-if="pinned"
+        side="bottom"
+        :title="pinned.title"
+        :sub="pinned.sub"
+      >
+        <template #logo>
+          <CalendarDate
+            v-bind="cal(pinned.at)"
+            :tone="pinned.tone"
+            :size="40"
+          />
+        </template>
+      </LinkedPin>
     </div>
 
     <LinkedDetail
@@ -510,7 +496,7 @@ const list = ref<HTMLElement | null>(null);
 
 <style>
 /* Valeurs de la planche CandidaturesOrdinateurB, onglet Rendez-vous (maquette du 15 novembre, §14) : la même liaison
-   qu'Offres et Envoyées (LinkedDetail, liste de 532 px). Cartes de 104 au minimum, marges 14/18,5, contour de 1,5
+   qu'Offres et Envoyées (LinkedDetail, liste de 504 px, rail et pointe du §18). Cartes de 104 au minimum, marges 14/18,5, contour de 1,5
    (--card-line), coins de 18, écart 10 ; la carte choisie en 16 avec un contour de 2. Titres de groupe à 14/4/8. Le
    détail : une carte en-tête (24/28/24/32, coins de 24) puis chaque bloc en carte (marge de 32), 16 px entre elles. */
 .rdv-grid {
@@ -528,7 +514,7 @@ const list = ref<HTMLElement | null>(null);
 }
 button.rdv-item { cursor: pointer; }
 button.rdv-item:hover { border-color: var(--field-border); }
-.rdv-item[aria-current="true"], button.rdv-item[aria-current="true"]:hover { max-width: none; padding: var(--space-4); border: 2px solid var(--primary-graphic); }
+.rdv-item[aria-current="true"], button.rdv-item[aria-current="true"]:hover { max-width: none; border-color: var(--primary-graphic); }
 .rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-2); }
 .rdv-item-kicker { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-item-title, .rdv-item-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -542,8 +528,8 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
 .rdv-chips > .green { background: var(--success-soft); color: var(--success); }
 /* « Aucun rendez-vous à venir » : la pastille en haut de la liste, alignée sur les cartes, un trait dessous (480 px). */
-.linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-cover) + var(--space-1)) calc(var(--space-2) + var(--rdv-2)) calc(var(--linked-room) + var(--space-1)); }
-.rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-room); right: var(--linked-cover); bottom: 0; border-bottom: 1px solid var(--line); }
+.linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-gap) + var(--space-1)) calc(var(--space-2) + var(--rdv-2)) calc(var(--linked-bar) + var(--space-1)); }
+.rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-bar); right: var(--linked-gap); bottom: 0; border-bottom: 1px solid var(--line); }
 .rdv-list-empty + .rdv-list-title { margin-top: calc(var(--space-1) + var(--rdv-2)); }
 .rdv-empty-pill {
   display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); white-space: nowrap;

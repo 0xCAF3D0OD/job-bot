@@ -12,6 +12,7 @@ import { firstGoal } from "../composables/useGoalMoment";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import LinkedDetail, { Plain } from "../components/LinkedDetail.vue";
+import LinkedPin from "../components/LinkedPin.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
@@ -762,6 +763,14 @@ onUnmounted(() => {
           class="offers-list-tools"
           data-linked-tools
         />
+        <LinkedPin
+          v-if="linked && selected"
+          side="top"
+          :title="selected.title"
+          :sub="selected.company ?? 'Entreprise non indiquée'"
+          :name="selected.company ?? selected.title"
+          :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
+        />
         <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
              pendant 6 secondes (Material 3, snackbar). -->
         <p
@@ -1083,6 +1092,14 @@ onUnmounted(() => {
             </button>
           </div>
         </template>
+        <LinkedPin
+          v-if="linked && selected"
+          side="bottom"
+          :title="selected.title"
+          :sub="selected.company ?? 'Entreprise non indiquée'"
+          :name="selected.company ?? selected.title"
+          :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
+        />
       </div>
 
       <Transition name="detail">

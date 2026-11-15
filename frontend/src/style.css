@@ -5010,9 +5010,9 @@ a.panel-row:hover { background: var(--band); }
 }
 .sent-col { display: contents; }
 @media (min-width: 1024px) {
-  /* Envoyées reliée au détail (§11 du 15 novembre) : colonne liste de 532 px qui défile sous l'objectif et les filtres
+  /* Envoyées reliée au détail (§18 du 15 novembre) : colonne liste de 504 px qui défile sous l'objectif et les filtres
      (collés en haut), la zone de détail (LinkedDetail) jusqu'au bas de la fenêtre. */
-  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 532px; position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); align-items: stretch; height: calc(100dvh - var(--linked-top, 0px)); padding-bottom: 0; }
+  .jobs-band > .jobs-body.sent-columns { --sent-list-w: 504px; position: relative; display: grid; grid-template-columns: var(--sent-list-w) minmax(0, 1fr); align-items: stretch; height: calc(100dvh - var(--linked-top, 0px)); padding-bottom: 0; }
   .sent-columns > .sent-col.linked-list { display: block; grid-row: 1; }
   .sent-columns > :not(.sent-detail) { grid-column: 1; }
   /* Le volet Filtres (maquette du 14 novembre, §3) prend la place de la colonne liste. */

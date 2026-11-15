@@ -607,7 +607,7 @@ watch(
          en bref, puis l’entreprise et les contacts, gardés hors de la planche (règle 3). -->
     <template v-if="columns">
       <header
-        class="oc-head"
+        class="oc-card oc-head"
         data-test="section-offer"
       >
         <div class="oc-head-row">
@@ -1558,8 +1558,8 @@ watch(
 .match-profile-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); padding: 0; border: 0; background: none; font: inherit; cursor: pointer; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .match-profile-link:hover { text-decoration: underline; }
 .match-profile-link .icon { width: 14px; height: 14px; }
-/* Ordinateur, maquette du 15 novembre (§11 ; HTML de CandidaturesOrdinateurB, onglet Offres) : la tête à plat dans la
-   zone de détail, à 24 px du bord (28 à droite), intitulé 24/30 800, entreprise 15 grise à 4 px ; la note sur une ligne,
+/* Ordinateur, maquette du 15 novembre (§18 ; HTML de CandidaturesOrdinateurB, onglet Offres) : la tête en carte, 24 px
+   sous le haut de la zone (marges 22 / 28 / 8 / 24), intitulé 24/30 800, entreprise 15 grise à 4 px ; la note sur une ligne,
    sous un filet de 1 px à 12 px, « Voir la compatibilité » à droite. Puis les cartes blanches, trait de 1 px --line,
    coins de 24 : titre 18/24, lignes à 12 / 24 séparées d'un filet, étiquette 13 px grise au-dessus d'une valeur 15/700 ;
    pied de pilules de 52 px à 12 px d'écart (§7), le secondaire en trait gris. */
@@ -1569,7 +1569,7 @@ watch(
   --oc-10: 10px; --oc-14: 14px; --oc-20: 20px; --oc-22: 22px; --oc-row-min: 64px; --oc-chip-r: 6px;
 }
 .oc-card { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--oc-r); color: var(--text); }
-.oc-head { padding: var(--space-6) var(--oc-title-x) var(--space-1) var(--space-6); }
+.oc-head { margin-top: var(--space-6); padding: var(--oc-22) var(--oc-title-x) var(--space-2) var(--space-6); }
 .oc-head-row { display: flex; align-items: flex-start; gap: var(--space-4); }
 .oc-title-text { flex: 1; min-width: 0; }
 .oc-title-text h2 { margin: 0; font-size: var(--oc-h2); line-height: var(--oc-h2-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }

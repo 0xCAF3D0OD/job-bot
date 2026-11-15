@@ -11,10 +11,10 @@ import { ref, toRef } from "vue";
 
 import { useLinkedNotch } from "../composables/useLinkedNotch";
 
-// La zone de détail reliée à la liste (Candidatures sur ordinateur, maquette du 15 novembre, §11) : pas de fond ni de
-// cadre, un trait de 1,5 px à gauche et en haut (coin de 24), qui s'efface en dégradé sur 160 px à droite ; un fondu de
-// 72 px en bas ; l'encoche creusée dans le trait gauche en face de la flèche de la carte choisie (tracés de la planche,
-// data-notch). Le trait, l'encoche et les fondus restent fixes : seul le contenu défile.
+// La zone de détail reliée à la liste (Candidatures sur ordinateur, §18 du 15 novembre) : pas de fond ni de cadre, un
+// rail vertical de 1,5 px (--linked-line) à 9 px de la colonne de liste, en fondu sur 56 px en haut et 72 px en bas ;
+// en face de la carte choisie, le rail fait une pointe vers la gauche qui touche la pointe de la flèche (data-notch,
+// tracé de la planche), le trait droit interrompu sur sa hauteur. Le rail et sa pointe restent fixes : seul le contenu défile.
 const props = defineProps<{ list: HTMLElement | null }>();
 const zone = ref<HTMLElement | null>(null);
 const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
@@ -31,43 +31,25 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
       aria-hidden="true"
       class="linked-notch"
       width="24"
-      height="43"
-      viewBox="0 0 24 43"
+      height="60"
+      viewBox="0 0 24 60"
       :style="{ top: `${top}px` }"
     >
-      <defs>
-        <filter
-          id="linked-halo"
-          x="-200%"
-          y="-100%"
-          width="500%"
-          height="300%"
-        ><feGaussianBlur stdDeviation="5" /></filter>
-        <clipPath id="linked-clip"><rect
-          x="0.75"
-          y="-30"
-          width="60"
-          height="103"
-        /></clipPath>
-      </defs>
-      <g clip-path="url(#linked-clip)"><path
-        class="linked-notch-halo"
-        d="M0.75 -4 L17.5 18.8 Q19.9 21.3 17.5 23.8 L0.75 46.6"
-        fill="none"
-        stroke-width="10"
-        filter="url(#linked-halo)"
-      /></g>
-      <path
-        class="linked-notch-fill"
-        d="M-1 -2 L0.75 0 L17.5 18.8 Q19.9 21.3 17.5 23.8 L0.75 42.6 L-1 44.6 Z"
+      <rect
+        class="linked-notch-gap"
+        style="fill: var(--bg)"
+        x="-0.3"
+        y="7"
+        width="2.1"
+        height="46"
       />
       <path
         class="linked-notch-line"
-        d="M0.75 0 L17.5 18.8 Q19.9 21.3 17.5 23.8 L0.75 42.6"
+        style="stroke: var(--linked-line)"
+        d="M0.75 3 L0.75 7 Q0.75 12 -2.79 15.54 L-14.42 27.17 Q-17.25 30 -14.42 32.83 L-2.79 44.46 Q0.75 48 0.75 53 L0.75 57"
         fill="none"
         stroke-width="1.5"
         stroke-linejoin="round"
-        stroke-linecap="round"
       />
     </svg>
     <div class="linked-scroll">
@@ -77,43 +59,47 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 </template>
 
 <style>
-/* Valeurs de la planche CandidaturesOrdinateurB (onglets Offres et Envoyées) : la zone commence 18 px avant la fin de
-   la colonne liste (532 px), comme sur la planche (marge de -18,5 admise par l'audit de grille, puis 0,5 px de
-   décalage : la flèche et l'encoche gardent leur écart exact) ; contenu à 24 px du trait, 16 px entre les cartes, 48 px sous la dernière. Halo de
-   l'encoche : --primary-graphic à 26 % (22 % en sombre), côté zone seulement. */
+/* Valeurs de la planche CandidaturesOrdinateurB (§18, trois onglets) : colonne de liste de 504 px, cartes de 480 px
+   (24 px avant la fin de la colonne), rail 9 px après la colonne (33 px après le bord des cartes) ; contenu de la zone
+   à 24 px du rail, 16 px entre les cartes, 48 px sous la dernière ; barre de défilement fine, --card-line sur fond
+   transparent. */
 .linked-detail {
-  --linked-r: 24px; --linked-w: 1.5px; --linked-fade-x: 160px; --linked-fade-y: 72px; --linked-into: -18.5px; --linked-nudge: 0.5px; --linked-halo: 0.26;
-  position: relative; left: var(--linked-nudge); z-index: 0; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; margin-left: var(--linked-into);
-  border-top: var(--linked-w) solid var(--linked-line); border-left: var(--linked-w) solid var(--linked-line); border-top-left-radius: var(--linked-r);
+  --linked-w: 1.5px; --linked-fade-top: 56px; --linked-fade-y: 72px; --linked-into: 9px;
+  position: relative; z-index: 0; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0;
+  margin-left: var(--linked-into); border-left: var(--linked-w) solid var(--linked-line);
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .linked-detail { --linked-halo: 0.22; } }
-:root[data-theme="dark"] .linked-detail { --linked-halo: 0.22; }
 .linked-notch { position: absolute; left: calc(-1 * var(--linked-w)); z-index: 1; overflow: visible; }
-.linked-notch-halo { stroke: var(--primary-graphic); stroke-opacity: var(--linked-halo); }
-.linked-notch-fill { fill: var(--bg); }
-.linked-notch-line { stroke: var(--linked-line); }
-.linked-detail::before { content: ""; position: absolute; top: calc(-1 * var(--linked-w)); right: 0; z-index: 2; width: var(--linked-fade-x); height: 2px; background: linear-gradient(90deg, transparent, var(--bg)); }
+.linked-detail::before { content: ""; position: absolute; top: 0; left: -2px; z-index: 2; width: 3px; height: var(--linked-fade-top); background: linear-gradient(var(--bg), transparent); }
 .linked-detail::after { content: ""; position: absolute; left: -2px; right: 0; bottom: 0; z-index: 2; height: var(--linked-fade-y); background: linear-gradient(180deg, transparent, var(--bg) 85%); pointer-events: none; }
 .linked-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: 0 0 var(--space-12) var(--space-6); }
-/* La liste reliée (OffersView, ApplicationsView, RendezVousDesktop) : colonne de 532 px, cartes de 480 px à 52 px de la zone ; la barre
-   de recherche et de filtres collée en haut (son fond couvre la carte choisie, 28 px de plus, sans toucher le trait de
-   la zone, 18 px avant la fin de la colonne), seules les cartes défilent dessous, avec une ombre légère dès que la liste
-   a défilé. La carte choisie s'allonge de 28 px vers la droite (fond --linked-selected-bg, contour de 2 px, sans
-   ombre) et porte la flèche ; masquée quand son centre sort de la partie visible (data-arrow-off). */
+.linked-scroll, .linked-list { scrollbar-width: thin; scrollbar-color: var(--card-line) transparent; }
+/* La liste reliée (OffersView, ApplicationsView, RendezVousDesktop) : colonne de 504 px, cartes de 480 px ; la barre
+   de défilement à gauche, dans la marge (rtl sur la liste, ltr sur son contenu, 14 px de marge pour que les cartes restent
+   alignées sur le champ de filtre) ; la barre de recherche et de filtres collée en haut, seules les cartes défilent
+   dessous, avec une ombre légère dès que la liste a défilé. La carte choisie : fond --linked-selected-bg, contour de 2 px,
+   la flèche à droite. */
 :is(.offers-grid, .jobs-body, .rdv-grid) > .linked-list {
-  --linked-col: 532px; --linked-gap: 52px; --linked-grow: 28px; --linked-room: 3px;
-  position: relative; z-index: 2; flex: none; box-sizing: border-box; width: calc(var(--linked-col) + var(--linked-room)); min-height: 0;
-  overflow-y: auto; margin: calc(-1 * var(--linked-room)) 0 0 calc(-1 * var(--linked-room)); padding: var(--linked-room) var(--linked-gap) var(--space-3) var(--linked-room);
+  --linked-col: 504px; --linked-gap: 24px; --linked-bar: 14px; --linked-room: 3px;
+  position: relative; z-index: 2; flex: none; box-sizing: border-box; width: calc(var(--linked-col) + var(--linked-bar)); min-height: 0;
+  overflow-y: auto; direction: rtl; margin: calc(-1 * var(--linked-room)) 0 0 calc(-1 * var(--linked-bar));
+  padding: var(--linked-room) var(--linked-gap) var(--space-3) var(--linked-bar);
 }
+.linked-list > * { direction: ltr; }
 .linked-list > [data-linked-tools] {
-  --linked-cover: 32px;
-  position: sticky; top: calc(-1 * var(--linked-room)); z-index: 3; margin: calc(-1 * var(--linked-room)) calc(-1 * var(--linked-cover)) 0 calc(-1 * var(--linked-room));
-  padding: var(--linked-room) var(--linked-cover) var(--space-1) var(--linked-room); background: var(--bg);
+  position: sticky; top: calc(-1 * var(--linked-room)); z-index: 3; margin: calc(-1 * var(--linked-room)) calc(-1 * var(--linked-gap)) 0 calc(-1 * var(--linked-bar));
+  padding: var(--linked-room) var(--linked-gap) var(--space-1) var(--linked-bar); background: var(--bg);
 }
 .linked-list[data-scrolled] > [data-linked-tools] { box-shadow: 0 10px 12px -12px rgb(27 31 42 / 35%); }
-.linked-list .list-card[aria-current="true"] { position: relative; margin-right: calc(-1 * var(--linked-grow)); background: var(--linked-selected-bg); box-shadow: none; }
-.linked-list .list-card-arrow { --linked-arrow: 22px; display: block; position: absolute; top: 50%; right: calc(-1 * var(--linked-arrow)); margin-top: calc(-1 * var(--linked-arrow)); overflow: visible; }
-.linked-list[data-arrow-off] .list-card-arrow { visibility: hidden; }
-.list-card-arrow-fill { fill: var(--linked-selected-bg); }
-.list-card-arrow-line { stroke: var(--primary-graphic); }
+.linked-list .list-card { scroll-margin-block: var(--linked-pin-top, 0); }
+/* Pas d'enfoncement au clic sur une carte de la liste (comme sur la planche, où seuls les boutons s'enfoncent) : réduite
+   de 3 % puis choisie, la carte tremblait. */
+.linked-list .list-card:active { transform: none; }
+/* Changer de sélection ne change jamais la taille d'une carte (sinon la liste tremble) : la carte choisie garde le trait
+   et les marges des autres ; le contour de 2 px de la planche est un outline posé dessus, qui ne prend pas de place
+   (remplacé par l'anneau de focus au clavier). */
+.linked-list .list-card[aria-current="true"] { --linked-sel: 2px; position: relative; background: var(--linked-selected-bg); box-shadow: none; }
+.linked-list .list-card[aria-current="true"]:not(:focus-visible) { outline: var(--linked-sel) solid var(--primary-graphic); outline-offset: calc(-1 * var(--linked-sel)); }
+/* La flèche part du bord extérieur de la carte : son décalage tient compte du trait réel de la carte (mesuré, voir
+   useLinkedNotch ; Chrome arrondit 1,5 px à 1 px). */
+.linked-list .list-card-arrow { --linked-arrow: 20px; display: block; position: absolute; top: 50%; right: calc(-1 * (var(--linked-arrow) + var(--linked-card-border))); translate: 0 -50%; overflow: visible; }
 </style>

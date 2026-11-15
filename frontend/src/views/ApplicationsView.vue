@@ -47,6 +47,7 @@ import InlineConfirm from "../components/InlineConfirm.vue";
 import SentCard from "../components/SentCard.vue";
 import SentDetail from "../components/SentDetail.vue";
 import LinkedDetail from "../components/LinkedDetail.vue";
+import LinkedPin from "../components/LinkedPin.vue";
 import { usePhone } from "../composables/usePhone";
 import { sentCounts, sentFiltered, sentFilterOf, sentSorted, sentSortOf, type SentFilter, type SentSort } from "../sentFilters";
 import { sentSections, type SentSection } from "../sentList";
@@ -796,6 +797,13 @@ onUnmounted(() => assistant.setFocus(null));
             @open="sentFiltersOpen = true"
           />
         </div>
+        <LinkedPin
+          v-if="twoColumns && shown"
+          side="top"
+          :title="shown.job_title"
+          :sub="shown.company ?? 'Entreprise non indiquée'"
+          :name="shown.company ?? shown.job_title"
+        />
 
         <EngagementMoment
           v-if="celebrating"
@@ -1025,6 +1033,13 @@ onUnmounted(() => assistant.setFocus(null));
       <LoadingBlocks
         v-else
         :heights="['3rem', '22rem']"
+      />
+      <LinkedPin
+        v-if="twoColumns && shown"
+        side="bottom"
+        :title="shown.job_title"
+        :sub="shown.company ?? 'Entreprise non indiquée'"
+        :name="shown.company ?? shown.job_title"
       />
     </div>
   </section>
