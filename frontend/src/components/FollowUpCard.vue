@@ -392,9 +392,6 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 .follow-card-to { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-1); margin: var(--space-4) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .follow-card-to b { color: var(--text); }
 .follow-card-change .more-trigger { min-height: var(--space-6); padding: 0; border: 0; background: none; color: var(--primary-text); font-size: inherit; font-weight: var(--weight-bold); }
-.follow-card-actions { display: flex; align-items: center; gap: var(--space-5); margin-top: var(--space-4); }
-.follow-card-actions :is(.primary, .primary-link) { min-height: var(--space-12); padding: 0 var(--space-5); border-radius: var(--radius-pill); }
-.follow-card-actions .link { min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .follow-card-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 /* Ordinateur, maquette du 14 novembre (§8, §9 ; planche CandidaturesOrdinateurStatut) : en-tête de 20 px de marge,
    titre 18/700, pastille verte ; lignes à étiquette 13 grise au-dessus de la valeur 15/700, 12 px en haut et en bas,

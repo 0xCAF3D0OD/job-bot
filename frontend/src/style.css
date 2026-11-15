@@ -59,7 +59,6 @@
   --text: #1B1F2A;
   --text-secondary: #596070;
   --text-tertiary: #474C59;
-  --btn-disabled: #D9DCE6;
   /* Le bleu : --primary pour les boutons pleins (texte --on-primary), --primary-graphic pour les traits, anneaux et
      icônes, --primary-text pour les liens et boutons texte ; en sombre, les trois diffèrent. */
   --primary: #2445C2;
@@ -94,7 +93,6 @@
   --warning: #A8540E;
   --warning-soft: #FCEEDD;
   --score-dig: #6F6459;
-  --neutral: #596070;
   /* L'anneau et la jauge de « Loin » : un gris froid plus clair que le mot (en --text-secondary), 3:1 au moins sur
      la carte (WCAG 1.4.11) et distinct du gris chaud d'« À creuser » (1,75:1 entre eux, et deux teintes). */
   --neutral-graphic: #878E9B;
@@ -247,7 +245,6 @@
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
-    --btn-disabled: #36312B;
     --primary: #2445C2;
     --primary-graphic: #7D95FF;
     --action: #7D95FF;
@@ -267,7 +264,6 @@
     --warning: #F2A766;
     --score-dig: #B39A82;
     --warning-soft: #3A2A1C;
-    --neutral: #ABA398;
     --neutral-graphic: #6B707C;
     --neutral-soft: #2E2A26;
     --danger: #FF8A73;
@@ -310,7 +306,6 @@
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
-  --btn-disabled: #36312B;
   --primary: #2445C2;
   --primary-graphic: #7D95FF;
   --action: #7D95FF;
@@ -330,7 +325,6 @@
   --warning: #F2A766;
   --score-dig: #B39A82;
   --warning-soft: #3A2A1C;
-  --neutral: #ABA398;
   --neutral-graphic: #6B707C;
   --neutral-soft: #2E2A26;
   --danger: #FF8A73;
@@ -1950,7 +1944,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --ease-out: ease-out;
   --ease-standard: cubic-bezier(.2, 0, 0, 1);
   --spring-soft: linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1);
-  --spring-strong: linear(0, 0.5 6%, 1.2 16%, 1.32 22%, 1.2 32%, 0.96 46%, 1.03 60%, 0.99 76%, 1);
   
   --t-fast: 200ms;
   --t-standard: 300ms;
@@ -2937,7 +2930,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .undo-toast { align-items: center; }
 .undo-toast > button.link { margin-left: auto; font-size: var(--font-body); font-weight: var(--weight-semibold); min-height: 2.75rem; padding: 0 var(--space-2); }
 /* Snackbar du 9 novembre (PR 1) : fond sombre, rayon 12, actions en bleu clair ; 6 s (UNDO_MS), role="status". */
-.undo-toast, .snackbar { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
+.undo-toast { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
 :is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
@@ -4752,7 +4745,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
    et `aria-disabled` à vide, bleu avec du texte. Focus : bordure 1,5 px bleue à l'intérieur, rien ne dépasse.
    Valeurs de la maquette ramenées sur la grille de 4 : padding 14 16 9 → 16 16 8, écart 6 → 8, marges de la barre
    -12 / -10 → -12. */
-.composer-stacked { --composer-r: 24px; --composer-send-dot: 36px; --composer-send-off: #8A8F9C; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-2); border-radius: var(--composer-r); }
+.composer-stacked { --composer-r: 24px; --composer-send-dot: 36px; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-2); border-radius: var(--composer-r); }
 .composer-stacked:focus-within { outline: none; border-color: var(--primary-graphic); box-shadow: inset 0 0 0 0.5px var(--primary-graphic), var(--shadow-composer); }
 .composer-stacked .composer-row { display: block; }
 .composer.composer-stacked .composer-input { display: block; width: 100%; min-height: var(--space-6); max-height: calc(6 * var(--space-6)); margin: 0; padding: 0; font-size: var(--font-body); line-height: var(--space-6); }
@@ -4762,7 +4755,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-send-dot { display: inline-flex; align-items: center; justify-content: center; width: var(--composer-send-dot); height: var(--composer-send-dot); border-radius: var(--radius-pill); background: var(--action); }
 .composer-send-round .composer-send-dot .icon { width: 18px; height: 18px; }
 .composer-send-round[aria-disabled="true"] { cursor: default; }
-.composer-send-round[aria-disabled="true"] .composer-send-dot { background: var(--line); color: var(--composer-send-off); }
+.composer-send-round[aria-disabled="true"] .composer-send-dot { background: var(--line); color: var(--field-border); }
 .composer-menu { position: absolute; left: 0; z-index: 40; width: min(320px, 100%); padding: var(--space-1) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); animation: ja-pop 150ms ease-out; }
 .composer-menu-up { bottom: 100%; margin-bottom: var(--space-2); transform-origin: bottom left; }
 .composer-menu-down { top: 100%; margin-top: var(--space-2); transform-origin: top left; }

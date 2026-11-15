@@ -102,11 +102,11 @@ const titleId = useId();
 .offer-actions-title { font-size: var(--font-body); font-weight: var(--weight-bold); }
 .offer-actions-where { font-size: var(--label-caps); color: var(--text-secondary); }
 .offer-action {
-  display: flex; align-items: center; gap: var(--space-4); min-height: var(--act-row); padding: 0 var(--space-4); border: 0; border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: center; gap: var(--space-4); min-height: var(--act-row); padding: 0 var(--space-4); border: 0;
   border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--act-17); font-weight: var(--weight-semibold); text-align: left;
 }
-.offer-action:last-child { border-bottom: 0; }
+.offer-action + .offer-action { border-top: 1px solid var(--line-soft); }
 .offer-action .icon { flex: none; width: var(--act-22); height: var(--act-22); color: var(--primary-graphic); stroke-width: 2.2; }
 .offer-actions-discard, .offer-actions-discard .icon { color: var(--danger); }
-.offer-actions-cancel { min-height: var(--act-row); border: 0; text-align: center; justify-content: center; color: var(--primary-text); font: inherit; font-size: var(--act-17); font-weight: var(--weight-bold); }
+.offer-actions-cancel { min-height: var(--act-row); border: 0; justify-content: center; color: var(--primary-text); font: inherit; font-size: var(--act-17); font-weight: var(--weight-bold); }
 </style>

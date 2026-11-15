@@ -604,8 +604,8 @@ defineExpose({
 /* AjouterOffreTel : champ de 104 px (4 lignes de 24 et ses marges), aide 13 px 8 px dessous (10 sur la planche), quota en
    pastille orange (avertissement). */
 .manual-form :deep(.composer textarea) { --manual-104: 104px; min-height: var(--manual-104); }
-.manual-help { margin: calc(var(--space-2) - var(--space-4)) var(--space-1) 0; font-size: var(--manual-13); }
-.manual-quota { justify-self: start; margin: calc(var(--space-2) - var(--space-4)) 0 0; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--warning-soft); color: var(--warning); font-size: var(--manual-13); font-weight: var(--weight-semibold); }
+.manual-help, .manual-quota { margin: calc(var(--space-2) - var(--space-4)) var(--space-1) 0; font-size: var(--manual-13); }
+.manual-quota { justify-self: start; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--warning-soft); color: var(--warning); font-weight: var(--weight-semibold); }
 .manual-pdf { justify-self: start; gap: var(--space-2); }
 .manual-read { display: grid; gap: var(--space-4); }
 .manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }
