@@ -616,3 +616,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.402 | « Plus de filtres » sur ordinateur (Offres et Envoyées) : marges intérieures de 16 px comme sur la planche, le bouton passe de 160 à 152 px | livrée |
 | 1.6.403 | Contour des boutons secondaires gris : nouveau jeton --button-outline (#C9C5BA, sombre #4E473E) comme sur les planches, --line-strong reste aux champs, à la barre de recherche et aux séparateurs | livrée |
 | 1.6.404 | Carte épinglée de Rendez-vous sur ordinateur : la date dans l'icône calendrier de la liste (40 px, même couleur que la carte), et le texte de la carte épinglée n'est plus écrasé | livrée |
+| 1.6.405 | Relance : pastilles « Copier » (le message) et « Objet » (l’objet), qui disent « Copié ». | livrée |
+| 1.6.406 | Offres sur ordinateur : un compteur au-dessus de la liste, « 12 sur 38 offres » avec un filtre. | livrée |

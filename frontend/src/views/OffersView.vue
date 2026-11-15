@@ -174,6 +174,15 @@ const hidesFar = computed(() => phone.value && filters.value.minScore === null &
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
 // Le nombre que disent la phrase et « Afficher n offres » : la liste montrée, sans les offres « Loin » cachées.
 const shownTotal = computed(() => (hidesFar.value && !showFar.value ? Math.max(0, total.value - farCount.value) : total.value));
+// Le compteur au-dessus de la liste (ordinateur, décision de Kevin du 15.11). Seul « À traiter » a un total sans
+// filtre (counts.pending) : « 12 sur 38 offres » ; les autres vues disent le nombre seul.
+const countLabel = computed(() => {
+  const base = counts.value.pending;
+  if (filters.value.view === "pending" && activeCount(filters.value) && shownTotal.value < base) {
+    return `${shownTotal.value} sur ${plural(base, "offre", "offres")}`;
+  }
+  return shownTotal.value ? plural(shownTotal.value, "offre", "offres") : "Aucune offre";
+});
 const shown = computed(() =>
   hidesFar.value && !showFar.value
     ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
@@ -805,6 +814,15 @@ onUnmounted(() => {
           :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
         />
         <div class="linked-cards">
+          <!-- Le compteur (décision de Kevin du 15.11, au-dessus de la liste, ordinateur) : les offres de la liste montrée,
+               filtres compris ; avec un filtre qui en retire, « 12 sur 38 offres », 38 étant « À traiter » sans filtre. -->
+          <p
+            v-if="wide && !phone && !bare && !failed && shownTotal > 0"
+            class="offers-count"
+            data-test="offers-count"
+          >
+            {{ countLabel }}
+          </p>
           <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
                pendant 6 secondes (Material 3, snackbar). -->
           <p
@@ -1335,6 +1353,7 @@ onUnmounted(() => {
 /* Rien encore (§13) : l'état vide occupe la hauteur sous l'en-tête. Téléphone (CandidaturesVide) : du haut de la liste
    (144 px sans le bandeau Démo) à 130 px du bas de l'écran, la marge basse de la page au-dessus de la barre d'onglets. */
 .offers-list-bare { display: flex; flex-direction: column; }
+.offers-count { margin: 0 0 var(--space-3); padding-inline: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
 @media (max-width: 820px) {
   .offers-list-bare { --bare-chrome: 274px; min-height: calc(100dvh - var(--bare-chrome)); }
   .notice.undo-snackbar {
