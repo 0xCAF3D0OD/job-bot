@@ -416,7 +416,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");
     expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");
     const alert = wrapper.get("[data-test=welcome-alert]");
-    expect(wrapper.text()).toContain("Crée une alerte sur jobup : ses offres arrivent ici chaque matin, déjà triées. Environ 2 minutes.");
+    // Section 15 du paquet du 15.11 : plus de phrase sous le titre.
+    expect(wrapper.text()).not.toContain("Crée une alerte sur jobup");
     // Une seule recherche, la première ; les autres restent dans Mes alertes (décision de Kevin du 14.11).
     expect(alert.get("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne et 30 km");
     expect(alert.text()).not.toContain("SRE");
@@ -425,7 +426,9 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(open.text()).toContain("Ouvrir jobup");
     expect(alert.get("[data-test=wizard-address]").text()).toBe("lea+0mwdr89t@alertes.joba1.ch");
     expect(alert.text()).toContain("Copie-la, puis colle-la dans le champ e-mail de l’alerte.");
-    expect(alert.text()).toContain("Enregistre l’alerte, puis reviens ici");
+    expect(alert.text()).toContain("Recopie le code de jobup");
+    expect(alert.get("[data-test=code-box]").text()).toBe("En attente du code de jobup…");
+    expect(alert.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
     expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
 
     await click(wrapper, "welcome-alert-done");
@@ -564,10 +567,12 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await click(wrapper, "welcome-criteria");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
     expect(wrapper.get("h1").text()).toBe("Une alerte, et elles arrivent seules");
-    expect(wrapper.text()).toContain("jobup t’envoie ses nouvelles offres par e-mail, jobA1 les trie pour toi chaque matin. Environ 2 minutes.");
+    // Section 15 du paquet du 15.11 : plus de phrase sous le titre.
+    expect(wrapper.text()).not.toContain("t’envoie ses nouvelles offres");
     const card = wrapper.get("[data-test=welcome-alert]");
     expect(card.classes()).toContain("wdk-card");
-    expect(card.text()).toContain("Enregistre l’alerte sur jobup, puis reviens ici");
+    expect(card.text()).toContain("jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici.");
+    expect(card.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
     const orange = wrapper.get("[data-test=welcome-orange]");
     expect(orange.attributes("alt")).toBe("");
     expect(orange.attributes("width")).toBe("260");

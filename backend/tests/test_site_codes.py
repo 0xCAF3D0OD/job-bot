@@ -10,10 +10,11 @@ from sqlalchemy import func, select, text
 
 from jobbot import accounts
 from jobbot.api.app import create_app
+from jobbot.auth import passwords
 from jobbot.collect import service
-from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search
+from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search, User
 from jobbot.mail import confirm, site_codes
-from jobbot.mail.codes import find_code
+from jobbot.mail.codes import find_code, valid_minutes
 from jobbot.mail.message import ParsedEmail
 from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
@@ -57,6 +58,21 @@ def email(subject: str, text_body: str) -> ParsedEmail:
 def test_find_code(subject: str, body: str, code: str | None) -> None:
     found = find_code(email(subject, body))
     assert (found.code if found else None) == code
+
+
+@pytest.mark.parametrize(
+    ("body", "minutes"),
+    [
+        ("Votre code : 482913. Il est valable 15 minutes.", 15),
+        ("Voici votre code : 482913. Il expire dans 5 minutes.", 5),
+        ("Ihr Code lautet 482 913. Er ist 20 Minuten gültig. Gültig für 20 Minuten.", 20),
+        ("Your code is 4829. It is valid for 30 minutes.", 30),
+        ("Votre code de vérification est 482913.", 10),
+        ("Votre code est 482913, valable 0 minute.", 10),
+    ],
+)
+def test_valid_minutes(body: str, minutes: int) -> None:
+    assert valid_minutes(email("Votre code", body)) == minutes
 
 
 @pytest.fixture
@@ -195,6 +211,51 @@ async def test_extension_reads_a_fresh_code(
     found = await site_codes.latest(clean, "jobup")
     assert found is not None and found.code == "482913"
     assert await site_codes.latest(clean, "indeed") is None
+
+
+async def test_last_code_route(clean: Runtime, mailbox: FakeMailbox, phone: Any) -> None:
+    """Section 15 du paquet du 15.11 : le dernier code du site, l'heure et la durée lue dans
+    l'e-mail, rien d'autre (ni objet, ni texte)."""
+    app = create_app(clean.settings, clean)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        assert (await api.get("/api/alert-searches/codes/last")).json() is None
+        mailbox.add(_code_email("<a@x>", datetime.now(UTC) - timedelta(minutes=3)), "<a@x>")
+        with accounts.use(None):
+            await service.collect(clean)
+        mailbox.add(
+            make_email(
+                message_id="<b@x>",
+                sender="no-reply@jobup.ch",
+                received_at=datetime.now(UTC),
+                subject="Votre code de vérification",
+                html="<p>Votre code de vérification est <b>731205</b>. Valable 15 minutes.</p>",
+            ),
+            "<b@x>",
+        )
+        with accounts.use(None):
+            await service.collect(clean)
+        body = (await api.get("/api/alert-searches/codes/last")).json()
+        assert set(body) == {"code", "received_at", "valid_minutes"}
+        assert (body["code"], body["valid_minutes"]) == ("731205", 15)
+        assert (await api.get("/api/alert-searches/codes/last?site=indeed")).json() is None
+    # Sous la RLS d'un autre compte, le code n'existe pas (docs/regles-securite-donnees.md C-4).
+    owner = accounts.current()
+    async with clean.sessionmaker.begin() as session:
+        other = User(username="code-autre", password_hash=passwords.hash_password("x" * 12))
+        session.add(other)
+        await session.flush()
+        other_id = other.id
+    accounts.set_current(other_id)
+    try:
+        assert await site_codes.last(clean, "jobup") is None
+    finally:
+        accounts.set_current(owner)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": other_id})
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        # Le code effacé au bout de 30 minutes : plus rien à montrer.
+        await site_codes.purge(clean, datetime.now(UTC) + timedelta(minutes=31))
+        assert (await api.get("/api/alert-searches/codes/last")).json() is None
 
 
 @pytest.mark.usefixtures("site_example")

@@ -88,7 +88,8 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     expect(panel().findAll(".alert-site-step-title").map((b) => b.text())).toEqual([
       "Ouvre jobup avec ta recherche",
       "Mets cette adresse comme destinataire",
-      "Enregistre l’alerte sur jobup, puis reviens ici",
+      "Recopie le code de jobup",
+      "Termine l’alerte sur jobup, puis reviens ici",
     ]);
     expect(panel().find("[data-test=wizard-address]").text()).toBe("moi@exemple.ch");
     expect(wrapper.find("[data-test=alerts-wizard] h2").text()).toBe("Offres à recevoir");
@@ -345,7 +346,8 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("moi@exemple.ch");
     expect(panel.find("[data-test=alert-site-copied]").text()).toBe("Adresse copiée");
-    expect(panel.findAll("[role=status]")).toHaveLength(1);
+    // Une seule annonce pour la copie ; l'autre zone annoncée est l'étape du code de jobup (section 15).
+    expect(panel.findAll("[role=status]:not([data-test=code-box])")).toHaveLength(1);
   });
 });
 

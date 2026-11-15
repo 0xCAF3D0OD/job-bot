@@ -28,7 +28,7 @@ from jobbot.db.models import (
     Source,
 )
 from jobbot.log import get_logger
-from jobbot.mail.codes import spaced
+from jobbot.mail.codes import DEFAULT_VALID_MINUTES, spaced, valid_minutes
 from jobbot.mail.message import parse_email
 from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
@@ -101,6 +101,33 @@ async def latest(runtime: Runtime, site: str) -> SiteCode | None:
     """Le code de ce site reçu il y a moins de 10 minutes (pour l'extension)."""
     found = await current(runtime, within=CODE_FILLED_WITHIN)
     return next((c for c in found if c.site == site), None)
+
+
+@dataclass(frozen=True)
+class LastCode:
+    code: str
+    received_at: datetime
+    valid_minutes: int
+
+
+async def last(runtime: Runtime, site: str) -> LastCode | None:
+    """Le dernier code de ce site pour le compte en cours, avec sa durée de validité lue dans
+    l'e-mail (10 minutes sinon) : l'étape « Recopie le code » (section 15 du paquet du 15.11).
+    Rien d'autre de l'e-mail ne sort ; le code s'efface au bout de 30 minutes, comme avant."""
+    found = next((c for c in await current(runtime) if c.site == site), None)
+    if found is None:
+        return None
+    minutes = DEFAULT_VALID_MINUTES
+    async with runtime.sessionmaker() as session:
+        search = await session.get(Search, found.search_id)
+    if search is not None:
+        try:
+            raw = runtime.storage.get(search.raw_key)
+        except FileNotFoundError:
+            raw = None
+        if raw is not None:
+            minutes = valid_minutes(parse_email(raw, fallback_received=search.received_at))
+    return LastCode(found.code, found.received_at, minutes)
 
 
 async def expect(runtime: Runtime) -> bool:

@@ -415,6 +415,21 @@ async def expect_code(request: Request) -> ExpectCodeOut:
     return ExpectCodeOut(queued=await site_codes.expect(_runtime(request)))
 
 
+class LastCodeOut(BaseModel):
+    """Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée."""
+
+    code: str
+    received_at: datetime
+    valid_minutes: int
+
+
+@router.get("/codes/last", operation_id="lastSiteCode")
+async def last_code(request: Request, site: str = "jobup") -> LastCodeOut | None:
+    """Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail."""
+    found = await site_codes.last(_runtime(request), site)
+    return LastCodeOut(**found.__dict__) if found else None
+
+
 class SiteMessageOut(BaseModel):
     id: int
     site: str

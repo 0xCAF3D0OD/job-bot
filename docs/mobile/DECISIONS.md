@@ -95,6 +95,15 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 | 2026-11-15 | Offres sur téléphone : « + Ajouter » est gardé à côté de la recherche, place définitive : bouton rond 48 × 48 px (hauteur du champ), contour 1,5 px bleu (#2445C2, sombre #7D95FF), fond carte, icône « + » de 22 px, nommé « Ajouter une offre », 8 px entre le champ et le bouton. Le titre garde 30 px, « Alertes » ne bouge pas. Sur un écran vide où la recherche est masquée, le « + » l'est aussi (le bouton « Ajouter une offre » de l'écran vide le remplace). Sa planche arrive avec le prochain lot. | « Ajouter » compact à côté de la recherche (C10). |
 | 2026-11-15 | Offre provisoire sur téléphone : « L'entreprise » reste, sous « Le poste », dans le même style de section (titre 16/700, texte 15 px), masquée si on n'a aucune information sur l'entreprise ; pas de carte en plus. | L'absence de « L'entreprise » sur OffreProvisoire. |
 
+## Code jobup dans l'étape Alertes (Kevin, 14 et 15.11.2026)
+
+- 14.11 : le code de vérification de jobup s'affiche dans l'étape Alertes des Premiers pas (choix « Code dans l'étape Alertes »).
+- 14.11 : format d'adresse avec sous-adressage, `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch` → `alertes+nom-code@joba1.ch` ; Kevin règle le serveur.
+- 15.11 : la relecture toutes les 5 s ne tourne que pendant l'attente et quand l'écran est visible ; elle s'arrête dès que le code arrive ou au bout de 10 minutes sans code (état expiré, « Renvoyer »).
+- 15.11 : la route ne renvoie que le dernier code du compte connecté, sans contenu de l'e-mail ; le code n'est pas journalisé.
+- 15.11 : durée de validité lue dans l'e-mail de jobup, 10 minutes par défaut ; l'étape du code seulement pour jobup.
+- 15.11 : l'état expiré réutilise les jetons existants `--peach-soft` / `--peach-text` (valeurs claires de la planche).
+- 15.11 (réponses de Kevin sur #725) : l'état expiré garde `--peach-soft` / `--peach-text` aussi en sombre (#3A281E / #F2B98E, contraste 8,1:1) ; le libellé reste « Renvoyer », aria-label « Renvoyer le code depuis jobup » (la capture sombre du téléphone était périmée). Poids : l'allègement est fusionné d'abord, puis #723 et #725, sans toucher à la limite.
 ## Liaison carte → détail (ordinateur), réponses du 15 novembre
 
 | Date | Décision | Source |
