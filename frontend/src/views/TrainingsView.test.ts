@@ -380,6 +380,10 @@ describe("TrainingsView", () => {
       expect(wrapper.text()).toContain("1 formation");
       expect(wrapper.find("[data-test=training-current]").text()).toContain("Continuer le cours");
       expect(wrapper.find("[data-test=modules-bar]").exists()).toBe(true);
+      // Kevin, 2026-11-15 : « Module N sur 12 » suffit, plus de « Module terminé » ni de − et +.
+      expect(wrapper.find("[data-test=training-current]").text()).not.toContain("Module terminé");
+      expect(wrapper.find("[data-test=module-more]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=module-less]").exists()).toBe(false);
       const rows = wrapper.findAll("[data-test=training-kept]");
       expect(rows).toHaveLength(2);
       expect(rows[0]!.text()).toContain("HashiCorp · À ton rythme · 2 semaines");
