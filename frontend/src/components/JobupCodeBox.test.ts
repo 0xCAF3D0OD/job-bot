@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import JobupCodeBox from "./JobupCodeBox.vue";
@@ -8,6 +8,7 @@ const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a) },
 }));
+enableAutoUnmount(afterEach);
 const NOW = new Date("2026-11-15T13:00:00Z");
 beforeEach(() => {
   vi.useFakeTimers();
@@ -19,6 +20,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const WATCH = ["/api/alert-searches/watch-code"] as const;
 const code = (minutesAgo: number, value = "482913", valid = 10) => ({
   code: value,
   received_at: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
@@ -60,7 +62,7 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     expect(resend.attributes("href")).toBe("https://www.jobup.ch/?term=DevOps");
     expect(resend.attributes("aria-label")).toBe("Renvoyer le code depuis jobup");
     await resend.trigger("click");
-    expect(POST).toHaveBeenCalledWith("/api/alert-searches/expect-code");
+    expect(POST).toHaveBeenCalledWith(...WATCH);
     expect(wrapper.get("[data-test=code-box]").text()).toBe("En attente du code de jobup…");
     // L'ancien code ne revient pas : seul un nouveau le remplace.
     await vi.advanceTimersByTimeAsync(5000);
@@ -93,5 +95,54 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     document.dispatchEvent(new Event("visibilitychange"));
     await flushPromises();
     expect(GET).toHaveBeenCalledTimes(1);
+  });
+
+  // Décision de Kevin du 15.11 : le serveur relève la boîte tant que l'étape attend, 10 minutes au plus.
+  it.each([
+    ["à 20 s", 20_000],
+    ["à 4 min", 4 * 60_000],
+    ["à 9 min", 9 * 60_000],
+  ])("code reçu %s : relance chaque minute, puis plus rien", async (_label, at) => {
+    GET.mockResolvedValue({ data: null });
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: null } });
+    await flushPromises();
+    expect(POST).toHaveBeenCalledTimes(1);
+    expect(POST).toHaveBeenCalledWith(...WATCH);
+    await vi.advanceTimersByTimeAsync(at);
+    expect(POST).toHaveBeenCalledTimes(1 + Math.floor(at / 60_000));
+    GET.mockResolvedValue({ data: code(0) });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(wrapper.find("[data-test=code-box-value]").exists()).toBe(true);
+    const asked = POST.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(POST).toHaveBeenCalledTimes(asked);
+  });
+
+  it("jamais reçu : relance jusqu’à 10 minutes, puis arrêt", async () => {
+    GET.mockResolvedValue({ data: null });
+    mount(JobupCodeBox, { props: { siteUrl: null } });
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(10 * 60_000 + 5000);
+    expect(POST).toHaveBeenCalledTimes(10);
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(POST).toHaveBeenCalledTimes(10);
+  });
+
+  it("onglet caché : plus de relance ; elle reprend au retour, et la fermeture l’arrête", async () => {
+    GET.mockResolvedValue({ data: null });
+    let visibility = "visible";
+    vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility as DocumentVisibilityState);
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: null } });
+    await flushPromises();
+    visibility = "hidden";
+    await vi.advanceTimersByTimeAsync(3 * 60_000);
+    expect(POST).toHaveBeenCalledTimes(1);
+    visibility = "visible";
+    document.dispatchEvent(new Event("visibilitychange"));
+    await flushPromises();
+    expect(POST).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+    await vi.advanceTimersByTimeAsync(3 * 60_000);
+    expect(POST).toHaveBeenCalledTimes(2);
   });
 });

@@ -14,6 +14,7 @@ from jobbot.auth import passwords
 from jobbot.collect import service
 from jobbot.db.models import Search, User
 from jobbot.mail import addresses
+from jobbot.mail.imap import MailboxError
 from jobbot.runtime import Runtime
 
 from .conftest import admin_engine, make_settings
@@ -112,6 +113,32 @@ async def test_guest_box_is_separate_and_emptied(
     assert guest_box.cleaned == ["<amy@x>"]
     assert [mid for mid, _ in guest_box.emails] == ["<perdu@x>"]
     assert [mid for mid, _ in owner_box.emails] == ["<kevin@x>"]
+
+
+async def test_guest_box_read_when_gmail_fails(
+    rt: Runtime, boxes: tuple[FakeMailbox, FakeGuestBox], account: int
+) -> None:
+    """Décision de Kevin du 15.11 : une boîte illisible (mot de passe Gmail refusé) n'empêche
+    pas de lire l'autre ; l'erreur est relancée après, ou gardée dans le résultat."""
+    owner_box, guest_box = boxes
+    amy = await _amy(rt)
+    owner_box.error = MailboxError("auth", "authentification IMAP refusée")
+    guest_box.add(_mail("<amy@x>", "alertes+amy-fictif02@example.ch"), "<amy@x>")
+    with accounts.use(None), pytest.raises(MailboxError):
+        await service.collect(rt)
+    assert await _messages(rt, amy) == ["<amy@x>"]
+    assert guest_box.cleaned == ["<amy@x>"]
+    with accounts.use(None):
+        result = await service.collect(rt, raise_errors=False)
+    assert [e.kind for e in result.errors] == ["auth"]
+    # Et dans l'autre sens : la boîte des invités en panne, celle de l'exploitant est lue.
+    owner_box.error = None
+    guest_box.error = MailboxError("connection", "connexion IMAP impossible")
+    owner_box.add(_mail("<kevin@x>", "kevin@example.com"), "<kevin@x>")
+    with accounts.use(None):
+        result = await service.collect(rt, raise_errors=False)
+    assert [e.kind for e in result.errors] == ["connection"]
+    assert await _messages(rt, account) == ["<kevin@x>"]
 
 
 async def test_guest_address_without_owner_box(tmp_path: Path) -> None:

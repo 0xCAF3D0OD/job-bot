@@ -12,6 +12,8 @@ import AppIcon from "./AppIcon.vue";
 // Décisions de Kevin du 15.11 : la relecture toutes les 5 s ne tourne que pendant l'attente et seulement quand l'écran
 // est visible ; elle s'arrête dès que le code arrive, ou au bout de 10 minutes sans code (état expiré). La durée de
 // validité vient de l'e-mail de jobup (10 minutes sinon). Un nouveau code remplace l'ancien.
+// Le serveur ne relève la boîte que si on le lui demande : dès l'affichage, puis chaque minute tant que l'étape attend
+// et que l'onglet est visible (« watch-code »), il la relève toutes les 15 s. Sans relance, il s'arrête de lui-même.
 const props = defineProps<{ siteUrl: string | null }>();
 
 type Code = { code: string; received_at: string; valid_minutes: number };
@@ -23,6 +25,7 @@ let since = 0;
 let seen = "";
 let timer = 0;
 let expiry = 0;
+let asked = 0;
 const ends = (c: Code): number => Date.parse(c.received_at) + c.valid_minutes * 60_000;
 
 function stop(next: "waiting" | "received" | "expired"): void {
@@ -31,8 +34,13 @@ function stop(next: "waiting" | "received" | "expired"): void {
 }
 
 async function tick(): Promise<void> {
-  if (Date.now() - since > 10 * 60_000) return stop("expired");
+  if (Date.now() - since >= 10 * 60_000) return stop("expired");
   if (document.visibilityState !== "visible") return;
+  // La relance du relevé rapide côté serveur, une fois par minute au plus.
+  if (Date.now() - asked >= 60_000) {
+    asked = Date.now();
+    void api.POST("/api/alert-searches/watch-code");
+  }
   const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
   if (state.value !== "waiting" || !data || data.received_at === seen) return;
   seen = data.received_at;
@@ -48,12 +56,6 @@ function wait(): void {
   since = Date.now();
   timer = window.setInterval(tick, 5000);
   void tick();
-}
-
-// « Ouvrir jobup » ou « Renvoyer » : la boîte relevée vite (15 s pendant 5 min), l'écran attend le nouveau code.
-function restart(): void {
-  void api.POST("/api/alert-searches/expect-code");
-  wait();
 }
 
 const onVisible = (): void => void (state.value === "waiting" && tick());
@@ -75,7 +77,8 @@ onUnmounted(() => {
   clearTimeout(expiry);
 });
 
-defineExpose({ restart });
+// « Ouvrir jobup » ou « Renvoyer » : l'écran attend le nouveau code, et la boîte est relevée vite dès maintenant.
+defineExpose({ restart: wait });
 </script>
 
 <template>
@@ -149,7 +152,7 @@ defineExpose({ restart });
         class="code-box-resend"
         aria-label="Renvoyer le code depuis jobup"
         data-test="code-box-resend"
-        @click="restart"
+        @click="wait"
       >Renvoyer<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
     </template>
   </div>

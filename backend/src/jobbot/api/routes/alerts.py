@@ -415,6 +415,13 @@ async def expect_code(request: Request) -> ExpectCodeOut:
     return ExpectCodeOut(queued=await site_codes.expect(_runtime(request)))
 
 
+@router.post("/watch-code", operation_id="watchSiteCode", status_code=status.HTTP_202_ACCEPTED)
+async def watch_code(request: Request) -> ExpectCodeOut:
+    """L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
+    le relevé toutes les 15 secondes de 75 secondes, 10 minutes au plus (une seule attente)."""
+    return ExpectCodeOut(queued=await site_codes.expect(_runtime(request), watch=True))
+
+
 class LastCodeOut(BaseModel):
     """Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée."""
 

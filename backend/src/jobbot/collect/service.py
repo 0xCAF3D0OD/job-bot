@@ -86,6 +86,10 @@ class CollectResult:
     unrouted: int = 0
     # Codes de vérification reçus (docs/112) : le relevé rapide s'arrête au premier.
     codes: int = 0
+    # Les comptes qui ont reçu un code : le relevé rapide d'un compte s'arrête au sien.
+    code_accounts: set[int] = field(default_factory=set)
+    # Une boîte illisible n'empêche pas de lire l'autre : son erreur est gardée ici.
+    errors: list[MailboxError] = field(default_factory=list)
 
 
 def raw_key(email: ParsedEmail) -> str:
@@ -387,20 +391,34 @@ async def _warn_filter(runtime: Runtime) -> None:
 GUEST_UNROUTED_KEPT = timedelta(days=7)
 
 
-async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectResult:
+async def collect(
+    runtime: Runtime, run_id: uuid.UUID | None = None, *, raise_errors: bool = True
+) -> CollectResult:
     """Les deux boîtes : celle de l'exploitant (ses alertes, en lecture seule) et, si elle est
-    réglée, celle des invités (docs/113), vidée de ce qui est copié dans jobA1."""
+    réglée, celle des invités (docs/113), vidée de ce qui est copié dans jobA1. Chacune est
+    lue à part : si l'une échoue (mot de passe Gmail refusé…), l'autre est lue quand même ;
+    l'erreur est relancée à la fin (`raise_errors`), ou laissée dans le résultat."""
     settings = runtime.settings
     if not settings.imap_configured and not settings.guest_imap_configured:
         log.info("collect_not_configured")
         return CollectResult(configured=False)
     result = CollectResult()
     if settings.imap_configured:
-        await _collect_box(runtime, mailbox_factory(settings), run_id, result, guest=False)
+        try:
+            await _collect_box(runtime, mailbox_factory(settings), run_id, result, guest=False)
+        except MailboxError as exc:
+            result.errors.append(exc)
+            log.warning("collect_box_failed", guest_box=False, kind=exc.kind)
     if settings.guest_imap_configured:
         guest = guest_mailbox_factory(settings)
-        await _collect_box(runtime, guest, run_id, result, guest=True)
-        await _clean_guest_box(runtime, guest)
+        try:
+            await _collect_box(runtime, guest, run_id, result, guest=True)
+            await _clean_guest_box(runtime, guest)
+        except MailboxError as exc:
+            result.errors.append(exc)
+            log.warning("collect_box_failed", guest_box=True, kind=exc.kind)
+    if result.errors and raise_errors:
+        raise result.errors[0]
     return result
 
 
@@ -454,6 +472,8 @@ async def _collect_box(
         if search is not None:
             result.new_searches += 1
             result.codes += search.kind == "code"
+            if search.kind == "code":
+                result.code_accounts.add(account)
             result.new_offers += search.new_offers_count
             if search.new_offers_count:
                 result.accounts.add(account)

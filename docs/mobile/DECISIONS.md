@@ -167,3 +167,10 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
 - Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
+
+## Code jobup : relevé de la boîte tant que l'étape attend (Kevin, 15.11.2026, 18 h 24)
+
+- L'étape « Recopie le code de jobup » demande au serveur de relever la boîte dès son affichage, puis chaque minute tant qu'elle attend et que l'onglet est visible, 10 minutes au plus ; le serveur relève toutes les 15 s et s'arrête de lui-même 75 s après la dernière demande, ou dès que le code du compte est arrivé.
+- La limite de 6 par heure et par compte compte une attente, pas chaque relance. Plafond de la plateforme : 120 relevés rapides par heure, tous comptes confondus ; au-delà, le code arrive au relevé normal.
+- La boîte des invités est lue même si la boîte Gmail de l'exploitant échoue, et inversement ; l'erreur est relancée après.
+- Ligne d'état de l'étape : « on vérifie toutes les 15 s » (la vraie fréquence du serveur).
