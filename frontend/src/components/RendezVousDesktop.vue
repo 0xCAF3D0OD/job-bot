@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import type { Application } from "../api/client";
@@ -22,6 +22,7 @@ import {
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
+import LinkedDetail from "./LinkedDetail.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
 import OrpOutcomeInline from "./OrpOutcomeInline.vue";
@@ -114,41 +115,29 @@ function addQuestion(): void {
   custom.value = "";
 }
 
-// Les deux colonnes défilent seules, sous l'en-tête : la hauteur se mesure à l'arrivée et au redimensionnement.
-const grid = ref<HTMLElement | null>(null);
-const top = ref(0);
-function measure(): void {
-  top.value = Math.max(0, Math.round((grid.value?.getBoundingClientRect().top ?? 0) + window.scrollY));
-}
-onMounted(() => {
-  void nextTick(measure);
-  window.addEventListener("resize", measure);
-});
-onUnmounted(() => window.removeEventListener("resize", measure));
-watch(() => props.page, () => void nextTick(measure));
+// La liste reliée au détail (§14 du 15 novembre) : la hauteur des colonnes (--linked-top) et l'encoche sont
+// calculées par LinkedDetail (useLinkedNotch).
+const list = ref<HTMLElement | null>(null);
 </script>
 
 <template>
   <div
-    ref="grid"
     class="rdv-grid"
-    :style="{ '--rdv-top': `${top}px` }"
     data-test="rdv-desktop"
   >
     <div
-      class="rdv-list"
+      ref="list"
+      class="rdv-list linked-list"
       aria-label="Liste des rendez-vous"
       role="region"
     >
       <div
         v-if="!upcoming.length"
         class="rdv-list-empty"
+        data-linked-tools
         data-test="rdv-list-empty"
       >
-        <div>
-          <strong>Aucun rendez-vous à venir</strong>
-          <span>jobA1 prépare ta fiche la veille.</span>
-        </div>
+        <span class="rdv-empty-pill"><AppIcon name="calendar" />Aucun rendez-vous à venir</span>
       </div>
       <template v-if="upcoming.length">
         <h2 class="rdv-list-title">
@@ -158,7 +147,7 @@ watch(() => props.page, () => void nextTick(measure));
           v-for="item in upcoming"
           :key="item.key"
           type="button"
-          class="rdv-item"
+          class="rdv-item list-card"
           :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
           :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
           @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
@@ -172,7 +161,7 @@ watch(() => props.page, () => void nextTick(measure));
             <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
             <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
             <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
-            <span class="list-card-chips">
+            <span class="rdv-chips">
               <span
                 v-if="item.kind === 'orp'"
                 :class="lines.length ? 'green' : ''"
@@ -183,6 +172,25 @@ watch(() => props.page, () => void nextTick(measure));
               >À préparer</span>
             </span>
           </span>
+          <svg
+            v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
+            data-arrow
+            aria-hidden="true"
+            class="list-card-arrow"
+            width="22"
+            height="44"
+            viewBox="0 0 22 44"
+          ><path
+            class="list-card-arrow-fill"
+            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
+          /><path
+            class="list-card-arrow-line"
+            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          /></svg>
         </button>
       </template>
       <template v-if="toNote.length">
@@ -193,7 +201,7 @@ watch(() => props.page, () => void nextTick(measure));
           v-for="item in toNote"
           :key="item.id"
           type="button"
-          class="rdv-item"
+          class="rdv-item list-card"
           :aria-current="selected === pastKey(item) ? 'true' : undefined"
           :data-test="`rdv-to-note-${item.id}`"
           @click="select(pastKey(item))"
@@ -207,6 +215,25 @@ watch(() => props.page, () => void nextTick(measure));
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ pastLine(item) }}</span>
           </span>
+          <svg
+            v-if="selected === pastKey(item)"
+            data-arrow
+            aria-hidden="true"
+            class="list-card-arrow"
+            width="22"
+            height="44"
+            viewBox="0 0 22 44"
+          ><path
+            class="list-card-arrow-fill"
+            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
+          /><path
+            class="list-card-arrow-line"
+            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          /></svg>
         </button>
       </template>
       <template v-if="noted.length">
@@ -217,7 +244,7 @@ watch(() => props.page, () => void nextTick(measure));
           v-for="item in noted"
           :key="item.id"
           type="button"
-          class="rdv-item"
+          class="rdv-item list-card"
           :aria-current="selected === pastKey(item) ? 'true' : undefined"
           :data-test="`rdv-item-passe-${item.id}`"
           @click="select(pastKey(item))"
@@ -231,13 +258,33 @@ watch(() => props.page, () => void nextTick(measure));
             <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
             <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
           </span>
+          <svg
+            v-if="selected === pastKey(item)"
+            data-arrow
+            aria-hidden="true"
+            class="list-card-arrow"
+            width="22"
+            height="44"
+            viewBox="0 0 22 44"
+          ><path
+            class="list-card-arrow-fill"
+            d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
+          /><path
+            class="list-card-arrow-line"
+            d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          /></svg>
         </button>
       </template>
     </div>
 
-    <div
+    <LinkedDetail
       v-if="selected || (editing && page.meeting)"
       class="rdv-detail"
+      :list="list"
       data-test="rdv-detail"
     >
       <!-- Le rendez-vous ORP prévu : la feuille, ce que tu apportes, tes questions, ce qui a été convenu la dernière fois. -->
@@ -247,7 +294,7 @@ watch(() => props.page, () => void nextTick(measure));
         class="rdv-detail-body"
         data-test="rdv-detail-orp"
       >
-        <div class="rdv-detail-head">
+        <div class="rdv-detail-head rdv-card">
           <CalendarDate
             v-bind="cal(nextOrp.at)"
             tone="orp"
@@ -267,7 +314,7 @@ watch(() => props.page, () => void nextTick(measure));
             test-id="rdv-more"
           />
         </div>
-        <div class="rdv-detail-actions">
+        <div class="rdv-detail-actions rdv-card">
           <button
             type="button"
             class="primary"
@@ -290,7 +337,7 @@ watch(() => props.page, () => void nextTick(measure));
         <section
           v-if="lines.length"
           aria-labelledby="rdv-brings"
-          class="rdv-detail-section"
+          class="rdv-detail-section rdv-card"
         >
           <h2 id="rdv-brings">
             Ce que tu apportes
@@ -308,7 +355,7 @@ watch(() => props.page, () => void nextTick(measure));
         </section>
         <section
           aria-labelledby="rdv-questions"
-          class="rdv-questions-box"
+          class="rdv-questions-box rdv-card"
           data-test="rdv-questions"
         >
           <div>
@@ -369,7 +416,7 @@ watch(() => props.page, () => void nextTick(measure));
         <section
           v-if="lastNoted"
           aria-labelledby="rdv-last"
-          class="rdv-detail-section"
+          class="rdv-detail-section rdv-card"
         >
           <h2 id="rdv-last">
             Convenu la dernière fois
@@ -387,7 +434,7 @@ watch(() => props.page, () => void nextTick(measure));
         class="rdv-detail-body"
         data-test="rdv-detail-interview"
       >
-        <div class="rdv-detail-head">
+        <div class="rdv-detail-head rdv-card">
           <CalendarDate
             v-bind="cal(selectedInterview.at)"
             :size="56"
@@ -406,7 +453,7 @@ watch(() => props.page, () => void nextTick(measure));
             </p>
           </div>
         </div>
-        <div class="rdv-detail-actions">
+        <div class="rdv-detail-actions rdv-card">
           <button
             type="button"
             class="primary"
@@ -425,7 +472,7 @@ watch(() => props.page, () => void nextTick(measure));
         class="rdv-detail-body rdv-detail-past"
         data-test="rdv-detail-past"
       >
-        <div class="rdv-detail-head">
+        <div class="rdv-detail-head rdv-card">
           <CalendarDate
             v-bind="cal(selectedPast.starts_at)"
             :tone="selectedPast.outcome_at ? 'past' : 'orp'"
@@ -440,6 +487,7 @@ watch(() => props.page, () => void nextTick(measure));
         </div>
         <OrpOutcomeInline
           :key="selectedPast.id"
+          class="rdv-card"
           :meeting="selectedPast"
           :target="page.target"
           :next="nextOrp?.kind === 'orp' ? page.meeting : null"
@@ -456,64 +504,64 @@ watch(() => props.page, () => void nextTick(measure));
         @saved="emit('saved', $event)"
         @cancel="emit('cancel')"
       />
-    </div>
+    </LinkedDetail>
   </div>
 </template>
 
 <style>
-/* Valeurs de la maquette (CandidaturesOrdinateurB, onglet Rendez-vous) : liste de 480, écart 24 ; cartes de 104 aux
-   marges 14/16, écart 14 ; icône calendrier de 44 (56 dans le détail) ; détail blanc aux coins de 24, marges 24/28. */
+/* Valeurs de la planche CandidaturesOrdinateurB, onglet Rendez-vous (maquette du 15 novembre, §14) : la même liaison
+   qu'Offres et Envoyées (LinkedDetail, liste de 532 px). Cartes de 104 au minimum, marges 14/18,5, contour de 1,5
+   (--card-line), coins de 18, écart 10 ; la carte choisie en 16 avec un contour de 2. Titres de groupe à 14/4/8. Le
+   détail : une carte en-tête (24/28/24/32, coins de 24) puis chaque bloc en carte (marge de 32), 16 px entre elles. */
 .rdv-grid {
-  --rdv-3: 3px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-22: 22px; --rdv-26: 26px; --rdv-28: 28px; --rdv-15: 15px; --rdv-lh-title: 1.23; --rdv-lh-text: 1.45;
-  display: flex; gap: var(--space-6); height: calc(100dvh - var(--rdv-top, 0px) - var(--space-6)); min-height: 20rem;
+  --rdv-2: 2px; --rdv-3: 3px; --rdv-14: 14px; --rdv-18-5: 18.5px; --rdv-17: 17px; --rdv-18: 18px; --rdv-21: 21px; --rdv-24: 24px; --rdv-28: 28px; --rdv-30: 30px;
+  --rdv-15: 15px; --rdv-lh-text: 1.45;
+  display: flex; align-items: stretch; gap: 0; height: calc(100dvh - var(--linked-top, 0px)); min-height: 20rem; box-sizing: border-box; padding-top: var(--space-1);
 }
-.rdv-list { flex: none; width: 480px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-2) var(--space-4) 0; }
-.rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) var(--space-1); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-list { display: flex; flex-direction: column; }
+.rdv-list-title { display: flex; align-items: baseline; gap: var(--space-2); margin: 0; padding: var(--rdv-14) var(--space-1) var(--space-2); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.rdv-item + .rdv-item { margin-top: calc(var(--space-2) + var(--rdv-2)); }
 .rdv-item {
-  flex: none; display: flex; align-items: center; gap: var(--rdv-14); box-sizing: border-box; height: 104px; width: 100%; padding: var(--rdv-14) var(--space-4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); font: inherit; text-align: left;
+  flex: none; display: flex; align-items: center; gap: var(--space-2) var(--rdv-14); box-sizing: border-box; min-height: 104px; padding: var(--rdv-14) var(--rdv-18-5);
+  background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--rdv-18); color: var(--text); font: inherit; text-align: left;
 }
 button.rdv-item { cursor: pointer; }
 button.rdv-item:hover { border-color: var(--field-border); }
-.rdv-item[aria-current="true"] {
-  padding: calc(var(--rdv-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
-  background: color-mix(in srgb, var(--primary-soft) 45%, var(--surface));
-}
-.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-3); }
+.rdv-item[aria-current="true"], button.rdv-item[aria-current="true"]:hover { max-width: none; padding: var(--space-4); border: 2px solid var(--primary-graphic); }
+.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-2); }
 .rdv-item-kicker { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-item-title, .rdv-item-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.rdv-item-title { font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-item-title { font-size: var(--font-body); line-height: var(--rdv-21); font-weight: var(--weight-bold); }
 .rdv-item-sub { font-size: var(--font-small); color: var(--text-secondary); }
-.rdv-item .list-card-chips { display: flex; gap: var(--space-1); margin-top: var(--rdv-3); overflow: hidden; }
-/* Les puces de ListCard (son CSS n'est pas chargé sur cette page). */
-.rdv-item .list-card-chips > * {
+.rdv-chips { display: flex; gap: var(--space-1); margin-top: var(--rdv-3); overflow: hidden; }
+.rdv-chips > * {
   flex: none; padding: var(--rdv-3) var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; font-size: var(--font-caption);
   font-weight: var(--weight-semibold); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-tertiary);
 }
-.rdv-item .list-card-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
-.rdv-item .list-card-chips > .green { background: var(--success-soft); color: var(--success); }
-.rdv-detail {
-  flex: 1; min-width: 0; overflow-y: auto; box-sizing: border-box; padding: var(--space-6) var(--rdv-28);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--space-6);
+.rdv-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
+.rdv-chips > .green { background: var(--success-soft); color: var(--success); }
+/* « Aucun rendez-vous à venir » : la pastille en haut de la liste, alignée sur les cartes, un trait dessous (480 px). */
+.linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-cover) + var(--space-1)) calc(var(--space-2) + var(--rdv-2)) calc(var(--linked-room) + var(--space-1)); }
+.rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-room); right: var(--linked-cover); bottom: 0; border-bottom: 1px solid var(--line); }
+.rdv-list-empty + .rdv-list-title { margin-top: calc(var(--space-1) + var(--rdv-2)); }
+.rdv-empty-pill {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); white-space: nowrap;
+  background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-semibold);
 }
-.rdv-detail-body { display: flex; flex-direction: column; gap: var(--rdv-22); }
-.rdv-detail-head { display: flex; align-items: flex-start; gap: var(--rdv-18); }
+.rdv-empty-pill svg { width: var(--space-4); height: var(--space-4); }
+.rdv-detail-body { flex: none; display: flex; flex-direction: column; gap: var(--space-4); }
+.rdv-card { box-sizing: border-box; padding: var(--space-6) var(--space-8); background: var(--surface); border: 1px solid var(--line); border-radius: var(--rdv-24); }
+.rdv-detail-head.rdv-card { flex: none; display: flex; align-items: flex-start; gap: var(--space-4); margin-top: var(--space-6); padding: var(--space-6) var(--rdv-28) var(--space-6) var(--space-8); }
 .rdv-detail-head > div:not(.more-menu) { flex: 1; min-width: 0; }
-/* Le « ⋯ » du détail à la hauteur de « Nouveau rendez-vous », sur la même ligne (44 px, audit des contrôles). */
 .rdv-detail-head .more-button { min-width: var(--target-min); min-height: var(--target-min); }
-.rdv-detail-kicker { font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.rdv-detail-head h1 { margin: var(--space-1) 0 0; font-size: var(--rdv-26); line-height: var(--rdv-lh-title); font-weight: var(--weight-heavy); }
-.rdv-detail-head p { margin: var(--space-1) 0 0; font-size: var(--font-body); color: var(--text-secondary); overflow-wrap: anywhere; }
-/* Un rendez-vous passé (lot 14, gabarit §2) : calendrier de 56, H2 de 24 en 800, la ligne de 15 dessous, rien d'autre. */
-.rdv-detail-past { --rdv-24: 24px; --rdv-30: 30px; gap: var(--rdv-18); }
-.rdv-detail-past .rdv-detail-head { gap: var(--space-4); }
-.rdv-detail-past .rdv-detail-head h2 { margin: 0; font-size: var(--rdv-24); line-height: var(--rdv-30); font-weight: var(--weight-heavy); color: var(--text); }
-.rdv-detail-past .rdv-detail-head p { font-size: var(--font-label); }
-.rdv-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.rdv-detail-kicker { display: block; margin-bottom: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.rdv-detail-head :is(h1, h2) { margin: 0; font-size: var(--rdv-24); line-height: var(--rdv-30); font-weight: var(--weight-heavy); color: var(--text); }
+.rdv-detail-head p { margin: var(--space-1) 0 0; font-size: var(--font-label); color: var(--text-secondary); overflow-wrap: anywhere; }
+.rdv-detail-actions { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .rdv-detail-actions :is(button, a) { min-height: var(--btn-secondary); padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .rdv-detail-ready { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--success); }
-.rdv-detail-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.rdv-detail-section { flex: none; display: flex; flex-direction: column; gap: var(--space-3); }
 .rdv-detail-section h2, .rdv-questions-box .rdv-questions-title { margin: 0; font-size: var(--rdv-18); font-weight: var(--weight-bold); }
 .rdv-detail-section p { margin: 0; font-size: var(--rdv-15); line-height: var(--rdv-lh-text); color: var(--text-tertiary); }
 .rdv-brings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
@@ -521,7 +569,7 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-brings span { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .rdv-brings strong { font-size: var(--rdv-17); line-height: var(--leading-tight); }
 .rdv-brings small { font-size: var(--font-small); color: var(--text-secondary); }
-.rdv-questions-box { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4) var(--space-5); border: 1px solid var(--line); border-radius: var(--space-4); }
+.rdv-questions-box { flex: none; display: flex; flex-direction: column; gap: var(--space-1); }
 .rdv-questions-box > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 .rdv-questions-box > div > span { font-size: var(--font-small); color: var(--text-secondary); }
 .rdv-questions-box ul { margin: 0; padding: 0; list-style: none; }
@@ -530,10 +578,9 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-questions-box > .link { align-self: flex-start; min-height: var(--target-min); padding: 0 var(--space-1); font-weight: var(--weight-bold); }
 .rdv-question-new { display: flex; gap: var(--space-2); }
 .rdv-question-new input { flex: 1; min-width: 0; }
-.rdv-detail .rdv-form { max-width: 560px; }
-/* Aucun rendez-vous à venir : une ligne de texte et « Ajouter » (44 px, en pilule), un trait dessous, sans carte. */
-.rdv-list-empty { flex: none; display: flex; align-items: center; gap: var(--rdv-14); padding: var(--space-1) var(--space-1) var(--space-2); border-bottom: 1px solid var(--line); }
-.rdv-list-empty > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.rdv-list-empty strong { font-size: var(--rdv-15); }
-.rdv-list-empty span { font-size: var(--font-caption); color: var(--text-secondary); }
+/* « Ce qui a été convenu » : la carte de contenu (4/32/0), sans le trait qui l'ouvrait ; « Enregistrer » collé en bas. */
+.outcome-inline.rdv-card { flex: none; margin: 0; padding: var(--space-1) var(--space-8) 0; border: 1px solid var(--line); }
+.outcome-inline.rdv-card > .detail-overline { padding-top: var(--space-6); }
+.outcome-inline.rdv-card .outcome-inline-actions { border-bottom-left-radius: var(--rdv-24); border-bottom-right-radius: var(--rdv-24); }
+.rdv-detail .rdv-form { max-width: 560px; margin-top: var(--space-6); }
 </style>
