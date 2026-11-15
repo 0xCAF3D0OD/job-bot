@@ -182,6 +182,12 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Rappels d'échéance obligatoire (remise des preuves ORP, veille d'un rendez-vous ORP) : jamais coupés par le jour de repos. Un jour de repos, ils partent si l'échéance tombe au plus tard le prochain jour normal ; sinon ils sont décalés au prochain jour normal, à la même heure (Kevin, 15.11.2026, 12 h 45).
 - Trier à 0 offre : « Rien à trier pour l'instant » sur l'état vide commun (§13) : mascotte de FinDuTriAucune, titre manuscrit, pastille « Offres collectées chaque jour », boutons « Voir mes candidatures » (principal) et « Gérer mes alertes » (contour) ; ni éventail vide ni Écarter / Garder (Kevin, 15.11.2026, 12 h 45).
 
+## Formations ordinateur, plus de « Module terminé » (Kevin, 15.11.2026, 16 h 33)
+
+- Dans « En cours » de la vue d'ensemble Formations sur ordinateur, « Module terminé » et ses boutons − et + sont retirés : « Module N sur 12 » avec la barre suffit, comme sur la planche BilanOrdinateur.
+- « Marquer comme terminée » (au dernier module) et « Noter l'avancement » restent. Le téléphone (Suivies) garde le compteur jusqu'à sa propre page.
+- Le compte se note dans le panneau « Noter l'avancement » : champ « Modules faits » (nombre, de 0 au nombre de modules, libellé visible), sous « Nombre de modules ». Au-delà du total, rien n'est enregistré et « Pas plus de N modules » s'affiche sous le champ. La carte montre ensuite « Module N sur 12 » (Kevin, 15.11.2026, 18 h 01).
+
 ## Offre ajoutée à la main, notée comme les autres (Kevin, 15.11.2026, 16 h 33 et 16 h 39)
 
 - Une offre ajoutée à la main est notée comme les autres, quel que soit son statut (écartée par les critères, gardée, en préparation, envoyée). La note part dès l'ajout.
@@ -191,13 +197,6 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
 
 ## Carte épinglée de Rendez-vous, date en icône calendrier (Kevin, 15.11.2026, 16 h 42)
-## Formations ordinateur, plus de « Module terminé » (Kevin, 15.11.2026, 16 h 33)
-
-- Dans « En cours » de la vue d'ensemble Formations sur ordinateur, « Module terminé » et ses boutons − et + sont retirés : « Module N sur 12 » avec la barre suffit, comme sur la planche BilanOrdinateur.
-- « Marquer comme terminée » (au dernier module) et « Noter l'avancement » restent. Le téléphone (Suivies) garde le compteur jusqu'à sa propre page.
-- Le compte se note dans le panneau « Noter l'avancement » : champ « Modules faits » (nombre, de 0 au nombre de modules, libellé visible), sous « Nombre de modules ». Au-delà du total, rien n'est enregistré et « Pas plus de N modules » s'affiche sous le champ. La carte montre ensuite « Module N sur 12 » (Kevin, 15.11.2026, 18 h 01).
-
-## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
 
 - Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
