@@ -167,11 +167,15 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(host.find("[data-test=offer] .list-card-logo").text()).toBe("LD");
   });
 
-  it("aucune offre avec des filtres : ce qui filtre, en mots, et « Modifier les filtres »", async () => {
+  it("aucune offre avec des filtres (AucuneOffre, §17) : les filtres en pastilles retirables, « Modifier les filtres », « Tout effacer », sans « Autres offres »", async () => {
     const wrapper = await mountAt("/offres?note=70&taux=80", []);
     const empty = wrapper.find("[data-test=offers-empty]");
     expect(empty.find(".face-state-title").text()).toBe("Aucune offre avec ces filtres");
-    expect(empty.text()).toContain("Note minimale : Proche et plus, Taux minimum : 80 %. Élargis un critère pour voir plus d’offres.");
+    const chips = empty.findAll(".offers-empty-chip");
+    expect(chips.map((c) => c.attributes("aria-label"))).toEqual(["Retirer le filtre Note minimale : Proche et plus", "Retirer le filtre Taux minimum : 80 %"]);
+    expect(empty.find("[data-test=offers-reset]").text()).toBe("Tout effacer");
+    expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
+    expect(wrapper.find(".offers-other-cap").exists()).toBe(false);
     expect(empty.find("[data-test=offers-edit-filters]").classes()).toContain("primary");
     // Les 4 personnages du logo (maquette AucuneOffre, §15) : la scène « aucune-offre », 330 px, seule sur l'écran.
     const person = empty.find("[data-illustration=troupe]");

@@ -308,14 +308,14 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("« Partager l’annonce » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
+  it("« Partager » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
     phone();
     const shareFn = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, share: shareFn });
     const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/poste" }));
     const share = async () => {
       await wrapper.find("[data-test=detail-more]").trigger("click");
-      await wrapper.find("[data-test=offer-action-share] button").trigger("click");
+      await wrapper.find("[data-test=offer-action-share]").trigger("click");
     };
     await share();
     expect(shareFn).toHaveBeenCalledWith(expect.objectContaining({ url: "https://exemple.ch/poste" }));
@@ -339,17 +339,19 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » : Écarter, J’ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
+  it("la feuille « ⋯ » (ActionsOffre, §17) : J’ai déjà postulé, Écarter, puis les actions de la fiche, Annuler à part", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
-    const titles = sheet.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles.slice(0, 2)).toEqual(["Écarter l’offre", "J’ai déjà postulé"]);
+    const titles = sheet.findAll(".offer-action").map((t) => t.text());
+    expect(titles.slice(0, 2)).toEqual(["J’ai déjà postulé", "Écarter l’offre"]);
+    expect(titles).toContain("Partager");
+    expect(sheet.find("[data-test=offer-actions-cancel]").text()).toBe("Annuler");
     expect(titles).toContain("Signaler comme expirée");
     expect(titles).toContain("Cette note ne me correspond pas");
     expect(titles).not.toContain("Plus tard");
-    await sheet.find("[data-test=offer-action-score-correction-menu] button").trigger("click");
+    await sheet.find("[data-test=offer-action-score-correction-menu]").trigger("click");
     expect(wrapper.find("[data-test=score-correction-sheet] .score-correction-card.bare").exists()).toBe(true);
     vi.unstubAllGlobals();
   });

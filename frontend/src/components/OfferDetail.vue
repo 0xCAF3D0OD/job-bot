@@ -194,7 +194,8 @@ const tags = computed(() => {
   const received = o.first_seen_at ? dateInList(o.first_seen_at) : "";
   return [
     ...(rate ? [{ test: "rate", text: rate }] : []),
-    { test: "contract", text: o.employment_type || "Contrat non précisé" },
+    // Offre provisoire sur téléphone (§17 du 15 novembre) : pas de pastille « Contrat non précisé ».
+    ...(o.employment_type || !(sub.value && provisional.value) ? [{ test: "contract", text: o.employment_type || "Contrat non précisé" }] : []),
     ...(remote ? [{ test: "remote", text: remote }] : []),
     ...(received ? [{ test: "received", text: /^\d/.test(received) ? `Reçue ${dateInSentence(o.first_seen_at)}` : `Reçue ${received}` }] : []),
   ];
@@ -394,7 +395,7 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
     items.push(
       o.expired_at
         ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
-        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "clock-off", run: () => emit("expiry", true) },
     );
   }
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
@@ -416,11 +417,11 @@ const menuItems = computed<MoreMenuItem[]>(() => {
     items.push(
       o.expired_at
         ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
-        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "clock-off", run: () => emit("expiry", true) },
     );
   }
   if (withBar.value && scored.value) {
-    items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
+    items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
   }
   if (assistant.available.value) {
     items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
@@ -441,12 +442,12 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     items.push(
       o.expired_at
         ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
-        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "clock-off", run: () => emit("expiry", true) },
     );
   }
-  if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
+  if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
-  if (shareUrl.value) items.push({ label: "Partager l’annonce", test: "share", icon: "upload", run: () => void share() });
+  if (shareUrl.value) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
@@ -541,7 +542,7 @@ watch(
 
 <template>
   <article
-    :class="['detail-panel', { 'offer-cards': columns, 'offer-blocks': sub }]"
+    :class="['detail-panel', { 'offer-cards': columns, 'offer-blocks': sub, 'offer-provisional': sub && provisional }]"
     data-test="offer-detail"
   >
     <!-- La sous-page du téléphone (maquette Offre du 14 novembre, §6) : la flèche de retour à gauche ; Garder et « ⋯ » à
@@ -1167,7 +1168,7 @@ watch(
             </div>
           </div>
           <ul
-            v-if="matchLines.length && !sub && !columns"
+            v-if="matchLines.length && (sub ? provisional : !columns)"
             class="match-lines"
             data-test="match-lines"
           >
@@ -1384,6 +1385,7 @@ watch(
       <!-- Récapitulatif du 11 novembre, PR 33 point 4 (cible_entreprise) : plus de bandeau bleu ni de ligne
            repliable ; le libellé gris au-dessus, la valeur en gras dessous, le bouton copier à droite. -->
       <section
+        v-if="!(sub && provisional) || offer.company || offer.company_address"
         class="offer-company"
         aria-labelledby="offer-company-title"
         data-test="company-section"
@@ -1684,6 +1686,22 @@ watch(
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
+  /* Offre provisoire (OffreProvisoire, §17 du 15 novembre) : l'en-tête sans carte, sur le fond : logo de 56 px, 12 px, titre
+     28/34, entreprise et lieu 16 px, pastilles à contour (trait de 1 px, rayon 8) ; dans la carte de la note, les points
+     tirés de l'extrait (coche de 18 px, 15/20) et « Voir la compatibilité » en texte foncé. « L'entreprise » en section
+     comme « Le poste » (titre 16/700, texte 15 px ; décision de Kevin du 15.11). */
+  .offer-provisional { --prov-34: 34px; }
+  .offer-provisional > .detail-offer { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ob-12); margin: var(--space-1) var(--ob-margin) 0; padding: 0; background: none; border: 0; }
+  .offer-provisional .detail-title h2 { font-size: var(--ob-28); line-height: var(--prov-34); font-weight: var(--weight-bold); letter-spacing: -0.015em; }
+  .offer-provisional .detail-title .detail-sub { font-size: var(--font-body); line-height: var(--ob-24); }
+  .offer-provisional .offer-tags { margin-top: 0; }
+  .offer-provisional .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); }
+  .offer-provisional .match-card { margin-top: var(--space-5); }
+  .offer-provisional .match-lines { margin-top: var(--ob-gap); font-size: var(--font-label); line-height: var(--space-5); }
+  .offer-provisional .compat-open { width: 100%; margin: var(--ob-gap) 0 calc(-1 * var(--ob-gap)); padding: 0; border-radius: 0; color: var(--text); }
+  .offer-provisional .compat-open > .icon { width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
+  .offer-provisional .offer-company-cap { font-size: var(--font-body); font-weight: var(--weight-bold); letter-spacing: 0; text-transform: none; color: var(--text); }
+  .offer-provisional .offer-company { font-size: var(--font-label); }
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
      retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
      refus séparé par un filet, 16 px dessus (14 dans la maquette, sur la grille de 4), 12 px entre ses lignes ; puis

@@ -248,7 +248,7 @@ const families = computed(() =>
    en capitales ; critères 12 px au-dessus et en dessous, trait dessous, icône 24 à 8 px du haut ; libellé 13/16,
    valeur 15/20 700 ; lien de bas de 56 px. */
 .compat-sum { --compat-sum-gap: 20px; --compat-ring: 56px; display: flex; align-items: center; gap: var(--space-4); padding-bottom: var(--compat-sum-gap); border-bottom: 1px solid var(--line-soft); }
-.compat-sum .score-ring.large { flex: none; width: var(--compat-ring); height: var(--compat-ring); }
+.compat-sum .score-ring.large { flex: none; width: var(--compat-ring); height: var(--compat-ring); margin: 0; }
 .compat-sum-text { min-width: 0; }
 .compat-verdict { display: block; font-size: var(--font-title); line-height: var(--space-6); }
 .compat-verdict.is-very-close, .compat-verdict.is-close { color: var(--success); }

@@ -101,6 +101,9 @@ const { phone: wide } = usePhone("(min-width: 1024px)");
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
 const chips = computed(() => activeChips(filters.value));
+// Aucune offre avec ces filtres, sur téléphone (AucuneOffre, §13 et §17 du 15 novembre) : les filtres actifs passent en
+// pastilles sous le titre, sans la rangée du haut ni le bloc « Autres offres ».
+const phoneEmptyFiltered = computed(() => phone.value && !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
 // « Note minimale : Proche et plus, Taux : 80 % et plus. Élargis un critère pour voir plus d'offres. »
 const emptyFiltersLine = computed(() => {
   const q = filters.value.q.trim();
@@ -717,6 +720,7 @@ onUnmounted(() => {
       </div>
     </component>
     <OfferFilterChips
+      v-if="!phoneEmptyFiltered"
       :chips="chips"
       @update="update"
       @reset="reset"
@@ -869,7 +873,27 @@ onUnmounted(() => {
           :class="{ 'character-state-wide': wide && !phone }"
           data-test="offers-empty"
         >
-          <p>{{ emptyFiltersLine }}</p>
+          <div
+            v-if="phone"
+            class="offers-empty-chips"
+            role="group"
+            aria-label="Filtres actifs"
+          >
+            <button
+              v-for="chip in chips"
+              :key="chip.key"
+              type="button"
+              class="offers-empty-chip"
+              :aria-label="`Retirer le filtre ${chip.label}`"
+              :data-test="`empty-chip-remove-${chip.key}`"
+              @click="update(chip.patch)"
+            >
+              {{ chip.label }}<AppIcon name="close" />
+            </button>
+          </div>
+          <p v-else>
+            {{ emptyFiltersLine }}
+          </p>
           <div class="face-state-actions">
             <button
               v-if="wide && !phone"
@@ -889,6 +913,15 @@ onUnmounted(() => {
               Modifier les filtres
             </button>
           </div>
+          <button
+            v-if="phone"
+            type="button"
+            class="link offers-empty-clear"
+            data-test="offers-reset"
+            @click="reset"
+          >
+            Tout effacer
+          </button>
           <!-- Sous un trait de 420 px (§2.7, AucuneOffreOrdinateur) : la candidature spontanée, qui ouvre « Ajouter ». -->
           <div
             v-if="wide && !phone"
@@ -970,7 +1003,7 @@ onUnmounted(() => {
         />
         <!-- Téléphone, bas de la liste (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
              CandidaturesSombre, état bas-de-liste) : un bouton contour pleine largeur, puis le groupe « Autres offres ». -->
-        <template v-if="phone && !loading && !failed">
+        <template v-if="phone && !loading && !failed && !phoneEmptyFiltered">
           <button
             v-if="remaining > 0"
             type="button"
@@ -1189,6 +1222,13 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* AucuneOffre (téléphone) : pastilles de 36 px bleu clair, 14/600, croix de 14 px, 8 px entre elles, centrées ; puis le
+   bouton et le lien « Tout effacer » de 44 px. */
+.offers-empty-chips { --chip-36: 36px; --chip-14: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin-top: var(--space-2); }
+.offers-empty-chip { display: inline-flex; align-items: center; gap: var(--space-1); height: var(--chip-36); min-height: 0; padding: 0 var(--space-2) 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.offers-empty-chip .icon { width: var(--chip-14); height: var(--chip-14); stroke-width: 2.6; }
+.offers-empty-clear { min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.offers-empty-chips + .face-state-actions .primary { --empty-52: 52px; min-height: var(--empty-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
 /* Le message « Offre écartée » du téléphone (§10.1, captures Offre--ecartee et OffreSombre--ecartee) : au-dessus de la
    barre du bas, à 20 px des bords, fond --text, texte --bg, « Annuler » en --inverse-link (jamais en orange, D30). */
 @media (max-width: 820px) {
