@@ -103,3 +103,22 @@ La cause : `style.css` (327 Ko bruts) est chargé en entier dès le premier écr
 Retirer ces règles ferait gagner environ 0,3 Ko en gzip. Le gain important viendrait de découper `style.css` par page, comme le JavaScript (docs/117 §3) : Accueil chargerait environ 33 Ko de CSS brut au lieu de 334. C'est un chantier à part, à proposer.
 
 **Les 8 avatars PNG** (`public/avatars/avatar-N-256.png`, 610 Ko) : retirés le 2026-11-13 avec l'accord de Kevin. L'avatar affiché (en-tête, menu du compte, choix de l'image) passe par `ProfileImage.vue`, qui appelle `avatarSrc()` de `useProfileImage.ts` : `/avatars/avatar-N-128.webp` jusqu'à 48 px, `/avatars/avatar-N-256.webp` au-delà. Aucun code ne lisait les PNG : c'étaient les mêmes dessins que les WebP, et des copies de `docs/mobile/illustrations/avatars/`, qui restent dans la maquette. Il n'y a plus d'exception au WebP dans `poids.mjs`.
+
+## Regrouper ce qui se charge ensemble (#664, 15.11.2026)
+
+`js-total` et `css-total` additionnent **tous** les fichiers, chacun compressé à part. Découper davantage (une page ou un bloc chargé à la demande) n'allège donc pas ces deux mesures : chaque nouveau fichier perd le contexte de compression des autres. Essai du 15.11 : `JobupCodeBox` en chargement différé, + 0,6 Ko de JS total. Découper ne sert qu'aux mesures d'une page (`js-premier`, `js-candidatures`…).
+
+Ce qui allège le total, c'est l'inverse : regrouper des fichiers **toujours chargés ensemble**. `vite.config.ts` met dans un seul fichier, `commun-*.js`, ce que toute page charge avec l'application : Vue, vue-router, openapi-fetch (`node_modules`) et nos modules que l'entrée importe toujours (`api/client.ts`, `icons.ts`, `dates.ts`, `brandPaths.ts`, `AppIcon.vue`). Avant, Vue faisait deux fichiers (`runtime-core`, `runtime-dom`) dont le nom long revenait dans l'import de 84 pages. `includeDependenciesRecursively: false` empêche le groupe d'aspirer leurs dépendances (sinon l'entrée et des pages chargées plus tard s'y retrouvent).
+
+Mesure sur main + #722 + #724 + #723 + #725 : JS total 427,4 → 422,6 Ko (− 4,8). Chaque page télécharge 1,6 à 2,6 Ko de JS en moins ; le CSS ne change pas.
+
+Pistes mesurées sans gain suffisant (même ensemble) :
+
+| Piste | Gain gzip | Retenue |
+|---|---|---|
+| Icônes : SVG en ligne dupliqués entre composants | < 0,1 Ko (seules les flèches de liaison se répètent, dans un même fichier) | non |
+| Dépendances remplacées par du natif | 0 : seules Vue, vue-router, openapi-fetch et la police ; aucune bibliothèque de dates ou d'utilitaires | sans objet |
+| Doublons clair/sombre de `style.css` passés par les jetons | 0,0 Ko (gzip les compresse déjà ; − 1,2 Ko brut seulement) | non |
+| Cible CSS relevée (Chrome 120, Safari 17, Firefox 121) | − 0,1 Ko, et des navigateurs encore pris en charge perdraient des préfixes | non |
+| Thème Auto posé par le JS, copies `@media (prefers-color-scheme: dark)` retirées | environ − 0,5 Ko CSS, mais un éclair clair au chargement en sombre avant le JS | non, dégrade l'écran |
+| Regrouper aussi les composants partagés de Candidatures | − 8,0 Ko JS et − 0,7 Ko CSS de plus, mais + 13 à + 21 Ko à télécharger sur Connexion, Inscription, Réglages, Alertes… | non |
