@@ -190,3 +190,8 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 
 - « N changements, à vérifier » prend l'orange d'alerte `--warning` (clair #A8540E, sombre #F2A766) : c'est une action à faire, pas une réussite. Remplace le vert de la planche PreparerOrdinateurCVPret.
 - Les lignes de « Ce CV » (et de « Ta candidature », qui partage les mêmes lignes) tiennent dans la carte : largeur 100 %, sans marge négative ; la carte n'a pas de marge sur les côtés, le titre et les lignes portent les 18,5 px. Un texte long est coupé sur une ligne avec points de suspension ; dans « Ce CV », le texte complet est dans l'aria-label de la ligne.
+
+## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
+
+- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
+- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
