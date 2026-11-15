@@ -157,6 +157,8 @@ PUBLIC_SEARCH_PREFIX = "public:"
 # Le lien d'une offre trouvée par la recherche web des premières offres (docs/104) : un
 # intitulé et une adresse, jamais lus ni notés tant qu'aucune autre source ne la montre.
 WEB_LINK_SOURCE = "web"
+# Offre ajoutée à la main (formulaire « Ajouter une offre », extension) : docs/111.
+MANUAL_LINK_SOURCE = "manual"
 # L'e-mail d'un expéditeur qui n'est aucun site (Stripe, une banque…) : ni copie, ni objet, ni
 # lien ; seul son Message-ID reste, pour que la collecte ne le relise pas. Hors du journal.
 IGNORED_KIND = "ignored"

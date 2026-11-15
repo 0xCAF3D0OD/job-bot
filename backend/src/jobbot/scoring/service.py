@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts, plans, platform
 from jobbot.db.models import (
+    MANUAL_LINK_SOURCE,
     WEB_LINK_SOURCE,
     Evaluation,
     LlmBatch,
@@ -54,6 +55,10 @@ DIRECT_LIMIT = 20
 ESTIMATE_USD = Decimal("0.03")
 TO_SCORE = (OfferStatus.NEW, OfferStatus.TO_REVIEW)
 KEPT_ASIDE = (OfferStatus.LATER, OfferStatus.PREPARING)
+# Offres ajoutées à la main : notées quel que soit leur statut à partir de ce moment (minuit
+# du 16 novembre 2026 à Zurich). Les plus anciennes jamais notées : commande ponctuelle
+# `jobbot noter-offres-manuelles` (décision de Kevin du 2026-11-15).
+MANUAL_SCORED_SINCE = datetime(2026, 11, 15, 23, 0, tzinfo=UTC)
 
 # Remplaçable en test par un faux client.
 make_client = client_factory
@@ -199,6 +204,17 @@ async def candidates(
     other_link = select(OfferLink.offer_id).where(
         OfferLink.offer_id == Offer.id, OfferLink.source != WEB_LINK_SOURCE
     )
+    # Ajoutée à la main : notée comme les autres quel que soit son statut (écartée par les
+    # critères, gardée, en préparation, envoyée), tant qu'elle n'a jamais eu de note
+    # (décision de Kevin du 2026-11-15). Une note manquée ne se relance pas sans fin. Les
+    # offres ajoutées avant MANUAL_SCORED_SINCE passent par `jobbot noter-offres-manuelles`.
+    manual_link = select(OfferLink.offer_id).where(
+        OfferLink.offer_id == Offer.id, OfferLink.source == MANUAL_LINK_SOURCE
+    )
+    never_scored = or_(
+        Evaluation.id.is_(None),
+        and_(Evaluation.scored_at.is_(None), Evaluation.score_error.is_(None)),
+    )
     rows = await session.scalars(
         select(Offer)
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
@@ -212,7 +228,15 @@ async def candidates(
             # intitulé et un lien, pas d'annonce à noter (docs/104). Revue dans une alerte ou
             # complétée à la main, elle a un autre lien et se note comme les autres.
             or_(~web_link.exists(), other_link.exists()),
-            or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
+            or_(
+                and_(Offer.status.in_(TO_SCORE), or_(*needs)),
+                kept_aside,
+                and_(
+                    manual_link.exists(),
+                    Offer.first_seen_at >= MANUAL_SCORED_SINCE,
+                    never_scored,
+                ),
+            ),
         )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
     )
