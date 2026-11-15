@@ -5,12 +5,10 @@ import { computed, onUnmounted, ref, watch } from "vue";
 // 2026-11-04) : « Module 6 sur 12 · 50 % », la barre, puis « Module terminé » avec − et +. L'écran change
 // tout de suite ; seule la dernière valeur part au serveur, 500 ms après le dernier appui. Au dernier
 // module, « Marquer comme terminée » est proposé, sans changer le statut tout seul.
-// Sur ordinateur, « Module terminé » et ses boutons sont retirés (Kevin, 2026-11-15) : `stepper` faux.
+// Sur ordinateur, « Module terminé » et ses boutons sont retirés (Kevin, 2026-11-15) : `compact`.
 const SAVE_DELAY_MS = 500;
 
-const props = withDefaults(defineProps<{ title: string; total: number; done: number; stepper?: boolean }>(), {
-  stepper: true,
-});
+const props = defineProps<{ title: string; total: number; done: number; compact?: boolean }>();
 const emit = defineEmits<{ save: [done: number]; finish: [done: number] }>();
 
 const count = ref(props.done);
@@ -77,7 +75,7 @@ onUnmounted(flush);
       <span :style="{ width: `${percent}%` }" />
     </div>
     <div
-      v-if="stepper"
+      v-if="!compact"
       class="training-modules-step"
     >
       <span>Module terminé</span>

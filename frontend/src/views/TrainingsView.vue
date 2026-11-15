@@ -320,7 +320,7 @@ onMounted(() => void load());
               </div>
               <TrainingModules
                 v-if="training.mark!.modules_total"
-                :stepper="false"
+                compact
                 :title="training.title"
                 :total="training.mark!.modules_total"
                 :done="training.mark!.modules_done ?? 0"
