@@ -74,7 +74,7 @@ withDefaults(
   padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); text-decoration: none;
 }
 .empty-state-actions svg, .empty-state > .link svg { --es-18: 18px; width: var(--es-18); height: var(--es-18); }
-.empty-state-actions > .secondary { --es-22: 22px; padding-inline: var(--es-22); border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
+.empty-state-actions > .secondary { --es-22: 22px; padding-inline: var(--es-22); border: 1.5px solid var(--button-outline); background: var(--surface); color: var(--text); }
 .empty-state > .link { --es-15: 15px; --es-2: 2px; display: inline-flex; align-items: center; gap: var(--es-2); min-height: var(--target-min); margin-top: var(--es-link); font-size: var(--es-15); font-weight: var(--weight-bold); color: var(--primary-text); }
 @media (min-width: 1024px) {
   .empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }

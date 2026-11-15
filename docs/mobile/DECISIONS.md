@@ -124,3 +124,9 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Avec des barres de défilement classiques (Windows, Linux, Mac avec souris), leur place reste réservée, vide (`scrollbar-gutter: stable`, classe `scrollbars-classic` posée par main.ts) : le logo et l'en-tête ne bougent plus entre une page courte et une page longue, ni pendant le chargement d'une page. Pas de `overflow-y: scroll`, qui laisserait une barre vide en permanence (Kevin, 11 h 31).
 - Bouton « Assistant » : au moins 12 px entre lui et les liens du pied de page ; la marge du bas du pied de page (hauteur du bouton + 16 px, règle existante) suffit.
 - Carte de formation : l'avancement s'écrit « Module 6 sur 12 », comme sur la planche BilanOrdinateur, y compris quand il a été noté en texte libre « module 6/12 » (affichage seulement).
+
+## Contour des boutons secondaires (Kevin, 15.11.2026, 11 h 57)
+
+- `--line-strong` (#D8D4CA) ne change pas : contours de champs, barre de recherche, séparateurs.
+- Nouveau jeton `--button-outline` : #C9C5BA, sombre #4E473E, pour tous les boutons secondaires à contour gris (« Plus de filtres », « Retirer l’accès », « Annuler », pastilles, boutons ronds, « + Ajouter » en pointillé).
+- « Plus de filtres » : le demi-pixel restant (espace 8 au lieu de 6, icône 16,5 au lieu de 18) est accepté.

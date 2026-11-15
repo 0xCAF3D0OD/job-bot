@@ -20,9 +20,12 @@
   --avatar-badge-line: #E5E2D9;
   --avatar-initials: #2445C2;
   --logout-text: #B4371F;
-  /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos et de la bulle de recherche, bordure
-     1,5 px des pilules date et heure, texte désactivé (exempté de contraste, WCAG 1.4.3). */
+  /* Maquette du 8 novembre (docs/143, D20) : bordure des champs au repos, de la barre de recherche et des
+     séparateurs, texte désactivé (exempté de contraste, WCAG 1.4.3). */
   --line-strong: #D8D4CA;
+  /* Contour des boutons secondaires gris (« Plus de filtres », « Retirer l’accès », « Annuler », pastilles et boutons
+     ronds ; planches du 15 novembre, Kevin 15.11) : #C9C5BA, sombre #4E473E. */
+  --button-outline: #C9C5BA;
   /* Trait des cartes (prompt du 9 novembre, PR 1) : #CFCBC1 en clair ; en sombre, le même que --line-strong. */
   --card-line: #CFCBC1;
   /* « Complétons ton profil » (maquettes OnboardingProfil du 10 novembre) : champ désactivé (Fin, « J’y travaille
@@ -230,6 +233,7 @@
     --line: #38322B;
     --line-soft: #2C2722;
     --line-strong: #4E473E;
+    --button-outline: #4E473E;
     --card-line: #4E473E;
     --field-disabled-bg: #2C2722;
     --text-placeholder: #9A9389;
@@ -293,6 +297,7 @@
   --line: #38322B;
   --line-soft: #2C2722;
   --line-strong: #4E473E;
+  --button-outline: #4E473E;
   --card-line: #4E473E;
   --field-disabled-bg: #2C2722;
   --text-placeholder: #9A9389;
@@ -3438,7 +3443,7 @@ main:focus { outline: none; }
 @media (min-width: 821px) {
   .topbar-actions { gap: var(--space-4); }
   .header-round { min-width: var(--target-min); height: var(--target-min); }
-  .header-round.bell-button { --bell-gap: 6px; border: 1.5px solid var(--line-strong); background: var(--surface); }
+  .header-round.bell-button { --bell-gap: 6px; border: 1.5px solid var(--button-outline); background: var(--surface); }
   .header-round.bell-button:hover { background: var(--band); }
   .header-round.bell-button.has-unread { gap: var(--bell-gap); padding: 0 var(--field-pad-x); border-color: transparent; background: var(--peach-soft); color: var(--peach-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
   .header-round.bell-button.has-unread:hover { background: color-mix(in srgb, var(--peach-text) 10%, var(--peach-soft)); }
@@ -4093,9 +4098,9 @@ html.search-open { overflow: hidden; }
 .card-head-count { color: var(--muted); font-weight: var(--weight-regular); }
 .card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 /* Copier : l'icône seule, juste à côté de la valeur, à la hauteur commune des contrôles. */
-/* Prompt du 9 novembre (PR 1) : cercle de 40 px (44 sur téléphone, --control-h), trait 1,5 px --card-line, icône
+/* Prompt du 9 novembre (PR 1) : cercle de 40 px (44 sur téléphone, --control-h), trait 1,5 px --button-outline, icône
    --text ; infobulle « Copier », nom lu « Copier : <libellé> ». */
-.copy-button { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--control-h); height: var(--control-h); padding: 0; border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); vertical-align: middle; }
+.copy-button { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--control-h); height: var(--control-h); padding: 0; border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); vertical-align: middle; }
 .copy-button:hover { background: var(--primary-soft); }
 /* « Afficher plus (4) » : en bas de la carte, le chevron tourne quand c'est ouvert. */
 .show-more { margin-top: var(--space-3); }
@@ -4491,7 +4496,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-current-head span span, .training-kept li > span > span, .training-help { font-size: var(--font-small); color: var(--text-secondary); }
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
 .training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
-.training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
 /* Les puces gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
    (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
 .training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
@@ -4789,7 +4794,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 
 /* Pastilles de suggestions au-dessus du Composer. */
 .suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
-.suggestion-chip { justify-content: center; min-height: 40px; padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.suggestion-chip { justify-content: center; min-height: 40px; padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .suggestion-chip:hover { border-color: var(--primary-graphic); }
 
 /* CalendarDate (D26) : l'icône calendrier qui contient la date. */
@@ -4859,7 +4864,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-confirm strong { font-size: var(--font-title); }
 .dt-confirm-button { justify-content: center; }
 .dt-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line-soft); }
-.dt-shortcut { justify-content: center; min-height: 34px; height: 34px; padding: 0 var(--space-3); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--label-caps); font-weight: var(--weight-semibold); white-space: nowrap; }
+.dt-shortcut { justify-content: center; min-height: 34px; height: 34px; padding: 0 var(--space-3); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--label-caps); font-weight: var(--weight-semibold); white-space: nowrap; }
 .dt-shortcut[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .dt-month { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0 var(--space-2); }
 .dt-month strong { font-size: var(--font-body); }
@@ -4878,7 +4883,7 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-typed .dt-typed-input { flex: 1; min-width: 0; height: 36px; min-height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--field-border); border-radius: var(--radius-sm); background: var(--surface); font-size: var(--font-label); }
 .dt-time-title { font-size: var(--font-small); font-weight: var(--weight-bold); }
 .dt-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
-.dt-slot { justify-content: center; height: 40px; min-height: 40px; padding: 0; border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.dt-slot { justify-content: center; height: 40px; min-height: 40px; padding: 0; border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .dt-slot[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .dt-panel-full { position: fixed; inset: 0; z-index: 60; overflow-y: auto; padding: var(--space-4) var(--space-4) 0; background: var(--bg); }
 .dt-panel-full .dt-panel-head { margin-left: calc(var(--space-2) * -1); }
@@ -4991,7 +4996,7 @@ a.panel-row:hover { background: var(--band); }
   .jobs-actions .jobs-alerts-link .icon { width: 18px; height: 18px; }
   .jobs-actions { --alerts-gap: 28px; --add-pad: 18px; }
   .jobs-alerts-count { margin-right: var(--alerts-gap); font-size: var(--font-label); font-weight: var(--weight-semibold); color: var(--text-secondary); }
-  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   /* Planche CandidaturesOrdinateurB du 13.11 : titre de 32 px, 20 px entre les éléments de la rangée ; le nombre des
      groupes seul. */
   .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); padding-top: var(--space-2); padding-bottom: var(--space-5); }
@@ -5005,7 +5010,7 @@ a.panel-row:hover { background: var(--band); }
   .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
   /* Lot 17 : un champ en pilule a le même focus que le Composer, un seul anneau qui suit son arrondi. */
   .offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
-  .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
 }
 @media (min-width: 1024px) {
@@ -5207,12 +5212,12 @@ html.text-large { font-size: 125%; }
 
 /* --- Feuilles et panneaux, maquette du 14 novembre (§4 ; référence : le panneau « Rendez-vous ORP »,
    RendezVousFeuilleOrdinateurV2). Toutes les feuilles du téléphone et tous les panneaux de l'ordinateur : titre 20/800 ;
-   croix ronde de 44 px, trait de 1,5 px --line-strong (#C9C5BA ; sombre --line, #38322B), fond --surface, à 20 px du
+   croix ronde de 44 px, trait de 1,5 px --button-outline (#C9C5BA ; sombre #4E473E), fond --surface, à 20 px du
    bord droit ; libellés de section en capitales 13/700 gris, espacement .05em. Ordinateur : le panneau est une carte
    flottante, à 16 px du haut, de la droite et du bas, coins de 24 px, ombre 0 12 32 rgba(27,31,42,.2) (sombre : trait de
    1 px --line, ombre rgba(0,0,0,.45)) ; les volets ancrés à un bouton (Ajouter, Nouveau rendez-vous) gardent 420 px et
    commencent à 84 px du haut. Les menus de l'en-tête (Compte, Notifications) ne changent pas. --- */
 :root { --panel-float: 16px; --panel-float-top: 84px; --panel-float-r: 24px; --panel-float-shadow: 0 12px 32px rgba(27,31,42,.2); --panel-float-line: transparent;
-  --panel-close-size: 44px; --panel-close-line: var(--line-strong); --panel-close-edge: 20px; --panel-title-size: 20px; --panel-caps-size: 13px; --panel-close-bw: 1.5px; }
+  --panel-close-size: 44px; --panel-close-line: var(--button-outline); --panel-close-edge: 20px; --panel-title-size: 20px; --panel-caps-size: 13px; --panel-close-bw: 1.5px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); } }
 :root[data-theme="dark"] { --panel-float-shadow: 0 12px 32px rgba(0,0,0,.45); --panel-float-line: var(--line); --panel-close-line: var(--line); }
