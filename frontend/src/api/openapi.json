@@ -9177,7 +9177,7 @@
           "alerts"
         ],
         "summary": "Watch Code",
-        "description": "L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge\nle relevé toutes les 15 secondes de 75 secondes, 10 minutes au plus (une seule attente).",
+        "description": "L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge\nson attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte\nattend.",
         "operationId": "watchSiteCode",
         "responses": {
           "202": {
@@ -14623,6 +14623,11 @@
           "queued": {
             "type": "boolean",
             "title": "Queued"
+          },
+          "mailbox_down": {
+            "type": "boolean",
+            "title": "Mailbox Down",
+            "default": false
           }
         },
         "type": "object",

@@ -416,7 +416,11 @@ async def collect(
             await _clean_guest_box(runtime, guest)
         except MailboxError as exc:
             result.errors.append(exc)
+            # Ni adresse ni code : le type d'erreur seulement.
             log.warning("collect_box_failed", guest_box=True, kind=exc.kind)
+            await site_codes.guest_box_read(runtime, ok=False)
+        else:
+            await site_codes.guest_box_read(runtime, ok=True)
     if result.errors and raise_errors:
         raise result.errors[0]
     return result

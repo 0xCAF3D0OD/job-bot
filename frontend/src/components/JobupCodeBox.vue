@@ -20,6 +20,9 @@ type Code = { code: string; received_at: string; valid_minutes: number };
 const state = ref<"waiting" | "received" | "expired">("waiting");
 const code = ref<Code | null>(null);
 const copied = ref(false);
+// La boîte jobA1 a raté ses 3 dernières lectures (décision de Kevin du 15.11, 19 h 02) : la ligne d'attente le dit, et
+// la relance part à chaque relecture pour revenir à l'attente dès qu'une lecture réussit.
+const down = ref(false);
 // Début de l'attente, dernier code déjà vu (seul un code plus récent compte), minuteurs.
 let since = 0;
 let seen = "";
@@ -33,13 +36,21 @@ function stop(next: "waiting" | "received" | "expired"): void {
   state.value = next;
 }
 
+async function watch(): Promise<void> {
+  try {
+    down.value = !!(await api.POST("/api/alert-searches/watch-code"))?.data?.mailbox_down;
+  } catch {
+    // Hors ligne : la ligne reste telle quelle, la relecture suivante réessaie.
+  }
+}
+
 async function tick(): Promise<void> {
   if (Date.now() - since >= 10 * 60_000) return stop("expired");
   if (document.visibilityState !== "visible") return;
-  // La relance du relevé rapide côté serveur, une fois par minute au plus.
-  if (Date.now() - asked >= 60_000) {
+  // La relance du relevé rapide côté serveur, une fois par minute au plus (à chaque relecture si la boîte est muette).
+  if (down.value || Date.now() - asked >= 60_000) {
     asked = Date.now();
-    void api.POST("/api/alert-searches/watch-code");
+    void watch();
   }
   const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
   if (state.value !== "waiting" || !data || data.received_at === seen) return;
@@ -89,7 +100,14 @@ defineExpose({ restart: wait });
     aria-live="polite"
     data-test="code-box"
   >
-    <template v-if="state === 'waiting'">
+    <template v-if="state === 'waiting' && down">
+      <AppIcon
+        name="alert"
+        class="code-box-down"
+      />
+      <span data-test="code-box-down">La boîte jobA1 ne répond pas. On réessaie dans 1 minute.</span>
+    </template>
+    <template v-else-if="state === 'waiting'">
       <svg
         class="code-box-spinner"
         width="20"
@@ -174,6 +192,7 @@ defineExpose({ restart: wait });
 .code-box-track { stroke: var(--line); }
 .code-box-arc { stroke: var(--primary); }
 .code-box-bang { flex: none; }
+.code-box-down { flex: none; width: 20px; height: 20px; color: var(--orange); }
 .code-box-value { flex: 1; min-width: 0; font-size: var(--code-26); line-height: var(--code-32); font-weight: var(--weight-heavy); letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--text); }
 .code-box-copy, .code-box-resend { flex: none; display: inline-flex; align-items: center; gap: var(--code-6); height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); font-family: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .code-box-copy { background: var(--primary-soft); }

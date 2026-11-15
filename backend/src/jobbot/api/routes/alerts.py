@@ -407,6 +407,8 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
 class ExpectCodeOut(BaseModel):
     # Toujours True depuis le relevé partagé (15.11) : plus de limite par compte.
     queued: bool
+    # La boîte invités a raté ses 3 dernières lectures : l'étape du code le dit (15.11, 19 h 02).
+    mailbox_down: bool = False
 
 
 @router.post("/expect-code", operation_id="expectSiteCode", status_code=status.HTTP_202_ACCEPTED)
@@ -420,7 +422,11 @@ async def watch_code(request: Request) -> ExpectCodeOut:
     """L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
     son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
     attend."""
-    return ExpectCodeOut(queued=await site_codes.expect(_runtime(request), watch=True))
+    runtime = _runtime(request)
+    return ExpectCodeOut(
+        queued=await site_codes.expect(runtime, watch=True),
+        mailbox_down=await site_codes.guest_box_down(runtime),
+    )
 
 
 class LastCodeOut(BaseModel):

@@ -1,1 +1,2 @@
 Code jobup à l'inscription : un relevé partagé lit la boîte toutes les 15 s tant qu'une page attend un code, et la boîte des invités est lue même si Gmail échoue
+- Étape du code jobup : si la boîte jobA1 rate trois lectures de suite, la ligne d'état dit « La boîte jobA1 ne répond pas. On réessaie dans 1 minute. » et revient à l'attente dès qu'une lecture réussit. Le message « Déjà six relevés rapides » disparaît.

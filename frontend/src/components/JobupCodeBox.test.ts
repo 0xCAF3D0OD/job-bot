@@ -145,4 +145,27 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     await vi.advanceTimersByTimeAsync(3 * 60_000);
     expect(POST).toHaveBeenCalledTimes(2);
   });
+
+  it("la boîte jobA1 ne répond pas (3 échecs), puis répond : la ligne d’attente revient", async () => {
+    GET.mockResolvedValue({ data: null });
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: null } });
+    await flushPromises();
+    // Les trois premières lectures ratent : à la relance suivante, le serveur dit que la boîte est muette.
+    POST.mockResolvedValue({ data: { queued: true, mailbox_down: true } });
+    await vi.advanceTimersByTimeAsync(60_000);
+    const box = wrapper.get("[data-test=code-box]");
+    expect(box.text()).toBe("La boîte jobA1 ne répond pas. On réessaie dans 1 minute.");
+    expect(box.attributes("role")).toBe("status");
+    expect(box.find("[data-icon=alert]").exists()).toBe(true);
+    expect(box.text()).not.toMatch(/IMAP|Infomaniak|erreur/i);
+    // Muette, l'étape demande l'état à chaque relecture ; la lecture suivante réussit.
+    const asked = POST.mock.calls.length;
+    POST.mockResolvedValue({ data: { queued: true, mailbox_down: false } });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(POST.mock.calls.length).toBe(asked + 1);
+    expect(box.text()).toBe("En attente du code de jobup…");
+    // Revenue à la normale, la relance reprend son rythme d'une par minute.
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(POST.mock.calls.length).toBe(asked + 1);
+  });
 });

@@ -3430,7 +3430,8 @@ export interface paths {
         /**
          * Watch Code
          * @description L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
-         *     le relevé toutes les 15 secondes de 75 secondes, 10 minutes au plus (une seule attente).
+         *     son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
+         *     attend.
          */
         post: operations["watchSiteCode"];
         delete?: never;
@@ -5222,6 +5223,11 @@ export interface components {
         ExpectCodeOut: {
             /** Queued */
             queued: boolean;
+            /**
+             * Mailbox Down
+             * @default false
+             */
+            mailbox_down: boolean;
         };
         /** ExtensionCode */
         ExtensionCode: {

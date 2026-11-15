@@ -1,12 +1,14 @@
 """La boîte des invités (docs/113) : à part de celle de l'exploitant, vidée après copie."""
 
+import asyncio
 from collections.abc import AsyncIterator, Callable
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
+from structlog.testing import capture_logs
 
 from jobbot import accounts
 from jobbot.api.app import create_app
@@ -54,6 +56,9 @@ async def rt(tmp_path: Path) -> AsyncIterator[Runtime]:
     runtime = Runtime.create(settings, "worker")
     async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE searches, offers, job_runs CASCADE"))
+        await conn.execute(
+            text("DELETE FROM platform_settings WHERE key IN ('guest_box_failures', 'fast_reads')")
+        )
     yield runtime
     async with admin_engine().begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE username = 'amy-boite'"))
@@ -198,6 +203,80 @@ async def test_three_waits_one_shared_reading(
     finally:
         async with admin_engine().begin() as conn:
             await conn.execute(text("DELETE FROM users WHERE username LIKE '%-trois'"))
+
+
+async def test_guest_box_down_after_three_failures(
+    rt: Runtime,
+    boxes: tuple[FakeMailbox, FakeGuestBox],
+    account: int,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Décision de Kevin du 15.11 (19 h 02) : la boîte invités rate 3 lectures de suite ;
+    l'étape du code dit « La boîte jobA1 ne répond pas », le relevé ne la relit plus qu'une fois
+    par minute, et tout redevient normal à la première lecture réussie. Dans les journaux, le
+    type d'erreur seulement : ni adresse, ni code."""
+    _owner_box, guest_box = boxes
+    clock = Clock(monkeypatch)
+    monkeypatch.setattr(site_codes, "enqueue", _no_enqueue)
+    amy = await _amy(rt)
+    fetches = guest_box.since_calls
+    real_fetch = guest_box.fetch_since
+    seen: list[bool] = []
+
+    def fetch_since(*args: object, **kwargs: object) -> object:
+        # L'état vu par l'étape au moment de chaque lecture.
+        seen.append(guest_box.error is not None)
+        if len(fetches) < 3:
+            guest_box.error = MailboxError("connection", "connexion IMAP impossible")
+        else:
+            guest_box.error = None
+            guest_box.add(_code("<amy@x>", "alertes+amy-fictif02@example.ch", "654321"), "<amy@x>")
+        return real_fetch(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(guest_box, "fetch_since", fetch_since)
+    api_rt = Runtime.create(rt.settings)
+    app = create_app(rt.settings, api_rt)
+    downs: list[bool] = []
+
+    async def step_sees() -> bool:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+            with accounts.use(amy):
+                body = (await api.post("/api/alert-searches/watch-code")).json()
+        return bool(body["mailbox_down"])
+
+    real_sleep = asyncio.sleep
+
+    async def sleep(seconds: float) -> None:
+        # Seules les pauses du relevé comptent (pas celles du client HTTP en test).
+        # Le code reçu (4e lecture), la page ne relance plus : l'état se lit sans elle.
+        if seconds >= 15:
+            downs.append(
+                await step_sees() if len(fetches) < 4 else await site_codes.guest_box_down(rt)
+            )
+        await real_sleep(seconds)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    try:
+        assert not await step_sees()
+        start = clock.now
+        # Les échecs restent dans le journal des exécutions : le passage finit en erreur.
+        with capture_logs() as logs, accounts.use(None), pytest.raises(MailboxError):
+            await execute(rt, site_codes.FAST_COLLECT_JOB)
+        # Trois échecs, puis la lecture qui réussit apporte le code : quatre lectures. Deux
+        # pauses de 15 s, une d'une minute une fois la boîte déclarée muette, puis de nouveau
+        # 15 s : la boîte répond.
+        assert len(fetches) == 4
+        assert downs == [False, False, True, False]
+        assert clock.now - start == timedelta(seconds=15 + 15 + 60 + 15)
+        assert not await step_sees()
+        with accounts.use(amy):
+            found = await site_codes.last(rt, "jobup")
+        assert found is not None and found.code == "654321"
+        failed = [entry for entry in logs if entry["event"] == "collect_box_failed"]
+        assert [entry["kind"] for entry in failed] == ["connection"] * 3
+        assert "654321" not in repr(logs) and "alertes+" not in repr(logs)
+    finally:
+        await api_rt.dispose()
 
 
 async def _no_enqueue(_settings: object, _name: str) -> bool:

@@ -61,6 +61,11 @@ WAIT_AT_MOST = timedelta(minutes=10)
 # le nombre d'attentes. Au-delà, le code arrive au relevé normal.
 FAST_READS_KEY = "fast_reads"
 FAST_READS_PER_HOUR = 240
+# La boîte invités qui ne répond pas (décision de Kevin du 15.11, 19 h 02) : après 3 lectures
+# ratées de suite, l'étape du code le dit et le relevé rapide ne la relit plus qu'une fois par
+# minute ; la première lecture réussie remet le compte à zéro.
+GUEST_FAILURES_KEY = "guest_box_failures"
+GUEST_DOWN_AFTER = 3
 MAX_TEXT = 20_000
 
 
@@ -218,6 +223,21 @@ async def take_fast_read(runtime: Runtime) -> bool:
             return False
         await platform.put(session, FAST_READS_KEY, [*recent, now.isoformat()])
     return True
+
+
+async def guest_box_read(runtime: Runtime, *, ok: bool) -> None:
+    """Compte les lectures ratées de suite de la boîte invités ; une réussie remet à zéro."""
+    async with runtime.sessionmaker.begin() as session:
+        failures = await platform.get(session, GUEST_FAILURES_KEY, 0)
+        failures = 0 if ok else (failures if isinstance(failures, int) else 0) + 1
+        await platform.put(session, GUEST_FAILURES_KEY, failures)
+
+
+async def guest_box_down(runtime: Runtime) -> bool:
+    """La boîte invités a raté ses 3 dernières lectures, ou plus."""
+    async with runtime.sessionmaker() as session:
+        failures = await platform.get(session, GUEST_FAILURES_KEY, 0)
+    return isinstance(failures, int) and failures >= GUEST_DOWN_AFTER
 
 
 @dataclass(frozen=True)

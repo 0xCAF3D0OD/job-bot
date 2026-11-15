@@ -18,6 +18,8 @@ from jobbot.worker.tasks.score import SCORE_JOB
 # moins un compte attend un code, une heure au plus par passage (une relance le reprend), sous
 # le plafond de la plateforme.
 FAST_EVERY_SECONDS = 15.0
+# La boîte invités ne répond plus (3 échecs de suite) : une lecture par minute jusqu'au retour.
+DOWN_EVERY_SECONDS = 60.0
 MAX_ROUNDS = 240
 PURGE_JOB = "site_codes_purge"
 log = get_logger(__name__)
@@ -33,7 +35,8 @@ async def collect_fast_job(runtime: Runtime, ctx: RunContext) -> None:
     with accounts.use(None):
         for round_ in range(MAX_ROUNDS):
             if round_:
-                await asyncio.sleep(FAST_EVERY_SECONDS)
+                down = await site_codes.guest_box_down(runtime)
+                await asyncio.sleep(DOWN_EVERY_SECONDS if down else FAST_EVERY_SECONDS)
             until = await site_codes.waits_until(runtime)
             if until is None or datetime.now(UTC) >= until:
                 break
