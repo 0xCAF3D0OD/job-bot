@@ -54,12 +54,6 @@ export function dateInList(value: string | Date, now: Date = new Date()): string
   return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear).format(date));
 }
 
-/** Le jour et le mois abrégé, séparés : [« 12 », « nov. »] (date de la carte épinglée de Rendez-vous). */
-export function dayAndMonth(value: string | Date): [string, string] {
-  const [day = "", ...month] = clean(dayMonth.format(toDate(value))).split(" ");
-  return [day, month.join(" ")];
-}
-
 /** Dans une phrase : « le 12 octobre » (« le 12 octobre 2025 » une autre année). */
 export function dateInSentence(value: string | Date, now: Date = new Date()): string {
   const date = toDate(value);

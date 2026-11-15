@@ -161,3 +161,9 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - `--line-strong` (#D8D4CA) ne change pas : contours de champs, barre de recherche, séparateurs.
 - Nouveau jeton `--button-outline` : #C9C5BA, sombre #4E473E, pour tous les boutons secondaires à contour gris (« Plus de filtres », « Retirer l’accès », « Annuler », pastilles, boutons ronds, « + Ajouter » en pointillé).
 - « Plus de filtres » : le demi-pixel restant (espace 8 au lieu de 6, icône 16,5 au lieu de 18) est accepté.
+
+## Carte épinglée de Rendez-vous, date en icône calendrier (Kevin, 15.11.2026, 16 h 42)
+
+- Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
+- Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
+- Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
