@@ -10,8 +10,9 @@ from sqlalchemy import func, select, text
 
 from jobbot import accounts
 from jobbot.api.app import create_app
+from jobbot.auth import passwords
 from jobbot.collect import service
-from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search
+from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search, User
 from jobbot.mail import confirm, site_codes
 from jobbot.mail.codes import find_code, valid_minutes
 from jobbot.mail.message import ParsedEmail
@@ -237,6 +238,21 @@ async def test_last_code_route(clean: Runtime, mailbox: FakeMailbox, phone: Any)
         assert set(body) == {"code", "received_at", "valid_minutes"}
         assert (body["code"], body["valid_minutes"]) == ("731205", 15)
         assert (await api.get("/api/alert-searches/codes/last?site=indeed")).json() is None
+    # Sous la RLS d'un autre compte, le code n'existe pas (docs/regles-securite-donnees.md C-4).
+    owner = accounts.current()
+    async with clean.sessionmaker.begin() as session:
+        other = User(username="code-autre", password_hash=passwords.hash_password("x" * 12))
+        session.add(other)
+        await session.flush()
+        other_id = other.id
+    accounts.set_current(other_id)
+    try:
+        assert await site_codes.last(clean, "jobup") is None
+    finally:
+        accounts.set_current(owner)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": other_id})
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         # Le code effacé au bout de 30 minutes : plus rien à montrer.
         await site_codes.purge(clean, datetime.now(UTC) + timedelta(minutes=31))
         assert (await api.get("/api/alert-searches/codes/last")).json() is None
