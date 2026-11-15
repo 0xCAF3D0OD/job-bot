@@ -39,9 +39,9 @@ Mesurés sur main après la PR 20 (#628). Chaque limite vaut la taille + 5 %, ar
 | js-bilan | 290,2 Ko | 108,0 Ko | 95,8 Ko | 113,4 Ko (gzip) |
 | js-compte | 259,5 Ko | 94,2 Ko | 83,2 Ko | 98,8 Ko (gzip) |
 | css-premier | 327,1 Ko | 57,0 Ko | 45,4 Ko | 59,8 Ko (gzip) |
-| css-total | 484,3 Ko | 92,2 Ko | 75,7 Ko | 116,0 Ko (gzip) |
+| css-total | 484,3 Ko | 92,2 Ko | 75,7 Ko | 117,0 Ko (gzip) |
 | css-accueil | 327,1 Ko | 57,0 Ko | 45,4 Ko | 59,8 Ko (gzip) |
-| css-candidatures | 360,1 Ko | 65,1 Ko | 52,3 Ko | 68,3 Ko (gzip) |
+| css-candidatures | 360,1 Ko | 65,1 Ko | 52,3 Ko | 69,0 Ko (gzip) |
 | css-bilan | 335,5 Ko | 59,4 Ko | 47,5 Ko | 62,4 Ko (gzip) |
 | css-compte | 332,6 Ko | 58,3 Ko | 46,5 Ko | 61,2 Ko (gzip) |
 | images | 4660,1 Ko | n/a | n/a | 4893,1 Ko (brut) |
@@ -53,6 +53,8 @@ Le 13 novembre 2026 (PR 44), trois limites de totaux sont relevées une fois pou
 Le 14 novembre 2026, js-total passe à 425,0 Ko (décision de Kevin) : main mesurait 421,0 Ko après les PR #708 et #712 de la maquette du 14 novembre. Les autres limites ne changent pas ; l'allègement reste suivi dans le ticket #664.
 
 Le 15 novembre 2026 (#722, liaison carte → détail sur Candidatures ordinateur), css-total passe à 116,0 Ko et js-total à 426,0 Ko, une seule fois (décision de Kevin). Mesures avec main et #721 : 115,5 Ko et 425,4 Ko. Le CSS mort avait déjà été retiré par #720. Pas de nouveau relèvement automatique : une PR qui dépasse s'arrête, et on dit à Kevin de combien et pourquoi avant de toucher à une limite.
+
+Le 15 novembre 2026 (#726, ticket #664), css-total passe à 117,0 Ko et css-candidatures à 69,0 Ko, une seule fois (décision de Kevin : « liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS »). Mesures sur main + #722 + #724 + #723 + #725 : 116,7 Ko et 68,3 Ko. Les pistes CSS essayées sont dans « Regrouper ce qui se charge ensemble » ; le thème Auto posé par le JS et le regroupement des composants de Candidatures sont écartés, parce qu'ils dégradent l'écran ou d'autres pages. Pas de nouveau relèvement automatique.
 
 Les « 93 Ko » de l'ancien budget étaient la taille **gzip** de tout le CSS. Il pesait alors 92,2 Ko : 484,3 Ko bruts, 75,7 Ko en brotli.
 
@@ -105,3 +107,22 @@ La cause : `style.css` (327 Ko bruts) est chargé en entier dès le premier écr
 Retirer ces règles ferait gagner environ 0,3 Ko en gzip. Le gain important viendrait de découper `style.css` par page, comme le JavaScript (docs/117 §3) : Accueil chargerait environ 33 Ko de CSS brut au lieu de 334. C'est un chantier à part, à proposer.
 
 **Les 8 avatars PNG** (`public/avatars/avatar-N-256.png`, 610 Ko) : retirés le 2026-11-13 avec l'accord de Kevin. L'avatar affiché (en-tête, menu du compte, choix de l'image) passe par `ProfileImage.vue`, qui appelle `avatarSrc()` de `useProfileImage.ts` : `/avatars/avatar-N-128.webp` jusqu'à 48 px, `/avatars/avatar-N-256.webp` au-delà. Aucun code ne lisait les PNG : c'étaient les mêmes dessins que les WebP, et des copies de `docs/mobile/illustrations/avatars/`, qui restent dans la maquette. Il n'y a plus d'exception au WebP dans `poids.mjs`.
+
+## Regrouper ce qui se charge ensemble (#664, 15.11.2026)
+
+`js-total` et `css-total` additionnent **tous** les fichiers, chacun compressé à part. Découper davantage (une page ou un bloc chargé à la demande) n'allège donc pas ces deux mesures : chaque nouveau fichier perd le contexte de compression des autres. Essai du 15.11 : `JobupCodeBox` en chargement différé, + 0,6 Ko de JS total. Découper ne sert qu'aux mesures d'une page (`js-premier`, `js-candidatures`…).
+
+Ce qui allège le total, c'est l'inverse : regrouper des fichiers **toujours chargés ensemble**. `vite.config.ts` met dans un seul fichier, `commun-*.js`, ce que toute page charge avec l'application : Vue, vue-router, openapi-fetch (`node_modules`) et nos modules que l'entrée importe toujours (`api/client.ts`, `icons.ts`, `dates.ts`, `brandPaths.ts`, `AppIcon.vue`). Avant, Vue faisait deux fichiers (`runtime-core`, `runtime-dom`) dont le nom long revenait dans l'import de 84 pages. `includeDependenciesRecursively: false` empêche le groupe d'aspirer leurs dépendances (sinon l'entrée et des pages chargées plus tard s'y retrouvent).
+
+Mesure sur main + #722 + #724 + #723 + #725 : JS total 427,4 → 422,6 Ko (− 4,8). Chaque page télécharge 1,6 à 2,6 Ko de JS en moins ; le CSS ne change pas.
+
+Pistes mesurées sans gain suffisant (même ensemble) :
+
+| Piste | Gain gzip | Retenue |
+|---|---|---|
+| Icônes : SVG en ligne dupliqués entre composants | < 0,1 Ko (seules les flèches de liaison se répètent, dans un même fichier) | non |
+| Dépendances remplacées par du natif | 0 : seules Vue, vue-router, openapi-fetch et la police ; aucune bibliothèque de dates ou d'utilitaires | sans objet |
+| Doublons clair/sombre de `style.css` passés par les jetons | 0,0 Ko (gzip les compresse déjà ; − 1,2 Ko brut seulement) | non |
+| Cible CSS relevée (Chrome 120, Safari 17, Firefox 121) | − 0,1 Ko, et des navigateurs encore pris en charge perdraient des préfixes | non |
+| Thème Auto posé par le JS, copies `@media (prefers-color-scheme: dark)` retirées | environ − 0,5 Ko CSS, mais un éclair clair au chargement en sombre avant le JS | non, dégrade l'écran |
+| Regrouper aussi les composants partagés de Candidatures | − 8,0 Ko JS et − 0,7 Ko CSS de plus, mais + 13 à + 21 Ko à télécharger sur Connexion, Inscription, Réglages, Alertes… | non |

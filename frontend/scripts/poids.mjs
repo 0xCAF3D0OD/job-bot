@@ -25,9 +25,9 @@ export const LIMITS = {
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 116_000, // liaison carte → détail, #722 (Kevin, 15.11 : relevé une seule fois, plus de relèvement automatique)
+  "css-total": 117_000, // liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS (Kevin, 15.11 : relevé une seule fois)
   "css-accueil": 59_800,
-  "css-candidatures": 68_300,
+  "css-candidatures": 69_000, // liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS (Kevin, 15.11 : relevé une seule fois)
   "css-bilan": 62_400,
   "css-compte": 61_200,
   images: 4_893_100,
