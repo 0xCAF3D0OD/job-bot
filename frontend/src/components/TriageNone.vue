@@ -4,8 +4,9 @@ import BookmarkMark from "./BookmarkMark.vue";
 // « Rien à trier pour l’instant » (lot du 11 novembre au soir, PR 49 ; état « vide » d'AccueilV2 et
 // d'AujourdhuiOrdinateurV2) : un bloc à bordure pointillée, le contour du marque-page à droite, puis « Élargir ma
 // recherche » vers les critères. `title` : un jour de repos, en pause ou le tri fini, la page le dit à la place ;
-// `widen` : le lien, seulement quand il n'y a vraiment aucune offre.
-defineProps<{ title?: string; widen?: boolean }>();
+// `widen` : le lien, seulement quand il n'y a vraiment aucune offre. `first` : un compte sans offre encore (§22 du
+// 15.11, AujourdhuiOrdinateurNouveau) : sa phrase, sans marque-page.
+defineProps<{ title?: string; widen?: boolean; first?: boolean }>();
 </script>
 
 <template>
@@ -16,9 +17,10 @@ defineProps<{ title?: string; widen?: boolean }>();
     <div class="tri-none-box">
       <p>
         <b>{{ title ?? "Rien à trier pour l’instant" }}</b>
-        <span>jobA1 cherche chaque matin. Les prochaines offres arrivent demain.</span>
+        <span>{{ first ? "Tes premières offres arrivent après ta première alerte." : "jobA1 cherche chaque matin. Les prochaines offres arrivent demain." }}</span>
       </p>
       <BookmarkMark
+        v-if="!first"
         outline
         :width="38"
       />

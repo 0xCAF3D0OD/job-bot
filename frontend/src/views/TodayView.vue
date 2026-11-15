@@ -5,7 +5,7 @@ import { RouterLink, type RouteLocationRaw } from "vue-router";
 
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
-import FirstSteps from "../components/FirstSteps.vue";
+import FirstStepsList from "../components/FirstStepsList.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -209,6 +209,9 @@ const reachedSub = computed(() => {
   return `Tes ${plural(t.month_target, "recherche", "recherches")} ${ofMonth(t.month)} ${t.month_target === 1 ? "est faite" : "sont faites"}. Ce que tu envoies maintenant compte en plus.`;
 });
 
+// Un compte sans offre encore (§22 du 15.11, AujourdhuiOrdinateurNouveau) : « Bienvenue, / tes offres arrivent
+// bientôt » à la main, premiers pas ouverts ou fermés.
+const newcomer = computed(() => today.value?.has_offers === false);
 // Le titre de la bande : l'action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP ; sa fin en
 // écriture manuscrite (un seul accent par écran). Un seul élément de titre.
 type Heading = { lead: string; hand: string; sub: string };
@@ -308,11 +311,10 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
 const googleJobs = computed(() => today.value?.google_jobs ?? null);
 // Les deux liens dessous restent sans carte pendant les premiers pas, comme avant (docs/144).
 const googleShown = computed(() => !!googleJobs.value || (starting.value && today.value?.has_offers === false));
-const googleAdd = computed(() => !today.value?.first_steps.some((s) => s.key === "alerts" && s.done));
-// « Cette semaine · 2 sur 3 » sous la barre ORP : pas pendant une pause ni les premiers pas.
+// « Cette semaine · 2 sur 3 » sous la barre ORP : pas pendant une pause (premiers pas compris, §22 du 15.11).
 const weekCount = computed(() => {
   const week = today.value?.rhythm;
-  return week && week.target !== null && !week.pause_until && !starting.value ? { count: week.count, target: week.target } : null;
+  return week && week.target !== null && !week.pause_until ? { count: week.count, target: week.target } : null;
 });
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
@@ -488,12 +490,14 @@ const { me } = useAuth();
     >
       <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
     </RouterLink>
-    <FirstSteps
+    <FirstStepsList
       v-if="starting"
       :steps="today.first_steps"
+      :summary="today.first_steps_summary ?? null"
       :has-offers="today.has_offers ?? true"
       :offer-id="today.first_steps_offer_id ?? null"
       :pick-ready="!rhythmPaused && best.length > 0"
+      phone
       @dismiss="dismissSteps"
     />
     <section
@@ -528,7 +532,6 @@ const { me } = useAuth();
       data-test="google-jobs-links"
     >
       <RouterLink
-        v-if="googleAdd"
         to="/ajouter-une-offre"
         data-test="start-add"
       >
@@ -570,6 +573,14 @@ const { me } = useAuth();
             </template>
           </h1>
           <h1
+            v-else-if="newcomer"
+            id="today-title"
+            class="aj-late"
+            data-test="today-sentence"
+          >
+            <span class="aj-hand aj-hand-late">Bienvenue,</span><br><span class="aj-hand">tes offres arrivent bientôt</span>
+          </h1>
+          <h1
             v-else-if="goalReached"
             id="today-title"
             class="aj-late"
@@ -596,11 +607,11 @@ const { me } = useAuth();
             </template>
           </h1>
           <p
-            v-if="lateCatch || goalReached || heading.sub"
+            v-if="lateCatch || newcomer || goalReached || heading.sub"
             class="aj-sub"
             data-test="today-sub"
           >
-            {{ lateCatch ? lateCatch.sub : goalReached ? reachedSub : heading.sub }}
+            {{ lateCatch ? lateCatch.sub : newcomer ? "Crée ta première alerte\u202f: jobA1 s’occupe du reste." : goalReached ? reachedSub : heading.sub }}
           </p>
         </div>
         <img
@@ -621,10 +632,11 @@ const { me } = useAuth();
         <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
       </RouterLink>
 
-      <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
-      <FirstSteps
+      <!-- Les premiers pas en cinq lignes (§23 du 15.11) : la seule action tant qu'il en manque. -->
+      <FirstStepsList
         v-if="starting"
         :steps="today.first_steps"
+        :summary="today.first_steps_summary ?? null"
         :has-offers="today.has_offers ?? true"
         :offer-id="today.first_steps_offer_id ?? null"
         :pick-ready="!rhythmPaused && best.length > 0"
@@ -666,7 +678,6 @@ const { me } = useAuth();
         data-test="google-jobs-links"
       >
         <RouterLink
-          v-if="googleAdd"
           to="/ajouter-une-offre"
           data-test="start-add"
         >
@@ -764,7 +775,7 @@ const { me } = useAuth();
         @resumed="onMiniDone(false)"
       />
       <section
-        v-else-if="!starting"
+        v-else-if="!starting || newcomer"
         class="aj-none"
         aria-labelledby="aj-none-title"
         data-test="today-no-triage"
@@ -773,8 +784,9 @@ const { me } = useAuth();
           Offres à trier
         </h2>
         <TriageNone
-          :title="emptyTitle"
-          :widen="widen"
+          :title="newcomer ? undefined : emptyTitle"
+          :widen="widen && !newcomer"
+          :first="newcomer"
         />
       </section>
     </aside>
@@ -844,7 +856,7 @@ const { me } = useAuth();
 .aj-title { font-size: var(--font-page); font-weight: var(--weight-heavy); line-height: var(--aj-lh-title); letter-spacing: -0.4px; color: var(--text); }
 .aj-title-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; letter-spacing: 0; color: var(--primary-text); }
 .aj-sub { margin: var(--space-4) 0 0; font-size: var(--aj-17); line-height: var(--aj-26); color: var(--text-lead); }
-.aj-main > .today-welcome, .aj-main > :deep(.first-steps) { margin: var(--space-6) 0 0; }
+.aj-main > .today-welcome { margin: var(--space-6) 0 0; }
 .aj-section > h2, .aj-orp h2, .aj-none h2 { margin: 0; font-size: var(--aj-22); font-weight: var(--weight-heavy); }
 .aj-section > h2 { margin: var(--space-8) 0 var(--space-3); }
 .today-tasks { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
