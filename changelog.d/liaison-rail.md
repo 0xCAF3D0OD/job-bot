@@ -1,0 +1,1 @@
+Liaison carte → détail sur ordinateur, version rail (§18) : colonne de 504 px, flèche de la carte choisie au contact de la pointe d'un rail de 1,5 px, détail entièrement en cartes, et carte compacte épinglée en haut ou en bas quand la carte choisie sort de la liste, sur Offres, Envoyées et Rendez-vous ; plus aucun changement de taille au clic

@@ -1,4 +1,3 @@
-@import "./block-fields.css";
 /* Le style « blocs » (MODIFICATIONS du 8 novembre au soir, §2.1 à §2.4, lot 18) : une page de lecture est une pile de
    blocs sans bordure ni ombre sur le fond --page-blocks (D28) ; une ligne à flèche est cliquable en entier (D29) ;
    un champ à recopier a son libellé au-dessus et un bouton copier (D32). Importé par les écrans qui l'utilisent,

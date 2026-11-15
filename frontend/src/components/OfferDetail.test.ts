@@ -368,16 +368,16 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
   const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("le détail relié (maquette du 15 novembre, §11) : en-tête plat avec la ligne de note, puis Candidature et L’offre en bref", async () => {
+  it("le détail relié (maquette du 15 novembre, §18) : en-tête en carte avec la ligne de note, puis Candidature et L’offre en bref", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
-    // L'en-tête n'est plus une carte : titre, entreprise, puis sous un filet « [libellé] · [note] sur 100 ».
+    // §18 : l'en-tête est la première carte : titre, entreprise, puis sous un filet « [libellé] · [note] sur 100 ».
     const head = wrapper.get("header[data-test=section-offer]");
-    expect(head.classes()).not.toContain("oc-card");
+    expect(head.classes()).toContain("oc-card");
     expect(head.get("[data-test=section-for-you]").text()).toContain("60 sur 100");
     expect(head.find(".score-ring").exists()).toBe(false);
     const cards = wrapper.findAll(".oc-card").map((card) => card.attributes("data-test"));
-    expect(cards.slice(0, 2)).toEqual(["section-ad", "offer-brief"]);
+    expect(cards.slice(0, 3)).toEqual(["section-offer", "section-ad", "offer-brief"]);
     // La lecture de l'annonce complète est une ligne de la carte « Candidature » (§8, Offres, 3).
     expect(wrapper.find("[data-test=section-ad] [data-test=text-reading]").exists()).toBe(true);
     const brief = wrapper.get("[data-test=offer-brief]");

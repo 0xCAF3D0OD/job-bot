@@ -774,7 +774,11 @@ function onStatus(value: ApplicationStatus): void {
    égales, cercle et libellés centrés ; Documents et contacts en deux colonnes séparées d’un filet de 1 px, lignes de
    64 px au moins (12 px en haut et en bas), puis la ligne « Historique » à chevron. */
 .sent-detail-cards:not(.sent-detail-phone) { gap: var(--space-4); }
-.sd-title { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6) var(--sent-28) var(--space-1) var(--space-6); }
+/* §18 du 15 novembre : la tête en carte, 24 px sous le haut de la zone, marges 22 / 28 / 22 / 24 sur la planche, 22,5 en haut et en bas ici (la règle de grille compte 1,5 px de trait), rayon 24. */
+.sd-title {
+  --sent-pad-y: 22.5px; display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-6); padding: var(--sent-pad-y) var(--sent-28) var(--sent-pad-y) var(--space-6);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--space-6);
+}
 .sd-steps-card { padding: var(--space-5) var(--space-6); border-width: 1px; border-color: var(--line); border-radius: var(--space-6); }
 .sd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; }
 .sd-steps > li, .sd-steps > li:last-child { flex: none; align-items: center; text-align: center; }

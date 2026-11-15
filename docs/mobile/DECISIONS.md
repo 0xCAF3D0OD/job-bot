@@ -125,6 +125,22 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Bouton « Assistant » : au moins 12 px entre lui et les liens du pied de page ; la marge du bas du pied de page (hauteur du bouton + 16 px, règle existante) suffit.
 - Carte de formation : l'avancement s'écrit « Module 6 sur 12 », comme sur la planche BilanOrdinateur, y compris quand il a été noté en texte libre « module 6/12 » (affichage seulement).
 
+## Jour de repos et tri (Kevin, 15.11.2026, 12 h 24)
+
+- Le jour de repos ne bloque jamais une action choisie par l'utilisateur (planche AujourdhuiOrdinateurV2, état is_repos). Il change seulement le ton d'Aujourd'hui (« Jour de repos. Ta semaine est faite. Si tu veux avancer, N choses t'attendent. ») et coupe les rappels et les notifications de ce jour-là.
+- Trier n'a pas d'écran « Jour de repos ». Aujourd'hui, Trier et l'assistant comptent les offres à trier avec la même règle (useDailyDose : pickDose, isTriagePending).
+- Rappels d'échéance obligatoire (remise des preuves ORP, veille d'un rendez-vous ORP) : jamais coupés par le jour de repos. Un jour de repos, ils partent si l'échéance tombe au plus tard le prochain jour normal ; sinon ils sont décalés au prochain jour normal, à la même heure (Kevin, 15.11.2026, 12 h 45).
+- Trier à 0 offre : « Rien à trier pour l'instant » sur l'état vide commun (§13) : mascotte de FinDuTriAucune, titre manuscrit, pastille « Offres collectées chaque jour », boutons « Voir mes candidatures » (principal) et « Gérer mes alertes » (contour) ; ni éventail vide ni Écarter / Garder (Kevin, 15.11.2026, 12 h 45).
+
+## Liaison rail (§18, paquet jobA1_maquette_2026-11-15_rail)
+
+| Date | Décision | Remplace |
+|---|---|---|
+| 2026-11-15 | La section 18 remplace la liaison de §11 et §14 : colonne de 504 px, cartes de 480, plus de prolongement de 28 px, flèche 22 × 60 au contact de la pointe du rail (1,5 px, 9 px après la colonne), détail entièrement en cartes, carte compacte épinglée (CandidaturesOrdinateurEpinglee) sur les trois onglets. | Liaison de #722 (§11, §14). |
+| 2026-11-15 | Pointe du rail : la formule du LISEZMOI fait foi (centre de la flèche − haut de la zone − 30, contact exact) ; le dessin de la planche (1,5 px plus haut) est une imprécision. | Kevin, réponse 1 sur #731 |
+| 2026-11-15 | Carte épinglée de Rendez-vous : la date dans le carré de 40 px du logo (même rayon, fond neutre), jour en gras, mois abrégé dessous ; « <Entreprise> · Sélection affichée » (l'ORP pour ses rendez-vous) ; nom du bouton « Revenir au rendez-vous du 12 novembre, <Entreprise>, dans la liste ». | Kevin, réponse 2 sur #731 |
+| 2026-11-15 | La barre de recherche et de filtres sort de ce qui défile : seules les cartes défilent, la barre de défilement commence sous les filtres ; la carte épinglée reste à 12 px sous la barre de recherche. | Kevin, réponse 3 sur #731 |
+
 ## Contour des boutons secondaires (Kevin, 15.11.2026, 11 h 57)
 
 - `--line-strong` (#D8D4CA) ne change pas : contours de champs, barre de recherche, séparateurs.

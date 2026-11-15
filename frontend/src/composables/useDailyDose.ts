@@ -36,22 +36,27 @@ export function triageDoneToday(): boolean {
   }
 }
 
+// La dose du jour à partir des offres « à examiner » (notées, meilleures d'abord) : une seule règle pour Aujourd'hui,
+// la page « Trier les offres » et l'assistant, pour que le compteur d'Aujourd'hui et la pile de Trier ne divergent
+// jamais.
+export function pickDose(today: Today | null, best: Offer[]): Offer[] {
+  const behind = !!today && orpPace(today.month_count, today.month_target, today.month)?.state === "behind";
+  return best.slice(0, behind ? DOSE_CATCH_UP : DOSE);
+}
+
+// Le tri à faire : une dose, pas de pause, pas déjà fait aujourd'hui. Le jour de repos ne bloque jamais le tri
+// (planche AujourdhuiOrdinateurV2, état is_repos) : il change seulement le ton d'Aujourd'hui et coupe les rappels.
+export function isTriagePending(today: Today | null, dose: Offer[], done: boolean): boolean {
+  return !today?.rhythm?.pause_until && dose.length > 0 && !done;
+}
+
 export function useDailyDose() {
   const today = ref<Today | null>(null);
   const best = ref<Offer[]>([]);
   const loaded = ref(false);
-  // Un jour de repos (docs/86) : aucune liste à traiter.
-  const restDay = computed(() => today.value?.rhythm?.research_today === false);
-  const dose = computed(() => {
-    const t = today.value;
-    const behind = !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
-    return best.value.slice(0, behind ? DOSE_CATCH_UP : DOSE);
-  });
-
-  // Le tri à faire, comme sur l'Accueil : ni repos, ni pause, une dose, pas déjà fait aujourd'hui.
-  const triagePending = computed(
-    () => !restDay.value && !today.value?.rhythm?.pause_until && dose.value.length > 0 && !triageDoneToday(),
-  );
+  const dose = computed(() => pickDose(today.value, best.value));
+  // Le tri à faire, comme sur Aujourd'hui (même règle, isTriagePending).
+  const triagePending = computed(() => isTriagePending(today.value, dose.value, triageDoneToday()));
 
   async function load(): Promise<void> {
     const [day, offers] = await Promise.all([
@@ -63,5 +68,5 @@ export function useDailyDose() {
     loaded.value = true;
   }
 
-  return { today, best, dose, restDay, triagePending, loaded, load };
+  return { today, best, dose, triagePending, loaded, load };
 }
