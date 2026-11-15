@@ -748,12 +748,13 @@ onMounted(() => void load());
           type="button"
           class="prep-file-row"
           aria-haspopup="dialog"
+          :aria-label="`Adapté pour cette offre, ${changesLine}`"
           data-test="cv-changes-open"
           @click="changesOpen = true"
         >
           <span class="prep-file-text">
             <b>Adapté pour cette offre</b>
-            <span :class="['prep-file-sub', { ok: changes.length }]">{{ changesLine }}</span>
+            <span :class="['prep-file-sub', { warn: changes.length }]">{{ changesLine }}</span>
           </span>
           <AppIcon name="chevron" />
         </button>
@@ -761,6 +762,7 @@ onMounted(() => void load());
           type="button"
           class="prep-file-row"
           aria-haspopup="dialog"
+          :aria-label="`Versions · ${cvs.length}, ${currentVersionLine}`"
           data-test="cv-versions-open"
           @click="versionsOpen = true"
         >

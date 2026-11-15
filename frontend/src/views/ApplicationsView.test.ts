@@ -444,6 +444,18 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(wrapper.find("[data-test=goal]").attributes("href")).toBe("/reglages?rubrique=recherche");
     expect(wrapper.find("[role=progressbar]").exists()).toBe(false);
     expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
+    // Sans objectif, pas de pastille : la carte reste, pour l’indiquer.
+    expect(wrapper.find("[data-test=empty-pill]").exists()).toBe(false);
+  });
+
+  it("aucune candidature (§13 du 15.11) : l’état vide, l’objectif en pastille à la place de la carte", async () => {
+    mockApi(() => month({ count: 0, target: 10 }), []);
+    const { wrapper } = await mountView();
+    const empty = wrapper.find("[data-test=applications-none-yet]");
+    expect(empty.find("h2").text()).toBe("Pas encore de candidature envoyée");
+    expect(empty.find("[data-test=empty-pill]").text()).toMatch(/^Objectif ORP d.+ : 10 candidatures$/);
+    expect(empty.text()).toContain("Voir les offres à préparer");
+    expect(wrapper.find("[data-test=goal]").exists()).toBe(false);
   });
 
   it("les rubriques : à relancer, entretiens, cette semaine, plus tôt ; la carte commune et son statut", async () => {

@@ -175,6 +175,8 @@ class AskKeywordOut(BaseModel):
 class ScorePoint(BaseModel):
     text: str
     chunk_ids: list[int]
+    # Forme courte écrite sur les cartes de Trier (score-v9) : absente d'une note plus ancienne.
+    short: str | None = None
 
 
 class ScorePartOut(BaseModel):

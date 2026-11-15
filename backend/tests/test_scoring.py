@@ -30,6 +30,7 @@ from jobbot.llm.client import BatchItem, RawResult, Refused
 from jobbot.llm.pricing import Usage, cost_usd
 from jobbot.llm.scoring import (
     INSTRUCTIONS,
+    NEXT_OUTPUT_SCHEMA,
     OUTPUT_SCHEMA,
     PART_MAX,
     InvalidScore,
@@ -42,7 +43,7 @@ from jobbot.llm.scoring import (
     why_sentence,
 )
 from jobbot.runtime import Runtime
-from jobbot.scoring import manual_backlog, remote, service
+from jobbot.scoring import manual_backlog, remote, service, short_notes
 from jobbot.settings import Settings
 
 from .conftest import admin_engine, make_settings
@@ -113,6 +114,28 @@ def test_parse_drops_unproven_strengths() -> None:
     )
     assert [(p.text, p.chunk_ids) for p in output.strengths] == [("Prouvé", [1])]
     assert output.score == 78
+
+
+def test_parse_keeps_the_short_form_tidied() -> None:
+    """score-v9 : la forme courte est gardée, espaces resserrés ; vide, elle n'existe pas. Trop
+    longue, elle reste : c'est l'écran qui revient au texte complet."""
+    output = parse_output(
+        answer(
+            strengths=[
+                {
+                    "text": "Linux : 5 ans d'administration.",
+                    "chunk_ids": [1],
+                    "short": " Linux  5 ans ",
+                },
+                {"text": "Acme : admin système.", "chunk_ids": [2], "short": "  "},
+                {"text": "Linux : serveurs.", "chunk_ids": [1], "short": "x" * 40},
+                {"text": "Ancienne note", "chunk_ids": [1]},
+            ]
+        ),
+        CHUNKS,
+    )
+    assert [p.short for p in output.strengths] == ["Linux 5 ans", None, "x" * 40, None]
+    assert [p.short for p in output.gaps] == [None]
 
 
 def test_parse_without_profile_has_no_score() -> None:
@@ -349,7 +372,7 @@ async def test_api_scores_sort_filter_and_status(
         "Exploiter des serveurs Linux",
         False,
     )
-    assert top["strengths"] == [{"text": "Linux solide", "chunk_ids": [1]}]
+    assert top["strengths"] == [{"text": "Linux solide", "chunk_ids": [1], "short": None}]
     filtered = (await api.get("/api/offers", params={"view": "to_review", "min_score": 60})).json()
     assert [o["title"] for o in filtered["items"]] == ["Offre 2"]
 
@@ -928,3 +951,66 @@ async def test_manual_backlog_counts_then_scores_once(ai: Runtime, fake: FakeCli
     assert await manual_backlog.count(ai) == []
     assert (await manual_backlog.score_all(ai)).scored == 0
     assert len(fake.calls) == 1
+
+
+# --- Mesure des notes courtes (score-v9) ----------------------------------------------
+
+
+def test_short_problem_checks_length_and_doubt() -> None:
+    assert short_notes.short_problem("Linux : 5 ans.", "Linux 5 ans") is None
+    assert short_notes.short_problem("Linux : 5 ans.", None) == "absente ou vide"
+    assert short_notes.short_problem("Linux : 5 ans.", "") == "absente ou vide"
+    assert short_notes.short_problem("Linux", "x" * 29) == "29 caractères (plus de 28)"
+    assert short_notes.short_problem("Linux", "x" * 28) is None
+    doubt = "Allemand : niveau non précisé, à vérifier."
+    assert short_notes.short_problem(doubt, "Allemand courant") == "doute sans « ? »"
+    assert short_notes.short_problem(doubt, "Allemand courant ?") is None
+
+
+async def test_measure_short_notes_writes_nothing(ai: Runtime, fake: FakeClient) -> None:
+    for n in (1, 2):
+        await add_offer(ai, n)
+    await service.run_scoring(ai)
+    async with ai.sessionmaker() as session:
+        calls_before = await session.scalar(select(func.count()).select_from(LlmCall))
+        evaluations_before = [
+            (e.offer_id, e.scored_at) for e in await session.scalars(select(Evaluation))
+        ]
+
+    profile, samples = await short_notes.gather(ai)
+    assert len(samples) == 2 and len(profile) == 2
+    assert short_notes.estimate_usd(samples) == Decimal("0.0245")  # 2 x 0,01225 $
+    assert all(s.before is not None and s.version == "score-v8" for s in samples)
+
+    fake.responses["Offre 1"] = raw(
+        answer(
+            strengths=[
+                {
+                    "text": "Linux : 5 ans d'administration.",
+                    "chunk_ids": [1],
+                    "short": "Linux 5 ans",
+                }
+            ]
+        ).replace(
+            '{"text": "Pas d\'Ansible", "chunk_ids": []}',
+            '{"text": "Ansible : non mentionné.", "chunk_ids": [], "short": "Ansible"}',
+        )
+    )
+    results = await short_notes.measure(ai, profile, samples)
+    lines = short_notes.report(results, Decimal("0.8"))
+
+    assert len(fake.calls) == 4
+    text_ = "\n".join(lines)
+    assert "Prompt mesuré : score-v9" in text_ and "Notes d'avant : 2 en score-v8" in text_
+    assert fake.calls[-1]["output_config"]["format"]["schema"] == NEXT_OUTPUT_SCHEMA
+    assert "Jetons d'entrée moyens (2 offres) : 3400 → 3400, écart +0 (+0.0 %)" in text_
+    assert "Jetons de sortie moyens (2 offres) : 350 → 350" in text_
+    assert "Formes courtes valides : 1 sur 4 (25%)" in text_
+    assert "invalide (doute sans « ? ») : « Ansible » ← Ansible : non mentionné." in text_
+    assert "court : « Linux 5 ans »" in text_
+    # Rien n'est écrit : ni appel compté, ni note changée.
+    async with ai.sessionmaker() as session:
+        assert await session.scalar(select(func.count()).select_from(LlmCall)) == calls_before
+        assert [
+            (e.offer_id, e.scored_at) for e in await session.scalars(select(Evaluation))
+        ] == evaluations_before

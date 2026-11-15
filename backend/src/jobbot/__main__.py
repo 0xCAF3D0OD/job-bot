@@ -14,6 +14,7 @@ getemall-tester IDENTIFIANT  marque un compte testeur de Get'emAll (--retirer : 
 noter-offres-manuelles  anciennes offres ajoutées à la main sans note : nombre et coût
              (--lancer : les noter)
 logos --clean-generic  retire les logos génériques (--essai : liste sans rien retirer)
+mesure-notes-courtes  coût et qualité des notes courtes (score-v9) ; --lancer appelle l'IA
 """
 
 import argparse
@@ -682,6 +683,47 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mesure_notes_courtes(args: argparse.Namespace) -> int:
+    """Notes courtes (score-v9, Kevin 15.11) : sans --lancer, compte les offres et estime le coût ;
+    avec --lancer, note de nouveau ces offres et compare. Rien n'est écrit en base."""
+    from jobbot.runtime import Runtime
+    from jobbot.scoring import short_notes
+
+    settings = _settings()
+
+    async def run() -> int:
+        runtime = Runtime.create(settings)
+        try:
+            profile, samples = await short_notes.gather(runtime)
+            rate = await short_notes.chf_rate(runtime)
+            usd = short_notes.estimate_usd(samples)
+            print(
+                f"{plural(len(samples), 'offre retenue', 'offres retenues')} (les "
+                f"{short_notes.SAMPLE} dernières notées, toutes sources) · modèle "
+                f"{settings.score_model}, effort {settings.llm_effort}"
+            )
+            print(f"Coût estimé : {usd:.4f} $ ({usd * rate:.4f} CHF), hors plafond mensuel.")
+            if not args.lancer:
+                print("Aucun appel à l'IA. Pour mesurer : jobbot mesure-notes-courtes --lancer")
+                return 0
+            if not settings.llm_configured:
+                print("IA non configurée : JOBBOT_ANTHROPIC_API_KEY manque.", file=sys.stderr)
+                return 1
+            if not samples:
+                return 0
+            if not profile:
+                print("Aucun bloc de profil actif : rien à noter.", file=sys.stderr)
+                return 1
+            results = await short_notes.measure(runtime, profile, samples)
+        finally:
+            await runtime.dispose()
+        print()
+        print("\n".join(short_notes.report(results, rate)))
+        return 0
+
+    return asyncio.run(run())
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -708,6 +750,13 @@ def main(argv: list[str] | None = None) -> int:
     compare_cmd.add_argument("--model", default="claude-sonnet-5")
     compare_cmd.add_argument("--limit", type=int, default=20)
     compare_cmd.set_defaults(func=cmd_score_compare)
+    short_cmd = sub.add_parser(
+        "mesure-notes-courtes", help="notes courtes (score-v9) : coût et qualité, sans rien écrire"
+    )
+    short_cmd.add_argument(
+        "--lancer", action="store_true", help="note les 20 offres avec le prompt suivant (payant)"
+    )
+    short_cmd.set_defaults(func=cmd_mesure_notes_courtes)
     anon = sub.add_parser("anonymize-sample", help="jeux de test anonymisés")
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
     anon.add_argument("--out", required=True, help="dossier de sortie")

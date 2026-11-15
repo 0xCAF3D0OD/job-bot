@@ -205,3 +205,19 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - ORP : la phrase commune (« Encore N d'ici le <date> »), pas celle de la planche.
 - Un seul bouton, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton ; à venir : grisées, sans bouton. Pas les mots de l'ancienne carte.
 - Bandeau à trait de compte à rebours partout où il y a « Annuler » (Gardée, Écartée, Carte masquée, Premiers pas masqués, Navigateur retiré) : un seul composant, dans la feuille commune ; coût à mesurer.
+
+## Formations ordinateur, plus de « Module terminé » (Kevin, 15.11.2026, 16 h 33)
+
+- Dans « En cours » de la vue d'ensemble Formations sur ordinateur, « Module terminé » et ses boutons − et + sont retirés : « Module N sur 12 » avec la barre suffit, comme sur la planche BilanOrdinateur.
+- « Marquer comme terminée » (au dernier module) et « Noter l'avancement » restent. Le téléphone (Suivies) garde le compteur jusqu'à sa propre page.
+- Le compte se note dans le panneau « Noter l'avancement » : champ « Modules faits » (nombre, de 0 au nombre de modules, libellé visible), sous « Nombre de modules ». Au-delà du total, rien n'est enregistré et « Pas plus de N modules » s'affiche sous le champ. La carte montre ensuite « Module N sur 12 » (Kevin, 15.11.2026, 18 h 01).
+
+## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
+
+- « N changements, à vérifier » prend l'orange d'alerte `--warning` (clair #A8540E, sombre #F2A766) : c'est une action à faire, pas une réussite. Remplace le vert de la planche PreparerOrdinateurCVPret.
+- Les lignes de « Ce CV » (et de « Ta candidature », qui partage les mêmes lignes) tiennent dans la carte : largeur 100 %, sans marge négative ; la carte n'a pas de marge sur les côtés, le titre et les lignes portent les 18,5 px. Un texte long est coupé sur une ligne avec points de suspension ; dans « Ce CV », le texte complet est dans l'aria-label de la ligne.
+
+## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
+
+- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
+- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.

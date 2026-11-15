@@ -11,7 +11,9 @@ export type Scene =
   | "aucune-offre"
   | "envoyee"
   | "objectif"
-  | "un";
+  | "un"
+  | "envoyees-vide"
+  | "rendez-vous-vide";
 
 // Les fichiers de public/troupe/ : `phone` et `desk` sont les largeurs des deux fichiers (2× de la largeur
 // affichée dans les maquettes : 680 pour 340 px) ; `ratio`, largeur sur hauteur, pour réserver la place.
@@ -26,6 +28,9 @@ export const SCENES: Record<Scene, { phone: number; desk: number; ratio: number 
   envoyee: { phone: 680, desk: 942, ratio: 942 / 480 },
   objectif: { phone: 680, desk: 946, ratio: 946 / 480 },
   un: { phone: 400, desk: 400, ratio: 323 / 660 },
+  // États vides d'Envoyées et de Rendez-vous (§13 du 15 novembre) : les dessins des planches, les mêmes en sombre.
+  "envoyees-vide": { phone: 322, desk: 496, ratio: 520 / 340 },
+  "rendez-vous-vide": { phone: 234, desk: 360, ratio: 387 / 518 },
 };
 
 // Servies telles quelles depuis public/troupe/ ; `TROUPE` change quand les images changent.
