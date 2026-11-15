@@ -366,30 +366,36 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
   const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("le détail en cartes empilées (maquette du 14 novembre, §8) : titre, note, Candidature, L’offre en bref", async () => {
+  it("le détail relié (maquette du 15 novembre, §11) : en-tête plat avec la ligne de note, puis Candidature et L’offre en bref", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
+    // L'en-tête n'est plus une carte : titre, entreprise, puis sous un filet « [libellé] · [note] sur 100 ».
+    const head = wrapper.get("header[data-test=section-offer]");
+    expect(head.classes()).not.toContain("oc-card");
+    expect(head.get("[data-test=section-for-you]").text()).toContain("60 sur 100");
+    expect(head.find(".score-ring").exists()).toBe(false);
     const cards = wrapper.findAll(".oc-card").map((card) => card.attributes("data-test"));
-    expect(cards.slice(0, 4)).toEqual(["section-offer", "section-for-you", "section-ad", "offer-brief"]);
+    expect(cards.slice(0, 2)).toEqual(["section-ad", "offer-brief"]);
     // La lecture de l'annonce complète est une ligne de la carte « Candidature » (§8, Offres, 3).
     expect(wrapper.find("[data-test=section-ad] [data-test=text-reading]").exists()).toBe(true);
     const brief = wrapper.get("[data-test=offer-brief]");
     const rows = brief.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
     expect(rows.map((r) => r[0])).toEqual(["Lieu", "Contrat", "Taux d’activité", "Reçue"]);
     expect(rows[1]![1]).toBe("Non précisé");
+    expect(brief.findAll("dd")[1]!.classes()).toContain("oc-missing");
     expect(rows[3]![1]).toMatch(/, par une alerte e-mail$/);
     const link = brief.get("[data-test=brief-link]");
     expect(link.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
     expect(link.text()).toContain("Voir l’annonce sur Indeed");
     // Un seul lien visible vers l'annonce sur ordinateur aussi : celui de « L'offre en bref » (PR 25).
     expect(wrapper.findAll('a[href="https://ch.indeed.com/viewjob?jk=1"]')).toHaveLength(1);
-    // Les puces de la carte titre restent.
-    expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
+    // Plus de puces dans l'en-tête, et jamais de puce qui dit qu'une information manque.
+    expect(wrapper.find("[data-test=tag-contract]").exists()).toBe(false);
     // Les actions sont le pied de la carte « Candidature ».
     expect(wrapper.find("[data-test=section-ad] [data-test=triage] [data-test=prepare]").exists()).toBe(true);
   });
 
-  it("la note en carte d’information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
+  it("la ligne de note avec « Voir la compatibilité », qui ouvre le panneau (§11)", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes" }));
     const note = wrapper.find("[data-test=section-for-you]");
@@ -400,6 +406,15 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(open.attributes("aria-haspopup")).toBe("dialog");
     await open.trigger("click");
     expect(wrapper.find("[data-test=compat-sheet]").exists()).toBe(true);
+  });
+
+  it("une offre pas encore notée : « Pas encore notée » et « Donner l’annonce pour la noter » (§11)", async () => {
+    desktop();
+    const wrapper = await mountDetail(offer({ score: null, snippet: "Kubernetes" }));
+    const line = wrapper.get("[data-test=section-for-you]");
+    expect(line.text()).toContain("Pas encore notée");
+    expect(line.find("[data-test=compat-open]").exists()).toBe(false);
+    expect(line.get("[data-test=give-to-score]").attributes("aria-controls")).toBe("offer-give-zone");
   });
 
   it("sous 1 024 px, une seule colonne", async () => {

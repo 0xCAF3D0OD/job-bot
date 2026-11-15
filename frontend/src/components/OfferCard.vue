@@ -29,6 +29,13 @@ const to = computed(() =>
     : { path: route.path, query: { ...route.query, offre: String(props.offer.id) } },
 );
 
+// Une pastille dit une information, jamais qu'elle manque (§11 du 15 novembre, téléphone et ordinateur) : une valeur
+// absente ou inconnue ne donne pas de pastille ; l'information reste dans « L'offre en bref » de la fiche.
+const UNKNOWN = /^(non (précisée?|indiquée?|renseignée?|communiquée?)|inconnue?|n\/a|-)$/i;
+function known(value: string | null | undefined): string | null {
+  const text = value?.trim();
+  return text && !UNKNOWN.test(text) ? text : null;
+}
 type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
@@ -45,7 +52,8 @@ const chips = computed<Chip[]>(() => {
   if (!o.description && !o.spontaneous && o.score !== null && o.score !== undefined) out.push({ text: "Provisoire", tone: "peach" });
   const rate = rateText(o.rate_min, o.rate_max);
   if (rate) out.push({ text: rate });
-  out.push({ text: o.employment_type || "Contrat non précisé" });
+  const contract = known(o.employment_type);
+  if (contract) out.push({ text: contract });
   const remote = remoteText(o, phone.value);
   if (remote) out.push({ text: remote });
   if (o.spontaneous) out.push({ text: "Spontanée", tone: "blue" });
