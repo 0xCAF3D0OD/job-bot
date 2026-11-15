@@ -620,3 +620,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.406 | Offres sur ordinateur : un compteur au-dessus de la liste, « 12 sur 38 offres » avec un filtre. | livrée |
 | 1.6.407 | Trier les offres sur ordinateur : l'éventail de cartes remplace le livre. Au survol, les cartes s'étalent ; un clic (ou Entrée, Espace) retourne une carte et montre l'extrait surligné, les verdicts et « Voir l'annonce complète ». Une offre gardée reste dans l'éventail avec son badge « Gardée » ; « Écarter » affiche aussi « Annuler ». Le dernier reste du livre (images, styles, jetons) est retiré ; le marque-page du téléphone s'appelle désormais « signet ». | livrée |
 | 1.6.408 | Offre ajoutée à la main notée tout de suite, même écartée ou déjà préparée ; cercle « Pas encore notée » (§21) ; commande noter-offres-manuelles pour les anciennes | livrée |
+| 1.6.409 | Candidatures sur ordinateur : une seule flèche quand la carte choisie est épinglée en haut ou en bas de la liste | livrée |
+| 1.6.410 | Préparer, carte « Ce CV » : les lignes tiennent dans la carte même avec un texte long, « à vérifier » en orange d'alerte | livrée |
+| 1.6.411 | Préparer : la vignette « Bandeau » de la carte Mise en page sur ordinateur passe en pêche, la couleur du document, en clair comme en sombre | livrée |

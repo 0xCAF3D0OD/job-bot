@@ -65,9 +65,11 @@ const { template } = useDocTemplate();
               rx="1.5"
             />
           </template>
+          <!-- Le bandeau pêche du document (PDF, planche PreparerMiseEnPage), le même en clair et en sombre : c’est la
+               couleur du document, pas celle de l’interface (Kevin, 15.11.2026). -->
           <template v-else-if="item.value === 'bandeau'">
             <rect
-              class="thumb-ink"
+              fill="#F3B08A"
               x="0.75"
               y="0.75"
               width="46.5"
@@ -75,7 +77,7 @@ const { template } = useDocTemplate();
               rx="3"
             />
             <rect
-              class="thumb-on-ink"
+              fill="#1B1F2A"
               x="8"
               y="7"
               width="18"
@@ -175,7 +177,6 @@ const { template } = useDocTemplate();
 .layout-card-thumbs button[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--selected-bg); color: var(--primary-text); font-weight: var(--weight-bold); }
 .layout-card-thumbs .thumb-paper { fill: var(--thumb-paper); stroke: var(--card-line); }
 .layout-card-thumbs .thumb-ink { fill: var(--text); }
-.layout-card-thumbs .thumb-on-ink { fill: var(--thumb-paper); }
 .layout-card-thumbs .thumb-accent { fill: var(--primary-graphic); }
 .layout-card-thumbs .thumb-line { fill: var(--thumb-line); }
 .layout-card-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 0; padding-top: var(--space-3); border-top: 1px solid var(--line); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
