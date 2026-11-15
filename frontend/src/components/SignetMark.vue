@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Le marque-page (lot du 11 novembre au soir, §1) : un seul dessin, réutilisé partout. Corps orange, repli plus
+// Le signet (lot du 11 novembre au soir, §1) : un seul dessin, réutilisé partout. Corps orange, repli plus
 // sombre en haut à gauche, étoile blanche, bas en V ; largeur 1, hauteur 1,82. Décoratif : les couleurs sont
 // celles du dessin, les mêmes en clair et en sombre.
 // `outline` : le même contour, en pointillés, pour « Rien à trier pour l’instant » (PR 49).
@@ -8,7 +8,7 @@ withDefaults(defineProps<{ width?: number; outline?: boolean }>(), { width: 38 }
 
 <template>
   <svg
-    :class="['bookmark-mark', { 'bookmark-outline': outline }]"
+    :class="['signet-mark', { 'signet-outline': outline }]"
     :width="width"
     :height="Math.round(width * 1.82)"
     viewBox="0 0 56 102"
@@ -44,6 +44,6 @@ withDefaults(defineProps<{ width?: number; outline?: boolean }>(), { width: 38 }
 </template>
 
 <style scoped>
-.bookmark-mark { display: block; filter: drop-shadow(0 4px 5px rgba(27, 31, 42, 0.22)); }
-.bookmark-outline { filter: none; opacity: 0.45; }
+.signet-mark { display: block; filter: drop-shadow(0 4px 5px rgba(27, 31, 42, 0.22)); }
+.signet-outline { filter: none; opacity: 0.45; }
 </style>
