@@ -608,7 +608,7 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
         f"({plural(chosen.results, 'résultat rendu', 'résultats rendus')} par le moteur, "
         f"dont {chosen.dated} avec une date ; "
         f"{plural(chosen.too_old, 'offre écartée', 'offres écartées')} car de plus de 14 jours ; "
-        f"{plural(chosen.undated_kept, 'offre gardée', 'offres gardées')} sans date connue ; "
+        f"{plural(chosen.undated, 'offre écartée', 'offres écartées')} sans date connue ; "
         f"{plural(raw.usage.web_searches, 'recherche', 'recherches')}, "
         f"{cost_usd(raw.model, raw.usage):.4f} USD)"
     )
@@ -616,6 +616,8 @@ def cmd_premieres_offres_web(args: argparse.Namespace) -> int:
         details = " · ".join(v for v in (offer.company, offer.location) if v)
         print(f"{number:>2}. {offer.title}" + (f" ({details})" if details else ""))
         print(f"    {offer.url}")
+    for query in raw.web_queries:
+        print(f"Recherche : {query}")
     if chosen.problem:
         print(f"\nRéponse de l'IA illisible : {chosen.problem}.")
     dropped = [v for v in chosen.verdicts if v.reason != web_offers.KEPT]
