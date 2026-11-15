@@ -167,3 +167,9 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
 - Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
+
+## Offre ajoutée à la main, notée comme les autres (Kevin, 15.11.2026, 16 h 33 et 16 h 39)
+
+- Une offre ajoutée à la main est notée comme les autres, quel que soit son statut (écartée par les critères, gardée, en préparation, envoyée). La note part dès l'ajout.
+- Pendant la notation, la carte de la liste ordinateur montre le cercle vide en pointillés et la pastille « Pas encore notée » (§21, paquet jobA1_maquette_2026-11-15_reglages), puis la note s'affiche sans recharger la page.
+- Les offres ajoutées à la main avant le 16 novembre et jamais notées ne sont pas reprises au passage automatique : une commande ponctuelle, idempotente, donne d'abord leur nombre et le coût estimé, puis les note sur accord.

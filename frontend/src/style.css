@@ -54,6 +54,8 @@
   /* Liste reliée à un détail (Candidatures ordinateur, §11 du 15 novembre) : le trait de la zone de détail et de son
      encoche, et le fond de la carte choisie. Ailleurs, la sélection garde --selected-bg. */
   --linked-line: #D5D1C7;
+  /* Tiret du cercle « Pas encore notée » (§21 du 15 novembre). */
+  --unrated-dash: #8C8478;
   --linked-selected-bg: #EEF1FC;
   /* Vignettes de modèle (PreparerOrdinateur) : la feuille blanche et ses lignes grises ; en sombre, le fond et #5E574F. */
   --thumb-paper: #FFFFFF;
@@ -247,6 +249,7 @@
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
     --linked-line: #4E473E;
+    --unrated-dash: #ABA398;
     --linked-selected-bg: #232B45;
     --thumb-paper: #171411;
     --thumb-line: #5E574F;
@@ -311,6 +314,7 @@
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
   --linked-line: #4E473E;
+  --unrated-dash: #ABA398;
   --linked-selected-bg: #232B45;
   --thumb-paper: #171411;
   --thumb-line: #5E574F;

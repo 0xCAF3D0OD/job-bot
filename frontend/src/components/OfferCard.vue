@@ -40,6 +40,9 @@ type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: s
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // Ordinateur, §21 du 15 novembre : sans note, la pastille neutre « Pas encore notée » en tête (le cercle vide est à
+  // droite). Sans profil, « Profil à compléter » le dit à sa place.
+  if (!phone.value && unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
   // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
   // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
   if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
@@ -99,7 +102,28 @@ const { reached } = usePlan();
       /></svg>{{ chip.text }}</span>
     </template>
     <template #end>
+      <svg
+        v-if="!phone && unscored"
+        class="score-ring score-unrated"
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label="Pas encore notée"
+        :title="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
+        data-test="score"
+      ><circle
+        cx="50"
+        cy="50"
+        r="42"
+        fill="none"
+        stroke-width="8"
+        stroke-dasharray="12 9.99"
+      /><path
+        d="M38 50H62"
+        stroke-width="8"
+        stroke-linecap="round"
+      /></svg>
       <ScoreRing
+        v-else
         worded
         :score="offer.score ?? null"
         :pending="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
@@ -124,6 +148,9 @@ const { reached } = usePlan();
 @media (min-width: 1024px) {
   .list-card-end .score-ring { width: 2.5rem; height: 2.5rem; }
   .list-card-end:has(.score-ring) { align-self: start; width: auto; }
+  /* §21 du 15 novembre : sans note, un cercle vide en pointillés et un tiret, à la place de l'anneau. */
+  .score-unrated circle { stroke: var(--linked-line); }
+  .score-unrated path { stroke: var(--unrated-dash); }
   .list-card-end .score-ring-word { display: none; }
   .list-card[aria-current="true"] { --ring-gap: var(--selected-bg); }
 }

@@ -334,11 +334,18 @@ describe("OffersView", () => {
     const cards = wrapper.findAll("[data-test=offer]");
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
     expect(cards[0]?.text()).not.toContain("chez l’employeur");
-    // Pas encore notée : pas d'anneau, le texte, et la raison au survol (docs/76 §3).
-    expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
-    expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["80–100 %", "Temporaire"]);
-    expect(cards[1]?.find("[data-test=offer-chip]").text()).toBe("Type : stage (« stage »)");
-    expect(cards[1]?.find("[data-test=offer-chip]").classes()).toContain("warn");
+    // Pas encore notée (§21 du 15 novembre, ordinateur) : le cercle vide en pointillés, la raison au survol (docs/76
+    // §3), et la pastille neutre en tête.
+    const pending = cards[0]?.find("[data-test=score]");
+    expect(pending?.attributes("aria-label")).toBe("Pas encore notée");
+    expect(pending?.attributes("role")).toBe("img");
+    expect(pending?.attributes("title")).toContain("à noter");
+    expect(pending?.text()).toBe("");
+    expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["Pas encore notée", "80–100 %", "Temporaire"]);
+    expect(cards[0]?.find("[data-test=offer-chip]").classes()).toEqual([]);
+    const reason = cards[1]?.findAll("[data-test=offer-chip]").at(1);
+    expect(reason?.text()).toBe("Type : stage (« stage »)");
+    expect(reason?.classes()).toContain("warn");
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
@@ -388,7 +395,7 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+$|^Reçue (aujourd’hui|hier)$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
-    expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
+    expect(unscored?.find("[data-test=score]").classes()).toContain("score-unrated");
 
     await scored?.trigger("click");
     expect(wrapper.find("[data-test=match-title]").text()).toBe("Proche de ton profil");
@@ -755,6 +762,56 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     expect(listLoads() - before).toBe(1);
   });
 
+  // Kevin, 15.11 : l'offre ajoutée est notée tout de suite, même écartée par les critères. La carte montre « Pas encore
+  // notée » (§21), puis prend la note sans recharger la page ; la relecture s'arrête dès que la note est là.
+  it("l’offre ajoutée prend sa note sans recharger, même écartée", async () => {
+    let scored = false;
+    const added = () =>
+      offer(9, "Menuisier CFC", {
+        added_by_you: true,
+        links: [],
+        status: "filtered_out",
+        filter_reasons: ["Mot exclu : menuisier"],
+        ...(scored ? { score: 82 } : {}),
+      });
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/manual"
+          ? { data: { trade: "Menuisier", added_today: 0, daily_limit: 20 } }
+          : path === "/api/offers/{offer_id}"
+            ? { data: added() }
+            : path === "/api/profile-chunks"
+              ? { data: [{ id: 1, active: true }] }
+              : page([offer(1, "Une", { score: 60 })]),
+      ),
+    );
+    const wrapper = await mountAt("/offres?ajouter=1");
+    await flushPromises();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      wrapper.findComponent({ name: "ManualOfferForm" }).vm.$emit("added", { id: 9, existing: false, status: "filtered_out", reasons: ["Mot exclu : menuisier"] });
+      await flushPromises();
+      await flushPromises();
+      expect(wrapper.text()).toContain("Sa note arrive dans un instant.");
+      const card = () => wrapper.find("[data-offer-row='9'] [data-test=score]");
+      expect(card().attributes("aria-label")).toBe("Pas encore notée");
+      const reads = () => GET.mock.calls.filter((c) => c[0] === "/api/offers/{offer_id}").length;
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(5000);
+      await flushPromises();
+      expect(reads() - before).toBe(1);
+      expect(card().attributes("aria-label")).toBe("Pas encore notée");
+      scored = true;
+      await vi.advanceTimersByTimeAsync(5000);
+      await flushPromises();
+      expect(card().attributes("aria-label")).toBe("Proche : 82 sur 100");
+      await vi.advanceTimersByTimeAsync(20000);
+      expect(reads() - before).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   // PR 38 : pas de « Cette offre était déjà là ». Le panneau se ferme, l'offre s'ouvre, sa carte est mise en avant
   // 2 secondes, et le message dit « Elle était déjà dans ta liste ».
   it("un doublon : le panneau se ferme, la carte existante est mise en avant 2 secondes", async () => {
@@ -889,7 +946,7 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     expect(titles).toEqual(["En préparation", "Aujourd’hui"]);
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[0]!.text()).not.toContain("En préparation");
-    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["Gardée", "80–100 %", "CDI"]);
+    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["Pas encore notée", "Gardée", "80–100 %", "CDI"]);
     // La carte de la maquette : logo, poste, « entreprise · lieu », puces, anneau ; rien d'autre.
     expect(cards[0]!.findAll("button")).toHaveLength(0);
     expect(cards[0]!.element.tagName).toBe("A");
