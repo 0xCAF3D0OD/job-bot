@@ -7,7 +7,7 @@ Plain.props = ["list"];
 </script>
 
 <script setup lang="ts">
-import { ref, toRef, useId } from "vue";
+import { ref, toRef } from "vue";
 
 import { useLinkedNotch } from "../composables/useLinkedNotch";
 
@@ -18,7 +18,6 @@ import { useLinkedNotch } from "../composables/useLinkedNotch";
 const props = defineProps<{ list: HTMLElement | null }>();
 const zone = ref<HTMLElement | null>(null);
 const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
-const id = useId();
 </script>
 
 <template>
@@ -38,25 +37,25 @@ const id = useId();
     >
       <defs>
         <filter
-          :id="`${id}-halo`"
+          id="linked-halo"
           x="-200%"
           y="-100%"
           width="500%"
           height="300%"
         ><feGaussianBlur stdDeviation="5" /></filter>
-        <clipPath :id="`${id}-clip`"><rect
+        <clipPath id="linked-clip"><rect
           x="0.75"
           y="-30"
           width="60"
           height="103"
         /></clipPath>
       </defs>
-      <g :clip-path="`url(#${id}-clip)`"><path
+      <g clip-path="url(#linked-clip)"><path
         class="linked-notch-halo"
         d="M0.75 -4 L17.5 18.8 Q19.9 21.3 17.5 23.8 L0.75 46.6"
         fill="none"
         stroke-width="10"
-        :filter="`url(#${id}-halo)`"
+        filter="url(#linked-halo)"
       /></g>
       <path
         class="linked-notch-fill"
@@ -71,14 +70,6 @@ const id = useId();
         stroke-linecap="round"
       />
     </svg>
-    <div
-      class="linked-fade-top"
-      aria-hidden="true"
-    />
-    <div
-      class="linked-fade-bottom"
-      aria-hidden="true"
-    />
     <div class="linked-scroll">
       <slot />
     </div>
@@ -100,8 +91,8 @@ const id = useId();
 .linked-notch-halo { stroke: var(--primary-graphic); stroke-opacity: var(--linked-halo); }
 .linked-notch-fill { fill: var(--bg); }
 .linked-notch-line { stroke: var(--linked-line); }
-.linked-fade-top { position: absolute; top: calc(-1 * var(--linked-w)); right: 0; z-index: 2; width: var(--linked-fade-x); height: 2px; background: linear-gradient(90deg, transparent, var(--bg)); }
-.linked-fade-bottom { position: absolute; left: -2px; right: 0; bottom: 0; z-index: 2; height: var(--linked-fade-y); background: linear-gradient(180deg, transparent, var(--bg) 85%); pointer-events: none; }
+.linked-detail::before { content: ""; position: absolute; top: calc(-1 * var(--linked-w)); right: 0; z-index: 2; width: var(--linked-fade-x); height: 2px; background: linear-gradient(90deg, transparent, var(--bg)); }
+.linked-detail::after { content: ""; position: absolute; left: -2px; right: 0; bottom: 0; z-index: 2; height: var(--linked-fade-y); background: linear-gradient(180deg, transparent, var(--bg) 85%); pointer-events: none; }
 .linked-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: 0 0 var(--space-12) var(--space-6); }
 /* La liste reliée (OffersView, ApplicationsView) : colonne de 532 px, cartes de 480 px à 52 px de la zone ; la barre
    de recherche et de filtres collée en haut (son fond couvre la carte choisie, 28 px de plus, sans toucher le trait de
