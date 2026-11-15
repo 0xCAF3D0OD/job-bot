@@ -320,6 +320,7 @@ onMounted(() => void load());
               </div>
               <TrainingModules
                 v-if="training.mark!.modules_total"
+                compact
                 :title="training.title"
                 :total="training.mark!.modules_total"
                 :done="training.mark!.modules_done ?? 0"
@@ -692,7 +693,7 @@ onMounted(() => void load());
 .training-now .training-modules-line { grid-row: 1; grid-column: 2; }
 .training-now .training-modules-line strong { font-size: var(--tw-13); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .training-now .training-modules-line span { display: none; }
-.training-now .training-modules-step, .training-now .training-modules-finish { grid-column: 1 / -1; }
+.training-now .training-modules-finish { grid-column: 1 / -1; }
 .training-now-update { justify-self: start; min-height: var(--target-min); font-size: var(--tw-15); }
 .training-kept-row { display: flex; align-items: center; gap: var(--tw-14); width: 100%; min-height: var(--tw-row); padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: none; color: var(--text); font-size: var(--tw-15); font-weight: var(--weight-regular); line-height: var(--tw-lh); text-align: left; white-space: normal; }
 .training-kept-row:hover { background: var(--surface-muted); }
