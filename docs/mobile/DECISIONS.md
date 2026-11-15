@@ -186,6 +186,11 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Téléphone (Kevin, 15.11.2026, 17 h 25) : même traitement que l'ordinateur. Cercle vide en pointillés de 48 px à la place de l'anneau (aria-label « Pas encore notée ») et pastille neutre « Pas encore notée » en première position. Les pastilles qui ne tiennent pas sur la ligne passent dans « +N » (planche Candidatures), jamais coupées.
 - « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
 
+## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
+
+- « N changements, à vérifier » prend l'orange d'alerte `--warning` (clair #A8540E, sombre #F2A766) : c'est une action à faire, pas une réussite. Remplace le vert de la planche PreparerOrdinateurCVPret.
+- Les lignes de « Ce CV » (et de « Ta candidature », qui partage les mêmes lignes) tiennent dans la carte : largeur 100 %, sans marge négative ; la carte n'a pas de marge sur les côtés, le titre et les lignes portent les 18,5 px. Un texte long est coupé sur une ligne avec points de suspension ; dans « Ce CV », le texte complet est dans l'aria-label de la ligne.
+
 ## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
 
 - Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).

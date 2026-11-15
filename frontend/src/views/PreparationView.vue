@@ -2105,17 +2105,14 @@ onMounted(() => void load());
 .prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
 .prep-desk-head > .step-tabs { flex: none; width: auto; }
 
-.prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
+.prep-layout.prep-desk { --prep-15: 15px; --prep-64: 64px; --prep-card: 18.5px; --prep-sheet: 560px; --prep-40: 40px; --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
 /* Une seule zone défile, la page (§1) : la colonne de droite reste en place, sans défilement à elle. */
 .prep-desk .prep-side { gap: var(--space-4); }
-.prep-desk .side-card { gap: var(--space-1); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
-.prep-desk .doc-card-head { background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
-.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
 /* Le CV prêt (§14, PreparerOrdinateurCVPret) : une page A4 de 560 px sur le fond grisé, à 32 px du haut et 40 du bas ;
    nom 20/800, titre 12/700 bleu, coordonnées 10,5, rubriques 10 en capitales bleues soulignées, texte 10,5/15. */
@@ -2128,13 +2125,12 @@ onMounted(() => void load());
   border: 0; border-radius: 0; background: var(--logo-paper); font-size: var(--cv-10-5); line-height: var(--cv-15);
 }
 .prep-desk .cv-sheet .cv-name { font-size: var(--cv-20); font-weight: var(--weight-heavy); line-height: var(--space-6); }
-.prep-desk .cv-sheet .cv-headline { font-size: var(--cv-12); font-weight: var(--weight-bold); color: var(--cv-accent); padding: 0; margin: 0; min-height: var(--space-6); }
+.prep-desk .cv-sheet .cv-headline { font-size: var(--cv-12); font-weight: var(--weight-bold); color: var(--cv-accent); padding: 0; margin: 0; min-height: var(--space-6); height: var(--space-6); }
 .prep-desk .cv-sheet .cv-contacts { color: var(--cv-muted); font-size: var(--cv-10-5); margin: 0 0 var(--space-4); }
 .prep-desk .cv-sheet h3 { margin: var(--space-4) 0 var(--space-2); padding-bottom: var(--space-1); font-size: var(--cv-10); font-weight: var(--weight-heavy); letter-spacing: .08em; color: var(--cv-accent); border-bottom-color: var(--cv-rule); }
 .prep-desk .cv-sheet .cv-item { margin-bottom: var(--space-2); }
 .prep-desk .cv-sheet .cv-item-title { font-size: var(--cv-11-5); }
 .prep-desk .cv-sheet :is(input, textarea) { min-height: 0; padding: 0; border: 1px dashed transparent; border-radius: var(--space-1); background: transparent; color: inherit; box-shadow: none; }
-.prep-desk .cv-sheet .cv-headline { height: var(--space-6); }
 .prep-desk .cv-sheet .kw { padding: 0; border: 0; background: none; color: inherit; font-size: inherit; font-weight: var(--weight-bold); }
 /* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
    (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
@@ -2155,10 +2151,9 @@ onMounted(() => void load());
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
 /* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus,
    libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
-.prep-desk .prep-file { --prep-15: 15px; --prep-64: 64px; gap: 0; }
-.prep-file > h2 { margin: 0 0 var(--space-3); line-height: var(--prep-24); }
+.prep-file > h2 { margin: 0 0 var(--space-3); padding: 0 var(--prep-card); line-height: var(--prep-24); }
 .prep-file-row {
-  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-64); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-3) var(--prep-24); box-sizing: border-box;
+  display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--prep-64); padding: var(--space-2) var(--prep-card); box-sizing: border-box;
   border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
 }
 .prep-file-row:hover { background: var(--selected-bg); }
@@ -2167,8 +2162,9 @@ onMounted(() => void load());
 .prep-file-text { flex: 1; min-width: 0; }
 .prep-file-text b { display: block; font-size: var(--prep-15); line-height: var(--space-5); }
 .prep-file-sub { display: block; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.prep-file-sub:is(.ok, .todo) { font-weight: var(--weight-bold); }
+.prep-file-sub:is(.ok, .todo, .warn, .busy) { font-weight: var(--weight-bold); }
 .prep-file-sub.ok { color: var(--success); }
+.prep-file-sub.warn { color: var(--warning); }
 .prep-file-sub.todo { color: var(--peach-text); }
 .prep-aside-main { display: inline-flex; justify-content: center; width: 100%; min-height: var(--prep-48); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 /* Pas encore de lettre (§2.2) : la page A4 de 560 en lignes grisées, la carte au centre, à 32 px des bords. */
@@ -2218,7 +2214,7 @@ onMounted(() => void load());
 .apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
 /* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
    la source de l’adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
-.apply-company { --apply-22: 22px; --apply-15: 15px; --prep-15: 15px; --prep-64: 64px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+.apply-company { --apply-22: 22px; --apply-15: 15px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
 .apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
 .apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }
 .apply-facts dd { margin: 0; font-size: var(--font-body); line-height: var(--apply-22); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
@@ -2227,7 +2223,6 @@ onMounted(() => void load());
 .apply-facts dd.apply-source { font-size: var(--label-caps); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .apply-site { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--primary-text); text-decoration: none; }
 .apply-site:hover { text-decoration: underline; }
-.apply-company > .prep-file-row:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
 /* Le panneau des contacts sur ordinateur : chaque lien et bouton texte garde une cible de 24 px (§1, WCAG 2.5.8). */
 [data-test=contacts-sheet] .link { display: inline-flex; align-items: center; min-height: var(--space-6); }
 .apply-after-text { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
@@ -2239,7 +2234,7 @@ onMounted(() => void load());
 .prep-spin { --prep-18: 18px; flex: none; width: var(--prep-18); height: var(--prep-18); box-sizing: border-box; border: 2.5px solid var(--card-line); border-top-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: prep-spin 1s linear infinite; }
 @keyframes prep-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .prep-spin { animation: none; } }
-.prep-file-sub.busy { font-weight: var(--weight-bold); color: var(--primary-text); }
+.prep-file-sub.busy { color: var(--primary-text); }
 .prep-file-busy { cursor: default; }
 .prep-file-busy:hover { background: transparent; }
 .prep-desk-bottom-off .prep-revise { opacity: .5; }
@@ -2269,13 +2264,15 @@ onMounted(() => void load());
 .prep-desk-head.container { --prep-4: 4px; padding-top: var(--prep-4); padding-bottom: 0; margin-bottom: var(--space-4); }
 .band.prep-desk-band { background: var(--bg); border-top: 0; padding-top: 0; }
 .prep-desk-head > .step-tabs > a { flex: none; padding-inline: var(--space-4); font-size: var(--font-label); color: var(--text); }
-.prep-layout.prep-desk { --prep-card: 18.5px; --prep-sheet: 560px; --prep-40: 40px; }
 .prep-desk :is(.side-card, .doc-card) { border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.prep-desk .side-card { padding: var(--prep-card); }
-.prep-desk .prep-file { padding-bottom: 0; }
-.prep-desk .prep-file-row { width: calc(100% + 2 * var(--prep-card)); margin: 0 calc(-1 * var(--prep-card)); padding: var(--space-2) var(--prep-card); }
-.prep-desk .doc-card-head { --prep-68: 68px; min-height: var(--prep-68); padding: 0 var(--prep-card); box-sizing: border-box; }
-.prep-desk .doc-card > .letter-sheet { margin: var(--prep-48) auto var(--prep-40); }
+.prep-desk .side-card { gap: var(--space-1); padding: var(--prep-card); }
+/* « Ce CV », « Ta candidature » (Kevin, 15.11) : les lignes tiennent dans la carte, sans marge négative ; la carte n'a pas de marge
+   sur les côtés, le titre et les lignes portent les 18,5. Texte long coupé sur une ligne, le texte complet dans l'aria-label. */
+.prep-desk .prep-file { grid-template-columns: minmax(0, 1fr); gap: 0; padding: var(--prep-card) 0 0; }
+.prep-file-text > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apply-company > .prep-file-row { width: calc(100% + 2 * var(--prep-card)); max-width: none; margin: 0 calc(-1 * var(--prep-card)); }
+.prep-desk .doc-card-head { background: var(--surface); border-bottom: 1px solid var(--line-soft); --prep-68: 68px; min-height: var(--prep-68); padding: 0 var(--prep-card); box-sizing: border-box; }
+.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); border: 0; margin: var(--prep-48) auto var(--prep-40); }
 .prep-desk .doc-language { background: var(--surface-muted); }
 .prep-desk .doc-language > button { --prep-52: 52px; --prep-36: 36px; min-inline-size: var(--prep-52); min-height: var(--prep-36); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); }
 .prep-desk .doc-language > button[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: var(--weight-bold); box-shadow: 0 1px 2px rgb(27 31 42 / 12%); }
