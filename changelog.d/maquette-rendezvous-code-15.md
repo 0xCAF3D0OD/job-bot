@@ -1,1 +1,2 @@
 Maquette : le paquet jobA1_maquette_2026-11-15_rendezvous_code (177 planches, 67 captures, sections 1 à 16 dont états vides, liaison Rendez-vous, code jobup et bouton « + » téléphone) remplace les précédents dans docs/maquette/2026-11-15/, règles recopiées dans docs/design/regles.md.
+État : documentation seule
