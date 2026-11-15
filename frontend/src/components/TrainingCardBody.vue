@@ -153,15 +153,25 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
 
 // Le nombre de modules (B19) : vide, on revient au texte libre ; plus petit, les modules faits suivent.
 function setTotal(value: string): void {
-  const mark = props.training.mark;
-  if (!mark) return;
-  const total = Math.trunc(Number(value));
-  if (!value.trim() || !Number.isFinite(total) || total < 1) {
-    emit("mark", mark.status, { modules_total: null, modules_done: null });
-    return;
-  }
-  const capped = Math.min(total, 999);
-  emit("mark", mark.status, { modules_total: capped, modules_done: Math.min(mark.modules_done ?? 0, capped) });
+  const mark = props.training.mark!;
+  const total = Math.min(Math.trunc(Number(value)), 999);
+  emit(
+    "mark",
+    mark.status,
+    value.trim() && total >= 1
+      ? { modules_total: total, modules_done: Math.min(mark.modules_done ?? 0, total) }
+      : { modules_total: null, modules_done: null },
+  );
+}
+
+// Les modules faits (Kevin, 2026-11-15) : sur ordinateur, le compteur − / + est retiré ; le compte se note ici.
+// Au-delà du total, rien ne part : la valeur tapée reste dans le champ et l'erreur s'affiche dessous.
+const tooMany = ref("");
+function setDone(value: string): void {
+  const mark = props.training.mark!;
+  const done = Math.trunc(Number(value));
+  tooMany.value = done > mark.modules_total! ? value : "";
+  if (!tooMany.value && done >= 0) emit("mark", mark.status, { modules_done: done });
 }
 
 // La pastille d'état de la carte : « En cours · Module 6 sur 12 », « Terminée · certificat ».
@@ -316,24 +326,45 @@ const today = todayDay();
         </div>
       </div>
       <!-- B19 : avec un nombre de modules, le compteur de la carte Suivies ; sans, le texte libre. -->
-      <FormField
-        v-if="training.mark && training.mark.status !== 'done'"
-        v-slot="f"
-        class="training-field"
-        label="Nombre de modules"
-        optional
-      >
-        <input
-          :id="f.id"
-          type="number"
-          inputmode="numeric"
-          min="1"
-          max="999"
-          :value="training.mark.modules_total ?? ''"
-          data-test="modules-total"
-          @change="setTotal(inputValue($event))"
+      <template v-if="training.mark && training.mark.status !== 'done'">
+        <FormField
+          v-slot="f"
+          class="training-field"
+          label="Nombre de modules"
+          optional
         >
-      </FormField>
+          <input
+            :id="f.id"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="999"
+            :value="training.mark.modules_total ?? ''"
+            data-test="modules-total"
+            @change="setTotal(inputValue($event))"
+          >
+        </FormField>
+        <FormField
+          v-if="training.mark.modules_total"
+          v-slot="f"
+          class="training-field"
+          label="Modules faits"
+          :error="tooMany && `Pas plus de ${training.mark.modules_total} modules`"
+        >
+          <input
+            :id="f.id"
+            :aria-describedby="f.describedby"
+            :aria-invalid="f.invalid"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            :max="training.mark.modules_total"
+            :value="tooMany || (training.mark.modules_done ?? 0)"
+            data-test="modules-done"
+            @change="setDone(inputValue($event))"
+          >
+        </FormField>
+      </template>
       <FormField
         v-if="training.mark?.status === 'in_progress' && !training.mark.modules_total"
         v-slot="f"

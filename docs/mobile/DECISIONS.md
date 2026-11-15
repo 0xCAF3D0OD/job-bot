@@ -194,3 +194,19 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Ligne d'état de l'étape : « on vérifie toutes les 15 s » (la vraie fréquence du serveur).
 - Retiré : le message « Déjà six relevés rapides cette heure-ci », qui ne pouvait plus s'afficher (Kevin, 19 h 02).
 - La boîte jobA1 ne répond pas (Kevin, 19 h 02) : après 3 lectures ratées de suite de la boîte des invités (Infomaniak indisponible, erreur IMAP), la ligne d'état de l'étape 3 devient « La boîte jobA1 ne répond pas. On réessaie dans 1 minute. », même style, icône d'alerte orange. Le relevé ne relit plus la boîte qu'une fois par minute tant qu'elle ne répond pas. La ligne revient à l'attente dès qu'une lecture réussit. Aucun détail technique affiché ; dans les journaux, le type d'erreur seulement, ni adresse ni code.
+
+## Formations ordinateur, plus de « Module terminé » (Kevin, 15.11.2026, 16 h 33)
+
+- Dans « En cours » de la vue d'ensemble Formations sur ordinateur, « Module terminé » et ses boutons − et + sont retirés : « Module N sur 12 » avec la barre suffit, comme sur la planche BilanOrdinateur.
+- « Marquer comme terminée » (au dernier module) et « Noter l'avancement » restent. Le téléphone (Suivies) garde le compteur jusqu'à sa propre page.
+- Le compte se note dans le panneau « Noter l'avancement » : champ « Modules faits » (nombre, de 0 au nombre de modules, libellé visible), sous « Nombre de modules ». Au-delà du total, rien n'est enregistré et « Pas plus de N modules » s'affiche sous le champ. La carte montre ensuite « Module N sur 12 » (Kevin, 15.11.2026, 18 h 01).
+
+## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
+
+- « N changements, à vérifier » prend l'orange d'alerte `--warning` (clair #A8540E, sombre #F2A766) : c'est une action à faire, pas une réussite. Remplace le vert de la planche PreparerOrdinateurCVPret.
+- Les lignes de « Ce CV » (et de « Ta candidature », qui partage les mêmes lignes) tiennent dans la carte : largeur 100 %, sans marge négative ; la carte n'a pas de marge sur les côtés, le titre et les lignes portent les 18,5 px. Un texte long est coupé sur une ligne avec points de suspension ; dans « Ce CV », le texte complet est dans l'aria-label de la ligne.
+
+## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
+
+- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
+- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.

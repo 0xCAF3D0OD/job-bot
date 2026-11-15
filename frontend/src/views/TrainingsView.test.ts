@@ -380,6 +380,10 @@ describe("TrainingsView", () => {
       expect(wrapper.text()).toContain("1 formation");
       expect(wrapper.find("[data-test=training-current]").text()).toContain("Continuer le cours");
       expect(wrapper.find("[data-test=modules-bar]").exists()).toBe(true);
+      // Kevin, 2026-11-15 : « Module N sur 12 » suffit, plus de « Module terminé » ni de − et +.
+      expect(wrapper.find("[data-test=training-current]").text()).not.toContain("Module terminé");
+      expect(wrapper.find("[data-test=module-more]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=module-less]").exists()).toBe(false);
       const rows = wrapper.findAll("[data-test=training-kept]");
       expect(rows).toHaveLength(2);
       expect(rows[0]!.text()).toContain("HashiCorp · À ton rythme · 2 semaines");
@@ -387,6 +391,30 @@ describe("TrainingsView", () => {
       expect(rows[1]!.text()).toContain("Microsoft Learn · À ton rythme · gratuit");
       expect(rows[1]!.find("[data-test=training-kept-status]").exists()).toBe(false);
       expect(wrapper.findAll("[data-test=training]")).toHaveLength(0);
+    });
+
+    it("« Modules faits » se note dans « Noter l’avancement » ; au-delà du total, l’erreur et rien n’est envoyé", async () => {
+      GET.mockResolvedValue({ data: page([current]) });
+      PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) =>
+        Promise.resolve({ data: { status: "in_progress", modules_total: 12, modules_done: 3, ...body } }),
+      );
+      const wrapper = await mountView("/formations", false);
+      await wrapper.find("[data-test=training-update]").trigger("click");
+      await flushPromises();
+      const field = wrapper.find("[data-test=modules-done]");
+      expect([field.attributes("type"), field.attributes("inputmode"), field.attributes("min"), field.attributes("max")]).toEqual(["number", "numeric", "0", "12"]);
+      expect(wrapper.text()).toContain("Modules faits");
+      await field.setValue("13");
+      await flushPromises();
+      expect(PUT).not.toHaveBeenCalled();
+      expect(wrapper.text()).toContain("Pas plus de 12 modules");
+      expect(field.attributes("aria-invalid")).toBe("true");
+      expect((field.element as HTMLInputElement).value).toBe("13");
+      await field.setValue("9");
+      await flushPromises();
+      expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "in_progress", modules_total: 12, modules_done: 9 });
+      expect(wrapper.text()).not.toContain("Pas plus de 12 modules");
+      expect(wrapper.find("[data-test=training-current] .training-modules-line").text()).toContain("Module 9 sur 12");
     });
 
     it("« Chercher d’autres formations » ouvre le catalogue inchangé, et Suivies y ramène", async () => {
