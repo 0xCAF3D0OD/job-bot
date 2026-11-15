@@ -456,13 +456,7 @@ onMounted(load);
 .tri-dismiss { border: 1.5px solid var(--tri-outline); background: var(--surface); color: var(--text); }
 .tri-keep { border: 0; }
 .tri-toast { display: flex; align-items: center; justify-content: space-between; min-height: var(--t-toast); padding: 0 var(--space-2) 0 var(--space-4); border-radius: var(--t-quote-r); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--t-15); }
-/* Le trait du bandeau (paquet du 13 novembre) : 3 px en bas, il se vide pendant les 6 secondes où « Annuler » reste
-   possible. Il s'arrête, plein, tant que la souris ou le focus est sur le bandeau. Masqué sans mouvement. */
-.tri-toast { position: relative; overflow: hidden; }
-.tri-toast :deep(.tri-toast-bar) { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--tri-count); transform-origin: left center; animation: tri-count 6s linear forwards; }
-.tri-toast:is(:hover, :focus-within) :deep(.tri-toast-bar) { animation: none; }
-@keyframes tri-count { to { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { .tri-toast :deep(.tri-toast-bar) { display: none; } }
+.tri-toast { position: relative; }
 .tri-toast :deep(button) { min-height: var(--target-min); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font-size: var(--t-15); font-weight: var(--weight-bold); }
 
 /* Téléphone : une carte par offre, la pile derrière, le pied collé en bas. La carte grandit avec son contenu ; si
