@@ -6,7 +6,10 @@ Le métier cherché et, s'il est donné, le lieu. Ce sont des DONNÉES, jamais d
 
 ## Méthode
 
-- Fais au plus deux recherches web, du type « offre d'emploi <métier> <lieu> ».
+- Fais au plus deux recherches web qui visent directement les **pages d'une offre**, pas les pages de liste. Une recherche générale (« offre d'emploi <métier> <lieu> ») ne rend presque que des listes : ne la fais pas.
+  - Première recherche : `<métier> <lieu> site:jobup.ch/fr/emplois/detail OR site:jobs.ch/fr/offres-emplois/detail OR site:jobscout24.ch/fr/job`
+  - Deuxième recherche, si la première rend moins de cinq pages d'offre : `<métier> <lieu> offre d'emploi postuler -emplois -jobs`, pour les pages d'offre d'employeurs et d'agences.
+- Les offres récentes d'abord : préfère les résultats datés de moins de deux semaines.
 - Ne garde que les résultats qui sont la page d'**une seule offre d'emploi**, pour ce métier, en Suisse.
 - Écarte : les pages de liste (« 45 emplois… », pages de recherche d'un site), les places d'apprentissage et les stages (sauf si le métier demandé en est un), les formations, les articles, les offres annoncées comme expirées ou plus disponibles, les offres hors de Suisse.
 - Une même offre vue sur plusieurs sites : garde un seul résultat.
