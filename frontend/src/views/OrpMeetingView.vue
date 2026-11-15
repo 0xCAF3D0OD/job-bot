@@ -7,6 +7,7 @@ import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import AppToast from "../components/AppToast.vue";
 import BusyButton from "../components/BusyButton.vue";
+import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
 import CopyButton from "../components/CopyButton.vue";
@@ -299,10 +300,31 @@ const sheetView = computed(() => typeof sheetPart.value === "string");
 const compact = computed(() => phone.value && !!page.value && !noApplications.value && !sheetView.value);
 const wideView = computed(() => wide.value && !phone.value && !!page.value && !noApplications.value && !sheetView.value);
 const applications = ref<Application[]>([]);
+const applicationsLoaded = ref(false);
 const preparing = ref<Application | null>(null);
 async function loadApplications(): Promise<void> {
   const { data } = await api.GET("/api/applications");
   if (Array.isArray(data)) applications.value = data;
+  applicationsLoaded.value = true;
+}
+// Aucun rendez-vous du tout (§13 du 15 novembre, RendezVousOrdinateurVide / RendezVousVide) : ni ORP, ni entretien, ni
+// rendez-vous passé. L’état vide commun, centré ; le formulaire (date, heure, lieu) n’apparaît qu’après « Ajouter un
+// rendez-vous » (décision de Kevin du 15.11) : sans candidature, le formulaire ORP sur place ; sinon le panneau
+// « Nouveau rendez-vous », comme le « + Ajouter » de l’en-tête.
+const formOpen = ref(false);
+const noMeetings = computed(
+  () =>
+    !!page.value &&
+    !sheetView.value &&
+    !formOpen.value &&
+    !page.value.meeting &&
+    !page.value.past.length &&
+    // Entre les deux formats, la page entière (Préparer, Le mois) reste : seulement téléphone et ordinateur.
+    (noApplications.value || ((phone.value || wide.value) && applicationsLoaded.value && !upcomingAppointments(null, applications.value).length)),
+);
+function addFirst(): void {
+  if (noApplications.value) formOpen.value = true;
+  else openAdd();
 }
 watch(() => phone.value || wide.value, (value) => value && void loadApplications(), { immediate: true });
 // La recherche (maquette du 14 novembre, RendezVous, §6 ; décision de Kevin du 14.11) : « Poste, entreprise, lieu »
@@ -336,9 +358,9 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section class="jobs-body orp-meeting">
+  <section :class="['jobs-body', 'orp-meeting', { 'jobs-empty': noMeetings }]">
     <Teleport
-      v-if="phone && !sheetView"
+      v-if="phone && !sheetView && !noMeetings"
       to="#jobs-tools"
       defer
     >
@@ -357,6 +379,36 @@ onMounted(() => void load());
       Impossible de préparer le rendez-vous pour l’instant.
     </p>
     <LoadingBlocks v-else-if="!page" />
+    <EmptyState
+      v-else-if="noMeetings"
+      scene="rendez-vous-vide"
+      :width="117"
+      :desktop-width="180"
+      title="Aucun rendez-vous"
+      pill="jobA1 prépare ta feuille la veille"
+      pill-icon="calendar"
+      data-test="rdv-none-yet"
+    >
+      <template #actions>
+        <button
+          type="button"
+          class="primary"
+          data-test="rdv-none-add"
+          @click="addFirst"
+        >
+          <AppIcon name="plus" />Ajouter un rendez-vous
+        </button>
+      </template>
+      <!-- Sans candidature : le lien vers les offres d’avant reste, sous le bouton (texte hors carte = lien). -->
+      <RouterLink
+        v-if="noApplications"
+        to="/candidatures/offres"
+        class="link"
+        data-test="see-offers"
+      >
+        Voir les offres
+      </RouterLink>
+    </EmptyState>
     <RendezVousDesktop
       v-else-if="wideView"
       :page="page"
