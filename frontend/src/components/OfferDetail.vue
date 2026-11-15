@@ -1692,7 +1692,7 @@ watch(
      comme « Le poste » (titre 16/700, texte 15 px ; décision de Kevin du 15.11). */
   .offer-provisional { --prov-34: 34px; }
   .offer-provisional > .detail-offer { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ob-12); margin: var(--space-1) var(--ob-margin) 0; padding: 0; background: none; border: 0; }
-  .offer-provisional .detail-title h2 { font-size: var(--ob-28); line-height: var(--prov-34); font-weight: var(--weight-bold); letter-spacing: -0.015em; }
+  .offer-provisional .detail-title h2 { font-size: var(--ob-28); line-height: var(--prov-34); font-weight: var(--weight-bold); }
   .offer-provisional .detail-title .detail-sub { font-size: var(--font-body); line-height: var(--ob-24); }
   .offer-provisional .offer-tags { margin-top: 0; }
   .offer-provisional .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); }

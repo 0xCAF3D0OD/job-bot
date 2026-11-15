@@ -96,7 +96,7 @@ export const ICONS = {
   close: path("M6 6l12 12M18 6L6 18"),
   // La feuille d'actions d'une offre (ActionsOffre, §17 du 15 novembre) : expirée, la note ne correspond pas, partager.
   "clock-off": circle(12, 12, 9) + path("M12 7v5l3 2M4 4l16 16"),
-  "thumbs-down": path("M10 15v4a3 3 0 0 0 3 3l4-9V2H5.7a2 2 0 0 0-2 1.7l-1.4 9a2 2 0 0 0 2 2.3zM17 2h2.7A2.3 2.3 0 0 1 22 4v7a2.3 2.3 0 0 1-2.3 2H17"),
+  "thumbs-down": path("M10 15v4a3 3 0 0 0 3 3l4-9V2H6a2 2 0 0 0-2 2l-1.4 9a2 2 0 0 0 2 2zM17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"),
   "share-nodes": circle(18, 5, 2.5) + circle(6, 12, 2.5) + circle(18, 19, 2.5) + path("M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"),
   "arrow-left": path("M19 12H5M11 6l-6 6 6 6"),
   "arrow-right": path("M5 12h14M13 6l6 6-6 6"),
