@@ -396,8 +396,8 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 /* Ordinateur, maquette du 14 novembre (§8, §9 ; planche CandidaturesOrdinateurStatut) : en-tête de 20 px de marge,
    titre 18/700, pastille verte ; lignes à étiquette 13 grise au-dessus de la valeur 15/700, 12 px en haut et en bas,
    64 px au moins, filet de 1 px ; pilules de 52 px, 12 px entre elles ; « Après l’envoi » en pastille grise. */
-.sent-card.fc-card { --fc-x: 24px; --fc-top: 18.5px; --fc-14: 14px; --fc-r: 6px; --fc-52: 52px; --fc-64: 64px; padding: 0; overflow: hidden; }
-.fc-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--fc-top) var(--fc-x) var(--fc-14); border-bottom: 1px solid var(--line); }
+.sent-card.fc-card { --fc-x: 24px; --fc-top: 18.5px; --fc-r: 6px; --fc-52: 52px; --fc-64: 64px; padding: 0; overflow: hidden; }
+.fc-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--fc-top) var(--fc-x) var(--space-4); border-bottom: 1px solid var(--line); }
 .fc-head .follow-card-title { margin: 0; font-size: var(--follow-18); line-height: var(--space-6); font-weight: var(--weight-bold); }
 .fc-pill, .fc-after-pill { flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--fc-r); font-size: var(--follow-13); line-height: var(--follow-16); font-weight: var(--weight-bold); }
 .fc-pill { background: var(--success-soft); color: var(--success); }

@@ -77,11 +77,11 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 </template>
 
 <style>
-/* Valeurs de la planche CandidaturesOrdinateurB (onglets Offres et Envoyées) : la zone commence 18 px avant la fin de
+/* Valeurs de la planche CandidaturesOrdinateurB (onglets Offres et Envoyées) : la zone commence 18,5 px (18 sur la planche, 18,5 admis par l’audit de grille) avant la fin de
    la colonne liste (532 px) ; contenu à 24 px du trait, 16 px entre les cartes, 48 px sous la dernière. Halo de
    l'encoche : --primary-graphic à 26 % (22 % en sombre), côté zone seulement. */
 .linked-detail {
-  --linked-r: 24px; --linked-w: 1.5px; --linked-fade-x: 160px; --linked-fade-y: 72px; --linked-into: -18px; --linked-halo: 0.26;
+  --linked-r: 24px; --linked-w: 1.5px; --linked-fade-x: 160px; --linked-fade-y: 72px; --linked-into: -18.5px; --linked-halo: 0.26;
   position: relative; z-index: 0; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; margin-left: var(--linked-into);
   border-top: var(--linked-w) solid var(--linked-line); border-left: var(--linked-w) solid var(--linked-line); border-top-left-radius: var(--linked-r);
 }

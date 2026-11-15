@@ -707,7 +707,7 @@ function onStatus(value: ApplicationStatus): void {
    8 px entre elles ; en-tête 22,5 de marge, logo 56, titre 24/30 800, « entreprise · ville » 15 ; mots 15/20 700
    décalés de 72 ; Suivi : cercles de 28 à trait 2, libellés 14/18 700 à gauche, dates 13/16, traits de 2 à 8 px des
    cercles ; colonne droite de 280, lignes de 56 ; Historique sur le crème, 20 px plus bas. */
-.sent-detail-cards { --sent-8: 8px; --sent-18-5: 18.5px; --sent-22-5: 22.5px; --sent-56: 56px; --sent-72: 72px; --sent-19: 19px; --sent-30: 30px; --sent-28: 28px; --sent-14: 14px; --sent-13: 13px; --sent-16: 16px; --sent-18: 18px; --sent-2: 2px; --sent-64: 64px; --sent-6: 6px; display: flex; flex-direction: column; gap: var(--sent-8); }
+.sent-detail-cards { --sent-8: 8px; --sent-18-5: 18.5px; --sent-22-5: 22.5px; --sent-56: 56px; --sent-72: 72px; --sent-19: 19px; --sent-30: 30px; --sent-28: 28px; --sent-14: 14px; --sent-13: 13px; --sent-16: 16px; --sent-18: 18px; --sent-2: 2px; --sent-64: 64px; display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-card { padding: var(--sent-18-5); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .sent-head { display: flex; flex-direction: column; padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
 .sent-head-top { display: flex; align-items: flex-start; gap: var(--space-4); }
@@ -715,7 +715,7 @@ function onStatus(value: ApplicationStatus): void {
 .sent-head-title { flex: 1; min-width: 0; }
 .sent-head-title h2 { margin: 0; font-size: var(--space-6); line-height: var(--sent-30); font-weight: var(--weight-heavy); }
 .sent-head-title p { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
-.sent-words { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin: calc(-1 * var(--sent-6)) 0 0; font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
+.sent-words { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin: calc(-1 * var(--space-1)) 0 0; font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
 .sent-words > span { display: inline-flex; align-items: center; gap: var(--space-1); }
 .sent-words .icon { width: var(--sent-16); height: var(--sent-16); stroke-width: 2.6; }
 .sent-words .peach { color: var(--peach-text); }
@@ -775,7 +775,7 @@ function onStatus(value: ApplicationStatus): void {
    64 px au moins (12 px en haut et en bas), puis la ligne « Historique » à chevron. */
 .sent-detail-cards:not(.sent-detail-phone) { gap: var(--space-4); }
 .sd-title { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6) var(--sent-28) var(--space-1) var(--space-6); }
-.sd-steps-card { padding: var(--space-5) var(--space-6) var(--sent-18); border-width: 1px; border-color: var(--line); border-radius: var(--space-6); }
+.sd-steps-card { padding: var(--space-5) var(--space-6); border-width: 1px; border-color: var(--line); border-radius: var(--space-6); }
 .sd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; }
 .sd-steps > li, .sd-steps > li:last-child { flex: none; align-items: center; text-align: center; }
 .sd-steps .sent-step-line { left: calc(50% + var(--sent-28) / 2 + var(--sent-8)); right: calc(-50% + var(--sent-28) / 2 + var(--sent-8)); }
