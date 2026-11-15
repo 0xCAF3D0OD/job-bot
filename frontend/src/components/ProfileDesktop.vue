@@ -431,7 +431,7 @@ async function onSaved(): Promise<void> {
 .profile-skill, .profile-skill-add { display: inline-flex; align-items: center; min-height: var(--pd-chip-h); padding: var(--pd-chip-y) var(--space-3); box-sizing: border-box; border-radius: var(--radius-pill); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .profile-skill { background: var(--surface-muted); color: var(--text-secondary); }
 .profile-skill:hover { color: var(--text); }
-.profile-skill-add { border: 1.5px dashed var(--field-border); color: var(--primary-text); }
+.profile-skill-add { border: 1.5px dashed var(--button-outline); color: var(--primary-text); }
 .profile-section .criteria-row { text-decoration: none; }
 .profile-desktop .narrow-block, .profile-section .narrow-block { max-width: none; }
 

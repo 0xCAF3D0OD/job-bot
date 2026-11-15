@@ -2284,7 +2284,7 @@ onMounted(() => void load());
 .prep-desk .apply-copy-desk { padding-bottom: var(--space-1); }
 .prep-desk .apply-go > .prep-bar-main { font-size: var(--font-body); }
 .prep-desk .apply-go > :is(.apply-already, .apply-reopen) { font-size: var(--font-label); }
-.prep-desk-bottom .suggestion-chip { border-color: var(--card-line); font-size: var(--font-label); }
+.prep-desk-bottom .suggestion-chip { font-size: var(--font-label); }
 .prep-desk-bottom .composer-pill { --prep-20: 20px; --prep-56: 56px; min-height: var(--prep-56); padding: 0 var(--space-2) 0 var(--prep-20); border: 1.5px solid var(--field-border); }
 /* Le modèle choisi dans « Mise en page » habille la page de la lettre et du CV comme leur PDF (letters/pdf.py) et
    comme la planche PreparerMiseEnPage : Moderne, la bande bleue à gauche et le nom en bleu ; Bandeau, le nom dans un

@@ -171,7 +171,7 @@ onMounted(load);
 .partner-app-tile .icon { width: 24px; height: 24px; stroke-width: var(--icon-stroke); }
 .partner-app + .setting-row, .setting-row + .partner-app-remove { border-top: 1px solid var(--divider); }
 .partner-app-remove { padding: var(--space-3) var(--space-6) var(--space-5); }
-.partner-app-remove-button { width: 100%; min-height: var(--btn-tertiary); justify-content: center; border: 1.5px solid var(--line); border-radius: var(--radius-card); background: var(--surface); color: var(--primary-text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer; }
+.partner-app-remove-button { width: 100%; min-height: var(--btn-tertiary); justify-content: center; border: 1.5px solid var(--button-outline); border-radius: var(--radius-card); background: var(--surface); color: var(--primary-text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer; }
 .partner-app-empty { margin: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .partner-confirm { width: calc(100% - 2 * var(--space-6)); max-width: 420px; box-sizing: border-box; padding: var(--space-6) var(--space-5) var(--space-5); border: 0; border-radius: var(--radius-block); background: var(--surface); color: var(--text); box-shadow: 0 20px 50px rgba(27, 31, 42, 0.25); }
 .partner-confirm[open] { display: flex; flex-direction: column; gap: var(--space-3); }

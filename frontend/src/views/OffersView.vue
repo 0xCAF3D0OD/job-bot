@@ -1344,12 +1344,12 @@ onUnmounted(() => {
 /* Aucune offre (§2.7, AucuneOffreOrdinateur) : trait de 420 px à 32 px sous les boutons, phrase 15 grise à 32 dessous,
    lien 15/700 de 44 px. Le panneau « Ajouter » (§2.6) : les onglets, puis la phrase 15 à 24 dessous. */
 /* Sur ordinateur, sans offre avec ces filtres : pas de colonne de fiche, l'écran est centré sur toute la largeur ;
-   « Tout effacer » en contour gris, texte foncé (planche : trait #C9C5BA, absent des jetons : --line-strong). */
+   « Tout effacer » en contour gris, texte foncé (planche : trait #C9C5BA, --button-outline). */
 @media (min-width: 1024px) {
 .offers-grid.offers-grid-empty .offers-list { --empty-tools: 472px; flex: 1; width: auto; }
   .offers-grid-empty .offers-list-tools { max-width: var(--empty-tools); }
   .offers-grid-empty .offers-list :deep(.character-state-wide) { margin-inline: auto; }
-  .offers-empty-reset { border-color: var(--line-strong); background: var(--surface); color: var(--text); }
+  .offers-empty-reset { border-color: var(--button-outline); background: var(--surface); color: var(--text); }
 }
 .offers-empty-spontaneous { --empty-420: 420px; --empty-15: 15px; display: grid; justify-items: center; gap: var(--space-1); width: min(var(--empty-420), 100%); margin: var(--space-8) auto 0; padding-top: var(--space-8); border-top: 1px solid var(--line); }
 .offers-empty-spontaneous p { margin: 0; font-size: var(--empty-15); color: var(--text-secondary); }

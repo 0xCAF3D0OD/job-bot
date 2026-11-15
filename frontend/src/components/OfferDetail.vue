@@ -1601,7 +1601,7 @@ watch(
 .oc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--oc-14) var(--oc-x) var(--oc-head-top); border-top: 1px solid var(--line); }
 .oc-actions > :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: var(--oc-pill); padding: 0 var(--oc-22); border-radius: var(--oc-pill-r); font-size: var(--font-label); white-space: nowrap; }
 .oc-actions > .button-link.primary-link { padding: 0 var(--space-6); border: 0; background: var(--action); color: var(--on-action); font-weight: var(--weight-bold); }
-.oc-actions > button.secondary { border: var(--action-line, 1.5px) solid var(--line-strong); background: var(--surface); color: var(--text); font-weight: var(--weight-semibold); }
+.oc-actions > button.secondary { border: var(--action-line, 1.5px) solid var(--button-outline); background: var(--surface); color: var(--text); font-weight: var(--weight-semibold); }
 .oc-brief .oc-card-title { padding-bottom: var(--space-2); }
 .oc-brief-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0; padding-bottom: var(--space-2); }
 .oc-brief-grid > div { box-sizing: border-box; min-height: var(--oc-row-min); padding: var(--space-3) var(--oc-x); }

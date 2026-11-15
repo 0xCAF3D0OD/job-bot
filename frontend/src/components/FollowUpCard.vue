@@ -411,7 +411,7 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 .fc-card .follow-card-change .more-trigger { min-height: var(--target-min); font-size: var(--font-label); }
 .fc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--fc-x); border-bottom: 1px solid var(--line); }
 .fc-actions :is(.primary, .primary-link, .secondary) { min-height: var(--fc-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.fc-actions .secondary { border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
+.fc-actions .secondary { border: 1.5px solid var(--button-outline); background: var(--surface); color: var(--text); }
 .fc-error { margin: var(--space-3) var(--fc-x) 0; }
 .fc-after { display: flex; align-items: center; gap: var(--space-3); margin: 0; padding: var(--space-3) var(--fc-x); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .fc-after-pill { background: color-mix(in srgb, var(--text) 7%, var(--surface)); color: var(--text); }

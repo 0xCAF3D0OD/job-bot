@@ -221,7 +221,7 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
 .outcome-field textarea { resize: none; }
 .outcome-counter { display: flex; align-items: center; gap: var(--out-14); }
 .outcome-counter button {
-  display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0; border: 1.5px solid var(--line); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0; border: 1.5px solid var(--button-outline); border-radius: 50%;
   background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
 }
 .outcome-counter > span { min-width: 2.25rem; text-align: center; font-size: var(--out-24); font-weight: var(--weight-heavy); }

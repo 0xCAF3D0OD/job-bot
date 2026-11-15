@@ -394,7 +394,7 @@ async function save(): Promise<void> {
 .answer-choices { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .answer-choices button {
   flex: none; display: flex; align-items: center; gap: var(--space-2); height: 2.75rem; padding: 0 var(--space-4);
-  border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text);
+  border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text);
   font: inherit; font-size: var(--as-15); font-weight: var(--weight-semibold); cursor: pointer;
 }
 .answer-choices button[aria-checked="true"] { border: 2px solid var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); font-weight: var(--weight-bold); }

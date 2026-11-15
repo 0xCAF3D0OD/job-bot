@@ -155,3 +155,9 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 | 2026-11-15 | Pointe du rail : la formule du LISEZMOI fait foi (centre de la flèche − haut de la zone − 30, contact exact) ; le dessin de la planche (1,5 px plus haut) est une imprécision. | Kevin, réponse 1 sur #731 |
 | 2026-11-15 | Carte épinglée de Rendez-vous : la date dans le carré de 40 px du logo (même rayon, fond neutre), jour en gras, mois abrégé dessous ; « <Entreprise> · Sélection affichée » (l'ORP pour ses rendez-vous) ; nom du bouton « Revenir au rendez-vous du 12 novembre, <Entreprise>, dans la liste ». | Kevin, réponse 2 sur #731 |
 | 2026-11-15 | La barre de recherche et de filtres sort de ce qui défile : seules les cartes défilent, la barre de défilement commence sous les filtres ; la carte épinglée reste à 12 px sous la barre de recherche. | Kevin, réponse 3 sur #731 |
+
+## Contour des boutons secondaires (Kevin, 15.11.2026, 11 h 57)
+
+- `--line-strong` (#D8D4CA) ne change pas : contours de champs, barre de recherche, séparateurs.
+- Nouveau jeton `--button-outline` : #C9C5BA, sombre #4E473E, pour tous les boutons secondaires à contour gris (« Plus de filtres », « Retirer l’accès », « Annuler », pastilles, boutons ronds, « + Ajouter » en pointillé).
+- « Plus de filtres » : le demi-pixel restant (espace 8 au lieu de 6, icône 16,5 au lieu de 18) est accepté.

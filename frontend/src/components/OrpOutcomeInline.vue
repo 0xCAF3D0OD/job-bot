@@ -176,7 +176,7 @@ const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}
 .outcome-inline .outcome-counter { display: flex; align-items: center; gap: var(--out-14); }
 .outcome-inline .outcome-counter button {
   display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0;
-  border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
+  border: 1.5px solid var(--button-outline); border-radius: 50%; background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
 }
 .outcome-inline .outcome-counter > span { min-width: var(--space-8); text-align: center; font-size: var(--out-22); font-weight: var(--weight-heavy); }
 .outcome-inline .outcome-counter small { font-size: var(--font-small); color: var(--text-secondary); }
@@ -186,7 +186,7 @@ const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}
 .outcome-next-text span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
 button.outcome-next-add, button.outcome-next-add:hover:not(:disabled) {
   flex: none; display: inline-flex; align-items: center; gap: var(--out-6); height: var(--target-min); min-height: var(--target-min); padding: 0 var(--out-18);
-  border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold);
+  border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold);
 }
 .outcome-inline-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; background: var(--surface); border-top: 1px solid var(--line-soft); }
 .outcome-inline-actions .primary { flex: none; min-height: var(--out-52); padding: 0 var(--out-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
