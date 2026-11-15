@@ -26,7 +26,7 @@ CHUV = "https://carrieres.exemple-hopital.ch/job/assc-urgences"
 TODAY = date(2026, 11, 14)
 # Ce que le moteur a rendu : adresse, titre et, parfois, âge de la page.
 RESULTS = (
-    WebResult(ASSC, "ASSC en soins à domicile - CMS Exemple | exemple-emploi.ch"),
+    WebResult(ASSC, "ASSC en soins à domicile - CMS Exemple | exemple-emploi.ch", "2 days ago"),
     WebResult(CHUV, "Un·e ASSC aux urgences, Lausanne", "November 10, 2026"),
     WebResult("https://www.exemple-emploi.ch/emplois?q=assc", "45 emplois ASSC"),
 )
@@ -144,13 +144,15 @@ def test_offers_older_than_14_days_are_dropped_when_the_date_is_known() -> None:
     for old in ("October 30, 2026", "2025-11-12", "15 days ago", "3 weeks ago", "il y a 2 mois"):
         chosen = web_offers.select_offers(dated(old), TODAY)
         assert (chosen.offers, chosen.too_old, chosen.dated) == ([], 1, 1), old
-    # Sans date, ou avec une date illisible : gardée, et comptée « sans date ».
+    # Sans date, ou avec une date illisible : écartée aussi (essai du 2026-11-15 : des offres
+    # sans date affichée avaient 160 jours), et comptée « sans date ».
     for unknown in (None, "", "bientôt"):
         chosen = web_offers.select_offers(dated(unknown), TODAY)
-        assert (len(chosen.offers), chosen.dated, chosen.undated_kept) == (1, 0, 1)
-    # La part des résultats datés, affichée par la commande d'essai : 1 sur 3 ici.
+        assert (chosen.offers, chosen.dated, chosen.undated) == ([], 0, 1)
+        assert chosen.verdicts[0].reason == web_offers.UNDATED
+    # La part des résultats datés, affichée par la commande d'essai : 2 sur 3 ici.
     chosen = web_offers.select_offers(answer([]), TODAY)
-    assert (chosen.results, chosen.dated) == (3, 1)
+    assert (chosen.results, chosen.dated) == (3, 2)
 
 
 def test_each_result_says_why_it_is_dropped() -> None:
@@ -291,3 +293,26 @@ async def test_web_search_can_be_relaunched_once_a_day_at_most(web: Runtime) -> 
         await public_search._save(session, {"status": "done", "at": two_hours_ago})
     assert await public_search.request(web) == "too_soon"
     assert public_search.MAX_WEB_QUERIES == 2 and web_offers.MAX_SEARCHES == 2
+
+
+def test_the_searches_made_by_the_ai_are_kept_for_the_trial() -> None:
+    """L'essai affiche les requêtes faites (docs/104), pour voir si elles visent des offres."""
+    from types import SimpleNamespace as Block
+
+    from jobbot.llm.client import _raw
+
+    usage = Block(
+        input_tokens=1, cache_read_input_tokens=0, cache_creation_input_tokens=0,
+        output_tokens=1, server_tool_use=Block(web_search_requests=1),
+    )  # fmt: skip
+    message = Block(
+        model="m", stop_reason="end_turn", usage=usage,
+        content=[
+            Block(type="server_tool_use", name="web_search", input={"query": "ASSC site:jobup.ch"}),
+            Block(type="web_search_tool_result", content=[Block(url=ASSC, title="A")]),
+            Block(type="text", text="<reponse>{\"offers\": []}</reponse>"),
+        ],
+    )  # fmt: skip
+    raw = _raw(message)
+    assert raw.web_queries == ("ASSC site:jobup.ch",)
+    assert raw.web_urls == (ASSC,)
