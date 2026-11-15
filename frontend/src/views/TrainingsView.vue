@@ -20,7 +20,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
 import { plural } from "../format";
-import { FUNDING, ORP_LINKS, SHORT_FORMATS } from "../trainingLabels";
+import { FUNDING, ORP_LINKS, SHORT_FORMATS, progressLabel } from "../trainingLabels";
 
 const { aiNote } = usePlan();
 // Bilan › Formations (docs/16 §5 ; maquette Explorer, onglet Formations ; B15 à B19, Kevin, 2026-11-04).
@@ -330,7 +330,7 @@ onMounted(() => void load());
                 v-else
                 class="training-current-progress"
               >
-                {{ training.mark!.progress || "En cours" }}
+                {{ progressLabel(training.mark!) || "En cours" }}
               </p>
               <button
                 type="button"
@@ -561,7 +561,7 @@ onMounted(() => void load());
             v-else
             class="training-current-progress"
           >
-            {{ training.mark!.progress || "En cours" }}
+            {{ progressLabel(training.mark!) || "En cours" }}
           </p>
           <div class="training-current-actions">
             <a

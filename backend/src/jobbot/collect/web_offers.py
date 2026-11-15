@@ -6,7 +6,8 @@ l'intitulé, l'entreprise et le lieu quand le résultat les montre, et le lien. 
 vérifié contre ceux que le moteur a réellement rendus : un lien que l'IA aurait inventé est
 écarté. L'intitulé, l'entreprise et le lieu sont des morceaux du titre rendu par le moteur,
 recopiés par le code : l'IA choisit, elle ne reformule pas. Un résultat daté de plus de
-14 jours est écarté ; sans date connue, il est gardé. Ces offres ne sont ni lues ni notées
+14 jours est écarté, et sans date connue aussi (essai du 2026-11-15 : des offres de 160 jours
+sans date affichée). Ces offres ne sont ni lues ni notées
 (pas de texte d'annonce).
 """
 
@@ -23,9 +24,9 @@ from jobbot.db.models import WEB_LINK_SOURCE
 from jobbot.llm.client import RawResult, WebResult
 from jobbot.sources.base import RawOffer
 
-PROMPT_VERSION = "first-offers-web-v1"
+PROMPT_VERSION = "first-offers-web-v2"
 INSTRUCTIONS = (
-    resources.files("jobbot.llm").joinpath("prompts/first-offers-web-v1.md").read_text("utf-8")
+    resources.files("jobbot.llm").joinpath("prompts/first-offers-web-v2.md").read_text("utf-8")
 )
 LINK_SOURCE = WEB_LINK_SOURCE
 MODEL = "claude-haiku-4-5"
@@ -145,6 +146,7 @@ def verbatim(wanted: str | None, shown: str) -> str | None:
 # Les motifs d'écart, affichés par la commande d'essai.
 KEPT = "gardée"
 TOO_OLD = "datée de plus de 14 jours"
+UNDATED = "sans date connue"
 OVER_LIMIT = "au-delà de 10 offres"
 NOT_PROPOSED = "non retenue par l'IA"
 UNKNOWN_LINK = "lien absent des résultats du moteur"
@@ -172,7 +174,7 @@ class Selection:
     dated: int = 0  # dont ceux qui portent une date lisible
     proposed: int = 0  # offres proposées par l'IA dont le lien vient bien du moteur
     too_old: int = 0  # écartées : datées de plus de 14 jours
-    undated_kept: int = 0  # gardées sans date connue
+    undated: int = 0  # écartées : sans date connue
     # Un verdict par résultat du moteur, dans son ordre, puis les liens inconnus de l'IA.
     verdicts: list[Verdict] = field(default_factory=list)
     # Pourquoi la réponse de l'IA n'a pas pu être lue (None : elle a été lue).
@@ -205,8 +207,9 @@ def _loose(url: str) -> str:
 def select_offers(raw: RawResult, today: date) -> Selection:
     """Les offres de la dernière balise <reponse> dont le lien figure parmi les résultats du
     moteur. Titre, entreprise et lieu viennent du titre du résultat ; une offre datée de plus
-    de 14 jours est écartée. Rien si la balise manque ou si le moteur n'a rien rendu. Chaque
-    résultat reçoit un verdict, pour que l'essai montre pourquoi il est écarté."""
+    de 14 jours, ou sans date connue, est écartée. Rien si la balise manque ou si le moteur
+    n'a rien rendu. Chaque résultat reçoit un verdict, pour que l'essai montre pourquoi il est
+    écarté."""
     selection = Selection(results=len(raw.web_results))
     dates = {result.url: page_date(result.page_age, today) for result in raw.web_results}
     selection.dated = sum(1 for value in dates.values() if value is not None)
@@ -250,14 +253,17 @@ def select_offers(raw: RawResult, today: date) -> Selection:
             continue
         selection.proposed += 1
         when = dates[hit.url]
-        if when is not None and today - when > MAX_AGE:
+        if when is None:
+            selection.undated += 1
+            reasons[hit.url] = UNDATED
+            continue
+        if today - when > MAX_AGE:
             selection.too_old += 1
             reasons[hit.url] = TOO_OLD
             continue
         if len(offers) >= MAX_OFFERS:
             reasons[hit.url] = OVER_LIMIT
             continue
-        selection.undated_kept += when is None
         reasons[hit.url] = KEPT
         offers[hit.url] = RawOffer(
             title=title,
