@@ -307,3 +307,30 @@ Planches : AujourdhuiOrdinateurNouveau(Sombre) (hauteur 1200), AccueilNouveau(So
 - 4 « Garder tes premières offres » et 5 « Préparer et envoyer une candidature » : rond gris (#ECE9E1, chiffre #596070), titre et sous-titre en #596070, pas de bouton, aria-disabled="true". Sous-titre « Dès ta première offre ». Quand les 3 premières étapes sont faites sans offre arrivée, le sous-titre de l'étape 4 devient « Ta première offre arrive après la prochaine collecte ».
 - Ordinateur : lignes en cartes blanches de 88 px, 12 px d'écart. Téléphone : lignes de 72 px séparées par un trait, dans la feuille blanche.
 - L'écran « C'est fait ! » reste à la fin des 5 étapes.
+
+## 24. Onboarding, étape 3 : trajet du code jobup
+
+Planches : OnboardingOrdinateurAlerteCode, ...CodeRecu, ...CodeExpire et OnboardingAlerteCode, ...CodeRecu, ...CodeExpire (téléphone), en clair et en sombre. Complète la section 15.
+
+- Sous « Recopie le code de jobup », un trajet en 3 points reliés par un trait : « jobup », « Ta boîte jobA1 » (« Boîte jobA1 » sur téléphone), « Cette page ». Chaque point : rond de 40 px avec icône, nom en gras, état dessous.
+- En attente : cadre à contour plein (plus de pointillés). Points 1 et 3 en pointillés gris (« envoie le code », « le code s'affiche »), point 2 actif en bleu avec anneau (« on écoute »), traits en pointillés. Sous un séparateur, ligne d'état avec l'indicateur tournant : « Rien reçu pour l'instant. Valide l'alerte sur jobup, on vérifie toutes les 15 s. » (téléphone : sans la fin). role="status" aria-live="polite".
+- Code reçu : les 3 points en vert avec coche (« code envoyé », « code reçu », « code affiché »), traits verts pleins, puis le champ du code et la pastille « Reçu à … » inchangés.
+- Code expiré : points 1 et 2 verts, point 3 orange avec icône d'alerte (« code expiré »), puis le bandeau « Code expiré / Renvoyer » inchangé.
+- Le serveur ne sait qu'une chose : l'e-mail est arrivé ou non. N'affiche jamais d'état intermédiaire inventé (« en route », « envoyé par jobup ») avant l'arrivée.
+- Après 2 minutes sans code : ajoute sous la ligne d'état « Toujours rien ? Vérifie que l'adresse est bien collée dans jobup. » (pas de planche, même style que la ligne d'état).
+- prefers-reduced-motion : l'indicateur ne tourne pas.
+
+## 25. Onboarding ordinateur, étape alerte : scène à la place du bonhomme seul
+
+Planches : OnboardingOrdinateurAlerte, ...AlerteCode, ...AlerteCodeRecu, ...AlerteCodeExpire, en clair et en sombre. Image source : captures/scene-boite-aux-lettres.png (fond transparent).
+
+- La mascotte seule est remplacée par la scène des trois mascottes autour de la boîte aux lettres. Largeur affichée 420 px, hauteur automatique, 40 px sous le haut de la colonne. alt="" aria-hidden="true" (décorative).
+- Sers-la en WebP, 840 px de large (2x), environ 73 Ko, avec width et height en attributs pour éviter le saut de mise en page, loading="lazy" inutile (elle est au-dessus de la ligne de flottaison).
+- Téléphone : pas d'illustration sur cette étape, inchangé.
+
+Compléments section 23 (premiers pas) :
+- Bloc d'accueil, sous-titre : « Crée ta première alerte : jobA1 s'occupe du reste. » avant l'alerte ; « Ton alerte est créée. La prochaine collecte t'apporte tes premières offres. » une fois l'alerte créée (état v = alerte).
+- Un seul bouton à la fois, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton. Étapes à venir : grisées, sans bouton.
+- Croix « Masquer les premiers pas » : 44 × 44 px à droite du compteur, aria-label « Masquer les premiers pas », bandeau « Premiers pas masqués » + « Annuler ».
+- Phrase ORP : la phrase commune de l'app (« Encore N d'ici le <date> »), pas celle de la planche.
+- Tous les bandeaux avec « Annuler » ont le trait de compte à rebours.
