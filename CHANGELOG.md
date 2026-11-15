@@ -610,3 +610,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.396 | Premières offres par le web : requêtes qui visent les pages d'offre, offres sans date écartées, requêtes affichées par l'essai | livrée pour un essai ; réglage toujours éteint, seuil de 3 offres fraîches par métier fixé avant le résultat |
 | 1.6.397 | Changement de page sans tremblement : la place de la barre de défilement reste réservée et le pied de page reste en bas pendant le chargement | livrée |
 | 1.6.398 | Trier ne se bloque plus un jour de repos : Aujourd’hui et Trier comptent les mêmes offres, et les relances de contacts et de financement ne partent plus sur le téléphone un jour de repos | livrée |
+| 1.6.399 | Aujourd'hui sur ordinateur : le bloc « offres à trier » montre l'éventail de cartes de la page Trier, en petit, à la place du livre ; la police manuscrite couvre les majuscules | livrée |
