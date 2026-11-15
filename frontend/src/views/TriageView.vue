@@ -3,53 +3,43 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router";
 
 import AppIcon from "../components/AppIcon.vue";
-import BookmarkMark from "../components/BookmarkMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import EmptyState from "../components/EmptyState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import OfferFan from "../components/OfferFan.vue";
 import ScoreRing from "../components/ScoreRing.vue";
+import SignetMark from "../components/SignetMark.vue";
 import TriageDone from "../components/TriageDone.vue";
+import UndoToast from "../components/UndoToast.vue";
 import { useArrowKeys } from "../composables/useArrowKeys";
 import { markTriageDone, useDailyDose } from "../composables/useDailyDose";
 import { useFocusMode } from "../composables/useFocusMode";
 import { usePhone } from "../composables/usePhone";
 import { useTriage } from "../composables/useTriage";
 import { useUndo } from "../composables/useUndo";
-import { companyPlace, plural, rateText, remoteText, scoreWord } from "../format";
-import { buildExcerpt, matchedPassages, offerText } from "../offerPassages";
+import { companyPlace, plural, scoreWord, triageTags } from "../format";
+import { buildExcerpt, matchedPassages, offerText, triagePoints } from "../offerPassages";
 import "../triage.css";
 
 // Trier les offres (lot du 11 novembre au soir, PR 45 ; maquettes TrierOffresV2 et TrierOffresOrdinateurV2). Les
-// offres du jour, une par une, la meilleure d'abord : une carte sur téléphone, un livre ouvert sur ordinateur, le
-// même contenu dans le même ordre (titre, entreprise, lieu, note, étiquettes, extrait, points). « Écarter » et
-// « Garder » sont de vrais boutons (← et → sur ordinateur) ; aucun geste n'est nécessaire. « Annuler » pendant
-// 6 secondes : rien ne part au serveur avant. À la fin, « C’est trié ! » (TriageDone).
-// Le nom des deux touches, écrit sur leur capuchon (planche TrierOffresOrdinateurV2) : un
-// libellé de touche, pas une icône d'action (docs/101).
-const KEY_LEFT = "\u2190";
-const KEY_RIGHT = "\u2192";
+// offres du jour, une par une, la meilleure d'abord : une carte sur téléphone (titre, entreprise, lieu, note,
+// étiquettes, extrait, points) ; sur ordinateur, l'éventail de cartes (maquette du 15 novembre, §12, OfferFan).
+// « Écarter » et « Garder » sont de vrais boutons (← et →, annoncés par aria-keyshortcuts et écrits dans leur
+// infobulle) ; aucun geste n'est nécessaire. « Annuler » pendant 6 secondes : rien ne part au serveur avant. À la fin,
+// « C’est trié ! » (TriageDone).
 // L'écart du message « Annuler » au bas de la fenêtre, et l'écart gardé au-dessus de lui (12 px, planche).
 const TOAST_GAP = 12;
+// Les flèches des raccourcis, écrites dans l'infobulle des deux boutons (Kevin, 15.11) : un libellé de touche, pas une
+// icône d'action (docs/101).
+const KEY_LEFT = "\u2190";
+const KEY_RIGHT = "\u2192";
 const { phone } = usePhone();
 const { focus } = useFocusMode();
 const { dose, loaded, load } = useDailyDose();
-const { pending, undo, hold, release, flush } = useUndo();
-// Le trait du bandeau suit le compte de useUndo : arrêté tant que la souris ou le focus est sur le bandeau, il
-// repart de plein quand ils le quittent (le compte de 6 secondes repart lui aussi).
-const held = ref(false);
-const countdown = ref(0);
-function holdToast(): void {
-  held.value = true;
-  hold();
-}
-function releaseToast(): void {
-  held.value = false;
-  countdown.value += 1;
-  release();
-}
+const { pending, flush } = useUndo();
 
 // La pile et les choix (useTriage, partagé avec l'éventail en petit d'Aujourd'hui).
-const { index, total, current, remaining, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
+const { queue, index, total, current, remaining, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
 const done = computed(() => loaded.value && finished.value);
 
 // Sur téléphone, la page de tri remplace l'en-tête et la barre du bas (maquette) ; la fin du tri aussi.
@@ -59,37 +49,45 @@ watch(done, (now) => now && markTriageDone());
 
 const word = computed(() => (current.value?.score == null ? null : scoreWord(current.value.score)));
 // Contrat, taux, puis télétravail : toujours en étiquettes, pour rester lisibles quand le titre est coupé.
-const tags = computed(() => {
-  const o = current.value;
-  if (!o) return [];
-  return [o.employment_type ?? "", rateText(o.rate_min, o.rate_max), remoteText(o) ?? ""].filter(Boolean).slice(0, 3);
-});
+const tags = computed(() => (current.value ? triageTags(current.value) : []));
 const excerpt = computed(() => {
   const o = current.value;
   const text = o ? offerText(o) : "";
   return text ? buildExcerpt(text, matchedPassages(o!)) : null;
 });
-// Trois points au plus : d'abord ce qui est retrouvé dans le profil, puis au plus un point à vérifier.
-const points = computed(() => {
-  const o = current.value;
-  if (!o) return [];
-  const check = o.gaps?.[0]?.text;
-  const found = (o.strengths ?? []).slice(0, check ? 2 : 3).map((s) => ({ text: s.text, ok: true }));
-  return check ? [...found, { text: check, ok: false }] : found;
+const points = computed(() => (current.value ? triagePoints(current.value) : []));
+
+// Ordinateur : l'éventail montre les offres par groupes de 3, dans l'ordre de la pile. Une offre gardée y reste, avec
+// son badge « Gardée » ; une offre écartée en sort. La carte du moment est devant.
+const keptIds = computed(() => kept.value.map((o) => o.id));
+const fan = computed(() => {
+  const start = Math.floor(Math.min(index.value, total.value - 1) / 3) * 3;
+  const window = queue.value.slice(start, start + 3).map((offer, k) => ({ offer, at: start + k }));
+  const shown = window.filter((w) => w.at >= index.value || keptIds.value.includes(w.offer.id));
+  return {
+    offers: shown.map((w) => w.offer),
+    tones: shown.map((w) => w.at),
+    front: Math.max(0, shown.findIndex((w) => w.at === index.value)),
+  };
 });
+// Le titre manuscrit sous l'éventail : « 3 offres pour toi », puis « Encore 2 à trier ».
+const handTitle = computed(() =>
+  index.value === 0 || phone.value ? plural(total.value, "offre pour toi", "offres pour toi") : `Encore ${total.value - index.value} à trier`,
+);
 
 const title = ref<HTMLElement | null>(null);
+const group = ref<HTMLElement | null>(null);
 const doneScreen = ref<InstanceType<typeof TriageDone> | null>(null);
 async function focusNext(): Promise<void> {
   await nextTick();
-  if (current.value) title.value?.focus();
+  if (current.value) (phone.value ? title.value : group.value)?.focus();
   else doneScreen.value?.focus();
 }
 
 // Sur ordinateur, le message « Annuler » est fixé en bas de la fenêtre (planche : 12 px du bord) : il reste visible
 // pendant ses 6 secondes, quelle que soit la longueur de la page. Dans une fenêtre basse, la page défile juste
 // assez pour que les boutons restent au-dessus de lui.
-const toast = ref<HTMLElement | null>(null);
+const toast = ref<InstanceType<typeof UndoToast> | null>(null);
 const foot = ref<HTMLElement | null>(null);
 watch(
   () => pending.value?.id,
@@ -97,14 +95,15 @@ watch(
     if (!id || phone.value) return;
     await nextTick();
     const actions = foot.value?.querySelector(".tri-actions");
-    if (!toast.value || !foot.value || !actions) return;
+    const box = toast.value?.$el as HTMLElement | undefined;
+    if (!box || !foot.value || !actions) return;
     // La place du message, calculée et non mesurée : pendant l'entrée de la page, une mesure serait fausse.
-    const top = window.innerHeight - toast.value.offsetHeight - 2 * TOAST_GAP;
-    // Les boutons toujours ; le compteur et les touches aussi, tant que le haut du livre reste sous l'en-tête.
+    const top = window.innerHeight - box.offsetHeight - 2 * TOAST_GAP;
+    // Les boutons toujours ; le compteur aussi, tant que le haut de l'éventail reste sous l'en-tête.
     const buttons = actions.getBoundingClientRect().bottom - top;
     const all = foot.value.getBoundingClientRect().bottom - top;
     const header = document.querySelector("[data-test=app-header]")?.getBoundingClientRect().bottom ?? 0;
-    const room = Math.max(0, (foot.value.previousElementSibling?.getBoundingClientRect().top ?? 0) - header);
+    const room = Math.max(0, (foot.value.parentElement?.querySelector(".tri-stage")?.getBoundingClientRect().top ?? 0) - header);
     const by = Math.max(buttons, Math.min(all, room));
     if (by > 0) window.scrollBy({ top: by, behavior: "instant" });
   },
@@ -191,17 +190,19 @@ onMounted(load);
       </template>
     </EmptyState>
     <template v-else-if="current">
-      <p class="tri-catch">
+      <p
+        v-if="phone"
+        class="tri-catch"
+      >
         <span
           class="tri-hand"
           data-test="triage-count"
-        >{{ plural(total, "offre pour toi", "offres pour toi") }}</span>
-        <span
-          v-if="!phone"
-          class="tri-lead"
-        >Tourne les pages : garde celles qui te parlent.</span>
+        >{{ handTitle }}</span>
       </p>
-      <div class="tri-stage">
+      <div
+        v-if="phone"
+        class="tri-stage"
+      >
         <div class="tri-deck">
           <span
             v-if="remaining > 1"
@@ -213,7 +214,7 @@ onMounted(load);
             class="tri-pile tri-pile-near"
             aria-hidden="true"
           />
-          <Transition :name="phone ? 'tri-fly' : 'tri-turn'">
+          <Transition name="tri-fly">
             <section
               :key="current.id"
               class="tri-offer"
@@ -290,13 +291,10 @@ onMounted(load);
                   </RouterLink>
                   <p
                     v-if="excerpt.count"
-                    :class="['tri-legend', { 'visually-hidden': phone }]"
+                    class="visually-hidden"
                     data-test="triage-legend"
                   >
-                    <span
-                      class="tri-legend-mark"
-                      aria-hidden="true"
-                    />{{ plural(excerpt.count, "point retrouvé", "points retrouvés") }}
+                    {{ plural(excerpt.count, "point retrouvé", "points retrouvés") }}
                   </p>
                 </div>
                 <ul
@@ -321,66 +319,45 @@ onMounted(load);
               </div>
             </section>
           </Transition>
-          <svg
-            v-if="!phone"
-            class="tri-sparks"
-            width="50"
-            height="21"
-            viewBox="0 0 60 26"
-            aria-hidden="true"
-          ><path d="M14 8l6 12M33 3v15M52 8l-6 12" /></svg>
-          <BookmarkMark
-            class="tri-bookmark"
-            :width="phone ? 38 : 50"
+          <SignetMark
+            class="tri-signet"
+            :width="38"
           />
         </div>
-        <template v-if="!phone">
-          <img
-            class="tri-friend tri-friend-left"
-            src="/tri/orange-tient-le-livre.webp"
-            alt=""
-            width="140"
-            height="265"
-          >
-          <img
-            class="tri-friend tri-friend-right"
-            src="/tri/sourire-tient-le-livre.webp"
-            alt=""
-            width="152"
-            height="185"
-          >
-        </template>
       </div>
+      <div
+        v-else
+        ref="group"
+        class="tri-stage"
+        role="group"
+        tabindex="-1"
+        :aria-label="`Offre ${index + 1} sur ${total}`"
+        data-test="triage-offer"
+      >
+        <OfferFan
+          :offers="fan.offers"
+          :front="fan.front"
+          :tones="fan.tones"
+          :kept="keptIds"
+        />
+      </div>
+      <p
+        v-if="!phone"
+        class="tri-catch"
+      >
+        <span
+          class="tri-hand"
+          data-test="triage-count"
+        >{{ handTitle }}</span>
+      </p>
       <footer
         ref="foot"
         class="tri-foot"
       >
-        <div
-          v-if="pending"
-          :key="pending.id"
+        <UndoToast
           ref="toast"
-          class="tri-toast"
-          role="status"
-          data-test="triage-toast"
-          @mouseenter="holdToast"
-          @mouseleave="releaseToast"
-          @focusin="holdToast"
-          @focusout="releaseToast"
-        >
-          <span>{{ pending.message }}</span>
-          <button
-            type="button"
-            data-test="undo"
-            @click="undo"
-          >
-            Annuler
-          </button>
-          <i
-            :key="countdown"
-            :class="['tri-toast-bar', { held }]"
-            aria-hidden="true"
-          />
-        </div>
+          bar
+        />
         <p
           class="tri-counter"
           data-test="triage-counter"
@@ -391,20 +368,14 @@ onMounted(load);
             :class="{ on: n === index + 1 }"
             aria-hidden="true"
           />
-          <span>{{ index + 1 }} sur {{ total }}</span>
-        </p>
-        <p
-          v-if="!phone"
-          class="tri-keys"
-          data-test="triage-keys"
-        >
-          <kbd><span aria-hidden="true">{{ KEY_LEFT }}</span><span class="visually-hidden">flèche gauche</span></kbd>Écarter<kbd><span aria-hidden="true">{{ KEY_RIGHT }}</span><span class="visually-hidden">flèche droite</span></kbd>Garder
+          <span>{{ index + 1 }} sur {{ total }}<template v-if="!phone"> · {{ plural(kept.length, "gardée", "gardées") }}</template></span>
         </p>
         <div class="tri-actions">
           <button
             type="button"
             class="tri-dismiss"
             aria-keyshortcuts="ArrowLeft"
+            :title="`Écarter (${KEY_LEFT})`"
             data-test="triage-dismiss"
             @click="decide('dismiss')"
           >
@@ -414,6 +385,7 @@ onMounted(load);
             type="button"
             class="primary tri-keep"
             aria-keyshortcuts="ArrowRight"
+            :title="`Garder (${KEY_RIGHT})`"
             data-test="triage-keep"
             @click="decide('keep')"
           >
@@ -434,10 +406,10 @@ onMounted(load);
 /* Les valeurs des maquettes, écrites avec les échelles ; les tailles hors échelle sont nommées ici. Les marges,
    retraits et écarts hors de la grille de 4 (6, 10, 14, 22, 26, 50) sont ramenés à la grille. */
 .tri {
-  --t-head: 56px; --t-84: 84px; --t-29: 29px; --t-40: 40px; --t-48: 48px; --t-20: 1.25rem; --t-28: 1.75rem; --t-44h: 2.75rem; --t-18: 1.125rem; --t-23: 1.4375rem; --t-14: 0.875rem; --t-15: 0.9375rem; --t-13: 0.8125rem;
-  --t-25: 1.5625rem; --t-22: 1.375rem; --t-26: 1.625rem; --t-17: 1.0625rem; --t-16: 1rem; --t-card-r: 22px; --t-pad: 16px; --t-quote-r: 14px; --t-tag-h: 28px; --t-tag-r: 14px;
-  --t-btn: 52px; --t-btn-wide: 56px; --t-toast: 48px; --t-toast-wide: 52px; --t-dot: 8px; --t-dash: 24px; --t-pip: 22px; --t-ring: 48px; --t-logo: 44px; --t-logo-wide: 48px;
-  --t-page-w: 300px; --t-page-h: 430px; --t-book: 616px; --t-actions: 440px; --t-mark-r: 4px; --t-key-r: 6px; --t-10: 10px; --t-14p: 14px; --t-2: 2px; --t-3: 3px;
+  --t-head: 56px; --t-60: 3.75rem; --t-40: 40px; --t-20: 1.25rem; --t-28: 1.75rem; --t-18: 1.125rem; --t-23: 1.4375rem; --t-14: 0.875rem; --t-15: 0.9375rem; --t-13: 0.8125rem;
+  --t-25: 1.5625rem; --t-22: 1.375rem; --t-16: 1rem; --t-card-r: 22px; --t-pad: 16px; --t-quote-r: 14px; --t-tag-h: 28px; --t-tag-r: 14px;
+  --t-btn: 52px; --t-toast: 48px; --t-toast-wide: 52px; --t-dot: 8px; --t-dash: 24px; --t-pip: 22px; --t-ring: 48px; --t-logo: 44px;
+  --t-actions: 440px; --t-mark-r: 4px; --t-10: 10px; --t-14p: 14px; --t-2: 2px; --t-3: 3px;
   display: flex; flex-direction: column; color: var(--text);
 }
 .tri-head { display: flex; align-items: center; gap: var(--space-3); }
@@ -447,7 +419,6 @@ onMounted(load);
 .tri-wait { padding: var(--space-6) var(--space-5); }
 .tri-catch { margin: 0; }
 .tri-hand { display: inline-block; font-family: var(--font-hand); font-weight: var(--weight-regular); line-height: var(--leading-none); color: var(--primary-text); transform: rotate(-2deg); }
-.tri-lead { display: block; margin-top: var(--space-3); font-size: var(--t-17); color: var(--tri-tag-text); }
 
 .tri-stage { position: relative; }
 .tri-deck { position: relative; }
@@ -467,15 +438,13 @@ onMounted(load);
 .tri-quote p { margin: 0; color: var(--tri-tag-text); }
 .tri-quote mark { padding: 0 var(--space-1); border-radius: var(--t-mark-r); background: var(--tri-mark); color: inherit; }
 .tri-read { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--t-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: underline; }
-.tri-legend { display: flex; align-items: center; gap: var(--space-2); font-size: var(--t-13); }
-.tri-legend-mark { flex: none; width: var(--t-22); height: 11px; border-radius: var(--t-mark-r); background: var(--tri-mark); }
 .tri-points { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .tri-points li { display: flex; align-items: flex-start; gap: var(--space-3); font-size: var(--t-15); line-height: var(--t-22); }
 .tri-dot { flex: none; display: grid; place-items: center; width: var(--t-pip); height: var(--t-pip); border-radius: 50%; font-size: var(--t-13); font-weight: var(--weight-heavy); }
 .tri-dot.ok { background: var(--tri-ok); color: var(--tri-ok-ink); }
 .tri-dot.ok :deep(svg) { width: var(--t-13); height: var(--t-13); stroke-width: 3; }
 .tri-dot.ask { background: var(--tri-ask); color: var(--tri-ask-ink); }
-.tri-bookmark { position: absolute; z-index: 3; }
+.tri-signet { position: absolute; z-index: 3; }
 
 .tri-counter { display: flex; justify-content: center; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--t-13); color: var(--text-secondary); }
 .tri-counter i { width: var(--t-dot); height: var(--t-dot); border-radius: var(--space-1); background: var(--tri-dot); }
@@ -490,15 +459,11 @@ onMounted(load);
 /* Le trait du bandeau (paquet du 13 novembre) : 3 px en bas, il se vide pendant les 6 secondes où « Annuler » reste
    possible. Il s'arrête, plein, tant que la souris ou le focus est sur le bandeau. Masqué sans mouvement. */
 .tri-toast { position: relative; overflow: hidden; }
-.tri-toast-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--tri-count); transform-origin: left center; animation: tri-count 6s linear forwards; }
-.tri-toast-bar.held { animation: none; }
+.tri-toast :deep(.tri-toast-bar) { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--tri-count); transform-origin: left center; animation: tri-count 6s linear forwards; }
+.tri-toast :deep(.held) { animation: none; }
 @keyframes tri-count { to { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { .tri-toast-bar { display: none; } }
-/* Les raccourcis, sous le compteur sur ordinateur : deux touches dessinées de 24 px et leur libellé. */
-.tri-keys { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin: 0; font-size: var(--t-13); line-height: var(--space-6); color: var(--text-secondary); }
-.tri-keys kbd { display: inline-flex; align-items: center; justify-content: center; min-width: var(--space-6); height: var(--space-6); box-sizing: border-box; padding: 0 var(--space-1); border: 1px solid var(--tri-outline); border-radius: var(--t-key-r); background: var(--surface); font: inherit; font-weight: var(--weight-bold); color: var(--text); }
-.tri-keys kbd:nth-of-type(2) { margin-left: var(--space-4); }
-.tri-toast button { min-height: var(--target-min); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font-size: var(--t-15); font-weight: var(--weight-bold); }
+@media (prefers-reduced-motion: reduce) { .tri-toast :deep(.tri-toast-bar) { display: none; } }
+.tri-toast :deep(button) { min-height: var(--target-min); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font-size: var(--t-15); font-weight: var(--weight-bold); }
 
 /* Téléphone : une carte par offre, la pile derrière, le pied collé en bas. La carte grandit avec son contenu ; si
    l'écran est trop court, c'est la page qui défile. */
@@ -522,55 +487,30 @@ onMounted(load);
 .tri-phone .tri-quote { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--t-quote-r); background: var(--tri-quote); }
 .tri-phone .tri-quote p { font-size: var(--t-15); line-height: var(--t-25); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .tri-phone .tri-points { gap: var(--space-2); margin-top: var(--space-3); }
-.tri-phone .tri-bookmark { right: var(--t-18); top: calc(-1 * var(--t-14p)); }
+.tri-phone .tri-signet { right: var(--t-18); top: calc(-1 * var(--t-14p)); }
 .tri-phone .tri-foot { position: sticky; bottom: 0; z-index: 4; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-5) max(var(--t-28), env(safe-area-inset-bottom)); border-top: 1px solid var(--tri-rule); background: var(--bg); }
 .tri-phone .tri-toast { position: absolute; left: var(--space-5); right: var(--space-5); bottom: calc(100% + var(--space-4)); }
 
 /* La carte qui part : 250 ms au plus (§1). */
 .tri-fly-leave-active { position: absolute; inset: 0 0 auto; z-index: 2; transition: transform 0.25s ease-in, opacity 0.25s ease-in; transform-origin: 50% 100%; }
 .tri-fly-leave-to { transform: translateX(300px) rotate(9deg); opacity: 0; }
-.tri-turn-leave-active { position: absolute; inset: 0; z-index: 2; }
-.tri-turn-leave-active .tri-left { visibility: hidden; }
-.tri-turn-leave-active .tri-right { transition: transform 0.25s ease-in; transform-origin: left center; }
-.tri-turn-leave-to .tri-right { transform: perspective(1200px) rotateY(-88deg); }
 @media (prefers-reduced-motion: reduce) {
-  .tri-fly-leave-active, .tri-turn-leave-active { transition: opacity 0.12s linear; }
-  .tri-turn-leave-active .tri-right { transition: none; }
-  .tri-fly-leave-to, .tri-turn-leave-to { transform: none; opacity: 0; }
-  .tri-turn-leave-to .tri-right { transform: none; }
+  .tri-fly-leave-active { transition: opacity 0.12s linear; }
+  .tri-fly-leave-to { transform: none; opacity: 0; }
 }
 
-/* Ordinateur : un livre ouvert de taille fixe, les deux personnages par-dessus, les boutons puis le compteur. */
+/* Ordinateur (§12) : l'éventail (OfferFan), le titre manuscrit, les boutons, puis le compteur. Écarts de la
+   planche ramenés à la grille : 26 px au-dessus de l'éventail (24), 30 px au-dessus du titre (32), 22 px au-dessus
+   des boutons (24). Le groupe reçoit le focus après chaque choix sans être une commande : pas de contour. */
 .tri:not(.tri-phone) { align-items: center; padding: var(--space-3) 0 var(--space-12); text-align: center; }
-.tri:not(.tri-phone) .tri-hand { font-size: var(--t-44h); }
-.tri:not(.tri-phone) .tri-stage { width: var(--t-book); margin-top: var(--t-48); text-align: left; }
-.tri:not(.tri-phone) .tri-deck { z-index: 1; padding: var(--space-2) var(--space-2) var(--space-4); border-radius: var(--t-18); background: var(--tri-edge); box-shadow: var(--tri-book-shadow); }
-.tri:not(.tri-phone) .tri-pile { display: none; }
-.tri:not(.tri-phone) .tri-offer { display: flex; border-radius: var(--space-3); box-shadow: 0 0 0 var(--t-3) var(--tri-rim); }
-.tri:not(.tri-phone) .tri-turn-leave-active { inset: var(--space-2) var(--space-2) var(--space-4); }
-.tri:not(.tri-phone) :is(.tri-left, .tri-right) { box-sizing: border-box; width: var(--t-page-w); height: var(--t-page-h); overflow: hidden; background: var(--surface); }
-.tri:not(.tri-phone) .tri-left { padding: var(--space-6); border-radius: var(--space-3) 0 0 var(--space-3); box-shadow: inset -18px 0 16px -12px var(--tri-fold); }
-.tri:not(.tri-phone) .tri-right { padding: var(--t-84) var(--space-6) var(--space-4) var(--t-28); border-radius: 0 var(--space-3) var(--space-3) 0; box-shadow: inset 18px 0 16px -12px var(--tri-fold); }
-.tri:not(.tri-phone) .tri-logo { width: var(--t-logo-wide); height: var(--t-logo-wide); }
-.tri:not(.tri-phone) .tri-title { margin-top: var(--space-3); font-size: var(--t-20); line-height: var(--t-26); }
-.tri:not(.tri-phone) .tri-sub { margin-top: var(--space-1); font-size: var(--t-16); line-height: var(--t-22); }
-.tri:not(.tri-phone) .tri-score { margin-top: var(--space-4); }
-.tri:not(.tri-phone) .tri-tags { margin-top: var(--space-3); }
-.tri:not(.tri-phone) .tri-quote p:first-child { font-size: var(--t-16); line-height: var(--t-26); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-.tri:not(.tri-phone) .tri-legend { margin-top: var(--space-3); }
-.tri:not(.tri-phone) .tri-points { gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px dashed var(--tri-dash); }
-.tri:not(.tri-phone) .tri-bookmark { left: calc(50% - var(--t-29)); top: calc(-1 * var(--t-14p)); }
-.tri-sparks { position: absolute; left: calc(50% - var(--t-26)); top: -41px; fill: none; stroke: var(--tri-spark); stroke-width: 5; stroke-linecap: round; }
-.tri-friend { position: absolute; z-index: 2; width: auto; pointer-events: none; }
-.tri-friend-left { left: -104px; top: -6px; height: 265px; }
-.tri-friend-right { left: 591px; top: 118px; height: 185px; }
-.tri:not(.tri-phone) .tri-foot { display: flex; flex-direction: column; gap: var(--space-5); width: var(--t-actions); margin-top: var(--space-8); }
+.tri:not(.tri-phone) .tri-stage { align-self: stretch; margin-top: var(--space-6); outline: 0; }
+.tri:not(.tri-phone) .tri-catch { margin-top: var(--space-8); }
+.tri:not(.tri-phone) .tri-hand { font-size: var(--t-60); }
+.tri:not(.tri-phone) .tri-foot { display: flex; flex-direction: column; gap: var(--space-4); width: var(--t-actions); margin-top: var(--space-6); }
 .tri:not(.tri-phone) .tri-actions { order: 1; }
-.tri:not(.tri-phone) .tri-actions button { min-height: var(--t-btn-wide); }
 .tri:not(.tri-phone) .tri-counter { order: 2; }
-.tri:not(.tri-phone) .tri-keys { order: 3; margin-top: calc(var(--space-2) * -1); }
 /* Le message « Annuler » : fixé en bas de la fenêtre, à 12 px du bord (planche), 440 px de large. La page garde sous
-   les touches la place du message et de ses deux écarts, pour qu'il ne recouvre jamais rien en bas de page. */
+   le compteur la place du message et de ses deux écarts, pour qu'il ne recouvre jamais rien en bas de page. */
 .tri:not(.tri-phone) .tri-toast {
   position: fixed; left: 50%; bottom: var(--space-3); z-index: 4; box-sizing: border-box; width: min(var(--t-actions), calc(100vw - var(--space-8)));
   min-height: var(--t-toast-wide); padding-left: var(--space-5); transform: translateX(-50%);
