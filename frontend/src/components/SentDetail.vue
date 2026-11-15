@@ -201,15 +201,11 @@ function onStatus(value: ApplicationStatus): void {
          2. le suivi en 5 colonnes égales ; 3. la relance conseillée (ou l’état et les cartes Entretien et ORP) ;
          4. Documents et contacts en deux colonnes, puis la ligne « Historique ». -->
     <template v-if="!phone">
-      <div
-        class="sent-card sent-head sd-title"
+      <header
+        class="sd-title"
         data-test="sent-title-card"
       >
         <div class="sent-head-top">
-          <span
-            :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
-            aria-hidden="true"
-          >{{ initials(company) }}</span>
           <div class="sent-head-title">
             <h2 data-test="panel-title">
               {{ application.job_title }}
@@ -236,7 +232,7 @@ function onStatus(value: ApplicationStatus): void {
             name="done"
           />{{ word.text }}</span>
         </p>
-      </div>
+      </header>
       <div class="sent-card sd-steps-card">
         <ol
           class="sent-steps sd-steps"
@@ -778,21 +774,23 @@ function onStatus(value: ApplicationStatus): void {
    égales, cercle et libellés centrés ; Documents et contacts en deux colonnes séparées d’un filet de 1 px, lignes de
    64 px au moins (12 px en haut et en bas), puis la ligne « Historique » à chevron. */
 .sent-detail-cards:not(.sent-detail-phone) { gap: var(--space-4); }
-.sd-title { padding-bottom: var(--space-6); }
-.sd-steps-card { padding: var(--space-6) var(--space-4) var(--space-5); }
+.sd-title { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6) var(--sent-28) var(--space-1) var(--space-6); }
+.sd-title .sent-head-title p { font-size: var(--font-label); line-height: normal; }
+.sd-title .sent-words { margin: calc(-1 * var(--sent-6)) 0 0; padding-left: 0; }
+.sd-steps-card { padding: var(--space-5) var(--space-6) var(--sent-18); border-width: 1px; border-color: var(--line); border-radius: var(--space-6); }
 .sd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; }
 .sd-steps > li, .sd-steps > li:last-child { flex: none; align-items: center; text-align: center; }
 .sd-steps .sent-step-line { left: calc(50% + var(--sent-28) / 2 + var(--sent-8)); right: calc(-50% + var(--sent-28) / 2 + var(--sent-8)); }
-.sd-docs { padding: 0; overflow: hidden; }
+.sd-docs { padding: var(--sent-18-5) 0 0; overflow: hidden; }
 .sd-docs-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
 .sd-docs-cols > .sent-rows { padding: 0; border: 0; border-radius: 0; background: none; }
 .sd-docs-cols > .sent-rows + .sent-rows { border-left: 1px solid var(--line); }
-.sd-docs .sent-rows h3 { margin: 0; padding: var(--space-4) var(--space-5); font-size: var(--font-body); }
-.sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-5); border-top-color: var(--line); }
-.sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sd-docs .sent-rows h3 { --sd-22: 22px; margin: 0; padding: 0 var(--space-6) var(--space-3); font-size: var(--font-body); line-height: var(--sd-22); }
+.sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-6); border-top-color: var(--line); }
+.sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
 .sd-history-row:hover { background: var(--primary-soft); }
 .sd-history-row > .icon { flex: none; color: var(--primary-text); }
-.sd-history { margin: 0; padding: 0 var(--space-5) var(--space-4); }
+.sd-history { margin: 0; padding: 0 var(--space-6) var(--space-4); }
 /* Écran moyen (1024 à 1279 px) : la colonne de droite passe sous la colonne principale, pour garder des lignes lisibles. */
 @media (max-width: 1279px) {
   .sent-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--sent-8); }

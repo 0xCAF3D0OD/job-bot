@@ -81,6 +81,30 @@ function onClick(event: MouseEvent): void {
       v-if="$slots.chips"
       class="list-card-chips"
     ><slot name="chips" /></span>
+    <!-- La flèche de la carte choisie dans une liste reliée au détail (ordinateur, §11 du 15 novembre) : tracé de la
+         planche (data-arrow), soudé au contour ; décorative, la sélection est dite par aria-current. -->
+    <svg
+      v-if="selected"
+      data-arrow
+      aria-hidden="true"
+      class="list-card-arrow"
+      width="22"
+      height="44"
+      viewBox="0 0 22 44"
+    >
+      <path
+        class="list-card-arrow-fill"
+        d="M-1 1 L17.6 19.6 Q20 22 17.6 24.4 L-1 43 Z"
+      />
+      <path
+        class="list-card-arrow-line"
+        d="M1 1 L17.6 19.6 Q20 22 17.6 24.4 L1 43"
+        fill="none"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
   </a>
 </template>
 
@@ -105,6 +129,8 @@ function onClick(event: MouseEvent): void {
   padding: calc(var(--card-14) - 1px) calc(var(--space-4) - 1px); border: 2px solid var(--primary-graphic);
   background: var(--selected-bg);
 }
+/* Sans liste reliée (téléphone, autres listes), pas de flèche. */
+.list-card-arrow { display: none; }
 .list-card-logo {
   grid-area: logo; flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); overflow: hidden;
   border-radius: var(--card-12); font-size: var(--font-body); font-weight: var(--weight-bold);
