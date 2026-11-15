@@ -124,6 +124,7 @@ export type CvBlock = Schemas["CvBlock"];
 export type OrpMonth = Schemas["OrpMonthOut"];
 export type OrpRow = Schemas["OrpRowOut"];
 export type Today = Schemas["TodayOut"];
+export type GoogleJobs = Schemas["GoogleJobsOut"];
 export type Contact = Schemas["ContactOut"];
 export type ContactIn = Schemas["ContactIn"];
 export type ContactsPage = Schemas["ContactsPage"];

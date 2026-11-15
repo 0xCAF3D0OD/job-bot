@@ -306,8 +306,8 @@ const starterTasks = computed<DeskTask[]>(() => {
   const t = today.value;
   if (!t || !starting.value || (t.has_offers ?? true)) return [];
   const list: DeskTask[] = [];
-  if (t.search_url) {
-    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d’autres sites, réunies", action: "Ouvrir", to: "", href: t.search_url, tone: "normal" });
+  if (t.google_jobs) {
+    list.push({ key: "google", test: "start-google", icon: "search", title: "Chercher sur Google Emplois", detail: "Les offres de jobup, jobs.ch et d’autres sites, réunies", action: "Ouvrir", to: "", href: t.google_jobs.url, tone: "normal" });
   }
   // Alertes prêtes : la carte des premiers pas propose déjà « Ajouter une offre ».
   const alertsDone = t.first_steps.some((s) => s.key === "alerts" && s.done);

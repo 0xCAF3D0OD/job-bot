@@ -7542,6 +7542,69 @@
         }
       }
     },
+    "/api/google-jobs": {
+      "get": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Get Google Jobs",
+        "description": "Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la\ncarte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).",
+        "operationId": "getGoogleJobs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GoogleJobsOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getgooglejobs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Set Google Jobs",
+        "description": "« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.",
+        "operationId": "setGoogleJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleJobsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/insights": {
       "get": {
         "tags": [
@@ -16069,6 +16132,50 @@
         ],
         "title": "GlobalSearchOut"
       },
+      "GoogleJobsIn": {
+        "properties": {
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hidden"
+        ],
+        "title": "GoogleJobsIn",
+        "description": "« Masquer » sur la carte Google Emplois (ou l'annuler)."
+      },
+      "GoogleJobsOut": {
+        "properties": {
+          "terms": {
+            "type": "string",
+            "title": "Terms"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms",
+          "url"
+        ],
+        "title": "GoogleJobsOut",
+        "description": "« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."
+      },
       "GroupOut": {
         "properties": {
           "key": {
@@ -24219,16 +24326,15 @@
             "title": "First Steps Finished",
             "default": false
           },
-          "search_url": {
+          "google_jobs": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/GoogleJobsOut"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Search Url"
+            ]
           },
           "to_review": {
             "type": "integer",

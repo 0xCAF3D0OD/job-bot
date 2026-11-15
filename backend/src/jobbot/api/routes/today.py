@@ -106,6 +106,28 @@ class RhythmWeek(BaseModel):
     pause_until: date | None = None
 
 
+class GoogleJobsOut(BaseModel):
+    """« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."""
+
+    terms: str
+    location: str | None = None
+    url: str
+
+
+class GoogleJobsIn(BaseModel):
+    """« Masquer » sur la carte Google Emplois (ou l'annuler)."""
+
+    hidden: bool
+
+
+def _google_jobs(found: alert_service.GoogleJobs | None) -> GoogleJobsOut | None:
+    return (
+        None
+        if found is None
+        else GoogleJobsOut(terms=found.terms, location=found.location, url=found.url)
+    )
+
+
 class TodayOut(BaseModel):
     # Les premiers pas (docs/128) : les cinq étapes, faites ou non, dans l'ordre.
     first_steps: list[FirstStepsOut] = []
@@ -116,8 +138,9 @@ class TodayOut(BaseModel):
     first_steps_offer_id: int | None = None
     # Les cinq étapes faites, la réussite pas encore montrée : la carte de réussite.
     first_steps_finished: bool = False
-    # Tant qu'aucune offre n'est arrivée (docs/144) : la recherche du métier sur Google Emplois.
-    search_url: str | None = None
+    # Tant qu'aucune offre n'est arrivée et que la carte n'est pas masquée (docs/144, accord de
+    # Kevin du 15.11) : la recherche du métier sur Google Emplois.
+    google_jobs: GoogleJobsOut | None = None
     to_review: int
     # « À traiter » (docs/139, C2) : à examiner, plus tard, en préparation ; le calcul de la liste.
     pending: int = 0
@@ -328,7 +351,7 @@ async def get_today(request: Request) -> TodayOut:
     async with runtime.sessionmaker.begin() as session:
         steps = await first_steps_service.load(session)
     async with runtime.sessionmaker() as session:
-        search_url = None if steps.has_offers else await alert_service.first_search(session)
+        google_jobs = await alert_service.google_jobs(session, steps.has_offers)
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
     soon = meeting is not None and (
@@ -344,7 +367,7 @@ async def get_today(request: Request) -> TodayOut:
         has_offers=steps.has_offers,
         first_steps_offer_id=steps.offer_id,
         first_steps_finished=steps.just_finished,
-        search_url=search_url,
+        google_jobs=_google_jobs(google_jobs),
         to_review=to_review,
         pending=pending,
         pending_near=pending_near,
@@ -386,3 +409,18 @@ async def set_first_steps(request: Request, body: FirstStepsIn) -> None:
             await first_steps_service.dismiss(session, body.dismissed)
         if body.celebrated:
             await first_steps_service.celebrate(session)
+
+
+@router.get("/google-jobs", operation_id="getGoogleJobs")
+async def get_google_jobs(request: Request) -> GoogleJobsOut | None:
+    """Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la
+    carte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte)."""
+    async with _runtime(request).sessionmaker() as session:
+        return _google_jobs(await alert_service.google_jobs(session))
+
+
+@router.put("/google-jobs", operation_id="setGoogleJobs", status_code=status.HTTP_204_NO_CONTENT)
+async def set_google_jobs(request: Request, body: GoogleJobsIn) -> None:
+    """« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        await alert_service.hide_google_jobs(session, body.hidden)

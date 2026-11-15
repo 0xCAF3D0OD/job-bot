@@ -9,11 +9,21 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.alerts import trades
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import AlertSearch, AlertSetup, Search, Setting, Site, received_alert
+from jobbot.db.models import (
+    AlertSearch,
+    AlertSetup,
+    Offer,
+    OfferStatus,
+    Search,
+    Setting,
+    Site,
+    received_alert,
+)
 from jobbot.filtering.service import load_criteria
 from jobbot.news import domain
 from jobbot.sources.sites import followed
@@ -70,20 +80,58 @@ def google_jobs_url(terms: str, location: str | None) -> str:
     return GOOGLE_JOBS_URL + urlencode({"q": words, "udm": "8"})
 
 
-async def first_search(session: AsyncSession) -> str | None:
+@dataclass(frozen=True)
+class GoogleJobs:
+    """La carte « Des offres pour toi, en attendant » (docs/144, accord de Kevin du 15.11) :
+    le métier et le lieu montrés dans la pastille, et l'adresse qui ne contient qu'eux."""
+
+    terms: str
+    location: str | None
+    url: str
+
+
+# « Masquer » sur la carte Google Emplois : retenu pour le compte, elle ne revient plus.
+GOOGLE_JOBS_HIDDEN_KEY = "google_jobs_hidden"
+
+
+async def first_search(session: AsyncSession) -> GoogleJobs | None:
     """La recherche Google Emplois d'un compte qui démarre : la première alerte active, sinon la
     première recherche du métier avec le premier lieu ; None sans métier ni alerte."""
     search = await session.scalar(
         select(AlertSearch).where(AlertSearch.active.is_(True)).order_by(AlertSearch.id).limit(1)
     )
     if search is not None:
-        return google_jobs_url(search.terms, search.location)
-    terms = await trades.searches_for(session)
-    if not terms:
+        terms, location = search.terms, search.location
+    else:
+        found = await trades.searches_for(session)
+        if not found:
+            return None
+        criteria = await load_criteria(session)
+        places = [loc for loc in criteria.locations if not is_canton(loc)]
+        terms, location = found[0], places[0] if places else None
+    return GoogleJobs(terms=terms, location=location, url=google_jobs_url(terms, location))
+
+
+async def google_jobs(session: AsyncSession, has_offers: bool | None = None) -> GoogleJobs | None:
+    """La carte Google Emplois : tant qu'aucune offre n'est arrivée (la même règle que les premiers
+    pas), si la personne ne l'a pas masquée et qu'un métier (ou une alerte) donne une recherche."""
+    if has_offers is None:
+        visible = select(Offer.id).where(Offer.status != OfferStatus.FILTERED_OUT).limit(1)
+        has_offers = await session.scalar(visible) is not None
+    if has_offers:
         return None
-    criteria = await load_criteria(session)
-    places = [loc for loc in criteria.locations if not is_canton(loc)]
-    return google_jobs_url(terms[0], places[0] if places else None)
+    hidden = await session.scalar(
+        select(Setting.value).where(Setting.key == GOOGLE_JOBS_HIDDEN_KEY)
+    )
+    return None if hidden else await first_search(session)
+
+
+async def hide_google_jobs(session: AsyncSession, hidden: bool) -> None:
+    await session.execute(
+        insert(Setting)
+        .values(key=GOOGLE_JOBS_HIDDEN_KEY, value=hidden)
+        .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": hidden})
+    )
 
 
 def is_canton(value: str) -> bool:

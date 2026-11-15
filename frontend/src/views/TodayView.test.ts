@@ -121,7 +121,7 @@ describe("Les premiers pas (docs/128)", () => {
   it("aucune offre encore : des offres dès maintenant, sans « en retard » (docs/144)", async () => {
     const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? starting(1, { has_offers: false, search_url: url, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+      Promise.resolve({ data: path === "/api/today" ? starting(1, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url }, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
     );
     const wrapper = await mountView();
     const group = wrapper.find("[data-test=today-start]");
@@ -137,13 +137,13 @@ describe("Les premiers pas (docs/128)", () => {
   });
 
   it("alertes prêtes : pas de second « Ajouter », et plus rien dès la première offre", async () => {
-    mockGet(starting(2, { has_offers: false, search_url: null }));
+    mockGet(starting(2, { has_offers: false, google_jobs: null }));
     let wrapper = await mountView();
     const group = wrapper.find("[data-test=today-start]");
     expect(group.find("[data-test=start-google]").exists()).toBe(false);
     expect(group.find("[data-test=start-add]").exists()).toBe(false);
     expect(group.find("[data-test=start-forward]").exists()).toBe(true);
-    mockGet(starting(2, { has_offers: true, search_url: null }));
+    mockGet(starting(2, { has_offers: true, google_jobs: null }));
     wrapper = await mountView();
     expect(wrapper.find("[data-test=today-start]").exists()).toBe(false);
   });
