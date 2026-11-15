@@ -117,3 +117,10 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - a) Dès qu'au moins une recherche est suivie : titre « Tes alertes sont prêtes », bouton principal « Ajouter une offre », secondaire « Voir mes alertes ». « Créer mes alertes » n'apparaît que si aucune recherche n'est suivie (l'en-tête dit alors « Aucune recherche suivie »). Heure de la prochaine collecte inconnue : pastille « Offres collectées chaque jour », jamais une heure inventée.
 - b) Vide parce qu'il n'y a encore rien : pas de recherche ni de filtres (ordinateur et téléphone, bouton « + » compris). Vide à cause des filtres : la barre de filtres reste, avec les filtres actifs en pastilles retirables. Dans les deux cas, la scène est centrée sur toute la largeur, sans rail ni colonne de détail.
 - Poids : limite CSS relevée une seule fois de 0,5 Ko (total 117,5 Ko, Candidatures 69,5 Ko) pour les états vides et la liaison rail (section 18).
+
+## Aujourd'hui ordinateur, l'éventail remplace le livre (Kevin, 15.11.2026, 11 h 03)
+
+- Deux PR à la suite : la première fait Aujourd'hui (§20) et le composant éventail réutilisable (OfferFan) ; la seconde refait Trier ordinateur (§12) avec ce composant, puis retire le dernier livre (composant, CSS, images, signet, pages) et renomme l'état is_livre en is_ferme. Entre les deux, le livre reste sur Trier ordinateur.
+- Couleurs des cartes : bleu = `--primary` (existant) ; deux jetons nouveaux, `--fan-orange` (#F2853A) et `--fan-yellow` (#FFE07A), les mêmes en clair et en sombre (aucun jeton existant n'avait ces valeurs).
+- Police manuscrite : sous-ensemble élargi à toutes les majuscules, « · », les lettres accentuées et l'apostrophe ’. « ↗ » n'existe pas dans Caveat Brush : il s'affiche dans la police de secours.
+- « livreu » (détection du métier de livreur, formulaire de profil) reste, avec un commentaire qui le protège du nettoyage.
