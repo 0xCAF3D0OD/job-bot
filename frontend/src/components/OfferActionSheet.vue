@@ -24,7 +24,7 @@ const titleId = useId();
 <template>
   <BottomSheet
     :open="offer !== null"
-    :title="offer?.title ?? ''"
+    title=""
     :labelled-by="titleId"
     class="offer-actions-sheet"
     data-test="offer-actions"
