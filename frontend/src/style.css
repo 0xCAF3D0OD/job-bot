@@ -5000,7 +5000,7 @@ a.panel-row:hover { background: var(--band); }
   .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
   /* Lot 17 : un champ en pilule a le même focus que le Composer, un seul anneau qui suit son arrondi. */
   .offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
-  .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
 }
 @media (min-width: 1024px) {

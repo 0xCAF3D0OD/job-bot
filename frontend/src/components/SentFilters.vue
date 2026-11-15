@@ -89,7 +89,7 @@ const shown = computed(() => SENT_FILTERS.filter((f) => f.value === "toutes" || 
 .sent-filters-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
 .sent-filters-row :deep(.filters-search) { height: var(--target-min); padding-block: 0; padding-left: calc(var(--space-8) + var(--space-3)); border-color: var(--line); border-radius: var(--radius-pill); background-color: var(--surface); }
 .sent-filters-row :deep(.filters-search-wrap .icon) { left: var(--space-4); }
-.sent-more { min-height: var(--target-min); padding: 0 var(--space-5); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+.sent-more { min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-sort { height: var(--target-min); min-height: var(--target-min); border-color: var(--line); font-weight: var(--weight-semibold); }
 .sent-pills { display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; }
 .sent-pill { display: inline-flex; flex: none; align-items: center; gap: var(--space-2); min-height: var(--pill-36); padding: 0 var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--pill-13); font-weight: var(--weight-semibold); white-space: nowrap; }
