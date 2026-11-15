@@ -169,12 +169,13 @@ describe("Trier les offres (PR 45)", () => {
     expect(done.findAll("a")).toHaveLength(1);
   });
 
-  it("rien à trier, ou un jour de repos : un écran vide qui dit pourquoi", async () => {
+  it("rien à trier : un écran vide ; un jour de repos ne bloque jamais le tri (planche AujourdhuiOrdinateurV2, is_repos)", async () => {
     mockApi([]);
     const empty = (await mountTriage()).wrapper;
     expect(empty.find("[data-test=triage-empty]").text()).toContain("Rien à trier");
     mockApi([offer(1, "DevOps", 90)], { ...TODAY, rhythm: { research_today: false } });
     const rest = (await mountTriage()).wrapper;
-    expect(rest.find("[data-test=triage-empty]").text()).toContain("Jour de repos");
+    expect(rest.find("[data-test=triage-empty]").exists()).toBe(false);
+    expect(rest.find("[data-test=triage-count]").text()).toBe("1 offre pour toi");
   });
 });

@@ -51,9 +51,20 @@ BUDGET_ALERT_RATIO = Decimal("0.8")
 BUDGET_ALERT_KEY = "budget_alert_month"
 DIGEST_KEY = "offers_digest_day"
 # Ce qui peut attendre un jour de recherche (docs/86 §2) ; les rappels datés (remise ORP,
-# rendez-vous de demain) et les alertes techniques passent toujours.
+# rendez-vous de demain) et les alertes techniques passent toujours. Les noms sont ceux que
+# passent les envois (kind=...) : « contact » et « funding » ne correspondaient à aucun envoi,
+# et les relances de contacts et de financement partaient un jour de repos (15.11.2026).
 QUIET_KINDS = frozenset(
-    {"offers", "follow_up", "interview", "contact", "funding", "orp_target", "first_alert"}
+    {
+        "offers",
+        "follow_up",
+        "interview",
+        "contact_follow_up",
+        "training_funding",
+        "orp_target",
+        "first_alert",
+        "rhythm_week",
+    }
 )
 
 

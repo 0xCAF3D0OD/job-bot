@@ -32,7 +32,7 @@ const KEY_RIGHT = "\u2192";
 const TOAST_GAP = 12;
 const { phone } = usePhone();
 const { focus } = useFocusMode();
-const { dose, restDay, loaded, load } = useDailyDose();
+const { dose, loaded, load } = useDailyDose();
 const { pending, undo, hold, release, flush } = useUndo();
 // Le trait du bandeau suit le compte de useUndo : arrêté tant que la souris ou le focus est sur le bandeau, il
 // repart de plein quand ils le quittent (le compte de 6 secondes repart lui aussi).
@@ -155,14 +155,14 @@ onMounted(load);
       :heights="['2.5rem', '20rem']"
     />
     <div
-      v-else-if="restDay || !total"
+      v-else-if="!total"
       class="tri-wait"
     >
       <FaceState
-        :title="restDay ? 'Jour de repos' : 'Rien à trier'"
+        title="Rien à trier"
         data-test="triage-empty"
       >
-        <p>{{ restDay ? "Pas de tri aujourd’hui." : "Les nouvelles offres arrivent chaque matin." }}</p>
+        <p>Les nouvelles offres arrivent chaque matin.</p>
         <div class="face-state-actions">
           <RouterLink
             :to="{ name: 'today' }"
