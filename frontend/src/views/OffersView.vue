@@ -9,7 +9,6 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import ApplicationSent from "../components/ApplicationSent.vue";
 import GoalReached from "../components/GoalReached.vue";
 import { firstGoal } from "../composables/useGoalMoment";
-import { GOOGLE_JOBS_ACTION, loadGoogleJobs } from "../composables/useGoogleJobs";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import LinkedDetail, { Plain } from "../components/LinkedDetail.vue";
@@ -129,7 +128,7 @@ const googleLink = ref<GoogleJobs | null>(null);
 watch(
   () => noneYet.value,
   async (shown) => {
-    if (shown && !googleLink.value) googleLink.value = await loadGoogleJobs();
+    if (shown && !googleLink.value) googleLink.value = (await api.GET("/api/google-jobs").catch(() => ({ data: null }))).data ?? null;
   },
   { immediate: true },
 );
@@ -891,7 +890,7 @@ onUnmounted(() => {
             class="link"
             aria-label="Voir les offres sur Google Emplois (nouvel onglet)"
             data-test="offers-none-google"
-          >{{ GOOGLE_JOBS_ACTION }}<AppIcon name="trend" /></a>
+          >Voir les offres sur Google Emplois<AppIcon name="trend" /></a>
           <button
             type="button"
             class="link"
