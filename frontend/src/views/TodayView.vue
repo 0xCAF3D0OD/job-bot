@@ -212,6 +212,11 @@ const reachedSub = computed(() => {
 // Un compte sans offre encore (§22 du 15.11, AujourdhuiOrdinateurNouveau) : « Bienvenue, / tes offres arrivent
 // bientôt » à la main, premiers pas ouverts ou fermés.
 const newcomer = computed(() => today.value?.has_offers === false);
+const newcomerSub = computed(() =>
+  today.value?.first_steps.some((s) => s.key === "alerts" && s.done)
+    ? "Ton alerte est créée. La prochaine collecte t’apporte tes premières offres."
+    : "Crée ta première alerte\u202f: jobA1 s’occupe du reste.",
+);
 // Le titre de la bande : l'action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP ; sa fin en
 // écriture manuscrite (un seul accent par écran). Un seul élément de titre.
 type Heading = { lead: string; hand: string; sub: string };
@@ -448,7 +453,7 @@ function dismissSteps(): void {
   if (!today.value) return;
   today.value = { ...today.value, first_steps_dismissed: true };
   void offerUndo({
-    message: "Premiers pas masqués.",
+    message: "Premiers pas masqués",
     commit: async (keepalive) => {
       const { response } = await api.PUT("/api/first-steps", { body: { dismissed: true }, keepalive });
       return response.ok;
@@ -611,7 +616,7 @@ const { me } = useAuth();
             class="aj-sub"
             data-test="today-sub"
           >
-            {{ lateCatch ? lateCatch.sub : newcomer ? "Crée ta première alerte\u202f: jobA1 s’occupe du reste." : goalReached ? reachedSub : heading.sub }}
+            {{ lateCatch ? lateCatch.sub : newcomer ? newcomerSub : goalReached ? reachedSub : heading.sub }}
           </p>
         </div>
         <img

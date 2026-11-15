@@ -136,6 +136,7 @@ describe("Les premiers pas (docs/128)", () => {
     expect(list.find("[data-test=first-step-keep]").text()).toContain("Ta première offre arrive après la prochaine collecte");
     expect(list.find("[data-test=first-step-send]").text()).toContain("Dès ta première offre");
     expect(list.find("[data-test=first-steps-action]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ton alerte est créée. La prochaine collecte t’apporte tes premières offres.");
     // Les deux liens restent, « Ajouter une offre vue ailleurs » compris.
     expect(wrapper.find("[data-test=start-add]").attributes("href")).toBe("/ajouter-une-offre");
     expect(wrapper.find("[data-test=orp-month]").exists()).toBe(true);
@@ -201,16 +202,32 @@ describe("Les premiers pas (docs/128)", () => {
     expect(wrapper.find("[data-test=google-jobs-links]").exists()).toBe(false);
   });
 
-  it("garder une offre : le bouton ouvre l’écran de tri", async () => {
+  it("étape 4 en cours, des offres arrivées : « Trier mes offres » ouvre l’écran de tri, un seul bouton", async () => {
     mockGet(starting(3));
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/aujourdhui/tri");
+    const actions = wrapper.findAll("[data-test=first-steps-action]");
+    expect(actions).toHaveLength(1);
+    expect(actions[0]!.text()).toBe("Trier mes offres");
+    expect(actions[0]!.attributes("href")).toBe("/aujourdhui/tri");
+    expect(wrapper.find("[data-test=first-step-send]").attributes("aria-disabled")).toBe("true");
   });
 
-  it("préparer et envoyer : la dernière offre gardée", async () => {
+  it("étape 5 en cours : « Préparer une candidature » sur la dernière offre gardée", async () => {
     mockGet(starting(4, { first_steps_offer_id: 7 }));
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
+    const action = wrapper.find("[data-test=first-steps-action]");
+    expect(action.text()).toBe("Préparer une candidature");
+    expect(action.attributes("href")).toBe("/candidatures/offres/7/preparer");
+    expect(wrapper.find("[data-test=first-step-keep]").text()).toContain("Fait");
+  });
+
+  it("étape 1 à faire (parcours sans CV) : pas de bouton, les suivantes grisées", async () => {
+    mockGet(starting(0, { has_offers: false }));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps-count]").text()).toBe("0 sur 5");
+    expect(wrapper.find("[data-test=first-steps-action]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=first-step-cv]").attributes("aria-disabled")).toBeUndefined();
+    expect(wrapper.find("[data-test=first-step-alerts]").attributes("aria-disabled")).toBe("true");
   });
 
   it("pendant les premiers pas, pas de lien vers le bilan, mais « Cette semaine » (§22 du 15.11)", async () => {
