@@ -177,3 +177,8 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Badge « Gardée » : le style de la puce de la liste Candidatures, icône signet orange #F2853A ; fond et texte `--peach-soft` / `--peach-text`.
 - Signet : gardé sur la carte du téléphone ; fichier, composant et classes renommés « signet » (SignetMark). L'écran « Rien à trier » est refait à part (#735).
 - La ligne des touches ← → sous le compteur est retirée (Kevin, 15.11, 12 h 40) : les boutons portent `aria-keyshortcuts` et le titre « Écarter (←) » / « Garder (→) ».
+
+## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
+
+- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
+- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
