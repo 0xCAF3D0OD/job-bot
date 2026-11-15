@@ -46,7 +46,7 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
       <path
         class="linked-notch-line"
         style="stroke: var(--linked-line)"
-        d="M0.75 3 L0.75 7 Q0.75 12 -2.79 15.54 L-14.42 27.17 Q-17.25 30 -14.42 32.83 L-2.79 44.46 Q0.75 48 0.75 53 L0.75 57"
+        d="M0.75 3 L0.75 7 Q0.75 12 -1.79 15.54 L-13.42 27.17 Q-16.25 30 -13.42 32.83 L-1.79 44.46 Q0.75 48 0.75 53 L0.75 57"
         fill="none"
         stroke-width="1.5"
         stroke-linejoin="round"
@@ -99,6 +99,8 @@ const { top, visible } = useLinkedNotch(toRef(props, "list"), zone);
 .linked-list .list-card[aria-current="true"] { --linked-sel: 2px; position: relative; background: var(--linked-selected-bg); box-shadow: none; }
 .linked-list .list-card[aria-current="true"]:not(:focus-visible) { outline: var(--linked-sel) solid var(--primary-graphic); outline-offset: calc(-1 * var(--linked-sel)); }
 /* La flèche part du bord extérieur de la carte : son décalage tient compte du trait réel de la carte (mesuré, voir
-   useLinkedNotch ; Chrome arrondit 1,5 px à 1 px). */
-.linked-list .list-card-arrow { --linked-arrow: 19px; display: block; position: absolute; top: 50%; right: calc(-1 * (var(--linked-arrow) + var(--linked-card-border))); translate: 0 -50%; overflow: visible; }
+   useLinkedNotch ; Chrome arrondit 1,5 px à 1 px). À 20 px, son trait de 2 px recouvre exactement le contour de 2 px de
+   la carte (à 19, les deux traits côte à côte faisaient une marche, le « double trait » signalé par Kevin le 15.11) ; la
+   pointe du rail avance d'1 px pour que le contact reste exact. */
+.linked-list .list-card-arrow { --linked-arrow: 20px; display: block; position: absolute; top: 50%; right: calc(-1 * (var(--linked-arrow) + var(--linked-card-border))); translate: 0 -50%; overflow: visible; }
 </style>
