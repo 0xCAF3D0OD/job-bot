@@ -5,7 +5,6 @@ import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CountBadge from "./CountBadge.vue";
 import OfferSearch from "./OfferSearch.vue";
-import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 import { radioKey } from "../composables/useOfferFilters";
 import { plural } from "../format";
 import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
@@ -17,7 +16,8 @@ import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
 // - dans la feuille : les statuts (avant en puces sous la recherche) et le tri, « À relancer d'abord » par défaut ou
 //   « Plus récentes d'abord » (décision de Kevin du 14.11) ; « Tout effacer » et « Afficher N candidatures » en bas.
 // Alignée sur la planche FiltresEnvoyees (§10, paquet du 15 novembre ; décision de Kevin du 15.11) : titre « Filtres des
-// envoyées », statut choisi coché, tri en contrôle segmenté sur toute la largeur.
+// envoyées », statut choisi coché. Le tri a trois choix (décision de Kevin du 15.11) : en contrôle segmenté, « Plus anciennes
+// d’abord » était coupé en 390 px ; il prend donc les mêmes choix cochés que le statut, qui passent à la ligne.
 // La logique (mots, statut et tri gardés dans l'adresse) reste dans ApplicationsView.
 const props = defineProps<{ words: string; filter: SentFilter; sort: SentSort; counts: Record<SentFilter, number>; total: number }>();
 const emit = defineEmits<{ "update:words": [value: string]; "update:filter": [value: SentFilter]; "update:sort": [value: SentSort]; reset: [] }>();
@@ -25,11 +25,11 @@ const emit = defineEmits<{ "update:words": [value: string]; "update:filter": [va
 const open = ref(false);
 // Un statut à 0 est masqué, sauf celui qui est choisi (pour pouvoir le quitter), comme sur ordinateur.
 const shown = computed(() => SENT_FILTERS.filter((f) => f.value === "toutes" || props.counts[f.value] > 0 || f.value === props.filter));
-const SORTS: SegmentOption[] = [
+const SORTS: { value: SentSort; label: string; test: string }[] = [
   { value: "relancer", label: "À relancer d’abord", test: "sent-sort-relancer" },
   { value: "recentes", label: "Plus récentes d’abord", test: "sent-sort-recentes" },
+  { value: "anciennes", label: "Plus anciennes d’abord", test: "sent-sort-anciennes" },
 ];
-const sortModel = computed({ get: () => props.sort as string, set: (value: string) => emit("update:sort", value as SentSort) });
 const active = computed(() => (props.filter !== "toutes" ? 1 : 0) + (props.sort !== "relancer" ? 1 : 0));
 const toggleLabel = computed(() => (active.value ? `Filtres, ${active.value} actif${active.value > 1 ? "s" : ""}` : "Filtres"));
 const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", "candidatures")}`);
@@ -108,12 +108,29 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
         <h3 id="sent-sheet-sort">
           Trier
         </h3>
-        <SegmentedControl
-          v-model="sortModel"
-          :options="SORTS"
-          label="Trier"
-          full
-        />
+        <div
+          class="filter-choices-row"
+          role="radiogroup"
+          aria-labelledby="sent-sheet-sort"
+          @keydown="radioKey"
+        >
+          <button
+            v-for="choice in SORTS"
+            :key="choice.value"
+            type="button"
+            class="filter-choice"
+            role="radio"
+            :aria-checked="sort === choice.value"
+            :tabindex="sort === choice.value ? 0 : -1"
+            :data-test="choice.test"
+            @click="emit('update:sort', choice.value)"
+          >
+            <AppIcon
+              v-if="sort === choice.value"
+              name="tick"
+            />{{ choice.label }}
+          </button>
+        </div>
       </div>
     </div>
     <template #actions>

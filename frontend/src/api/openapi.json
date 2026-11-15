@@ -4258,6 +4258,66 @@
         }
       }
     },
+    "/api/sent-sort": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Sent Sort",
+        "operationId": "getSentSort",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Sent Sort",
+        "operationId": "saveSentSort",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentSortModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -7548,7 +7608,7 @@
           "today"
         ],
         "summary": "Get Google Jobs",
-        "description": "Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la\ncarte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).",
+        "description": "Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;\n« Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).",
         "operationId": "getGoogleJobs",
         "responses": {
           "200": {
@@ -7576,7 +7636,7 @@
           "today"
         ],
         "summary": "Set Google Jobs",
-        "description": "« Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.",
+        "description": "« Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.",
         "operationId": "setGoogleJobs",
         "requestBody": {
           "content": {
@@ -16174,7 +16234,7 @@
           "url"
         ],
         "title": "GoogleJobsOut",
-        "description": "« <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux."
+        "description": "« <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,\nqui ouvre le panneau Google Emplois."
       },
       "GroupOut": {
         "properties": {
@@ -23612,6 +23672,23 @@
           "orp_month"
         ],
         "title": "SentOut"
+      },
+      "SentSortModel": {
+        "properties": {
+          "sort": {
+            "type": "string",
+            "enum": [
+              "relancer",
+              "recentes",
+              "anciennes"
+            ],
+            "title": "Sort",
+            "default": "relancer"
+          }
+        },
+        "type": "object",
+        "title": "SentSortModel",
+        "description": "Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11)."
       },
       "SettingsModel": {
         "properties": {

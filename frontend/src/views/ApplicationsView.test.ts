@@ -513,6 +513,17 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(none.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
   });
 
+  it("le tri enregistré pour le compte revient à l’arrivée sans ?tri (décision de Kevin du 15.11)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/sent-sort" ? { sort: "anciennes" } : path === "/api/orp" ? month() : [application] }),
+    );
+    const { router } = await mountView("/candidatures/suivi");
+    expect(router.currentRoute.value.query.tri).toBe("anciennes");
+    expect(PUT).not.toHaveBeenCalledWith("/api/sent-sort", expect.anything());
+    const { router: linked } = await mountView("/candidatures/suivi?tri=recentes");
+    expect(linked.currentRoute.value.query.tri).toBe("recentes");
+  });
+
   it("PR 39 : statuts avec leur nombre (0 masqué), un seul choisi, gardé dans l’adresse ; le tri", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
@@ -551,7 +562,8 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(names()).toEqual(["Ancienne SA", "Silence SA", "Entretien SA", "Récente SA"]);
     await sort.setValue("recentes");
     await flushPromises();
-    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);
+    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);    // Le choix est enregistré pour le compte (décision de Kevin du 15.11).
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "recentes" } });
   });
   it("ordinateur, maquette du 14 novembre (§3) : « Plus de filtres » ouvre le volet Filtres (statuts et tri) à la place de la liste", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -583,6 +595,8 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     await flushPromises();
     expect(router.currentRoute.value.query.statut).toBeUndefined();
     expect(router.currentRoute.value.query.tri).toBeUndefined();
+    // « Tout effacer » enregistre aussi le tri par défaut pour le compte.
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "relancer" } });
     await wrapper.find("[data-test=sent-filters-done]").trigger("click");
     expect(wrapper.find("[data-test=sent-filters-panel]").exists()).toBe(false);
     vi.unstubAllGlobals();

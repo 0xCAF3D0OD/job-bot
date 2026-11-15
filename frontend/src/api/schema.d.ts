@@ -1600,6 +1600,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sent-sort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sent Sort */
+        get: operations["getSentSort"];
+        /** Put Sent Sort */
+        put: operations["saveSentSort"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -2810,13 +2828,13 @@ export interface paths {
         };
         /**
          * Get Google Jobs
-         * @description Le lien Google Emplois sous les boutons de Candidatures vide : les mêmes conditions que la
-         *     carte d'Aujourd'hui (aucune offre, pas masquée, un métier ou une alerte).
+         * @description Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;
+         *     « Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).
          */
         get: operations["getGoogleJobs"];
         /**
          * Set Google Jobs
-         * @description « Masquer » la carte Google Emplois : retenu pour le compte, elle ne revient plus.
+         * @description « Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.
          */
         put: operations["setGoogleJobs"];
         post?: never;
@@ -5752,7 +5770,8 @@ export interface components {
         };
         /**
          * GoogleJobsOut
-         * @description « <Métier> · <Lieu> » dans la pastille, et l'adresse qui ne contient qu'eux.
+         * @description « <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,
+         *     qui ouvre le panneau Google Emplois.
          */
         GoogleJobsOut: {
             /** Terms */
@@ -8167,6 +8186,18 @@ export interface components {
             application_id: number;
             /** Orp Month */
             orp_month: string;
+        };
+        /**
+         * SentSortModel
+         * @description Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11).
+         */
+        SentSortModel: {
+            /**
+             * Sort
+             * @default relancer
+             * @enum {string}
+             */
+            sort: "relancer" | "recentes" | "anciennes";
         };
         /** SettingsModel */
         SettingsModel: {
@@ -12207,6 +12238,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfferFiltersVisible"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
+                };
+            };
+        };
+    };
+    saveSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentSortModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
                 };
             };
             /** @description Validation Error */

@@ -102,7 +102,20 @@ const statusFilter = computed<SentFilter>({
 });
 const sentSort = computed<SentSort>({
   get: () => sentSortOf(route.query.tri),
-  set: (value) => void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } }),
+  set: (value) => {
+    saveSort(value);
+    void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } });
+  },
+});
+// Le tri est gardé pour le compte (décision de Kevin du 15.11) : sans ?tri dans l'adresse, le tri enregistré revient ;
+// chaque choix (et « Tout effacer ») est enregistré, jamais un simple changement d'adresse.
+function saveSort(sort: SentSort): void {
+  Promise.resolve(api.PUT("/api/sent-sort", { body: { sort } })).catch(() => undefined);
+}
+onMounted(async () => {
+  if (route.query.tri !== undefined) return;
+  const saved = (await api.GET("/api/sent-sort").catch(() => undefined))?.data?.sort;
+  if ((saved === "recentes" || saved === "anciennes") && route.query.tri === undefined) void router.replace({ query: { ...route.query, tri: saved } });
 });
 const worded = computed(() => (wanted.value.length ? all.value.filter(matches) : all.value));
 const statusCounts = computed(() => sentCounts(worded.value));
@@ -114,6 +127,7 @@ function clearFilters(): void {
 // « Tout effacer » de la feuille Filtres (téléphone) : les mots, le statut et le tri.
 function resetPhoneSentFilters(): void {
   words.value = "";
+  saveSort("relancer");
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined, tri: undefined } });
 }
 // Les rubriques d'Envoyées (« à relancer d'abord ») ; triées par date, une seule liste sans rubrique.
@@ -380,6 +394,7 @@ watch(twoColumns, (wide) => {
 });
 const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
 function resetSentFilters(): void {
+  saveSort("relancer");
   void router.replace({ query: { ...route.query, statut: undefined, tri: undefined } });
 }
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {

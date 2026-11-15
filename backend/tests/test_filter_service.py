@@ -274,3 +274,17 @@ async def test_changing_criteria_brings_offers_back(api: AsyncClient, fresh: Run
     second = (await api.put("/api/criteria", json={"locations": ["zurich", "BE"]})).json()
     assert second["returned"] == 1
     assert (await statuses(fresh))["A Berne"] == "to_review"
+
+
+async def test_api_sent_sort(api: AsyncClient, fresh: Runtime) -> None:
+    """Le tri des Envoyées est gardé pour le compte (décision de Kevin du 15.11)."""
+    async with fresh.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'sent_sort'"))
+    assert (await api.get("/api/sent-sort")).json() == {"sort": "relancer"}
+    assert (await api.put("/api/sent-sort", json={"sort": "anciennes"})).json() == {
+        "sort": "anciennes"
+    }
+    assert (await api.get("/api/sent-sort")).json() == {"sort": "anciennes"}
+    assert (await api.put("/api/sent-sort", json={"sort": "hasard"})).status_code == 422
+    async with fresh.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'sent_sort'"))
