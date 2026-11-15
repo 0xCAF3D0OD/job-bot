@@ -56,6 +56,15 @@ L'interface s'ouvre sur http://localhost:5173 et l'API sur http://127.0.0.1:8000
 
 La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 
+## Limites de poids
+
+`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR.
+
+| Date | Limite | Avant | Après | Raison |
+|---|---|---|---|---|
+| 15.11.2026 | JS total (gzip) | 426 000 o | 426 700 o | dos des cartes Trier ordinateur : verdicts, étiquettes, anneau |
+| 15.11.2026 | CSS total (gzip) | 117 500 o | 117 750 o | dos des cartes Trier ordinateur : verdicts, étiquettes, anneau |
+
 ## Pour aller plus loin
 
 Le guide de lecture de la doc se trouve dans [docs/README.md](docs/README.md).

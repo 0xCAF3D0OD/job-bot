@@ -126,3 +126,5 @@ Pistes mesurées sans gain suffisant (même ensemble) :
 | Cible CSS relevée (Chrome 120, Safari 17, Firefox 121) | − 0,1 Ko, et des navigateurs encore pris en charge perdraient des préfixes | non |
 | Thème Auto posé par le JS, copies `@media (prefers-color-scheme: dark)` retirées | environ − 0,5 Ko CSS, mais un éclair clair au chargement en sombre avant le JS | non, dégrade l'écran |
 | Regrouper aussi les composants partagés de Candidatures | − 8,0 Ko JS et − 0,7 Ko CSS de plus, mais + 13 à + 21 Ko à télécharger sur Connexion, Inscription, Réglages, Alertes… | non |
+
+Relèvement du 15.11.2026 (Kevin, une seule fois) : JS total 426 000 → 426 700 o et CSS total 117 500 → 117 750 o, pour le dos des cartes Trier ordinateur (verdicts, étiquettes, anneau). Mesure sur main d4f2bec sans autre PR ouverte : JS 425 880 → 426 689 o, CSS 117 440 → 117 736 o.
