@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-libelle audit-menu audit-tri poids css-inutilise
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check decisions audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-libelle audit-menu audit-tri poids css-inutilise
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -126,9 +126,13 @@ audit-tri: ## trier 3 offres (garder, écarter, garder) : boutons, clavier, « A
 changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
 	python3 scripts/changelog.py
 
-changelog-check: ## vérifie les fichiers de changelog.d/, l'assemblage et les numéros de docs/
+decisions: ## assemble docs/mobile/DECISIONS.md depuis docs/decisions/ (sur main, l'action decisions.yml le fait)
+	python3 scripts/decisions.py
+
+changelog-check: ## vérifie les fichiers de changelog.d/ et de docs/decisions/, l'assemblage et les numéros de docs/
 	python3 -m unittest discover -s scripts -q
 	python3 scripts/changelog.py --check
+	python3 scripts/decisions.py --check
 	python3 scripts/docs_numeros.py
 
 poids: ## le budget de poids : JS, CSS et images, brut, gzip et brotli (docs/performance.md)
