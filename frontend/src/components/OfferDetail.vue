@@ -1698,7 +1698,7 @@ watch(
   .offer-provisional .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); }
   .offer-provisional .match-card { margin-top: var(--space-5); }
   .offer-provisional .match-lines { margin-top: var(--ob-gap); font-size: var(--font-label); line-height: var(--space-5); }
-  .offer-provisional .compat-open { width: 100%; margin: var(--ob-gap) 0 calc(-1 * var(--ob-gap)); padding: 0; border-radius: 0; color: var(--text); }
+  .offer-provisional .compat-open { width: 100%; margin: var(--ob-gap) 0 calc(-1 * var(--ob-gap)); padding: 0; color: var(--text); }
   .offer-provisional .compat-open > .icon { width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
   .offer-provisional .offer-company-cap { font-size: var(--font-body); font-weight: var(--weight-bold); letter-spacing: 0; text-transform: none; color: var(--text); }
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au

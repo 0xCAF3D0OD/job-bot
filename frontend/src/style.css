@@ -4754,7 +4754,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-send.composer-send-round { background: transparent; color: var(--on-action); }
 .composer-send-dot { display: inline-flex; align-items: center; justify-content: center; width: var(--composer-send-dot); height: var(--composer-send-dot); border-radius: var(--radius-pill); background: var(--action); }
 .composer-send-round .composer-send-dot .icon { width: 18px; height: 18px; }
-.composer-send-round[aria-disabled="true"] { cursor: default; }
 .composer-send-round[aria-disabled="true"] .composer-send-dot { background: var(--line); color: var(--field-border); }
 .composer-menu { position: absolute; left: 0; z-index: 40; width: min(320px, 100%); padding: var(--space-1) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); animation: ja-pop 150ms ease-out; }
 .composer-menu-up { bottom: 100%; margin-bottom: var(--space-2); transform-origin: bottom left; }

@@ -885,7 +885,6 @@ onUnmounted(() => {
               type="button"
               class="offers-empty-chip"
               :aria-label="`Retirer le filtre ${chip.label}`"
-              :data-test="`empty-chip-remove-${chip.key}`"
               @click="update(chip.patch)"
             >
               {{ chip.label }}<AppIcon name="close" />
