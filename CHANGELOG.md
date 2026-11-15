@@ -609,3 +609,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.395 | États vides de Candidatures, premier lot : un seul composant d'état vide, et l'écran Offres sans offre centré sur toute la largeur, sans recherche ni filtres, avec « Tes alertes sont prêtes » quand une recherche est suivie | livrée |
 | 1.6.396 | Premières offres par le web : requêtes qui visent les pages d'offre, offres sans date écartées, requêtes affichées par l'essai | livrée pour un essai ; réglage toujours éteint, seuil de 3 offres fraîches par métier fixé avant le résultat |
 | 1.6.397 | Changement de page sans tremblement : la place de la barre de défilement reste réservée et le pied de page reste en bas pendant le chargement | livrée |
+| 1.6.398 | Trier ne se bloque plus un jour de repos : Aujourd’hui et Trier comptent les mêmes offres, et les relances de contacts et de financement ne partent plus sur le téléphone un jour de repos | livrée |

@@ -17,9 +17,9 @@ import TriageNone from "../components/TriageNone.vue";
 import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
-import { DOSE, DOSE_CATCH_UP, markTriageDone, triageDoneToday, unmarkTriageDone } from "../composables/useDailyDose";
+import { DOSE_CATCH_UP, isTriagePending, markTriageDone, pickDose, triageDoneToday, unmarkTriageDone } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { dailyPace, daysBefore, localDate, ofMonth, orpPace, plural } from "../format";
+import { dailyPace, daysBefore, localDate, ofMonth, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
@@ -56,11 +56,6 @@ const triageDone = ref(false);
 const miniOpen = ref(false);
 // Un jour de repos (docs/86) : tout est facultatif, la liste devient « Si tu veux avancer ».
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
-// Le mois ORP en retard sur son rythme (format.orpPace).
-const monthBehind = computed(() => {
-  const t = today.value;
-  return !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
-});
 const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
 const { message } = useCollect();
 
@@ -82,7 +77,7 @@ function untilDay(day: string): string {
 }
 
 // La dose du jour (docs/86) : 3 offres ; 5 quand le mois ORP est à rattraper (docs/124 §D).
-const dose = computed(() => best.value.slice(0, monthBehind.value ? DOSE_CATCH_UP : DOSE));
+const dose = computed(() => pickDose(today.value, best.value));
 // Les premiers pas (docs/128) : tant qu'il en manque, la carte remplace la phrase et le tri ; le mois
 // ORP reste, le reste attend.
 const starting = computed(() => {
@@ -91,7 +86,8 @@ const starting = computed(() => {
 });
 // Le tri à faire : une tâche « Trier » sur ordinateur, les offres de la dose sur téléphone. Un jour de repos aussi
 // (planches AujourdhuiOrdinateurV2 et AccueilV2, état « repos », 14 novembre) : « Offres à trier » comme en semaine.
-const triagePending = computed(() => !rhythmPaused.value && dose.value.length > 0 && !triageDone.value);
+// Même règle que la page « Trier les offres » (useDailyDose) : le compteur d'ici et la pile de Trier ne divergent pas.
+const triagePending = computed(() => isTriagePending(today.value, dose.value, triageDone.value));
 // « Relire ton CV » (maquette du 10 novembre, PR 22) : en tête de « À faire » tant qu'un CV lisible n'a jamais été lu ;
 // la ligne part dès que la lecture a trouvé quelque chose (état « lu »).
 const reading = useCvReading();
@@ -492,7 +488,7 @@ const { me } = useAuth();
       :steps="today.first_steps"
       :has-offers="today.has_offers ?? true"
       :offer-id="today.first_steps_offer_id ?? null"
-      :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+      :pick-ready="!rhythmPaused && best.length > 0"
       @dismiss="dismissSteps"
     />
   </HomePhone>
@@ -581,7 +577,7 @@ const { me } = useAuth();
         :steps="today.first_steps"
         :has-offers="today.has_offers ?? true"
         :offer-id="today.first_steps_offer_id ?? null"
-        :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+        :pick-ready="!rhythmPaused && best.length > 0"
         @dismiss="dismissSteps"
       />
 
