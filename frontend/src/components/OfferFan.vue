@@ -28,12 +28,10 @@ const cards = computed(() => {
   const places = PLACES[shown.length] ?? [];
   return shown.map((offer, rank) => {
     const [left, top, angle, plane] = places[rank] ?? [0, 0, 0, 0];
-    // Les notes manuscrites : deux points retrouvés et au plus un point à vérifier, comme sur la page Trier ; d'un
-    // point « Kubernetes : plateforme de 40 nœuds », la carte ne garde que « Kubernetes » (notes courtes de la planche).
+    // Les notes manuscrites : deux points retrouvés et au plus un point à vérifier, comme sur la page Trier ; chacune
+    // sur 2 lignes au plus, puis des points de suspension (Kevin, 15.11 : jamais coupée avant « : »).
     const check = offer.gaps?.[0]?.text;
-    const notes = [...(offer.strengths ?? []).slice(0, check ? 2 : 3).map((s) => s.text), ...(check ? [check] : [])].map(
-      (text) => text.split(" : ")[0],
-    );
+    const notes = [...(offer.strengths ?? []).slice(0, check ? 2 : 3).map((s) => s.text), ...(check ? [check] : [])];
     return {
       offer,
       tone: TONES[rank],
@@ -136,7 +134,8 @@ const cards = computed(() => {
 .fan-ring { width: 56px; height: 56px; }
 .fan-ring path { stroke: var(--fan-bg); }
 .fan-notes { flex: auto; overflow: hidden; margin-top: var(--space-6); font: var(--fan-22) / var(--fan-26) var(--font-hand); letter-spacing: 0.02em; opacity: 0.85; }
-.fan-notes span, .fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fan-notes span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .fan-names b { display: -webkit-box; font-size: var(--fan-26); line-height: var(--fan-30); letter-spacing: -0.3px; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fan-names span { margin-top: var(--space-1); font-size: var(--fan-place); line-height: var(--fan-place-lh); opacity: 0.9; }
 </style>
