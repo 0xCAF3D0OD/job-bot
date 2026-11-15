@@ -55,7 +55,7 @@ export interface NavEntry {
   label: string;
   // L'icône devant le nom dans le menu (docs/101).
   icon?: IconName;
-  // Version du cadrage (docs/01-cadrage.md §11) qui livre la page.
+  // Version du cadrage (docs/01-cadrage.md §11) qui apporte la page.
   since?: string;
   description?: string;
 }

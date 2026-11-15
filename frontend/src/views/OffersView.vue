@@ -2,7 +2,7 @@
 import { computed, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
+import { api, type GoogleJobs, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
@@ -123,6 +123,16 @@ const bare = computed(() => noOffersYet.value && !failed.value && items.value.le
 // collecte n'est pas connue du serveur : la pastille reste « Offres collectées chaque jour », jamais une heure inventée.
 const followedSearches = inject<Ref<number | null>>("followedSearches", ref(null));
 const alertsReady = computed(() => (followedSearches.value ?? 0) > 0);
+// Candidatures vide, avec ou sans alerte (§22 du 15.11) : le lien Google Emplois sous les boutons, pas de carte.
+// « Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11) ; le serveur ne l'envoie que sans offre et avec un métier.
+const googleLink = ref<GoogleJobs | null>(null);
+watch(
+  () => noneYet.value,
+  async (shown) => {
+    if (shown && !googleLink.value) googleLink.value = (await api.GET("/api/google-jobs").catch(() => ({ data: null }))).data ?? null;
+  },
+  { immediate: true },
+);
 const filterLabel = computed(() => {
   const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
   if (phone.value) return `Filtres${active}`;
@@ -882,6 +892,15 @@ onUnmounted(() => {
                 </button>
               </template>
             </template>
+            <a
+              v-if="googleLink"
+              :href="googleLink.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link"
+              aria-label="Voir les offres sur Google Emplois (nouvel onglet)"
+              data-test="offers-none-google"
+            >Voir les offres sur Google Emplois<AppIcon name="trend" /></a>
             <button
               type="button"
               class="link"

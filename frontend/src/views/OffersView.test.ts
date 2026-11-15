@@ -175,6 +175,28 @@ describe("OffersView", () => {
     expect(empty.text()).not.toContain("Créer mes alertes");
   });
 
+  it("compte neuf : le lien Google Emplois sous les boutons, avec ou sans alerte (§22 du 15.11)", async () => {
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/google-jobs" ? { data: { terms: "Comptable", location: "Sion", url } } : { data: { ...page([]).data, counts: none } }),
+    );
+    for (const followed of [0, 3]) {
+      const wrapper = await mountAt("/offres", { followedSearches: ref(followed) });
+      const link = wrapper.get("[data-test=offers-none-yet] [data-test=offers-none-google]");
+      expect(link.text()).toBe("Voir les offres sur Google Emplois");
+      expect(link.attributes()).toMatchObject({ href: url, target: "_blank", rel: "noopener noreferrer", "aria-label": "Voir les offres sur Google Emplois (nouvel onglet)" });
+      // Au-dessus de « Faire une candidature spontanée ».
+      expect(link.element.nextElementSibling?.getAttribute("data-test")).toBe("offers-none-spontaneous");
+    }
+    // Sans métier, le serveur n'envoie rien : pas de lien.
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/google-jobs" ? { data: null } : { data: { ...page([]).data, counts: none } }),
+    );
+    const bare = await mountAt("/offres");
+    expect(bare.find("[data-test=offers-none-google]").exists()).toBe(false);
+  });
+
   it("ordinateur large, aucune offre avec ces filtres (§2.7 du 9 novembre) : « Faire une candidature spontanée » ouvre « Ajouter »", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
     mockOffers(page([]));

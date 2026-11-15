@@ -134,4 +134,7 @@ def test_police_manuscrite_contient_chaque_caractere_des_titres():
     # Les titres manuscrits composés à l'écran (lot du 11 novembre au soir : « 3 offres pour toi », « octobre est
     # remis ! », « 1 justificatif en retard, ») : les minuscules, les chiffres et les accents des mois sont là.
     assert missing_glyphs(texts=["abcdefghijklmnopqrstuvwxyz 0123456789 .,!?’:- àâçéèêîôû"]) == []
-    assert missing_glyphs(texts=["Zoë"]) == ["Z", "ë"]
+    # Les notes des cartes de l'éventail (§20 du 15 novembre) : toutes les majuscules, « · » et les accents. « ↗ » n'existe
+    # pas dans Caveat Brush ; « ñ » n'est pas dans le sous-ensemble.
+    assert missing_glyphs(texts=["ABCDEFGHIJKLMNOPQRSTUVWXYZ · ÀÉÈÇ ëïüùœ"]) == []
+    assert missing_glyphs(texts=["Año ↗"]) == ["ñ", "↗"]

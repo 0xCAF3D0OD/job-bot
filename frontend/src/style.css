@@ -40,6 +40,10 @@
   /* Lettres sur le carré pêche, et fond blanc d'un logo d'entreprise : les mêmes en clair et en sombre. */
   --on-peach: #1B1F2A;
   --logo-paper: #FFFFFF;
+  /* L'éventail des offres à trier (§12 et §20 du 15 novembre) : les cartes orange et jaune (la bleue prend --primary) ;
+     les mêmes en clair et en sombre. */
+  --fan-orange: #F2853A;
+  --fan-yellow: #FFE07A;
   /* La page A4 reste blanche en sombre, avec une ombre plus marquée (§12 du 9 novembre). */
   --paper-shadow: 0 2px 8px rgb(27 31 42 / 12%);
   /* Carte sélectionnée (§12 du 9 novembre) : #F5F7FE en clair, #232B45 en sombre. */
@@ -3548,7 +3552,8 @@ main:focus { outline: none; }
 /* « Candidature notée » (C9) : le visage, la phrase, l'objectif ORP, puis « Offre suivante » et « Annuler ». */
 /* « C'est fait ! » (ObjectifAtteint, B10 à B12) : le feston et le visage, « à faire » barré une fois, la phrase
    manuscrite, puis l'export et l'accueil en bas. La police n'est chargée que si un titre manuscrit s'affiche ; un seul
-   sous-ensemble (23 Ko : minuscules, chiffres, accents) pour « C’est fait ! », les fins de titre des premiers pas (O3, 11b) et les titres du tri. */
+   sous-ensemble sans ligatures (16 Ko : minuscules, majuscules, chiffres, accents du français, « ’ · ? ! % ( ) / ») pour « C’est fait ! », les fins de titre des premiers pas (O3, 11b),
+   les titres du tri et les notes des cartes de l'éventail (§20 du 15 novembre). */
 @font-face { font-family: "Caveat Brush"; src: url("./assets/fonts/caveat-brush-titres.woff2?no-inline") format("woff2"); font-display: swap; }
 .goal-reached { position: relative; display: flex; flex-direction: column; align-items: center; max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-5) var(--space-6); box-sizing: border-box; text-align: center; color: var(--text-tertiary); }
 .goal-reached-close { position: absolute; top: var(--space-3); right: var(--space-2); width: var(--btn-tertiary); height: var(--btn-tertiary); color: var(--text); }
@@ -5252,6 +5257,7 @@ html.text-large { font-size: 125%; }
 .empty-state-actions svg, .empty-state > .link svg { --es-18: 18px; width: var(--es-18); height: var(--es-18); }
 .empty-state-actions > .secondary { --es-22: 22px; padding-inline: var(--es-22); border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--text); }
 .empty-state > .link { --es-15: 15px; --es-2: 2px; display: inline-flex; align-items: center; gap: var(--es-2); min-height: var(--target-min); margin-top: var(--es-link); font-size: var(--es-15); font-weight: var(--weight-bold); color: var(--primary-text); }
+.empty-state > .link + .link { margin-top: 0; }
 @media (min-width: 1024px) {
   .empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }
   .empty-state-actions { flex-direction: row; justify-content: center; width: auto; max-width: none; }

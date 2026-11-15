@@ -4,7 +4,7 @@ import type { IconName } from "./icons";
 // son icône sur téléphone (MODIFICATIONS du 8 novembre au soir, §10.9) : une icône de 24 px par type, en
 // --primary-graphic, sauf retard ou limite en --peach-text. Offres : porte-documents ; justificatifs ou budget :
 // point d'exclamation dans un cercle ; relance : avion en papier ; bilan : courbe. Les genres que la maquette ne
-// montre pas prennent l'icône la plus proche : rendez-vous et entretien, le calendrier ; formation, le livre ;
+// montre pas prennent l'icône la plus proche : rendez-vous et entretien, le calendrier ; formation, l'icône des formations ;
 // collecte, filtre Gmail ou sauvegarde en échec, le point d'exclamation en pêche ; les autres, le document.
 type Kind = { action: string | null; icon: IconName; late?: boolean };
 
