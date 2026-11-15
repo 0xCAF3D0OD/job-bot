@@ -1595,8 +1595,8 @@ button, .button-link { max-width: 100%; }
   /* « + » (décision de Kevin du 15.11) : rond de 48 px, à la hauteur du champ et 8 px après lui, contour bleu de 1,5 px. */
   .jobs-tools .offers-toolbar { gap: var(--space-2); }
   .jobs-tools .offers-filter { display: contents; }
-  .jobs-tools .offers-add-compact { --add-22: 22px; display: grid; flex: none; place-items: center; width: var(--field-h); height: var(--field-h); padding: 0; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-graphic); }
-  .jobs-tools .offers-add-compact .icon { width: var(--add-22); height: var(--add-22); }
+  .jobs-tools .offers-add-compact { --add-22: 22px; display: grid; flex: none; place-items: center; width: var(--field-h); height: var(--field-h); padding: 0; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); }
+  .jobs-tools .offers-add-compact .icon { width: var(--add-22); height: var(--add-22); stroke-width: 2.4; }
   .jobs-segments { margin-bottom: var(--space-2); }
   /* Bas de la liste des offres (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
      CandidaturesSombre) : « Afficher n offres de plus » en bouton contour pleine largeur (48 px, bord de 1,5 px), puis le
