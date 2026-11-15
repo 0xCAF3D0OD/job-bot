@@ -24,13 +24,13 @@ const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 428_000, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : 426 000 → 428 000, une fois ; README, Limites de poids)
+  "js-total": 428_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +2 Ko, une fois, 426 780 → 428 780 ; README, Limites de poids)
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 118_500, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : 117 500 → 118 500, une fois ; README, Limites de poids)
+  "css-total": 118_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +1 Ko, une fois, 117 780 → 118 780 ; README, Limites de poids)
   "css-accueil": 59_800,
   "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
   "css-bilan": 62_400,

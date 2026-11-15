@@ -66,8 +66,16 @@ async function mountTriage() {
   return { wrapper, router };
 }
 
-describe("Trier les offres (PR 45)", () => {
-  it("le titre, l’accroche, une offre à la fois dans une région nommée, le compteur une seule fois", async () => {
+// Le téléphone : la carte d'une offre (planche TrierOffresV2).
+function asPhone(): void {
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+}
+
+describe("Trier les offres, téléphone (PR 45)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("le titre, une offre à la fois dans une région nommée, le compteur une seule fois", async () => {
+    asPhone();
     mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75), offer(4, "Data", 70)]);
     const { wrapper } = await mountTriage();
     expect(wrapper.find("h1").text()).toBe("Trier les offres");
@@ -82,9 +90,13 @@ describe("Trier les offres (PR 45)", () => {
     const order = ["DevOps", "Acme SA", "Très proche", "CDI", "clusters Kubernetes", "Kubernetes : 40 services"].map((t) => text.indexOf(t));
     expect(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1]!))).toBe(true);
     expect(wrapper.find("[data-test=triage-tags]").text()).toContain("80–100 %");
+    // Le signet en haut à droite de la carte ; pas de touches dessinées sur téléphone.
+    expect(wrapper.find(".signet-mark").exists()).toBe(true);
+    expect(wrapper.find("[data-test=triage-keys]").exists()).toBe(false);
   });
 
   it("l’extrait surligne les passages retrouvés, avec sa légende en texte ; trois points au plus, un seul à vérifier", async () => {
+    asPhone();
     mockApi([offer(1, "DevOps", 90)]);
     const { wrapper } = await mountTriage();
     const marks = wrapper.findAll("[data-test=triage-excerpt] mark");
@@ -98,6 +110,7 @@ describe("Trier les offres (PR 45)", () => {
   });
 
   it("sans passage retrouvé : ni surlignage ni légende, le début de l’annonce et « Lire toute l’annonce »", async () => {
+    asPhone();
     const long = "Notre entreprise familiale grandit chaque année depuis cinquante ans. ".repeat(12);
     mockApi([offer(7, "DevOps", 90, { passages: [], description: long })]);
     const { wrapper } = await mountTriage();
@@ -107,35 +120,115 @@ describe("Trier les offres (PR 45)", () => {
     expect(wrapper.find("[data-test=triage-read]").attributes("href")).toBe("/candidatures/offres?offre=7");
   });
 
-  it("« Garder » et « Écarter » sont de vrais boutons avec leur raccourci ; le message, « Annuler », le focus", async () => {
+  it("après un choix, le focus va au titre de l’offre suivante", async () => {
+    asPhone();
+    mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80)]);
+    const { wrapper } = await mountTriage();
+    await wrapper.find("[data-test=triage-keep]").trigger("click");
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.find("[data-test=triage-title]").element);
+    expect(wrapper.find("[data-test=triage-title]").text()).toBe("SRE");
+  });
+});
+
+describe("Trier les offres, ordinateur : l’éventail (§12)", () => {
+  it("3 cartes dans un groupe nommé, la meilleure devant ; le titre manuscrit sous l’éventail ; le compteur", async () => {
+    mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75), offer(4, "Data", 70)]);
+    const { wrapper } = await mountTriage();
+    expect(wrapper.find("h1").text()).toBe("Trier les offres");
+    const group = wrapper.find("[data-test=triage-offer]");
+    expect([group.attributes("role"), group.attributes("aria-label")]).toEqual(["group", "Offre 1 sur 3"]);
+    const cards = group.findAll("[data-test=fan-card]");
+    expect(cards.map((c) => c.find("b").text())).toEqual(["DevOps", "SRE", "Cloud"]);
+    expect(cards.map((c) => (c.element as HTMLElement).style.getPropertyValue("--r"))).toEqual(["0deg", "-7deg", "7deg"]);
+    expect(cards[0]!.classes()).toEqual(expect.arrayContaining(["fan-front", "fan-blue"]));
+    // Les pastilles en capitales (contrat, taux, mot de la note) ; pas de phrase d'explication sous le titre.
+    expect(cards[0]!.find("[data-test=fan-tags]").text()).toContain("80–100 %");
+    expect(wrapper.find("[data-test=triage-count]").text()).toBe("3 offres pour toi");
+    expect(wrapper.find("[data-test=triage-counter]").text()).toBe("1 sur 3 · 0 gardée");
+    expect(wrapper.text()).not.toContain("Tourne les pages");
+  });
+
+  it("chaque carte est un bouton qui la retourne : extrait surligné, verdicts, « Voir l’annonce complète » hors du bouton", async () => {
+    mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80)]);
+    const { wrapper } = await mountTriage();
+    const flip = wrapper.find("[data-test=fan-flip]");
+    expect(flip.element.tagName).toBe("BUTTON");
+    expect(flip.attributes("aria-pressed")).toBe("false");
+    // Le nom du bouton : poste, entreprise, les notes entières, puis l'action.
+    expect(flip.attributes("aria-label")).toBe(
+      "DevOps, Acme SA. Kubernetes : 40 services en production. Terraform : Azure et AWS. Allemand : demandé, à vérifier. Retourner pour voir l’extrait",
+    );
+    await flip.trigger("click");
+    expect(wrapper.find("[data-test=fan-flip]").attributes("aria-pressed")).toBe("true");
+    const back = wrapper.find("[data-test=fan-back]");
+    expect(back.findAll("mark").map((m) => m.text())).toEqual(["clusters Kubernetes"]);
+    expect(back.findAll(".fan-verdicts li")).toHaveLength(3);
+    const read = back.find("[data-test=fan-read]");
+    expect(read.attributes("href")).toBe("/candidatures/offres?offre=1");
+    expect(read.find("svg").attributes("aria-hidden")).toBe("true");
+    expect(read.text()).toBe("Voir l’annonce complète");
+    // Le lien n'est pas dans le bouton : Entrée sur le lien l'ouvre sans retourner la carte.
+    expect(read.element.closest("button")).toBeNull();
+    await wrapper.find("[data-test=fan-flip]").trigger("click");
+    expect(wrapper.find("[data-test=fan-back]").exists()).toBe(false);
+  });
+
+  it("« Garder » : badge « Gardée » sur la carte, « Encore 1 à trier », le toast et « Annuler » ; le focus va au groupe", async () => {
     mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80)]);
     const { wrapper } = await mountTriage();
     const keep = wrapper.find("[data-test=triage-keep]");
     const dismiss = wrapper.find("[data-test=triage-dismiss]");
     expect([keep.element.tagName, keep.text(), keep.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Garder", "ArrowRight"]);
     expect([dismiss.element.tagName, dismiss.text(), dismiss.attributes("aria-keyshortcuts")]).toEqual(["BUTTON", "Écarter", "ArrowLeft"]);
-    // Sur ordinateur, les deux raccourcis sont affichés sous le compteur (touches dessinées).
-    expect(wrapper.find("[data-test=triage-keys]").text().replace(/\s+/g, " ")).toBe("←flèche gaucheÉcarter→flèche droiteGarder");
+    // Les raccourcis se découvrent sur les boutons (Kevin, 15.11) : plus de ligne de touches sous le compteur.
+    expect([dismiss.attributes("title"), keep.attributes("title")]).toEqual(["Écarter (←)", "Garder (→)"]);
+    expect(wrapper.find("[data-test=triage-keys]").exists()).toBe(false);
     await keep.trigger("click");
     await flushPromises();
     const toast = wrapper.find("[data-test=triage-toast]");
     expect(toast.attributes("role")).toBe("status");
     expect(toast.text()).toContain("Offre gardée dans tes candidatures");
-    // Le trait qui se vide pendant les 6 secondes : décoratif, caché des lecteurs d'écran.
     expect(toast.find(".tri-toast-bar").attributes("aria-hidden")).toBe("true");
-    expect(wrapper.find("[data-test=triage-offer]").attributes("aria-label")).toBe("Offre 2 sur 2");
-    expect(document.activeElement).toBe(wrapper.find("[data-test=triage-title]").element);
-    // Rien n'est parti au serveur ; « Annuler » remet l'offre à l'écran.
+    const group = wrapper.find("[data-test=triage-offer]");
+    expect(group.attributes("aria-label")).toBe("Offre 2 sur 2");
+    expect(document.activeElement).toBe(group.element);
+    // L'offre gardée reste dans l'éventail avec son badge ; la suivante passe devant.
+    const cards = group.findAll("[data-test=fan-card]");
+    expect(cards.map((c) => c.find("b").text())).toEqual(["DevOps", "SRE"]);
+    expect(cards[0]!.find("[data-test=fan-kept]").text()).toBe("Gardée");
+    expect(cards[1]!.classes()).toContain("fan-front");
+    expect(wrapper.find("[data-test=triage-count]").text()).toBe("Encore 1 à trier");
+    expect(wrapper.find("[data-test=triage-counter]").text()).toBe("2 sur 2 · 1 gardée");
+    // Rien n'est parti au serveur ; « Annuler » remet l'offre devant, sans badge.
     expect(PATCH).not.toHaveBeenCalled();
     await wrapper.find("[data-test=undo]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=triage-title]").text()).toBe("DevOps");
+    expect(wrapper.find("[data-test=fan-kept]").exists()).toBe(false);
+    expect(wrapper.find(".fan-front b").text()).toBe("DevOps");
     expect(PATCH).not.toHaveBeenCalled();
-    await dismiss.trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=triage-toast]").text()).toContain("Offre écartée");
   });
 
+  it("« Écarter » : la carte sort de l’éventail, toast « Offre écartée » avec « Annuler »", async () => {
+    mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75)]);
+    const { wrapper } = await mountTriage();
+    await wrapper.find("[data-test=triage-dismiss]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=triage-toast]").text()).toContain("Offre écartée");
+    expect(wrapper.find("[data-test=triage-toast] [data-test=undo]").text()).toBe("Annuler");
+    const cards = wrapper.findAll("[data-test=fan-card]");
+    // Deux offres : −4° et +4°.
+    expect(cards.map((c) => c.find("b").text())).toEqual(["SRE", "Cloud"]);
+    expect(cards.map((c) => (c.element as HTMLElement).style.getPropertyValue("--r"))).toEqual(["4deg", "-4deg"]);
+    expect(wrapper.find("[data-test=triage-counter]").text()).toBe("2 sur 3 · 0 gardée");
+    await wrapper.find("[data-test=undo]").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAll("[data-test=fan-card]")).toHaveLength(3);
+  });
+
+});
+
+describe("Trier les offres : la fin (PR 45)", () => {
   it("trier 3 offres (garder, écarter, garder) : « 2 offres gardées, 1 écartée. », les deux offres, l’état « Gardée » en base", async () => {
     mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75)]);
     const { wrapper } = await mountTriage();

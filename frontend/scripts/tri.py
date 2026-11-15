@@ -25,6 +25,17 @@ from formats import checked
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200").rstrip("/")
 KEEP, DISMISS = "[data-test=triage-keep]", "[data-test=triage-dismiss]"
 TITLE = "[data-test=triage-title]"
+# Sur ordinateur (§12), l'éventail : le titre de la carte du moment, et le groupe qui reçoit le focus après un choix.
+FRONT = "[data-test=triage-offer] .fan-front .fan-names b"
+GROUP = "[data-test=triage-offer]"
+
+
+def title_of(width: int) -> str:
+    return TITLE if width < 821 else FRONT
+
+
+def focus_of(width: int) -> str:
+    return TITLE if width < 821 else GROUP
 
 
 async def research_day(route: Route) -> None:
@@ -70,7 +81,7 @@ async def run(context: BrowserContext, width: int) -> list[str]:
         check(bool(box and box["height"] >= 44 and box["width"] >= 44), f"« {name} » fait moins de 44 px")
 
     # Au clavier : la tabulation atteint « Écarter » puis « Garder », dans cet ordre.
-    await page.locator(TITLE).focus()
+    await page.locator(focus_of(width)).focus()
     reached: list[str] = []
     for _ in range(12):
         await page.keyboard.press("Tab")
@@ -80,7 +91,7 @@ async def run(context: BrowserContext, width: int) -> list[str]:
     check(reached[:2] == ["triage-dismiss", "triage-keep"], f"ordre de tabulation : {reached}")
 
     # « Annuler » : l'offre revient, rien n'est envoyé.
-    first = (await page.locator(TITLE).text_content() or "").strip()
+    first = (await page.locator(title_of(width)).text_content() or "").strip()
     await page.locator(KEEP).click()
     toast = page.locator("[data-test=triage-toast]")
     await toast.wait_for(timeout=3000)
@@ -89,19 +100,19 @@ async def run(context: BrowserContext, width: int) -> list[str]:
     bar = await toast.locator(".tri-toast-bar").bounding_box()
     check(bool(bar and round(bar["height"]) == 3), "le message n'a pas son trait de 3 px qui se vide")
     await page.wait_for_timeout(500)  # la carte précédente a fini de partir
-    check(await page.evaluate("(s) => document.activeElement === document.querySelector(s)", TITLE), "le focus ne va pas au titre de l'offre suivante")
+    check(await page.evaluate("(s) => document.activeElement === document.querySelector(s)", focus_of(width)), "le focus ne va pas à l'offre suivante")
     await toast.locator("[data-test=undo]").click()
     await page.wait_for_timeout(500)
-    check((await page.locator(TITLE).text_content() or "").strip() == first, "« Annuler » ne remet pas l'offre")
+    check((await page.locator(title_of(width)).text_content() or "").strip() == first, "« Annuler » ne remet pas l'offre")
     check(not sent, "« Annuler » a envoyé un changement d'état")
 
     # Garder, écarter, garder : au clic sur téléphone, aux flèches sur ordinateur.
     kept: list[str] = []
     for choice in ("keep", "dismiss", "keep"):
         if choice == "keep":
-            kept.append((await page.locator(TITLE).text_content() or "").strip())
+            kept.append((await page.locator(title_of(width)).text_content() or "").strip())
         if width >= 1024:
-            await page.locator(TITLE).focus()
+            await page.locator(GROUP).focus()
             await page.keyboard.press("ArrowRight" if choice == "keep" else "ArrowLeft")
         else:
             await page.locator(KEEP if choice == "keep" else DISMISS).click()
@@ -133,7 +144,7 @@ async def run(context: BrowserContext, width: int) -> list[str]:
 async def message_in_window(context: BrowserContext, width: int, height: int) -> list[str]:
     """Sur ordinateur, après un choix à la flèche : le message « Annuler » est dans la fenêtre, à 12 px du bas, sans
     recouvrir « Écarter » ni « Garder » ; au clavier, « Annuler » est à trois tabulations au plus et Entrée remet
-    l'offre ; les deux touches dessinées se lisent « flèche gauche » et « flèche droite »."""
+    l'offre ; les raccourcis se lisent sur les boutons (aria-keyshortcuts et infobulle, Kevin 15.11)."""
     faults: list[str] = []
     size = f"{width} × {height}"
     page = await context.new_page()
@@ -148,10 +159,11 @@ async def message_in_window(context: BrowserContext, width: int, height: int) ->
     await page.route("**/api/today", research_day)
     await page.goto(f"{BASE}/candidatures/trier")
     await page.locator(KEEP).wait_for(timeout=15000)
-    keys = (await page.locator("[data-test=triage-keys]").text_content() or "").replace("\n", " ")
-    if "flèche gauche" not in keys or "flèche droite" not in keys:
-        faults.append(f"{size} : les touches ne se lisent pas « flèche gauche » et « flèche droite » ({' '.join(keys.split())})")
-    first = (await page.locator(TITLE).text_content() or "").strip()
+    for selector, shortcut, tip in ((DISMISS, "ArrowLeft", "Écarter (←)"), (KEEP, "ArrowRight", "Garder (→)")):
+        button = page.locator(selector)
+        if await button.get_attribute("aria-keyshortcuts") != shortcut or await button.get_attribute("title") != tip:
+            faults.append(f"{size} : le bouton n'annonce pas son raccourci « {tip} »")
+    first = (await page.locator(FRONT).text_content() or "").strip()
     await page.keyboard.press("ArrowLeft")
     toast = page.locator("[data-test=triage-toast]")
     await toast.wait_for(timeout=3000)
@@ -171,7 +183,7 @@ async def message_in_window(context: BrowserContext, width: int, height: int) ->
         faults.append(f"{size} : « Annuler » n'est pas atteint en trois tabulations après un choix à la flèche")
     await page.keyboard.press("Enter")
     await page.wait_for_timeout(500)
-    if (await page.locator(TITLE).text_content() or "").strip() != first:
+    if (await page.locator(FRONT).text_content() or "").strip() != first:
         faults.append(f"{size} : Entrée sur « Annuler » ne remet pas l'offre")
     await page.close()
     return faults
