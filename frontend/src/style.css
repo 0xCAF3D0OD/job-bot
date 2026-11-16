@@ -99,6 +99,9 @@
   --success-wash: #EAF4EE;
   /* Le texte sur --peach-soft : le bloc date du rendez-vous ORP (maquette RendezVous, 6.11.2026). */
   --peach-text: #8A4A16;
+  /* Agence de placement (section 35 du 16.11) : la pastille et le rond de la fiche, ~7:1. */
+  --agency-bg: #EFE9F7;
+  --agency-text: #5B3E8C;
   --scribble: #F09A66;
   /* Les statuts, toujours avec un mot. L'orange (--warning) reste à ce qui demande d'agir (D5) ; « À creuser » est
      en gris chaud (--score-dig). Le rouge, aux erreurs et aux actions destructives. */
@@ -277,6 +280,8 @@
     --peach-wash: #2E241C;
     --success-wash: #1F2E26;
     --peach-text: #F2B98E;
+    --agency-bg: #2E2540;
+    --agency-text: #C9B3F0;
     --success: #62D497;
     --success-soft: #1C3527;
     --warning: #F2A766;
@@ -342,6 +347,8 @@
   --peach-wash: #2E241C;
   --success-wash: #1F2E26;
   --peach-text: #F2B98E;
+  --agency-bg: #2E2540;
+  --agency-text: #C9B3F0;
   --success: #62D497;
   --success-soft: #1C3527;
   --warning: #F2A766;
@@ -503,7 +510,8 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
   right: 1.5rem;
   /* Au-dessus du bouton Assistant, en bas à droite (retour d'usage du 2026-10-15). */
   bottom: 5.25rem;
-  z-index: 20;
+  /* Au-dessus de la fiche plein écran du téléphone (39), sous le voile des panneaux (40, placé après). */
+  z-index: 40;
   max-width: 24rem;
   margin: 0;
   padding: var(--space-3) var(--space-4);

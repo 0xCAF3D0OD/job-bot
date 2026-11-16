@@ -1434,6 +1434,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/not-agency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Not Agency */
+        post: operations["markNotAgency"];
+        /** Unmark Not Agency */
+        delete: operations["unmarkNotAgency"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/employer": {
         parameters: {
             query?: never;
@@ -3945,6 +3963,18 @@ export interface components {
             base_unit: "applications" | "offers";
             /** Link */
             link?: string | null;
+        };
+        /** AgencyDuplicateOut */
+        AgencyDuplicateOut: {
+            /** Title */
+            title: string;
+            /** Company */
+            company: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
         };
         /** AiReadingOut */
         AiReadingOut: {
@@ -7102,6 +7132,9 @@ export interface components {
             employer_status?: ("found" | "not_found" | "agency" | "gone") | null;
             /** Employer Checked At */
             employer_checked_at?: string | null;
+            /** Agency */
+            agency?: ("known" | "probable") | null;
+            agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
             /**
              * Has Logo
              * @default false
@@ -8097,6 +8130,9 @@ export interface components {
             employer_status?: ("found" | "not_found" | "agency" | "gone") | null;
             /** Employer Checked At */
             employer_checked_at?: string | null;
+            /** Agency */
+            agency?: ("known" | "probable") | null;
+            agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
             /**
              * Has Logo
              * @default false
@@ -11952,6 +11988,7 @@ export interface operations {
                 external_only?: boolean;
                 remote?: ("partial" | "full") | null;
                 hide_doubtful?: boolean;
+                hide_agencies?: boolean;
                 with_filtered_out?: boolean;
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
@@ -11983,6 +12020,68 @@ export interface operations {
         };
     };
     getOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markNotAgency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmarkNotAgency: {
         parameters: {
             query?: never;
             header?: never;
