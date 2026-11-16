@@ -674,3 +674,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.460 | Offre écartée sans note : « Écartée le 12 nov. », « Remettre dans le tri » et plus de bouton « Écarter » (§30 du 16.11) | livrée |
 | 1.6.461 | Ordinateur : rien d'ouvert à l'arrivée sur Offres, Envoyées et Rendez-vous, la scène « Choisis… » dans la colonne de droite, et « Annuler » après Écarter rouvre l'offre (§36) | livrée |
 | 1.6.462 | Une offre renotée qui sort des filtres reste ouverte en tête, « Hors de tes filtres », avec sa nouvelle note | livrée |
+| 1.6.463 | Bilan › ORP sur téléphone : carte « Mois ORP » avec barre et chevron, recherches en cartes de 2 lignes, « Replier le mois », « Mois précédents » et « Autres exports » en feuilles du bas (planches du 16.11) | livrée |
+| 1.6.464 | Bilan › Formations sur téléphone : « Mes formations » d'abord et le catalogue derrière « Voir le catalogue », compteur de modules dans la feuille « Noter l'avancement » (téléphone et ordinateur), lignes du catalogue sur deux lignes sans icône (planches du 16.11) | livrée |
