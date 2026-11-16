@@ -49,3 +49,75 @@ function jobA1AlertForm(rules, address) {
 }
 
 globalThis.jobA1AlertForm = jobA1AlertForm;
+
+// --- Le suivi de l'alerte jobup (section 42, docs/142 §4 bis) ---------------------------------
+// Deux fonctions copiées telles quelles dans l'onglet de l'alerte, celui où la personne a ouvert
+// la fenêtre, et seulement lui. Ni l'une ni l'autre ne clique : la personne crée et confirme
+// l'alerte elle-même sur jobup. Le code n'est jamais écrit dans la console.
+
+// Où en est la page : le formulaire d'alerte ouvert, le champ du code, une demande de code sans
+// champ trouvé (sélecteurs cassés), l'alerte créée. Rien d'autre n'est lu ni renvoyé.
+function jobA1AlertProbe(rules) {
+  const visible = (el) => {
+    if (!el || el.hidden || el.closest("[hidden], [aria-hidden='true']")) return false;
+    const style = getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden";
+  };
+  const usable = (input) => visible(input) && !input.disabled && !input.readOnly;
+  const text = [...document.querySelectorAll("[role='dialog'], dialog, form, main, [role='alert'], [role='status']")]
+    .filter(visible)
+    .map((box) => box.textContent || "")
+    .join(" ");
+  const marker = new RegExp(rules.marker, "i");
+  const form = [...document.querySelectorAll(rules.forms.join(","))].some(
+    (box) => visible(box) && marker.test(box.textContent || "") && rules.email.some((s) => [...box.querySelectorAll(s)].some(usable)),
+  );
+  let code = false;
+  for (const selector of rules.code) {
+    if ([...document.querySelectorAll(selector)].some((input) => usable(input) && input.type !== "email" && input.type !== "hidden")) {
+      code = true;
+      break;
+    }
+  }
+  return {
+    form,
+    code,
+    asks: new RegExp(rules.codeAsk, "i").test(text),
+    done: new RegExp(rules.done, "i").test(text),
+  };
+}
+
+// Le code dans son champ, comme au clavier (setter natif, input et change), ou chiffre par chiffre
+// dans des cases d'un caractère. Vrai si le champ a pris le code. Aucun bouton n'est touché.
+function jobA1PasteCode(rules, code) {
+  const visible = (el) => {
+    if (!el || el.hidden || el.closest("[hidden], [aria-hidden='true']")) return false;
+    const style = getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden";
+  };
+  const usable = (input) => visible(input) && !input.disabled && !input.readOnly && input.type !== "email" && input.type !== "hidden";
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+  const type = (input, value) => {
+    input.focus();
+    setter.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  for (const selector of rules.code) {
+    const inputs = [...document.querySelectorAll(selector)].filter(usable);
+    if (!inputs.length) continue;
+    const boxes = inputs.filter((input) => input.maxLength === 1);
+    if (boxes.length === code.length) {
+      boxes.forEach((input, i) => type(input, code[i]));
+      boxes[boxes.length - 1].blur();
+      return boxes.map((input) => input.value).join("") === code;
+    }
+    type(inputs[0], code);
+    inputs[0].blur();
+    return inputs[0].value === code;
+  }
+  return false;
+}
+
+globalThis.jobA1AlertProbe = jobA1AlertProbe;
+globalThis.jobA1PasteCode = jobA1PasteCode;

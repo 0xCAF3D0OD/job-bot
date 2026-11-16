@@ -10,6 +10,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 type Rules = { name: string; hosts: string[]; forms: string[]; email: string[]; marker: string; opener: string };
 type Result = { form: boolean; filled: boolean };
 let fillForm: (rules: Rules, address: string | null) => Result;
+type Probe = { form: boolean; code: boolean; asks: boolean; done: boolean };
+let probe: (rules: Rules) => Probe;
+let paste: (rules: Rules, code: string) => boolean;
 let rules: Record<string, Rules>;
 
 const ADDRESS = "kevin.k3x@alertes.joba1.ch";
@@ -38,8 +41,15 @@ beforeAll(async () => {
   await import("../../extension/alert-selectors.js");
   // @ts-expect-error script de l'extension, sans types (passé tel quel à la page)
   await import("../../extension/alertes.js");
-  const g = globalThis as unknown as { jobA1AlertForm: typeof fillForm; jobA1AlertSelectors: typeof rules };
+  const g = globalThis as unknown as {
+    jobA1AlertForm: typeof fillForm;
+    jobA1AlertSelectors: typeof rules;
+    jobA1AlertProbe: typeof probe;
+    jobA1PasteCode: typeof paste;
+  };
   fillForm = g.jobA1AlertForm;
+  probe = g.jobA1AlertProbe;
+  paste = g.jobA1PasteCode;
   rules = g.jobA1AlertSelectors;
 });
 
@@ -97,5 +107,43 @@ describe("les sites et leurs accès", () => {
     expect([...manifest.host_permissions].sort()).toEqual(hosts.sort());
     expect(manifest.host_permissions.join(" ")).not.toMatch(/all_urls|\*\.|auth\./);
     expect(manifest.permissions).not.toContain("<all_urls>");
+  });
+});
+
+// Le suivi de l'alerte jobup (section 42) : où en est la page, le code collé sans jamais cliquer,
+// et l'état secours quand le champ du code n'est plus reconnu.
+describe("le code de l’alerte jobup", () => {
+  it("le formulaire d’alerte ouvert : ni code demandé, ni alerte créée", () => {
+    open("jobup.html");
+    expect(probe(rules.jobup!)).toEqual({ form: true, code: false, asks: false, done: false });
+  });
+
+  it("le champ du code : reconnu, rempli comme au clavier, sans « Confirmer »", () => {
+    const page = open("jobup-code.html");
+    expect(probe(rules.jobup!)).toEqual({ form: false, code: true, asks: true, done: false });
+    expect(paste(rules.jobup!, "482913")).toBe(true);
+    expect(value("#otp")).toBe("482913");
+    expect(page.events).toEqual(["code:input", "code:change"]);
+    expect(page.submitted()).toBe(false);
+  });
+
+  it("six cases d’un chiffre : un chiffre par case, sans « Confirmer »", () => {
+    const page = open("jobup-code-cases.html");
+    expect(probe(rules.jobup!).code).toBe(true);
+    expect(paste(rules.jobup!, "482913")).toBe(true);
+    expect([...document.querySelectorAll("input")].map((i) => i.value).join("")).toBe("482913");
+    expect(page.submitted()).toBe(false);
+  });
+
+  it("champ du code introuvable : la demande est vue, rien n’est collé (état secours)", () => {
+    const page = open("jobup-code-casse.html");
+    expect(probe(rules.jobup!)).toEqual({ form: false, code: false, asks: true, done: false });
+    expect(paste(rules.jobup!, "482913")).toBe(false);
+    expect(page.submitted()).toBe(false);
+  });
+
+  it("l’alerte créée est reconnue", () => {
+    open("jobup-alerte-creee.html");
+    expect(probe(rules.jobup!).done).toBe(true);
   });
 });

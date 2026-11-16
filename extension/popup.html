@@ -135,6 +135,25 @@
         </div>
       </section>
 
+      <!-- ExtAlerte* (section 42) : le formulaire « Créer une alerte » de jobup, suivi en 4 étapes.
+           jobA1 remplit, colle le code, et ne clique jamais sur jobup. -->
+      <section id="alerte-jobup" class="state" hidden>
+        <ol id="aj-steps" class="aj-steps">
+          <li id="aj-1"><span class="aj-num" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>1</span></span><div class="aj-text"><b id="aj-1-title">Formulaire rempli</b><span id="aj-summary" class="aj-sub"></span></div></li>
+          <li id="aj-2"><span class="aj-num" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>2</span></span><div class="aj-text"><b id="aj-2-title">Clique sur « Créer l’alerte » sur jobup</b><span id="aj-2-sub" class="aj-sub">Vérifie d’abord le formulaire. jobA1 ne valide jamais à ta place.</span></div></li>
+          <li id="aj-3"><span class="aj-num" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>3</span></span><div class="aj-text"><b id="aj-3-title">Code de confirmation</b><span id="aj-3-sub" class="aj-sub">jobA1 le collera dans jobup.</span><div id="aj-wait" class="aj-note" role="status" hidden><span class="spin" aria-hidden="true"></span><span><b>En attente du code.</b> Il arrive dans ta boîte jobA1, puis jobA1 le colle dans jobup.</span></div><div id="aj-warn" class="aj-note warn" role="status" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/></svg><span>jobA1 n’a pas trouvé le champ du code sur jobup.</span></div><div id="aj-code" class="aj-code" hidden></div><button id="aj-copy-code" class="aj-copy" type="button" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg><span id="aj-copy-label">Copier le code</span></button></div></li>
+          <li id="aj-4"><span class="aj-num" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>4</span></span><div class="aj-text"><b id="aj-4-title">Valide le code sur jobup</b><span id="aj-4-sub" class="aj-sub">Clique sur « Confirmer » sur jobup.</span></div></li>
+        </ol>
+        <p id="aj-empty" class="note" hidden>Un champ est vide ? <button id="aj-copy-address" class="link" type="button">Copier l’adresse jobA1</button></p>
+        <p id="aj-error" class="error" role="alert" hidden></p>
+        <div id="aj-done" class="aj-done" role="status" hidden>
+          <span class="aj-done-mark" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="title-md">Alerte créée sur jobup</span>
+          <span class="body">Tes premières offres arrivent dans jobA1 dès le premier e-mail d’alerte.</span>
+        </div>
+        <a id="aj-open" class="aj-primary open-app" href="#" hidden>Ouvrir jobA1</a>
+      </section>
+
       <!-- Réglages (roue dentée) : l'adresse de la plateforme, relier, délier. -->
       <!-- Transfert Gmail (docs/142 §5) : un filtre pour les seules alertes, jamais tout le courrier. -->
       <section id="gmail" class="state" hidden>
