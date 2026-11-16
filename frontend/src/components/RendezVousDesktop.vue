@@ -23,6 +23,8 @@ import {
   splitLine,
   timeAndPlace,
   upcomingAppointments,
+  upcomingLabel,
+  upcomingLine,
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
@@ -188,6 +190,7 @@ const list = ref<HTMLElement | null>(null);
             class="rdv-item list-card"
             :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
             :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
+            :aria-label="upcomingLabel(item, item.kind === 'orp' ? (lines.length ? 'Feuille prête' : 'Feuille à compléter') : 'Entretien', now)"
             @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
           >
             <CalendarDate
@@ -195,20 +198,21 @@ const list = ref<HTMLElement | null>(null);
               :tone="item.kind === 'orp' ? 'orp' : 'blue'"
               :size="44"
             />
+            <!-- Deux lignes au plus (demande de Kevin du 16.11, planche RendezVous) : le titre et sa pastille, puis
+                 « 9 h · dans 3 jours · lieu ». -->
             <span class="rdv-item-text">
-              <span class="rdv-item-kicker">{{ item.kind === "orp" ? countdown(item.at, now) : "Entretien d’embauche" }}</span>
-              <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
-              <span class="rdv-item-sub"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ item.kind === "orp" ? timeAndPlace(item.at, item.meeting.place) : [item.application.company, timeOfDay(item.at), interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(" · ") }}</span>
-              <span class="rdv-chips">
+              <span class="rdv-item-line">
+                <span class="rdv-item-title">{{ item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué" }}</span>
                 <span
                   v-if="item.kind === 'orp'"
-                  :class="lines.length ? 'green' : ''"
-                >{{ lines.length ? "Ta feuille est prête" : "Feuille à compléter" }}</span>
+                  :class="['rdv-chip', lines.length ? 'green' : '']"
+                >{{ lines.length ? "Feuille prête" : "Feuille à compléter" }}</span>
                 <span
                   v-else
-                  class="peach"
-                >À préparer</span>
+                  class="rdv-chip"
+                >Entretien</span>
               </span>
+              <span class="rdv-item-sub">{{ upcomingLine(item, now) }}</span>
             </span>
             <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
           </button>
@@ -510,11 +514,11 @@ const list = ref<HTMLElement | null>(null);
 
 <style>
 /* Valeurs de la planche CandidaturesOrdinateurB, onglet Rendez-vous (maquette du 15 novembre, §14) : la même liaison
-   qu'Offres et Envoyées (LinkedDetail, liste de 504 px, rail et pointe du §18). Cartes de 104 au minimum, marges 14/18,5, contour de 1,5
+   qu'Offres et Envoyées (LinkedDetail, liste de 504 px, rail et pointe du §18). Cartes de 80 au minimum, marges 14/16, deux lignes au plus (§39 du 16.11), contour de 1,5
    (--card-line), coins de 18, écart 10 ; la carte choisie en 16 avec un contour de 2. Titres de groupe à 14/4/8. Le
    détail : une carte en-tête (24/28/24/32, coins de 24) puis chaque bloc en carte (marge de 32), 16 px entre elles. */
 .rdv-grid {
-  --rdv-2: 2px; --rdv-3: 3px; --rdv-14: 14px; --rdv-18-5: 18.5px; --rdv-17: 17px; --rdv-18: 18px; --rdv-21: 21px; --rdv-24: 24px; --rdv-28: 28px; --rdv-30: 30px;
+  --rdv-2: 2px; --rdv-3: 3px; --rdv-14: 14px; --rdv-17: 17px; --rdv-18: 18px; --rdv-21: 21px; --rdv-24: 24px; --rdv-28: 28px; --rdv-30: 30px;
   --rdv-15: 15px; --rdv-lh-text: 1.45;
   display: flex; align-items: stretch; gap: 0; height: calc(100dvh - var(--linked-top, 0px)); min-height: 20rem; box-sizing: border-box; padding-top: var(--space-1);
 }
@@ -525,24 +529,22 @@ const list = ref<HTMLElement | null>(null);
 .rdv-list-title span { font-size: var(--label-caps); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .rdv-item + .rdv-item { margin-top: calc(var(--space-2) + var(--rdv-2)); }
 .rdv-item {
-  flex: none; display: flex; align-items: center; gap: var(--space-2) var(--rdv-14); box-sizing: border-box; min-height: 104px; padding: var(--rdv-14) var(--rdv-18-5);
+  flex: none; display: flex; align-items: center; gap: var(--space-2) var(--rdv-14); box-sizing: border-box; min-height: 80px; padding: var(--rdv-14) var(--space-4);
   background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--rdv-18); color: var(--text); font: inherit; text-align: left;
 }
 button.rdv-item { cursor: pointer; }
 button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-item[aria-current="true"], button.rdv-item[aria-current="true"]:hover { max-width: none; border-color: var(--primary-graphic); }
-.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-2); }
-.rdv-item-kicker { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.rdv-item-title, .rdv-item-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rdv-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--rdv-3); }
+.rdv-item-line { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.rdv-item-title, .rdv-item-sub { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .rdv-item-title { font-size: var(--font-body); line-height: var(--rdv-21); font-weight: var(--weight-bold); }
 .rdv-item-sub { font-size: var(--font-small); color: var(--text-secondary); }
-.rdv-chips { display: flex; gap: var(--space-1); margin-top: var(--rdv-3); overflow: hidden; }
-.rdv-chips > * {
-  flex: none; padding: var(--rdv-3) var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; font-size: var(--font-caption);
-  font-weight: var(--weight-semibold); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-tertiary);
+.rdv-chip {
+  flex: none; padding: var(--rdv-2) var(--space-2); border-radius: var(--radius-pill); white-space: nowrap; font-size: var(--font-caption);
+  font-weight: var(--weight-bold); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-tertiary);
 }
-.rdv-chips > .peach { background: var(--peach-soft); color: var(--peach-text); }
-.rdv-chips > .green { background: var(--success-soft); color: var(--success); }
+.rdv-chip.green { background: var(--success-soft); color: var(--success); }
 /* « Aucun rendez-vous à venir » : la pastille en haut de la liste, alignée sur les cartes, un trait dessous (480 px). */
 .linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-gap) + var(--space-1)) calc(var(--space-2) + var(--rdv-2) - var(--linked-room)) calc(var(--linked-bar) + var(--space-1)); }
 .rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-bar); right: var(--linked-gap); bottom: calc(-1 * var(--linked-room)); border-bottom: 1px solid var(--line); }
