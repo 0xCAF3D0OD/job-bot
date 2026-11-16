@@ -686,3 +686,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.472 | « Pour l'ORP » : la pastille « Case à cocher dans Job-Room » se détache du fond beige (fond blanc et trait, sombre compris) | livrée |
 | 1.6.473 | Poids : 274 règles qui ne servent qu'à une page ou à un composant chargé à la demande quittent style.css pour le fichier de ce composant ; chaque page charge de 0,6 à 4,2 Ko de CSS en moins (gzip), sans aucun changement visible (allègement (a) de l'issue #797) | livrée |
 | 1.6.474 | Extension : le script de la page jobA1 attend <html> s'il n'existe pas encore au chargement | livrée |
+| 1.6.475 | Poids : Préparer charge à la demande ses panneaux secondaires (Compatibilité, « Pas vrai », Compléter le profil) et les écrans d'après l'envoi (« Candidature envoyée », « C'est fait ! ») ; la page s'ouvre avec 12,3 Ko de JS et 3,9 Ko de CSS en moins (gzip), sans changement visible (allègement (c) de l'issue #797) | livrée |
