@@ -30,7 +30,8 @@ const props = withDefaults(
     busy?: boolean;
     // Un bouton à texte à la place de la flèche seule (« Refaire la note », maquette OffreProvisoire du 10 novembre au
     // soir, PR 25) : il reste visible et `aria-disabled` sous `minChars`. `enough` : la fin du compteur une fois le
-    // minimum atteint (« assez pour noter »), en vert.
+    // minimum atteint (« assez pour noter »), en vert. Pendant `busy`, une roue tourne devant le texte (Kevin, 16.11 :
+    // on voit que jobA1 traite l'annonce).
     sendText?: string;
     enough?: string;
     // La boîte de l'Assistant (prompt du 10 novembre, PR 19 ; maquettes Assistant et AssistantOrdinateur, comme la
@@ -307,10 +308,28 @@ defineExpose({ focus: () => area.value?.focus() });
         type="button"
         class="composer-send composer-send-text"
         :aria-disabled="canSend ? undefined : 'true'"
+        :aria-busy="busy ? 'true' : undefined"
         data-test="composer-send"
         @click="send"
       >
-        {{ sendText }}
+        <svg
+          v-if="busy"
+          class="offer-reading-spinner"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          aria-hidden="true"
+          data-test="composer-busy"
+        ><circle
+          cx="12"
+          cy="12"
+          r="9"
+          opacity="0.35"
+        /><path d="M12 3a9 9 0 0 1 9 9" /></svg>{{ sendText }}
       </button>
       <button
         v-else

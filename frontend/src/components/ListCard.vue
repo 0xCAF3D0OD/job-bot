@@ -160,7 +160,7 @@ function onClick(event: MouseEvent): void {
   .list-card-end { width: 72px; }
   .list-card > .list-card-chips { margin-top: var(--card-8); }
   .list-card > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--card-2) var(--card-8); border-radius: var(--chip-r); line-height: normal; }
-  .list-card > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
+  .list-card > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
 }
 /* Planches CandidaturesOrdinateur* du 13.11 : hors téléphone, les carrés des cartes et de la tête de la fiche prennent
    cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu

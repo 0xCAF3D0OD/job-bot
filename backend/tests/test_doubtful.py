@@ -133,6 +133,10 @@ async def test_doubt_signals_and_hide_filter(api: AsyncClient, runtime: Runtime)
     hidden = await listing(api, hide_doubtful=True)
     assert sorted(hidden) == ["SRE"]
 
+    # « Masquer les agences de placement » (section 35 du 16.11) : seule l'agence part.
+    direct = await listing(api, hide_agencies=True)
+    assert "Data" not in direct and {"SRE", "Assistant", "Vieille", "Gain facile"} <= set(direct)
+
 
 def test_scam_signals_are_capped_and_cleaned() -> None:
     chunks = [ProfileChunkData(1, "competence", "Linux", "Linux")]

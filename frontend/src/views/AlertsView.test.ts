@@ -346,8 +346,10 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("moi@exemple.ch");
     expect(panel.find("[data-test=alert-site-copied]").text()).toBe("Adresse copiée");
-    // Une seule annonce pour la copie ; l'autre zone annoncée est l'étape du code de jobup (section 15).
-    expect(panel.findAll("[role=status]:not([data-test=code-box])")).toHaveLength(1);
+    // Une seule annonce pour la copie ; l'autre zone annoncée est l'étape du code de jobup, son trajet en 3 points
+    // (section 24, aussi dans le panneau : Kevin, 16.11).
+    expect(panel.find("[data-test=code-trail]").attributes("role")).toBe("status");
+    expect(panel.findAll("[role=status]:not([data-test=code-trail])")).toHaveLength(1);
   });
 });
 

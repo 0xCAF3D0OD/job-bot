@@ -74,8 +74,20 @@ def catalog() -> list[dict[str, Any]]:
 async def sync_catalog(session: AsyncSession) -> None:
     """Le catalogue du dépôt fait foi : ses fiches sont créées ou mises à jour (par adresse)."""
     for entry in catalog():
-        values = {**entry, "origin": "catalog", "verified": True}
-        fields = {k: v for k, v in values.items() if k != "url"}
+        # L'état du lien : celui du fichier pour une nouvelle fiche (« a_reverifier » : elle attend
+        # la tâche des liens, Kevin 16.11), puis celui que la tâche lui donne.
+        values = {
+            "link_status": "ok",
+            **entry,
+            "origin": "catalog",
+            "verified": True,
+            "link_next_check": datetime.now(UTC),
+        }
+        fields = {
+            k: v
+            for k, v in values.items()
+            if k not in ("url", "link_status", "link_next_check")
+        }
         await session.execute(
             insert(Training)
             .values(**values)

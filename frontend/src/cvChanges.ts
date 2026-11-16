@@ -5,7 +5,9 @@ import type { Cv } from "./api/client";
 // (llm/cv.py) : elle écrit le titre et le résumé, choisit les blocs et leur ordre. Chaque retrait et chaque nouvel ordre
 // peut s'annuler (`undo` : la liste de blocs à enregistrer) ; le résumé n'a pas d'« avant » gardé, il ne s'annule pas.
 
-export type CvChange = { key: string; title: string; before: string; now: string; undo: number[] | null };
+// `mark` : ce que « Voir les changements » surligne dans l'aperçu (§34 du 16.11), le résumé ou le bloc déplacé ; un
+// bloc retiré n'est plus dans l'aperçu, il n'a rien à surligner.
+export type CvChange = { key: string; title: string; before: string; now: string; undo: number[] | null; mark?: number | "summary" };
 
 const SECTIONS: Record<string, string> = {
   experience: "Expériences",
@@ -50,6 +52,7 @@ export function cvChanges(cv: Cv): CvChange[] {
       before: "Avant : pas de résumé ; jobA1 l’écrit à partir de tes blocs, sans rien ajouter.",
       now: `Maintenant : « ${summary} »`,
       undo: null,
+      mark: "summary",
     });
   }
   if (!origin.length) return changes;
@@ -66,6 +69,7 @@ export function cvChanges(cv: Cv): CvChange[] {
         before: `Avant : « ${title(id)} » venait en ${rank(before.indexOf(id) + 1)}.`,
         now: `Maintenant : il vient en ${rank(moved + 1)}, pour cette offre.`,
         undo: reorder(cv, origin, kept),
+        mark: id,
       });
     }
   }

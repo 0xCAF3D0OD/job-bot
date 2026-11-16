@@ -618,3 +618,33 @@ async def test_new_account_never_sees_owner_identity(
                         "('identity_name', 'identity_city', 'profile_avatar')"
                     )
                 )
+
+
+async def test_declared_diplomas_stay_in_their_account(
+    runtime: Runtime, two_accounts: tuple[int, int]
+) -> None:
+    """« J'ai ce diplôme » (formations, 16.11) : la déclaration d'un compte ne vaut pas pour un
+    autre (C-1, C-4)."""
+    from jobbot.trainings import diplomas
+
+    owner, other = two_accounts
+    with accounts.use(owner):
+        async with runtime.sessionmaker.begin() as session:
+            await session.execute(
+                text(
+                    "insert into settings (key, value) values ('training_diplomas', "
+                    "'[\"soins_infirmiers\"]') on conflict (user_id, key) do update "
+                    "set value = excluded.value"
+                )
+            )
+    try:
+        with accounts.use(other):
+            async with runtime.sessionmaker.begin() as session:
+                assert await diplomas.declared(session) == set()
+        with accounts.use(owner):
+            async with runtime.sessionmaker.begin() as session:
+                assert await diplomas.declared(session) == {"soins_infirmiers"}
+    finally:
+        with accounts.use(owner):
+            async with runtime.sessionmaker.begin() as session:
+                await session.execute(text("delete from settings where key = 'training_diplomas'"))
