@@ -649,15 +649,15 @@ onUnmounted(() => assistant.setFocus(null));
       aria-label="Aucune candidature ouverte"
     >
       <LinkedDetail :list="sentList">
-<EmptyState
-            class="choose-detail"
-            data-test="choose-detail"
-            scene="choisis-candidature"
-            title="Choisis une candidature"
-            pill="Suivi, relances et documents s’affichent ici"
-            pill-icon="arrow-left"
-            :width="340"
-            :desktop-width="340"
+        <EmptyState
+          class="choose-detail"
+          data-test="choose-detail"
+          scene="choisis-candidature"
+          title="Choisis une candidature"
+          pill="Suivi, relances et documents s’affichent ici"
+          pill-icon="arrow-left"
+          :width="340"
+          :desktop-width="340"
         />
       </LinkedDetail>
     </aside>

@@ -1193,7 +1193,7 @@ onUnmounted(() => {
           class="detail-column"
         >
           <LinkedDetail :list="listEl">
-<EmptyState
+            <EmptyState
               class="choose-detail"
               data-test="choose-detail"
               scene="choisis-offre"

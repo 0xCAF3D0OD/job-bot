@@ -513,16 +513,16 @@ const list = ref<HTMLElement | null>(null);
       class="rdv-detail"
       :list="list"
     >
-<EmptyState
-              class="choose-detail"
-              data-test="choose-detail"
-              scene="choisis-rendez-vous"
-              title="Choisis un rendez-vous"
-              pill="Préparation et feuille ORP s’affichent ici"
-              pill-icon="arrow-left"
-              :width="340"
-              :desktop-width="340"
-            />
+      <EmptyState
+        class="choose-detail"
+        data-test="choose-detail"
+        scene="choisis-rendez-vous"
+        title="Choisis un rendez-vous"
+        pill="Préparation et feuille ORP s’affichent ici"
+        pill-icon="arrow-left"
+        :width="340"
+        :desktop-width="340"
+      />
     </LinkedDetail>
   </div>
 </template>

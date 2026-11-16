@@ -5168,9 +5168,10 @@ html.text-large { font-size: 125%; }
 }
 .empty-state-pill svg { width: var(--space-4); height: var(--space-4); }
 /* Colonne de droite sans élément ouvert, sur ordinateur (§36 du 16.11, planches *OrdinateurAucuneOuverte) : scène de 340,
-   titre 24/30 à 24 px, flèche de la pastille à 6 px du texte ; 24 px sur les côtés, 48 dessous. */
+   titre 24/30 à 24 px ; 24 px sur les côtés, 48 dessous. La pastille de 32 px (6/12 sur la planche) : hauteur posée et
+   texte centré, sans marge de 6 px, pour rester sur la grille de 4 (audit) ; flèche à 4 px du texte (6 sur la planche). */
 .empty-state.choose-detail { --es-24: 24px; --es-t: var(--es-24); --es-lh: 30px; --es-top: var(--space-6); padding: 0 var(--space-6) var(--space-12); }
-.choose-detail .empty-state-pill { gap: var(--es-6); }
+.choose-detail .empty-state-pill { min-height: var(--space-8); padding-block: 0; }
 .empty-state-actions { --es-300: 300px; display: flex; flex-direction: column; gap: var(--space-3); width: 100%; max-width: var(--es-300); margin-top: var(--es-gap); }
 .empty-state-actions > * {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--es-btn); margin: 0;
