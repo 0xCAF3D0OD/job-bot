@@ -397,12 +397,26 @@ async def test_existing_offer_or_create_anyway(
         "draft"
     ]
     assert draft["existing_offer_id"] == spontaneous_id
+    assert draft["existing_kind"] == "post"
+    assert draft["existing_title"] == "Développeuse Full Stack"
+    assert draft["existing_company"] == "Exemple Sàrl"
+    assert draft["existing_added"] == datetime.now(UTC).date().isoformat()
 
     separate = (await api.post("/api/offers/manual", json={**draft, "separate": True})).json()
     assert separate["existing"] is False and separate["id"] != spontaneous_id
     async with rt.sessionmaker() as session:
         assert len(list(await session.scalars(select(Offer)))) == 2
     assert ai.calls == []
+
+    # Même lien (doublon sûr) : pas d'offre à part, même demandée ; l'offre déjà là s'ouvre.
+    again = (
+        await api.post("/api/offers/manual/read", json={"url": "https://www.exemple.ch/job/1/"})
+    ).json()["draft"]
+    assert again["existing_kind"] == "link" and again["existing_offer_id"] == separate["id"]
+    opened = (await api.post("/api/offers/manual", json={**again, "separate": True})).json()
+    assert opened == {**opened, "existing": True, "id": separate["id"]}
+    async with rt.sessionmaker() as session:
+        assert len(list(await session.scalars(select(Offer)))) == 2
 
 
 async def test_complete_never_reaches_another_account(

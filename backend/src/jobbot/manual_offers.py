@@ -34,6 +34,7 @@ from jobbot.core.normalize import (
     parse_rate,
 )
 from jobbot.db.models import MANUAL_LINK_SOURCE, EnrichStatus, Offer, OfferLink, OfferStatus
+from jobbot.filtering.duplicates import _links, link_key
 from jobbot.filtering.service import run_filter
 from jobbot.letters.service import load_identity
 from jobbot.llm import alert as alert_llm
@@ -95,6 +96,12 @@ class Draft:
     trade: str | None = None
     matches_trade: bool = True
     existing_offer_id: int | None = None
+    # Décision de Kevin du 16.11 : « link », même lien (doublon sûr, on l'ouvre) ; « post », même
+    # poste chez la même entreprise, lien différent (doublon probable, « Ajouter quand même »).
+    existing_kind: str | None = None
+    existing_title: str | None = None
+    existing_company: str | None = None
+    existing_added: datetime | None = None
     # Ce que l'annonce peut apporter à l'offre déjà là : ses champs vides (docs/111).
     fillable: list[str] = field(default_factory=list)
 
@@ -273,15 +280,35 @@ async def _complete(session: AsyncSession, draft: Draft) -> Draft:
     draft.trade, words = await trade(session)
     if words:
         draft.matches_trade = about_trade(words, draft.title, draft.description)
-    norm = normalize_offer(draft.title, draft.company, draft.location)
-    existing = await same_offer(session, norm)
-    if existing is None and draft.url:
-        existing = await session.scalar(
-            select(OfferLink.offer_id).where(OfferLink.url == draft.url).limit(1)
+    existing = await same_link(session, draft.url)
+    kind = "link" if existing is not None else None
+    if existing is None:
+        existing = await same_offer(
+            session, normalize_offer(draft.title, draft.company, draft.location)
         )
+        kind = "post" if existing is not None else None
+    draft.existing_kind = kind
+    if existing is not None and (offer := await session.get(Offer, existing)) is not None:
+        draft.existing_title, draft.existing_company = offer.title, offer.company
+        draft.existing_added = offer.first_seen_at
     draft.existing_offer_id = existing
     draft.fillable = await _fillable(session, existing, draft) if existing is not None else []
     return draft
+
+
+async def same_link(session: AsyncSession, url: str | None) -> int | None:
+    """L'offre qui a déjà cette page (lien d'alerte, annonce chez l'employeur, formulaire), comparée
+    comme dans le fil : hôte sans www, chemin sans / final, identifiant de l'annonce (#810).
+    L'offre gardée d'un groupe de doublons, pas une offre rattachée."""
+    page = link_key(url)
+    if page is None:
+        return None
+    offers = list(await session.scalars(select(Offer).order_by(Offer.id)))
+    links = await _links(session, offers)
+    for offer in offers:
+        if page in links.get(offer.id, ()):
+            return offer.duplicate_of or offer.id
+    return None
 
 
 async def same_offer(session: AsyncSession, norm: NormalizedOffer) -> int | None:

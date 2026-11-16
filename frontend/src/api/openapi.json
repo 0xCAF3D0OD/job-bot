@@ -19097,6 +19097,55 @@
             "type": "array",
             "title": "Fillable",
             "default": []
+          },
+          "existing_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "link",
+                  "post"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Kind"
+          },
+          "existing_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Title"
+          },
+          "existing_company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Company"
+          },
+          "existing_added": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Added"
           }
         },
         "type": "object",

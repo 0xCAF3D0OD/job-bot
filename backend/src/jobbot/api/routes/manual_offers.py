@@ -6,6 +6,7 @@ deux (docs/72).
 """
 
 import asyncio
+from datetime import date
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
@@ -68,6 +69,12 @@ class ManualDraft(BaseModel):
     existing_offer_id: int | None
     # Les champs vides de l'offre déjà là que cette annonce peut remplir.
     fillable: list[Literal["company", "location", "description", "url"]] = []
+    # Déjà là (décision de Kevin du 16.11) : « link », même lien ; « post », même poste chez la même
+    # entreprise. Le titre, l'entreprise et le jour d'ajout de l'offre déjà là, pour le message.
+    existing_kind: Literal["link", "post"] | None = None
+    existing_title: str | None = None
+    existing_company: str | None = None
+    existing_added: date | None = None
 
 
 class ManualReadOut(BaseModel):
@@ -142,6 +149,12 @@ async def read(request: Request, body: ManualReadIn) -> ManualReadOut:
             matches_trade=draft.matches_trade,
             existing_offer_id=draft.existing_offer_id,
             fillable=draft.fillable,
+            existing_kind=(
+                "link" if draft.existing_kind == "link" else "post" if draft.existing_kind else None
+            ),
+            existing_title=draft.existing_title,
+            existing_company=draft.existing_company,
+            existing_added=draft.existing_added.date() if draft.existing_added else None,
         )
     )
 
@@ -194,13 +207,14 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
         read_by=body.read_by,
     )
     filled: list[str] = []
-    existing = None
-    if not body.separate:
-        async with runtime.sessionmaker() as session:
-            existing = (await manual_offers._complete(session, draft)).existing_offer_id
+    async with runtime.sessionmaker() as session:
+        found_draft = await manual_offers._complete(session, draft)
+    # « Ajouter quand même » : doublon probable seulement ; même lien, l'offre déjà là s'ouvre.
+    separate = body.separate and found_draft.existing_kind != "link"
+    existing = None if separate else found_draft.existing_offer_id
     if existing is None:
         try:
-            offer_id = await manual_offers.add(runtime, draft, separate=body.separate)
+            offer_id = await manual_offers.add(runtime, draft, separate=separate)
         except manual_offers.ReadProblem as exc:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, exc.message) from exc
         # La note part tout de suite, sans attendre la relève des 10 minutes ; l'offre est

@@ -6669,6 +6669,14 @@ export interface components {
              * @default []
              */
             fillable: ("company" | "location" | "description" | "url")[];
+            /** Existing Kind */
+            existing_kind?: ("link" | "post") | null;
+            /** Existing Title */
+            existing_title?: string | null;
+            /** Existing Company */
+            existing_company?: string | null;
+            /** Existing Added */
+            existing_added?: string | null;
         };
         /** ManualPdfOut */
         ManualPdfOut: {
