@@ -636,3 +636,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.422 | « Voir la compatibilité » en bleu sur l'offre provisoire, comme partout | livrée |
 | 1.6.423 | Les décisions de Kevin, un fichier par décision dans docs/decisions/, assemblées dans docs/mobile/DECISIONS.md sur main après chaque fusion : plus de conflit entre PR sur la fin de DECISIONS.md | livrée |
 | 1.6.424 | La tâche « Envoyer N candidatures » d'Aujourd'hui notée comme fonction manquante (décision de Kevin du 16.11) | livrée |
+| 1.6.425 | Éventail : chaque note tient sur une ligne avec « … », forme courte ou non, et 24 px au moins la séparent du poste | livrée |
