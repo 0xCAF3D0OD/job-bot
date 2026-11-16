@@ -89,6 +89,17 @@ case "${1:-}" in
     sur_le_serveur relancer
     ;;
   mot-de-passe) sur_le_serveur jobbot set-password ;;
+  comparer-notes)
+    # Les notes score-v7 et score-v8 d'un même lot d'offres (scripts/comparer_notes_v7_v8.py), dans le
+    # conteneur de l'API : rien n'est écrit dans les notes, chaque appel compte dans le plafond de l'IA.
+    git fetch -q origin
+    v7=backend/src/jobbot/llm/prompts/score-v7.md
+    retire="$(git rev-list -1 origin/main -- "$v7")"
+    api="sudo docker compose -f ~/$REMOTE_DIR/deploy/prod/docker-compose.yml exec -T api"
+    git show "$retire^:$v7" | "${SSH[@]}" "$SERVER" "$api sh -c 'cat > /tmp/score-v7.md'"
+    git show origin/main:scripts/comparer_notes_v7_v8.py \
+      | "${SSH[@]}" "$SERVER" "$api python - --limit ${LIMIT:-20} --v7 /tmp/score-v7.md"
+    ;;
   sauvegardes)
     dest="${DEST:-$HOME/Documents/joba1-sauvegardes-serveur}"
     mkdir -p "$dest" && chmod 700 "$dest"
