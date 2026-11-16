@@ -77,7 +77,7 @@ async function mountAt(path: string, provide: Record<string, unknown> = {}) {
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: "/offres", component: OffersView },
+      { path: "/offres", name: "offers", component: OffersView },
       { path: "/aujourdhui/tri", name: "triage", component: { template: "<div />" } },
     ],
   });
@@ -98,19 +98,21 @@ function lastQuery(): Record<string, unknown> {
   return (call?.[1] as { params: { query: Record<string, unknown> } }).params.query;
 }
 
-beforeEach(() =>
+beforeEach(() => {
+  sessionStorage.clear();
   GET.mockImplementation((path: string) =>
     Promise.resolve(
       path === "/api/profile-chunks"
         ? { data: [{ id: 1, title: "Linux", active: true }] }
         : page([offer(1, "Ingénieur système")]),
     ),
-  ),
-);
+  );
+});
 afterEach(async () => {
   await useUndo().flush();
   GET.mockReset();
   vi.useRealTimers();
+  sessionStorage.clear();
 });
 
 describe("filtres dans l’adresse", () => {
@@ -321,7 +323,32 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-test=filters-reset]").text()).toBe("Tout effacer");
     await wrapper.find("[data-test=filters-reset]").trigger("click");
     await flushPromises();
+    // « Tout effacer » retire aussi le statut (Kevin, 16.11).
+    expect(router.currentRoute.value.query).toEqual({});
+  });
+
+  it("filtres gardés jusqu’à la fermeture de l’onglet (Kevin, 16.11) : remis au retour sans filtre, un lien qui en porte un l’emporte", async () => {
+    const first = await mountAt("/offres?statut=to_review");
+    expect(first.find("[data-test=chip-view]").text()).toContain("Statut : Nouvelles");
+    expect(first.find("[data-test=filters-count]").text()).toBe("1");
+    expect(first.find("[data-test=chips-reset]").text()).toBe("Tout effacer");
+    first.unmount();
+    // « Retour aux offres » de « C'est fait ! » : un lien sans filtre.
+    const back = await mountAt("/offres");
     expect(router.currentRoute.value.query).toEqual({ statut: "to_review" });
+    expect(lastQuery()).toMatchObject({ view: "to_review" });
+    await back.find("[data-test=chip-remove-view]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({});
+    back.unmount();
+    const cleared = await mountAt("/offres");
+    expect(router.currentRoute.value.query).toEqual({});
+    cleared.unmount();
+    sessionStorage.setItem("jobA1.offres-filtres", JSON.stringify({ statut: "later" }));
+    // « Tout voir » de Top du jour : son filtre l'emporte sur les filtres gardés.
+    await mountAt("/offres?note=75");
+    expect(router.currentRoute.value.query).toEqual({ note: "75" });
+    expect(lastQuery()).toMatchObject({ view: "pending", min_score: 75 });
   });
 
   it("groupe « Type de note » (PR 26, section 31) : Toutes, Définitives · n, Provisoires · n en boutons radio ; le choix part à l’API et dans l’adresse", async () => {
@@ -1120,6 +1147,7 @@ describe("« Afficher aussi » : Écartées et Expirées (docs/139 étapes 5c et
       "Avec les offres écartées",
       "Avec les offres expirées",
     ]);
+    sessionStorage.clear(); // un nouvel onglet : rien de gardé
     await mountAt("/offres");
     expect(lastQuery().with_filtered_out).toBeUndefined();
     expect(lastQuery().with_expired).toBeUndefined();

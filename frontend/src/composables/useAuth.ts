@@ -49,6 +49,8 @@ export function useAuth() {
       // Le profil d'essai choisi appartient à ce compte : le suivant repart du sien.
       try {
         globalThis.localStorage?.removeItem(PROFILE_KEY);
+        // Les filtres gardés des Offres (useOfferFilters) appartiennent aussi à ce compte (A-7).
+        globalThis.sessionStorage?.removeItem("jobA1.offres-filtres");
       } catch {
         // Stockage refusé : rien n'y était gardé.
       }

@@ -1,0 +1,6 @@
+## Filtres des Offres gardés jusqu'à la fermeture de l'onglet (Kevin, 16.11.2026, 16 h 44)
+
+- Constat : le filtre choisi (par exemple « Nouvelles ») retombait sur « Toutes » après une candidature, parce que les filtres vivent dans l'adresse (`?statut=to_review`) et que « Retour aux offres » (écran « C'est fait ! »), l'onglet Offres et les autres liens pointent sur `/candidatures/offres` sans filtre.
+- Les filtres des Offres (statut, tri, note, taux, sites, cantons, télétravail, agences, écartées, expirées, recherche) sont gardés pour l'onglet du navigateur (`sessionStorage`, clé `jobA1.offres-filtres`) et remis quand on revient sur Offres par un lien qui n'en porte aucun. Ils durent jusqu'à la fermeture de l'onglet et sont effacés à la déconnexion (règle A-7).
+- Un lien qui porte un filtre précis (par exemple « Tout voir » de Top du jour → note 75 et plus) l'emporte sur les filtres gardés.
+- Le statut choisi devient une pastille, « Statut : Nouvelles » (Gardées, En préparation), comptée dans le nombre du bouton Filtres ; « Tout effacer » apparaît dès qu'un filtre est actif et retire aussi le statut (avant, il le gardait). Le tri n'a pas de pastille et reste en place, sauf « Dernière action », propre à En préparation.
