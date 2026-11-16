@@ -5,16 +5,15 @@ import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import {
   agreedLines,
-  countdown,
   dateText,
-  interviewFormat,
-  interviewPlace,
   meetingsToNote,
   notedMeetings,
   pastTitle,
   sheetLines,
   timeAndPlace,
   upcomingAppointments,
+  upcomingLabel,
+  upcomingLine,
   appointmentMatches,
   meetingMatches,
 } from "../rendezVous";
@@ -22,7 +21,6 @@ import { plural } from "../format";
 import CalendarDate from "./CalendarDate.vue";
 import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import { timeOfDay } from "../dates";
 
 // Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Trois parties,
 // posées par OrpMeetingView : « À noter » en premier (corrections du 9 novembre : un rendez-vous passé à noter passe
@@ -101,58 +99,44 @@ function cal(iso: string): { day: number; month: number } {
             test-id="rdv-more"
           />
         </div>
-        <div class="rdv-head">
-          <CalendarDate
-            class="rdv-date"
-            v-bind="cal(item.at)"
-            tone="orp"
-          />
-          <div class="rdv-body">
-            <span class="rdv-kicker">{{ countdown(item.at, now) }}</span>
+        <!-- Deux lignes au plus (demande de Kevin du 16.11, planche RendezVous) : « Rendez-vous ORP » et sa pastille,
+             puis « 9 h · dans 3 jours · lieu ». Toute la carte ouvre la feuille de préparation (la planche relie la
+             carte à RendezVousPreparer) : le bouton s’étend sur la carte ; son nom dit titre, pastille, date, heure et délai. -->
+        <CalendarDate
+          class="rdv-date"
+          v-bind="cal(item.at)"
+          tone="orp"
+        />
+        <div class="rdv-body">
+          <span class="rdv-line">
             <h3
               id="rdv-orp-titre"
               class="rdv-orp-title"
             >
               Rendez-vous ORP
             </h3>
-            <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ timeAndPlace(item.at, item.meeting.place) }}</span>
             <!-- « prête » seulement si la feuille a au moins une ligne ; sinon une pastille neutre. -->
             <span
               v-if="lines.length"
               class="rdv-ready"
               data-test="rdv-ready"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              ><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>Ta feuille est prête
-            </span>
+            >Feuille prête</span>
             <span
               v-else
               class="rdv-ready rdv-todo"
               data-test="rdv-todo"
             >Feuille à compléter</span>
-          </div>
+          </span>
+          <span class="rdv-meta">{{ upcomingLine(item, now) }}</span>
         </div>
-        <!-- §10.7 (9 novembre) : ce qui préparait le rendez-vous passe dans une feuille du bas. Prompt du 9 novembre,
-             PR 7 (maquettes RendezVous et RendezVousSombre) : une seule action dans la carte, le bouton plein qui ouvre
-             la feuille (elle porte « Imprimer ou télécharger en PDF ») ; plus de « Voir ma feuille ». -->
         <button
           type="button"
-          class="rdv-prep-open"
+          class="rdv-prepare"
           aria-haspopup="dialog"
+          :aria-label="upcomingLabel(item, lines.length ? 'Feuille prête' : 'Feuille à compléter', now)"
           data-test="rdv-prep-open"
           @click="prepOpen = true"
-        >
-          Préparer le rendez-vous
-        </button>
+        />
       </article>
       <MeetingPrepSheet
         v-if="item.kind === 'orp'"
@@ -177,36 +161,22 @@ function cal(iso: string): { day: number; month: number } {
           tone="blue"
         />
         <div class="rdv-body">
-          <span class="rdv-kicker">Entretien d’embauche</span>
-          <h3 class="rdv-interview-title">
-            {{ item.application.job_title || "Poste non indiqué" }}
-          </h3>
-          <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ [item.application.company, timeOfDay(item.at), interviewFormat(item.application)].filter(Boolean).join(" · ") }}</span>
-          <span
-            v-if="interviewPlace(item.application)"
-            class="rdv-meta rdv-place"
-            data-test="rdv-place"
-          >{{ interviewPlace(item.application) }}</span>
-          <!-- Toute la carte ouvre la préparation (maquette) : le bouton s'étend sur la carte. -->
-          <button
-            type="button"
-            class="rdv-prepare"
-            :data-test="`rdv-prepare-${item.application.id}`"
-            @click="emit('prepare', item.application)"
-          >
-            Préparer l’entretien<span class="visually-hidden"> {{ item.application.job_title }}, {{ item.application.company }}</span><svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            ><path d="m9 6 6 6-6 6" /></svg>
-          </button>
+          <span class="rdv-line">
+            <h3 class="rdv-interview-title">
+              {{ item.application.job_title || "Poste non indiqué" }}
+            </h3>
+            <span class="rdv-ready rdv-todo">Entretien</span>
+          </span>
+          <span class="rdv-meta">{{ upcomingLine(item, now) }}</span>
         </div>
+        <!-- Toute la carte ouvre la préparation (maquette) : le bouton s’étend sur la carte. -->
+        <button
+          type="button"
+          class="rdv-prepare"
+          :aria-label="upcomingLabel(item, 'Entretien', now)"
+          :data-test="`rdv-prepare-${item.application.id}`"
+          @click="emit('prepare', item.application)"
+        />
       </article>
     </template>
   </section>
@@ -332,8 +302,8 @@ function cal(iso: string): { day: number; month: number } {
 <style scoped>
 /* Les valeurs de la maquette (RendezVous.dc.html), écrites avec les échelles (scales.test.ts) ; mises sur la grille de 4
    le 9 novembre (§2.9, audit-grille.js) : 14 → 16 entre le calendrier et le texte, 10 → 8 entre deux cartes, 6 → 8
-   entre une icône et son mot ; « Préparer l’entretien » a 44 px de haut. 15 px = --font-small + 1 px. */
-.rdv-part { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+   entre une icône et son mot. 15 px = --font-small + 1 px. */
+.rdv-part { --rdv-14: 14px; --rdv-22: 22px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .rdv-title {
   display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-2) var(--space-1) 0;
   font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-tight);
@@ -343,43 +313,27 @@ function cal(iso: string): { day: number; month: number } {
   display: flex; padding: var(--space-5); background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-card); color: var(--text);
 }
-.rdv-orp { position: relative; flex-direction: column; }
-/* Le « ⋯ » (C6) : 44 px dans le coin en haut à droite ; le texte de la carte lui laisse la place. */
-.rdv-more { position: absolute; top: var(--space-1); right: var(--space-1); z-index: 1; }
+/* Cartes « À venir » (planche RendezVous, demande de Kevin du 16.11) : l'icône calendrier, puis deux lignes au plus,
+   le titre (16/22) et sa pastille (12, 22 de haut ; marges de 4 pour la grille), puis « 9 h · dans 3 jours · lieu » (14/20), coupées par « … ». */
+.rdv-orp, .rdv-interview { position: relative; align-items: center; gap: var(--space-4); }
+/* Le « ⋯ » (C6) : 44 px collé au coin en haut à droite, ses points dans la marge ; la 1re ligne lui laisse 16 px. */
+.rdv-more { position: absolute; top: 0; right: 0; z-index: 1; }
 .rdv-more :deep(.more-button) { width: var(--target-min); height: var(--target-min); }
-.rdv-orp .rdv-kicker, .rdv-orp-title { padding-right: var(--space-6); }
-.rdv-head, .rdv-interview { gap: var(--space-4); }
-.rdv-head { display: flex; }
-.rdv-interview { position: relative; }
+.rdv-orp .rdv-line { padding-right: var(--space-4); }
 .rdv-date { flex: none; }
 .rdv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.rdv-kicker { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.rdv-orp-title { margin: 0; font-size: var(--font-title); line-height: 1.28em; font-weight: var(--weight-heavy); }
-.rdv-interview-title { margin: 0; font-size: var(--font-body); line-height: 1.3125em; font-weight: var(--weight-bold); }
+.rdv-line { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.rdv-orp-title, .rdv-interview-title, .rdv-orp .rdv-meta, .rdv-interview .rdv-meta { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rdv-orp-title, .rdv-interview-title { margin: 0; font-size: var(--font-body); line-height: var(--rdv-22); font-weight: var(--weight-bold); }
 .rdv-meta { font-size: var(--font-small); color: var(--text-secondary); }
-/* Un lien de visioconférence est un long mot : il passe à la ligne où il faut. */
-.rdv-place { overflow-wrap: anywhere; }
 .rdv-ready {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-2);
-  margin-top: var(--space-2); padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill); background: var(--success-soft); color: var(--success);
-  font-size: var(--label-caps); font-weight: var(--weight-bold);
+  flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); white-space: nowrap;
+  background: var(--success-soft); color: var(--success); font-size: var(--font-caption); line-height: var(--rdv-14); font-weight: var(--weight-bold);
 }
-.rdv-ready svg { flex: none; }
 .rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
 .rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
-/* « Préparer le rendez-vous » (maquette RendezVous du 9 novembre) : le bouton plein de 52 px, 16 px sous l'en-tête. */
-.rdv-prep-open {
-  --rdv-btn: 52px;
-  display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--rdv-btn);
-  margin-top: var(--space-4); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
-  background: var(--primary); color: var(--on-primary); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); cursor: pointer;
-}
-.rdv-prepare {
-  display: flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: var(--target-min);
-  margin-top: 0; padding: 0; border: 0; border-radius: 0; background: transparent;
-  color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
-}
+/* Hors du flux (aucun écart de plus dans la carte) : le bouton couvre toute la carte. */
+.rdv-prepare { position: absolute; inset: 0; padding: 0; border: 0; border-radius: var(--radius-card); background: transparent; cursor: pointer; }
 /* La carte entière est la cible (maquette : un lien sur toute la carte). */
 .rdv-prepare::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .rdv-prepare:focus-visible { outline: none; }
