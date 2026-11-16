@@ -272,3 +272,18 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 ## Bilan ordinateur, Formations : « Noter l'avancement » sur toutes les formations en cours (Kevin, 16.11.2026, 10 h 15)
 
 - « Noter l'avancement » reste sur toutes les cartes « En cours », avec ou sans nombre de modules. La planche BilanOrdinateurFormEtats, qui ne le montre que sur la carte sans modules, sera corrigée dans ce sens.
+
+## Coordonnées trouvées dans le CV : dans la relecture du CV (Kevin, 16.11.2026, 10 h 33)
+
+- Bloc « Tes coordonnées » en tête du panneau « Repris de … » (relecture du CV, Profil › Mon CV › « Choisir les éléments »), au style des cartes existantes du panneau. Pas de planche à attendre : Kevin la dessine d'après la capture de la PR.
+- Seulement les champs encore vides du profil (nom, rue, NPA, localité, téléphone, e-mail), déjà remplis et modifiables ; un champ déjà rempli n'est jamais proposé ni écrasé.
+- Enregistrés avec « Ajouter N éléments » (le bloc compte pour un élément), jamais avant ; « Annuler » ou le bloc décoché n'enregistre rien. La règle « Rien n'est enregistré avant » reste.
+- Rien ne part à l'IA : les coordonnées sont repérées sur le serveur, sans IA.
+- Pas dans les premiers pas (ils sont déjà longs).
+
+## Taille des cibles dans les filtres (Kevin, 16.11.2026, 11 h 50)
+
+- Ordinateur : les pastilles du panneau Filtres gardent 36 px de haut, comme sur la planche. WCAG 2.2 AA (2.5.8)
+  demande 24 px ; les 44 px valent pour le tactile.
+- Téléphone : 44 px au moins.
+- Pas de règle CSS en plus pour ça.
