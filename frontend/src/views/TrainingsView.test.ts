@@ -82,17 +82,18 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=filter-all]").exists()).toBe(false);
     // Le financement : l'encadré, puis la feuille « Formation et chômage » (B16, formulation neutre B4).
     const note = wrapper.find("[data-test=orp-note]");
-    expect(note.text()).toBe("Financement possible par l’ORPSeulement avec l’accord préalable de l’ORP");
+    expect(note.text()).toBe("Financement possible par l’ORPAvec l’accord préalable de l’ORP");
     await note.trigger("click");
     const sheet = wrapper.find("[data-test=orp-sheet]");
     expect(sheet.text()).toContain("Il faut d’abord la demander à l’ORP et attendre son accord");
     expect(sheet.findAll("a")).toHaveLength(2);
-    // Les groupes, avec leur nombre ; une ligne : titre, « éditeur · format · langue », le prix.
+    // Les groupes, avec leur nombre ; une ligne sur deux lignes (planche BilanCatalogue, §37) : titre, « éditeur · format », le prix.
     expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications1");
     expect(wrapper.find("[data-test=training-section-courses] h2").text()).toBe("Cours et ateliers2");
     const first = wrapper.findAll("[data-test=training]")[0]!;
     expect(first.find("strong").text()).toBe("Certified Kubernetes Administrator (CKA)");
-    expect(first.text()).toContain("The Linux Foundation / CNCF · Examen en ligne · anglais");
+    expect(first.text()).toContain("The Linux Foundation / CNCF · examen en ligne");
+    expect(first.text()).not.toContain("anglais");
     expect(first.find("[data-test=training-price]").text()).toBe("Payant");
     // Les puces (B17) : un seul genre ; « Gratuites » et « En français » s'ajoutent.
     await wrapper.find("[data-test=chip-cours]").trigger("click");
@@ -161,9 +162,8 @@ describe("TrainingsView", () => {
     await wrapper.find("[data-test=progress]").setValue("module 4/12");
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
-    // Sur la ligne : l'avancement noté, en étiquette (B19).
-    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · Module 4 sur 12");
-    expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
+    // Sur téléphone, la ligne du catalogue ne montre plus l'avancement (planche BilanCatalogue, §37).
+    expect(wrapper.find("[data-test=training] [data-test=training-progress]").exists()).toBe(false);
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalled();
@@ -212,55 +212,60 @@ describe("TrainingsView", () => {
     expect(wrapper.findAll("[data-test=unverified]")).toHaveLength(0);
   });
 
-  it("Suivies : en cours en carte avec l’avancement, puis les gardées et les terminées (B19)", async () => {
+  it("Mes formations d’abord : en cours en carte avec l’avancement, puis les gardées et les terminées (§37)", async () => {
     const done = { status: "done", progress: null, done_at: "2026-09-30", certified: true };
     const current = { status: "in_progress", progress: "Module 3 sur 6", done_at: null, certified: null };
     const kept = { status: "interested", progress: null, done_at: null, certified: null };
     GET.mockResolvedValue({
       data: page([training(1, { mark: done }), training(2), training(3, { title: "CKAD", mark: current }), training(4, { title: "Terraform", mark: kept })]),
     });
-    const wrapper = await mountView("/formations?onglet=miennes");
-    expect(wrapper.find("[data-test=tab-mine]").classes()).toContain("active");
-    expect(wrapper.find("[data-test=tab-mine]").text()).toBe("Suivies3");
+    const wrapper = await mountView("/formations");
+    expect(wrapper.find("[data-test=trainings-overview]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=tab-mine]").exists()).toBe(false);
+    expect(wrapper.findAll("[data-test=training]")).toHaveLength(0);
+    expect(wrapper.find("[data-test=orp-note]").text()).toBe("L’ORP peut financer une formationAvec l’accord de ta conseillère");
     const card = wrapper.find("[data-test=training-current]");
     expect(card.text()).toContain("CKAD");
     expect(card.find(".training-current-progress").text()).toBe("Module 3 sur 6");
     expect(card.find("[data-test=training-continue]").attributes("href")).toBe("https://training.example/3");
-    // Lot 18 (§10.5) : « Continuer le cours » au niveau 2, la ligne gardée finit par le cercle D29 de 36 px.
-    expect(card.find("[data-test=training-continue]").classes()).toContain("action-2");
-    expect(wrapper.find(".training-see .arrow-circle.small").attributes("aria-hidden")).toBe("true");
-    expect(wrapper.findAll("[data-test=training-kept]").map((li) => li.text())).toEqual([
-      "TerraformGardée · pas encore commencée",
-      "Certified Kubernetes Administrator (CKA)Terminée",
-    ]);
-    await wrapper.findAll("[data-test=training-kept] button")[1]!.trigger("click");
+    const rows = wrapper.findAll("[data-test=training-kept]");
+    expect(rows.map((li) => li.find("strong").text())).toEqual(["Terraform", "Certified Kubernetes Administrator (CKA)"]);
+    // Sur téléphone, « Terminée » passe en ligne 2.
+    expect(rows[1]!.find(".training-kept-text [data-test=training-kept-status]").text()).toBe("Terminée");
+    expect(wrapper.find("[data-test=trainings-catalog]").attributes("href")).toBe("/formations?onglet=catalogue");
+    await rows[1]!.find("button").trigger("click");
     await flushPromises();
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
+    // Sans nombre de modules, « Noter l’avancement » ouvre le panneau, comme avant.
     await card.find("[data-test=training-update]").trigger("click");
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("CKAD");
   });
 
-  it("B19 : le compteur de modules, la barre, l’envoi unique et « Marquer comme terminée »", async () => {
+  it("le compteur quitte la carte : « Noter l’avancement » ouvre la feuille, envoi unique et « Marquer comme terminée » (§37)", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const current = { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: 12, modules_done: 6 };
     GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
     PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) => Promise.resolve({ data: { ...current, ...body } }));
-    const wrapper = await mountView("/formations?onglet=miennes");
+    const wrapper = await mountView("/formations");
     const card = wrapper.find("[data-test=training-current]");
     expect(card.find(".training-modules-line").text()).toBe("Module 6 sur 1250 %");
     const bar = card.find("[data-test=modules-bar]");
     expect([bar.attributes("aria-valuenow"), bar.attributes("aria-valuemin"), bar.attributes("aria-valuemax")]).toEqual(["6", "0", "12"]);
-    expect(bar.attributes("aria-valuetext")).toBe("Module 6 sur 12");
-    expect(card.find("[data-test=module-more]").attributes("aria-label")).toBe("Un module de plus");
-    expect(card.find("[data-test=module-less]").attributes("aria-label")).toBe("Un module de moins");
-    // Rien n'est annoncé au chargement.
-    expect(card.find("[data-test=modules-status]").text()).toBe("");
+    expect(card.find("[data-test=module-more]").exists()).toBe(false);
+    expect(card.find("[data-test=module-less]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=module-more]").exists()).toBe(false);
+
+    await card.find("[data-test=training-update]").trigger("click");
+    await flushPromises();
+    const sheet = () => wrapper.find("[data-test=progress-sheet]");
+    expect(sheet().find("[data-test=module-more]").attributes("aria-label")).toBe("Un module de plus");
+    expect(sheet().find("[data-test=module-less]").attributes("aria-label")).toBe("Un module de moins");
+    expect(sheet().find("[data-test=modules-status]").text()).toBe("");
 
     // Trois appuis : l'écran suit tout de suite, un seul envoi 500 ms après le dernier.
-    for (let i = 0; i < 3; i++) await card.find("[data-test=module-more]").trigger("click");
-    expect(card.find("[data-test=module-count]").text()).toBe("9");
-    expect(card.find("[data-test=modules-status]").text()).toBe("Module 9 sur 12");
-    expect(card.find("[data-test=modules-status]").attributes("role")).toBe("status");
+    for (let i = 0; i < 3; i++) await sheet().find("[data-test=module-more]").trigger("click");
+    expect(sheet().find("[data-test=module-count]").text()).toBe("9");
+    expect(sheet().find("[data-test=modules-status]").text()).toBe("Module 9 sur 12");
     expect(PUT).not.toHaveBeenCalled();
     vi.advanceTimersByTime(499);
     expect(PUT).not.toHaveBeenCalled();
@@ -270,29 +275,40 @@ describe("TrainingsView", () => {
     expect(PUT.mock.calls[0]![1].body).toMatchObject({ status: "in_progress", modules_total: 12, modules_done: 9 });
 
     // Au dernier module : + désactivé, « Marquer comme terminée » proposé ; le statut ne change pas seul.
-    for (let i = 0; i < 4; i++) await wrapper.find("[data-test=module-more]").trigger("click");
-    expect(wrapper.find("[data-test=module-count]").text()).toBe("12");
-    expect(wrapper.find("[data-test=module-more]").attributes("disabled")).toBeDefined();
+    for (let i = 0; i < 3; i++) await sheet().find("[data-test=module-more]").trigger("click");
+    expect(sheet().find("[data-test=module-count]").text()).toBe("12");
+    expect(sheet().find("[data-test=module-more]").attributes("disabled")).toBeDefined();
     vi.advanceTimersByTime(500);
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "in_progress", modules_done: 12 });
-    await wrapper.find("[data-test=module-finish]").trigger("click");
+    await sheet().find("[data-test=module-finish]").trigger("click");
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "done", modules_done: 12 });
     vi.useRealTimers();
   });
 
-  it("B19 : − désactivé à 0 ; une formation gardée avec ses modules est une carte, + la passe « en cours »", async () => {
+  it("le titre de la carte en cours ouvre le panneau de la formation", async () => {
+    const current = { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: 12, modules_done: 6 };
+    GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
+    const wrapper = await mountView("/formations");
+    await wrapper.find("[data-test=training-now-open]").trigger("click");
+    expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("CKAD");
+  });
+
+  it("feuille : − désactivé à 0 ; une formation gardée avec ses modules est une carte, + la garde « gardée »", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const kept = { status: "interested", progress: null, done_at: null, certified: null, modules_total: 4, modules_done: 0 };
     GET.mockResolvedValue({ data: page([training(5, { title: "Terraform", mark: kept })]) });
     PUT.mockResolvedValue({ data: { ...kept, status: "in_progress", modules_done: 1 } });
-    const wrapper = await mountView("/formations?onglet=miennes");
+    const wrapper = await mountView("/formations");
     expect(wrapper.findAll("[data-test=training-kept]")).toHaveLength(0);
-    expect(wrapper.find("[data-test=module-less]").attributes("disabled")).toBeDefined();
-    await wrapper.find("[data-test=module-less]").trigger("click");
-    expect(wrapper.find("[data-test=module-count]").text()).toBe("0");
-    await wrapper.find("[data-test=module-more]").trigger("click");
+    await wrapper.find("[data-test=training-update]").trigger("click");
+    await flushPromises();
+    const sheet = () => wrapper.find("[data-test=progress-sheet]");
+    expect(sheet().find("[data-test=module-less]").attributes("disabled")).toBeDefined();
+    await sheet().find("[data-test=module-less]").trigger("click");
+    expect(sheet().find("[data-test=module-count]").text()).toBe("0");
+    await sheet().find("[data-test=module-more]").trigger("click");
     vi.advanceTimersByTime(500);
     await flushPromises();
     expect(PUT.mock.calls[0]![1].body).toMatchObject({ status: "interested", modules_total: 4, modules_done: 1 });
@@ -303,7 +319,7 @@ describe("TrainingsView", () => {
     const current = { status: "in_progress", progress: "module 2", done_at: null, certified: null, modules_total: null, modules_done: null };
     GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
     PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) => Promise.resolve({ data: { ...current, ...body } }));
-    const wrapper = await mountView("/formations?onglet=miennes");
+    const wrapper = await mountView("/formations");
     await wrapper.find("[data-test=training-update]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=progress]").exists()).toBe(true);
@@ -318,10 +334,13 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=progress]").exists()).toBe(true);
   });
 
-  it("Suivies vide : l’invitation à garder une formation", async () => {
+  it("aucune suivie : l’état vide et « Voir le catalogue » (planche BilanFormationsVide)", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
-    const wrapper = await mountView("/formations?onglet=miennes");
-    expect(wrapper.find("[data-test=trainings-none]").text()).toContain("Garde une formation du catalogue avec son signet.");
+    const wrapper = await mountView("/formations");
+    const none = wrapper.find("[data-test=trainings-none]");
+    expect(none.text()).toContain("Aucune formation suivie");
+    expect(none.text()).toContain("Garde-en une avec son signet");
+    expect(none.find("[data-test=trainings-none-catalog]").attributes("href")).toBe("/formations?onglet=catalogue");
   });
 
   it("formation terminée : « Ajouter à mon profil », bloc prérempli, puis « Dans ton profil »", async () => {
@@ -418,13 +437,19 @@ describe("TrainingsView", () => {
       expect(wrapper.findAll("[data-test=training]")).toHaveLength(0);
     });
 
-    it("« Modules faits » se note dans « Noter l’avancement » ; au-delà du total, l’erreur et rien n’est envoyé", async () => {
+    it("« Noter l’avancement » ouvre la feuille du compteur ; dans le panneau, « Modules faits » au-delà du total est refusé", async () => {
       GET.mockResolvedValue({ data: page([current]) });
       PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) =>
         Promise.resolve({ data: { status: "in_progress", modules_total: 12, modules_done: 3, ...body } }),
       );
       const wrapper = await mountView("/formations", false);
+      // §37 du 16.11 : « Même chose sur ordinateur », le compteur est dans la feuille.
       await wrapper.find("[data-test=training-update]").trigger("click");
+      await flushPromises();
+      expect(wrapper.find("[data-test=progress-sheet] [data-test=module-more]").exists()).toBe(true);
+      expect(wrapper.find("[data-test=training-current] [data-test=module-more]").exists()).toBe(false);
+      // Le panneau, ouvert par le titre, garde le champ « Modules faits ».
+      await wrapper.find("[data-test=training-now-open]").trigger("click");
       await flushPromises();
       const field = wrapper.find("[data-test=modules-done]");
       expect([field.attributes("type"), field.attributes("inputmode"), field.attributes("min"), field.attributes("max")]).toEqual(["number", "numeric", "0", "12"]);

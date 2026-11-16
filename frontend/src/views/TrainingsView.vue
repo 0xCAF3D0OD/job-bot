@@ -328,10 +328,17 @@ onMounted(() => void load());
               data-test="training-current"
             >
               <div class="training-now-head">
-                <span>
+                <!-- Le titre ouvre le panneau de la formation (notes, financement, profil), qui reste accessible. -->
+                <button
+                  type="button"
+                  class="training-now-open"
+                  aria-haspopup="dialog"
+                  data-test="training-now-open"
+                  @click="openId = training.id"
+                >
                   <strong>{{ training.title }}</strong>
                   <span>{{ training.provider }}</span>
-                </span>
+                </button>
                 <a
                   v-if="!phone"
                   :href="training.url"
@@ -448,7 +455,7 @@ onMounted(() => void load());
             class="training-funding-icon"
             aria-hidden="true"
           ><AppIcon name="tag" /></span>
-          <span><strong>Financement possible par l’ORP</strong><span>Seulement avec l’accord préalable de l’ORP</span></span>
+          <span><strong>Financement possible par l’ORP</strong><span>{{ phone ? "Avec" : "Seulement avec" }} l’accord préalable de l’ORP</span></span>
           <span
             class="arrow-circle small"
             aria-hidden="true"
@@ -672,7 +679,7 @@ onMounted(() => void load());
 }
 .trainings-overview { --tw-10: 10px; --tw-14: 14px; --tw-18: 18px; --tw-15: 0.9375rem; --tw-13: 0.8125rem; --tw-bar: 6px; --tw-lh: 21px; --tw-row: 56px; display: grid; gap: var(--space-8); }
 .training-orp-card { display: flex; align-items: center; gap: var(--space-4); padding: var(--tw-18) var(--space-6); background: var(--surface); border: 1px solid var(--water); border-radius: var(--radius-card); box-shadow: var(--shadow-band-card); }
-.training-orp-card > span { display: grid; flex: 1; min-width: 0; }
+.training-orp-card > span:first-child { display: grid; flex: 1; min-width: 0; }
 .training-orp-card > span > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-orp-how { display: inline-flex; flex: none; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--tw-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .training-block { display: grid; gap: var(--tw-10); }
@@ -681,8 +688,9 @@ onMounted(() => void load());
 .training-block-list > li + li { border-top: 1px solid var(--surface-muted); }
 .training-now { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
 .training-now-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
-.training-now-head > span, .training-kept-text { display: grid; flex: 1; min-width: 0; }
-.training-now-head > span > span, .training-kept-text > span { font-size: var(--font-small); color: var(--text-secondary); }
+.training-now-head > .training-now-open, .training-kept-text { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; }
+.training-now-open { gap: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.training-now-open > span, .training-kept-text > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-now-continue, .training-more { display: inline-flex; flex: none; align-items: center; justify-content: center; box-sizing: border-box; height: var(--target-min); padding: 0 var(--tw-18); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--tw-15); font-weight: var(--weight-semibold); white-space: nowrap; text-decoration: none; }
 .training-now-continue:hover, .training-more:hover { background: var(--primary-soft); }
 .training-more { justify-self: start; }
@@ -726,41 +734,41 @@ onMounted(() => void load());
 .trainings-desk .training-funding-icon { width: 2.5rem; height: 2.5rem; }
 .trainings .training-keep { width: var(--target-min); height: var(--target-min); margin-right: var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); color: var(--primary-text); }
 .trainings .training-keep.on { border-color: var(--primary-soft); background: var(--primary-soft); }
-.training-now-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.training-now-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 /* Téléphone (planches BilanFormations et BilanCatalogue du 16.11, §37) : sections espacées de 22, intertitres de 17 ;
    En cours et Gardées en cartes séparées à filet de 1,5 px ; la barre puis « Module 3 sur 12 » ; « Noter
    l'avancement » à gauche, « Continuer le cours » à droite ; Gardées sur 2 lignes, statut en pastille ; catalogue sans
    icône, titre sur une ligne, « organisme · format » et le prix en pastille, signet rond de 44 px. */
 @media (max-width: 820px) {
-  .trainings { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; }
-  .trainings-overview { gap: 22px; }
-  .training-orp-card { gap: 12px; width: 100%; padding: 14px 16px; color: var(--text); font: inherit; font-weight: var(--weight-regular); text-align: left; }
+  .trainings { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-13: 0.8125rem; --td-17: 1.0625rem; --td-chip-r: 6px; }
+  .trainings-overview { gap: var(--space-6); }
+  .training-orp-card { gap: var(--space-3); width: 100%; padding: var(--space-4); color: var(--text); font: inherit; font-weight: var(--weight-regular); text-align: left; }
   .training-orp-card strong { font-size: var(--tw-15); }
   .training-orp-card > span > span { font-size: var(--tw-13); }
-  .training-block { gap: 8px; }
-  .training-block .bilan-section-head h2, .trainings .training-section h2 { font-size: 17px; }
-  .training-block-list { display: grid; gap: 8px; overflow: visible; background: none; }
+  .training-block { gap: var(--space-2); }
+  .training-block .bilan-section-head h2, .trainings .training-section h2 { font-size: var(--td-17); }
+  .training-block-list { display: grid; gap: var(--space-2); overflow: visible; background: none; }
   .training-block-list > li, .trainings .training-list { overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .training-block-list > li + li { border-top: 1.5px solid var(--card-line); }
-  .training-now { gap: 0; padding: 16px; }
+  .training-now { gap: 0; padding: var(--space-4); }
   .training-now-head strong, .training-kept-text strong, .training-row-text > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .training-now-head > span > span { margin-top: 2px; }
-  .training-now .training-modules { grid-template-columns: 1fr; row-gap: 6px; margin-top: 12px; }
+  .training-now-open > span { margin-top: var(--space-1); }
+  .training-now .training-modules { grid-template-columns: 1fr; row-gap: var(--space-2); margin-top: var(--space-3); }
   .training-now .training-modules-line { grid-row: 2; grid-column: 1; }
-  .training-now > .training-current-progress { margin-top: 10px; font-size: var(--font-small); color: var(--text-lead); }
-  .training-now-actions { margin-top: 12px; }
-  .training-kept-row { min-height: 68px; padding: 12px 16px; }
-  .training-kept-text > span { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+  .training-now > .training-current-progress { margin-top: var(--space-3); font-size: var(--font-small); color: var(--text-lead); }
+  .training-now-actions { margin-top: var(--space-3); }
+  .training-kept-row { min-height: 68px; padding: var(--space-3) var(--space-4); }
+  .training-kept-text > span { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
   .training-kept-text > span > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .training-kept-status, .training-row-tags > .training-tag { padding: 3px 8px; border-radius: 6px; font-size: 12px; line-height: normal; }
-  .training-kept-status { gap: 4px; background: var(--success-soft); }
+  .training-kept-status, .training-row-tags > .training-tag { padding: var(--space-1) var(--space-2); border-radius: var(--td-chip-r); font-size: var(--font-caption); line-height: normal; }
+  .training-kept-status { gap: var(--space-1); background: var(--success-soft); }
   .training-kept-status .icon { width: 12px; height: 12px; }
   .training-more { width: 100%; }
   .training-row-icon { display: none; }
-  .training-row-open { min-height: 68px; padding: 10px 0 10px 16px; }
-  .training-row-text { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; }
-  .training-row-text > strong { flex-basis: 100%; font-size: var(--td-15); }
-  .training-row-text > span:nth-child(2) { min-width: 0; overflow: hidden; font-size: 0.8125rem; text-overflow: ellipsis; white-space: nowrap; }
-  .trainings .training-keep { margin-right: 10px; }
+  .training-row-open { min-height: 68px; padding: var(--space-3) 0 var(--space-3) var(--space-4); }
+  .training-row-text { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; align-items: center; gap: var(--space-1) var(--space-2); }
+  .training-row-text > strong { grid-column: 1 / -1; font-size: var(--td-15); }
+  .training-row-text > span:nth-child(2) { min-width: 0; overflow: hidden; font-size: var(--td-13); text-overflow: ellipsis; white-space: nowrap; }
+  .trainings .training-keep { margin-right: var(--space-3); }
 }
 </style>
