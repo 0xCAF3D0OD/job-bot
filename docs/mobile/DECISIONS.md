@@ -246,6 +246,13 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - « Voir la compatibilité » est bleu (`--primary-text`) partout, offre provisoire comprise : un lien garde la même couleur sur tous les écrans (Nielsen, heuristique 4). La planche OffreProvisoire, qui le dessinait foncé, avait tort ; Kevin la corrige.
 - La flèche d'envoi grise quand le champ est vide est voulue sur tous les champs à flèche (Ajouter, assistant) : même état désactivé partout, flèche toujours visible et annoncée avec `aria-disabled`.
 
+## Bilan ordinateur, menus ouverts, mois déplié et fiche sombre (Kevin, 16.11.2026, 9 h 00 et 9 h 25)
+
+- Les planches du paquet jobA1_maquette_2026-11-16_bilan (§29, recopié dans docs/maquette/2026-11-16/) font foi pour le Bilan sur ordinateur. Elles remplacent la règle provisoire de 9 h 00 (« sans planche, style du menu ⋯ »).
+- Menus « Mois précédents » et « Autres exports » (planches BilanOrdinateurMoisPrecedents et Exports) : 300 px, rayon 16, lignes de 44 px, ouverts vers le haut, chevron du bouton qui se retourne ; « À remettre » en orange sur le mois dont les justificatifs restent à remettre.
+- Mois déplié (planche BilanOrdinateurMois) : « Voir les N autres » devient « Replier le mois » une fois toutes les recherches affichées ; la carte du mois montre un chevron vers le haut et replie aussi.
+- Fiche « Pour l'ORP » (planches BilanOrdinateurFiche et FicheSombre) : lignes de 64 px au lieu de 56 ; palette sombre commune.
+
 ## Tâche « Envoyer N candidatures » d'Aujourd'hui, fonction manquante (Kevin, 16.11.2026, 9 h 41)
 
 | Date | Fonction (planche) | Ce qu'il faudrait |
