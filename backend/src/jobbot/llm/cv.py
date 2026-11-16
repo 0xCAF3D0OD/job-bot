@@ -9,6 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
+from jobbot.llm import cv_reasons
 from jobbot.llm.letter import Assessment, Language, assessment_text
 from jobbot.llm.scoring import (
     InvalidScore,
@@ -19,7 +20,12 @@ from jobbot.llm.scoring import (
 )
 
 PROMPT_VERSION = "cv-v1"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/cv-v1.md").read_text("utf-8")
+_PROMPTS = resources.files("jobbot.llm").joinpath("prompts")
+INSTRUCTIONS = _PROMPTS.joinpath(f"{PROMPT_VERSION}.md").read_text("utf-8")
+# Le prompt suivant (ligne « Pourquoi », §32 et §37 du 16.11) : il ne sert qu'à `jobbot
+# mesure-pourquoi` ; cv-v1 reste en service jusqu'à la bascule, après la mesure de Kevin.
+NEXT_VERSION = "cv-v2"
+NEXT_INSTRUCTIONS = _PROMPTS.joinpath(f"{NEXT_VERSION}.md").read_text("utf-8")
 MAX_TOKENS = 8_000
 # Types de blocs qui ont leur place dans un CV ; préférences, rédhibitoires et ton n'y vont pas.
 CV_KINDS = ("experience", "competence", "formation")
@@ -44,6 +50,22 @@ OUTPUT_SCHEMA: dict[str, Any] = {
     },
     "required": ["language", "headline", "summary", "chunk_ids", "keywords"],
     "additionalProperties": False,
+}
+NEXT_OUTPUT_SCHEMA: dict[str, Any] = {
+    **OUTPUT_SCHEMA,
+    "properties": {
+        **OUTPUT_SCHEMA["properties"],
+        "reasons": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"target": {"type": "string"}, "reason": {"type": "string"}},
+                "required": ["target", "reason"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": [*OUTPUT_SCHEMA["required"], "reasons"],
 }
 
 
@@ -72,7 +94,12 @@ def request_params(
     assessment: Assessment | None = None,
     previous: dict[str, Any] | None = None,
     instruction: str | None = None,
+    next_prompt: bool = False,
 ) -> dict[str, Any]:
+    """`next_prompt` : le prompt suivant (NEXT_VERSION), pour la mesure avant sa mise en service."""
+    instructions, schema = (
+        (NEXT_INSTRUCTIONS, NEXT_OUTPUT_SCHEMA) if next_prompt else (INSTRUCTIONS, OUTPUT_SCHEMA)
+    )
     parts = [offer_message(offer), "\n\n", assessment_text(assessment)]
     parts.append(f"<langue>{language or 'auto'}</langue>")
     if previous is not None:
@@ -85,14 +112,14 @@ def request_params(
         "model": model,
         "max_tokens": MAX_TOKENS,
         "system": [
-            {"type": "text", "text": INSTRUCTIONS},
+            {"type": "text", "text": instructions},
             # Même bloc de profil que la note et la lettre : il profite du même cache.
             {"type": "text", "text": profile_block(chunks), "cache_control": {"type": "ephemeral"}},
         ],
         "messages": [{"role": "user", "content": "".join(parts)}],
         "output_config": {
             "effort": effort,
-            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+            "format": {"type": "json_schema", "schema": schema},
         },
     }
 
@@ -123,4 +150,29 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> CvOutput:
         summary=output.summary.strip(),
         chunk_ids=ids,
         keywords=keywords,
+    )
+
+
+def parse_reasons(
+    text: str, output: CvOutput, chunks: list[ProfileChunkData], offer_text: str | None
+) -> list[cv_reasons.Reason]:
+    """Les raisons de la réponse cv-v2 qui passent la vérification (cv_reasons) ; une réponse
+    sans raisons, ou des raisons mal formées, n'en donnent aucune : le CV reste valable."""
+    try:
+        raw = json.loads(text).get("reasons")
+    except (json.JSONDecodeError, AttributeError):
+        return []
+    if not isinstance(raw, list):
+        return []
+    pairs = [
+        (str(r.get("target", "")), str(r.get("reason", "")))
+        for r in raw[:40]
+        if isinstance(r, dict)
+    ]
+    return cv_reasons.validate(
+        pairs,
+        offer_text or "",
+        summary=output.summary,
+        kept=output.chunk_ids,
+        eligible={c.id for c in chunks if c.kind in CV_KINDS},
     )
