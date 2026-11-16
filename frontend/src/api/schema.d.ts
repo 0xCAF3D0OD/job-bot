@@ -6935,6 +6935,8 @@ export interface components {
             to_review: number;
             /** Pending */
             pending: number;
+            /** Pending All */
+            pending_all: number;
             /** Filtered Out */
             filtered_out: number;
             /** Later */

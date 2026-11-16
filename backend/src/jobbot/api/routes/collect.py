@@ -199,8 +199,11 @@ class ScoreTipOut(BaseModel):
 
 class OfferCounts(BaseModel):
     to_review: int
-    # À traiter, sans les filtres de la liste : le nombre de la pastille (count_pending).
+    # « À traiter » avec les filtres de la liste, comme les autres compteurs (Kevin, 16.11) : la pastille du
+    # panneau Filtres et le total de la liste disent le même nombre.
     pending: int
+    # « À traiter » sans les filtres (count_pending) : « 12 sur 38 offres » au-dessus de la liste.
+    pending_all: int
     filtered_out: int
     later: int
     # En préparation ou candidature envoyée (expirées comprises : un bandeau le signale).
@@ -711,8 +714,16 @@ async def list_offers(
         without_cantons.append(view_condition)
 
     async with runtime.sessionmaker() as session:
-        # « À traiter » sans les filtres : le nombre de la pastille, une seule source (docs/139).
-        pending = await count_pending(session)
+        # « À traiter » sans les filtres : « 12 sur 38 offres », une seule source (docs/139).
+        pending_all = await count_pending(session)
+        # « À traiter » avec les filtres : la pastille du panneau, le même nombre que la liste.
+        pending_condition = _view_condition("pending", with_filtered_out, with_expired)
+        pending = int(
+            await session.scalar(
+                select(func.count()).select_from(Offer).where(*conditions, pending_condition)
+            )
+            or 0
+        )
         # Le total décrit ce que la liste montre : la vue et les filtres, rien d'autre.
         total = int(
             await session.scalar(select(func.count()).select_from(Offer).where(*listed)) or 0
@@ -768,6 +779,7 @@ async def list_offers(
     counts = OfferCounts(
         to_review=sum(live.get(s, 0) for s in TO_REVIEW),
         pending=pending,
+        pending_all=pending_all,
         filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
         later=live.get(OfferStatus.LATER, 0),
         in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),

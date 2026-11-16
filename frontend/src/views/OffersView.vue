@@ -50,9 +50,10 @@ const MORE_SIZE = 20;
 const { filters, update, reset } = useOfferFilters();
 const items = ref<Offer[]>([]);
 const total = ref(0);
-const counts = ref<Record<View, number>>({
+const counts = ref<Record<View | "pending_all", number>>({
   to_review: 0,
   pending: 0,
+  pending_all: 0,
   filtered_out: 0,
   later: 0,
   in_progress: 0,
@@ -80,7 +81,7 @@ const VIEW_END: Record<string, [string, string]> = {
   all: ["", ""],
 };
 // La phrase décrit la liste affichée, rien d'autre (Kevin, 2026-11-03) : « 35 offres en cours. »,
-// « 12 offres à traiter avec ces filtres. ». Le nombre de tout « À traiter » est sur la pastille du segment.
+// « 12 offres à traiter avec ces filtres. ». Le nombre de tout « À traiter » sans filtre est counts.pending_all.
 // Avec les écartées ou les expirées en plus, la liste n'est plus seulement « à traiter » : « affichées ».
 const sentenceEnd = computed(() => {
   const f = filters.value;
@@ -176,9 +177,9 @@ const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).redu
 // Le nombre que disent la phrase et « Afficher n offres » : la liste montrée, sans les offres « Loin » cachées.
 const shownTotal = computed(() => (hidesFar.value && !showFar.value ? Math.max(0, total.value - farCount.value) : total.value));
 // Le compteur au-dessus de la liste (ordinateur, décision de Kevin du 15.11). Seul « À traiter » a un total sans
-// filtre (counts.pending) : « 12 sur 38 offres » ; les autres vues disent le nombre seul.
+// filtre (counts.pending_all) : « 12 sur 38 offres » ; les autres vues disent le nombre seul.
 const countLabel = computed(() => {
-  const base = counts.value.pending;
+  const base = counts.value.pending_all;
   if (filters.value.view === "pending" && activeCount(filters.value) && shownTotal.value < base) {
     return `${shownTotal.value} sur ${plural(base, "offre", "offres")}`;
   }
@@ -351,7 +352,7 @@ function openManual(): void {
 
 // Tout est examiné (1.6.50) : la vue « À examiner » est vide alors que le compte a des offres.
 const allReviewed = computed(
-  () => !noOffersYet.value && filters.value.view === "pending" && counts.value.pending === 0 && !activeCount(filters.value),
+  () => !noOffersYet.value && filters.value.view === "pending" && counts.value.pending_all === 0 && !activeCount(filters.value),
 );
 
 // « + Ajouter » sur ordinateur (MODIFICATIONS du 9 novembre, §2.6 ; maquettes CandidaturesOrdinateurAjouter et
