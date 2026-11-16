@@ -241,8 +241,9 @@ const cards = computed(() => {
 .fan-notes p { max-height: round(down, 100%, var(--fan-26)); margin: 0; overflow: hidden; }
 /* Une ligne par note, « … » si elle ne tient pas, forme courte ou non (Kevin, 16.11.2026). */
 .fan-notes span, .fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-/* Une note coupée garde une marge de chaque côté, comme une note courte : 88 % de la largeur, centrée (Kevin, 16.11). */
-.fan-notes span { max-width: 88%; margin-inline: auto; }
+/* Une note coupée garde une marge de chaque côté, comme une note courte : environ 88 % de la largeur, centrée
+   (Kevin, 16.11) ; 16 px de chaque côté plutôt que 88 %, pour rester sur la grille de 4 (240 px sur 272). */
+.fan-notes span { margin-inline: var(--space-4); }
 .fan-names b { display: -webkit-box; font-size: var(--fan-26); line-height: var(--fan-30); letter-spacing: -0.3px; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fan-names span { margin-top: var(--space-1); font-size: var(--fan-place); line-height: var(--fan-place-lh); opacity: 0.9; }
 
