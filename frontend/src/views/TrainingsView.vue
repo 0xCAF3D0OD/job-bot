@@ -689,7 +689,7 @@ onMounted(() => void load());
 .training-now { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
 .training-now-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .training-now-head > .training-now-open, .training-kept-text { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; }
-.training-now-open { gap: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.training-now-open { gap: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; white-space: normal; cursor: pointer; }
 .training-now-open > span, .training-kept-text > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-now-continue, .training-more { display: inline-flex; flex: none; align-items: center; justify-content: center; box-sizing: border-box; height: var(--target-min); padding: 0 var(--tw-18); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--tw-15); font-weight: var(--weight-semibold); white-space: nowrap; text-decoration: none; }
 .training-now-continue:hover, .training-more:hover { background: var(--primary-soft); }
