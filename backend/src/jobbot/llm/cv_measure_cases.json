@@ -1,0 +1,222 @@
+[
+ {
+  "offer": {
+   "title": "Ingénieur DevOps",
+   "company": "Exemple Cloud SA",
+   "text": "Nous cherchons un ingénieur DevOps pour notre plateforme. Exigences : Kubernetes, Terraform, GitLab CI, scripts en Python. Expérience des astreintes appréciée. Français courant, anglais."
+  },
+  "blocks": [
+   [
+    "experience",
+    "Ingénieur systèmes — Fiduciaire Alpha, Nyon (2021-2025)",
+    "Administration de 40 serveurs Linux, automatisation avec Ansible, migration vers Kubernetes, astreintes."
+   ],
+   [
+    "experience",
+    "Technicien support — Commune de Bex (2018-2021)",
+    "Support de 200 postes Windows, inventaire, formation des utilisateurs."
+   ],
+   [
+    "experience",
+    "Projet personnel — Domotique (2023)",
+    "Raspberry Pi, Home Assistant, scripts Python."
+   ],
+   [
+    "competence",
+    "Infrastructure",
+    "Linux, Kubernetes, Terraform, Ansible, GitLab CI."
+   ],
+   [
+    "competence",
+    "Programmation",
+    "Python, Bash, Go."
+   ],
+   [
+    "formation",
+    "Brevet fédéral d'informaticien",
+    "2019, Lausanne."
+   ],
+   [
+    "competence",
+    "Langues",
+    "Français (langue maternelle), anglais (B2), allemand (A2)."
+   ]
+  ]
+ },
+ {
+  "offer": {
+   "title": "Kaufmännische Mitarbeiterin Schadenabteilung",
+   "company": "Muster Versicherung AG",
+   "text": "Ihre Aufgaben: Bearbeitung von Schadenfällen, Korrespondenz mit Kunden, Erfassung in SAP. Ihr Profil: kaufmännische Ausbildung (KV), sehr gute Deutsch- und Französischkenntnisse, Teamfähigkeit, sicherer Umgang mit Excel."
+  },
+  "blocks": [
+   [
+    "experience",
+    "Gestionnaire de dossiers — Assurance Fictive, Fribourg (2019-2025)",
+    "Traitement de 60 dossiers sinistres par mois, contact avec les clients, rédaction de courriers."
+   ],
+   [
+    "experience",
+    "Vendeuse — Boutique Modèle, Bulle (2015-2019)",
+    "Conseil à la clientèle, caisse, gestion du stock."
+   ],
+   [
+    "experience",
+    "Bénévole — Association de quartier (2020-2024)",
+    "Organisation d'événements, comptabilité simple."
+   ],
+   [
+    "competence",
+    "Bureautique",
+    "Word, Excel (tableaux croisés), Outlook, SAP."
+   ],
+   [
+    "competence",
+    "Relation client",
+    "Accueil, téléphone, gestion des réclamations."
+   ],
+   [
+    "formation",
+    "CFC d'employée de commerce",
+    "2015, Fribourg."
+   ],
+   [
+    "competence",
+    "Langues",
+    "Français (langue maternelle), allemand (B2), anglais (A2)."
+   ]
+  ]
+ },
+ {
+  "offer": {
+   "title": "Cuisinier en collectivité",
+   "company": "Restauration Modèle Sàrl",
+   "text": "Pour notre cuisine centrale, nous recherchons un cuisinier CFC. Vous maîtrisez les normes HACCP et savez planifier les commandes. Horaires réguliers, pas de service du soir."
+  },
+  "blocks": [
+   [
+    "experience",
+    "Cuisinier — Restaurant du Lac, Montreux (2017-2025)",
+    "Chef de partie, préparation de 150 couverts par service, gestion des commandes."
+   ],
+   [
+    "experience",
+    "Commis de cuisine — Hôtel Exemple, Sion (2014-2017)",
+    "Mise en place, plonge, réception des marchandises."
+   ],
+   [
+    "competence",
+    "Hygiène",
+    "HACCP, traçabilité, nettoyage des postes."
+   ],
+   [
+    "competence",
+    "Organisation",
+    "Planification des équipes, commandes fournisseurs."
+   ],
+   [
+    "competence",
+    "Permis",
+    "Permis B, véhicule."
+   ],
+   [
+    "formation",
+    "CFC de cuisinier",
+    "2014, Sion."
+   ],
+   [
+    "competence",
+    "Langues",
+    "Français (langue maternelle), italien (B1)."
+   ]
+  ]
+ },
+ {
+  "offer": {
+   "title": "Frontend Developer",
+   "company": "Example Software Ltd",
+   "text": "We are looking for a frontend developer. Must have: Vue.js, TypeScript, accessibility (WCAG). Nice to have: Go, PostgreSQL. You work in an English-speaking team in Geneva."
+  },
+  "blocks": [
+   [
+    "experience",
+    "Développeuse web — Agence Pixel Fictif, Genève (2022-2025)",
+    "Applications Vue.js et TypeScript, API en Node.js, tests avec Vitest."
+   ],
+   [
+    "experience",
+    "Stagiaire — Start-up Exemple, Genève (2021-2022)",
+    "Pages en React, intégration de maquettes Figma."
+   ],
+   [
+    "experience",
+    "Projet personnel — Application de recettes (2024)",
+    "Java, Android, base SQLite."
+   ],
+   [
+    "competence",
+    "Front-end",
+    "Vue.js, TypeScript, JavaScript, CSS, accessibilité."
+   ],
+   [
+    "competence",
+    "Back-end",
+    "Node.js, PostgreSQL, Java."
+   ],
+   [
+    "formation",
+    "Bachelor HES en informatique de gestion",
+    "2022, Genève."
+   ],
+   [
+    "competence",
+    "Langues",
+    "Français (langue maternelle), anglais (C1)."
+   ]
+  ]
+ },
+ {
+  "offer": {
+   "title": "Comptable",
+   "company": "Exemple Industrie SA",
+   "text": "Missions : tenue de la comptabilité générale, décomptes TVA, bouclements mensuels. Profil : brevet fédéral de spécialiste en finance et comptabilité, maîtrise d'Abacus. Allemand un atout."
+  },
+  "blocks": [
+   [
+    "experience",
+    "Assistant comptable — Fiduciaire Beta, Neuchâtel (2020-2025)",
+    "Saisie comptable de 30 PME, TVA trimestrielle, bouclements avec l'expert."
+   ],
+   [
+    "experience",
+    "Employé de banque — Banque Fictive, La Chaux-de-Fonds (2016-2020)",
+    "Guichet, paiements, ouverture de comptes."
+   ],
+   [
+    "experience",
+    "Caissier — Club de football amateur (2018-2025)",
+    "Tenue des comptes du club, budget annuel."
+   ],
+   [
+    "competence",
+    "Comptabilité",
+    "Abacus, Excel, TVA, salaires."
+   ],
+   [
+    "competence",
+    "Outils",
+    "Word, Outlook, Teams."
+   ],
+   [
+    "formation",
+    "Brevet fédéral de spécialiste en finance et comptabilité",
+    "2021, Neuchâtel."
+   ],
+   [
+    "competence",
+    "Langues",
+    "Français (langue maternelle), allemand (B1)."
+   ]
+  ]
+ }
+]

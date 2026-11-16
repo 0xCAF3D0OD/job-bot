@@ -62,7 +62,7 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
   });
 
   it("un bouton : émet click", async () => {
-    const wrapper = mount(GroupedRow, { props: { title: "Taux minimum", value: "80 %", button: true }, global });
+    const wrapper = mount(GroupedRow, { props: { title: "Taux d’activité", value: "80 %", button: true }, global });
     await wrapper.find("button.grouped-row").trigger("click");
     expect(wrapper.emitted("click")).toHaveLength(1);
     expect(wrapper.find(".grouped-value").text()).toBe("80 %");

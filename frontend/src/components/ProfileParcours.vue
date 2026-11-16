@@ -612,7 +612,8 @@ const documentItems = computed<MoreMenuItem[]>(() => {
 </template>
 
 <style>
-/* Le bloc d'état de la lecture passe sous la ligne du document, sur toute la largeur (PR 21). */
-.doc-list li:has(> .doc-read-state) { flex-wrap: wrap; padding-right: 0; }
-.doc-list .doc-read-state { flex-basis: 100%; }
+/* Le bloc d'état de la lecture passe sous la ligne du document, sur toute la largeur (PR 21). La ligne garde sa
+   marge droite et aucun écart sous le bouton : tous les « Proposer à partir du CV » alignés et centrés. */
+.doc-list li:has(> .doc-read-state) { flex-wrap: wrap; row-gap: 0; }
+.doc-list .doc-read-state { flex-basis: calc(100% + var(--space-4)); margin-right: calc(-1 * var(--space-4)); }
 </style>
