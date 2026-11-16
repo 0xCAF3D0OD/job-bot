@@ -21,6 +21,14 @@ const { phone } = usePhone();
 const route = useRoute();
 const { empty: profileEmpty } = useProfileEmpty();
 const unscored = computed(() => props.offer.score === null || props.offer.score === undefined);
+// A2 (Kevin, 16.11) : écartée sans note, ni anneau ni « Pas encore notée », la pastille neutre « Écartée » ; note
+// impossible (trois échecs, ou annonce sans texte), le cercle gris en pointillés et la pastille « Pas de note ».
+// Une offre ajoutée à la main est notée même écartée (Kevin, 15.11) : elle garde le cercle d'attente.
+const setAside = computed(
+  () => unscored.value && !props.offer.added_by_you && (props.offer.status === "filtered_out" || props.offer.status === "ignored"),
+);
+const noScore = computed(() => unscored.value && !setAside.value && !!props.offer.score_final);
+const unratedLabel = computed(() => (noScore.value ? "Pas de note" : "Pas encore notée"));
 
 // Le lien de la carte : la sous-page sur téléphone, ?offre= à côté de la liste sur ordinateur (filtres gardés).
 const to = computed(() =>
@@ -42,7 +50,9 @@ const chips = computed<Chip[]>(() => {
   const out: Chip[] = [];
   // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
   // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
-  if (unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
+  if (setAside.value) out.push({ text: "Écartée" });
+  else if (noScore.value) out.push({ text: "Pas de note" });
+  else if (unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
   // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
   // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
   if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
@@ -51,7 +61,7 @@ const chips = computed<Chip[]>(() => {
     out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
   else if (o.expired_at && o.status !== "applied") out.push({ text: "Retirée", tone: "warn" });
   // Sans profil, aucune offre n'est notée : la puce le dit, au lieu d'un « Pas encore notée » sans fin.
-  if (profileEmpty.value && unscored.value && !out.length) out.push({ text: "Profil à compléter", tone: "warn", title: "Ajoute ton dernier poste dans Profil pour que jobA1 note les offres." });
+  if (profileEmpty.value && unscored.value && !setAside.value && !noScore.value && !out.length) out.push({ text: "Profil à compléter", tone: "warn", title: "Ajoute ton dernier poste dans Profil pour que jobA1 note les offres." });
   if (!o.description && !o.spontaneous && o.score !== null && o.score !== undefined) out.push({ text: "Provisoire", tone: "peach" });
   const rate = rateText(o.rate_min, o.rate_max);
   if (rate) out.push({ text: rate });
@@ -132,12 +142,12 @@ watch([chips, phone], () => void fit());
     </template>
     <template #end>
       <svg
-        v-if="unscored"
+        v-if="unscored && !setAside"
         class="score-ring score-unrated"
         viewBox="0 0 100 100"
         role="img"
-        aria-label="Pas encore notée"
-        :title="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
+        :aria-label="unratedLabel"
+        :title="noScore ? 'Pas de note' : profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
         data-test="score"
       ><circle
         cx="50"
@@ -152,7 +162,7 @@ watch([chips, phone], () => void fit());
         stroke-linecap="round"
       /></svg>
       <ScoreRing
-        v-else
+        v-else-if="!unscored"
         worded
         :score="offer.score ?? null"
         :pending="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"

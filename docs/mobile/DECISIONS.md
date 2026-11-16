@@ -246,6 +246,12 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - « Voir la compatibilité » est bleu (`--primary-text`) partout, offre provisoire comprise : un lien garde la même couleur sur tous les écrans (Nielsen, heuristique 4). La planche OffreProvisoire, qui le dessinait foncé, avait tort ; Kevin la corrige.
 - La flèche d'envoi grise quand le champ est vide est voulue sur tous les champs à flèche (Ajouter, assistant) : même état désactivé partout, flèche toujours visible et annoncée avec `aria-disabled`.
 
+## Offres jamais notées, A2 : écartée et note impossible (Kevin, 16.11.2026, 8 h 18)
+
+- Une offre écartée par les critères et sans note n'a pas d'anneau et n'affiche jamais « Pas encore notée » : pastille neutre « Écartée » dans la rangée de pastilles, à la place. Une offre ajoutée à la main reste notée même écartée (décision du 15.11) et garde le cercle d'attente.
+- Note impossible (trois échecs de l'IA, ou annonce sans texte) : sur la carte, le même cercle gris en pointillés sans chiffre et une pastille neutre « Pas de note ».
+- Dans la fiche, une ligne selon la cause : annonce sans texte → « L’annonce est trop courte pour être notée. » ; échec de l'IA → « La note n’a pas pu être calculée. » avec un bouton « Réessayer », parce que le serveur ne réessaie plus après le 3e échec (« Nouvel essai demain » écarté).
+
 ## Bilan ordinateur, menus ouverts, mois déplié et fiche sombre (Kevin, 16.11.2026, 9 h 00 et 9 h 25)
 
 - Les planches du paquet jobA1_maquette_2026-11-16_bilan (§29, recopié dans docs/maquette/2026-11-16/) font foi pour le Bilan sur ordinateur. Elles remplacent la règle provisoire de 9 h 00 (« sans planche, style du menu ⋯ »).

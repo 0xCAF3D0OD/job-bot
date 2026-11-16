@@ -3096,6 +3096,55 @@
         }
       }
     },
+    "/api/offers/{offer_id}/retry-score": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Retry Score",
+        "description": "« Réessayer » d'une note impossible après trois échecs de l'IA (A2, décision de Kevin\ndu 16.11) : un seul essai, tout de suite ; s'il échoue, la tâche des 10 minutes reprend\njusqu'au 3e. Refusé hors de cet état, pour ne pas relancer l'IA sur une offre notée.",
+        "operationId": "retryScore",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryScoreOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "409": {
+            "description": "La note n'est pas en échec : rien à refaire"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/interview.ics": {
       "get": {
         "tags": [
@@ -20518,6 +20567,22 @@
             ],
             "title": "Score Error"
           },
+          "score_final": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sans_texte",
+                  "reponse_vide",
+                  "erreur"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Final"
+          },
           "keywords_role": {
             "items": {
               "type": "string"
@@ -22398,6 +22463,26 @@
         ],
         "title": "RescoreResponse"
       },
+      "RetryScoreOut": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "title": "RetryScoreOut"
+      },
       "ReviewCriterionOut": {
         "properties": {
           "key": {
@@ -23302,6 +23387,22 @@
               }
             ],
             "title": "Score Error"
+          },
+          "score_final": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sans_texte",
+                  "reponse_vide",
+                  "erreur"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Final"
           },
           "keywords_role": {
             "items": {

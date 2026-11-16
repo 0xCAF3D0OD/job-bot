@@ -29,6 +29,7 @@ from jobbot.llm import letter_review
 from jobbot.llm.scoring import InvalidScore
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring_service
 
 router = APIRouter(prefix="/api", tags=["letters"])
 log = get_logger(__name__)
@@ -390,6 +391,8 @@ async def _write(
             offer.company_address = output.employer.address
             offer.company_address_source = "letter"
         out = await _render(session, draft)
+    # Préparée avant sa note, ou offre écartée qu'on prépare : la note part maintenant (A2).
+    await scoring_service.score_if_unscored(runtime, offer_id)
     log.info(
         "letter_written",
         offer_id=offer_id,
