@@ -392,6 +392,8 @@ describe("OffersView", () => {
     await router.push("/offres?note=70");
     await flushPromises();
     expect(wrapper.find("[data-offer-row='5']").exists()).toBe(false);
+  });
+
   it("section 35 du 16.11 : pastille « Agence » en tête, ligne dans la fiche, filtre « Masquer les agences »", async () => {
     mockOffers(
       page([
