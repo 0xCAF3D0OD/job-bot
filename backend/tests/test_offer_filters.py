@@ -191,13 +191,18 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
                 ),
             ]
         )
-    page = (await api.get("/api/offers", params={"view": "in_progress", "sort": "activity"})).json()
-    assert [o["title"] for o in page["items"]] == [
+    page = (await api.get("/api/offers", params={"view": "all", "sort": "activity"})).json()
+    mine = {"Lettre aujourd'hui", "Envoyée hier", "Envoyée il y a 5 jours", "Préparation sans document"}
+    assert [o["title"] for o in page["items"] if o["title"] in mine] == [
         "Lettre aujourd'hui",
         "Envoyée hier",
         "Envoyée il y a 5 jours",
         "Préparation sans document",
     ]
+    # En préparation : sans les envoyées, qui sont dans Envoyées (section 38 du 16.11).
+    page = (await api.get("/api/offers", params={"view": "in_progress", "sort": "activity"})).json()
+    assert [o["title"] for o in page["items"]] == ["Lettre aujourd'hui", "Préparation sans document"]
+    assert page["counts"]["in_progress"] == 2
 
 
 async def test_sort_by_day_then_score(api: AsyncClient, runtime: Runtime) -> None:

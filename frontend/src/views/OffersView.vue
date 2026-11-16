@@ -70,19 +70,19 @@ const applyError = ref("");
 const notice = ref("");
 const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0 });
 const loading = ref(false);
-// La fin de la phrase selon le statut regardé : « 4 offres à examiner. », « 1 offre écartée. ».
+// La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
-  pending: [" à traiter", " à traiter"],
-  to_review: [" à examiner", " à examiner"],
-  in_progress: [" en cours", " en cours"],
+  pending: ["", ""],
+  to_review: [" nouvelle", " nouvelles"],
+  in_progress: [" en préparation", " en préparation"],
   later: [" pour plus tard", " pour plus tard"],
   filtered_out: [" écartée", " écartées"],
   expired: [" expirée", " expirées"],
   all: ["", ""],
 };
-// La phrase décrit la liste affichée, rien d'autre (Kevin, 2026-11-03) : « 35 offres en cours. »,
-// « 12 offres à traiter avec ces filtres. ». Le nombre de tout « À traiter » sans filtre est counts.pending_all.
-// Avec les écartées ou les expirées en plus, la liste n'est plus seulement « à traiter » : « affichées ».
+// La phrase décrit la liste affichée, rien d'autre (Kevin, 2026-11-03) : « 35 offres en préparation. »,
+// « 12 offres avec ces filtres. » dans « Toutes ». Le nombre de « Toutes » sans filtre est counts.pending_all.
+// Avec les écartées ou les expirées en plus, la liste n'est plus seulement « Toutes » : « affichées ».
 const sentenceEnd = computed(() => {
   const f = filters.value;
   const mixed = f.view === "pending" && (f.showFilteredOut || f.showExpired);
@@ -523,7 +523,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   if (status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")) {
     const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
     void offerUndo({
-      message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`,
+      message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : status === "to_review" ? "Remise dans Nouvelles." : `Passée en ${STATUS_TEXT[status]}.`,
       commit: () => true,
       restore: async () => {
         await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
@@ -534,7 +534,7 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   await load();
 }
 
-const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "À examiner" };
+const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "Nouvelles" };
 
 // « Signaler comme expirée » / « Pas expirée » (docs/11 §1) : prioritaire sur la détection.
 async function setExpiry(expired: boolean): Promise<void> {
@@ -659,7 +659,7 @@ onUnmounted(() => {
     class="offers-page"
   >
     <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. Pas sur téléphone :
-         le nombre est sur la pastille de « À traiter » (maquette Candidatures, Kevin, 2026-11-05). -->
+         le nombre est sur la pastille de « Toutes » (maquette Candidatures, Kevin, 2026-11-05). -->
     <p
       v-if="!phone && !wide && !failed && (!loading || items.length)"
       class="offers-sentence"
@@ -803,7 +803,7 @@ onUnmounted(() => {
         />
         <div class="linked-cards">
           <!-- Le compteur (décision de Kevin du 15.11, au-dessus de la liste, ordinateur) : les offres de la liste montrée,
-               filtres compris ; avec un filtre qui en retire, « 12 sur 38 offres », 38 étant « À traiter » sans filtre. -->
+               filtres compris ; avec un filtre qui en retire, « 12 sur 38 offres », 38 étant « Toutes » sans filtre. -->
           <p
             v-if="wide && !phone && !bare && !failed && shownTotal > 0"
             class="offers-count"

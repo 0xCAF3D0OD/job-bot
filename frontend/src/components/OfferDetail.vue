@@ -410,7 +410,7 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (shareUrl.value) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
-  if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+  if (o.status === "later") items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
   if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
   if (withBar.value && scored.value) {
@@ -434,7 +434,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   if (o.status !== "applied") {
     items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
-      items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+      items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
       items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
       // Un seul mot pour une action (étape 6, O8) : « Écarter », comme dans la feuille de la liste.
@@ -462,7 +462,7 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
-    items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   }
   if (o.status !== "applied") {
     items.push(
@@ -482,7 +482,7 @@ const saved = computed(() => props.offer.status === "later");
 const canSave = computed(() => ["to_review", "later"].includes(props.offer.status));
 function toggleSaved(): void {
   emit("status", saved.value ? "to_review" : "later");
-  saidAloud.value = saved.value ? "Offre remise à examiner." : "Offre gardée pour plus tard.";
+  saidAloud.value = saved.value ? "Offre remise dans Nouvelles." : "Offre gardée pour plus tard.";
 }
 // Partager (O2) : le lien public de l'annonce (employeur, puis site source), jamais l'adresse jobA1, qui est
 // privée. La feuille de partage du téléphone, sinon le lien copié.

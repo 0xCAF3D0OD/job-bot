@@ -152,7 +152,7 @@ describe("OffersView", () => {
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
     expect(wrapper.find("[data-test=offers-none-add]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre.");
     expect(empty.find("a").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=offers-empty]").exists()).toBe(false);
     // Des filtres : c'est « rien ne correspond », pas un compte neuf.
@@ -231,13 +231,13 @@ describe("OffersView", () => {
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres.");
     expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
     // La phrase décrit la liste affichée, sans le nombre de tout « À traiter » (2026-11-03).
     const inProgress = await mountAt("/offres?statut=in_progress");
-    expect(inProgress.find("[data-test=offers-sentence]").text()).toBe("2 offres en cours.");
+    expect(inProgress.find("[data-test=offers-sentence]").text()).toBe("2 offres en préparation.");
     const searched = await mountAt("/offres?q=devops");
-    expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter avec ces filtres.");
+    expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres avec ces filtres.");
     const mixed = await mountAt("/offres?ecartees=montrer");
     expect(mixed.find("[data-test=offers-sentence]").text()).toBe("2 offres affichées avec ces filtres.");
     // Un seul bouton « + Ajouter » (§2.6 du 9 novembre) : un panneau à deux onglets, « Une offre » d'abord.
@@ -274,7 +274,9 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     expect(wrapper.find("[data-test=pop-view-pending]").attributes("aria-pressed")).toBe("true");
-    expect(wrapper.find("[data-test=pop-view-pending]").text()).toMatch(/^À traiter · \d+$/);
+    expect(wrapper.find("[data-test=pop-view-pending]").text()).toMatch(/^Toutes · \d+$/);
+    // L'ordre du parcours d'une offre, « Toutes » (le choix par défaut) en dernier (section 38 du 16.11).
+    expect(wrapper.findAll("[data-test^=pop-view-]").map((b) => b.text().split(" · ")[0])).toEqual(["Nouvelles", "Gardées", "En préparation", "Toutes"]);
     await wrapper.find("[data-test=pop-score-75]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ note: "75" });
@@ -894,7 +896,7 @@ describe("Offres, sans bande d’action (1.6.53)", () => {
     expect(wrapper.text()).not.toContain("Commencer le tri");
   });
 
-  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à traiter. »", async () => {
+  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre. »", async () => {
     const reviewed = { to_review: 0, pending: 0, pending_all: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
     mockOffers({ data: { ...page([]).data, counts: reviewed } });
     const wrapper = await mountAt("/offres");
@@ -903,7 +905,7 @@ describe("Offres, sans bande d’action (1.6.53)", () => {
     expect(done.find(".face-state-title").text()).toBe("Tout est examiné");
     expect(done.text()).toContain("Les nouvelles arrivent chaque matin.");
     expect(done.find("button, a").exists()).toBe(false);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre.");
   });
 });
 
