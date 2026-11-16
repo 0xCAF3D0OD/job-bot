@@ -119,7 +119,9 @@ async def test_catalog_filter_and_marks(rt: Runtime) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         everything = (await api.get("/api/trainings")).json()
         assert everything["domain_keywords"] == KEYWORDS and everything["can_suggest"]
-        assert len(everything["items"]) == len(service.catalog())
+        # Les fiches qui attendent la vérification de leur lien ne s'affichent pas (16.11).
+        checked = [e for e in service.catalog() if e.get("link_status", "ok") == "ok"]
+        assert len(everything["items"]) == len(checked)
         # Les plus proches du domaine d'abord : la CKA trouve les deux mots-clés.
         assert "CKA" in everything["items"][0]["title"]
         mine = (await api.get("/api/trainings", params={"domain_only": True})).json()["items"]
