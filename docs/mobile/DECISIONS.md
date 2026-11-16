@@ -409,6 +409,13 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Après la fusion de #764, #770 et #771 : ouvrir une issue « Budget JS » qui (1) mesure le JS chargé au premier écran de chaque page (gzip), (2) propose une limite par page en plus de js-total, (3) liste les 5 plus gros modules avec des pistes d'allègement chiffrées.
 - Plus aucun relèvement de css-total ou de js-total sans passer par cette issue.
 
+## Audit de poids quand main dépasse déjà (Kevin, 16.11.2026, 14 h 25)
+
+- Quand main dépasse déjà une limite de poids (JS ou CSS), une PR dont la mesure baisse ou reste égale passe en vert ; seule une PR qui ajoute du poids à cette mesure reste bloquée.
+- Mise en œuvre : `frontend/scripts/poids-ci.sh` (CI et `make audits-ci`) mesure la branche ; si une mesure dépasse, il construit la base (HEAD^1 dans la CI, le main sur lequel la PR est fusionnée ; origin/main en local) et compare avec `poids.mjs --base`.
+- Les limites ne changent pas, et la règle des illustrations en WebP reste bloquante.
+- Suite : issue « Budget JS et CSS » (JS et CSS du premier écran par page, limite par page, 5 plus gros modules avec des pistes chiffrées, écarts expliqués). Plus aucun relèvement de css-total ou de js-total sans passer par cette issue.
+
 ## Préparer, bouton « ↑ » du champ de demande (Kevin, 16.11.2026, 14 h 48)
 
 - Champ de 56 px. Bouton visible de 40 × 40 px, à 8 px du bord du champ en haut, à droite et en bas : sur la grille de 4, sans exception dans l'audit.
