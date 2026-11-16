@@ -273,6 +273,7 @@ html.accueil body { border-radius: var(--radius-card); box-shadow: 0 6px 24px rg
 
 /* L'alerte jobup suivie (section 42, ExtAlerte*) : la liste en 4 étapes, comme dans jobA1. */
 main:has(> #alerte-jobup:not([hidden])) { gap: 12px; padding-top: 14px; }
+main:has(> #alerte-jobup:not([hidden])) .site { line-height: 15px; }
 #alerte-jobup { gap: 12px; }
 .aj-steps { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 16px; }
 .aj-steps li { display: flex; gap: 10px; padding: 11px 12px; }
