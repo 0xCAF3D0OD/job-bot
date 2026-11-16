@@ -25,6 +25,8 @@ export type MoreMenuItem = {
   icon?: IconName;
   /** Un trait avant cette entrée (maquette du 8 novembre : « Signaler une erreur dans l'offre »). */
   separator?: boolean;
+  /** Une mention à droite du nom (planche BilanOrdinateurMoisPrecedents : « À remettre »). */
+  note?: string;
 };
 
 function iconOf(item: MoreMenuItem): IconName | null {
@@ -44,8 +46,10 @@ const props = withDefaults(
     inline?: boolean;
     trigger?: string;
     triggerIcon?: IconName;
+    /** Un chevron après le libellé du bouton, tourné vers le haut quand le menu est ouvert (BilanOrdinateur). */
+    chevron?: boolean;
   }>(),
-  { label: "Plus d’actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
+  { label: "Plus d’actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined, chevron: false },
 );
 
 // Une seule action ordinaire : pas de menu, l'action directement (docs/76 §3).
@@ -176,7 +180,11 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       <span class="with-icon"><AppIcon
         v-if="triggerIcon"
         :name="triggerIcon"
-      />{{ trigger }}</span>
+      />{{ trigger }}</span><AppIcon
+        v-if="chevron"
+        name="chevron-down"
+        class="more-chevron"
+      />
     </button>
     <button
       v-else
@@ -240,7 +248,10 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
             />{{ item.label }}<span
               v-if="item.count"
               class="menu-count"
-            > ({{ item.count }})</span>
+            > ({{ item.count }})</span><span
+              v-if="item.note"
+              class="menu-note"
+            >{{ item.note }}</span>
           </button>
         </li>
       </template>
