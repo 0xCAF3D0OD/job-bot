@@ -12,17 +12,23 @@ import AppIcon from "./AppIcon.vue";
 // Décisions de Kevin du 15.11 : la relecture toutes les 5 s ne tourne que pendant l'attente et seulement quand l'écran
 // est visible ; elle s'arrête dès que le code arrive, ou au bout de 10 minutes sans code (état expiré). La durée de
 // validité vient de l'e-mail de jobup (10 minutes sinon). Un nouveau code remplace l'ancien.
+// Le serveur ne relève la boîte que si on le lui demande : dès l'affichage, puis chaque minute tant que l'étape attend
+// et que l'onglet est visible (« watch-code »), il la relève toutes les 15 s. Sans relance, il s'arrête de lui-même.
 const props = defineProps<{ siteUrl: string | null }>();
 
 type Code = { code: string; received_at: string; valid_minutes: number };
 const state = ref<"waiting" | "received" | "expired">("waiting");
 const code = ref<Code | null>(null);
 const copied = ref(false);
+// La boîte jobA1 a raté ses 3 dernières lectures (décision de Kevin du 15.11, 19 h 02) : la ligne d'attente le dit, et
+// la relance part à chaque relecture pour revenir à l'attente dès qu'une lecture réussit.
+const down = ref(false);
 // Début de l'attente, dernier code déjà vu (seul un code plus récent compte), minuteurs.
 let since = 0;
 let seen = "";
 let timer = 0;
 let expiry = 0;
+let asked = 0;
 const ends = (c: Code): number => Date.parse(c.received_at) + c.valid_minutes * 60_000;
 
 function stop(next: "waiting" | "received" | "expired"): void {
@@ -30,9 +36,22 @@ function stop(next: "waiting" | "received" | "expired"): void {
   state.value = next;
 }
 
+async function watch(): Promise<void> {
+  try {
+    down.value = !!(await api.POST("/api/alert-searches/watch-code"))?.data?.mailbox_down;
+  } catch {
+    // Hors ligne : la ligne reste telle quelle, la relecture suivante réessaie.
+  }
+}
+
 async function tick(): Promise<void> {
-  if (Date.now() - since > 10 * 60_000) return stop("expired");
+  if (Date.now() - since >= 10 * 60_000) return stop("expired");
   if (document.visibilityState !== "visible") return;
+  // La relance du relevé rapide côté serveur, une fois par minute au plus (à chaque relecture si la boîte est muette).
+  if (down.value || Date.now() - asked >= 60_000) {
+    asked = Date.now();
+    void watch();
+  }
   const { data } = await api.GET("/api/alert-searches/codes/last", { params: { query: { site: "jobup" } } });
   if (state.value !== "waiting" || !data || data.received_at === seen) return;
   seen = data.received_at;
@@ -48,12 +67,6 @@ function wait(): void {
   since = Date.now();
   timer = window.setInterval(tick, 5000);
   void tick();
-}
-
-// « Ouvrir jobup » ou « Renvoyer » : la boîte relevée vite (15 s pendant 5 min), l'écran attend le nouveau code.
-function restart(): void {
-  void api.POST("/api/alert-searches/expect-code");
-  wait();
 }
 
 const onVisible = (): void => void (state.value === "waiting" && tick());
@@ -75,7 +88,8 @@ onUnmounted(() => {
   clearTimeout(expiry);
 });
 
-defineExpose({ restart });
+// « Ouvrir jobup » ou « Renvoyer » : l'écran attend le nouveau code, et la boîte est relevée vite dès maintenant.
+defineExpose({ restart: wait });
 </script>
 
 <template>
@@ -86,7 +100,14 @@ defineExpose({ restart });
     aria-live="polite"
     data-test="code-box"
   >
-    <template v-if="state === 'waiting'">
+    <template v-if="state === 'waiting' && down">
+      <AppIcon
+        name="alert"
+        class="code-box-down"
+      />
+      <span data-test="code-box-down">La boîte jobA1 ne répond pas. On réessaie dans 1 minute.</span>
+    </template>
+    <template v-else-if="state === 'waiting'">
       <svg
         class="code-box-spinner"
         width="20"
@@ -149,7 +170,7 @@ defineExpose({ restart });
         class="code-box-resend"
         aria-label="Renvoyer le code depuis jobup"
         data-test="code-box-resend"
-        @click="restart"
+        @click="wait"
       >Renvoyer<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
     </template>
   </div>
@@ -171,6 +192,7 @@ defineExpose({ restart });
 .code-box-track { stroke: var(--line); }
 .code-box-arc { stroke: var(--primary); }
 .code-box-bang { flex: none; }
+.code-box-down { flex: none; width: 20px; height: 20px; color: var(--orange); }
 .code-box-value { flex: 1; min-width: 0; font-size: var(--code-26); line-height: var(--code-32); font-weight: var(--weight-heavy); letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--text); }
 .code-box-copy, .code-box-resend { flex: none; display: inline-flex; align-items: center; gap: var(--code-6); height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); font-family: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .code-box-copy { background: var(--primary-soft); }

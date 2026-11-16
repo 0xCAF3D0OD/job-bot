@@ -129,7 +129,8 @@ async def test_special_functions_are_guarded() -> None:
     # 16 depuis la 0074 : `take_partner_code` et `account_of_partner_token` (Get'emAll).
     # 18 depuis la 0076 : `account_of_oauth` et `account_of_verified_email` (Google, Microsoft,
     # Apple).
-    assert len(functions) == 18
+    # 19 depuis la 0086 : `code_waits_until`, la fin des attentes de code (relevé partagé).
+    assert len(functions) == 19
     for name, config, acl in functions:
         assert config == ["search_path=public, pg_temp"], name
         # Pas d'exécution pour tout le monde (« =X/ » : PUBLIC), seulement pour l'API.

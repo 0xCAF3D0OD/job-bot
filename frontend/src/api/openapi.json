@@ -9171,6 +9171,28 @@
         }
       }
     },
+    "/api/alert-searches/watch-code": {
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Watch Code",
+        "description": "L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge\nson attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte\nattend.",
+        "operationId": "watchSiteCode",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectCodeOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alert-searches/codes/last": {
       "get": {
         "tags": [
@@ -14601,6 +14623,11 @@
           "queued": {
             "type": "boolean",
             "title": "Queued"
+          },
+          "mailbox_down": {
+            "type": "boolean",
+            "title": "Mailbox Down",
+            "default": false
           }
         },
         "type": "object",

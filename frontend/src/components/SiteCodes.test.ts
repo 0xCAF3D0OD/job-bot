@@ -49,16 +49,6 @@ describe("Les codes des sites (docs/112)", () => {
     expect(wrapper.find("[data-test=site-code-expect]").exists()).toBe(false);
   });
 
-  it("trop de relevés rapides : il le dit", async () => {
-    POST.mockResolvedValueOnce({ data: { queued: false } });
-    GET.mockResolvedValue({ data: [] });
-    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
-    await flushPromises();
-    await wrapper.find("[data-test=site-code-expect]").trigger("click");
-    await flushPromises();
-    expect(wrapper.text()).toContain("Déjà six relevés rapides");
-  });
-
   it("les messages des sites, le texte à l’ouverture", async () => {
     GET.mockResolvedValueOnce({ data: [{ id: 7, site: "jobup", subject: "Bienvenue sur jobup", received_at: "2026-10-21T08:00:00Z" }] });
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });

@@ -4,7 +4,10 @@
   téléphone (sans lui, docs/120), montré
   en haut de la page Alertes, et lu par l'extension pour le remplir ; il s'efface au bout de
   30 minutes, avec la copie de son e-mail (docs/113).
-- « J'attends un code » : la boîte est relevée toutes les 15 secondes pendant 5 minutes.
+- Le relevé rapide est partagé (décision de Kevin du 15.11) : un seul relevé lit la boîte toutes
+  les 15 secondes tant qu'au moins un compte attend un code, et range chaque code selon son
+  adresse. « J'attends un code » attend 5 minutes ; l'étape « Recopie le code de jobup » relance
+  son attente chaque minute tant qu'elle est visible, 10 minutes au plus.
 - Les autres e-mails des sites (bienvenue, alerte modifiée…) se lisent dans « Messages des
   sites », 30 jours.
 - Un e-mail qui ne vient d'aucun site n'est pas gardé : seule une ligne sans objet ni copie
@@ -15,10 +18,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from bs4 import BeautifulSoup
-from sqlalchemy import and_, delete, or_, select, update
+from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot import accounts
+from jobbot import accounts, platform
 from jobbot.db.models import (
     IGNORED_KIND,
     Notification,
@@ -47,8 +51,21 @@ MESSAGES_KEPT_FOR = timedelta(days=30)
 ALERT_COPY_KEPT_FOR = timedelta(days=90)
 FAST_COLLECT_JOB = "collect_fast"
 EXPECT_KEY = "code_expected"
-# Le relevé rapide : 6 demandes par heure au plus, par compte.
-EXPECT_PER_HOUR = 6
+# Une attente : 5 minutes pour « J'attends un code » et l'extension ; pour l'étape du code, 75 s
+# après chaque relance (une par minute), 10 minutes au plus depuis son début. Pas de limite par
+# compte : le relevé est le même pour tous.
+FAST_FOR = timedelta(minutes=5)
+WATCH_FOR = timedelta(seconds=75)
+WAIT_AT_MOST = timedelta(minutes=10)
+# Plafond de la plateforme : 240 relevés rapides par heure, un toutes les 15 s, quel que soit
+# le nombre d'attentes. Au-delà, le code arrive au relevé normal.
+FAST_READS_KEY = "fast_reads"
+FAST_READS_PER_HOUR = 240
+# La boîte invités qui ne répond pas (décision de Kevin du 15.11, 19 h 02) : après 3 lectures
+# ratées de suite, l'étape du code le dit et le relevé rapide ne la relit plus qu'une fois par
+# minute ; la première lecture réussie remet le compte à zéro.
+GUEST_FAILURES_KEY = "guest_box_failures"
+GUEST_DOWN_AFTER = 3
 MAX_TEXT = 20_000
 
 
@@ -130,26 +147,97 @@ async def last(runtime: Runtime, site: str) -> LastCode | None:
     return LastCode(found.code, found.received_at, minutes)
 
 
-async def expect(runtime: Runtime) -> bool:
-    """« J'attends un code » : le relevé rapide, 6 fois par heure au plus. False : trop tôt."""
+def _wait(value: object) -> tuple[datetime | None, datetime | None]:
+    """Le début de l'attente de l'étape du code et la fin de l'attente, dans le réglage."""
+    if not isinstance(value, dict):
+        return None, None
+    start, until = value.get("start"), value.get("until")
+    return (
+        datetime.fromisoformat(start) if isinstance(start, str) else None,
+        datetime.fromisoformat(until) if isinstance(until, str) else None,
+    )
+
+
+async def _save_wait(session: AsyncSession, start: datetime | None, until: datetime) -> None:
+    value = {"start": start.isoformat() if start else None, "until": until.isoformat()}
+    statement = insert(Setting).values(key=EXPECT_KEY, value=value)
+    await session.execute(
+        statement.on_conflict_do_update(
+            index_elements=["user_id", "key"], set_={"value": statement.excluded.value}
+        )
+    )
+
+
+async def expect(runtime: Runtime, *, watch: bool = False) -> bool:
+    """« J'attends un code » : le compte attend un code, le relevé partagé tourne.
+
+    `watch` : la relance de l'étape « Recopie le code » (chaque minute, page visible) prolonge
+    l'attente de 75 secondes, 10 minutes au plus depuis son début ; sans relance, elle finit.
+    Renvoie toujours True (plus de limite par compte, décision de Kevin du 15.11)."""
     now = datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
         value = await session.scalar(select(Setting.value).where(Setting.key == EXPECT_KEY))
+        start, until = _wait(value)
+        if not watch:
+            start, until = None, max(until or now, now + FAST_FOR)
+        elif start and until and until > now - WATCH_FOR and now < start + WAIT_AT_MOST:
+            until = max(until, min(now + WATCH_FOR, start + WAIT_AT_MOST))
+        else:
+            start, until = now, now + WATCH_FOR
+        await _save_wait(session, start, until)
+    # Un seul relevé pour toute la plateforme : mis en file sans compte.
+    with accounts.use(None):
+        await enqueue(runtime.settings, FAST_COLLECT_JOB)
+    return True
+
+
+async def code_received(runtime: Runtime, account: int) -> None:
+    """Le code du compte est arrivé : son attente finit, le relevé partagé ne l'attend plus."""
+    now = datetime.now(UTC)
+    with accounts.use(account):
+        async with runtime.sessionmaker.begin() as session:
+            value = await session.scalar(select(Setting.value).where(Setting.key == EXPECT_KEY))
+            start, until = _wait(value)
+            if until is not None and until > now:
+                await _save_wait(session, start, now)
+
+
+async def waits_until(runtime: Runtime) -> datetime | None:
+    """La fin la plus lointaine des attentes de tous les comptes (une date, rien d'autre)."""
+    async with runtime.sessionmaker() as session:
+        found: datetime | None = await session.scalar(select(func.code_waits_until()))
+    return found
+
+
+async def take_fast_read(runtime: Runtime) -> bool:
+    """Compte un relevé rapide dans le plafond de la plateforme. False : plafond atteint."""
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        value = await platform.get(session, FAST_READS_KEY, [])
         recent = [
             at
             for at in (value if isinstance(value, list) else [])
             if isinstance(at, str) and now - datetime.fromisoformat(at) < timedelta(hours=1)
         ]
-        if len(recent) >= EXPECT_PER_HOUR:
+        if len(recent) >= FAST_READS_PER_HOUR:
             return False
-        statement = insert(Setting).values(key=EXPECT_KEY, value=[*recent, now.isoformat()])
-        await session.execute(
-            statement.on_conflict_do_update(
-                index_elements=["user_id", "key"], set_={"value": statement.excluded.value}
-            )
-        )
-    await enqueue(runtime.settings, FAST_COLLECT_JOB)
+        await platform.put(session, FAST_READS_KEY, [*recent, now.isoformat()])
     return True
+
+
+async def guest_box_read(runtime: Runtime, *, ok: bool) -> None:
+    """Compte les lectures ratées de suite de la boîte invités ; une réussie remet à zéro."""
+    async with runtime.sessionmaker.begin() as session:
+        failures = await platform.get(session, GUEST_FAILURES_KEY, 0)
+        failures = 0 if ok else (failures if isinstance(failures, int) else 0) + 1
+        await platform.put(session, GUEST_FAILURES_KEY, failures)
+
+
+async def guest_box_down(runtime: Runtime) -> bool:
+    """La boîte invités a raté ses 3 dernières lectures, ou plus."""
+    async with runtime.sessionmaker() as session:
+        failures = await platform.get(session, GUEST_FAILURES_KEY, 0)
+    return isinstance(failures, int) and failures >= GUEST_DOWN_AFTER
 
 
 @dataclass(frozen=True)
