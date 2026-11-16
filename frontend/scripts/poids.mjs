@@ -114,7 +114,7 @@ export const PAGES = {
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   preparer: ["views/PreparationView.vue"],
-  // Préparer avec tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
+  // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
   "preparer-panneaux": [
     "views/PreparationView.vue",
@@ -123,6 +123,7 @@ export const PAGES = {
     "components/OfferCompatSheet.vue",
     "components/FalseClaimSheet.vue",
     "components/ProfileCompletionPanel.vue",
+    "components/CvPanel.vue",
   ],
   suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
   alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
