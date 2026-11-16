@@ -126,6 +126,28 @@ async function sharePdf(event: MouseEvent, href: string, name: string): Promise<
     // Partage annulé ou refusé : rien à dire.
   }
 }
+// La coche des pièces téléchargées (Kevin, 16.11, docs/decisions/2026-11-16-1644-coche-telechargement.md) : posée quand
+// le fichier est bien arrivé (« file-done », useFileDownloads), gardée dans ce navigateur par version du document (une lettre refaite repart sans coche), effacée à la
+// déconnexion (useAuth). Le lien reste cliquable pour retélécharger.
+const DOWNLOADED_KEY = "jobA1.telecharges";
+function readDownloaded(): string[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(DOWNLOADED_KEY) ?? "[]");
+    return Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+const downloaded = ref<string[]>(readDownloaded());
+function markDownloaded(key: string): void {
+  if (downloaded.value.includes(key)) return;
+  downloaded.value = [...downloaded.value, key].slice(-100);
+  try {
+    localStorage.setItem(DOWNLOADED_KEY, JSON.stringify(downloaded.value));
+  } catch {
+    // Stockage refusé : la coche tient jusqu'au rechargement.
+  }
+}
 function downloadAll(): void {
   attachRow.value?.querySelectorAll<HTMLAnchorElement>("a[download]").forEach((link) => link.click());
 }
@@ -1115,18 +1137,28 @@ onMounted(() => void load());
                   v-if="currentLetterId"
                   :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
                   download
+                  :aria-label="downloaded.includes(`lettre-${currentLetterId}`) ? 'Lettre.pdf, téléchargée' : undefined"
                   data-test="sheet-letter"
+                  @file-done="markDownloaded(`lettre-${currentLetterId}`)"
                 ><AppIcon name="file" />Lettre.pdf<AppIcon
-                  v-if="!phone"
+                  v-if="downloaded.includes(`lettre-${currentLetterId}`)"
+                  name="done"
+                /><AppIcon
+                  v-else-if="!phone"
                   name="download"
                 /></a>
                 <a
                   v-if="currentCvId"
                   :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
                   download
+                  :aria-label="downloaded.includes(`cv-${currentCvId}`) ? 'CV.pdf, téléchargé' : undefined"
                   data-test="sheet-cv"
+                  @file-done="markDownloaded(`cv-${currentCvId}`)"
                 ><AppIcon name="file" />CV.pdf<AppIcon
-                  v-if="!phone"
+                  v-if="downloaded.includes(`cv-${currentCvId}`)"
+                  name="done"
+                /><AppIcon
+                  v-else-if="!phone"
                   name="download"
                 /></a>
               </PrepCertificates>
@@ -2266,6 +2298,7 @@ onMounted(() => void load());
 .apply-card .apply-files { display: flex; flex: 1; flex-wrap: wrap; gap: var(--space-3); }
 .apply-card .apply-files > a { min-height: var(--apply-40); font-size: var(--apply-15); border-radius: var(--radius-pill); }
 .apply-card .apply-files .icon-download { color: var(--primary-text); }
+.apply-card .apply-files .icon-done { color: var(--ok-text); }
 .apply-card .apply-attach > .hint { order: 1; flex-basis: 100%; margin: 0; }
 .apply-all { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--apply-40); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--apply-15); font-weight: var(--weight-bold); cursor: pointer; }
 .apply-all:hover { background: var(--selected-bg); }

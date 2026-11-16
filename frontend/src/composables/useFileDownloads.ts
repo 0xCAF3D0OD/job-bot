@@ -71,6 +71,8 @@ export async function download(link: HTMLAnchorElement): Promise<void> {
     const blob = await response.blob();
     save(blob, fileName(response.headers.get("content-disposition"), href));
     mark(link, "done", fileSize(blob.size));
+    // Pour qui veut garder la trace du téléchargement (la coche de Postuler, PreparationView).
+    link.dispatchEvent(new CustomEvent("file-done"));
     setTimeout(() => link.dataset.file === "done" && mark(link, null), DONE_MS);
   } catch {
     mark(link, "failed");
