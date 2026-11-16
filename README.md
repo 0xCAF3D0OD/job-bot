@@ -58,7 +58,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 
 ## Limites de poids
 
-`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`). Quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe ; seule une PR qui l'alourdit reste bloquée (`frontend/scripts/poids-ci.sh`, décision de Kevin du 16.11).
+`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Le CSS a une limite par page (les 30 pages de l'application, décision de Kevin du 16.11), plus css-total comme garde-fou. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`). Quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe ; seule une PR qui l'alourdit reste bloquée (`frontend/scripts/poids-ci.sh`, décision de Kevin du 16.11).
 
 **Règle (Kevin, 15.11.2026)** : toute PR qui ajoute plus de 0,5 Ko de JS ou de CSS (gzip, total) le justifie dans sa description, avec le détail de ce qui pèse.
 
@@ -72,6 +72,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 | 16.11.2026 | JS total (gzip) | 428 780 o | 431 500 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, sans découpage ; mesuré : 431 252 o |
 | 15.11.2026 | CSS total (gzip) | 117 780 o | 118 780 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
 | 16.11.2026 | CSS total (gzip) | 118 780 o | 119 450 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, après l'allègement de #777 (−189 o) ; mesuré : 119 403 o |
+| 16.11.2026 | CSS total (gzip) | 119 450 o | 123 100 o | refixé une fois avec les limites de CSS par page (issue #797) : main 119 581 o + 3 % ; chaque page a sa limite, voir docs/performance.md |
 
 ## Pour aller plus loin
 

@@ -14,12 +14,13 @@ La limite porte sur **gzip** pour le JavaScript et le CSS. Pour les **images**, 
 
 | Mesure | Ce qu'elle compte |
 |---|---|
-| `js-premier`, `css-premier` | ce que charge le premier écran : l'application et Aujourd'hui |
+| `js-premier` | ce que charge le premier écran : l'application et Aujourd'hui |
 | `js-total`, `css-total` | tout le code, tout le CSS |
-| `js-accueil`, `css-accueil` | Aujourd'hui (`TodayView`) |
+| `js-accueil`, `css-accueil` | Aujourd'hui (`TodayView`), donc aussi le CSS du premier écran |
 | `js-candidatures`, `css-candidatures` | Candidatures › Offres (`JobsView` + `OffersView`) |
 | `js-bilan`, `css-bilan` | Bilan › ORP (`BilanView` + `BilanOrpView`) |
 | `js-compte`, `css-compte` | Compte (`AccountView`) |
+| `css-<page>` | le CSS de chacune des 30 pages de l'application (`CSS_PAGES` dans `poids.mjs`), voir « Le CSS page par page » |
 | `images` | toutes les images servies (`dist/`, donc `public/` et les images importées par le code) |
 
 Une page compte l'application et tout ce que sa vue importe d'emblée. Les fenêtres et les sous-pages chargées plus tard n'y sont pas.
@@ -55,6 +56,49 @@ Le 14 novembre 2026, js-total passe à 425,0 Ko (décision de Kevin) : main mesu
 Le 15 novembre 2026 (#722, liaison carte → détail sur Candidatures ordinateur), css-total passe à 116,0 Ko et js-total à 426,0 Ko, une seule fois (décision de Kevin). Mesures avec main et #721 : 115,5 Ko et 425,4 Ko. Le CSS mort avait déjà été retiré par #720. Pas de nouveau relèvement automatique : une PR qui dépasse s'arrête, et on dit à Kevin de combien et pourquoi avant de toucher à une limite.
 
 Le 15 novembre 2026 (#726, ticket #664), css-total passe à 117,0 Ko et css-candidatures à 69,0 Ko, une seule fois (décision de Kevin : « liaison, code jobup, sous-pages téléphone ; #726 a tout tenté côté CSS »). Mesures sur main + #722 + #724 + #723 + #725 : 116,7 Ko et 68,3 Ko. Les pistes CSS essayées sont dans « Regrouper ce qui se charge ensemble » ; le thème Auto posé par le JS et le regroupement des composants de Candidatures sont écartés, parce qu'ils dégradent l'écran ou d'autres pages. Pas de nouveau relèvement automatique.
+
+## Le CSS page par page (16.11.2026)
+
+Décision de Kevin du 16 novembre 2026 (issue #797, `docs/decisions/2026-11-16-1510-css-limites-par-page.md`) : le CSS a une limite **par page**. On ne charge pas tout le CSS d'un coup, seulement celui de la page qu'on ouvre ; c'est lui qui ralentit vraiment l'écran. Chaque page de `router.ts` est mesurée : le socle de l'application, plus le CSS de sa vue et de sa page parente (Candidatures, Bilan). Une vue qui n'est dans aucune page fait échouer le budget : une nouvelle page reçoit sa limite dans la PR qui la crée.
+
+Chaque limite vaut le CSS de la page sur main le 16.11 (après #796), + 3 %, arrondi à la centaine d'octets inférieure. `css-total` est refixé une seule fois de la même façon, à 123,1 Ko (119 581 o + 3 %). Il ne sert plus que de garde-fou. `css-premier` disparaît : c'était la même mesure que `css-accueil`.
+
+| Page | Vue(s) | gzip le 16.11 | Limite |
+|---|---|---:|---:|
+| css-accueil | `TodayView` | 58,9 Ko | 60,6 Ko |
+| css-trier | `TriageView` | 62,0 Ko | 63,8 Ko |
+| css-candidatures | `JobsView` + `OffersView` | 69,1 Ko | 71,1 Ko |
+| css-preparer | `PreparationView` | 67,2 Ko | 69,2 Ko |
+| css-suivi | `JobsView` + `ApplicationsView` | 70,1 Ko | 72,2 Ko |
+| css-alertes | `JobsView` + `AlertsView` | 60,0 Ko | 61,8 Ko |
+| css-rendez-vous-orp | `JobsView` + `OrpMeetingView` | 63,2 Ko | 65,0 Ko |
+| css-relances | `FollowUpsView` | 57,5 Ko | 59,1 Ko |
+| css-bilan | `BilanView` + `BilanOrpView` | 59,2 Ko | 60,9 Ko |
+| css-resultats | `BilanView` + `InsightsView` | 57,2 Ko | 58,9 Ko |
+| css-formations | `BilanView` + `TrainingsView` | 58,1 Ko | 59,8 Ko |
+| css-fiche-orp | `OrpFicheView` | 58,7 Ko | 60,4 Ko |
+| css-entrainement | `PracticeView` | 58,1 Ko | 59,8 Ko |
+| css-notifications | `NotificationsView` | 59,3 Ko | 61,1 Ko |
+| css-compte | `AccountView` | 57,5 Ko | 59,2 Ko |
+| css-profil | `ProfileView` | 61,3 Ko | 63,1 Ko |
+| css-reglages | `SettingsView` | 58,7 Ko | 60,4 Ko |
+| css-diagnostic | `DiagnosticView` | 56,2 Ko | 57,9 Ko |
+| css-connexion | `LoginView` | 58,0 Ko | 59,7 Ko |
+| css-inscription | `SignupView` | 56,6 Ko | 58,2 Ko |
+| css-acces | `AccessView` | 56,6 Ko | 58,2 Ko |
+| css-bienvenue | `WelcomeView` | 63,6 Ko | 65,4 Ko |
+| css-getemall | `GetemallAuthorizeView` | 57,3 Ko | 59,0 Ko |
+| css-extension | `ExtensionLinkView` | 56,2 Ko | 57,9 Ko |
+| css-la-plateforme | `DiscoverView` | 56,2 Ko | 57,9 Ko |
+| css-tes-donnees | `PrivacyView` | 56,5 Ko | 58,1 Ko |
+| css-accessibilite | `AccessibilityView` | 56,2 Ko | 57,9 Ko |
+| css-conditions | `TermsView` | 56,2 Ko | 57,9 Ko |
+| css-a-propos | `AboutView` | 56,2 Ko | 57,9 Ko |
+| css-introuvable | `NotFoundView` | 57,2 Ko | 58,9 Ko |
+
+Le socle commun à toutes les pages (l'application seule) pèse 56,2 Ko ; une page sans CSS propre (À propos, Conditions…) pèse exactement le socle. Une règle ajoutée à `style.css` compte donc sur toutes les pages à la fois, une règle d'un composant ne compte que sur les pages qui le chargent.
+
+Pas de coupe de contenu pour gagner du poids (Kevin, 16.11). Une PR qui dépasse la limite d'une page s'arrête et dit de combien ; la limite ne se relève qu'avec l'accord de Kevin.
 
 Les « 93 Ko » de l'ancien budget étaient la taille **gzip** de tout le CSS. Il pesait alors 92,2 Ko : 484,3 Ko bruts, 75,7 Ko en brotli.
 

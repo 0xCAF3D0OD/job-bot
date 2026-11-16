@@ -1,13 +1,13 @@
 // Le budget de poids (docs/performance.md, docs/117 §3). Après `vite build`, le script mesure :
 //   - le JavaScript : le premier écran (l'application et Aujourd'hui), tout le code, et page par page ;
-//   - le CSS : le premier écran, tout le CSS, et page par page (Accueil, Candidatures, Bilan, Compte) ;
+//   - le CSS : tout le CSS, et chaque page de l'application une à une (CSS_PAGES, limites par page du 16.11) ;
 //   - les images servies (dist/) : leur poids total, et les illustrations toutes en WebP (ou SVG).
 // Chaque taille est donnée brute, en gzip et en brotli. La limite porte sur gzip pour le code et le CSS (ce que le
 // serveur envoie : Caddy compresse en zstd ou gzip), sur le poids brut pour les images (déjà compressées).
 // Au-delà d'une limite, le script échoue et dit quels fichiers pèsent le plus.
 //
 //     npm run poids                      (construit, puis mesure)
-//     node scripts/poids.mjs --releve    (après un build : les limites à + 5 % des tailles d'aujourd'hui)
+//     node scripts/poids.mjs --releve    (après un build : les limites à + 5 % des tailles d'aujourd'hui, + 3 % pour le CSS)
 //     node scripts/poids.mjs --dist D --json F   (mesure le build D, écrit les tailles dans F ; scripts/poids-delta.sh)
 //     node scripts/poids.mjs --base F    (F : les tailles de main ; scripts/poids-ci.sh, voir plus bas)
 //
@@ -34,21 +34,84 @@ export const LIMITS = {
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
   "js-compte": 98_800,
-  "css-premier": 59_800,
-  "css-total": 119_450, // #764, #770 et #771 ensemble, après l'allègement de #777 (Kevin, 16.11 14 h 08 : une fois, 118 780 → 119 450 ; docs/decisions/2026-11-16-1408-releve-css-trois-pr.md)
-  "css-accueil": 59_800,
-  "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
-  "css-bilan": 62_400,
-  "css-compte": 61_200,
+  // Le CSS, page par page (Kevin, 16.11, issue #797 : docs/decisions/2026-11-16-1510-css-limites-par-page.md). Chaque
+  // limite est le CSS que charge la page sur main le 16.11, + 3 %, arrondi à la centaine d'octets inférieure.
+  // css-total, refixé une seule fois de la même façon, n'est plus qu'un garde-fou : ce qui compte, c'est la page ouverte.
+  "css-total": 123_100, // refixé une fois avec les limites par page (119 581 sur main le 16.11, + 3 %)
+  "css-accueil": 60_600, // le premier écran (l'ancien css-premier)
+  "css-trier": 63_800,
+  "css-candidatures": 71_100,
+  "css-preparer": 69_200,
+  "css-suivi": 72_200,
+  "css-alertes": 61_800,
+  "css-rendez-vous-orp": 65_000,
+  "css-relances": 59_100,
+  "css-bilan": 60_900,
+  "css-resultats": 58_900,
+  "css-formations": 59_800,
+  "css-fiche-orp": 60_400,
+  "css-entrainement": 59_800,
+  "css-notifications": 61_100,
+  "css-compte": 59_200,
+  "css-profil": 63_100,
+  "css-reglages": 60_400,
+  "css-diagnostic": 57_900,
+  "css-connexion": 59_700,
+  "css-inscription": 58_200,
+  "css-acces": 58_200,
+  "css-bienvenue": 65_400,
+  "css-getemall": 59_000,
+  "css-extension": 57_900,
+  "css-la-plateforme": 57_900,
+  "css-tes-donnees": 58_100,
+  "css-accessibilite": 57_900,
+  "css-conditions": 57_900,
+  "css-a-propos": 57_900,
+  "css-introuvable": 58_900,
   images: 4_893_100,
 };
 
-// Les pages mesurées une à une : la vue et ses sous-vues ouvertes par défaut (router.ts).
+// Les pages mesurées une à une pour le JS : la vue et ses sous-vues ouvertes par défaut (router.ts).
 const PAGES = {
   accueil: ["views/TodayView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"],
   bilan: ["views/BilanView.vue", "views/BilanOrpView.vue"],
   compte: ["views/AccountView.vue"],
+};
+
+// Les pages mesurées une à une pour le CSS : toutes les vues de router.ts, avec leur page parente (Candidatures,
+// Bilan). Une vue qui n'est dans aucune page fait échouer le budget : une nouvelle page reçoit sa limite.
+export const CSS_PAGES = {
+  accueil: ["views/TodayView.vue"], // le premier écran
+  trier: ["views/TriageView.vue"],
+  candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
+  preparer: ["views/PreparationView.vue"],
+  suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
+  alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
+  "rendez-vous-orp": ["views/JobsView.vue", "views/OrpMeetingView.vue"],
+  relances: ["views/FollowUpsView.vue"],
+  bilan: ["views/BilanView.vue", "views/BilanOrpView.vue"], // Bilan › ORP
+  resultats: ["views/BilanView.vue", "views/InsightsView.vue"],
+  formations: ["views/BilanView.vue", "views/TrainingsView.vue"],
+  "fiche-orp": ["views/OrpFicheView.vue"],
+  entrainement: ["views/PracticeView.vue"],
+  notifications: ["views/NotificationsView.vue"],
+  compte: ["views/AccountView.vue"],
+  profil: ["views/ProfileView.vue"],
+  reglages: ["views/SettingsView.vue"],
+  diagnostic: ["views/DiagnosticView.vue"],
+  connexion: ["views/LoginView.vue"],
+  inscription: ["views/SignupView.vue"],
+  acces: ["views/AccessView.vue"],
+  bienvenue: ["views/WelcomeView.vue"],
+  getemall: ["views/GetemallAuthorizeView.vue"],
+  extension: ["views/ExtensionLinkView.vue"],
+  "la-plateforme": ["views/DiscoverView.vue"],
+  "tes-donnees": ["views/PrivacyView.vue"],
+  accessibilite: ["views/AccessibilityView.vue"],
+  conditions: ["views/TermsView.vue"],
+  "a-propos": ["views/AboutView.vue"],
+  introuvable: ["views/NotFoundView.vue"],
 };
 
 // Les dossiers d'illustrations : WebP (ou SVG) seulement. Les icônes de l'application (favicon, écran d'accueil)
@@ -110,13 +173,19 @@ const images = walk(DIST).filter((file) => IMAGE.test(file));
 const groups = {
   "js-premier": jsOf(loaded(PAGES.accueil)),
   "js-total": allJs,
-  "css-premier": cssOf(loaded(PAGES.accueil)),
   "css-total": allCss,
   images,
 };
 for (const [page, paths] of Object.entries(PAGES)) {
   groups[`js-${page}`] = jsOf(loaded(paths));
-  groups[`css-${page}`] = cssOf(loaded(paths));
+}
+for (const [page, paths] of Object.entries(CSS_PAGES)) groups[`css-${page}`] = cssOf(loaded(paths));
+
+// Une limite sans page (une page retirée de CSS_PAGES) : le dire plutôt que planter.
+const orphans = Object.keys(LIMITS).filter((name) => !groups[name]);
+if (orphans.length) {
+  console.log(`TROP limites sans page : ${orphans.join(", ")} (à ajouter dans CSS_PAGES ou à retirer de LIMITS)`);
+  process.exit(1);
 }
 
 const kb = (bytes) => `${(bytes / 1000).toFixed(1)} Ko`;
@@ -130,7 +199,8 @@ if (arg("--json")) {
 
 if (process.argv.includes("--releve")) {
   for (const name of Object.keys(LIMITS)) {
-    console.log(`  "${name}": ${Math.floor((limited(name) * 1.05) / 100) * 100},`);
+    const margin = name.startsWith("css-") ? 1.03 : 1.05;
+    console.log(`  "${name}": ${Math.floor((limited(name) * margin) / 100) * 100},`);
   }
   process.exit(0);
 }
@@ -140,6 +210,15 @@ const base = arg("--base") ? JSON.parse(readFileSync(arg("--base"), "utf8")) : {
 const tolerated = (name, limit) => base[name] > limit && limited(name) <= base[name];
 
 let failed = false;
+// Toutes les vues du manifeste sont mesurées dans une page CSS.
+const inPages = new Set(Object.values(CSS_PAGES).flat());
+const unmeasured = Object.keys(manifest)
+  .map((key) => key.match(/src\/(views\/\w+\.vue)$/)?.[1])
+  .filter((view) => view && !inPages.has(view));
+if (unmeasured.length) {
+  failed = true;
+  console.log(`TROP vues sans limite de CSS : ${unmeasured.join(", ")} (à ajouter dans CSS_PAGES et LIMITS)`);
+}
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {
   const within = limited(name) <= limit;
