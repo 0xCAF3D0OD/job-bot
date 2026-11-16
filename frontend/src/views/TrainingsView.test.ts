@@ -337,9 +337,11 @@ describe("TrainingsView", () => {
   it("aucune suivie : l’état vide et « Voir le catalogue » (planche BilanFormationsVide)", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     const wrapper = await mountView("/formations");
+    // Planche BilanFormationsVide (§37 du 16.11) : scène « introuvable », pastille courte, « Voir le catalogue ».
     const none = wrapper.find("[data-test=trainings-none]");
-    expect(none.text()).toContain("Aucune formation suivie");
-    expect(none.text()).toContain("Garde-en une avec son signet");
+    expect(none.find(".empty-state-title").text()).toBe("Aucune formation suivie");
+    expect(none.find("[data-test=empty-pill]").text()).toBe("Garde-en une avec son signet");
+    expect(none.find(".empty-state-scene").exists()).toBe(true);
     expect(none.find("[data-test=trainings-none-catalog]").attributes("href")).toBe("/formations?onglet=catalogue");
   });
 
