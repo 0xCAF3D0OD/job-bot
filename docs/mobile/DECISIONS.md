@@ -210,3 +210,8 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 
 - Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
 - Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
+
+## Bilan ordinateur, menus ouverts et fiche sombre sans planche (Kevin, 16.11.2026, 9 h 00)
+
+- Les menus « Mois précédents » et « Autres exports » ouverts n'ont pas de planche : ils suivent les règles existantes, soit le style du menu ⋯ de la fiche d'offre (planche CandidaturesOrdinateurB : 280 px, --line, --radius-card, --shadow-menu, ouverture ja-pop), ouverts vers le haut.
+- La fiche « Pour l'ORP » en sombre n'a pas de planche : elle garde la palette sombre des autres panneaux (SidePanel commun). Capture dans la PR pour vérification.
