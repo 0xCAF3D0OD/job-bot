@@ -329,7 +329,7 @@ defineExpose({ restart: wait });
 .code-trail.telephone { --trail-w: 84px; --trail-name: calc(var(--font-caption) + 1px); --trail-note: var(--font-caption); --trail-pull: -14px; }
 .code-trail.waiting { margin: 0; padding: var(--space-4) var(--space-3) var(--trail-14); border: 1.5px solid var(--card-line); border-radius: var(--trail-16); }
 .code-trail-points { display: flex; align-items: flex-start; }
-.code-trail-point { flex: none; width: var(--trail-w); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.code-trail-point { flex: 0 1 var(--trail-w); min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .code-trail-point b { margin-top: var(--space-2); font-size: var(--trail-name); line-height: var(--trail-18); color: var(--text); }
 .code-trail-point > span:last-child { margin-top: var(--trail-2); font-size: var(--trail-note); line-height: var(--space-4); color: var(--text-secondary); }
 .code-trail-dot { width: var(--trail-dot); height: var(--trail-dot); box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
