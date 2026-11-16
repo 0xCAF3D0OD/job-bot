@@ -1,5 +1,6 @@
 // Les notes des cartes de l'éventail (Kevin, 15.11) : la forme courte de l'IA (score-v9) quand elle tient en 28
-// caractères ; sinon le texte complet, que l'éventail coupe à 2 lignes. La note entière reste dans le nom du bouton.
+// caractères ; sinon le texte complet, que l'éventail coupe à 1 ligne avec « … » (16.11). La note entière reste
+// dans le nom du bouton.
 import { mount, RouterLinkStub } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
