@@ -1256,7 +1256,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .orp-month-rows,
 .setting-cards,
 .bilan-interviews,
-.training-mine,
 .training-kept,
 .prep-revise { display: grid; gap: var(--space-3); }
 .alerts-panel .section-title.first { margin-top: 0; }
@@ -4479,13 +4478,9 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 /* Bilan › Formations (maquette Explorer, onglet Formations ; B15 à B19) : Catalogue · Suivies soulignés, l'encadré
    du financement, les puces, les formations en lignes dans une carte par groupe ; Suivies en cartes.
    Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
-.trainings-tabs { display: flex; gap: var(--space-5); padding: 0 var(--space-1); border-bottom: 1px solid var(--line); }
-.trainings-tabs a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); margin-bottom: -1px; border-bottom: 3px solid transparent; border-radius: 0; color: var(--text-secondary); font-weight: var(--weight-bold); text-decoration: none; }
-.trainings-tabs a.active { color: var(--text); border-bottom-color: var(--primary-graphic); }
-.trainings-tabs .tab-count { margin: 0; }
 .training-funding-note { display: flex; justify-content: flex-start; align-items: center; gap: var(--space-3); width: 100%; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--peach-soft); color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-funding-note > span:nth-child(2) { display: grid; flex: 1; gap: var(--space-1); }
-.training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-current-head span span, .training-kept li > span > span, .training-help { font-size: var(--font-small); color: var(--text-secondary); }
+.training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-kept li > span > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
 .training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
 .training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
@@ -4493,14 +4488,13 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
    (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
 .training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
 /* Formations gardées (lot 18, D29) : toute la ligne ouvre la formation, le cercle de 36 px en est la marque. */
-.training-see::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .training-section h2 { display: flex; justify-content: space-between; margin: 0; padding: 0 var(--space-1); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .training-section h2 span:last-child { font-weight: var(--weight-semibold); letter-spacing: 0; }
 .training-list li + li { border-top: 1px solid var(--line-soft); }
 .training-row-open { display: flex; flex: 1; justify-content: flex-start; align-items: center; gap: var(--space-3); min-width: 0; min-height: 0; padding: var(--space-3) 0 var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-row-icon { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); background: var(--peach-soft); color: var(--warning); }
 .training-row-icon.cert { background: var(--primary-soft); color: var(--primary-graphic); }
-.training-row-text, .training-current-head > span:last-child, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
+.training-row-text, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
 .training-row-text > strong { line-height: var(--leading-tight); }
 .training-row-tags { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
 .training-tag { padding: 0 var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); color: var(--text-tertiary); font-size: var(--font-caption); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
@@ -4510,22 +4504,14 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-keep.on { color: var(--primary-graphic); }
 .training-row-review { display: flex; flex: none; gap: var(--space-1); margin-right: var(--space-1); }
 .training-suggest { justify-content: center; width: 100%; min-height: var(--btn-secondary); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
-.training-current-head { display: flex; align-items: center; gap: var(--space-3); }
 .training-current-progress { margin: 0; font-weight: var(--weight-bold); }
-.training-current-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
-.training-current-actions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-4); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
-.training-current-actions a:hover { background: var(--primary-soft); }
-.training-current-actions .link { min-height: var(--target-min); font-size: var(--font-body); }
 .training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-.training-see { flex: none; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: none; }
-.training-help { margin: 0 var(--space-1); line-height: var(--leading-normal); }
 .training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
 .training-funding-sheet a { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--btn-tertiary); padding: 0 var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-bold); text-decoration: none; }
 .training-funding-sheet a span { flex: none; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 @media (min-width: 821px) {
   .training-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
-  .training-mine { max-width: 40rem; }
 }
 
 /* L'avancement par modules (B19, maquette Explorer › Formations › Suivies) : la ligne « Module 6 sur 12 · 50 % »,
