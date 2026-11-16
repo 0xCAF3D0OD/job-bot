@@ -285,8 +285,8 @@ async function declare(): Promise<void> {
 .orp-fiche-missing strong { display: block; font-size: var(--font-label); line-height: var(--space-5); color: var(--peach-text); }
 .orp-fiche-missing span { display: block; margin-top: var(--fw-2); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-tertiary); }
 .orp-fiche-wide .block-cap { margin: var(--space-6) 0 var(--space-1); }
-.orp-fiche-wide .block-field { gap: var(--space-4); min-height: 56px; padding: var(--fw-6) 0; box-sizing: border-box; border-top-color: var(--line); }
-.orp-fiche-wide .block-cap + .block-field { padding-top: var(--fw-6); }
+.orp-fiche-wide .block-field { gap: var(--space-4); min-height: 64px; padding: var(--fw-12) 0; box-sizing: border-box; border-top-color: var(--line); }
+.orp-fiche-wide .block-cap + .block-field { padding-top: var(--fw-12); }
 .orp-fiche-wide .block-field-label { line-height: var(--space-4); }
 .orp-fiche-wide .block-field-value { margin-top: var(--fw-2); line-height: var(--fw-22); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .orp-fiche-wide .block-field-value.block-field-none { font-weight: var(--weight-regular); }

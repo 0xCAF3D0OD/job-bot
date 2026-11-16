@@ -15329,11 +15329,11 @@
           "key": {
             "type": "string",
             "enum": [
-              "profile",
+              "cv",
+              "criteria",
               "alerts",
               "keep",
-              "prepare",
-              "sent"
+              "send"
             ],
             "title": "Key"
           },
@@ -15376,6 +15376,61 @@
         ],
         "title": "FirstStepsStats",
         "description": "Les premiers pas des comptes créés depuis 30 jours (docs/128 §4) : des nombres seulement."
+      },
+      "FirstStepsSummaryOut": {
+        "properties": {
+          "skills": {
+            "type": "integer",
+            "title": "Skills"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "min_rate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Rate"
+          },
+          "kept": {
+            "type": "integer",
+            "title": "Kept"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skills",
+          "trade",
+          "place",
+          "min_rate",
+          "kept"
+        ],
+        "title": "FirstStepsSummaryOut",
+        "description": "Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres\ngardées (16.11)."
       },
       "FocusIn": {
         "properties": {
@@ -24515,6 +24570,16 @@
             "type": "array",
             "title": "First Steps",
             "default": []
+          },
+          "first_steps_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FirstStepsSummaryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "first_steps_dismissed": {
             "type": "boolean",

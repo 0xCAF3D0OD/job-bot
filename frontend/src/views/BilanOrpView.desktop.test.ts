@@ -139,6 +139,25 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     expect(wrapper.findAll("[data-test^=orp-declare-]").filter((w) => w.element.tagName === "BUTTON" && !w.attributes("data-test")!.endsWith("more"))).toHaveLength(4);
     expect(wrapper.find("[data-test=orp-declare-more]").exists()).toBe(false);
     expect(wrapper.find("[data-test=orp-all]").exists()).toBe(false);
+    // Planche BilanOrdinateurMois (16.11) : « Replier le mois » et la carte du mois retirent ?tout=1.
+    const fold = wrapper.get("[data-test=orp-fold]");
+    expect(fold.text()).toBe("Replier le mois");
+    expect(fold.attributes("data-to")).toBe(JSON.stringify({ path: "/bilan", query: {} }));
+    const card = wrapper.get("[data-test=orp-goal]");
+    expect(card.attributes("aria-expanded")).toBe("true");
+    expect(card.attributes("aria-label")).toContain("Replier le mois");
+    expect(card.attributes("data-to")).toBe(JSON.stringify({ path: "/bilan", query: {} }));
+  });
+
+  it("« Mois précédents » ouvert : « À remettre » sur le mois à remettre, chevron du bouton (planche du 16.11)", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+    const trigger = wrapper.get("[data-test=orp-months]");
+    expect(trigger.find(".more-chevron").exists()).toBe(true);
+    await trigger.trigger("click");
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+    expect(wrapper.get("[data-test=orp-month-2026-10] .menu-note").text()).toBe("À remettre");
+    expect(wrapper.find("[data-test=orp-month-2026-09] .menu-note").exists()).toBe(false);
   });
 
   it("« Mois précédents » : un ancien mois s’affiche dans la même page, avec ses exports", async () => {

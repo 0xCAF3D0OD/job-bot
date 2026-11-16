@@ -4,11 +4,12 @@ import { ref } from "vue";
 // on retrouve l'onglet quitté. Gardée dans ce navigateur.
 const KEY = "jobbot-candidatures";
 const DEFAULT = "/candidatures/offres";
-// Pages jamais retenues : Mes alertes e-mail (lot 11.4), Préparer et Relances (Kevin, 13.11.2026). Sinon, sur
-// l'une d'elles, « Candidatures » dans le menu mène à la page déjà ouverte et le clic ne fait rien.
-const SKIPPED = /^\/candidatures\/(?:alertes|relances|offres\/\d+\/preparer)(?:[/?#]|$)/;
-// Depuis Préparer et Relances, le menu ramène toujours à la liste des offres.
-const TO_OFFERS = /^\/candidatures\/(?:relances|offres\/\d+\/preparer)(?:[/?#]|$)/;
+// Pages jamais retenues : Mes alertes e-mail (lot 11.4), Préparer et Relances (Kevin, 13.11.2026), Trier
+// (Kevin, 16.11.2026). Sinon, sur l'une d'elles, « Candidatures » dans le menu mène à la page déjà ouverte et le
+// clic ne fait rien ; pour Trier, il ramenait au tri déjà fait au lieu de la rubrique.
+const SKIPPED = /^\/candidatures\/(?:alertes|relances|trier|offres\/\d+\/preparer)(?:[/?#]|$)/;
+// Depuis Préparer, Relances et Trier, le menu ramène toujours à la liste des offres.
+const TO_OFFERS = /^\/candidatures\/(?:relances|trier|offres\/\d+\/preparer)(?:[/?#]|$)/;
 
 function read(): string {
   try {

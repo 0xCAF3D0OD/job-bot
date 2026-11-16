@@ -5480,7 +5480,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "profile" | "alerts" | "keep" | "prepare" | "sent";
+            key: "cv" | "criteria" | "alerts" | "keep" | "send";
             /** Done */
             done: boolean;
         };
@@ -5495,6 +5495,23 @@ export interface components {
             sent_within_week: number;
             /** Stopped At */
             stopped_at: number[];
+        };
+        /**
+         * FirstStepsSummaryOut
+         * @description Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+         *     gardées (16.11).
+         */
+        FirstStepsSummaryOut: {
+            /** Skills */
+            skills: number;
+            /** Trade */
+            trade: string | null;
+            /** Place */
+            place: string | null;
+            /** Min Rate */
+            min_rate: number | null;
+            /** Kept */
+            kept: number;
         };
         /**
          * FocusIn
@@ -8529,6 +8546,7 @@ export interface components {
              * @default []
              */
             first_steps: components["schemas"]["FirstStepsOut"][];
+            first_steps_summary?: components["schemas"]["FirstStepsSummaryOut"] | null;
             /**
              * First Steps Dismissed
              * @default false

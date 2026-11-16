@@ -42,7 +42,7 @@ const offer = (id: number, score: number) => ({
 // `behind` : le mois ORP en retard, la dose passe à 5.
 function day(restDay: boolean, behind: boolean) {
   return {
-    first_steps: ["profile", "alerts", "keep", "prepare", "sent"].map((key) => ({ key, done: true })),
+    first_steps: ["cv", "criteria", "alerts", "keep", "send"].map((key) => ({ key, done: true })),
     first_steps_dismissed: false,
     has_offers: true,
     to_review: 8,
