@@ -1,12 +1,14 @@
 """Les codes et les messages des sites (docs/112)."""
 
 import asyncio
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text
+from structlog.testing import capture_logs
 
 from jobbot import accounts
 from jobbot.api.app import create_app
@@ -261,6 +263,27 @@ async def test_last_code_route(clean: Runtime, mailbox: FakeMailbox, phone: Any)
 
 
 @pytest.mark.usefixtures("site_example")
+async def test_code_never_logged(
+    clean: Runtime, mailbox: FakeMailbox, phone: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Section 41 du paquet du 16.11 : le code de jobup n'apparaît jamais dans les logs, ni à la
+    relève de la boîte, ni quand la page le lit, ni quand elle demande la relève
+    (docs/regles-securite-donnees.md : aucune donnée personnelle dans les logs)."""
+    caplog.set_level(logging.DEBUG)
+    app = create_app(clean.settings, clean)
+    with capture_logs() as logs:
+        mailbox.add(_code_email("<log@x>", datetime.now(UTC)), "<log@x>")
+        with accounts.use(None):
+            await service.collect(clean)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+            assert (await api.get("/api/alert-searches/codes/last")).json()["code"] == "482913"
+            await api.post("/api/alert-searches/watch-code")
+            await api.get("/api/alert-searches")
+    assert logs, "la capture voit au moins le journal des requêtes"
+    assert "482913" not in repr(logs)
+    assert "482913" not in caplog.text
+
+
 async def test_site_messages(clean: Runtime, mailbox: FakeMailbox) -> None:
     mailbox.add(
         make_email(
