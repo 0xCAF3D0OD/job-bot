@@ -698,19 +698,24 @@ watch(viewMonth, () => void load());
 <style>
 /* Bilan › ORP sur téléphone (§37 du 16.11 ; HTML d'OrpMois) : les cartes de l'ordinateur à 68 px, 12/16, titre 16 ;
    pastille 12/700 de rayon 6 après l'entreprise ; deux pilules de 44 px à parts égales ; feuilles en lignes de 52. */
-.orp-phone { --bilan-card-h: 68px; --bilan-pad-y: 12px; --bilan-pad: 16px; --bilan-17: 16px; --bilan-bar: 8px; --bilan-lh-21: 21px; display: grid; gap: 22px; }
-.orp-phone .today-orp-card { gap: 12px; margin: 0; padding: 14px 16px; border: 1.5px solid var(--card-line); box-shadow: none; }
-.orp-phone .bilan-section-head h2 { font-size: 17px; }
+.orp-phone { --bilan-card-h: 68px; --bilan-pad-y: 12px; --bilan-pad: 16px; --bilan-17: 16px; --bilan-bar: 8px; --bilan-lh-21: 21px; --orp-h2: 17px; --orp-chip-r: 6px; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+.orp-phone .today-orp-card { gap: var(--space-3); margin: 0; padding: var(--space-4); border: 1.5px solid var(--card-line); box-shadow: none; }
+.orp-phone .orp-month-band, .orp-phone .bilan-section { gap: var(--space-2); }
+.orp-phone .bilan-card { gap: var(--space-3); }
+.orp-phone .bilan-card-what > span { margin-top: var(--space-1); }
+.orp-phone .bilan-section-head h2 { font-size: var(--orp-h2); }
 .orp-phone .bilan-card-what { font-size: var(--font-body); }
-.orp-phone-top { display: flex; gap: 8px; align-items: center; }
+.orp-phone-top { display: flex; gap: var(--space-2); align-items: center; }
 .orp-phone-top > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.orp-phone-chip { flex: none; padding: 3px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
+.orp-phone-chip { flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--orp-chip-r); font-size: var(--font-caption); white-space: nowrap; }
 .orp-phone-chip.todo { background: var(--peach-soft); color: var(--peach-text); }
 .orp-phone-chip.ok { background: var(--success-soft); color: var(--success); }
-.orp-phone-more { display: flex; gap: 8px; }
-.orp-phone-more > button { flex: 1; gap: 8px; height: var(--target-min); padding: 0 10px; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
-.orp-phone-sheet-list { margin: 0; padding: 0; list-style: none; }
-.orp-phone-sheet-list :is(button, a) { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 4px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font: inherit; font-weight: 500; text-decoration: none; }
+.orp-phone-more { display: flex; gap: var(--space-2); }
+.orp-phone-more > button { flex: 1; min-width: 0; gap: var(--space-2); height: var(--target-min); padding: 0 var(--space-2); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+/* À 320 px, les deux pilules gardent leur texte entier : l’icône part. */
+@media (max-width: 359px) { .orp-phone-more > button > .icon { display: none; } }
+.orp-phone-sheet-list { --orp-medium: 500; margin: 0; padding: 0; list-style: none; }
+.orp-phone-sheet-list :is(button, a) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 52px; padding: 0 var(--space-1); border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font: inherit; font-weight: var(--orp-medium); text-decoration: none; }
 .orp-phone-sheet-list :is(button, a) > span:first-of-type { flex: 1; text-align: left; }
 .orp-phone-sheet-list .icon { width: 20px; height: 20px; color: var(--text-secondary); }
 </style>
