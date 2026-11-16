@@ -64,6 +64,9 @@ QUIET_KINDS = frozenset(
         "orp_target",
         "first_alert",
         "rhythm_week",
+        # Une réponse d'entreprise transférée (docs/146) : la cloche la garde ; le téléphone
+        # attend le prochain jour de recherche.
+        "employer_reply",
     }
 )
 
