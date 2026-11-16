@@ -741,7 +741,7 @@ onMounted(() => void load());
    icône, titre sur une ligne, « organisme · format » et le prix en pastille, signet rond de 44 px. */
 @media (max-width: 820px) {
   .trainings { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-13: 0.8125rem; --td-17: 1.0625rem; --td-chip-r: 6px; }
-  .trainings-overview { gap: var(--space-6); }
+  .trainings-overview { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
   .training-orp-card { gap: var(--space-3); width: 100%; padding: var(--space-4); color: var(--text); font: inherit; font-weight: var(--weight-regular); text-align: left; }
   .training-orp-card strong { font-size: var(--tw-15); }
   .training-orp-card > span > span { font-size: var(--tw-13); }
@@ -751,7 +751,7 @@ onMounted(() => void load());
   .training-block-list > li, .trainings .training-list { overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .training-block-list > li + li { border-top: 1.5px solid var(--card-line); }
   .training-now { gap: 0; padding: var(--space-4); }
-  .training-now-head strong, .training-kept-text strong, .training-row-text > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .training-now-head strong, .training-kept-text strong, .training-row-text > strong { overflow-wrap: anywhere; }
   .training-now-open > span { margin-top: var(--space-1); }
   .training-now .training-modules { grid-template-columns: 1fr; row-gap: var(--space-2); margin-top: var(--space-3); }
   .training-now .training-modules-line { grid-row: 2; grid-column: 1; }
