@@ -634,3 +634,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.420 | Notifications : « Comment s'est passé ton entretien ? » ouvre la candidature et « Faire le point » directement | livrée |
 | 1.6.421 | La comparaison des notes score-v7 et score-v8 se lance sur le serveur depuis le Mac (make prod-comparer-notes) | livrée |
 | 1.6.422 | « Voir la compatibilité » en bleu sur l'offre provisoire, comme partout | livrée |
+| 1.6.423 | Les décisions de Kevin, un fichier par décision dans docs/decisions/, assemblées dans docs/mobile/DECISIONS.md sur main après chaque fusion : plus de conflit entre PR sur la fin de DECISIONS.md | livrée |
+| 1.6.424 | La tâche « Envoyer N candidatures » d'Aujourd'hui notée comme fonction manquante (décision de Kevin du 16.11) | livrée |
