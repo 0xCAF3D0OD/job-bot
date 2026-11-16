@@ -1,0 +1,1 @@
+Premiers pas, étape 2 « Quel travail cherches-tu ? » : un seul bloc Postes, Lieu, Taux avec « Modifier », pastille « Depuis ton CV », langues avec icône (§41 du 16.11)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
@@ -11,10 +11,9 @@ import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
+import WelcomeCriteria from "../components/WelcomeCriteria.vue";
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
-import SidePanel from "../components/SidePanel.vue";
-import TagInput from "../components/TagInput.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
 import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -99,19 +98,13 @@ const skills = computed(() =>
 // Étape 3, les critères.
 const roles = ref<string[]>([]);
 const picked = ref<string[]>([]);
-const newRole = ref("");
-// « + Ajouter » (maquette Onboarding) : le champ d'un poste s'ouvre sur demande quand le CV en a déjà proposé.
-const adding = ref(false);
 const places = ref<string[]>([]);
 const orp = ref(true);
 const target = ref(10);
 // Le taux minimum (OnboardingOrdinateurEtape2, carte « Taux d'activité ») : celui du CV s'il le dit, sinon peu importe.
 const rate = ref<number | null>(null);
-const RATES = [null, 50, 60, 70, 80, 90, 100] as const;
-const rateLabel = (value: number | null): string => (value ? `${value} à 100\u202F%` : "Peu importe");
-// Le panneau ouvert par une carte de critère (Postes, Lieux, Taux d'activité).
-const editing = ref<"" | "roles" | "places" | "rate">("");
-const EDIT_TITLES = { roles: "Postes", places: "Lieux", rate: "Taux d’activité" } as const;
+// Le bloc des critères (WelcomeCriteria, section 41) : ses panneaux de modification et le poste tapé sans « + ».
+const criteriaBlock = ref<InstanceType<typeof WelcomeCriteria> | null>(null);
 const rolesFromCv = computed(() => !!understanding.value?.roles.length);
 // « Repris de ton CV » seulement si la lecture a vraiment repris quelque chose (test du 10 novembre : le CV
 // enregistré mais pas lu affichait quand même « Pré-rempli depuis ton CV »).
@@ -359,25 +352,6 @@ function saveChunks(): void {
   }
 }
 
-function toggleRole(role: string): void {
-  if (picked.value.includes(role)) picked.value = picked.value.filter((r) => r !== role);
-  else if (picked.value.length < MAX_ROLES) picked.value = [...picked.value, role];
-}
-
-function openAdd(): void {
-  adding.value = true;
-  void nextTick(() => document.getElementById("welcome-role")?.focus());
-}
-
-function addRole(): void {
-  const role = newRole.value.trim().slice(0, 80);
-  newRole.value = "";
-  if (!role) return;
-  if (!roles.value.some((r) => r.toLowerCase() === role.toLowerCase())) roles.value = [...roles.value, role];
-  const same = roles.value.find((r) => r.toLowerCase() === role.toLowerCase())!;
-  if (!picked.value.includes(same) && picked.value.length < MAX_ROLES) picked.value = [...picked.value, same];
-}
-
 // Les langues que le CV mentionne : « Courant » au départ, à corriger à l'étape 2 (PR 17).
 const cvLanguages = computed(() => understanding.value?.languages ?? []);
 
@@ -386,13 +360,13 @@ const cvLanguages = computed(() => understanding.value?.languages ?? []);
 // découlent).
 // Un poste tapé sans le « + » compte aussi : le bouton bleu est celui qu'on presse (2026-11-05, Kevin).
 async function confirmCriteria(): Promise<void> {
-  if (newRole.value.trim()) addRole();
+  criteriaBlock.value?.flush();
   if (criteria.value) {
     criteria.value = {
       ...criteria.value,
       locations: places.value,
-      // Sur ordinateur, le taux se choisit dans sa carte ; sur téléphone, peu importe (O1).
-      min_rate: desk.value ? rate.value : null,
+      // Le taux se choisit dans sa ligne, sur ordinateur comme sur téléphone (section 41).
+      min_rate: rate.value,
       remote_policy: "from_switzerland",
       // « Non renseigné » n'écarte jamais une offre (PR 17) : plus de langue écartée d'office.
       language_levels: levelsForm.value?.levels ?? languageLevels.value ?? criteria.value.language_levels ?? {},
@@ -624,7 +598,7 @@ async function finish(to: string): Promise<void> {
             v-else-if="step === 2"
             class="wdk-title"
           >
-            Tes critères
+            Quel travail cherches-tu ?
           </h1>
           <h1
             v-else-if="step === 3"
@@ -780,115 +754,22 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 2">
             <p class="wdk-lead">
-              {{ fromCv ? "Repris de ton CV. Vérifie-les, tu pourras les changer à tout moment dans Profil." : cvUnread ? "Ton CV n’a pas pu être lu : indique-les ici, tu pourras les changer à tout moment dans Profil." : "Tu pourras les changer à tout moment dans Profil." }}
+              {{ fromCv ? "jobA1 a rempli ces critères avec ton CV. Vérifie-les et modifie-les si besoin. Tu pourras aussi les changer plus tard dans Profil." : cvUnread ? "Ton CV n’a pas pu être lu : indique-les ici, tu pourras les changer plus tard dans Profil." : "Tu pourras les changer plus tard dans Profil." }}
             </p>
-            <ul class="wdk-rows">
-              <li>
-                <button
-                  type="button"
-                  class="wdk-row"
-                  aria-haspopup="dialog"
-                  data-test="criteria-roles"
-                  @click="editing = 'roles'"
-                >
-                  <span class="wdk-row-text">
-                    <span class="wdk-row-key">Postes</span>
-                    <span class="wdk-row-value">{{ reading && !picked.length ? "Lecture du CV…" : picked.join(", ") || "À choisir" }}</span>
-                    <span
-                      v-if="rolesFromCv"
-                      class="wdk-tag"
-                    ><AppIcon name="tick" />Trouvé dans ton CV</span>
-                  </span>
-                  <span
-                    class="arrow-circle small"
-                    aria-hidden="true"
-                  ><AppIcon name="arrow-right" /></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  class="wdk-row"
-                  aria-haspopup="dialog"
-                  data-test="criteria-places"
-                  @click="editing = 'places'"
-                >
-                  <span class="wdk-row-text">
-                    <span class="wdk-row-key">Lieux</span>
-                    <span class="wdk-row-value">{{ places.join(", ") || "Toute la Suisse" }}</span>
-                  </span>
-                  <span
-                    class="arrow-circle small"
-                    aria-hidden="true"
-                  ><AppIcon name="arrow-right" /></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  class="wdk-row"
-                  aria-haspopup="dialog"
-                  data-test="criteria-rate"
-                  @click="editing = 'rate'"
-                >
-                  <span class="wdk-row-text">
-                    <span class="wdk-row-key">Taux d’activité</span>
-                    <span class="wdk-row-value">{{ reading && rate === null ? "Lecture du CV…" : rateLabel(rate) }}</span>
-                    <span
-                      v-if="rateFromCv"
-                      class="wdk-tag"
-                    ><AppIcon name="tick" />Trouvé dans ton CV</span>
-                  </span>
-                  <span
-                    class="arrow-circle small"
-                    aria-hidden="true"
-                  ><AppIcon name="arrow-right" /></span>
-                </button>
-              </li>
-            </ul>
-            <div class="wdk-card wdk-orp">
-              <label class="wdk-orp-row">
-                <span><b>Je suis inscrit à l’ORP</b><span>jobA1 tient le suivi de tes recherches</span></span>
-                <input
-                  v-model="orp"
-                  type="checkbox"
-                  role="switch"
-                  data-test="orp-switch"
-                >
-              </label>
-              <div
-                v-if="orp"
-                class="wdk-orp-row"
-              >
-                <span id="welcome-target"><b>Recherches par mois</b><span>Objectif fixé avec ta conseillère</span></span>
-                <button
-                  type="button"
-                  class="wdk-stepper"
-                  aria-label="Une de moins"
-                  :disabled="target <= 1"
-                  data-test="target-minus"
-                  @click="target = Math.max(1, target - 1)"
-                >
-                  −
-                </button>
-                <output
-                  class="wdk-target"
-                  aria-live="polite"
-                  aria-labelledby="welcome-target"
-                  data-test="target"
-                >{{ target }}</output>
-                <button
-                  type="button"
-                  class="wdk-stepper"
-                  aria-label="Une de plus"
-                  :disabled="target >= 99"
-                  data-test="target-plus"
-                  @click="target = Math.min(99, target + 1)"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            <WelcomeCriteria
+              ref="criteriaBlock"
+              v-model:roles="roles"
+              v-model:picked="picked"
+              v-model:places="places"
+              v-model:rate="rate"
+              v-model:orp="orp"
+              v-model:target="target"
+              :desk="desk"
+              :reading="reading"
+              :roles-from-cv="rolesFromCv"
+              :rate-from-cv="rateFromCv"
+              :max-roles="MAX_ROLES"
+            />
             <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
             <ProfileCompletionForm
               v-if="understanding"
@@ -917,102 +798,6 @@ async function finish(to: string): Promise<void> {
                 Continuer
               </button>
             </div>
-            <SidePanel
-              :open="editing !== ''"
-              :title="editing ? EDIT_TITLES[editing] : ''"
-              @close="editing = ''"
-            >
-              <div
-                v-if="editing === 'roles'"
-                class="wdk-panel"
-              >
-                <p class="wdk-panel-note">
-                  Trois postes au plus.
-                </p>
-                <div
-                  class="welcome-roles"
-                  data-test="roles"
-                >
-                  <button
-                    v-for="role in roles"
-                    :key="role"
-                    type="button"
-                    :class="['chip', 'welcome-role', { on: picked.includes(role) }]"
-                    :aria-pressed="picked.includes(role)"
-                    :aria-disabled="!picked.includes(role) && picked.length >= MAX_ROLES ? 'true' : undefined"
-                    @click="toggleRole(role)"
-                  >
-                    <AppIcon
-                      v-if="picked.includes(role)"
-                      name="check"
-                    />{{ role }}
-                  </button>
-                </div>
-                <div class="tag-add">
-                  <input
-                    id="welcome-role"
-                    v-model="newRole"
-                    type="text"
-                    maxlength="80"
-                    placeholder="Ajouter un poste"
-                    aria-label="Ajouter un poste"
-                    data-test="role-input"
-                    @keydown.enter.prevent="addRole"
-                  >
-                  <IconButton
-                    icon="plus"
-                    label="Ajouter"
-                    data-test="role-add"
-                    @click="addRole"
-                  />
-                </div>
-              </div>
-              <div
-                v-else-if="editing === 'places'"
-                class="wdk-panel"
-              >
-                <label
-                  for="welcome-place"
-                  class="wdk-panel-note"
-                >Une ville ou un canton, autant que tu veux.</label>
-                <TagInput
-                  id="welcome-place"
-                  v-model="places"
-                  placeholder="Une ville ou un canton"
-                />
-              </div>
-              <fieldset
-                v-else-if="editing === 'rate'"
-                class="wdk-panel wdk-rates"
-              >
-                <legend class="visually-hidden">
-                  Taux d’activité minimum
-                </legend>
-                <label
-                  v-for="value in RATES"
-                  :key="String(value)"
-                  class="wdk-rate"
-                >
-                  <input
-                    v-model="rate"
-                    type="radio"
-                    name="welcome-rate"
-                    :value="value"
-                  >
-                  {{ rateLabel(value) }}
-                </label>
-              </fieldset>
-              <template #footer>
-                <button
-                  type="button"
-                  class="primary wdk-panel-done"
-                  data-test="criteria-done"
-                  @click="editing = ''"
-                >
-                  OK
-                </button>
-              </template>
-            </SidePanel>
           </template>
 
           <!-- Section 15 du paquet du 15.11 : plus de phrase sous le titre ; l'étape « Recopie le code de jobup ». -->
@@ -1364,117 +1149,22 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 2">
             <p class="welcome-lead">
-              {{ fromCv ? "Pré-rempli depuis ton CV. Modifiable à tout moment dans Compte." : cvUnread ? "Ton CV n’a pas pu être lu : indique tes postes et tes lieux. Modifiable à tout moment dans Compte." : "Modifiable à tout moment dans Compte." }}
+              {{ fromCv ? "jobA1 a rempli ces critères avec ton CV. Vérifie-les et modifie-les si besoin." : cvUnread ? "Ton CV n’a pas pu être lu : indique tes postes et tes lieux. Modifiable à tout moment dans Compte." : "Modifiable à tout moment dans Compte." }}
             </p>
-            <fieldset class="welcome-field">
-              <legend>Postes</legend>
-              <div
-                class="welcome-roles"
-                data-test="roles"
-              >
-                <button
-                  v-for="role in roles"
-                  :key="role"
-                  type="button"
-                  :class="['chip', 'welcome-role', { on: picked.includes(role) }]"
-                  :aria-pressed="picked.includes(role)"
-                  :aria-disabled="!picked.includes(role) && picked.length >= MAX_ROLES ? 'true' : undefined"
-                  @click="toggleRole(role)"
-                >
-                  <AppIcon
-                    v-if="picked.includes(role)"
-                    name="check"
-                  />{{ role }}
-                </button>
-                <button
-                  v-if="roles.length && !adding"
-                  type="button"
-                  class="chip welcome-role welcome-role-add"
-                  data-test="role-open"
-                  @click="openAdd"
-                >
-                  <AppIcon name="plus" />Ajouter
-                </button>
-              </div>
-              <div
-                v-if="!roles.length || adding"
-                class="tag-add"
-              >
-                <input
-                  id="welcome-role"
-                  v-model="newRole"
-                  type="text"
-                  maxlength="80"
-                  placeholder="Ajouter un poste"
-                  aria-label="Ajouter un poste"
-                  data-test="role-input"
-                  @keydown.enter.prevent="addRole"
-                >
-                <IconButton
-                  icon="plus"
-                  label="Ajouter"
-                  data-test="role-add"
-                  @click="addRole"
-                />
-              </div>
-              <p
-                v-if="picked.length >= MAX_ROLES"
-                class="welcome-note"
-              >
-                Trois postes au plus.
-              </p>
-            </fieldset>
-            <div class="welcome-field">
-              <label
-                for="welcome-place"
-                class="welcome-label"
-              >Lieux</label>
-              <TagInput
-                id="welcome-place"
-                v-model="places"
-                placeholder="Une ville ou un canton"
-              />
-            </div>
-            <div class="welcome-orp">
-              <label class="welcome-orp-row">
-                <span><strong>Je suis inscrit à l’ORP</strong><small>Active le suivi de tes recherches</small></span>
-                <input
-                  v-model="orp"
-                  type="checkbox"
-                  role="switch"
-                  data-test="orp-switch"
-                >
-              </label>
-              <div
-                v-if="orp"
-                class="welcome-orp-row"
-              >
-                <span id="welcome-target"><strong>Recherches par mois</strong></span>
-                <button
-                  type="button"
-                  class="icon-button welcome-stepper"
-                  aria-label="Moins"
-                  data-test="target-minus"
-                  @click="target = Math.max(1, target - 1)"
-                >
-                  −
-                </button>
-                <output
-                  aria-live="polite"
-                  aria-labelledby="welcome-target"
-                  data-test="target"
-                >{{ target }}</output>
-                <button
-                  type="button"
-                  class="icon-button welcome-stepper"
-                  aria-label="Plus"
-                  data-test="target-plus"
-                  @click="target = Math.min(99, target + 1)"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            <WelcomeCriteria
+              ref="criteriaBlock"
+              v-model:roles="roles"
+              v-model:picked="picked"
+              v-model:places="places"
+              v-model:rate="rate"
+              v-model:orp="orp"
+              v-model:target="target"
+              :desk="desk"
+              :reading="reading"
+              :roles-from-cv="rolesFromCv"
+              :rate-from-cv="rateFromCv"
+              :max-roles="MAX_ROLES"
+            />
             <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
             <ProfileCompletionForm
               v-if="understanding"
@@ -1737,12 +1427,6 @@ async function finish(to: string): Promise<void> {
 .welcome-skills li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .welcome-privacy { display: flex; gap: var(--space-2); margin: auto 0 0; font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-secondary); }
 .welcome-privacy .icon { flex: none; width: 16px; height: 16px; margin-top: calc(var(--space-1) / 2); }
-.welcome-field { display: grid; gap: var(--space-3); margin: 0; padding: 0; border: 0; min-width: 0; }
-.welcome-field legend { margin-bottom: var(--space-3); }
-.welcome-roles { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.welcome-role.chip { min-height: var(--btn-compact); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-semibold); }
-.welcome-role .icon { width: 16px; height: 16px; }
-.welcome-role-add.chip { border: 1.5px dashed var(--field-border); background: transparent; color: var(--primary-text); }
 /* « Pas de CV à jour ? » et le « 1 » seul (maquette OnboardingC, étape 2). */
 .welcome-no-cv { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-4); background: transparent; border: 1.5px solid var(--field-border); border-radius: var(--radius-card); color: var(--text); text-align: left; white-space: normal; }
 .welcome-no-cv > span { flex: 1; display: grid; gap: var(--space-1); }
@@ -1754,15 +1438,10 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-hill { position: absolute; left: 0; bottom: 6px; width: 70%; height: 70px; fill: var(--primary-soft); }
 .welcome-cv-ground { position: absolute; left: var(--space-6); right: var(--space-2); bottom: 0; height: 10px; border-radius: var(--radius-sm); background: var(--surface-muted); }
 .welcome-cv-person { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
-.welcome-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
-.welcome-orp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
-.welcome-langs { margin-top: var(--space-8); }
-.welcome-orp-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3); }
-.welcome-orp-row + .welcome-orp-row { border-top: 1px solid var(--line-soft); }
-.welcome-orp-row > span { flex: 1; display: grid; gap: calc(var(--space-1) / 2); }
-.welcome-orp-row small { font-size: var(--font-small); color: var(--text-secondary); }
-.welcome-orp-row output { min-width: 28px; text-align: center; font-size: var(--title-sub); font-weight: var(--weight-bold); }
-.welcome-stepper { width: var(--target-min); height: var(--target-min); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); font-size: var(--title-sub); font-weight: var(--weight-semibold); }
+/* Section 41 : Langues 20 px sous le bloc ORP sur téléphone (16 + 4), 28 px sur ordinateur ; « Retour » 8 px sous « Ajouter une langue ». */
+.welcome-langs { margin-top: var(--space-1); }
+.wdk .welcome-langs { margin-top: var(--wdk-28); }
+.welcome-langs + .wdk-foot { margin-top: var(--space-2); }
 .welcome-offer { display: grid; gap: var(--space-3); padding: var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: 0 10px 30px rgba(27, 31, 42, 0.10); }
 .welcome-offer-head { display: flex; align-items: flex-start; justify-content: space-between; }
 .welcome-offer-title { display: grid; gap: var(--space-1); margin: 0; }
@@ -1852,26 +1531,6 @@ async function finish(to: string): Promise<void> {
 .wdk-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--wdk-44); padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); cursor: pointer; }
 .wdk-link .icon { width: var(--wdk-18); height: var(--wdk-18); }
 .wdk-back { height: var(--wdk-52); min-height: var(--wdk-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
-.wdk-rows { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--wdk-28) 0 0; padding: 0; list-style: none; }
-.wdk-row { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--wdk-72); padding: var(--wdk-row-pad) var(--wdk-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.wdk-row:hover { border-color: var(--primary-graphic); }
-.wdk-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
-.wdk-row-key { font-size: var(--wdk-13); line-height: var(--wdk-16); color: var(--text-secondary); }
-.wdk-row-value { margin-top: var(--space-1); font-size: var(--font-body); line-height: var(--wdk-22); font-weight: var(--weight-bold); }
-.wdk-tag { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
-.wdk-orp { margin-top: var(--space-4); padding-top: var(--wdk-orp-pad); padding-bottom: var(--wdk-orp-pad); }
-.wdk-orp-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--wdk-56); }
-.wdk-orp-row + .wdk-orp-row { border-top: 1px solid var(--line); }
-.wdk-orp-row > span:first-child { flex: 1; }
-.wdk-orp-row b { display: block; font-size: var(--font-body); line-height: var(--wdk-22); }
-.wdk-orp-row b + span { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
-.wdk-stepper { flex: none; display: grid; place-items: center; width: var(--wdk-40); height: var(--wdk-40); min-height: var(--wdk-40); padding: 0; border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-title); }
-.wdk-target { min-width: var(--space-8); text-align: center; font-size: var(--font-title); font-weight: var(--weight-heavy); }
-.wdk-panel { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: 0; border: 0; }
-.wdk-panel-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
-.wdk-rate { display: flex; align-items: center; gap: var(--space-3); min-height: var(--wdk-44); font-size: var(--font-body); cursor: pointer; }
-.wdk-rate input { width: var(--wdk-20); height: var(--wdk-20); margin: 0; accent-color: var(--primary-graphic); }
-.wdk-panel-done { width: 100%; }
 .wdk-offers { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--wdk-28) 0 0; padding: 0; list-style: none; }
 .wdk-offer { display: flex; align-items: center; gap: var(--space-4); padding-top: var(--wdk-row-pad); padding-bottom: var(--wdk-row-pad); }
 .wdk-offer-logo { flex: none; display: grid; place-items: center; width: var(--wdk-44); height: var(--wdk-44); border-radius: var(--wdk-radius-logo); background: var(--text); color: var(--surface); font-size: var(--font-label); font-weight: var(--weight-bold); }
