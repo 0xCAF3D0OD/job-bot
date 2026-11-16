@@ -23,11 +23,15 @@ const props = withDefaults(
     // `codeHelp` : le texte sous son titre, sur ordinateur ; pas de texte sur téléphone (planche OnboardingAlerteCode).
     code?: boolean;
     codeHelp?: string;
+    // Le trajet du code en 3 points (section 24 du paquet du 15.11) : les premiers pas et le panneau des Alertes
+    // (Kevin, 16.11 : la même boîte).
+    codeTrail?: "ordinateur" | "telephone";
   }>(),
   {
     mailbox: null,
     code: false,
     codeHelp: "",
+    codeTrail: undefined,
     addressHelp: "Elle est déjà copiée quand tu ouvres le site : colle-la dans le champ e-mail de l’alerte.",
     saveTitle: "",
   },
@@ -125,6 +129,7 @@ function copyOnOpen(): void {
           <JobupCodeBox
             ref="codeBox"
             :site-url="links[0]?.url ?? null"
+            :trail="codeTrail"
           />
         </div>
       </div>

@@ -366,6 +366,7 @@ function copyOnOpen(): void {
       :links="panelSiteLinks"
       :mailbox="page.mailbox"
       :code="site.slug === 'jobup'"
+      code-trail="ordinateur"
       code-help="jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici."
     />
     <template #footer>

@@ -72,12 +72,12 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     expect(wrapper.get("[data-test=code-box-value]").text()).toBe("731 205");
   });
 
-  it("10 minutes sans code : expiré, et plus de relecture", async () => {
+  it("10 minutes sans code : pas d’« expiré » (aucun code reçu), toujours en attente, plus de relecture", async () => {
     GET.mockResolvedValue({ data: null });
     const wrapper = mount(JobupCodeBox, { props: { siteUrl: "https://www.jobup.ch/" } });
     await flushPromises();
     await vi.advanceTimersByTimeAsync(10 * 60_000 + 5000);
-    expect(wrapper.get("[data-test=code-box]").text()).toContain("Code expiré");
+    expect(wrapper.get("[data-test=code-box]").text()).toBe("En attente du code de jobup…");
     const calls = GET.mock.calls.length;
     await vi.advanceTimersByTimeAsync(60_000);
     expect(GET.mock.calls.length).toBe(calls);
@@ -167,5 +167,88 @@ describe("Recopie le code de jobup (section 15 du paquet du 15.11)", () => {
     // Revenue à la normale, la relance reprend son rythme d'une par minute.
     await vi.advanceTimersByTimeAsync(30_000);
     expect(POST.mock.calls.length).toBe(asked + 1);
+  });
+
+  // Section 24 du paquet du 15.11 : le trajet du code en 3 points, sur l’étape des premiers pas.
+  const notes = (w: ReturnType<typeof mount>) =>
+    w.findAll(".code-trail-point").map((p) => [p.get("b").text(), p.get("span:last-child").text(), p.get(".code-trail-dot").classes()[1]]);
+
+  it("trajet, ordinateur : attente, 2 actif, ligne d’état et « Toujours rien ? » à 2 minutes ; puis reçu, 3 coches", async () => {
+    GET.mockResolvedValue({ data: null });
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: null, trail: "ordinateur" } });
+    await flushPromises();
+    const trail = wrapper.get("[data-test=code-trail]");
+    expect(trail.attributes("role")).toBe("status");
+    expect(trail.attributes("aria-live")).toBe("polite");
+    expect(wrapper.find("[data-test=code-box]").exists()).toBe(false);
+    expect(notes(wrapper)).toEqual([
+      ["jobup", "envoie le code", "todo"],
+      ["Ta boîte jobA1", "on écoute", "on"],
+      ["Cette page", "le code s’affiche", "todo"],
+    ]);
+    expect(trail.text()).toContain("Rien reçu pour l’instant. Valide l’alerte sur jobup, on vérifie toutes les 15 s.");
+    await vi.advanceTimersByTimeAsync(115_000);
+    expect(wrapper.find("[data-test=code-trail-late]").exists()).toBe(false);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(wrapper.get("[data-test=code-trail-late]").text()).toBe("Toujours rien ? Vérifie que l’adresse est bien collée dans jobup.");
+    GET.mockResolvedValue({ data: code(0) });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(notes(wrapper)).toEqual([
+      ["jobup", "code envoyé", "ok"],
+      ["Ta boîte jobA1", "code reçu", "ok"],
+      ["Cette page", "code affiché", "ok"],
+    ]);
+    expect(wrapper.get("[data-test=code-trail]").attributes("role")).toBeUndefined();
+    expect(wrapper.get("[data-test=code-box-value]").text()).toBe("482 913");
+    expect(wrapper.find("[data-test=code-trail-late]").exists()).toBe(false);
+  });
+
+  it("trajet, téléphone : « Boîte jobA1 », sans la fréquence ; 10 min sans code : en attente ; code périmé : 3 en alerte", async () => {
+    GET.mockResolvedValue({ data: null });
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: "https://www.jobup.ch/", trail: "telephone" } });
+    await flushPromises();
+    expect(notes(wrapper)[1]).toEqual(["Boîte jobA1", "on écoute", "on"]);
+    expect(notes(wrapper)[2]).toEqual(["Cette page", "s’affiche ici", "todo"]);
+    expect(wrapper.get(".code-trail-status").text()).toBe("Rien reçu pour l’instant. Valide l’alerte sur jobup.");
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    // Aucun code reçu : pas d'état inventé, l'attente reste avec son aide (Kevin, 16.11).
+    expect(notes(wrapper)).toEqual([
+      ["jobup", "envoie le code", "todo"],
+      ["Boîte jobA1", "on écoute", "on"],
+      ["Cette page", "s’affiche ici", "todo"],
+    ]);
+    expect(wrapper.find("[data-test=code-trail-late]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=code-box]").exists()).toBe(false);
+    // Un code reçu puis périmé : « Code expiré ».
+    await wrapper.vm.restart();
+    GET.mockResolvedValue({ data: code(0) });
+    await vi.advanceTimersByTimeAsync(5000);
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(notes(wrapper)).toEqual([
+      ["jobup", "code envoyé", "ok"],
+      ["Boîte jobA1", "code reçu", "ok"],
+      ["Cette page", "code expiré", "bad"],
+    ]);
+    expect(wrapper.get("[data-test=code-box]").text()).toContain("Code expiré");
+  });
+
+  it("trajet : la boîte jobA1 ne répond pas, la ligne d’état le dit, puis revient", async () => {
+    GET.mockResolvedValue({ data: null });
+    const wrapper = mount(JobupCodeBox, { props: { siteUrl: null, trail: "ordinateur" } });
+    await flushPromises();
+    POST.mockResolvedValue({ data: { queued: true, mailbox_down: true } });
+    await vi.advanceTimersByTimeAsync(120_000);
+    const line = wrapper.get(".code-trail-status");
+    expect(line.text()).toBe("La boîte jobA1 ne répond pas. On réessaie dans 1 minute.");
+    expect(line.find("[data-icon=alert]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=code-trail-late]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=code-trail]").attributes("role")).toBe("status");
+    expect(notes(wrapper)[1]).toEqual(["Ta boîte jobA1", "ne répond pas", "bad"]);
+    expect(wrapper.findAll(".code-trail-dot")[1]?.find("[data-icon=alert-circle]").exists()).toBe(true);
+    POST.mockResolvedValue({ data: { queued: true, mailbox_down: false } });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(wrapper.get(".code-trail-status").text()).toContain("Rien reçu pour l’instant.");
+    expect(notes(wrapper)[1]).toEqual(["Ta boîte jobA1", "on écoute", "on"]);
+    expect(wrapper.find("[data-test=code-trail-late]").exists()).toBe(true);
   });
 });
