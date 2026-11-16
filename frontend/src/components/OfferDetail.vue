@@ -66,12 +66,11 @@ watch(
 );
 const emit = defineEmits<{
   close: [];
-  rescored: [];
   status: [status: "to_review" | "later" | "ignored" | "preparing"];
   applied: [];
   expiry: [expired: boolean];
   address: [address: string];
-  changed: [];
+  changed: [rescored?: true];
 }>();
 
 // Annonce chez l'employeur (docs/20 §2) : lien vérifié, ou recherche à la demande.
@@ -828,9 +827,8 @@ watch(
           <OfferTextNotice
             ref="textNotice"
             :offer="offer"
-            @changed="emit('changed')"
+            @changed="emit('changed', true)"
             @refresh="emit('changed')"
-            @rescored="emit('rescored')"
           />
         </div>
         <div class="oc-row oc-post">
@@ -1279,9 +1277,8 @@ watch(
           <OfferTextNotice
             v-if="partial"
             :offer="offer"
-            @changed="emit('changed')"
+            @changed="emit('changed', true)"
             @refresh="emit('changed')"
-            @rescored="emit('rescored')"
           />
           <p
             v-else-if="redone"

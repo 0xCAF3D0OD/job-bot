@@ -202,15 +202,11 @@ const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value 
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
 // comptée dans aucun jour.
 const pinnedId = ref<number | null>(null);
-// Offre renotée depuis sa fiche (Kevin, 16.11) : si sa nouvelle note la sort des filtres, elle reste en tête, ouverte,
-// avec la pastille « Hors de tes filtres », jusqu'au prochain changement de filtre ou au départ de la page. Son statut
-// d'alors : si on l'écarte ou la garde ensuite, elle suit la règle commune.
-const outside = ref<{ id: number; status: Offer["status"] } | null>(null);
-const outsideId = computed(() => (outside.value && pinnedId.value === outside.value.id ? outside.value.id : null));
-function keepRescored(): void {
-  const offer = selected.value;
-  outside.value = offer ? { id: offer.id, status: offer.status } : null;
-}
+// Offre renotée depuis sa fiche (Kevin, 16.11) : si sa nouvelle note la sort des filtres, elle reste en tête,
+// ouverte, avec la pastille « Hors de tes filtres », jusqu'au prochain changement de filtre ou au départ de la page. Si
+// son statut change ensuite (écartée, gardée…), elle suit la règle commune.
+const outside = ref<Offer | null>(null);
+const outsideId = computed(() => (pinnedId.value === outside.value?.id ? pinnedId.value : null));
 // « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
 const outsideNote = computed(() => {
   const offer = selected.value;
@@ -523,19 +519,12 @@ async function load(append = false): Promise<void> {
 // L'offre renotée, relue si la liste ne la rend plus ; null si elle y est, a changé de statut, ou n'existe plus.
 async function keptOutside(listed: Offer[]): Promise<Offer | null> {
   const keep = outside.value;
-  if (!keep) return null;
-  if (listed.some((o) => o.id === keep.id)) {
-    outside.value = null;
-    return null;
-  }
-  try {
-    const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: keep.id } } });
-    if (data && data.status === keep.status) return data;
-  } catch {
-    // API injoignable : la liste se recharge sans elle.
-  }
   outside.value = null;
-  return null;
+  if (!keep || listed.some((o) => o.id === keep.id)) return null;
+  const data = (await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: keep.id } } }).catch(() => null))?.data;
+  if (data?.status !== keep.status) return null;
+  outside.value = data;
+  return data;
 }
 
 async function setStatus(status: "to_review" | "later" | "ignored" | "preparing", target: Offer | null = selected.value): Promise<void> {
@@ -1232,8 +1221,7 @@ onUnmounted(() => {
               @applied="openApplication"
               @expiry="setExpiry"
               @address="setAddress"
-              @changed="load()"
-              @rescored="keepRescored"
+              @changed="(rescored) => { if (rescored) outside = selected; load(); }"
             />
           </component>
         </div>
