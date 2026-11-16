@@ -261,13 +261,14 @@ const marks = computed<Mark[]>(() => {
 </template>
 
 <style>
-/* Valeurs des planches de la section 41 (OnboardingOrdinateurAlerte… et OnboardingAlerte…), couleurs en jetons. */
+/* Valeurs des planches de la section 41 (OnboardingOrdinateurAlerte… et OnboardingAlerte…), couleurs en jetons. Sur ordinateur,
+   arrondies à la grille de 4 (audit-grille) : 18 → 16, 6 → 8, 5 et 2 → 4. */
 .wa { --wa-pad: 16px 14px; --wa-gap: 12px; --wa-num: 32px; --wa-num-font: 15px; --wa-title: 16px; --wa-title-lh: 22px; --wa-help: 14px;
   --wa-help-lh: 20px; --wa-box-w: 36px; --wa-box-h: 46px; --wa-box-r: 9px; --wa-box-font: 20px; --wa-box-gap: 6px; --wa-radius: 20px;
   --wa-address-h: 48px; --wa-address-pad: 1px 2px 1px 14px; --wa-address-font: 14px; --wa-copy-h: 44px; --wa-2: 2px; --wa-5: 5px; --wa-6: 6px;
   --wa-8: 8px; --wa-10: 10px; --wa-15: 15px; --wa-18: 18px;
   margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--wa-radius); }
-.wa-desk { --wa-pad: 18px; --wa-gap: 16px; --wa-num: 36px; --wa-num-font: 16px; --wa-title: 18px; --wa-title-lh: 24px; --wa-help: 15px;
+.wa-desk { --wa-pad: 16px; --wa-2: 4px; --wa-5: 4px; --wa-6: 8px; --wa-gap: 16px; --wa-num: 36px; --wa-num-font: 16px; --wa-title: 18px; --wa-title-lh: 24px; --wa-help: 15px;
   --wa-help-lh: 21px; --wa-box-w: 44px; --wa-box-h: 52px; --wa-box-r: 10px; --wa-box-font: 22px; --wa-box-gap: 8px; --wa-radius: 22px;
   --wa-address-h: 52px; --wa-address-pad: 0 6px 0 18px; --wa-address-font: 16px; --wa-copy-h: 40px; --wa-open-h: 52px; --wa-open-pad: 0 28px;
   margin-top: var(--space-6); padding: 0 var(--wa-6); }
