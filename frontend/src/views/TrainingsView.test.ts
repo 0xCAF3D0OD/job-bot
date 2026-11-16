@@ -50,8 +50,9 @@ const page = (items: unknown[], extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-// Téléphone par défaut : le catalogue d'abord. Sur ordinateur, la vue d'ensemble (planche BilanOrdinateur).
-async function mountView(path = "/formations", phone = true) {
+// Téléphone par défaut, sur le catalogue (?onglet=catalogue) ; « Mes formations » d'abord sur les deux formats depuis
+// le §37 du 16.11.
+async function mountView(path = "/formations?onglet=catalogue", phone = true) {
   vi.stubGlobal("matchMedia", (media: string) => ({ matches: phone && media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: TrainingsView }] });
   await router.push(path);
