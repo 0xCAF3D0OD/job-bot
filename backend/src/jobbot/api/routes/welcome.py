@@ -18,6 +18,11 @@ def _runtime(request: Request) -> Runtime:
 
 
 Goal = Literal["job", "orp", "news"]
+# D'où vient chaque critère de l'étape 2 (Kevin, 16.11, #806) : la pastille « Depuis ton CV »
+# ne s'affiche que pour « cv » ; une valeur modifiée et enregistrée passe à « user », une valeur
+# par défaut reste « default ».
+Source = Literal["cv", "user", "default"]
+SourceKey = Literal["roles", "places", "rate"]
 
 
 class WelcomeOut(BaseModel):
@@ -27,6 +32,7 @@ class WelcomeOut(BaseModel):
     trade: str | None
     # Les postes visés lus dans le CV et gardés à l'accueil (docs/121 §A) : pour les alertes.
     roles: list[str] = Field(default_factory=list)
+    sources: dict[SourceKey, Source] = Field(default_factory=dict)
 
 
 class WelcomeIn(BaseModel):
@@ -36,6 +42,8 @@ class WelcomeIn(BaseModel):
     roles: list[Annotated[str, Field(min_length=1, max_length=80)]] | None = Field(
         default=None, max_length=3
     )
+    # Le tableau entier à chaque fois : la fusion de la base est superficielle.
+    sources: dict[SourceKey, Source] | None = None
     # « Plus tard » : Aujourd'hui, avec « Terminer mon accueil » ; reprise à la connexion.
     postponed: bool | None = None
     done: bool | None = None
@@ -46,7 +54,13 @@ def _out(value: dict[str, object]) -> WelcomeOut:
     trade = value.get("trade")
     step = value.get("step")
     roles = value.get("roles")
+    sources = value.get("sources")
     return WelcomeOut(
+        sources={
+            k: v
+            for k, v in (sources.items() if isinstance(sources, dict) else [])
+            if k in ("roles", "places", "rate") and v in ("cv", "user", "default")
+        },
         roles=[r for r in roles if isinstance(r, str)] if isinstance(roles, list) else [],
         status=welcome.status(value),
         step=step if isinstance(step, int) else 1,

@@ -1,3 +1,7 @@
+<script lang="ts">
+export type CriteriaSources = Record<"roles" | "places" | "rate", "cv" | "user" | "default">;
+</script>
+
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
@@ -10,7 +14,11 @@ import TagInput from "./TagInput.vue";
 // et OnboardingC, étape 2) : un seul bloc de 3 lignes (Postes recherchés en puces, Lieu, Taux d'activité), icône à
 // gauche, « Modifier » à droite (un crayon de 44 px sur téléphone), la pastille « Depuis ton CV » collée à l'intitulé ;
 // puis le bloc ORP. Téléphone et ordinateur partagent ce bloc ; chaque ligne ouvre le même panneau qu'avant.
-const props = defineProps<{ desk: boolean; reading: boolean; rolesFromCv: boolean; rateFromCv: boolean; maxRoles: number }>();
+// La provenance de chaque ligne (Kevin, 16.11, #806) : la pastille « Depuis ton CV » seulement pour « cv ». Jamais
+// sur Lieu : l'adresse est retirée du CV avant toute lecture (option B du 16.11).
+const props = defineProps<{ desk: boolean; reading: boolean; sources: CriteriaSources; maxRoles: number }>();
+// Une ligne modifiée dans son panneau, puis validée : elle devient « user » et perd la pastille.
+const emit = defineEmits<{ edited: [key: keyof CriteriaSources] }>();
 const roles = defineModel<string[]>("roles", { required: true });
 const picked = defineModel<string[]>("picked", { required: true });
 const places = defineModel<string[]>("places", { required: true });
@@ -21,13 +29,24 @@ const target = defineModel<number>("target", { required: true });
 const RATES = [null, 50, 60, 70, 80, 90, 100] as const;
 const rateLabel = (value: number | null): string => (value ? `${value} à 100 %` : "Peu importe");
 const editing = ref<"" | "roles" | "places" | "rate">("");
+const current = (key: keyof CriteriaSources): string => JSON.stringify(key === "roles" ? picked.value : key === "places" ? places.value : rate.value);
+let before = "";
+function edit(key: keyof CriteriaSources): void {
+  before = current(key);
+  editing.value = key;
+}
+function close(): void {
+  const key = editing.value;
+  editing.value = "";
+  if (key && current(key) !== before) emit("edited", key);
+}
 const EDIT_TITLES = { roles: "Postes recherchés", places: "Lieu", rate: "Taux d’activité" } as const;
 const newRole = ref("");
 
 const rows = computed(() => [
-  { key: "roles", icon: "briefcase", label: "Postes recherchés", aria: "Modifier les postes", cv: props.rolesFromCv },
+  { key: "roles", icon: "briefcase", label: "Postes recherchés", aria: "Modifier les postes", cv: props.sources.roles === "cv" },
   { key: "places", icon: "pin", label: "Lieu", aria: "Modifier le lieu", cv: false },
-  { key: "rate", icon: "clock", label: "Taux d’activité", aria: "Modifier le taux", cv: props.rateFromCv },
+  { key: "rate", icon: "clock", label: "Taux d’activité", aria: "Modifier le taux", cv: props.sources.rate === "cv" },
 ] as const);
 
 function toggleRole(role: string): void {
@@ -102,7 +121,7 @@ defineExpose({ flush: () => newRole.value.trim() && addRole() });
           :aria-label="desk ? undefined : row.aria"
           aria-haspopup="dialog"
           :data-test="`criteria-${row.key}-edit`"
-          @click="editing = row.key"
+          @click="edit(row.key)"
         >
           <AppIcon name="pencil" /><template v-if="desk">
             Modifier
@@ -171,7 +190,7 @@ defineExpose({ flush: () => newRole.value.trim() && addRole() });
     <SidePanel
       :open="editing !== ''"
       :title="editing ? EDIT_TITLES[editing] : ''"
-      @close="editing = ''"
+      @close="close"
     >
       <div
         v-if="editing === 'roles'"
@@ -258,7 +277,7 @@ defineExpose({ flush: () => newRole.value.trim() && addRole() });
           type="button"
           class="primary wc-done"
           data-test="criteria-done"
-          @click="editing = ''"
+          @click="close"
         >
           OK
         </button>

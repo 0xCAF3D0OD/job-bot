@@ -11,7 +11,7 @@ import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
-import WelcomeCriteria from "../components/WelcomeCriteria.vue";
+import WelcomeCriteria, { type CriteriaSources } from "../components/WelcomeCriteria.vue";
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
@@ -105,12 +105,19 @@ const target = ref(10);
 const rate = ref<number | null>(null);
 // Le bloc des critères (WelcomeCriteria, section 41) : ses panneaux de modification et le poste tapé sans « + ».
 const criteriaBlock = ref<InstanceType<typeof WelcomeCriteria> | null>(null);
-const rolesFromCv = computed(() => !!understanding.value?.roles.length);
+// La provenance des lignes Postes, Lieu et Taux (Kevin, 16.11, #806), gardée dans l'état des premiers pas : « cv » quand
+// la valeur vient de la lecture du CV, « user » dès qu'elle est modifiée et validée. Lieu ne vient jamais du CV.
+const sources = ref<CriteriaSources>({ roles: "default", places: "default", rate: "default" });
+function setSources(changes: Partial<CriteriaSources>): void {
+  const next = { ...sources.value, ...changes };
+  if (JSON.stringify(next) === JSON.stringify(sources.value)) return;
+  sources.value = next;
+  void remember({ sources: next });
+}
 // « Repris de ton CV » seulement si la lecture a vraiment repris quelque chose (test du 10 novembre : le CV
 // enregistré mais pas lu affichait quand même « Pré-rempli depuis ton CV »).
 const fromCv = computed(() => !!understanding.value && (understanding.value.roles.length > 0 || !!understanding.value.min_rate));
 const cvUnread = computed(() => !!cvName.value && !reading.value && !paused.value && !understanding.value);
-const rateFromCv = computed(() => !!understanding.value?.min_rate && rate.value === understanding.value.min_rate);
 
 // Étape 4, l'alerte jobup : la première recherche enregistrée (pas une recherche écrite en dur) et l'adresse jobA1.
 const ALERT_SITE = "jobup";
@@ -162,6 +169,7 @@ onMounted(async () => {
   if (state.data) {
     roles.value = [...(state.data.roles ?? [])];
     picked.value = [...roles.value];
+    sources.value = { ...sources.value, ...(state.data.sources ?? {}), places: state.data.sources?.places === "user" ? "user" : "default" };
     if (state.data.goal === "job") orp.value = false;
     // Reprendre là où on s'était arrêté, sans revenir au tri (il se recharge à l'étape 3).
     // Une personne arrêtée au tri (étape 4 avant l'alerte, 5 depuis) reprend à l'alerte, qui y mène.
@@ -244,7 +252,13 @@ async function understand(documentId: number): Promise<void> {
     const found = data.roles.filter((r) => !known.has(r.toLowerCase()));
     roles.value = [...roles.value, ...found];
     picked.value = [...picked.value, ...found].slice(0, MAX_ROLES);
-    if (data.min_rate && rate.value === null) rate.value = data.min_rate;
+    // Le taux du CV : posé s'il n'y en avait pas, ou identique à celui déjà là (sans modification de la personne).
+    const rateFound = !!data.min_rate && (rate.value === null || rate.value === data.min_rate);
+    if (rateFound) rate.value = data.min_rate;
+    setSources({
+      ...(found.length && sources.value.roles !== "user" ? { roles: "cv" as const } : {}),
+      ...(rateFound && sources.value.rate !== "user" ? { rate: "cv" as const } : {}),
+    });
     saveChunks();
   } catch {
     // La connexion est tombée : le CV est enregistré, la lecture reprend seule (OnboardingOrdinateurCoupure).
@@ -766,9 +780,9 @@ async function finish(to: string): Promise<void> {
               v-model:target="target"
               :desk="desk"
               :reading="reading"
-              :roles-from-cv="rolesFromCv"
-              :rate-from-cv="rateFromCv"
+              :sources="sources"
               :max-roles="MAX_ROLES"
+              @edited="(key) => setSources({ [key]: 'user' })"
             />
             <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
             <ProfileCompletionForm
@@ -1161,9 +1175,9 @@ async function finish(to: string): Promise<void> {
               v-model:target="target"
               :desk="desk"
               :reading="reading"
-              :roles-from-cv="rolesFromCv"
-              :rate-from-cv="rateFromCv"
+              :sources="sources"
               :max-roles="MAX_ROLES"
+              @edited="(key) => setSources({ [key]: 'user' })"
             />
             <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
             <ProfileCompletionForm

@@ -62,7 +62,7 @@ const ALERTS = {
   ],
 };
 
-type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[] };
+type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[]; sources?: Record<string, string> };
 
 async function mountWelcome(
   state: State = { status: "pending", step: 1, goal: null, trade: null },
@@ -537,6 +537,25 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=criteria-roles-edit]").text()).toBe("Modifier");
     expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("80 à 100");
     expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("lieux-carte");
+    // La provenance (Kevin, 16.11, #806) : enregistrée ; jamais de pastille sur Lieu.
+    expect(calls("/api/welcome").some((b) => JSON.stringify(b.sources) === JSON.stringify({ roles: "cv", places: "default", rate: "cv" }))).toBe(true);
+    expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("Depuis ton CV");
+    expect(wrapper.get("[data-test=criteria-places]").text()).not.toContain("Depuis ton CV");
+    // Le taux modifié puis validé : « user », la pastille s'en va ; ouvrir sans rien changer ne touche à rien.
+    await click(wrapper, "criteria-roles-edit");
+    await click(wrapper, "criteria-done");
+    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("Depuis ton CV");
+    await click(wrapper, "criteria-rate-edit");
+    await wrapper.findAll("input[name=welcome-rate]").at(-1)!.setValue();
+    await click(wrapper, "criteria-done");
+    expect(wrapper.get("[data-test=criteria-rate]").text()).not.toContain("Depuis ton CV");
+    expect(calls("/api/welcome").at(-1)).toEqual({ sources: { roles: "cv", places: "default", rate: "user" } });
+  });
+
+  it("la provenance revient avec l’état des premiers pas : « user » reste sans pastille", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["DevOps"], sources: { roles: "user", places: "default", rate: "cv" } });
+    expect(wrapper.get("[data-test=criteria-roles]").text()).not.toContain("Depuis ton CV");
+    expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("Depuis ton CV");
   });
 
   it("coupure pendant la lecture : « En pause », scène connexion-perdue, nouvel essai après 5 s", async () => {
