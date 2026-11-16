@@ -409,6 +409,21 @@ Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
 - « Remettre dans le tri » vide la date ; une nouvelle mise à l'écart pose la nouvelle date.
 - Format de date habituel : « 12 nov. », l'année seulement si ce n'est pas l'année en cours.
 
+## Bilan › Formations sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- « Mes formations » d'abord (carte de l'ORP, En cours, Gardées), le catalogue derrière « Voir le catalogue » et « Chercher d'autres formations », comme sur ordinateur. Les onglets Catalogue / Suivies disparaissent ; « ← Mes formations » ramène depuis le catalogue (planches BilanFormations et BilanCatalogue, §37).
+- Le compteur « − N + » quitte la carte « En cours » : « Noter l'avancement » ouvre une feuille du bas qui le contient. Même chose sur ordinateur. Sans nombre de modules, « Noter l'avancement » ouvre le panneau de la formation, comme avant.
+- Le titre de la carte « En cours » ouvre le panneau de la formation (notes, financement, profil), pour que ces fonctions restent accessibles.
+- Catalogue sur téléphone : lignes sur deux lignes (titre ; « organisme · format » et le prix), sans icône, signet rond de 44 px. L'avancement et le financement restent dans le panneau.
+
+## Bilan › ORP sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- La carte « Mois ORP · novembre · 7 sur 10 », avec sa barre et son chevron, remplace l'anneau ; elle déplie et replie le mois.
+- Cartes de recherche sur 2 lignes : entreprise + pastille d'état, puis poste · date.
+- Replié : les trois premières à déclarer. Déplié : toutes, puis les recherches du mois, puis « Replier le mois ». Plus de « Afficher l'autre ».
+- En bas, deux pilules « Mois précédents » et « Autres exports », chacune ouvre sa feuille du bas ; « Exporter le formulaire (PDF) » passe dans « Autres exports ».
+- Règle : hors d'une carte, seulement un titre ou un lien. Une phrase vraiment utile devient une pastille. Les phrases sous les intertitres sont retirées.
+
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 
 - Avant ces trois PR, un allègement à part (#777) : 47 groupes de règles identiques de `style.css` réunis, −189 octets gzip, 138 captures sans un pixel d'écart. L'objectif de 470 octets n'est pas atteignable par regroupement (plafond mesuré ≈ 390 octets).
