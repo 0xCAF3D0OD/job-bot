@@ -234,7 +234,7 @@ defineExpose({ save, saving, missingForLetter, levels });
 </script>
 
 <template>
-  <div :class="['pc', { 'pc-desk': desk }]">
+  <div :class="['pc', { 'pc-desk': desk, 'pc-only': languagesOnly }]">
     <section
       v-if="has('experiences')"
       class="pc-sec"
@@ -355,8 +355,9 @@ defineExpose({ save, saving, missingForLetter, levels });
       data-test="completion-languages"
     >
       <h2>Langues</h2>
+      <!-- Premiers pas (section 41 du 16.11) : « Non renseigné », le libellé de la liste, et une icône par langue. -->
       <p class="pc-hint">
-        Une langue non renseignée n’écarte aucune offre.
+        {{ !languagesOnly ? "Une langue non renseignée n’écarte aucune offre." : desk ? "Indique ton niveau. « Non renseigné » n’écarte aucune offre." : "« Non renseigné » n’écarte aucune offre." }}
       </p>
       <div class="pc-card pc-langs">
         <div
@@ -365,6 +366,11 @@ defineExpose({ save, saving, missingForLetter, levels });
           class="pc-lang"
           data-test="completion-language"
         >
+          <AppIcon
+            v-if="languagesOnly"
+            name="globe"
+            class="pc-globe"
+          />
           <input
             v-if="language.added"
             v-model="language.name"
@@ -583,4 +589,11 @@ defineExpose({ save, saving, missingForLetter, levels });
 .pc-link { display: inline-flex; align-items: center; gap: var(--pc-link-gap); min-height: var(--target-min); margin-top: var(--pc-link-gap); padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--pc-hint); font-weight: var(--weight-bold); cursor: pointer; }
 .pc-link .icon { width: 18px; height: 18px; }
 .pc-message { margin-top: var(--space-6); }
+/* Langues des premiers pas (OnboardingOrdinateurEtape2, OnboardingC étape 2) : l'icône, la liste de 240 px (172 sur
+   téléphone), la carte sans marge intérieure verticale. */
+.pc-only { --pc-lang-gap: 12px; --pc-lang-h: 68px; --pc-level-w: 172px; --pc-card-pad: 0 14px; --pc-card-gap: 10px; --pc-hint: 14px; --pc-hint-lh: 20px; }
+.pc-only.pc-desk { --pc-lang-gap: 16px; --pc-level-w: 240px; --pc-card-pad: 0 18px; --pc-card-gap: 12px; --pc-hint: 15px; }
+.pc-only .pc-lang { gap: var(--pc-lang-gap); }
+.pc.pc-only .pc-lang select.pc-level { width: var(--pc-level-w); max-width: none; }
+.pc-globe { flex: none; width: 20px; height: 20px; color: var(--text-secondary); stroke-width: 2; }
 </style>
