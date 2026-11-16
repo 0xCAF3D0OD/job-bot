@@ -1,0 +1,1 @@
+- Le lien `frontend/node_modules`, ajouté par erreur avec la PR #763, est retiré du dépôt ; `.gitignore` ignore désormais aussi un lien nommé `node_modules`.
