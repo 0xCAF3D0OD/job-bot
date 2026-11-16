@@ -190,11 +190,11 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
   });
 
   it("aucune offre avec des filtres (AucuneOffre, §17) : les filtres en pastilles retirables, « Modifier les filtres », « Tout effacer », sans « Autres offres »", async () => {
-    const wrapper = await mountAt("/offres?note=70&taux=80", []);
+    const wrapper = await mountAt("/offres?note=75&taux=80", []);
     const empty = wrapper.find("[data-test=offers-empty]");
     expect(empty.find(".face-state-title").text()).toBe("Aucune offre avec ces filtres");
     const chips = empty.findAll(".offers-empty-chip");
-    expect(chips.map((c) => c.attributes("aria-label"))).toEqual(["Retirer le filtre Note minimale : Proche et plus", "Retirer le filtre Taux minimum : 80 %"]);
+    expect(chips.map((c) => c.attributes("aria-label"))).toEqual(["Retirer le filtre Note minimale : 75 et +", "Retirer le filtre Taux d’activité : dès 80 %"]);
     expect(empty.find("[data-test=offers-reset]").text()).toBe("Tout effacer");
     expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
     expect(wrapper.find(".offers-other-cap").exists()).toBe(false);

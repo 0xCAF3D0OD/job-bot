@@ -1374,7 +1374,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .extension-token .hint { flex-basis: 100%; }
 .extension-tokens { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); }
 .extension-tokens li { display: flex; justify-content: space-between; gap: var(--space-3); }
-/* Tri « Par jour » : intertitre de jour dans la liste des offres. */
+/* Tri « Par date » : intertitre de jour dans la liste des offres. */
 /* Télétravail sur la carte (docs/26 §2) ; barré s'il n'est pas ouvert depuis la Suisse. */
 .remote-read { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin: var(--space-2) 0 0; font-size: var(--font-small); color: var(--muted); }
 /* Sites d'offres en télétravail proposés (docs/26 §5). */
