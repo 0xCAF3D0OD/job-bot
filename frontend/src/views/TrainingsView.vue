@@ -686,7 +686,7 @@ onMounted(() => void load());
 .training-block .bilan-section-head h2 { font-size: var(--font-title); }
 .training-block-list { margin: 0; padding: 0; overflow: hidden; list-style: none; background: var(--surface); border-radius: var(--radius-card); }
 .training-block-list > li + li { border-top: 1px solid var(--surface-muted); }
-.training-now { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
+.training-now { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
 .training-now-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .training-now-head > .training-now-open, .training-kept-text { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; }
 .training-now-open { gap: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -709,13 +709,13 @@ onMounted(() => void load());
 .training-kept-status.accepted, .training-kept-status.granted, .training-kept-status.done { color: var(--success); }
 .training-kept-status.refused { color: var(--text-secondary); }
 /* En cours sans modules (planche BilanOrdinateurFormEtats, 16.11) : le texte libre et « Noter l'avancement » sur une ligne. */
-.training-now { grid-template-columns: minmax(0, 1fr) auto; }
 .training-now > * { grid-column: 1 / -1; }
 .training-now > .training-current-progress { grid-column: 1; align-self: center; font-size: var(--tw-15); font-weight: var(--weight-regular); color: var(--text-tertiary); }
 .training-now > .training-current-progress + .training-now-actions { grid-column: 2; }
 /* Le catalogue sur ordinateur (planche BilanOrdinateurCatalogue, 16.11) : « ← Mes formations », les puces (la
    choisie en plein), une colonne de groupes, des lignes d'une ligne de détails et le signet rond de 44 px. */
-.trainings-desk { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-72: 72px; gap: var(--space-8); }
+.trainings { --td-8: 8px; --td-12: 12px; --td-13: 0.8125rem; --td-15: 0.9375rem; --td-17: 1.0625rem; --td-72: 72px; --td-chip-r: 6px; }
+.trainings-desk { gap: var(--space-8); }
 .training-back { display: inline-flex; justify-self: start; align-items: center; gap: var(--td-8); min-height: var(--target-min); margin: calc(var(--td-12) * -1) 0 calc(var(--td-8) * -1); font-size: var(--td-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .training-chips-sep { display: none; }
 .trainings-desk .training-chips { margin-top: calc(var(--td-8) * -1); }
@@ -740,7 +740,6 @@ onMounted(() => void load());
    l'avancement » à gauche, « Continuer le cours » à droite ; Gardées sur 2 lignes, statut en pastille ; catalogue sans
    icône, titre sur une ligne, « organisme · format » et le prix en pastille, signet rond de 44 px. */
 @media (max-width: 820px) {
-  .trainings { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-13: 0.8125rem; --td-17: 1.0625rem; --td-chip-r: 6px; }
   .trainings-overview { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
   .training-orp-card { gap: var(--space-3); width: 100%; padding: var(--space-4); color: var(--text); font: inherit; font-weight: var(--weight-regular); text-align: left; }
   .training-orp-card strong { font-size: var(--tw-15); }
@@ -757,15 +756,15 @@ onMounted(() => void load());
   .training-now .training-modules-line { grid-row: 2; grid-column: 1; }
   .training-now > .training-current-progress { margin-top: var(--space-3); font-size: var(--font-small); color: var(--text-lead); }
   .training-now-actions { margin-top: var(--space-3); }
-  .training-kept-row { min-height: 68px; padding: var(--space-3) var(--space-4); }
-  .training-kept-text > span { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+  .training-kept-row { padding: var(--space-3) var(--space-4); }
+  .training-kept-row, .training-row-open { min-height: 68px; }
+  .training-kept-text > span { display: flex; align-items: center; gap: var(--space-2); }
   .training-kept-text > span > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .training-kept-status, .training-row-tags > .training-tag { padding: var(--space-1) var(--space-2); border-radius: var(--td-chip-r); font-size: var(--font-caption); line-height: normal; }
-  .training-kept-status { gap: var(--space-1); background: var(--success-soft); }
+  .training-kept-status { background: var(--success-soft); }
   .training-kept-status .icon { width: 12px; height: 12px; }
   .training-more { width: 100%; }
   .training-row-icon { display: none; }
-  .training-row-open { min-height: 68px; padding: var(--space-3) 0 var(--space-3) var(--space-4); }
   .training-row-text { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; align-items: center; gap: var(--space-1) var(--space-2); }
   .training-row-text > strong { grid-column: 1 / -1; font-size: var(--td-15); }
   .training-row-text > span:nth-child(2) { min-width: 0; overflow: hidden; font-size: var(--td-13); text-overflow: ellipsis; white-space: nowrap; }
