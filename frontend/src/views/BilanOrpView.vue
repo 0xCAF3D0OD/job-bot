@@ -5,10 +5,10 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type OrpMonth, type OrpRow } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
+import BottomSheet from "../components/BottomSheet.vue";
 import CalendarDate from "../components/CalendarDate.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
-import OrpBlocks from "../components/OrpBlocks.vue";
 import OrpMonthBar from "../components/OrpMonth.vue";
 import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
@@ -18,7 +18,7 @@ import OrpSheet from "../components/OrpSheet.vue";
 import SidePanel from "../components/SidePanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
-import { formatMonth, ofMonth, orpChannel, plural, shiftMonth } from "../format";
+import { formatMonth, ofMonth, orpChannel, orpLeftLine, plural, shiftMonth } from "../format";
 import { dateText, meetingsToNote, pastTitle, timeAndPlace } from "../rendezVous";
 import { isNetworkError } from "../network";
 
@@ -130,7 +130,38 @@ const nextMeeting = computed(() => {
 const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
 // Une recherche du mois : sa ligne dans le Suivi ORP du mois.
 function openSearch(id: number): void {
-  if (orp.value) void router.push({ path: "/bilan/orp", query: { mois: orp.value.month, candidature: id } });
+  const month = shownMonth.value?.month;
+  if (month) void router.push({ path: "/bilan/orp", query: { mois: month, candidature: id } });
+}
+
+// Téléphone (§37 du 16.11, planches OrpMois, OrpMoisPrecedents, OrpExports) : la carte « Mois ORP · novembre » avec sa
+// barre et son chevron ; replié, les trois premières à déclarer ; déplié, toutes, puis les recherches du mois et
+// « Replier le mois » ; en bas, « Mois précédents » et « Autres exports », chacun dans sa feuille du bas.
+const PHONE_DECLARE = 3;
+const phoneTitle = computed(() => (shownMonth.value ? `Mois ORP · ${formatMonth(shownMonth.value.month).split(" ")[0]!.toLowerCase()}` : ""));
+const phoneLine = computed(() => {
+  const o = shownMonth.value;
+  if (!o) return "";
+  return o.target ? orpLeftLine(o.count, o.target, o.month, o.due_date) : "Indique l’objectif fixé avec ton ORP dans les Réglages";
+});
+const phonePending = computed(() => (expanded.value ? pending.value : pending.value.slice(0, PHONE_DECLARE)));
+const SHORT_DAY = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+function shortDay(row: OrpRow): string {
+  const [d, m, y] = row.date.split(".").map(Number);
+  return d && m && y ? SHORT_DAY.format(new Date(y, m - 1, d)) : row.date;
+}
+const ficheTo = (row: Pending) => ({ path: `/bilan/orp/candidature/${row.application_id}`, query: { mois: row.month } });
+const monthsOpen = ref(false);
+const exportsOpen = ref(false);
+// « Exporter le formulaire (PDF) » passe dans « Autres exports » sur téléphone (Kevin, 16.11, 14 h 06).
+const phoneExportItems = computed<MoreMenuItem[]>(() => [
+  { label: "Exporter le formulaire (PDF)", test: "orp-export", icon: "download", run: () => void sheet.value?.printPdf() },
+  ...exportItems.value,
+]);
+function runItem(item: MoreMenuItem): void {
+  monthsOpen.value = false;
+  exportsOpen.value = false;
+  item.run?.();
 }
 
 function thisMonth(): string {
@@ -159,7 +190,7 @@ async function load(): Promise<void> {
       phone.value ? Promise.resolve(null) : api.GET("/api/orp-meeting").catch(() => null),
     ]);
     if (!data) throw new Error();
-    if (!phone.value) await loadMonths(data);
+    await loadMonths(data);
     orp.value = data;
     meetings.value = rdv?.data ?? null;
   } catch (cause) {
@@ -246,9 +277,11 @@ watch(viewMonth, () => void load());
           data-test="orp-to-declare"
         >
           <div class="bilan-section-head">
-            <h2 id="orp-declare-title">
-              À déclarer à l’ORP · {{ pending.length }}
-            </h2>
+            <div class="bilan-section-head">
+              <h2 id="orp-declare-title">
+                À déclarer à l’ORP · {{ pending.length }}
+              </h2>
+            </div>
           </div>
           <p class="bilan-section-sub">
             Envoyées en {{ pendingMonths }}, pas encore sur ta feuille de recherches.
@@ -476,19 +509,213 @@ watch(viewMonth, () => void load());
           />
         </SidePanel>
       </template>
-      <template v-else>
-        <!-- Téléphone (lot 18, §10.2 ; onglet ORP de la maquette Explorer) : les blocs du Suivi ORP. -->
-        <OrpBlocks
-          :data="orp"
-          @open="openSearch"
-          @export="sheet?.printPdf()"
-        />
+      <template v-else-if="shownMonth">
+        <!-- Téléphone, refait d'après les planches OrpMois, OrpMoisPrecedents et OrpExports (§37 du 16.11). -->
+        <div
+          class="orp-phone"
+          data-test="orp-phone"
+        >
+          <RouterLink
+            :to="expanded ? foldTo : shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
+            class="today-orp-card bilan-orp-card"
+            :aria-label="expanded ? cardLabel.replace('Voir tout le mois', 'Replier le mois') : cardLabel"
+            :aria-expanded="shownMonth.target ? expanded : undefined"
+            data-test="orp-goal"
+          >
+            <OrpMonthBar
+              :title="phoneTitle"
+              :count="shownMonth.count"
+              :target="shownMonth.target ?? null"
+              :month="shownMonth.month"
+              :due="shownMonth.due_date"
+              :line="phoneLine"
+              band
+            />
+            <AppIcon
+              :name="expanded ? 'chevron-up' : 'chevron-down'"
+              class="today-orp-chevron"
+            />
+          </RouterLink>
+
+          <section
+            v-if="pending.length"
+            class="bilan-section"
+            aria-labelledby="orp-declare-title"
+            data-test="orp-to-declare"
+          >
+            <div class="bilan-section-head">
+              <h2 id="orp-declare-title">
+                À déclarer à l’ORP · {{ pending.length }}
+              </h2>
+            </div>
+            <RouterLink
+              v-for="row in phonePending"
+              :key="row.application_id"
+              :to="ficheTo(row)"
+              class="bilan-card"
+              :data-test="`orp-declare-${row.application_id}`"
+            >
+              <span class="bilan-card-what">
+                <strong class="orp-phone-top"><span>{{ row.company }}</span><span
+                  v-if="row.missing.length"
+                  class="orp-phone-chip todo"
+                >Infos à compléter</span></strong>
+                <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
+              </span>
+              <span
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
+            </RouterLink>
+          </section>
+
+          <section
+            v-if="expanded"
+            class="bilan-section"
+            aria-labelledby="orp-month-title"
+            data-test="orp-searches"
+          >
+            <div class="bilan-section-head">
+              <h2 id="orp-month-title">
+                Recherches {{ ofMonth(shownMonth.month) }}
+              </h2>
+              <span>{{ shownMonth.count }} ce mois</span>
+            </div>
+            <button
+              v-for="row in declared"
+              :key="row.application_id"
+              type="button"
+              class="bilan-card"
+              :data-test="`orp-row-${row.application_id}`"
+              @click="openSearch(row.application_id)"
+            >
+              <span class="bilan-card-what">
+                <strong class="orp-phone-top"><span>{{ row.company }}</span><span :class="['orp-phone-chip', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Justificatif à joindre" : "Justificatif joint" }}</span></strong>
+                <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
+              </span>
+              <span
+                class="arrow-circle small"
+                aria-hidden="true"
+              ><AppIcon name="arrow-right" /></span>
+            </button>
+            <RouterLink
+              :to="foldTo"
+              class="bilan-card-more"
+              aria-expanded="true"
+              data-test="orp-fold"
+            >
+              Replier le mois<AppIcon name="chevron-up" />
+            </RouterLink>
+          </section>
+
+          <div
+            class="orp-phone-more"
+            data-test="orp-more-row"
+          >
+            <button
+              type="button"
+              class="secondary"
+              aria-haspopup="dialog"
+              data-test="orp-months"
+              @click="monthsOpen = true"
+            >
+              <AppIcon name="calendar" />Mois précédents
+            </button>
+            <button
+              type="button"
+              class="secondary"
+              aria-haspopup="dialog"
+              data-test="orp-exports"
+              @click="exportsOpen = true"
+            >
+              <AppIcon name="download" />Autres exports
+            </button>
+          </div>
+        </div>
+        <BottomSheet
+          :open="monthsOpen"
+          title="Mois précédents"
+          data-test="orp-months-sheet"
+          @close="monthsOpen = false"
+        >
+          <ul class="orp-phone-sheet-list">
+            <li
+              v-for="item in monthItems"
+              :key="item.test"
+            >
+              <button
+                type="button"
+                :data-test="item.test"
+                @click="runItem(item)"
+              >
+                <AppIcon name="calendar" /><span>{{ item.label }}</span><span
+                  v-if="item.note"
+                  class="orp-phone-chip todo"
+                >{{ item.note }}</span>
+              </button>
+            </li>
+          </ul>
+        </BottomSheet>
+        <BottomSheet
+          :open="exportsOpen"
+          title="Autres exports"
+          data-test="orp-exports-sheet"
+          @close="exportsOpen = false"
+        >
+          <ul class="orp-phone-sheet-list">
+            <li
+              v-for="item in phoneExportItems"
+              :key="item.test"
+            >
+              <a
+                v-if="item.href"
+                :href="item.href"
+                :download="item.download || undefined"
+                :data-test="item.test"
+                @click="exportsOpen = false"
+              ><AppIcon name="download" /><span>{{ item.label }}</span></a>
+              <button
+                v-else
+                type="button"
+                :data-test="item.test"
+                @click="runItem(item)"
+              >
+                <AppIcon name="download" /><span>{{ item.label }}</span>
+              </button>
+            </li>
+          </ul>
+        </BottomSheet>
         <OrpSheet
           ref="sheet"
-          :data="orp"
+          :data="shownMonth"
           @reload="load"
         />
       </template>
     </div>
   </section>
 </template>
+
+<style>
+/* Bilan › ORP sur téléphone (§37 du 16.11 ; HTML d'OrpMois) : les cartes de l'ordinateur à 68 px, 12/16, titre 16 ;
+   pastille 12/700 de rayon 6 après l'entreprise ; deux pilules de 44 px à parts égales ; feuilles en lignes de 52. */
+.orp-phone { --bilan-card-h: 68px; --bilan-pad-y: 12px; --bilan-pad: 16px; --bilan-17: 16px; --bilan-bar: 8px; --bilan-lh-21: 21px; --orp-h2: 17px; --orp-chip-r: 6px; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+.orp-phone .today-orp-card { gap: var(--space-3); margin: 0; padding: var(--space-4); border: 1.5px solid var(--card-line); box-shadow: none; }
+.orp-phone .orp-month-band, .orp-phone .bilan-section { gap: var(--space-2); }
+.orp-phone .bilan-card { gap: var(--space-3); }
+.orp-phone .bilan-card-what > span { margin-top: var(--space-1); }
+.orp-phone .bilan-section-head h2 { font-size: var(--orp-h2); }
+.orp-phone .bilan-card-what { font-size: var(--font-body); }
+.orp-phone-top { display: flex; gap: var(--space-2); align-items: center; }
+.orp-phone-top > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orp-phone-chip { flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--orp-chip-r); font-size: var(--font-caption); white-space: nowrap; }
+.orp-phone-chip.todo { background: var(--peach-soft); color: var(--peach-text); }
+.orp-phone-chip.ok { background: var(--success-soft); color: var(--success); }
+.orp-phone-more { display: flex; gap: var(--space-2); }
+.orp-phone-more > button { flex: 1; min-width: 0; gap: var(--space-2); height: var(--target-min); padding: 0 var(--space-2); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+/* À 320 px, les deux pilules gardent leur texte entier : l’icône part. */
+@media (max-width: 359px) { .orp-phone-more > button > .icon { display: none; } }
+.orp-phone-sheet-list { --orp-medium: 500; margin: 0; padding: 0; list-style: none; }
+.orp-phone-sheet-list :is(button, a) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 52px; padding: 0 var(--space-1); border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font: inherit; font-weight: var(--orp-medium); text-decoration: none; }
+.orp-phone-sheet-list :is(button, a) > span:first-of-type { flex: 1; text-align: left; }
+.orp-phone-sheet-list .icon { width: 20px; height: 20px; color: var(--text-secondary); }
+</style>
