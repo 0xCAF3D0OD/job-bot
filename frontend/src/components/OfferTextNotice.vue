@@ -13,11 +13,14 @@ import FormField from "./FormField.vue";
 // CandidaturesOrdinateurB) : l'utilisateur ne va plus chercher le texte lui-même. Une offre venue d'une alerte est lue
 // en arrière-plan ; la carte de la note montre où en est la lecture, sans bouton :
 // - `reading` : « jobA1 lit l'annonce complète… » avec un petit indicateur (role="status", aria-live="polite") ;
-// - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : une seule ligne « Annonce
-//   illisible · Indeed bloque la lecture. » et le bouton teinté « Donner l'annonce » (prompt du 10 novembre au soir,
-//   PR 25). Sur téléphone, il ouvre la fenêtre du bas « Donner l'annonce à jobA1 » ; sur ordinateur, la carte se
-//   déplie sur place (`aria-expanded`). On y donne le lien de l'annonce chez l'employeur, que jobA1 lit, ou on colle le
-//   texte. Pas de lien vers le site ici : le seul est « Voir l'annonce sur [source] » de la fiche.
+// - `refused` (le site bloque, connexion obligatoire, annonce retirée, pas de lien) : « Annonce illisible · Indeed
+//   bloque la lecture. Trouve l'annonce complète, puis donne-la à jobA1. », puis deux liens pour aller la chercher et
+//   le bouton teinté « Donner l'annonce » (paquet du 16 novembre, section 33, qui remplace « un seul lien » de la
+//   PR 25 pour ce bloc). « Ouvrir sur [site] » : l'annonce là où elle a été trouvée. « Chercher sur le site de
+//   [entreprise] » : une recherche web "titre" "entreprise" (jobA1 ne connaît pas la page carrière). Ordinateur :
+//   pilules à contour sur une rangée ; téléphone : liens texte empilés. Sur téléphone, le bouton ouvre la fenêtre du
+//   bas « Donner l'annonce à jobA1 » ; sur ordinateur, la carte se déplie sur place (`aria-expanded`). On y donne le
+//   lien de l'annonce chez l'employeur, que jobA1 lit, ou on colle le texte.
 // Plus de « Lire l'annonce » ni de bande « Il manque l'annonce complète ». `done` est montré par la fiche (« Note
 // refaite sur l'annonce complète. »). Si la fiche s'ouvre avant la tâche de fond, la lecture est demandée tout de suite
 // (une fois par offre) ; si le site est lent, jobA1 réessaie une fois de lui-même et la fiche se recharge un moment.
@@ -89,11 +92,14 @@ onBeforeUnmount(() => {
 
 const { phone } = usePhone();
 
-// Le nom réel du site d'où vient l'offre (« Indeed bloque la lecture. ») ; inconnu : « Ce site ».
-const blocker = computed(() => {
-  const link = props.offer.links.find((l) => l.source !== "manual" && !l.url.startsWith("https://annonce-collee.invalid/"));
-  return `${link ? (sourceLabel[link.source] ?? "Ce site") : "Ce site"} bloque la lecture.`;
-});
+// Le site d'où vient l'offre (« Indeed bloque la lecture. ») ; inconnu : « Ce site », et pas de lien « Ouvrir sur ».
+const sourceLink = computed(() => props.offer.links.find((l) => l.source !== "manual" && !l.url.startsWith("https://annonce-collee.invalid/")));
+const site = computed(() => (sourceLink.value ? (sourceLabel[sourceLink.value.source] ?? "Ce site") : "Ce site"));
+const blocker = computed(() => `${site.value} bloque la lecture. Trouve l’annonce complète, puis donne-la à jobA1.`);
+// Sur téléphone, le libellé est plus long (« Ouvrir l'annonce sur Indeed »), comme sur la planche OffreProvisoire.
+const openLabel = computed(() => `${phone.value ? "Ouvrir l’annonce sur" : "Ouvrir sur"} ${site.value}`);
+const company = computed(() => props.offer.company?.trim() ?? "");
+const searchUrl = computed(() => `https://www.google.com/search?${new URLSearchParams({ q: `"${props.offer.title}" "${company.value}"` })}`);
 
 // « Donner l'annonce » : le lien chez l'employeur, lu par le serveur (le lien n'est pas gardé).
 const giving = ref(false);
@@ -251,18 +257,35 @@ export function resetRequested(): void {
     aria-labelledby="offer-text-title"
     data-test="text-refused"
   >
-    <div class="offer-text-head">
-      <div class="offer-text-what">
-        <h4
-          id="offer-text-title"
-          data-test="refused-title"
-        >
-          Annonce illisible
-        </h4>
-        <p data-test="refused-text">
-          {{ blocker }}
-        </p>
-      </div>
+    <h4
+      id="offer-text-title"
+      data-test="refused-title"
+    >
+      Annonce illisible
+    </h4>
+    <p data-test="refused-text">
+      {{ blocker }}
+    </p>
+    <div
+      class="offer-text-acts"
+      :class="{ 'is-phone': phone }"
+    >
+      <a
+        v-if="sourceLink"
+        :href="sourceLink.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        :class="phone ? 'offer-text-link' : 'button-link'"
+        data-test="open-source"
+      >{{ openLabel }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+      <a
+        v-if="company"
+        :href="searchUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :class="phone ? 'offer-text-link' : 'button-link'"
+        data-test="search-company"
+      >Chercher sur le site de {{ company }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
       <button
         v-if="phone"
         type="button"
@@ -276,13 +299,13 @@ export function resetRequested(): void {
       <button
         v-else
         type="button"
-        class="offer-give offer-give-fold"
+        class="offer-give"
         :aria-expanded="giving"
         :aria-controls="zoneId"
         data-test="give-offer"
         @click="toggleGive"
       >
-        Donner l’annonce<AppIcon :name="giving ? 'chevron-up' : 'chevron-down'" />
+        Donner l’annonce
       </button>
     </div>
     <div

@@ -408,3 +408,30 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Décision : js-total passe de 428 780 à 431 500 octets, une seule fois, dans une petite PR à part, pour les trois PR ensemble. Pas de découpage.
 - Après la fusion de #764, #770 et #771 : ouvrir une issue « Budget JS » qui (1) mesure le JS chargé au premier écran de chaque page (gzip), (2) propose une limite par page en plus de js-total, (3) liste les 5 plus gros modules avec des pistes d'allègement chiffrées.
 - Plus aucun relèvement de css-total ou de js-total sans passer par cette issue.
+
+## Audit de poids quand main dépasse déjà (Kevin, 16.11.2026, 14 h 25)
+
+- Quand main dépasse déjà une limite de poids (JS ou CSS), une PR dont la mesure baisse ou reste égale passe en vert ; seule une PR qui ajoute du poids à cette mesure reste bloquée.
+- Mise en œuvre : `frontend/scripts/poids-ci.sh` (CI et `make audits-ci`) mesure la branche ; si une mesure dépasse, il construit la base (HEAD^1 dans la CI, le main sur lequel la PR est fusionnée ; origin/main en local) et compare avec `poids.mjs --base`.
+- Les limites ne changent pas, et la règle des illustrations en WebP reste bloquante.
+- Suite : issue « Budget JS et CSS » (JS et CSS du premier écran par page, limite par page, 5 plus gros modules avec des pistes chiffrées, écarts expliqués). Plus aucun relèvement de css-total ou de js-total sans passer par cette issue.
+
+## Préparer, bouton « ↑ » du champ de demande (Kevin, 16.11.2026, 14 h 48)
+
+- Champ de 56 px. Bouton visible de 40 × 40 px, à 8 px du bord du champ en haut, à droite et en bas : sur la grille de 4, sans exception dans l'audit.
+- Zone tactile de 48 × 48 px par un pseudo-élément qui déborde de 4 px dans le retrait (modèle des boutons-icônes de Material 3).
+- Rayon du champ = rayon du bouton + retrait = 20 + 8 = 28 px, pour des arrondis concentriques. Icône « ↑ » de 20 px.
+- Le texte saisi s'arrête à 12 px du bouton, il ne passe jamais dessous.
+- Vaut pour « Que changer ? » (téléphone) et « Demander une modification de la lettre / du CV » (ordinateur).
+- Remplace la première demande du même jour (14 h 18 : bouton de 44, retrait de 6), qui sortait de la grille de 4.
+
+## Limites de poids par page (Kevin, 16.11.2026, 15 h 10 et 15 h 18, issue #797)
+
+- Règle : le JS et le CSS ont des limites **par page**, fixées une seule fois et jamais relevées. Une PR qui dépasse compense sur sa propre page ou attend. Seule exception : une décision écrite dans docs/decisions/ avec l'accord de Kevin.
+- Valeur : pour chaque page, la plus basse entre (a) une référence publique de budget pour un téléphone moyen en 4G et (b) la mesure de main du 16.11 + 5 %, arrondie à la centaine d'octets inférieure.
+- Référence (a) : Alex Russell, « The Performance Inequality Gap, 2024 » (https://infrequently.org/2024/01/performance-inequality-gap-2024/). Pour un téléphone de milieu de gamme (Galaxy A51, Pixel 4a) sur un réseau P75 (7,2 Mbit/s, 94 ms), interactif en 3 secondes : environ 730 Kio compressés par page, dont 365 Kio de JS au plus, soit 373 760 o de JS et 373 760 o pour le reste (HTML, CSS, images, polices). Aujourd'hui (b) est plus basse partout : la page la plus lourde, Candidatures › Suivi, charge 168 Ko de JS et 70 Ko de CSS.
+- Pages : les 30 vues de router.ts (avec leur page parente), plus Aujourd'hui avec le bloc qu'elle charge à part sur téléphone (HomePhone) et sur ordinateur (TriageMini) : 32 pages. Une vue ou un bloc chargé à part sans limite fait échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
+- js-total et css-total sont affichés dans chaque PR mais ne bloquent plus. css-premier et js-premier disparaissent : c'est la page Aujourd'hui (accueil).
+- Chaque PR affiche le poids avant/après des pages qu'elle touche : résumé de l'exécution de la CI et note sur la PR (scripts/poids-ci.sh).
+- Voie 1 retenue : la voie 3 (couper du contenu utile pour gagner du poids) est exclue, la voie 2 seule (relever css-total) ne réglait rien.
+- Suite, une PR chacun, captures identiques au pixel près, gain mesuré par page : (a) sortir de style.css le CSS propre aux pages ; (b) premiers pas, une étape par fichier chargée à son tour ; (c) Préparer, panneaux secondaires à la demande.
