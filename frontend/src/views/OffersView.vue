@@ -30,7 +30,7 @@ import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
-import { activeChips, activeCount, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -202,6 +202,19 @@ const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value 
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
 // comptée dans aucun jour.
 const pinnedId = ref<number | null>(null);
+// Offre renotée depuis sa fiche (Kevin, 16.11) : si sa nouvelle note la sort des filtres, elle reste en tête,
+// ouverte, avec la pastille « Hors de tes filtres », jusqu'au prochain changement de filtre ou au départ de la page. Si
+// son statut change ensuite (écartée, gardée…), elle suit la règle commune.
+const outside = ref<Offer | null>(null);
+const outsideId = computed(() => (pinnedId.value === outside.value?.id ? pinnedId.value : null));
+// « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
+const outsideNote = computed(() => {
+  const offer = selected.value;
+  const f = filters.value;
+  if (!offer || offer.id !== outsideId.value || offer.score === null || offer.score === undefined) return null;
+  const out = (f.minScore !== null && offer.score < f.minScore) || (f.maxScore !== null && offer.score > f.maxScore);
+  return out ? `Nouvelle note : ${offer.score}. Elle sort de ton filtre « ${scoreLabel(f)} ».` : null;
+});
 const byDay = computed(() => filters.value.sort === "day");
 // À traiter (C2, C8) : les offres en préparation viennent d'abord (le serveur les met en tête) ; triées
 // par jour, elles ont leur propre titre, « En préparation », avant les jours.
@@ -472,8 +485,10 @@ async function load(append = false): Promise<void> {
     });
     if (current !== requestId) return; // une requête plus récente est partie entre-temps
     if (!data) throw new Error("réponse vide");
-    items.value = append ? [...items.value, ...data.items] : data.items;
-    if (!append) pinnedId.value = null;
+    const kept = append ? null : await keptOutside(data.items);
+    if (current !== requestId) return;
+    items.value = append ? [...items.value, ...data.items] : kept ? [kept, ...data.items] : data.items;
+    if (!append) pinnedId.value = kept ? kept.id : null;
     total.value = data.total;
     counts.value = data.counts;
     facets.value = data.facets;
@@ -490,6 +505,17 @@ async function load(append = false): Promise<void> {
       void nextTick(measureGrid);
     }
   }
+}
+
+// L'offre renotée, relue si la liste ne la rend plus ; null si elle y est, a changé de statut, ou n'existe plus.
+async function keptOutside(listed: Offer[]): Promise<Offer | null> {
+  const keep = outside.value;
+  outside.value = null;
+  if (!keep || listed.some((o) => o.id === keep.id)) return null;
+  const data = (await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: keep.id } } }).catch(() => null))?.data;
+  if (data?.status !== keep.status) return null;
+  outside.value = data;
+  return data;
 }
 
 async function setStatus(status: "to_review" | "later" | "ignored" | "preparing", target: Offer | null = selected.value): Promise<void> {
@@ -604,7 +630,10 @@ function onKeydown(event: KeyboardEvent): void {
 // (ajoutée à la main, ou par un lien) en serait effacée et sa fiche refermée aussitôt.
 watch(
   () => JSON.stringify(toQuery(filters.value)),
-  () => void load(),
+  () => {
+    outside.value = null;
+    void load();
+  },
 );
 
 async function loadChunkTitles(): Promise<void> {
@@ -1067,6 +1096,7 @@ onUnmounted(() => {
                 :offer="row.offer"
                 :selected="row.offer.id === selectedId"
                 :show-date="!byDay || row.offer.id === pinnedId"
+                :outside="row.offer.id === outsideId"
                 @select="selectOffer(row.offer.id)"
               />
             </li>
@@ -1180,12 +1210,13 @@ onUnmounted(() => {
             <OfferDetail
               :offer="selected"
               :chunk-titles="chunkTitles"
+              :outside-note="outsideNote"
               @close="selectedId = null"
               @status="setStatus"
               @applied="openApplication"
               @expiry="setExpiry"
               @address="setAddress"
-              @changed="load()"
+              @changed="(rescored) => { if (rescored) outside = selected; load(); }"
             />
           </component>
         </div>
