@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot import accounts
-from jobbot.agency import agency_condition, agency_kind
+from jobbot.agency import NO_CORRECTIONS, agency_condition, agency_kind
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Offer, OfferLink, Setting, User
 from jobbot.runtime import Runtime
@@ -24,13 +24,13 @@ NOW = datetime.now(UTC)
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
     async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications CASCADE"))
-        await conn.execute(text("DELETE FROM settings WHERE key = 'not_agencies'"))
+        await conn.execute(text("DELETE FROM settings WHERE key IN ('not_agencies', 'agencies')"))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications CASCADE"))
-        await conn.execute(text("DELETE FROM settings WHERE key = 'not_agencies'"))
+        await conn.execute(text("DELETE FROM settings WHERE key IN ('not_agencies', 'agencies')"))
 
 
 async def add(runtime: Runtime, key: str, title: str, company: str | None, **extra: Any) -> int:
@@ -78,9 +78,9 @@ async def test_python_and_sql_agree(
     async with runtime.sessionmaker() as session:
         offer = await session.get_one(Offer, offer_id)
         in_sql = await session.scalar(
-            select(Offer.id).where(Offer.id == offer_id, agency_condition(frozenset()))
+            select(Offer.id).where(Offer.id == offer_id, agency_condition(NO_CORRECTIONS))
         )
-    assert agency_kind(offer, frozenset()) == kind
+    assert agency_kind(offer, NO_CORRECTIONS) == kind
     assert (in_sql is not None) == (kind is not None)
 
 
@@ -164,3 +164,36 @@ async def test_correction_of_another_account_is_404(api: AsyncClient, runtime: R
     finally:
         async with admin_engine().begin() as conn:
             await conn.execute(text("DELETE FROM users WHERE username = 'compte-agence'"))
+
+
+async def test_mark_as_agency_last_correction_wins(api: AsyncClient, runtime: Runtime) -> None:
+    """« C'est une agence de placement » (Kevin, 16.11 23 h 33) : gardé pour l'entreprise,
+    appliqué à ses autres offres ; la dernière correction l'emporte, dans les deux sens."""
+    first = await add(runtime, "m1", "DevOps", "Banque Exemple SA")
+    await add(runtime, "m2", "SRE", "banque exemple sa ")
+    await add(runtime, "m3", "Data", "Autre SA")
+    marked = (await api.post(f"/api/offers/{first}/agency")).json()
+    assert marked["agency"] == "known"
+    found = await listing(api)
+    assert found["SRE"]["agency"] == "known" and found["Data"]["agency"] is None
+    assert sorted(await listing(api, hide_agencies=True)) == ["Data"]
+    async with runtime.sessionmaker() as session:
+        rows = dict(
+            (
+                await session.execute(
+                    select(Setting.key, Setting.value).where(
+                        Setting.key.in_(["agencies", "not_agencies"])
+                    )
+                )
+            ).all()
+        )
+    assert rows["agencies"] == ["banque exemple sa"]
+    # « Ce n'est pas une agence » ensuite : il l'emporte et retire la première correction.
+    back = (await api.post(f"/api/offers/{first}/not-agency")).json()
+    assert back["agency"] is None
+    assert sorted(await listing(api, hide_agencies=True)) == ["Data", "DevOps", "SRE"]
+    # Puis de nouveau « agence » : la dernière gagne encore.
+    assert (await api.post(f"/api/offers/{first}/agency")).json()["agency"] == "known"
+    # « Annuler » retire la correction : la détection seule revient (rien ici).
+    assert (await api.delete(f"/api/offers/{first}/agency")).json()["agency"] is None
+    assert (await api.post("/api/offers/999999/agency")).status_code == 404
