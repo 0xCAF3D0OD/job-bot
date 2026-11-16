@@ -4474,7 +4474,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-funding-sheet a span { flex: none; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 @media (min-width: 821px) {
   .training-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
-  .training-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
   .training-mine { max-width: 40rem; }
 }

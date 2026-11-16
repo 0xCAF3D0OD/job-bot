@@ -1,0 +1,1 @@
+Bilan ordinateur, Formations : état vide avec « Voir le catalogue », catalogue d'après la planche du 16.11 (« ← Mes formations », une colonne, signet rond), En cours sans modules sur une ligne, « Terminée » en vert
