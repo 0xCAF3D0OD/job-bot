@@ -1238,6 +1238,11 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 .settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; max-width: 40rem; margin: 0 auto; }
 @media (max-width: 860px) { .settings-layout { padding: 0 var(--space-5); } }
+/* En-tête des sous-pages de Réglages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien,
+   le titre et les cartes sur le même bord gauche (largeur de .settings-sections, marges de .settings-layout). */
+.page-head.jobs-head.settings-head { display: block; box-sizing: content-box; max-width: 40rem; padding: var(--space-6) var(--space-6) var(--space-2); }
+.settings-head > h1 { margin: 0 0 var(--space-4); }
+@media (max-width: 860px) { .page-head.jobs-head.settings-head { padding: var(--space-5) var(--space-5) var(--space-2); } }
 
 /* Saisie Job-Room : une section par étape de leur formulaire
    Règle réunie plus haut avec « .training-title:hover », même style (allègement du 16.11). */
@@ -2228,8 +2233,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Des blocs à leur taille (docs/63 §2). */
 @media (min-width: 821px) {
   /* Réglages : les rubriques à la largeur de lecture. */
-  .settings-sections { max-width: 46rem; }
+  .settings-sections, .page-head.jobs-head.settings-head { max-width: 46rem; }
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
+  :root:has(.ai-spend) .page-head.jobs-head.settings-head { max-width: calc(var(--page-max) - 2 * var(--space-6)); }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté.
@@ -2910,8 +2916,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Une rubrique, une carte : les cartes du contenu perdent leur cadre, les parties sont séparées
    par leur titre, pas par un filet ni par une autre carte. */
 .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-8) var(--space-8); }
-.settings-card > * + * { margin-top: 0; }
-.settings-card > * + * { padding-top: var(--space-2); }
 /* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
 /* Téléphone (docs/106, complément 0.76.1) : la ligne dépliable est la carte ; son contenu garde
    une marge égale des deux côtés, sans barre, et les parties se resserrent. */
@@ -3008,7 +3012,8 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 
 /* La structure des Réglages (docs/106, complément 0.77.3) : un filet fin entre deux parties,
    jamais en dernier ni au-dessus d'un bouton ; les parties serrées autour de leur titre. */
-/* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. */
+/* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. Seule règle des
+   marges entre parties (les deux `.settings-card > * + *` plus faibles, sans effet, retirés le 16.11, #792). */
 .settings-card.settings-card > * + * { margin-top: 0; padding-top: 0; border-top: 1px solid var(--divider); }
 /* Deux réglages côte à côte (docs/130 §D) : pas de filet au-dessus du second, seulement au-dessus
 
@@ -3359,7 +3364,6 @@ main:focus { outline: none; }
    description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
 @media (min-width: 861px) {
   .settings-card { background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
-  .settings-card > * + * { padding-top: 0; }
   /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
   .settings-card.settings-card > * + * { border-top: 0; }
   /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
