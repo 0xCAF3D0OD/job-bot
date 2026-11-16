@@ -630,3 +630,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.416 | Code jobup à l'inscription : un relevé partagé lit la boîte toutes les 15 s tant qu'une page attend un code, la boîte des invités est lue même si Gmail échoue, et l'étape dit quand la boîte jobA1 ne répond pas | livrée |
 | 1.6.417 | Envoyées : l’historique se déplie sur place, replié par défaut ; le tri a trois choix sur téléphone aussi et il est gardé pour le compte. | livrée |
 | 1.6.418 | Aujourd'hui : premiers pas en cinq lignes sur ordinateur et téléphone, accueil « Bienvenue » et « Offres à trier » vide pour un compte sans offre (§22 et §23 du 15.11) | livrée |
+| 1.6.419 | Trier : après le tri, « Candidatures » dans le menu ne ramène plus à la page de tri mais à la dernière page de la rubrique | livrée |
