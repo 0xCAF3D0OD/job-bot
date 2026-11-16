@@ -197,6 +197,16 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
 
 ## Carte épinglée de Rendez-vous, date en icône calendrier (Kevin, 15.11.2026, 16 h 42)
+
+- Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
+- Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
+- Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
+
+## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
+
+- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
+- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
+
 ## Premiers pas d'Aujourd'hui en cinq lignes (Kevin, 15.11.2026, 17 h 39)
 
 - Option B pour la section 22 (planche AujourdhuiOrdinateurNouveau) : cinq lignes dans le style de la planche, compteur « N sur 5 », au lieu des trois lignes « 2 sur 3 » dessinées. Un seul composant de ligne pour les cinq étapes ; l'ancienne carte « 2 sur 5 » à une seule action est supprimée.
@@ -207,26 +217,6 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Serveur : CV et critères séparés ; /api/today renvoie compétences, métier, lieu et taux. Les étapes gardées pour le compte, l'équipe et les applications partenaires ne changent pas.
 - Poids : pas de relèvement de limite ; fusion seulement après le retrait du livre de Trier.
 - Téléphone : plus tard, avec la nouvelle page d'accueil. La mise en page attend la planche mise à jour.
-
-## Premiers pas : compléments du §23 (Kevin, 15.11.2026, 18 h 24)
-
-- Croix « Masquer les premiers pas » gardée : 44 × 44 px à droite du compteur, bandeau « Premiers pas masqués » + « Annuler ».
-- Téléphone : la liste dans une carte, en attendant la nouvelle page d'accueil.
-- Sous-titre du bloc d'accueil : « Crée ta première alerte : jobA1 s'occupe du reste. » avant l'alerte ; « Ton alerte est créée. La prochaine collecte t'apporte tes premières offres. » après.
-- ORP : la phrase commune (« Encore N d'ici le <date> »), pas celle de la planche.
-- Un seul bouton, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton ; à venir : grisées, sans bouton. Pas les mots de l'ancienne carte.
-- Bandeau à trait de compte à rebours partout où il y a « Annuler » (Gardée, Écartée, Carte masquée, Premiers pas masqués, Navigateur retiré) : un seul composant, dans la feuille commune ; coût à mesurer.
-
-## Code jobup : relevé partagé de la boîte tant qu'une page attend (Kevin, 15.11.2026, 18 h 24 et 18 h 49)
-
-- Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
-- Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
-- Le nom du bouton garde la date complète ; variante du bas à 12 px du bas de la zone de liste, comme les 12 px sous les filtres en haut.
-
-## Modèles de la lettre et du CV (Kevin, 15.11.2026, 17 h 33 et 19 h 07)
-
-- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
-- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
 
 ## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
 
@@ -241,10 +231,23 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Ligne d'état de l'étape : « on vérifie toutes les 15 s » (la vraie fréquence du serveur).
 - Retiré : le message « Déjà six relevés rapides cette heure-ci », qui ne pouvait plus s'afficher (Kevin, 19 h 02).
 - La boîte jobA1 ne répond pas (Kevin, 19 h 02) : après 3 lectures ratées de suite de la boîte des invités (Infomaniak indisponible, erreur IMAP), la ligne d'état de l'étape 3 devient « La boîte jobA1 ne répond pas. On réessaie dans 1 minute. », même style, icône d'alerte orange. Le relevé ne relit plus la boîte qu'une fois par minute tant qu'elle ne répond pas. La ligne revient à l'attente dès qu'une lecture réussit. Aucun détail technique affiché ; dans les journaux, le type d'erreur seulement, ni adresse ni code.
-- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
-- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
+
+## Premiers pas : compléments du §23 (Kevin, 15.11.2026, 18 h 24)
+
+- Croix « Masquer les premiers pas » gardée : 44 × 44 px à droite du compteur, bandeau « Premiers pas masqués » + « Annuler ».
+- Téléphone : la liste dans une carte, en attendant la nouvelle page d'accueil.
+- Sous-titre du bloc d'accueil : « Crée ta première alerte : jobA1 s'occupe du reste. » avant l'alerte ; « Ton alerte est créée. La prochaine collecte t'apporte tes premières offres. » après.
+- ORP : la phrase commune (« Encore N d'ici le <date> »), pas celle de la planche.
+- Un seul bouton, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton ; à venir : grisées, sans bouton. Pas les mots de l'ancienne carte.
+- Bandeau à trait de compte à rebours partout où il y a « Annuler » (Gardée, Écartée, Carte masquée, Premiers pas masqués, Navigateur retiré) : un seul composant, dans la feuille commune ; coût à mesurer.
 
 ## Offres sur téléphone, réponses du 16 novembre (Kevin, 16.11.2026)
 
 - « Voir la compatibilité » est bleu (`--primary-text`) partout, offre provisoire comprise : un lien garde la même couleur sur tous les écrans (Nielsen, heuristique 4). La planche OffreProvisoire, qui le dessinait foncé, avait tort ; Kevin la corrige.
 - La flèche d'envoi grise quand le champ est vide est voulue sur tous les champs à flèche (Ajouter, assistant) : même état désactivé partout, flèche toujours visible et annoncée avec `aria-disabled`.
+
+## Tâche « Envoyer N candidatures » d'Aujourd'hui, fonction manquante (Kevin, 16.11.2026, 9 h 41)
+
+| Date | Fonction (planche) | Ce qu'il faudrait |
+|---|---|---|
+| 2026-11-16 | Tâche « Envoyer N candidatures · Lettres et CV déjà prêts » dans « À faire » d'Aujourd'hui (AujourdhuiOrdinateurV2 et AccueilV2, états « accueil » et « repos ») | Savoir quelles candidatures ont leur lettre et leur CV prêts, offre par offre, et en tirer N. Ce calcul n'existe pas : jobA1 montre seulement « Préparer N candidatures » (offres gardées sans lettre). Rien n'est codé : la marge de poids JS est presque épuisée. La tâche reste sur la planche comme objectif, marquée « à venir » par Kevin. |
