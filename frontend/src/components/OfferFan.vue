@@ -48,8 +48,8 @@ const cards = computed(() => {
   const shift = props.mini ? 220 : 0;
   return shown.map((offer, i) => {
     const [left, top, angle, plane] = places[order.indexOf(i)] ?? [0, 0, 0, 0];
-    // Les notes manuscrites : deux points retrouvés et au plus un point à vérifier ; chacune sur 2 lignes au plus, puis
-    // des points de suspension (Kevin, 15.11 : jamais coupée avant « : ») ; la note entière dans l'aria-label.
+    // Les notes manuscrites : deux points retrouvés et au plus un point à vérifier ; chacune sur 1 ligne, puis
+    // des points de suspension (Kevin, 16.11) ; la note entière dans l'aria-label.
     const points = triagePoints(offer);
     const score = offer.score == null ? null : Math.round(offer.score);
     const company = offer.company || "Entreprise non indiquée";
@@ -64,7 +64,7 @@ const cards = computed(() => {
         "--sx": `${SPREAD[n]?.[i] ?? left}px`,
         zIndex: plane,
       },
-      // La forme courte de l'IA (score-v9) si elle tient en 28 caractères, sinon le texte complet, coupé à 2 lignes
+      // La forme courte de l'IA (score-v9) si elle tient en 28 caractères, sinon le texte complet, coupé à 1 ligne
       // (Kevin, 15.11 : forme courte absente, vide ou trop longue).
       notes: points.map((p) => (p.short && p.short.length < 29 ? p.short : p.text)),
       points,
@@ -76,7 +76,7 @@ const cards = computed(() => {
         ? []
         : [...triageTags(offer), ...(score == null ? [] : [scoreWord(score).word])].slice(0, 4),
       excerpt: text ? buildExcerpt(text, matchedPassages(offer), 160) : null,
-      // Le nom du bouton qui retourne la carte : poste, entreprise, les notes entières (affichées sur 2 lignes au plus).
+      // Le nom du bouton qui retourne la carte : poste, entreprise, les notes entières (affichées sur 1 ligne).
       label: [`${offer.title}, ${company}`, ...points.map((p) => p.text.replace(/[.\s]+$/, "")), "Retourner pour voir l’extrait"].join(". "),
       front: i === front,
       turned: flipped.value.includes(offer.id),
@@ -235,11 +235,15 @@ const cards = computed(() => {
 .fan :deep(.score-ring-wrap) { padding: 0; }
 .fan :deep(circle) { stroke-width: 10; }
 .fan :deep(.score-ring) { --ring: var(--fan-ink); --ring-soft: rgb(0 0 0 / 14%); --ring-gap: var(--fan-bg); width: 56px; height: 56px; padding: 0; font-size: var(--font-title); font-weight: var(--weight-heavy); }
-.fan-notes { flex: auto; min-height: 0; margin-top: var(--space-6); font: var(--fan-22) / var(--fan-26) var(--font-hand); letter-spacing: 0.02em; opacity: 0.85; }
+/* 24 px au moins entre la dernière note et le poste, comme entre l'en-tête et les notes (Kevin, 16.11.2026). */
+.fan-notes { flex: auto; min-height: 0; margin-block: var(--space-6); font: var(--fan-22) / var(--fan-26) var(--font-hand); letter-spacing: 0.02em; opacity: 0.85; }
 /* Une hauteur en lignes entières : une note qui ne tient pas est coupée entre deux lignes, jamais au milieu. */
 .fan-notes p { max-height: round(down, 100%, var(--fan-26)); margin: 0; overflow: hidden; }
-.fan-notes span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Une ligne par note, « … » si elle ne tient pas, forme courte ou non (Kevin, 16.11.2026). */
+.fan-notes span, .fan-names span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Une note coupée garde une marge de chaque côté, comme une note courte : environ 88 % de la largeur, centrée
+   (Kevin, 16.11) ; 16 px de chaque côté plutôt que 88 %, pour rester sur la grille de 4 (240 px sur 272). */
+.fan-notes span { margin-inline: var(--space-4); }
 .fan-names b { display: -webkit-box; font-size: var(--fan-26); line-height: var(--fan-30); letter-spacing: -0.3px; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fan-names span { margin-top: var(--space-1); font-size: var(--fan-place); line-height: var(--fan-place-lh); opacity: 0.9; }
 
