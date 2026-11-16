@@ -3418,6 +3418,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-searches/watch-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Watch Code
+         * @description L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
+         *     son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
+         *     attend.
+         */
+        post: operations["watchSiteCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alert-searches/codes/last": {
         parameters: {
             query?: never;
@@ -5201,6 +5223,11 @@ export interface components {
         ExpectCodeOut: {
             /** Queued */
             queued: boolean;
+            /**
+             * Mailbox Down
+             * @default false
+             */
+            mailbox_down: boolean;
         };
         /** ExtensionCode */
         ExtensionCode: {
@@ -16024,6 +16051,26 @@ export interface operations {
         };
     };
     expectSiteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectCodeOut"];
+                };
+            };
+        };
+    };
+    watchSiteCode: {
         parameters: {
             query?: never;
             header?: never;
