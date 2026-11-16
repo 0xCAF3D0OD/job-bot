@@ -28,7 +28,7 @@ const offer = (id: number, title: string) => ({
   links: [],
   filter_reasons: [],
 });
-const counts = { to_review: 1, pending: 1, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 1 };
+const counts = { to_review: 1, pending: 1, pending_all: 1, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 1 };
 const facets = { sources: [], cantons: [], scores: [] as number[], unscored: 0 };
 
 async function mountAt(

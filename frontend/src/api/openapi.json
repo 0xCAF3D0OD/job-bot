@@ -19831,6 +19831,10 @@
             "type": "integer",
             "title": "Pending"
           },
+          "pending_all": {
+            "type": "integer",
+            "title": "Pending All"
+          },
           "filtered_out": {
             "type": "integer",
             "title": "Filtered Out"
@@ -19856,6 +19860,7 @@
         "required": [
           "to_review",
           "pending",
+          "pending_all",
           "filtered_out",
           "later",
           "in_progress",

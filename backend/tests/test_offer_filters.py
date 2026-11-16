@@ -104,8 +104,14 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
     body = (
         await api.get("/api/offers", params={"view": "to_review", "q": "devops", "cantons": "GE"})
     ).json()
-    # « À traiter » ne suit pas les filtres : c'est la pastille du segment (docs/139, 2026-11-03).
-    assert body["counts"].pop("pending") == (await api.get("/api/today")).json()["pending"]
+    # « À traiter » sans filtre : le total de « 12 sur 38 offres », le même que la barre (docs/139).
+    assert body["counts"].pop("pending_all") == (await api.get("/api/today")).json()["pending"]
+    # « À traiter » avec les filtres, comme les autres compteurs (Kevin, 16.11 : le bug du 415).
+    pending = (
+        await api.get("/api/offers", params={"view": "pending", "q": "devops", "cantons": "GE"})
+    ).json()
+    assert body["counts"]["pending"] == pending["total"]
+    assert body["counts"].pop("pending") == 1
     assert body["counts"] == {
         "to_review": 1,
         "filtered_out": 0,
@@ -372,19 +378,22 @@ async def test_pending_view_can_show_expired(api: AsyncClient, runtime: Runtime)
 async def test_counts_pending_is_the_badge_and_total_is_the_list(
     api: AsyncClient, runtime: Runtime
 ) -> None:
-    """Une seule source par nombre (docs/139, 2026-11-03).
+    """Une seule source par nombre (docs/139, 2026-11-03 ; Kevin, 16.11).
 
-    counts.pending est la pastille, sans filtre ; total décrit la liste affichée.
+    counts.pending_all est le total sans filtre (la barre) ; counts.pending suit les filtres, comme la
+    liste « À traiter » ; total décrit la liste affichée.
     """
     await add(runtime, 16, "Kubernetes à Lausanne", ["jobup"])
     await add(runtime, 17, "Comptable", ["jobup"])
     await add(runtime, 18, "Envoyée", ["jobup"], status=OfferStatus.APPLIED)
     badge = (await api.get("/api/today")).json()["pending"]
     searched = (await api.get("/api/offers", params={"view": "pending", "q": "comptable"})).json()
-    assert searched["counts"]["pending"] == badge
-    assert searched["total"] == len(searched["items"]) == 1
-    in_progress = (await api.get("/api/offers", params={"view": "in_progress"})).json()
-    assert in_progress["counts"]["pending"] == badge
+    assert searched["counts"]["pending_all"] == badge
+    assert searched["counts"]["pending"] == searched["total"] == len(searched["items"]) == 1
+    # Dans une autre vue, la puce « À traiter » compte aussi avec les filtres.
+    in_progress = (await api.get("/api/offers", params={"view": "in_progress", "q": "comptable"})).json()
+    assert in_progress["counts"]["pending_all"] == badge
+    assert in_progress["counts"]["pending"] == 1
     assert in_progress["total"] == len(in_progress["items"])
 
 

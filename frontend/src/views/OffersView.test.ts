@@ -46,7 +46,7 @@ function page(items: unknown[]) {
     data: {
       items,
       total: items.length,
-      counts: { to_review: 5, pending: 6, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
+      counts: { to_review: 5, pending: 6, pending_all: 6, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
       facets: {
         sources: [
           { value: "indeed", count: 3 },
@@ -895,7 +895,7 @@ describe("Offres, sans bande d’action (1.6.53)", () => {
   });
 
   it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à traiter. »", async () => {
-    const reviewed = { to_review: 0, pending: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
+    const reviewed = { to_review: 0, pending: 0, pending_all: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
     mockOffers({ data: { ...page([]).data, counts: reviewed } });
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
