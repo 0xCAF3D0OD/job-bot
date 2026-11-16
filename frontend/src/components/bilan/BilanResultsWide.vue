@@ -7,7 +7,7 @@ import type { components } from "../../api/schema";
 import { daysBefore, formatMonth, plural } from "../../format";
 import { isNetworkError } from "../../network";
 import AppIcon from "../AppIcon.vue";
-import FaceState from "../FaceState.vue";
+import EmptyState from "../EmptyState.vue";
 import LoadingBlocks from "../LoadingBlocks.vue";
 import NetworkError from "../NetworkError.vue";
 
@@ -104,33 +104,52 @@ const oldest = computed(() => Math.max(0, ...(today.value?.follow_ups ?? []).map
       v-if="error && offline"
       @retry="load()"
     />
-    <p
+    <!-- Les états de la planche (§29 du 16.11) : Erreur, Chargement, Trop tôt. Hors ligne, NetworkError reste. -->
+    <EmptyState
       v-else-if="error"
-      class="notice error"
+      title="Bilan indisponible pour l’instant"
+      scene="erreur"
+      :width="360"
+      :desktop-width="360"
+      pill="Tes candidatures et ton suivi ORP ne sont pas touchés"
+      pill-icon="done"
       role="alert"
+      data-test="insights-error"
     >
-      Bilan indisponible pour l’instant.
-    </p>
+      <template #actions>
+        <button
+          type="button"
+          class="primary"
+          data-test="insights-retry"
+          @click="load()"
+        >
+          <AppIcon name="refresh" />Réessayer
+        </button>
+      </template>
+    </EmptyState>
     <LoadingBlocks
       v-else-if="!insights || !funnel"
       :heights="['6rem', '10rem', '16rem']"
     />
-    <FaceState
+    <EmptyState
       v-else-if="funnel.applications === 0"
       title="Trop tôt pour conclure"
-      illustration="trop-tot"
+      scene="groupe"
+      :width="300"
+      :desktop-width="300"
+      pill="Le Bilan se remplit avec tes premières candidatures et réponses"
+      pill-icon="stats"
       data-test="insights-empty"
     >
-      <p>Le Bilan se remplit avec tes premières candidatures et réponses.</p>
-      <div class="face-state-actions">
+      <template #actions>
         <RouterLink
           to="/candidatures/offres"
           class="button-link primary-link"
         >
-          <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+          <AppIcon name="briefcase" />Voir les offres
         </RouterLink>
-      </div>
-    </FaceState>
+      </template>
+    </EmptyState>
     <template v-else>
       <!-- Les trois chiffres : carte à filet bleu clair et ombre, remontée de 8. -->
       <ul
