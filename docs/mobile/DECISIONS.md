@@ -197,6 +197,23 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
 
 ## Carte épinglée de Rendez-vous, date en icône calendrier (Kevin, 15.11.2026, 16 h 42)
+  
+## Code jobup : relevé partagé de la boîte tant qu'une page attend (Kevin, 15.11.2026, 18 h 24 et 18 h 49)
+
+- L'étape « Recopie le code de jobup » signale son attente dès son affichage, puis chaque minute tant qu'elle attend et que l'onglet est visible, 10 minutes au plus ; l'attente finit 75 s après la dernière relance, ou dès que le code du compte est arrivé. « J'attends un code » et l'extension attendent 5 minutes.
+- Un seul relevé partagé lit la boîte toutes les 15 s tant qu'au moins une attente est en cours, et range chaque code selon son adresse. Plafond : 240 relevés rapides par heure, un toutes les 15 s, quel que soit le nombre d'attentes ; pas de plafond par compte.
+- La boîte des invités est lue même si la boîte Gmail de l'exploitant échoue, et inversement ; l'erreur est relancée après.
+- Ligne d'état de l'étape : « on vérifie toutes les 15 s » (la vraie fréquence du serveur).
+- Retiré : le message « Déjà six relevés rapides cette heure-ci », qui ne pouvait plus s'afficher (Kevin, 19 h 02).
+- La boîte jobA1 ne répond pas (Kevin, 19 h 02) : après 3 lectures ratées de suite de la boîte des invités (Infomaniak indisponible, erreur IMAP), la ligne d'état de l'étape 3 devient « La boîte jobA1 ne répond pas. On réessaie dans 1 minute. », même style, icône d'alerte orange. Le relevé ne relit plus la boîte qu'une fois par minute tant qu'elle ne répond pas. La ligne revient à l'attente dès qu'une lecture réussit. Aucun détail technique affiché ; dans les journaux, le type d'erreur seulement, ni adresse ni code.
+
+## Formations ordinateur, plus de « Module terminé » (Kevin, 15.11.2026, 16 h 33)
+
+- Dans « En cours » de la vue d'ensemble Formations sur ordinateur, « Module terminé » et ses boutons − et + sont retirés : « Module N sur 12 » avec la barre suffit, comme sur la planche BilanOrdinateur.
+- « Marquer comme terminée » (au dernier module) et « Noter l'avancement » restent. Le téléphone (Suivies) garde le compteur jusqu'à sa propre page.
+- Le compte se note dans le panneau « Noter l'avancement » : champ « Modules faits » (nombre, de 0 au nombre de modules, libellé visible), sous « Nombre de modules ». Au-delà du total, rien n'est enregistré et « Pas plus de N modules » s'affiche sous le champ. La carte montre ensuite « Module N sur 12 » (Kevin, 15.11.2026, 18 h 01).
+
+## Préparer, carte « Ce CV » (Kevin, 15.11.2026, 17 h 57)
 
 - Remplace la décision « la date dans le carré de 40 px du logo » (Liaison rail) : la carte épinglée de Rendez-vous montre la même icône calendrier que les cartes de la liste et la carte d'en-tête (mois abrégé en capitales en haut, jour dessous), à 40 px comme le logo de la carte épinglée d'Offres.
 - Même ton que la carte représentée, comme dans la liste : orange pour un rendez-vous ORP, bleu pour un entretien, gris pour un rendez-vous passé déjà noté.
