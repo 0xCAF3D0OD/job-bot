@@ -142,6 +142,28 @@ describe("CvPanel", () => {
     expect(wrapper.findAll("[data-test=cv-change]")).toHaveLength(1);
   });
 
+  it("§34 : « Voir les changements · N » surligne le résumé ; la loupe ouvre la recherche, Échap la ferme", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [2, 1, 3], { origin_ids: [1, 2, 3] })] });
+    const wrapper = await mountPanel();
+    const show = wrapper.get("[data-test=cv-changes-show]");
+    expect(show.text()).toBe("Voir les changements · 2");
+    expect(show.attributes("aria-pressed")).toBe("false");
+    await show.trigger("click");
+    expect(show.attributes("aria-pressed")).toBe("true");
+    const sheet = wrapper.get("[data-test=cv]");
+    // Le texte remplace les champs pendant la lecture, et le résumé changé est surligné.
+    expect(sheet.classes()).toContain("doc-reading");
+    expect(sheet.find("p.print-only.cv-changed").text()).toBe("Stage DevOps sur AWS.");
+    expect(sheet.find("[data-test=cv-item]").classes()).not.toContain("cv-changed");
+    const open = wrapper.get("[data-test=cv-search-open]");
+    expect(open.attributes("aria-label")).toBe("Chercher dans le CV");
+    await open.trigger("click");
+    expect(open.attributes("aria-expanded")).toBe("true");
+    await wrapper.get("[data-test=doc-search]").trigger("keydown", { key: "Escape" });
+    expect(wrapper.find("[data-test=doc-search]").exists()).toBe(false);
+    expect(open.attributes("aria-expanded")).toBe("false");
+  });
+
   it("un bloc retiré revient à sa place d’origine", async () => {
     GET.mockResolvedValue({ data: [cv(21, [2, 3], { origin_ids: [1, 2, 3] })] });
     PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
