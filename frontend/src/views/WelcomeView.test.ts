@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import { useAssistant } from "../composables/useAssistant";
+import { useUndo } from "../composables/useUndo";
 import WelcomeView from "./WelcomeView.vue";
 
 const GET = vi.fn();
@@ -18,7 +19,10 @@ vi.mock("../api/client", () => ({
   },
   QUIET: { headers: { "X-Jobbot-Quiet": "1" } },
 }));
-afterEach(() => vi.resetAllMocks());
+afterEach(async () => {
+  await useUndo().flush();
+  vi.resetAllMocks();
+});
 
 const CRITERIA = {
   locations: ["VD"],
@@ -370,28 +374,32 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
     await toOffers(wrapper);
     await click(wrapper, "welcome-dismiss");
-    expect(wrapper.find("[data-test=welcome-notice]").text()).toContain("Offre écartée.");
+    // Le bandeau commun à trait (§23 du 15.11) : le statut est parti, « Annuler » remet celui d'avant.
+    const { pending, undo } = useUndo();
+    expect(pending.value?.message).toBe("Offre écartée.");
     expect(wrapper.text()).toContain("Offre 2 sur 2");
 
-    await click(wrapper, "undo-status");
+    await undo();
+    await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 7 } }, body: { status: "to_review" } });
-    expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+    expect(pending.value).toBeNull();
     expect(wrapper.text()).toContain("Offre 1 sur 2");
 
     // Garder ne propose pas d'annuler ; écarter la dernière offre garde « Annuler » sur « Tout est prêt ».
     await click(wrapper, "welcome-keep");
-    expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+    expect(pending.value).toBeNull();
     vi.useFakeTimers();
     try {
       await click(wrapper, "welcome-dismiss");
       expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("1 offre gardée, 1 écartée.");
-      await click(wrapper, "undo-status");
+      await undo();
+      await flushPromises();
       expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 8 } }, body: { status: "later" } });
       expect(wrapper.text()).toContain("Offre 2 sur 2");
       await click(wrapper, "welcome-dismiss");
       vi.advanceTimersByTime(6000);
       await flushPromises();
-      expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+      expect(pending.value).toBeNull();
       expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("1 offre gardée, 1 écartée.");
     } finally {
       vi.useRealTimers();
