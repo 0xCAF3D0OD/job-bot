@@ -91,6 +91,19 @@ class CvReasonOut(BaseModel):
     quotes: list[str] = []
 
 
+class CvUserRequestOut(BaseModel):
+    """Une demande de l'utilisateur (retouche ou consigne), gardée d'une version à l'autre.
+    `applied: false` : cette version ne la reprend pas (« N de tes demandes ne sont pas reprises »,
+    bouton « Les réappliquer »). `after` : le bloc qui doit précéder `target` (None : en tête) ;
+    `text` : le résumé demandé."""
+
+    target: int | Literal["summary"]
+    kind: Literal["summary", "removed", "added", "moved"]
+    text: str | None = None
+    after: int | None = None
+    applied: bool
+
+
 class CvOut(BaseModel):
     id: int
     offer_id: int
@@ -113,6 +126,7 @@ class CvOut(BaseModel):
     # pouvoir l'annuler.
     origin_ids: list[int] = []
     reasons: list[CvReasonOut] = []
+    user_requests: list[CvUserRequestOut] = []
 
 
 class CvRead(BaseModel):
@@ -130,6 +144,17 @@ class CvEdit(BaseModel):
     summary: Annotated[str, Field(max_length=1500)]
     chunk_ids: list[int] = Field(min_length=1, max_length=40)
     keywords: list[Annotated[str, Field(max_length=60)]] | None = Field(default=None, max_length=30)
+
+
+async def _latest_content(runtime: Runtime, offer_id: int) -> dict[str, Any] | None:
+    async with runtime.sessionmaker() as session:
+        latest = await session.scalar(
+            select(Draft)
+            .where(Draft.offer_id == offer_id, Draft.kind == DraftKind.CV)
+            .order_by(Draft.version.desc())
+            .limit(1)
+        )
+        return dict(latest.content) if latest else None
 
 
 def _eligible(chunks: list[ProfileChunkData]) -> dict[int, ProfileChunkData]:
@@ -150,13 +175,26 @@ def _document(draft: Draft, chunks: dict[int, ProfileChunkData], identity: Ident
 
 
 def _reasons(content: dict[str, Any]) -> list[CvReasonOut]:
-    user = list(dict.fromkeys(content.get("user_targets", [])))
+    user = [r["target"] for r in content.get("user_requests", []) if cv_reasons.applied(r, content)]
     ai = [
         CvReasonOut(target=r["target"], origin="ai", text=r["text"], quotes=r.get("quotes", []))
         for r in content.get("reasons", [])
         if r.get("target") not in user
     ]
     return ai + [CvReasonOut(target=t, origin="user") for t in user]
+
+
+def _requests(content: dict[str, Any]) -> list[CvUserRequestOut]:
+    return [
+        CvUserRequestOut(
+            target=r["target"],
+            kind=r["kind"],
+            text=r.get("text"),
+            after=r.get("after"),
+            applied=cv_reasons.applied(r, content),
+        )
+        for r in content.get("user_requests", [])
+    ]
 
 
 async def _render(session: AsyncSession, draft: Draft) -> CvOut:
@@ -186,6 +224,7 @@ async def _render(session: AsyncSession, draft: Draft) -> CvOut:
         read_at=draft.content.get("read_at"),
         origin_ids=list(chunks),
         reasons=_reasons(draft.content),
+        user_requests=_requests(draft.content),
     )
 
 
@@ -248,6 +287,11 @@ async def write_cv(request: Request, offer_id: int, body: CvRequest) -> CvOut:
     if instruction and ctx.previous is not None:
         # « Demander une modification du CV » : ce qui change est demandé par l'utilisateur.
         content |= cv_reasons.carry_over(ctx.previous, content)
+    else:
+        # Sans consigne, les demandes de la version précédente restent connues, reprises ou non.
+        content |= cv_reasons.keep_requests(
+            ctx.previous or await _latest_content(runtime, offer_id)
+        )
     async with runtime.sessionmaker.begin() as session:
         draft = await writing.add_version(
             session,
@@ -279,7 +323,7 @@ async def edit_cv(request: Request, draft_id: int, body: CvEdit) -> CvOut:
             )
         # Une retouche défait « J'ai relu le CV », comme pour la lettre ; ce qu'elle change
         # n'a plus la raison de l'IA (« Demandé par toi »).
-        dropped = ("read_at", "reasons", "user_targets")
+        dropped = ("read_at", "reasons", "user_requests")
         before = draft.content
         content = {
             **{k: v for k, v in before.items() if k not in dropped},

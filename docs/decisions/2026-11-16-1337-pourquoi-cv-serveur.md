@@ -5,3 +5,8 @@
 - Les mots cités restent dans la langue de l'annonce, entre guillemets, même si la raison est en français.
 - Un changement demandé par l'utilisateur via « Demander une modification du CV » n'a pas de raison de l'IA : l'API renvoie `origin: "user"` et l'interface affiche « Demandé par toi ».
 - `make mesure-pourquoi` utilise 5 CV fictifs (aucune donnée de compte réel) et n'affiche que des chiffres : jetons et prix par CV, total, différence v1/v2.
+
+Précisions de Kevin (16.11.2026, 13 h 52) :
+
+- Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
+- « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.

@@ -16,7 +16,8 @@ Tu prépares la version ciblée d'un CV d'une page pour UNE offre d'emploi en Su
 - `reasons` : la raison de chaque changement, pour la ligne « Pourquoi » que la personne lit sous le changement. Une entrée par changement, avec `target` et `reason` :
   - le résumé de profil : `target` vaut `"profil"` ;
   - un bloc placé plus haut que dans l'ordre d'origine (l'ordre des identifiants, rubrique par rubrique) : `target` est l'identifiant du bloc, par exemple `"12"` ;
-  - un bloc de type `experience`, `competence` ou `formation` que tu n'as pas mis dans `chunk_ids` : `target` est son identifiant.
+  - un bloc de type `experience`, `competence` ou `formation` que tu n'as pas mis dans `chunk_ids` : `target` est son identifiant ;
+  - un bloc que tu ajoutes alors qu'il n'était pas dans la version précédente (`<version_precedente>`) : `target` est son identifiant. Un bloc ajouté est toujours un bloc existant du profil, jamais un texte inventé.
 
 ## Règles strictes de la raison
 

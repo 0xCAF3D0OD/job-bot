@@ -303,7 +303,29 @@ async def test_api_reasons_and_user_origin(
         (ids["k8s"], "user"),
     }
     assert all(r["text"] is None for r in second["reasons"])
-    assert (await _content(rt, second["id"]))["user_targets"]
+    assert [(r["target"], r["kind"], r["applied"]) for r in second["user_requests"]] == [
+        ("summary", "summary", True),
+        (ids["stage"], "moved", True),
+        (ids["k8s"], "moved", True),
+    ]
+
+    # Nouvelle version sans consigne : les demandes restent connues ; celles qu'elle ne reprend
+    # pas sont « applied: false » (« N de tes demandes ne sont pas reprises », à réappliquer).
+    fake.response = answer([ids["k8s"], ids["stage"]])
+    third = (await api.post(f"/api/offers/{offer_id}/cvs", json={})).json()
+    assert [(r["target"], r["applied"]) for r in third["user_requests"]] == [
+        ("summary", False),
+        (ids["stage"], False),
+        (ids["k8s"], False),
+    ]
+    assert third["reasons"] == []
+    stored = await _content(rt, third["id"])
+    assert stored["user_requests"][0] == {
+        "target": "summary",
+        "kind": "summary",
+        "text": "Mon résumé.",
+    }
+    assert stored["user_requests"][1] == {"target": ids["stage"], "kind": "moved", "after": None}
 
 
 def test_highlight() -> None:

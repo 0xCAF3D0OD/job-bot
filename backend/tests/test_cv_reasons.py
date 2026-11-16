@@ -148,3 +148,22 @@ async def test_measure_prints_numbers_only() -> None:
         assert case.offer.title not in text
         assert all(c.title not in text for c in case.chunks)
     assert "Kubernetes" not in text and "Ansible" not in text
+
+
+def test_user_requests_follow_the_change() -> None:
+    before = {"summary": "A", "chunk_ids": [1, 2, 3]}
+    after = {"summary": "B", "chunk_ids": [3, 1, 4]}
+    requests = cv_reasons.requests_from(before, after)
+    assert requests == [
+        {"target": "summary", "kind": "summary", "text": "B"},
+        {"target": 2, "kind": "removed"},
+        {"target": 4, "kind": "added", "after": 1},
+        {"target": 3, "kind": "moved", "after": None},
+        {"target": 1, "kind": "moved", "after": 3},
+    ]
+    assert all(cv_reasons.applied(r, after) for r in requests)
+    assert not any(cv_reasons.applied(r, before) for r in requests)
+    # Une demande plus récente sur la même cible remplace l'ancienne.
+    again = cv_reasons.requests_from(after, {"summary": "B", "chunk_ids": [3, 1, 4, 2]})
+    merged = cv_reasons.merge_requests(requests, again)
+    assert [(r["target"], r["kind"]) for r in merged if r["target"] == 2] == [(2, "added")]

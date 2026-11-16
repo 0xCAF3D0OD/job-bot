@@ -14228,6 +14228,14 @@
             "type": "array",
             "title": "Reasons",
             "default": []
+          },
+          "user_requests": {
+            "items": {
+              "$ref": "#/components/schemas/CvUserRequestOut"
+            },
+            "type": "array",
+            "title": "User Requests",
+            "default": []
           }
         },
         "type": "object",
@@ -14388,6 +14396,66 @@
           "items"
         ],
         "title": "CvSectionOut"
+      },
+      "CvUserRequestOut": {
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "const": "summary"
+              }
+            ],
+            "title": "Target"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "removed",
+              "added",
+              "moved"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "kind",
+          "applied"
+        ],
+        "title": "CvUserRequestOut",
+        "description": "Une demande de l'utilisateur (retouche ou consigne), gardée d'une version à l'autre.\n`applied: false` : cette version ne la reprend pas (« N de tes demandes ne sont pas reprises »,\nbouton « Les réappliquer »). `after` : le bloc qui doit précéder `target` (None : en tête) ;\n`text` : le résumé demandé."
       },
       "DataSummary": {
         "properties": {

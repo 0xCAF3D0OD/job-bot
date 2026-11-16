@@ -5097,6 +5097,11 @@ export interface components {
              * @default []
              */
             reasons: components["schemas"]["CvReasonOut"][];
+            /**
+             * User Requests
+             * @default []
+             */
+            user_requests: components["schemas"]["CvUserRequestOut"][];
         };
         /** CvRead */
         CvRead: {
@@ -5146,6 +5151,28 @@ export interface components {
             heading: string;
             /** Items */
             items: components["schemas"]["CvItemOut"][];
+        };
+        /**
+         * CvUserRequestOut
+         * @description Une demande de l'utilisateur (retouche ou consigne), gardée d'une version à l'autre.
+         *     `applied: false` : cette version ne la reprend pas (« N de tes demandes ne sont pas reprises »,
+         *     bouton « Les réappliquer »). `after` : le bloc qui doit précéder `target` (None : en tête) ;
+         *     `text` : le résumé demandé.
+         */
+        CvUserRequestOut: {
+            /** Target */
+            target: number | "summary";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "removed" | "added" | "moved";
+            /** Text */
+            text?: string | null;
+            /** After */
+            after?: number | null;
+            /** Applied */
+            applied: boolean;
         };
         /** DataSummary */
         DataSummary: {
