@@ -1,0 +1,1 @@
+Relecture du CV : un bloc « Tes coordonnées » en tête propose, déjà remplis et modifiables, les champs encore vides du profil trouvés dans le CV ; ils s’enregistrent avec « Ajouter N éléments », jamais avant, et un champ déjà rempli n’est jamais écrasé

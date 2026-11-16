@@ -880,6 +880,7 @@ button.secondary:hover:not(:disabled), button.action-2:hover:not(:disabled), but
 .proposal-check { align-items: center; flex-wrap: wrap; }
 .proposal-check input { margin-top: 0; }
 .proposal input[type="text"] { width: 100%; font-weight: var(--weight-semibold); }
+.proposal .form-field input { font-weight: inherit; }
 
 /* --- Candidatures (0.5.0-a) --- */
 
