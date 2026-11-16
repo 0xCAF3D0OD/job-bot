@@ -24,7 +24,8 @@ B pourra s'ajouter si le transfert à la main devient pénible.
    - sinon, quand le domaine ne dit rien (boîte personnelle, logiciel de recrutement comme Workday ou SmartRecruiters, site d'annonces), le nom de l'entreprise, sans sa forme juridique, dans le message ;
    - plusieurs entreprises possibles : aucune (la personne choisit) ; plusieurs candidatures dans la même entreprise : la plus récente.
 4. **Classement** par mots-clés, sans IA : un refus d'abord (« malheureusement », « leider », « unfortunately »…, car un refus parle souvent de l'entretien passé), puis un accusé de réception (« bien reçu votre candidature » : « autre »), puis un entretien (« entretien », « Vorstellungsgespräch », « interview »…), sinon « autre ».
-5. **Rien ne change tout seul** : le statut de la candidature reste le même. Une notification (cloche ; téléphone un jour de recherche) dit « Ivy Partners SA t'a répondu : entretien ? » (ou « refus ? », ou seulement « t'a répondu ») et ouvre la candidature (`/candidatures/suivi?candidature=ID`), où la personne choisit le statut comme aujourd'hui. Candidature non retrouvée : « Réponse d'entreprise reçue », qui ouvre Candidatures.
+5. **Rien ne change tout seul** : le statut de la candidature reste le même. Une notification dit « Ivy Partners SA t'a répondu : entretien ? » (ou « refus ? », ou seulement « t'a répondu ») et ouvre la candidature (`/candidatures/suivi?candidature=ID`), où la personne choisit le statut comme aujourd'hui. Candidature non retrouvée : « Réponse d'entreprise reçue », qui ouvre Candidatures.
+6. **Où arrive la notification** (Kevin, 16.11.2026, 13 h 08) : une invitation à un entretien va dans la cloche et sur le téléphone, même un jour de repos, une seule fois, sans rappel (la même invitation transférée deux fois : cloche seule). Refus, accusé de réception et autre réponse : la cloche seule, jamais le téléphone.
 
 ## 3. Données (docs/regles-securite-donnees.md)
 

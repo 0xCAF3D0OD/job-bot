@@ -180,11 +180,11 @@ async def test_reply_is_attached_and_announced_without_keeping_it(
     phone: list[notify.Message],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Un jour de recherche : le téléphone reçoit aussi (un jour de repos, la cloche seule).
-    async def research_day(*_: object) -> bool:
-        return True
+    # Un jour de repos : l'invitation part quand même sur le téléphone (Kevin, 16.11, 13 h 08).
+    async def rest_day(*_: object) -> bool:
+        return False
 
-    monkeypatch.setattr(rhythm, "is_research_day", research_day)
+    monkeypatch.setattr(rhythm, "is_research_day", rest_day)
     application_id = await _add_application(clean, company="Ivy Partners SA")
     mailbox.add(manual_forward("<ivy@x>", IVY_BODY), "<ivy@x>")
     with capture_logs() as logs, accounts.use(None):
@@ -218,6 +218,13 @@ async def test_reply_is_attached_and_announced_without_keeping_it(
     _, bell = await owner_rows(clean)
     assert len(bell) == 1
 
+    # La même invitation transférée une deuxième fois : la cloche, pas de rappel au téléphone.
+    mailbox.add(manual_forward("<ivy2@x>", IVY_BODY), "<ivy2@x>")
+    with accounts.use(None):
+        await service.collect(clean)
+    _, bell = await owner_rows(clean)
+    assert len(bell) == 2 and len(phone) == 1
+
 
 async def test_unmatched_reply_still_announced(
     clean: Runtime, mailbox: FakeMailbox, phone: list[notify.Message]
@@ -235,6 +242,34 @@ async def test_unmatched_reply_still_announced(
     assert [(n.title, n.link) for n in bell] == [
         ("Réponse d'entreprise reçue", "/candidatures/suivi")
     ]
+    # Un refus reste dans la cloche, jamais sur le téléphone, même un jour de recherche.
+    assert phone == []
+
+
+async def test_refusal_and_receipt_stay_in_the_bell(
+    clean: Runtime,
+    mailbox: FakeMailbox,
+    phone: list[notify.Message],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def research_day(*_: object) -> bool:
+        return True
+
+    monkeypatch.setattr(rhythm, "is_research_day", research_day)
+    await _add_application(clean, company="Ivy Partners SA")
+    header = "De : RH <rh@ivypartners.ch>\nObjet : Candidature\n\n"
+    mailbox.add(manual_forward("<non@x>", header + "Malheureusement, c'est non."), "<non@x>")
+    mailbox.add(
+        manual_forward("<recu@x>", header + "Nous avons bien reçu votre candidature."), "<recu@x>"
+    )
+    with accounts.use(None):
+        await service.collect(clean)
+    _, bell = await owner_rows(clean)
+    assert sorted(n.title for n in bell) == [
+        "Ivy Partners SA t'a répondu",
+        "Ivy Partners SA t'a répondu : refus ?",
+    ]
+    assert phone == []
 
 
 async def test_personal_email_without_forward_header_stays_silent(

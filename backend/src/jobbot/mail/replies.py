@@ -26,7 +26,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from sqlalchemy import select
 
-from jobbot.db.models import Application
+from jobbot.db.models import Application, Notification
 from jobbot.log import get_logger
 from jobbot.mail.message import ParsedEmail
 from jobbot.notify import service as notify
@@ -238,6 +238,8 @@ async def handle(runtime: Runtime, email: ParsedEmail, today: date | None = None
             await session.scalars(select(Application).where(Application.sent_at >= since))
         )
         found = match(applications, forward)
+        # Une invitation déjà annoncée (la même réponse transférée deux fois) : cloche seule.
+        repeated = found is not None and found.reply_kind == INTERVIEW
         if found is not None:
             found.reply_kind = kind
             found.reply_at = email.received_at
@@ -247,6 +249,14 @@ async def handle(runtime: Runtime, email: ParsedEmail, today: date | None = None
     if application_id is not None:
         link += f"?candidature={application_id}"
     click = f"{runtime.settings.public_url.rstrip('/')}{link}"
-    await notify.deliver(runtime, message(company, kind, click), kind=KIND, link=link)
+    text = message(company, kind, click)
+    if kind == INTERVIEW and not repeated:
+        # Décision de Kevin du 16.11 (13 h 08) : une invitation à un entretien part aussi sur
+        # le téléphone, même un jour de repos, une seule fois, sans rappel.
+        await notify.deliver(runtime, text, kind=KIND, link=link)
+    else:
+        # Refus, accusé de réception, autre réponse : la cloche seule, jamais le téléphone.
+        async with runtime.sessionmaker.begin() as session:
+            session.add(Notification(kind=KIND, title=text.title, message=text.message, link=link))
     log.info("employer_reply", kind=kind, matched=application_id is not None)
     return True
