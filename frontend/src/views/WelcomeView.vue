@@ -1148,18 +1148,17 @@ async function finish(to: string): Promise<void> {
         </div>
       </Transition>
       <div class="wdk-scene">
-        <!-- L'alerte (OnboardingOrdinateurAlerte) : Orange, 260 px, à la place d'une scène. -->
+        <!-- L'alerte (OnboardingOrdinateurAlerte…, section 25 du paquet du 15.11) : la scène de la boîte aux lettres, 420 px,
+             40 px sous le haut de la colonne, servie en 840 px (2x). -->
         <img
           v-if="step === 3"
-          class="wdk-orange"
-          src="/illustrations/orange-salut-260.webp"
-          srcset="/illustrations/orange-salut-260.webp 1x, /illustrations/orange-salut-520.webp 2x"
-          width="260"
-          height="333"
+          class="wdk-mailbox"
+          src="/illustrations/scene-boite-aux-lettres-840.webp"
+          width="420"
+          height="299"
           alt=""
           aria-hidden="true"
-          decoding="async"
-          data-test="welcome-orange"
+          data-test="welcome-mailbox"
         >
         <SceneIllustration
           v-else
@@ -1501,6 +1500,7 @@ async function finish(to: string): Promise<void> {
                 :mailbox="alerts.mailbox"
                 address-help="Copie-la, puis colle-la dans le champ e-mail de l’alerte."
                 code
+                code-trail="telephone"
               />
             </div>
           </template>
@@ -1893,7 +1893,7 @@ async function finish(to: string): Promise<void> {
 .wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
 .wdk-foot-end .wdk-link { font-size: var(--font-body); }
 .wdk-alert + .wdk-foot { margin-top: var(--space-2); }
-.wdk-orange { width: 260px; height: auto; }
+.wdk-mailbox { width: 420px; height: auto; margin-top: var(--wdk-40); }
 .wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
 .wdk-scene .illu { width: var(--wdk-scene); }
 .wdk-scene .illu img { width: 100%; height: auto; }
