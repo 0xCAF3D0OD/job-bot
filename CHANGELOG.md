@@ -644,3 +644,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.430 | Candidatures et accueil : « Annuler » après « Écarter » ou « Garder » dans le bandeau commun, avec le trait de compte à rebours (§23 du 15.11) | livrée |
 | 1.6.431 | Bilan ordinateur, Formations : état vide avec « Voir le catalogue », catalogue d'après la planche du 16.11 (« ← Mes formations », une colonne, signet rond), En cours sans modules sur une ligne, « Terminée » en vert | livrée |
 | 1.6.432 | - Le lien `frontend/node_modules`, ajouté par erreur avec la PR #763, est retiré du dépôt ; `.gitignore` ignore désormais aussi un lien nommé `node_modules`. | livrée |
+| 1.6.433 | Bilan ordinateur, Résultats : « Bilan indisponible » avec la nouvelle scène et « Réessayer », « Trop tôt pour conclure » avec la scène groupe et sa pastille (planches du 16.11) | livrée |

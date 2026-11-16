@@ -93,6 +93,23 @@ describe("Bilan › Résultats sur ordinateur", () => {
     const wrapper = await mountWide();
     expect(wrapper.get("[data-test=insights-empty]").text()).toContain("Trop tôt pour conclure");
     expect(wrapper.find("[data-test=bilan-blocks]").exists()).toBe(false);
+    // Planche BilanOrdinateurTropTot (16.11) : la pastille et « Voir les offres ».
+    expect(wrapper.get("[data-test=empty-pill]").text()).toBe("Le Bilan se remplit avec tes premières candidatures et réponses");
+    expect(wrapper.get("[data-test=insights-empty] a").attributes("href")).toBe("/candidatures/offres");
+  });
+
+  it("serveur en erreur : l’état « Bilan indisponible » et « Réessayer » relance (planche BilanOrdinateurErreur)", async () => {
+    GET.mockResolvedValue({ data: undefined });
+    const wrapper = await mountWide();
+    const state = wrapper.get("[data-test=insights-error]");
+    expect(state.attributes("role")).toBe("alert");
+    expect(state.text()).toContain("Bilan indisponible pour l’instant");
+    expect(state.text()).toContain("Tes candidatures et ton suivi ORP ne sont pas touchés");
+    serve(report());
+    await wrapper.get("[data-test=insights-retry]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=insights-error]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=bilan-figures]").exists()).toBe(true);
   });
 
   it("« Ce que jobA1 conseille » : chaque conseil avec sa base, le conseil de compétence mène aux formations", async () => {
