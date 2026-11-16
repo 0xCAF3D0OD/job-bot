@@ -663,3 +663,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.449 | Panneaux : en sombre, le voile derrière les panneaux passe au noir à 60 %, comme sur les planches | livrée |
 | 1.6.450 | Une roue d'attente sur « Refaire la note » pendant que jobA1 refait la note d'un texte collé | livrée |
 | 1.6.451 | Formations : 14 formations en soins (Suisse romande), diplômes acceptés par fiche et vérification automatique des liens du catalogue | livrée côté serveur ; l'écran du prérequis suit dans une PR à part |
+| 1.6.452 | Préparer, étape CV : chercher dans le CV et la lettre, « Voir les changements » surligne ce que l'adaptation a changé ; « Ce CV » sans carte dans la carte | livrée sur ordinateur ; téléphone sans planche |
