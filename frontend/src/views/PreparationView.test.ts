@@ -350,11 +350,10 @@ describe("barre de candidature", () => {
     // La coche après le téléchargement (Kevin, 16.11) : « Tout télécharger » coche les deux, le nom le dit.
     expect(steps.find("[data-test=sheet-letter] .icon-download").exists()).toBe(true);
     expect(steps.find("[data-test=sheet-letter]").attributes("aria-label")).toBeUndefined();
-    const stopNavigation = (event: Event) => event.preventDefault();
-    document.addEventListener("click", stopNavigation);
-    await steps.find("[data-test=download-all]").trigger("click");
-    document.removeEventListener("click", stopNavigation);
-    expect(steps.find("[data-test=sheet-letter] .icon-check").exists()).toBe(true);
+    // Le fichier bien arrivé (useFileDownloads, monté par l'appli) : « file-done » sur chaque lien.
+    for (const link of steps.findAll(".apply-attach a[download]")) link.element.dispatchEvent(new CustomEvent("file-done"));
+    await flushPromises();
+    expect(steps.find("[data-test=sheet-letter] .icon-done").exists()).toBe(true);
     expect(steps.find("[data-test=sheet-letter] .icon-download").exists()).toBe(false);
     expect(steps.find("[data-test=sheet-letter]").attributes("aria-label")).toBe("Lettre.pdf, téléchargée");
     expect(steps.find("[data-test=sheet-cv]").attributes("aria-label")).toBe("CV.pdf, téléchargé");
