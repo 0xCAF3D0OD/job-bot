@@ -296,6 +296,18 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Sur téléphone, toute la carte ORP ouvre la feuille de préparation, comme la planche (lien vers RendezVousPreparer) et comme la carte entretien ; le bouton « Préparer le rendez-vous » sort de la carte, le « ⋯ » reste.
 - Le détail de droite sur ordinateur garde « Ta feuille est prête » à côté des boutons.
 
+## Réponses des entreprises transférées (Kevin, 16.11.2026, 12 h 36)
+
+- Option retenue : la personne transfère à la main la réponse d'une entreprise vers son adresse d'alertes habituelle (docs/146). Pas de connexion à sa boîte, pas de filtre automatique pour l'instant.
+- Le serveur garde ce transfert, retrouve la candidature d'après l'expéditeur puis le nom de l'entreprise, et range la réponse en entretien, refus ou autre avec des mots-clés, sans IA.
+- Rien ne change tout seul : une notification « Ivy Partners t'a répondu : entretien ? » ouvre la candidature et la personne confirme. « Il faut une vraie transparence sur ce que fait l'IA. »
+
+## Réponses des entreprises : le téléphone pour les invitations seulement (Kevin, 16.11.2026, 13 h 08)
+
+- Exception au jour de repos pour les invitations à un entretien uniquement : une notification sur le téléphone, une seule fois, sans rappel.
+- Refus, accusés de réception et autres réponses restent dans la cloche (jamais sur le téléphone).
+- Précise docs/decisions/2026-11-16-1236-reponses-employeurs.md (docs/146 §2.6).
+
 ## Ligne « Pourquoi » du CV, partie serveur et IA (Kevin, 16.11.2026, 13 h 37)
 
 - Le prompt cv-v2 (une raison par changement) ne sert qu'à `make mesure-pourquoi` ; cv-v1 reste en service. La bascule se fera dans une petite PR après la mesure de Kevin.
@@ -308,3 +320,15 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
+
+## Notes de l'éventail sur une ligne (Kevin, 16.11.2026, 8 h 56 et 14 h 19)
+
+- Chaque carte garde ses 3 notes, sur 1 ligne chacune avec « … », qu'elle ait une forme courte (score-v9) ou non
+  (PR #755).
+- Entre la dernière note et le poste : 24 px au moins (`--space-6`), le même écart qu'entre l'en-tête et les notes.
+- Les notes restent centrées. Une note coupée garde une marge de chaque côté, comme une note courte : Kevin avait
+  demandé « environ 88 % de la largeur de la carte ».
+- Écart retenu, validé par Kevin à 14 h 19 : 16 px de chaque côté (`--space-4`), soit une ligne de 240 px sur les
+  272 px de la zone de texte (88 %). Raisons :
+  - 88 % de la carte entière (282 px) dépasserait la zone de texte, qui fait 272 px à cause du padding de 24 px ;
+  - `max-width: 88%` donnait des marges de 16,3 px, hors de la grille de 4 (l'audit grille relevait 48 écarts).
