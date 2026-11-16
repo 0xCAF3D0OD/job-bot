@@ -44,6 +44,36 @@ export function timeAndPlace(iso: string, place: string | null | undefined): str
   return [timeOfDay(iso), place?.trim()].filter(Boolean).join(" · ");
 }
 
+/** La 2e ligne d'une carte « À venir » (§39 du 16.11), en deux parties : ce qui n'est jamais coupé, l'heure et le délai
+ *  (« 9 h · dans 3 jours »), puis le reste, coupé par « … » s'il le faut (le lieu ; pour un entretien, l'entreprise,
+ *  le format et le lieu). */
+export function upcomingWhen(item: Upcoming, now: Date = new Date()): string {
+  return `${timeOfDay(item.at)} · ${inDays(item.at, now)}`;
+}
+
+export function upcomingWhere(item: Upcoming): string {
+  if (item.kind === "orp") return item.meeting.place?.trim() ?? "";
+  const a = item.application;
+  return [a.company, interviewFormat(a), interviewPlace(a)].filter(Boolean).join(" · ");
+}
+
+/** La 2e ligne entière : « 9 h · dans 3 jours · ORP Renens ». */
+export function upcomingLine(item: Upcoming, now: Date = new Date()): string {
+  return [upcomingWhen(item, now), upcomingWhere(item)].filter(Boolean).join(" · ");
+}
+
+/** Le nom de la carte « À venir » pour les lecteurs d'écran (§39 du 16.11) : titre, état de la pastille, date et heure,
+ *  délai, lieu. « Rendez-vous ORP, feuille prête, mardi 19 novembre à 9 h, dans 3 jours, ORP Renens ». */
+export function upcomingLabel(item: Upcoming, chip: string, now: Date = new Date()): string {
+  const title = item.kind === "orp" ? "Rendez-vous ORP" : item.application.job_title || "Poste non indiqué";
+  const company = item.kind === "orp" ? null : item.application.company;
+  const place = item.kind === "orp" ? item.meeting.place?.trim() : [interviewFormat(item.application), interviewPlace(item.application)].filter(Boolean).join(", ");
+  const day = dateText(item.at);
+  return [title, company, chip.toLowerCase(), `${day.charAt(0).toLowerCase()}${day.slice(1)} à ${timeOfDay(item.at)}`, inDays(item.at, now), place]
+    .filter(Boolean)
+    .join(", ");
+}
+
 /** Où a lieu l'entretien : le lieu ou le lien saisi sur la candidature, sinon l'adresse de l'entreprise. */
 export function interviewPlace(application: Pick<Application, "interview_place" | "company_address" | "interview_format">): string | null {
   // Au téléphone ou en visio (PR 41), l'adresse de l'entreprise n'est pas le lieu de l'entretien.

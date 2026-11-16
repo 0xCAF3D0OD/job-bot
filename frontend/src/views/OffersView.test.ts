@@ -11,6 +11,7 @@ import OffersView from "./OffersView.vue";
 const GET = vi.fn();
 const PATCH = vi.fn();
 const POST = vi.fn();
+const DELETE = vi.fn();
 const PUT = vi.fn();
 // Aucune note corrigée (docs/114) : sans cette réponse, la fiche recevait une page d'offres
 // à la place de la correction et ScoreCorrection lisait un sens inexistant.
@@ -21,6 +22,7 @@ vi.mock("../api/client", () => ({
     GET: (...args: unknown[]) => (args[0] === NO_CORRECTION ? Promise.resolve({ data: null }) : GET(...args)),
     PATCH: (...args: unknown[]) => PATCH(...args),
     POST: (...args: unknown[]) => POST(...args),
+    DELETE: (...args: unknown[]) => DELETE(...args),
   },
 }));
 
@@ -46,7 +48,7 @@ function page(items: unknown[]) {
     data: {
       items,
       total: items.length,
-      counts: { to_review: 5, pending: 6, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
+      counts: { to_review: 5, pending: 6, pending_all: 6, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
       facets: {
         sources: [
           { value: "indeed", count: 3 },
@@ -152,7 +154,7 @@ describe("OffersView", () => {
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
     expect(wrapper.find("[data-test=offers-none-add]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre.");
     expect(empty.find("a").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=offers-empty]").exists()).toBe(false);
     // Des filtres : c'est « rien ne correspond », pas un compte neuf.
@@ -231,13 +233,13 @@ describe("OffersView", () => {
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres.");
     expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
     // La phrase décrit la liste affichée, sans le nombre de tout « À traiter » (2026-11-03).
     const inProgress = await mountAt("/offres?statut=in_progress");
-    expect(inProgress.find("[data-test=offers-sentence]").text()).toBe("2 offres en cours.");
+    expect(inProgress.find("[data-test=offers-sentence]").text()).toBe("2 offres en préparation.");
     const searched = await mountAt("/offres?q=devops");
-    expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter avec ces filtres.");
+    expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres avec ces filtres.");
     const mixed = await mountAt("/offres?ecartees=montrer");
     expect(mixed.find("[data-test=offers-sentence]").text()).toBe("2 offres affichées avec ces filtres.");
     // Un seul bouton « + Ajouter » (§2.6 du 9 novembre) : un panneau à deux onglets, « Une offre » d'abord.
@@ -274,7 +276,9 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     expect(wrapper.find("[data-test=pop-view-pending]").attributes("aria-pressed")).toBe("true");
-    expect(wrapper.find("[data-test=pop-view-pending]").text()).toMatch(/^À traiter · \d+$/);
+    expect(wrapper.find("[data-test=pop-view-pending]").text()).toMatch(/^Toutes · \d+$/);
+    // L'ordre du parcours d'une offre, « Toutes » (le choix par défaut) en dernier (section 38 du 16.11).
+    expect(wrapper.findAll("[data-test^=pop-view-]").map((b) => b.text().split(" · ")[0])).toEqual(["Nouvelles", "Gardées", "En préparation", "Toutes"]);
     await wrapper.find("[data-test=pop-score-75]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ note: "75" });
@@ -388,6 +392,50 @@ describe("OffersView", () => {
     await router.push("/offres?note=70");
     await flushPromises();
     expect(wrapper.find("[data-offer-row='5']").exists()).toBe(false);
+  it("section 35 du 16.11 : pastille « Agence » en tête, ligne dans la fiche, filtre « Masquer les agences »", async () => {
+    mockOffers(
+      page([
+        offer(11, "DevOps Engineer", {
+          company: "Galaxi Consulting",
+          status: "later",
+          agency: "probable",
+          agency_duplicate: { title: "DevOps Engineer", company: "Banque Exemple SA", sent_at: "2026-11-04" },
+          doubts: [{ kind: "hidden_employer", text: "Employeur caché : annonce d'agence, employeur non nommé." }],
+        }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres?offre=11");
+    const chips = wrapper.get("[data-offer-row='11']").findAll("[data-test=offer-chip]");
+    expect(chips[0]?.text()).toBe("Agence");
+    expect(chips[0]?.classes()).toContain("agency");
+    // Le doute d'agence est dit par « Agence » : pas de « À vérifier » en plus.
+    expect(chips.map((c) => c.text())).not.toContain("À vérifier");
+    const note = wrapper.get("[data-test=agency-note]");
+    expect(note.text()).toContain("Probablement une agence de placement");
+    expect(note.text()).toContain("Galaxi Consulting recrute pour un client");
+    // « Employeur caché » ne se répète pas dans la fiche : la ligne Agence suffit (Kevin, 16.11).
+    expect(wrapper.text()).not.toContain("Employeur caché");
+    expect(note.get("[data-test=agency-duplicate]").text()).toBe("Tu as déjà postulé le 4 novembre à un poste proche : DevOps Engineer chez Banque Exemple SA.");
+    // « Ce n'est pas une agence » : gardé côté serveur, puis la liste est relue.
+    const calls = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    POST.mockResolvedValue({ data: { id: 11 } });
+    await note.get("[data-test=not-agency]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: 11 } } });
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(calls);
+    // « Correction enregistrée · Annuler » (Kevin, 16.11) : « Annuler » retire la correction et relit la liste.
+    expect(useUndo().pending.value?.message).toBe("Correction enregistrée.");
+    const before = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    DELETE.mockResolvedValue({ data: { id: 11 } });
+    await useUndo().undo();
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: 11 } } });
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(before);
+    await wrapper.get("[data-test=filters-toggle]").trigger("click");
+    await wrapper.get("[data-test=pop-agencies]").setValue(true);
+    await flushPromises();
+    expect(router.currentRoute.value.query).toMatchObject({ agences: "masquer" });
+    expect(lastQuery()).toMatchObject({ hide_agencies: true });
   });
 
   it("détail : candidature, raisons, texte complet, fermeture", async () => {
@@ -928,8 +976,8 @@ describe("Offres, sans bande d’action (1.6.53)", () => {
     expect(wrapper.text()).not.toContain("Commencer le tri");
   });
 
-  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à traiter. »", async () => {
-    const reviewed = { to_review: 0, pending: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
+  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre. »", async () => {
+    const reviewed = { to_review: 0, pending: 0, pending_all: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
     mockOffers({ data: { ...page([]).data, counts: reviewed } });
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
@@ -937,7 +985,7 @@ describe("Offres, sans bande d’action (1.6.53)", () => {
     expect(done.find(".face-state-title").text()).toBe("Tout est examiné");
     expect(done.text()).toContain("Les nouvelles arrivent chaque matin.");
     expect(done.find("button, a").exists()).toBe(false);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre.");
   });
 });
 

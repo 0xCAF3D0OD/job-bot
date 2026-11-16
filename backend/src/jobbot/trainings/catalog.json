@@ -1,5 +1,5 @@
 {
-  "_comment": "Catalogue de formations (docs/16 §5.2), liens vérifiés le 2026-10-06. Prix et durées ne sont pas repris : ils changent souvent, la page officielle fait foi.",
+  "_comment": "Catalogue de formations (docs/16 §5.2), liens vérifiés le 2026-10-06. Prix et durées ne sont pas repris : ils changent souvent, la page officielle fait foi. Formations en soins (Suisse romande) ajoutées le 2026-11-16 d'après la liste de Kevin ; chaque lien est revérifié par le serveur avant affichage (link_status).",
   "trainings": [
     {
       "title": "Certified Kubernetes Administrator (CKA)",
@@ -18,7 +18,8 @@
       "description": "Certification de référence pour administrer un cluster Kubernetes. Examen pratique en ligne, sur un vrai cluster, en ligne de commande. Selon la page officielle, l'inscription comprend une seconde tentative et deux sessions du simulateur killer.sh.",
       "level": "intermediate",
       "duration": null,
-      "prep": "« Kubernetes for the Absolute Beginners » puis « CKA » (KodeKloud), ou « Kubernetes Fundamentals » (LFS258) ; entraînement sur killer.sh et Killercoda."
+      "prep": "« Kubernetes for the Absolute Beginners » puis « CKA » (KodeKloud), ou « Kubernetes Fundamentals » (LFS258) ; entraînement sur killer.sh et Killercoda.",
+      "prerequisites": []
     },
     {
       "title": "Certified Kubernetes Application Developer (CKAD)",
@@ -36,7 +37,8 @@
       "description": "Certification orientée déploiement d'applications sur Kubernetes. Examen pratique en ligne.",
       "level": "intermediate",
       "duration": null,
-      "prep": "Souvent passée après ou avant la CKA, les bases sont communes."
+      "prep": "Souvent passée après ou avant la CKA, les bases sont communes.",
+      "prerequisites": []
     },
     {
       "title": "Certified Kubernetes Security Specialist (CKS)",
@@ -55,7 +57,8 @@
       "description": "Sécurité des clusters et des charges Kubernetes. Examen pratique en ligne ; la CKA est exigée avant de la passer.",
       "level": "advanced",
       "duration": null,
-      "prep": "Avoir la CKA."
+      "prep": "Avoir la CKA.",
+      "prerequisites": []
     },
     {
       "title": "Kubernetes and Cloud Native Associate (KCNA)",
@@ -73,7 +76,8 @@
       "description": "Certification d'entrée sur Kubernetes et l'écosystème cloud natif (questionnaire). Une première étape possible avant la CKA.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Linux Foundation Certified System Administrator (LFCS)",
@@ -90,7 +94,8 @@
       "description": "Administration Linux en ligne de commande. Examen pratique en ligne.",
       "level": "intermediate",
       "duration": null,
-      "prep": "« Introduction to Linux » (LFS101), gratuit."
+      "prep": "« Introduction to Linux » (LFS101), gratuit.",
+      "prerequisites": []
     },
     {
       "title": "Certifications HashiCorp (Terraform Associate)",
@@ -108,7 +113,8 @@
       "description": "Terraform Associate valide les bases de l'infrastructure as code avec Terraform.",
       "level": "beginner",
       "duration": null,
-      "prep": "Tutoriels Terraform gratuits de HashiCorp."
+      "prep": "Tutoriels Terraform gratuits de HashiCorp.",
+      "prerequisites": []
     },
     {
       "title": "AWS Certified Solutions Architect – Associate",
@@ -126,7 +132,8 @@
       "description": "Concevoir des architectures sur AWS. Une des certifications cloud les plus demandées dans les annonces.",
       "level": "intermediate",
       "duration": null,
-      "prep": "Parcours gratuits d'AWS Skill Builder."
+      "prep": "Parcours gratuits d'AWS Skill Builder.",
+      "prerequisites": []
     },
     {
       "title": "AWS Certified DevOps Engineer – Professional",
@@ -145,7 +152,8 @@
       "description": "Automatisation, CI/CD et exploitation sur AWS, niveau avancé.",
       "level": "advanced",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
@@ -163,7 +171,8 @@
       "description": "Administration des services Azure.",
       "level": "intermediate",
       "duration": null,
-      "prep": "Parcours gratuits de Microsoft Learn."
+      "prep": "Parcours gratuits de Microsoft Learn.",
+      "prerequisites": []
     },
     {
       "title": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
@@ -181,7 +190,8 @@
       "description": "DevOps sur Azure (Azure DevOps, GitHub). Demande une certification Azure associée au préalable.",
       "level": "advanced",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Google Cloud Professional Cloud DevOps Engineer",
@@ -200,7 +210,8 @@
       "description": "Fiabilité (SRE), CI/CD et exploitation sur Google Cloud.",
       "level": "advanced",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "AWS Skill Builder",
@@ -217,7 +228,8 @@
       "description": "Centaines de cours AWS gratuits, dont la préparation aux certifications ; une offre payante ajoute des laboratoires.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Microsoft Learn",
@@ -235,7 +247,8 @@
       "description": "Parcours gratuits, souvent en français, dont la préparation aux examens Azure.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Google Skills (ex-Cloud Skills Boost)",
@@ -253,7 +266,8 @@
       "description": "Cours et laboratoires Google Cloud ; une partie est gratuite.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Introduction to Kubernetes (LFS158)",
@@ -270,7 +284,8 @@
       "description": "Cours d'introduction gratuit à Kubernetes.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Introduction to Linux (LFS101)",
@@ -287,7 +302,8 @@
       "description": "Cours d'introduction gratuit à Linux.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Tutoriels Kubernetes",
@@ -304,7 +320,8 @@
       "description": "Tutoriels officiels ; la documentation Kubernetes est aussi celle qu'on peut consulter pendant l'examen CKA.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Tutoriels Terraform",
@@ -321,7 +338,8 @@
       "description": "Tutoriels officiels gratuits, de la prise en main à la préparation de Terraform Associate.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Killercoda",
@@ -339,7 +357,8 @@
       "description": "Environnements Kubernetes et Linux dans le navigateur, avec des scénarios d'entraînement à la CKA.",
       "level": "intermediate",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Kubernetes Fundamentals (LFS258)",
@@ -356,7 +375,8 @@
       "description": "Cours officiel de préparation à la CKA ; proposé aussi en lot avec l'examen.",
       "level": "intermediate",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "CKA Certification Course",
@@ -373,7 +393,8 @@
       "description": "Préparation à la CKA avec laboratoires dans le navigateur et examens blancs.",
       "level": "intermediate",
       "duration": null,
-      "prep": "« Kubernetes for the Absolute Beginners » (KodeKloud)."
+      "prep": "« Kubernetes for the Absolute Beginners » (KodeKloud).",
+      "prerequisites": []
     },
     {
       "title": "Kubernetes for the Absolute Beginners",
@@ -390,7 +411,8 @@
       "description": "Premiers pas sur Kubernetes, avec laboratoires.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "Simulateur killer.sh",
@@ -409,7 +431,8 @@
       "description": "Simulateur d'examen CKA, CKAD et CKS, plus difficile que l'examen réel ; deux sessions sont comprises avec l'inscription à l'examen selon la Linux Foundation.",
       "level": "intermediate",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
     },
     {
       "title": "A Cloud Guru (Pluralsight)",
@@ -429,7 +452,356 @@
       "description": "Abonnement de cours et laboratoires cloud et DevOps, avec préparation aux certifications.",
       "level": "beginner",
       "duration": null,
-      "prep": null
+      "prep": null,
+      "prerequisites": []
+    },
+    {
+      "title": "Auxiliaire de santé CRS",
+      "provider": "Croix-Rouge vaudoise, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.orientation.ch/fr/formations/croix-rouge-vaudoise/auxiliaire-de-sante-croix-rouge",
+      "tags": [
+        "auxiliaire de santé",
+        "aide-soignant",
+        "soins",
+        "santé",
+        "EMS",
+        "soins à domicile"
+      ],
+      "description": "Certificat d'auxiliaire de santé de la Croix-Rouge suisse, ouvert sans diplôme de soins : cours théoriques puis stage pratique.",
+      "level": "beginner",
+      "duration": "120 h de cours, 2 jours par semaine",
+      "prep": null,
+      "prerequisites": [],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "Auxiliaire de santé CRS, en emploi",
+      "provider": "AVASAD, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.orientation.ch/fr/formations/avasad/auxiliaire-de-sante-croix-rouge-formation-en-emploi",
+      "tags": [
+        "auxiliaire de santé",
+        "aide-soignant",
+        "soins",
+        "santé",
+        "soins à domicile"
+      ],
+      "description": "Le certificat d'auxiliaire de santé CRS en emploi, sans diplôme : on se forme avec un salaire et un contrat à durée indéterminée.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null,
+      "prerequisites": [],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "Auxiliaire accompagnant la personne âgée",
+      "provider": "HEVIVA, Vaud",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.orientation.ch/fr/formations/heviva/auxiliaire-accompagnant-la-personne-agee",
+      "tags": [
+        "auxiliaire de santé",
+        "aide-soignant",
+        "personnes âgées",
+        "gériatrie",
+        "EMS",
+        "soins",
+        "santé"
+      ],
+      "description": "Formation ouverte sans diplôme, reconnue par le canton de Vaud comme équivalente au certificat d'auxiliaire de santé Croix-Rouge.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null,
+      "prerequisites": [],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "Cours Passage CRS, soins palliatifs",
+      "provider": "Croix-Rouge neuchâteloise",
+      "kind": "cours",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://croix-rouge-ne.ch/wp-content/uploads/2017/02/Formation-passage-septembre-2024.pdf",
+      "tags": [
+        "soins palliatifs",
+        "fin de vie",
+        "auxiliaire de santé",
+        "soins",
+        "santé"
+      ],
+      "description": "Formation aux soins palliatifs pour les auxiliaires de santé CRS et les personnes qui accompagnent des malades graves ou en fin de vie. Dès 18 ans, français B1.",
+      "level": "beginner",
+      "duration": "48 h, 8 jours de 6 h",
+      "prep": null,
+      "prerequisites": [],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "Réanimation BLS-AED-SRC, cours complet",
+      "provider": "CHUV, Lausanne",
+      "kind": "cours",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.chuv.ch/fr/formation/offre-de-formation/form_ofr_49/reanimation-cardio-pulmonaire-bls-aed-src-cours-complet-pratique",
+      "tags": [
+        "réanimation",
+        "BLS",
+        "urgences",
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé"
+      ],
+      "description": "Pratique de la réanimation cardio-pulmonaire pour les soignants, certificat BLS du Swiss Resuscitation Council ; renouvellement conseillé tous les 2 ans. L'e-learning théorique se fait avant, dans les 3 mois.",
+      "level": "beginner",
+      "duration": "2 h 30 de pratique",
+      "prep": "E-learning « Réanimation BLS complet » du CHUV, attestation à apporter.",
+      "prerequisites": [],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Évaluation clinique infirmière",
+      "provider": "La Source, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.ecolelasource.ch/fr/formations/postgrade/cas-evaluation-clinique",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "évaluation clinique"
+      ],
+      "description": "CAS de 15 ECTS pour les infirmières en hôpital, en EMS ou en soins communautaires : évaluer l'état de santé, avec un module enfant et famille ou personne âgée.",
+      "level": "advanced",
+      "duration": "16 mois",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Coordination des soins et travail en réseau",
+      "provider": "La Source, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.ecolelasource.ch/fr/formations/postgrade/cas-coordination-soins-reseau",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "coordination des soins",
+        "case management",
+        "réseau"
+      ],
+      "description": "CAS de 15 ECTS sur la coordination des soins, l'orientation et le case management, pour les professionnels de la santé et du social.",
+      "level": "advanced",
+      "duration": "18 mois",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Infirmière en santé au travail",
+      "provider": "La Source, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.ecolelasource.ch/fr/formations/postgrade/cas-sante-travail",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "santé au travail"
+      ],
+      "description": "CAS de 15 ECTS : interventions de l'infirmier·ère en santé au travail. Bachelor en soins infirmiers et au moins 2 ans d'expérience.",
+      "level": "advanced",
+      "duration": "12 mois",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Pratique de l'endoscopie",
+      "provider": "CHUV et HESAV, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.chuv.ch/fr/formation/offres-de-formation/offre-de-formation/form_ofr_56/cas-en-pratique-de-lendoscopie",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "endoscopie"
+      ],
+      "description": "CAS HES-SO pour les infirmières qui travaillent en endoscopie. Bachelor ou titre jugé équivalent.",
+      "level": "advanced",
+      "duration": "23 jours de cours",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Soins aux personnes avec une maladie rénale chronique",
+      "provider": "HESAV et HUG",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://hesav.ch/wp-content/uploads/2026/07/CAS_Depliant_SPIR.pdf",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "néphrologie",
+        "dialyse"
+      ],
+      "description": "CAS HES-SO de 15 ECTS, cours à Lausanne et Genève, en emploi. Bachelor en soins infirmiers et un an d'expérience en néphrologie.",
+      "level": "advanced",
+      "duration": "24 jours sur 12 mois au plus",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Soins gériatriques et soins palliatifs",
+      "provider": "HEdS Genève",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://visions.hesge.ch/soins-geriatriques-soins-palliatifs",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "gériatrie",
+        "soins palliatifs",
+        "personnes âgées"
+      ],
+      "description": "CAS HES-SO de 15 ECTS. Bachelor en soins infirmiers ou en santé et au moins un an d'expérience en gériatrie ou en soins palliatifs.",
+      "level": "advanced",
+      "duration": "1 an, 2 à 3 jours par mois",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers",
+        "bachelor_hes_sante"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Clinique infirmière en psychiatrie",
+      "provider": "Formation continue UNIL-EPFL",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.formation-continue-unil-epfl.ch/wp-content/uploads/2024/01/0_DEP_03_226_013_clinique-infirmiere-psychiatrie.pdf",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "psychiatrie",
+        "santé mentale"
+      ],
+      "description": "CAS de 13 ECTS délivré par l'Université de Lausanne. Diplôme en soins infirmiers et au moins 2 ans en psychiatrie.",
+      "level": "advanced",
+      "duration": "22 jours de cours et 5 à distance",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "CAS Soins de cardiologie",
+      "provider": "HEdS Fribourg",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.heds-fr.ch/media/1892/heds-fr_brochure_cas-soins-de-cardiologie_25419.pdf",
+      "tags": [
+        "soins infirmiers",
+        "infirmier",
+        "infirmière",
+        "soins",
+        "santé",
+        "cardiologie"
+      ],
+      "description": "CAS HES-SO de 15 ECTS pour accompagner les personnes atteintes d'une maladie cardiovasculaire, de l'investigation à la phase post-aiguë.",
+      "level": "advanced",
+      "duration": "27 jours sur 12 à 18 mois",
+      "prep": null,
+      "prerequisites": [
+        "soins_infirmiers"
+      ],
+      "link_status": "a_reverifier"
+    },
+    {
+      "title": "Certificat (A2) de sensibilisation en soins palliatifs",
+      "provider": "HE-Arc Santé et CHUV, Lausanne",
+      "kind": "certification",
+      "format": "in_person",
+      "language": "fr",
+      "price": "paid",
+      "url": "https://www.chuv.ch/fr/formation/offres-de-formation/offre-de-formation/form_ofr_205/certificat-a2-de-sensibilisation-en-soins-palliatifs",
+      "tags": [
+        "soins palliatifs",
+        "fin de vie",
+        "soins",
+        "santé",
+        "travail social"
+      ],
+      "description": "Certificat de 3 ECTS. Inscription auprès de la HE-Arc. Bachelor HES en santé ou en travail social, et une pratique dans un lieu de soins ou de vie.",
+      "level": "intermediate",
+      "duration": "5 jours",
+      "prep": null,
+      "prerequisites": [
+        "bachelor_hes_sante",
+        "bachelor_hes_social"
+      ],
+      "link_status": "a_reverifier"
     }
   ]
 }

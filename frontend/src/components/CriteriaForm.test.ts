@@ -55,7 +55,7 @@ describe("CriteriaView", () => {
         excluded_types: ["stage"],
       }),
     });
-    expect(wrapper.find("[role=status]").text()).toBe("Critères enregistrés. 112 offres reviennent dans À examiner.");
+    expect(wrapper.find("[role=status]").text()).toBe("Critères enregistrés. 112 offres reviennent dans Nouvelles.");
   });
 });
 

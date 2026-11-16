@@ -647,3 +647,21 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.433 | Bilan ordinateur, Résultats : « Bilan indisponible » avec la nouvelle scène et « Réessayer », « Trop tôt pour conclure » avec la scène groupe et sa pastille (planches du 16.11) | livrée |
 | 1.6.434 | Relecture du CV : un bloc « Tes coordonnées » en tête propose, déjà remplis et modifiables, les champs encore vides du profil trouvés dans le CV ; ils s’enregistrent avec « Ajouter N éléments », jamais avant, et un champ déjà rempli n’est jamais écrasé | livrée |
 | 1.6.435 | Filtres des offres : des libellés compréhensibles sans connaître jobA1 (Note minimale sur 100, Type de note, Taux d’activité, Par date, télétravail possible) | livrée |
+| 1.6.436 | Rendez-vous : les cartes « À venir » tiennent sur deux lignes, titre et pastille puis heure, délai et lieu | livrée |
+| 1.6.437 | Compte › Documents : les boutons « Proposer à partir du CV » alignés à droite et centrés dans leur ligne, la phrase sur les certificats dans un encadré | livrée |
+| 1.6.438 | CV adapté : le prompt cv-v2 donne une raison par changement, vérifiée dans l'annonce par mots entiers ; changements demandés par l'utilisateur marqués « user » ; make mesure-pourquoi sur 5 CV fictifs | préparée, cv-v1 reste en service jusqu'à la mesure de Kevin ; affichage dans une PR suivante |
+| 1.6.439 | Les réponses des entreprises transférées par la personne sont rattachées à la candidature et annoncées par une notification, sans changer son statut | livrée |
+| 1.6.440 | CSS : 47 groupes de règles identiques de style.css réunis (−189 octets compressés, 138 captures sans un pixel d'écart) | livrée |
+| 1.6.441 | Poids : js-total relevé une fois à 431 500 octets pour le code jobup, la recherche dans le CV et les agences de placement | livrée |
+| 1.6.442 | Filtres des offres : chaque puce de statut compte avec les filtres actifs (le compteur « À traiter » restait sans filtre) | livrée |
+| 1.6.443 | « Avant ta lettre » reprend les coordonnées du CV dans les champs vides, marqués « Du CV », seulement quand la lecture est sûre | livrée |
+| 1.6.444 | Offres : les statuts s'appellent Nouvelles, Gardées, En préparation et Toutes (par défaut, en dernier) ; les candidatures envoyées sortent de « En préparation » ; « À traiter » disparaît partout (alertes, extension, Assistant). | livrée |
+| 1.6.445 | Rendez-vous : « À préparer » sur la carte entretien, l'heure et le délai jamais coupés sur les petits téléphones | livrée |
+| 1.6.446 | Offres : les agences de placement sont repérées sans IA (agences connues, « pour notre client »), signalées par une pastille et une ligne dans la fiche, avec l'alerte si tu as déjà postulé à un poste proche ; « Ce n'est pas une agence » est gardé par compte, avec « Annuler » pendant 6 secondes, et le filtre les masque | livrée |
+| 1.6.447 | Formations : quand le catalogue vérifié n'a rien pour « Mon domaine », un état vide le dit et propose la recherche web en bouton principal | livrée |
+| 1.6.448 | Étape 3 des premiers pas : le trajet du code jobup en 3 points (aussi dans le panneau des Alertes), et la scène de la boîte aux lettres sur ordinateur | livrée |
+| 1.6.449 | Panneaux : en sombre, le voile derrière les panneaux passe au noir à 60 %, comme sur les planches | livrée |
+| 1.6.450 | Une roue d'attente sur « Refaire la note » pendant que jobA1 refait la note d'un texte collé | livrée |
+| 1.6.451 | Formations : 14 formations en soins (Suisse romande), diplômes acceptés par fiche et vérification automatique des liens du catalogue | livrée côté serveur ; l'écran du prérequis suit dans une PR à part |
+| 1.6.452 | Préparer, étape CV : chercher dans le CV et la lettre, « Voir les changements » surligne ce que l'adaptation a changé ; « Ce CV » sans carte dans la carte | livrée sur ordinateur ; téléphone sans planche |
+| 1.6.453 | Annonce illisible : « Ouvrir sur [site] » et « Chercher sur le site de [entreprise] » avant « Donner l’annonce » (paquet du 16.11, §33) | livrée |

@@ -88,10 +88,16 @@ describe("Rendez-vous sur téléphone", () => {
     // Le bloc date est décoratif ; la date est aussi dite en texte.
     const orp = wrapper.get("[data-test=rdv-orp]");
     expect(orp.get(".rdv-date").attributes("aria-hidden")).toBe("true");
-    expect(orp.text()).toContain("Mardi 10 novembre, 9 h 30 · ORP Renens");
-    expect(orp.text()).toContain("Ta feuille est prête");
-    // §10.7 (9 novembre) : la carte garde « Préparer le rendez-vous », qui ouvre la feuille avec « Où tu en es ».
-    expect(orp.get("[data-test=rdv-prep-open]").text()).toBe("Préparer le rendez-vous");
+    // Deux lignes (demande de Kevin du 16.11) : le titre et « Feuille prête », puis l'heure, le délai et le lieu.
+    expect(orp.get(".rdv-line").text()).toBe("Rendez-vous ORP Feuille prête");
+    expect(orp.get(".rdv-meta").text()).toMatch(/^9 h 30 · dans \d+ jours\s·\sORP Renens$/);
+    // Ni « Dans N jours » au-dessus du titre, ni rangée de pastilles à part (§39 du 16.11).
+    expect(orp.find(".rdv-kicker").exists()).toBe(false);
+    expect(orp.findAll(".rdv-body > *")).toHaveLength(2);
+    // Toute la carte ouvre la feuille avec « Où tu en es » ; son nom dit titre, pastille, date, heure et délai.
+    expect(orp.get("[data-test=rdv-prep-open]").attributes("aria-label")).toMatch(
+      /^Rendez-vous ORP, feuille prête, mardi 10 novembre à 9 h 30, dans \d+ jours, ORP Renens$/,
+    );
     expect(orp.find("[data-test=rdv-pdf]").exists()).toBe(false);
     expect(wrapper.findAll("[data-test=rdv-prep-lines] li").map((li) => li.text())).toEqual([
       "Ton mois6 recherches sur 10",
@@ -109,7 +115,7 @@ describe("Rendez-vous sur téléphone", () => {
     expect(past.get("[data-test=rdv-log]").text()).toContain("Carnet ORP1 rendez-vous");
   });
 
-  it("« Ta feuille est prête » seulement avec au moins une ligne ; sinon « Feuille à compléter »", async () => {
+  it("« Feuille prête » seulement avec au moins une ligne ; sinon « Feuille à compléter »", async () => {
     const empty = { ...PREP, blockers: [], missing: [], months: [] };
     serve({ meeting: MEETING, preparation: empty, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();
@@ -119,7 +125,7 @@ describe("Rendez-vous sur téléphone", () => {
 
     serve({ meeting: MEETING, preparation: { ...empty, blockers: ["Aucune réponse."] }, past: [], target: 10, trainings: [] });
     const again = await open();
-    expect(again.wrapper.get("[data-test=rdv-ready]").text()).toBe("Ta feuille est prête");
+    expect(again.wrapper.get("[data-test=rdv-ready]").text()).toBe("Feuille prête");
     expect(again.wrapper.find("[data-test=rdv-todo]").exists()).toBe(false);
   });
 
@@ -156,7 +162,7 @@ describe("Rendez-vous sur téléphone", () => {
     const { wrapper } = await open();
     const orp = wrapper.get("[data-test=rdv-orp]");
     // Le menu « Plus d'actions » (modifier, annuler) reste une icône dans le coin.
-    expect(orp.findAll("button").map((b) => b.text()).filter(Boolean)).toEqual(["Préparer le rendez-vous"]);
+    expect(orp.findAll("button").map((b) => b.attributes("data-test")).filter((t) => t !== "rdv-more")).toEqual(["rdv-prep-open"]);
     expect(orp.get("[data-test=rdv-prep-open]").attributes("aria-haspopup")).toBe("dialog");
     expect(wrapper.find("[data-test=rdv-sheet]").exists()).toBe(false);
     expect(orp.find("[data-test=rdv-ready]").exists()).toBe(true);
@@ -192,7 +198,9 @@ describe("Rendez-vous sur téléphone", () => {
     ]);
     const { wrapper } = await open();
     const card = wrapper.get("[data-test=rdv-interview-7]");
-    expect(card.get("[data-test=rdv-place]").text()).toBe(link);
+    expect(card.get(".rdv-meta").text()).toMatch(new RegExp(` · ${link.replace(/[.]/g, "\\.")}$`));
+    // L'heure et le délai, à part : jamais coupés.
+    expect(card.get(".rdv-when > span").text()).toMatch(/^\d+ h · dans \d+ jours$/);
     expect(card.text()).not.toContain("Avenue de la Gare 12");
   });
 

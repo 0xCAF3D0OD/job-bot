@@ -30,11 +30,13 @@ const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>;
 const bases = computed(() => basisChoices(props.facets));
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
+// Statut (section 38 du 16.11) : l'ordre du parcours d'une offre ; « Toutes » (les offres pas encore envoyées)
+// reste le choix par défaut, même en dernier.
 const VIEWS: { label: string; value: View }[] = [
-  { label: "À traiter", value: "pending" },
-  { label: "À examiner", value: "to_review" },
-  { label: "En préparation", value: "in_progress" },
+  { label: "Nouvelles", value: "to_review" },
   { label: "Gardées", value: "later" },
+  { label: "En préparation", value: "in_progress" },
+  { label: "Toutes", value: "pending" },
 ];
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par date", value: "day" },
@@ -197,6 +199,14 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         :checked="filters.remote !== null"
         data-test="pop-remote"
         @change="emit('update', { remote: filters.remote === null ? 'partial' : null })"
+      ></label>
+      <!-- Section 35 du 16.11 (CandidaturesOrdinateurAgence, panneau Filtres) : sous Télétravail. -->
+      <label class="filter-panel-switch">Masquer les agences de placement<input
+        type="checkbox"
+        role="switch"
+        :checked="filters.hideAgencies"
+        data-test="pop-agencies"
+        @change="emit('update', { hideAgencies: !filters.hideAgencies })"
       ></label>
       <label
         v-if="filters.view === 'pending'"

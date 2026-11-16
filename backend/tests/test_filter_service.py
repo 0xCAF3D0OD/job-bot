@@ -211,6 +211,7 @@ async def test_api_offer_views(api: AsyncClient, fresh: Runtime) -> None:
     assert page["counts"] == {
         "to_review": 2,
         "pending": 2,
+        "pending_all": 2,
         "filtered_out": 2,
         "later": 0,
         "in_progress": 0,

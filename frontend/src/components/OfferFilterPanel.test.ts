@@ -30,8 +30,8 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
     expect(texts(wrapper, "pop-basis")).toEqual(["Toutes", "Définitives · 104", "Provisoires · 312"]);
     expect(texts(wrapper, "pop-rate")).toEqual(["Tous", "Dès 60 %", "Dès 80 %", "100 %"]);
     expect(wrapper.find("[data-test=pop-remote]").element.closest("label")?.textContent).toBe("Télétravail possible, même partiel");
-    // L'interrupteur des agences n'arrive qu'avec leur détection (section 35) : absent ici.
-    expect(wrapper.text()).not.toContain("agences");
+    // Section 35 du 16.11 : l'interrupteur des agences, sous Télétravail.
+    expect(wrapper.text()).toContain("Masquer les agences de placement");
   });
 
   it("les textes d’aide, reliés par aria-describedby", () => {
