@@ -24,7 +24,7 @@ const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 // une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
 export const LIMITS = {
   "js-premier": 111_500,
-  "js-total": 428_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +2 Ko, une fois, 426 780 → 428 780 ; README, Limites de poids)
+  "js-total": 431_500, // #764, #770 et #771 ensemble, sans découpage (Kevin, 16.11 14 h 19 : une fois, 428 780 → 431 500 ; docs/decisions/2026-11-16-1419-releve-js-trois-pr.md). Plus de relèvement hors de l'issue « Budget JS ».
   "js-accueil": 111_500,
   "js-candidatures": 168_000,
   "js-bilan": 113_400,
