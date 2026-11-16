@@ -56,6 +56,7 @@ async def test_new_account_goes_through_welcome(
             "goal": None,
             "trade": None,
             "roles": [],
+            "sources": {},
         }
         saved = await api.put(
             "/api/welcome", json={"goal": "orp", "trade": "Infirmière", "step": 3}
@@ -66,7 +67,13 @@ async def test_new_account_goes_through_welcome(
             "goal": "orp",
             "trade": "Infirmière",
             "roles": [],
+            "sources": {},
         }
+        # La provenance des critères (#806) : le tableau entier, une valeur inconnue refusée.
+        sources = {"roles": "cv", "places": "default", "rate": "user"}
+        kept = (await api.put("/api/welcome", json={"sources": sources})).json()
+        assert kept["sources"] == sources and kept["step"] == 3
+        assert (await api.put("/api/welcome", json={"sources": {"roles": "ia"}})).status_code == 422
         # « Plus tard » : plus d'envoi forcé vers l'accueil, mais pas fini.
         later = (await api.put("/api/welcome", json={"postponed": True})).json()
         assert later["status"] == "postponed" and later["step"] == 3
