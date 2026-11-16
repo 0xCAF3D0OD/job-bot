@@ -329,6 +329,12 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
 
+## Formations : catalogue vide pour « Mon domaine » (Kevin, 16.11.2026, 13 h 53)
+
+- Quand le catalogue vérifié n'a rien pour « Mon domaine », avant tout filtre : titre « Rien dans le catalogue pour {domaine} », pastille « Le catalogue couvre surtout l'informatique pour l'instant », bouton principal « Chercher des formations en {domaine} » (la recherche web existante). {domaine} est le premier mot-clé de « Mon domaine ».
+- « Aucune formation avec ces filtres » reste seulement quand ce sont les filtres qui vident la liste.
+- Le catalogue des soins viendra d'une liste sourcée fournie par Kevin : aucune formation inventée.
+
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 
 - Avant ces trois PR, un allègement à part (#777) : 47 groupes de règles identiques de `style.css` réunis, −189 octets gzip, 138 captures sans un pixel d'écart. L'objectif de 470 octets n'est pas atteignable par regroupement (plafond mesuré ≈ 390 octets).
@@ -336,6 +342,12 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Décision : css-total passe de 118 780 à 119 450 octets, une seule fois, dans #777, pour les trois PR ensemble. Pas de relèvement PR par PR.
 - #770 garde le contour du résultat courant (sans lui, seule la couleur distingue le résultat courant, WCAG 1.4.1).
 - JS : pas de relèvement de js-total sans que Kevin ait vu les chiffres. Avant de fusionner la troisième PR, mesurer l'apport JS de chacune et proposer un découpage (chargement à la demande des parties absentes du premier écran).
+
+## Cartes de rendez-vous en 2 lignes : réponses de Kevin (16.11.2026)
+
+- Le délai figure aussi sur la carte entretien, en ligne 2, jamais sur une 3e ligne.
+- La pastille de l’entretien reste « À préparer » (orange), sur ordinateur comme sur téléphone ; pas de « Entretien » neutre, le titre le dit déjà.
+- À 320 et 360 px, le titre peut être coupé par « … », à trois conditions : le titre complet est dans le nom accessible et dans le détail ; l’heure et le délai ne sont jamais coupés (ils passent en tête de la ligne 2, seuls l’entreprise et le lieu se coupent) ; la zone du « ⋯ » fait au moins 24 × 24 px (elle fait 44 × 44).
 
 ## Notes de l'éventail sur une ligne (Kevin, 16.11.2026, 8 h 56 et 14 h 19)
 
