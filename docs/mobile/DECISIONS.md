@@ -264,3 +264,11 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 | Date | Fonction (planche) | Ce qu'il faudrait |
 |---|---|---|
 | 2026-11-16 | Tâche « Envoyer N candidatures · Lettres et CV déjà prêts » dans « À faire » d'Aujourd'hui (AujourdhuiOrdinateurV2 et AccueilV2, états « accueil » et « repos ») | Savoir quelles candidatures ont leur lettre et leur CV prêts, offre par offre, et en tirer N. Ce calcul n'existe pas : jobA1 montre seulement « Préparer N candidatures » (offres gardées sans lettre). Rien n'est codé : la marge de poids JS est presque épuisée. La tâche reste sur la planche comme objectif, marquée « à venir » par Kevin. |
+
+## Bilan ordinateur, Résultats : chargement par les blocs gris existants (Kevin, 16.11.2026, 10 h 15)
+
+- Le chargement de Résultats reprend LoadingBlocks tel quel (trois blocs gris avec reflet), sans la forme dessinée sur la planche BilanOrdinateurChargement : la limite de CSS n'est pas relevée. Erreur et Trop tôt suivent la planche.
+
+## Bilan ordinateur, Formations : « Noter l'avancement » sur toutes les formations en cours (Kevin, 16.11.2026, 10 h 15)
+
+- « Noter l'avancement » reste sur toutes les cartes « En cours », avec ou sans nombre de modules. La planche BilanOrdinateurFormEtats, qui ne le montre que sur la carte sans modules, sera corrigée dans ce sens.
