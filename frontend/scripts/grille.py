@@ -31,7 +31,7 @@ AUDIT = (Path(__file__).resolve().parents[2] / "docs/mobile/outils/audit-grille.
 # (WCAG 2.5.8) au lieu de 44. Le script du paquet n'a pas ce mode : seule sa règle 6 est adaptée ici.
 # La page A4 (lettre, CV) suit sa propre typographie d'imprimé, comme la `.page` des maquettes : hors de la grille de 4.
 AUDIT_DESK = (
-    AUDIT.replace("r.height<44||r.width<44", "r.height<24||r.width<24")
+    AUDIT.replace("h<44||w<44", "h<24||w<24")
     .replace("cible tactile >= 44 px", "cible >= 24 px (ordinateur)")
     .replace("document.querySelectorAll('.scroll *, .top, .bar')", "document.querySelectorAll('.scroll *:not(.print-sheet, .print-sheet *), .top, .bar')")
 )
