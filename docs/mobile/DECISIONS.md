@@ -424,6 +424,17 @@ Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
 - En bas, deux pilules « Mois précédents » et « Autres exports », chacune ouvre sa feuille du bas ; « Exporter le formulaire (PDF) » passe dans « Autres exports ».
 - Règle : hors d'une carte, seulement un titre ou un lien. Une phrase vraiment utile devient une pastille. Les phrases sous les intertitres sont retirées.
 
+## Ma candidature › CV sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- Kevin : « pas besoin de proposition, code-le selon les planches MaCandidatureCV, MaCandidatureCVPourquoi, MaCandidatureCVRecherche, dans une PR à part » (§37 du paquet du 16.11).
+- Sous les étapes : « Changements · N » (pilule, surligne les passages changés), la loupe ronde de 44 px, le lien « Modèle » (la feuille Mise en page et langue). La recherche remplace la rangée.
+- Le CV entier s'affiche tout de suite, sans aperçu à toucher ; la page suit le thème clair ou sombre.
+- Toucher un passage surligné ouvre « Changement N sur M » : Avant, Maintenant, Pourquoi (la raison du serveur, mots de l'annonce surlignés ; « Demandé par toi » pour une demande de l'utilisateur), « Annuler ce changement », précédent et suivant.
+- La retouche est le champ « Demander une modification du CV » ; le bouton du bas devient « J'ai relu, continuer » (note la relecture, puis Postuler), comme sur ordinateur.
+- Retirés du téléphone parce qu'absents des planches : l'aperçu à toucher, les mots mis en avant sous l'aperçu (ils restent en gras dans le CV), la case « J'ai relu le CV » (remplacée par le bouton du bas), « Modifier le texte avec l'Assistant » (remplacé par le champ).
+- Kevin, 16.11 à 15 h 51 : les quatre fonctions retirées du téléphone (l'aperçu à toucher, les mots sous l'aperçu, la case « J'ai relu le CV », « Modifier le texte avec l'Assistant ») sont enlevées pour de bon ; les planches les remplacent.
+- Kevin, 16.11 à 15 h 51 : le surlignage de « Pourquoi » ne dépend pas des guillemets. Avec chaque raison, l'IA donne à part la liste des mots tirés de l'annonce (`words`, prompt cv-v2) ; le serveur les vérifie dans le texte de l'offre et les renvoie dans `quotes` ; le téléphone les surligne avec la même fonction que « Mon domaine » (`highlight`, sans majuscules, mots entiers).
+
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 
 - Avant ces trois PR, un allègement à part (#777) : 47 groupes de règles identiques de `style.css` réunis, −189 octets gzip, 138 captures sans un pixel d'écart. L'objectif de 470 octets n'est pas atteignable par regroupement (plafond mesuré ≈ 390 octets).
