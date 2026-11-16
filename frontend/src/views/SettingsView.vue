@@ -945,7 +945,6 @@ watch(
 .settings-wide .settings-section + .settings-section { margin-top: 0; }
 .settings-wide #donnees { order: 1; }
 .settings-wide .settings-section > .section-title { margin: 0 var(--space-1) var(--space-3); font-size: var(--font-title); color: var(--text); text-transform: none; letter-spacing: normal; }
-.settings-wide .setting-cards { border-radius: var(--radius-card); }
 .settings-wide :is(.setting-card, .rg-list) { border: 0; border-radius: 0; }
 .settings-wide :is(.setting-cards > * + *, .setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--surface-muted); }
 .settings-wide :is(.account-data, .appearance) { gap: 0; }
@@ -963,20 +962,11 @@ watch(
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
 .settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
-/* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3). Champs chiffrés : une colonne fixe
-   d'une carte à l'autre (texte 1fr, champ 72 px, unité 120 px, assez pour « du mois suivant », écart 12 px), rayon des
-   champs de saisie (--ff-radius), 44 px de haut, chiffre centré. Sur téléphone, le champ et l'unité sous le texte. */
-.setting-row.num-row { --num-unit: 120px; display: grid; grid-template-columns: minmax(0, 1fr) 72px var(--num-unit); align-items: center; gap: var(--space-2) var(--space-3); }
-.num-row > .setting-row-control { display: contents; }
-.num-row .setting-number { grid-column: 2; grid-row: 1; width: 72px; height: 44px; min-height: 44px; padding: 0; border-radius: var(--ff-radius); text-align: center; }
-.num-row .setting-row-control > span:not([role="status"]) { grid-column: 3; grid-row: 1; }
-.num-row .setting-row-status { grid-column: 2 / -1; grid-row: 2; }
-.num-row > .setting-row-error { grid-column: 1 / -1; text-align: left; }
-@media (max-width: 820px) {
-  .setting-row.num-row { grid-template-columns: 72px var(--num-unit) minmax(0, 1fr); }
-  .num-row > .setting-row-text { grid-column: 1 / -1; }
-  .num-row .setting-number { grid-column: 1; grid-row: 2; }
-  .num-row .setting-row-control > span:not([role="status"]) { grid-column: 2; grid-row: 2; }
-  .num-row .setting-row-status { grid-column: 3; grid-row: 2; }
-}
+/* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3) : champ 72 × 44 px au rayon des champs de saisie,
+   chiffre centré, unité de 120 px (assez pour « du mois suivant »), écart 12 px. Le bloc champ + unité a une largeur
+   fixe : les champs forment une colonne d'une carte à l'autre. « Enregistré » s'affiche dessous, sans rien décaler. */
+.num-row .setting-row-control { position: relative; gap: var(--space-3); }
+.num-row .setting-number { width: 72px; height: 44px; min-height: 44px; padding: 0; border-radius: var(--ff-radius); text-align: center; }
+.num-row .setting-row-control > span:not([role="status"]) { width: 120px; }
+.num-row .setting-row-status { position: absolute; top: 100%; }
 </style>
