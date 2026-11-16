@@ -657,3 +657,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.443 | « Avant ta lettre » reprend les coordonnées du CV dans les champs vides, marqués « Du CV », seulement quand la lecture est sûre | livrée |
 | 1.6.444 | Offres : les statuts s'appellent Nouvelles, Gardées, En préparation et Toutes (par défaut, en dernier) ; les candidatures envoyées sortent de « En préparation » ; « À traiter » disparaît partout (alertes, extension, Assistant). | livrée |
 | 1.6.445 | Rendez-vous : « À préparer » sur la carte entretien, l'heure et le délai jamais coupés sur les petits téléphones | livrée |
+| 1.6.446 | Offres : les agences de placement sont repérées sans IA (agences connues, « pour notre client »), signalées par une pastille et une ligne dans la fiche, avec l'alerte si tu as déjà postulé à un poste proche ; « Ce n'est pas une agence » est gardé par compte, avec « Annuler » pendant 6 secondes, et le filtre les masque | livrée |
+| 1.6.447 | Formations : quand le catalogue vérifié n'a rien pour « Mon domaine », un état vide le dit et propose la recherche web en bouton principal | livrée |
+| 1.6.448 | Étape 3 des premiers pas : le trajet du code jobup en 3 points (aussi dans le panneau des Alertes), et la scène de la boîte aux lettres sur ordinateur | livrée |
