@@ -108,18 +108,31 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     vi.useRealTimers();
   });
 
-  it("refus (état du serveur) : une ligne « Annonce illisible · LinkedIn bloque la lecture. », « Donner l’annonce », sans lien (PR 25)", async () => {
+  it("refus (état du serveur) : « LinkedIn bloque la lecture. Trouve l’annonce complète… », « Ouvrir sur LinkedIn », « Chercher sur le site de SpeciTec », « Donner l’annonce » (16.11, section 33)", async () => {
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
     expect(POST).not.toHaveBeenCalled();
     expect(wrapper.find("[data-test=match-sub]").text()).toBe("Calculée sur l’extrait de l’alerte : les exigences n’ont pas pu être vérifiées.");
     const block = wrapper.find("[data-test=section-for-you] [data-test=text-refused]");
     expect(block.attributes("role")).toBe("group");
     expect(block.find("[data-test=refused-title]").text()).toBe("Annonce illisible");
-    expect(block.find("[data-test=refused-text]").text()).toBe("LinkedIn bloque la lecture.");
+    expect(block.find("[data-test=refused-text]").text()).toBe("LinkedIn bloque la lecture. Trouve l’annonce complète, puis donne-la à jobA1.");
+    const open = block.find("[data-test=open-source]");
+    expect(open.text()).toBe("Ouvrir sur LinkedIn (nouvel onglet)");
+    expect(open.attributes("href")).toBe("https://www.linkedin.com/jobs/view/42");
+    expect(open.attributes("target")).toBe("_blank");
+    expect(open.attributes("rel")).toContain("noopener");
+    const search = block.find("[data-test=search-company]");
+    expect(search.text()).toBe("Chercher sur le site de SpeciTec (nouvel onglet)");
+    const url = new URL(search.attributes("href") ?? "");
+    expect(url.origin + url.pathname).toBe("https://www.google.com/search");
+    expect(url.searchParams.get("q")).toBe('"Ingénieur DevOps" "SpeciTec"');
+    expect(search.attributes("target")).toBe("_blank");
+    expect(search.attributes("rel")).toContain("noopener");
+    // Les deux liens viennent avant le bouton, sur la même rangée.
+    const row = block.find(".offer-text-acts").element.children;
+    expect(Array.from(row).map((e) => e.getAttribute("data-test"))).toEqual(["open-source", "search-company", "give-offer"]);
     expect(block.find("[data-test=give-offer]").text()).toBe("Donner l’annonce");
-    // Le seul lien vers l'annonce est « Voir l'annonce sur [source] » de la fiche : aucun dans l'encadré.
-    expect(block.find("a").exists()).toBe(false);
-    expect(block.text()).not.toContain("Ouvrir l’annonce");
+    expect(block.find("[data-test=give-offer] svg").exists()).toBe(false);
     expect(wrapper.find("[data-test=text-reading]").exists()).toBe(false);
   });
 
@@ -176,7 +189,13 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
   it("téléphone : la fenêtre du bas « Donner l’annonce à jobA1 », puis « Coller le texte de l’annonce » ouvre le collage", async () => {
     onPhone();
     const wrapper = await mountDetail(offer({ text_reading: "refused", links: [{ source: "indeed", url: "https://ch.indeed.com/viewjob?jk=1" }] }));
-    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Indeed bloque la lecture.");
+    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Indeed bloque la lecture. Trouve l’annonce complète, puis donne-la à jobA1.");
+    // Téléphone : liens texte empilés (« Ouvrir l’annonce sur Indeed », « Chercher sur le site de SpeciTec »), puis le bouton.
+    expect(wrapper.find(".offer-text-acts").classes()).toContain("is-phone");
+    expect(wrapper.find("[data-test=open-source]").classes()).toContain("offer-text-link");
+    expect(wrapper.find("[data-test=open-source]").text()).toBe("Ouvrir l’annonce sur Indeed (nouvel onglet)");
+    expect(wrapper.find("[data-test=open-source]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(wrapper.find("[data-test=search-company]").text()).toBe("Chercher sur le site de SpeciTec (nouvel onglet)");
     const open = wrapper.find("[data-test=give-offer]");
     expect(open.attributes("aria-haspopup")).toBe("dialog");
     expect(open.attributes("aria-expanded")).toBeUndefined();
@@ -209,10 +228,13 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(wrapper.emitted("changed")).toBeUndefined();
   });
 
-  it("refus sans site connu : « Ce site bloque la lecture. »", async () => {
+  it("refus sans site connu : « Ce site bloque la lecture. », sans « Ouvrir sur »", async () => {
     const wrapper = await mountDetail(offer({ text_reading: "refused", links: [{ source: "manual", url: "https://annonce-collee.invalid/" }] }));
-    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Ce site bloque la lecture.");
+    expect(wrapper.find("[data-test=refused-text]").text()).toBe("Ce site bloque la lecture. Trouve l’annonce complète, puis donne-la à jobA1.");
     expect(wrapper.find("[data-test=give-offer]").exists()).toBe(true);
+    // Pas de site connu : pas de « Ouvrir sur », mais la recherche chez l'entreprise reste.
+    expect(wrapper.find("[data-test=open-source]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=search-company]").exists()).toBe(true);
     expect(wrapper.find("[data-test=open-offer]").exists()).toBe(false);
   });
 

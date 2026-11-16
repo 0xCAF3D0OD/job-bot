@@ -1,14 +1,26 @@
 """Journal des recherches, offres collectées et lancement manuel de la collecte."""
 
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, case, cast, func, not_, or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.agency import (
+    NOT_AGENCIES,
+    AgencyKind,
+    Duplicate,
+    agency_condition,
+    agency_kind,
+    company_key,
+    duplicate,
+    load_not_agencies,
+    recent_applications,
+)
 from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
@@ -24,6 +36,7 @@ from jobbot.db.models import (
     OfferStatus,
     ParseStatus,
     Search,
+    Setting,
 )
 from jobbot.employer import service as employer_service
 from jobbot.filtering.service import load_criteria
@@ -113,6 +126,11 @@ class OfferOut(BaseModel):
     employer_url_source: Literal["site", "ats", "web"] | None = None
     employer_status: Literal["found", "not_found", "agency", "gone"] | None = None
     employer_checked_at: datetime | None = None
+    # Agence de placement (section 35 du 16.11, jobbot.agency) : agence connue, ou annonce « pour
+    # notre client » ; vide si ce n'en est pas une, ou si tu l'as corrigé. Pour une agence, une
+    # candidature envoyée ces 90 derniers jours à un poste proche.
+    agency: Literal["known", "probable"] | None = None
+    agency_duplicate: "AgencyDuplicateOut | None" = None
     # Logo de l'entreprise disponible sur /api/offers/{id}/logo (docs/14 §4).
     has_logo: bool = False
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
@@ -209,7 +227,8 @@ class OfferCounts(BaseModel):
     pending_all: int
     filtered_out: int
     later: int
-    # En préparation ou candidature envoyée (expirées comprises : un bandeau le signale).
+    # En préparation, candidature pas encore envoyée (expirées comprises : un bandeau le signale). Les envoyées
+    # sont dans l'onglet Envoyées (section 38 du 16.11).
     in_progress: int
     # Retirées par l'employeur ; exclues des autres compteurs.
     expired: int
@@ -266,7 +285,15 @@ async def _links(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[Offer
 PERMANENT_AFTER = timedelta(days=30)
 
 
-def _doubts(offer: Offer, evaluation: Evaluation | None) -> list["DoubtOut"]:
+class AgencyDuplicateOut(BaseModel):
+    title: str
+    company: str
+    sent_at: date
+
+
+def _doubts(
+    offer: Offer, evaluation: Evaluation | None, agency: AgencyKind | None = None
+) -> list["DoubtOut"]:
     """Signaux « à vérifier » (docs/30 §2) ; rien n'est écarté pour autant."""
     found: list[DoubtOut] = []
     if offer.spontaneous:
@@ -284,7 +311,7 @@ def _doubts(offer: Offer, evaluation: Evaluation | None) -> list["DoubtOut"]:
         found.append(
             DoubtOut(kind="hidden_employer", text="Employeur caché : aucune entreprise indiquée.")
         )
-    elif offer.employer_status == "agency":
+    elif agency is not None:
         found.append(
             DoubtOut(
                 kind="hidden_employer",
@@ -355,7 +382,11 @@ def _offer_out(
     links: list[OfferLinkOut],
     evaluation: Evaluation | None = None,
     current_hash: str | None = None,
+    not_agencies: frozenset[str] = frozenset(),
+    sent: list[Duplicate] | None = None,
 ) -> OfferOut:
+    agency = agency_kind(offer, not_agencies)
+    found = duplicate(offer, sent) if agency and sent else None
     remote: dict[str, object] = {}
     if evaluation is not None and evaluation.remote:
         remote = {
@@ -374,10 +405,25 @@ def _offer_out(
             "added_by_you": any(link.source == "manual" for link in links),
             **_evaluation_fields(evaluation, current_hash),
             **remote,
-            "doubts": _doubts(offer, evaluation),
+            "doubts": _doubts(offer, evaluation, agency),
+            "agency": agency,
+            "agency_duplicate": (
+                {"title": found.title, "company": found.company, "sent_at": found.sent_at}
+                if found
+                else None
+            ),
             "text_reading": text_reading(offer),
         }
     )
+
+
+async def _sent_if_agency(
+    session: AsyncSession, offers: Sequence[Offer], not_agencies: frozenset[str]
+) -> list[Duplicate]:
+    """Les candidatures des 90 derniers jours, lues seulement si une offre est une agence."""
+    if not any(agency_kind(o, not_agencies) for o in offers):
+        return []
+    return await recent_applications(session, datetime.now(LOCAL_TZ).date())
 
 
 def text_reading(offer: Offer) -> str | None:
@@ -489,7 +535,7 @@ def _escape_like(term: str) -> str:
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-def _doubtful() -> ColumnElement[bool]:
+def _doubtful(not_agencies: frozenset[str]) -> ColumnElement[bool]:
     """Les mêmes signaux que `_doubts`, en SQL, pour « Masquer les offres à vérifier »."""
     scam = Offer.id.in_(
         select(Evaluation.offer_id).where(func.jsonb_array_length(Evaluation.scam_signals) > 0)
@@ -501,8 +547,7 @@ def _doubtful() -> ColumnElement[bool]:
     hidden = or_(
         Offer.company.is_(None),
         func.btrim(Offer.company) == "",
-        # Valeur vide : ni vrai ni faux en SQL ; ramenée à « pas une agence ».
-        func.coalesce(Offer.employer_status, "") == "agency",
+        agency_condition(not_agencies),
     )
     return and_(Offer.spontaneous.is_(False), or_(scam, permanent, hidden))
 
@@ -529,12 +574,17 @@ def _filters(
     external_only: bool,
     remote: str | None = None,
     hide_doubtful: bool = False,
+    hide_agencies: bool = False,
+    not_agencies: frozenset[str] = frozenset(),
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
     Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
     conditions: list[ColumnElement[bool]] = [Offer.duplicate_of.is_(None)]
     if hide_doubtful:
-        conditions.append(_doubtful().is_(False))
+        conditions.append(_doubtful(not_agencies).is_(False))
+    if hide_agencies:
+        # « Masquer les agences de placement » (section 35 du 16.11) : les mêmes que la pastille.
+        conditions.append(not_(agency_condition(not_agencies)))
     if (remote_filter := _remote_condition(remote)) is not None:
         conditions.append(remote_filter)
     if q:
@@ -585,7 +635,8 @@ def _view_condition(
     if view == "later":
         return and_(Offer.status == OfferStatus.LATER, live)
     if view == "in_progress":
-        return Offer.status.in_(IN_PROGRESS)
+        # En préparation seulement : les candidatures envoyées sont dans Envoyées (section 38 du 16.11).
+        return Offer.status == OfferStatus.PREPARING
     if view == "expired":
         return and_(Offer.expired_at.is_not(None), Offer.status.not_in(IN_PROGRESS))
     return or_(live, Offer.status.in_(IN_PROGRESS))
@@ -639,6 +690,7 @@ async def list_offers(
     external_only: bool = False,
     remote: Literal["partial", "full"] | None = None,
     hide_doubtful: bool = False,
+    hide_agencies: bool = False,
     with_filtered_out: bool = False,
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
@@ -648,6 +700,8 @@ async def list_offers(
     `view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des
     filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte."""
     runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        not_agencies = await load_not_agencies(session)
     score = (
         select(Evaluation.score)
         .where(Evaluation.offer_id == Offer.id, Evaluation.scored_at.is_not(None))
@@ -678,7 +732,17 @@ async def list_offers(
         # À traiter : les offres en préparation d'abord (docs/139, C2), puis l'ordre du tri.
         first: ColumnElement[Any] = case((Offer.status == OfferStatus.PREPARING, 0), else_=1)
         order = (first, *order)
-    conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful)
+    conditions = _filters(
+        q,
+        sources,
+        cantons,
+        min_rate,
+        external_only,
+        remote,
+        hide_doubtful,
+        hide_agencies,
+        not_agencies,
+    )
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
     if min_score is not None:
@@ -699,8 +763,12 @@ async def list_offers(
         conditions.append(provisional if basis == "provisional" else sure)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
-    without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
-    without_cantons = _filters(q, sources, [], min_rate, external_only, remote, hide_doubtful)
+    without_sources = _filters(
+        q, [], cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies, not_agencies
+    )
+    without_cantons = _filters(
+        q, sources, [], min_rate, external_only, remote, hide_doubtful, hide_agencies, not_agencies
+    )
     for bound in (
         *([score >= min_score] if min_score is not None else []),
         *([score <= max_score] if max_score is not None else []),
@@ -785,7 +853,7 @@ async def list_offers(
         pending_all=pending_all,
         filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
         later=live.get(OfferStatus.LATER, 0),
-        in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),
+        in_progress=live.get(OfferStatus.PREPARING, 0),
         expired=sum(c for s, e, c in grouped if e and s not in IN_PROGRESS),
         all=sum(live.values()),
     )
@@ -812,11 +880,17 @@ async def list_offers(
     async with runtime.sessionmaker() as session:
         current_hash = profile_hash(await active_profile(session))
         criteria = await load_criteria(session)
+        recent = await _sent_if_agency(session, offers, not_agencies)
     logos = await _logo_keys(runtime)
     return OfferPage(
         items=[
             _with_languages(
-                _with_logo(_offer_out(o, links[o.id], evaluations.get(o.id), current_hash), logos),
+                _with_logo(
+                    _offer_out(
+                        o, links[o.id], evaluations.get(o.id), current_hash, not_agencies, recent
+                    ),
+                    logos,
+                ),
                 o,
                 criteria,
             )
@@ -837,8 +911,12 @@ async def get_offer(request: Request, offer_id: int) -> OfferOut:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
         current_hash = profile_hash(await active_profile(session))
         criteria = await load_criteria(session)
+        not_agencies = await load_not_agencies(session)
+        sent = await _sent_if_agency(session, [offer], not_agencies)
     links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
-    out = _offer_out(offer, links[offer_id], evaluations.get(offer_id), current_hash)
+    out = _offer_out(
+        offer, links[offer_id], evaluations.get(offer_id), current_hash, not_agencies, sent
+    )
     return _with_languages(_with_logo(out, await _logo_keys(runtime)), offer, criteria)
 
 
@@ -862,6 +940,36 @@ def _with_logo(out: OfferOut, logos: set[str]) -> OfferOut:
     if out.company and name_key(out.company) in logos:
         out.has_logo = True
     return out
+
+
+async def _set_not_agency(request: Request, offer_id: int, *, keep: bool) -> OfferOut:
+    """« Ce n'est pas une agence » (section 35 du 16.11) : gardé pour l'entreprise de l'offre,
+    dans ce compte seulement (réglage `not_agencies`) ; `keep=False` revient sur la correction.
+    L'offre est relue sous la RLS du compte (C-5) : celle d'un autre compte donne 404."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        key = company_key(offer.company) if offer is not None else ""
+        if offer is None or not key:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        names = set(await load_not_agencies(session))
+        names = names | {key} if keep else names - {key}
+        value = sorted(names)
+        await session.execute(
+            pg_insert(Setting)
+            .values(key=NOT_AGENCIES, value=value)
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
+        )
+    return await get_offer(request, offer_id)
+
+
+@router.post("/offers/{offer_id}/not-agency", operation_id="markNotAgency")
+async def mark_not_agency(request: Request, offer_id: int) -> OfferOut:
+    return await _set_not_agency(request, offer_id, keep=True)
+
+
+@router.delete("/offers/{offer_id}/not-agency", operation_id="unmarkNotAgency")
+async def unmark_not_agency(request: Request, offer_id: int) -> OfferOut:
+    return await _set_not_agency(request, offer_id, keep=False)
 
 
 @router.post(

@@ -44,13 +44,22 @@ export function timeAndPlace(iso: string, place: string | null | undefined): str
   return [timeOfDay(iso), place?.trim()].filter(Boolean).join(" · ");
 }
 
-/** La 2e ligne d'une carte « À venir » (demande de Kevin du 16.11) : l'heure, le délai, puis le lieu s'il existe.
- *  ORP : « 9 h · dans 3 jours · ORP Renens » ; entretien : « Alpstack · 14 h · dans 3 jours · Visio · lieu ». */
-export function upcomingLine(item: Upcoming, now: Date = new Date()): string {
-  const when = [timeOfDay(item.at), inDays(item.at, now)];
-  if (item.kind === "orp") return [...when, item.meeting.place?.trim()].filter(Boolean).join(" · ");
+/** La 2e ligne d'une carte « À venir » (§39 du 16.11), en deux parties : ce qui n'est jamais coupé, l'heure et le délai
+ *  (« 9 h · dans 3 jours »), puis le reste, coupé par « … » s'il le faut (le lieu ; pour un entretien, l'entreprise,
+ *  le format et le lieu). */
+export function upcomingWhen(item: Upcoming, now: Date = new Date()): string {
+  return `${timeOfDay(item.at)} · ${inDays(item.at, now)}`;
+}
+
+export function upcomingWhere(item: Upcoming): string {
+  if (item.kind === "orp") return item.meeting.place?.trim() ?? "";
   const a = item.application;
-  return [a.company, ...when, interviewFormat(a), interviewPlace(a)].filter(Boolean).join(" · ");
+  return [a.company, interviewFormat(a), interviewPlace(a)].filter(Boolean).join(" · ");
+}
+
+/** La 2e ligne entière : « 9 h · dans 3 jours · ORP Renens ». */
+export function upcomingLine(item: Upcoming, now: Date = new Date()): string {
+  return [upcomingWhen(item, now), upcomingWhere(item)].filter(Boolean).join(" · ");
 }
 
 /** Le nom de la carte « À venir » pour les lecteurs d'écran (§39 du 16.11) : titre, état de la pastille, date et heure,

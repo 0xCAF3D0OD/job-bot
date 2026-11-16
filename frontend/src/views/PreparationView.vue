@@ -30,6 +30,7 @@ import GroupedRow from "../components/GroupedRow.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import HoverNote from "../components/HoverNote.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
+import DocSearch from "../components/DocSearch.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import ScoreRing from "../components/ScoreRing.vue";
@@ -609,6 +610,14 @@ function onInput(event: Event): void {
 // système : toucher une phrase la choisit, et l'action passe dans le panneau. Puis la feuille
 // « Pas vrai » : retirer la phrase, ou la réécrire d'après le profil ; « Annuler » pendant 6 s.
 const claim = ref<{ index: number; sentence: string } | null>(null);
+// Chercher dans la lettre (§34 du 16.11 : « même chose à l'étape Lettre ») : la loupe de l'en-tête ouvre la barre.
+const letterSheet = ref<HTMLElement | null>(null);
+const letterSearch = ref(false);
+const letterSearchButton = ref<HTMLButtonElement | null>(null);
+function closeLetterSearch(): void {
+  letterSearch.value = false;
+  letterSearchButton.value?.focus();
+}
 const claimOpen = ref(false);
 const claimBusy = ref(false);
 const claimError = ref("");
@@ -1345,14 +1354,34 @@ onMounted(() => void load());
               <h2 id="letter-card-title">
                 Lettre de motivation
               </h2>
-              <SegmentedControl
-                v-if="!claim"
-                v-model="shownLanguage"
-                :options="LANGUAGE_OPTIONS"
-                label="Langue de la lettre"
-                class="doc-language"
-              />
+              <div class="doc-tools">
+                <button
+                  v-if="draft"
+                  ref="letterSearchButton"
+                  type="button"
+                  class="doc-tool doc-tool-round"
+                  aria-label="Chercher dans la lettre"
+                  :aria-expanded="letterSearch"
+                  data-test="letter-search-open"
+                  @click="letterSearch ? closeLetterSearch() : (letterSearch = true)"
+                >
+                  <AppIcon name="search" />
+                </button>
+                <SegmentedControl
+                  v-if="!claim"
+                  v-model="shownLanguage"
+                  :options="LANGUAGE_OPTIONS"
+                  label="Langue de la lettre"
+                  class="doc-language"
+                />
+              </div>
             </div>
+            <DocSearch
+              v-if="!phone && draft && letterSearch"
+              :target="letterSheet"
+              label="Chercher dans la lettre"
+              @close="closeLetterSearch"
+            />
             <!-- Sur téléphone, pas encore de lettre : l'aperçu vide du modèle ; « Rédiger la lettre » est en bas. -->
             <DocPreview
               v-if="phone && !selected && !writing"
@@ -1523,8 +1552,9 @@ onMounted(() => void load());
             </div>
             <article
               v-if="doc && draft && (!phone || letterOpen)"
+              ref="letterSheet"
               class="letter-sheet print-sheet"
-              :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing }]"
+              :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing, 'doc-reading': !phone && letterSearch }]"
               :data-template="template"
               :lang="doc.language"
               data-test="letter"
@@ -2110,9 +2140,9 @@ onMounted(() => void load());
 .prep-desk .prep-side { gap: var(--space-4); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
-.prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
+.prep-desk .doc-card { position: relative; gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
-.prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
+.prep-desk .doc-card > :not(.doc-card-head, .doc-search, .doc-hit-box, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
 .prep-desk .doc-card > .review-line:empty { display: none; }
 /* Le CV prêt (§14, PreparerOrdinateurCVPret) : une page A4 de 560 px sur le fond grisé, à 32 px du haut et 40 du bas ;
    nom 20/800, titre 12/700 bleu, coordonnées 10,5, rubriques 10 en capitales bleues soulignées, texte 10,5/15. */
@@ -2149,15 +2179,14 @@ onMounted(() => void load());
 /* Retoucher (§2.2) : collé en bas de la colonne gauche, 16 au-dessus et 20 dessous, sur un fondu vers le fond. */
 .prep-desk-bottom { position: sticky; bottom: 0; z-index: 5; padding: var(--space-4) 0 var(--space-5); background: linear-gradient(transparent, var(--bg) var(--prep-24)); }
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
-/* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus,
+/* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus
+   et rien d’autre, ni fond ni coins propres (§34 du 16.11 : plus de carte dans la carte),
    libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
 .prep-file > h2 { margin: 0 0 var(--space-3); padding: 0 var(--prep-card); line-height: var(--prep-24); }
 .prep-file-row {
   display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--prep-64); padding: var(--space-2) var(--prep-card); box-sizing: border-box;
-  border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+  border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
 }
-.prep-file-row:hover { background: var(--selected-bg); }
-.prep-file-row:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
 .prep-file-row > .icon { flex: none; width: var(--space-5); height: var(--space-5); color: var(--primary-text); }
 .prep-file-text { flex: 1; min-width: 0; }
 .prep-file-text b { display: block; font-size: var(--prep-15); line-height: var(--space-5); }
@@ -2236,7 +2265,6 @@ onMounted(() => void load());
 @media (prefers-reduced-motion: reduce) { .prep-spin { animation: none; } }
 .prep-file-sub.busy { color: var(--primary-text); }
 .prep-file-busy { cursor: default; }
-.prep-file-busy:hover { background: transparent; }
 .prep-desk-bottom-off .prep-revise { opacity: .5; }
 /* Les versions dans le panneau : 4 px entre le nom et sa ligne (grille de 4). */
 .sheet .versions .grouped-text { gap: var(--space-1); }
