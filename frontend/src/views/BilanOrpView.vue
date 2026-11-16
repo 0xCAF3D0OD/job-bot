@@ -144,10 +144,6 @@ const phoneLine = computed(() => {
   if (!o) return "";
   return o.target ? orpLeftLine(o.count, o.target, o.month, o.due_date) : "Indique l’objectif fixé avec ton ORP dans les Réglages";
 });
-const phoneShare = computed(() => {
-  const o = shownMonth.value;
-  return o?.target ? Math.min(100, Math.round((o.count / o.target) * 100)) : 0;
-});
 const phonePending = computed(() => (expanded.value ? pending.value : pending.value.slice(0, PHONE_DECLARE)));
 const SHORT_DAY = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 function shortDay(row: OrpRow): string {
@@ -281,9 +277,11 @@ watch(viewMonth, () => void load());
           data-test="orp-to-declare"
         >
           <div class="bilan-section-head">
-            <h2 id="orp-declare-title">
-              À déclarer à l’ORP · {{ pending.length }}
-            </h2>
+            <div class="bilan-section-head">
+              <h2 id="orp-declare-title">
+                À déclarer à l’ORP · {{ pending.length }}
+              </h2>
+            </div>
           </div>
           <p class="bilan-section-sub">
             Envoyées en {{ pendingMonths }}, pas encore sur ta feuille de recherches.
@@ -519,48 +517,50 @@ watch(viewMonth, () => void load());
         >
           <RouterLink
             :to="expanded ? foldTo : shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
-            class="orp-phone-month"
+            class="today-orp-card bilan-orp-card"
             :aria-label="expanded ? cardLabel.replace('Voir tout le mois', 'Replier le mois') : cardLabel"
             :aria-expanded="shownMonth.target ? expanded : undefined"
             data-test="orp-goal"
           >
-            <span class="orp-phone-month-head">
-              <span>{{ phoneTitle }}</span>
-              <span data-test="month-count">{{ shownMonth.target ? `${shownMonth.count} sur ${shownMonth.target}` : shownMonth.count }}<AppIcon :name="expanded ? 'chevron-up' : 'chevron-down'" /></span>
-            </span>
-            <span
-              v-if="shownMonth.target"
-              class="orp-phone-month-bar"
-              aria-hidden="true"
-            ><span :style="{ width: `${phoneShare}%` }" /></span>
-            <span
-              class="orp-phone-month-line"
-              data-test="orp-left"
-            >{{ phoneLine }}</span>
+            <OrpMonthBar
+              :title="phoneTitle"
+              :count="shownMonth.count"
+              :target="shownMonth.target ?? null"
+              :month="shownMonth.month"
+              :due="shownMonth.due_date"
+              :line="phoneLine"
+              band
+            />
+            <AppIcon
+              :name="expanded ? 'chevron-up' : 'chevron-down'"
+              class="today-orp-chevron"
+            />
           </RouterLink>
 
           <section
             v-if="pending.length"
-            class="orp-phone-section"
+            class="bilan-section"
             aria-labelledby="orp-declare-title"
             data-test="orp-to-declare"
           >
-            <h2 id="orp-declare-title">
-              À déclarer à l’ORP · {{ pending.length }}
-            </h2>
+            <div class="bilan-section-head">
+              <h2 id="orp-declare-title">
+                À déclarer à l’ORP · {{ pending.length }}
+              </h2>
+            </div>
             <RouterLink
               v-for="row in phonePending"
               :key="row.application_id"
               :to="ficheTo(row)"
-              class="orp-phone-card"
+              class="bilan-card"
               :data-test="`orp-declare-${row.application_id}`"
             >
-              <span class="orp-phone-card-what">
-                <span class="orp-phone-card-top"><strong>{{ row.company }}</strong><span
+              <span class="bilan-card-what">
+                <strong class="orp-phone-top"><span>{{ row.company }}</span><span
                   v-if="row.missing.length"
                   class="orp-phone-chip todo"
-                >Infos à compléter</span></span>
-                <span class="orp-phone-card-sub">{{ row.job_title }} · {{ shortDay(row) }}</span>
+                >Infos à compléter</span></strong>
+                <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
               </span>
               <span
                 class="arrow-circle small"
@@ -571,11 +571,11 @@ watch(viewMonth, () => void load());
 
           <section
             v-if="expanded"
-            class="orp-phone-section"
+            class="bilan-section"
             aria-labelledby="orp-month-title"
             data-test="orp-searches"
           >
-            <div class="orp-phone-section-head">
+            <div class="bilan-section-head">
               <h2 id="orp-month-title">
                 Recherches {{ ofMonth(shownMonth.month) }}
               </h2>
@@ -585,13 +585,13 @@ watch(viewMonth, () => void load());
               v-for="row in declared"
               :key="row.application_id"
               type="button"
-              class="orp-phone-card"
+              class="bilan-card"
               :data-test="`orp-row-${row.application_id}`"
               @click="openSearch(row.application_id)"
             >
-              <span class="orp-phone-card-what">
-                <span class="orp-phone-card-top"><strong>{{ row.company }}</strong><span :class="['orp-phone-chip', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Justificatif à joindre" : "Justificatif joint" }}</span></span>
-                <span class="orp-phone-card-sub">{{ row.job_title }} · {{ shortDay(row) }}</span>
+              <span class="bilan-card-what">
+                <strong class="orp-phone-top"><span>{{ row.company }}</span><span :class="['orp-phone-chip', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Justificatif à joindre" : "Justificatif joint" }}</span></strong>
+                <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
               </span>
               <span
                 class="arrow-circle small"
@@ -600,7 +600,7 @@ watch(viewMonth, () => void load());
             </button>
             <RouterLink
               :to="foldTo"
-              class="orp-phone-fold"
+              class="bilan-card-more"
               aria-expanded="true"
               data-test="orp-fold"
             >
@@ -696,39 +696,21 @@ watch(viewMonth, () => void load());
 </template>
 
 <style>
-/* Bilan › ORP sur téléphone (§37 du 16.11 ; valeurs du HTML d'OrpMois) : sections espacées de 22, cartes blanches à
-   filet de 1,5 px et rayon 18 ; carte du mois 14/16, titre et compte en 16/700, barre de 8 ; cartes de recherche de
-   68 px sur 2 lignes (16/700 + pastille 12/700 de rayon 6, puis 14 gris) ; intertitres en 17/700 ; deux pilules de
-   44 px à parts égales ; lignes des feuilles de 52 px. */
-.orp-phone { --op-22: 22px; --op-14: 14px; --op-68: 68px; --op-17: 17px; --op-6: 6px; --op-3: 3px; --op-12: 12px; --op-52: 52px; --op-10: 10px; --op-500: 500; display: flex; flex-direction: column; gap: var(--op-22); }
-.orp-phone-month, .orp-phone-card { box-sizing: border-box; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
-.orp-phone-month { display: block; padding: var(--op-14) var(--space-4); }
-.orp-phone-month-head { display: flex; justify-content: space-between; align-items: center; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.orp-phone-month-head > span:last-child { display: inline-flex; align-items: center; gap: var(--space-1); }
-.orp-phone-month-head .icon { width: var(--space-4); height: var(--space-4); }
-.orp-phone-month-bar { display: block; height: var(--space-2); margin: var(--op-10) 0 var(--space-2); border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
-.orp-phone-month-bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); }
-.orp-phone-month-line { font-size: var(--font-small); color: var(--text-secondary); }
-.orp-phone-section { display: flex; flex-direction: column; gap: var(--space-2); }
-.orp-phone-section h2 { margin: 0; padding: 0 var(--space-1); font-size: var(--op-17); font-weight: var(--weight-bold); }
-.orp-phone-section-head { display: flex; align-items: baseline; justify-content: space-between; }
-.orp-phone-section-head h2 { padding-right: 0; }
-.orp-phone-section-head > span { padding-right: var(--space-1); font-size: var(--label-caps); color: var(--text-secondary); }
-.orp-phone-card { display: flex; align-items: center; gap: var(--op-12); width: 100%; min-height: var(--op-68); padding: var(--op-12) var(--space-4); font: inherit; text-align: left; cursor: pointer; }
-.orp-phone-card-what { flex: 1; min-width: 0; }
-.orp-phone-card-top { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.orp-phone-card-top strong { overflow: hidden; font-size: var(--font-body); font-weight: var(--weight-bold); white-space: nowrap; text-overflow: ellipsis; }
-.orp-phone-card-sub { display: block; margin-top: calc(var(--space-1) / 2); overflow: hidden; font-size: var(--font-small); color: var(--text-secondary); white-space: nowrap; text-overflow: ellipsis; }
-.orp-phone-chip { flex: none; display: inline-flex; align-items: center; padding: var(--op-3) var(--space-2); border-radius: var(--op-6); font-size: var(--op-12); font-weight: var(--weight-bold); white-space: nowrap; }
+/* Bilan › ORP sur téléphone (§37 du 16.11 ; HTML d'OrpMois) : les cartes de l'ordinateur à 68 px, 12/16, titre 16 ;
+   pastille 12/700 de rayon 6 après l'entreprise ; deux pilules de 44 px à parts égales ; feuilles en lignes de 52. */
+.orp-phone { --bilan-card-h: 68px; --bilan-pad-y: 12px; --bilan-pad: 16px; --bilan-17: 16px; --bilan-bar: 8px; --bilan-lh-21: 21px; display: grid; gap: 22px; }
+.orp-phone .today-orp-card { gap: 12px; margin: 0; padding: 14px 16px; border: 1.5px solid var(--card-line); box-shadow: none; }
+.orp-phone .bilan-section-head h2 { font-size: 17px; }
+.orp-phone .bilan-card-what { font-size: var(--font-body); }
+.orp-phone-top { display: flex; gap: 8px; align-items: center; }
+.orp-phone-top > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orp-phone-chip { flex: none; padding: 3px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
 .orp-phone-chip.todo { background: var(--peach-soft); color: var(--peach-text); }
 .orp-phone-chip.ok { background: var(--success-soft); color: var(--success); }
-.orp-phone-fold { display: inline-flex; align-items: center; gap: var(--op-6); align-self: flex-start; min-height: var(--target-min); padding: 0 var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
-.orp-phone-fold .icon { width: var(--space-4); height: var(--space-4); }
-.orp-phone-more { display: flex; gap: var(--space-2); }
-.orp-phone-more > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--target-min); height: var(--target-min); padding: 0 var(--op-10); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); white-space: nowrap; }
-.orp-phone-more .icon { width: var(--space-4); height: var(--space-4); }
-.orp-phone-sheet-list { --op-12: 12px; --op-52: 52px; --op-500: 500; --op-3: 3px; --op-6: 6px; margin: 0; padding: 0; list-style: none; }
-.orp-phone-sheet-list :is(button, a) { display: flex; align-items: center; gap: var(--op-12); width: 100%; min-height: var(--op-52); padding: 0 var(--space-1); border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--font-body); font-weight: var(--op-500); text-align: left; text-decoration: none; }
-.orp-phone-sheet-list :is(button, a) > span:first-of-type { flex: 1; }
-.orp-phone-sheet-list .icon { width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
+.orp-phone-more { display: flex; gap: 8px; }
+.orp-phone-more > button { flex: 1; gap: 8px; height: var(--target-min); padding: 0 10px; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.orp-phone-sheet-list { margin: 0; padding: 0; list-style: none; }
+.orp-phone-sheet-list :is(button, a) { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 4px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font: inherit; font-weight: 500; text-decoration: none; }
+.orp-phone-sheet-list :is(button, a) > span:first-of-type { flex: 1; text-align: left; }
+.orp-phone-sheet-list .icon { width: 20px; height: 20px; color: var(--text-secondary); }
 </style>

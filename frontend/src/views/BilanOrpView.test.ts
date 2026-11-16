@@ -55,16 +55,16 @@ describe("Bilan › ORP sur téléphone (§37 du 16.11, planches OrpMois, OrpMoi
     const wrapper = mountView(10);
     await flushPromises();
     const goal = wrapper.find("[data-test=orp-goal]");
-    expect(goal.find(".orp-phone-month-head").text()).toBe("Mois ORP · octobre4 sur 10");
-    expect(goal.find(".orp-phone-month-bar > span").attributes("style")).toContain("width: 40%");
+    expect(goal.find(".orp-month-band-head").text()).toBe("Mois ORP · octobre4 sur 10");
+    expect(goal.find(".orp-month-band-bar > span").attributes("style")).toContain("width: 40%");
     // Sans date du serveur, le 5 du mois suivant (ORP_DEADLINE_DAY).
-    expect(goal.find("[data-test=orp-left]").text()).toBe("Encore 6 d’ici le 5 novembre");
+    expect(goal.find("[data-test=month-left]").text()).toBe("Encore 6 d’ici le 5 novembre");
     const declare = wrapper.find("[data-test=orp-to-declare]");
     expect(declare.find("h2").text()).toBe("À déclarer à l’ORP · 4");
-    const cards = declare.findAll(".orp-phone-card");
+    const cards = declare.findAll(".bilan-card");
     expect(cards).toHaveLength(3);
-    expect(cards[0]!.find("strong").text()).toBe("Vaud Network");
-    expect(cards[0]!.find(".orp-phone-card-sub").text()).toBe("DevOps Engineer · 17 oct.");
+    expect(cards[0]!.find(".orp-phone-top > span").text()).toBe("Vaud Network");
+    expect(cards[0]!.find(".bilan-card-what > span").text()).toBe("DevOps Engineer · 17 oct.");
     expect(cards[2]!.find(".orp-phone-chip.todo").text()).toBe("Infos à compléter");
     // Plus de « Afficher l'autre » ni de phrase sous les intertitres (règle de Kevin du 16.11) ; replié, pas de recherches.
     expect(wrapper.find("[data-test=orp-declare-more]").exists()).toBe(false);
@@ -80,10 +80,10 @@ describe("Bilan › ORP sur téléphone (§37 du 16.11, planches OrpMois, OrpMoi
     data.rows = data.rows.map((r, i) => (i < 2 ? { ...r, declared_at: "2026-10-30" } : r)) as typeof data.rows;
     const wrapper = mountWith(data);
     await flushPromises();
-    expect(wrapper.find("[data-test=orp-to-declare]").findAll(".orp-phone-card")).toHaveLength(2);
+    expect(wrapper.find("[data-test=orp-to-declare]").findAll(".bilan-card")).toHaveLength(2);
     const searches = wrapper.find("[data-test=orp-searches]");
-    expect(searches.find(".orp-phone-section-head").text()).toBe("Recherches d’octobre4 ce mois");
-    const rows = searches.findAll(".orp-phone-card");
+    expect(searches.find(".bilan-section-head").text()).toBe("Recherches d’octobre4 ce mois");
+    const rows = searches.findAll(".bilan-card");
     expect(rows).toHaveLength(2);
     expect(rows[0]!.find(".orp-phone-chip.ok").text()).toBe("Justificatif joint");
     expect(searches.find("[data-test=orp-fold]").text()).toBe("Replier le mois");
@@ -104,8 +104,8 @@ describe("Bilan › ORP sur téléphone (§37 du 16.11, planches OrpMois, OrpMoi
   it("sans objectif saisi : la phrase des Réglages, pas de « 0 sur 0 » ni de barre", async () => {
     const wrapper = mountView(null);
     await flushPromises();
-    expect(wrapper.find(".orp-phone-month-bar").exists()).toBe(false);
+    expect(wrapper.find(".orp-month-band-bar").exists()).toBe(false);
     expect(wrapper.find("[data-test=month-count]").text()).toBe("4");
-    expect(wrapper.find("[data-test=orp-left]").text()).toBe("Indique l’objectif fixé avec ton ORP dans les Réglages");
+    expect(wrapper.find("[data-test=month-left]").text()).toBe("Indique l’objectif fixé avec ton ORP dans les Réglages");
   });
 });
