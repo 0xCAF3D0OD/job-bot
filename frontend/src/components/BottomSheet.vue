@@ -20,8 +20,9 @@ import AppIcon from "./AppIcon.vue";
 // 2.4.3) ; croix, Échap et clic à l'extérieur la ferment, sans bouton « Annuler ».
 // `labelledBy` : la feuille dessine son propre en-tête (ActionsOffre, §17 du 15 novembre) ; pas de titre ni de croix,
 // le nom vient de l’élément désigné.
-const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; full?: boolean; icon?: IconName | ""; labelledBy?: string }>(), {
+const props = withDefaults(defineProps<{ open: boolean; title: string; subtitle?: string; eyebrow?: string; full?: boolean; icon?: IconName | ""; labelledBy?: string }>(), {
   subtitle: "",
+  eyebrow: "",
   labelledBy: "",
   full: false,
   icon: "",
@@ -158,6 +159,12 @@ function onClick(event: MouseEvent): void {
           aria-hidden="true"
         ><AppIcon :name="icon" /></span>
         <div class="sheet-heading">
+          <!-- Au-dessus du titre, en petit (« Changement 2 sur 4 », §37 du 16.11). -->
+          <span
+            v-if="eyebrow"
+            class="sheet-eyebrow"
+            data-test="sheet-eyebrow"
+          >{{ eyebrow }}</span>
           <h2
             :id="titleId"
             class="sheet-title"

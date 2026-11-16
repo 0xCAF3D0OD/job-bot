@@ -64,6 +64,25 @@ def test_removal_may_give_the_place_constraint() -> None:
     assert check("Retiré pour tenir sur une page ; « Ansible » absent.", removed=True) is None
 
 
+def test_words_given_apart_need_no_quotes() -> None:
+    # Kevin, 16.11 : les mots de l'annonce viennent avec la raison, sans dépendre des guillemets.
+    offer = cv_reasons.fold(OFFER)
+    reason = cv_reasons.check(
+        "L'annonce demande Kubernetes et Terraform.",
+        offer,
+        removed=False,
+        words=("Kubernetes", "Terraform"),
+    )
+    assert reason is not None and reason.quotes == ("Kubernetes", "Terraform")
+    # Un mot donné à part mais absent de l'annonce écarte la raison, comme une citation.
+    assert (
+        cv_reasons.check("L'annonce demande Ansible.", offer, removed=False, words=("Ansible",))
+        is None
+    )
+    # Sans mot ni citation, pas de raison.
+    assert cv_reasons.check("L'annonce demande Kubernetes.", offer, removed=False, words=()) is None
+
+
 def test_parse_reasons_targets() -> None:
     body = {
         "language": "fr",
@@ -72,7 +91,7 @@ def test_parse_reasons_targets() -> None:
         "chunk_ids": [3, 1, 4],
         "keywords": [],
         "reasons": [
-            {"target": "profil", "reason": "L'annonce demande « Terraform »."},
+            {"target": "profil", "reason": "L'annonce demande Terraform.", "words": ["Terraform"]},
             {"target": "3", "reason": "L'annonce cite « JavaScript »."},
             {"target": "3", "reason": "Doublon « Kubernetes »."},
             {"target": "2", "reason": "Retiré pour tenir sur une page."},

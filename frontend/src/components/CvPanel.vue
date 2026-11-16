@@ -30,6 +30,7 @@ import SegmentedControl from "./SegmentedControl.vue";
 import SuggestionChips from "./SuggestionChips.vue";
 import { cvChanges, type CvChange } from "../cvChanges";
 import DocSearch from "./DocSearch.vue";
+import { highlight, type Segment } from "../newsLabels";
 
 // Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -240,30 +241,11 @@ function versionLabel(cv: Cv): string {
   return `v${cv.version} · ${LANGUAGES[cv.language]} · ${what} · ${cv.edited_at ? "modifiée" : "préparée"} ${when}`;
 }
 
-// Sur téléphone, la même structure que la lettre (maquette Preparer, Kevin 2026-11-05) : le modèle partagé,
-// l'aperçu (touché, il ouvre le CV entier), « Modifier le texte avec l'Assistant », « J'ai relu le CV », la
-// langue en réglage secondaire sous l'aperçu ; le bouton plein en bas.
+// Sur téléphone (§37 du 16.11, planche MaCandidatureCV) : la rangée d'outils, le CV entier, « Demander une
+// modification du CV », puis « J’ai relu, continuer » en bas.
 const { phone } = usePhone();
 const { template } = useDocTemplate();
-const cvOpen = ref(false);
-const instructionOpen = ref(false);
-const instructionEl = ref<HTMLInputElement | null>(null);
-function openInstruction(): void {
-  instructionOpen.value = true;
-  void nextTick(() => instructionEl.value?.focus());
-}
-const previewSub = computed(() => {
-  const city = doc.value?.contacts.find((c) => /\b\d{4}\s/.test(c))?.replace(/^.*\b\d{4}\s+/, "");
-  return [edit.value.headline, city].filter(Boolean).join(" · ") || null;
-});
-const previewParagraphs = computed(() => {
-  const d = doc.value;
-  if (!d) return [];
-  const items = d.sections.flatMap((s) => s.items.map((i) => [i.title, i.content.map((c) => c.text).join("")].filter(Boolean).join(" : ")));
-  return [edit.value.summary, ...items].filter(Boolean).slice(0, 3);
-});
-// Le bouton plein du téléphone : préparer le CV, puis la nouvelle version quand une consigne est écrite ;
-// sinon « Continuer vers Postuler ».
+// Le bouton plein du téléphone : préparer le CV, ou à nouveau dans une autre langue ; sinon « J’ai relu, continuer ».
 // La langue en FR / DE / EN en tête de la carte (maquette Preparer, Kevin 2026-11-06) : sans choix, celle du CV
 // affiché ; une autre langue propose de préparer le CV à nouveau.
 const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), name: LANGUAGES[code], test: `cv-language-${code}` }));
@@ -293,19 +275,6 @@ const words = computed(() => {
   const texts = [edit.value.headline, edit.value.summary, ...d.sections.flatMap((s) => s.items.flatMap((i) => [i.title, ...i.content.map((c) => c.text)]))];
   return texts.reduce((n, t) => n + (t?.match(/\S+/g)?.length ?? 0), 0);
 });
-const readBusy = ref(false);
-async function markRead(box: HTMLInputElement): Promise<void> {
-  const cv = selected.value;
-  if (!cv) return;
-  readBusy.value = true;
-  try {
-    const { data } = await api.PUT("/api/cvs/{draft_id}/read", { params: { path: { draft_id: cv.id } }, body: { read: box.checked } });
-    if (data) cvs.value = cvs.value.map((c) => (c.id === data.id ? data : c));
-    else box.checked = !!cv.read_at;
-  } finally {
-    readBusy.value = false;
-  }
-}
 
 // L'étape CV prête sur ordinateur (MODIFICATIONS du 9 novembre, §14 ; maquettes PreparerOrdinateurCVPret et
 // PreparerOrdinateurCVChangements) : la structure de l'étape Lettre. FR / DE / EN en tête du CV, retouche en bas, et à
@@ -334,7 +303,7 @@ const showChanges = ref(false);
 const marked = computed(() => new Set<unknown>(showChanges.value ? changes.value.map((c) => c.mark).filter((m) => m !== undefined) : []));
 function closeSearch(): void {
   searchOpen.value = false;
-  searchButton.value?.focus();
+  void nextTick(() => searchButton.value?.focus());
 }
 const versionsOpen = ref(false);
 const changesLine = computed(() => {
@@ -355,6 +324,41 @@ const forCompany = computed(() => {
 async function undo(change: CvChange): Promise<void> {
   if (change.undo && (await save(change.undo))) savedAt.value = Date.now();
 }
+// Téléphone (§37 du 16.11, planches MaCandidatureCV et MaCandidatureCVPourquoi) : toucher un passage surligné ouvre la
+// feuille « Changement N sur M » : Avant, Maintenant, Pourquoi (la ligne du serveur, mots de l'annonce surlignés),
+// « Annuler ce changement », précédent et suivant.
+const changeAt = ref<number | null>(null);
+const changeOf = computed(() => (changeAt.value === null ? null : (changes.value[changeAt.value] ?? null)));
+function openChange(event: Event): void {
+  if (!phone.value || !showChanges.value) return;
+  const passage = (event.target as HTMLElement).closest<HTMLElement>("[data-change]");
+  if (!passage) return;
+  const target = passage.dataset.change === "summary" ? "summary" : Number(passage.dataset.change);
+  const at = changes.value.findIndex((c) => c.mark === target);
+  if (at >= 0) changeAt.value = at;
+}
+function stepChange(by: number): void {
+  const n = changes.value.length;
+  if (changeAt.value === null || !n) return;
+  changeAt.value = (changeAt.value + by + n) % n;
+}
+async function undoShown(): Promise<void> {
+  const change = changeOf.value;
+  if (!change) return;
+  await undo(change);
+  changeAt.value = null;
+}
+// « Pourquoi » : le texte du serveur, les mots de l'annonce qu'il renvoie avec la raison (`quotes`) surlignés comme
+// dans « Le poste », sans dépendre des guillemets (Kevin, 16.11) ; « Demandé par toi » pour un changement demandé
+// par l'utilisateur ; rien sans raison.
+const why = computed<Segment[]>(() => {
+  const change = changeOf.value;
+  const reason = change ? selected.value?.reasons?.find((r) => r.target === change.target) : null;
+  if (!reason) return [];
+  if (reason.origin === "user") return [{ text: "Demandé par toi.", hit: false }];
+  const text = reason.text?.trim() ?? "";
+  return text ? highlight(text, (reason.quotes ?? []).filter(Boolean)) : [];
+});
 function pickVersion(cv: Cv): void {
   show(cv);
   versionsOpen.value = false;
@@ -428,14 +432,14 @@ onMounted(() => void load());
       <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
            l’adaptation a mis en avant (ses mots-clés). -->
       <section
-        class="doc-card"
+        :class="['doc-card', { 'cv-phone-ready': phone && selected }]"
         aria-labelledby="cv-card-title"
         data-test="cv-card"
       >
         <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille « Mise en page
              et langue » ; plus de FR / DE / EN sur l’écran. -->
         <LayoutSheetLink
-          v-if="phone"
+          v-if="phone && !selected"
           v-model="shownLanguage"
           title="CV adapté"
           title-id="cv-card-title"
@@ -443,6 +447,62 @@ onMounted(() => void load());
           :options="SHEET_LANGUAGE_OPTIONS"
           language-label="Langue du titre et du résumé"
         />
+        <!-- Téléphone, CV prêt (§37 du 16.11, planche MaCandidatureCV) : la rangée d'outils sous les étapes,
+             « Changements · N », la loupe et « Modèle » (la feuille Mise en page et langue). La recherche la remplace. -->
+        <template v-else-if="phone">
+          <h2
+            id="cv-card-title"
+            class="visually-hidden"
+          >
+            CV adapté
+          </h2>
+          <div
+            v-if="!searchOpen"
+            class="cv-phone-tools"
+            data-test="cv-phone-tools"
+          >
+            <button
+              v-if="changes.length"
+              type="button"
+              class="doc-tool"
+              :aria-pressed="showChanges"
+              data-test="cv-changes-show"
+              @click="showChanges = !showChanges"
+            >
+              <i
+                class="doc-tool-mark"
+                aria-hidden="true"
+              />Changements · {{ changes.length }}
+            </button>
+            <button
+              ref="searchButton"
+              type="button"
+              class="doc-tool doc-tool-round cv-phone-search"
+              aria-label="Chercher dans le CV"
+              :aria-expanded="searchOpen"
+              data-test="cv-search-open"
+              @click="searchOpen = true"
+            >
+              <AppIcon name="search" />
+            </button>
+            <LayoutSheetLink
+              v-model="shownLanguage"
+              compact
+              title="CV adapté"
+              title-id="cv-card-title"
+              :name="doc?.name"
+              :options="SHEET_LANGUAGE_OPTIONS"
+              language-label="Langue du titre et du résumé"
+            />
+          </div>
+          <DocSearch
+            v-else
+            class="cv-phone-find"
+            :target="sheet"
+            label="Chercher dans le CV"
+            @close="closeSearch"
+          />
+        </template>
         <div
           v-else
           class="doc-card-head"
@@ -579,24 +639,16 @@ onMounted(() => void load());
           kind="cv"
         />
 
-        <DocPreview
-          v-if="phone && doc && selected && !cvOpen"
-          :template="template"
-          :name="doc.name || 'Ton nom'"
-          :sub="previewSub"
-          :paragraphs="previewParagraphs"
-          label="Ouvrir le CV entier pour le modifier"
-          class="doc-preview-tall"
-          @open="cvOpen = true"
-        />
         <article
-          v-if="doc && selected && (!phone || cvOpen)"
+          v-if="doc && selected"
           ref="sheet"
           class="cv-sheet print-sheet"
-          :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing || saving, 'doc-reading': !phone && (searchOpen || showChanges) }]"
+          :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing || saving, 'doc-reading': searchOpen || showChanges }]"
           :data-template="template"
           :lang="doc.language"
           data-test="cv"
+          @click="openChange"
+          @keydown.enter="openChange"
         >
           <!-- L’en-tête (le nom et le titre) que le modèle habille : bande, bandeau ou filet, comme dans le PDF. -->
           <div class="doc-head cv-head">
@@ -626,7 +678,10 @@ onMounted(() => void load());
             data-test="summary"
             @input="onInput"
           />
-          <p :class="['print-only', { 'cv-changed': marked.has('summary') }]">
+          <p
+            :class="['print-only', { 'cv-changed': marked.has('summary') }]"
+            v-bind="phone && marked.has('summary') ? { 'data-change': 'summary', role: 'button', tabindex: 0 } : {}"
+          >
             {{ edit.summary }}
           </p>
           <template
@@ -638,6 +693,7 @@ onMounted(() => void load());
               v-for="item in section.items"
               :key="item.chunk_id"
               :class="['cv-item', { 'cv-changed': marked.has(item.chunk_id) }]"
+              v-bind="phone && marked.has(item.chunk_id) ? { 'data-change': item.chunk_id, role: 'button', tabindex: 0 } : {}"
               data-test="cv-item"
             >
               <strong
@@ -655,58 +711,17 @@ onMounted(() => void load());
             </div>
           </template>
         </article>
-        <!-- Téléphone (maquette Preparer) : les mots mis en avant sous l'aperçu, puis les deux gestes de la lettre. -->
-        <template v-if="phone">
-          <ul
-            v-if="highlights.length"
-            class="doc-tags"
-            aria-label="Mis en avant pour cette offre"
-            data-test="cv-highlights"
-          >
-            <li
-              v-for="word in highlights"
-              :key="word"
-            >
-              {{ word }}
-            </li>
-          </ul>
-          <template v-if="selected">
-            <button
-              v-if="!instructionOpen"
-              type="button"
-              class="secondary doc-card-edit"
-              data-test="cv-edit-text"
-              @click="openInstruction"
-            >
-              Modifier le texte avec l’Assistant
-            </button>
-            <div
-              v-else
-              class="doc-card-instruction"
-            >
-              <input
-                ref="instructionEl"
-                v-model="instruction"
-                class="prep-instruction-line"
-                maxlength="500"
-                aria-label="Consigne pour la nouvelle version"
-                placeholder="Consigne : mets le projet personnel en premier"
-                data-test="cv-instruction"
-              >
-            </div>
-            <label class="doc-card-read">
-              <input
-                type="checkbox"
-                :checked="!!selected.read_at"
-                :disabled="writing || readBusy"
-                data-test="cv-read"
-                @change="markRead($event.target as HTMLInputElement)"
-              >
-              <span>J’ai relu le CV</span>
-            </label>
-          </template>
-        </template>
       </section>
+      <!-- Téléphone (§37 du 16.11) : la retouche sous le CV, comme sur ordinateur. -->
+      <Composer
+        v-if="phone && selected"
+        v-model="revision"
+        class="cv-phone-composer"
+        placeholder="Demander une modification du CV"
+        send-label="Envoyer la demande"
+        :busy="writing"
+        @send="revise"
+      />
       <!-- Retoucher (§14, comme la lettre) : les puces et la zone de saisie collées en bas de la colonne gauche. -->
       <div
         v-if="deskReady"
@@ -760,14 +775,17 @@ onMounted(() => void load());
         >
           <span class="with-icon"><AppIcon name="ai" />{{ writeLabel || "Préparer le CV" }}</span>
         </BusyButton>
-        <RouterLink
+        <!-- §37 du 16.11 : « J’ai relu, continuer » note la relecture puis passe à Postuler, comme sur ordinateur. -->
+        <BusyButton
           v-else
-          :to="{ query: { doc: 'postuler' } }"
-          class="button-link primary-link prep-bar-main"
+          class="primary prep-bar-main"
+          :busy="readThenBusy"
+          busy-label="Enregistrement…"
           data-test="next-step"
+          @click="readThenNext"
         >
-          Continuer vers Postuler
-        </RouterLink>
+          J’ai relu, continuer
+        </BusyButton>
       </ActionBar>
     </div>
 
@@ -1091,6 +1109,73 @@ onMounted(() => void load());
       </div>
     </section>
 
+    <!-- Téléphone (§37 du 16.11, planche MaCandidatureCVPourquoi) : un changement à la fois. -->
+    <BottomSheet
+      v-if="phone"
+      :open="!!changeOf"
+      :title="changeOf?.title ?? ''"
+      :eyebrow="changeOf ? `Changement ${(changeAt ?? 0) + 1} sur ${changes.length}` : ''"
+      data-test="cv-change-sheet"
+      @close="changeAt = null"
+    >
+      <div
+        v-if="changeOf"
+        class="cv-why-body"
+      >
+        <p class="cv-why-before">
+          {{ changeOf.before }}
+        </p>
+        <p class="cv-why-now">
+          {{ changeOf.now }}
+        </p>
+        <p
+          v-if="why.length"
+          class="cv-why"
+          data-test="cv-why"
+        >
+          <AppIcon name="target" />
+          <span><b>Pourquoi :</b> <template
+            v-for="(part, i) in why"
+            :key="i"
+          ><mark
+            v-if="part.hit"
+            class="cv-why-quote"
+          >{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+        </p>
+        <div class="cv-why-actions">
+          <button
+            v-if="changeOf.undo"
+            type="button"
+            class="secondary cv-why-undo"
+            :disabled="saving"
+            data-test="cv-change-undo"
+            @click="undoShown"
+          >
+            Annuler ce changement
+          </button>
+          <button
+            type="button"
+            class="cv-why-step"
+            aria-label="Changement précédent"
+            :disabled="changes.length < 2"
+            data-test="cv-change-prev"
+            @click="stepChange(-1)"
+          >
+            <AppIcon name="chevron-left" />
+          </button>
+          <button
+            type="button"
+            class="cv-why-step next"
+            aria-label="Changement suivant"
+            :disabled="changes.length < 2"
+            data-test="cv-change-next"
+            @click="stepChange(1)"
+          >
+            <AppIcon name="chevron" />
+          </button>
+        </div>
+      </div>
+    </BottomSheet>
     <!-- Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : un bloc par changement, « Avant »,
          « Maintenant » et « Annuler ce changement ». -->
     <BottomSheet

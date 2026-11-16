@@ -1,11 +1,13 @@
 """La ligne « Pourquoi » de chaque changement du CV adapté (§32 et §37 du 16.11.2026).
 
 L'IA (prompt cv-v2) donne une raison par changement : profil réécrit, bloc déplacé, bloc retiré.
-Une raison ne cite QUE des mots de l'annonce, entre guillemets, dans la langue de l'annonce ; pour
-un retrait, elle peut aussi donner la contrainte de place « pour tenir sur une page ». Ici, le
-serveur vérifie chaque citation dans le texte de l'offre, sans accents ni majuscules, par mots ou
-expressions entiers (« Go » ne valide pas « Google »). Une raison qui cite un mot absent, qui ne
-cite rien, ou qui est vide est écartée : l'interface n'affiche alors pas de ligne « Pourquoi ».
+Une raison ne cite QUE des mots de l'annonce, dans la langue de l'annonce, et l'IA les donne à part
+dans `words` (Kevin, 16.11 : le surlignage ne dépend pas des guillemets ; une citation entre
+guillemets compte aussi) ; pour un retrait, elle peut aussi donner la contrainte de place « pour
+tenir sur une page ». Ici, le serveur vérifie chaque mot ou citation dans le texte de l'offre, sans
+accents ni majuscules, par mots ou expressions entiers (« Go » ne valide pas « Google »). Une
+raison qui cite un mot absent, qui ne cite rien, ou qui est vide est écartée : l'interface
+n'affiche alors pas de ligne « Pourquoi ».
 
 Un changement demandé par l'utilisateur (« Demander une modification du CV », ou ses retouches)
 n'a pas de raison de l'IA : il est gardé dans `user_requests` (de quoi le réappliquer) et l'API le
@@ -52,13 +54,16 @@ class Reason:
         return {"target": self.target, "text": self.text, "quotes": list(self.quotes)}
 
 
-def check(text: str, offer: str, *, removed: bool) -> Reason | None:
+def check(text: str, offer: str, *, removed: bool, words: tuple[str, ...] = ()) -> Reason | None:
     """La raison si elle est valable, sinon None. `offer` est le texte de l'offre passé par `fold`.
-    Le champ `target` est rempli par l'appelant."""
+    `words` : les mots de l'annonce que l'IA donne à part (Kevin, 16.11 : le surlignage ne dépend
+    pas des guillemets) ; les citations entre guillemets du texte s'y ajoutent. Le champ `target`
+    est rempli par l'appelant."""
     text = " ".join(text.split())
     if not text or len(text) > REASON_MAX:
         return None
-    quotes = tuple(next(g for g in m.groups() if g) for m in QUOTED.finditer(text))
+    quoted = (next(g for g in m.groups() if g) for m in QUOTED.finditer(text))
+    quotes = tuple(" ".join(q.split()) for q in (*words, *quoted) if q.strip())
     if any(len(q) > QUOTE_MAX or not cites(offer, q) for q in quotes):
         return None
     if not quotes and not (removed and PLACE in fold(text)):
@@ -74,7 +79,7 @@ def target_of(value: str) -> Target | None:
 
 
 def validate(
-    raw: list[tuple[str, str]],
+    raw: list[tuple[str, str, tuple[str, ...]]],
     offer_text: str,
     *,
     summary: str,
@@ -82,11 +87,12 @@ def validate(
     eligible: set[int],
 ) -> list[Reason]:
     """Les raisons valables, une par cible au plus : le profil s'il est écrit, un bloc gardé ou
-    retiré parmi les blocs de CV. `raw` : les paires (cible, raison) rendues par l'IA."""
+    retiré parmi les blocs de CV. `raw` : les triplets (cible, raison, mots de l'annonce) rendus
+    par l'IA."""
     offer = fold(offer_text)
     seen: set[Target] = set()
     reasons = []
-    for value, text in raw:
+    for value, text, words in raw:
         target = target_of(value)
         if target is None or target in seen:
             continue
@@ -94,7 +100,7 @@ def validate(
             continue
         if target != SUMMARY and target not in eligible:
             continue
-        reason = check(text, offer, removed=target != SUMMARY and target not in kept)
+        reason = check(text, offer, removed=target != SUMMARY and target not in kept, words=words)
         if reason is None:
             continue
         seen.add(target)

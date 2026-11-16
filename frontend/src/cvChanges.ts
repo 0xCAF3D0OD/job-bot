@@ -7,7 +7,8 @@ import type { Cv } from "./api/client";
 
 // `mark` : ce que « Voir les changements » surligne dans l'aperçu (§34 du 16.11), le résumé ou le bloc déplacé ; un
 // bloc retiré n'est plus dans l'aperçu, il n'a rien à surligner.
-export type CvChange = { key: string; title: string; before: string; now: string; undo: number[] | null; mark?: number | "summary" };
+// `target` : ce que vise la ligne « Pourquoi » du serveur (`reasons`, §37 du 16.11), le résumé ou le bloc déplacé ou retiré.
+export type CvChange = { key: string; title: string; before: string; now: string; undo: number[] | null; mark?: number | "summary"; target: number | "summary" };
 
 const SECTIONS: Record<string, string> = {
   experience: "Expériences",
@@ -53,6 +54,7 @@ export function cvChanges(cv: Cv): CvChange[] {
       now: `Maintenant : « ${summary} »`,
       undo: null,
       mark: "summary",
+      target: "summary",
     });
   }
   if (!origin.length) return changes;
@@ -70,6 +72,7 @@ export function cvChanges(cv: Cv): CvChange[] {
         now: `Maintenant : il vient en ${rank(moved + 1)}, pour cette offre.`,
         undo: reorder(cv, origin, kept),
         mark: id,
+        target: id,
       });
     }
   }
@@ -83,6 +86,7 @@ export function cvChanges(cv: Cv): CvChange[] {
       before: `Avant : dans ton CV, rubrique ${SECTIONS[block.section] ?? block.section}.`,
       now: "Maintenant : retiré pour cette offre.",
       undo: restore(cv, origin, id),
+      target: id,
     });
   }
   return changes;
