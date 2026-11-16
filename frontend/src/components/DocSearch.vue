@@ -189,15 +189,15 @@ onBeforeUnmount(() => {
 .doc-tool > .icon { width: 18px; height: 18px; }
 .doc-tool-mark { width: var(--doc-14); height: var(--doc-14); box-sizing: border-box; border-left: 3px solid var(--primary-graphic); border-radius: var(--space-1); background: color-mix(in srgb, var(--primary-graphic) 18%, var(--surface)); }
 .doc-tools { display: flex; align-items: center; gap: var(--space-2); }
-.doc-search { display: flex; align-items: center; gap: var(--space-2); padding: 10px var(--prep-card); border-bottom: 1px solid var(--line); background: var(--surface); }
-.doc-search-field { flex: 1; display: flex; align-items: center; gap: var(--space-2); height: 44px; padding: 0 14px; box-sizing: border-box; border: 2px solid var(--card-line); border-radius: var(--radius-pill); color: var(--text-secondary); }
+.doc-search { --doc-10: 10px; display: flex; align-items: center; gap: var(--space-2); padding: var(--doc-10) var(--prep-card); border-bottom: 1px solid var(--line); background: var(--surface); }
+.doc-search-field { --doc-14: 14px; flex: 1; display: flex; align-items: center; gap: var(--space-2); height: 44px; padding: 0 var(--doc-14); box-sizing: border-box; border: 2px solid var(--card-line); border-radius: var(--radius-pill); color: var(--text-secondary); }
 .doc-search-field:focus-within { border-color: var(--primary-graphic); }
 .doc-search .doc-search-field > input { flex: 1; min-width: 0; height: auto; min-height: 0; padding: 0; border: 0; background: none; color: var(--text); font-size: var(--font-label); box-shadow: none; }
 .doc-search-count { font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .doc-search-close { border: 0; background: none; }
 ::highlight(doc-hit) { background-color: #FFE9A8; }
 ::highlight(doc-hit-now) { background-color: #FFB86B; }
-.doc-hit-box { position: absolute; border-radius: 2px; outline: 2px solid #B4631F; pointer-events: none; }
+.doc-hit-box { --doc-2: 2px; position: absolute; border-radius: var(--doc-2); outline: 2px solid #B4631F; pointer-events: none; }
 /* Pendant la recherche et « Voir les changements », les champs du document laissent place à leur texte. */
 .doc-reading .screen-only { display: none; }
 .doc-reading .print-only { display: revert; }
