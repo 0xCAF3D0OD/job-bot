@@ -361,6 +361,15 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
 
+## Offre renotée hors des filtres (Kevin, 16.11.2026, 13 h 39)
+
+- Après « Refaire la note » (texte collé, lien donné ou lecture de l’annonce), une offre dont la nouvelle note sort des
+  filtres de la liste ne disparaît plus : elle reste ouverte et en tête de liste, avec la pastille neutre « Hors de tes
+  filtres », jusqu’au prochain changement de filtre ou au départ de la page.
+- Dans la fiche, sous la note : « Nouvelle note : {n}. Elle sort de ton filtre « {seuil} ». », avec le libellé du filtre
+  de note en vigueur ; la phrase est annoncée (aria-live="polite").
+- Si on change ensuite le statut de l’offre (écarter, garder…), la règle commune revient.
+
 ## Réglages « Objectif ORP et sites » (Kevin, 16.11.2026, 13 h 51)
 
 Pas de planche pour cette page : la référence est le message de Kevin. Ordinateur et téléphone, clair et sombre.
