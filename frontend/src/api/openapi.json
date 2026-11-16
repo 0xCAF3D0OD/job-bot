@@ -3841,6 +3841,88 @@
         }
       }
     },
+    "/api/offers/{offer_id}/not-agency": {
+      "post": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Mark Not Agency",
+        "operationId": "markNotAgency",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Unmark Not Agency",
+        "operationId": "unmarkNotAgency",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/employer": {
       "post": {
         "tags": [
@@ -10567,6 +10649,30 @@
           "base_unit"
         ],
         "title": "AdviceOut"
+      },
+      "AgencyDuplicateOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company",
+          "sent_at"
+        ],
+        "title": "AgencyDuplicateOut"
       },
       "AiReadingOut": {
         "properties": {
@@ -20408,6 +20514,31 @@
             ],
             "title": "Employer Checked At"
           },
+          "agency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "known",
+                  "probable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agency"
+          },
+          "agency_duplicate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgencyDuplicateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -23228,6 +23359,31 @@
               }
             ],
             "title": "Employer Checked At"
+          },
+          "agency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "known",
+                  "probable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agency"
+          },
+          "agency_duplicate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgencyDuplicateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "has_logo": {
             "type": "boolean",

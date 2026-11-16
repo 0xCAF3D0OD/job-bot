@@ -51,7 +51,7 @@ const chips = computed<Chip[]>(() => {
   const out: Chip[] = [];
   // Section 35 du 16.11 (CandidaturesOrdinateurAgence, OffreAgence) : « Agence » en premier dans la rangée. Le doute
   // « Employeur caché : annonce d'agence » qu'elle dit déjà ne donne plus, seul, la pastille « À vérifier ».
-  const agency = o.employer_status === "agency";
+  const agency = !!o.agency;
   if (agency) out.push({ text: "Agence", tone: "agency", title: "Agence de placement : elle recrute pour un client dont le nom n’est pas donné." });
   const doubts = agency ? o.doubts?.filter((d) => d.kind !== "hidden_employer") : o.doubts;
   // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en

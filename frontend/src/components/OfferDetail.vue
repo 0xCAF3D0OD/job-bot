@@ -104,6 +104,19 @@ async function findEmployer(): Promise<void> {
   }
 }
 
+// « Ce n'est pas une agence » (section 35 du 16.11) : gardé pour cette entreprise, dans ce compte ; la liste relue, la
+// pastille et la ligne partent.
+const agencyBusy = ref(false);
+async function notAgency(): Promise<void> {
+  agencyBusy.value = true;
+  try {
+    const { data } = await api.POST("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: props.offer.id } } });
+    if (data) emit("changed");
+  } finally {
+    agencyBusy.value = false;
+  }
+}
+
 // Le seul lien vers l'annonce de toute la fiche, hors menu « … » (prompt récapitulatif du 11 novembre, PR 25) :
 // « Voir l'annonce sur [source] », dans « Le poste » sur téléphone et dans « L'offre en bref » sur ordinateur.
 // Chez l'employeur si l'annonce y est, sinon sur le site d'où elle vient : la même adresse que « Ouvrir l'annonce sur
@@ -665,8 +678,12 @@ watch(
           </div>
         </div>
         <AgencyNote
-          v-if="offer.employer_status === 'agency'"
+          v-if="offer.agency"
+          :kind="offer.agency"
           :company="offer.company"
+          :duplicate="offer.agency_duplicate"
+          :busy="agencyBusy"
+          @correct="notAgency"
         />
         <div
           v-if="statusLabel && offer.status === 'applied'"
@@ -1017,8 +1034,12 @@ watch(
         </li>
       </ul>
       <AgencyNote
-        v-if="offer.employer_status === 'agency'"
+        v-if="offer.agency"
+        :kind="offer.agency"
         :company="offer.company"
+        :duplicate="offer.agency_duplicate"
+        :busy="agencyBusy"
+        @correct="notAgency"
       />
       <div
         v-if="offer.status !== 'applied' && !sub"

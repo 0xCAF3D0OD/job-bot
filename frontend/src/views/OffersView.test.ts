@@ -360,7 +360,8 @@ describe("OffersView", () => {
         offer(11, "DevOps Engineer", {
           company: "Galaxi Consulting",
           status: "later",
-          employer_status: "agency",
+          agency: "probable",
+          agency_duplicate: { title: "DevOps Engineer", company: "Banque Exemple SA", sent_at: "2026-11-04" },
           doubts: [{ kind: "hidden_employer", text: "Employeur caché : annonce d'agence, employeur non nommé." }],
         }),
       ]),
@@ -371,7 +372,17 @@ describe("OffersView", () => {
     expect(chips[0]?.classes()).toContain("agency");
     // Le doute d'agence est dit par « Agence » : pas de « À vérifier » en plus.
     expect(chips.map((c) => c.text())).not.toContain("À vérifier");
-    expect(wrapper.get("[data-test=agency-note]").text()).toContain("Galaxi Consulting recrute pour un client");
+    const note = wrapper.get("[data-test=agency-note]");
+    expect(note.text()).toContain("Probablement une agence de placement");
+    expect(note.text()).toContain("Galaxi Consulting recrute pour un client");
+    expect(note.get("[data-test=agency-duplicate]").text()).toBe("Tu as déjà postulé le 4 novembre à un poste proche : DevOps Engineer chez Banque Exemple SA.");
+    // « Ce n'est pas une agence » : gardé côté serveur, puis la liste est relue.
+    const calls = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    POST.mockResolvedValue({ data: { id: 11 } });
+    await note.get("[data-test=not-agency]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: 11 } } });
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(calls);
     await wrapper.get("[data-test=filters-toggle]").trigger("click");
     await wrapper.get("[data-test=pop-agencies]").setValue(true);
     await flushPromises();

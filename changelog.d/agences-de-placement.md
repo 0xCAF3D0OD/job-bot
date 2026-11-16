@@ -1,0 +1,1 @@
+Offres : les agences de placement sont repérées sans IA (agences connues, « pour notre client »), signalées par une pastille et une ligne dans la fiche, avec l'alerte si tu as déjà postulé à un poste proche ; « Ce n'est pas une agence » est gardé par compte et le filtre les masque
