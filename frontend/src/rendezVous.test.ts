@@ -19,6 +19,8 @@ import {
   upcomingAppointments,
   upcomingLabel,
   upcomingLine,
+  upcomingWhen,
+  upcomingWhere,
   type Upcoming,
 } from "./rendezVous";
 
@@ -73,14 +75,17 @@ describe("les textes de la carte", () => {
     expect(upcomingLine(noPlace, NOW)).toBe("9 h · demain");
     const job = { ...application(1, "2026-11-09T13:00:00Z"), interview_format: "visio" } as Application;
     const [interview] = upcomingAppointments(null, [job], NOW) as [Upcoming];
-    expect(upcomingLine(interview, NOW)).toBe("Entreprise 1 · 14 h · dans 3 jours · Visio");
+    // L'heure et le délai d'abord : ils ne sont jamais coupés ; l'entreprise, le format et le lieu suivent.
+    expect(upcomingWhen(interview, NOW)).toBe("14 h · dans 3 jours");
+    expect(upcomingWhere(interview)).toBe("Entreprise 1 · Visio");
+    expect(upcomingLine(interview, NOW)).toBe("14 h · dans 3 jours · Entreprise 1 · Visio");
   });
 
   it("le nom de la carte : titre, pastille, date et heure, délai, lieu (§39 du 16.11)", () => {
     const [orp] = upcomingAppointments(meeting("2026-11-10T08:00:00Z"), [], NOW) as [Upcoming];
     expect(upcomingLabel(orp, "Feuille prête", NOW)).toBe("Rendez-vous ORP, feuille prête, mardi 10 novembre à 9 h, dans 4 jours, ORP Renens");
     const [interview] = upcomingAppointments(null, [application(1, "2026-11-09T13:00:00Z")], NOW) as [Upcoming];
-    expect(upcomingLabel(interview, "Entretien", NOW)).toBe("Poste 1, Entreprise 1, entretien, lundi 9 novembre à 14 h, dans 3 jours");
+    expect(upcomingLabel(interview, "À préparer", NOW)).toBe("Poste 1, Entreprise 1, à préparer, lundi 9 novembre à 14 h, dans 3 jours");
   });
 
   it("les trois lignes tirées de la feuille ; une partie vide ne s’affiche pas", () => {
