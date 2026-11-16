@@ -8,6 +8,7 @@ import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import CountBadge from "../components/CountBadge.vue";
 import DomainField from "../components/DomainField.vue";
+import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import HoverNote from "../components/HoverNote.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -223,10 +224,19 @@ onMounted(() => void load());
 
 <template>
   <section class="band">
-    <div class="container trainings">
-      <!-- Catalogue · Suivies, soulignés (second niveau, S4 ; B15), le nombre de suivies en pastille. -->
+    <div :class="['container', 'trainings', { 'trainings-desk': !phone }]">
+      <!-- Catalogue · Suivies, soulignés (second niveau, S4 ; B15), le nombre de suivies en pastille. Sur
+           ordinateur, le catalogue revient par le lien « Mes formations » (planche BilanOrdinateurCatalogue, 16.11). -->
+      <RouterLink
+        v-if="!phone && tab === 'catalog'"
+        :to="mineTo"
+        class="training-back"
+        data-test="trainings-back"
+      >
+        <AppIcon name="arrow-left" />Mes formations
+      </RouterLink>
       <nav
-        v-if="!overview"
+        v-else-if="!overview"
         class="trainings-tabs"
         aria-label="Formations affichées"
       >
@@ -279,14 +289,26 @@ onMounted(() => void load());
             Comment demander<AppIcon name="chevron" />
           </button>
         </div>
-        <FaceState
+        <!-- Aucune suivie (planche BilanOrdinateurFormVide, 16.11) : l'état vide commun et « Voir le catalogue ». -->
+        <EmptyState
           v-if="!mineCount"
           title="Aucune formation suivie"
-          illustration="formations-vide"
+          scene="introuvable"
+          :desktop-width="260"
+          pill="Garde une formation du catalogue avec son signet"
+          pill-icon="bookmark"
           data-test="trainings-none"
         >
-          <p>Garde une formation du catalogue avec son signet.</p>
-        </FaceState>
+          <template #actions>
+            <RouterLink
+              :to="catalogTo"
+              class="button-link primary-link"
+              data-test="trainings-none-catalog"
+            >
+              <AppIcon name="book" />Voir le catalogue
+            </RouterLink>
+          </template>
+        </EmptyState>
         <section
           v-if="inProgress.length"
           class="training-block"
@@ -374,7 +396,10 @@ onMounted(() => void load());
                   v-if="keptStatus(training)"
                   :class="['training-kept-status', keptStatus(training)!.tone]"
                   data-test="training-kept-status"
-                >{{ keptStatus(training)!.label }}</span>
+                ><AppIcon
+                  v-if="training.mark!.status === 'done'"
+                  name="done"
+                />{{ keptStatus(training)!.label }}</span>
                 <span
                   class="arrow-circle small"
                   aria-hidden="true"
@@ -384,6 +409,7 @@ onMounted(() => void load());
           </ul>
         </section>
         <RouterLink
+          v-if="mineCount"
           :to="catalogTo"
           class="training-more"
           data-test="trainings-catalog"
@@ -426,6 +452,10 @@ onMounted(() => void load());
           >
             {{ chip.label }}
           </button>
+          <span
+            class="training-chips-sep"
+            aria-hidden="true"
+          />
           <button
             type="button"
             class="training-chip"
@@ -474,7 +504,7 @@ onMounted(() => void load());
             :data-test="`training-section-${section.key}`"
           >
             <h2 :id="`training-${section.key}`">
-              <span>{{ section.label }}</span><span>{{ section.items.length }}</span>
+              <span>{{ section.label }}</span><span>{{ phone ? section.items.length : plural(section.items.length, "formation", "formations") }}</span>
             </h2>
             <ul class="training-list">
               <li
@@ -698,7 +728,33 @@ onMounted(() => void load());
 .training-kept-row { display: flex; align-items: center; gap: var(--tw-14); width: 100%; min-height: var(--tw-row); padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: none; color: var(--text); font-size: var(--tw-15); font-weight: var(--weight-regular); line-height: var(--tw-lh); text-align: left; white-space: normal; }
 .training-kept-row:hover { background: var(--surface-muted); }
 .training-kept-text > span { margin-top: var(--space-1); }
-.training-kept-status { flex: none; font-weight: var(--weight-bold); color: var(--text); }
-.training-kept-status.accepted, .training-kept-status.granted { color: var(--success); }
-.training-kept-status.done, .training-kept-status.refused { color: var(--text-secondary); }
+.training-kept-status { display: inline-flex; flex: none; align-items: center; gap: var(--space-1); font-weight: var(--weight-bold); color: var(--text); }
+.training-kept-status.accepted, .training-kept-status.granted, .training-kept-status.done { color: var(--success); }
+.training-kept-status.refused { color: var(--text-secondary); }
+/* En cours sans modules (planche BilanOrdinateurFormEtats, 16.11) : le texte libre et « Noter l'avancement » sur une ligne. */
+.training-now { grid-template-columns: minmax(0, 1fr) auto; }
+.training-now > * { grid-column: 1 / -1; }
+.training-now > .training-current-progress { grid-column: 1; align-self: center; font-size: var(--tw-15); font-weight: var(--weight-regular); color: var(--text-tertiary); }
+.training-now > .training-current-progress + .training-now-update { grid-column: 2; }
+/* Le catalogue sur ordinateur (planche BilanOrdinateurCatalogue, 16.11) : « ← Mes formations », les puces (la
+   choisie en plein), une colonne de groupes, des lignes d'une ligne de détails et le signet rond de 44 px. */
+.trainings-desk { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-72: 72px; gap: var(--space-8); }
+.training-back { display: inline-flex; justify-self: start; align-items: center; gap: var(--td-8); min-height: var(--target-min); margin: calc(var(--td-12) * -1) 0 calc(var(--td-8) * -1); font-size: var(--td-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.training-chips-sep { display: none; }
+.trainings-desk .training-chips { margin-top: calc(var(--td-8) * -1); }
+.trainings-desk .training-chips-sep { display: block; flex: none; width: 1px; height: var(--space-6); margin: var(--td-8) var(--space-1); background: var(--button-outline); }
+.trainings-desk .training-chip { font-size: var(--td-15); font-weight: var(--weight-semibold); }
+.trainings-desk .training-chip[aria-pressed="true"] { border-color: var(--text); background: var(--text); color: var(--bg); }
+.trainings-desk .training-section h2 { align-items: baseline; font-size: var(--font-title); letter-spacing: 0; text-transform: none; color: var(--text); }
+.trainings-desk .training-section h2 span:last-child { font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.trainings-desk .training-row-open { gap: var(--space-4); min-height: var(--td-72); padding-left: var(--space-5); }
+.trainings-desk .training-row-icon { border-radius: var(--td-12); background: var(--primary-soft); color: var(--primary-text); }
+.trainings-desk .training-row-icon.cert { background: var(--peach-soft); color: var(--peach-text); }
+.trainings-desk .training-row-text { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--td-8); }
+.trainings-desk .training-row-text > strong { flex-basis: 100%; font-size: var(--td-15); }
+.trainings-desk .training-funding-note > span:nth-child(2) { gap: 0; }
+.trainings-desk .training-funding-note > span:nth-child(2) > span { color: var(--peach-text); }
+.trainings-desk .training-funding-icon { width: 2.5rem; height: 2.5rem; }
+.trainings-desk .training-keep { width: var(--target-min); height: var(--target-min); margin-right: var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); color: var(--primary-text); }
+.trainings-desk .training-keep.on { border-color: var(--primary-soft); background: var(--primary-soft); }
 </style>
