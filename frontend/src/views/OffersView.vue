@@ -252,17 +252,11 @@ const gridTop = ref(0);
 function measureGrid(): void {
   if (grid.value) gridTop.value = Math.round(grid.value.getBoundingClientRect().top + window.scrollY);
 }
-// Sur ordinateur, une offre est toujours ouverte à droite (maquette) : sans ?offre=, la première de la liste.
-// L'adresse est remplacée, pas empilée : le retour arrière ne repasse pas par elle.
-watch(wide, () => void nextTick(() => {
-  measureGrid();
-  selectFirst();
-}));
-function selectFirst(): void {
-  if (!wide.value || routeOfferId() || failed.value) return;
-  const first = shown.value[0];
-  if (first) void router.replace({ query: { ...route.query, offre: String(first.id) } });
-}
+// Sur ordinateur, rien n'est ouvert à l'arrivée ni après « Écarter » (§36 du 16 novembre, décision de Kevin du
+// 16.11) : sans ?offre=, la colonne de droite montre « Choisis une offre ».
+watch(wide, () => void nextTick(measureGrid));
+// La colonne de droite sans offre ouverte (§36) : seulement à côté d'une liste qui a des offres.
+const choosing = computed(() => linked.value && !selected.value && !failed.value && firstLoaded.value && !emptyWithFilters.value && !bare.value && items.value.length > 0);
 
 // L'offre ouverte est l'élément dont parle l'assistant (docs/24 §2.2).
 watch(selected, (offer) => {
@@ -493,10 +487,7 @@ async function load(append = false): Promise<void> {
       loading.value = false;
       retrying.value = false;
       firstLoaded.value = true;
-      void nextTick(() => {
-        measureGrid();
-        selectFirst();
-      });
+      void nextTick(measureGrid);
     }
   }
 }
@@ -521,14 +512,18 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   const previous = offer.status;
   // « Annuler » dans le bandeau commun à trait (§23 du 15.11, Kevin le 15.11 18 h 49) : le statut est déjà parti au
   // serveur, « Annuler » remet celui d'avant (docs/60 §3, 6 secondes, docs/108).
-  if (status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")) {
-    const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
+  // « Écarter » depuis « En préparation » a aussi son « Annuler » (§36 du 16.11 : la planche écarte une offre en préparation).
+  const undoable = previous === "to_review" || previous === "later" || previous === "ignored" || (status === "ignored" && previous === "preparing");
+  if (status in STATUS_TEXT && previous !== status && undoable) {
+    const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée";
     void offerUndo({
       message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : status === "to_review" ? "Remise dans Nouvelles." : `Passée en ${STATUS_TEXT[status]}.`,
       commit: () => true,
       restore: async () => {
         await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
         await load();
+        // Sur ordinateur, l'offre revient à sa place, choisie, son détail ouvert (§36, décision de Kevin du 16.11).
+        if (linked.value && items.value.some((o) => o.id === offer.id)) selectOffer(offer.id);
       },
     });
   }
@@ -1193,6 +1188,23 @@ onUnmounted(() => {
               @changed="load()"
             />
           </component>
+        </div>
+        <div
+          v-else-if="choosing"
+          class="detail-column"
+        >
+          <LinkedDetail :list="listEl">
+            <EmptyState
+              class="choose-detail"
+              data-test="choose-detail"
+              scene="choisis-offre"
+              title="Choisis une offre"
+              pill="Son détail s’affiche ici"
+              pill-icon="arrow-left"
+              :width="340"
+              :desktop-width="340"
+            />
+          </LinkedDetail>
         </div>
       </Transition>
     </div>

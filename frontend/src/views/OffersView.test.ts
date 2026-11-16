@@ -230,6 +230,36 @@ describe("OffersView", () => {
     vi.unstubAllGlobals();
   });
 
+  it("ordinateur large (§36 du 16.11) : rien d’ouvert à l’arrivée, « Choisis une offre » ; après Écarter, la scène revient et « Annuler » rouvre l’offre", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    const wrapper = await mountAt("/offres");
+    expect(router.currentRoute.value.query.offre).toBeUndefined();
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    const choose = wrapper.get("[data-test=choose-detail]");
+    expect(choose.get("h2").text()).toBe("Choisis une offre");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Son détail s’affiche ici");
+    expect(wrapper.find("[aria-current=true]").exists()).toBe(false);
+    await wrapper.get("[data-test=offer]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(false);
+    PATCH.mockResolvedValue({ data: { id: 1, status: "ignored" } });
+    mockOffers(page([offer(2, "Deux")]));
+    await wrapper.get("[data-test=offer-discard]").trigger("click");
+    await flushPromises();
+    // Aucune autre offre ne s'ouvre : la scène revient, avec « Offre écartée · Annuler ».
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(true);
+    expect(router.currentRoute.value.query.offre).toBeUndefined();
+    expect(useUndo().pending.value?.message).toBe("Offre écartée");
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    await useUndo().undo();
+    await flushPromises();
+    expect(router.currentRoute.value.query.offre).toBe("1");
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");

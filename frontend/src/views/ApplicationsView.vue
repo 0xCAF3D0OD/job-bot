@@ -396,9 +396,10 @@ watch(
   },
   { immediate: true },
 );
-const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
-// À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
-const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
+// À droite sur ordinateur : la candidature ouverte (?candidature=). Rien d'ouvert à l'arrivée (§36 du 16 novembre,
+// décision de Kevin du 16.11) : « Choisis une candidature » à côté d'une liste qui en a.
+const shown = computed(() => (twoColumns.value ? opened.value : null));
+const choosing = computed(() => twoColumns.value && !shown.value && !noneSent.value && sections.value.some((section) => section.items.length > 0));
 // Sur téléphone, hors du Suivi ORP, la candidature s'ouvre en écran poussé (§8.3) ; « ‹ Envoyées » revient à la liste.
 const sentScreen = computed(() => phone.value && !orpPage);
 function closeScreen(): void {
@@ -639,6 +640,24 @@ onUnmounted(() => assistant.setFocus(null));
           @prepare="prepareFromPanel"
           @practice="practiceFromPanel"
           @changed="load"
+        />
+      </LinkedDetail>
+    </aside>
+    <aside
+      v-else-if="choosing"
+      class="sent-detail"
+      aria-label="Aucune candidature ouverte"
+    >
+      <LinkedDetail :list="sentList">
+        <EmptyState
+          class="choose-detail"
+          data-test="choose-detail"
+          scene="choisis-candidature"
+          title="Choisis une candidature"
+          pill="Suivi, relances et documents s’affichent ici"
+          pill-icon="arrow-left"
+          :width="340"
+          :desktop-width="340"
         />
       </LinkedDetail>
     </aside>
