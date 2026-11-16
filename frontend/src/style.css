@@ -2193,6 +2193,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   /* Réglages : les rubriques à la largeur de lecture. */
   .settings-sections, .page-head.jobs-head.settings-head { max-width: 46rem; }
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
+  :root:has(.ai-spend) .page-head.jobs-head.settings-head { max-width: calc(var(--page-max) - 2 * var(--space-6)); }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté. */
