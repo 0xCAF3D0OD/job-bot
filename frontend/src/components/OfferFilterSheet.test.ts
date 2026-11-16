@@ -35,8 +35,8 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(hide.text()).toContain("Éteins ce réglage pour les voir dans la liste");
     expect((hide.find("input[role=switch]").element as HTMLInputElement).checked).toBe(true);
     expect(wrapper.find("[data-test=sheet-remote]").text()).toBe("Télétravail possible, même partiel");
-    // L'interrupteur des agences n'arrive qu'avec leur détection (section 35) : absent ici.
-    expect(wrapper.text()).not.toContain("agences");
+    // Section 35 du 16.11 : l'interrupteur des agences, sous Télétravail.
+    expect(wrapper.text()).toContain("Masquer les agences de placement");
     // Plus d'« Afficher aussi », d'expirées, de sites ni de cantons : sites et cantons se règlent dans Compte.
     for (const gone of ["sheet-show-also", "sheet-expired", "sheet-external", "sheet-doubtful", "sheet-source-jobup", "sheet-canton-VD"]) {
       expect(wrapper.find(`[data-test=${gone}]`).exists()).toBe(false);
