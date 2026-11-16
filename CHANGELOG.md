@@ -652,3 +652,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.438 | CV adapté : le prompt cv-v2 donne une raison par changement, vérifiée dans l'annonce par mots entiers ; changements demandés par l'utilisateur marqués « user » ; make mesure-pourquoi sur 5 CV fictifs | préparée, cv-v1 reste en service jusqu'à la mesure de Kevin ; affichage dans une PR suivante |
 | 1.6.439 | Les réponses des entreprises transférées par la personne sont rattachées à la candidature et annoncées par une notification, sans changer son statut | livrée |
 | 1.6.440 | CSS : 47 groupes de règles identiques de style.css réunis (−189 octets compressés, 138 captures sans un pixel d'écart) | livrée |
+| 1.6.441 | Poids : js-total relevé une fois à 431 500 octets pour le code jobup, la recherche dans le CV et les agences de placement | livrée |
