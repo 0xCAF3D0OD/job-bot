@@ -223,5 +223,7 @@ watch([chips, phone], () => void fit());
   .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
   .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
   .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
+  /* Planche CandidaturesAgence (paquet du 16.11 mis à jour) : l'icône de 12 px, trait de 2,6. */
+  .agency > .icon { width: 12px; height: 12px; stroke-width: 2.6; }
 }
 </style>
