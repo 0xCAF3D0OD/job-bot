@@ -1581,8 +1581,13 @@ button, .button-link { max-width: 100%; }
 
 /* Panneau latéral (docs/32 §2.2) */
 /* Prompt du 9 novembre (PR 1) : même panneau que les feuilles du bas sur ordinateur, 440 px (480 au besoin), fond
-   crème, voile rgba(27,31,42,.45), titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. */
-.side-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(27 31 42 / 45%); }
+   crème, voile var(--voile), titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. */
+/* Voile derrière les panneaux (Kevin 16.11, planche BilanOrdinateurFicheSombre) : noir à 60 % en sombre.
+   Repli sur ::backdrop pour les navigateurs qui n'y héritent pas les variables (avant 2024). */
+:root { --voile: rgb(27 31 42 / 45%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --voile: rgb(0 0 0 / 60%); } }
+:root[data-theme="dark"] { --voile: rgb(0 0 0 / 60%); }
+.side-backdrop { position: fixed; inset: 0; z-index: 40; background: var(--voile); }
 .side-panel { --sheet-title-lh: 28px; position: fixed; top: 0; right: 0; bottom: 0; z-index: 46; width: min(440px, 100vw); display: flex; flex-direction: column; background: var(--bg); box-shadow: -10px 0 30px rgb(27 31 42 / 18%); }
 @media (min-width: 821px) { .side-panel { top: var(--panel-float); right: var(--panel-float); bottom: var(--panel-float); border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); box-shadow: var(--panel-float-shadow); overflow: hidden; } }
 .side-panel-head { flex: none; display: flex; align-items: center; gap: var(--space-2); min-height: 76px; padding: 0 var(--panel-close-edge) 0 var(--space-6); }
@@ -4217,11 +4222,11 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 }
 @keyframes sheet-rise { from { transform: translateY(100%); } }
 /* Ordinateur (prompt du 9 novembre, PR 1 ; panneaux des maquettes AlertesOrdinateur, BilanOrdinateur) : la même
-   feuille s'ouvre en panneau à droite, 440 px, sur toute la hauteur, fond crème, voile rgba(27,31,42,.45), entrée
+   feuille s'ouvre en panneau à droite, 440 px, sur toute la hauteur, fond crème, voile var(--voile), entrée
    ja-panel de 250 ms ; titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. Seul le panneau défile. */
 @media (min-width: 821px) {
   .sheet { --sheet-pad: 24px; --sheet-head-h: 76px; --sheet-title-lh: 28px; position: fixed; inset: var(--panel-float) var(--panel-float) var(--panel-float) auto; width: 440px; max-width: 440px; height: auto; max-height: calc(100dvh - 2 * var(--panel-float)); margin: 0; border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); background: var(--bg); box-shadow: var(--panel-float-shadow); overflow: hidden; }
-  .sheet::backdrop { background: rgb(27 31 42 / 45%); }
+  .sheet::backdrop { background: var(--voile, rgb(27 31 42 / 45%)); }
   .sheet[open] { animation: ja-panel 250ms cubic-bezier(.2,.8,.2,1) both; }
   .sheet-inner { gap: 0; height: 100%; padding: 0; }
   .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--panel-close-edge) 0 var(--sheet-pad); }
