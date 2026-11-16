@@ -1639,7 +1639,6 @@ watch(
 .oc-text + .oc-text { margin-top: var(--space-2); }
 .oc-post .read-more { display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); color: var(--primary-text); }
 .oc-row.offer-facts { list-style: none; }
-.oc-row-refused .offer-text-head { gap: var(--space-4); }
 .oc-row-refused .offer-give-zone { margin: var(--space-3) calc(-1 * var(--oc-x)) calc(-1 * var(--space-3)); padding: var(--space-5) var(--space-5) var(--space-2); border-top: 1px solid var(--line); }
 .oc-row-refused .offer-reading { min-height: var(--target-min); }
 .oc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--oc-14) var(--oc-x) var(--oc-head-top); border-top: 1px solid var(--line); }

@@ -2719,14 +2719,17 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 /* Refus (prompt du 10 novembre au soir, PR 25 ; OffreProvisoire, CandidaturesOrdinateurB) : une ligne, « Annonce
    illisible » 16/22 gras et la phrase 14/20, puis « Donner l'annonce » teinté de 44 px. Sur ordinateur, la carte se
    déplie sur place : champ et « Lire » à contour sur une ligne, l'astuce, « Pas de lien ? Colle le texte ». */
-.offer-text-refused { --refused-20: 20px; --refused-22: 22px; --give-read-h: 48px; --give-pad: 18px; --give-pad-fold: 14px; --give-read-pad: 22px; --give-tip: 13px; --give-tip-lh: 18px; }
-.offer-text-head { display: flex; align-items: center; gap: var(--space-3); }
-.offer-text-what { flex: 1; min-width: 0; }
+.offer-text-refused { --refused-20: 20px; --refused-22: 22px; --give-read-h: 48px; --give-pad: 18px; --give-read-pad: 22px; --acts-gap: 6px; --give-tip: 13px; --give-tip-lh: 18px; }
 .offer-text-refused h4 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--refused-22); }
-.offer-text-refused .offer-text-what p { margin: 0; font-size: var(--font-small); line-height: var(--refused-20); color: var(--text-secondary); }
+.offer-text-refused > p { margin: 0; font-size: var(--font-small); line-height: var(--refused-20); color: var(--text-secondary); }
 .offer-give { flex: none; display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; height: var(--target-min); min-height: var(--target-min); padding: 0 var(--give-pad); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
-.offer-give-fold { padding-right: var(--give-pad-fold); }
-.offer-give-fold .icon { width: 20px; height: 20px; }
+/* Paquet du 16.11, section 33 : « Ouvrir sur [site] » et « Chercher sur le site de [entreprise] », puis « Donner l'annonce ». */
+.offer-text-acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-3); }
+.offer-text-acts > a { gap: var(--acts-gap); height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
+.offer-text-acts .icon { width: 16px; height: 16px; }
+.offer-text-acts.is-phone { flex-direction: column; align-items: flex-start; gap: 0; margin-top: var(--space-1); }
+.offer-text-acts.is-phone > a { display: flex; align-items: center; gap: var(--space-2); padding: 0; color: var(--primary-text); text-decoration: none; }
+.offer-text-acts.is-phone .offer-give { margin-top: var(--space-2); }
 .offer-give-zone { display: flex; flex-direction: column; gap: var(--space-2); }
 .match-lines li, .offer-give-row { display: flex; align-items: flex-start; gap: var(--space-3); }
 .offer-give-row .form-field { flex: 1; min-width: 0; }
