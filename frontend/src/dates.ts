@@ -45,13 +45,12 @@ function clean(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/** Dans une liste : « aujourd'hui », « hier », « 12 oct. », « 12 oct. 2025 » (une autre année). `plain` : toujours la date
- * (« Écartée le 12 nov. », §30 du 16.11). */
-export function dateInList(value: string | Date, now: Date = new Date(), plain = false): string {
+/** Dans une liste : « aujourd'hui », « hier », « 12 oct. », « 12 oct. 2025 » (une autre année). */
+export function dateInList(value: string | Date, now: Date = new Date()): string {
   const date = toDate(value);
   const days = calendarDays(date, now);
-  if (!plain && days === 0) return "aujourd’hui";
-  if (!plain && days === 1) return "hier";
+  if (days === 0) return "aujourd’hui";
+  if (days === 1) return "hier";
   return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear).format(date));
 }
 

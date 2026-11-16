@@ -270,7 +270,12 @@ const matchTitle = computed(() => {
   if (matchWord.value) return MATCH_TITLE[matchWord.value.tone]!;
   if (finalCause.value) return "Note impossible";
   if (!setAside.value) return "Pas encore notée";
-  return props.offer.set_aside_at ? `Écartée le ${dateInList(props.offer.set_aside_at, undefined, true)}` : "Écartée";
+  const at = props.offer.set_aside_at;
+  if (!at) return "Écartée";
+  // « 12 nov. », l'année seulement si ce n'est pas l'année en cours (décision du 16.11) ; ici plutôt que dans dates.ts,
+  // pour ne pas alourdir le socle commun à toutes les pages.
+  const year = new Date(at).getFullYear() === new Date().getFullYear() ? undefined : "numeric";
+  return `Écartée le ${new Date(at).toLocaleDateString("fr-CH", { day: "numeric", month: "short", year, timeZone: "Europe/Zurich" })}`;
 });
 // Sans profil, la note n'arrive jamais : la fiche le dit et envoie vers Profil › Expériences (test du 10 novembre).
 const { empty: profileEmpty, refresh: refreshProfile } = useProfileEmpty();
