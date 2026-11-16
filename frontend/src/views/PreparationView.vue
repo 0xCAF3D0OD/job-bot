@@ -2310,7 +2310,16 @@ onMounted(() => void load());
 .prep-desk .apply-go > .prep-bar-main { font-size: var(--font-body); }
 .prep-desk .apply-go > :is(.apply-already, .apply-reopen) { font-size: var(--font-label); }
 .prep-desk-bottom .suggestion-chip { font-size: var(--font-label); }
-.prep-desk-bottom .composer-pill { --prep-20: 20px; --prep-56: 56px; min-height: var(--prep-56); padding: 0 var(--space-2) 0 var(--prep-20); border: 1.5px solid var(--field-border); }
+/* Champ « Que changer ? » et « Demander une modification » (Kevin, 16.11, 14 h 48) : champ de 56, bouton visible de 40 à 8 du bord
+   en haut, à droite et en bas (sur la grille de 4), zone tactile de 48 × 48 par un pseudo-élément qui déborde de 4 dans le retrait ;
+   rayon du champ = 20 + 8 = 28, concentrique ; icône de 20. Le trait est dessiné à l'intérieur (ombre) : il ne déplace rien. Le texte
+   saisi est centré sur la rangée de 40 et s'arrête à 12 du bouton. */
+.prep-revise .composer-pill { --prep-40: 40px; --prep-ring: 1px var(--line); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-1); border: 0; border-radius: calc(var(--prep-40) / 2 + var(--space-2)); box-shadow: inset 0 0 0 var(--prep-ring), var(--shadow-composer); }
+.prep-revise .composer-input { align-self: center; margin: 0; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1); }
+.prep-revise .composer-send { position: relative; width: var(--prep-40); height: var(--prep-40); min-height: var(--prep-40); }
+.prep-revise .composer-send::before { content: ""; position: absolute; inset: calc(-1 * var(--space-1)); }
+.prep-revise .composer-send .icon { width: var(--space-5); height: var(--space-5); }
+.prep-desk-bottom .composer-pill { --prep-ring: 1.5px var(--field-border); padding-left: var(--space-5); }
 /* Le modèle choisi dans « Mise en page » habille la page de la lettre et du CV comme leur PDF (letters/pdf.py) et
    comme la planche PreparerMiseEnPage : Moderne, la bande bleue à gauche et le nom en bleu ; Bandeau, le nom dans un
    bandeau pêche en haut de la page ; Classique, le papier crème, une police à empattements et le nom centré sur un
