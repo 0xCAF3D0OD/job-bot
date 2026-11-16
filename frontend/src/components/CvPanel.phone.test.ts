@@ -90,46 +90,40 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=next-step]").exists()).toBe(false);
   });
 
-  it("avec un CV : « Moderne · Français » et « Changer » en tête, l’aperçu, « J’ai relu le CV » et la suite vers Postuler", async () => {
+  it("avec un CV (§37 du 16.11) : la rangée d’outils, le CV entier, la retouche et « J’ai relu, continuer »", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     PUT.mockResolvedValue({ data: cv(21, [1, 3], { read_at: "2026-11-05T10:00:00Z" }) });
     const wrapper = await mountPanel();
-    expect(wrapper.find("[data-test=doc-preview]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=doc-preview]").classes()).toContain("doc-preview-tall");
-    expect(wrapper.find("[data-test=cv]").exists()).toBe(false);
-    // La langue du CV affiché, dans la feuille « Mise en page et langue » (§9) ; plus de FR / DE / EN à l'écran.
-    expect(wrapper.find("[data-test=cv-language]").exists()).toBe(false);
-    const card = wrapper.find("[data-test=cv-card]");
-    expect(card.find(".doc-language").exists()).toBe(false);
-    expect(card.get("[data-test=layout-summary]").text()).toBe("Moderne · Français");
-    await card.get("[data-test=layout-change]").trigger("click");
+    // Plus d'aperçu à toucher : le CV entier tout de suite.
+    expect(wrapper.find("[data-test=doc-preview]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=cv]").exists()).toBe(true);
+    const tools = wrapper.get("[data-test=cv-phone-tools]");
+    expect(tools.get("[data-test=cv-changes-show]").text()).toBe("Changements · 1");
+    expect(tools.get("[data-test=cv-search-open]").attributes("aria-label")).toBe("Chercher dans le CV");
+    // « Modèle » ouvre la feuille « Mise en page et langue » ; plus de FR / DE / EN à l'écran.
+    const model = tools.get("[data-test=layout-change]");
+    expect(model.text()).toBe("Modèle");
+    expect(model.attributes("aria-label")).toBe("Changer le modèle ou la langue, Moderne · Français");
+    expect(wrapper.find(".doc-language").exists()).toBe(false);
+    await model.trigger("click");
     const sheet = wrapper.get("[data-test=layout-sheet]");
     expect(sheet.get("[data-test=cv-language-fr]").attributes("aria-checked")).toBe("true");
     const pills = sheet.findAll("[role=radiogroup][aria-label='Langue du titre et du résumé'] [role=radio]");
     expect(pills.map((b) => b.text())).toEqual(["Français", "Deutsch", "English"]);
-    expect(wrapper.find(".prep-side").text()).not.toContain("Nouvelle version");
-    expect(wrapper.find("[data-test=next-step]").text()).toBe("Continuer vers Postuler");
-
-    await wrapper.find("[data-test=cv-read]").setValue(true);
+    expect(wrapper.get("[data-test=composer] textarea").attributes("placeholder")).toBe("Demander une modification du CV");
+    // « J’ai relu, continuer » note la relecture, puis passe à Postuler.
+    const next = wrapper.get("[data-test=next-step]");
+    expect(next.text()).toContain("J’ai relu, continuer");
+    await next.trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/cvs/{draft_id}/read", { params: { path: { draft_id: 21 } }, body: { read: true } });
-    expect((wrapper.find("[data-test=cv-read]").element as HTMLInputElement).checked).toBe(true);
-
-    await wrapper.find("[data-test=doc-preview]").trigger("click");
-    expect(wrapper.find("[data-test=cv]").exists()).toBe(true);
   });
 
-  it("une autre langue propose de préparer le CV à nouveau ; les mots mis en avant sous l’aperçu ; « Blocs du CV » replié", async () => {
+  it("une autre langue propose de préparer le CV à nouveau ; « Blocs du CV » replié", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     const wrapper = await mountPanel();
     await wrapper.find("[data-test=cv-language-de]").trigger("click");
     expect(wrapper.find("[data-test=write-cv]").text()).toContain("Préparer à nouveau en allemand");
-    const card = wrapper.find("[data-test=cv-card]").element;
-    const preview = wrapper.find("[data-test=doc-preview]").element;
-    const tags = wrapper.find("[data-test=cv-highlights]");
-    expect(tags.text()).toBe("Terraform");
-    expect(preview.compareDocumentPosition(tags.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(card.contains(preview)).toBe(true);
     const blocks = wrapper.find("[data-test=cv-blocks-card]");
     expect(blocks.find("h2").exists()).toBe(false);
     const row = blocks.find(".disclosure-row");
@@ -138,13 +132,52 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(row.attributes("aria-expanded")).toBe("false");
   });
 
-  it("« Modifier le texte avec l’Assistant » ouvre la consigne et change le bouton du bas", async () => {
+  it("« Changements » surligne ; toucher un passage ouvre « Changement N sur M » avec le pourquoi, précédent et suivant", async () => {
+    const shown = cv(21, [3, 1], {
+      origin_ids: [1, 2, 3],
+      reasons: [
+        { target: "summary", origin: "ai", text: "L’annonce demande AWS dès sa première ligne.", quotes: ["AWS"] },
+        { target: 2, origin: "user", text: null, quotes: [] },
+      ],
+    });
+    GET.mockResolvedValue({ data: [shown] });
+    PUT.mockResolvedValue({ data: cv(21, [1, 2, 3]) });
+    const wrapper = await mountPanel();
+    expect(wrapper.find("[data-change]").exists()).toBe(false);
+    const pill = wrapper.get("[data-test=cv-changes-show]");
+    expect(pill.text()).toBe("Changements · 2");
+    await pill.trigger("click");
+    expect(pill.attributes("aria-pressed")).toBe("true");
+    const passage = wrapper.get("[data-change=summary]");
+    expect(passage.classes()).toContain("cv-changed");
+    expect(passage.attributes("role")).toBe("button");
+    await passage.trigger("click");
+    const sheet = () => wrapper.get("[data-test=cv-change-sheet]");
+    expect(sheet().get("[data-test=sheet-eyebrow]").text()).toBe("Changement 1 sur 2");
+    expect(sheet().get(".sheet-title").text()).toBe("Profil");
+    expect(sheet().get("[data-test=cv-why]").text()).toBe("Pourquoi : L’annonce demande AWS dès sa première ligne.");
+    expect(sheet().findAll(".cv-why-quote").map((m) => m.text())).toEqual(["AWS"]);
+    // Le résumé ne s'annule pas (pas d'« avant » gardé).
+    expect(sheet().find("[data-test=cv-change-undo]").exists()).toBe(false);
+    await sheet().get("[data-test=cv-change-next]").trigger("click");
+    expect(sheet().get("[data-test=sheet-eyebrow]").text()).toBe("Changement 2 sur 2");
+    expect(sheet().get(".sheet-title").text()).toBe("Stage web");
+    expect(sheet().get("[data-test=cv-why]").text()).toBe("Pourquoi : Demandé par toi.");
+    await sheet().get("[data-test=cv-change-undo]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/cvs/{draft_id}", expect.objectContaining({ body: expect.objectContaining({ chunk_ids: [3, 1, 2] }) }));
+  });
+
+  it("la loupe remplace la rangée d’outils par la recherche ; la fermer la rend", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1])] });
     const wrapper = await mountPanel();
-    await wrapper.find("[data-test=cv-edit-text]").trigger("click");
-    await wrapper.find("[data-test=cv-instruction]").setValue("Mets Kubernetes en avant");
-    expect(wrapper.find("[data-test=write-cv]").text()).toContain("Préparer la nouvelle version");
+    await wrapper.get("[data-test=cv-search-open]").trigger("click");
+    expect(wrapper.find("[data-test=cv-phone-tools]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=doc-search]").exists()).toBe(true);
+    await wrapper.get("[data-test=doc-search-close]").trigger("click");
+    expect(wrapper.find("[data-test=cv-phone-tools]").exists()).toBe(true);
   });
+
   it("cocher un bloc et le monter enregistrent aussitôt", async () => {
     GET.mockResolvedValue({ data: [cv(21, [1, 3])] });
     PUT.mockResolvedValueOnce({ data: cv(21, [1, 3, 2]) }).mockResolvedValueOnce({ data: cv(21, [2, 3, 1]) });

@@ -2162,6 +2162,48 @@ onMounted(() => void load());
 .prep-desk .cv-sheet .cv-item-title { font-size: var(--cv-11-5); }
 .prep-desk .cv-sheet :is(input, textarea) { min-height: 0; padding: 0; border: 1px dashed transparent; border-radius: var(--space-1); background: transparent; color: inherit; box-shadow: none; }
 .prep-desk .cv-sheet .kw { padding: 0; border: 0; background: none; color: inherit; font-size: inherit; font-weight: var(--weight-bold); }
+/* Étape CV sur téléphone (§37 du 16.11, planches MaCandidatureCV, MaCandidatureCVPourquoi, MaCandidatureCVRecherche) :
+   pas de carte autour ; la rangée d'outils 8 px sous les étapes ; la page blanche à 4 px du bord de la colonne, 24 / 20 /
+   12 / 28, rayon 3, ombre douce, filet bleu de 6 ; nom 17/800, rubriques 11 en capitales, texte 13,5/20. */
+.cv-phone-ready { --cv-3: 3px; --cv-6: 6px; --cv-11: 11px; --cv-13: 13px; --cv-13-5: 13.5px; --cv-17: 17px; --cv-20: 20px; --cv-28: 28px; position: relative; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0; border: 0; background: none; }
+.cv-phone-tools { display: flex; align-items: center; gap: var(--space-2); margin: calc(-1 * var(--space-2)) 0 var(--space-2); }
+.cv-phone-tools .cv-phone-search { margin-left: auto; }
+.cv-phone-ready .doc-search { gap: var(--space-2); margin: calc(-1 * var(--space-2)) 0 var(--space-2); padding: 0; border: 0; background: none; }
+.cv-phone-ready .doc-search-field { min-width: 0; border-color: var(--primary-graphic); }
+.cv-phone-ready.doc-card > .cv-sheet.print-sheet {
+  --tpl-blue: var(--primary-graphic); --cv-accent: var(--primary-text); --cv-rule: var(--line); --cv-muted: var(--text-secondary); --cv-ink: var(--text);
+  margin: var(--space-2) var(--space-1) var(--space-5); padding: var(--space-6) var(--space-5) var(--space-3) var(--cv-28); box-sizing: border-box;
+  border: 0; border-radius: var(--cv-3); background: var(--surface); color: var(--cv-ink);
+  box-shadow: 0 1px 2px rgba(27, 31, 42, .10), 0 10px 24px rgba(27, 31, 42, .10); font-size: var(--cv-13-5); line-height: var(--cv-20);
+}
+.cv-phone-ready.doc-card > .cv-sheet.print-sheet.tpl-moderne { border-left-width: var(--cv-6); }
+.cv-phone-ready .cv-sheet .cv-name { font-size: var(--cv-17); font-weight: var(--weight-heavy); line-height: var(--space-6); color: var(--cv-accent); }
+.cv-phone-ready > .cv-sheet.print-sheet .cv-head .cv-headline { height: auto; min-height: 0; margin: 0; padding: 0; font-size: var(--cv-13); font-weight: var(--weight-regular); color: var(--cv-muted); }
+.cv-phone-ready .cv-sheet .cv-contacts { margin: 0; font-size: var(--cv-13); color: var(--cv-muted); }
+.cv-phone-ready .cv-sheet h3 { margin: var(--space-3) 0 var(--space-2); padding-bottom: var(--space-1); font-size: var(--cv-11); font-weight: var(--weight-heavy); letter-spacing: .08em; color: var(--cv-accent); border-bottom: 1px solid var(--cv-rule); }
+.cv-phone-ready .cv-sheet .cv-item { margin-bottom: var(--space-2); }
+.cv-phone-ready .cv-sheet .cv-item-title { font-size: var(--cv-13-5); }
+.cv-phone-ready .cv-sheet :is(input, textarea) { min-height: 0; padding: 0; border: 1px dashed transparent; border-radius: var(--space-1); background: transparent; color: inherit; font: inherit; box-shadow: none; }
+.cv-phone-ready .cv-sheet .kw { padding: 0; border: 0; background: none; color: inherit; font-size: inherit; font-weight: var(--weight-bold); }
+.cv-phone-ready .cv-sheet [data-change] { cursor: pointer; }
+/* Sur téléphone, la page suit le thème (planche MaCandidatureCVSombre) : le surlignage aussi. */
+.cv-phone-ready .cv-sheet ::highlight(doc-hit) { background-color: color-mix(in srgb, #FFE9A8 45%, var(--surface)); color: var(--text); }
+.cv-phone-ready .cv-sheet ::highlight(doc-hit-now) { background-color: color-mix(in srgb, #FFB86B 60%, var(--surface)); color: var(--text); }
+.cv-phone-ready .cv-sheet .cv-changed { background: var(--primary-soft); box-shadow: inset 2px 0 0 var(--primary-graphic); }
+.cv-phone-composer { margin: 0 0 var(--space-4); }
+/* La feuille « Changement N sur M » : Avant 15/22 gris, Maintenant 15/22, Pourquoi 15/22 (cible 18 px, mots de l'annonce
+   sur #FFE9A8), puis « Annuler ce changement » (pilule de 52) et deux ronds de 52, le suivant en bleu plein. */
+.cv-why-before, .cv-why-now, .cv-why { --cv-22: 22px; --cv-52: 52px; margin: var(--space-2) 0 0; font-size: var(--font-label); line-height: var(--cv-22); }
+.cv-why-before { margin-top: 0; color: var(--text-secondary); }
+.cv-why-now { margin-top: var(--space-1); }
+.cv-why { display: flex; gap: var(--space-2); margin-top: var(--space-3); color: var(--text-lead); }
+.cv-why > .icon { flex: none; width: 18px; height: 18px; color: var(--text-secondary); }
+.cv-why-quote { padding: 0 var(--space-1); border-radius: var(--space-1); background: #FFE9A8; color: #1B1F2A; }
+.cv-why-actions { --cv-52: 52px; display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-5); }
+.cv-why-undo { flex: 1; height: var(--cv-52); border-radius: var(--radius-pill); }
+.cv-why-step { display: flex; flex: none; align-items: center; justify-content: center; width: var(--cv-52); height: var(--cv-52); padding: 0; border: 1.5px solid var(--card-line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); }
+.cv-why-actions > .cv-why-step:first-child { margin-left: auto; }
+.cv-why-step.next { border: 0; background: var(--primary); color: var(--on-primary, #fff); }
 /* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
    (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
 .cv-changes-intro, .cv-changes { --cv-22: 22px; }

@@ -1,0 +1,1 @@
+Ma candidature › CV sur téléphone : rangée d'outils « Changements · N », loupe et « Modèle », CV entier avec les passages changés surlignés, feuille « Changement N sur M » avec le pourquoi, recherche dans le CV, « J'ai relu, continuer » (planches du 16.11)
