@@ -670,3 +670,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.456 | Poids : neuf petits composants partagés réunis en un fichier (−2,7 Ko de JS) et 17 groupes de règles CSS identiques (−60 octets) | livrée |
 | 1.6.457 | Budget de poids : limites de JS et de CSS par page (32 pages, fixées une fois), totaux affichés sans bloquer, avant/après des pages dans chaque PR | livrée |
 | 1.6.458 | Budget de poids : le groupe « partage » de vite est retiré, les pages ne chargent plus les petits composants dont elles n'ont pas besoin | livrée |
+| 1.6.459 | Réglages « Objectif ORP et sites » : le retour au-dessus du titre et sur le bord gauche des cartes (toutes les sous-pages de Réglages et État du service), les champs chiffrés en colonne fixe (72 px, 44 px de haut, rayon des champs de saisie, chiffre centré), « [5] du mois suivant » et « À rendre chaque mois avant ce jour. » | livrée |
+| 1.6.460 | Offre écartée sans note : « Écartée le 12 nov. », « Remettre dans le tri » et plus de bouton « Écarter » (§30 du 16.11) | livrée |
