@@ -98,3 +98,18 @@ const SCRIBBLE =
     />
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.goal-reached-todo s { text-decoration: none; }
+@media (max-width: 820px) {
+.goal-reached-close { top: calc(var(--space-3) + env(safe-area-inset-top)); }
+}
+@media (min-width: 1024px) {
+.goal-reached-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
+.goal-reached { max-width: 880px; padding-top: var(--space-6); color: var(--text-secondary); }
+.goal-reached-close, .goal-reached-todo { display: none; }
+.goal-reached-body { flex: 0 0 auto; padding: 0; }
+.goal-reached-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--state-10); width: auto; margin-top: var(--state-28-gap); }
+}
+</style>

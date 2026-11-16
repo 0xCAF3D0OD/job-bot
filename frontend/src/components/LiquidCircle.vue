@@ -64,3 +64,14 @@ const WAVE = `M -100 0 ${"q 12.5 -3 25 0 q 12.5 3 25 0 ".repeat(6)}L 200 120 L -
     >{{ count }}/{{ target }}</text>
   </svg>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.liquid-circle { flex: none; }
+.liquid-circle-ring { fill: none; stroke: var(--primary-graphic); stroke-width: 3.5; }
+.liquid-circle-wave { fill: var(--water); stroke: var(--primary-graphic); stroke-width: 2.5; animation: liquid-wave 1.4s linear 2; }
+.liquid-circle-rise { animation: liquid-rise 1.2s var(--ease-standard) both; }
+@media (prefers-reduced-motion: reduce) {
+.liquid-circle-wave, .liquid-circle-rise { animation: none; }
+}
+</style>

@@ -649,6 +649,12 @@ watch(practiceId, (id) => {
   </section>
 </template>
 
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.practice-question details summary { cursor: pointer; color: var(--accent); font-size: var(--font-small); }
+.practice-question details p { margin-top: var(--space-2); white-space: pre-wrap; }
+</style>
+
 <style scoped>
 /* Les valeurs des maquettes Entrainement et EntrainementOrdinateur (récapitulatif du 11 novembre, PR 42), écrites
    avec les échelles ; les tailles hors échelle sont nommées ici. */

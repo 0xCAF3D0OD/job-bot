@@ -74,3 +74,8 @@ const segments = computed<SegmentOption[]>(() => [
     <RouterView v-else />
   </template>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.bilan-page { --bilan-17: 17px; --bilan-gap-28: 28px; --bilan-pad: 18.5px; --bilan-pad-y: 14.5px; --bilan-card-h: 72px; --bilan-bar: 10px; --bilan-lh-21: 21px; }
+</style>

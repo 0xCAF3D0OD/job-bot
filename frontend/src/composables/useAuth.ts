@@ -49,6 +49,8 @@ export function useAuth() {
       // Le profil d'essai choisi appartient à ce compte : le suivant repart du sien.
       try {
         globalThis.localStorage?.removeItem(PROFILE_KEY);
+        // Les coches « téléchargée » de Postuler (PreparationView) appartiennent aussi à ce compte (A-7).
+        globalThis.localStorage?.removeItem("jobA1.telecharges");
       } catch {
         // Stockage refusé : rien n'y était gardé.
       }

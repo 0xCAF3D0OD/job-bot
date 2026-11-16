@@ -92,3 +92,20 @@ onUnmounted(() => {
     </div>
   </Teleport>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.success-card p strong { color: var(--text); }
+@media (max-width: 820px) {
+.success-overlay { place-items: end center; }
+.success-card { margin: 9rem 0 var(--space-4); padding-top: var(--space-6); }
+}
+.victory-bubble { position: absolute; left: 50%; top: 50%; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--mint); opacity: 0; animation: victory-bubble 900ms 200ms ease-out both; }
+.victory-bubble.b3 { background: var(--ok); }
+.victory-bubble.b1 { --x: -80px; --y: -40px; }
+.victory-bubble.b2 { --x: -60px; --y: 30px; }
+.victory-bubble.b3 { --x: -20px; --y: -70px; }
+.victory-bubble.b4 { --x: 75px; --y: -45px; }
+.victory-bubble.b5 { --x: 60px; --y: 35px; }
+.victory-bubble.b6 { --x: 25px; --y: -72px; }
+</style>

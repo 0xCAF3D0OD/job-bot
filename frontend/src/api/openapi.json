@@ -20785,6 +20785,18 @@
               }
             ]
           },
+          "applied_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Before"
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -23642,6 +23654,18 @@
                 "type": "null"
               }
             ]
+          },
+          "applied_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Before"
           },
           "has_logo": {
             "type": "boolean",

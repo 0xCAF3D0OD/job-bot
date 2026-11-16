@@ -7177,6 +7177,8 @@ export interface components {
             /** Agency */
             agency?: ("known" | "probable") | null;
             agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
+            /** Applied Before */
+            applied_before?: string | null;
             /**
              * Has Logo
              * @default false
@@ -8177,6 +8179,8 @@ export interface components {
             /** Agency */
             agency?: ("known" | "probable") | null;
             agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
+            /** Applied Before */
+            applied_before?: string | null;
             /**
              * Has Logo
              * @default false

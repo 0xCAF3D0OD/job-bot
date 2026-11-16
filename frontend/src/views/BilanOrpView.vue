@@ -696,6 +696,11 @@ watch(viewMonth, () => void load());
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (prefers-reduced-motion: reduce) {
+.face-mouth-enter-active, .face-mouth-leave-active, .face-tile { transition: none; }
+}
+.bilan-orp-more { --bom-6: 6px; --bom-10: 10px; --bom-13: 0.8125rem; --bom-16: 16px; --bom-20: 20px; --bom-500: 500; }
 /* Bilan › ORP sur téléphone (§37 du 16.11 ; HTML d'OrpMois) : les cartes de l'ordinateur à 68 px, 12/16, titre 16 ;
    pastille 12/700 de rayon 6 après l'entreprise ; deux pilules de 44 px à parts égales ; feuilles en lignes de 52. */
 .orp-phone { --bilan-card-h: 68px; --bilan-pad-y: 12px; --bilan-pad: 16px; --bilan-17: 16px; --bilan-bar: 8px; --bilan-lh-21: 21px; --orp-h2: 17px; --orp-chip-r: 6px; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
