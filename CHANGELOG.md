@@ -669,3 +669,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.455 | Budget de poids : quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe | livrée |
 | 1.6.456 | Poids : neuf petits composants partagés réunis en un fichier (−2,7 Ko de JS) et 17 groupes de règles CSS identiques (−60 octets) | livrée |
 | 1.6.457 | Budget de poids : limites de JS et de CSS par page (32 pages, fixées une fois), totaux affichés sans bloquer, avant/après des pages dans chaque PR | livrée |
+| 1.6.458 | Budget de poids : le groupe « partage » de vite est retiré, les pages ne chargent plus les petits composants dont elles n'ont pas besoin | livrée |
