@@ -858,7 +858,7 @@ async function finish(to: string): Promise<void> {
               Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
             </p>
             <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
-                 l'avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
+                 l’avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
             <div
               v-if="viaChoice"
               class="wdk-via"
