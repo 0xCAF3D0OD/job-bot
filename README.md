@@ -58,7 +58,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 
 ## Limites de poids
 
-`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`). Quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe ; seule une PR qui l'alourdit reste bloquée (`frontend/scripts/poids-ci.sh`, décision de Kevin du 16.11).
+`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le JS ou le CSS compressé d'une page dépasse sa limite. **Règle (Kevin, 16.11)** : chacune des 32 pages a ses limites de JS et de CSS, fixées une seule fois et jamais relevées ; une PR qui dépasse compense sur sa propre page ou attend, sauf décision écrite dans docs/decisions/ avec l'accord de Kevin (docs/performance.md, « Les limites par page »). js-total et css-total sont affichés, sans limite. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`). Quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe ; seule une PR qui l'alourdit reste bloquée (`frontend/scripts/poids-ci.sh`, décision de Kevin du 16.11).
 
 **Règle (Kevin, 15.11.2026)** : toute PR qui ajoute plus de 0,5 Ko de JS ou de CSS (gzip, total) le justifie dans sa description, avec le détail de ce qui pèse.
 
@@ -72,6 +72,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 | 16.11.2026 | JS total (gzip) | 428 780 o | 431 500 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, sans découpage ; mesuré : 431 252 o |
 | 15.11.2026 | CSS total (gzip) | 117 780 o | 118 780 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
 | 16.11.2026 | CSS total (gzip) | 118 780 o | 119 450 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, après l'allègement de #777 (−189 o) ; mesuré : 119 403 o |
+| 16.11.2026 | toutes | — | — | limites par page (32 pages, JS et CSS, main + 5 %) ; js-total et css-total ne bloquent plus (issue #797) |
 
 ## Pour aller plus loin
 
