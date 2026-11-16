@@ -330,7 +330,7 @@ function onStatus(value: ApplicationStatus): void {
           @click="historyOpen = !historyOpen"
         >
           <span class="sent-row-text"><b>Historique</b><span>{{ historySummary }}</span></span>
-          <AppIcon :name="historyOpen ? 'chevron-down' : 'chevron'" />
+          <AppIcon name="chevron" />
         </button>
         <section
           v-show="historyOpen"
@@ -791,7 +791,9 @@ function onStatus(value: ApplicationStatus): void {
 .sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-6); border-top-color: var(--line); }
 .sd-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-64); padding: var(--space-3) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
 .sd-history-row:hover { background: var(--primary-soft); }
-.sd-history-row > .icon { flex: none; color: var(--primary-text); }
+/* Le chevron tourne d'un quart à l'ouverture (décision de Kevin du 15.11) ; --t-fast passe à 0 si l'appareil demande moins d'animations. */
+.sd-history-row > .icon { flex: none; color: var(--primary-text); transition: rotate var(--t-fast); }
+.sd-history-row[aria-expanded="true"] > .icon { rotate: 90deg; }
 .sd-history { margin: 0; padding: 0 var(--space-6) var(--space-4); }
 /* Téléphone (EnvoyeeDetail, §8.3 ; retour du 14 novembre, §6) : barre de 56 « ← Candidature » et « … », marges de 20, 12 px entre les cartes, titre
    22/28 800, mots à 20 px du titre ; carte de deux lignes de 72 à chevron gris ; Historique 8 px plus bas. */

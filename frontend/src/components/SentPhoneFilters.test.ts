@@ -21,16 +21,16 @@ describe("SentPhoneFilters", () => {
     expect(input.attributes("aria-label")).toBe("Rechercher une candidature");
   });
 
-  it("les statuts sans les vides, le tri en deux choix, le nombre à afficher", async () => {
+  it("les statuts sans les vides, le tri en trois choix, le nombre à afficher", async () => {
     const wrapper = mountIt();
     expect(wrapper.find("[data-test=sent-status-entretien]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-status-relancer]").text()).toBe("À relancer · 2");
-    // Planche FiltresEnvoyees : le statut choisi coché, le tri en contrôle segmenté.
+    // Planche FiltresEnvoyees : le statut choisi coché, le tri en choix cochés (trois choix, qui passent à la ligne).
     expect(wrapper.find("[data-test=sent-status-toutes]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find("[data-test=sent-status-toutes] .icon").exists()).toBe(true);
     expect(wrapper.find("[data-test=sent-status-relancer] .icon").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-sort-relancer]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.findAll("[data-test^=sent-sort-]").map((b) => b.text())).toEqual(["À relancer d’abord", "Plus récentes d’abord"]);
+    expect(wrapper.findAll("[data-test^=sent-sort-]").map((b) => b.text())).toEqual(["À relancer d’abord", "Plus récentes d’abord", "Plus anciennes d’abord"]);
     expect(wrapper.find("[data-test=sent-sheet-show]").text()).toBe("Afficher 9 candidatures");
     await wrapper.find("[data-test=sent-sort-recentes]").trigger("click");
     expect(wrapper.emitted("update:sort")).toEqual([["recentes"]]);

@@ -4258,6 +4258,66 @@
         }
       }
     },
+    "/api/sent-sort": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Sent Sort",
+        "operationId": "getSentSort",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Sent Sort",
+        "operationId": "saveSentSort",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentSortModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -23650,6 +23710,23 @@
           "orp_month"
         ],
         "title": "SentOut"
+      },
+      "SentSortModel": {
+        "properties": {
+          "sort": {
+            "type": "string",
+            "enum": [
+              "relancer",
+              "recentes",
+              "anciennes"
+            ],
+            "title": "Sort",
+            "default": "relancer"
+          }
+        },
+        "type": "object",
+        "title": "SentSortModel",
+        "description": "Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11)."
       },
       "SettingsModel": {
         "properties": {
