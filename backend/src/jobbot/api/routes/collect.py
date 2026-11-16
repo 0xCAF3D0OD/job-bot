@@ -206,7 +206,8 @@ class OfferCounts(BaseModel):
     pending_all: int
     filtered_out: int
     later: int
-    # En préparation ou candidature envoyée (expirées comprises : un bandeau le signale).
+    # En préparation, candidature pas encore envoyée (expirées comprises : un bandeau le signale). Les envoyées
+    # sont dans l'onglet Envoyées (section 38 du 16.11).
     in_progress: int
     # Retirées par l'employeur ; exclues des autres compteurs.
     expired: int
@@ -582,7 +583,8 @@ def _view_condition(
     if view == "later":
         return and_(Offer.status == OfferStatus.LATER, live)
     if view == "in_progress":
-        return Offer.status.in_(IN_PROGRESS)
+        # En préparation seulement : les candidatures envoyées sont dans Envoyées (section 38 du 16.11).
+        return Offer.status == OfferStatus.PREPARING
     if view == "expired":
         return and_(Offer.expired_at.is_not(None), Offer.status.not_in(IN_PROGRESS))
     return or_(live, Offer.status.in_(IN_PROGRESS))
@@ -782,7 +784,7 @@ async def list_offers(
         pending_all=pending_all,
         filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
         later=live.get(OfferStatus.LATER, 0),
-        in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),
+        in_progress=live.get(OfferStatus.PREPARING, 0),
         expired=sum(c for s, e, c in grouped if e and s not in IN_PROGRESS),
         all=sum(live.values()),
     )

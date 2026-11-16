@@ -56,7 +56,7 @@ def _month_param(description: str) -> dict[str, Any]:
 TOOLS: list[dict[str, Any]] = [
     {
         "name": "situation",
-        "description": "Vue d'ensemble du jour : offres à examiner, candidatures à relancer, "
+        "description": "Vue d'ensemble du jour : nouvelles offres (statut « Nouvelles »), candidatures à relancer, "
         "compteur ORP du mois, entretiens sans retour, alertes qui n'arrivent pas, et le rythme "
         "(jours de recherche, objectif de la semaine, pause). "
         "À appeler pour « que faire aujourd'hui ? » ou « où en suis-je ? ».",
@@ -64,7 +64,7 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "offres_a_examiner",
-        "description": "Les offres à examiner (non triées, non expirées), les mieux notées "
+        "description": "Les nouvelles offres, statut « Nouvelles » (non triées, non expirées), les mieux notées "
         "d'abord : id, titre, entreprise, lieu, note sur 100, résumé du poste.",
         "input_schema": {
             "type": "object",
@@ -158,7 +158,7 @@ TOOLS: list[dict[str, Any]] = [
 
 LABELS = {
     "situation": "ta situation du jour",
-    "offres_a_examiner": "les offres à examiner",
+    "offres_a_examiner": "les nouvelles offres",
     "offre": "l'offre",
     "candidatures": "tes candidatures",
     "candidature": "la candidature",

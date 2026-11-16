@@ -30,11 +30,13 @@ const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>;
 const bases = computed(() => basisChoices(props.facets));
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
+// Statut (section 38 du 16.11) : l'ordre du parcours d'une offre ; « Toutes » (les offres pas encore envoyées)
+// reste le choix par défaut, même en dernier.
 const VIEWS: { label: string; value: View }[] = [
-  { label: "À traiter", value: "pending" },
-  { label: "À examiner", value: "to_review" },
-  { label: "En préparation", value: "in_progress" },
+  { label: "Nouvelles", value: "to_review" },
   { label: "Gardées", value: "later" },
+  { label: "En préparation", value: "in_progress" },
+  { label: "Toutes", value: "pending" },
 ];
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par date", value: "day" },
