@@ -629,3 +629,14 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.415 | Liste liée des candidatures : la flèche de la carte choisie n’a plus de double trait à la jonction avec le contour (décalage d’un pixel corrigé). | livrée |
 | 1.6.416 | Code jobup à l'inscription : un relevé partagé lit la boîte toutes les 15 s tant qu'une page attend un code, la boîte des invités est lue même si Gmail échoue, et l'étape dit quand la boîte jobA1 ne répond pas | livrée |
 | 1.6.417 | Envoyées : l’historique se déplie sur place, replié par défaut ; le tri a trois choix sur téléphone aussi et il est gardé pour le compte. | livrée |
+| 1.6.418 | Aujourd'hui : premiers pas en cinq lignes sur ordinateur et téléphone, accueil « Bienvenue » et « Offres à trier » vide pour un compte sans offre (§22 et §23 du 15.11) | livrée |
+| 1.6.419 | Trier : après le tri, « Candidatures » dans le menu ne ramène plus à la page de tri mais à la dernière page de la rubrique | livrée |
+| 1.6.420 | Notifications : « Comment s'est passé ton entretien ? » ouvre la candidature et « Faire le point » directement | livrée |
+| 1.6.421 | La comparaison des notes score-v7 et score-v8 se lance sur le serveur depuis le Mac (make prod-comparer-notes) | livrée |
+| 1.6.422 | « Voir la compatibilité » en bleu sur l'offre provisoire, comme partout | livrée |
+| 1.6.423 | Les décisions de Kevin, un fichier par décision dans docs/decisions/, assemblées dans docs/mobile/DECISIONS.md sur main après chaque fusion : plus de conflit entre PR sur la fin de DECISIONS.md | livrée |
+| 1.6.424 | La tâche « Envoyer N candidatures » d'Aujourd'hui notée comme fonction manquante (décision de Kevin du 16.11) | livrée |
+| 1.6.425 | Éventail : chaque note tient sur une ligne avec « … », forme courte ou non, et 24 px au moins la séparent du poste | livrée |
+| 1.6.426 | Le worker reprend une tâche restée « en cours » après un arrêt brutal (une fois, sans double exécution) et s’arrête proprement : la tâche en cours a 20 secondes pour finir, puis elle est relâchée | livrée |
+| 1.6.427 | Bilan ordinateur : menus « Mois précédents » et « Autres exports » selon la planche du 16.11 (« À remettre », chevron), lien « Replier le mois », lignes de la fiche « Pour l'ORP » à 64 px | livrée |
+| 1.6.428 | Interface : le support de l'« Options API » de Vue coupé au build (aucun composant ne s'en sert), 1,65 Ko de JavaScript en moins | livrée |

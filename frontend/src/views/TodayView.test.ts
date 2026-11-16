@@ -16,7 +16,7 @@ vi.mock("../api/client", () => ({
 }));
 afterEach(() => vi.resetAllMocks());
 
-const STEP_KEYS = ["profile", "alerts", "keep", "prepare", "sent"] as const;
+const STEP_KEYS = ["cv", "criteria", "alerts", "keep", "send"] as const;
 // Un compte neuf : les `done` premières étapes faites.
 function starting(done: number, extra: Record<string, unknown> = {}) {
   return today({ first_steps: STEP_KEYS.map((key, i) => ({ key, done: i < done })), ...extra });
@@ -86,42 +86,66 @@ function clearStorage(): void {
 }
 
 describe("Les premiers pas (docs/128)", () => {
-  it("une seule prochaine action, à la place de la phrase du jour", async () => {
-    mockGet(starting(1));
+  it("cinq lignes, « 2 sur 5 » : les faites cochées, la prochaine avec le seul bouton, garder et envoyer grisés (§23 du 15.11)", async () => {
+    const summary = { skills: 12, trade: "DevOps", place: "Lausanne", min_rate: 80, kept: 0 };
+    mockGet(starting(2, { has_offers: false, first_steps_summary: summary }));
     const wrapper = await mountView();
-    const card = wrapper.find("[data-test=first-steps]");
-    expect(card.text()).toContain("2 sur 5");
-    expect(card.find("h2").text()).toBe("Alertes sur les sites d’emploi");
-    expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/bienvenue?etape=alerte");
-    expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
-    expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
-    expect(wrapper.find("h1").text()).toBe("Commence par les premiers pas.");
+    const list = wrapper.find("[data-test=first-steps]");
+    expect(list.find("h2").text()).toBe("Premiers pas");
+    expect(list.find("[data-test=first-steps-count]").text()).toBe("2 sur 5");
+    const cv = list.find("[data-test=first-step-cv]");
+    expect(cv.text()).toContain("Ton CV est lu");
+    expect(cv.text()).toContain("12 compétences reprises");
+    expect(cv.text()).toContain("Fait");
+    expect(list.find("[data-test=first-step-criteria]").text()).toContain("DevOps · Lausanne · 80 à 100 %");
+    const alert = list.find("[data-test=first-step-alerts]");
+    expect(alert.text()).toContain("Créer ta première alerte");
+    expect(alert.text()).toContain("jobup : 2 minutes");
+    // Un seul bouton plein, sur la prochaine étape.
+    const actions = list.findAll("[data-test=first-steps-action]");
+    expect(actions).toHaveLength(1);
+    expect(actions[0]!.text()).toBe("Créer mon alerte");
+    expect(actions[0]!.attributes("href")).toBe("/bienvenue?etape=alerte");
+    for (const key of ["keep", "send"]) {
+      const step = list.find(`[data-test=first-step-${key}]`);
+      expect(step.attributes("aria-disabled")).toBe("true");
+      expect(step.text()).toContain("Dès ta première offre");
+      expect(step.find("a").exists()).toBe(false);
+    }
+    // L'accroche d'un compte sans offre, et « Offres à trier » vide sans marque-page ni « Élargir ».
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("Bienvenue,tes offres arrivent bientôt");
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Crée ta première alerte\u202f: jobA1 s’occupe du reste.");
+    const none = wrapper.find("[data-test=today-no-triage]");
+    expect(none.text()).toContain("Rien à trier pour l’instant");
+    expect(none.text()).toContain("Tes premières offres arrivent après ta première alerte.");
+    expect(none.find("svg").exists()).toBe(false);
+    expect(wrapper.find("[data-test=triage-widen]").exists()).toBe(false);
     // Le tri, « À faire » et « À retenir » attendent (docs/interface.md n° 17).
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
     expect(wrapper.find("[data-test=today-tasks]").exists()).toBe(false);
     expect(wrapper.find("[data-test=today-retain]").exists()).toBe(false);
-    // Les anciens guides ont disparu.
-    expect(wrapper.find("[data-test=checklist]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
   });
 
-  it("alertes créées, aucune offre encore : on attend, ou on en ajoute une", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? starting(2, { has_offers: false, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
-    );
+  it("trois étapes faites sans offre : « 3 sur 5 », l’étape 4 dit quand la première arrive, aucun bouton", async () => {
+    mockGet(starting(3, { has_offers: false, to_review: 0, to_follow_up: 0, follow_ups: [] }));
     const wrapper = await mountView();
-    const card = wrapper.find("[data-test=first-steps]");
-    expect(card.find("h2").text()).toBe("Alertes prêtes");
-    expect(card.text()).toContain("d’ici un ou deux jours");
-    expect(card.find("[data-test=first-steps-add]").attributes("href")).toBe("/candidatures/offres?ajouter=1");
-    // Le mois ORP reste.
+    const list = wrapper.find("[data-test=first-steps]");
+    expect(list.find("[data-test=first-steps-count]").text()).toBe("3 sur 5");
+    expect(list.find("[data-test=first-step-alerts]").text()).toContain("Ta première alerte est créée");
+    expect(list.find("[data-test=first-step-alerts]").text()).toContain("jobup · chaque jour");
+    expect(list.find("[data-test=first-step-keep]").text()).toContain("Ta première offre arrive après la prochaine collecte");
+    expect(list.find("[data-test=first-step-send]").text()).toContain("Dès ta première offre");
+    expect(list.find("[data-test=first-steps-action]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=today-sub]").text()).toBe("Ton alerte est créée. La prochaine collecte t’apporte tes premières offres.");
+    // Les deux liens restent, « Ajouter une offre vue ailleurs » compris.
+    expect(wrapper.find("[data-test=start-add]").attributes("href")).toBe("/ajouter-une-offre");
     expect(wrapper.find("[data-test=orp-month]").exists()).toBe(true);
   });
 
   it("aucune offre encore : la carte Google Emplois sous les premiers pas, sans « en retard » (§22 du 15.11)", async () => {
     const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? starting(1, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url }, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+      Promise.resolve({ data: path === "/api/today" ? starting(2, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url }, month: "2026-11", month_count: 0, month_target: 10, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
     );
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=google-jobs]");
@@ -145,7 +169,7 @@ describe("Les premiers pas (docs/128)", () => {
 
   it("premiers pas fermés : la carte vient en premier", async () => {
     const url = "https://www.google.com/search?q=Comptable+emploi&udm=8";
-    mockGet(starting(2, { has_offers: false, first_steps_dismissed: true, google_jobs: { terms: "Comptable", location: null, url } }));
+    mockGet(starting(3, { has_offers: false, first_steps_dismissed: true, google_jobs: { terms: "Comptable", location: null, url } }));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=first-steps]").exists()).toBe(false);
     expect(wrapper.find("[data-test=google-jobs-search]").text()).toBe("Comptable");
@@ -154,7 +178,7 @@ describe("Les premiers pas (docs/128)", () => {
   it("« Masquer » : la carte part tout de suite, retenue pour le compte au bout de 6 secondes", async () => {
     vi.useFakeTimers();
     const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
-    mockGet(starting(1, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url } }));
+    mockGet(starting(2, { has_offers: false, google_jobs: { terms: "Comptable", location: "Sion", url } }));
     PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=google-jobs-hide]").trigger("click");
@@ -167,43 +191,58 @@ describe("Les premiers pas (docs/128)", () => {
     vi.useRealTimers();
   });
 
-  it("alertes prêtes, sans métier : pas de carte ni de second « Ajouter », et plus rien dès la première offre", async () => {
-    mockGet(starting(2, { has_offers: false, google_jobs: null }));
+  it("alertes prêtes, sans métier : pas de carte, les deux liens, et plus rien dès la première offre", async () => {
+    mockGet(starting(3, { has_offers: false, google_jobs: null }));
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=google-jobs]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=start-add]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=start-add]").exists()).toBe(true);
     expect(wrapper.find("[data-test=start-forward]").exists()).toBe(true);
-    mockGet(starting(2, { has_offers: true, google_jobs: null }));
+    mockGet(starting(3, { has_offers: true, google_jobs: null }));
     wrapper = await mountView();
     expect(wrapper.find("[data-test=google-jobs-links]").exists()).toBe(false);
   });
 
-  it("garder une offre : le bouton ouvre l’écran de tri", async () => {
-    mockGet(starting(2));
+  it("étape 4 en cours, des offres arrivées : « Trier mes offres » ouvre l’écran de tri, un seul bouton", async () => {
+    mockGet(starting(3));
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/aujourdhui/tri");
+    const actions = wrapper.findAll("[data-test=first-steps-action]");
+    expect(actions).toHaveLength(1);
+    expect(actions[0]!.text()).toBe("Trier mes offres");
+    expect(actions[0]!.attributes("href")).toBe("/aujourdhui/tri");
+    expect(wrapper.find("[data-test=first-step-send]").attributes("aria-disabled")).toBe("true");
   });
 
-  it("préparer puis marquer envoyée : la dernière offre gardée", async () => {
-    mockGet(starting(3, { first_steps_offer_id: 7 }));
-    let wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
-    mockGet(starting(4, { first_steps_offer_id: 7 }));
-    wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps]").find("h2").text()).toBe("Candidature envoyée");
-    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer?doc=postuler");
+  it("étape 5 en cours : « Préparer une candidature » sur la dernière offre gardée", async () => {
+    const summary = { skills: 12, trade: "DevOps", place: "Lausanne", min_rate: 80, kept: 3 };
+    mockGet(starting(4, { first_steps_offer_id: 7, first_steps_summary: summary }));
+    const wrapper = await mountView();
+    const action = wrapper.find("[data-test=first-steps-action]");
+    expect(action.text()).toBe("Préparer une candidature");
+    expect(action.attributes("href")).toBe("/candidatures/offres/7/preparer");
+    // Le vrai nombre d'offres gardées (Kevin, 16.11).
+    expect(wrapper.find("[data-test=first-step-keep]").text()).toContain("3 offres gardées");
+    expect(wrapper.find("[data-test=first-step-keep]").text()).toContain("Fait");
   });
 
-  it("pendant les premiers pas, pas de rythme ni de lien vers le bilan", async () => {
-    mockGet(starting(2, { rhythm: { target: 5, count: 0, days: [], research_today: true } }));
+  it("étape 1 à faire (parcours sans CV) : pas de bouton, les suivantes grisées", async () => {
+    mockGet(starting(0, { has_offers: false }));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps-count]").text()).toBe("0 sur 5");
+    expect(wrapper.find("[data-test=first-steps-action]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=first-step-cv]").attributes("aria-disabled")).toBeUndefined();
+    expect(wrapper.find("[data-test=first-step-alerts]").attributes("aria-disabled")).toBe("true");
+  });
+
+  it("pendant les premiers pas, pas de lien vers le bilan, mais « Cette semaine » (§22 du 15.11)", async () => {
+    mockGet(starting(3, { rhythm: { target: 3, count: 0, days: [], research_today: true } }));
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("Voir le bilan");
-    expect(wrapper.find("[data-test=orp-bar-week]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-bar-week]").text()).toBe("Cette semaine0 sur 3");
   });
 
   it("masquer : partie tout de suite, enregistrée au bout de 6 secondes", async () => {
     vi.useFakeTimers();
-    mockGet(starting(1));
+    mockGet(starting(2));
     PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=first-steps-dismiss]").trigger("click");

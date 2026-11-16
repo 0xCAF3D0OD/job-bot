@@ -12,7 +12,7 @@
 
 ## 2. Qui fait foi
 
-1. Une décision de Kevin donnée dans la conversation après le 13 novembre. Note-la dans `docs/mobile/DECISIONS.md` avec la date.
+1. Une décision de Kevin donnée dans la conversation après le 13 novembre. Note-la avec la date dans son propre fichier `docs/decisions/AAAA-MM-JJ-HHMM-sujet.md` (docs/decisions/README.md) ; `docs/mobile/DECISIONS.md` les assemble sur main, ne le modifie pas.
 2. Les décisions du point 4 de ce fichier.
 3. Le dessin des planches de ce paquet.
 4. Le texte des prompts, du plus récent au plus ancien.

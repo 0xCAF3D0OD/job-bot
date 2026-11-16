@@ -1667,7 +1667,7 @@ watch(
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
   /* Offre provisoire (OffreProvisoire, §17 du 15 novembre) : l'en-tête sans carte, sur le fond : logo de 56 px, 12 px, titre
      28/34, entreprise et lieu 16 px, pastilles à contour (trait de 1 px, rayon 8) ; dans la carte de la note, les points
-     tirés de l'extrait (coche de 18 px, 15/20) et « Voir la compatibilité » en texte foncé. « L'entreprise » en section
+     tirés de l'extrait (coche de 18 px, 15/20) et « Voir la compatibilité » en bleu comme partout (décision de Kevin du 16.11). « L'entreprise » en section
      comme « Le poste » (titre 16/700, texte 15 px ; décision de Kevin du 15.11). */
   .offer-provisional > .detail-offer { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ob-12); margin: var(--space-1) var(--ob-margin) 0; padding: 0; background: none; border: 0; }
   .offer-provisional .detail-title h2 { font-size: var(--ob-28); line-height: var(--title-block); font-weight: var(--weight-bold); }
@@ -1676,8 +1676,8 @@ watch(
   .offer-provisional .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); }
   .offer-provisional .match-card { margin-top: var(--space-5); }
   .offer-provisional .match-lines { margin-top: var(--ob-gap); font-size: var(--font-label); line-height: var(--space-5); }
-  .offer-provisional .compat-open { width: 100%; margin: var(--ob-gap) 0 calc(-1 * var(--ob-gap)); padding: 0; color: var(--text); }
-  .offer-provisional .compat-open > .icon { width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
+  .offer-provisional .compat-open { width: 100%; margin: var(--ob-gap) 0 calc(-1 * var(--ob-gap)); padding: 0; }
+  .offer-provisional .compat-open > .icon { width: var(--space-5); height: var(--space-5); }
   .offer-provisional .offer-company-cap { font-size: var(--font-body); font-weight: var(--weight-bold); letter-spacing: 0; text-transform: none; color: var(--text); }
   /* Lecture de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire) : tout reste DANS la carte, au
      retrait du contenu, jamais en pleine largeur. La ligne « jobA1 lit l'annonce complète… » 16 px sous le verdict ; le
