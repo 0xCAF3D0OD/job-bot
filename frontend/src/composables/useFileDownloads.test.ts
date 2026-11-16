@@ -25,6 +25,8 @@ describe("fichiers préparés (docs/59 §4)", () => {
     let resolve!: (r: Response) => void;
     vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((r) => (resolve = r))));
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: () => undefined }));
+    const arrived = vi.fn();
+    link.addEventListener("file-done", arrived);
     const pending = download(link);
     expect(link.dataset.file).toBe("preparing");
     const status = () => document.querySelector("[data-test=file-status]");
@@ -34,6 +36,7 @@ describe("fichiers préparés (docs/59 §4)", () => {
     await pending;
     expect(link.dataset.file).toBe("done");
     expect(link.dataset.size).toBe("84 Ko");
+    expect(arrived).toHaveBeenCalledOnce();
     expect(status()?.textContent).toBe("Word téléchargé, 84 Ko.");
 
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("", { status: 500 }))));

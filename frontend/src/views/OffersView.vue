@@ -1361,6 +1361,33 @@ onUnmounted(() => {
   </BottomSheet>
 </template>
 
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (max-width: 1200px) {
+.detail-enter-active .detail-panel, .detail-leave-active .detail-panel { transition: transform 0.25s ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+.panel-section .full-text { transition: none; }
+}
+.offer-reading-track { stroke: var(--line); }
+.offer-reading-arc { stroke: var(--primary); }
+.offer-company { --block-cap: 13px; --block-cap-lh: 18px; --field-pad: 16px; --field-label-lh: 18px; --field-value-lh: 22px; }
+.gap-fill { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); line-height: var(--leading-normal); }
+@media (max-width: 820px) {
+.offer-save[aria-pressed="true"] svg { fill: currentColor; }
+}
+.offers-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-h); box-sizing: border-box;
+  padding: 0 var(--space-2) 0 var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-pill);
+  background: var(--accent-soft); color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold);
+}
+.offers-chip-remove {
+  display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; padding: 0; border: 0;
+  border-radius: 50%; background: none; color: inherit; cursor: pointer;
+}
+.offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+</style>
+
 <style scoped>
 /* AucuneOffre (téléphone) : pastilles de 36 px bleu clair, 14/600, croix de 14 px, 8 px entre elles, centrées ; puis le
    bouton et le lien « Tout effacer » de 44 px. */

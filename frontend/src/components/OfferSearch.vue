@@ -43,6 +43,10 @@ watch(
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (min-width: 1024px) {
+.offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
+}
 /* Téléphone, maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : le champ « Poste, entreprise, lieu »
    au-dessus des onglets : 48 px, coins de 14, bord --line, fond blanc, loupe de 20 à 14 px, 16 px à droite (grille de 4). */
 @media (max-width: 820px) {

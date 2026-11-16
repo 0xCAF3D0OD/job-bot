@@ -681,3 +681,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.467 | Extension 0.64.0 : la fenêtre sur « Créer une alerte » de jobup suit l'alerte en 4 étapes, colle le code de confirmation sans jamais cliquer, et passe à l'état secours si le champ du code est introuvable | livrée ; sélecteurs de la page du code reconstitués, à vérifier sur le vrai jobup |
 | 1.6.468 | Extension : « Le champ e-mail est vide ? » et pastille de la fenêtre jobup à la hauteur de la planche | livrée |
 | 1.6.469 | Premiers pas, étape 2 « Quel travail cherches-tu ? » : un seul bloc Postes, Lieu, Taux avec « Modifier », pastille « Depuis ton CV » selon la provenance enregistrée (cv, user, default ; jamais sur Lieu), langues avec icône (§41 du 16.11) | livrée |
+| 1.6.470 | Postuler : une coche sur Lettre.pdf et CV.pdf une fois téléchargés, « Tout télécharger » coche les deux | livrée |
+| 1.6.471 | Fil Offres : une offre au même lien qu'une candidature envoyée en sort, une offre au même titre chez la même entreprise reste visible avec « Déjà postulé le … » | livrée |
+| 1.6.472 | « Pour l'ORP » : la pastille « Case à cocher dans Job-Room » se détache du fond beige (fond blanc et trait, sombre compris) | livrée |

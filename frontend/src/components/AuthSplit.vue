@@ -33,3 +33,18 @@ defineProps<{ title: string; subtitle?: string }>();
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.auth-split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); min-height: calc(100dvh - 4.4rem); }
+.auth-art { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--space-6) + var(--space-1)); padding: 0 var(--space-6); background: var(--surface); border-right: 1px solid var(--line); }
+.auth-pitch { margin: 0; --pitch-24: 1.5rem; --pitch-lh: 1.25; max-width: 520px; text-align: center; font-size: var(--pitch-24); line-height: var(--pitch-lh); font-weight: var(--weight-bold); }
+.auth-panel { display: grid; place-items: center; padding: var(--space-12) var(--space-6); background: var(--bg); }
+.auth-box { display: grid; gap: var(--space-4); width: min(100%, 24rem); }
+@media (max-width: 820px) {
+.auth-split { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.auth-art { gap: 0; padding: 0; background: var(--bg); border-right: 0; }
+.auth-art .auth-illustration-phone { display: block; }
+.auth-panel { padding: var(--space-6) var(--space-4) var(--space-8); place-items: start center; }
+}
+</style>

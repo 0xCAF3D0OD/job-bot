@@ -258,3 +258,30 @@ onBeforeUnmount(() => {
     </div>
   </article>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.discover-hero .discover-hero-art { width: 440px; }
+.discover-scene.flip .discover-stage { order: 2; }
+.discover-stage .discover-character { position: absolute; bottom: 0; right: 0; width: 250px; margin: 0; }
+.discover-bubble::before { content: ""; position: absolute; top: 50%; left: -0.6rem; width: 1rem; height: 1rem; background: var(--surface); border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); transform: translateY(-50%) rotate(45deg); }
+.discover-end .discover-say { width: min(100%, 40rem); }
+@media (max-width: 820px) {
+.discover-hero .discover-hero-art { width: min(320px, 90%); }
+.discover-stage .discover-character { width: 190px; }
+.discover-stage, .discover-scene.flip .discover-stage { grid-column: 2; grid-row: 1; }
+.discover-bubble, .discover-data { grid-column: 2; grid-row: 2; }
+.discover-end { justify-items: stretch; }
+.discover-end .discover-data { grid-row: 1; }
+.discover-bubble::before { top: -0.6rem; left: 50%; border-left: 2px solid var(--border); border-bottom: 0; border-top: 2px solid var(--border); transform: translateX(-50%) rotate(45deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+.discover-scene { opacity: 1; transform: none; transition: none; }
+.discover-path-done, .discover-node { transition: none; }
+}
+@media (max-width: 820px) {
+.discover-stage.below { display: grid; min-height: 0; }
+.discover-stage.below .discover-character { position: static; justify-self: end; margin-top: calc(var(--space-2) * -1); }
+.discover-scene.flip .discover-stage.below .discover-character { justify-self: start; }
+}
+</style>

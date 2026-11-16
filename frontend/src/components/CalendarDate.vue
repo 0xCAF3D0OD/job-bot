@@ -64,3 +64,15 @@ const caps = computed(() => monthCaps(props.month));
     >{{ day }}</text>
   </svg>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.calendar-date-orp { --cal-tone: var(--warning); }
+/* Passé : le cadre et les traits en --field-border (#8C8478, permis pour les traits), le mois écrit en
+   --text-secondary comme le jour (#596070, #ABA398 en sombre : corrections du 13.11, §3, pas de #8C8478 en texte). */
+.calendar-date-past { --cal-tone: var(--field-border); --cal-month: var(--text-secondary); --cal-day: var(--text-secondary); }
+.calendar-date-frame { fill: var(--surface); stroke: var(--cal-tone); }
+.calendar-date-line { stroke: var(--cal-tone); fill: none; }
+.calendar-date-month { fill: var(--cal-month, var(--cal-tone)); font-family: inherit; }
+.calendar-date-day { fill: var(--cal-day); font-family: inherit; }
+</style>

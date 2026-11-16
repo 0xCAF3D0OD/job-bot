@@ -84,3 +84,17 @@ const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.hr
     </component>
   </li>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.versions .grouped-row-current::before { content: ""; position: absolute; inset: var(--space-1); z-index: -1; border-radius: calc(var(--radius) - var(--space-1)); background: var(--accent-soft); }
+.grouped-item + .grouped-item { border-top: 1px solid var(--divider); }
+.grouped-row-action:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
+/* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras.
+   Règle réunie plus haut avec « .more-menu .menu button:hover », même style (allègement du 16.11). */
+.grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
+.grouped-row-title { line-height: var(--leading-normal); }
+.grouped-row-description { font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
+.grouped-value { flex: none; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--text) 7%, var(--surface)); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-none); color: var(--text-secondary); }
+.grouped-chevron { flex: none; width: 1.1rem; height: 1.1rem; color: var(--muted); }
+</style>

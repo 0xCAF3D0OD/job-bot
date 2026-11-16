@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
+from jobbot.db.models import Application, Evaluation, Offer, OfferLink, OfferStatus
 from jobbot.filtering.service import run_filter
 from jobbot.llm.scoring import OUTPUT_SCHEMA, ProfileChunkData, parse_output
 from jobbot.runtime import Runtime
@@ -24,12 +24,12 @@ NOW = datetime.now(UTC)
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
     async with admin_engine().begin() as conn:
-        await conn.execute(text("TRUNCATE offers, criteria CASCADE"))
+        await conn.execute(text("TRUNCATE offers, applications, criteria CASCADE"))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     async with admin_engine().begin() as conn:
-        await conn.execute(text("TRUNCATE offers CASCADE"))
+        await conn.execute(text("TRUNCATE offers, applications CASCADE"))
 
 
 async def add(
@@ -79,13 +79,13 @@ async def test_duplicates_grouped_under_the_offer_you_acted_on(
     api: AsyncClient, runtime: Runtime
 ) -> None:
     old = await add(runtime, "d1", "DevOps Engineer", "Exemple SA", days_ago=40, source="jobup")
-    sent = await add(
+    kept = await add(
         runtime,
         "d2",
         "DevOps  engineer",
         "EXEMPLE SA",
         days_ago=2,
-        status="applied",
+        status="preparing",
         source="linkedin",
     )
     newest = await add(runtime, "d3", "DevOps Engineer", "Exemple SA", days_ago=1, source="indeed")
@@ -93,18 +93,59 @@ async def test_duplicates_grouped_under_the_offer_you_acted_on(
     await run_filter(runtime)
     async with runtime.sessionmaker() as session:
         rows = {o.id: o for o in await session.scalars(select(Offer))}
-    # La candidature envoyée est gardée ; les autres lui sont rattachées.
-    assert rows[sent].duplicate_of is None
-    assert rows[old].duplicate_of == sent and rows[newest].duplicate_of == sent
-    assert rows[sent].seen_since == rows[old].first_seen_at
+    # L'offre en préparation est gardée ; les autres lui sont rattachées.
+    assert rows[kept].duplicate_of is None
+    assert rows[old].duplicate_of == kept and rows[newest].duplicate_of == kept
+    assert rows[kept].seen_since == rows[old].first_seen_at
 
     offers = (await api.get("/api/offers", params={"view": "all"})).json()["items"]
     assert [o["company"] for o in offers].count("Exemple SA") == 0  # titre de la gardée
-    kept = next(o for o in offers if o["id"] == sent)
-    assert sorted(link["source"] for link in kept["links"]) == ["indeed", "jobup", "linkedin"]
+    shown = next(o for o in offers if o["id"] == kept)
+    assert sorted(link["source"] for link in shown["links"]) == ["indeed", "jobup", "linkedin"]
     assert len(offers) == 2
     # Annonce vue depuis 40 jours (doublons compris) : permanente.
-    assert [d["kind"] for d in kept["doubts"]] == ["permanent"]
+    assert [d["kind"] for d in shown["doubts"]] == ["permanent"]
+
+
+async def test_sent_offer_hides_only_its_own_page(api: AsyncClient, runtime: Runtime) -> None:
+    """Décision de Kevin du 16.11 : même lien qu'une offre envoyée = doublon sûr, rattaché ;
+    même titre chez la même entreprise = doublon probable, visible avec « Déjà postulé le … »."""
+    sent = await add(runtime, "s1", "DevOps Engineer", "Exemple SA", days_ago=10, status="applied")
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            Application(
+                offer_id=sent,
+                sent_at=date(2026, 11, 4),
+                method="electronique",
+                company="Exemple SA",
+                job_title="DevOps Engineer",
+                orp_month="2026-11",
+            )
+        )
+    # La même annonce, relevée dans une autre alerte avec des paramètres de suivi.
+    same_page = await add(runtime, "s2", "DevOps engineer (80-100 %)", "Exemple", days_ago=1)
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            OfferLink(offer_id=same_page, source="indeed", url="https://www.x/s1/?utm_source=a")
+        )
+    # Le même titre, republié sur une autre page : un vrai nouveau poste, peut-être.
+    republished = await add(runtime, "s3", "DevOps Engineer", "Exemple Sàrl", days_ago=0)
+    other = await add(runtime, "s4", "DevOps Engineer", "Autre SA")
+    await run_filter(runtime)
+    async with runtime.sessionmaker() as session:
+        rows = {o.id: o for o in await session.scalars(select(Offer))}
+    assert rows[same_page].duplicate_of == sent
+    assert rows[republished].duplicate_of is None
+
+    offers = {o["id"]: o for o in (await listing_by_id(api))}
+    assert same_page not in offers
+    assert offers[republished]["applied_before"] == "2026-11-04"
+    assert offers[other]["applied_before"] is None
+    assert offers[sent]["applied_before"] is None
+
+
+async def listing_by_id(api: AsyncClient) -> list[dict[str, Any]]:
+    return list((await api.get("/api/offers", params={"view": "all"})).json()["items"])
 
 
 async def test_doubt_signals_and_hide_filter(api: AsyncClient, runtime: Runtime) -> None:
