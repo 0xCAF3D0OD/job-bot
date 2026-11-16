@@ -284,6 +284,7 @@ async def test_code_never_logged(
     assert "482913" not in caplog.text
 
 
+@pytest.mark.usefixtures("site_example")
 async def test_site_messages(clean: Runtime, mailbox: FakeMailbox) -> None:
     mailbox.add(
         make_email(
