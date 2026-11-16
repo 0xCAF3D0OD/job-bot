@@ -600,6 +600,14 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(file.find("h2").text()).toBe("Ta candidature");
     expect(file.get("[data-test=versions-open]").text()).toContain("Versions · 1");
     expect(file.get("[data-test=cv-row]").text()).toContain("CV adapté");
+    // §34 du 16.11 : la loupe de l'en-tête ouvre la recherche dans la lettre, qui passe en texte à lire.
+    const search = wrapper.get("[data-test=letter-search-open]");
+    expect(search.attributes("aria-label")).toBe("Chercher dans la lettre");
+    await search.trigger("click");
+    expect(wrapper.get("[data-test=doc-search-input]").attributes("aria-label")).toBe("Chercher dans la lettre");
+    expect(wrapper.get("[data-test=letter]").classes()).toContain("doc-reading");
+    await wrapper.get("[data-test=doc-search-close]").trigger("click");
+    expect(wrapper.find("[data-test=doc-search]").exists()).toBe(false);
     expect(wrapper.find("[data-test=prep-desk-bottom] [data-test=letter-read]").exists()).toBe(false);
     expect(wrapper.find("[data-test=prep-desk-bottom] [data-test=composer-input]").exists()).toBe(true);
     const read = wrapper.get("[data-test=prep-aside] [data-test=letter-read]");

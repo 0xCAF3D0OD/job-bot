@@ -3725,6 +3725,16 @@
             }
           },
           {
+            "name": "hide_agencies",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Agencies"
+            }
+          },
+          {
             "name": "with_filtered_out",
             "in": "query",
             "required": false,
@@ -3796,6 +3806,88 @@
         ],
         "summary": "Get Offer",
         "operationId": "getOffer",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/not-agency": {
+      "post": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Mark Not Agency",
+        "operationId": "markNotAgency",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Unmark Not Agency",
+        "operationId": "unmarkNotAgency",
         "parameters": [
           {
             "name": "offer_id",
@@ -8309,6 +8401,48 @@
         }
       }
     },
+    "/api/trainings/diplomas": {
+      "put": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Set Diplomas",
+        "description": "« J'ai ce diplôme » (Kevin, 16.11) : corrige la détection ; une liste vide l'annule.",
+        "operationId": "setTrainingDiplomas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiplomasIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiplomasOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/trainings/{training_id}/mark": {
       "put": {
         "tags": [
@@ -10557,6 +10691,30 @@
           "base_unit"
         ],
         "title": "AdviceOut"
+      },
+      "AgencyDuplicateOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company",
+          "sent_at"
+        ],
+        "title": "AgencyDuplicateOut"
       },
       "AiReadingOut": {
         "properties": {
@@ -14622,6 +14780,62 @@
         ],
         "title": "DeleteIn",
         "description": "Le mot de passe qui confirme une action sur tout le compte : fermer, exporter."
+      },
+      "DiplomasIn": {
+        "properties": {
+          "diplomas": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Diplomas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diplomas"
+        ],
+        "title": "DiplomasIn",
+        "description": "« J'ai ce diplôme » : la liste complète des diplômes déclarés."
+      },
+      "DiplomasOut": {
+        "properties": {
+          "detected": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Detected"
+          },
+          "declared": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Declared"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detected",
+          "declared"
+        ],
+        "title": "DiplomasOut"
       },
       "DocumentOut": {
         "properties": {
@@ -20529,6 +20743,31 @@
             ],
             "title": "Employer Checked At"
           },
+          "agency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "known",
+                  "probable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agency"
+          },
+          "agency_duplicate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgencyDuplicateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -23350,6 +23589,31 @@
             ],
             "title": "Employer Checked At"
           },
+          "agency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "known",
+                  "probable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agency"
+          },
+          "agency_duplicate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgencyDuplicateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -25345,6 +25609,24 @@
                 "type": "null"
               }
             ]
+          },
+          "prerequisites": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Prerequisites",
+            "default": []
+          },
+          "eligible": {
+            "type": "boolean",
+            "title": "Eligible",
+            "default": true
           }
         },
         "type": "object",
@@ -25395,6 +25677,32 @@
           "can_suggest": {
             "type": "boolean",
             "title": "Can Suggest"
+          },
+          "diplomas_detected": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Diplomas Detected",
+            "default": []
+          },
+          "diplomas_declared": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "soins_infirmiers",
+                "bachelor_hes_sante",
+                "bachelor_hes_social"
+              ]
+            },
+            "type": "array",
+            "title": "Diplomas Declared",
+            "default": []
           }
         },
         "type": "object",

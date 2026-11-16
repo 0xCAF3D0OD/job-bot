@@ -24,7 +24,8 @@ import {
   timeAndPlace,
   upcomingAppointments,
   upcomingLabel,
-  upcomingLine,
+  upcomingWhen,
+  upcomingWhere,
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
@@ -190,7 +191,7 @@ const list = ref<HTMLElement | null>(null);
             class="rdv-item list-card"
             :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
             :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
-            :aria-label="upcomingLabel(item, item.kind === 'orp' ? (lines.length ? 'Feuille prête' : 'Feuille à compléter') : 'Entretien', now)"
+            :aria-label="upcomingLabel(item, item.kind === 'orp' ? (lines.length ? 'Feuille prête' : 'Feuille à compléter') : 'À préparer', now)"
             @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
           >
             <CalendarDate
@@ -209,10 +210,10 @@ const list = ref<HTMLElement | null>(null);
                 >{{ lines.length ? "Feuille prête" : "Feuille à compléter" }}</span>
                 <span
                   v-else
-                  class="rdv-chip"
-                >Entretien</span>
+                  class="rdv-chip peach"
+                >À préparer</span>
               </span>
-              <span class="rdv-item-sub">{{ upcomingLine(item, now) }}</span>
+              <span class="rdv-item-sub rdv-when"><span>{{ upcomingWhen(item, now) }}</span><span v-if="upcomingWhere(item)">&nbsp;· {{ upcomingWhere(item) }}</span></span>
             </span>
             <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
           </button>
@@ -540,11 +541,15 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-item-title, .rdv-item-sub { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .rdv-item-title { font-size: var(--font-body); line-height: var(--rdv-21); font-weight: var(--weight-bold); }
 .rdv-item-sub { font-size: var(--font-small); color: var(--text-secondary); }
+/* L'heure et le délai ne sont jamais coupés ; seul ce qui suit l'est (§39, Kevin 16.11). */
+.rdv-when { display: flex; }
+.rdv-when > * + * { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .rdv-chip {
   flex: none; padding: var(--rdv-2) var(--space-2); border-radius: var(--radius-pill); white-space: nowrap; font-size: var(--font-caption);
   font-weight: var(--weight-bold); background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-tertiary);
 }
 .rdv-chip.green { background: var(--success-soft); color: var(--success); }
+.rdv-chip.peach { background: var(--peach-soft); color: var(--peach-text); }
 /* « Aucun rendez-vous à venir » : la pastille en haut de la liste, alignée sur les cartes, un trait dessous (480 px). */
 .linked-list > .rdv-list-empty { display: flex; align-items: center; padding: calc(var(--linked-room) + var(--space-1)) calc(var(--linked-gap) + var(--space-1)) calc(var(--space-2) + var(--rdv-2) - var(--linked-room)) calc(var(--linked-bar) + var(--space-1)); }
 .rdv-list-empty::after { content: ""; position: absolute; left: var(--linked-bar); right: var(--linked-gap); bottom: calc(-1 * var(--linked-room)); border-bottom: 1px solid var(--line); }
