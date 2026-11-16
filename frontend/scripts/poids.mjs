@@ -9,6 +9,11 @@
 //     npm run poids                      (construit, puis mesure)
 //     node scripts/poids.mjs --releve    (après un build : les limites à + 5 % des tailles d'aujourd'hui)
 //     node scripts/poids.mjs --dist D --json F   (mesure le build D, écrit les tailles dans F ; scripts/poids-delta.sh)
+//     node scripts/poids.mjs --base F    (F : les tailles de main ; scripts/poids-ci.sh, voir plus bas)
+//
+// Main qui dépasse déjà (Kevin, 16.11, docs/decisions/2026-11-16-1425-audit-poids-main-depasse.md) : avec --base, une
+// mesure au-dessus de sa limite passe quand main la dépassait déjà et que la branche ne l'alourdit pas (taille égale
+// ou plus petite que sur main). Seule une branche qui ajoute du poids à une mesure en dépassement reste bloquée.
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
@@ -130,10 +135,15 @@ if (process.argv.includes("--releve")) {
   process.exit(0);
 }
 
+const base = arg("--base") ? JSON.parse(readFileSync(arg("--base"), "utf8")) : {};
+// Au-dessus de la limite, mais main la dépassait déjà et la branche n'ajoute rien : la mesure passe.
+const tolerated = (name, limit) => base[name] > limit && limited(name) <= base[name];
+
 let failed = false;
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {
-  const ok = limited(name) <= limit;
+  const within = limited(name) <= limit;
+  const ok = within || tolerated(name, limit);
   failed ||= !ok;
   const m = measured[name];
   const heaviest = [...new Set(groups[name])]
@@ -144,7 +154,7 @@ for (const [name, limit] of Object.entries(LIMITS)) {
   console.log(
     `${ok ? "ok " : "TROP"} ${name.padEnd(17)}${kb(m.raw).padStart(10)}${kb(m.gzip).padStart(10)}${kb(m.brotli).padStart(10)}   ` +
       `${kb(limit)} (${name === "images" ? "brut" : "gzip"})` +
-      (ok ? "" : `  (les plus lourds : ${heaviest})`),
+      (within ? "" : ok ? `  (au-dessus, mais main y est déjà : ${base[name]} o sur main, ${limited(name)} o ici, la branche n'ajoute rien)` : `  (les plus lourds : ${heaviest})`),
   );
 }
 

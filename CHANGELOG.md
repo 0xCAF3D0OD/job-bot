@@ -666,3 +666,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.452 | Préparer, étape CV : chercher dans le CV et la lettre, « Voir les changements » surligne ce que l'adaptation a changé ; « Ce CV » sans carte dans la carte | livrée sur ordinateur ; téléphone sans planche |
 | 1.6.453 | Annonce illisible : « Ouvrir sur [site] » et « Chercher sur le site de [entreprise] » avant « Donner l’annonce » (paquet du 16.11, §33) | livrée |
 | 1.6.454 | Préparer : le bouton « ↑ » du champ de demande à 8 px du bord des trois côtés, 40 px visibles et 48 px de zone tactile | livrée |
+| 1.6.455 | Budget de poids : quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe | livrée |
