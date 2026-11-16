@@ -38,6 +38,7 @@
   --row-icon: #3D4250;
   /* Snackbar (prompt du 9 novembre, PR 1) : fond #1B1F2A, texte blanc, actions #AEBDFF, en clair comme en sombre. */
   --snackbar-bg: #1B1F2A;
+  --toast-bar: #7D95FF;
   --snackbar-text: #FFFFFF;
   --snackbar-action: #AEBDFF;
   /* Lettres sur le carré pêche, et fond blanc d'un logo d'entreprise : les mêmes en clair et en sombre. */
@@ -2245,7 +2246,7 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .discover-bubble { position: relative; padding: var(--space-4) var(--space-5); background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); }
 .discover-bubble::before { content: ""; position: absolute; top: 50%; left: -0.6rem; width: 1rem; height: 1rem; background: var(--surface); border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); transform: translateY(-50%) rotate(45deg); }
 .discover-bubble h3 { margin: 0 0 var(--space-1); font-size: var(--font-title); }
-.discover-bubble p, .first-steps-why { margin: 0; color: var(--muted); line-height: var(--leading-normal); }
+.discover-bubble p { margin: 0; color: var(--muted); line-height: var(--leading-normal); }
 .discover-end { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 .discover-end .discover-say { width: min(100%, 40rem); }
 .discover-node.goal { font-size: var(--font-figure); }
@@ -2560,26 +2561,11 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .today-banner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; font-size: var(--font-body); line-height: var(--leading-normal); }
 .today-banner a { color: var(--accent); font-weight: var(--weight-semibold); white-space: nowrap; text-decoration: none; }
 .today-banner a:hover { text-decoration: underline; }
-/* Les premiers pas (docs/128 §1) : le visage en tuile, l'étape, pourquoi, le bouton ; « 2 sur 5 »
-   et « Masquer » sur la ligne du haut ; les cinq points comme ceux de l'accueil. */
-.first-steps { flex-direction: row; align-items: flex-start; gap: var(--space-5); margin: var(--space-2) 0 0; }
-.first-steps-body { display: grid; justify-items: start; gap: var(--space-3); flex: 1; min-width: 0; }
-.first-steps-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); width: 100%; min-height: 2.25rem; }
-.first-steps-count { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--muted); }
-.first-steps h2 { margin: 0; font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; }
-.first-steps-action { margin-top: var(--space-1); border-radius: var(--radius-pill); padding-inline: var(--space-5); }
-.first-steps-dots { display: flex; gap: var(--space-2); margin: var(--space-2) 0 0; }
-.first-steps-dots span { width: 0.7rem; height: 0.7rem; border-radius: var(--radius-pill); background: var(--band); border: 2px solid var(--faint); box-sizing: border-box; }
-.first-steps-dots span.done { background: var(--accent); border-color: var(--accent); }
-.first-steps-dots span.current { width: 1.6rem; background: var(--accent); border-color: var(--accent); }
 /* Les lignes de liste (docs/129, Candidatures) : trois colonnes fixes (le logo, le texte, l'action),
    à la même place partout. */
 .today-rows li + li { border-top: 1px solid var(--divider); }
 @media (max-width: 820px) {
   .offers-sentence { font-size: var(--font-section); }
-  .first-steps { gap: var(--space-4); }
-  .first-steps h2 { font-size: var(--font-section); }
-  .first-steps-action { min-height: var(--control-h); }
 }
 
 /* Le logo (docs/103) et la mascotte (docs/97) : bleu stylo et bille pêche ; en sombre, le bleu
@@ -2903,6 +2889,14 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .undo-toast > button.link { margin-left: auto; font-size: var(--font-body); font-weight: var(--weight-semibold); min-height: 2.75rem; padding: 0 var(--space-2); }
 /* Snackbar du 9 novembre (PR 1) : fond sombre, rayon 12, actions en bleu clair ; 6 s (UNDO_MS), role="status". */
 .undo-toast { border: 0; border-radius: var(--radius-sm); background: var(--snackbar-bg); color: var(--snackbar-text); font-size: var(--font-label); }
+/* Le trait de compte à rebours (paquet du 13 novembre, §23 du 15.11) : sur tous les bandeaux « Annuler », 3 px en bas,
+   il se vide pendant les 6 secondes. Arrêté, plein, tant que la souris ou le focus est sur le bandeau ; masqué sans
+   mouvement. #7D95FF en clair comme en sombre (fond --snackbar-bg). */
+.undo-toast, .tri-toast { overflow: hidden; }
+.toast-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--toast-bar); transform-origin: left; animation: toast-count 6s linear forwards; }
+:is(:hover, :focus-within) > .toast-bar { animation: none; }
+@keyframes toast-count { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast-bar { display: none; } }
 :is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
@@ -4285,7 +4279,7 @@ html.search-open { overflow: hidden; }
   .undo-toast.inline { display: none; }
 }
 @media (min-width: 600px) {
-  .undo-toast.inline { position: static; width: auto; max-width: none; margin: 0; box-shadow: none; border: 0; animation: none; }
+  .undo-toast.inline { position: relative; width: auto; max-width: none; margin: 0; box-shadow: none; border: 0; animation: none; }
   :root:has(.undo-toast.inline) .undo-toast:not(.inline) { display: none; }
 }
 

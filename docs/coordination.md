@@ -9,19 +9,22 @@ leurs territoires et leurs règles ; le travail en cours se lit dans les PR ouve
 |---|---|---|
 | Design | Figma ; les variables de `frontend/src/style.css` (largeurs, espacements, couleurs, mesures) ; `docs/regles-ui-ergonomie.md` ; l'en-tête | le code des pages et leurs tests ; l'outillage |
 | Pages | le code des pages (`frontend/src/views`, `frontend/src/components`, `backend/`) et leurs tests | les variables de `style.css` ; les règles ; Figma (lecture seule) |
-| Dépôt | l'outillage et l'organisation : `docs/coordination.md`, `changelog.d/README.md`, `scripts/`, `Makefile`, `.github/` | les pages, les règles, les variables ; Figma (lecture seule) |
+| Dépôt | l'outillage et l'organisation : `docs/coordination.md`, `changelog.d/README.md`, `docs/decisions/README.md`, `scripts/`, `Makefile`, `.github/` | les pages, les règles, les variables ; Figma (lecture seule) |
 
 Un fichier hors de son territoire ne se modifie pas : la session s'arrête et le signale à Kevin.
 
 ## Une PR ne touche aucun fichier partagé
 
 Deux PR qui modifient le même endroit d'un fichier entrent en conflit dès que l'une est fusionnée. Les fichiers que
-toutes les PR modifiaient (les tableaux de réservation, `CHANGELOG.md`) ne sont donc plus édités à la main :
+toutes les PR modifiaient (les tableaux de réservation, `CHANGELOG.md`, `docs/mobile/DECISIONS.md`) ne sont donc plus édités à la main :
 
 - **Le numéro de version est donné à la fusion.** Une PR dépose `changelog.d/<sujet>.md` (minuscules, chiffres et
   tirets, par exemple `boutons-segmentes.md`), sans numéro. Sur main, après la fusion, l'action `changelog.yml` lui
   donne le numéro suivant dans l'ordre de fusion, le renomme en `changelog.d/X.Y.Z.md` et assemble `CHANGELOG.md`.
   La CI refuse une PR qui ajoute un fichier `changelog.d/X.Y.Z.md`.
+- **Une décision, un fichier.** Une décision de Kevin se note dans `docs/decisions/AAAA-MM-JJ-HHMM-sujet.md`
+  (l'heure est facultative), qui commence par un titre `## …`. Sur main, après la fusion, l'action `decisions.yml`
+  assemble `docs/mobile/DECISIONS.md`, trié par date. La CI refuse une PR qui modifie `docs/mobile/DECISIONS.md`.
 - **Pas de numéro avant la fusion** : ni dans la branche (`fix/<sujet>`, `feat/<sujet>`), ni dans le titre de la PR,
   ni dans les commits, ni dans un dossier de captures (`docs/captures/<sujet>/`). Le numéro se lit après la fusion,
   dans `changelog.d/` ou `CHANGELOG.md`.
