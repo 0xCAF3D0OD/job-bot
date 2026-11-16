@@ -672,3 +672,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.458 | Budget de poids : le groupe « partage » de vite est retiré, les pages ne chargent plus les petits composants dont elles n'ont pas besoin | livrée |
 | 1.6.459 | Réglages « Objectif ORP et sites » : le retour au-dessus du titre et sur le bord gauche des cartes (toutes les sous-pages de Réglages et État du service), les champs chiffrés en colonne fixe (72 px, 44 px de haut, rayon des champs de saisie, chiffre centré), « [5] du mois suivant » et « À rendre chaque mois avant ce jour. » | livrée |
 | 1.6.460 | Offre écartée sans note : « Écartée le 12 nov. », « Remettre dans le tri » et plus de bouton « Écarter » (§30 du 16.11) | livrée |
+| 1.6.461 | Ordinateur : rien d'ouvert à l'arrivée sur Offres, Envoyées et Rendez-vous, la scène « Choisis… » dans la colonne de droite, et « Annuler » après Écarter rouvre l'offre (§36) | livrée |
