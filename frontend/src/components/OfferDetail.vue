@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
-import { dateInList, dateInSentence, dayInList } from "../dates";
+import { dateInList, dateInSentence } from "../dates";
 import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
@@ -270,7 +270,7 @@ const matchTitle = computed(() => {
   if (matchWord.value) return MATCH_TITLE[matchWord.value.tone]!;
   if (finalCause.value) return "Note impossible";
   if (!setAside.value) return "Pas encore notée";
-  return props.offer.set_aside_at ? `Écartée le ${dayInList(props.offer.set_aside_at)}` : "Écartée";
+  return props.offer.set_aside_at ? `Écartée le ${dateInList(props.offer.set_aside_at, undefined, true)}` : "Écartée";
 });
 // Sans profil, la note n'arrive jamais : la fiche le dit et envoie vers Profil › Expériences (test du 10 novembre).
 const { empty: profileEmpty, refresh: refreshProfile } = useProfileEmpty();
@@ -1291,26 +1291,17 @@ watch(
           <!-- Téléphone (§10.1) et ordinateur (MODIFICATIONS du 9 novembre, §2.1) : une seule ligne cliquable, « Voir la
                compatibilité », sur la ligne de texte du verdict ; le détail est dans le panneau. -->
           <button
-            v-if="(sub || columns) && scored"
+            v-if="(sub || columns) && scored || aside"
             type="button"
             class="compat-open"
-            aria-haspopup="dialog"
-            data-test="compat-open"
-            @click="compatOpen = true"
+            :aria-haspopup="scored ? 'dialog' : undefined"
+            :data-test="scored ? 'compat-open' : 'back-to-triage'"
+            @click="scored ? (compatOpen = true) : emit('status', 'to_review')"
           >
             <!-- « Voir la compatibilité » sur téléphone comme sur ordinateur (décision de Kevin du 15.11) ; sur téléphone,
-                 aligné sur le contenu de la carte, chevron à droite, que la note soit provisoire ou non. -->
-            Voir la compatibilité
-            <AppIcon name="chevron" />
-          </button>
-          <button
-            v-else-if="aside"
-            type="button"
-            class="compat-open"
-            data-test="back-to-triage"
-            @click="emit('status', 'to_review')"
-          >
-            Remettre dans le tri
+                 aligné sur le contenu de la carte, chevron à droite, que la note soit provisoire ou non. Offre écartée
+                 sans note (§30 du 16.11) : « Remettre dans le tri », même style. -->
+            {{ scored ? "Voir la compatibilité" : "Remettre dans le tri" }}
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
@@ -1699,8 +1690,8 @@ watch(
 .oc-note-line .match-title { margin: 0; font-size: var(--font-label); font-weight: var(--weight-bold); }
 .oc-note-line .match-title.is-none { color: var(--text-secondary); }
 /* §30 : la pastille neutre « Pas de note » d'une offre écartée, celle des cartes de la liste (ListCard). */
-.oc-note-line .aside-pill { background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); }
-.oc-note-line .provisional-pill, .oc-note-line .aside-pill { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
+.aside-pill { background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); }
+.oc-note-line > span { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
 .oc-note-sub { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
 .oc-note-link:hover { text-decoration: underline; }
