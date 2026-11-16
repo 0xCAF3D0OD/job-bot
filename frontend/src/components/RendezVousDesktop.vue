@@ -28,6 +28,7 @@ import {
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
+import ChooseDetail from "./ChooseDetail.vue";
 import LinkedDetail from "./LinkedDetail.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
@@ -81,13 +82,11 @@ const keys = computed(() => [
   ...toNote.value.map(pastKey),
   ...noted.value.map(pastKey),
 ]);
-// Sans rendez-vous ORP prévu : le premier rendez-vous à noter (lot 14), sinon le premier de la liste. PR 41 : plus de
-// formulaire dans le détail, un nouveau rendez-vous se saisit dans le panneau « Nouveau rendez-vous ».
+// Le rendez-vous de l'adresse (?rdv=). Rien d'ouvert à l'arrivée (§36 du 16 novembre, décision de Kevin du 16.11) :
+// « Choisis un rendez-vous » à droite. PR 41 : un nouveau rendez-vous se saisit dans le panneau « Nouveau rendez-vous ».
 const selected = computed(() => {
   const asked = route.query.rdv;
-  if (typeof asked === "string" && keys.value.includes(asked)) return asked;
-  if (nextOrp.value) return "orp";
-  return toNote.value[0] ? pastKey(toNote.value[0]) : (keys.value[0] ?? "");
+  return typeof asked === "string" && keys.value.includes(asked) ? asked : "";
 });
 function select(key: string): void {
   void router.replace({ query: { ...route.query, rdv: key } });
@@ -507,6 +506,17 @@ const list = ref<HTMLElement | null>(null);
         inline
         @saved="emit('saved', $event)"
         @cancel="emit('cancel')"
+      />
+    </LinkedDetail>
+    <LinkedDetail
+      v-else-if="keys.length"
+      class="rdv-detail"
+      :list="list"
+    >
+      <ChooseDetail
+        scene="choisis-rendez-vous"
+        title="Choisis un rendez-vous"
+        hint="Préparation et feuille ORP s’affichent ici"
       />
     </LinkedDetail>
   </div>
