@@ -30,7 +30,7 @@ export const LIMITS = {
   "js-bilan": 113_400,
   "js-compte": 98_800,
   "css-premier": 59_800,
-  "css-total": 118_780, // marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle (Kevin, 15.11 17 h 25 : +1 Ko, une fois, 117 780 → 118 780 ; README, Limites de poids)
+  "css-total": 119_450, // #764, #770 et #771 ensemble, après l'allègement de #777 (Kevin, 16.11 14 h 08 : une fois, 118 780 → 119 450 ; docs/decisions/2026-11-16-1408-releve-css-trois-pr.md)
   "css-accueil": 59_800,
   "css-candidatures": 69_500, // états vides (§13) et liaison rail (§18) : +0,5 Ko (Kevin, 15.11 10 h 34 : relevé une seule fois)
   "css-bilan": 62_400,

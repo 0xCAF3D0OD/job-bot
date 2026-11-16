@@ -5122,11 +5122,44 @@ export interface components {
              * @default []
              */
             origin_ids: number[];
+            /**
+             * Reasons
+             * @default []
+             */
+            reasons: components["schemas"]["CvReasonOut"][];
+            /**
+             * User Requests
+             * @default []
+             */
+            user_requests: components["schemas"]["CvUserRequestOut"][];
         };
         /** CvRead */
         CvRead: {
             /** Read */
             read: boolean;
+        };
+        /**
+         * CvReasonOut
+         * @description La ligne « Pourquoi » d'un changement (§32 et §37 du 16.11). `target` : « summary » pour le
+         *     profil, sinon l'identifiant du bloc déplacé ou retiré. `origin: "user"` : changement demandé
+         *     par l'utilisateur (« Demandé par toi »), sans raison de l'IA. `quotes` : les mots de l'annonce
+         *     cités par la raison, vérifiés dans l'offre.
+         */
+        CvReasonOut: {
+            /** Target */
+            target: number | "summary";
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "ai" | "user";
+            /** Text */
+            text?: string | null;
+            /**
+             * Quotes
+             * @default []
+             */
+            quotes: string[];
         };
         /** CvRequest */
         CvRequest: {
@@ -5148,6 +5181,28 @@ export interface components {
             heading: string;
             /** Items */
             items: components["schemas"]["CvItemOut"][];
+        };
+        /**
+         * CvUserRequestOut
+         * @description Une demande de l'utilisateur (retouche ou consigne), gardée d'une version à l'autre.
+         *     `applied: false` : cette version ne la reprend pas (« N de tes demandes ne sont pas reprises »,
+         *     bouton « Les réappliquer »). `after` : le bloc qui doit précéder `target` (None : en tête) ;
+         *     `text` : le résumé demandé.
+         */
+        CvUserRequestOut: {
+            /** Target */
+            target: number | "summary";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "removed" | "added" | "moved";
+            /** Text */
+            text?: string | null;
+            /** After */
+            after?: number | null;
+            /** Applied */
+            applied: boolean;
         };
         /** DataSummary */
         DataSummary: {

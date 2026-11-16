@@ -59,7 +59,7 @@ onMounted(() => void load());
 <template>
   <p
     v-if="page && !page.certificates.length && documents"
-    class="hint certificates-hint"
+    class="notice hint certificates-hint"
     data-test="certificates-hint"
   >
     Un certificat parmi tes documents ? Ouvre-le, puis ⋯ › « C’est un certificat de travail ». Encore en poste ?

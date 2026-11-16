@@ -69,6 +69,13 @@ describe("Rendez-vous sur ordinateur", () => {
     const { wrapper, router } = await open();
     expect(wrapper.find("[data-test=rdv-desktop]").exists()).toBe(true);
     expect(wrapper.get("[data-test=rdv-item-orp]").attributes("aria-current")).toBe("true");
+    // Deux lignes (§39 du 16.11) : le titre et sa pastille, puis l'heure, le délai et le lieu ; ni surtitre ni rangée vide.
+    const card = wrapper.get("[data-test=rdv-item-orp]");
+    expect(card.findAll(".rdv-item-text > *").map((line) => line.classes()[0])).toEqual(["rdv-item-line", "rdv-item-sub"]);
+    expect(card.get(".rdv-item-line").text()).toMatch(/^Rendez-vous ORP\s*Feuille (prête|à compléter)$/);
+    expect(card.get(".rdv-item-sub").text()).toMatch(/· dans \d+ jours/);
+    expect(card.attributes("aria-label")).toMatch(/^Rendez-vous ORP, feuille (prête|à compléter), \S+ \d+ \S+ à .+, dans \d+ jours/);
+    expect(wrapper.find("[data-test=rdv-list-empty]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-detail-orp]").exists()).toBe(true);
     expect(wrapper.get("[data-test=rdv-last-agreed]").text()).toContain("8 recherches par mois");
     const past = wrapper.get("[data-test=rdv-item-passe-2]");

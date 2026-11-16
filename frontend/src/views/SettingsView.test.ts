@@ -319,7 +319,7 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
 });
 
 describe("Des Réglages épurés (docs/106)", () => {
-  it("une rubrique, une carte ; le seuil en mots, enregistré au clic (C11)", async () => {
+  it("une rubrique, une carte ; le seuil en chiffres, enregistré au clic (C11)", async () => {
     mockGet(true);
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 85 } } as never);
@@ -328,7 +328,11 @@ describe("Des Réglages épurés (docs/106)", () => {
     // Sur ordinateur, ce qui était sur la page Compte suit les notifications (PR 20).
     expect(wrapper.find("[data-test=section-plus] [data-test=account-orp]").exists()).toBe(true);
     const choices = wrapper.findAll("[data-test=notify-switches] [role=radio]").map((b) => b.text());
-    expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
+    // Comme « Note minimale » des filtres (Kevin, 16.11) : en chiffres, mêmes seuils, même aide reliée.
+    expect(choices).toEqual(["85 et +", "75 et +", "50 et +"]);
+    const group = wrapper.find("[data-test=threshold-row] [role=radiogroup]");
+    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
+    expect(wrapper.find(`#${group.attributes("aria-labelledby")}`).text()).toBe("M’avertir dès");
     expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
 
     await wrapper.find("[data-test=threshold-85]").trigger("click");

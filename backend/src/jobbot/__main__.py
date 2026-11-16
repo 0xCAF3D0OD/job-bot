@@ -16,6 +16,7 @@ noter-offres-manuelles  anciennes offres ajoutées à la main sans note : nombre
              (--lancer : les noter)
 logos --clean-generic  retire les logos génériques (--essai : liste sans rien retirer)
 mesure-notes-courtes  coût et qualité des notes courtes (score-v9) ; --lancer appelle l'IA
+mesure-pourquoi  coût de la ligne « Pourquoi » du CV (cv-v2), 5 CV fictifs ; --lancer appelle l'IA
 """
 
 import argparse
@@ -763,6 +764,30 @@ def cmd_mesure_notes_courtes(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def cmd_mesure_pourquoi(args: argparse.Namespace) -> int:
+    """Ligne « Pourquoi » (cv-v2, Kevin 16.11) : 5 CV fictifs préparés avec cv-v1 puis cv-v2 ;
+    sans --lancer, aucun appel. Aucune donnée de compte, rien d'écrit, des chiffres seulement."""
+    from jobbot.llm import cv_measure
+    from jobbot.scoring.service import make_client
+
+    settings = _settings()
+    print(
+        f"{len(cv_measure.CASES)} CV fictifs, 2 appels chacun · modèle {settings.llm_model}, "
+        f"effort {settings.llm_writing_effort} · hors plafond mensuel"
+    )
+    if not args.lancer:
+        print("Aucun appel à l'IA. Pour mesurer : jobbot mesure-pourquoi --lancer")
+        return 0
+    if not settings.llm_configured:
+        print("IA non configurée : JOBBOT_ANTHROPIC_API_KEY manque.", file=sys.stderr)
+        return 1
+    rows = asyncio.run(
+        cv_measure.measure(make_client(settings), settings.llm_model, settings.llm_writing_effort)
+    )
+    print("\n".join(cv_measure.report(rows)))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -796,6 +821,13 @@ def main(argv: list[str] | None = None) -> int:
         "--lancer", action="store_true", help="note les 20 offres avec le prompt suivant (payant)"
     )
     short_cmd.set_defaults(func=cmd_mesure_notes_courtes)
+    why_cmd = sub.add_parser(
+        "mesure-pourquoi", help="ligne « Pourquoi » du CV (cv-v2) : coût sur 5 CV fictifs"
+    )
+    why_cmd.add_argument(
+        "--lancer", action="store_true", help="prépare les 5 CV avec cv-v1 et cv-v2 (payant)"
+    )
+    why_cmd.set_defaults(func=cmd_mesure_pourquoi)
     anon = sub.add_parser("anonymize-sample", help="jeux de test anonymisés")
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
     anon.add_argument("--out", required=True, help="dossier de sortie")

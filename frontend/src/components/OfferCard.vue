@@ -14,7 +14,7 @@ import { usePhone } from "../composables/usePhone";
 // Une offre dans À traiter (maquettes CandidaturesOrdinateur et Candidatures, 7.11.2026) : la carte de liste
 // commune, avec l'anneau et son mot à droite. Ce qui demande attention (écartée, à vérifier, retirée) et la note
 // provisoire deviennent des puces ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
-// « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par jour », où le titre du jour la donne.
+// « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par date », où le titre du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
 defineEmits<{ select: [] }>();
 const { phone } = usePhone();
