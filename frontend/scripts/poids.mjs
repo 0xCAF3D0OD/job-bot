@@ -32,6 +32,8 @@ const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 // docs/decisions/ avec l'accord de Kevin.
 export const LIMITS = {
   "js-accueil": 108_600, // Aujourd'hui : le premier écran
+  "js-accueil-telephone": 113_700,
+  "js-accueil-ordinateur": 115_000,
   "js-trier": 106_000,
   "js-candidatures": 175_500,
   "js-preparer": 157_400,
@@ -62,6 +64,8 @@ export const LIMITS = {
   "js-a-propos": 95_000,
   "js-introuvable": 94_800,
   "css-accueil": 61_800, // Aujourd'hui : le premier écran
+  "css-accueil-telephone": 63_200,
+  "css-accueil-ordinateur": 64_400,
   "css-trier": 65_000,
   "css-candidatures": 72_500,
   "css-preparer": 70_500,
@@ -102,6 +106,9 @@ const TOTALS = ["js-total", "css-total"];
 // échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
 export const PAGES = {
   accueil: ["views/TodayView.vue"], // le premier écran
+  // Aujourd'hui charge ensuite, à part, son bloc selon l'écran : l'accueil du téléphone ou le mini-tri de l'ordinateur.
+  "accueil-telephone": ["views/TodayView.vue", "components/HomePhone.vue"],
+  "accueil-ordinateur": ["views/TodayView.vue", "components/TriageMini.vue"],
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   preparer: ["views/PreparationView.vue"],
@@ -227,14 +234,15 @@ const base = arg("--base") ? JSON.parse(readFileSync(arg("--base"), "utf8")) : {
 const tolerated = (name, limit) => base[name] > limit && limited(name) <= base[name];
 
 let failed = false;
-// Toutes les vues du manifeste sont mesurées dans une page.
+// Toutes les vues, et tout bloc chargé à part (import() hors des vues), sont mesurés dans une page.
 const inPages = new Set(Object.values(PAGES).flat());
 const unmeasured = Object.keys(manifest)
-  .map((key) => key.match(/src\/(views\/\w+\.vue)$/)?.[1])
-  .filter((view) => view && !inPages.has(view));
+  .filter((key) => /src\/views\/\w+\.vue$/.test(key) || manifest[key].isDynamicEntry)
+  .map((key) => key.replace(/^.*?src\//, ""))
+  .filter((file) => !inPages.has(file));
 if (unmeasured.length) {
   failed = true;
-  console.log(`TROP vues sans limite : ${unmeasured.join(", ")} (à ajouter dans PAGES, et leurs limites dans LIMITS)`);
+  console.log(`TROP vues ou blocs chargés à part sans limite : ${unmeasured.join(", ")} (à ajouter dans PAGES, et leurs limites dans LIMITS)`);
 }
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {

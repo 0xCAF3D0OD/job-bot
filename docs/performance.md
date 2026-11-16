@@ -14,7 +14,7 @@ La limite porte sur **gzip** pour le JavaScript et le CSS. Pour les **images**, 
 
 | Mesure | Ce qu'elle compte |
 |---|---|
-| `js-<page>`, `css-<page>` | le JS et le CSS de chacune des 30 pages de l'application (`PAGES` dans `poids.mjs`) : ce sont eux qui ont une limite, voir « Les limites par page » |
+| `js-<page>`, `css-<page>` | le JS et le CSS de chacune des 32 pages de l'application (`PAGES` dans `poids.mjs`) : ce sont eux qui ont une limite, voir « Les limites par page » |
 | `js-accueil`, `css-accueil` | Aujourd'hui (`TodayView`), donc aussi le premier écran |
 | `js-total`, `css-total` | tout le code, tout le CSS : affichés, sans limite depuis le 16.11 |
 | `images` | toutes les images servies (`dist/`, donc `public/` et les images importées par le code) |
@@ -61,7 +61,7 @@ Décisions de Kevin du 16 novembre 2026 (issue #797, `docs/decisions/2026-11-16-
 
 **Règle** : le JS et le CSS ont des limites **par page**, fixées une seule fois et **jamais relevées**. Une PR qui dépasse compense sur sa propre page ou attend. Seule exception : une décision écrite dans `docs/decisions/` avec l'accord de Kevin. Pas de coupe de contenu utile pour gagner du poids.
 
-On ne charge pas tout le code d'un coup, seulement celui de la page qu'on ouvre : c'est lui qui ralentit l'écran. Chaque page de `router.ts` est mesurée : le socle de l'application, plus sa vue et sa page parente (Candidatures, Bilan). Une vue qui n'est dans aucune page fait échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
+On ne charge pas tout le code d'un coup, seulement celui de la page qu'on ouvre : c'est lui qui ralentit l'écran. Chaque page de `router.ts` est mesurée : le socle de l'application, plus sa vue et sa page parente (Candidatures, Bilan). Aujourd'hui compte trois fois : la vue seule, puis avec le bloc qu'elle charge à part sur téléphone (`HomePhone`) ou sur ordinateur (`TriageMini`). Une vue ou un bloc chargé à part (`import()`) qui n'est dans aucune page fait échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
 
 **Valeur** : pour chaque page, la plus basse entre :
 
@@ -77,6 +77,8 @@ Aujourd'hui, la valeur 2 est la plus basse sur toutes les pages : la plus lourde
 | Page | Vue(s) | JS le 16.11 | Limite JS | CSS le 16.11 | Limite CSS |
 |---|---|---:|---:|---:|---:|
 | accueil | `TodayView` | 103,5 | 108,6 | 58,9 | 61,8 |
+| accueil-telephone | `TodayView` + `HomePhone` | 108,3 | 113,7 | 60,3 | 63,2 |
+| accueil-ordinateur | `TodayView` + `TriageMini` | 109,5 | 115,0 | 61,4 | 64,4 |
 | trier | `TriageView` | 101,0 | 106,0 | 62,0 | 65,0 |
 | candidatures | `JobsView` + `OffersView` | 167,2 | 175,5 | 69,1 | 72,5 |
 | preparer | `PreparationView` | 150,0 | 157,4 | 67,2 | 70,5 |
