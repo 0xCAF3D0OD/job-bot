@@ -59,7 +59,7 @@ const track = computed(() =>
       <div class="wa-body">
         <template v-if="!installed && i === 0">
           <b class="wa-title">Installe l’extension jobA1</b>
-          <span class="wa-help">Gratuite, pour Chrome, Edge et Firefox. Elle n’agit que sur les pages d’alerte que tu ouvres.</span>
+          <span class="wa-help">Gratuite, pour Firefox. Elle n’agit que sur les pages d’alerte que tu ouvres.</span>
           <div class="wa-open-row">
             <a
               :href="STORE_URL"

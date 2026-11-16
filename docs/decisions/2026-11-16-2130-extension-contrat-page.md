@@ -25,4 +25,6 @@ choix « Avec l'extension · environ 1 minute » / « À la main · environ 2 mi
 
 Le suivi en direct affiche : Formulaire rempli, Alerte envoyée à jobup, Code collé dans jobup, En attente de ta
 confirmation sur jobup. Changer d'option garde l'avancée de chaque parcours. Téléphone : pas de choix, parcours à la
-main seul. Les règles de l'extension elle-même sont dans `2026-11-16-2125-extension-alerte-jobup.md`.
+main seul. Ordinateur (Kevin, 16.11, 23 h 29) : l'extension n'existe que pour Firefox, donc le choix ne s'affiche que sur
+Firefox, ou sur tout navigateur où l'extension est détectée ; ailleurs, parcours à la main seul. Texte : « Gratuite,
+pour Firefox. ». Les règles de l'extension elle-même sont dans `2026-11-16-2125-extension-alerte-jobup.md`.

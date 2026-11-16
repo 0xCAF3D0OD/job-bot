@@ -620,7 +620,17 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 2 sur 4");
   });
 
-  it("section 42 : « Avec l’extension / À la main », à la main par défaut sans extension ; chaque parcours garde son avancée", async () => {
+  it("section 42 : hors Firefox et sans extension, pas de choix, le parcours à la main seul (Kevin, 16.11, 23 h 29)", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    expect(wrapper.find("[data-test=welcome-alert-via]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=welcome-alert]").isVisible()).toBe(true);
+    expect(wrapper.get("[data-test=welcome-alert-extension]").isVisible()).toBe(false);
+    expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(true);
+  });
+
+  it("section 42 : sur Firefox, « Avec l’extension / À la main », à la main par défaut sans extension ; chaque parcours garde son avancée", async () => {
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0");
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
     await click(wrapper, "welcome-criteria");
     const group = wrapper.get("[data-test=welcome-alert-via]");
@@ -641,9 +651,10 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=welcome-alert-via-main]").attributes("aria-checked")).toBe("true");
     // Le parcours à la main a gardé son avancée : jobup ouvert, l'étape 3 en cours.
     expect(wrapper.get("[data-test=welcome-alert-step-3]").attributes("aria-current")).toBe("step");
+    ua.mockRestore();
   });
 
-  it("section 42 : l’extension détectée est choisie par défaut ; à « created », la page passe aux offres toute seule", async () => {
+  it("section 42 : l’extension détectée (quel que soit le navigateur) est choisie par défaut ; à « created », la page passe aux offres toute seule", async () => {
     document.documentElement.dataset.joba1Extension = "0.64.0";
     try {
       const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });

@@ -141,8 +141,12 @@ const VIAS = [
 ] as const;
 type Via = (typeof VIAS)[number]["key"];
 const chosenVia = ref<Via | null>(null);
+// L'extension n'existe que pour Firefox (Kevin, 16.11, 23 h 29) : le choix ne s'affiche que sur Firefox, ou partout si
+// l'extension est détectée ; sinon le parcours à la main seul, comme sur téléphone.
+const firefox = /firefox\//i.test(navigator.userAgent);
+const viaChoice = computed(() => firefox || !!extension.version.value);
 const via = computed<Via>({
-  get: () => chosenVia.value ?? (extension.version.value ? "extension" : "main"),
+  get: () => (viaChoice.value ? chosenVia.value ?? (extension.version.value ? "extension" : "main") : "main"),
   set: (value) => (chosenVia.value = value),
 });
 function onViaKey(event: KeyboardEvent): void {
@@ -853,9 +857,10 @@ async function finish(to: string): Promise<void> {
             <p class="wdk-lead">
               Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
             </p>
-            <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement ; l'avancée de chaque parcours
-                 est gardée quand on change (les deux restent montés). -->
+            <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
+                 l'avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
             <div
+              v-if="viaChoice"
               class="wdk-via"
               role="radiogroup"
               aria-label="Comment créer l’alerte"
