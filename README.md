@@ -71,6 +71,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 | 15.11.2026 | JS total (gzip) | 426 780 o | 428 780 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
 | 16.11.2026 | JS total (gzip) | 428 780 o | 431 500 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, sans découpage ; mesuré : 431 252 o |
 | 15.11.2026 | CSS total (gzip) | 117 780 o | 118 780 o | marge pour les PR en cours : Trier, premiers pas, Google Emplois, notation manuelle |
+| 16.11.2026 | CSS total (gzip) | 118 780 o | 119 450 o | #764 (code jobup), #770 (recherche dans le CV) et #771 (agences de placement) ensemble, après l'allègement de #777 (−189 o) ; mesuré : 119 403 o |
 
 ## Pour aller plus loin
 

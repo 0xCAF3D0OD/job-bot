@@ -35,7 +35,7 @@ from jobbot.db.models import (
 )
 from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
-from jobbot.mail import addresses, site_codes
+from jobbot.mail import addresses, replies, site_codes
 from jobbot.mail.codes import find_code
 from jobbot.mail.confirm import confirmation_link, open_confirmation
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
@@ -350,6 +350,10 @@ async def ingest_email(
         )
     if ignored and email.forwarded:
         await _warn_filter(runtime)
+    elif ignored:
+        # La réponse d'une entreprise, transférée à la main par la personne (docs/146) : lue en
+        # mémoire, jamais stockée ; seule une notification et le type de réponse restent.
+        await replies.handle(runtime, email)
     if found is not None:
         fallback = "Gmail" if source == "gmail" else source
         name = next((site.name for site in sites if site.slug == source), fallback)

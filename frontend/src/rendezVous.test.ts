@@ -17,6 +17,9 @@ import {
   sheetLines,
   splitLine,
   upcomingAppointments,
+  upcomingLabel,
+  upcomingLine,
+  type Upcoming,
 } from "./rendezVous";
 
 type Meeting = components["schemas"]["MeetingOut"];
@@ -61,6 +64,23 @@ describe("les textes de la carte", () => {
     expect(countdown("2026-11-10T08:30:00Z", NOW)).toBe("Dans 4 jours");
     expect(countdown("2026-11-07T08:30:00Z", NOW)).toBe("Demain");
     expect(countdown("2026-11-06T15:00:00Z", NOW)).toBe("Aujourd’hui");
+  });
+
+  it("la 2e ligne d’une carte « À venir » : heure · délai, puis le lieu s’il existe (§39 du 16.11)", () => {
+    const [orp] = upcomingAppointments(meeting("2026-11-10T08:00:00Z"), [], NOW) as [Upcoming];
+    expect(upcomingLine(orp, NOW)).toBe("9 h · dans 4 jours · ORP Renens");
+    const [noPlace] = upcomingAppointments({ ...meeting("2026-11-07T08:00:00Z"), place: " " }, [], NOW) as [Upcoming];
+    expect(upcomingLine(noPlace, NOW)).toBe("9 h · demain");
+    const job = { ...application(1, "2026-11-09T13:00:00Z"), interview_format: "visio" } as Application;
+    const [interview] = upcomingAppointments(null, [job], NOW) as [Upcoming];
+    expect(upcomingLine(interview, NOW)).toBe("Entreprise 1 · 14 h · dans 3 jours · Visio");
+  });
+
+  it("le nom de la carte : titre, pastille, date et heure, délai, lieu (§39 du 16.11)", () => {
+    const [orp] = upcomingAppointments(meeting("2026-11-10T08:00:00Z"), [], NOW) as [Upcoming];
+    expect(upcomingLabel(orp, "Feuille prête", NOW)).toBe("Rendez-vous ORP, feuille prête, mardi 10 novembre à 9 h, dans 4 jours, ORP Renens");
+    const [interview] = upcomingAppointments(null, [application(1, "2026-11-09T13:00:00Z")], NOW) as [Upcoming];
+    expect(upcomingLabel(interview, "Entretien", NOW)).toBe("Poste 1, Entreprise 1, entretien, lundi 9 novembre à 14 h, dans 3 jours");
   });
 
   it("les trois lignes tirées de la feuille ; une partie vide ne s’affiche pas", () => {
