@@ -224,9 +224,18 @@ const correcting = ref(false);
 // La carte de correspondance (O3, O4) : le mot en titre, le chiffre dans l'anneau (D12), les lignes ✓ et (!).
 const matchWord = computed(() => (scored.value ? scoreWord(props.offer.score!) : null));
 const matchTone = computed(() => matchWord.value?.tone ?? "none");
+// A2 (Kevin, 16.11) : une note impossible (après trois échecs, ou sans texte) le dit, avec sa cause ; une offre
+// écartée sans note n'affiche jamais « Pas encore notée ». Un échec pas encore final est une attente : la tâche des
+// 10 minutes refait la note.
+const finalCause = computed(() => (scored.value ? null : (props.offer.score_final ?? null)));
+const retryable = computed(() => finalCause.value === "reponse_vide" || finalCause.value === "erreur");
+const setAside = computed(
+  () => !scored.value && !props.offer.added_by_you && (props.offer.status === "filtered_out" || props.offer.status === "ignored"),
+);
 const matchTitle = computed(() => {
   if (matchWord.value) return MATCH_TITLE[matchWord.value.tone]!;
-  return props.offer.score_error ? "Note impossible" : "Pas encore notée";
+  if (finalCause.value) return "Note impossible";
+  return setAside.value ? "Écartée" : "Pas encore notée";
 });
 // Sans profil, la note n'arrive jamais : la fiche le dit et envoie vers Profil › Expériences (test du 10 novembre).
 const { empty: profileEmpty, refresh: refreshProfile } = useProfileEmpty();
@@ -247,6 +256,18 @@ function raiseNote(action: TipAction): void {
     completing.value = true;
   }
 }
+// « Réessayer » : un essai tout de suite ; la fiche se recharge avec la note, ou avec l'attente si l'essai échoue.
+const retrying = ref(false);
+async function retryScore(): Promise<void> {
+  if (retrying.value) return;
+  retrying.value = true;
+  try {
+    await api.POST("/api/offers/{offer_id}/retry-score", { params: { path: { offer_id: props.offer.id } } });
+    emit("changed");
+  } finally {
+    retrying.value = false;
+  }
+}
 async function profileSaved(): Promise<void> {
   completing.value = false;
   await refreshProfile();
@@ -254,7 +275,9 @@ async function profileSaved(): Promise<void> {
 const matchSub = computed(() => {
   const o = props.offer;
   if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
-  if (!scored.value) return o.score_error ?? "La note arrive dès que l’annonce est lue.";
+  if (finalCause.value === "sans_texte") return "L’annonce est trop courte pour être notée.";
+  if (finalCause.value) return "La note n’a pas pu être calculée.";
+  if (!scored.value) return setAside.value ? "" : "La note arrive dès que l’annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
   // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
@@ -701,7 +724,17 @@ watch(
             Compléter mon profil<AppIcon name="chevron" />
           </button>
           <button
-            v-else-if="partial && !offer.score_error"
+            v-else-if="retryable"
+            type="button"
+            class="oc-note-link"
+            :disabled="retrying"
+            data-test="retry-score"
+            @click="retryScore"
+          >
+            Réessayer
+          </button>
+          <button
+            v-else-if="partial"
             type="button"
             class="oc-note-link"
             aria-controls="offer-give-zone"
@@ -712,7 +745,7 @@ watch(
           </button>
         </div>
         <p
-          v-if="!scored && (needsProfile || offer.score_error)"
+          v-if="!scored && (needsProfile || finalCause)"
           class="oc-note-sub"
           data-test="match-sub"
         >
@@ -1135,11 +1168,22 @@ watch(
                 >Provisoire</span>
               </div>
               <p
+                v-if="matchSub"
                 class="match-sub"
                 data-test="match-sub"
               >
                 {{ matchSub }}
               </p>
+              <button
+                v-if="retryable"
+                type="button"
+                class="match-profile-link"
+                :disabled="retrying"
+                data-test="retry-score"
+                @click="retryScore"
+              >
+                Réessayer
+              </button>
               <button
                 v-if="needsProfile"
                 type="button"

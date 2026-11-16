@@ -298,9 +298,11 @@ async def test_refusal_and_invalid_answer_are_recorded(ai: Runtime, fake: FakeCl
     assert result.failed == 2
     assert (await evaluation(ai, refused)).score_error == "refus"  # type: ignore[union-attr]
     assert "non conforme" in (await evaluation(ai, invalid)).score_error  # type: ignore[union-attr,operator]
-    # Pas de nouvel essai automatique sur ces offres.
-    await service.run_scoring(ai)
-    assert len(fake.calls) == 2
+    # Repris au passage suivant, jusqu'à 3 essais manqués (A2 du 13 novembre) ; ensuite, plus rien.
+    for _ in range(4):
+        await service.run_scoring(ai)
+    assert len(fake.calls) == 2 * service.MAX_ATTEMPTS
+    assert (await evaluation(ai, refused)).score_final == "erreur"  # type: ignore[union-attr]
 
 
 async def test_many_offers_go_through_a_batch(ai: Runtime, fake: FakeClient) -> None:
@@ -869,7 +871,8 @@ AFTER = service.MANUAL_SCORED_SINCE + timedelta(hours=1)
 async def test_manual_offer_is_scored_whatever_its_status(ai: Runtime, fake: FakeClient) -> None:
     """Ajoutée à la main : notée même écartée, gardée, en préparation ou envoyée, tant
     qu'elle n'a jamais eu de note (décision de Kevin du 2026-11-15). Une offre d'alerte
-    écartée reste sans note, et une note manquée ne se relance pas sans fin."""
+    écartée reste sans note. Une note manquée est reprise jusqu'au 3e essai (A2, décision de
+    Kevin du 13.11), et une offre d'avant A2 attend `jobbot rattraper-notes`."""
     manual = {}
     for n, status in enumerate(
         (
@@ -883,7 +886,7 @@ async def test_manual_offer_is_scored_whatever_its_status(ai: Runtime, fake: Fak
         manual[status] = await add_offer(ai, n, status=status, first_seen_at=AFTER)
     alert_filtered = await add_offer(ai, 10, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
     failed = await add_offer(ai, 11, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
-    # Ajoutée avant MANUAL_SCORED_SINCE : laissée à `jobbot noter-offres-manuelles`.
+    # Offre d'avant A2 : la migration 0087 la marque « a_rattraper ».
     older = await add_offer(ai, 12, status=OfferStatus.FILTERED_OUT)
     async with ai.sessionmaker.begin() as session:
         for offer_id in (*manual.values(), failed, older):
@@ -897,17 +900,30 @@ async def test_manual_offer_is_scored_whatever_its_status(ai: Runtime, fake: Fak
                 criteria_hash="x",
                 score_error="réponse vide",
                 profile_hash=profile_hash(CHUNKS),
+                score_attempts=1,
+            )
+        )
+        session.add(
+            Evaluation(
+                offer_id=older,
+                filter_passed=False,
+                filter_reasons=[],
+                criteria_hash="x",
+                score_final=service.FINAL_BACKLOG,
             )
         )
 
     result = await service.run_scoring(ai)
 
-    assert result.scored == 4
+    assert result.scored == 5
     for offer_id in manual.values():
         stored = await evaluation(ai, offer_id)
         assert stored is not None and stored.score is not None
     assert await evaluation(ai, alert_filtered) is None
-    assert await evaluation(ai, older) is None
+    stored_failed = await evaluation(ai, failed)
+    assert stored_failed is not None and stored_failed.score is not None
+    stored_older = await evaluation(ai, older)
+    assert stored_older is not None and stored_older.score is None
     async with ai.sessionmaker() as session:
         assert (
             await service.candidates(session, profile_hash(CHUNKS), include_stale_profile=False)
