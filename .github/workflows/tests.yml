@@ -52,7 +52,10 @@ jobs:
     name: Interface (vitest, types, poids)
     runs-on: ubuntu-latest
     steps:
+      # Deux commits : le budget de poids compare au besoin avec HEAD^1, le main sur lequel la PR est fusionnée.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -68,9 +71,12 @@ jobs:
       - name: Types
         working-directory: frontend
         run: npm run typecheck
+      # Main qui dépasse déjà une limite : la PR passe si elle n'alourdit pas cette mesure (scripts/poids-ci.sh).
       - name: Budget de poids des pages
         working-directory: frontend
-        run: npm run poids
+        env:
+          POIDS_BASE: HEAD^1
+        run: npm run poids:ci
 
   historique:
     name: Historique (changelog.d)
