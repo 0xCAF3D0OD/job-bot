@@ -8,7 +8,7 @@ import EmptyState from "../components/EmptyState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import OfferFan from "../components/OfferFan.vue";
 import ScoreRing from "../components/ScoreRing.vue";
-import SignetMark from "../components/SignetMark.vue";
+import TriSlider from "../components/TriSlider.vue";
 import TriageDone from "../components/TriageDone.vue";
 import UndoToast from "../components/UndoToast.vue";
 import { useArrowKeys } from "../composables/useArrowKeys";
@@ -17,6 +17,8 @@ import { useFocusMode } from "../composables/useFocusMode";
 import { usePhone } from "../composables/usePhone";
 import { useTriage } from "../composables/useTriage";
 import { useUndo } from "../composables/useUndo";
+import { MATCH_TITLE } from "../compat";
+import { dateInList } from "../dates";
 import { companyPlace, plural, scoreWord, triageTags } from "../format";
 import { buildExcerpt, matchedPassages, offerText, triagePoints } from "../offerPassages";
 import "../triage.css";
@@ -39,7 +41,7 @@ const { dose, loaded, load } = useDailyDose();
 const { pending, flush } = useUndo();
 
 // La pile et les choix (useTriage, partagé avec l'éventail en petit d'Aujourd'hui).
-const { queue, index, total, current, remaining, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
+const { queue, index, total, current, finished, kept, dismissed, decide } = useTriage(dose, () => void focusNext());
 const done = computed(() => loaded.value && finished.value);
 
 // Sur téléphone, la page de tri remplace l'en-tête et la barre du bas (maquette) ; la fin du tri aussi.
@@ -56,6 +58,20 @@ const excerpt = computed(() => {
   return text ? buildExcerpt(text, matchedPassages(o!)) : null;
 });
 const points = computed(() => (current.value ? triagePoints(current.value) : []));
+// Téléphone (§40 du 16.11, planche TrierOffresV2) : la carte est un dossier ; derrière, les dossiers des offres
+// suivantes du groupe de 3, avec leur onglet (« 2 », « 3 »), à leur place : le suivant devant, l'autre derrière.
+const folders = computed(() => {
+  const start = Math.floor(index.value / 3) * 3;
+  const list: { n: number; slot: number }[] = [];
+  for (let at = index.value + 1; at < Math.min(start + 3, total.value); at++) list.push({ n: at + 1, slot: at - start });
+  return list.reverse();
+});
+const where = computed(() => {
+  const o = current.value;
+  if (!o) return "";
+  const line = companyPlace(o.company || "Entreprise non indiquée", o.location);
+  return o.first_seen_at ? `${line} · ${dateInList(o.first_seen_at)}` : line;
+});
 
 // Ordinateur : l'éventail montre les offres par groupes de 3, dans l'ordre de la pile. Une offre gardée y reste, avec
 // son badge « Gardée » ; une offre écartée en sort. La carte du moment est devant.
@@ -205,15 +221,11 @@ onMounted(load);
       >
         <div class="tri-deck">
           <span
-            v-if="remaining > 1"
-            class="tri-pile tri-pile-far"
+            v-for="folder in folders"
+            :key="folder.n"
+            :class="['tri-folder', `tri-folder-${folder.slot}`]"
             aria-hidden="true"
-          />
-          <span
-            v-if="remaining > 0"
-            class="tri-pile tri-pile-near"
-            aria-hidden="true"
-          />
+          ><b>{{ folder.n }}</b></span>
           <Transition name="tri-fly">
             <section
               :key="current.id"
@@ -221,6 +233,10 @@ onMounted(load);
               :aria-label="`Offre ${index + 1} sur ${total}`"
               data-test="triage-offer"
             >
+              <span
+                class="tri-tab"
+                aria-hidden="true"
+              >Offre {{ index + 1 }} sur {{ total }}</span>
               <div class="tri-left">
                 <div class="tri-top">
                   <CompanyLogo
@@ -238,7 +254,7 @@ onMounted(load);
                       {{ current.title }}
                     </h2>
                     <p class="tri-sub">
-                      {{ companyPlace(current.company || "Entreprise non indiquée", current.location) }}
+                      {{ where }}
                     </p>
                   </div>
                 </div>
@@ -248,11 +264,16 @@ onMounted(load);
                     :stale="current.score_stale"
                     bare
                   />
-                  <b
+                  <span
                     v-if="word"
-                    :class="['tri-word', word.tone]"
-                    aria-hidden="true"
-                  >{{ word.word }}</b>
+                    class="tri-match"
+                  >
+                    <b
+                      :class="['tri-word', word.tone]"
+                      aria-hidden="true"
+                    >{{ MATCH_TITLE[word.tone] }}</b>
+                    <span class="tri-why">Selon ton profil et tes préférences</span>
+                  </span>
                 </div>
                 <ul
                   v-if="tags.length"
@@ -281,14 +302,6 @@ onMounted(load);
                       <mark v-if="part.mark">{{ part.text }}</mark><span v-else>{{ part.text }}</span>
                     </template>&nbsp;»
                   </p>
-                  <RouterLink
-                    v-if="excerpt.built"
-                    :to="{ path: '/candidatures/offres', query: { offre: current.id } }"
-                    class="tri-read"
-                    data-test="triage-read"
-                  >
-                    Lire toute l’annonce
-                  </RouterLink>
                   <p
                     v-if="excerpt.count"
                     class="visually-hidden"
@@ -317,12 +330,15 @@ onMounted(load);
                   </li>
                 </ul>
               </div>
+              <RouterLink
+                :to="{ path: '/candidatures/offres', query: { offre: current.id } }"
+                class="tri-full"
+                data-test="triage-read"
+              >
+                Voir l’offre complète<AppIcon name="chevron" />
+              </RouterLink>
             </section>
           </Transition>
-          <SignetMark
-            class="tri-signet"
-            :width="38"
-          />
         </div>
       </div>
       <div
@@ -359,6 +375,7 @@ onMounted(load);
           bar
         />
         <p
+          v-if="!phone"
           class="tri-counter"
           data-test="triage-counter"
         >
@@ -368,9 +385,16 @@ onMounted(load);
             :class="{ on: n === index + 1 }"
             aria-hidden="true"
           />
-          <span>{{ index + 1 }} sur {{ total }}<template v-if="!phone"> · {{ plural(kept.length, "gardée", "gardées") }}</template></span>
+          <span>{{ index + 1 }} sur {{ total }} · {{ plural(kept.length, "gardée", "gardées") }}</span>
         </p>
-        <div class="tri-actions">
+        <TriSlider
+          v-if="phone"
+          @decide="decide"
+        />
+        <div
+          v-else
+          class="tri-actions"
+        >
           <button
             type="button"
             class="tri-dismiss"
@@ -409,7 +433,7 @@ onMounted(load);
   --t-head: 56px; --t-60: 3.75rem; --t-40: 40px; --t-20: 1.25rem; --t-28: 1.75rem; --t-18: 1.125rem; --t-23: 1.4375rem; --t-14: 0.875rem; --t-15: 0.9375rem; --t-13: 0.8125rem;
   --t-25: 1.5625rem; --t-22: 1.375rem; --t-16: 1rem; --t-card-r: 22px; --t-pad: 16px; --t-quote-r: 14px; --t-tag-h: 28px; --t-tag-r: 14px;
   --t-btn: 52px; --t-toast: 48px; --t-toast-wide: 52px; --t-dot: 8px; --t-dash: 24px; --t-pip: 22px; --t-ring: 48px; --t-logo: 44px;
-  --t-actions: 440px; --t-mark-r: 4px; --t-10: 10px; --t-14p: 14px; --t-2: 2px; --t-3: 3px;
+  --t-actions: 440px; --t-56: 56px; --t-21: 1.3125rem; --t-27: 1.6875rem; --t-24: 1.5rem; --t-32: 32px; --t-6: 6px; --t-tab-w: 136px; --t-tab-up: 34px; --t-folder-r: 18px; --t-folder-tab: 30px; --t-folder-w: 52px; --t-folder-at: 136px; --t-folder-step: 52px; --t-mark-r: 4px; --t-10: 10px; --t-14p: 14px; --t-2: 2px; --t-3: 3px;
   display: flex; flex-direction: column; color: var(--text);
 }
 .tri-head { display: flex; align-items: center; gap: var(--space-3); }
@@ -437,14 +461,12 @@ onMounted(load);
 .tri-tags li { display: inline-flex; align-items: center; min-height: var(--t-tag-h); padding: 0 var(--space-2); border-radius: var(--t-tag-r); background: var(--tri-tag); color: var(--tri-tag-text); font-size: var(--t-13); font-weight: var(--weight-semibold); }
 .tri-quote p { margin: 0; color: var(--tri-tag-text); }
 .tri-quote mark { padding: 0 var(--space-1); border-radius: var(--t-mark-r); background: var(--tri-mark); color: inherit; }
-.tri-read { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--t-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: underline; }
 .tri-points { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .tri-points li { display: flex; align-items: flex-start; gap: var(--space-3); font-size: var(--t-15); line-height: var(--t-22); }
 .tri-dot { flex: none; display: grid; place-items: center; width: var(--t-pip); height: var(--t-pip); border-radius: 50%; font-size: var(--t-13); font-weight: var(--weight-heavy); }
 .tri-dot.ok { background: var(--tri-ok); color: var(--tri-ok-ink); }
 .tri-dot.ok :deep(svg) { width: var(--t-13); height: var(--t-13); stroke-width: 3; }
 .tri-dot.ask { background: var(--tri-ask); color: var(--tri-ask-ink); }
-.tri-signet { position: absolute; z-index: 3; }
 
 .tri-counter { display: flex; justify-content: center; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--t-13); color: var(--text-secondary); }
 .tri-counter i { width: var(--t-dot); height: var(--t-dot); border-radius: var(--space-1); background: var(--tri-dot); }
@@ -459,31 +481,43 @@ onMounted(load);
 .tri-toast { position: relative; }
 .tri-toast :deep(button) { min-height: var(--target-min); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font-size: var(--t-15); font-weight: var(--weight-bold); }
 
-/* Téléphone : une carte par offre, la pile derrière, le pied collé en bas. La carte grandit avec son contenu ; si
-   l'écran est trop court, c'est la page qui défile. */
+/* Téléphone (§40 du 16.11, planches TrierOffresV2 et TrierOffresCurseur*) : la carte est un dossier, son onglet
+   « Offre 1 sur 3 » soudé en haut à gauche ; derrière, les dossiers suivants en pêche avec leur onglet. La carte prend
+   la hauteur libre jusqu'au curseur. Valeurs ramenées à la grille de 4 : 22 px de marge et de retrait (24), 14 px
+   d'écart (16), 18 px autour des traits (16), onglets à 146 et 208 px (148 et 208). */
 .tri-phone { min-height: 100dvh; background: var(--bg); }
 .tri-phone .tri-head { min-height: var(--t-head); padding: 0 var(--space-4); }
 .tri-phone .tri-catch { padding: var(--space-1) var(--space-6) 0; }
 .tri-phone .tri-hand { font-size: var(--t-28); }
-.tri-phone .tri-stage { flex: 1; margin-top: var(--t-40); padding-bottom: var(--space-8); overflow-x: clip; }
-.tri-phone .tri-deck { margin: 0 var(--space-6); }
-.tri-pile { position: absolute; height: var(--t-40); border-radius: var(--space-5); }
-.tri-pile-far { left: var(--t-22); right: var(--t-22); top: calc(-1 * var(--t-14p)); background: var(--tri-pile-far); }
-.tri-pile-near { left: var(--t-10); right: var(--t-10); top: -7px; background: var(--tri-pile-near); }
-.tri-phone .tri-offer { padding: var(--t-pad); border: var(--t-3) solid var(--tri-edge); border-radius: var(--t-card-r); background: var(--surface); box-shadow: var(--tri-shadow); }
-.tri-phone .tri-top { display: flex; align-items: flex-start; gap: var(--space-3); padding-right: var(--space-12); }
-.tri-phone .tri-logo { width: var(--t-logo); height: var(--t-logo); }
+.tri-phone .tri-stage { flex: 1; display: flex; flex-direction: column; margin-top: var(--t-56); padding-bottom: var(--space-4); overflow-x: clip; }
+.tri-phone .tri-deck { flex: 1; display: flex; flex-direction: column; margin: 0 var(--space-6); }
+.tri-folder { position: absolute; top: calc(-1 * var(--space-2)); left: var(--t-10); right: var(--t-10); bottom: var(--space-12); border: 1.5px solid var(--tri-folder-edge); border-radius: var(--t-folder-r); background: var(--tri-folder); }
+.tri-folder-2 { top: calc(-1 * var(--space-4)); left: var(--space-5); right: var(--space-5); border-color: var(--tri-folder-far-edge); background: var(--tri-folder-far); }
+.tri-folder b { position: absolute; top: calc(-1 * var(--t-folder-tab)); left: var(--t-folder-at); display: flex; justify-content: center; box-sizing: border-box; width: var(--t-folder-w); height: calc(var(--t-folder-tab) + var(--space-1)); padding-top: var(--t-6); border: inherit; border-bottom: 0; border-radius: var(--t-14p) var(--t-14p) 0 0; background: inherit; font-size: var(--t-14); font-weight: var(--weight-bold); color: var(--tri-folder-ink); }
+.tri-folder-2 b { left: calc(var(--t-folder-at) + var(--t-folder-step)); }
+.tri-phone .tri-offer { flex: 1; display: flex; flex-direction: column; z-index: 1; padding: var(--space-6) var(--space-6) var(--space-2); border: 1.5px solid var(--tri-card-edge); border-radius: 0 var(--space-5) var(--space-5) var(--space-5); background: var(--surface); box-shadow: var(--tri-card-shadow); }
+.tri-tab { position: absolute; z-index: 2; left: -1.5px; top: calc(-1 * var(--t-tab-up)); display: flex; justify-content: center; box-sizing: border-box; width: var(--t-tab-w); height: var(--t-40); padding-top: var(--space-2); border: 1.5px solid var(--tri-card-edge); border-bottom: 0; border-radius: var(--space-4) var(--space-4) 0 0; background: var(--surface); font-size: var(--t-15); font-weight: var(--weight-heavy); }
+.tri-phone .tri-top { display: flex; align-items: center; gap: var(--space-4); }
+.tri-phone .tri-logo { width: var(--t-56); height: var(--t-56); border-radius: var(--t-14p); }
 .tri-phone .tri-names { flex: 1; min-width: 0; }
-.tri-phone .tri-title { font-size: var(--t-18); line-height: var(--t-23); }
-.tri-phone .tri-sub { margin-top: var(--space-1); font-size: var(--t-14); line-height: var(--t-20); }
-.tri-phone .tri-score { margin-top: var(--space-3); }
-.tri-phone .tri-tags { margin-top: var(--space-3); }
-.tri-phone .tri-quote { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--t-quote-r); background: var(--tri-quote); }
-.tri-phone .tri-quote p { font-size: var(--t-15); line-height: var(--t-25); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.tri-phone .tri-points { gap: var(--space-2); margin-top: var(--space-3); }
-.tri-phone .tri-signet { right: var(--t-18); top: calc(-1 * var(--t-14p)); }
-.tri-phone .tri-foot { position: sticky; bottom: 0; z-index: 4; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-5) max(var(--t-28), env(safe-area-inset-bottom)); border-top: 1px solid var(--tri-rule); background: var(--bg); }
-.tri-phone .tri-toast { position: absolute; left: var(--space-5); right: var(--space-5); bottom: calc(100% + var(--space-4)); }
+.tri-phone .tri-title { font-size: var(--t-21); line-height: var(--t-27); font-weight: var(--weight-heavy); }
+.tri-phone .tri-sub { margin-top: var(--t-2); font-size: var(--t-15); line-height: var(--t-20); }
+.tri-phone :is(.tri-score, .tri-quote, .tri-points) { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--tri-rule); }
+.tri-phone .tri-score { gap: var(--space-4); }
+.tri-phone .tri-score :deep(.score-ring) { width: var(--t-56); height: var(--t-56); font-size: var(--t-18); }
+.tri-match { display: grid; gap: var(--t-2); }
+.tri-phone .tri-word { font-size: var(--t-18); line-height: var(--t-24); }
+.tri-why { font-size: var(--t-14); color: var(--text-secondary); }
+.tri-phone .tri-tags { margin-top: var(--space-4); }
+.tri-phone .tri-tags li { min-height: var(--t-32); padding: 0 var(--space-3); border-radius: var(--space-4); font-size: var(--t-14); }
+.tri-phone .tri-quote p { font-size: var(--t-16); line-height: var(--t-27); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.tri-phone .tri-points { gap: var(--space-4); }
+.tri-phone .tri-points li { align-items: center; font-size: var(--t-16); }
+.tri-phone .tri-dot { width: var(--space-6); height: var(--space-6); font-size: var(--t-14); }
+.tri-full { display: flex; align-items: center; justify-content: center; gap: var(--t-6); min-height: var(--target-min); margin-top: auto; padding-top: var(--space-3); font-size: var(--t-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.tri-full :deep(svg) { width: var(--t-16); height: var(--t-16); }
+.tri-phone .tri-foot { position: sticky; bottom: 0; z-index: 4; padding: var(--space-4) var(--space-5) max(var(--t-28), env(safe-area-inset-bottom)); background: var(--bg); }
+.tri-phone .tri-toast { position: absolute; left: var(--space-5); right: var(--space-5); bottom: 100%; z-index: 6; }
 
 /* La carte qui part : 250 ms au plus (§1). */
 .tri-fly-leave-active { position: absolute; inset: 0 0 auto; z-index: 2; transition: transform 0.25s ease-in, opacity 0.25s ease-in; transform-origin: 50% 100%; }

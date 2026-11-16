@@ -110,6 +110,7 @@ export const ICONS = {
   "chevron-up": path("M6 15l6-6 6 6"),
   external: path("M14 4.5h5.5V10M19.5 4.5L11 13") + path("M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"),
   bookmark: path("M6.5 4.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16l-5.5-4-5.5 4z"),
+  arrows: path("M9 6l-6 6 6 6M15 6l6 6-6 6"),
   more: circle(5.5, 12, 0.9, ' fill="currentColor"') + circle(12, 12, 0.9, ' fill="currentColor"') + circle(18.5, 12, 0.9, ' fill="currentColor"'),
   // L'étincelle à 4 branches, réservée à l'IA (docs/99) : la rubrique IA des Réglages.
   spark: path("M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z") + path("M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"),

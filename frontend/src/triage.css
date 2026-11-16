@@ -6,6 +6,10 @@
   --tri-quote: #FFF8E1; --tri-mark: #FFE9A8; --tri-tag: #F1EEE7; --tri-tag-text: #3D4250;
   --tri-ok: #1F7A4D; --tri-ok-ink: #FFFFFF; --tri-ask: #FBEBDD; --tri-ask-ink: #8A4A12;
   --tri-rule: #ECE9E1; --tri-dot: #DAD6CC; --tri-outline: #C9C5BA;
+  /* §40 du 16.11 : les dossiers du téléphone et le curseur. */
+  --tri-card-edge: #CFCBC1; --tri-card-shadow: 0 10px 24px rgba(27, 31, 42, 0.1);
+  --tri-folder: #F8DCC8; --tri-folder-edge: #EBC4AB; --tri-folder-far: #FCEDE4; --tri-folder-far-edge: #F1D3C0; --tri-folder-ink: #8A4A16;
+  --tri-slide-out: #3D4250; --tri-slide-out-ink: #FFFFFF; --tri-slide-keep-ink: #FFFFFF; --tri-slide-muted: #B5AFA3; --tri-knob-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 :root[data-theme="dark"] :is(.tri, .tri-done, .tri-mini, .tri-none) {
   --tri-edge: #4560D8; --tri-pile-near: #3A4A86; --tri-pile-far: #2C3558;
@@ -13,6 +17,9 @@
   --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
   --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
   --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E;
+  --tri-card-edge: #4E473E; --tri-card-shadow: none;
+  --tri-folder: #3A2A1F; --tri-folder-edge: #56402F; --tri-folder-far: #2E231B; --tri-folder-far-edge: #4A3628; --tri-folder-ink: #F2B98E;
+  --tri-slide-out: #D9D2C7; --tri-slide-out-ink: #221E1A; --tri-slide-keep-ink: #171411; --tri-slide-muted: #6E665C;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) :is(.tri, .tri-done, .tri-mini, .tri-none) {
@@ -21,6 +28,9 @@
     --tri-quote: #2B2618; --tri-mark: #5C4A14; --tri-tag: #2C2722; --tri-tag-text: #D9D2C7;
     --tri-ok: #7FD3A6; --tri-ok-ink: #171411; --tri-ask: #3A2A1C; --tri-ask-ink: #F2B98E;
     --tri-rule: #2C2722; --tri-dot: #4E473E; --tri-outline: #4E473E;
+  --tri-card-edge: #4E473E; --tri-card-shadow: none;
+  --tri-folder: #3A2A1F; --tri-folder-edge: #56402F; --tri-folder-far: #2E231B; --tri-folder-far-edge: #4A3628; --tri-folder-ink: #F2B98E;
+  --tri-slide-out: #D9D2C7; --tri-slide-out-ink: #221E1A; --tri-slide-keep-ink: #171411; --tri-slide-muted: #6E665C;
   }
   /* En sombre, l'illustration de « Fin du tri » a un contour clair (lot). */
   :root:not([data-theme="light"]) .tri-done .sent-screen-image { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }

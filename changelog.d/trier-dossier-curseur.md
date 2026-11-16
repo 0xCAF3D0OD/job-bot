@@ -1,0 +1,1 @@
+Trier sur téléphone : la carte devient un dossier (onglet « Offre 1 sur 3 », dossiers suivants en pêche), le curseur Écarter / Garder remplace les deux boutons ; toucher « Écarter » ou « Garder » trie sans glisser (§40 du 16.11).

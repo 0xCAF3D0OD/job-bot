@@ -66,6 +66,14 @@ async function mountTriage() {
   return { wrapper, router };
 }
 
+// Un geste du doigt sur le curseur (jsdom n'a pas de PointerEvent : un MouseEvent avec son pointerId).
+async function point(el: Element, type: string, pointerId: number, clientX: number): Promise<void> {
+  const event = new MouseEvent(type, { clientX, bubbles: true });
+  Object.defineProperty(event, "pointerId", { value: pointerId });
+  el.dispatchEvent(event);
+  await flushPromises();
+}
+
 // Le téléphone : la carte d'une offre (planche TrierOffresV2).
 function asPhone(): void {
   vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("820px"), addEventListener() {}, removeEventListener() {} }));
@@ -90,9 +98,16 @@ describe("Trier les offres, téléphone (PR 45)", () => {
     const order = ["DevOps", "Acme SA", "Très proche", "CDI", "clusters Kubernetes", "Kubernetes : 40 services"].map((t) => text.indexOf(t));
     expect(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1]!))).toBe(true);
     expect(wrapper.find("[data-test=triage-tags]").text()).toContain("80–100 %");
-    // Le signet en haut à droite de la carte ; pas de touches dessinées sur téléphone.
-    expect(wrapper.find(".signet-mark").exists()).toBe(true);
+    // §40 du 16.11 : la carte est un dossier ; plus de signet ni de compteur, l'onglet dit « Offre 1 sur 3 » ; derrière,
+    // les dossiers « 2 » et « 3 » ; pas de touches dessinées sur téléphone.
+    expect(wrapper.find(".signet-mark").exists()).toBe(false);
+    expect(wrapper.find("[data-test=triage-counter]").exists()).toBe(false);
+    expect(wrapper.find(".tri-tab").text()).toBe("Offre 1 sur 3");
+    expect(wrapper.findAll(".tri-folder").map((f) => f.text())).toEqual(["3", "2"]);
     expect(wrapper.find("[data-test=triage-keys]").exists()).toBe(false);
+    // « Proche de ton profil » et sa phrase, comme la fiche.
+    expect(region.text()).toContain("Très proche de ton profil");
+    expect(region.text()).toContain("Selon ton profil et tes préférences");
   });
 
   it("l’extrait surligne les passages retrouvés, avec sa légende en texte ; trois points au plus, un seul à vérifier", async () => {
@@ -105,8 +120,8 @@ describe("Trier les offres, téléphone (PR 45)", () => {
     const points = wrapper.findAll("[data-test=triage-points] li");
     expect(points).toHaveLength(3);
     expect(points[2]!.text()).toContain("À vérifier : Allemand");
-    // Un texte court tient en entier : pas de « Lire toute l’annonce ».
-    expect(wrapper.find("[data-test=triage-read]").exists()).toBe(false);
+    // §40 du 16.11 : « Voir l’offre complète » en bas de chaque carte, même quand l'extrait tient en entier.
+    expect(wrapper.find("[data-test=triage-read]").text()).toBe("Voir l’offre complète");
   });
 
   it("sans passage retrouvé : ni surlignage ni légende, le début de l’annonce et « Lire toute l’annonce »", async () => {
@@ -118,6 +133,34 @@ describe("Trier les offres, téléphone (PR 45)", () => {
     expect(wrapper.find("[data-test=triage-legend]").exists()).toBe(false);
     expect(wrapper.find("[data-test=triage-excerpt]").text()).toContain("Notre entreprise familiale");
     expect(wrapper.find("[data-test=triage-read]").attributes("href")).toBe("/candidatures/offres?offre=7");
+  });
+
+  it("le curseur : deux vrais boutons qui trient sans glisser ; glissé au-delà de la moitié, il trie aussi ; avant, il revient", async () => {
+    asPhone();
+    mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75)]);
+    const { wrapper } = await mountTriage();
+    const slider = wrapper.find("[data-test=triage-slider]");
+    expect(slider.attributes("role")).toBe("group");
+    expect(slider.find("[data-test=triage-dismiss]").element.tagName).toBe("BUTTON");
+    expect(slider.find("[data-test=triage-knob]").attributes("aria-hidden")).toBe("true");
+    Object.defineProperty(slider.element, "clientWidth", { value: 350 });
+    const knob = slider.find("[data-test=triage-knob]");
+    // Un peu à droite puis lâché : retour au milieu, rien ne change.
+    await point(knob.element, "pointerdown", 1, 195);
+    await point(knob.element, "pointermove", 1, 225);
+    expect(slider.classes()).toContain("keep");
+    expect(slider.text()).toContain("Lâche pour garder");
+    await point(knob.element, "pointerup", 1, 225);
+    await flushPromises();
+    expect(wrapper.find("[data-test=triage-title]").text()).toBe("DevOps");
+    // Jusqu'au bout à droite : l'offre est gardée, la suivante passe devant, l'onglet le dit.
+    await point(knob.element, "pointerdown", 2, 195);
+    await point(knob.element, "pointermove", 2, 400);
+    await point(knob.element, "pointerup", 2, 400);
+    await flushPromises();
+    expect(wrapper.find("[data-test=triage-title]").text()).toBe("SRE");
+    expect(wrapper.find(".tri-tab").text()).toBe("Offre 2 sur 3");
+    expect(wrapper.findAll(".tri-folder").map((f) => f.text())).toEqual(["3"]);
   });
 
   it("après un choix, le focus va au titre de l’offre suivante", async () => {
