@@ -9,6 +9,7 @@ import { dateInList, dateInSentence } from "../dates";
 import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
+import AgencyNote from "./AgencyNote.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
@@ -27,6 +28,7 @@ import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
+import { offerUndo } from "../composables/useUndo";
 import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
@@ -100,6 +102,31 @@ async function findEmployer(): Promise<void> {
     emit("changed");
   } finally {
     employerBusy.value = false;
+  }
+}
+
+// « Ce n'est pas une agence » (section 35 du 16.11) : gardé pour cette entreprise, dans ce compte ; la liste relue, la
+// pastille et la ligne partent.
+const agencyBusy = ref(false);
+async function notAgency(): Promise<void> {
+  agencyBusy.value = true;
+  try {
+    const path = { offer_id: props.offer.id };
+    const { data } = await api.POST("/api/offers/{offer_id}/not-agency", { params: { path } });
+    if (!data) return;
+    emit("changed");
+    // « Correction enregistrée · Annuler » avec le trait, comme « Offre écartée » (Kevin, 16.11) : la correction est
+    // déjà partie, « Annuler » la retire.
+    void offerUndo({
+      message: "Correction enregistrée.",
+      commit: () => true,
+      restore: async () => {
+        await api.DELETE("/api/offers/{offer_id}/not-agency", { params: { path } });
+        emit("changed");
+      },
+    });
+  } finally {
+    agencyBusy.value = false;
   }
 }
 
@@ -204,6 +231,8 @@ const facts = computed<Fact[]>(() => {
   const list: Fact[] = [];
   if (o.remote_from_switzerland === false) list.push({ mark: "check", text: "Télétravail pas ouvert depuis la Suisse" });
   for (const doubt of o.doubts ?? []) {
+    // Pour une agence, la ligne « Agence de placement » le dit déjà (Kevin, 16.11).
+    if (o.agency && doubt.kind === "hidden_employer") continue;
     list.push({ mark: "check", text: doubt.text, excerpt: doubt.excerpt ?? undefined, scam: doubt.kind === "scam" });
   }
   for (const reason of o.filter_reasons ?? []) list.push({ mark: "no", text: reason });
@@ -410,7 +439,7 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (shareUrl.value) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", href: shareUrl.value });
-  if (o.status === "later") items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+  if (o.status === "later") items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   else if (o.status !== "applied") items.push({ label: "Garder pour plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
   if (shareUrl.value) items.push({ label: "Copier le lien", test: "copy-link", icon: "link", run: () => void copyLink() });
   if (withBar.value && scored.value) {
@@ -434,7 +463,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   if (o.status !== "applied") {
     items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
-      items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+      items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
       items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
       // Un seul mot pour une action (étape 6, O8) : « Écarter », comme dans la feuille de la liste.
@@ -462,7 +491,7 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
-    items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   }
   if (o.status !== "applied") {
     items.push(
@@ -482,7 +511,7 @@ const saved = computed(() => props.offer.status === "later");
 const canSave = computed(() => ["to_review", "later"].includes(props.offer.status));
 function toggleSaved(): void {
   emit("status", saved.value ? "to_review" : "later");
-  saidAloud.value = saved.value ? "Offre remise à examiner." : "Offre gardée pour plus tard.";
+  saidAloud.value = saved.value ? "Offre remise dans Nouvelles." : "Offre gardée pour plus tard.";
 }
 // Partager (O2) : le lien public de l'annonce (employeur, puis site source), jamais l'adresse jobA1, qui est
 // privée. La feuille de partage du téléphone, sinon le lien copié.
@@ -663,6 +692,14 @@ watch(
             />
           </div>
         </div>
+        <AgencyNote
+          v-if="offer.agency"
+          :kind="offer.agency"
+          :company="offer.company"
+          :duplicate="offer.agency_duplicate"
+          :busy="agencyBusy"
+          @correct="notAgency"
+        />
         <div
           v-if="statusLabel && offer.status === 'applied'"
           class="oc-status"
@@ -1011,6 +1048,14 @@ watch(
           {{ tag.text }}
         </li>
       </ul>
+      <AgencyNote
+        v-if="offer.agency"
+        :kind="offer.agency"
+        :company="offer.company"
+        :duplicate="offer.agency_duplicate"
+        :busy="agencyBusy"
+        @correct="notAgency"
+      />
       <div
         v-if="offer.status !== 'applied' && !sub"
         class="detail-actions"
@@ -1639,7 +1684,6 @@ watch(
 .oc-text + .oc-text { margin-top: var(--space-2); }
 .oc-post .read-more { display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); color: var(--primary-text); }
 .oc-row.offer-facts { list-style: none; }
-.oc-row-refused .offer-text-head { gap: var(--space-4); }
 .oc-row-refused .offer-give-zone { margin: var(--space-3) calc(-1 * var(--oc-x)) calc(-1 * var(--space-3)); padding: var(--space-5) var(--space-5) var(--space-2); border-top: 1px solid var(--line); }
 .oc-row-refused .offer-reading { min-height: var(--target-min); }
 .oc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--oc-14) var(--oc-x) var(--oc-head-top); border-top: 1px solid var(--line); }

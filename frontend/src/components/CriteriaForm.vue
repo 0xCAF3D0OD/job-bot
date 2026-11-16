@@ -165,7 +165,7 @@ async function save(): Promise<void> {
     // Les offres écartées sont réévaluées tout de suite : dire combien reviennent.
     const back = data.returned ?? 0;
     message.value = back
-      ? `Critères enregistrés. ${plural(back, "offre revient", "offres reviennent")} dans À examiner.`
+      ? `Critères enregistrés. ${plural(back, "offre revient", "offres reviennent")} dans Nouvelles.`
       : "Critères enregistrés. Aucune offre écartée ne revient.";
   } catch {
     message.value = "L’enregistrement a échoué : vérifie les valeurs saisies.";

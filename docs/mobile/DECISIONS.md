@@ -252,6 +252,14 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Note impossible (trois échecs de l'IA, ou annonce sans texte) : sur la carte, le même cercle gris en pointillés sans chiffre et une pastille neutre « Pas de note ».
 - Dans la fiche, une ligne selon la cause : annonce sans texte → « L’annonce est trop courte pour être notée. » ; échec de l'IA → « La note n’a pas pu être calculée. » avec un bouton « Réessayer », parce que le serveur ne réessaie plus après le 3e échec (« Nouvel essai demain » écarté).
 
+## Étape 3, trajet du code en 3 points et scène de la boîte aux lettres (Kevin, 16.11.2026, 9 h 16)
+
+- Sections 24 et 25 du paquet du 15.11 appliquées à l'étape « Alerte » des premiers pas, ordinateur et téléphone ; la scène de la boîte aux lettres sur ordinateur seulement.
+- 10 minutes sans code : pas d'état « code expiré ». L'étape reste en attente (point 1 sans coche, point 2 « on écoute », aide « Toujours rien ? » visible) et la relecture s'arrête. « Code expiré » seulement pour un code reçu puis périmé.
+- Boîte qui ne répond pas : point 2 en orange, « ne répond pas », même icône que « expiré » ; la ligne d'état dit « La boîte jobA1 ne répond pas. On réessaie dans 1 minute. » et « Toujours rien ? » est masqué.
+- Le trajet est aussi dans le panneau « Alerte jobup » de la page Alertes (même boîte, variante ordinateur), sans planche propre.
+- Écarts acceptés : bordure `--card-line` (#CFCBC1) au lieu de #C9C5BA ; fonds sombres des coches et de l'icône « expiré » repris des jetons existants. Les images orange-salut, devenues inutiles, seront retirées dans une PR de nettoyage à part.
+
 ## Bilan ordinateur, menus ouverts, mois déplié et fiche sombre (Kevin, 16.11.2026, 9 h 00 et 9 h 25)
 
 - Les planches du paquet jobA1_maquette_2026-11-16_bilan (§29, recopié dans docs/maquette/2026-11-16/) font foi pour le Bilan sur ordinateur. Elles remplacent la règle provisoire de 9 h 00 (« sans planche, style du menu ⋯ »).
@@ -281,12 +289,29 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Rien ne part à l'IA : les coordonnées sont repérées sur le serveur, sans IA.
 - Pas dans les premiers pas (ils sont déjà longs).
 
+## Agences de placement, détection (Kevin, 16.11.2026, 10 h 34)
+
+- Section 35 du paquet du 16.11 : plan validé. Détection sans IA, avec la liste des agences connues (titre « Agence de placement ») et les phrases de l'annonce comme « pour notre client » (titre « Probablement une agence de placement »).
+- « Ce n'est pas une agence » : la correction est gardée par compte, pour l'entreprise, et passe avant la détection.
+- Alerte doublon : si une candidature a été envoyée ces 90 derniers jours à un poste proche (titre proche, même ville), chez l'employeur ou via une autre agence, la ligne de la fiche le dit.
+- Le répertoire SECO des entreprises autorisées n'est pas utilisé tant que le SECO n'a pas donné son accord écrit. Lui écrire est une bonne idée, mais ça ne bloque pas le reste.
+
 ## Taille des cibles dans les filtres (Kevin, 16.11.2026, 11 h 50)
 
 - Ordinateur : les pastilles du panneau Filtres gardent 36 px de haut, comme sur la planche. WCAG 2.2 AA (2.5.8)
   demande 24 px ; les 44 px valent pour le tactile.
 - Téléphone : 44 px au moins.
 - Pas de règle CSS en plus pour ça.
+
+## Agences de placement, fiche et « Annuler » (Kevin, 16.11.2026, 12 h 10)
+
+- Pour une agence, la fiche ne montre plus le doute « Employeur caché : annonce d'agence » : la ligne « Agence de placement » suffit.
+- Après « Ce n'est pas une agence », le bandeau commun « Correction enregistrée. Annuler » s'affiche, avec le trait du compte à rebours, comme « Offre écartée ».
+- Les 2 octets de CSS de trop ne sont pas regagnés dans cette PR : une PR « Allègement CSS » à part regroupe les règles en double de toute l'app, pour les PR #764, #770 et #771 ensemble.
+
+## Voile derrière les panneaux : noir à 60 % en sombre (Kevin, 16.11.2026, 12 h 10)
+
+- En sombre, le voile derrière les panneaux latéraux, les feuilles ouvertes en panneau sur ordinateur et la confirmation Get'emAll devient rgb(0 0 0 / 60%), comme sur la planche BilanOrdinateurFicheSombre (paquet du 16.11). En clair, il reste rgb(27 31 42 / 45%). Une variable commune, --voile, porte les deux valeurs.
 
 ## Cartes « À venir » de Rendez-vous sur deux lignes (Kevin, 16.11.2026)
 
@@ -316,6 +341,13 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Refus, accusés de réception et autres réponses restent dans la cloche (jamais sur le téléphone).
 - Précise docs/decisions/2026-11-16-1236-reponses-employeurs.md (docs/146 §2.6).
 
+## Roue d'attente sur « Refaire la note » (Kevin, 16.11.2026, 13 h 20)
+
+- Fenêtre « Coller le texte de l’annonce » : pendant que jobA1 enregistre le texte et refait la note, une roue tourne
+  devant « Refaire la note », pour qu’on voie que la plateforme traite l’annonce. La planche OffreProvisoire ne dessine
+  pas cet état ; c’est la roue de lecture de l’annonce (18 px), dans la couleur du texte du bouton, et le bouton
+  garde sa couleur pleine pendant l’attente (gris seulement tant que le texte est trop court).
+
 ## Ligne « Pourquoi » du CV, partie serveur et IA (Kevin, 16.11.2026, 13 h 37)
 
 - Le prompt cv-v2 (une raison par changement) ne sert qu'à `make mesure-pourquoi` ; cv-v1 reste en service. La bascule se fera dans une petite PR après la mesure de Kevin.
@@ -329,6 +361,12 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
 
+## Formations : catalogue vide pour « Mon domaine » (Kevin, 16.11.2026, 13 h 53)
+
+- Quand le catalogue vérifié n'a rien pour « Mon domaine », avant tout filtre : titre « Rien dans le catalogue pour {domaine} », pastille « Le catalogue couvre surtout l'informatique pour l'instant », bouton principal « Chercher des formations en {domaine} » (la recherche web existante). {domaine} est le premier mot-clé de « Mon domaine ».
+- « Aucune formation avec ces filtres » reste seulement quand ce sont les filtres qui vident la liste.
+- Le catalogue des soins viendra d'une liste sourcée fournie par Kevin : aucune formation inventée.
+
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 
 - Avant ces trois PR, un allègement à part (#777) : 47 groupes de règles identiques de `style.css` réunis, −189 octets gzip, 138 captures sans un pixel d'écart. L'objectif de 470 octets n'est pas atteignable par regroupement (plafond mesuré ≈ 390 octets).
@@ -336,6 +374,20 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Décision : css-total passe de 118 780 à 119 450 octets, une seule fois, dans #777, pour les trois PR ensemble. Pas de relèvement PR par PR.
 - #770 garde le contour du résultat courant (sans lui, seule la couleur distingue le résultat courant, WCAG 1.4.1).
 - JS : pas de relèvement de js-total sans que Kevin ait vu les chiffres. Avant de fusionner la troisième PR, mesurer l'apport JS de chacune et proposer un découpage (chargement à la demande des parties absentes du premier écran).
+
+## Cartes de rendez-vous en 2 lignes : réponses de Kevin (16.11.2026)
+
+- Le délai figure aussi sur la carte entretien, en ligne 2, jamais sur une 3e ligne.
+- La pastille de l’entretien reste « À préparer » (orange), sur ordinateur comme sur téléphone ; pas de « Entretien » neutre, le titre le dit déjà.
+- À 320 et 360 px, le titre peut être coupé par « … », à trois conditions : le titre complet est dans le nom accessible et dans le détail ; l’heure et le délai ne sont jamais coupés (ils passent en tête de la ligne 2, seuls l’entreprise et le lieu se coupent) ; la zone du « ⋯ » fait au moins 24 × 24 px (elle fait 44 × 44).
+
+## Formations en soins : diplômes acceptés et vérification des liens (Kevin, 16.11.2026, 14 h 11)
+
+- 14 formations de Suisse romande entrent au catalogue vérifié, d'après la liste sourcée de Kevin ; aucune n'est inventée. Un lien mort = la fiche n'entre pas.
+- Chaque fiche porte la liste des diplômes acceptés (vide = sans diplôme) : soins infirmiers, Bachelor HES santé, Bachelor HES travail social. La fiche HE-Arc accepte les deux Bachelor.
+- Le diplôme de la personne vient de ses blocs : Bachelor, diplôme ES ou HES en soins infirmiers, « Diplôme d'État infirmier », ou « infirmier·ère » dans le titre d'une expérience. « J'ai ce diplôme » corrige la détection.
+- Vérificateur de liens : 404, 410 ou page « 404 / page non trouvée » = mort ; erreur 5xx, délai, page « Cookie not accepted » = à revérifier dans 24 h, jamais mort. Une fiche du catalogue ne s'affiche qu'une fois son lien vérifié. Les fiches orientation.ch (1, 2, 3) attendent ainsi la fin de la panne du site.
+- Remplacements : 6, 7 et 8 par les pages officielles de La Source (la brochure PDF de la 7 renvoie vers une page 404) ; 14 par la fiche du CHUV.
 
 ## Notes de l'éventail sur une ligne (Kevin, 16.11.2026, 8 h 56 et 14 h 19)
 
@@ -356,3 +408,12 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Décision : js-total passe de 428 780 à 431 500 octets, une seule fois, dans une petite PR à part, pour les trois PR ensemble. Pas de découpage.
 - Après la fusion de #764, #770 et #771 : ouvrir une issue « Budget JS » qui (1) mesure le JS chargé au premier écran de chaque page (gzip), (2) propose une limite par page en plus de js-total, (3) liste les 5 plus gros modules avec des pistes d'allègement chiffrées.
 - Plus aucun relèvement de css-total ou de js-total sans passer par cette issue.
+
+## Préparer, bouton « ↑ » du champ de demande (Kevin, 16.11.2026, 14 h 48)
+
+- Champ de 56 px. Bouton visible de 40 × 40 px, à 8 px du bord du champ en haut, à droite et en bas : sur la grille de 4, sans exception dans l'audit.
+- Zone tactile de 48 × 48 px par un pseudo-élément qui déborde de 4 px dans le retrait (modèle des boutons-icônes de Material 3).
+- Rayon du champ = rayon du bouton + retrait = 20 + 8 = 28 px, pour des arrondis concentriques. Icône « ↑ » de 20 px.
+- Le texte saisi s'arrête à 12 px du bouton, il ne passe jamais dessous.
+- Vaut pour « Que changer ? » (téléphone) et « Demander une modification de la lettre / du CV » (ordinateur).
+- Remplace la première demande du même jour (14 h 18 : bouton de 44, retrait de 6), qui sortait de la grille de 4.

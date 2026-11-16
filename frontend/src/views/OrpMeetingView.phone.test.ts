@@ -90,7 +90,7 @@ describe("Rendez-vous sur téléphone", () => {
     expect(orp.get(".rdv-date").attributes("aria-hidden")).toBe("true");
     // Deux lignes (demande de Kevin du 16.11) : le titre et « Feuille prête », puis l'heure, le délai et le lieu.
     expect(orp.get(".rdv-line").text()).toBe("Rendez-vous ORP Feuille prête");
-    expect(orp.get(".rdv-meta").text()).toMatch(/^9 h 30 · dans \d+ jours · ORP Renens$/);
+    expect(orp.get(".rdv-meta").text()).toMatch(/^9 h 30 · dans \d+ jours\s·\sORP Renens$/);
     // Ni « Dans N jours » au-dessus du titre, ni rangée de pastilles à part (§39 du 16.11).
     expect(orp.find(".rdv-kicker").exists()).toBe(false);
     expect(orp.findAll(".rdv-body > *")).toHaveLength(2);
@@ -198,7 +198,9 @@ describe("Rendez-vous sur téléphone", () => {
     ]);
     const { wrapper } = await open();
     const card = wrapper.get("[data-test=rdv-interview-7]");
-    expect(card.get(".rdv-meta").text()).toContain(` · ${link}`);
+    expect(card.get(".rdv-meta").text()).toMatch(new RegExp(` · ${link.replace(/[.]/g, "\\.")}$`));
+    // L'heure et le délai, à part : jamais coupés.
+    expect(card.get(".rdv-when > span").text()).toMatch(/^\d+ h · dans \d+ jours$/);
     expect(card.text()).not.toContain("Avenue de la Gare 12");
   });
 

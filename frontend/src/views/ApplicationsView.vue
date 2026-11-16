@@ -903,7 +903,7 @@ onUnmounted(() => assistant.setFocus(null));
             </template>
           </EmptyState>
           <template v-else-if="loaded">
-            <!-- Envoyées : les rubriques, la carte d'À traiter (maquette Envoyees). -->
+            <!-- Envoyées : les rubriques, la carte de Toutes (maquette Envoyees). -->
             <template v-if="!orpPage">
               <!-- Téléphone (maquette du 14 novembre, Envoyees, §3 et §6) : la recherche au-dessus des onglets, l’icône
                    Filtres dans l’en-tête, statuts et tri dans la feuille Filtres. -->

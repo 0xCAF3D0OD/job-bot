@@ -13,7 +13,8 @@ import {
   timeAndPlace,
   upcomingAppointments,
   upcomingLabel,
-  upcomingLine,
+  upcomingWhen,
+  upcomingWhere,
   appointmentMatches,
   meetingMatches,
 } from "../rendezVous";
@@ -127,7 +128,7 @@ function cal(iso: string): { day: number; month: number } {
               data-test="rdv-todo"
             >Feuille à compléter</span>
           </span>
-          <span class="rdv-meta">{{ upcomingLine(item, now) }}</span>
+          <span class="rdv-meta rdv-when"><span>{{ upcomingWhen(item, now) }}</span><span v-if="upcomingWhere(item)">&nbsp;· {{ upcomingWhere(item) }}</span></span>
         </div>
         <button
           type="button"
@@ -165,15 +166,15 @@ function cal(iso: string): { day: number; month: number } {
             <h3 class="rdv-interview-title">
               {{ item.application.job_title || "Poste non indiqué" }}
             </h3>
-            <span class="rdv-ready rdv-todo">Entretien</span>
+            <span class="rdv-ready rdv-peach">À préparer</span>
           </span>
-          <span class="rdv-meta">{{ upcomingLine(item, now) }}</span>
+          <span class="rdv-meta rdv-when"><span>{{ upcomingWhen(item, now) }}</span><span v-if="upcomingWhere(item)">&nbsp;· {{ upcomingWhere(item) }}</span></span>
         </div>
         <!-- Toute la carte ouvre la préparation (maquette) : le bouton s’étend sur la carte. -->
         <button
           type="button"
           class="rdv-prepare"
-          :aria-label="upcomingLabel(item, 'Entretien', now)"
+          :aria-label="upcomingLabel(item, 'À préparer', now)"
           :data-test="`rdv-prepare-${item.application.id}`"
           @click="emit('prepare', item.application)"
         />
@@ -323,7 +324,7 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-date { flex: none; }
 .rdv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .rdv-line { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.rdv-orp-title, .rdv-interview-title, .rdv-orp .rdv-meta, .rdv-interview .rdv-meta { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rdv-orp-title, .rdv-interview-title, .rdv-when > * + * { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .rdv-orp-title, .rdv-interview-title { margin: 0; font-size: var(--font-body); line-height: var(--rdv-22); font-weight: var(--weight-bold); }
 .rdv-meta { font-size: var(--font-small); color: var(--text-secondary); }
 .rdv-ready {
@@ -331,6 +332,9 @@ function cal(iso: string): { day: number; month: number } {
   background: var(--success-soft); color: var(--success); font-size: var(--font-caption); line-height: var(--rdv-14); font-weight: var(--weight-bold);
 }
 .rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
+.rdv-peach { background: var(--peach-soft); color: var(--peach-text); }
+/* L'heure et le délai ne sont jamais coupés ; seul ce qui suit l'est (§39, Kevin 16.11). */
+.rdv-when { display: flex; min-width: 0; white-space: nowrap; }
 .rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
 /* Hors du flux (aucun écart de plus dans la carte) : le bouton couvre toute la carte. */
 .rdv-prepare { position: absolute; inset: 0; padding: 0; border: 0; border-radius: var(--radius-card); background: transparent; cursor: pointer; }

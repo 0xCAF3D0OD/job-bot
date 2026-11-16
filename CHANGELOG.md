@@ -655,3 +655,14 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.441 | Poids : js-total relevé une fois à 431 500 octets pour le code jobup, la recherche dans le CV et les agences de placement | livrée |
 | 1.6.442 | Filtres des offres : chaque puce de statut compte avec les filtres actifs (le compteur « À traiter » restait sans filtre) | livrée |
 | 1.6.443 | « Avant ta lettre » reprend les coordonnées du CV dans les champs vides, marqués « Du CV », seulement quand la lecture est sûre | livrée |
+| 1.6.444 | Offres : les statuts s'appellent Nouvelles, Gardées, En préparation et Toutes (par défaut, en dernier) ; les candidatures envoyées sortent de « En préparation » ; « À traiter » disparaît partout (alertes, extension, Assistant). | livrée |
+| 1.6.445 | Rendez-vous : « À préparer » sur la carte entretien, l'heure et le délai jamais coupés sur les petits téléphones | livrée |
+| 1.6.446 | Offres : les agences de placement sont repérées sans IA (agences connues, « pour notre client »), signalées par une pastille et une ligne dans la fiche, avec l'alerte si tu as déjà postulé à un poste proche ; « Ce n'est pas une agence » est gardé par compte, avec « Annuler » pendant 6 secondes, et le filtre les masque | livrée |
+| 1.6.447 | Formations : quand le catalogue vérifié n'a rien pour « Mon domaine », un état vide le dit et propose la recherche web en bouton principal | livrée |
+| 1.6.448 | Étape 3 des premiers pas : le trajet du code jobup en 3 points (aussi dans le panneau des Alertes), et la scène de la boîte aux lettres sur ordinateur | livrée |
+| 1.6.449 | Panneaux : en sombre, le voile derrière les panneaux passe au noir à 60 %, comme sur les planches | livrée |
+| 1.6.450 | Une roue d'attente sur « Refaire la note » pendant que jobA1 refait la note d'un texte collé | livrée |
+| 1.6.451 | Formations : 14 formations en soins (Suisse romande), diplômes acceptés par fiche et vérification automatique des liens du catalogue | livrée côté serveur ; l'écran du prérequis suit dans une PR à part |
+| 1.6.452 | Préparer, étape CV : chercher dans le CV et la lettre, « Voir les changements » surligne ce que l'adaptation a changé ; « Ce CV » sans carte dans la carte | livrée sur ordinateur ; téléphone sans planche |
+| 1.6.453 | Annonce illisible : « Ouvrir sur [site] » et « Chercher sur le site de [entreprise] » avant « Donner l’annonce » (paquet du 16.11, §33) | livrée |
+| 1.6.454 | Préparer : le bouton « ↑ » du champ de demande à 8 px du bord des trois côtés, 40 px visibles et 48 px de zone tactile | livrée |
