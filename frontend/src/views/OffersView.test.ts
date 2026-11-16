@@ -11,6 +11,7 @@ import OffersView from "./OffersView.vue";
 const GET = vi.fn();
 const PATCH = vi.fn();
 const POST = vi.fn();
+const DELETE = vi.fn();
 const PUT = vi.fn();
 // Aucune note corrigée (docs/114) : sans cette réponse, la fiche recevait une page d'offres
 // à la place de la correction et ScoreCorrection lisait un sens inexistant.
@@ -21,6 +22,7 @@ vi.mock("../api/client", () => ({
     GET: (...args: unknown[]) => (args[0] === NO_CORRECTION ? Promise.resolve({ data: null }) : GET(...args)),
     PATCH: (...args: unknown[]) => PATCH(...args),
     POST: (...args: unknown[]) => POST(...args),
+    DELETE: (...args: unknown[]) => DELETE(...args),
   },
 }));
 
@@ -377,6 +379,8 @@ describe("OffersView", () => {
     const note = wrapper.get("[data-test=agency-note]");
     expect(note.text()).toContain("Probablement une agence de placement");
     expect(note.text()).toContain("Galaxi Consulting recrute pour un client");
+    // « Employeur caché » ne se répète pas dans la fiche : la ligne Agence suffit (Kevin, 16.11).
+    expect(wrapper.text()).not.toContain("Employeur caché");
     expect(note.get("[data-test=agency-duplicate]").text()).toBe("Tu as déjà postulé le 4 novembre à un poste proche : DevOps Engineer chez Banque Exemple SA.");
     // « Ce n'est pas une agence » : gardé côté serveur, puis la liste est relue.
     const calls = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
@@ -385,6 +389,14 @@ describe("OffersView", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: 11 } } });
     expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(calls);
+    // « Correction enregistrée · Annuler » (Kevin, 16.11) : « Annuler » retire la correction et relit la liste.
+    expect(useUndo().pending.value?.message).toBe("Correction enregistrée.");
+    const before = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    DELETE.mockResolvedValue({ data: { id: 11 } });
+    await useUndo().undo();
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: 11 } } });
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(before);
     await wrapper.get("[data-test=filters-toggle]").trigger("click");
     await wrapper.get("[data-test=pop-agencies]").setValue(true);
     await flushPromises();

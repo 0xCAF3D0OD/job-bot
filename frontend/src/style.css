@@ -508,7 +508,8 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
   right: 1.5rem;
   /* Au-dessus du bouton Assistant, en bas à droite (retour d'usage du 2026-10-15). */
   bottom: 5.25rem;
-  z-index: 20;
+  /* Au-dessus de la fiche plein écran du téléphone (39), sous le voile des panneaux (40, placé après). */
+  z-index: 40;
   max-width: 24rem;
   margin: 0;
   padding: var(--space-3) var(--space-4);

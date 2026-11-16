@@ -28,6 +28,7 @@ import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
+import { offerUndo } from "../composables/useUndo";
 import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
@@ -110,8 +111,20 @@ const agencyBusy = ref(false);
 async function notAgency(): Promise<void> {
   agencyBusy.value = true;
   try {
-    const { data } = await api.POST("/api/offers/{offer_id}/not-agency", { params: { path: { offer_id: props.offer.id } } });
-    if (data) emit("changed");
+    const path = { offer_id: props.offer.id };
+    const { data } = await api.POST("/api/offers/{offer_id}/not-agency", { params: { path } });
+    if (!data) return;
+    emit("changed");
+    // « Correction enregistrée · Annuler » avec le trait, comme « Offre écartée » (Kevin, 16.11) : la correction est
+    // déjà partie, « Annuler » la retire.
+    void offerUndo({
+      message: "Correction enregistrée.",
+      commit: () => true,
+      restore: async () => {
+        await api.DELETE("/api/offers/{offer_id}/not-agency", { params: { path } });
+        emit("changed");
+      },
+    });
   } finally {
     agencyBusy.value = false;
   }
@@ -218,6 +231,8 @@ const facts = computed<Fact[]>(() => {
   const list: Fact[] = [];
   if (o.remote_from_switzerland === false) list.push({ mark: "check", text: "Télétravail pas ouvert depuis la Suisse" });
   for (const doubt of o.doubts ?? []) {
+    // Pour une agence, la ligne « Agence de placement » le dit déjà (Kevin, 16.11).
+    if (o.agency && doubt.kind === "hidden_employer") continue;
     list.push({ mark: "check", text: doubt.text, excerpt: doubt.excerpt ?? undefined, scam: doubt.kind === "scam" });
   }
   for (const reason of o.filter_reasons ?? []) list.push({ mark: "no", text: reason });
