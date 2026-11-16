@@ -37,6 +37,7 @@ import EngagementMoment from "../components/EngagementMoment.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
+import { needsFeedback } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence } from "../dates";
 import { formatMonth, ofMonth, orpLeftLine, plural, shiftMonth } from "../format";
@@ -104,7 +105,20 @@ const statusFilter = computed<SentFilter>({
 });
 const sentSort = computed<SentSort>({
   get: () => sentSortOf(route.query.tri),
-  set: (value) => void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } }),
+  set: (value) => {
+    saveSort(value);
+    void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } });
+  },
+});
+// Le tri est gardé pour le compte (décision de Kevin du 15.11) : sans ?tri dans l'adresse, le tri enregistré revient ;
+// chaque choix (et « Tout effacer ») est enregistré, jamais un simple changement d'adresse.
+function saveSort(sort: SentSort): void {
+  Promise.resolve(api.PUT("/api/sent-sort", { body: { sort } })).catch(() => undefined);
+}
+onMounted(async () => {
+  if (route.query.tri !== undefined) return;
+  const saved = (await api.GET("/api/sent-sort").catch(() => undefined))?.data?.sort;
+  if ((saved === "recentes" || saved === "anciennes") && route.query.tri === undefined) void router.replace({ query: { ...route.query, tri: saved } });
 });
 const worded = computed(() => (wanted.value.length ? all.value.filter(matches) : all.value));
 const statusCounts = computed(() => sentCounts(worded.value));
@@ -116,6 +130,7 @@ function clearFilters(): void {
 // « Tout effacer » de la feuille Filtres (téléphone) : les mots, le statut et le tri.
 function resetPhoneSentFilters(): void {
   words.value = "";
+  saveSort("relancer");
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined, tri: undefined } });
 }
 // Les rubriques d'Envoyées (« à relancer d'abord ») ; triées par date, une seule liste sans rubrique.
@@ -360,6 +375,27 @@ watch(
   },
   { immediate: true },
 );
+// La notification « Comment s'est passé ton entretien ? » (Kevin, 16.11) : `?candidature=ID&retour=1` ouvre la
+// candidature et « Faire le point » d'emblée, si le point reste à faire. Une candidature supprimée entre-temps :
+// Envoyées s'ouvre normalement, sans erreur. Une seule fois : les paramètres sont retirés de l'adresse.
+watch(
+  () => [route.query.retour, loaded.value] as const,
+  ([retour, ready]) => {
+    if (retour !== "1" || !ready) return;
+    const query = { ...route.query };
+    delete query.retour;
+    const application = opened.value;
+    if (!application) {
+      openId.value = null;
+      delete query.candidature;
+    } else if (needsFeedback(application)) {
+      if (!twoColumns.value) openId.value = null;
+      openInterview(application, null);
+    }
+    void router.replace({ query });
+  },
+  { immediate: true },
+);
 const firstSent = computed(() => sections.value.flatMap((section) => section.items)[0] ?? null);
 // À droite sur ordinateur : la candidature ouverte, ou la première de la liste.
 const shown = computed(() => (twoColumns.value ? (opened.value ?? firstSent.value) : null));
@@ -382,6 +418,7 @@ watch(twoColumns, (wide) => {
 });
 const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
 function resetSentFilters(): void {
+  saveSort("relancer");
   void router.replace({ query: { ...route.query, statut: undefined, tri: undefined } });
 }
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {

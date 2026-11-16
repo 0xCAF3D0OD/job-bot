@@ -9,6 +9,10 @@ refaites maintenant, avec le même modèle, le même profil et la même annonce 
 écrit dans les notes ; chaque appel est compté dans le plafond (finalité « compare »), comme `jobbot
 score-compare`. Les offres sont les dernières notées du compte de l'exploitant (`--compte N` pour un autre).
 `--essai` : sans clé et sans appel, pour vérifier que le script tourne.
+
+Sur le serveur, où il n'y a pas git, `--v7 FICHIER` donne le prompt score-v7 :
+`make prod-comparer-notes` (depuis le Mac) l'envoie dans le conteneur de l'API avec ce script et lance la
+comparaison sur les offres du serveur.
 """
 
 import argparse
@@ -17,6 +21,7 @@ import copy
 import json
 import subprocess
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
@@ -74,12 +79,15 @@ class Fake:
         raise Refused("essai sans clé")
 
 
-async def run(limit: int, ref: str, essai: bool, compte: int | None = None) -> int:
+async def run(
+    limit: int, ref: str, essai: bool, compte: int | None = None, v7_text: str | None = None
+) -> int:
     settings = Settings()
     if not essai and not settings.llm_configured:
         print("IA non configurée : JOBBOT_ANTHROPIC_API_KEY manque.")
         return 1
-    old_text, old_schema = v7_instructions(ref), v7_schema()
+    old_text = v7_text or v7_instructions(ref)
+    old_schema = v7_schema()
     runtime = Runtime.create(settings)
     rows: list[tuple[str, int | None, int | None]] = []
     try:
@@ -155,5 +163,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--compte", type=int, default=None, help="un autre compte que celui de l'exploitant (démo)"
     )
+    parser.add_argument("--v7", default=None, help="le prompt score-v7 dans un fichier (sans git)")
     args = parser.parse_args()
-    raise SystemExit(asyncio.run(run(args.limit, args.ref, args.essai, args.compte)))
+    text = Path(args.v7).read_text(encoding="utf-8") if args.v7 else None
+    raise SystemExit(asyncio.run(run(args.limit, args.ref, args.essai, args.compte, text)))

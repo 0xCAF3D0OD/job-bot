@@ -388,6 +388,38 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
   });
 
+  it("la notification « Comment s’est passé ton entretien ? » ouvre la candidature et « Faire le point » (16.11)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-21T08:00:00Z"));
+    const held = { ...application, status: "entretien", interviews: [] };
+    mockApi(() => month(), [held]);
+    const { wrapper, router } = await mountView(`/candidatures/suivi?candidature=${held.id}&retour=1`);
+    vi.useRealTimers();
+    const form = wrapper.findComponent({ name: "InterviewForm" });
+    expect(form.exists()).toBe(true);
+    expect(form.props("company")).toBe("Acme SA");
+    expect(form.props("heldAt")).toBe("2026-10-20");
+    // Une seule fois : « retour » quitte l’adresse, la candidature y reste.
+    expect(router.currentRoute.value.query).toEqual({ candidature: String(held.id) });
+  });
+
+  it("le point déjà fait : la notification n’ouvre que la candidature", async () => {
+    const done = { ...application, status: "entretien", interviews: [{ id: 9, held_at: "2026-10-20", rating: 4 }] };
+    mockApi(() => month(), [done]);
+    const { wrapper, router } = await mountView(`/candidatures/suivi?candidature=${done.id}&retour=1`);
+    expect(wrapper.findComponent({ name: "InterviewForm" }).exists()).toBe(false);
+    expect(router.currentRoute.value.query).toEqual({ candidature: String(done.id) });
+  });
+
+  it("une candidature supprimée entre-temps : Envoyées s’ouvre normalement, sans erreur", async () => {
+    mockApi(() => month(), [application]);
+    const { wrapper, router } = await mountView("/candidatures/suivi?candidature=999&retour=1");
+    expect(wrapper.findComponent({ name: "InterviewForm" }).exists()).toBe(false);
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
+    expect(wrapper.find(".side-panel").exists()).toBe(false);
+    expect(router.currentRoute.value.query).toEqual({});
+  });
+
   it("le calendrier replié dans le Suivi ORP, pas dans Envoyées ; un jour demandé l’ouvre", async () => {
     mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
     const { wrapper } = await mountView();
@@ -525,6 +557,17 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(none.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
   });
 
+  it("le tri enregistré pour le compte revient à l’arrivée sans ?tri (décision de Kevin du 15.11)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/sent-sort" ? { sort: "anciennes" } : path === "/api/orp" ? month() : [application] }),
+    );
+    const { router } = await mountView("/candidatures/suivi");
+    expect(router.currentRoute.value.query.tri).toBe("anciennes");
+    expect(PUT).not.toHaveBeenCalledWith("/api/sent-sort", expect.anything());
+    const { router: linked } = await mountView("/candidatures/suivi?tri=recentes");
+    expect(linked.currentRoute.value.query.tri).toBe("recentes");
+  });
+
   it("PR 39 : statuts avec leur nombre (0 masqué), un seul choisi, gardé dans l’adresse ; le tri", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
@@ -563,7 +606,8 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(names()).toEqual(["Ancienne SA", "Silence SA", "Entretien SA", "Récente SA"]);
     await sort.setValue("recentes");
     await flushPromises();
-    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);
+    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);    // Le choix est enregistré pour le compte (décision de Kevin du 15.11).
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "recentes" } });
   });
   it("ordinateur, maquette du 14 novembre (§3) : « Plus de filtres » ouvre le volet Filtres (statuts et tri) à la place de la liste", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -595,6 +639,8 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     await flushPromises();
     expect(router.currentRoute.value.query.statut).toBeUndefined();
     expect(router.currentRoute.value.query.tri).toBeUndefined();
+    // « Tout effacer » enregistre aussi le tri par défaut pour le compte.
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "relancer" } });
     await wrapper.find("[data-test=sent-filters-done]").trigger("click");
     expect(wrapper.find("[data-test=sent-filters-panel]").exists()).toBe(false);
     vi.unstubAllGlobals();

@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const DAY = {
-  first_steps: ["profile", "alerts", "keep", "prepare", "sent"].map((key) => ({ key, done: true })),
+  first_steps: ["cv", "criteria", "alerts", "keep", "send"].map((key) => ({ key, done: true })),
   first_steps_dismissed: false,
   has_offers: true,
   to_review: 0,

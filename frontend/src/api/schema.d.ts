@@ -1600,6 +1600,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sent-sort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sent Sort */
+        get: operations["getSentSort"];
+        /** Put Sent Sort */
+        put: operations["saveSentSort"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -5440,7 +5458,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "profile" | "alerts" | "keep" | "prepare" | "sent";
+            key: "cv" | "criteria" | "alerts" | "keep" | "send";
             /** Done */
             done: boolean;
         };
@@ -5455,6 +5473,23 @@ export interface components {
             sent_within_week: number;
             /** Stopped At */
             stopped_at: number[];
+        };
+        /**
+         * FirstStepsSummaryOut
+         * @description Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+         *     gardées (16.11).
+         */
+        FirstStepsSummaryOut: {
+            /** Skills */
+            skills: number;
+            /** Trade */
+            trade: string | null;
+            /** Place */
+            place: string | null;
+            /** Min Rate */
+            min_rate: number | null;
+            /** Kept */
+            kept: number;
         };
         /**
          * FocusIn
@@ -8198,6 +8233,18 @@ export interface components {
             /** Orp Month */
             orp_month: string;
         };
+        /**
+         * SentSortModel
+         * @description Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11).
+         */
+        SentSortModel: {
+            /**
+             * Sort
+             * @default relancer
+             * @enum {string}
+             */
+            sort: "relancer" | "recentes" | "anciennes";
+        };
         /** SettingsModel */
         SettingsModel: {
             /** Orp Monthly Target */
@@ -8468,6 +8515,7 @@ export interface components {
              * @default []
              */
             first_steps: components["schemas"]["FirstStepsOut"][];
+            first_steps_summary?: components["schemas"]["FirstStepsSummaryOut"] | null;
             /**
              * First Steps Dismissed
              * @default false
@@ -12237,6 +12285,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfferFiltersVisible"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
+                };
+            };
+        };
+    };
+    saveSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentSortModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
                 };
             };
             /** @description Validation Error */

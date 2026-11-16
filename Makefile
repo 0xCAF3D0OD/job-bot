@@ -186,6 +186,9 @@ prod-reglages: ## modifie les réglages de la plateforme (jobbot.env), puis rela
 prod-mot-de-passe: ## crée le compte de l'exploitant ou change son mot de passe
 	@$(PROD) mot-de-passe
 
+prod-comparer-notes: ## notes score-v7 et score-v8 du même lot d'offres du serveur, côte à côte (LIMIT=20 ; rien n'est écrit dans les notes)
+	@LIMIT="$(LIMIT)" $(PROD) comparer-notes
+
 prod-sauvegardes: ## copie les sauvegardes du serveur sur le Mac (DEST=…, par défaut ~/Documents/joba1-sauvegardes-serveur)
 	@DEST="$(DEST)" $(PROD) sauvegardes
 
