@@ -58,7 +58,7 @@ La liste complète se trouve dans [docs/exploitation.md](docs/exploitation.md).
 
 ## Limites de poids
 
-`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`).
+`frontend/scripts/poids.mjs` (lancé par `npm run poids` et par `make audits-ci`) bloque la CI si le CSS ou le JS compressé dépasse sa limite. Une limite ne se relève qu'avec l'accord de Kevin, une seule fois, et le relèvement se note ici et dans la PR. `make audits-ci` affiche aussi l'écart de poids de la branche avec main (`frontend/scripts/poids-delta.sh`). Quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe ; seule une PR qui l'alourdit reste bloquée (`frontend/scripts/poids-ci.sh`, décision de Kevin du 16.11).
 
 **Règle (Kevin, 15.11.2026)** : toute PR qui ajoute plus de 0,5 Ko de JS ou de CSS (gzip, total) le justifie dans sa description, avec le détail de ce qui pèse.
 
