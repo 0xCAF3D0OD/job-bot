@@ -9012,6 +9012,10 @@ export interface components {
             trade?: string | null;
             /** Roles */
             roles?: string[] | null;
+            /** Sources */
+            sources?: {
+                [key: string]: "cv" | "user" | "default";
+            } | null;
             /** Postponed */
             postponed?: boolean | null;
             /** Done */
@@ -9032,6 +9036,10 @@ export interface components {
             trade: string | null;
             /** Roles */
             roles?: string[];
+            /** Sources */
+            sources?: {
+                [key: string]: "cv" | "user" | "default";
+            };
         };
         /** WorkerStatus */
         WorkerStatus: {

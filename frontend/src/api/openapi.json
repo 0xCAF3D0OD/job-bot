@@ -26005,6 +26005,32 @@
             ],
             "title": "Roles"
           },
+          "sources": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "cv",
+                    "user",
+                    "default"
+                  ]
+                },
+                "propertyNames": {
+                  "enum": [
+                    "roles",
+                    "places",
+                    "rate"
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources"
+          },
           "postponed": {
             "anyOf": [
               {
@@ -26079,6 +26105,25 @@
             },
             "type": "array",
             "title": "Roles"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "cv",
+                "user",
+                "default"
+              ]
+            },
+            "propertyNames": {
+              "enum": [
+                "roles",
+                "places",
+                "rate"
+              ]
+            },
+            "type": "object",
+            "title": "Sources"
           }
         },
         "type": "object",

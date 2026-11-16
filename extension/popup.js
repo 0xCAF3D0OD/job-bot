@@ -24,7 +24,7 @@ function say(id, text) {
 
 // --- Les états de la fenêtre ------------------------------------------------------------
 
-const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "alerte", "gmail", "settings", "main", "job-room", "codes"];
+const STATES = ["signin", "linked", "authorize-state", "idle", "annonce", "alerte", "alerte-jobup", "gmail", "settings", "main", "job-room", "codes"];
 // Sans pastille : ces états ne parlent pas de la page ouverte.
 const NO_SITE = new Set(["signin", "linked", "authorize-state", "settings"]);
 let current = null;
@@ -237,6 +237,8 @@ async function start() {
   }
   tab = await targetTab();
   setSite(tab?.url);
+  // L'onglet d'une alerte jobup suivie, même sur la page du code (section 42).
+  if (tab && (await showJobupFlow())) return;
   if (isCodePage(tab?.url)) {
     await startCodes();
     return;
@@ -333,6 +335,7 @@ function alertText(title, text) {
 async function startAlert(slug) {
   const rules = globalThis.jobA1AlertSelectors[slug];
   if (!(await alertForm(rules, null)).form) return false;
+  if (slug === "jobup") return startJobupAlert(rules);
   alertSlug = slug;
   setSite(tab.url, `${ALERT_PILL[slug]} · Créer une alerte`);
   show("al-todo");
@@ -381,6 +384,140 @@ async function startAlert(slug) {
   }
   return true;
 }
+
+// --- L'alerte jobup suivie (section 42, ExtAlerte*) -----------------------------------------
+// La liste en 4 étapes : formulaire rempli, « Créer l'alerte » à cliquer, code, « Confirmer » à
+// cliquer. jobA1 remplit et colle ; la personne clique sur jobup. Le fond suit l'onglet (le
+// panneau se ferme dès qu'on clique dans la page) ; l'étape revient ici à chaque ouverture.
+// Le code n'est jamais gardé : lu sur la plateforme quand il faut l'afficher, oublié avec le
+// panneau.
+
+let jobupCode = "";
+
+// La recherche, lue dans l'adresse de la page ouverte par jobA1 (« ?term=DevOps&location=Lausanne »).
+function searchSummary(url) {
+  try {
+    const params = new URL(url).searchParams;
+    const words = (params.get("term") || "").trim();
+    const place = (params.get("location") || "").trim();
+    const radius = (params.get("radius") || "").trim();
+    const where = place && /^\d+$/.test(radius) ? `${place} et ${radius} km` : place;
+    const search = [words, where].filter(Boolean).join(" · ");
+    return search ? `${search}, adresse jobA1` : "Adresse jobA1";
+  } catch {
+    return "Adresse jobA1";
+  }
+}
+
+async function flowState() {
+  try {
+    const flow = await chrome.runtime.sendMessage({ type: "alert-flow", tabId: tab.id });
+    return typeof flow?.step === "string" ? flow : null;
+  } catch {
+    return null;
+  }
+}
+
+async function showJobupFlow() {
+  const flow = await flowState();
+  if (!flow || flow.step === "filled") return false;
+  await renderJobup(flow);
+  return true;
+}
+
+async function startJobupAlert(rules) {
+  setSite(tab.url, "jobup.ch · Créer une alerte");
+  view("alerte-jobup");
+  say("aj-error", "");
+  try {
+    ({ address: alertAddress } = await (await call("/api/extension/alerts")).json());
+  } catch (error) {
+    alertAddress = null;
+    if (error.status === 404) say("aj-error", "Mets ta plateforme jobA1 à jour pour remplir les alertes.");
+    else say("aj-error", offline(error) ? "Plateforme injoignable." : error.message);
+  }
+  if (!alertAddress && !$("aj-error").textContent) say("aj-error", "Pas encore d’adresse jobA1 : ouvre Alertes dans jobA1, ton adresse y est créée.");
+  const { filled } = alertAddress ? await alertForm(rules, alertAddress) : { filled: false };
+  const summary = searchSummary(tab.url);
+  const flow = (await chrome.runtime.sendMessage({ type: "alert-track", tabId: tab.id, summary, emailEmpty: !filled }).catch(() => null)) ?? {};
+  await renderJobup({ step: "filled", summary, emailEmpty: !filled, ...(typeof flow.step === "string" ? flow : {}) });
+  return true;
+}
+
+function stepRow(n, state) {
+  const row = $(`aj-${n}`);
+  row.classList.toggle("done", state === "done");
+  if (state === "current") row.setAttribute("aria-current", "step");
+  else row.removeAttribute("aria-current");
+}
+
+function showJobupCode(code) {
+  const box = $("aj-code");
+  box.replaceChildren(...[...code].map((digit) => Object.assign(document.createElement("span"), { textContent: digit })));
+  box.setAttribute("aria-label", `Code ${code.split("").join(" ")}`);
+  show("aj-code", Boolean(code));
+}
+
+async function readCode() {
+  try {
+    const { code } = await (await call("/api/extension/codes?site=jobup")).json();
+    return typeof code?.code === "string" ? code.code : "";
+  } catch {
+    return "";
+  }
+}
+
+async function renderJobup(flow) {
+  setSite(tab.url, "jobup.ch · Créer une alerte");
+  view("alerte-jobup");
+  const step = flow.step;
+  const created = step === "created";
+  show("aj-steps", !created);
+  show("aj-done", created);
+  show("aj-open", created);
+  $("aj-summary").textContent = flow.summary || "Adresse jobA1";
+  stepRow(1, "done");
+  stepRow(2, step === "filled" ? "current" : "done");
+  stepRow(3, step === "filled" ? "todo" : step === "code-pasted" ? "done" : "current");
+  stepRow(4, step === "code-pasted" ? "current" : "todo");
+  $("aj-2-title").textContent = step === "filled" ? "Clique sur « Créer l’alerte » sur jobup" : "Alerte envoyée à jobup";
+  show("aj-2-sub", step === "filled");
+  $("aj-3-title").textContent =
+    step === "code-pasted" ? "Code collé dans jobup" : step === "fallback" ? "Code reçu, à coller toi-même" : "Code de confirmation";
+  show("aj-3-sub", step === "filled");
+  show("aj-wait", step === "sent");
+  show("aj-warn", step === "fallback");
+  show("aj-copy-code", step === "fallback");
+  show("aj-4-sub", step === "code-pasted");
+  show("aj-empty", step === "filled" && flow.emailEmpty === true && Boolean(alertAddress));
+  jobupCode = step === "code-pasted" || step === "fallback" ? await readCode() : "";
+  showJobupCode(jobupCode);
+}
+
+async function copyJobupCode() {
+  if (!jobupCode) return;
+  try {
+    await navigator.clipboard.writeText(jobupCode);
+    $("aj-copy-label").textContent = "Code copié";
+  } catch {
+    say("aj-error", "Copie impossible : recopie le code à la main.");
+  }
+}
+
+async function copyJobupAddress() {
+  try {
+    await navigator.clipboard.writeText(alertAddress);
+    $("aj-copy-address").textContent = "Adresse copiée";
+  } catch {
+    say("aj-error", "Copie impossible.");
+  }
+}
+
+// Le fond annonce une nouvelle étape pendant que le panneau est ouvert.
+chrome.runtime.onMessage?.addListener((message) => {
+  if (message?.type !== "alert-changed" || message.tabId !== tab?.id || current !== "alerte-jobup") return;
+  flowState().then((flow) => flow && renderJobup(flow));
+});
 
 // « J'ai créé l'alerte » : comme le bouton de l'assistant des alertes.
 async function alertCreated() {
@@ -823,7 +960,9 @@ function isCodePage(url) {
 }
 
 async function watchCode() {
-  say("codes-message", "J'attends le code : il sera rempli ici dès qu'il arrive, puis « Continuer ».");
+  // jobup : le code est rempli, la personne clique elle-même (section 42, règle 1).
+  const jobup = new URL(tab.url).hostname === "auth.jobup.ch";
+  say("codes-message", `J'attends le code : il sera rempli ici dès qu'il arrive${jobup ? ". Clique ensuite toi-même sur « Continuer »." : ", puis « Continuer »."}`);
   show("codes-allow", false);
   const filled = await chrome.runtime.sendMessage({ type: "watch-code", tabId: tab.id, url: tab.url });
   say("codes-message", filled ? "Code rempli." : "Pas de code arrivé : recopie-le depuis la page Alertes de jobA1.");
@@ -983,6 +1122,8 @@ $("gear").addEventListener("click", toggleSettings);
 $("an-send").addEventListener("click", () => sendAnnonce());
 $("al-copy").addEventListener("click", copyAddress);
 $("al-created").addEventListener("click", alertCreated);
+$("aj-copy-code").addEventListener("click", copyJobupCode);
+$("aj-copy-address").addEventListener("click", copyJobupAddress);
 $("gm-begin").addEventListener("click", () => gmailStep("gm-address"));
 $("gm-added").addEventListener("click", () => gmailStep("gm-code"));
 $("gm-validated").addEventListener("click", () => gmailStep("gm-filter"));

@@ -62,7 +62,7 @@ const ALERTS = {
   ],
 };
 
-type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[] };
+type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[]; sources?: Record<string, string> };
 
 async function mountWelcome(
   state: State = { status: "pending", step: 1, goal: null, trade: null },
@@ -96,7 +96,7 @@ async function mountWelcome(
   await router.push(options.path ?? "/bienvenue");
   const wrapper = mount(WelcomeView, {
     attachTo: options.realTransition ? document.body : undefined,
-    global: { plugins: [router], stubs: options.realTransition ? { transition: false } : {} },
+    global: { plugins: [router], stubs: options.realTransition ? { transition: false, teleport: true } : { teleport: true } },
   });
   await flushPromises();
   return { wrapper, router };
@@ -201,12 +201,14 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const added = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
     expect(added).toHaveLength(1);
     expect(added[0]![1]).toMatchObject({ body: { title: "Kubernetes", document_id: 3 } });
+    // Les postes du CV en puces dans la ligne « Postes recherchés » ; le crayon ouvre leur panneau (section 41).
+    expect(wrapper.findAll("[data-test=criteria-roles] li").map((li) => li.text())).toEqual(["DevOps Engineer", "SRE"]);
+    expect(wrapper.find("[data-test=criteria-roles-edit]").attributes("aria-label")).toBe("Modifier les postes");
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(false);
+    await click(wrapper, "criteria-roles-edit");
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
     const roles = wrapper.findAll("[data-test=roles] button[aria-pressed]");
     expect(roles.map((r) => r.text())).toEqual(["DevOps Engineer", "SRE"]);
-    // Les postes du CV en puces ; « + Ajouter » ouvre le champ d'un autre poste (maquette Onboarding).
-    expect(wrapper.find("[data-test=role-input]").exists()).toBe(false);
-    await click(wrapper, "role-open");
-    expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
     expect(roles.every((r) => r.attributes("aria-pressed") === "true")).toBe(true);
 
     // CV lu : les langues quand même, pré-remplies (PR 17) ; celle du CV en « Courant », les autres « Non renseigné ».
@@ -289,7 +291,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
-    await click(wrapper, "role-open");
+    await click(wrapper, "criteria-roles-edit");
     await wrapper.find("[data-test=role-input]").setValue("Aide-soignante");
     await click(wrapper, "welcome-continue");
     expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4, roles: ["Infirmière", "Aide-soignante"] });
@@ -297,7 +299,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("les critères : postes (trois au plus), lieux en puces, l’ORP et ses recherches par mois", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
-    await click(wrapper, "role-open");
+    await click(wrapper, "criteria-roles-edit");
     for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {
       await wrapper.find("[data-test=role-input]").setValue(role);
       await click(wrapper, "role-add");
@@ -308,7 +310,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(roles[3]!.attributes("aria-disabled")).toBe("true");
     expect(wrapper.text()).toContain("Trois postes au plus.");
 
-    expect(wrapper.find(".tag").text()).toContain("VD");
+    expect(wrapper.find("[data-test=criteria-places]").text()).toContain("VD");
     expect(wrapper.find("[data-test=target]").text()).toBe("10");
     await click(wrapper, "target-plus");
     await click(wrapper, "target-plus");
@@ -318,7 +320,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(calls("/api/criteria").at(-1)).toEqual({
       ...CRITERIA,
       locations: ["VD"],
-      min_rate: null,
+      // Le taux a sa ligne sur téléphone aussi (section 41) : celui déjà enregistré est gardé.
+      min_rate: 80,
       remote_policy: "from_switzerland",
       // Plus aucune langue écartée d'office (PR 17) : « Non renseigné » n'écarte rien.
       language_levels: {},
@@ -528,10 +531,30 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 2 postes, 1 compétence trouvés");
     expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("formations-vide");
     await click(wrapper, "welcome-continue");
-    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("DevOps, SRE");
-    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("Trouvé dans ton CV");
+    expect(wrapper.findAll("[data-test=criteria-roles] li").map((li) => li.text())).toEqual(["DevOps", "SRE"]);
+    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("Depuis ton CV");
+    expect(wrapper.get("[data-test=criteria-roles-edit]").text()).toBe("Modifier");
     expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("80 à 100");
     expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("lieux-carte");
+    // La provenance (Kevin, 16.11, #806) : enregistrée ; jamais de pastille sur Lieu.
+    expect(calls("/api/welcome").some((b) => JSON.stringify(b.sources) === JSON.stringify({ roles: "cv", places: "default", rate: "cv" }))).toBe(true);
+    expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("Depuis ton CV");
+    expect(wrapper.get("[data-test=criteria-places]").text()).not.toContain("Depuis ton CV");
+    // Le taux modifié puis validé : « user », la pastille s'en va ; ouvrir sans rien changer ne touche à rien.
+    await click(wrapper, "criteria-roles-edit");
+    await click(wrapper, "criteria-done");
+    expect(wrapper.get("[data-test=criteria-roles]").text()).toContain("Depuis ton CV");
+    await click(wrapper, "criteria-rate-edit");
+    await wrapper.findAll("input[name=welcome-rate]").at(-1)!.setValue();
+    await click(wrapper, "criteria-done");
+    expect(wrapper.get("[data-test=criteria-rate]").text()).not.toContain("Depuis ton CV");
+    expect(calls("/api/welcome").at(-1)).toEqual({ sources: { roles: "cv", places: "default", rate: "user" } });
+  });
+
+  it("la provenance revient avec l’état des premiers pas : « user » reste sans pastille", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["DevOps"], sources: { roles: "user", places: "default", rate: "cv" } });
+    expect(wrapper.get("[data-test=criteria-roles]").text()).not.toContain("Depuis ton CV");
+    expect(wrapper.get("[data-test=criteria-rate]").text()).toContain("Depuis ton CV");
   });
 
   it("coupure pendant la lecture : « En pause », scène connexion-perdue, nouvel essai après 5 s", async () => {
