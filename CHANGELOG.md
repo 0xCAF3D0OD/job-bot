@@ -633,3 +633,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.419 | Trier : après le tri, « Candidatures » dans le menu ne ramène plus à la page de tri mais à la dernière page de la rubrique | livrée |
 | 1.6.420 | Notifications : « Comment s'est passé ton entretien ? » ouvre la candidature et « Faire le point » directement | livrée |
 | 1.6.421 | La comparaison des notes score-v7 et score-v8 se lance sur le serveur depuis le Mac (make prod-comparer-notes) | livrée |
+| 1.6.422 | « Voir la compatibilité » en bleu sur l'offre provisoire, comme partout | livrée |
