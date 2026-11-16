@@ -639,3 +639,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.425 | Éventail : chaque note tient sur une ligne avec « … », forme courte ou non, et 24 px au moins la séparent du poste | livrée |
 | 1.6.426 | Le worker reprend une tâche restée « en cours » après un arrêt brutal (une fois, sans double exécution) et s’arrête proprement : la tâche en cours a 20 secondes pour finir, puis elle est relâchée | livrée |
 | 1.6.427 | Bilan ordinateur : menus « Mois précédents » et « Autres exports » selon la planche du 16.11 (« À remettre », chevron), lien « Replier le mois », lignes de la fiche « Pour l'ORP » à 64 px | livrée |
+| 1.6.428 | Interface : le support de l'« Options API » de Vue coupé au build (aucun composant ne s'en sert), 1,65 Ko de JavaScript en moins | livrée |
