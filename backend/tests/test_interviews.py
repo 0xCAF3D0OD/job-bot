@@ -92,7 +92,7 @@ async def test_reminder_the_day_after(runtime: Runtime, client: AsyncClient) -> 
     assert await notify_interviews(runtime, date(2026, 10, 8)) == 0
     async with runtime.sessionmaker() as session:
         alert = await session.scalar(select(Notification).where(Notification.kind == "interview"))
-    assert alert is not None and alert.link == "/candidatures/suivi?mois=2026-10&jour=2026-10-06"
+    assert alert is not None and alert.link == f"/candidatures/suivi?candidature={app_id}&retour=1"
     assert "Exemple SA" in alert.title
 
     today = (await client.get("/api/today")).json()

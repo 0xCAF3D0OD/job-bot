@@ -37,6 +37,7 @@ import EngagementMoment from "../components/EngagementMoment.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
+import { needsFeedback } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence } from "../dates";
 import { formatMonth, ofMonth, orpLeftLine, plural, shiftMonth } from "../format";
@@ -370,6 +371,27 @@ watch(
     editing.value = { id: application.id, value: { ...application }, focusAddress: true };
     const query = { ...route.query };
     delete query.modifier;
+    void router.replace({ query });
+  },
+  { immediate: true },
+);
+// La notification « Comment s'est passé ton entretien ? » (Kevin, 16.11) : `?candidature=ID&retour=1` ouvre la
+// candidature et « Faire le point » d'emblée, si le point reste à faire. Une candidature supprimée entre-temps :
+// Envoyées s'ouvre normalement, sans erreur. Une seule fois : les paramètres sont retirés de l'adresse.
+watch(
+  () => [route.query.retour, loaded.value] as const,
+  ([retour, ready]) => {
+    if (retour !== "1" || !ready) return;
+    const query = { ...route.query };
+    delete query.retour;
+    const application = opened.value;
+    if (!application) {
+      openId.value = null;
+      delete query.candidature;
+    } else if (needsFeedback(application)) {
+      if (!twoColumns.value) openId.value = null;
+      openInterview(application, null);
+    }
     void router.replace({ query });
   },
   { immediate: true },
