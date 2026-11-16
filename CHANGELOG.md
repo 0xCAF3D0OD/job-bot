@@ -684,3 +684,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.470 | Postuler : une coche sur Lettre.pdf et CV.pdf une fois téléchargés, « Tout télécharger » coche les deux | livrée |
 | 1.6.471 | Fil Offres : une offre au même lien qu'une candidature envoyée en sort, une offre au même titre chez la même entreprise reste visible avec « Déjà postulé le … » | livrée |
 | 1.6.472 | « Pour l'ORP » : la pastille « Case à cocher dans Job-Room » se détache du fond beige (fond blanc et trait, sombre compris) | livrée |
+| 1.6.473 | Poids : 274 règles qui ne servent qu'à une page ou à un composant chargé à la demande quittent style.css pour le fichier de ce composant ; chaque page charge de 0,6 à 4,2 Ko de CSS en moins (gzip), sans aucun changement visible (allègement (a) de l'issue #797) | livrée |
+| 1.6.474 | Extension : le script de la page jobA1 attend <html> s'il n'existe pas encore au chargement | livrée |
