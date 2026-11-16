@@ -1,0 +1,1 @@
+Offres : les statuts s'appellent Nouvelles, Gardées, En préparation et Toutes (par défaut, en dernier) ; les candidatures envoyées sortent de « En préparation » ; « À traiter » disparaît partout (alertes, extension, Assistant).

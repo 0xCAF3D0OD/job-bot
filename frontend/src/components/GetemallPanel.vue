@@ -175,7 +175,7 @@ onMounted(load);
 .partner-app-empty { margin: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .partner-confirm { width: calc(100% - 2 * var(--space-6)); max-width: 420px; box-sizing: border-box; padding: var(--space-6) var(--space-5) var(--space-5); border: 0; border-radius: var(--radius-block); background: var(--surface); color: var(--text); box-shadow: 0 20px 50px rgba(27, 31, 42, 0.25); }
 .partner-confirm[open] { display: flex; flex-direction: column; gap: var(--space-3); }
-.partner-confirm::backdrop { background: rgba(27, 31, 42, 0.45); }
+.partner-confirm::backdrop { background: var(--voile, rgb(27 31 42 / 45%)); }
 .partner-confirm h2 { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); font-weight: var(--weight-bold); }
 .partner-confirm p { margin: 0; font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .partner-confirm-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-1); }

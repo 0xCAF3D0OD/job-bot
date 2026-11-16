@@ -13,6 +13,7 @@ from jobbot.worker.tasks import (
     rhythm,
     score,
     site_codes,
+    training_links,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "rhythm",
     "score",
     "site_codes",
+    "training_links",
 ]

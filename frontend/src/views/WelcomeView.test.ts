@@ -435,7 +435,11 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(alert.get("[data-test=wizard-address]").text()).toBe("lea+0mwdr89t@alertes.joba1.ch");
     expect(alert.text()).toContain("Copie-la, puis colle-la dans le champ e-mail de l’alerte.");
     expect(alert.text()).toContain("Recopie le code de jobup");
-    expect(alert.get("[data-test=code-box]").text()).toBe("En attente du code de jobup…");
+    // Section 24 du paquet du 15.11 : le trajet du code, version téléphone (« Boîte jobA1 », sans la fréquence).
+    const trail = alert.get("[data-test=code-trail]");
+    expect(trail.classes()).toContain("telephone");
+    expect(trail.text()).toContain("Boîte jobA1");
+    expect(trail.text()).toContain("Rien reçu pour l’instant. Valide l’alerte sur jobup.");
     expect(alert.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
     expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
 
@@ -570,7 +574,7 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await flushPromises();
     expect(wrapper.find("[data-test=welcome-keep]").exists()).toBe(true);
   });
-  it("étape 3 sur 4 : « Une alerte, et elles arrivent seules », les trois étapes dans une carte, Orange à droite", async () => {
+  it("étape 3 sur 4 : « Une alerte, et elles arrivent seules », les étapes dans une carte, la scène de la boîte aux lettres à droite", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
     await click(wrapper, "welcome-criteria");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
@@ -581,9 +585,13 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(card.classes()).toContain("wdk-card");
     expect(card.text()).toContain("jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici.");
     expect(card.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
-    const orange = wrapper.get("[data-test=welcome-orange]");
-    expect(orange.attributes("alt")).toBe("");
-    expect(orange.attributes("width")).toBe("260");
+    // Section 25 du paquet du 15.11 : la scène à la place d'Orange seul, 420 px, servie en WebP 840 px.
+    const scene = wrapper.get("[data-test=welcome-mailbox]");
+    expect(scene.attributes("src")).toBe("/illustrations/scene-boite-aux-lettres-840.webp");
+    expect(scene.attributes("alt")).toBe("");
+    expect(scene.attributes("aria-hidden")).toBe("true");
+    expect([scene.attributes("width"), scene.attributes("height")]).toEqual(["420", "299"]);
+    expect(card.find("[data-test=code-trail]").classes()).toContain("ordinateur");
     expect(wrapper.find("[data-illustration]").exists()).toBe(false);
     await click(wrapper, "welcome-back");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 2 sur 4");

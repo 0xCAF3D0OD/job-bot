@@ -50,6 +50,8 @@ const suggesting = ref(false);
 const message = ref("");
 
 const hasDomain = computed(() => keywords.value.length > 0);
+// Le catalogue vérifié n'a rien pour « Mon domaine », avant tout filtre (Kevin, 16.11).
+const domainEmpty = computed(() => loaded.value && hasDomain.value && domainOnly.value && !items.value.length);
 
 // Les puces (B17) : Tout, Certifications ou Cours, un seul choix ; « Gratuites » et « En français » s'ajoutent.
 const kind = ref<Kind>("all");
@@ -492,9 +494,37 @@ onMounted(() => void load());
             En français
           </button>
         </div>
+        <!-- Rien pour « Mon domaine » dans le catalogue vérifié (Kevin, 16.11) : l'état vide commun et la recherche
+             web existante en bouton principal. La ligne grise reste pour les seuls filtres qui vident la liste. -->
+        <EmptyState
+          v-if="domainEmpty"
+          :title="`Rien dans le catalogue pour ${keywords[0]}`"
+          scene="introuvable"
+          :desktop-width="260"
+          pill="Le catalogue couvre surtout l’informatique pour l’instant"
+          pill-icon="book"
+          data-test="trainings-domain-empty"
+        >
+          <template
+            v-if="canSuggest"
+            #actions
+          >
+            <BusyButton
+              class="primary"
+              :busy="suggesting"
+              busy-label="Recherche en cours…"
+              data-test="suggest-domain"
+              @click="suggest"
+            >
+              <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
+                <span class="with-icon"><AppIcon name="search" />Chercher des formations en {{ keywords[0] }}</span>
+              </HoverNote>
+            </BusyButton>
+          </template>
+        </EmptyState>
         <!-- Aucun résultat (règles §4) : une ligne grise et « Effacer les filtres ». -->
         <p
-          v-if="!sections.length"
+          v-else-if="!sections.length"
           class="muted empty"
           data-test="trainings-no-result"
         >
@@ -554,7 +584,7 @@ onMounted(() => void load());
         </PushTransition>
         <!-- La recherche par domaine (B17) : sous la liste, « Chercher d'autres formations ». -->
         <BusyButton
-          v-if="canSuggest"
+          v-if="canSuggest && !domainEmpty"
           class="secondary action-2 training-suggest"
           :busy="suggesting"
           busy-label="Recherche en cours…"

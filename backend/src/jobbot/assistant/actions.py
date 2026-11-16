@@ -31,7 +31,7 @@ MAX_PER_ANSWER = 3
 OFFER_STATUSES = {
     OfferStatus.LATER: "Plus tard",
     OfferStatus.IGNORED: "Ignorée",
-    OfferStatus.TO_REVIEW: "À examiner",
+    OfferStatus.TO_REVIEW: "Nouvelles",
 }
 APPLICATION_STATUSES = {
     ApplicationStatus.RELANCEE: "Relancée",

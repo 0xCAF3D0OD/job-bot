@@ -153,7 +153,7 @@ defineExpose({ load });
       <SettingRow
         v-if="remote?.pending"
         title="Télétravail à relever"
-        :description="`${plural(remote.pending, 'offre notée', 'offres notées')} avant, à examiner · ${remoteCost}.`"
+        :description="`${plural(remote.pending, 'offre notée', 'offres notées')} avant, dans Nouvelles · ${remoteCost}.`"
         data-test="remote-read"
       >
         <button
