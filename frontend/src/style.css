@@ -4731,8 +4731,9 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-counter { margin: var(--space-2) var(--space-1) 0; font-size: var(--label-caps); color: var(--text-secondary); }
 /* « Refaire la note » (OffreProvisoire, PR 25) : un bouton à texte de 44 px ; sous le minimum, pâli et `aria-disabled`.
    Le compteur passe au vert une fois le minimum atteint (« assez pour noter »). */
-.composer-send.composer-send-text { --send-text-off: #9AA6D8; width: auto; padding: 0 var(--space-5); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
+.composer-send.composer-send-text { --send-text-off: #9AA6D8; width: auto; gap: var(--space-2); padding: 0 var(--space-5); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); white-space: nowrap; }
 .composer-send-text[aria-disabled="true"] { background: var(--send-text-off); cursor: default; }
+.composer-send-text[aria-busy="true"] { background: var(--action); color: var(--on-action); cursor: progress; }
 .composer-counter { font-weight: var(--weight-semibold); }
 .composer-multi .composer-counter { position: absolute; top: 100%; left: 0; }
 
