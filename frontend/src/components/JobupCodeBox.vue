@@ -7,7 +7,7 @@ import AppIcon from "./AppIcon.vue";
 
 // « Recopie le code de jobup » (section 15 du paquet du 15.11, planches OnboardingOrdinateurAlerteCode…,
 // OnboardingAlerteCode…, AlertesOrdinateurSite) : jobup envoie un code à l'adresse jobA1 quand la personne valide
-// son alerte ; il s'affiche ici. Trois états : attente (cadre pointillé, roue), reçu (le code, Copier, « Reçu à … ·
+// son alerte ; il s'affiche ici. Trois états : attente (le trajet en 3 points, section 24), reçu (le code, Copier, « Reçu à … ·
 // valable … ») et expiré (« Code expiré », « Renvoyer » qui rouvre jobup).
 // Décisions de Kevin du 15.11 : la relecture toutes les 5 s ne tourne que pendant l'attente et seulement quand l'écran
 // est visible ; elle s'arrête dès que le code arrive, ou au bout de 10 minutes sans code (état expiré). La durée de
@@ -15,7 +15,7 @@ import AppIcon from "./AppIcon.vue";
 // Le serveur ne relève la boîte que si on le lui demande : dès l'affichage, puis chaque minute tant que l'étape attend
 // et que l'onglet est visible (« watch-code »), il la relève toutes les 15 s. Sans relance, il s'arrête de lui-même.
 // `trail` : le trajet du code en 3 points (section 24 du paquet du 15.11), premiers pas et panneau des Alertes.
-const props = defineProps<{ siteUrl: string | null; trail?: "ordinateur" | "telephone" }>();
+const props = defineProps<{ siteUrl: string | null; trail: "ordinateur" | "telephone" }>();
 
 type Code = { code: string; received_at: string; valid_minutes: number };
 const state = ref<"waiting" | "received" | "expired">("waiting");
@@ -128,7 +128,6 @@ defineExpose({ restart: wait });
 
 <template>
   <div
-    v-if="trail"
     class="code-trail"
     :class="[state, trail]"
     :role="state === 'waiting' ? 'status' : undefined"
@@ -216,44 +215,14 @@ defineExpose({ restart: wait });
     </p>
   </div>
   <div
-    v-if="!trail || state !== 'waiting'"
+    v-if="state !== 'waiting'"
     class="code-box"
     :class="state"
     role="status"
     aria-live="polite"
     data-test="code-box"
   >
-    <template v-if="state === 'waiting' && down">
-      <AppIcon
-        name="alert"
-        class="code-box-down"
-      />
-      <span data-test="code-box-down">La boîte jobA1 ne répond pas. On réessaie dans 1 minute.</span>
-    </template>
-    <template v-else-if="state === 'waiting'">
-      <svg
-        class="code-box-spinner"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      ><circle
-        class="code-box-track"
-        cx="12"
-        cy="12"
-        r="9"
-        fill="none"
-        stroke-width="3"
-      /><path
-        class="code-box-arc"
-        d="M12 3a9 9 0 0 1 9 9"
-        fill="none"
-        stroke-width="3"
-        stroke-linecap="round"
-      /></svg>
-      En attente du code de jobup…
-    </template>
-    <template v-else-if="state === 'received' && code">
+    <template v-if="state === 'received' && code">
       <span
         class="code-box-value"
         data-test="code-box-value"
@@ -308,14 +277,11 @@ defineExpose({ restart: wait });
 /* Valeurs du HTML des planches OnboardingOrdinateurAlerteCode… (section 15), couleurs en jetons. L'état expiré reprend
    --peach-soft / --peach-text (les valeurs claires de la planche, décision de Kevin : réutiliser un jeton existant). */
 .code-box { --code-5: 5px; --code-6: 6px; --code-56: 56px; --code-26: 26px; --code-32: 32px; --code-radius: 16px; display: flex; align-items: center; gap: var(--space-3); min-height: var(--code-56); box-sizing: border-box; border-radius: var(--code-radius); font-size: var(--font-label); }
-.code-box.waiting { padding: 0 var(--space-5); border: 1.5px dashed var(--card-line); color: var(--text-secondary); }
 .code-box.received { padding: 0 var(--code-5) 0 var(--space-5); background: var(--surface); border: 1.5px solid var(--primary-graphic); }
 .code-box.expired { padding: var(--code-6) var(--code-5) var(--code-6) var(--space-4); background: var(--peach-soft); color: var(--peach-text); }
 .code-box-spinner { flex: none; animation: offer-reading-turn 900ms linear infinite; }
-.code-box-track { stroke: var(--line); }
-.code-box-arc { stroke: var(--primary); }
 .code-box-bang { flex: none; }
-.code-box-down { flex: none; width: 20px; height: 20px; color: var(--orange); }
+.code-box-down { flex: none; color: var(--orange); }
 .code-box-value { flex: 1; min-width: 0; font-size: var(--code-26); line-height: var(--code-32); font-weight: var(--weight-heavy); letter-spacing: .14em; font-variant-numeric: tabular-nums; color: var(--text); }
 .code-box-copy, .code-box-resend { flex: none; display: inline-flex; align-items: center; gap: var(--code-6); height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); font-family: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .code-box-copy { background: var(--primary-soft); }
@@ -344,7 +310,7 @@ defineExpose({ restart: wait });
 .code-trail-status b { color: var(--text); }
 .code-trail-status .code-box-down { width: 18px; height: 18px; }
 .code-trail-late { margin-top: var(--space-2); padding-top: 0; border-top: 0; }
-.code-trail .code-box-track { stroke: var(--card-line); }
-.code-trail .code-box-arc { stroke: var(--primary-graphic); }
+.code-box-track { stroke: var(--card-line); }
+.code-box-arc { stroke: var(--primary-graphic); }
 @media (prefers-reduced-motion: reduce) { .code-box-spinner { animation: none; } }
 </style>

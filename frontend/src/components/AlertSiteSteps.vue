@@ -31,7 +31,7 @@ const props = withDefaults(
     mailbox: null,
     code: false,
     codeHelp: "",
-    codeTrail: undefined,
+    codeTrail: "ordinateur",
     addressHelp: "Elle est déjà copiée quand tu ouvres le site : colle-la dans le champ e-mail de l’alerte.",
     saveTitle: "",
   },
