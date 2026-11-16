@@ -118,6 +118,30 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=chip-free]").attributes("aria-pressed")).toBe("false");
   });
 
+  it("rien pour « Mon domaine » dans le catalogue : l’état vide et la recherche web en bouton principal (Kevin, 16.11)", async () => {
+    GET.mockResolvedValue({ data: page([], { domain_keywords: ["Soins infirmiers", "Gériatrie"] }) });
+    POST.mockResolvedValue({ data: { added: 3 } });
+    const wrapper = await mountView();
+    const empty = wrapper.find("[data-test=trainings-domain-empty]");
+    expect(empty.text()).toContain("Rien dans le catalogue pour Soins infirmiers");
+    expect(empty.text()).toContain("Le catalogue couvre surtout l’informatique pour l’instant");
+    expect(wrapper.find("[data-test=trainings-no-result]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=suggest]").exists()).toBe(false);
+    const button = wrapper.find("[data-test=suggest-domain]");
+    expect(button.text()).toContain("Chercher des formations en Soins infirmiers");
+    expect(button.classes()).toContain("primary");
+    await button.trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/trainings/suggest");
+  });
+
+  it("rien pour le domaine, mais l’IA indisponible : l’état vide sans bouton", async () => {
+    GET.mockResolvedValue({ data: page([], { domain_keywords: ["Soins infirmiers"], can_suggest: false }) });
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=trainings-domain-empty]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=suggest-domain]").exists()).toBe(false);
+  });
+
   it("suivi : intéressé, en cours avec progression, retrait", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     PUT.mockImplementation((_p: string, { body }: { body: Record<string, unknown> }) =>

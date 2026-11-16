@@ -55,6 +55,20 @@ describe("Composer (docs/143, D25)", () => {
     expect(wrapper.emitted("send")).toHaveLength(1);
   });
 
+  it("`sendText` occupé : une roue devant le texte, `aria-busy`, pas d'envoi (Kevin, 16.11)", async () => {
+    const wrapper = mount(Composer, { props: { modelValue: "a".repeat(300), placeholder: "Texte", minChars: 200, rows: 5, sendText: "Refaire la note", busy: true } });
+    const send = wrapper.get("[data-test=composer-send]");
+    expect(send.find("[data-test=composer-busy]").exists()).toBe(true);
+    expect(send.attributes("aria-busy")).toBe("true");
+    expect(send.attributes("aria-disabled")).toBe("true");
+    expect(send.text()).toBe("Refaire la note");
+    await send.trigger("click");
+    expect(wrapper.emitted("send")).toBeUndefined();
+    await wrapper.setProps({ busy: false });
+    expect(send.find("[data-test=composer-busy]").exists()).toBe(false);
+    expect(send.attributes("aria-busy")).toBeUndefined();
+  });
+
   it("le menu + s’ouvre, se parcourt aux flèches et joint l’élément choisi", async () => {
     const wrapper = mount(Composer, { attachTo: document.body, props: { modelValue: "", placeholder: "Message", plusItems: ITEMS } });
     const plus = wrapper.get("[data-test=composer-plus]");

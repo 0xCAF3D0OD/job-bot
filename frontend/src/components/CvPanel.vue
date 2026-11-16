@@ -29,6 +29,7 @@ import GroupedRow from "./GroupedRow.vue";
 import SegmentedControl from "./SegmentedControl.vue";
 import SuggestionChips from "./SuggestionChips.vue";
 import { cvChanges, type CvChange } from "../cvChanges";
+import DocSearch from "./DocSearch.vue";
 
 // Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -325,6 +326,16 @@ function revise(text: string): void {
 }
 const changes = computed<CvChange[]>(() => (selected.value ? cvChanges(selected.value) : []));
 const changesOpen = ref(false);
+// §34 du 16.11 (PreparerOrdinateurCVChangementsVus, PreparerOrdinateurCVRecherche) : la loupe ouvre la recherche ;
+// « Voir les changements · N » surligne dans l'aperçu ce que l'adaptation a changé (résumé, bloc déplacé).
+const searchOpen = ref(false);
+const searchButton = ref<HTMLButtonElement | null>(null);
+const showChanges = ref(false);
+const marked = computed(() => new Set<unknown>(showChanges.value ? changes.value.map((c) => c.mark).filter((m) => m !== undefined) : []));
+function closeSearch(): void {
+  searchOpen.value = false;
+  searchButton.value?.focus();
+}
 const versionsOpen = ref(false);
 const changesLine = computed(() => {
   const n = changes.value.length;
@@ -439,14 +450,48 @@ onMounted(() => void load());
           <h2 id="cv-card-title">
             CV adapté
           </h2>
-          <SegmentedControl
+          <div
             v-if="selected"
-            v-model="shownLanguage"
-            :options="LANGUAGE_OPTIONS"
-            label="Langue du CV"
-            class="doc-language"
-          />
+            class="doc-tools"
+          >
+            <button
+              ref="searchButton"
+              type="button"
+              class="doc-tool doc-tool-round"
+              aria-label="Chercher dans le CV"
+              :aria-expanded="searchOpen"
+              data-test="cv-search-open"
+              @click="searchOpen ? closeSearch() : (searchOpen = true)"
+            >
+              <AppIcon name="search" />
+            </button>
+            <button
+              v-if="changes.length"
+              type="button"
+              class="doc-tool"
+              :aria-pressed="showChanges"
+              data-test="cv-changes-show"
+              @click="showChanges = !showChanges"
+            >
+              <i
+                class="doc-tool-mark"
+                aria-hidden="true"
+              />Voir les changements · {{ changes.length }}
+            </button>
+            <SegmentedControl
+              v-model="shownLanguage"
+              :options="LANGUAGE_OPTIONS"
+              label="Langue du CV"
+              class="doc-language"
+            />
+          </div>
         </div>
+        <DocSearch
+          v-if="!phone && selected && searchOpen"
+          :target="sheet"
+          label="Chercher dans le CV"
+          @close="closeSearch"
+        />
         <DocPreview
           v-if="phone && loaded && !selected && !writing"
           :template="template"
@@ -548,7 +593,7 @@ onMounted(() => void load());
           v-if="doc && selected && (!phone || cvOpen)"
           ref="sheet"
           class="cv-sheet print-sheet"
-          :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing || saving }]"
+          :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing || saving, 'doc-reading': !phone && (searchOpen || showChanges) }]"
           :data-template="template"
           :lang="doc.language"
           data-test="cv"
@@ -581,7 +626,7 @@ onMounted(() => void load());
             data-test="summary"
             @input="onInput"
           />
-          <p class="print-only">
+          <p :class="['print-only', { 'cv-changed': marked.has('summary') }]">
             {{ edit.summary }}
           </p>
           <template
@@ -592,7 +637,7 @@ onMounted(() => void load());
             <div
               v-for="item in section.items"
               :key="item.chunk_id"
-              class="cv-item"
+              :class="['cv-item', { 'cv-changed': marked.has(item.chunk_id) }]"
               data-test="cv-item"
             >
               <strong

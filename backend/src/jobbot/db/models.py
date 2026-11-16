@@ -910,6 +910,17 @@ class Training(Base):
     # en base pour ne pas être reproposée.
     verified: Mapped[bool] = mapped_column(default=True)
     dismissed: Mapped[bool] = mapped_column(default=False)
+    # Diplômes acceptés (Kevin, 16.11) : vide = sans diplôme ; sinon un au moins suffit
+    # (soins_infirmiers, bachelor_hes_sante, bachelor_hes_social).
+    prerequisites: Mapped[Any] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
+    # Lien vérifié par le serveur (ok), à revérifier (5xx, délai, page de cookies) ou mort
+    # (404, 410). Une fiche du catalogue ne s'affiche qu'une fois « ok ».
+    link_status: Mapped[str] = mapped_column(
+        Text, nullable=False, default="ok", server_default="ok"
+    )
+    link_next_check: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

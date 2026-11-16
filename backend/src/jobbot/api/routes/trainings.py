@@ -10,12 +10,13 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
-from jobbot.db.models import ChunkKind, Profile, ProfileChunk, Training, TrainingMark
+from jobbot.db.models import ChunkKind, Profile, ProfileChunk, Setting, Training, TrainingMark
 from jobbot.letters.service import load_identity
 from jobbot.news import domain
 from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
-from jobbot.trainings import funding, service
+from jobbot.trainings import diplomas, funding, service
+from jobbot.trainings.diplomas import Diploma
 from jobbot.trainings.service import SuggestUnavailable
 
 router = APIRouter(prefix="/api/trainings", tags=["trainings"])
@@ -72,6 +73,9 @@ class TrainingOut(BaseModel):
     # Mots de « Mon domaine » trouvés, pour les surligner.
     matched: list[str]
     mark: TrainingMarkOut | None
+    # Diplômes acceptés (vide = sans diplôme) et s'ils sont remplis (Kevin, 16.11).
+    prerequisites: list[Diploma] = []
+    eligible: bool = True
 
 
 class TrainingPage(BaseModel):
@@ -80,6 +84,20 @@ class TrainingPage(BaseModel):
     languages: list[str]
     # Suggestions de l'IA possibles (clé API configurée).
     can_suggest: bool
+    # Diplômes de la personne : repérés dans son profil, ou déclarés (« J'ai ce diplôme »).
+    diplomas_detected: list[Diploma] = []
+    diplomas_declared: list[Diploma] = []
+
+
+class DiplomasIn(BaseModel):
+    """« J'ai ce diplôme » : la liste complète des diplômes déclarés."""
+
+    diplomas: list[Diploma]
+
+
+class DiplomasOut(BaseModel):
+    detected: list[Diploma]
+    declared: list[Diploma]
 
 
 class TrainingMarkIn(BaseModel):
@@ -132,6 +150,7 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
         # « Mon domaine », suggestions et suivi du profil choisi (docs/17 §4).
         profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
         keywords = await domain.keywords(session, profile.id)
+        detected, declared = await diplomas.of_account(session)
         rows = (
             await session.execute(
                 select(Training, TrainingMark)
@@ -155,8 +174,12 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
             training.prep,
             " · ".join(training.tags),
         )
-        # Une formation suivie reste visible, même hors de « Mon domaine ».
-        if domain_only and not matched and mark is None:
+        # Une formation suivie reste visible, même hors de « Mon domaine » ou si son lien est
+        # à revérifier ; sinon une fiche ne s'affiche qu'une fois son lien vérifié (16.11).
+        if mark is None and (
+            (domain_only and not matched)
+            or (training.origin == "catalog" and training.link_status != "ok")
+        ):
             continue
         items.append(
             TrainingOut(
@@ -189,6 +212,8 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
                 )
                 if mark
                 else None,
+                prerequisites=training.prerequisites,
+                eligible=diplomas.eligible(training.prerequisites, detected | declared),
             )
         )
     # Les plus proches de ton domaine d'abord, puis certifications, cours, parcours, ateliers.
@@ -198,7 +223,23 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
         domain_keywords=keywords,
         languages=sorted({t.language for t in items}),
         can_suggest=runtime.settings.llm_configured,
+        diplomas_detected=sorted(detected),
+        diplomas_declared=sorted(declared),
     )
+
+
+@router.put("/diplomas", operation_id="setTrainingDiplomas")
+async def set_diplomas(request: Request, body: DiplomasIn) -> DiplomasOut:
+    """« J'ai ce diplôme » (Kevin, 16.11) : corrige la détection ; une liste vide l'annule."""
+    chosen = sorted(set(body.diplomas))
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key=diplomas.SETTING_KEY, value=chosen)
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": chosen})
+        )
+        detected, declared = await diplomas.of_account(session)
+    return DiplomasOut(detected=sorted(detected), declared=sorted(declared))
 
 
 async def _visible(session: AsyncSession, request: Request, training_id: int) -> Profile:

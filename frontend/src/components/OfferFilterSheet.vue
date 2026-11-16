@@ -188,6 +188,22 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             >
           </template>
         </GroupedRow>
+        <!-- Section 35 du 16.11 (Filtres) : en dernier, après le télétravail (Kevin, section 31), avec « Seulement les employeurs directs ». -->
+        <GroupedRow
+          title="Masquer les agences de placement"
+          description="Seulement les employeurs directs"
+          label
+          data-test="sheet-agencies"
+        >
+          <template #end>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="filters.hideAgencies"
+              @change="emit('update', { hideAgencies: !filters.hideAgencies })"
+            >
+          </template>
+        </GroupedRow>
       </GroupedList>
     </div>
 
