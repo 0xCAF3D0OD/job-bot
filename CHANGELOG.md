@@ -667,3 +667,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.453 | Annonce illisible : « Ouvrir sur [site] » et « Chercher sur le site de [entreprise] » avant « Donner l’annonce » (paquet du 16.11, §33) | livrée |
 | 1.6.454 | Préparer : le bouton « ↑ » du champ de demande à 8 px du bord des trois côtés, 40 px visibles et 48 px de zone tactile | livrée |
 | 1.6.455 | Budget de poids : quand main dépasse déjà une limite, une PR qui n'ajoute rien à cette mesure passe | livrée |
+| 1.6.456 | Poids : neuf petits composants partagés réunis en un fichier (−2,7 Ko de JS) et 17 groupes de règles CSS identiques (−60 octets) | livrée |
