@@ -3116,6 +3116,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trainings/diplomas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Diplomas
+         * @description « J'ai ce diplôme » (Kevin, 16.11) : corrige la détection ; une liste vide l'annule.
+         */
+        put: operations["setTrainingDiplomas"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trainings/{training_id}/mark": {
         parameters: {
             query?: never;
@@ -5182,6 +5202,21 @@ export interface components {
         DeleteIn: {
             /** Password */
             password: string;
+        };
+        /**
+         * DiplomasIn
+         * @description « J'ai ce diplôme » : la liste complète des diplômes déclarés.
+         */
+        DiplomasIn: {
+            /** Diplomas */
+            diplomas: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
+        };
+        /** DiplomasOut */
+        DiplomasOut: {
+            /** Detected */
+            detected: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
+            /** Declared */
+            declared: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
         };
         /** DocumentOut */
         DocumentOut: {
@@ -8764,6 +8799,16 @@ export interface components {
             /** Matched */
             matched: string[];
             mark: components["schemas"]["TrainingMarkOut"] | null;
+            /**
+             * Prerequisites
+             * @default []
+             */
+            prerequisites: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
+            /**
+             * Eligible
+             * @default true
+             */
+            eligible: boolean;
         };
         /** TrainingPage */
         TrainingPage: {
@@ -8775,6 +8820,16 @@ export interface components {
             languages: string[];
             /** Can Suggest */
             can_suggest: boolean;
+            /**
+             * Diplomas Detected
+             * @default []
+             */
+            diplomas_detected: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
+            /**
+             * Diplomas Declared
+             * @default []
+             */
+            diplomas_declared: ("soins_infirmiers" | "bachelor_hes_sante" | "bachelor_hes_social")[];
         };
         /**
          * TrainingReview
@@ -15478,6 +15533,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrainingPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setTrainingDiplomas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiplomasIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiplomasOut"];
                 };
             };
             /** @description Validation Error */
