@@ -1,7 +1,7 @@
 """La date de mise à l'écart d'une offre (§30 du 16.11, décision de Kevin du 16.11.2026, 13 h 53)
 
-Revision ID: 0089
-Revises: 0088
+Revision ID: 0090
+Revises: 0089
 Create Date: 2026-11-16
 
 `offers.set_aside_at` : le moment où l'offre a été écartée (par la personne, Trier, l'assistant ou
@@ -19,8 +19,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0089"
-down_revision: str | None = "0088"
+revision: str = "0090"
+down_revision: str | None = "0089"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
