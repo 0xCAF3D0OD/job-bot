@@ -4,7 +4,6 @@ import { computed, onMounted, ref } from "vue";
 import type { InboxItem } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import FaceTransform from "../components/FaceTransform.vue";
-import Illustration from "../components/Illustration.vue";
 import MoodAnimation from "../components/MoodAnimation.vue";
 import NotificationCard from "../components/NotificationCard.vue";
 import NotificationRow from "../components/NotificationRow.vue";
@@ -170,18 +169,25 @@ onMounted(() => void refresh());
         role="status"
         data-test="notifications-empty"
       >
-        <!-- « Tout est lu » : sur téléphone, le personnage assis et son ombre (§10.9, docs/141 §3) ; sur ordinateur,
-             la cloche sonne dans l’arche, une fois (maquette Animations). Un seul des trois par écran. -->
+        <!-- « Tout est lu » : sur téléphone, le Sourire de 140 px et son ombre (corrections du 13.11 au soir, §7 ;
+             liseré clair en sombre) ; sur ordinateur, la cloche sonne dans l’arche, une fois (maquette Animations,
+             NotificationsOrdinateur ne dessine pas cet état). Un seul des trois par écran. -->
         <div
           v-if="inbox.items.length && !wide"
           class="notifications-perso"
           data-test="notifications-perso"
         >
-          <Illustration
-            pose="assis"
-            :height="211"
-            full
-          />
+          <img
+            class="notifications-sourire"
+            src="/illustrations/sourire-pouce-140.webp"
+            srcset="/illustrations/sourire-pouce-140.webp 1x, /illustrations/sourire-pouce-280.webp 2x"
+            width="148"
+            height="140"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            data-test="notifications-sourire"
+          >
           <span
             class="notifications-perso-shadow"
             aria-hidden="true"

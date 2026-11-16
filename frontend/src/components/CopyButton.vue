@@ -8,10 +8,16 @@ import CopyLabel from "./CopyLabel.vue";
 // annoncés aux lecteurs d'écran (WCAG 4.1.3). Inspiré du bouton de copie de GitHub (Primer).
 // `text` (maquette Preparer, étape 7c) : le mot « Copier » dans une pastille, qui devient « Copié » en vert ;
 // le nom du champ reste lu par un lecteur d'écran.
-const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string }>(), {
+// `announce: false` : la page annonce elle-même la copie (panneau des alertes, « Adresse copiée »).
+// `word` : le mot de la pastille à la place de « Copier » (« Objet » dans la Relance) ; `ariaLabel` : le nom lu par
+// un lecteur d'écran, à la place du mot et de `text`.
+const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string; announce?: boolean; word?: string; ariaLabel?: string }>(), {
   label: "Copier",
+  word: "Copier",
+  ariaLabel: undefined,
   testId: "copy",
   text: "",
+  announce: true,
 });
 const emit = defineEmits<{ copied: [] }>();
 
@@ -40,10 +46,14 @@ onUnmounted(() => clearTimeout(timer));
     type="button"
     :class="text ? ['copy-text', { 'copy-done': done }] : 'copy-button'"
     :data-test="testId"
+    :aria-label="ariaLabel"
     @click="copy"
   >
     <template v-if="text">
-      {{ done ? "Copié" : "Copier" }}<span class="visually-hidden"> : {{ text }}</span>
+      {{ done ? "Copié" : word }}<span
+        v-if="!ariaLabel"
+        class="visually-hidden"
+      > : {{ text }}</span>
     </template>
     <CopyLabel
       v-else
@@ -52,6 +62,7 @@ onUnmounted(() => clearTimeout(timer));
     />
   </button>
   <span
+    v-if="announce"
     class="visually-hidden"
     role="status"
   >{{ done ? "Copié" : "" }}</span>

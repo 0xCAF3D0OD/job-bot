@@ -29,6 +29,14 @@ router.onError((error: unknown) => {
   if (/dynamically imported module|Importing a module script failed|error loading dynamically/i.test(String(error))) reloadOnce();
 });
 
+// Barres de défilement classiques (Windows, Linux, Mac avec souris) : leur place reste réservée (html.scrollbars-classic,
+// style.css), pour que la page ne glisse pas de côté quand une page courte s'affiche (Kevin, 15.11.2026).
+const probe = document.createElement("div");
+probe.style.cssText = "position:absolute;top:-99px;width:50px;height:50px;overflow:scroll";
+document.body.append(probe);
+document.documentElement.classList.toggle("scrollbars-classic", probe.offsetWidth > probe.clientWidth);
+probe.remove();
+
 // L'apparence choisie (Clair, Sombre) avant le premier rendu : pas d'éclair de l'autre thème.
 useTheme().apply();
 useTextSize().apply();

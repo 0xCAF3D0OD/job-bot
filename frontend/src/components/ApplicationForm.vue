@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 
 import type { ApplicationStatus, ApplicationUpdate } from "../api/client";
 import { todayDay } from "../dates";
@@ -16,6 +16,8 @@ const props = defineProps<{
   // Le statut de suivi n'a de sens qu'une fois la candidature enregistrée.
   withStatus: boolean;
   error?: string;
+  // Ouvert depuis « Il manque l’adresse de l’entreprise » (écran de fin, §8) : le curseur va dans l’adresse.
+  focusAddress?: boolean;
 }>();
 const emit = defineEmits<{ submit: [value: ApplicationFormValue]; close: [] }>();
 
@@ -50,6 +52,13 @@ const { errors, check, clearIfFixed, validate } = useChecks(
 const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, string][];
 
 const formEl = ref<HTMLFormElement | null>(null);
+onMounted(async () => {
+  if (!props.focusAddress) return;
+  await nextTick();
+  const field = formEl.value?.querySelector<HTMLInputElement>("[data-test=application-address]");
+  field?.scrollIntoView?.({ block: "center" });
+  field?.focus({ preventScroll: true });
+});
 async function submit(): Promise<void> {
   if (validate()) {
     emit("submit", form.value);
@@ -157,6 +166,7 @@ const today = todayDay();
             :id="id"
             v-model="form.company_address"
             type="text"
+            data-test="application-address"
             :aria-describedby="describedby"
             :aria-invalid="invalid"
           >

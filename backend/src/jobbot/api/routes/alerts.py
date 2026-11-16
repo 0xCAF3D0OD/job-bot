@@ -340,16 +340,20 @@ class FirstOffersOut(BaseModel):
     found: int = 0
     new: int = 0
     queries: list[str] = []
+    # D'où viennent ces offres : la recherche publique de jobup, ou la recherche web de l'IA
+    # (intitulé et lien seulement, offres non notées).
+    provider: Literal["jobup", "web"] | None = None
 
 
 class FirstOffersStart(FirstOffersOut):
     result: Literal["queued", "already_queued", "no_trade", "too_soon", "disabled"]
 
 
-def _first_out(value: dict[str, object]) -> FirstOffersOut:
+def _first_out(value: dict[str, object], provider: str | None) -> FirstOffersOut:
     found, new, queries, at = (value.get(k) for k in ("found", "new", "queries", "at"))
     raw = value.get("status")
     return FirstOffersOut(
+        provider=provider if provider in ("jobup", "web") else None,
         status=raw if raw in ("queued", "done", "failed", "no_trade") else "none",
         at=datetime.fromisoformat(at) if isinstance(at, str) else None,
         found=found if isinstance(found, int) else 0,
@@ -367,7 +371,8 @@ async def get_first_offers(request: Request) -> FirstOffersOut:
     """
     runtime = _runtime(request)
     # Coupée (0.82.4) : ni recherche ni carte ; les offres déjà trouvées restent.
-    if not runtime.settings.public_search_enabled:
+    provider = public_search.provider(runtime.settings)
+    if provider is None:
         return FirstOffersOut(status="disabled")
     async with runtime.sessionmaker() as session:
         current = await public_search.state(session)
@@ -381,7 +386,7 @@ async def get_first_offers(request: Request) -> FirstOffersOut:
         await public_search.request(runtime, first_only=True)
         async with runtime.sessionmaker() as session:
             current = await public_search.state(session)
-    return _first_out(current)
+    return _first_out(current, provider)
 
 
 @router.post("/first-offers", operation_id="startFirstOffers", status_code=status.HTTP_202_ACCEPTED)
@@ -390,7 +395,9 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
     runtime = _runtime(request)
     result = await public_search.request(runtime)
     async with runtime.sessionmaker() as session:
-        current = _first_out(await public_search.state(session))
+        current = _first_out(
+            await public_search.state(session), public_search.provider(runtime.settings)
+        )
     return FirstOffersStart(**current.model_dump(), result=result)
 
 
@@ -398,14 +405,43 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
 
 
 class ExpectCodeOut(BaseModel):
-    # False : six relevés rapides dans l'heure, c'est le maximum.
+    # Toujours True depuis le relevé partagé (15.11) : plus de limite par compte.
     queued: bool
+    # La boîte invités a raté ses 3 dernières lectures : l'étape du code le dit (15.11, 19 h 02).
+    mailbox_down: bool = False
 
 
 @router.post("/expect-code", operation_id="expectSiteCode", status_code=status.HTTP_202_ACCEPTED)
 async def expect_code(request: Request) -> ExpectCodeOut:
     """« J'attends un code » : la boîte relevée toutes les 15 secondes pendant 5 minutes."""
     return ExpectCodeOut(queued=await site_codes.expect(_runtime(request)))
+
+
+@router.post("/watch-code", operation_id="watchSiteCode", status_code=status.HTTP_202_ACCEPTED)
+async def watch_code(request: Request) -> ExpectCodeOut:
+    """L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
+    son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
+    attend."""
+    runtime = _runtime(request)
+    return ExpectCodeOut(
+        queued=await site_codes.expect(runtime, watch=True),
+        mailbox_down=await site_codes.guest_box_down(runtime),
+    )
+
+
+class LastCodeOut(BaseModel):
+    """Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée."""
+
+    code: str
+    received_at: datetime
+    valid_minutes: int
+
+
+@router.get("/codes/last", operation_id="lastSiteCode")
+async def last_code(request: Request, site: str = "jobup") -> LastCodeOut | None:
+    """Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail."""
+    found = await site_codes.last(_runtime(request), site)
+    return LastCodeOut(**found.__dict__) if found else None
 
 
 class SiteMessageOut(BaseModel):

@@ -15,10 +15,12 @@ from sqlalchemy import func, select, text, update
 from jobbot.api.app import create_app
 from jobbot.core.filter import Criteria, RemotePolicy
 from jobbot.db.models import (
+    MANUAL_LINK_SOURCE,
     Evaluation,
     LlmBatch,
     LlmCall,
     Offer,
+    OfferLink,
     OfferStatus,
     ProfileChunk,
     Setting,
@@ -27,6 +29,8 @@ from jobbot.filtering.service import save_criteria
 from jobbot.llm.client import BatchItem, RawResult, Refused
 from jobbot.llm.pricing import Usage, cost_usd
 from jobbot.llm.scoring import (
+    INSTRUCTIONS,
+    NEXT_OUTPUT_SCHEMA,
     OUTPUT_SCHEMA,
     PART_MAX,
     InvalidScore,
@@ -39,7 +43,7 @@ from jobbot.llm.scoring import (
     why_sentence,
 )
 from jobbot.runtime import Runtime
-from jobbot.scoring import remote, service
+from jobbot.scoring import manual_backlog, remote, service, short_notes
 from jobbot.settings import Settings
 
 from .conftest import admin_engine, make_settings
@@ -110,6 +114,28 @@ def test_parse_drops_unproven_strengths() -> None:
     )
     assert [(p.text, p.chunk_ids) for p in output.strengths] == [("Prouvé", [1])]
     assert output.score == 78
+
+
+def test_parse_keeps_the_short_form_tidied() -> None:
+    """score-v9 : la forme courte est gardée, espaces resserrés ; vide, elle n'existe pas. Trop
+    longue, elle reste : c'est l'écran qui revient au texte complet."""
+    output = parse_output(
+        answer(
+            strengths=[
+                {
+                    "text": "Linux : 5 ans d'administration.",
+                    "chunk_ids": [1],
+                    "short": " Linux  5 ans ",
+                },
+                {"text": "Acme : admin système.", "chunk_ids": [2], "short": "  "},
+                {"text": "Linux : serveurs.", "chunk_ids": [1], "short": "x" * 40},
+                {"text": "Ancienne note", "chunk_ids": [1]},
+            ]
+        ),
+        CHUNKS,
+    )
+    assert [p.short for p in output.strengths] == ["Linux 5 ans", None, "x" * 40, None]
+    assert [p.short for p in output.gaps] == [None]
 
 
 def test_parse_without_profile_has_no_score() -> None:
@@ -202,11 +228,10 @@ async def add_offer(rt: Runtime, n: int, status: str = OfferStatus.TO_REVIEW, **
         offer = Offer(
             fingerprint=f"o{n}",
             title=f"Offre {n}",
-            first_seen_at=NOW + timedelta(minutes=n),
             last_seen_at=NOW,
             status=status,
             snippet="Extrait",
-            **extra,
+            **({"first_seen_at": NOW + timedelta(minutes=n)} | extra),
         )
         session.add(offer)
         await session.flush()
@@ -234,7 +259,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v7" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v8" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -347,7 +372,7 @@ async def test_api_scores_sort_filter_and_status(
         "Exploiter des serveurs Linux",
         False,
     )
-    assert top["strengths"] == [{"text": "Linux solide", "chunk_ids": [1]}]
+    assert top["strengths"] == [{"text": "Linux solide", "chunk_ids": [1], "short": None}]
     filtered = (await api.get("/api/offers", params={"view": "to_review", "min_score": 60})).json()
     assert [o["title"] for o in filtered["items"]] == ["Offre 2"]
 
@@ -442,7 +467,7 @@ async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClie
     await service.run_scoring(ai)
     async with ai.sessionmaker() as session:
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
-        assert evaluation is not None and evaluation.prompt_version == "score-v7"
+        assert evaluation is not None and evaluation.prompt_version == "score-v8"
         assert evaluation.keywords_asks == [
             {"text": "5 ans Linux", "covered": True},
             {"text": "Ansible", "covered": False},
@@ -476,7 +501,7 @@ async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
         rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
     # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
     # annulé est notée comme une nouvelle, sans erreur.
-    assert rows[old].prompt_version == "score-v7" and rows[old].score_error is None
+    assert rows[old].prompt_version == "score-v8" and rows[old].score_error is None
     assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
     assert len(fake.calls) - calls_before == 2
 
@@ -753,3 +778,239 @@ async def test_api_exposes_the_parts_of_the_note(
     ]
     assert offer["score_parts"][1]["check"] is True
     assert offer["score_tip"] == tip
+
+
+# --- Citations de l'annonce (score-v8, lot du 11 novembre au soir, PR 45 et 47) ----------
+
+
+ANNONCE = (
+    "Vous exploitez nos clusters Kubernetes\nmulti-régions.\n\n"
+    "Vous faites évoluer l\u2019infrastructure avec Terraform et\u00a0Ansible.\n"
+    "Piquet une semaine sur six."
+)
+
+
+def with_quotes(quotes: list[str]) -> str:
+    return json.dumps({**json.loads(answer(score=78)), "quotes": quotes})
+
+
+def test_invented_quote_is_never_kept() -> None:
+    output = parse_output(
+        with_quotes(["maîtrise avancée de Kubernetes", "clusters Kubernetes"]), CHUNKS, ANNONCE
+    )
+    assert output.quotes == ["clusters Kubernetes"]
+
+
+def test_quote_is_found_across_apostrophes_line_breaks_and_case() -> None:
+    output = parse_output(
+        with_quotes(
+            [
+                "clusters kubernetes multi-régions",  # un retour à la ligne dans l'annonce
+                "l'infrastructure avec Terraform",  # apostrophe droite, courbe dans l'annonce
+                "Terraform et Ansible",  # espace insécable dans l'annonce
+            ]
+        ),
+        CHUNKS,
+        ANNONCE,
+    )
+    # Le texte gardé est celui de l'annonce, pas celui de l'IA.
+    assert output.quotes == [
+        "clusters Kubernetes\nmulti-régions",
+        "l\u2019infrastructure avec Terraform",
+        "Terraform et\u00a0Ansible",
+    ]
+
+
+def test_quotes_are_two_to_twelve_words_and_five_at_most() -> None:
+    long = (
+        "Vous exploitez nos clusters Kubernetes multi-régions. "
+        "Vous faites évoluer l\u2019infrastructure avec Terraform et Ansible"
+    )
+    output = parse_output(with_quotes(["Kubernetes", long]), CHUNKS, ANNONCE)
+    assert output.quotes == []
+    many = [
+        "Vous exploitez",
+        "nos clusters",
+        "clusters Kubernetes",
+        "faites évoluer",
+        "avec Terraform",
+        "Piquet une semaine",
+        "vous exploitez",  # doublon, à la casse près
+    ]
+    output = parse_output(with_quotes(many), CHUNKS, ANNONCE)
+    assert output.quotes == many[:5]
+
+
+def test_no_quotes_without_profile_or_without_text() -> None:
+    assert parse_output(with_quotes(["clusters Kubernetes"]), [], ANNONCE).quotes == []
+    assert parse_output(with_quotes(["clusters Kubernetes"]), CHUNKS).quotes == []
+    # Une réponse d'avant score-v8 (lot en cours) n'a pas le champ : pas de citation, pas d'erreur.
+    assert parse_output(answer(score=78), CHUNKS, ANNONCE).quotes == []
+
+
+def test_schema_requires_quotes() -> None:
+    assert "quotes" in OUTPUT_SCHEMA["required"]
+    assert "Citations de l'annonce" in INSTRUCTIONS
+
+
+async def test_api_exposes_only_the_quotes_found_in_the_offer(
+    ai: Runtime, fake: FakeClient, api: AsyncClient
+) -> None:
+    await add_offer(ai, 1, description=ANNONCE)
+    fake.responses = {"Offre 1": raw(with_quotes(["clusters kubernetes", "expert Kubernetes"]))}
+    await service.run_scoring(ai)
+    offer = (await api.get("/api/offers", params={"view": "to_review"})).json()["items"][0]
+    assert offer["passages"] == ["clusters Kubernetes"]
+
+
+AFTER = service.MANUAL_SCORED_SINCE + timedelta(hours=1)
+
+
+async def test_manual_offer_is_scored_whatever_its_status(ai: Runtime, fake: FakeClient) -> None:
+    """Ajoutée à la main : notée même écartée, gardée, en préparation ou envoyée, tant
+    qu'elle n'a jamais eu de note (décision de Kevin du 2026-11-15). Une offre d'alerte
+    écartée reste sans note, et une note manquée ne se relance pas sans fin."""
+    manual = {}
+    for n, status in enumerate(
+        (
+            OfferStatus.FILTERED_OUT,
+            OfferStatus.LATER,
+            OfferStatus.PREPARING,
+            OfferStatus.APPLIED,
+        ),
+        start=1,
+    ):
+        manual[status] = await add_offer(ai, n, status=status, first_seen_at=AFTER)
+    alert_filtered = await add_offer(ai, 10, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
+    failed = await add_offer(ai, 11, status=OfferStatus.FILTERED_OUT, first_seen_at=AFTER)
+    # Ajoutée avant MANUAL_SCORED_SINCE : laissée à `jobbot noter-offres-manuelles`.
+    older = await add_offer(ai, 12, status=OfferStatus.FILTERED_OUT)
+    async with ai.sessionmaker.begin() as session:
+        for offer_id in (*manual.values(), failed, older):
+            session.add(OfferLink(offer_id=offer_id, source=MANUAL_LINK_SOURCE, url=""))
+        session.add(OfferLink(offer_id=alert_filtered, source="jobup", url="https://jobup.ch/1"))
+        session.add(
+            Evaluation(
+                offer_id=failed,
+                filter_passed=False,
+                filter_reasons=[],
+                criteria_hash="x",
+                score_error="réponse vide",
+                profile_hash=profile_hash(CHUNKS),
+            )
+        )
+
+    result = await service.run_scoring(ai)
+
+    assert result.scored == 4
+    for offer_id in manual.values():
+        stored = await evaluation(ai, offer_id)
+        assert stored is not None and stored.score is not None
+    assert await evaluation(ai, alert_filtered) is None
+    assert await evaluation(ai, older) is None
+    async with ai.sessionmaker() as session:
+        assert (
+            await service.candidates(session, profile_hash(CHUNKS), include_stale_profile=False)
+            == []
+        )
+
+
+async def test_manual_backlog_counts_then_scores_once(ai: Runtime, fake: FakeClient) -> None:
+    """`jobbot noter-offres-manuelles` : d'abord le nombre et le coût, sans appel ; puis la
+    note et le bilan (notées, jetons). Une seconde exécution ne trouve plus rien."""
+    old_manual = await add_offer(ai, 1, status=OfferStatus.FILTERED_OUT)
+    alert_filtered = await add_offer(ai, 2, status=OfferStatus.FILTERED_OUT)
+    scored = await add_offer(ai, 3, status=OfferStatus.APPLIED)
+    async with ai.sessionmaker.begin() as session:
+        for offer_id in (old_manual, scored):
+            session.add(OfferLink(offer_id=offer_id, source=MANUAL_LINK_SOURCE, url=""))
+        session.add(
+            Evaluation(
+                offer_id=scored,
+                filter_passed=True,
+                filter_reasons=[],
+                criteria_hash="x",
+                score=70,
+                scored_at=NOW,
+                prompt_version="score-v2",
+                profile_hash=profile_hash(CHUNKS),
+            )
+        )
+
+    found = await manual_backlog.count(ai)
+    assert [f.offers for f in found] == [1] and found[0].cost_chf > 0
+    assert fake.calls == []
+
+    done = await manual_backlog.score_all(ai)
+
+    assert (done.scored, done.failed, done.skipped) == (1, 0, 0)
+    assert done.input_tokens > 0 and done.output_tokens > 0
+    stored = await evaluation(ai, old_manual)
+    assert stored is not None and stored.score is not None
+    assert await evaluation(ai, alert_filtered) is None
+    assert await manual_backlog.count(ai) == []
+    assert (await manual_backlog.score_all(ai)).scored == 0
+    assert len(fake.calls) == 1
+
+
+# --- Mesure des notes courtes (score-v9) ----------------------------------------------
+
+
+def test_short_problem_checks_length_and_doubt() -> None:
+    assert short_notes.short_problem("Linux : 5 ans.", "Linux 5 ans") is None
+    assert short_notes.short_problem("Linux : 5 ans.", None) == "absente ou vide"
+    assert short_notes.short_problem("Linux : 5 ans.", "") == "absente ou vide"
+    assert short_notes.short_problem("Linux", "x" * 29) == "29 caractères (plus de 28)"
+    assert short_notes.short_problem("Linux", "x" * 28) is None
+    doubt = "Allemand : niveau non précisé, à vérifier."
+    assert short_notes.short_problem(doubt, "Allemand courant") == "doute sans « ? »"
+    assert short_notes.short_problem(doubt, "Allemand courant ?") is None
+
+
+async def test_measure_short_notes_writes_nothing(ai: Runtime, fake: FakeClient) -> None:
+    for n in (1, 2):
+        await add_offer(ai, n)
+    await service.run_scoring(ai)
+    async with ai.sessionmaker() as session:
+        calls_before = await session.scalar(select(func.count()).select_from(LlmCall))
+        evaluations_before = [
+            (e.offer_id, e.scored_at) for e in await session.scalars(select(Evaluation))
+        ]
+
+    profile, samples = await short_notes.gather(ai)
+    assert len(samples) == 2 and len(profile) == 2
+    assert short_notes.estimate_usd(samples) == Decimal("0.0245")  # 2 x 0,01225 $
+    assert all(s.before is not None and s.version == "score-v8" for s in samples)
+
+    fake.responses["Offre 1"] = raw(
+        answer(
+            strengths=[
+                {
+                    "text": "Linux : 5 ans d'administration.",
+                    "chunk_ids": [1],
+                    "short": "Linux 5 ans",
+                }
+            ]
+        ).replace(
+            '{"text": "Pas d\'Ansible", "chunk_ids": []}',
+            '{"text": "Ansible : non mentionné.", "chunk_ids": [], "short": "Ansible"}',
+        )
+    )
+    results = await short_notes.measure(ai, profile, samples)
+    lines = short_notes.report(results, Decimal("0.8"))
+
+    assert len(fake.calls) == 4
+    text_ = "\n".join(lines)
+    assert "Prompt mesuré : score-v9" in text_ and "Notes d'avant : 2 en score-v8" in text_
+    assert fake.calls[-1]["output_config"]["format"]["schema"] == NEXT_OUTPUT_SCHEMA
+    assert "Jetons d'entrée moyens (2 offres) : 3400 → 3400, écart +0 (+0.0 %)" in text_
+    assert "Jetons de sortie moyens (2 offres) : 350 → 350" in text_
+    assert "Formes courtes valides : 1 sur 4 (25%)" in text_
+    assert "invalide (doute sans « ? ») : « Ansible » ← Ansible : non mentionné." in text_
+    assert "court : « Linux 5 ans »" in text_
+    # Rien n'est écrit : ni appel compté, ni note changée.
+    async with ai.sessionmaker() as session:
+        assert await session.scalar(select(func.count()).select_from(LlmCall)) == calls_before
+        assert [
+            (e.offer_id, e.scored_at) for e in await session.scalars(select(Evaluation))
+        ] == evaluations_before

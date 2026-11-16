@@ -39,7 +39,6 @@ import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import Composer from "../components/Composer.vue";
 import SuggestionChips from "../components/SuggestionChips.vue";
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInSentence, dateWithTime } from "../dates";
 import { companyPlace, expiredText, scoreWord } from "../format";
@@ -112,6 +111,20 @@ const contactsOpen = ref(false);
 const contactsCount = ref(0);
 // « Tout télécharger » : chaque pièce de la ligne « À joindre » qui se télécharge (Lettre.pdf, CV.pdf).
 const attachRow = ref<HTMLElement | null>(null);
+// « Partager » (MaCandidatureV2, état formulaire) : la feuille de partage du téléphone avec le PDF, pour le
+// joindre dans l'appli du site ; sans partage de fichiers (ordinateur, Firefox), le lien télécharge comme avant.
+async function sharePdf(event: MouseEvent, href: string, name: string): Promise<void> {
+  const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
+  const probe = typeof File === "function" ? new File([""], name, { type: "application/pdf" }) : null;
+  if (!probe || !nav.share || !nav.canShare?.({ files: [probe] })) return;
+  event.preventDefault();
+  try {
+    const blob = await (await fetch(href, { credentials: "same-origin" })).blob();
+    await nav.share({ files: [new File([blob], name, { type: "application/pdf" })], title: name });
+  } catch {
+    // Partage annulé ou refusé : rien à dire.
+  }
+}
 function downloadAll(): void {
   attachRow.value?.querySelectorAll<HTMLAnchorElement>("a[download]").forEach((link) => link.click());
 }
@@ -128,7 +141,7 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 const applyError = ref("");
 const applyBusy = ref(false);
 // L'écran « Candidature envoyée. » (docs/141, 8) : le poste, ce qui compte pour l'ORP, la relance prévue.
-type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; followUpOn: string | null };
+type Sent = { id: number; company: string; title: string; month: string; count: number | null; target: number | null; dueDate: string | null; followUpOn: string | null; addressMissing?: boolean };
 const sent = ref<Sent | null>(null);
 // « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
 const goal = ref<OrpMonth | null>(null);
@@ -147,12 +160,11 @@ async function markApplied(): Promise<void> {
       applyError.value = detail(err, "Enregistrement impossible pour l’instant : réessaie.");
       return;
     }
-    useJobsMemory().sent(offerId);
     // Le mois ORP d'abord : s'il atteint l'objectif, « C'est fait ! » s'affiche tout de suite, sans passer par
     // « Candidature notée ».
     const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
     goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
-    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, followUpOn: data.follow_up_on ?? null };
+    sent.value = { id: data.id, company: data.company, title: data.job_title, month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null, dueDate: orp?.due_date ?? null, followUpOn: data.follow_up_on ?? null, addressMissing: !data.company_address?.trim() };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
@@ -173,8 +185,6 @@ function cancelApplied(): void {
   if (won) forgetGoal(won.month);
   offer.value = { ...before, status: "preparing" };
   opened.value = false;
-  // L'offre revient en préparation : le menu Candidatures y ramène de nouveau.
-  useJobsMemory().remember(`/candidatures/offres/${offerId}/preparer?doc=postuler`);
   void offerUndo({
     message: "Candidature retirée : l’offre revient en préparation.",
     commit: async (keepalive) => {
@@ -188,7 +198,6 @@ function cancelApplied(): void {
       sent.value = done;
       if (won && firstGoal(won.month, won.count, won.target)) goal.value = won;
       offer.value = before;
-      useJobsMemory().sent(offerId);
     },
   });
 }
@@ -354,7 +363,6 @@ async function load(): Promise<void> {
   ]);
   if (!o.data) {
     notFound.value = true;
-    useJobsMemory().forget(route.fullPath);
     return;
   }
   offer.value = o.data;
@@ -828,7 +836,11 @@ onMounted(() => void load());
     :company="sent.company"
     :count="sent.count"
     :target="sent.target"
+    :month="sent.month"
+    :due-date="sent.dueDate"
     :follow-up-on="sent.followUpOn"
+    :application-id="sent.id"
+    :address-missing="sent.addressMissing"
     cancellable
     @cancel="cancelApplied"
   />
@@ -881,7 +893,7 @@ onMounted(() => void load());
     />
   </PageHero>
   <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
-       H1 avec l’entreprise et le lieu, l’anneau de 48 avec le verdict, puis les étapes. « Ma candidature » ne reste
+       H1 avec l’entreprise et le lieu, l’anneau de 48 seul (§9 du 14.11), puis les étapes. « Ma candidature » ne reste
        que dans le titre de l’onglet. -->
   <header
     v-else
@@ -912,12 +924,14 @@ onMounted(() => void load());
         {{ companyPlace(offer.company, offer.location, true) }}
       </p>
     </div>
-    <!-- La note (§2.2) : l'anneau, « Proche de ton profil » puis « Voir la compatibilité › », qui ouvre le panneau. -->
+    <!-- La note (§9, maquette du 14 novembre) : l’anneau de 48 seul, avec ses séparations (§1), qui ouvre le volet
+         Compatibilité. Plus de verdict ni de « Voir la compatibilité » à côté : ils sont sur la carte de l’offre. -->
     <button
       v-if="offer && verdict && offer.score !== null && offer.score !== undefined"
       type="button"
       class="prep-desk-score"
       aria-haspopup="dialog"
+      :aria-label="`Compatibilité, ${MATCH_TITLE[verdict.tone]} : ${Math.round(offer.score)} sur 100, voir le détail`"
       data-test="prep-score"
       @click="compatOpen = true"
     >
@@ -926,10 +940,6 @@ onMounted(() => void load());
         :stale="offer.score_stale"
         bare
       />
-      <span class="prep-desk-score-text">
-        <span :class="['prep-verdict', verdict.tone]">{{ MATCH_TITLE[verdict.tone] }}</span>
-        <span class="prep-desk-compat">Voir la compatibilité<AppIcon name="chevron" /></span>
-      </span>
     </button>
     <StepTabs
       v-if="offer"
@@ -997,8 +1007,74 @@ onMounted(() => void load());
           v-if="offer.status !== 'applied'"
           class="prep-main apply-cards"
         >
+          <!-- Téléphone (planche MaCandidatureV2, état « formulaire », refaite le 14.11) : le rappel de la capture,
+               « Tes documents » (Partager), « À copier · touche une ligne » et « Si le formulaire le demande »,
+               puis le contact ; les certificats, le modèle et « J’ai déjà postulé » de main sont gardés. -->
+          <template v-if="phone">
+            <p
+              class="apl-proof"
+              data-test="apply-proof"
+            >
+              <AppIcon name="camera" />
+              <span><strong>À la fin, fais une capture de la confirmation.</strong><span>Elle sert de justificatif pour l’ORP.</span></span>
+            </p>
+            <section
+              class="apl-card apl-docs"
+              aria-labelledby="apply-where-title"
+              data-test="apply-where"
+            >
+              <h2
+                id="apply-where-title"
+                class="apl-cap"
+              >
+                Tes documents
+              </h2>
+              <PrepCertificates>
+                <span
+                  v-if="currentLetterId"
+                  class="apl-doc"
+                ><AppIcon name="file" /><b>Lettre.pdf</b><a
+                  :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
+                  download="Lettre.pdf"
+                  class="apl-share"
+                  data-test="sheet-letter"
+                  @click="sharePdf($event, pdfHref(`/api/letters/${currentLetterId}/pdf`, template), 'Lettre.pdf')"
+                ><AppIcon name="share" />Partager<span class="visually-hidden"> Lettre.pdf</span></a></span>
+                <span
+                  v-if="currentCvId"
+                  class="apl-doc"
+                ><AppIcon name="file" /><b>CV.pdf</b><a
+                  :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
+                  download="CV.pdf"
+                  class="apl-share"
+                  data-test="sheet-cv"
+                  @click="sharePdf($event, pdfHref(`/api/cvs/${currentCvId}/pdf`, template), 'CV.pdf')"
+                ><AppIcon name="share" />Partager<span class="visually-hidden"> CV.pdf</span></a></span>
+              </PrepCertificates>
+              <p
+                v-if="templateNote"
+                class="apl-note"
+                data-test="apply-template-note"
+              >
+                {{ templateNote }}
+              </p>
+            </section>
+            <FormSheet
+              :letter-text="currentLetterText"
+              data-test="apply-sheet"
+            />
+            <RouterLink
+              v-if="offer.company"
+              :to="`/candidatures/offres/${offer.id}#contacts`"
+              class="apl-card apl-contact"
+              data-test="find-contact"
+            >
+              <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
+            </RouterLink>
+          </template>
           <section
-            :class="phone ? 'doc-card' : 'apply-card'"
+            v-if="!phone"
+            class="apply-card"
             aria-labelledby="apply-where-title"
             data-test="apply-where"
           >
@@ -1055,13 +1131,6 @@ onMounted(() => void load());
                 <AppIcon name="download" />Tout télécharger
               </button>
             </div>
-            <p
-              v-if="phone && templateNote"
-              class="apply-where-text apply-template-note"
-              data-test="apply-template-note"
-            >
-              {{ templateNote }}
-            </p>
             <div
               v-if="!phone"
               class="apply-go"
@@ -1077,7 +1146,8 @@ onMounted(() => void load());
             </div>
           </section>
           <section
-            :class="phone ? 'doc-card apply-copy' : 'apply-card apply-copy-desk'"
+            v-if="!phone"
+            class="apply-card apply-copy-desk"
             aria-labelledby="apply-copy-title"
             data-test="apply-sheet"
           >
@@ -1092,14 +1162,6 @@ onMounted(() => void load());
             </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
-          <RouterLink
-            v-if="phone && offer.company"
-            :to="`/candidatures/offres/${offer.id}#contacts`"
-            class="apply-contact"
-            data-test="find-contact"
-          >
-            <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
-          </RouterLink>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
           <ActionBar
             v-if="phone"
@@ -1462,10 +1524,20 @@ onMounted(() => void load());
             <article
               v-if="doc && draft && (!phone || letterOpen)"
               class="letter-sheet print-sheet"
-              :class="{ 'fresh-lines': fresh, busy: writing }"
+              :class="[`tpl-${template}`, { 'fresh-lines': fresh, busy: writing }]"
+              :data-template="template"
               :lang="doc.language"
               data-test="letter"
             >
+              <!-- Le nom en tête, à la manière du modèle choisi, comme dans le PDF (letters/pdf.py) : le Sobre garde le
+                   nom dans l’expéditeur. -->
+              <p
+                v-if="template !== 'sobre' && doc.sender[0]"
+                class="doc-head"
+                data-test="letter-head"
+              >
+                <strong>{{ doc.sender[0] }}</strong>
+              </p>
               <div class="letter-sender">
                 <span
                   v-for="line in doc.sender"
@@ -2028,31 +2100,19 @@ onMounted(() => void load());
 .prep-desk-title { flex: 1; min-width: 0; }
 .prep-desk-title h1 { margin: 0; font-size: var(--prep-24); font-weight: var(--weight-heavy); line-height: var(--leading-tight); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prep-desk-title p { margin: 0; font-size: var(--font-label); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* La note (§2.2) : anneau de 48, 12 px, puis le verdict 15/20 700 et, 6 px dessous, « Voir la compatibilité » 14/20 700
-   (ici 4 px et une ligne de 22, même hauteur, grille de 4). */
-.prep-desk-score { flex: none; display: flex; align-items: center; gap: var(--space-3); min-height: var(--prep-48); padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+/* La note (§9) : l'anneau de 48 seul, cliquable ; zone de 48 (cible au moins 44). */
+.prep-desk-score { flex: none; display: flex; align-items: center; justify-content: center; min-width: var(--prep-48); min-height: var(--prep-48); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
 .prep-desk-score .score-ring { width: var(--prep-48); height: var(--prep-48); }
-.prep-desk-score-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); line-height: var(--space-5); }
-.prep-desk-compat { display: inline-flex; align-items: center; gap: var(--space-1); line-height: var(--prep-22); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--primary-text); }
-.prep-desk-compat .icon { width: 14px; height: 14px; }
-.prep-desk-score:hover .prep-desk-compat { text-decoration: underline; }
-.prep-verdict { font-size: var(--font-label); font-weight: var(--weight-bold); }
-.prep-verdict:is(.very-close, .close) { color: var(--success); }
-.prep-verdict.dig { color: var(--score-dig); }
-.prep-verdict.far { color: var(--neutral); }
 .prep-desk-head > .step-tabs { flex: none; width: auto; }
 
-.prep-layout.prep-desk { --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; --prep-sheet: 520px; --prep-bottom: 150px; --prep-side-top: 5.5rem; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
+.prep-layout.prep-desk { --prep-15: 15px; --prep-64: 64px; --prep-card: 18.5px; --prep-sheet: 560px; --prep-40: 40px; --prep-360: 360px; --prep-24: 24px; --prep-20: 20px; --prep-28: 28px; --prep-52: 52px; --prep-48: 48px; grid-template-columns: minmax(0, 1fr) var(--prep-360); gap: var(--prep-24); }
 /* Une seule zone défile, la page (§1) : la colonne de droite reste en place, sans défilement à elle. */
 .prep-desk .prep-side { gap: var(--space-4); }
-.prep-desk .side-card { gap: var(--space-1); padding: var(--prep-20) var(--prep-24); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 .prep-desk .doc-card { gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
-.prep-desk .doc-card-head { padding: var(--prep-20) var(--prep-24); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
-.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); margin: var(--prep-28) auto; border: 0; }
 .prep-desk .doc-card > .review-line:empty { display: none; }
 /* Le CV prêt (§14, PreparerOrdinateurCVPret) : une page A4 de 560 px sur le fond grisé, à 32 px du haut et 40 du bas ;
    nom 20/800, titre 12/700 bleu, coordonnées 10,5, rubriques 10 en capitales bleues soulignées, texte 10,5/15. */
@@ -2065,13 +2125,12 @@ onMounted(() => void load());
   border: 0; border-radius: 0; background: var(--logo-paper); font-size: var(--cv-10-5); line-height: var(--cv-15);
 }
 .prep-desk .cv-sheet .cv-name { font-size: var(--cv-20); font-weight: var(--weight-heavy); line-height: var(--space-6); }
-.prep-desk .cv-sheet .cv-headline { font-size: var(--cv-12); font-weight: var(--weight-bold); color: var(--cv-accent); padding: 0; margin: 0; min-height: var(--space-6); }
+.prep-desk .cv-sheet .cv-headline { font-size: var(--cv-12); font-weight: var(--weight-bold); color: var(--cv-accent); padding: 0; margin: 0; min-height: var(--space-6); height: var(--space-6); }
 .prep-desk .cv-sheet .cv-contacts { color: var(--cv-muted); font-size: var(--cv-10-5); margin: 0 0 var(--space-4); }
 .prep-desk .cv-sheet h3 { margin: var(--space-4) 0 var(--space-2); padding-bottom: var(--space-1); font-size: var(--cv-10); font-weight: var(--weight-heavy); letter-spacing: .08em; color: var(--cv-accent); border-bottom-color: var(--cv-rule); }
 .prep-desk .cv-sheet .cv-item { margin-bottom: var(--space-2); }
 .prep-desk .cv-sheet .cv-item-title { font-size: var(--cv-11-5); }
 .prep-desk .cv-sheet :is(input, textarea) { min-height: 0; padding: 0; border: 1px dashed transparent; border-radius: var(--space-1); background: transparent; color: inherit; box-shadow: none; }
-.prep-desk .cv-sheet .cv-headline { height: var(--space-6); }
 .prep-desk .cv-sheet .kw { padding: 0; border: 0; background: none; color: inherit; font-size: inherit; font-weight: var(--weight-bold); }
 /* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
    (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
@@ -2090,12 +2149,11 @@ onMounted(() => void load());
 /* Retoucher (§2.2) : collé en bas de la colonne gauche, 16 au-dessus et 20 dessous, sur un fondu vers le fond. */
 .prep-desk-bottom { position: sticky; bottom: 0; z-index: 5; padding: var(--space-4) 0 var(--space-5); background: linear-gradient(transparent, var(--bg) var(--prep-24)); }
 .prep-desk-bottom .prep-revise { gap: var(--space-3); }
-/* « Ta candidature » (§2.2, §7.2) : titre 18/24 et 12 px dessous ; lignes de 56 px pleine largeur, trait --line au-dessus,
+/* « Ta candidature » (§2.2, §7.2 ; §9 du 14.11) : titre 18/24 et 12 px dessous ; lignes de 64 px pleine largeur, 12 en haut et en bas, trait --line au-dessus,
    libellé 15/20 700 et état 14/20 gris (vert « rien à renforcer », pêche « à renforcer »), chevron à droite. */
-.prep-desk .prep-file { --prep-15: 15px; --prep-56: 56px; gap: 0; padding-bottom: 0; }
-.prep-file > h2 { margin: 0 0 var(--space-3); line-height: var(--prep-24); }
+.prep-file > h2 { margin: 0 0 var(--space-3); padding: 0 var(--prep-card); line-height: var(--prep-24); }
 .prep-file-row {
-  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--prep-24)); max-width: none; min-height: var(--prep-56); margin: 0 calc(-1 * var(--prep-24)); padding: var(--space-2) var(--prep-24); box-sizing: border-box;
+  display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--prep-64); padding: var(--space-2) var(--prep-card); box-sizing: border-box;
   border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
 }
 .prep-file-row:hover { background: var(--selected-bg); }
@@ -2104,8 +2162,9 @@ onMounted(() => void load());
 .prep-file-text { flex: 1; min-width: 0; }
 .prep-file-text b { display: block; font-size: var(--prep-15); line-height: var(--space-5); }
 .prep-file-sub { display: block; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.prep-file-sub:is(.ok, .todo) { font-weight: var(--weight-bold); }
+.prep-file-sub:is(.ok, .todo, .warn, .busy) { font-weight: var(--weight-bold); }
 .prep-file-sub.ok { color: var(--success); }
+.prep-file-sub.warn { color: var(--warning); }
 .prep-file-sub.todo { color: var(--peach-text); }
 .prep-aside-main { display: inline-flex; justify-content: center; width: 100%; min-height: var(--prep-48); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 /* Pas encore de lettre (§2.2) : la page A4 de 560 en lignes grisées, la carte au centre, à 32 px des bords. */
@@ -2126,7 +2185,7 @@ onMounted(() => void load());
    (fichier bleu, nom 15/600, téléchargement), « Tout télécharger » à droite en contour de 40 ; 20 px plus bas le bouton
    plein de 48 et « J’ai déjà postulé » à 20 px. */
 .prep-desk .apply-cards { gap: var(--space-4); }
-.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-56: 56px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.apply-card { --apply-15: 15px; --apply-22: 22px; --apply-24: 24px; --apply-40: 40px; --apply-48: 48px; --apply-64: 64px; display: grid; gap: 0; min-width: 0; padding: var(--space-5) var(--space-6); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .apply-cap { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
 .apply-cards .apply-card h2 { margin: 0; font-size: var(--font-title); line-height: var(--apply-24); }
 .apply-card > .apply-cap + h2 { margin-top: var(--space-2); }
@@ -2139,15 +2198,15 @@ onMounted(() => void load());
 .apply-card .apply-attach > .hint { order: 1; flex-basis: 100%; margin: 0; }
 .apply-all { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--apply-40); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--apply-15); font-weight: var(--weight-bold); cursor: pointer; }
 .apply-all:hover { background: var(--selected-bg); }
-.apply-go { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); margin-top: var(--space-5); }
+.apply-go { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); margin-top: var(--space-5); }
 .apply-go > .notice { flex-basis: 100%; margin: 0; }
 .apply-go > .prep-bar-main { min-height: var(--apply-48); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .apply-go > :is(.apply-already, .apply-reopen) { min-height: var(--target-min); display: inline-flex; align-items: center; font-weight: var(--weight-bold); }
-/* À recopier (§1) : lignes de 56, trait --line, libellé 13/16 gris au-dessus de la valeur 16/22 600 ; copier en cercle de 40
+/* À recopier (§1 ; §9 du 14.11) : lignes de 64, 12 en haut et en bas, trait --line, libellé 13/16 gris au-dessus de la valeur 16/22 600 ; copier en cercle de 40
    bordé ; la lettre en texte sur 2 lignes, 15 regular. */
 .apply-copy-desk > .apply-where-text { margin-bottom: var(--space-3); }
 .apply-copy-desk { padding-bottom: var(--space-1); }
-.apply-copy-desk .form-sheet-row { min-height: var(--apply-56); padding: var(--space-1) 0; gap: 0 var(--space-4); border-top-color: var(--line); }
+.apply-copy-desk .form-sheet-row { min-height: var(--apply-64); padding: var(--space-3) 0; gap: 0 var(--space-4); border-top-color: var(--line); }
 .apply-copy-desk .form-sheet dt { font-size: var(--label-caps); line-height: var(--space-4); }
 .apply-copy-desk .form-sheet dd { font-size: var(--font-body); line-height: var(--apply-22); }
 .apply-copy-desk .form-sheet dd.form-sheet-long { font-size: var(--apply-15); font-weight: var(--weight-regular); }
@@ -2155,7 +2214,7 @@ onMounted(() => void load());
 .apply-copy-desk .form-sheet > .hint { padding: var(--space-3) 0; }
 /* Entreprise (§2.4) : libellé 13/16 gris, valeur 16/22 700 à 2 px (ici dans une ligne de 20 + 22), 12 px entre les champs ;
    la source de l’adresse 13/18 grise ; « Contacts · n » en ligne de 56 qui ouvre le panneau. */
-.apply-company { --apply-22: 22px; --apply-15: 15px; --apply-56: 56px; --prep-15: 15px; --prep-56: 56px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
+.apply-company { --apply-22: 22px; --apply-15: 15px; grid-template-columns: minmax(0, 1fr); padding-bottom: 0; }
 .apply-facts { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
 .apply-facts dt { font-size: var(--label-caps); line-height: var(--space-5); color: var(--text-secondary); }
 .apply-facts dd { margin: 0; font-size: var(--font-body); line-height: var(--apply-22); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
@@ -2164,7 +2223,6 @@ onMounted(() => void load());
 .apply-facts dd.apply-source { font-size: var(--label-caps); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .apply-site { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--primary-text); text-decoration: none; }
 .apply-site:hover { text-decoration: underline; }
-.apply-company > .prep-file-row:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
 /* Le panneau des contacts sur ordinateur : chaque lien et bouton texte garde une cible de 24 px (§1, WCAG 2.5.8). */
 [data-test=contacts-sheet] .link { display: inline-flex; align-items: center; min-height: var(--space-6); }
 .apply-after-text { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
@@ -2176,7 +2234,7 @@ onMounted(() => void load());
 .prep-spin { --prep-18: 18px; flex: none; width: var(--prep-18); height: var(--prep-18); box-sizing: border-box; border: 2.5px solid var(--card-line); border-top-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: prep-spin 1s linear infinite; }
 @keyframes prep-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .prep-spin { animation: none; } }
-.prep-file-sub.busy { font-weight: var(--weight-bold); color: var(--primary-text); }
+.prep-file-sub.busy { color: var(--primary-text); }
 .prep-file-busy { cursor: default; }
 .prep-file-busy:hover { background: transparent; }
 .prep-desk-bottom-off .prep-revise { opacity: .5; }
@@ -2198,4 +2256,72 @@ onMounted(() => void load());
 .review-group li > .icon.todo { color: var(--peach-text); }
 .review-k { display: block; font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
 .review-v { display: block; margin-top: var(--space-1); font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
+
+/* Maquette du 13 novembre (PreparerOrdinateur et suivantes) : en-tête de 64 à 4 px sous la barre et 16 px au-dessus
+   des cartes, sans bande ni trait ; cartes au bord 1,5 --card-line, coins de 18, marges 18,5 ; tête de la lettre de 68 ;
+   étapes en 15 ; langue en pastilles de 36 (blanche pour la choisie) ; lettre de 560 sur le fond grisé, à 48 / 40 ;
+   suggestions de 40 en 15 ; champ de demande de 56 au bord 1,5. */
+.prep-desk-head.container { --prep-4: 4px; padding-top: var(--prep-4); padding-bottom: 0; margin-bottom: var(--space-4); }
+.band.prep-desk-band { background: var(--bg); border-top: 0; padding-top: 0; }
+.prep-desk-head > .step-tabs > a { flex: none; padding-inline: var(--space-4); font-size: var(--font-label); color: var(--text); }
+.prep-desk :is(.side-card, .doc-card) { border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.prep-desk .side-card { gap: var(--space-1); padding: var(--prep-card); }
+/* « Ce CV », « Ta candidature » (Kevin, 15.11) : les lignes tiennent dans la carte, sans marge négative ; la carte n'a pas de marge
+   sur les côtés, le titre et les lignes portent les 18,5. Texte long coupé sur une ligne, le texte complet dans l'aria-label. */
+.prep-desk .prep-file { grid-template-columns: minmax(0, 1fr); gap: 0; padding: var(--prep-card) 0 0; }
+.prep-file-text > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apply-company > .prep-file-row { width: calc(100% + 2 * var(--prep-card)); max-width: none; margin: 0 calc(-1 * var(--prep-card)); }
+.prep-desk .doc-card-head { background: var(--surface); border-bottom: 1px solid var(--line-soft); --prep-68: 68px; min-height: var(--prep-68); padding: 0 var(--prep-card); box-sizing: border-box; }
+.prep-desk .doc-card > .letter-sheet { width: min(var(--prep-sheet), calc(100% - 2 * var(--prep-24))); border: 0; margin: var(--prep-48) auto var(--prep-40); }
+.prep-desk .doc-language { background: var(--surface-muted); }
+.prep-desk .doc-language > button { --prep-52: 52px; --prep-36: 36px; min-inline-size: var(--prep-52); min-height: var(--prep-36); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); }
+.prep-desk .doc-language > button[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: var(--weight-bold); box-shadow: 0 1px 2px rgb(27 31 42 / 12%); }
+.prep-desk .layout-card-thumbs button { gap: var(--space-1); padding: var(--space-2) 0; }
+.prep-desk .apply-card { padding: var(--prep-card); }
+.prep-desk .apply-copy-desk { padding-bottom: var(--space-1); }
+.prep-desk .apply-go > .prep-bar-main { font-size: var(--font-body); }
+.prep-desk .apply-go > :is(.apply-already, .apply-reopen) { font-size: var(--font-label); }
+.prep-desk-bottom .suggestion-chip { font-size: var(--font-label); }
+.prep-desk-bottom .composer-pill { --prep-20: 20px; --prep-56: 56px; min-height: var(--prep-56); padding: 0 var(--space-2) 0 var(--prep-20); border: 1.5px solid var(--field-border); }
+/* Le modèle choisi dans « Mise en page » habille la page de la lettre et du CV comme leur PDF (letters/pdf.py) et
+   comme la planche PreparerMiseEnPage : Moderne, la bande bleue à gauche et le nom en bleu ; Bandeau, le nom dans un
+   bandeau pêche en haut de la page ; Classique, le papier crème, une police à empattements et le nom centré sur un
+   filet. Le Sobre reste la page d’origine. Le papier garde ses couleurs en sombre, comme la page Sobre. */
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet) { --tpl-blue: #2445C2; --tpl-peach: #F3B08A; --tpl-ink: #1B1F2A; --tpl-cream: #FFFDF8; }
+.print-sheet .doc-head { margin: 0 0 var(--space-5); }
+.cv-sheet .cv-head { margin: 0; }
+.cv-sheet:not(.tpl-sobre) .cv-head { margin-bottom: var(--space-2); }
+.letter-sheet .doc-head strong { font-size: 1.35em; font-weight: var(--weight-heavy); line-height: 1.2; }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-moderne { border-left: 14px solid var(--tpl-blue); }
+.doc-card > .print-sheet.tpl-moderne :is(.doc-head, .cv-name, .cv-headline, h3) { color: var(--tpl-blue); }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-bandeau { overflow: hidden; }
+.doc-card > .print-sheet.tpl-bandeau .doc-head { padding-bottom: var(--space-3); background: var(--tpl-peach); color: var(--tpl-ink); box-shadow: 0 0 0 100vmax var(--tpl-peach); clip-path: inset(-100vmax -100vmax 0 -100vmax); }
+.doc-card > .print-sheet:is(.letter-sheet, .cv-sheet).tpl-classique { background: var(--tpl-cream); font-family: Georgia, "Times New Roman", serif; }
+.doc-card > .print-sheet.tpl-classique .doc-head { display: grid; justify-items: center; padding-bottom: var(--space-2); border-bottom: 1px solid var(--tpl-ink); text-align: center; }
+.doc-card > .print-sheet.tpl-classique .doc-head strong, .doc-card > .print-sheet.tpl-classique .cv-name { font-weight: var(--weight-semibold); }
+.doc-card > .print-sheet.tpl-classique .cv-headline { text-align: center; }
+.doc-card > .print-sheet:is(.tpl-bandeau, .tpl-classique) :is(.cv-name, .cv-headline, h3) { color: var(--tpl-ink); }
+/* Postuler sur téléphone (planche MaCandidatureV2, état « formulaire », refaite le 14.11) : cartes blanches de 16 px
+   de rayon, bordure --line, 16 px entre elles ; titre de carte en capitales 13/700 gris, 16 16 8 ; lignes de 56 au
+   moins pour les documents (icône 20, nom 15/600, « Partager » 15/700 bleu dans 44 px) ; le rappel de la capture sur
+   --peach-wash, appareil 22 px --peach-text, 15/22. */
+.apl-proof { display: flex; gap: var(--space-3); margin: 0; padding: var(--space-4); border-radius: var(--apl-radius); background: var(--peach-wash); font-size: var(--font-label); line-height: var(--apl-22); }
+.apl-proof > .icon { flex: none; width: var(--apl-22); height: var(--apl-22); color: var(--peach-text); }
+.apl-proof strong { display: block; }
+.apl-proof span span { color: var(--text-lead); }
+.apl-card, .apl-proof { --apl-radius: 16px; --apl-22: 22px; --apl-56: 56px; }
+.apl-card { display: block; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--apl-radius); overflow: hidden; }
+.apl-card > .apl-cap, .apl-card .apl-cap { margin: 0; padding: var(--space-4) var(--space-4) var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-bold); line-height: var(--space-4); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+.apl-docs .apply-files { display: block; margin: 0; }
+.apl-docs .apply-files > :is(.apl-doc, a) { display: flex; align-items: center; gap: var(--space-3); min-height: var(--apl-56); margin: 0; padding: 0 var(--space-2) 0 var(--space-4); border-top: 1px solid var(--line-soft); border-radius: 0; background: transparent; color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.apl-docs .apply-files > :is(.apl-doc, a) > .icon:first-child { flex: none; width: var(--space-5); height: var(--space-5); color: var(--text-lead); }
+.apl-doc > b { flex: 1; min-width: 0; font-weight: var(--weight-semibold); }
+.apl-share { --apl-6: 6px; display: flex; align-items: center; gap: var(--apl-6); min-height: var(--target-min); padding: 0 var(--space-3); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
+.apl-share .icon { width: 18px; height: 18px; }
+.apl-docs > .hint, .apl-note { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); font-size: var(--font-small); color: var(--text-secondary); }
+.apl-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--apl-56); padding: 0 var(--space-4); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); text-decoration: none; }
+.apl-contact > .icon { flex: none; color: var(--text-secondary); }
+/* « Postuler sur … » en bas sur téléphone (PreparerMiseEnPage du 14.11) : pilule de 52 ; ici plutôt que dans style.css,
+   qui est chargé au premier écran. */
+@media (max-width: 820px) { .prep-bar > a.prep-bar-main { min-height: var(--btn-secondary); } }
 </style>

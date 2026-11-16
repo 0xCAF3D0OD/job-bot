@@ -1600,6 +1600,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sent-sort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sent Sort */
+        get: operations["getSentSort"];
+        /** Put Sent Sort */
+        put: operations["saveSentSort"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -2105,8 +2123,15 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Draft Follow Up */
+        /**
+         * Keep Follow Up
+         * @description « Modifier le message » : la version de la personne remplace celle qui est gardée.
+         */
+        put: operations["keepFollowUp"];
+        /**
+         * Draft Follow Up
+         * @description Le message gardé, ou un nouveau (gardé à son tour) ; `rewrite` : « Réécrire ».
+         */
         post: operations["draftFollowUp"];
         delete?: never;
         options?: never;
@@ -2794,6 +2819,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/google-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Google Jobs
+         * @description Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;
+         *     « Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).
+         */
+        get: operations["getGoogleJobs"];
+        /**
+         * Set Google Jobs
+         * @description « Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.
+         */
+        put: operations["setGoogleJobs"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/insights": {
         parameters: {
             query?: never;
@@ -3386,6 +3436,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-searches/watch-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Watch Code
+         * @description L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge
+         *     son attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte
+         *     attend.
+         */
+        post: operations["watchSiteCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alert-searches/codes/last": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Last Code
+         * @description Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail.
+         */
+        get: operations["lastSiteCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alert-searches/messages": {
         parameters: {
             query?: never;
@@ -3810,6 +3902,27 @@ export interface components {
             web_source_url?: string | null;
             /** Web Unavailable */
             web_unavailable?: string | null;
+        };
+        /** AdviceOut */
+        AdviceOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "channel" | "site" | "skill";
+            /** Title */
+            title: string;
+            /** Text */
+            text: string;
+            /** Base */
+            base: number;
+            /**
+             * Base Unit
+             * @enum {string}
+             */
+            base_unit: "applications" | "offers";
+            /** Link */
+            link?: string | null;
         };
         /** AiReadingOut */
         AiReadingOut: {
@@ -5128,6 +5241,11 @@ export interface components {
         ExpectCodeOut: {
             /** Queued */
             queued: boolean;
+            /**
+             * Mailbox Down
+             * @default false
+             */
+            mailbox_down: boolean;
         };
         /** ExtensionCode */
         ExtensionCode: {
@@ -5286,6 +5404,8 @@ export interface components {
              * @default []
              */
             queries: string[];
+            /** Provider */
+            provider?: ("jobup" | "web") | null;
         };
         /** FirstOffersStart */
         FirstOffersStart: {
@@ -5311,6 +5431,8 @@ export interface components {
              * @default []
              */
             queries: string[];
+            /** Provider */
+            provider?: ("jobup" | "web") | null;
             /**
              * Result
              * @enum {string}
@@ -5336,7 +5458,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "profile" | "alerts" | "keep" | "prepare" | "sent";
+            key: "cv" | "criteria" | "alerts" | "keep" | "send";
             /** Done */
             done: boolean;
         };
@@ -5351,6 +5473,23 @@ export interface components {
             sent_within_week: number;
             /** Stopped At */
             stopped_at: number[];
+        };
+        /**
+         * FirstStepsSummaryOut
+         * @description Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+         *     gardées (16.11).
+         */
+        FirstStepsSummaryOut: {
+            /** Skills */
+            skills: number;
+            /** Trade */
+            trade: string | null;
+            /** Place */
+            place: string | null;
+            /** Min Rate */
+            min_rate: number | null;
+            /** Kept */
+            kept: number;
         };
         /**
          * FocusIn
@@ -5414,6 +5553,13 @@ export interface components {
             /** Follow Up On */
             follow_up_on?: string | null;
         };
+        /** FollowUpDraftIn */
+        FollowUpDraftIn: {
+            /** Subject */
+            subject: string;
+            /** Text */
+            text: string;
+        };
         /** FollowUpDraftOut */
         FollowUpDraftOut: {
             /** Subject */
@@ -5429,6 +5575,16 @@ export interface components {
             ai: boolean;
             /** Reason */
             reason: string | null;
+            /**
+             * Kept
+             * @default false
+             */
+            kept: boolean;
+            /**
+             * Failed
+             * @default false
+             */
+            failed: boolean;
         };
         /** FollowedTrainingOut */
         FollowedTrainingOut: {
@@ -5647,6 +5803,27 @@ export interface components {
             offers: components["schemas"]["OfferHits"];
             applications: components["schemas"]["ApplicationHits"];
             companies: components["schemas"]["CompanyHits"];
+        };
+        /**
+         * GoogleJobsIn
+         * @description « Masquer » sur la carte Google Emplois (ou l'annuler).
+         */
+        GoogleJobsIn: {
+            /** Hidden */
+            hidden: boolean;
+        };
+        /**
+         * GoogleJobsOut
+         * @description « <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,
+         *     qui ouvre le panneau Google Emplois.
+         */
+        GoogleJobsOut: {
+            /** Terms */
+            terms: string;
+            /** Location */
+            location?: string | null;
+            /** Url */
+            url: string;
         };
         /** GroupOut */
         GroupOut: {
@@ -6064,6 +6241,21 @@ export interface components {
          * @enum {string}
          */
         LanguageLevel: "unknown" | "notions" | "fluent" | "native";
+        /**
+         * LastCodeOut
+         * @description Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée.
+         */
+        LastCodeOut: {
+            /** Code */
+            code: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Valid Minutes */
+            valid_minutes: number;
+        };
         /**
          * LetterDocumentOut
          * @description La lettre telle qu'elle sera envoyée, en-tête compris.
@@ -6876,6 +7068,11 @@ export interface components {
              */
             score_parts: components["schemas"]["ScorePartOut"][];
             score_tip?: components["schemas"]["ScoreTipOut"] | null;
+            /**
+             * Passages
+             * @default []
+             */
+            passages: string[];
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -7658,6 +7855,8 @@ export interface components {
             text: string;
             /** Chunk Ids */
             chunk_ids: number[];
+            /** Short */
+            short?: string | null;
         };
         /** ScoreTipOut */
         ScoreTipOut: {
@@ -7857,6 +8056,11 @@ export interface components {
              */
             score_parts: components["schemas"]["ScorePartOut"][];
             score_tip?: components["schemas"]["ScoreTipOut"] | null;
+            /**
+             * Passages
+             * @default []
+             */
+            passages: string[];
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -7972,6 +8176,11 @@ export interface components {
             /** Headline */
             headline: string | null;
             highlight?: components["schemas"]["HighlightOut"] | null;
+            /**
+             * Advice
+             * @default []
+             */
+            advice: components["schemas"]["AdviceOut"][];
             /** Orp Summary */
             orp_summary: string | null;
             /**
@@ -8023,6 +8232,18 @@ export interface components {
             application_id: number;
             /** Orp Month */
             orp_month: string;
+        };
+        /**
+         * SentSortModel
+         * @description Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11).
+         */
+        SentSortModel: {
+            /**
+             * Sort
+             * @default relancer
+             * @enum {string}
+             */
+            sort: "relancer" | "recentes" | "anciennes";
         };
         /** SettingsModel */
         SettingsModel: {
@@ -8294,6 +8515,7 @@ export interface components {
              * @default []
              */
             first_steps: components["schemas"]["FirstStepsOut"][];
+            first_steps_summary?: components["schemas"]["FirstStepsSummaryOut"] | null;
             /**
              * First Steps Dismissed
              * @default false
@@ -8311,8 +8533,7 @@ export interface components {
              * @default false
              */
             first_steps_finished: boolean;
-            /** Search Url */
-            search_url?: string | null;
+            google_jobs?: components["schemas"]["GoogleJobsOut"] | null;
             /** To Review */
             to_review: number;
             /**
@@ -12077,6 +12298,59 @@ export interface operations {
             };
         };
     };
+    getSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
+                };
+            };
+        };
+    };
+    saveSentSort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentSortModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentSortModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     getNotifications: {
         parameters: {
             query?: never;
@@ -13229,9 +13503,46 @@ export interface operations {
             };
         };
     };
-    draftFollowUp: {
+    keepFollowUp: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FollowUpDraftIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowUpDraftIn"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftFollowUp: {
+        parameters: {
+            query?: {
+                rewrite?: boolean;
+            };
             header?: never;
             path: {
                 application_id: number;
@@ -14607,6 +14918,57 @@ export interface operations {
             };
         };
     };
+    getGoogleJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleJobsOut"] | null;
+                };
+            };
+        };
+    };
+    setGoogleJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleJobsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     getInsights: {
         parameters: {
             query?: {
@@ -15805,6 +16167,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpectCodeOut"];
+                };
+            };
+        };
+    };
+    watchSiteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectCodeOut"];
+                };
+            };
+        };
+    };
+    lastSiteCode: {
+        parameters: {
+            query?: {
+                site?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LastCodeOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

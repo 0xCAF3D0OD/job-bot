@@ -20,6 +20,7 @@ SCHEMAS = {
     "proposals": proposals.OUTPUT_SCHEMA,
     "understand": proposals.UNDERSTAND_SCHEMA,
     "scoring": scoring.OUTPUT_SCHEMA,
+    "scoring_next": scoring.NEXT_OUTPUT_SCHEMA,
     "remote": remote.SCHEMA,
 }
 

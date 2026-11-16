@@ -8,7 +8,9 @@ import type { IconName } from "../icons";
 // Candidatures (docs/139 étape 5a, C4). Appliquée 300 ms après la dernière frappe.
 // `icon` : l'entonnoir de l'ordinateur (maquette du 8 novembre : « Filtrer par titre ou entreprise », la recherche
 // globale étant dans l'en-tête, pas de seconde loupe).
-const props = defineProps<{ value: string; placeholder?: string; icon?: IconName }>();
+// `label` : le nom lu par les lecteurs d'écran, quand le texte visible est le même partout (« Poste, entreprise, lieu ») :
+// « Rechercher une candidature », « Rechercher un rendez-vous » (décision de Kevin du 14.11).
+const props = defineProps<{ value: string; placeholder?: string; icon?: IconName; label?: string }>();
 const emit = defineEmits<{ search: [value: string] }>();
 
 const search = ref(props.value);
@@ -33,9 +35,19 @@ watch(
       v-model="search"
       class="field-compact filters-search"
       type="search"
-      :aria-label="icon === 'filter' ? 'Filtrer par titre ou entreprise' : 'Rechercher une offre'"
+      :aria-label="label ?? (icon === 'filter' ? 'Filtrer par titre ou entreprise' : 'Rechercher une offre')"
       :placeholder="placeholder ?? 'Titre, entreprise, mot-clé…'"
       data-test="search"
     >
   </span>
 </template>
+
+<style>
+/* Téléphone, maquette du 14 novembre (§6, planches Candidatures, Envoyees, RendezVous) : le champ « Poste, entreprise, lieu »
+   au-dessus des onglets : 48 px, coins de 14, bord --line, fond blanc, loupe de 20 à 14 px, 16 px à droite (grille de 4). */
+@media (max-width: 820px) {
+  .jobs-tools .filters-search-wrap { --search-14: 14px; --search-icon: 20px; --search-gap: 10px; display: block; }
+  .jobs-tools .filters-search-wrap .filters-search { box-sizing: border-box; height: var(--field-h); padding: 0 var(--space-4) 0 calc(var(--search-14) + var(--search-icon) + var(--search-gap)); border: 1px solid var(--line); border-radius: var(--search-14); background-color: var(--surface); font-size: var(--font-body); }
+  .jobs-tools .filters-search-wrap > .icon { left: var(--search-14); width: var(--search-icon); height: var(--search-icon); color: var(--text-secondary); }
+}
+</style>

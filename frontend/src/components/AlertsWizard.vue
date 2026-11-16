@@ -2,15 +2,21 @@
 import { computed, nextTick, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import AlertSiteSteps from "./AlertSiteSteps.vue";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 import MailboxAddress from "./MailboxAddress.vue";
+import SidePanel from "./SidePanel.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
 // `focus` (1.6.70) : « Créer » ou « Vérifier l'alerte » sur une ligne de la page Alertes ouvre le pas à
 // pas directement sur ce site, pour cette recherche ; à la fin, retour à la page.
-const props = defineProps<{ page: AlertsPage; focus?: { site: string; terms: string } | null }>();
+// `desk` (planche AlertesOrdinateurSite, paquet du 13 novembre) : sur ordinateur, l'étape 2 passe dans le panneau de
+// droite « Alerte <site> » (440 px, DECISIONS du 13.11) : « Site N sur M », 5 traits, le rappel de la recherche,
+// 3 étapes numérotées, pied « Plus tard » et « J'ai créé l'alerte ». Avec `focus` (une carte « À créer »), seul le
+// panneau s'affiche, au-dessus de la liste ; il passe ensuite aux autres sites encore à créer pour cette recherche.
+const props = defineProps<{ page: AlertsPage; focus?: { site: string; terms: string } | null; desk?: boolean }>();
 const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 
 const step = ref<1 | 2 | 3>(props.focus ? 2 : 1);
@@ -28,9 +34,17 @@ const searches = computed(() =>
 // au hasard (docs/104 §5).
 const termsExample = computed(() => props.page.searches[0]?.terms ?? "ton métier");
 const placeExample = computed(() => props.page.searches.find((s) => s.location)?.location ?? "Lausanne");
-// Sites avec une recherche à ouvrir (les sites ajoutés sans adresse sont laissés de côté).
+// Sites avec une recherche à ouvrir (les sites ajoutés sans adresse sont laissés de côté). Dans le panneau ouvert
+// depuis une carte, seulement les sites encore à créer (et celui de la carte).
 const sites = computed(() =>
-  props.page.sites.filter((site) => searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.url)),
+  props.page.sites.filter(
+    (site) =>
+      searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.url) &&
+      (!props.desk ||
+        !props.focus ||
+        site.slug === props.focus.site ||
+        searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.status === "todo")),
+  ),
 );
 const site = computed(() => sites.value[siteIndex.value] ?? null);
 if (props.focus) siteIndex.value = Math.max(0, sites.value.findIndex((s) => s.slug === props.focus!.site));
@@ -103,10 +117,40 @@ async function continueToSites(): Promise<void> {
 }
 
 function nextSite(): void {
-  if (props.focus) emit("done");
+  copiedOnOpen.value = false;
+  if (props.desk && props.focus && siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
+  else if (props.focus) emit("done");
   else if (siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
-  else step.value = 3;
+  else {
+    step.value = 3;
+    if (props.desk) void nextTick(() => document.querySelector<HTMLElement>("[data-test=wizard-finish]")?.focus());
+  }
 }
+
+// Fermer le panneau (croix, Échap, clic à côté) : retour à la liste, ou à l'étape 1 de l'assistant.
+function closePanel(): void {
+  copiedOnOpen.value = false;
+  if (props.focus) emit("done");
+  else step.value = 1;
+}
+const panelSearch = computed(() =>
+  searches.value
+    .filter((s) => cellUrl(s.id))
+    .map((s) => `${s.terms} · ${s.location || "Toute la Suisse"}`)
+    .join(", "),
+);
+// Sur ordinateur, l'étape 1 reste affichée derrière le panneau de l'étape 2.
+const shownStep = computed(() => (props.desk && step.value === 2 ? 1 : step.value));
+const panelLinks = computed(() => searches.value.filter((s) => cellUrl(s.id)));
+// Les liens du panneau pour AlertSiteSteps : un par recherche, puis ceux du télétravail.
+const panelSiteLinks = computed(() => {
+  const name = site.value?.name ?? "";
+  const many = panelLinks.value.length > 1;
+  return [
+    ...panelLinks.value.map((search) => ({ key: `search-${search.id}`, url: cellUrl(search.id)!, label: `Ouvrir ${name}${many ? ` : ${search.terms}` : ""}` })),
+    ...remoteLinks.value.map((link) => ({ key: `remote-${link.terms}`, url: link.url, label: `Ouvrir ${name} en télétravail${many ? ` : ${link.terms}` : ""}` })),
+  ];
+});
 
 // Ouvrir un site copie l'adresse d'avance (docs/121 §B.2) : il ne reste qu'à la coller.
 const copiedOnOpen = ref(false);
@@ -122,6 +166,7 @@ function copyOnOpen(): void {
 
 <template>
   <section
+    v-if="!(desk && focus)"
     class="form-card wizard"
     data-test="alerts-wizard"
   >
@@ -132,17 +177,17 @@ function copyOnOpen(): void {
       <li
         v-for="n in 3"
         :key="n"
-        :class="{ done: n < step, current: n === step }"
+        :class="{ done: n < shownStep, current: n === shownStep }"
       />
     </ol>
     <p class="wizard-step">
-      Étape {{ step }} sur 3<span
-        v-if="step === 2 && site"
+      Étape {{ shownStep }} sur 3<span
+        v-if="shownStep === 2 && site"
         data-test="wizard-site-count"
       > · site {{ siteIndex + 1 }} sur {{ sites.length }}</span>
     </p>
 
-    <template v-if="step === 1">
+    <template v-if="shownStep === 1">
       <h2>Offres à recevoir</h2>
       <ul class="keyword-chips">
         <li
@@ -204,7 +249,7 @@ function copyOnOpen(): void {
       </div>
     </template>
 
-    <template v-else-if="step === 2 && site">
+    <template v-else-if="shownStep === 2 && site">
       <h2>Crée l’alerte sur {{ site.name }}</h2>
       <!-- Une ligne (docs/121 §B.2) : l'adresse est copiée en ouvrant le site, il reste à la
              coller dans « Créer une alerte » ; le détail au survol. -->
@@ -294,4 +339,70 @@ function copyOnOpen(): void {
       </div>
     </template>
   </section>
+  <SidePanel
+    v-if="desk && step === 2 && site"
+    open
+    :title="`Alerte ${site.name}`"
+    :eyebrow="`Site ${siteIndex + 1} sur ${sites.length}`"
+    panel-class="alert-site-panel"
+    @close="closePanel"
+  >
+    <template #top>
+      <ol
+        class="alert-site-progress"
+        aria-hidden="true"
+      >
+        <li
+          v-for="(s, n) in sites"
+          :key="s.slug"
+          :class="{ done: n <= siteIndex }"
+        />
+      </ol>
+    </template>
+    <AlertSiteSteps
+      :key="site.slug"
+      :site-name="site.name"
+      :search-label="panelSearch"
+      :links="panelSiteLinks"
+      :mailbox="page.mailbox"
+      :code="site.slug === 'jobup'"
+      code-help="jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici."
+    />
+    <template #footer>
+      <button
+        type="button"
+        class="alert-site-later"
+        data-test="wizard-skip"
+        @click="nextSite"
+      >
+        Plus tard
+      </button>
+      <button
+        type="button"
+        class="action-1 alert-site-done"
+        :disabled="busy"
+        data-test="wizard-site-done"
+        @click="siteDone"
+      >
+        J’ai créé l’alerte
+      </button>
+    </template>
+  </SidePanel>
 </template>
+
+<style>
+/* Panneau « Alerte <site> » (planche AlertesOrdinateurSite) : valeurs du HTML de la planche, couleurs en jetons. */
+.alert-site-progress { flex: none; display: flex; gap: var(--space-1); margin: 0; padding: 0 var(--space-6) var(--space-4); list-style: none; }
+.alert-site-progress li { flex: 1; height: 4px; border-radius: var(--radius-pill); background: var(--line-strong); }
+.alert-site-progress li.done { background: var(--primary-graphic); }
+/* Interligne de 22 px et décalage du titre d'étape (5 px, centré sur le rond de 32 px) : valeurs de la planche. */
+.alert-site-panel .side-panel-body { display: block; padding-top: var(--space-1); }
+/* La croix de la planche : 24 px, trait 2,2, couleur du texte. */
+.alert-site-panel .side-panel-close { color: var(--text); }
+.alert-site-panel .side-panel-close .icon { width: 24px; height: 24px; stroke-width: 2.2; }
+/* Pied (maquette du 14.11, §4) : un lien secondaire à côté du bouton principal, les deux alignés à droite, 24 px entre
+   eux ; le bouton prend la largeur de son texte (0 24 px), pilule de 52 px ; « Plus tard » garde 4 px de chaque côté. */
+.alert-site-panel .side-panel-foot { justify-content: flex-end; gap: var(--space-6); }
+.alert-site-later { flex: none; min-height: var(--target-min); padding: 0 var(--space-1); border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); }
+.alert-site-done { flex: none; justify-content: center; text-align: center; height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
+</style>

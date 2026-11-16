@@ -32,6 +32,8 @@ const MAQUETTE = new Set([
   "./views/AlertsView.vue : Mes alertes e-mail",
   "./views/AccountView.vue : Mon parcours",
   "./views/PreparationView.vue : Ta candidature",
+  // Postuler sur téléphone, planche MaCandidatureV2 (état formulaire), refaite le 14 novembre (PR #708).
+  "./views/PreparationView.vue : Tes documents",
   "./components/ProfileDesktop.vue : Mon CV",
   "./components/ProfileDesktop.vue : Mon parcours",
   // Maquette ProfilTel (prompt du 10 novembre, PR 20) : le titre du Profil sur téléphone.

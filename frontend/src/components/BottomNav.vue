@@ -20,7 +20,7 @@ import CountBadge from "./CountBadge.vue";
 const HIDDEN = new Set(["preparation", "welcome", "triage", "settings", "notifications"]);
 
 const route = useRoute();
-const { last: lastJobsPage } = useJobsMemory();
+const { menuLink } = useJobsMemory();
 const { available: assistantAvailable, known: assistantKnown } = useAssistant();
 const toReview = ref(0);
 
@@ -31,7 +31,7 @@ type Tab = { name: string; label: string; icon?: "home" | "briefcase" | "trend" 
 const tabs = computed<Tab[]>(() => {
   const list: Tab[] = [
     { name: "today", label: "Accueil", icon: "home", to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
-    { name: "jobs", label: "Candidatures", icon: "briefcase", to: lastJobsPage.value, active: route.path.startsWith("/candidatures") },
+    { name: "jobs", label: "Candidatures", icon: "briefcase", to: menuLink(route.path), active: route.path.startsWith("/candidatures") },
   ];
   if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", to: "/assistant", active: route.name === "assistant" });
   list.push(

@@ -15,10 +15,14 @@ import TroupeScene from "./TroupeScene.vue";
 // les actions se rangent côte à côte sous le texte.
 // `icon` à la place de `scene` : une icône sobre, pour une réponse négative (§15 : jamais les personnages sur un
 // refus).
-withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?: string; line?: string }>(), {
+// `image` : une illustration propre à l'écran, à la place de la scène (« C’est trié ! », lot du 11 novembre au soir) ;
+// `handPhone` : la fin manuscrite aussi sur téléphone (maquette FinDuTri).
+withDefaults(defineProps<{ scene?: Scene; icon?: IconName; image?: string; title: string; hand?: string; handPhone?: boolean; line?: string }>(), {
   scene: undefined,
   icon: undefined,
+  image: undefined,
   hand: "",
+  handPhone: false,
   line: "",
 });
 </script>
@@ -38,6 +42,12 @@ withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?:
         :scene="scene"
         full
       />
+      <img
+        v-else-if="image"
+        class="sent-screen-image"
+        :src="image"
+        alt=""
+      >
       <span
         v-else-if="icon"
         class="sent-screen-icon"
@@ -46,7 +56,7 @@ withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?:
       ><AppIcon :name="icon" /></span>
       <h1 class="sent-screen-title">
         {{ title }}<template v-if="hand">
-          {{ " " }}<span class="sent-screen-hand">{{ hand }}</span>
+          {{ " " }}<span :class="['sent-screen-hand', { 'sent-screen-hand-phone': handPhone }]">{{ hand }}</span>
         </template>
       </h1>
       <p v-if="line">
@@ -67,6 +77,8 @@ withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?:
 .sent-screen-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: 0 var(--space-6); text-align: center; }
 .sent-screen-icon { --moment-icon: 6rem; --moment-glyph: 2.5rem; display: grid; place-items: center; width: var(--moment-icon); height: var(--moment-icon); border-radius: 50%; background: var(--surface-muted); color: var(--text-secondary); }
 .sent-screen-icon :deep(svg) { width: var(--moment-glyph); height: var(--moment-glyph); }
+.sent-screen-image { --moment-image: 290px; display: block; flex: none; width: min(100%, var(--moment-image)); height: auto; }
+.sent-screen-hand-phone { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
 .sent-screen-title { margin: var(--space-2) 0 0; font-size: var(--font-figure); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -0.3px; }
 .sent-screen-body :slotted(p) { margin: 0; max-width: 310px; font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text-tertiary); }
 .sent-screen-body :slotted(p strong) { color: var(--text); }
@@ -81,6 +93,7 @@ withDefaults(defineProps<{ scene?: Scene; icon?: IconName; title: string; hand?:
 @media (min-width: 1024px) {
   .sent-screen { --sent-34: 34px; --sent-42: 42px; --sent-18: 18px; --sent-28: 28px; --sent-10: 10px; max-width: 880px; padding-top: var(--space-6); }
   .sent-screen-body { flex: 0 0 auto; gap: 0; padding: 0; }
+  .sent-screen-image { --moment-image: 440px; }
   .sent-screen-title { margin: var(--space-6) 0 0; font-size: var(--sent-34); line-height: var(--sent-42); font-weight: var(--weight-heavy); letter-spacing: normal; }
   .sent-screen-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
   .sent-screen-body :slotted(p) { max-width: 560px; margin: var(--space-3) 0 0; font-size: var(--sent-18); line-height: var(--sent-28); color: var(--text-secondary); }

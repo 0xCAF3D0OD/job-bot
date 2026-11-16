@@ -7,6 +7,7 @@ import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import AppToast from "../components/AppToast.vue";
 import BusyButton from "../components/BusyButton.vue";
+import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
 import CopyButton from "../components/CopyButton.vue";
@@ -28,6 +29,8 @@ import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import RendezVousPhone from "../components/RendezVousPhone.vue";
+import OfferSearch from "../components/OfferSearch.vue";
+import { appointmentMatches, meetingMatches, meetingsToNote, notedMeetings, searchWords, upcomingAppointments } from "../rendezVous";
 import { usePhone } from "../composables/usePhone";
 
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
@@ -277,6 +280,17 @@ const meetingItems = computed<MoreMenuItem[]>(() => [
 // ouvert avec ?feuille=carnet. Sans candidature, l'écran reste celui d'avant. Dès 1 024 px, RendezVousDesktop.
 const route = useRoute();
 const router = useRouter();
+// « + Ajouter » de l'en-tête (maquette du 14 novembre, §6) : ?ajouter=1 ouvre le panneau, puis l'adresse est nettoyée
+// avant l'ouverture (le panneau pose sa propre entrée d'historique).
+watch(
+  () => route?.query.ajouter,
+  async (value) => {
+    if (value !== "1") return;
+    await router.replace({ query: { ...route.query, ajouter: undefined } });
+    openAdd();
+  },
+  { immediate: true },
+);
 const { phone } = usePhone();
 // Dès 1 024 px (maquette RendezVousOrdinateur) : la liste et le détail, côte à côte.
 const { phone: wide } = usePhone("(min-width: 1024px)");
@@ -286,12 +300,45 @@ const sheetView = computed(() => typeof sheetPart.value === "string");
 const compact = computed(() => phone.value && !!page.value && !noApplications.value && !sheetView.value);
 const wideView = computed(() => wide.value && !phone.value && !!page.value && !noApplications.value && !sheetView.value);
 const applications = ref<Application[]>([]);
+const applicationsLoaded = ref(false);
 const preparing = ref<Application | null>(null);
 async function loadApplications(): Promise<void> {
   const { data } = await api.GET("/api/applications");
   if (Array.isArray(data)) applications.value = data;
+  applicationsLoaded.value = true;
+}
+// Aucun rendez-vous du tout (§13 du 15 novembre, RendezVousOrdinateurVide / RendezVousVide) : ni ORP, ni entretien, ni
+// rendez-vous passé. L’état vide commun, centré ; le formulaire (date, heure, lieu) n’apparaît qu’après « Ajouter un
+// rendez-vous » (décision de Kevin du 15.11) : sans candidature, le formulaire ORP sur place ; sinon le panneau
+// « Nouveau rendez-vous », comme le « + Ajouter » de l’en-tête.
+const formOpen = ref(false);
+const noMeetings = computed(
+  () =>
+    !!page.value &&
+    !sheetView.value &&
+    !formOpen.value &&
+    !page.value.meeting &&
+    !page.value.past.length &&
+    // Entre les deux formats, la page entière (Préparer, Le mois) reste : seulement téléphone et ordinateur.
+    (noApplications.value || ((phone.value || wide.value) && applicationsLoaded.value && !upcomingAppointments(null, applications.value).length)),
+);
+function addFirst(): void {
+  if (noApplications.value) formOpen.value = true;
+  else openAdd();
 }
 watch(() => phone.value || wide.value, (value) => value && void loadApplications(), { immediate: true });
+// La recherche (maquette du 14 novembre, RendezVous, §6 ; décision de Kevin du 14.11) : « Poste, entreprise, lieu »
+// au-dessus des onglets, comme sur Offres et Envoyées, lue « Rechercher un rendez-vous ». Elle filtre « À noter »,
+// « À venir » et le dernier rendez-vous noté ; rien ne correspond : une phrase et « Effacer la recherche ».
+const query = ref("");
+const words = computed(() => searchWords(query.value));
+const searchEmpty = computed(() => {
+  if (!compact.value || !page.value || !words.value.length) return false;
+  const now = new Date();
+  const upcoming = upcomingAppointments(page.value.meeting ?? null, applications.value, now).some((item) => appointmentMatches(item, words.value));
+  const past = [...meetingsToNote(page.value, now), ...notedMeetings(page.value, now)].some((m) => meetingMatches(m, words.value));
+  return !upcoming && !past;
+});
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
@@ -311,7 +358,20 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section class="jobs-body orp-meeting">
+  <section :class="['jobs-body', 'orp-meeting', { 'jobs-empty': noMeetings }]">
+    <Teleport
+      v-if="phone && !sheetView && !noMeetings"
+      to="#jobs-tools"
+      defer
+    >
+      <OfferSearch
+        class="rdv-search"
+        :value="query"
+        placeholder="Poste, entreprise, lieu"
+        label="Rechercher un rendez-vous"
+        @search="query = $event"
+      />
+    </Teleport>
     <p
       v-if="failed"
       class="notice error"
@@ -319,6 +379,36 @@ onMounted(() => void load());
       Impossible de préparer le rendez-vous pour l’instant.
     </p>
     <LoadingBlocks v-else-if="!page" />
+    <EmptyState
+      v-else-if="noMeetings"
+      scene="rendez-vous-vide"
+      :width="117"
+      :desktop-width="180"
+      title="Aucun rendez-vous"
+      pill="jobA1 prépare ta feuille la veille"
+      pill-icon="calendar"
+      data-test="rdv-none-yet"
+    >
+      <template #actions>
+        <button
+          type="button"
+          class="primary"
+          data-test="rdv-none-add"
+          @click="addFirst"
+        >
+          <AppIcon name="plus" />Ajouter un rendez-vous
+        </button>
+      </template>
+      <!-- Sans candidature : le lien vers les offres d’avant reste, sous le bouton (texte hors carte = lien). -->
+      <RouterLink
+        v-if="noApplications"
+        to="/candidatures/offres"
+        class="link"
+        data-test="see-offers"
+      >
+        Voir les offres
+      </RouterLink>
+    </EmptyState>
     <RendezVousDesktop
       v-else-if="wideView"
       :page="page"
@@ -343,6 +433,7 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
+        :words="words"
         @note="noting = $event"
       />
       <RendezVousPhone
@@ -352,9 +443,26 @@ onMounted(() => void load());
         :applications="applications"
         :sheet-link="sheetLink"
         :meeting-items="editing ? [] : phoneMeetingItems"
+        :words="words"
         @toggle="toggle"
         @prepare="preparing = $event"
       />
+      <div
+        v-if="searchEmpty"
+        class="sent-none"
+        role="status"
+        data-test="rdv-search-none"
+      >
+        <p>Aucun rendez-vous ne correspond</p>
+        <button
+          type="button"
+          class="secondary"
+          data-test="rdv-search-clear"
+          @click="query = ''"
+        >
+          Effacer la recherche
+        </button>
+      </div>
       <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
            en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
       <div
@@ -622,6 +730,7 @@ onMounted(() => void load());
         :page="page"
         :applications="applications"
         :sheet-link="sheetLink"
+        :words="words"
         @note="noting = $event"
         @log="openSheet('carnet')"
       />

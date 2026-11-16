@@ -3,7 +3,7 @@ import { computed, onMounted, onUpdated, ref, useId } from "vue";
 
 // Un champ de formulaire commun, à libellé flottant (maquettes du 10 novembre, PR 27 ; Material 3,
 // champ « outlined ») : vide, le libellé est dans le champ ; au focus ou rempli, il remonte dans la
-// bordure. C'est un vrai <label for> et il ne disparaît jamais (WCAG 3.3.2). Pas d'exemple en gris dans
+// bordure. Une zone de texte (textarea) le garde toujours dans la bordure (planches du 13.11, accord de Kevin du 14.11). C'est un vrai <label for> et il ne disparaît jamais (WCAG 3.3.2). Pas d'exemple en gris dans
 // le champ : l'exemple va dessous, dans `hint` (« Ex. : … »). « (facultatif) » sur un champ facultatif
 // (pas d'astérisque), puis l'erreur sous le champ, avec une icône (WCAG 1.4.1, 3.3.1). `width` : la largeur dit la réponse attendue, en caractères
 // (Baymard Institute, Form Field Width). Le slot reçoit l'id, la description et l'état invalide. `badge` : une marque

@@ -1,0 +1,1 @@
+« Trier les offres » : une offre à la fois (carte sur téléphone, livre ouvert sur ordinateur), « Écarter » et « Garder » au bouton ou aux flèches, les passages de l’annonce retrouvés dans le profil surlignés (citations de l’IA vérifiées par le serveur), puis « C’est trié ! » avec les offres gardées

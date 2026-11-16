@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt Claude Code : icônes du Compte, bas de liste, accueil en bandes empilées (10 novembre 2026, fin de soirée)
 
 À ajouter par-dessus `docs/mobile/` (fichiers modifiés seulement). Prime sur les paquets précédents pour ces points.

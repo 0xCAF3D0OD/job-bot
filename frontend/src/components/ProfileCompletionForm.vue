@@ -23,6 +23,7 @@ const TASK_EXAMPLES: [RegExp, string][] = [
   [/vent|vend|commerc|caiss|magasin|boutique|retail/i, "accueil des clients, caisse, commandes, inventaire"],
   [/soin|soign|infirm|aide|accompagn|asspe|socio/i, "soins de base, accompagnement, transmissions, hygiène"],
   [/cuisin|restaur|serv|barman|h[oô]tel|r[ée]ception/i, "mise en place, service, encaissement, hygiène"],
+  // « livreu » : détection du métier de livreur, sans rapport avec l'ancien visuel livre (à ne pas supprimer au nettoyage).
   [/logisti|magasinier|entrep[oô]t|chauffeur|livreu|cariste/i, "réception des marchandises, préparation des commandes, inventaire"],
   [/bureau|administr|secr[ée]tar|comptab|employ[ée]e? de commerce|assistant/i, "accueil téléphonique, courrier, saisie, classement"],
   [/nettoy|entretien|concierg/i, "nettoyage des locaux, produits, horaires, contrôle qualité"],
@@ -505,7 +506,7 @@ defineExpose({ save, saving, missingForLetter, levels });
   --pc-card-pad: 14.5px; --pc-input-pad: var(--space-4); --pc-input-radius: var(--space-3); --pc-link-gap: var(--space-2);
   --pc-h2: 20px; --pc-h2-lh: 26px; --pc-hint: 15px; --pc-hint-lh: 22px; --pc-label-lh: 18px; --pc-small-lh: 18px;
   --pc-lead-lh: 24px; --pc-box: 22px; --pc-box-radius: 6px; --pc-lang-h: 64px; --pc-level-w: 210px; --pc-npa: 96px;
-  --pc-ta-h: 96px; --pc-ta-pad: var(--space-3); --pc-medium: 500; --pc-small: 13px;
+  --pc-ta-h: 96px; --pc-ta-pad: var(--space-3); --pc-small: 13px;
 }
 .pc-desk { --pc-h2: 22px; --pc-h2-lh: 28px; --pc-card-pad: 18.5px; }
 .pc-sec { margin-top: var(--pc-sec-gap); }

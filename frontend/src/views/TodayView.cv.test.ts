@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const DAY = {
-  first_steps: ["profile", "alerts", "keep", "prepare", "sent"].map((key) => ({ key, done: true })),
+  first_steps: ["cv", "criteria", "alerts", "keep", "send"].map((key) => ({ key, done: true })),
   first_steps_dismissed: false,
   has_offers: true,
   to_review: 0,
@@ -38,6 +38,9 @@ async function mountView(documents: unknown[]) {
   );
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
+  await flushPromises();
+  // L'Accueil du téléphone et l'éventail en petit sont chargés à part.
+  await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
 }

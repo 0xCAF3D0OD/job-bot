@@ -1,0 +1,1 @@
+Candidatures sur ordinateur : la carte choisie d'Offres et d'Envoyées est reliée à son détail par une flèche et une encoche, la liste défile sous la recherche et les filtres collés en haut, le détail défile dans une zone à trait fin qui descend jusqu'au bas de la fenêtre, et les en-têtes passent à plat (note sur une ligne, plus de carte Note ni de grand anneau).

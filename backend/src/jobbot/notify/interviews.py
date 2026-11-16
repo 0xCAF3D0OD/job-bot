@@ -25,8 +25,9 @@ class PendingFeedback:
 
     @property
     def link(self) -> str:
-        day = self.interview_on
-        return f"/candidatures/suivi?mois={day:%Y-%m}&jour={day.isoformat()}"
+        # La candidature elle-même, le formulaire « Faire le point » ouvert (Kevin, 16.11) : le
+        # lien d'un jour menait au Suivi ORP, et sur ordinateur à Bilan, sans l'entretien.
+        return f"/candidatures/suivi?candidature={self.application_id}&retour=1"
 
 
 async def pending(session: AsyncSession, today: date) -> list[tuple[Application, date]]:

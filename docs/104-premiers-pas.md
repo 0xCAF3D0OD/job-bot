@@ -148,3 +148,54 @@ D'autres lectures automatiques de jobup, plus anciennes, tombent sous la même c
 | **« Ajouter une offre » par un lien jobup ou jobs.ch** | docs/111 | la page lue une fois, à la demande de la personne |
 
 jobs.ch appartient au même groupe (JobCloud) : mêmes règles. Les alertes e-mail de jobup, elles, restent permises : c'est jobup qui les envoie.
+
+## Premières offres par la recherche web (décision de Kevin, 2026-11-14)
+
+Ta demande du 2026-11-14 : « il faut des offres dès son inscription », puis « fais-le avec l'outil de jobA1, je veux que ça fonctionne ».
+
+### Ce qui change
+
+- Réglage `JOBBOT_WEB_FIRST_OFFERS_ENABLED`, **faux par défaut**. Allumé, et la recherche de jobup restant coupée, la tâche `first_offers` passe par l'outil de recherche web de l'IA (le même que pour l'adresse d'une entreprise) : deux métiers au plus par compte, deux recherches web par métier, dix offres gardées par métier.
+- L'IA ne reçoit que le métier et le lieu (règle I-1). Elle rend un titre, une entreprise et un lieu s'ils sont affichés dans le résultat, et le lien.
+- **Rien n'est inventé ni reformulé** : une offre n'est gardée que si son lien figure parmi les résultats rendus par le moteur (règle I-2). L'intitulé, l'entreprise et le lieu sont des morceaux du titre rendu par le moteur, recopiés par le code. Ce que l'IA propose et qui n'y figure pas mot pour mot est rejeté : l'intitulé devient alors le titre entier du moteur, l'entreprise et le lieu restent vides. Les pages de liste, les codes à la place du titre et les doublons sont écartés.
+- **Fraîcheur** : un résultat que le moteur date de plus de 14 jours est écarté. Sans date connue, il est écarté aussi (décision de Kevin du 2026-11-15, voir plus bas).
+- **jobA1 n'ouvre aucune page** : ni lecture de l'annonce, ni note. Ces offres portent le lien `web` ; elles restent « pas encore notées » tant qu'aucune alerte ne ramène la même offre.
+- L'écran le dit : « Pas encore notées. Les notes arrivent avec les offres de tes alertes. »
+- Coût et plafond : 2 appels au plus par recherche (un par métier), 2 recherches web et 4 000 jetons de réponse au plus par appel. Estimation : 0,06 USD par appel, soit 0,12 USD au plus par inscription (à mesurer à l'essai). Une relance par jour au plus depuis la page Alertes. Chaque appel est compté dans le plafond mensuel de l'IA (objet `first_offers`, règle I-5) ; plafond atteint, la recherche ne part pas.
+
+### Essayer sans rien enregistrer
+
+`jobbot premieres-offres-web "infirmier" "Lausanne"` affiche les offres gardées, le nombre de résultats du moteur, combien portent une date, combien sont écartées pour leur âge, et le coût.
+
+Essai de Kevin du 2026-11-15 en production : « infirmier » à Lausanne et « électricien de montage » en Suisse romande rendent 17 et 18 résultats, 0 offre gardée, sans dire pourquoi. Depuis, l'essai liste aussi **chaque résultat écarté**, avec son titre, sa date, son lien et son motif : non retenu par l'IA (page de liste, offre hors sujet…), daté de plus de 14 jours, lien proposé par l'IA mais absent des résultats du moteur, lien sans https ou page d'accueil, titre manquant ou réduit à un identifiant, au-delà de 10 offres. Si la réponse de l'IA n'a pas pu être lue (balise `<reponse>` absente, JSON illisible, réponse coupée par la limite de jetons), il le dit. Quand rien n'est gardé, il affiche la note de l'IA (son texte avant la balise).
+
+Deux causes possibles d'écart silencieux sont corrigées : une réponse placée dans un bloc de code (« ```json ») est lue, et un lien recopié sans « www. » ou avec une barre finale retrouve son résultat, s'il n'y en a qu'un. Le lien gardé reste celui du moteur. Le réglage reste éteint tant que l'essai ne rend pas de bonnes offres.
+
+### Deuxième essai et requêtes ciblées (décision de Kevin, 2026-11-15)
+
+Résultat du deuxième essai : le tri fait ce qu'il doit. Le moteur rend surtout des pages de liste (11 résultats sur 16 pour « infirmier », 10 sur 17 pour « électricien de montage ») ; toutes les offres individuelles datées ont plus de 14 jours (70 à 550 jours) ; les 2 offres gardées n'avaient pas de date, et une offre voisine du même site avait 160 jours.
+
+Kevin choisit un essai, un seul (prompt `first-offers-web-v2`) :
+
+- les deux recherches visent les pages d'une offre : la première `site:jobup.ch/fr/emplois/detail OR site:jobs.ch/fr/offres-emplois/detail OR site:jobscout24.ch/fr/job`, la seconde, si besoin, les pages d'employeurs et d'agences ;
+- une offre sans date connue est écartée ;
+- l'essai affiche les requêtes réellement faites par l'IA.
+
+**Seuil fixé avant le résultat** : au moins 3 offres de moins de 14 jours par métier, sur les deux métiers d'essai (« infirmier » à Lausanne, « électricien de montage » en Suisse romande). En dessous, la piste web s'arrête et `JOBBOT_WEB_FIRST_OFFERS_ENABLED` reste éteint.
+
+**Résultat (essai de Kevin du 2026-11-15, 12 h 30, en production) : seuil non atteint, piste web arrêtée.**
+
+- « infirmier » à Lausanne : 0 offre de moins de 14 jours. Les requêtes ciblées rendent bien des pages d'offre (9 résultats sur 19), mais 4 sont datées de 157 à 236 jours et 5 n'ont pas de date ; les 10 autres résultats sont des pages de liste ou d'agence.
+- « électricien de montage » : 0 offre de moins de 14 jours. 10 pages d'offre sur 19, dont 4 hors de Suisse romande ; les seules datées ont 70 à 654 jours ; 5 résultats viennent de France ou du Québec.
+- Le moteur de recherche de l'IA n'indexe pas les offres récentes, ou ne les date pas : ni le tri ni les requêtes n'y changent rien.
+
+`JOBBOT_WEB_FIRST_OFFERS_ENABLED` reste éteint. Le code reste en place, éteint, tant que Kevin n'a pas décidé de le retirer.
+
+### Écarts et points ouverts
+
+- Aucune planche ne dessine cet état dans le paquet du 13 novembre : le composant existant est repris, seul le texte change. À valider ou à dessiner.
+- Les liens trouvés mènent souvent à jobup et jobs.ch. jobA1 ne lit pas ces pages, mais afficher ces liens n'a pas été validé par un juriste.
+- Deux offres au même titre et au même lieu, sans entreprise affichée, n'en font qu'une.
+- jobA1 ne vérifie pas qu'une offre est encore ouverte : il faudrait ouvrir la page, ce que les conditions de jobup et jobs.ch interdisent à un robot.
+- Non essayé contre l'IA réelle depuis l'atelier (pas de clé) : à essayer avec la commande ci-dessus avant d'allumer le réglage.
+

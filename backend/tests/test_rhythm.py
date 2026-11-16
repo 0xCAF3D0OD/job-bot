@@ -322,3 +322,58 @@ async def test_the_end_of_week_signal(rt: Runtime, sent: list[Message]) -> None:
         too_much = await rhythm.signal(session, friday)
     assert too_much is not None and too_much.kind == "too_much"
     assert too_much.title == "9 candidatures cette semaine, dont 4 peu notées"
+
+
+# Les envois du travail « reminders » (worker/tasks/reminders.py) et le signal de la semaine. Un
+# jour de repos, aucun ne part vers le téléphone (la cloche garde tout), sauf les rappels datés
+# de docs/86 §2 : la remise des preuves ORP et la veille d'un rendez-vous ORP.
+OPTIONAL_REMINDERS = (
+    "follow_up",  # notify_reminders
+    "orp_target",  # notify_orp, objectif du mois
+    "interview",  # notify_interviews
+    "contact_follow_up",  # notify_contacts
+    "training_funding",  # notify_funding
+    "rhythm_week",  # notify_week
+)
+DATED_REMINDERS = ("orp_due", "orp_meeting")
+
+
+def test_every_reminder_kind_is_known() -> None:
+    """Un nom de rappel mal écrit dans QUIET_KINDS laissait partir le rappel un jour de repos."""
+    import re
+    from pathlib import Path
+
+    root = Path(notify.__file__).parents[1]
+    files = [
+        "notify/service.py",
+        "notify/orp.py",
+        "notify/orp_meeting.py",
+        "notify/interviews.py",
+        "notify/rhythm.py",
+        "contacts/service.py",
+        "trainings/funding.py",
+    ]
+    kinds = {k for f in files for k in re.findall(r'kind="(\w+)"', (root / f).read_text())}
+    technical = {"budget"}
+    assert kinds - technical == set(OPTIONAL_REMINDERS) | set(DATED_REMINDERS) | {"offers"}
+    assert set(OPTIONAL_REMINDERS) | {"offers"} <= notify.QUIET_KINDS
+    assert set(DATED_REMINDERS) == notify.DEADLINE_KINDS
+    assert not notify.DEADLINE_KINDS & notify.QUIET_KINDS
+
+
+@pytest.mark.parametrize("kind", OPTIONAL_REMINDERS)
+async def test_no_reminder_on_a_rest_day(
+    rt: Runtime, sent: list[Message], monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    message = Message(title="Rappel", message="")
+    # Dimanche 15 novembre 2026 : jour de repos (lundi à vendredi par défaut). Cloche seulement.
+    monkeypatch.setattr(rhythm, "now", lambda: datetime(2026, 11, 15, 9, 0, tzinfo=ZURICH))
+    await notify.deliver(rt, message, kind=kind, link="/")
+    assert sent == []
+    # Mercredi 18 novembre : le rappel part.
+    monkeypatch.setattr(rhythm, "now", lambda: datetime(2026, 11, 18, 9, 0, tzinfo=ZURICH))
+    await notify.deliver(rt, message, kind=kind, link="/")
+    assert len(sent) == 1
+    async with rt.sessionmaker() as session:
+        bell = (await session.scalars(select(Notification).where(Notification.kind == kind))).all()
+    assert len(bell) == 2

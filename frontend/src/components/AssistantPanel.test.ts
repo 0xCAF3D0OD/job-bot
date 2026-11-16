@@ -210,7 +210,7 @@ describe("AssistantPanel, effacer la discussion (règles §4, menu « ⋯ »)", 
 });
 
 describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
-  // Un flux qu'on fait avancer à la main : chaque appel à `push` livre un morceau, `end` le ferme.
+  // Un flux qu'on fait avancer à la main : chaque appel à `push` envoie un morceau, `end` le ferme.
   function manualStream() {
     const pending: ((chunk: { done: boolean; value?: Uint8Array }) => void)[] = [];
     const queue: { done: boolean; value?: Uint8Array }[] = [];
@@ -372,9 +372,16 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
   it("rien à faire : « Tout est à jour », et les questions de l’Accueil", async () => {
     localStorage.clear();
     GET.mockReset();
-    const { wrapper } = await mountPage({ ...TODAY, to_follow_up: 0, orp_meeting_at: null, rhythm: { research_today: false } });
+    const { wrapper } = await mountPage({ ...TODAY, to_follow_up: 0, orp_meeting_at: null, rhythm: { research_today: true, pause_until: "2026-12-01" } });
     expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe("Bonjour Kevin. Tout est à jour. Une question ?");
     expect(wrapper.findAll("[data-test=assistant-reply]").map((r) => r.text())).toContain("Que faire aujourd’hui ?");
+  });
+
+  it("un jour de repos, les offres à trier restent comptées, comme sur Aujourd’hui (planche AujourdhuiOrdinateurV2, is_repos)", async () => {
+    localStorage.clear();
+    GET.mockReset();
+    const { wrapper } = await mountPage({ ...TODAY, to_follow_up: 0, orp_meeting_at: null, rhythm: { research_today: false } });
+    expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe("Bonjour Kevin. 3 offres t’attendent. On commence par quoi ?");
   });
 
   it("un raccourci « Demander à l’assistant » sur téléphone mène à la page", async () => {

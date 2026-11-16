@@ -265,8 +265,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
     // §10.1 (9 novembre) : la carte de la note ne garde que l'anneau, le verdict et « Voir la compatibilité » ; la
     // phrase passe dans la feuille (« Comment la note est calculée ») ; la correction passe par la feuille « ⋯ ».
-    // Sans l'annonce complète, le lien sous la bande s'appelle « Le détail de la note » (corrections du 9 novembre).
-    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Le détail de la note");
+    // Sous la bande, le lien s'appelle « Voir la compatibilité », comme sur ordinateur (décision de Kevin du 15.11).
+    expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Voir la compatibilité");
     expect(wrapper.findComponent({ name: "OfferCompatSheet" }).props("how")).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
     vi.unstubAllGlobals();
@@ -285,8 +285,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     );
     const sheet = wrapper.findComponent({ name: "OfferCompatSheet" });
     expect(sheet.props("open")).toBe(false);
-    // Prompt du 10 novembre, PR 15 : sur téléphone, le lien s'appelle « Le détail de la note », note provisoire ou non.
-    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Le détail de la note");
+    // Sur téléphone, le lien s'appelle « Voir la compatibilité », note provisoire ou non (décision de Kevin du 15.11).
+    expect(wrapper.find("[data-test=compat-open]").text()).toBe("Voir la compatibilité");
     await wrapper.find("[data-test=compat-open]").trigger("click");
     expect(sheet.props("open")).toBe(true);
     expect(sheet.props("strengths")).toEqual([
@@ -308,14 +308,14 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("« Partager l’annonce » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
+  it("« Partager » dans la feuille « ⋯ » : le lien public par la feuille du téléphone, sinon le copie", async () => {
     phone();
     const shareFn = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, share: shareFn });
     const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/poste" }));
     const share = async () => {
       await wrapper.find("[data-test=detail-more]").trigger("click");
-      await wrapper.find("[data-test=offer-action-share] button").trigger("click");
+      await wrapper.find("[data-test=offer-action-share]").trigger("click");
     };
     await share();
     expect(shareFn).toHaveBeenCalledWith(expect.objectContaining({ url: "https://exemple.ch/poste" }));
@@ -339,17 +339,19 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » : Écarter, J’ai déjà postulé (lot 15.2), puis les actions de la fiche, sans « Plus tard »", async () => {
+  it("la feuille « ⋯ » (ActionsOffre, §17) : J’ai déjà postulé, Écarter, puis les actions de la fiche, Annuler à part", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
-    const titles = sheet.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles.slice(0, 2)).toEqual(["Écarter l’offre", "J’ai déjà postulé"]);
+    const titles = sheet.findAll(".offer-action").map((t) => t.text());
+    expect(titles.slice(0, 2)).toEqual(["J’ai déjà postulé", "Écarter l’offre"]);
+    expect(titles).toContain("Partager");
+    expect(sheet.find("[data-test=offer-actions-cancel]").text()).toBe("Annuler");
     expect(titles).toContain("Signaler comme expirée");
     expect(titles).toContain("Cette note ne me correspond pas");
     expect(titles).not.toContain("Plus tard");
-    await sheet.find("[data-test=offer-action-score-correction-menu] button").trigger("click");
+    await sheet.find("[data-test=offer-action-score-correction-menu]").trigger("click");
     expect(wrapper.find("[data-test=score-correction-sheet] .score-correction-card.bare").exists()).toBe(true);
     vi.unstubAllGlobals();
   });
@@ -366,30 +368,36 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
   const desktop = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("la note et le poste à gauche ; « L’offre en bref » à droite, en <dl>, avec le lien vers l’annonce", async () => {
+  it("le détail relié (maquette du 15 novembre, §18) : en-tête en carte avec la ligne de note, puis Candidature et L’offre en bref", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes", employment_type: null, rate_min: null, rate_max: null }));
-    const main = wrapper.find("[data-test=detail-columns-main]");
-    expect(main.find("[data-test=section-for-you]").exists()).toBe(true);
-    expect(main.find("[data-test=section-ad]").exists()).toBe(true);
-    // La lecture de l'annonce complète (prompt du 10 novembre) reste dans la note.
-    expect(main.find("[data-test=section-for-you] [data-test=text-reading]").exists()).toBe(true);
-    const aside = wrapper.find("aside[data-test=detail-columns-aside]");
-    expect(aside.attributes("aria-label")).toBe("L’offre en bref");
-    const rows = aside.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
+    // §18 : l'en-tête est la première carte : titre, entreprise, puis sous un filet « [libellé] · [note] sur 100 ».
+    const head = wrapper.get("header[data-test=section-offer]");
+    expect(head.classes()).toContain("oc-card");
+    expect(head.get("[data-test=section-for-you]").text()).toContain("60 sur 100");
+    expect(head.find(".score-ring").exists()).toBe(false);
+    const cards = wrapper.findAll(".oc-card").map((card) => card.attributes("data-test"));
+    expect(cards.slice(0, 3)).toEqual(["section-offer", "section-ad", "offer-brief"]);
+    // La lecture de l'annonce complète est une ligne de la carte « Candidature » (§8, Offres, 3).
+    expect(wrapper.find("[data-test=section-ad] [data-test=text-reading]").exists()).toBe(true);
+    const brief = wrapper.get("[data-test=offer-brief]");
+    const rows = brief.findAll("dl > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
     expect(rows.map((r) => r[0])).toEqual(["Lieu", "Contrat", "Taux d’activité", "Reçue"]);
     expect(rows[1]![1]).toBe("Non précisé");
+    expect(brief.findAll("dd")[1]!.classes()).toContain("oc-missing");
     expect(rows[3]![1]).toMatch(/, par une alerte e-mail$/);
-    const brief = aside.find("[data-test=brief-link]");
-    expect(brief.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
-    expect(brief.text()).toContain("Voir l’annonce sur Indeed");
+    const link = brief.get("[data-test=brief-link]");
+    expect(link.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(link.text()).toContain("Voir l’annonce sur Indeed");
     // Un seul lien visible vers l'annonce sur ordinateur aussi : celui de « L'offre en bref » (PR 25).
     expect(wrapper.findAll('a[href="https://ch.indeed.com/viewjob?jk=1"]')).toHaveLength(1);
-    // Les étiquettes du haut restent.
-    expect(wrapper.find("[data-test=tag-contract]").text()).toBe("Contrat non précisé");
+    // Plus de puces dans l'en-tête, et jamais de puce qui dit qu'une information manque.
+    expect(wrapper.find("[data-test=tag-contract]").exists()).toBe(false);
+    // Les actions sont le pied de la carte « Candidature ».
+    expect(wrapper.find("[data-test=section-ad] [data-test=triage] [data-test=prepare]").exists()).toBe(true);
   });
 
-  it("la note en carte d’information avec « Voir la compatibilité », qui ouvre le panneau (§2.1 du 9 novembre)", async () => {
+  it("la ligne de note avec « Voir la compatibilité », qui ouvre le panneau (§11)", async () => {
     desktop();
     const wrapper = await mountDetail(offer({ score: 60, snippet: "Kubernetes" }));
     const note = wrapper.find("[data-test=section-for-you]");
@@ -400,6 +408,15 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(open.attributes("aria-haspopup")).toBe("dialog");
     await open.trigger("click");
     expect(wrapper.find("[data-test=compat-sheet]").exists()).toBe(true);
+  });
+
+  it("une offre pas encore notée : « Pas encore notée » et « Donner l’annonce pour la noter » (§11)", async () => {
+    desktop();
+    const wrapper = await mountDetail(offer({ score: null, snippet: "Kubernetes" }));
+    const line = wrapper.get("[data-test=section-for-you]");
+    expect(line.text()).toContain("Pas encore notée");
+    expect(line.find("[data-test=compat-open]").exists()).toBe(false);
+    expect(line.get("[data-test=give-to-score]").attributes("aria-controls")).toBe("offer-give-zone");
   });
 
   it("sous 1 024 px, une seule colonne", async () => {

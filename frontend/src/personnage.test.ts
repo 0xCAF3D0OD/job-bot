@@ -24,11 +24,9 @@ function vueFiles(dir: string): string[] {
 const FILES = vueFiles(SRC).map((path) => ({ path: relative(SRC, path), text: readFileSync(path, "utf8") }));
 const template = (text: string) => text.slice(text.indexOf("<template>"), text.lastIndexOf("</template>"));
 
-// Les écrans qui montrent encore le personnage à capuche : les notifications seulement (MODIFICATIONS du 9 novembre,
-// §15). Un nouvel écran s'ajoute ici et dans docs/141.
-export const SCREENS: Record<string, string> = {
-  "views/NotificationsView.vue": "Notifications, Tout est lu (téléphone, §10.9)",
-};
+// Les écrans qui montrent encore le personnage à capuche : plus aucun depuis les corrections du 13.11 au soir (§7 :
+// « Tout est lu » montre le Sourire). Un nouvel écran s'ajoute ici et dans docs/141.
+export const SCREENS: Record<string, string> = {};
 
 // Les écrans des 4 personnages du logo (§15) : une scène par état de la plateforme.
 export const TROUPE_SCREENS: Record<string, string> = {
@@ -36,6 +34,7 @@ export const TROUPE_SCREENS: Record<string, string> = {
   "components/MaintenanceOverlay.vue": "hors ligne, maintenance, mise à jour",
   "views/NotFoundView.vue": "page introuvable",
   "components/CharacterState.vue": "aucune offre",
+  "components/EmptyState.vue": "états vides (§13 du 15 novembre)",
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché",
   "components/GoalReached.vue": "objectif ORP atteint",
   "views/WelcomeView.vue": "premiers pas sur téléphone (le « 1 » seul)",

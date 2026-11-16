@@ -326,8 +326,26 @@ watch(
 </script>
 
 <template>
+  <!-- Téléphone, page Réglages (planche Reglages du 14.11, §6) : la flèche de 24 px dans un bouton de 48 px, puis
+       le titre ; plus de « Retour au compte » ni de bandeau. -->
+  <header
+    v-if="phone && grouped"
+    class="rg-phone-head"
+  >
+    <RouterLink
+      to="/compte"
+      class="rg-back"
+      aria-label="Retour au compte"
+      data-test="settings-back"
+    >
+      <AppIcon name="arrow-left" />
+    </RouterLink>
+    <h1 data-test="settings-title">
+      Réglages
+    </h1>
+  </header>
   <PageHero
-    v-if="!(wide && grouped)"
+    v-else-if="!(wide && grouped)"
     :title="label"
   >
     <template #back>
@@ -342,8 +360,8 @@ watch(
       </RouterLink>
     </template>
   </PageHero>
-  <section :class="['band', { 'page-blocks-wide': wide && grouped }]">
-    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped }]">
+  <section class="band">
+    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]">
       <h1
         v-if="wide && grouped"
         class="settings-wide-title"
@@ -813,7 +831,10 @@ watch(
           title="Affichage"
           cards
         >
-          <AppearancePanel :detailed="wide && grouped" />
+          <AppearancePanel
+            :detailed="grouped"
+            :phone="phone"
+          />
         </SettingsSection>
 
         <SettingsSection
@@ -831,24 +852,10 @@ watch(
           title="Mes données"
           cards
         >
+          <!-- Mes données (planches Reglages et ReglagesOrdinateur du 14.11) : une liste, Exporter puis « L’IA et tes
+               données », puis Supprimer mon compte ; la connexion (fonction de main absente des planches) reste dessous. -->
+          <AccountDataPanel :phone="phone" />
           <SessionPanel />
-          <AccountDataPanel />
-          <!-- « L’IA et tes données » (libellé de Kevin, 10.11, PR 34 ; avant « Ce qui part à l’IA ») : la page publique, à sa
-               section IA. -->
-          <SettingCard data-test="ai-data">
-            <SettingRow
-              title="L’IA et tes données"
-              description="Ce que jobA1 envoie à l’IA, et ce qui n’y part jamais."
-            >
-              <RouterLink
-                :to="{ path: '/tes-donnees', hash: '#ia' }"
-                class="button-link secondary small"
-                data-test="ai-data-link"
-              >
-                Voir
-              </RouterLink>
-            </SettingRow>
-          </SettingCard>
         </SettingsSection>
 
         <SettingsSection
@@ -888,29 +895,66 @@ watch(
   </section>
 </template>
 
-<style scoped>
-/* La page Réglages unique du téléphone (maquette Réglages) : les titres de section en petites capitales grises. */
-.settings-grouped :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--space-2);
-  font-size: var(--font-caption);
-  font-weight: var(--weight-bold);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.settings-grouped :deep(.settings-section + .settings-section) { margin-top: var(--space-5); }
-/* Ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : les titres de section en 18 gras, une carte par section
-   aux lignes séparées d’un filet (D22) ; Connexions avant Mes données. */
+<style>
+/* Réglages, refaits d'après les planches du 14 novembre (Reglages pour le téléphone, ReglagesOrdinateur dès 1 024 px).
+   Sans `scoped` (classes propres à la page, rg-* et settings-grouped/-phone/-wide) : le CSS reste sous la limite de
+   poids. Téléphone : listes bordées de 1 px, rayon 18, lignes de 64 px (16/600, aide 13/18). Ordinateur : une carte
+   par section bordée de 1,5 px, lignes à 18,5 px du bord (15/600, aide 14). Valeurs hors grille arrondies à 4 px. */
+.rg-phone-head, .settings-layout { --rg-6: 6px; --rg-10: 10px; --rg-12: 12px; --rg-13: 13px; --rg-14: 14px; --rg-15: 15px; --rg-16: 16px; --rg-18: 18px; --rg-185: 18.5px; --rg-19: 19px; --rg-20: 20px; --rg-21: 21px; --rg-22: 22px; --rg-28: 28px; }
+.rg-phone-head { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-3) var(--space-2) var(--space-1); }
+.rg-phone-head h1 { margin: 0; font-size: var(--rg-22); line-height: var(--rg-28); font-weight: var(--weight-bold); }
+.rg-back { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-pill); color: var(--text); }
+.rg-back .icon { width: 24px; height: 24px; }
+.settings-phone { padding: var(--rg-10) var(--space-5) var(--rg-28); }
+.settings-grouped .settings-sections { gap: 0; }
+.settings-grouped .settings-section > .section-title { margin: 0 var(--space-1) var(--space-2); font-size: var(--rg-13); font-weight: var(--weight-bold); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; }
+.settings-grouped .settings-section + .settings-section { margin-top: var(--rg-22); }
+.settings-grouped :is(.setting-cards, .appearance, .account-data) { display: grid; gap: var(--space-3); }
+.settings-grouped :is(.setting-card, .rg-list) { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+.settings-grouped .setting-row { flex-wrap: nowrap; gap: var(--space-3); min-height: 64px; padding: var(--rg-10) var(--rg-14); }
+.settings-grouped :is(.setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--line-soft); }
+.settings-grouped .setting-row.stack { flex-wrap: wrap; }
+.settings-grouped .setting-row-text { flex: 1 1 auto; }
+.settings-grouped :is(.setting-row-title, .rg-label) { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
+.settings-grouped :is(.setting-row-description, .rg-sub) { font-size: var(--rg-13); line-height: var(--rg-18); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.settings-phone input[type="checkbox"][role="switch"] { width: 52px; height: 32px; }
+.settings-phone input[type="checkbox"][role="switch"]::after { top: 3px; left: 3px; width: 26px; height: 26px; }
+.settings-phone input[type="checkbox"][role="switch"]:checked::after { transform: translateX(20px); }
+.settings-grouped .appearance-row { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; padding: var(--rg-12) var(--rg-14); }
+.settings-phone .appearance-row { flex-direction: column; align-items: stretch; gap: var(--space-3); padding: var(--rg-14); }
+.settings-phone .appearance-row .segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: var(--rg-14); }
+.settings-phone .appearance-row .segmented > button { min-height: 44px; border: 0; border-radius: var(--rg-10); font-size: var(--rg-14); }
+.settings-grouped :is(.rg-link-row, .rg-danger-row) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; margin: 0; padding: 0 var(--rg-14); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; white-space: normal; cursor: pointer; }
+.settings-grouped .rg-label { flex: 1; min-width: 0; }
+.settings-grouped .rg-value { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
+.settings-grouped .rg-link-row > .icon:last-child { width: 18px; height: 18px; color: var(--text-secondary); }
+.settings-grouped .rg-lead { width: 20px; height: 20px; color: var(--primary-graphic); }
+.settings-grouped .rg-link-two { padding-block: var(--rg-12); }
+.settings-grouped .rg-sub { display: block; margin-top: var(--space-1); }
+.settings-grouped [data-test=delete-form] .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
+.settings-grouped .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-14); }
+.settings-phone .rg-danger-button { min-height: 52px; margin-top: var(--rg-6); justify-content: center; border: 1.5px solid var(--danger-line); border-radius: var(--rg-16); background: var(--surface); color: var(--danger); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
+/* Ordinateur : la carte par section vient de style.css (.settings-wide .setting-cards). */
 .settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); }
-.settings-wide :deep(.settings-section + .settings-section) { margin-top: 0; }
-.settings-wide :deep(#donnees) { order: 1; }
-.settings-wide :deep(.settings-section > .section-title) {
-  margin: 0 var(--space-1) var(--space-3);
-  font-size: var(--font-title);
-  font-weight: var(--weight-bold);
-  color: var(--text);
-  text-transform: none;
-  letter-spacing: normal;
-}
-.setting-row.notify-threshold { padding-top: 0; border-top: 0; }
+.settings-wide .settings-section + .settings-section { margin-top: 0; }
+.settings-wide #donnees { order: 1; }
+.settings-wide .settings-section > .section-title { margin: 0 var(--space-1) var(--space-3); font-size: var(--font-title); color: var(--text); text-transform: none; letter-spacing: normal; }
+.settings-wide .setting-cards { border-radius: var(--radius-card); }
+.settings-wide :is(.setting-card, .rg-list) { border: 0; border-radius: 0; }
+.settings-wide :is(.setting-cards > * + *, .setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--surface-muted); }
+.settings-wide :is(.account-data, .appearance) { gap: 0; }
+.settings-wide :is(.setting-row, .appearance-row, .rg-link-row) { gap: var(--space-4); padding: var(--rg-12) var(--rg-185); }
+.settings-wide .rg-link-row { min-height: 64px; }
+.settings-wide :is(.setting-row-title, .rg-label, .rg-danger-row) { font-size: var(--rg-15); }
+.settings-wide :is(.setting-row-description, .account-data .rg-sub) { font-size: var(--font-small); line-height: var(--rg-20); }
+.settings-wide .appearance-row .segmented { padding: var(--space-1); gap: 0; border-radius: var(--rg-19); }
+.settings-wide .appearance-row .segmented > button { min-height: 32px; padding: 0 var(--space-4); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
+.settings-wide .rg-link-row > .icon:last-child { width: 20px; height: 20px; }
+.settings-wide .account-data .rg-link-row { min-height: 56px; }
+.settings-wide .account-data .rg-label { font-weight: var(--weight-regular); line-height: var(--rg-21); }
+.settings-wide .account-data .arrow-circle { border-width: 2px; }
+.settings-wide .rg-danger-row { min-height: 56px; padding: 0 var(--rg-20); color: var(--danger); font-weight: var(--weight-bold); }
+.settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
+.settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
+.settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
 </style>

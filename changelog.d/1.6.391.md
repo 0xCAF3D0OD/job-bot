@@ -1,0 +1,1 @@
+Rendez-vous sur ordinateur : la carte choisie est reliée à son détail par la même flèche et la même encoche qu'Offres et Envoyées, la pastille « Aucun rendez-vous à venir » ouvre la liste, et le détail passe en cartes (une carte en-tête, puis chaque bloc en carte), sans le trait qui ouvrait « Ce qui a été convenu ».

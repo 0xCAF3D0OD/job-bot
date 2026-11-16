@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, toRef } from "vue";
+import { computed, nextTick, onMounted, ref, toRef, watch } from "vue";
 
 import type { components } from "../api/schema";
+import { grow } from "../composables/useAutoGrow";
 import { useOrpOutcome } from "../composables/useOrpOutcome";
 import { dateText, timeAndPlace } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
@@ -24,6 +25,21 @@ const { count, measures, message, busy, before, step, save } = useOrpOutcome(
   toRef(props, "target"),
   (page) => emit("saved", page),
 );
+
+// « Mesures décidées » : comme dans le volet (décision du 13 novembre), une zone de texte d'une ligne qui grandit
+// avec le texte. Entrée enregistre, comme dans un champ d'une ligne. Sans field-sizing (Firefox), la hauteur d'un
+// texte déjà noté est ajustée à l'affichage et quand on passe à un autre rendez-vous.
+const measuresArea = ref<HTMLTextAreaElement | null>(null);
+function submitFrom(event: KeyboardEvent): void {
+  (event.target as HTMLTextAreaElement).form?.requestSubmit();
+}
+async function fit(): Promise<void> {
+  await nextTick();
+  const native = typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("field-sizing", "content");
+  if (measuresArea.value && !native) grow(measuresArea.value);
+}
+onMounted(fit);
+watch(() => props.meeting, fit);
 
 // « Vendredi 20 novembre, 10 h · ORP de Lausanne », ou rien de noté.
 const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}, ${timeAndPlace(props.next.starts_at, props.next.place)}` : ""));
@@ -89,14 +105,16 @@ const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}
           v-slot="{ id }"
           label="Cours, stage ou programme"
         >
-          <input
+          <textarea
             :id="id"
+            ref="measuresArea"
             v-model="measures"
-            type="text"
+            rows="1"
             maxlength="1000"
             aria-describedby="outcome-help-measures"
             data-test="outcome-measures"
-          >
+            @keydown.enter.prevent="submitFrom"
+          />
         </FormField>
       </fieldset>
     </div>
@@ -152,10 +170,13 @@ const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}
 .outcome-set legend + * { clear: both; }
 .outcome-optional { font-size: var(--font-label); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .outcome-help { margin: var(--space-1) 0 var(--space-4); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+/* « Mesures décidées » : une ligne de 56 px au départ (le trait compris, comme le champ commun), le champ grandit avec le
+   texte au lieu de le couper. */
+.outcome-inline textarea[data-test="outcome-measures"] { min-height: var(--ff-h); padding-block: calc(var(--space-4) - 1px); }
 .outcome-inline .outcome-counter { display: flex; align-items: center; gap: var(--out-14); }
 .outcome-inline .outcome-counter button {
   display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0;
-  border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
+  border: 1.5px solid var(--button-outline); border-radius: 50%; background: var(--surface); color: var(--text); font-size: var(--out-22); font-weight: var(--weight-semibold);
 }
 .outcome-inline .outcome-counter > span { min-width: var(--space-8); text-align: center; font-size: var(--out-22); font-weight: var(--weight-heavy); }
 .outcome-inline .outcome-counter small { font-size: var(--font-small); color: var(--text-secondary); }
@@ -165,7 +186,7 @@ const nextLine = computed(() => (props.next ? `${dateText(props.next.starts_at)}
 .outcome-next-text span { display: block; margin-top: calc(var(--space-1) / 2); font-size: var(--font-small); color: var(--text-secondary); }
 button.outcome-next-add, button.outcome-next-add:hover:not(:disabled) {
   flex: none; display: inline-flex; align-items: center; gap: var(--out-6); height: var(--target-min); min-height: var(--target-min); padding: 0 var(--out-18);
-  border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold);
+  border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold);
 }
 .outcome-inline-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; background: var(--surface); border-top: 1px solid var(--line-soft); }
 .outcome-inline-actions .primary { flex: none; min-height: var(--out-52); padding: 0 var(--out-28); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }

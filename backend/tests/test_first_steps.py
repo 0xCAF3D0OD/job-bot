@@ -20,6 +20,8 @@ from jobbot.db.models import (
     Draft,
     Offer,
     OfferStatus,
+    ProfileChunk,
+    Search,
 )
 from jobbot.runtime import Runtime
 
@@ -27,8 +29,13 @@ from .conftest import admin_engine
 from .test_platform import client as account_client
 from .test_platform import invite, secured  # noqa: F401
 
-TABLES = "offers, applications, searches, drafts, criteria, documents, alert_searches"
-KEYS = "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated')"
+TABLES = (
+    "offers, applications, searches, drafts, criteria, documents, alert_searches, profile_chunks"
+)
+KEYS = (
+    "('first_steps_reached', 'first_steps_dismissed', 'first_steps_celebrated',"
+    " 'google_jobs_hidden')"
+)
 
 
 @pytest.fixture
@@ -50,13 +57,28 @@ def done(page: dict[str, Any]) -> list[str]:
 async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     page = (await client.get("/api/today")).json()
     keys = [s["key"] for s in page["first_steps"]]
-    assert keys == ["profile", "alerts", "keep", "prepare", "sent"]
+    assert keys == ["cv", "criteria", "alerts", "keep", "send"]
     assert done(page) == []
+    assert page["first_steps_summary"] == {
+        "skills": 0,
+        "trade": None,
+        "place": None,
+        "min_rate": None,
+        "kept": 0,
+    }
     assert page["has_offers"] is False and page["first_steps_dismissed"] is False
 
     now = datetime.now(UTC)
+    # Les critères seuls : la ligne du CV reste à faire (§22 du 15.11, CV et critères séparés).
     async with fresh.sessionmaker.begin() as session:
-        session.add(Criterion(kind="locations", value=["VD"]))
+        session.add(Criterion(kind="locations", value=["VD", "Lausanne"]))
+        session.add(Criterion(kind="min_rate", value=80))
+    page = (await client.get("/api/today")).json()
+    assert done(page) == ["criteria"]
+    summary = page["first_steps_summary"]
+    assert summary["place"] == "Lausanne" and summary["min_rate"] == 80
+
+    async with fresh.sessionmaker.begin() as session:
         session.add(
             Document(
                 filename="cv.pdf",
@@ -67,7 +89,14 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
                 text_status="ok",
             )
         )
-    assert done((await client.get("/api/today")).json()) == ["profile"]
+        # Les compétences actives du profil : « 2 compétences reprises ».
+        session.add(ProfileChunk(kind="competence", title="Kubernetes", content="k3s"))
+        session.add(ProfileChunk(kind="competence", title="Terraform", content="AWS"))
+        session.add(ProfileChunk(kind="competence", title="Cobol", content="…", active=False))
+        session.add(ProfileChunk(kind="experience", title="Acme", content="…"))
+    page = (await client.get("/api/today")).json()
+    assert done(page) == ["cv", "criteria"]
+    assert page["first_steps_summary"]["skills"] == 2
 
     # Les alertes créées, aucune offre encore : on attend les premières.
     async with fresh.sessionmaker.begin() as session:
@@ -76,7 +105,7 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
         await session.flush()
         session.add(AlertSetup(search_id=search.id, site="jobup"))
     page = (await client.get("/api/today")).json()
-    assert done(page) == ["profile", "alerts"] and page["has_offers"] is False
+    assert done(page) == ["cv", "criteria", "alerts"] and page["has_offers"] is False
 
     async with fresh.sessionmaker.begin() as session:
         offer = Offer(
@@ -92,17 +121,20 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     page = (await client.get("/api/today")).json()
     assert done(page)[-1] == "keep" and page["has_offers"] is True
     assert page["first_steps_offer_id"] == offer_id
+    # « 1 offre gardée » : les offres en préparation ou envoyées (Kevin, 16.11).
+    assert page["first_steps_summary"]["kept"] == 1
 
     async with fresh.sessionmaker.begin() as session:
         session.add(Draft(offer_id=offer_id, kind="letter", version=1, language="fr", content={}))
-    assert done((await client.get("/api/today")).json())[-1] == "prepare"
+    # « Préparer et envoyer » ne se coche qu'à l'envoi : une lettre ne suffit pas.
+    assert done((await client.get("/api/today")).json())[-1] == "keep"
 
     # Écartée ensuite : les étapes faites le restent.
     await client.patch(f"/api/offers/{offer_id}/status", json={"status": "ignored"})
     async with fresh.sessionmaker.begin() as session:
         await session.execute(text("DELETE FROM drafts"))
     page = (await client.get("/api/today")).json()
-    assert done(page)[-1] == "prepare" and page["first_steps_finished"] is False
+    assert done(page)[-1] == "keep" and page["first_steps_finished"] is False
 
     async with fresh.sessionmaker.begin() as session:
         session.add(
@@ -116,6 +148,7 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
         )
     page = (await client.get("/api/today")).json()
     assert len(done(page)) == 5 and page["first_steps_finished"] is True
+    assert page["first_steps_summary"] is None
     # D'autres lectures d'Aujourd'hui (la barre d'onglets) ne la consomment pas ; une fois
     # montrée, l'interface le dit et elle ne revient plus.
     assert (await client.get("/api/today")).json()["first_steps_finished"] is True
@@ -194,15 +227,124 @@ async def test_read_only_demo_reads_without_writing(fresh: Runtime) -> None:
     assert stored == 0
 
 
-async def test_search_url_until_the_first_offer(client: AsyncClient, fresh: Runtime) -> None:
-    """Sans offre (docs/144) : la recherche Google Emplois de la première alerte ; plus rien
-    dès qu'une offre arrive."""
-    assert (await client.get("/api/today")).json()["search_url"] is None  # ni métier ni alerte
+async def test_google_jobs_until_the_first_offer(client: AsyncClient, fresh: Runtime) -> None:
+    """Sans offre (docs/144) : la recherche Google Emplois de la première alerte, avec le métier
+    et le lieu de la pastille ; plus rien dès qu'une offre arrive, ni sur Aujourd'hui ni sous
+    Candidatures vide."""
+    assert (await client.get("/api/today")).json()["google_jobs"] is None  # ni métier ni alerte
+    assert (await client.get("/api/google-jobs")).json() is None
     async with fresh.sessionmaker.begin() as session:
         session.add(AlertSearch(terms="Comptable", location="Sion"))
-    page = (await client.get("/api/today")).json()
-    assert page["search_url"] == "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8"
+    card = {
+        "terms": "Comptable",
+        "location": "Sion",
+        "url": "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8",
+    }
+    assert (await client.get("/api/today")).json()["google_jobs"] == card
+    assert (await client.get("/api/google-jobs")).json() == card
     async with fresh.sessionmaker.begin() as session:
         now = datetime.now(UTC)
         session.add(Offer(fingerprint="g1", title="Comptable", first_seen_at=now, last_seen_at=now))
-    assert (await client.get("/api/today")).json()["search_url"] is None
+    assert (await client.get("/api/today")).json()["google_jobs"] is None
+    assert (await client.get("/api/google-jobs")).json() is None
+
+
+async def test_google_jobs_hidden_for_the_account(client: AsyncClient, fresh: Runtime) -> None:
+    """« Masquer » (Kevin, 15.11) : retenu côté serveur pour la carte d'Aujourd'hui, même premiers
+    pas fermés ; le lien de Candidatures vide reste ; l'annuler rend la carte."""
+    async with fresh.sessionmaker.begin() as session:
+        session.add(AlertSearch(terms="Comptable", location=None))
+    assert (await client.get("/api/today")).json()["google_jobs"]["location"] is None
+    assert (await client.put("/api/first-steps", json={"dismissed": True})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+    assert (await client.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"] is None
+    assert (await client.get("/api/google-jobs")).json()["terms"] == "Comptable"
+    assert (await client.put("/api/google-jobs", json={"hidden": False})).status_code == 204
+    assert (await client.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+
+
+async def test_google_jobs_hidden_stays_with_its_account(
+    runtime: Runtime,
+    fresh: Runtime,
+    secured: Runtime,  # noqa: F811
+) -> None:
+    """« Masquer » est un réglage du compte, sous sa RLS (docs/regles-securite-donnees.md C-1,
+    C-4) : un autre compte qui n'a rien masqué garde sa carte."""
+    async with account_client(runtime) as owner, account_client(secured) as guest:
+        guest_id = await invite(owner, guest)
+        assert (await owner.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        accounts.set_current(guest_id)
+        try:
+            async with secured.sessionmaker.begin() as session:
+                session.add(AlertSearch(terms="Comptable", location="Sion"))
+        finally:
+            accounts.set_current(None)
+        assert (await guest.get("/api/today")).json()["google_jobs"]["terms"] == "Comptable"
+        assert (await guest.put("/api/google-jobs", json={"hidden": True})).status_code == 204
+        assert (await guest.get("/api/today")).json()["google_jobs"] is None
+        # Le lien de Candidatures vide reste pour lui.
+        assert (await guest.get("/api/google-jobs")).json()["terms"] == "Comptable"
+
+
+def _search(message_id: str, kind: str | None = None) -> Search:
+    return Search(
+        source="jobup",
+        message_id=message_id,
+        received_at=datetime.now(UTC),
+        raw_key=message_id,
+        parse_status="parsed",
+        kind=kind,
+    )
+
+
+async def test_alerts_need_an_alert_created_or_received(
+    client: AsyncClient, fresh: Runtime
+) -> None:
+    """Étape « Alerte » (corrections du 13.11 au soir, §1, décision de Kevin du 14.11) : ni la
+    recherche publique, ni ses offres, ni une offre gardée ne cochent les alertes ; « Plus tard »
+    laisse l'étape ouverte jusqu'à une alerte créée ou reçue, ou à la première candidature."""
+    now = datetime.now(UTC)
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("public:jobup:1"))
+        session.add(_search("<code@jobup.ch>", kind="code"))
+        session.add(
+            Offer(
+                fingerprint="pub1",
+                title="DevOps",
+                first_seen_at=now,
+                last_seen_at=now,
+                status=OfferStatus.PREPARING,
+            )
+        )
+    page = (await client.get("/api/today")).json()
+    # Une offre gardée fait l'étape 3, mais l'étape des alertes reste ouverte.
+    assert done(page) == ["cv", "criteria", "keep"]
+
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("<alerte@jobup.ch>"))
+    assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "alerts", "keep"]
+
+    async with fresh.sessionmaker.begin() as session:
+        await session.execute(text("DELETE FROM searches"))
+        search = AlertSearch(terms="DevOps")
+        session.add(search)
+        await session.flush()
+        session.add(AlertSetup(search_id=search.id, site="jobup"))
+    assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "alerts", "keep"]
+
+
+async def test_the_team_count_follows_the_alert_rule(fresh: Runtime) -> None:
+    """La fonction SQL (migration 0084) compte comme `first_steps._computed` : les offres de la
+    recherche publique ne font pas l'étape des alertes."""
+    now = datetime.now(UTC)
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("public:jobup:2"))
+        session.add(Offer(fingerprint="pub2", title="DevOps", first_seen_at=now, last_seen_at=now))
+    async with fresh.sessionmaker() as session:
+        assert await first_steps.reached(session) == 0
+    async with admin_engine().connect() as conn:
+        body = await conn.scalar(
+            text("select prosrc from pg_proc where proname = 'first_steps_progress'")
+        )
+    assert "not like 'public:%'" in body and "offers t where t.user_id = u.id)" not in body

@@ -20,7 +20,9 @@ import os
 import sys
 from pathlib import Path
 
-from playwright.async_api import async_playwright
+from playwright.async_api import Route, async_playwright
+
+from formats import checked
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 AUDIT = (Path(__file__).resolve().parents[2] / "docs/mobile/outils/audit-grille.js").read_text(encoding="utf-8")
@@ -93,9 +95,14 @@ SCREENS: list[tuple[str, str | None]] = [
     ("profil?onglet=documents", None),
     # Coordonnées reprises du CV (maquette CoordonneesTel du 10 novembre au soir, PR 23) : le formulaire.
     ("profil?onglet=coordonnees", None),
+    # Trier les offres (lot du 11 novembre au soir, PR 45) : la carte, puis la fin du tri.
+    ("candidatures/trier", None),
+    ("candidatures/trier", "[data-test=triage-keep] && [data-test=triage-dismiss] && [data-test=triage-keep]"),
 ]
 # Écrans d'ordinateur déjà passés à la maquette du 9 novembre (une ligne par PR de la série).
 DESK_SCREENS: list[tuple[str, str | None]] = [
+    # Aujourd'hui en deux colonnes (PR 49) : l'accroche, les tâches, la bande ORP et l'éventail en petit.
+    ("aujourdhui", None),
     ("candidatures/offres/{offer}/preparer", None),
     ("candidatures/offres/{offer}/preparer", "[data-test=prep-file] [data-test=versions-open]"),
     ("candidatures/offres/{offer}/preparer?doc=cv", None),
@@ -122,13 +129,26 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=criteria-roles]"),
     ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria]"),
+    # L'étape « Alerte » (corrections du 13.11 au soir, §1) est entre les critères et le tri : « Plus tard » mène au tri.
+    ("bienvenue", "[data-test=welcome-continue] && [data-test=welcome-profile-later] >> visible=true && [data-test=welcome-criteria] && [data-test=welcome-alert-later]"),
     # Les 4 personnages du logo (PR 11, §15).
     ("adresse-inconnue", None),
+    # Trier les offres (lot du 11 novembre au soir, PR 45) : l'éventail, puis la fin du tri.
+    ("candidatures/trier", None),
+    ("candidatures/trier", "[data-test=triage-keep] && [data-test=triage-dismiss] && [data-test=triage-keep]"),
 ]
 # Écrans dont seule une partie est passée à la maquette du 9 novembre : la zone auditée remplace `main`.
 SCOPES: dict[str, str] = {"candidatures/suivi": ".sent-detail"}
 # La démo refuse d'écrire, et donc de rédiger la relance : une relance d'exemple, pour auditer la carte et sa feuille.
 DRAFT = {"subject": "Relance", "text": "Bonjour, je me permets de revenir vers vous au sujet de ma candidature.", "language": "fr", "ai": False, "reason": "démo"}
+
+
+async def research_day(route: Route) -> None:
+    response = await route.fetch()
+    body = await response.json()
+    if isinstance(body.get("rhythm"), dict):
+        body["rhythm"]["research_today"] = True
+    await route.fulfill(response=response, json=body)
 
 
 async def main() -> int:
@@ -144,11 +164,15 @@ async def main() -> int:
             "offer": offers["items"][0]["id"] if offers.get("items") else 0,
             "application": applications[0]["id"] if applications else 0,
         }
-        runs = [(390, 844, SCREENS, AUDIT), (1440, 900, DESK_SCREENS, AUDIT_DESK)]
+        runs = [r for r in ((390, 844, SCREENS, AUDIT), (1440, 900, DESK_SCREENS, AUDIT_DESK)) if checked(r[0])]
         for scheme, (width, height, screens, audit) in ((s, r) for s in ("light", "dark") for r in runs):
             phone = width < 821
             page = await browser.new_page(viewport={"width": width, "height": height}, color_scheme=scheme, has_touch=phone, is_mobile=phone)
             await page.route("**/follow-up/draft", lambda route: route.fulfill(json=DRAFT))
+            # La démo refuse d'écrire : le tri (PR 45) garde ses choix à l'écran, l'envoi est accepté ici.
+            await page.route("**/api/offers/*/status", lambda route: route.fulfill(json={}) if route.request.method == "PATCH" else route.continue_())
+            # Le week-end, la démo est en « Jour de repos » et le tri ne s'affiche pas : un jour de recherche, toujours.
+            await page.route("**/api/today", research_day)
             for path, opener in screens:
                 url = path.format(**ids)
                 await page.goto(f"{BASE}/{url}")

@@ -43,7 +43,7 @@ describe("Tes données (docs/65 §6)", () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     const { wrapper } = await mountPanel();
     // Les compteurs en une phrase (1.6.67).
-    expect(wrapper.find("[data-test=account-counts] .setting-row-description").text()).toBe(
+    expect(wrapper.find("[data-test=account-counts]").text()).toBe(
       "12 offres · 3 candidatures · 1 document · 5 blocs de profil · 20 e-mails d’alerte",
     );
     // Plus de lien direct : une session seule ne télécharge rien.
@@ -70,25 +70,25 @@ describe("Tes données (docs/65 §6)", () => {
     wrapper.unmount();
   });
 
-  it("le modèle des Réglages (1.6.67) ; la suppression seule dans sa carte rouge (C13)", async () => {
+  it("la liste des planches Reglages et ReglagesOrdinateur du 14.11 ; Supprimer en dernier", async () => {
     const { wrapper } = await mountPanel();
-    const card = wrapper.find("[data-test=account-data]");
-    expect(card.classes()).toContain("setting-card");
+    const list = wrapper.find("[data-test=account-data] .rg-list");
     expect(wrapper.find("fieldset").exists()).toBe(false);
-    expect(card.findAll(".setting-row-title").map((t) => t.text())).toEqual(["Données personnelles", "Exporter mes données"]);
-    // Plus de lien dans la phrase : « Voir les durées » est l'action de la ligne.
-    expect(card.find(".setting-row-description a").exists()).toBe(false);
-    const retention = card.find("[data-test=account-counts] .setting-row-control [data-test=data-retention]");
-    expect(retention.text()).toBe("Voir les durées");
-    expect(retention.attributes("href")).toBe("/tes-donnees");
-    expect(card.find(".setting-row-control [data-test=export]").text()).toBe("Télécharger");
-    const danger = wrapper.find("[data-test=account-delete-card]");
-    expect(danger.classes()).toContain("account-delete-card");
-    expect(danger.find(".setting-row-title").text()).toBe("Supprimer mon compte");
-    expect(danger.find(".setting-row-control [data-test=delete-account]").exists()).toBe(true);
-    // La confirmation sous sa ligne, dans la même carte ; le bouton s'efface pendant ce temps.
-    await wrapper.find("[data-test=delete-account]").trigger("click");
-    expect(danger.find("[data-test=delete-form].setting-row-form").exists()).toBe(true);
+    expect(list.findAll(".rg-label").map((t) => t.element.firstChild?.textContent)).toEqual([
+      "Exporter mes données",
+      "L’IA et tes données",
+      "Données personnelles",
+    ]);
+    // Données personnelles (fonction de main gardée) : les compteurs et le lien vers les durées.
+    expect(list.find("[data-test=data-retention]").attributes("href")).toBe("/tes-donnees");
+    expect(list.find("[data-test=ai-data-link]").attributes("href")).toBe("/tes-donnees#ia");
+    // Ordinateur : « Supprimer mon compte » est la dernière ligne de la liste, en rouge.
+    const danger = list.find("[data-test=delete-account]");
+    expect(danger.classes()).toContain("rg-danger-row");
+    expect(danger.text()).toBe("Supprimer mon compte");
+    // La confirmation sous sa ligne, dans la même liste ; le bouton s'efface pendant ce temps.
+    await danger.trigger("click");
+    expect(list.find("[data-test=delete-form].setting-row-form").exists()).toBe(true);
     expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
     wrapper.unmount();
   });

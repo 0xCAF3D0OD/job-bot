@@ -10,10 +10,12 @@ from sqlalchemy import func, select, text
 
 from jobbot import accounts
 from jobbot.api.app import create_app
+from jobbot.auth import passwords
 from jobbot.collect import service
-from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search
+from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search, User
 from jobbot.mail import confirm, site_codes
-from jobbot.mail.codes import find_code
+from jobbot.mail.codes import find_code, valid_minutes
+from jobbot.mail.imap import MailboxError
 from jobbot.mail.message import ParsedEmail
 from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
@@ -59,6 +61,21 @@ def test_find_code(subject: str, body: str, code: str | None) -> None:
     assert (found.code if found else None) == code
 
 
+@pytest.mark.parametrize(
+    ("body", "minutes"),
+    [
+        ("Votre code : 482913. Il est valable 15 minutes.", 15),
+        ("Voici votre code : 482913. Il expire dans 5 minutes.", 5),
+        ("Ihr Code lautet 482 913. Er ist 20 Minuten gültig. Gültig für 20 Minuten.", 20),
+        ("Your code is 4829. It is valid for 30 minutes.", 30),
+        ("Votre code de vérification est 482913.", 10),
+        ("Votre code est 482913, valable 0 minute.", 10),
+    ],
+)
+def test_valid_minutes(body: str, minutes: int) -> None:
+    assert valid_minutes(email("Votre code", body)) == minutes
+
+
 @pytest.fixture
 def phone(monkeypatch: pytest.MonkeyPatch) -> list[notify.Message]:
     sent: list[notify.Message] = []
@@ -79,6 +96,7 @@ async def clean(collect_runtime: Runtime) -> Runtime:
     async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE notifications"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'code_expected'"))
+        await conn.execute(text("DELETE FROM platform_settings WHERE key = 'fast_reads'"))
     return collect_runtime
 
 
@@ -195,6 +213,51 @@ async def test_extension_reads_a_fresh_code(
     found = await site_codes.latest(clean, "jobup")
     assert found is not None and found.code == "482913"
     assert await site_codes.latest(clean, "indeed") is None
+
+
+async def test_last_code_route(clean: Runtime, mailbox: FakeMailbox, phone: Any) -> None:
+    """Section 15 du paquet du 15.11 : le dernier code du site, l'heure et la durée lue dans
+    l'e-mail, rien d'autre (ni objet, ni texte)."""
+    app = create_app(clean.settings, clean)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        assert (await api.get("/api/alert-searches/codes/last")).json() is None
+        mailbox.add(_code_email("<a@x>", datetime.now(UTC) - timedelta(minutes=3)), "<a@x>")
+        with accounts.use(None):
+            await service.collect(clean)
+        mailbox.add(
+            make_email(
+                message_id="<b@x>",
+                sender="no-reply@jobup.ch",
+                received_at=datetime.now(UTC),
+                subject="Votre code de vérification",
+                html="<p>Votre code de vérification est <b>731205</b>. Valable 15 minutes.</p>",
+            ),
+            "<b@x>",
+        )
+        with accounts.use(None):
+            await service.collect(clean)
+        body = (await api.get("/api/alert-searches/codes/last")).json()
+        assert set(body) == {"code", "received_at", "valid_minutes"}
+        assert (body["code"], body["valid_minutes"]) == ("731205", 15)
+        assert (await api.get("/api/alert-searches/codes/last?site=indeed")).json() is None
+    # Sous la RLS d'un autre compte, le code n'existe pas (docs/regles-securite-donnees.md C-4).
+    owner = accounts.current()
+    async with clean.sessionmaker.begin() as session:
+        other = User(username="code-autre", password_hash=passwords.hash_password("x" * 12))
+        session.add(other)
+        await session.flush()
+        other_id = other.id
+    accounts.set_current(other_id)
+    try:
+        assert await site_codes.last(clean, "jobup") is None
+    finally:
+        accounts.set_current(owner)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": other_id})
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        # Le code effacé au bout de 30 minutes : plus rien à montrer.
+        await site_codes.purge(clean, datetime.now(UTC) + timedelta(minutes=31))
+        assert (await api.get("/api/alert-searches/codes/last")).json() is None
 
 
 @pytest.mark.usefixtures("site_example")
@@ -347,39 +410,201 @@ async def test_purge_forgets_mail_from_no_site(clean: Runtime) -> None:
     assert not any(clean.storage.exists(key) for key in keys.values())
 
 
-async def test_expect_code_is_limited(clean: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
-    queued: list[str] = []
+async def test_expect_code_always_queued(clean: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Plus de limite par compte (décision de Kevin du 15.11) : le relevé est partagé."""
+    queued: list[tuple[str, int | None]] = []
 
     async def enqueue(_settings: object, name: str) -> bool:
-        queued.append(name)
+        queued.append((name, accounts.current()))
         return True
 
     monkeypatch.setattr(site_codes, "enqueue", enqueue)
     app = create_app(clean.settings, clean)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         answers = [
-            (await api.post("/api/alert-searches/expect-code")).json()["queued"] for _ in range(7)
+            (await api.post(f"/api/alert-searches/{route}-code")).json()["queued"]
+            for route in ["expect"] * 7 + ["watch"] * 3
         ]
-    assert answers == [True] * 6 + [False]
-    assert queued == ["collect_fast"] * 6
+    assert answers == [True] * 10
+    # Mis en file sans compte : un seul relevé pour toute la plateforme.
+    assert queued == [("collect_fast", None)] * 10
 
 
-async def test_fast_collect_stops_at_the_first_code(
-    clean: Runtime, monkeypatch: pytest.MonkeyPatch
-) -> None:
+class Clock:
+    """Le temps du relevé rapide : chaque pause de 15 s l'avance, sans attendre."""
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.now = datetime.now(UTC)
+        self.sleeps = 0
+        clock = self
+
+        class FakeDatetime(datetime):
+            @classmethod
+            def now(cls, tz: Any = None) -> "FakeDatetime":
+                return cls.fromtimestamp(clock.now.timestamp(), tz)
+
+        async def sleep(seconds: float) -> None:
+            clock.sleeps += 1
+            clock.now += timedelta(seconds=seconds)
+
+        monkeypatch.setattr(asyncio, "sleep", sleep)
+        monkeypatch.setattr(site_codes, "datetime", FakeDatetime)
+        monkeypatch.setattr(fast_task, "datetime", FakeDatetime)
+
+    def advance(self, seconds: float) -> None:
+        self.now += timedelta(seconds=seconds)
+
+
+@pytest.fixture
+def queued(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    names: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        names.append(name)
+        return True
+
+    monkeypatch.setattr(site_codes, "enqueue", enqueue)
+    return names
+
+
+def fake_collect(
+    monkeypatch: pytest.MonkeyPatch,
+    codes: dict[int, int],
+    renew: Any = None,
+) -> list[int]:
+    """Le relevé simulé : `codes` donne, par tour, le compte dont le code arrive ; `renew` est
+    appelé à chaque tour (la page qui relance)."""
     rounds: list[int] = []
 
-    async def collect(_runtime: Runtime, _run_id: object = None) -> service.CollectResult:
+    async def collect(
+        _runtime: Runtime, _run_id: object = None, *, raise_errors: bool = True
+    ) -> service.CollectResult:
+        assert accounts.current() is None
         rounds.append(1)
-        return service.CollectResult(fetched=1, codes=1 if len(rounds) == 3 else 0)
-
-    async def no_sleep(_seconds: float) -> None:
-        return None
+        if renew is not None:
+            await renew(len(rounds))
+        got = codes.get(len(rounds))
+        return service.CollectResult(
+            fetched=1, codes=int(got is not None), code_accounts={got} if got else set()
+        )
 
     monkeypatch.setattr(fast_task, "collect", collect)
-    monkeypatch.setattr(asyncio, "sleep", no_sleep)
-    await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+    return rounds
+
+
+async def run_fast(clean: Runtime) -> None:
+    with accounts.use(None):
+        await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
+
+
+async def test_fast_collect_stops_at_the_code(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str], account: int
+) -> None:
+    Clock(monkeypatch)
+    assert await site_codes.expect(clean)
+    rounds = fake_collect(monkeypatch, {3: account})
+    await run_fast(clean)
     assert len(rounds) == 3
+
+
+async def test_fast_collect_lasts_five_minutes_without_code(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
+) -> None:
+    """« J'attends un code » et l'extension : 5 minutes de relevé, un toutes les 15 s."""
+    Clock(monkeypatch)
+    assert await site_codes.expect(clean)
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
+    assert len(rounds) == 20
+
+
+@pytest.mark.parametrize(
+    ("code_after", "rounds_read"),
+    [(20, 3), (4 * 60, 17), (9 * 60, 37), (None, 40)],
+    ids=["code-a-20-s", "code-a-4-min", "code-a-9-min", "jamais-recu"],
+)
+async def test_code_step_watch(
+    clean: Runtime,
+    monkeypatch: pytest.MonkeyPatch,
+    queued: list[str],
+    account: int,
+    code_after: int | None,
+    rounds_read: int,
+) -> None:
+    """L'étape « Recopie le code » relance chaque minute : la boîte est relevée toutes les 15 s
+    jusqu'au code, 10 minutes au plus."""
+    clock = Clock(monkeypatch)
+    start = clock.now
+    renewed: list[float] = [0]
+    code_round: dict[int, int] = {}
+
+    async def renew(round_: int) -> None:
+        elapsed = (clock.now - start).total_seconds()
+        if code_after is not None and elapsed >= code_after and not code_round:
+            code_round[round_] = account
+        # Comme JobupCodeBox : une relance par minute, tant qu'il n'y a pas de code.
+        if not code_round and elapsed - renewed[-1] >= 60:
+            renewed.append(elapsed)
+            with accounts.use(account):
+                await site_codes.expect(clean, watch=True)
+
+    rounds = fake_collect(monkeypatch, code_round, renew)
+    assert await site_codes.expect(clean, watch=True)
+    await run_fast(clean)
+    assert len(rounds) == rounds_read
+
+
+async def test_watch_stops_after_the_last_renewal(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
+) -> None:
+    """Onglet caché ou page fermée : plus de relance, l'attente finit d'elle-même."""
+    Clock(monkeypatch)
+    assert await site_codes.expect(clean, watch=True)
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
+    # 0, 15, 30, 45, 60 s : la relance donnait 75 s.
+    assert len(rounds) == 5
+
+
+async def test_fast_reads_capped_for_the_platform(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str]
+) -> None:
+    Clock(monkeypatch)
+    assert site_codes.FAST_READS_PER_HOUR == 240
+    monkeypatch.setattr(site_codes, "FAST_READS_PER_HOUR", 7)
+    assert await site_codes.expect(clean)
+    rounds = fake_collect(monkeypatch, {})
+    await run_fast(clean)
+    assert len(rounds) == 7
+    rounds.clear()
+    await run_fast(clean)
+    assert rounds == []
+
+
+async def test_fast_collect_goes_on_when_a_box_fails(
+    clean: Runtime, monkeypatch: pytest.MonkeyPatch, queued: list[str], account: int
+) -> None:
+    """Une boîte en panne n'arrête pas le relevé : l'erreur est relancée à la fin."""
+    Clock(monkeypatch)
+    assert await site_codes.expect(clean)
+    rounds: list[int] = []
+
+    async def collect(
+        _runtime: Runtime, _run_id: object = None, *, raise_errors: bool = True
+    ) -> service.CollectResult:
+        assert raise_errors is False
+        rounds.append(1)
+        got = len(rounds) == 4
+        return service.CollectResult(
+            codes=int(got),
+            code_accounts={account} if got else set(),
+            errors=[MailboxError("auth", "authentification IMAP refusée")],
+        )
+
+    monkeypatch.setattr(fast_task, "collect", collect)
+    with pytest.raises(MailboxError):
+        await run_fast(clean)
+    assert len(rounds) == 4
 
 
 async def test_guest_alert_copies_erased_after_90_days(clean: Runtime) -> None:

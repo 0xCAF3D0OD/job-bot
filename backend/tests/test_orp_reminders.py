@@ -154,5 +154,29 @@ async def test_deadline_moves_to_working_day_of_home_canton(
     async with rt.sessionmaker.begin() as session:
         session.add(Setting(key="identity_postcode", value="1204"))
     await add(rt, date(2024, 8, 12))
-    await notify_orp(rt, date(2024, 9, 1))
+    await notify_orp(rt, date(2024, 9, 2))  # le 1er est un dimanche (jour de repos)
     assert sent[0].title.endswith("avant le 6 septembre")
+
+
+# Le jour de repos coupe les incitations, jamais les échéances obligatoires (Kevin, 15.11.2026) :
+# un jour de repos, le rappel part si la date limite tombe au plus tard le prochain jour normal ;
+# sinon il est décalé à ce jour-là.
+async def test_rest_day_deadline_tomorrow_is_sent(rt: Runtime, sent: list[Message]) -> None:
+    """Dimanche 4 octobre 2026, date limite de septembre le lundi 5 : la veille part."""
+    await add(rt, date(2026, 9, 10))
+    assert await notify_orp(rt, date(2026, 10, 4)) == 1
+    assert sent[0].title == "Demain : justificatifs de septembre à remettre"
+
+
+async def test_rest_day_deadline_in_five_days_waits(rt: Runtime, sent: list[Message]) -> None:
+    """Dimanche 1er novembre 2026, date limite d'octobre le vendredi 6 : décalé au lundi 2."""
+    async with rt.sessionmaker.begin() as session:
+        session.add(Setting(key="orp_due_day", value=6))
+    await add(rt, date(2026, 10, 12))
+    assert await notify_orp(rt, date(2026, 11, 1)) == 0
+    assert sent == []
+    async with rt.sessionmaker() as session:
+        bell = await session.scalars(select(Notification).where(Notification.kind == "orp_due"))
+        assert bell.all() == []  # décalé, pas seulement muet : rien non plus dans la cloche
+    assert await notify_orp(rt, date(2026, 11, 2)) == 1
+    assert sent[0].title == "Justificatifs d'octobre à remettre avant le 6 novembre"

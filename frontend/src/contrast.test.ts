@@ -237,7 +237,9 @@ describe("l’anneau de la note : « Loin » et « À creuser » (revue de la PR
       expect(ratio(theme["text-secondary"]!, theme.surface!)).toBeGreaterThanOrEqual(4.5);
     }
     expect(css).toContain(".score-ring.far { --ring: var(--neutral-graphic); --ring-text: var(--text-secondary); }");
-    expect(css).toContain(".score-word.far .score-gauge { color: var(--neutral-graphic); }");
+    // La jauge de ScoreWord vit dans son composant (allègement du CSS commun, 14.11).
+    const scoreWord = readFileSync(resolve(process.cwd(), "src/components/ScoreWord.vue"), "utf8");
+    expect(scoreWord).toContain(".score-word.far .score-gauge { color: var(--neutral-graphic); }");
   });
 });
 

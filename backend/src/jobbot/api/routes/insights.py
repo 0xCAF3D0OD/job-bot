@@ -60,6 +60,17 @@ class HighlightOut(BaseModel):
     sentence: str
 
 
+class AdviceOut(BaseModel):
+    # « Ce que jobA1 conseille » (Kevin, 2026-11-14) : sans IA, au moins 5 candidatures ou 5 offres.
+    kind: Literal["channel", "site", "skill"]
+    title: str
+    text: str
+    # La base du conseil : « d'après 8 candidatures », « d'après 22 offres ».
+    base: int
+    base_unit: Literal["applications", "offers"]
+    link: str | None = None
+
+
 class MonthCountOut(BaseModel):
     # « Par mois » du Bilan (1.6.62) : les candidatures d'un mois ORP.
     month: str
@@ -86,6 +97,8 @@ class SearchReportOut(BaseModel):
     headline: str | None
     # Le même écart en un mot et une phrase, pour « À retenir » d'Aujourd'hui (1.6.51).
     highlight: HighlightOut | None = None
+    # « Ce que jobA1 conseille » : vide sous les seuils, le bloc est caché.
+    advice: list[AdviceOut] = []
     # Pour un mois choisi : le résumé à copier pour le rendez-vous ORP (docs/42 §3).
     orp_summary: str | None
     # « Par mois » (docs/55) : mois de la période, ou semaines d'un mois choisi.
@@ -188,6 +201,7 @@ async def get_insights(
         ],
         headline=found.headline,
         highlight=HighlightOut(**vars(found.highlight)) if found.highlight else None,
+        advice=[AdviceOut(**vars(a)) for a in found.advice],
         orp_summary=summary,
         unit="week" if found.unit == "week" else "month",
         buckets=[BucketOut(**vars(b)) for b in found.buckets],

@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt pour Claude Code : version ordinateur (9 novembre 2026)
 
 ```

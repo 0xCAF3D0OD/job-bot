@@ -1,3 +1,4 @@
+import { ref } from "vue";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
@@ -69,7 +70,7 @@ function mockOffers(response: unknown): void {
   );
 }
 
-async function mountAt(path: string) {
+async function mountAt(path: string, provide: Record<string, unknown> = {}) {
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -78,7 +79,7 @@ async function mountAt(path: string) {
     ],
   });
   await router.push(path);
-  const wrapper = mount(OffersView, { global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
+  const wrapper = mount(OffersView, { global: { plugins: [router], provide, stubs: { teleport: true, ContactsPanel: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -139,7 +140,12 @@ describe("OffersView", () => {
     mockOffers({ data: { ...page([]).data, counts: none } });
     const wrapper = await mountAt("/offres");
     const empty = wrapper.find("[data-test=offers-none-yet]");
-    expect(empty.text()).toContain("Tes premières offres arrivent après la prochaine collecte.");
+    // §13 du 15 novembre : aucune recherche suivie, la phrase devient la pastille et « Créer mes alertes » est le
+    // bouton principal ; pas de recherche ni de filtres tant qu'il n'y a rien.
+    expect(empty.find("h2").text()).toBe("Pas encore d’offre");
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(empty.find("[data-test=offers-none-alerts]").text()).toBe("Créer mes alertes");
+    expect(wrapper.find("[data-test=offers-toolbar]").exists()).toBe(false);
     expect(empty.find("[data-scene=aucune-offre]").exists()).toBe(true);
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
@@ -156,6 +162,41 @@ describe("OffersView", () => {
     expect(filtered.find("[data-test=offers-reset]").classes()).toContain("link");
   });
 
+  it("compte neuf avec des recherches suivies : « Tes alertes sont prêtes », jamais « Créer mes alertes » (§13 du 15 novembre)", async () => {
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    mockOffers({ data: { ...page([]).data, counts: none } });
+    const wrapper = await mountAt("/offres", { followedSearches: ref(3) });
+    const empty = wrapper.find("[data-test=offers-none-yet]");
+    expect(empty.find("h2").text()).toBe("Tes alertes sont prêtes");
+    // L'heure de la prochaine collecte n'est pas connue : la pastille ne l'invente pas.
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(empty.find("[data-test=offers-none-add]").classes()).toContain("primary");
+    expect(empty.find("[data-test=offers-none-alerts]").text()).toBe("Voir mes alertes");
+    expect(empty.text()).not.toContain("Créer mes alertes");
+  });
+
+  it("compte neuf : le lien Google Emplois sous les boutons, avec ou sans alerte (§22 du 15.11)", async () => {
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    const url = "https://www.google.com/search?q=Comptable+emploi+Sion&udm=8";
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/google-jobs" ? { data: { terms: "Comptable", location: "Sion", url } } : { data: { ...page([]).data, counts: none } }),
+    );
+    for (const followed of [0, 3]) {
+      const wrapper = await mountAt("/offres", { followedSearches: ref(followed) });
+      const link = wrapper.get("[data-test=offers-none-yet] [data-test=offers-none-google]");
+      expect(link.text()).toBe("Voir les offres sur Google Emplois");
+      expect(link.attributes()).toMatchObject({ href: url, target: "_blank", rel: "noopener noreferrer", "aria-label": "Voir les offres sur Google Emplois (nouvel onglet)" });
+      // Au-dessus de « Faire une candidature spontanée ».
+      expect(link.element.nextElementSibling?.getAttribute("data-test")).toBe("offers-none-spontaneous");
+    }
+    // Sans métier, le serveur n'envoie rien : pas de lien.
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/google-jobs" ? { data: null } : { data: { ...page([]).data, counts: none } }),
+    );
+    const bare = await mountAt("/offres");
+    expect(bare.find("[data-test=offers-none-google]").exists()).toBe(false);
+  });
+
   it("ordinateur large, aucune offre avec ces filtres (§2.7 du 9 novembre) : « Faire une candidature spontanée » ouvre « Ajouter »", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
     mockOffers(page([]));
@@ -166,6 +207,22 @@ describe("OffersView", () => {
     expect(filtered.find(".offers-empty-spontaneous p").text()).toBe("Tu vises une entreprise précise, même sans offre ?");
     await link.trigger("click");
     expect(filtered.get("[data-test=add-sheet] [data-test=add-tab-spontaneous]").attributes("aria-checked")).toBe("true");
+    vi.unstubAllGlobals();
+  });
+
+  it("ordinateur large : le compteur au-dessus de la liste dit le nombre de cartes, « 2 sur 6 offres » avec un filtre (Kevin, 15.11)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux"), offer(3, "Trois")]));
+    const all = await mountAt("/offres");
+    const cards = all.findAll("[data-offer-row]").length;
+    expect(cards).toBe(3);
+    expect(all.get("[data-test=offers-count]").text()).toBe(`${cards} offres`);
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    const searched = await mountAt("/offres?q=devops");
+    const shown = searched.findAll("[data-offer-row]").length;
+    expect(shown).toBe(2);
+    // 6 : « À traiter » sans filtre (counts.pending).
+    expect(searched.get("[data-test=offers-count]").text()).toBe(`${shown} sur 6 offres`);
     vi.unstubAllGlobals();
   });
 
@@ -293,11 +350,18 @@ describe("OffersView", () => {
     const cards = wrapper.findAll("[data-test=offer]");
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
     expect(cards[0]?.text()).not.toContain("chez l’employeur");
-    // Pas encore notée : pas d'anneau, le texte, et la raison au survol (docs/76 §3).
-    expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
-    expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["80–100 %", "Temporaire"]);
-    expect(cards[1]?.find("[data-test=offer-chip]").text()).toBe("Type : stage (« stage »)");
-    expect(cards[1]?.find("[data-test=offer-chip]").classes()).toContain("warn");
+    // Pas encore notée (§21 du 15 novembre, ordinateur) : le cercle vide en pointillés, la raison au survol (docs/76
+    // §3), et la pastille neutre en tête.
+    const pending = cards[0]?.find("[data-test=score]");
+    expect(pending?.attributes("aria-label")).toBe("Pas encore notée");
+    expect(pending?.attributes("role")).toBe("img");
+    expect(pending?.attributes("title")).toContain("à noter");
+    expect(pending?.text()).toBe("");
+    expect(cards[0]?.findAll("[data-test=offer-chip]").map((c) => c.text())).toEqual(["Pas encore notée", "80–100 %", "Temporaire"]);
+    expect(cards[0]?.find("[data-test=offer-chip]").classes()).toEqual([]);
+    const reason = cards[1]?.findAll("[data-test=offer-chip]").at(1);
+    expect(reason?.text()).toBe("Type : stage (« stage »)");
+    expect(reason?.classes()).toContain("warn");
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
@@ -347,7 +411,7 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.findAll("[data-test=offer-chip]").at(-1)?.text()).toMatch(/^Reçue (le )?\d{1,2} \S+$|^Reçue (aujourd’hui|hier)$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
-    expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
+    expect(unscored?.find("[data-test=score]").classes()).toContain("score-unrated");
 
     await scored?.trigger("click");
     expect(wrapper.find("[data-test=match-title]").text()).toBe("Proche de ton profil");
@@ -383,7 +447,7 @@ describe("tri et candidature", () => {
     wrapper.unmount();
   });
 
-  it("« Plus tard » change le statut et ferme le détail", async () => {
+  it("« Gardée » (ex « Plus tard ») change le statut et ferme le détail", async () => {
     PATCH.mockResolvedValue({ data: { id: 1, status: "later" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
@@ -396,7 +460,7 @@ describe("tri et candidature", () => {
     });
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
     // Le message propose d'annuler (docs/60 §3) : l'offre revient à son statut d'avant.
-    expect(wrapper.text()).toContain("Passée en Plus tard.");
+    expect(wrapper.text()).toContain("Offre gardée.");
     await wrapper.find("[data-test=undo-status]").trigger("click");
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", {
@@ -503,7 +567,7 @@ describe("détail allégé et adresse", () => {
     );
     const wrapper = await mountAt("/offres?statut=later");
     await wrapper.find("[data-test=offer]").trigger("click");
-    expect(wrapper.find("[data-test=status-pill]").text()).toBe("Plus tard");
+    expect(wrapper.find("[data-test=status-pill]").text()).toBe("Gardée");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
     expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
@@ -714,6 +778,56 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     expect(listLoads() - before).toBe(1);
   });
 
+  // Kevin, 15.11 : l'offre ajoutée est notée tout de suite, même écartée par les critères. La carte montre « Pas encore
+  // notée » (§21), puis prend la note sans recharger la page ; la relecture s'arrête dès que la note est là.
+  it("l’offre ajoutée prend sa note sans recharger, même écartée", async () => {
+    let scored = false;
+    const added = () =>
+      offer(9, "Menuisier CFC", {
+        added_by_you: true,
+        links: [],
+        status: "filtered_out",
+        filter_reasons: ["Mot exclu : menuisier"],
+        ...(scored ? { score: 82 } : {}),
+      });
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/manual"
+          ? { data: { trade: "Menuisier", added_today: 0, daily_limit: 20 } }
+          : path === "/api/offers/{offer_id}"
+            ? { data: added() }
+            : path === "/api/profile-chunks"
+              ? { data: [{ id: 1, active: true }] }
+              : page([offer(1, "Une", { score: 60 })]),
+      ),
+    );
+    const wrapper = await mountAt("/offres?ajouter=1");
+    await flushPromises();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      wrapper.findComponent({ name: "ManualOfferForm" }).vm.$emit("added", { id: 9, existing: false, status: "filtered_out", reasons: ["Mot exclu : menuisier"] });
+      await flushPromises();
+      await flushPromises();
+      expect(wrapper.text()).toContain("Sa note arrive dans un instant.");
+      const card = () => wrapper.find("[data-offer-row='9'] [data-test=score]");
+      expect(card().attributes("aria-label")).toBe("Pas encore notée");
+      const reads = () => GET.mock.calls.filter((c) => c[0] === "/api/offers/{offer_id}").length;
+      const before = reads();
+      await vi.advanceTimersByTimeAsync(5000);
+      await flushPromises();
+      expect(reads() - before).toBe(1);
+      expect(card().attributes("aria-label")).toBe("Pas encore notée");
+      scored = true;
+      await vi.advanceTimersByTimeAsync(5000);
+      await flushPromises();
+      expect(card().attributes("aria-label")).toBe("Proche : 82 sur 100");
+      await vi.advanceTimersByTimeAsync(20000);
+      expect(reads() - before).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   // PR 38 : pas de « Cette offre était déjà là ». Le panneau se ferme, l'offre s'ouvre, sa carte est mise en avant
   // 2 secondes, et le message dit « Elle était déjà dans ta liste ».
   it("un doublon : le panneau se ferme, la carte existante est mise en avant 2 secondes", async () => {
@@ -833,7 +947,7 @@ describe("Offres, illustrations (planche « Illustrations »)", () => {
 });
 
 describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
-  it("en préparation d’abord, sous son titre ; « Plus tard » et les faits en puces", async () => {
+  it("en préparation d’abord, sous son titre ; « Gardée » en tête et les faits en puces", async () => {
     const now = new Date().toISOString();
     mockOffers(
       page([
@@ -848,7 +962,7 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     expect(titles).toEqual(["En préparation", "Aujourd’hui"]);
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[0]!.text()).not.toContain("En préparation");
-    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["80–100 %", "CDI", "Plus tard"]);
+    expect(cards[1]!.findAll("[data-test=offer-chip]").map((s) => s.text())).toEqual(["Pas encore notée", "Gardée", "80–100 %", "CDI"]);
     // La carte de la maquette : logo, poste, « entreprise · lieu », puces, anneau ; rien d'autre.
     expect(cards[0]!.findAll("button")).toHaveLength(0);
     expect(cards[0]!.element.tagName).toBe("A");

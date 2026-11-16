@@ -1,0 +1,1 @@
+Envoyées sur téléphone (maquette du 14 novembre, §3 et §6) : recherche « Poste, entreprise, lieu » au-dessus des onglets, statuts et tri dans la feuille Filtres ouverte par l’icône de l’en-tête, objectif ORP sans chevron, retour « ← Candidature » dans le détail

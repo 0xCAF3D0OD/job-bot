@@ -8,8 +8,6 @@ import { useAuth } from "../composables/useAuth";
 import AppIcon from "./AppIcon.vue";
 import InlineConfirm from "./InlineConfirm.vue";
 import OrpSheet from "./OrpSheet.vue";
-import SettingCard from "./SettingCard.vue";
-import SettingRow from "./SettingRow.vue";
 import { plural } from "../format";
 
 // Tes données (docs/65 §6) : ce qui est gardé et l'export complet, dans une carte (1.6.67) ; la suppression du
@@ -24,6 +22,10 @@ type Summary = {
   notifications: number;
   can_delete: boolean;
 };
+// `phone` (planche Reglages du 14.11) : lignes à chevron avec icône bleue, « Supprimer mon compte » en bouton bordé
+// rouge sous la liste. Sur ordinateur (ReglagesOrdinateur) : lignes à flèche ronde, « Supprimer mon compte » en
+// dernière ligne de la liste, en rouge.
+withDefaults(defineProps<{ phone?: boolean }>(), { phone: false });
 const summary = ref<Summary | null>(null);
 const confirming = ref(false);
 const password = ref("");
@@ -139,169 +141,346 @@ async function remove(): Promise<void> {
 </script>
 
 <template>
-  <SettingCard data-test="account-data">
-    <SettingRow
-      title="Données personnelles"
-      :description="counts"
-      data-test="account-counts"
-    >
-      <RouterLink
-        to="/tes-donnees"
-        class="button-link"
-        data-test="data-retention"
-      >
-        Voir les durées
-      </RouterLink>
-    </SettingRow>
-    <SettingRow
-      title="Exporter mes données"
-      description="Un fichier ZIP avec tout ce que jobA1 garde de toi."
-    >
-      <button
-        v-if="!exporting"
-        type="button"
-        class="button-link"
-        data-test="export"
-        @click="exporting = true"
-      >
-        <span class="with-icon"><AppIcon name="download" />Télécharger</span>
-      </button>
-    </SettingRow>
-    <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
-         de passe dedans, sous sa ligne. -->
-    <form
-      v-if="exporting"
-      class="account-delete setting-row-form"
-      data-test="export-form"
-      @submit.prevent="download"
-    >
-      <InlineConfirm
-        message="Tes données partent dans un fichier ZIP. Un avis arrive aussi dans la cloche."
-        confirm-label="Télécharger"
-        cancel-label="Annuler"
-        :danger="false"
-        :busy="exportBusy || !exportPassword"
-        @confirm="download"
-        @cancel="exporting = false"
-      >
-        <FormField
-          v-slot="f"
-          class="account-delete-password"
-          label="Ton mot de passe pour confirmer"
-        >
-          <input
-            :id="f.id"
-            v-model="exportPassword"
-            :aria-describedby="f.describedby"
-            type="password"
-            autocomplete="current-password"
-            required
-            data-test="export-password"
-          >
-        </FormField>
-        <p
-          v-if="exportError"
-          class="notice"
-          role="alert"
-          data-test="export-error"
-        >
-          {{ exportError }}
-        </p>
-      </InlineConfirm>
-    </form>
-  </SettingCard>
-  <!-- Supprimer le compte (maquette Réglages ; décisions de Kevin du 2026-11-05, C13) : seul dans sa carte, en
-       rouge. La confirmation garde le mot de passe, propose d’abord d’exporter la feuille ORP, et « Annuler » a le
-       focus. Entrée dans le mot de passe ne supprime rien : seul le clic sur « Supprimer définitivement » le fait. -->
-  <SettingCard
-    v-if="summary?.can_delete"
-    class="account-delete-card"
-    data-test="account-delete-card"
+  <div
+    :class="['account-data', { 'account-data-phone': phone }]"
+    data-test="account-data"
   >
-    <SettingRow
-      v-if="!confirming"
-      title="Supprimer mon compte"
-      description="Ton CV, tes candidatures et ton suivi ORP sont effacés."
-    >
+    <div class="rg-list">
+      <template v-if="phone">
+        <button
+          v-if="!exporting"
+          type="button"
+          class="rg-link-row"
+          data-test="export"
+          @click="exporting = true"
+        >
+          <AppIcon
+            name="download"
+            class="rg-lead"
+          />
+          <span class="rg-label">Exporter mes données</span>
+          <AppIcon name="chevron" />
+        </button>
+        <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
+             de passe dedans, sous sa ligne. -->
+        <form
+          v-if="exporting"
+          class="account-delete setting-row-form"
+          data-test="export-form"
+          @submit.prevent="download"
+        >
+          <InlineConfirm
+            message="Tes données partent dans un fichier ZIP. Un avis arrive aussi dans la cloche."
+            confirm-label="Télécharger"
+            cancel-label="Annuler"
+            :danger="false"
+            :busy="exportBusy || !exportPassword"
+            @confirm="download"
+            @cancel="exporting = false"
+          >
+            <FormField
+              v-slot="f"
+              class="account-delete-password"
+              label="Ton mot de passe pour confirmer"
+            >
+              <input
+                :id="f.id"
+                v-model="exportPassword"
+                :aria-describedby="f.describedby"
+                type="password"
+                autocomplete="current-password"
+                required
+                data-test="export-password"
+              >
+            </FormField>
+            <p
+              v-if="exportError"
+              class="notice"
+              role="alert"
+              data-test="export-error"
+            >
+              {{ exportError }}
+            </p>
+          </InlineConfirm>
+        </form>
+        <RouterLink
+          :to="{ path: '/tes-donnees', hash: '#ia' }"
+          class="rg-link-row"
+          data-test="ai-data-link"
+        >
+          <AppIcon
+            name="spark"
+            class="rg-lead"
+          />
+          <span class="rg-label">L’IA et tes données</span>
+          <AppIcon name="chevron" />
+        </RouterLink>
+        <!-- Données personnelles (fonction de main absente de la planche) : les compteurs et les durées de garde. -->
+        <RouterLink
+          to="/tes-donnees"
+          class="rg-link-row rg-link-two"
+          data-test="data-retention"
+        >
+          <span class="rg-label">Données personnelles<span
+            class="rg-sub"
+            data-test="account-counts"
+          >{{ counts }}</span></span>
+          <AppIcon name="chevron" />
+        </RouterLink>
+      </template>
+      <template v-else>
+        <button
+          v-if="!exporting"
+          type="button"
+          class="rg-link-row rg-link-two"
+          data-test="export"
+          @click="exporting = true"
+        >
+          <span class="rg-label">Exporter mes données<span class="rg-sub">CV, candidatures et suivi ORP en un fichier</span></span>
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
+        </button>
+        <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
+             de passe dedans, sous sa ligne. -->
+        <form
+          v-if="exporting"
+          class="account-delete setting-row-form"
+          data-test="export-form"
+          @submit.prevent="download"
+        >
+          <InlineConfirm
+            message="Tes données partent dans un fichier ZIP. Un avis arrive aussi dans la cloche."
+            confirm-label="Télécharger"
+            cancel-label="Annuler"
+            :danger="false"
+            :busy="exportBusy || !exportPassword"
+            @confirm="download"
+            @cancel="exporting = false"
+          >
+            <FormField
+              v-slot="f"
+              class="account-delete-password"
+              label="Ton mot de passe pour confirmer"
+            >
+              <input
+                :id="f.id"
+                v-model="exportPassword"
+                :aria-describedby="f.describedby"
+                type="password"
+                autocomplete="current-password"
+                required
+                data-test="export-password"
+              >
+            </FormField>
+            <p
+              v-if="exportError"
+              class="notice"
+              role="alert"
+              data-test="export-error"
+            >
+              {{ exportError }}
+            </p>
+          </InlineConfirm>
+        </form>
+        <RouterLink
+          :to="{ path: '/tes-donnees', hash: '#ia' }"
+          class="rg-link-row rg-link-two"
+          data-test="ai-data-link"
+        >
+          <span class="rg-label">L’IA et tes données<span class="rg-sub">Ce qui part à l’IA et ce qui reste chez jobA1</span></span>
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
+        </RouterLink>
+        <!-- Données personnelles (fonction de main absente de la planche) : les compteurs et les durées de garde. -->
+        <RouterLink
+          to="/tes-donnees"
+          class="rg-link-row rg-link-two"
+          data-test="data-retention"
+        >
+          <span class="rg-label">Données personnelles<span
+            class="rg-sub"
+            data-test="account-counts"
+          >{{ counts }}</span></span>
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
+        </RouterLink>
+        <button
+          v-if="summary?.can_delete && !confirming"
+          type="button"
+          class="rg-danger-row"
+          data-test="delete-account"
+          @click="confirming = true"
+        >
+          Supprimer mon compte
+        </button>
+        <form
+          v-if="confirming && summary?.can_delete"
+          class="account-delete setting-row-form"
+          data-test="delete-form"
+          @submit.prevent
+        >
+          <InlineConfirm
+            message="Supprimer ton compte ?"
+            confirm-label="Supprimer définitivement"
+            cancel-label="Annuler"
+            :busy="busy || !password"
+            @confirm="remove"
+            @cancel="confirming = false"
+          >
+            <p class="account-delete-text">
+              Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta
+              feuille ORP avant.
+            </p>
+            <FormField
+              v-slot="f"
+              class="account-delete-password"
+              label="Ton mot de passe pour confirmer"
+            >
+              <input
+                :id="f.id"
+                ref="passwordInput"
+                v-model="password"
+                :aria-describedby="f.describedby"
+                type="password"
+                autocomplete="current-password"
+                required
+                data-test="delete-password"
+              >
+            </FormField>
+            <p
+              v-if="error"
+              class="notice"
+              role="alert"
+              data-test="delete-error"
+            >
+              {{ error }}
+            </p>
+            <button
+              type="button"
+              class="link account-delete-export"
+              :aria-busy="orpBusy ? 'true' : undefined"
+              data-test="delete-export-orp"
+              @click="exportOrp"
+            >
+              <span class="with-icon"><AppIcon name="download" />Exporter ma feuille ORP</span>
+            </button>
+            <p
+              v-if="orpError"
+              class="notice"
+              role="alert"
+              data-test="delete-export-orp-error"
+            >
+              {{ orpError }}
+            </p>
+            <!-- La feuille du mois, cachée : son PDF se fait sur place, la confirmation reste ouverte. -->
+            <div
+              v-if="orp"
+              hidden
+            >
+              <OrpSheet
+                ref="orpSheet"
+                :data="orp"
+              />
+            </div>
+          </InlineConfirm>
+        </form>
+      </template>
+    </div>
+    <!-- Supprimer le compte (maquette Réglages ; décisions de Kevin du 2026-11-05, C13) : la confirmation garde le mot
+         de passe, propose d’abord d’exporter la feuille ORP, et « Annuler » a le focus. Entrée dans le mot de passe ne
+         supprime rien : seul le clic sur « Supprimer définitivement » le fait. -->
+    <template v-if="phone && summary?.can_delete">
       <button
+        v-if="!confirming"
         type="button"
-        class="secondary small danger"
+        class="rg-danger-button"
         data-test="delete-account"
         @click="confirming = true"
       >
-        <span class="with-icon"><AppIcon name="trash" />Supprimer mon compte</span>
+        Supprimer mon compte
       </button>
-    </SettingRow>
-    <form
-      v-else
-      class="account-delete setting-row-form"
-      data-test="delete-form"
-      @submit.prevent
-    >
-      <InlineConfirm
-        message="Supprimer ton compte ?"
-        confirm-label="Supprimer définitivement"
-        cancel-label="Annuler"
-        :busy="busy || !password"
-        @confirm="remove"
-        @cancel="confirming = false"
+      <div
+        v-else
+        class="rg-list"
       >
-        <p class="account-delete-text">
-          Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta
-          feuille ORP avant.
-        </p>
-        <FormField
-          v-slot="f"
-          class="account-delete-password"
-          label="Ton mot de passe pour confirmer"
+        <form
+          v-if="confirming && summary?.can_delete"
+          class="account-delete setting-row-form"
+          data-test="delete-form"
+          @submit.prevent
         >
-          <input
-            :id="f.id"
-            ref="passwordInput"
-            v-model="password"
-            :aria-describedby="f.describedby"
-            type="password"
-            autocomplete="current-password"
-            required
-            data-test="delete-password"
+          <InlineConfirm
+            message="Supprimer ton compte ?"
+            confirm-label="Supprimer définitivement"
+            cancel-label="Annuler"
+            :busy="busy || !password"
+            @confirm="remove"
+            @cancel="confirming = false"
           >
-        </FormField>
-        <p
-          v-if="error"
-          class="notice"
-          role="alert"
-          data-test="delete-error"
-        >
-          {{ error }}
-        </p>
-        <button
-          type="button"
-          class="link account-delete-export"
-          :aria-busy="orpBusy ? 'true' : undefined"
-          data-test="delete-export-orp"
-          @click="exportOrp"
-        >
-          <span class="with-icon"><AppIcon name="download" />Exporter ma feuille ORP</span>
-        </button>
-        <p
-          v-if="orpError"
-          class="notice"
-          role="alert"
-          data-test="delete-export-orp-error"
-        >
-          {{ orpError }}
-        </p>
-        <!-- La feuille du mois, cachée : son PDF se fait sur place, la confirmation reste ouverte. -->
-        <div
-          v-if="orp"
-          hidden
-        >
-          <OrpSheet
-            ref="orpSheet"
-            :data="orp"
-          />
-        </div>
-      </InlineConfirm>
-    </form>
-  </SettingCard>
+            <p class="account-delete-text">
+              Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta
+              feuille ORP avant.
+            </p>
+            <FormField
+              v-slot="f"
+              class="account-delete-password"
+              label="Ton mot de passe pour confirmer"
+            >
+              <input
+                :id="f.id"
+                ref="passwordInput"
+                v-model="password"
+                :aria-describedby="f.describedby"
+                type="password"
+                autocomplete="current-password"
+                required
+                data-test="delete-password"
+              >
+            </FormField>
+            <p
+              v-if="error"
+              class="notice"
+              role="alert"
+              data-test="delete-error"
+            >
+              {{ error }}
+            </p>
+            <button
+              type="button"
+              class="link account-delete-export"
+              :aria-busy="orpBusy ? 'true' : undefined"
+              data-test="delete-export-orp"
+              @click="exportOrp"
+            >
+              <span class="with-icon"><AppIcon name="download" />Exporter ma feuille ORP</span>
+            </button>
+            <p
+              v-if="orpError"
+              class="notice"
+              role="alert"
+              data-test="delete-export-orp-error"
+            >
+              {{ orpError }}
+            </p>
+            <!-- La feuille du mois, cachée : son PDF se fait sur place, la confirmation reste ouverte. -->
+            <div
+              v-if="orp"
+              hidden
+            >
+              <OrpSheet
+                ref="orpSheet"
+                :data="orp"
+              />
+            </div>
+          </InlineConfirm>
+        </form>
+      </div>
+    </template>
+  </div>
 </template>

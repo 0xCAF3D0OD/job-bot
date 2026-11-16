@@ -122,12 +122,19 @@ def test_un_trait_qui_remonte_au_bout_est_trouve_et_un_trait_droit_non(page: Pag
 
 
 def test_police_manuscrite_contient_chaque_caractere_des_titres():
-    """Caveat Brush (11b) : chaque caractère des 4 fins de titre, de « fait ! », de « te revoir. » (connexion,
+    """Caveat Brush (11b) : chaque caractère des 5 fins de titre (« Recevoir. » de l'étape Alerte, 13.11 au soir), de « fait ! », de « te revoir. » (connexion,
     2026-11-05), des fins du titre d'Aujourd'hui et de « envoyée. » (maquette du 8 novembre) est dans la table cmap du sous-ensemble ; un caractère absent est bien signalé."""
     titles = hand_titles()
     assert titles == [
-        "plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "En trier 3.", "fait !", "te revoir.",
-        "pause.", "repos.", "à envoyer.", "à jour.", "à jour.", "envoyée.",
+        "plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "Recevoir.", "En trier 3.", "fait !", "te revoir.",
+        "1 justificatif en retard,", "1 justificatif en retard", "pause.", "Jour de repos.", "à envoyer.", "à jour.", "à jour.",
+        "puis 0123456789 candidatures", "envoyée.",
     ]
     assert missing_glyphs() == []
-    assert missing_glyphs(texts=["Zoë"]) == ["Z", "ë"]
+    # Les titres manuscrits composés à l'écran (lot du 11 novembre au soir : « 3 offres pour toi », « octobre est
+    # remis ! », « 1 justificatif en retard, ») : les minuscules, les chiffres et les accents des mois sont là.
+    assert missing_glyphs(texts=["abcdefghijklmnopqrstuvwxyz 0123456789 .,!?’:- àâçéèêîôû"]) == []
+    # Les notes des cartes de l'éventail (§20 du 15 novembre) : toutes les majuscules, « · » et les accents. « ↗ » n'existe
+    # pas dans Caveat Brush ; « ñ » n'est pas dans le sous-ensemble.
+    assert missing_glyphs(texts=["ABCDEFGHIJKLMNOPQRSTUVWXYZ · ÀÉÈÇ ëïüùœ"]) == []
+    assert missing_glyphs(texts=["Año ↗"]) == ["ñ", "↗"]

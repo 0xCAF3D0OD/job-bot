@@ -154,6 +154,11 @@ class Search(Base):
 # n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche. De
 # même pour un code ou un message d'un site (docs/112).
 PUBLIC_SEARCH_PREFIX = "public:"
+# Le lien d'une offre trouvée par la recherche web des premières offres (docs/104) : un
+# intitulé et une adresse, jamais lus ni notés tant qu'aucune autre source ne la montre.
+WEB_LINK_SOURCE = "web"
+# Offre ajoutée à la main (formulaire « Ajouter une offre », extension) : docs/111.
+MANUAL_LINK_SOURCE = "manual"
 # L'e-mail d'un expéditeur qui n'est aucun site (Stripe, une banque…) : ni copie, ni objet, ni
 # lien ; seul son Message-ID reste, pour que la collecte ne le relise pas. Hors du journal.
 IGNORED_KIND = "ignored"
@@ -322,6 +327,9 @@ class Evaluation(Base):
         JSONB, nullable=False, default=list, server_default="[]"
     )
     score_tip: Mapped[Any] = mapped_column(JSONB)
+    # Passages de l'annonce qui correspondent au profil (score-v8, lot du 11 novembre au soir) :
+    # les citations de l'IA retrouvées dans l'annonce, écrites comme dans l'annonce.
+    passages: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
     remote: Mapped[str | None] = mapped_column(Text)
     remote_days: Mapped[int | None] = mapped_column(SmallInteger)
     remote_region: Mapped[str | None] = mapped_column(Text)
@@ -578,6 +586,11 @@ class Application(Base):
     followed_up_at: Mapped[date | None] = mapped_column(Date)
     # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
     follow_up_on: Mapped[date | None] = mapped_column(Date)
+    # Le message de relance écrit (décision de Kevin du 14.11) : écrit à la première ouverture,
+    # gardé ensuite, modifiable ; « Réécrire » en demande un nouveau. Niveau : personnelle (D-1),
+    # comme la candidature ; exporté et effacé avec elle.
+    follow_up_subject: Mapped[str | None] = mapped_column(Text)
+    follow_up_text: Mapped[str | None] = mapped_column(Text)
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lieu ou lien de l'entretien (texte libre) ; affiché à la place de l'adresse de l'entreprise.
     interview_place: Mapped[str | None] = mapped_column(Text)

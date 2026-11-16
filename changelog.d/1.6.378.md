@@ -1,0 +1,1 @@
+Préparer, maquette du 14 novembre : anneau seul dans l'en-tête sur ordinateur, lignes de lecture à 64 px, et étape Postuler du téléphone refaite d'après sa planche (capture, Tes documents avec Partager, À copier, Si le formulaire le demande)
