@@ -539,3 +539,48 @@ Planches : onglet Rendez-vous de toutes les planches Candidatures ordinateur (cl
 - Carte : calendrier 44 px (mois + jour) ; ligne 1 : titre (« Rendez-vous ORP ») + pastille sur la même ligne (« Feuille prête » vert #E3F3EA / #17734A ; « Entretien » neutre ; « À noter » orange) ; ligne 2 : heure · délai · lieu (« 9 h · dans 3 jours · ORP Renens »), coupée par « … ».
 - Plus jamais 3 ou 4 lignes (« Dans 3 jours » au-dessus du titre, heure seule, pastille seule en dessous : non).
 - Hauteur : min 80 px, padding 14 px 16 px, pas de rangée de pastilles vide. Les cartes Offres et Envoyées gardent 104 px (elles ont une vraie rangée de pastilles).
+
+## 40. Téléphone : logos, Top du jour, offres à trier, fiche, frise, glisser, Trier en dossier
+
+Téléphone seulement (décision de Kevin du 16.11). Planches (chacune + Sombre) : Candidatures, CandidaturesGlisser (nouvelle), AccueilV2, Offre, EnvoyeeDetail (EnvoyeeDetailSombre est nouvelle), TrierOffresV2 (états e = carte, garde, longue), TrierOffresCurseurGauche et TrierOffresCurseurDroite (nouvelles). Captures : captures/telephone-1611b/.
+
+Logos d'entreprise
+- Carré blanc 44 px (liste) ou 56 px (fiche, Trier), bord 1 px (#E5E2D9 / sombre #38322B), logo à 28 px (34 px dans la fiche), jamais recoloré ; le carré reste blanc en sombre.
+- Source, du plus sûr au moins sûr : 1) logo fourni par le site d'emploi avec l'annonce ; 2) apple-touch-icon du site de l'entreprise ; 3) sinon les initiales sur fond neutre (#F1EEE7 / sombre #2C2722).
+- Image enregistrée par jobA1 une fois par entreprise (pas de service tiers chargé à l'affichage). Moins de 64 px ou illisible : initiales.
+- Les logos des planches sont inventés (entreprises fictives).
+
+Pastille « Top du jour » (liste Offres)
+- Tonale : fond #E3F3EA, texte #17734A, étoile 11 px (sombre #1C3527 / #62D497). En premier dans la rangée de pastilles.
+- Jusqu'à 3 offres notées 75 et plus, pas encore envoyées. Aucune ce jour-là : pas de pastille.
+- Les pastilles en trop se replient en « +N » ; la rangée reste sur une ligne. Les anneaux de note gardent leur épaisseur.
+
+Glisser une carte de la liste pour l'écarter
+- Vers la gauche seulement, depuis le milieu de la carte (pas depuis le bord : geste retour d'iOS). Dessous : zone grise (#ECE9E1 / #2C2722) avec croix et « Écarter ».
+- Lâchée après la moitié : l'offre est écartée et le bandeau commun « Offre écartée · Annuler » apparaît. Avant la moitié : la carte revient.
+- Les actions de la fiche restent (WCAG 2.5.7).
+
+Accueil
+- Ordre : À faire, ORP, Top du jour, 3 offres à trier.
+- « Top du jour » : feuille verte (#E3F3EA / sombre #1C3527), titre 26 px, « Tout voir » à droite ; mêmes offres que la pastille ; lignes de 68 px : titre (1 ligne), entreprise · lieu, note 44 px, chevron. Aucune offre à 75 et plus : feuille absente.
+- « 3 offres à trier » : sous-titre « Pas encore vues ». Jusqu'à 3 offres jamais ouvertes, jamais celles de « Top du jour ». Ligne : point bleu 10 px (« pas encore vue »), titre, puis entreprise · lieu · une raison surlignée comme les mots de l'annonce (<mark> #FFE9A8 / sombre #5A4A1E), note ou anneau en pointillés à droite. Bouton « Trier les offres » inchangé. Le titre suit le nombre (« 2 offres à trier ») ; zéro : feuille absente.
+
+Fiche d'une offre
+- Logo 56 px. Ligne de l'entreprise : « Alpstack · Lausanne · il y a 2 j ».
+- Les 4 pastilles deviennent 3 cases nommées dans un cadre (bord 1 px, rayon 12 px) : Taux · Contrat · Télétravail (libellé 12 px #596070, valeur 15 px gras).
+- En bas : carte « Autres offres chez {Entreprise} · N », lignes de 2 lignes (poste ; lieu · taux · date), pastille note ou « Envoyée », chevron, 44 px min. Absente s'il n'y a pas d'autre offre de la même entreprise.
+
+Candidature envoyée : frise des étapes
+- Dans la carte du haut, sous le statut : Envoyée → Réponse → Entretien → Décision. Faite : rond vert plein avec coche ; en cours : anneau orange (#8A4A16 / #F2B98E), libellé orange ; à venir : anneau gris. Trait vert jusqu'à l'étape en cours.
+- <ol aria-label="Étapes de la candidature">, aria-current="step" sur l'étape en cours.
+
+Trier : le dossier et le curseur
+- Plus de contour bleu épais, plus de marque-page, plus de points ni de « 1 sur 3 » en bas.
+- Carte = dossier : onglet blanc « Offre 1 sur 3 » soudé en haut à gauche (136 × 40 px), carte rayon 0 20 20 20, bord 1,5 px #CFCBC1, ombre légère. Derrière, les dossiers suivants en pêche (#FCEDE4 et #F8DCC8, comme la feuille de l'Accueil) avec leurs onglets « 2 » et « 3 » (non cliquables).
+- Contenu aéré, la carte prend la hauteur libre : logo 56 px + titre 21 px (3 lignes max) ; note 56 px + « Proche de ton profil » ; pastilles 32 px ; citation de l'annonce 16 px ; points forts ; traits fins entre les 4 blocs ; lien « Voir l'offre complète » en bas de la carte.
+- Barre du bas = un curseur : piste 64 px pleine largeur, « ✕ Écarter » à gauche, « Garder » à droite, rond bleu 52 px au milieu (flèches ↔). Glissé à gauche : remplissage gris foncé, « Lâche pour écarter », rond blanc avec croix ; à droite : remplissage bleu, « Lâche pour garder », rond blanc avec signet. Toujours 6 px entre le rond et le bord du remplissage. Lâché avant le bout : retour au milieu.
+- Toucher « Écarter » ou « Garder » fait l'action sans glisser (deux vrais boutons pour un lecteur d'écran, WCAG 2.5.7).
+- Après « Garder » : le dossier suivant passe devant (« Offre 2 sur 3 ») et le bandeau « Offre gardée dans tes candidatures · Annuler » apparaît au-dessus du curseur.
+
+Animation Accueil → Trier
+- Toucher « Trier les offres » : l'écran Trier monte depuis la feuille comme un dossier qu'on sort (léger penché, onglet « 3 offres à trier », Accueil assombri derrière), puis se redresse. 0,3 s en tout. Retour : mouvement inverse. prefers-reduced-motion : simple fondu. Captures : anim.png.
