@@ -309,6 +309,10 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Après « Ce n'est pas une agence », le bandeau commun « Correction enregistrée. Annuler » s'affiche, avec le trait du compte à rebours, comme « Offre écartée ».
 - Les 2 octets de CSS de trop ne sont pas regagnés dans cette PR : une PR « Allègement CSS » à part regroupe les règles en double de toute l'app, pour les PR #764, #770 et #771 ensemble.
 
+## Voile derrière les panneaux : noir à 60 % en sombre (Kevin, 16.11.2026, 12 h 10)
+
+- En sombre, le voile derrière les panneaux latéraux, les feuilles ouvertes en panneau sur ordinateur et la confirmation Get'emAll devient rgb(0 0 0 / 60%), comme sur la planche BilanOrdinateurFicheSombre (paquet du 16.11). En clair, il reste rgb(27 31 42 / 45%). Une variable commune, --voile, porte les deux valeurs.
+
 ## Cartes « À venir » de Rendez-vous sur deux lignes (Kevin, 16.11.2026)
 
 - Ordinateur et téléphone : deux lignes au plus, comme la planche RendezVous. Ligne 1 : le titre (« Rendez-vous ORP » ou l’intitulé du poste) et sa pastille sur la même ligne ; « Ta feuille est prête » devient « Feuille prête » (vert). Ligne 2 : l’heure et le délai (« 9 h · dans 3 jours »), puis le lieu s’il existe, coupée par « … ».
@@ -336,6 +340,13 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Exception au jour de repos pour les invitations à un entretien uniquement : une notification sur le téléphone, une seule fois, sans rappel.
 - Refus, accusés de réception et autres réponses restent dans la cloche (jamais sur le téléphone).
 - Précise docs/decisions/2026-11-16-1236-reponses-employeurs.md (docs/146 §2.6).
+
+## Roue d'attente sur « Refaire la note » (Kevin, 16.11.2026, 13 h 20)
+
+- Fenêtre « Coller le texte de l’annonce » : pendant que jobA1 enregistre le texte et refait la note, une roue tourne
+  devant « Refaire la note », pour qu’on voie que la plateforme traite l’annonce. La planche OffreProvisoire ne dessine
+  pas cet état ; c’est la roue de lecture de l’annonce (18 px), dans la couleur du texte du bouton, et le bouton
+  garde sa couleur pleine pendant l’attente (gris seulement tant que le texte est trop court).
 
 ## Ligne « Pourquoi » du CV, partie serveur et IA (Kevin, 16.11.2026, 13 h 37)
 
@@ -369,6 +380,14 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Le délai figure aussi sur la carte entretien, en ligne 2, jamais sur une 3e ligne.
 - La pastille de l’entretien reste « À préparer » (orange), sur ordinateur comme sur téléphone ; pas de « Entretien » neutre, le titre le dit déjà.
 - À 320 et 360 px, le titre peut être coupé par « … », à trois conditions : le titre complet est dans le nom accessible et dans le détail ; l’heure et le délai ne sont jamais coupés (ils passent en tête de la ligne 2, seuls l’entreprise et le lieu se coupent) ; la zone du « ⋯ » fait au moins 24 × 24 px (elle fait 44 × 44).
+
+## Formations en soins : diplômes acceptés et vérification des liens (Kevin, 16.11.2026, 14 h 11)
+
+- 14 formations de Suisse romande entrent au catalogue vérifié, d'après la liste sourcée de Kevin ; aucune n'est inventée. Un lien mort = la fiche n'entre pas.
+- Chaque fiche porte la liste des diplômes acceptés (vide = sans diplôme) : soins infirmiers, Bachelor HES santé, Bachelor HES travail social. La fiche HE-Arc accepte les deux Bachelor.
+- Le diplôme de la personne vient de ses blocs : Bachelor, diplôme ES ou HES en soins infirmiers, « Diplôme d'État infirmier », ou « infirmier·ère » dans le titre d'une expérience. « J'ai ce diplôme » corrige la détection.
+- Vérificateur de liens : 404, 410 ou page « 404 / page non trouvée » = mort ; erreur 5xx, délai, page « Cookie not accepted » = à revérifier dans 24 h, jamais mort. Une fiche du catalogue ne s'affiche qu'une fois son lien vérifié. Les fiches orientation.ch (1, 2, 3) attendent ainsi la fin de la panne du site.
+- Remplacements : 6, 7 et 8 par les pages officielles de La Source (la brochure PDF de la 7 renvoie vers une page 404) ; 14 par la fiche du CHUV.
 
 ## Notes de l'éventail sur une ligne (Kevin, 16.11.2026, 8 h 56 et 14 h 19)
 
