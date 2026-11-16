@@ -337,9 +337,12 @@ describe("OffersView", () => {
     const back = await mountAt("/offres");
     expect(router.currentRoute.value.query).toEqual({ statut: "to_review" });
     expect(lastQuery()).toMatchObject({ view: "to_review" });
-    await back.find("[data-test=chip-remove-view]").trigger("click");
+    // « Tout effacer » retire aussi le statut, le nombre retombe à 0 (Kevin, 16.11 0 h 29).
+    await back.find("[data-test=chips-reset]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({});
+    expect(back.find("[data-test=filters-count]").exists()).toBe(false);
+    expect(back.find("[data-test=chips-reset]").exists()).toBe(false);
     back.unmount();
     const cleared = await mountAt("/offres");
     expect(router.currentRoute.value.query).toEqual({});
