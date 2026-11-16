@@ -660,3 +660,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.446 | Offres : les agences de placement sont repérées sans IA (agences connues, « pour notre client »), signalées par une pastille et une ligne dans la fiche, avec l'alerte si tu as déjà postulé à un poste proche ; « Ce n'est pas une agence » est gardé par compte, avec « Annuler » pendant 6 secondes, et le filtre les masque | livrée |
 | 1.6.447 | Formations : quand le catalogue vérifié n'a rien pour « Mon domaine », un état vide le dit et propose la recherche web en bouton principal | livrée |
 | 1.6.448 | Étape 3 des premiers pas : le trajet du code jobup en 3 points (aussi dans le panneau des Alertes), et la scène de la boîte aux lettres sur ordinateur | livrée |
+| 1.6.449 | Panneaux : en sombre, le voile derrière les panneaux passe au noir à 60 %, comme sur les planches | livrée |
+| 1.6.450 | Une roue d'attente sur « Refaire la note » pendant que jobA1 refait la note d'un texte collé | livrée |
+| 1.6.451 | Formations : 14 formations en soins (Suisse romande), diplômes acceptés par fiche et vérification automatique des liens du catalogue | livrée côté serveur ; l'écran du prérequis suit dans une PR à part |
