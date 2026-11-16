@@ -1204,6 +1204,16 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 .settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; max-width: 40rem; margin: 0 auto; }
 @media (max-width: 860px) { .settings-layout { padding: 0 var(--space-5); } }
+/* En-tête des sous-pages de Réglages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien,
+   le titre et les cartes sur le même bord gauche (colonne et marges de .settings-sections dans .settings-layout). */
+.page-head.jobs-head.settings-head { display: block; box-sizing: content-box; max-width: 40rem; padding: var(--space-6) var(--space-6) var(--space-2); }
+.settings-head > .back-link { display: flex; width: fit-content; margin-bottom: var(--space-3); }
+.settings-head > h1 { margin: 0 0 var(--space-4); }
+@media (min-width: 821px) {
+  .page-head.jobs-head.settings-head { max-width: 46rem; }
+  :root:has(.ai-spend) .page-head.jobs-head.settings-head { max-width: 64rem; }
+}
+@media (max-width: 860px) { .page-head.jobs-head.settings-head { padding: var(--space-5) var(--space-5) var(--space-2); } }
 
 /* Saisie Job-Room : une section par étape de leur formulaire */
 .job-room-choice { color: var(--accent); }

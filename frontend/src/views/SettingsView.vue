@@ -342,9 +342,12 @@ watch(
       Réglages
     </h1>
   </header>
+  <!-- Sous-pages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien, le titre et les
+       cartes sur le même bord gauche (.settings-head, même colonne que .settings-sections). -->
   <PageHero
     v-else-if="!(wide && grouped)"
     :title="label"
+    :class="{ 'settings-head': !grouped }"
   >
     <template #back>
       <!-- Sur ordinateur, plus de page Compte (PR 20) : chaque rubrique revient aux Réglages. -->
@@ -384,6 +387,7 @@ watch(
                 description="Les candidatures demandées chaque mois."
                 :saved="savedRow === 'orp'"
                 :error="rowErrors.orp"
+                class="num-row"
                 stack
               >
                 <input
@@ -406,12 +410,12 @@ watch(
               <SettingRow
                 v-slot="c"
                 title="Date limite des justificatifs"
-                description="Le jour du mois suivant où les justificatifs sont dus."
+                description="À rendre chaque mois avant ce jour."
                 :saved="savedRow === 'due'"
                 :error="rowErrors.due"
+                class="num-row"
                 stack
               >
-                <span>le</span>
                 <input
                   v-model.number="form.orp_due_day"
                   class="setting-number"
@@ -436,9 +440,9 @@ watch(
                 description="Dès cette note, l’annonce est aussi cherchée chez l’employeur."
                 :saved="savedRow === 'employer'"
                 :error="rowErrors.employer"
+                class="num-row"
                 stack
               >
-                <span>dès</span>
                 <input
                   v-model.number="form.employer_search_threshold"
                   class="setting-number"
@@ -959,4 +963,20 @@ watch(
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
 .settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
+/* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3). Champs chiffrés : une colonne fixe
+   d'une carte à l'autre (texte 1fr, champ 72 px, unité 120 px, assez pour « du mois suivant », écart 12 px), rayon des
+   champs de saisie (--ff-radius), 44 px de haut, chiffre centré. Sur téléphone, le champ et l'unité sous le texte. */
+.setting-row.num-row { --num-unit: 120px; display: grid; grid-template-columns: minmax(0, 1fr) 72px var(--num-unit); align-items: center; gap: var(--space-2) var(--space-3); }
+.num-row > .setting-row-control { display: contents; }
+.num-row .setting-number { grid-column: 2; grid-row: 1; width: 72px; height: 44px; min-height: 44px; padding: 0; border-radius: var(--ff-radius); text-align: center; }
+.num-row .setting-row-control > span:not([role="status"]) { grid-column: 3; grid-row: 1; }
+.num-row .setting-row-status { grid-column: 2 / -1; grid-row: 2; }
+.num-row > .setting-row-error { grid-column: 1 / -1; text-align: left; }
+@media (max-width: 820px) {
+  .setting-row.num-row { grid-template-columns: 72px var(--num-unit) minmax(0, 1fr); }
+  .num-row > .setting-row-text { grid-column: 1 / -1; }
+  .num-row .setting-number { grid-column: 1; grid-row: 2; }
+  .num-row .setting-row-control > span:not([role="status"]) { grid-column: 2; grid-row: 2; }
+  .num-row .setting-row-status { grid-column: 3; grid-row: 2; }
+}
 </style>
