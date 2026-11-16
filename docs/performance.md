@@ -66,7 +66,7 @@ cd frontend && node scripts/poids.mjs --releve   # après un build : les limites
 make css-inutilise    # le CSS inutilisé (voir plus bas)
 ```
 
-En CI, la tâche « Interface (vitest, types, poids) » (`.github/workflows/tests.yml`) lance `npm run poids` à chaque PR. **La PR échoue si une mesure dépasse sa limite** ou si une illustration n'est pas en WebP. Le message dit quels fichiers pèsent le plus.
+En CI, la tâche « Interface (vitest, types, poids) » (`.github/workflows/tests.yml`) lance `npm run poids:ci` (`scripts/poids-ci.sh`) à chaque PR. **La PR échoue si une mesure dépasse sa limite** ou si une illustration n'est pas en WebP. Le message dit quels fichiers pèsent le plus. Exception (Kevin, 16.11) : si main (HEAD^1 du commit de fusion) dépassait déjà cette limite, la mesure passe quand la branche ne l'alourdit pas ; une branche qui ajoute du poids à une mesure en dépassement reste bloquée.
 
 **Relever une limite** : seulement avec l'accord de Kevin. La PR donne la raison et ce qui a été retiré ailleurs en compensation, puis change `LIMITS` dans `poids.mjs` et le tableau ci-dessus.
 
