@@ -248,15 +248,6 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 
 ## Tâche « Envoyer N candidatures » d'Aujourd'hui, fonction manquante (Kevin, 16.11.2026, 9 h 41)
 
-- Classique : la police Georgia est gardée ; c'est la police du document, pas celle de l'interface (la planche indique Fraunces, non chargée).
-- Bandeau : pêche partout (#F3B08A, la teinte du PDF et de la planche PreparerMiseEnPage). La vignette « Bandeau » de la carte Mise en page sur ordinateur passe du bandeau foncé des planches PreparerOrdinateur (et du bandeau clair de PreparerOrdinateurSombre) au pêche, avec le trait du nom en #1B1F2A. En sombre, le bandeau reste pêche : c'est la couleur du document.
-
-## Bilan ordinateur, menus ouverts, mois déplié et fiche sombre (Kevin, 16.11.2026, 9 h 00 et 9 h 25)
-
-- Les planches du paquet jobA1_maquette_2026-11-16_bilan (§29, recopié dans docs/maquette/2026-11-16/) font foi pour le Bilan sur ordinateur. Elles remplacent la règle provisoire de 9 h 00 (« sans planche, style du menu ⋯ »).
-- Menus « Mois précédents » et « Autres exports » (planches BilanOrdinateurMoisPrecedents et Exports) : 300 px, rayon 16, lignes de 44 px, ouverts vers le haut, chevron du bouton qui se retourne ; « À remettre » en orange sur le mois dont les justificatifs restent à remettre.
-- Mois déplié (planche BilanOrdinateurMois) : « Voir les N autres » devient « Replier le mois » une fois toutes les recherches affichées ; la carte du mois montre un chevron vers le haut et replie aussi.
-- Fiche « Pour l'ORP » (planches BilanOrdinateurFiche et FicheSombre) : lignes de 64 px au lieu de 56 ; palette sombre commune.
 | Date | Fonction (planche) | Ce qu'il faudrait |
 |---|---|---|
 | 2026-11-16 | Tâche « Envoyer N candidatures · Lettres et CV déjà prêts » dans « À faire » d'Aujourd'hui (AujourdhuiOrdinateurV2 et AccueilV2, états « accueil » et « repos ») | Savoir quelles candidatures ont leur lettre et leur CV prêts, offre par offre, et en tirer N. Ce calcul n'existe pas : jobA1 montre seulement « Préparer N candidatures » (offres gardées sans lettre). Rien n'est codé : la marge de poids JS est presque épuisée. La tâche reste sur la planche comme objectif, marquée « à venir » par Kevin. |
