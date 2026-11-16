@@ -653,3 +653,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.439 | Les réponses des entreprises transférées par la personne sont rattachées à la candidature et annoncées par une notification, sans changer son statut | livrée |
 | 1.6.440 | CSS : 47 groupes de règles identiques de style.css réunis (−189 octets compressés, 138 captures sans un pixel d'écart) | livrée |
 | 1.6.441 | Poids : js-total relevé une fois à 431 500 octets pour le code jobup, la recherche dans le CV et les agences de placement | livrée |
+| 1.6.442 | Filtres des offres : chaque puce de statut compte avec les filtres actifs (le compteur « À traiter » restait sans filtre) | livrée |
+| 1.6.443 | « Avant ta lettre » reprend les coordonnées du CV dans les champs vides, marqués « Du CV », seulement quand la lecture est sûre | livrée |
