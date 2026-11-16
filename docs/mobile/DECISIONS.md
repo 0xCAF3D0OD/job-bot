@@ -186,6 +186,26 @@ Décisions de Kevin du 15.11.2026 sur les questions du fil « Candidatures sur t
 - Téléphone (Kevin, 15.11.2026, 17 h 25) : même traitement que l'ordinateur. Cercle vide en pointillés de 48 px à la place de l'anneau (aria-label « Pas encore notée ») et pastille neutre « Pas encore notée » en première position. Les pastilles qui ne tiennent pas sur la ligne passent dans « +N » (planche Candidatures), jamais coupées.
 - « Donner l'annonce pour la noter › » (§18) : plus tard, pas dans la PR de la notation manuelle.
 
+## Premiers pas d'Aujourd'hui en cinq lignes (Kevin, 15.11.2026, 17 h 39)
+
+- Option B pour la section 22 (planche AujourdhuiOrdinateurNouveau) : cinq lignes dans le style de la planche, compteur « N sur 5 », au lieu des trois lignes « 2 sur 3 » dessinées. Un seul composant de ligne pour les cinq étapes ; l'ancienne carte « 2 sur 5 » à une seule action est supprimée.
+- Étapes : 1 « Ton CV est lu » (« N compétences reprises ») ; 2 « Tes critères sont réglés » (« Métier · Lieu · taux ») ; 3 « Créer ta première alerte » (« jobup : 2 minutes », bouton « Créer mon alerte ») ; 4 garder des offres ; 5 préparer et envoyer.
+- Avant la première offre, les étapes 4 et 5 sont grisées, sous-titre « Dès ta première offre », sans bouton, aria-disabled="true".
+- Trois étapes faites sans offre : « 3 sur 5 », l'étape 4 dit « Ta première offre arrive après la prochaine collecte », sans bouton.
+- L'écran « C'est fait ! » reste à la fin des cinq étapes.
+- Serveur : CV et critères séparés ; /api/today renvoie compétences, métier, lieu et taux. Les étapes gardées pour le compte, l'équipe et les applications partenaires ne changent pas.
+- Poids : pas de relèvement de limite ; fusion seulement après le retrait du livre de Trier.
+- Téléphone : plus tard, avec la nouvelle page d'accueil. La mise en page attend la planche mise à jour.
+
+## Premiers pas : compléments du §23 (Kevin, 15.11.2026, 18 h 24)
+
+- Croix « Masquer les premiers pas » gardée : 44 × 44 px à droite du compteur, bandeau « Premiers pas masqués » + « Annuler ».
+- Téléphone : la liste dans une carte, en attendant la nouvelle page d'accueil.
+- Sous-titre du bloc d'accueil : « Crée ta première alerte : jobA1 s'occupe du reste. » avant l'alerte ; « Ton alerte est créée. La prochaine collecte t'apporte tes premières offres. » après.
+- ORP : la phrase commune (« Encore N d'ici le <date> »), pas celle de la planche.
+- Un seul bouton, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton ; à venir : grisées, sans bouton. Pas les mots de l'ancienne carte.
+- Bandeau à trait de compte à rebours partout où il y a « Annuler » (Gardée, Écartée, Carte masquée, Premiers pas masqués, Navigateur retiré) : un seul composant, dans la feuille commune ; coût à mesurer.
+
 ## Code jobup : relevé partagé de la boîte tant qu'une page attend (Kevin, 15.11.2026, 18 h 24 et 18 h 49)
 
 - L'étape « Recopie le code de jobup » signale son attente dès son affichage, puis chaque minute tant qu'elle attend et que l'onglet est visible, 10 minutes au plus ; l'attente finit 75 s après la dernière relance, ou dès que le code du compte est arrivé. « J'attends un code » et l'extension attendent 5 minutes.

@@ -189,7 +189,7 @@ describe("Trier les offres, ordinateur : l’éventail (§12)", () => {
     const toast = wrapper.find("[data-test=triage-toast]");
     expect(toast.attributes("role")).toBe("status");
     expect(toast.text()).toContain("Offre gardée dans tes candidatures");
-    expect(toast.find(".tri-toast-bar").attributes("aria-hidden")).toBe("true");
+    expect(toast.find(".toast-bar").attributes("aria-hidden")).toBe("true");
     const group = wrapper.find("[data-test=triage-offer]");
     expect(group.attributes("aria-label")).toBe("Offre 2 sur 2");
     expect(document.activeElement).toBe(group.element);
