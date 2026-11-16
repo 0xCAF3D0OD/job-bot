@@ -6,9 +6,11 @@ import OfferFilterSheet from "./OfferFilterSheet.vue";
 
 const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores: [], unscored: 0, sure: 104, provisional: 312 };
 
+const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
+
 function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
   return mount(OfferFilterSheet, {
-    props: { open: true, filters: { ...DEFAULT_FILTERS, ...patch }, facets, total },
+    props: { open: true, filters: { ...DEFAULT_FILTERS, ...patch }, facets, total, counts },
     global: { stubs: { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } } },
   });
 }
@@ -41,7 +43,14 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     for (const gone of ["sheet-show-also", "sheet-expired", "sheet-external", "sheet-doubtful", "sheet-source-jobup", "sheet-canton-VD"]) {
       expect(wrapper.find(`[data-test=${gone}]`).exists()).toBe(false);
     }
-    expect(wrapper.find("[data-test^=sheet-view]").exists()).toBe(false);
+    // « Statut » en tête (Kevin, 17.11) : fieldset et légende, un seul choix, les nombres de l'ordinateur.
+    const status = wrapper.find("fieldset.filter-status");
+    expect(status.find("legend").text()).toBe("Statut");
+    expect(wrapper.find(".filter-sheet > *").element).toBe(status.element);
+    const views = status.find("[role=radiogroup][aria-labelledby=sheet-view-title]");
+    expect(views.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes · 38", "Nouvelles · 12", "Gardées · 4", "En préparation · 2"]);
+    expect(views.find("[data-test=sheet-view-pending]").attributes("aria-checked")).toBe("true");
+    expect(views.find("[data-test=sheet-view-pending] .icon-tick").exists()).toBe(true);
     expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 3 offres");
     expect(mountSheet({}, 1).find("[data-test=sheet-show]").text()).toBe("Afficher 1 offre");
     // Hors d'À traiter, l'interrupteur n'a pas de sens.
@@ -50,6 +59,10 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
 
   it("chaque choix s’applique tout de suite", async () => {
     const wrapper = mountSheet();
+    await wrapper.find("[data-test=sheet-view-to_review]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ view: "to_review" }]);
+    await wrapper.find("[data-test=sheet-view-in_progress]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ view: "in_progress", sort: "activity" }]);
     await wrapper.find("[data-test=sheet-score-50]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minScore: 50, maxScore: null }]);
     await wrapper.find("[data-test=sheet-rate-80]").trigger("click");

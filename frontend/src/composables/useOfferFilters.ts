@@ -183,6 +183,13 @@ export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">)
   return choice ? choice.label : `${filters.minScore ?? 0}–${filters.maxScore ?? 100}`;
 }
 
+/** Le changement de statut : En préparation se trie par dernière action (docs/43), choix qui part avec elle.
+ *  Partagé par le panneau de l'ordinateur et la feuille du téléphone. */
+export function viewPatch(view: View, sort: Sort): Partial<OfferFilters> {
+  if (view === "in_progress") return { view, sort: "activity" };
+  return sort === "activity" ? { view, sort: DEFAULT_FILTERS.sort } : { view };
+}
+
 const STATUS_CHIP: Partial<Record<View, string>> = { to_review: "Nouvelles", later: "Gardées", in_progress: "En préparation" };
 
 export interface FilterChip {

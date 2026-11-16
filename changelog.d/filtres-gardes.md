@@ -1,1 +1,1 @@
-Offres : les filtres choisis, statut compris, restent en place jusqu'à la fermeture de l'onglet ; le statut a sa pastille
+Offres : les filtres choisis, statut compris, restent en place jusqu'à la fermeture de l'onglet ; le statut a sa pastille et son groupe dans la feuille Filtres du téléphone
