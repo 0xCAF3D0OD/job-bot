@@ -18907,6 +18907,11 @@
             "type": "boolean",
             "title": "Fill",
             "default": false
+          },
+          "separate": {
+            "type": "boolean",
+            "title": "Separate",
+            "default": false
           }
         },
         "type": "object",

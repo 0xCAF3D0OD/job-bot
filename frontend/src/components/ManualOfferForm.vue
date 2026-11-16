@@ -169,11 +169,6 @@ async function read(value: string = entry.value): Promise<void> {
     matchesTrade.value = d.matches_trade;
     existingId.value = d.existing_offer_id ?? null;
     fillable.value = d.fillable ?? [];
-    // Déjà dans la liste, et rien à lui ajouter : on l'ouvre tout de suite (PR 38), sans fiche à relire.
-    if (existingId.value !== null && !fillable.value.length) {
-      openExisting();
-      return;
-    }
     readEntry.value = typed;
     textOpen.value = false;
     shown.value = true;
@@ -272,8 +267,8 @@ async function submit(event: Event): Promise<void> {
   else if (!full.value) await read();
 }
 
-async function add(event: Event): Promise<void> {
-  if (!(await valid(event.currentTarget, "title"))) return;
+async function add(event: Event | null, separate = false): Promise<void> {
+  if (event && !(await valid(event.currentTarget, "title"))) return;
   error.value = "";
   saving.value = true;
   try {
@@ -286,7 +281,10 @@ async function add(event: Event): Promise<void> {
         description: draft.description.trim() || null,
         url: draft.url.trim() || null,
         read_by: readBy.value,
-        fill: completing.value,
+        // Déjà là (décision de Kevin du 16.11) : la fiche existante s'ouvre, avec le lien et les champs vides que cette
+        // annonce remplit ; « Créer quand même » en fait une offre à part.
+        fill: existingId.value !== null && !separate,
+        separate,
       },
     });
     if (!data) {
@@ -321,8 +319,12 @@ defineExpose({
   shown,
   full,
   busy: computed(() => reading.value || saving.value),
-  label: computed(() => (completing.value && shown.value ? "Compléter l’offre" : "Ajouter l’offre")),
-  busyLabel: computed(() => (reading.value ? "Lecture de l’annonce…" : completing.value ? "Ajout des champs…" : "Ajout…")),
+  label: computed(() =>
+    !shown.value || existingId.value === null ? "Ajouter l’offre" : completing.value ? "Compléter l’offre" : "Ouvrir l’offre",
+  ),
+  busyLabel: computed(() =>
+    reading.value ? "Lecture de l’annonce…" : completing.value ? "Ajout des champs…" : existingId.value !== null ? "Ouverture…" : "Ajout…",
+  ),
 });
 </script>
 
@@ -467,18 +469,32 @@ defineExpose({
         {{ readBy === "main" ? "À remplir toi-même" : "Ce que jobA1 a lu" }}
       </h3>
       <p
-        v-if="completing"
+        v-if="existingId !== null"
         class="notice"
         data-test="manual-existing"
       >
-        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
-        sans rien remplacer.
+        <template v-if="completing">
+          Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
+          sans rien remplacer.
+          <button
+            type="button"
+            class="link"
+            @click="openExisting"
+          >
+            L’ouvrir
+          </button>
+        </template>
+        <template v-else>
+          Cette offre est déjà dans tes offres.
+        </template>
         <button
           type="button"
           class="link"
-          @click="openExisting"
+          :disabled="saving"
+          data-test="manual-separate"
+          @click="add(null, true)"
         >
-          L’ouvrir
+          Créer quand même
         </button>
       </p>
       <p

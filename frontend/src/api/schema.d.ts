@@ -6608,6 +6608,11 @@ export interface components {
              * @default false
              */
             fill: boolean;
+            /**
+             * Separate
+             * @default false
+             */
+            separate: boolean;
         };
         /** ManualAddOut */
         ManualAddOut: {

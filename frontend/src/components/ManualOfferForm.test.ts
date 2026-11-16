@@ -122,6 +122,7 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
       url: "https://bois.ch/emplois/1",
       read_by: "page",
       fill: false,
+      separate: false,
     });
     expect(wrapper.emitted("added")).toEqual([[{ id: 9, existing: false, status: "to_review", reasons: [] }]]);
   });
@@ -169,13 +170,28 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(POST.mock.calls[1]![1].body).toMatchObject({ title: "Menuisier", url: "https://ch.indeed.com/viewjob?jk=1", read_by: "main" });
   });
 
-  it("déjà dans la liste : pas de fiche, l’offre existante s’ouvre tout de suite (PR 38)", async () => {
+  it("déjà dans la liste (Kevin, 16.11) : « Ouvrir l’offre » l’ouvre avec son lien, « Créer quand même » visible à côté", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4 }) } });
     await send(wrapper, "https://bois.ch/emplois/1");
-    expect(wrapper.find("[data-test=manual-draft]").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("déjà");
-    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "", reasons: [] }]]);
+    expect(wrapper.find("[data-test=manual-existing]").text()).toContain("Cette offre est déjà dans tes offres.");
+    expect(wrapper.find("[data-test=manual-separate]").text()).toBe("Créer quand même");
+    expect((wrapper.vm as unknown as { label: string }).label).toBe("Ouvrir l’offre");
+    POST.mockResolvedValueOnce({ data: { id: 4, existing: true, status: "to_review", reasons: [], filled: [] } });
+    await send(wrapper);
+    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: true, separate: false });
+    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "to_review", reasons: [], filled: [] }]]);
+  });
+
+  it("« Créer quand même » : une offre à part, sans rattachement", async () => {
+    const wrapper = await mountForm();
+    POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4 }) } });
+    await send(wrapper, "https://bois.ch/emplois/1");
+    POST.mockResolvedValueOnce({ data: { id: 12, existing: false, status: "new", reasons: [] } });
+    await wrapper.find("[data-test=manual-separate]").trigger("click");
+    await flushPromises();
+    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: false, separate: true });
+    expect(wrapper.emitted("added")).toEqual([[{ id: 12, existing: false, status: "new", reasons: [] }]]);
   });
 
   // Une offre de LinkedIn sans texte : la page de l'annonce la complète, sans rien remplacer.

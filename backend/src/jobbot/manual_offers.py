@@ -286,13 +286,14 @@ async def _complete(session: AsyncSession, draft: Draft) -> Draft:
 
 async def same_offer(session: AsyncSession, norm: NormalizedOffer) -> int | None:
     """L'offre déjà là : même empreinte, ou même poste chez la même entreprise ailleurs
-    (une offre de LinkedIn sans lieu, la même sur la page de l'employeur avec son lieu)."""
+    (une offre de LinkedIn sans lieu, la même sur la page de l'employeur avec son lieu), une
+    candidature spontanée comprise (décision de Kevin du 16.11)."""
     existing = await session.scalar(select(Offer.id).where(Offer.fingerprint == norm.fingerprint))
     if existing is not None or not norm.company_key:
         return existing
     rows = await session.execute(
         select(Offer.id, Offer.title, Offer.company)
-        .where(Offer.company.is_not(None), Offer.spontaneous.is_(False))
+        .where(Offer.company.is_not(None))
         .order_by(Offer.first_seen_at.desc())
     )
     for offer_id, title, company in rows:

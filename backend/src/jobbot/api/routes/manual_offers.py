@@ -87,6 +87,9 @@ class ManualAddIn(BaseModel):
     read_by: Literal["page", "ia", "main"] = "main"
     # Déjà là : compléter ses champs vides avec cette fiche, sans rien remplacer.
     fill: bool = False
+    # « Créer quand même » (décision de Kevin du 16.11) : une offre à part, même si une offre au
+    # même lien ou au même titre chez la même entreprise est déjà là.
+    separate: bool = False
 
     @field_validator("url")
     @classmethod
@@ -191,11 +194,13 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
         read_by=body.read_by,
     )
     filled: list[str] = []
-    async with runtime.sessionmaker() as session:
-        existing = (await manual_offers._complete(session, draft)).existing_offer_id
+    existing = None
+    if not body.separate:
+        async with runtime.sessionmaker() as session:
+            existing = (await manual_offers._complete(session, draft)).existing_offer_id
     if existing is None:
         try:
-            offer_id = await manual_offers.add(runtime, draft)
+            offer_id = await manual_offers.add(runtime, draft, separate=body.separate)
         except manual_offers.ReadProblem as exc:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, exc.message) from exc
         # La note part tout de suite, sans attendre la relève des 10 minutes ; l'offre est
