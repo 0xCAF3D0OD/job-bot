@@ -16,7 +16,7 @@ import { isNetworkError } from "../network";
 import { formatMonth } from "../format";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import FaceState from "../components/FaceState.vue";
+import EmptyState from "../components/EmptyState.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import {
@@ -116,6 +116,7 @@ const periodLine = computed(() => {
     class="jobs-body insights"
   >
     <p
+      v-if="insights && insights.funnel.applications > 0"
       class="insights-period-line"
       data-test="insights-period-line"
     >
@@ -134,17 +135,33 @@ const periodLine = computed(() => {
       v-if="error && offline"
       @retry="load()"
     />
-    <p
+    <!-- Erreur, chargement, trop tôt (§37 du 16.11, planches BilanErreur, BilanChargement, BilanTropTot) : comme -->
+    <!-- l’ordinateur (§29), avec les pastilles raccourcies du téléphone. Hors ligne, NetworkError reste. -->
+    <EmptyState
       v-else-if="error"
-      class="notice error"
+      title="Bilan indisponible"
+      scene="erreur"
+      :width="290"
+      pill="Tes candidatures ne sont pas touchées"
+      pill-icon="done"
       role="alert"
+      data-test="insights-error"
     >
-      {{ error }}
-    </p>
+      <template #actions>
+        <button
+          type="button"
+          class="primary"
+          data-test="insights-retry"
+          @click="load()"
+        >
+          <AppIcon name="refresh" />Réessayer
+        </button>
+      </template>
+    </EmptyState>
 
     <LoadingBlocks
       v-if="!insights && !error"
-      :heights="['8rem', '6rem', '14rem']"
+      :heights="['6rem', '10rem', '16rem']"
     />
     <div
       v-if="insights"
@@ -162,22 +179,24 @@ const periodLine = computed(() => {
         />
         <!-- La période en contrôle segmenté (D4, 2026-11-03), au-dessus des chiffres. Sur téléphone, plus de
              période (maquette Progresser, Kevin 2026-11-06) : les chiffres des 3 derniers mois, sauf adresse avec un mois. -->
-        <FaceState
+        <EmptyState
           v-if="insights.funnel.applications === 0"
           title="Trop tôt pour conclure"
-          illustration="trop-tot"
+          scene="groupe"
+          :width="270"
+          pill="Il se remplit avec tes candidatures"
+          pill-icon="stats"
           data-test="insights-empty"
         >
-          <p>Le Bilan se remplit avec tes premières candidatures et réponses.</p>
-          <div class="face-state-actions">
+          <template #actions>
             <RouterLink
               to="/candidatures/offres"
               class="button-link primary-link"
             >
-              <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+              <AppIcon name="briefcase" />Voir les offres
             </RouterLink>
-          </div>
-        </FaceState>
+          </template>
+        </EmptyState>
         <template v-else>
           <ul
             class="bilan-figures"

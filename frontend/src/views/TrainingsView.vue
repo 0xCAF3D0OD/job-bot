@@ -9,7 +9,6 @@ import BusyButton from "../components/BusyButton.vue";
 import CountBadge from "../components/CountBadge.vue";
 import DomainField from "../components/DomainField.vue";
 import EmptyState from "../components/EmptyState.vue";
-import FaceState from "../components/FaceState.vue";
 import HoverNote from "../components/HoverNote.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PushTransition from "../components/PushTransition.vue";
@@ -549,15 +548,26 @@ onMounted(() => void load());
           </HoverNote>
         </BusyButton>
       </template>
-      <!-- Aucune formation suivie (planche « Illustrations »). -->
-      <FaceState
+      <!-- Aucune formation suivie (§37 du 16.11, planche BilanFormationsVide) : l'état vide commun. -->
+      <EmptyState
         v-else-if="!mineCount"
         title="Aucune formation suivie"
-        illustration="formations-vide"
+        scene="introuvable"
+        :width="250"
+        pill="Garde-en une avec son signet"
+        pill-icon="bookmark"
         data-test="trainings-none"
       >
-        <p>Garde une formation du catalogue avec son signet.</p>
-      </FaceState>
+        <template #actions>
+          <RouterLink
+            :to="catalogTo"
+            class="button-link primary-link"
+            data-test="trainings-none-catalog"
+          >
+            <AppIcon name="book" />Voir le catalogue
+          </RouterLink>
+        </template>
+      </EmptyState>
       <div
         v-else
         class="training-mine"

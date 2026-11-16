@@ -296,7 +296,12 @@ describe("TrainingsView", () => {
   it("Suivies vide : l’invitation à garder une formation", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     const wrapper = await mountView("/formations?onglet=miennes");
-    expect(wrapper.find("[data-test=trainings-none]").text()).toContain("Garde une formation du catalogue avec son signet.");
+    // Planche BilanFormationsVide (§37 du 16.11) : scène « introuvable », pastille courte, « Voir le catalogue ».
+    const none = wrapper.find("[data-test=trainings-none]");
+    expect(none.find(".empty-state-title").text()).toBe("Aucune formation suivie");
+    expect(none.find("[data-test=empty-pill]").text()).toBe("Garde-en une avec son signet");
+    expect(none.find(".empty-state-scene").exists()).toBe(true);
+    expect(none.find("[data-test=trainings-none-catalog]").attributes("href")).toBe("/formations");
   });
 
   it("formation terminée : « Ajouter à mon profil », bloc prérempli, puis « Dans ton profil »", async () => {
