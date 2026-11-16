@@ -31,6 +31,7 @@ from jobbot.db.models import (
     OfferStatus,
     Setting,
 )
+from jobbot.filtering.duplicates import group_duplicates
 from jobbot.followups import remind
 from jobbot.followups import service as followups
 from jobbot.letters.contact_guess import guess_contact
@@ -454,6 +455,9 @@ async def create_application(request: Request, body: ApplicationIn) -> Applicati
         session.add(application)
         await mark_changed(session, {application.orp_month})
         await session.flush()
+        # Doublon sûr (décision de Kevin du 16.11) : la même annonce vue sur un autre site sort
+        # aussitôt de la liste, sans attendre la prochaine relève.
+        await group_duplicates(session)
         await session.refresh(application)
         out = ApplicationOut.model_validate(application)
     log.info("application_created", application_id=out.id, offer_id=out.offer_id)

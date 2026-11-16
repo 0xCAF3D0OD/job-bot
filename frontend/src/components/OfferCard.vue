@@ -3,7 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import type { Offer } from "../api/client";
-import { dateInList } from "../dates";
+import { dateInList, sentDay } from "../dates";
 import { rateText, remoteText } from "../format";
 import ListCard from "./ListCard.vue";
 import ScoreRing from "./ScoreRing.vue";
@@ -64,6 +64,9 @@ const chips = computed<Chip[]>(() => {
   // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
   // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
   if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
+  // Doublon probable (décision de Kevin du 16.11) : même titre chez la même entreprise qu'une candidature envoyée
+  // depuis une autre fiche. L'offre reste visible, la pastille neutre le dit ; c'est toi qui décides.
+  if (o.applied_before) out.push({ text: `Déjà postulé ${sentDay(o.applied_before)}` });
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
   else if (doubts?.length)
     out.push({ text: doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: doubts.map((d) => d.text).join(" ") });

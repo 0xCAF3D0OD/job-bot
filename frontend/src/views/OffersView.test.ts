@@ -424,6 +424,15 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-offer-row='5']").exists()).toBe(false);
   });
 
+  it("doublon probable (Kevin, 16.11) : l'offre reste visible avec la pastille neutre « Déjà postulé le … »", async () => {
+    mockOffers(page([offer(12, "Software Engineer", { company: "EPFL", score: 70, applied_before: "2025-11-04" }), offer(13, "Monteur", { score: 70 })]));
+    const wrapper = await mountAt("/offres");
+    const chip = wrapper.get("[data-offer-row='12']").findAll("[data-test=offer-chip]").find((c) => c.text().startsWith("Déjà postulé"));
+    expect(chip?.text()).toBe("Déjà postulé le 4 nov. 2025");
+    expect(chip?.classes()).toEqual([]);
+    expect(wrapper.get("[data-offer-row='13']").text()).not.toContain("Déjà postulé");
+  });
+
   it("section 35 du 16.11 : pastille « Agence » en tête, ligne dans la fiche, filtre « Masquer les agences »", async () => {
     mockOffers(
       page([
