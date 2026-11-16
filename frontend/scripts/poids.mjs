@@ -149,7 +149,12 @@ const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf
 const cache = new Map();
 function sizes(file) {
   if (!cache.has(file)) {
-    const bytes = readFileSync(join(DIST, file));
+    // Les empreintes des noms de fichiers (« OffersView-CBxXxxP9.js ») changent à chaque PR et font varier le gzip de
+    // +13 à +21 o sans rien changer au code : on les remplace par une empreinte fixe avant de mesurer le JS et le CSS.
+    const read = readFileSync(join(DIST, file));
+    const bytes = /\.(js|css)$/.test(file)
+      ? Buffer.from(read.toString("utf8").replace(/-[\w-]{8}\.(js|css|woff2?|webp|svg|png|jpe?g|avif)\b/g, "-xxxxxxxx.$1"))
+      : read;
     cache.set(file, {
       raw: bytes.length,
       gzip: gzipSync(bytes).length,
