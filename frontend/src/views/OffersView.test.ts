@@ -382,7 +382,7 @@ describe("OffersView", () => {
     expect(chips[0]?.text()).toBe("Hors de tes filtres");
     expect(chips[0]?.classes()).toEqual([]);
     const note = wrapper.get("[data-test=outside-note]");
-    expect(note.text()).toBe("Nouvelle note : 38. Elle sort de ton filtre « À creuser et plus ».");
+    expect(note.text()).toBe("Nouvelle note : 38. Elle sort de ton filtre « 50 et + ».");
     expect(note.attributes("aria-live")).toBe("polite");
     // Un autre filtre : la règle commune revient, l'offre quitte la liste.
     await router.push("/offres?note=70");

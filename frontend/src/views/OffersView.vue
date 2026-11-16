@@ -210,7 +210,7 @@ function keepRescored(): void {
   const offer = selected.value;
   outside.value = offer ? { id: offer.id, status: offer.status } : null;
 }
-// « Nouvelle note : 38. Elle sort de ton filtre « À creuser et plus ». », sous la note de la fiche.
+// « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
 const outsideNote = computed(() => {
   const offer = selected.value;
   const f = filters.value;
