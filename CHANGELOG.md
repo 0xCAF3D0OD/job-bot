@@ -645,3 +645,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.431 | Bilan ordinateur, Formations : état vide avec « Voir le catalogue », catalogue d'après la planche du 16.11 (« ← Mes formations », une colonne, signet rond), En cours sans modules sur une ligne, « Terminée » en vert | livrée |
 | 1.6.432 | - Le lien `frontend/node_modules`, ajouté par erreur avec la PR #763, est retiré du dépôt ; `.gitignore` ignore désormais aussi un lien nommé `node_modules`. | livrée |
 | 1.6.433 | Bilan ordinateur, Résultats : « Bilan indisponible » avec la nouvelle scène et « Réessayer », « Trop tôt pour conclure » avec la scène groupe et sa pastille (planches du 16.11) | livrée |
+| 1.6.434 | Relecture du CV : un bloc « Tes coordonnées » en tête propose, déjà remplis et modifiables, les champs encore vides du profil trouvés dans le CV ; ils s’enregistrent avec « Ajouter N éléments », jamais avant, et un champ déjà rempli n’est jamais écrasé | livrée |
+| 1.6.435 | Filtres des offres : des libellés compréhensibles sans connaître jobA1 (Note minimale sur 100, Type de note, Taux d’activité, Par date, télétravail possible) | livrée |

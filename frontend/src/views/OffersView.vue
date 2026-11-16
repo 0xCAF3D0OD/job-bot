@@ -108,7 +108,7 @@ const chips = computed(() => activeChips(filters.value));
 // Aucune offre avec ces filtres, sur téléphone (AucuneOffre, §13 et §17 du 15 novembre) : les filtres actifs passent en
 // pastilles sous le titre, sans la rangée du haut ni le bloc « Autres offres ».
 const phoneEmptyFiltered = computed(() => phone.value && !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
-// « Note minimale : Proche et plus, Taux : 80 % et plus. Élargis un critère pour voir plus d'offres. »
+// « Note minimale : 75 et +, Taux d’activité : dès 80 %. Élargis un critère pour voir plus d'offres. »
 const emptyFiltersLine = computed(() => {
   const q = filters.value.q.trim();
   const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];
@@ -196,7 +196,7 @@ const nextCount = computed(() => Math.min(MORE_SIZE, remaining.value));
 const moreLabel = computed(() => `Afficher ${plural(nextCount.value, "offre", "offres")} de plus`);
 const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value > 1 ? "restantes" : "restante"}`);
 
-// Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
+// Tri « Par date » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
 // 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
 // comptée dans aucun jour.
