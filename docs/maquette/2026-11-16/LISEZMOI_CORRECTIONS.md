@@ -584,3 +584,32 @@ Trier : le dossier et le curseur
 
 Animation Accueil → Trier
 - Toucher « Trier les offres » : l'écran Trier monte depuis la feuille comme un dossier qu'on sort (léger penché, onglet « 3 offres à trier », Accueil assombri derrière), puis se redresse. 0,3 s en tout. Retour : mouvement inverse. prefers-reduced-motion : simple fondu. Captures : anim.png.
+
+## 41. Premiers pas, étapes 2 et 3, et Candidatures vide (16.11.2026)
+
+Planches : OnboardingOrdinateurEtape2, OnboardingOrdinateurAlerte, OnboardingOrdinateurAlerteCode, …CodeRecu, …CodeExpire, OnboardingC, OnboardingAlerteDebut, OnboardingAlerteCode, …Recu, …Expire, CandidaturesOrdinateurVideAlertes, CandidaturesVideAlertes, toutes avec leur version Sombre. Captures : premiers_pas_v3.png, premiers_pas_telephone.png.
+
+Étape 2 « Quel travail cherches-tu ? »
+- Un seul bloc de 3 lignes (Postes recherchés, Lieu, Taux d'activité), séparées par un trait, icône à gauche, bouton « Modifier » à droite (sur téléphone : bouton crayon 44 px avec aria-label « Modifier le lieu », etc.).
+- Postes recherchés : liste à puces, un métier par ligne.
+- Pastille verte « Depuis ton CV » collée à l'intitulé (Postes, Lieu) quand la valeur vient du CV.
+- Bloc ORP : interrupteur « Je suis inscrit à l'ORP » + « Recherches à faire par mois » (− 10 +).
+- Section Langues : une ligne par langue avec une liste déroulante, « Non renseigné » n'écarte aucune offre, lien « Ajouter une langue ».
+
+Étape 3 « Crée ton alerte sur jobup »
+- Une carte avec 4 étapes. Trait uniquement entre deux étapes. Pas de cadre bleu : l'étape en cours a seulement sa pastille bleue numérotée (aria-current="step"), les étapes faites une coche verte, les suivantes une pastille grise.
+- Étape 1 : bouton plein « Ouvrir jobup avec ma recherche » (nouvel onglet). Une fois faite : lien « Rouvrir jobup ».
+- Étape 2 : adresse jobA1 + bouton « Copier ».
+- Étape 3 : 6 cases EN LECTURE SEULE. Le code n'est jamais saisi dans jobA1 : le serveur le reçoit dans la boîte jobA1 et l'affiche, la personne le recopie sur jobup. États :
+  - attente : cases vides + « En attente du code de jobup. Il s'affiche ici dès qu'il arrive, tu n'as rien à faire. » (role="status") ;
+  - reçu : cases remplies, contour vert, bouton « Copier le code », l'étape 4 devient l'étape en cours « Colle le code sur jobup et valide l'alerte » ;
+  - expiré : cases vides + « Ce code a expiré. Sur jobup, demande un nouveau code : il s'affichera ici. » (orange).
+- Bouton principal : « J'ai créé l'alerte », puis « J'ai validé l'alerte » une fois le code reçu. « Plus tard » reste à côté.
+- Le code n'apparaît jamais dans les logs.
+
+Candidatures vide (avant les premières offres)
+- Titre « Tes premières offres arrivent bientôt » + phrase « jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire. »
+- Pastille : « En attente des premières offres · prochaine vérification ce soir vers 18 h » (téléphone : « Prochaine vérification ce soir vers 18 h », pour tenir sur une ligne).
+- Le lien « Faire une candidature spontanée » est retiré de cet état (il reste dans « Ajouter »).
+
+Plus tard (hors de cette livraison) : avec l'extension du navigateur, le formulaire jobup est déjà rempli et le code collé tout seul.
