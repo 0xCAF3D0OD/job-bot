@@ -13,6 +13,8 @@ import TroupeScene from "./TroupeScene.vue";
 withDefaults(
   defineProps<{
     title: string;
+    // La phrase sous le titre, seulement là où une planche la dessine (Candidatures vide avec alertes, §41 du 16.11).
+    text?: string;
     scene?: Scene;
     pill?: string;
     pillIcon?: IconName;
@@ -20,7 +22,7 @@ withDefaults(
     width?: number;
     desktopWidth?: number;
   }>(),
-  { scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2", width: 260, desktopWidth: 400 },
+  { text: undefined, scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2", width: 260, desktopWidth: 400 },
 );
 </script>
 
@@ -43,6 +45,13 @@ withDefaults(
         {{ title }}
       </slot>
     </component>
+    <p
+      v-if="text"
+      class="empty-state-text"
+      data-test="empty-text"
+    >
+      {{ text }}
+    </p>
     <span
       v-if="pill"
       class="empty-state-pill"

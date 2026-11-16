@@ -5188,6 +5188,9 @@ html.text-large { font-size: 125%; }
   border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-semibold);
 }
 .empty-state-pill svg { width: var(--space-4); height: var(--space-4); }
+/* La phrase sous le titre (CandidaturesVideAlertes, §41 du 16.11) : 15/22 (16/24 sur ordinateur), --text-lead, 8 px sous le
+   titre, 300 px au plus (460 sur ordinateur) ; la pastille reste 12 px dessous. */
+.empty-state-text { --es-text: 15px; --es-text-lh: 22px; --es-text-w: 300px; max-width: var(--es-text-w); margin: var(--space-2) 0 0; font-size: var(--es-text); line-height: var(--es-text-lh); color: var(--text-lead); }
 /* Colonne de droite sans élément ouvert, sur ordinateur (§36 du 16.11, planches *OrdinateurAucuneOuverte) : scène de 340,
    titre 24/30 à 24 px ; 24 px sur les côtés, 48 dessous. Pastille : marges de 8 px et flèche à 8 px du texte (6 sur la
    planche ; grille de 4, Kevin le 16.11 à 15 h 10). */
@@ -5209,5 +5212,6 @@ html.text-large { font-size: 125%; }
 @media (min-width: 1024px) {
   .empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }
   .empty-state-actions { flex-direction: row; justify-content: center; width: auto; max-width: none; }
+  .empty-state-text { --es-text: var(--font-body); --es-text-lh: 24px; --es-text-w: 460px; }
   .jobs-empty { --jobs-top: 153px; }
 }

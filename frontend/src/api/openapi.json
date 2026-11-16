@@ -25128,6 +25128,18 @@
             ],
             "title": "Last Collect At"
           },
+          "next_collect_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Collect At"
+          },
           "alerts_waiting": {
             "type": "integer",
             "title": "Alerts Waiting",

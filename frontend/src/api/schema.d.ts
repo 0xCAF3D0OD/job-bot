@@ -8730,6 +8730,8 @@ export interface components {
             orp_due_date: string | null;
             /** Last Collect At */
             last_collect_at: string | null;
+            /** Next Collect At */
+            next_collect_at?: string | null;
             /**
              * Alerts Waiting
              * @default 0

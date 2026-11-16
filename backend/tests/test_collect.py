@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator, Callable, Iterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -14,6 +15,7 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.sources import registry as sources
 from jobbot.worker.jobs import JOBS, execute
+from jobbot.worker.tasks.collect import next_collect
 
 from .conftest import admin_engine, make_settings
 from .emails import LineParser, make_email
@@ -475,3 +477,22 @@ async def test_reparse_after_new_parser(
         1,
     )
     assert await _count(collect_runtime, Offer) == 1
+
+
+def test_next_collect_follows_the_schedule() -> None:
+    """Candidatures vide, « prochaine vérification ce soir vers 18 h » (§41 du 16.11) : l'heure
+    vient de la planification réelle, toutes les 2 heures UTC, de 7 h à 21 h en Suisse."""
+    zurich = ZoneInfo("Europe/Zurich")
+    # Hiver (UTC+1) : 16 h 10 en Suisse → 17 h (16 h UTC).
+    assert next_collect(datetime(2026, 11, 16, 15, 10, tzinfo=UTC)).astimezone(zurich).hour == 17
+    # Pile à l'heure d'une collecte : la suivante, pas celle qui part.
+    assert next_collect(datetime(2026, 11, 16, 16, 0, tzinfo=UTC)) == datetime(
+        2026, 11, 16, 18, 0, tzinfo=UTC
+    )
+    # 22 h 30 en Suisse, après 21 h : le lendemain matin, à 7 h (6 h UTC).
+    late = next_collect(datetime(2026, 11, 16, 21, 30, tzinfo=UTC)).astimezone(zurich)
+    assert (late.day, late.hour) == (17, 7)
+    # Été (UTC+2) : 21 h 30 en Suisse → 8 h le lendemain (6 h UTC ; 7 h n'est pas une heure
+    # de collecte en été).
+    summer = next_collect(datetime(2026, 7, 1, 19, 30, tzinfo=UTC)).astimezone(zurich)
+    assert (summer.day, summer.hour) == (2, 8)

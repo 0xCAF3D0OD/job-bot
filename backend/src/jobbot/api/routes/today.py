@@ -31,7 +31,7 @@ from jobbot.orp import meeting as orp_meeting
 from jobbot.orp.service import load_canton, load_due_day
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
-from jobbot.worker.tasks.collect import COLLECT_JOB
+from jobbot.worker.tasks.collect import COLLECT_JOB, next_collect
 
 router = APIRouter(prefix="/api", tags=["today"])
 NO_ANSWER_AFTER = timedelta(days=14)
@@ -174,6 +174,9 @@ class TodayOut(BaseModel):
     orp_due_month: str | None
     orp_due_date: date | None
     last_collect_at: datetime | None
+    # La prochaine collecte planifiée (§41 du 16.11), absente si le planificateur est arrêté :
+    # jamais une heure inventée.
+    next_collect_at: datetime | None = None
     # Alertes créées sur un site depuis 24 heures sans rien envoyé (docs/20, docs/121 §B.3).
     alerts_waiting: int = 0
     # Prises de contact sans réponse depuis 7 jours (docs/31 §4).
@@ -406,6 +409,9 @@ async def get_today(request: Request) -> TodayOut:
         orp_due_month=due_month,
         orp_due_date=due_date(due_month, due_day, canton) if due_month else None,
         last_collect_at=last_collect_at,
+        next_collect_at=next_collect(datetime.now(UTC))
+        if runtime.settings.scheduler_enabled
+        else None,
         alerts_waiting=alerts_waiting,
         contacts_to_follow_up=contacts_to_follow_up,
         interviews_to_review=interviews_to_review,
