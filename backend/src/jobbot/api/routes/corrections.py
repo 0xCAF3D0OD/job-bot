@@ -216,3 +216,32 @@ async def add_gap_block(request: Request, offer_id: int, body: GapBlockIn) -> Ga
         chunk_id = chunk.id
     score = await scoring_service.score_offer(runtime, offer_id)
     return GapBlockOut(chunk_id=chunk_id, score=score)
+
+
+class RetryScoreOut(BaseModel):
+    score: int | None
+
+
+@router.post(
+    "/offers/{offer_id}/retry-score",
+    operation_id="retryScore",
+    responses={
+        404: {"description": "Offre inconnue"},
+        409: {"description": "La note n'est pas en échec : rien à refaire"},
+    },
+)
+async def retry_score(request: Request, offer_id: int) -> RetryScoreOut:
+    """« Réessayer » d'une note impossible après trois échecs de l'IA (A2, décision de Kevin
+    du 16.11) : un seul essai, tout de suite ; s'il échoue, la tâche des 10 minutes reprend
+    jusqu'au 3e. Refusé hors de cet état, pour ne pas relancer l'IA sur une offre notée."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        final = await session.execute(
+            select(Evaluation.score_final).where(Evaluation.offer_id == offer_id)
+        )
+        row = final.first()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "offre inconnue")
+    if row[0] not in (scoring_service.FINAL_EMPTY, scoring_service.FINAL_ERROR):
+        raise HTTPException(status.HTTP_409_CONFLICT, "la note n'est pas en échec")
+    return RetryScoreOut(score=await scoring_service.score_offer(runtime, offer_id))
