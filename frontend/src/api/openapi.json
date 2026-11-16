@@ -20402,6 +20402,18 @@
             ],
             "title": "Expired At"
           },
+          "set_aside_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set Aside At"
+          },
           "expiry_source": {
             "anyOf": [
               {
@@ -23222,6 +23234,18 @@
               }
             ],
             "title": "Expired At"
+          },
+          "set_aside_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set Aside At"
           },
           "expiry_source": {
             "anyOf": [

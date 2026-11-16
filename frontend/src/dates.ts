@@ -51,6 +51,12 @@ export function dateInList(value: string | Date, now: Date = new Date()): string
   const days = calendarDays(date, now);
   if (days === 0) return "aujourd’hui";
   if (days === 1) return "hier";
+  return dayInList(date, now);
+}
+
+/** Une date sans « aujourd'hui » ni « hier » : « 12 nov. », « 12 nov. 2025 » (une autre année) ; « Écartée le 12 nov. » (§30). */
+export function dayInList(value: string | Date, now: Date = new Date()): string {
+  const date = toDate(value);
   return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear).format(date));
 }
 

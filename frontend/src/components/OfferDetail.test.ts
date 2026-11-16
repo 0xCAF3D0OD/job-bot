@@ -441,6 +441,32 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(wrapper.text()).not.toContain("Pas encore notée");
   });
 
+  it("§30 : « Écartée le 12 nov. », la pastille « Pas de note », « Remettre dans le tri » et plus de « Écarter »", async () => {
+    desktop();
+    const wrapper = await mountDetail(
+      offer({ score: null, status: "ignored", set_aside_at: `${new Date().getFullYear()}-11-12T09:00:00Z` }),
+    );
+    expect(wrapper.get("[data-test=match-title]").text()).toBe("Écartée le 12 nov.");
+    expect(wrapper.get("[data-test=aside-pill]").text()).toBe("Pas de note");
+    expect(wrapper.find("[data-test=offer-discard]").exists()).toBe(false);
+    await wrapper.get("[data-test=back-to-triage]").trigger("click");
+    expect(wrapper.emitted("status")).toEqual([["to_review"]]);
+    // Une autre année : l'année est dite.
+    const old = await mountDetail(offer({ score: null, status: "filtered_out", set_aside_at: "2024-11-12T09:00:00Z" }));
+    expect(old.get("[data-test=match-title]").text()).toBe("Écartée le 12 nov. 2024");
+  });
+
+  it("§30 sur téléphone : la carte de note finit par « Remettre dans le tri », « Préparer ma candidature » seul en bas", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px") || media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
+    const wrapper = await mountDetail(offer({ score: null, status: "filtered_out", set_aside_at: null }));
+    expect(wrapper.get("[data-test=match-title]").text()).toBe("Écartée");
+    expect(wrapper.get("[data-test=match-sub]").text()).toBe("Pas de note : jobA1 ne note pas les offres écartées.");
+    expect(wrapper.find("[data-test=offer-discard]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=prepare]").exists()).toBe(true);
+    await wrapper.get("[data-test=back-to-triage]").trigger("click");
+    expect(wrapper.emitted("status")).toEqual([["to_review"]]);
+  });
+
   it("sous 1 024 px, une seule colonne", async () => {
     const wrapper = await mountDetail(offer());
     expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);
