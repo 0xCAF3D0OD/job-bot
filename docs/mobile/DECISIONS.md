@@ -361,11 +361,27 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
 
+## Réglages « Objectif ORP et sites » (Kevin, 16.11.2026, 13 h 51)
+
+Pas de planche pour cette page : la référence est le message de Kevin. Ordinateur et téléphone, clair et sombre.
+
+1. En-tête : « ← Retour aux réglages » passe au-dessus du titre, pas à côté. Le lien, le titre et les cartes commencent au même bord gauche. Même en-tête sur toutes les sous-pages de Réglages.
+2. Les champs chiffrés forment une colonne fixe, alignée d'une carte à l'autre. Grille de la carte : texte 1fr, champ 72 px, unité de largeur fixe (assez pour « du mois suivant »), écart 12 px. Le « le » devant le jour est retiré : « [5] du mois suivant ».
+3. Les champs prennent le rayon standard des champs de saisie de l'app (12 px, celui du champ à libellé flottant), pas la pilule. Hauteur 44 px, chiffre centré.
+4. Description de « Date limite des justificatifs » : « À rendre chaque mois avant ce jour. » « Objectif mensuel de l'ORP » garde « Les candidatures demandées chaque mois. »
+
 ## Formations : catalogue vide pour « Mon domaine » (Kevin, 16.11.2026, 13 h 53)
 
 - Quand le catalogue vérifié n'a rien pour « Mon domaine », avant tout filtre : titre « Rien dans le catalogue pour {domaine} », pastille « Le catalogue couvre surtout l'informatique pour l'instant », bouton principal « Chercher des formations en {domaine} » (la recherche web existante). {domaine} est le premier mot-clé de « Mon domaine ».
 - « Aucune formation avec ces filtres » reste seulement quand ce sont les filtres qui vident la liste.
 - Le catalogue des soins viendra d'une liste sourcée fournie par Kevin : aucune formation inventée.
+
+## Offre écartée sans note : la date de mise à l'écart, « Remettre dans le tri » (Kevin, 16.11.2026, 13 h 53)
+
+- §30 du paquet du 16.11 : dans la fiche, « Écartée le 12 nov. » à la place de « Écartée » seul ; lien « Remettre dans le tri » (téléphone : dernière ligne de la carte de note ; ordinateur : à droite de la ligne de note) ; plus de bouton « Écarter » sur une offre déjà écartée (téléphone : « Préparer ma candidature » prend toute la largeur).
+- Option A : une colonne `offers.set_aside_at`, posée à chaque mise à l'écart (la personne, Trier, l'assistant, les critères). Pas de rattrapage : une offre écartée avant la colonne affiche « Écartée » seul.
+- « Remettre dans le tri » vide la date ; une nouvelle mise à l'écart pose la nouvelle date.
+- Format de date habituel : « 12 nov. », l'année seulement si ce n'est pas l'année en cours.
 
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 
