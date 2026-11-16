@@ -631,3 +631,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.417 | Envoyées : l’historique se déplie sur place, replié par défaut ; le tri a trois choix sur téléphone aussi et il est gardé pour le compte. | livrée |
 | 1.6.418 | Aujourd'hui : premiers pas en cinq lignes sur ordinateur et téléphone, accueil « Bienvenue » et « Offres à trier » vide pour un compte sans offre (§22 et §23 du 15.11) | livrée |
 | 1.6.419 | Trier : après le tri, « Candidatures » dans le menu ne ramène plus à la page de tri mais à la dernière page de la rubrique | livrée |
+| 1.6.420 | Notifications : « Comment s'est passé ton entretien ? » ouvre la candidature et « Faire le point » directement | livrée |
+| 1.6.421 | La comparaison des notes score-v7 et score-v8 se lance sur le serveur depuis le Mac (make prod-comparer-notes) | livrée |
