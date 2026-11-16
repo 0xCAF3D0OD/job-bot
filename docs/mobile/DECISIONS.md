@@ -529,3 +529,11 @@ ExtAlerteCodeSecours, et leurs versions Sombre). Quatre règles strictes :
 
 Le contrat avec la page jobA1 (détection et suivi en direct) est dans
 `2026-11-16-2130-extension-contrat-page.md` (PR du choix « Avec l'extension / À la main »).
+
+Précisions de Kevin (16.11.2026, 23 h 05, sur #805) :
+- Le résumé « Formulaire rempli » n'affiche que ce qui est stocké (mots et lieu, sans rayon).
+- « Copier l'adresse jobA1 » seulement si le champ e-mail est resté vide, avec le libellé
+  « Le champ e-mail est vide ? » + lien « Copier l'adresse jobA1 ».
+- Plus tard, dans une PR à part : quand la fenêtre jobs.ch passera à la liste en 4 étapes, retirer aussi le clic
+  automatique sur « Continuer » pour jobs.ch. LinkedIn garde sa fenêtre actuelle avec « J'ai créé l'alerte »
+  jusqu'à nouvel ordre.
