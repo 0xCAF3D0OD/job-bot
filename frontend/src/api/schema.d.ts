@@ -5092,11 +5092,39 @@ export interface components {
              * @default []
              */
             origin_ids: number[];
+            /**
+             * Reasons
+             * @default []
+             */
+            reasons: components["schemas"]["CvReasonOut"][];
         };
         /** CvRead */
         CvRead: {
             /** Read */
             read: boolean;
+        };
+        /**
+         * CvReasonOut
+         * @description La ligne « Pourquoi » d'un changement (§32 et §37 du 16.11). `target` : « summary » pour le
+         *     profil, sinon l'identifiant du bloc déplacé ou retiré. `origin: "user"` : changement demandé
+         *     par l'utilisateur (« Demandé par toi »), sans raison de l'IA. `quotes` : les mots de l'annonce
+         *     cités par la raison, vérifiés dans l'offre.
+         */
+        CvReasonOut: {
+            /** Target */
+            target: number | "summary";
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "ai" | "user";
+            /** Text */
+            text?: string | null;
+            /**
+             * Quotes
+             * @default []
+             */
+            quotes: string[];
         };
         /** CvRequest */
         CvRequest: {

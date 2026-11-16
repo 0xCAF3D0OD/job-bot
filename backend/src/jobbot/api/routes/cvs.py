@@ -6,7 +6,7 @@ Comme pour la lettre, les coordonnées de Kevin sont ajoutées ici et jamais env
 from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
@@ -21,6 +21,7 @@ from jobbot.letters.document import Identity
 from jobbot.letters.pdf import Template, cv_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import cv as cv_llm
+from jobbot.llm import cv_reasons
 from jobbot.llm.scoring import InvalidScore, ProfileChunkData
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -78,6 +79,18 @@ class CvBlock(BaseModel):
     selected: bool
 
 
+class CvReasonOut(BaseModel):
+    """La ligne « Pourquoi » d'un changement (§32 et §37 du 16.11). `target` : « summary » pour le
+    profil, sinon l'identifiant du bloc déplacé ou retiré. `origin: "user"` : changement demandé
+    par l'utilisateur (« Demandé par toi »), sans raison de l'IA. `quotes` : les mots de l'annonce
+    cités par la raison, vérifiés dans l'offre."""
+
+    target: int | Literal["summary"]
+    origin: Literal["ai", "user"]
+    text: str | None = None
+    quotes: list[str] = []
+
+
 class CvOut(BaseModel):
     id: int
     offer_id: int
@@ -99,6 +112,7 @@ class CvOut(BaseModel):
     # « Adapté pour cette offre » compare la version à cet ordre pour dire ce qui a changé et
     # pouvoir l'annuler.
     origin_ids: list[int] = []
+    reasons: list[CvReasonOut] = []
 
 
 class CvRead(BaseModel):
@@ -135,6 +149,16 @@ def _document(draft: Draft, chunks: dict[int, ProfileChunkData], identity: Ident
     )
 
 
+def _reasons(content: dict[str, Any]) -> list[CvReasonOut]:
+    user = list(dict.fromkeys(content.get("user_targets", [])))
+    ai = [
+        CvReasonOut(target=r["target"], origin="ai", text=r["text"], quotes=r.get("quotes", []))
+        for r in content.get("reasons", [])
+        if r.get("target") not in user
+    ]
+    return ai + [CvReasonOut(target=t, origin="user") for t in user]
+
+
 async def _render(session: AsyncSession, draft: Draft) -> CvOut:
     chunks = _eligible(await active_profile(session))
     identity = await load_identity(session)
@@ -161,6 +185,7 @@ async def _render(session: AsyncSession, draft: Draft) -> CvOut:
         document=CvDocumentOut.model_validate(asdict(_document(draft, chunks, identity))),
         read_at=draft.content.get("read_at"),
         origin_ids=list(chunks),
+        reasons=_reasons(draft.content),
     )
 
 
@@ -219,13 +244,17 @@ async def write_cv(request: Request, offer_id: int, body: CvRequest) -> CvOut:
     except InvalidScore:
         raise writing.unusable() from None
 
+    content = output.model_dump(exclude={"language"})
+    if instruction and ctx.previous is not None:
+        # « Demander une modification du CV » : ce qui change est demandé par l'utilisateur.
+        content |= cv_reasons.carry_over(ctx.previous, content)
     async with runtime.sessionmaker.begin() as session:
         draft = await writing.add_version(
             session,
             offer_id,
             DraftKind.CV,
             language=output.language,
-            content=output.model_dump(exclude={"language"}),
+            content=content,
             instruction=instruction,
             model=raw.model,
             prompt_version=cv_llm.PROMPT_VERSION,
@@ -248,9 +277,12 @@ async def edit_cv(request: Request, draft_id: int, body: CvEdit) -> CvOut:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, "aucun bloc de profil valide coché"
             )
-        # Une retouche défait « J'ai relu le CV », comme pour la lettre.
-        draft.content = {
-            **{k: v for k, v in draft.content.items() if k != "read_at"},
+        # Une retouche défait « J'ai relu le CV », comme pour la lettre ; ce qu'elle change
+        # n'a plus la raison de l'IA (« Demandé par toi »).
+        dropped = ("read_at", "reasons", "user_targets")
+        before = draft.content
+        content = {
+            **{k: v for k, v in before.items() if k not in dropped},
             "headline": body.headline.strip(),
             "summary": body.summary.strip(),
             "chunk_ids": ids,
@@ -260,6 +292,7 @@ async def edit_cv(request: Request, draft_id: int, body: CvEdit) -> CvOut:
                 else {}
             ),
         }
+        draft.content = content | cv_reasons.carry_over(before, content)
         draft.edited_at = datetime.now(UTC)
         await session.flush()
         await session.refresh(draft)

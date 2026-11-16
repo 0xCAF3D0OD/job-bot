@@ -14220,6 +14220,14 @@
             "type": "array",
             "title": "Origin Ids",
             "default": []
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/CvReasonOut"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "default": []
           }
         },
         "type": "object",
@@ -14253,6 +14261,56 @@
           "read"
         ],
         "title": "CvRead"
+      },
+      "CvReasonOut": {
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "const": "summary"
+              }
+            ],
+            "title": "Target"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "user"
+            ],
+            "title": "Origin"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "quotes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quotes",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "origin"
+        ],
+        "title": "CvReasonOut",
+        "description": "La ligne « Pourquoi » d'un changement (§32 et §37 du 16.11). `target` : « summary » pour le\nprofil, sinon l'identifiant du bloc déplacé ou retiré. `origin: \"user\"` : changement demandé\npar l'utilisateur (« Demandé par toi »), sans raison de l'IA. `quotes` : les mots de l'annonce\ncités par la raison, vérifiés dans l'offre."
       },
       "CvRequest": {
         "properties": {
