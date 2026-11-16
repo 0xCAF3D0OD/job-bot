@@ -468,6 +468,7 @@ async function load(append = false): Promise<void> {
           external_only: f.externalOnly || undefined,
           remote: f.remote ?? undefined,
           hide_doubtful: f.hideDoubtful || undefined,
+          hide_agencies: f.hideAgencies || undefined,
           with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,

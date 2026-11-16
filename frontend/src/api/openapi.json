@@ -3725,6 +3725,16 @@
             }
           },
           {
+            "name": "hide_agencies",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Agencies"
+            }
+          },
+          {
             "name": "with_filtered_out",
             "in": "query",
             "required": false,

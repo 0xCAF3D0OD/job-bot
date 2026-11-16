@@ -523,12 +523,16 @@ def _filters(
     external_only: bool,
     remote: str | None = None,
     hide_doubtful: bool = False,
+    hide_agencies: bool = False,
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
     Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
     conditions: list[ColumnElement[bool]] = [Offer.duplicate_of.is_(None)]
     if hide_doubtful:
         conditions.append(_doubtful().is_(False))
+    if hide_agencies:
+        # « Masquer les agences de placement » (section 35 du 16.11) ; une valeur vide n'est pas une agence.
+        conditions.append(func.coalesce(Offer.employer_status, "") != "agency")
     if (remote_filter := _remote_condition(remote)) is not None:
         conditions.append(remote_filter)
     if q:
@@ -633,6 +637,7 @@ async def list_offers(
     external_only: bool = False,
     remote: Literal["partial", "full"] | None = None,
     hide_doubtful: bool = False,
+    hide_agencies: bool = False,
     with_filtered_out: bool = False,
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
@@ -672,7 +677,7 @@ async def list_offers(
         # À traiter : les offres en préparation d'abord (docs/139, C2), puis l'ordre du tri.
         first: ColumnElement[Any] = case((Offer.status == OfferStatus.PREPARING, 0), else_=1)
         order = (first, *order)
-    conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful)
+    conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies)
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
     if min_score is not None:
@@ -693,8 +698,8 @@ async def list_offers(
         conditions.append(provisional if basis == "provisional" else sure)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
-    without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
-    without_cantons = _filters(q, sources, [], min_rate, external_only, remote, hide_doubtful)
+    without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies)
+    without_cantons = _filters(q, sources, [], min_rate, external_only, remote, hide_doubtful, hide_agencies)
     for bound in (
         *([score >= min_score] if min_score is not None else []),
         *([score <= max_score] if max_score is not None else []),

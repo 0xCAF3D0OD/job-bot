@@ -354,6 +354,31 @@ describe("OffersView", () => {
     }
   });
 
+  it("section 35 du 16.11 : pastille « Agence » en tête, ligne dans la fiche, filtre « Masquer les agences »", async () => {
+    mockOffers(
+      page([
+        offer(11, "DevOps Engineer", {
+          company: "Galaxi Consulting",
+          status: "later",
+          employer_status: "agency",
+          doubts: [{ kind: "hidden_employer", text: "Employeur caché : annonce d'agence, employeur non nommé." }],
+        }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres?offre=11");
+    const chips = wrapper.get("[data-offer-row='11']").findAll("[data-test=offer-chip]");
+    expect(chips[0]?.text()).toBe("Agence");
+    expect(chips[0]?.classes()).toContain("agency");
+    // Le doute d'agence est dit par « Agence » : pas de « À vérifier » en plus.
+    expect(chips.map((c) => c.text())).not.toContain("À vérifier");
+    expect(wrapper.get("[data-test=agency-note]").text()).toContain("Galaxi Consulting recrute pour un client");
+    await wrapper.get("[data-test=filters-toggle]").trigger("click");
+    await wrapper.get("[data-test=pop-agencies]").setValue(true);
+    await flushPromises();
+    expect(router.currentRoute.value.query).toMatchObject({ agences: "masquer" });
+    expect(lastQuery()).toMatchObject({ hide_agencies: true });
+  });
+
   it("détail : candidature, raisons, texte complet, fermeture", async () => {
     mockOffers(
       page([

@@ -12,6 +12,17 @@ describe("offres à vérifier (docs/30 §3)", () => {
   });
 });
 
+describe("agences de placement (section 35 du 16.11)", () => {
+  it("garde « Masquer les agences de placement » dans l’adresse, éteint par défaut, avec sa pastille", () => {
+    expect(DEFAULT_FILTERS.hideAgencies).toBe(false);
+    expect(toQuery({ ...DEFAULT_FILTERS, hideAgencies: true })).toEqual({ agences: "masquer" });
+    expect(fromQuery({ agences: "masquer" }).hideAgencies).toBe(true);
+    expect(fromQuery({}).hideAgencies).toBe(false);
+    expect(activeCount({ ...DEFAULT_FILTERS, hideAgencies: true })).toBe(1);
+    expect(activeChips({ ...DEFAULT_FILTERS, hideAgencies: true })[0]?.label).toBe("Sans les agences de placement");
+  });
+});
+
 describe("filtre « Note » : sûres ou provisoires (PR 26)", () => {
   it("garde le choix dans l’adresse, compte pour un filtre et a sa pastille", () => {
     expect(DEFAULT_FILTERS.basis).toBeNull();

@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
 import { rateText, remoteText } from "../format";
+import AppIcon from "./AppIcon.vue";
 import ListCard from "./ListCard.vue";
 import ScoreRing from "./ScoreRing.vue";
 import { usePlan } from "../composables/usePlan";
@@ -44,10 +45,15 @@ function known(value: string | null | undefined): string | null {
   const text = value?.trim();
   return text && !UNKNOWN.test(text) ? text : null;
 }
-type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: string };
+type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept" | "agency"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // Section 35 du 16.11 (CandidaturesOrdinateurAgence, OffreAgence) : « Agence » en premier dans la rangée. Le doute
+  // « Employeur caché : annonce d'agence » qu'elle dit déjà ne donne plus, seul, la pastille « À vérifier ».
+  const agency = o.employer_status === "agency";
+  if (agency) out.push({ text: "Agence", tone: "agency", title: "Agence de placement : elle recrute pour un client dont le nom n’est pas donné." });
+  const doubts = agency ? o.doubts?.filter((d) => d.kind !== "hidden_employer") : o.doubts;
   // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
   // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
   if (setAside.value) out.push({ text: "Écartée" });
@@ -57,8 +63,8 @@ const chips = computed<Chip[]>(() => {
   // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
   if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
-  else if (o.doubts?.length)
-    out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
+  else if (doubts?.length)
+    out.push({ text: doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: doubts.map((d) => d.text).join(" ") });
   else if (o.expired_at && o.status !== "applied") out.push({ text: "Retirée", tone: "warn" });
   // Sans profil, aucune offre n'est notée : la puce le dit, au lieu d'un « Pas encore notée » sans fin.
   if (profileEmpty.value && unscored.value && !setAside.value && !noScore.value && !out.length) out.push({ text: "Profil à compléter", tone: "warn", title: "Ajoute ton dernier poste dans Profil pour que jobA1 note les offres." });
@@ -133,7 +139,11 @@ watch([chips, phone], () => void fit());
       ><path
         d="M1 1.5A1.5 1.5 0 0 1 2.5 0h7A1.5 1.5 0 0 1 11 1.5V15L6 11.5 1 15z"
         fill="#F2853A"
-      /></svg>{{ chip.text }}</span>
+      /></svg><AppIcon
+        v-if="chip.tone === 'agency'"
+        name="agency"
+        class="chip-mark"
+      />{{ chip.text }}</span>
       <span
         v-if="fits < chips.length"
         class="more"
@@ -184,6 +194,8 @@ watch([chips, phone], () => void fit());
 .score-unrated path { stroke: var(--unrated-dash); }
 .list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
 .chip-mark { flex: none; }
+.list-card-chips > .agency { background: var(--agency-bg); color: var(--agency-text); font-weight: var(--weight-bold); }
+.agency > .icon { width: 14px; height: 14px; stroke-width: 2.4; }
 /* Ordinateur, maquette du 14 novembre (§1 ; CandidaturesOrdinateurB) : l'anneau de 40 px en haut à droite, sans son
    mot (il reste dans le nom de l'anneau, « Proche : 92 sur 100 », et dans la fiche) ; même marge de 16 px en haut et
    à droite (ListCard). Les séparations prennent le fond de la carte, bleu pâle quand elle est choisie. */
@@ -209,7 +221,7 @@ watch([chips, phone], () => void fit());
   .list-card-offer .list-card-end .score-ring-wrap { justify-items: end; padding: 0; }
   .list-card-offer > .list-card-chips { margin-top: 0; }
   .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
-  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
+  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
   .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
 }
 </style>

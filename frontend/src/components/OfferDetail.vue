@@ -9,6 +9,7 @@ import { dateInList, dateInSentence } from "../dates";
 import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
+import AgencyNote from "./AgencyNote.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
@@ -663,6 +664,10 @@ watch(
             />
           </div>
         </div>
+        <AgencyNote
+          v-if="offer.employer_status === 'agency'"
+          :company="offer.company"
+        />
         <div
           v-if="statusLabel && offer.status === 'applied'"
           class="oc-status"
@@ -1011,6 +1016,10 @@ watch(
           {{ tag.text }}
         </li>
       </ul>
+      <AgencyNote
+        v-if="offer.employer_status === 'agency'"
+        :company="offer.company"
+      />
       <div
         v-if="offer.status !== 'applied' && !sub"
         class="detail-actions"

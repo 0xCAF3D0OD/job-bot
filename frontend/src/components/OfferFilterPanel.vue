@@ -186,6 +186,14 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         data-test="pop-remote"
         @change="emit('update', { remote: filters.remote === null ? 'partial' : null })"
       ></label>
+      <!-- Section 35 du 16.11 (CandidaturesOrdinateurAgence, panneau Filtres) : sous Télétravail. -->
+      <label class="filter-panel-switch">Masquer les agences de placement<input
+        type="checkbox"
+        role="switch"
+        :checked="filters.hideAgencies"
+        data-test="pop-agencies"
+        @change="emit('update', { hideAgencies: !filters.hideAgencies })"
+      ></label>
       <label
         v-if="filters.view === 'pending'"
         class="filter-panel-switch"

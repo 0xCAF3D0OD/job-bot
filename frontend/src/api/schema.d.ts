@@ -11895,6 +11895,7 @@ export interface operations {
                 external_only?: boolean;
                 remote?: ("partial" | "full") | null;
                 hide_doubtful?: boolean;
+                hide_agencies?: boolean;
                 with_filtered_out?: boolean;
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
