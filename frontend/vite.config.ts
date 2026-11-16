@@ -8,6 +8,11 @@ const apiTarget = process.env.JOBBOT_DEV_API_URL ?? "http://127.0.0.1:8000";
 
 export default defineConfig({
   plugins: [vue()],
+  // L'« Options API » de Vue (data(), methods, computed: dans un export default {}) coupée au build : aucun composant
+  // de l'app ni des bibliothèques chargées ne s'en sert, tous sont écrits avec setup (vérifié le 16.11, PR « Vue sans
+  // Options API »). Gain : 1,65 Ko de JS gzip (Kevin, 16.11 : alléger avant de dépasser). Un composant écrit à
+  // l'ancienne ne s'afficherait plus : écrire les composants en <script setup>. Les tests (vitest) n'en dépendent pas.
+  define: { __VUE_OPTIONS_API__: "false" },
   // Le manifeste dit quels fichiers chaque page charge : le budget de poids le lit (docs/117 §3).
   build: {
     manifest: true,
