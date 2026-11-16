@@ -1,20 +1,20 @@
 // Le budget de poids (docs/performance.md, docs/117 §3). Après `vite build`, le script mesure :
-//   - le JavaScript : le premier écran (l'application et Aujourd'hui), tout le code, et page par page ;
-//   - le CSS : tout le CSS, et chaque page de l'application une à une (CSS_PAGES, limites par page du 16.11) ;
+//   - le JavaScript et le CSS de chaque page de l'application, une à une (PAGES) : ce sont eux qui ont une limite ;
+//   - le JavaScript et le CSS au total (js-total, css-total) : affichés, pas bloquants (Kevin, 16.11) ;
 //   - les images servies (dist/) : leur poids total, et les illustrations toutes en WebP (ou SVG).
 // Chaque taille est donnée brute, en gzip et en brotli. La limite porte sur gzip pour le code et le CSS (ce que le
 // serveur envoie : Caddy compresse en zstd ou gzip), sur le poids brut pour les images (déjà compressées).
 // Au-delà d'une limite, le script échoue et dit quels fichiers pèsent le plus.
 //
 //     npm run poids                      (construit, puis mesure)
-//     node scripts/poids.mjs --releve    (après un build : les limites à + 5 % des tailles d'aujourd'hui, + 3 % pour le CSS)
+//     node scripts/poids.mjs --releve    (après un build : les tailles d'aujourd'hui + 5 %)
 //     node scripts/poids.mjs --dist D --json F   (mesure le build D, écrit les tailles dans F ; scripts/poids-delta.sh)
-//     node scripts/poids.mjs --base F    (F : les tailles de main ; scripts/poids-ci.sh, voir plus bas)
+//     node scripts/poids.mjs --base F    (F : les tailles de main ; scripts/poids-ci.sh : avant/après, voir plus bas)
 //
 // Main qui dépasse déjà (Kevin, 16.11, docs/decisions/2026-11-16-1425-audit-poids-main-depasse.md) : avec --base, une
 // mesure au-dessus de sa limite passe quand main la dépassait déjà et que la branche ne l'alourdit pas (taille égale
 // ou plus petite que sur main). Seule une branche qui ajoute du poids à une mesure en dépassement reste bloquée.
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
@@ -24,64 +24,83 @@ const arg = (name) => {
 };
 const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 
-// Les limites : la taille mesurée le 2026-11-10 (main après la PR 20) + 5 %, arrondie à la centaine d'octets
-// inférieure (décision de Kevin du 10.11 : « budget = taille compressée actuelle + 5 % maximum »). Pour en relever
-// une, le dire dans la PR et noter la nouvelle valeur dans docs/performance.md.
+// Les limites par page (Kevin, 16.11, issue #797 : docs/decisions/2026-11-16-1518-limites-par-page.md). Pour chaque
+// page, la plus basse entre (a) le budget public d'un téléphone moyen en 4G (365 Kio de JS et 365 Kio pour le reste,
+// gzip, The Performance Inequality Gap 2024) et (b) la mesure de main le 16.11 + 5 %, arrondie à la centaine
+// d'octets inférieure. Aujourd'hui (b) est toujours la plus basse. Ces limites sont fixées une fois et ne se relèvent
+// jamais : une PR qui dépasse compense sur sa propre page ou attend. Seule exception : une décision écrite dans
+// docs/decisions/ avec l'accord de Kevin.
 export const LIMITS = {
-  "js-premier": 111_500,
-  "js-total": 431_500, // #764, #770 et #771 ensemble, sans découpage (Kevin, 16.11 14 h 19 : une fois, 428 780 → 431 500 ; docs/decisions/2026-11-16-1419-releve-js-trois-pr.md). Plus de relèvement hors de l'issue « Budget JS ».
-  "js-accueil": 111_500,
-  "js-candidatures": 168_000,
-  "js-bilan": 113_400,
-  "js-compte": 98_800,
-  // Le CSS, page par page (Kevin, 16.11, issue #797 : docs/decisions/2026-11-16-1510-css-limites-par-page.md). Chaque
-  // limite est le CSS que charge la page sur main le 16.11, + 3 %, arrondi à la centaine d'octets inférieure.
-  // css-total, refixé une seule fois de la même façon, n'est plus qu'un garde-fou : ce qui compte, c'est la page ouverte.
-  "css-total": 123_100, // refixé une fois avec les limites par page (119 581 sur main le 16.11, + 3 %)
-  "css-accueil": 60_600, // le premier écran (l'ancien css-premier)
-  "css-trier": 63_800,
-  "css-candidatures": 71_100,
-  "css-preparer": 69_200,
-  "css-suivi": 72_200,
-  "css-alertes": 61_800,
-  "css-rendez-vous-orp": 65_000,
-  "css-relances": 59_100,
-  "css-bilan": 60_900,
-  "css-resultats": 58_900,
-  "css-formations": 59_800,
-  "css-fiche-orp": 60_400,
-  "css-entrainement": 59_800,
-  "css-notifications": 61_100,
-  "css-compte": 59_200,
-  "css-profil": 63_100,
-  "css-reglages": 60_400,
-  "css-diagnostic": 57_900,
-  "css-connexion": 59_700,
-  "css-inscription": 58_200,
-  "css-acces": 58_200,
-  "css-bienvenue": 65_400,
-  "css-getemall": 59_000,
-  "css-extension": 57_900,
-  "css-la-plateforme": 57_900,
-  "css-tes-donnees": 58_100,
-  "css-accessibilite": 57_900,
-  "css-conditions": 57_900,
-  "css-a-propos": 57_900,
-  "css-introuvable": 58_900,
+  "js-accueil": 108_600, // Aujourd'hui : le premier écran
+  "js-trier": 106_000,
+  "js-candidatures": 175_500,
+  "js-preparer": 157_400,
+  "js-suivi": 176_800,
+  "js-alertes": 124_800,
+  "js-rendez-vous-orp": 134_700,
+  "js-relances": 106_100,
+  "js-bilan": 114_900,
+  "js-resultats": 111_000,
+  "js-formations": 117_500,
+  "js-fiche-orp": 98_200,
+  "js-entrainement": 99_900,
+  "js-notifications": 98_500,
+  "js-compte": 97_500,
+  "js-profil": 135_800,
+  "js-reglages": 137_800,
+  "js-diagnostic": 98_000,
+  "js-connexion": 100_000,
+  "js-inscription": 97_900,
+  "js-acces": 98_000,
+  "js-bienvenue": 119_200,
+  "js-getemall": 96_300,
+  "js-extension": 95_600,
+  "js-la-plateforme": 98_700,
+  "js-tes-donnees": 97_800,
+  "js-accessibilite": 94_800,
+  "js-conditions": 95_400,
+  "js-a-propos": 95_000,
+  "js-introuvable": 94_800,
+  "css-accueil": 61_800, // Aujourd'hui : le premier écran
+  "css-trier": 65_000,
+  "css-candidatures": 72_500,
+  "css-preparer": 70_500,
+  "css-suivi": 73_600,
+  "css-alertes": 63_000,
+  "css-rendez-vous-orp": 66_300,
+  "css-relances": 60_300,
+  "css-bilan": 62_100,
+  "css-resultats": 60_000,
+  "css-formations": 60_900,
+  "css-fiche-orp": 61_500,
+  "css-entrainement": 61_000,
+  "css-notifications": 62_200,
+  "css-compte": 60_300,
+  "css-profil": 64_300,
+  "css-reglages": 61_600,
+  "css-diagnostic": 59_000,
+  "css-connexion": 60_900,
+  "css-inscription": 59_300,
+  "css-acces": 59_300,
+  "css-bienvenue": 66_700,
+  "css-getemall": 60_100,
+  "css-extension": 59_000,
+  "css-la-plateforme": 59_000,
+  "css-tes-donnees": 59_200,
+  "css-accessibilite": 59_000,
+  "css-conditions": 59_000,
+  "css-a-propos": 59_000,
+  "css-introuvable": 60_000,
   images: 4_893_100,
 };
 
-// Les pages mesurées une à une pour le JS : la vue et ses sous-vues ouvertes par défaut (router.ts).
-const PAGES = {
-  accueil: ["views/TodayView.vue"],
-  candidatures: ["views/JobsView.vue", "views/OffersView.vue"],
-  bilan: ["views/BilanView.vue", "views/BilanOrpView.vue"],
-  compte: ["views/AccountView.vue"],
-};
+// Affichés à chaque mesure, sans limite (Kevin, 16.11) : ce n'est pas ce que charge une page.
+const TOTALS = ["js-total", "css-total"];
 
-// Les pages mesurées une à une pour le CSS : toutes les vues de router.ts, avec leur page parente (Candidatures,
-// Bilan). Une vue qui n'est dans aucune page fait échouer le budget : une nouvelle page reçoit sa limite.
-export const CSS_PAGES = {
+// Les pages mesurées une à une : toutes les vues de router.ts, avec leur page parente (Candidatures, Bilan). Une page
+// compte l'application (le socle), sa vue et ce qu'elles importent d'emblée. Une vue qui n'est dans aucune page fait
+// échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
+export const PAGES = {
   accueil: ["views/TodayView.vue"], // le premier écran
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
@@ -171,20 +190,19 @@ function walk(dir) {
 const images = walk(DIST).filter((file) => IMAGE.test(file));
 
 const groups = {
-  "js-premier": jsOf(loaded(PAGES.accueil)),
   "js-total": allJs,
   "css-total": allCss,
   images,
 };
 for (const [page, paths] of Object.entries(PAGES)) {
   groups[`js-${page}`] = jsOf(loaded(paths));
+  groups[`css-${page}`] = cssOf(loaded(paths));
 }
-for (const [page, paths] of Object.entries(CSS_PAGES)) groups[`css-${page}`] = cssOf(loaded(paths));
 
-// Une limite sans page (une page retirée de CSS_PAGES) : le dire plutôt que planter.
+// Une limite sans page (une page retirée de PAGES) : le dire plutôt que planter.
 const orphans = Object.keys(LIMITS).filter((name) => !groups[name]);
 if (orphans.length) {
-  console.log(`TROP limites sans page : ${orphans.join(", ")} (à ajouter dans CSS_PAGES ou à retirer de LIMITS)`);
+  console.log(`TROP limites sans page : ${orphans.join(", ")} (à ajouter dans PAGES ou à retirer de LIMITS)`);
   process.exit(1);
 }
 
@@ -193,14 +211,13 @@ const measured = Object.fromEntries(Object.entries(groups).map(([name, files]) =
 const limited = (name) => (name === "images" ? measured[name].raw : measured[name].gzip);
 
 if (arg("--json")) {
-  writeFileSync(arg("--json"), JSON.stringify(Object.fromEntries(Object.keys(LIMITS).map((name) => [name, limited(name)]))));
+  writeFileSync(arg("--json"), JSON.stringify(Object.fromEntries([...Object.keys(LIMITS), ...TOTALS].map((name) => [name, limited(name)]))));
   process.exit(0);
 }
 
 if (process.argv.includes("--releve")) {
   for (const name of Object.keys(LIMITS)) {
-    const margin = name.startsWith("css-") ? 1.03 : 1.05;
-    console.log(`  "${name}": ${Math.floor((limited(name) * margin) / 100) * 100},`);
+    console.log(`  "${name}": ${Math.floor((limited(name) * 1.05) / 100) * 100},`);
   }
   process.exit(0);
 }
@@ -210,14 +227,14 @@ const base = arg("--base") ? JSON.parse(readFileSync(arg("--base"), "utf8")) : {
 const tolerated = (name, limit) => base[name] > limit && limited(name) <= base[name];
 
 let failed = false;
-// Toutes les vues du manifeste sont mesurées dans une page CSS.
-const inPages = new Set(Object.values(CSS_PAGES).flat());
+// Toutes les vues du manifeste sont mesurées dans une page.
+const inPages = new Set(Object.values(PAGES).flat());
 const unmeasured = Object.keys(manifest)
   .map((key) => key.match(/src\/(views\/\w+\.vue)$/)?.[1])
   .filter((view) => view && !inPages.has(view));
 if (unmeasured.length) {
   failed = true;
-  console.log(`TROP vues sans limite de CSS : ${unmeasured.join(", ")} (à ajouter dans CSS_PAGES et LIMITS)`);
+  console.log(`TROP vues sans limite : ${unmeasured.join(", ")} (à ajouter dans PAGES, et leurs limites dans LIMITS)`);
 }
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {
@@ -235,6 +252,54 @@ for (const [name, limit] of Object.entries(LIMITS)) {
       `${kb(limit)} (${name === "images" ? "brut" : "gzip"})` +
       (within ? "" : ok ? `  (au-dessus, mais main y est déjà : ${base[name]} o sur main, ${limited(name)} o ici, la branche n'ajoute rien)` : `  (les plus lourds : ${heaviest})`),
   );
+}
+
+// Les totaux : affichés, sans limite.
+for (const name of TOTALS) {
+  const m = measured[name];
+  console.log(`    ${name.padEnd(17)}${kb(m.raw).padStart(10)}${kb(m.gzip).padStart(10)}${kb(m.brotli).padStart(10)}   (gzip, sans limite)`);
+}
+
+// Avant/après (avec --base) : les mesures que la branche change, pour la PR. Dans la CI, aussi dans le résumé de
+// l'exécution (GITHUB_STEP_SUMMARY) et en note sur la PR.
+if (arg("--base")) {
+  const changed = [...Object.keys(LIMITS), ...TOTALS].filter((name) => base[name] !== undefined && base[name] !== limited(name));
+  const line = (name) => {
+    const d = limited(name) - base[name];
+    const limit = LIMITS[name] ? ` (limite ${LIMITS[name]})` : " (sans limite)";
+    return `${name} : ${base[name]} → ${limited(name)} o, ${d > 0 ? "+" : ""}${d}${limit}`;
+  };
+  const pages = changed.filter((name) => !TOTALS.includes(name));
+  console.log(`\nAvant/après (main → branche, octets) : ${pages.length ? `${pages.length} mesure(s) de page changée(s)` : "aucune page changée"}`);
+  for (const name of changed) console.log(`  ${line(name)}`);
+  if (process.env.GITHUB_ACTIONS) {
+    // En bref : par sorte (JS, CSS), le nombre de pages changées, l'écart le plus fort et la marge la plus petite.
+    const brief = ["js", "css"].flatMap((kind) => {
+      const names = pages.filter((name) => name.startsWith(`${kind}-`));
+      if (!names.length) return [];
+      const deltas = names.map((name) => limited(name) - base[name]);
+      const top = names[deltas.indexOf(Math.max(...deltas))];
+      const tight = names.reduce((a, b) => (LIMITS[a] - limited(a) <= LIMITS[b] - limited(b) ? a : b));
+      return [
+        `${kind.toUpperCase()} : ${names.length} page(s), de ${Math.min(...deltas)} à ${Math.max(...deltas)} o ; la plus touchée ${top.slice(kind.length + 1)} (${line(top)}) ; ` +
+          `marge la plus petite ${tight.slice(kind.length + 1)} (${LIMITS[tight] - limited(tight)} o)`,
+      ];
+    });
+    const totals = TOTALS.map((name) => `${name} ${limited(name) - base[name] > 0 ? "+" : ""}${limited(name) - base[name]} o`).join(", ");
+    const notice = [...(brief.length ? brief : ["aucune page changée"]), `totaux (sans limite) : ${totals}`].join(" ; ");
+    console.log(`::notice title=Poids avant/après (gzip)::${notice}`);
+  }
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const rows = changed.map((name) => {
+      const d = limited(name) - base[name];
+      return `| ${name} | ${base[name]} | ${limited(name)} | ${d > 0 ? "+" : ""}${d} | ${LIMITS[name] ?? "—"} |`;
+    });
+    appendFileSync(
+      process.env.GITHUB_STEP_SUMMARY,
+      `## Poids avant/après (gzip, octets)\n\n` +
+        (rows.length ? `| Mesure | main | branche | écart | limite |\n|---|---:|---:|---:|---:|\n${rows.join("\n")}\n` : "Aucune page changée.\n"),
+    );
+  }
 }
 
 // Les polices (woff2, déjà compressées) : relevées pour le tableau de poids des PR, sans limite. Aucune n'est
