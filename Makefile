@@ -93,7 +93,7 @@ test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au b
 audits-ci: ## avant chaque push : tests, types, lint, poids (et son écart avec main), historique, puis tous les audits CI ordinateur et téléphone (DEMO_URL)
 	@echec=0; \
 	for etape in "cd frontend && npm run -s test" "cd frontend && npm run -s typecheck" "cd frontend && npm run -s lint" \
-		"cd frontend && npm run -s poids" "sh frontend/scripts/poids-delta.sh" "$(MAKE) -s changelog-check" "$(MAKE) -s test-audit" \
+		"cd frontend && npm run -s poids:ci" "sh frontend/scripts/poids-delta.sh" "$(MAKE) -s changelog-check" "$(MAKE) -s test-audit" \
 		"AUDIT_FORMAT=telephone $(MAKE) -s -k audit-telephone audit-grille audit-controles audit-rendez-vous audit-menu audit-libelle audit-tri" \
 		"AUDIT_FORMAT=ordinateur $(MAKE) -s -k audit-grille audit-controles audit-panneaux audit-rendez-vous audit-menu audit-libelle audit-tri"; do \
 		echo "== $$etape"; sh -c "$$etape" || { echo "ÉCHEC : $$etape"; echec=1; }; \
