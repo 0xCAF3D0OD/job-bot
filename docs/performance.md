@@ -14,7 +14,7 @@ La limite porte sur **gzip** pour le JavaScript et le CSS. Pour les **images**, 
 
 | Mesure | Ce qu'elle compte |
 |---|---|
-| `js-<page>`, `css-<page>` | le JS et le CSS de chacune des 32 pages de l'application (`PAGES` dans `poids.mjs`) : ce sont eux qui ont une limite, voir « Les limites par page » |
+| `js-<page>`, `css-<page>` | le JS et le CSS de chacune des 33 pages de l'application (`PAGES` dans `poids.mjs`) : ce sont eux qui ont une limite, voir « Les limites par page » |
 | `js-accueil`, `css-accueil` | Aujourd'hui (`TodayView`), donc aussi le premier écran |
 | `js-total`, `css-total` | tout le code, tout le CSS : affichés, sans limite depuis le 16.11 |
 | `images` | toutes les images servies (`dist/`, donc `public/` et les images importées par le code) |
@@ -82,6 +82,7 @@ Aujourd'hui, la valeur 2 est la plus basse sur toutes les pages : la plus lourde
 | trier | `TriageView` | 101,0 | 106,0 | 62,0 | 65,0 |
 | candidatures | `JobsView` + `OffersView` | 167,2 | 175,5 | 69,1 | 72,5 |
 | preparer | `PreparationView` | 150,0 | 157,4 | 67,2 | 70,5 |
+| preparer-panneaux | `PreparationView` + ses panneaux chargés à la demande (allègement (c), 17.11) : le pire cas, tous ouverts, garde les limites de Préparer d'avant l'allègement | 150,0 | 157,4 | 67,2 | 70,5 |
 | suivi | `JobsView` + `ApplicationsView` | 168,4 | 176,8 | 70,1 | 73,6 |
 | alertes | `JobsView` + `AlertsView` | 118,9 | 124,8 | 60,0 | 63,0 |
 | rendez-vous-orp | `JobsView` + `OrpMeetingView` | 128,4 | 134,7 | 63,2 | 66,3 |

@@ -14,7 +14,7 @@
 // Main qui dépasse déjà (Kevin, 16.11, docs/decisions/2026-11-16-1425-audit-poids-main-depasse.md) : avec --base, une
 // mesure au-dessus de sa limite passe quand main la dépassait déjà et que la branche ne l'alourdit pas (taille égale
 // ou plus petite que sur main). Seule une branche qui ajoute du poids à une mesure en dépassement reste bloquée.
-import { appendFileSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
@@ -37,6 +37,7 @@ export const LIMITS = {
   "js-trier": 106_000,
   "js-candidatures": 175_500,
   "js-preparer": 157_400,
+  "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
   "js-alertes": 124_800,
   "js-rendez-vous-orp": 134_700,
@@ -69,6 +70,7 @@ export const LIMITS = {
   "css-trier": 65_000,
   "css-candidatures": 72_500,
   "css-preparer": 70_500,
+  "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
   "css-alertes": 63_000,
   "css-rendez-vous-orp": 66_300,
@@ -112,6 +114,16 @@ export const PAGES = {
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   preparer: ["views/PreparationView.vue"],
+  // Préparer avec tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
+  // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
+  "preparer-panneaux": [
+    "views/PreparationView.vue",
+    "components/ApplicationSent.vue",
+    "components/GoalReached.vue",
+    "components/OfferCompatSheet.vue",
+    "components/FalseClaimSheet.vue",
+    "components/ProfileCompletionPanel.vue",
+  ],
   suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
   alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
   "rendez-vous-orp": ["views/JobsView.vue", "views/OrpMeetingView.vue"],
@@ -180,13 +192,23 @@ function closure(key, seen = new Set()) {
   for (const next of entry.imports ?? []) closure(next, seen);
   return seen;
 }
+// La clé d'un fichier de PAGES. Un composant importé à la fois d'emblée et à la demande devient un bloc partagé, nommé
+// « _Composant-empreinte.js ». Un composant sans bloc à lui est fondu dans le bloc qui l'importe, déjà compté : il
+// n'ajoute rien (null). Un fichier qui n'existe pas dans src/ est une faute de frappe : on s'arrête.
 const keyOf = (path) => {
-  const key = Object.keys(manifest).find((k) => k.endsWith(path));
-  if (!key) throw new Error(`${path} absent du manifeste de vite`);
-  return key;
+  const keys = Object.keys(manifest);
+  const name = path.split("/").pop().replace(/\.vue$/, "");
+  const key = keys.find((k) => k.endsWith(path)) ?? keys.find((k) => new RegExp(`^_${name}-[\\w-]{8}\\.js$`).test(k));
+  if (key) return key;
+  if (/^components\//.test(path) && existsSync(new URL(`../src/${path}`, import.meta.url))) return null;
+  throw new Error(`${path} absent du manifeste de vite`);
 };
 const entry = Object.keys(manifest).find((key) => manifest[key].isEntry);
-const loaded = (paths) => paths.reduce((seen, path) => closure(keyOf(path), seen), closure(entry));
+const loaded = (paths) =>
+  paths.reduce((seen, path) => {
+    const key = keyOf(path);
+    return key ? closure(key, seen) : seen;
+  }, closure(entry));
 const jsOf = (keys) => [...keys].map((key) => manifest[key].file).filter((file) => file.endsWith(".js"));
 const cssOf = (keys) => [...keys].flatMap((key) => manifest[key].css ?? []);
 
