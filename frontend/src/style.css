@@ -869,9 +869,6 @@ button.secondary:hover:not(:disabled), button.action-2:hover:not(:disabled), but
    tous les 25 % découpées dans le fond (--ring-gap), jamais en bleu (D3, D5). */
 .score-ring { --ring: var(--success); --ring-soft: var(--success-soft); position: relative; flex-shrink: 0; display: inline-grid; place-content: center; width: 2.6rem; height: 2.6rem; font-size: var(--font-small); font-weight: var(--weight-bold); line-height: var(--leading-none); color: var(--ring); font-variant-numeric: tabular-nums; }
 .score-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; }
-.score-ring-track { stroke: var(--ring-soft); stroke-width: 9; }
-.score-ring-arc { stroke: var(--ring); stroke-width: 9; }
-.score-ring-ticks { stroke: var(--ring-gap, var(--surface)); stroke-width: 3.5; }
 .score-ring-value { position: relative; }
 .score-ring.very-close, .score-ring.close { --ring: var(--success); --ring-soft: var(--success-soft); }
 .score-ring.dig { --ring: var(--score-dig); --ring-soft: color-mix(in srgb, var(--score-dig) 18%, var(--surface)); }
@@ -966,7 +963,6 @@ html.search-open,
 .training-list { overflow: hidden; }
 .versions :is(.grouped-row-title, .grouped-row-description) { overflow-wrap: break-word; word-break: normal; hyphens: manual; }
 .versions .grouped-row-current, .versions .grouped-row-current:hover { position: relative; isolation: isolate; background: none; }
-.versions .grouped-row-current::before { content: ""; position: absolute; inset: var(--space-1); z-index: -1; border-radius: calc(var(--radius) - var(--space-1)); background: var(--accent-soft); }
 /* Une page A4 : la ligne sous la relecture, et la marque de fin de page dans la lettre. */
 .page-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin: 0; color: var(--muted); }
 .page-line .link { min-height: 2.75rem; }
@@ -1008,18 +1004,11 @@ html.search-open,
 #print-root { display: none; }
 #print-root.measuring { display: block; position: fixed; left: -10000px; top: 0; visibility: hidden; }
 #print-root { padding: 14mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: #fff; color: #000; }
-#print-root .print-sheet { position: static; border: 0; box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: none; width: auto; }
-#print-root .letter-sheet { font-size: 11pt; }
-#print-root .cv-sheet { font-size: 9.5pt; }
-#print-root .screen-only { display: none !important; }
-#print-root p.print-only { display: block; text-align: left; }
-#print-root .chunk-refs { display: none; }
 @media print {
   @page { size: A4; margin: 0; }
   @page landscape { size: A4 landscape; margin: 0; }
   body.printing > *:not(#print-root) { display: none !important; }
   body.printing #print-root { display: block; }
-  #print-root.landscape { page: landscape; }
 }
 /* Le même bord que les boutons secondaires (--faint, 1.6.27) : « Postuler chez l'employeur » à côté de « Ajouter une offre ». */
 .button-link { display: inline-flex; align-items: center; padding: var(--space-2) var(--space-4); font-size: var(--font-small); font-weight: var(--weight-semibold); border-radius: var(--radius-sm); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); text-decoration: none; background: var(--surface); }
@@ -1123,7 +1112,6 @@ html.search-open,
 
 @media (max-width: 1200px) {
   .detail-enter-active, .detail-leave-active { transition: opacity 0.2s ease; }
-  .detail-enter-active .detail-panel, .detail-leave-active .detail-panel { transition: transform 0.25s ease; }
   .detail-enter-from, .detail-leave-to { opacity: 0; }
   .detail-enter-from .detail-panel, .detail-leave-to .detail-panel { transform: translateX(100%); }
 }
@@ -1204,7 +1192,6 @@ html.search-open,
 .chunk-tags,
 .account-delete-password { display: grid; gap: var(--space-1); font-size: var(--font-small); }
 .login-form .form-actions { padding-top: var(--space-1); }
-pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--band); border: 1px solid var(--border); overflow-x: auto; font-size: var(--font-small); }
 
 /* Menu du compte : Profil, Réglages, profil affiché, déconnexion */
 .account-menu { position: relative; }
@@ -1255,7 +1242,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .training-kept,
 .prep-revise { display: grid; gap: var(--space-3); }
 .alerts-panel .section-title.first { margin-top: 0; }
-.alerts-table td { vertical-align: top; }
 .alert-cell { min-width: 9rem; }
 .alert-cell .link,
 .chunk-form > label > span,
@@ -1273,7 +1259,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .offers-chips-clear { font-size: var(--font-small); }
 .alert-form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); padding: var(--space-4); }
 .alert-form .form-actions { grid-column: 1 / -1; padding-top: 0; }
-@media (max-width: 720px) { .alert-form { grid-template-columns: 1fr; } }
 .employer-line { margin: var(--space-2) 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
 
 /* « En savoir plus » (docs/21 §2)
@@ -1311,7 +1296,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .contacts-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
 .contacts-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); align-items: center; font-size: var(--font-small); }
 /* Le nom et ses actions sur la même ligne, l'état en dessous (docs/74). */
-.contacts-list > li > span:first-child { grid-column: 1; grid-row: 1; }
 .contacts-list .contact-actions { grid-column: 2; grid-row: 1; }
 .contacts-list .contact-state { grid-column: 1 / -1; }
 .contacts-list .muted, .gap-fill-open { margin-left: var(--space-2); font-size: var(--font-small); }
@@ -1379,7 +1363,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .card-job-room dt { color: var(--muted); }
 .card-job-room dd { margin: 0; display: flex; align-items: baseline; gap: var(--space-2); justify-content: space-between; }
 /* Un long lien passe à la ligne au lieu d'élargir le panneau (docs/74). */
-.card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
   .suivi-calendar .day { min-height: 3.6rem; padding-inline: var(--space-1); }
   .day-marks .mark { display: none; }
@@ -1390,7 +1373,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .interview-form legend { font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
 .choice-row { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
 .choice-label { min-width: 9rem; }
-.score-chip { min-width: 2.2rem; justify-content: center; }
 .question-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
 .question-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
 .training-text, .interview-summary { margin: 0; font-size: var(--font-small); color: var(--muted); }
@@ -1564,10 +1546,8 @@ button, .button-link { max-width: 100%; }
 .disclosure, .disclosure-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 /* L'action d'un repliable ouvert, à droite de sa ligne de titre (docs/119). */
 .disclosure:has(> .disclosure-actions) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-.disclosure:has(> .disclosure-actions) > .disclosure-panel { grid-column: 1 / -1; }
 .disclosure-actions { align-self: stretch; display: flex; align-items: center; padding-right: var(--space-4); }
 .disclosure-list > .disclosure { border: 0; border-radius: 0; margin: 0; }
-.disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
 .disclosure-row { white-space: normal; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
@@ -1575,28 +1555,20 @@ button, .button-link { max-width: 100%; }
    le pointeur soit sur le titre ou sur le menu. */
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > :is(.disclosure-row, .disclosure-actions) { background: var(--accent-soft); }
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-left-radius: inherit; border-top-right-radius: inherit; }
-.disclosure.open:has(> .disclosure-actions):has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-right-radius: 0; }
-.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-actions { border-top-right-radius: inherit; }
 /* Sur la teinte, le résumé gris tombait à 4,3:1 : il passe à l'accent (6,9:1).
    Règle réunie plus haut avec « .training-title:hover », même style (allègement du 16.11). */
 /* Le focus entoure toute la carte : autour de la seule ligne, l'anneau passait sur le contenu ouvert
    (1.6.4). Dans une liste, il reste à l'intérieur pour ne pas mordre sur la voisine. */
 .disclosure-row:focus-visible { outline: none; }
-/* L'anneau suit les coins de la carte, même là où le repliable n'a pas de cadre (1.6.5). */
-.disclosure:has(> .disclosure-row:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius); }
-.disclosure-list > .disclosure:has(> .disclosure-row:focus-visible) { outline-offset: -2px; }
 /* Le titre en 600, ouvert ou fermé (1.6.20, comme le composant Repliable de Figma). */
 .disclosure-title { flex: 0 1 auto; font-weight: var(--weight-semibold); }
 /* Repliable avec icône et phrase (1.6.61) : la pastille, puis le titre et l'enseignement en gris. */
 .disclosure-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--control-h); height: var(--control-h); border-radius: var(--radius-pill); background: var(--panel); color: var(--text); }
 .disclosure-icon .icon { width: 20px; height: 20px; }
 .disclosure-text { display: grid; gap: var(--space-1); flex: 1 1 auto; min-width: 0; }
-.disclosure-text .disclosure-title { font-size: var(--font-body); }
 .disclosure-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 .disclosure-row:has(.disclosure-text),
 .match-card { gap: var(--space-4); }
-/* Ouvert et survolé, le fond passe à --accent-soft : la phrase passe en --text pour garder 4,5:1 (WCAG 1.4.3, 1.6.63). */
-.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-description { color: var(--text); }
 /* Le résumé n'est jamais coupé (1.6.24) : trop long, il passe à la ligne entre deux mots, aligné à droite ;
    jamais plus étroit que son mot le plus long (largeur minimale automatique). */
 .disclosure-value { flex: 1 1 0; margin-left: auto; color: var(--muted); font-size: var(--font-small); text-align: right; }
@@ -1604,14 +1576,11 @@ button, .button-link { max-width: 100%; }
 .disclosure-value + .disclosure-chevron { margin-left: 0; }
 .disclosure.open .disclosure-chevron { transform: rotate(90deg); color: var(--accent); }
 .disclosure-panel { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 0fr; transition: grid-template-rows 0.2s ease; }
-.disclosure.open .disclosure-panel { grid-template-rows: 1fr; }
 .disclosure-clip { position: relative; overflow: hidden; min-height: 0; }
 /* Ouverte, la ligne ne rogne plus son contenu une fois le glissement fini : les bulles « ? »
    débordent du cadre au lieu d'être coupées. Repliée ou en mouvement, elle reste rognée. */
 .disclosure.open, .disclosure.open .disclosure-clip, .disclosure-list:has(> .disclosure.open) { animation: disclosure-reveal 0s 0.2s forwards; }
 @keyframes disclosure-reveal { to { overflow: visible; } }
-.disclosure-list > .disclosure:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
-.disclosure-list > .disclosure:last-child { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
 /* Le contenu ouvert, sous son titre et au même retrait, sans barre à gauche (docs/118 §2). */
 .disclosure-body { margin: 0 var(--space-6) var(--space-6); padding: var(--space-1) 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
 @media (prefers-reduced-motion: reduce) {
@@ -1784,7 +1753,6 @@ button, .button-link { max-width: 100%; }
    bleu pâle, le site et l'heure, le code en grand, « Copier le code » dessous. */
 .site-code-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); width: 100%; }
 .site-code { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-5) var(--space-6); border-radius: var(--radius); background: var(--accent-soft); }
-.site-code-value { font-size: var(--font-figure); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 .site-mail-card .site-code .pill { background: var(--surface); }
 /* La page Alertes en une colonne (docs/130 §F) : les alertes, les e-mails des sites, puis le
    journal, chacun un titre et sa carte sur toute la largeur ; plus de carte étirée. */
@@ -1821,9 +1789,6 @@ button, .button-link { max-width: 100%; }
 .manual-form input, .manual-form textarea { width: 100%; font: inherit; font-weight: var(--weight-regular); }
 .manual-form .setting-desc, .manual-form .notice, .manual-form > .hint { margin: 0; }
 .manual-form .notice .link { margin-left: var(--space-1); }
-@media (max-width: 820px) {
-  /* Le nombre seul sur sa ligne, puis les boutons à la largeur de leur texte (§3), 44 px de haut. */
-}
 .spontaneous-form,
 .bilan-summary { display: grid; gap: var(--space-3); justify-items: start; }
 .spontaneous-form > .form-field { width: 100%; }
@@ -1840,7 +1805,6 @@ button, .button-link { max-width: 100%; }
 .loading-blocks { display: grid; grid-template-columns: repeat(var(--loading-columns, 1), minmax(0, 1fr)); gap: var(--space-4); }
 .loading-block { display: block; border-radius: var(--radius); background: linear-gradient(90deg, var(--band) 0%, var(--border) 50%, var(--band) 100%); background-size: 200% 100%; animation: loading-shine 1.4s ease-in-out infinite; }
 @keyframes loading-shine { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-@media (prefers-reduced-motion: reduce) { .loading-block { animation: none; } }
 
 /* « Mon domaine » sur place (docs/43 n° 4). */
 .domain-field { display: grid; gap: var(--space-2); margin: 0 0 var(--space-4); padding: var(--space-4) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
@@ -1874,7 +1838,6 @@ button, .button-link { max-width: 100%; }
    Règle réunie plus haut avec « p », même style (allègement du 16.11). */
 .summary-rows { margin: 0 0 var(--space-4); }
 .summary-rows > div { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); gap: var(--space-4); padding: var(--space-2) 0; }
-.summary-rows > div + div { border-top: 1px solid var(--border); }
 .summary-rows dt { color: var(--muted); }
 .summary-rows dd, .assistant-action-label, .certificates-summary { margin: 0; font-weight: var(--weight-semibold); }
 @media (max-width: 820px) {
@@ -1890,7 +1853,6 @@ button, .button-link { max-width: 100%; }
 .training-text.clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .training-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 3.2rem; margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--border); }
 .training-state { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.training-state::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent); }
 .training-foot .link { white-space: nowrap; }
 
 /* Sections titrées des panneaux (docs/44 §2, docs/45 à 49) : une seule classe (docs/50 §2). */
@@ -1920,7 +1882,6 @@ button, .button-link { max-width: 100%; }
 .panel-section-links { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--font-small); }
 .panel-section .full-text { max-height: none; overflow: hidden; padding-right: 0; transition: max-height 0.3s ease; }
 .read-more { justify-self: start; }
-@media (prefers-reduced-motion: reduce) { .panel-section .full-text { transition: none; } }
 
 /* Préparer une candidature (docs/47) : trois onglets numérotés, l'offre à côté, Postuler à part. */
 .step-number { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-right: var(--space-1); border-radius: 50%; border: 1px solid currentColor; font-size: var(--font-caption); font-weight: var(--weight-semibold); }
@@ -1965,7 +1926,6 @@ button, .button-link { max-width: 100%; }
   .hover-note { text-decoration: underline dotted var(--faint); text-underline-offset: 0.25em; cursor: help; }
 }
 /* Dans un bouton (docs/88, 0.70.1 : le prix d'une action IA), le bouton garde son aspect. */
-button .hover-note { text-decoration: none; cursor: inherit; }
 .hover-note-bubble {
   position: absolute; left: 0; top: calc(100% + 0.4rem); z-index: 40; width: max-content; max-width: min(22rem, 80vw);
   padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
@@ -1973,10 +1933,8 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   text-transform: none; letter-spacing: 0; white-space: normal; text-decoration: none; animation: hover-note-in 0.15s ease;
 }
 /* Un pont invisible sur l'écart entre le libellé et la bulle : la souris passe dessus sans la fermer (WCAG 1.4.13). */
-.hover-note-bubble::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 0.5rem; }
 :focus-visible, .hover-note[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 @keyframes hover-note-in { from { opacity: 0; transform: translateY(-2px); } }
-@media (prefers-reduced-motion: reduce) { .hover-note-bubble { animation: none; } }
 
 .dash-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 
@@ -2108,10 +2066,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .ai-writing { display: grid; gap: var(--space-4); padding: var(--space-6) var(--space-5); border: 1px dashed var(--border); border-radius: var(--radius); }
 .ai-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--ai-steps, 4), minmax(0, 1fr)); gap: var(--space-2); }
 .ai-steps li { display: grid; gap: var(--space-2); font-size: var(--font-small); color: var(--muted); }
-.ai-steps li::before { content: ""; height: 4px; border-radius: var(--radius-pill); background: var(--border); transition: background-color var(--t-state); }
 .ai-step-label { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: var(--leading-tight); overflow-wrap: anywhere; hyphens: auto; }
 .ai-step-label .icon { display: inline-block; width: 1em; height: 1em; margin-right: var(--space-1); vertical-align: -0.125em; }
-@media (max-width: 599px) { .ai-steps { gap: var(--space-1); } .ai-steps li { font-size: var(--font-caption); } }
+@media (max-width: 599px) { .ai-steps li { font-size: var(--font-caption); } }
 .ai-steps li.done { color: var(--text); }
 .ai-steps li.done::before,
 .wizard-progress li.done { background: var(--ok); }
@@ -2147,12 +2104,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Pastille d'état (1.6.74, règle §4) : point et mot ; quatre tons ; sans point, une étiquette. */
 .state-pill { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; min-height: 1.5rem; padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--panel); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-tight); white-space: nowrap; }
 .state-pill.tag { padding-left: var(--space-3); }
-.state-pill-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--muted); }
-.state-pill.todo .state-pill-dot { background: var(--orange); }
 .state-pill.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok-text); }
-.state-pill.ok .state-pill-dot { background: var(--ok); }
 .state-pill.error { background: color-mix(in srgb, var(--down) 12%, transparent); color: var(--down-text); }
-.state-pill.error .state-pill-dot { background: var(--down); }
 .illu.spot { width: auto; margin: 0 auto var(--space-4); container-type: normal; }
 .illu.spot img { width: auto; max-width: 100%; height: 200px; max-height: none; }
 @media (max-width: 820px) { .illu.spot img { height: 120px; } }
@@ -2202,7 +2155,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .success-card .success-art { position: absolute; left: 50%; top: 0; width: 220px; margin: 0; transform: translate(-50%, calc(-100% + 14px)); }
 .success-card h3 { margin: 0; font-size: var(--font-title); }
 .success-card p { margin: 0; color: var(--muted); }
-.success-card p strong { color: var(--text); }
 .success-overlay.leaving { animation: overlay-out var(--t-state) ease-in both; }
 .success-overlay.leaving .success-card { animation: card-drop var(--t-state) ease-in both; }
 @keyframes card-pop { from { opacity: 0; transform: translateY(48px) scale(0.92); } }
@@ -2210,8 +2162,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 @keyframes overlay-out { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .success-overlay, .success-card, .success-overlay.leaving, .success-overlay.leaving .success-card { animation: none; } }
 @media (max-width: 820px) {
-  .success-overlay { place-items: end center; }
-  .success-card { margin: 9rem 0 var(--space-4); padding-top: var(--space-6); }
   .success-card .success-art { width: 170px; }
 }
 /* Transition d'une page qui charge (docs/61 §2) : voile gris, illustration au centre. */
@@ -2222,8 +2172,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 @keyframes veil-rise { from { opacity: 0; transform: translateY(10px) scale(0.96); } }
 .page-veil-enter-from, .page-veil-leave-to { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .page-veil-enter-active, .page-veil-leave-active { transition: none; } .page-veil-enter-active .face-mark, .page-veil-enter-active .face-transform { animation: none; } }
-/* Un bloc qui n'a pas besoin de toute la largeur (docs/62 §1) : une largeur de lecture. */
-.reading-width { max-width: 40rem; }
 
 /* Des blocs à leur taille (docs/63 §2). */
 @media (min-width: 821px) {
@@ -2272,12 +2220,7 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 /* Liens d'accès et demande de compte (docs/65 ; docs/102) : l'écran coupé en deux, l'illustration de la connexion
    (AuthIllustration, maquette Connexion, ordinateur) à gauche sur la carte, le formulaire à droite ; sur téléphone,
    le bandeau de 150 px au-dessus du formulaire. La page de connexion a sa propre mise en page (LoginView). */
-.auth-split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); min-height: calc(100dvh - 4.4rem); }
-.auth-art { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--space-6) + var(--space-1)); padding: 0 var(--space-6); background: var(--surface); border-right: 1px solid var(--line); }
 .auth-art .auth-illustration-phone { display: none; }
-.auth-pitch { margin: 0; --pitch-24: 1.5rem; --pitch-lh: 1.25; max-width: 520px; text-align: center; font-size: var(--pitch-24); line-height: var(--pitch-lh); font-weight: var(--weight-bold); }
-.auth-panel { display: grid; place-items: center; padding: var(--space-12) var(--space-6); background: var(--bg); }
-.auth-box { display: grid; gap: var(--space-4); width: min(100%, 24rem); }
 .auth-box h1 { margin: 0; font-size: var(--font-figure); }
 .auth-box > .hint { margin: calc(var(--space-2) * -1) 0 0; }
 .auth-box .login-form { padding: 0; }
@@ -2288,13 +2231,8 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
    (pas display: none, que certains robots repèrent), sans place dans la mise en page. */
 .login-form label.check { display: flex; font-size: var(--font-small); line-height: var(--leading-normal); }
 .login-form label.check input { padding: 0; }
-.signup-trap { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 @media (max-width: 820px) {
-  .auth-split { grid-template-columns: minmax(0, 1fr); min-height: 0; }
-  .auth-art { gap: 0; padding: 0; background: var(--bg); border-right: 0; }
   .auth-art .auth-illustration-large, .auth-art .auth-pitch { display: none; }
-  .auth-art .auth-illustration-phone { display: block; }
-  .auth-panel { padding: var(--space-6) var(--space-4) var(--space-8); place-items: start center; }
 }
 
 /* La plateforme (docs/67, compléments) : un parcours façon Duolingo. Un chemin pointillé relie
@@ -2302,7 +2240,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
    en arrière-plan, le personnage devant, et sa bulle. Les scènes alternent de côté. */
 .discover { width: min(100%, 62rem); margin: 0 auto; padding: var(--space-4) 0 var(--space-12); overflow-x: clip; }
 .discover-hero { display: grid; justify-items: center; gap: var(--space-4); text-align: center; padding: var(--space-4) 0 var(--space-8); }
-.discover-hero .discover-hero-art { width: 440px; }
 .discover-hero h1 { margin: 0; font-size: var(--font-page); }
 .discover-lead { margin: 0; max-width: 36rem; font-size: var(--font-title); color: var(--muted); }
 .discover-hero .hint { margin: 0; }
@@ -2315,22 +2252,17 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .discover-scenes { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-12); }
 .discover-scene { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: var(--space-8); opacity: 0; transform: translateY(24px); transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out); }
 .discover-scene.shown { opacity: 1; transform: none; }
-.discover-scene.flip .discover-stage { order: 2; }
 /* La scène : la plateforme en arrière, inclinée et estompée ; le personnage devant, en bas. */
 .discover-stage { position: relative; min-height: 400px; }
 .discover-stage .dmock { position: absolute; top: 0; left: 0; width: 72%; transform: rotate(-2deg); opacity: 0.92; }
-.discover-scene.flip .discover-stage .dmock { left: auto; right: 0; transform: rotate(2deg); }
-.discover-stage .discover-character { position: absolute; bottom: 0; right: 0; width: 250px; margin: 0; }
 .more-menu .menu.align-left, .discover-scene.flip .discover-stage .discover-character { right: auto; left: 0; }
 .discover-say { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-5); }
 .discover-node { position: relative; z-index: 1; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; border-radius: var(--radius-pill); font-size: var(--font-section); font-weight: var(--weight-bold); color: var(--muted); background: var(--surface); border: 3px solid var(--border); border-bottom-width: 6px; transition: background var(--t-state), color var(--t-state), border-color var(--t-state), transform var(--t-state) var(--ease-out); }
 .discover-node.reached { color: var(--on-accent); background: var(--primary); border-color: color-mix(in srgb, var(--accent) 70%, #000); transform: scale(1.06); }
 .discover-bubble { position: relative; padding: var(--space-4) var(--space-5); background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); }
-.discover-bubble::before { content: ""; position: absolute; top: 50%; left: -0.6rem; width: 1rem; height: 1rem; background: var(--surface); border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); transform: translateY(-50%) rotate(45deg); }
 .discover-bubble h3 { margin: 0 0 var(--space-1); font-size: var(--font-title); }
 .discover-bubble p { margin: 0; color: var(--muted); line-height: var(--leading-normal); }
 .discover-end { grid-template-columns: minmax(0, 1fr); justify-items: center; }
-.discover-end .discover-say { width: min(100%, 40rem); }
 .discover-node.goal { font-size: var(--font-figure); }
 .discover-data { padding: var(--space-6); border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); display: grid; gap: var(--space-2); justify-items: start; }
 .discover-data h2 { margin: 0; }
@@ -2346,7 +2278,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .dmock-grow { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
 .dmock-grow small { color: var(--muted); }
 .dmock-toggle { width: 1.9rem; height: 1.05rem; border-radius: var(--radius-pill); background: var(--accent); position: relative; }
-.dmock-toggle::after { content: ""; position: absolute; right: 0.15rem; top: 0.15rem; width: 0.75rem; height: 0.75rem; border-radius: var(--radius-pill); background: #fff; }
 .dmock-button { justify-self: start; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); background: var(--primary); color: var(--on-accent); font-weight: var(--weight-semibold); font-size: 0.78rem; }
 .dmock-letter { margin: 0 0 0.2rem; font-weight: var(--weight-semibold); }
 .dmock-line { display: block; height: 0.5rem; border-radius: var(--radius-pill); background: var(--band); flex: 1; }
@@ -2358,29 +2289,16 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .dmock-calendar span.today { border: 2px solid var(--accent); }
 .dmock-dot { width: 0.6rem; height: 0.6rem; border-radius: var(--radius-pill); background: var(--orange-text); }
 .dmock-check { display: grid; place-items: center; width: 1.3rem; height: 1.3rem; border-radius: var(--radius-pill); background: var(--ok); color: #fff; font-size: var(--font-caption); font-weight: var(--weight-bold); }
-.dmock-thumb { width: 3rem; height: 2.2rem; border-radius: var(--radius-sm); background: var(--accent-soft); flex: none; }
 .dmock-kicker { color: var(--accent) !important; font-weight: var(--weight-semibold); text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.04em; }
 @media (max-width: 820px) {
-  .discover-hero .discover-hero-art { width: min(320px, 90%); }
   .discover-hero h1 { font-size: var(--font-figure); }
   .discover-scenes { gap: var(--space-12); }
-  .discover-stage .dmock { width: 92%; }
   .discover-stage { min-height: 330px; }
-  .discover-stage .discover-character { width: 190px; }
   /* Sur téléphone, le chemin descend dans une colonne à gauche, de pastille en pastille ; la scène
      et sa bulle (qui pointe vers le personnage, au-dessus) à droite. */
   .discover-scene, .discover-scene.flip { grid-template-columns: 2.6rem minmax(0, 1fr); column-gap: var(--space-3); row-gap: var(--space-4); }
   .discover-say { display: contents; }
   .discover-node { grid-column: 1; grid-row: 1; align-self: start; width: 2.6rem; height: 2.6rem; font-size: var(--font-body); border-bottom-width: 5px; }
-  .discover-stage, .discover-scene.flip .discover-stage { grid-column: 2; grid-row: 1; }
-  .discover-bubble, .discover-data { grid-column: 2; grid-row: 2; }
-  .discover-end { justify-items: stretch; }
-  .discover-end .discover-data { grid-row: 1; }
-  .discover-bubble::before { top: -0.6rem; left: 50%; border-left: 2px solid var(--border); border-bottom: 0; border-top: 2px solid var(--border); transform: translateX(-50%) rotate(45deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .discover-scene { opacity: 1; transform: none; transition: none; }
-  .discover-path-done, .discover-node { transition: none; }
 }
 
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio.
@@ -2408,8 +2326,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .practice-level.solide { color: var(--ok-text); background: color-mix(in srgb, var(--ok-text) 8%, transparent); }
 .practice-level.a_preciser { color: var(--orange-text); background: color-mix(in srgb, var(--orange-text) 8%, transparent); }
 .practice-level.a_retravailler { color: var(--down-text); background: color-mix(in srgb, var(--down-text) 8%, transparent); }
-.practice-question details summary { cursor: pointer; color: var(--accent); font-size: var(--font-small); }
-.practice-question details p { margin-top: var(--space-2); white-space: pre-wrap; }
 @media (max-width: 820px) {
   .practice-summary { grid-template-columns: 1fr; }
 }
@@ -2424,7 +2340,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 :is(.form-card, .disclosure, .disclosure-list) .runs { border: 0; border-radius: 0; background: none; overflow: visible; }
 /* Un tableau tient dans sa carte (§3) : le texte d'une cellule passe à la ligne plutôt que de déborder. */
 :is(.form-card, .disclosure, .disclosure-list) .runs :is(th, td) { overflow-wrap: anywhere; }
-:is(.form-card, .disclosure, .disclosure-list) .runs .status-select { max-width: 100%; }
 :is(.form-card, .disclosure, .disclosure-list) .runs :is(th, td):first-child { padding-left: 0; }
 :is(.form-card, .disclosure, .disclosure-list) .runs :is(th, td):last-child { padding-right: 0; }
 :is(.form-card, .disclosure, .disclosure-list) .runs tbody tr:last-child > td { border-bottom: 0; }
@@ -2436,9 +2351,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .form-card .disclosure { background: none; border: 0; border-radius: 0; }
 .form-card .disclosure > .disclosure-row { padding-left: 0; padding-right: 0; }
 .form-card .disclosure > .disclosure-panel .disclosure-body { margin-left: var(--space-1); margin-right: 0; }
-@media (max-width: 820px) {
-  /* Sur téléphone, les lignes des preuves ne sont plus des cartes dans le volet. */
-}
 /* Une seule action ordinaire, sans menu (docs/76 §3) : alignée comme le « ⋯ ». */
 .more-direct { white-space: nowrap; font-size: var(--font-small); }
 .panel-section-head .more-direct, .doc-actions .more-direct { margin-left: auto; }
@@ -2472,7 +2384,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .orp-conclusion-actions { display: flex; align-items: center; gap: var(--space-3); flex: none; min-height: var(--control-h); }
 /* Le mois : une ligne repliable par partie (1.6.23).
    Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
-.orp-month-rows > .disclosure + .disclosure { margin-top: 0; }
 .orp-month-rows .disclosure-body ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
 .orp-month-rows .disclosure-body ul.orp-month-lines { padding-left: 0; list-style: none; }
 .orp-month-rows .disclosure-body p { margin: 0; }
@@ -2536,7 +2447,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .certificate-passages li.bad mark { background: color-mix(in srgb, var(--orange) 30%, transparent); }
 .certificate-passages span { color: var(--muted); font-size: var(--font-small); }
 .certificate-notes li { padding-left: var(--space-4); position: relative; font-size: var(--font-small); }
-.certificate-notes li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--muted); }
 .certificate-notes li.bad::before { background: var(--orange); }
 .certificate .form-actions { align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-top: var(--space-1); }
 @media (prefers-color-scheme: dark) {
@@ -2708,7 +2618,6 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 
 /* docs/101 — Préparation, documents, rendez-vous ORP et entretiens */
 .certificate [aria-expanded="true"] .icon-chevron-down { transform: rotate(180deg); }
-.preparation-sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 .preparation-sheet-head h3 { margin: 0; }
 .success-card .success-close { position: absolute; top: 0.75rem; right: 0.75rem; margin: 0; }
 
@@ -2759,14 +2668,11 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .match-lines .gap .icon { color: var(--score-dig); }
 /* Note provisoire (maquette OffreProvisoire) : pastille, arc pâli, bande pêche pleine largeur, confirmation. */
 .provisional-pill { padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--peach-soft); color: var(--peach-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
-.score-ring-wrap.provisional .score-ring-arc { opacity: 0.45; }
 /* Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13 ; OffreProvisoire). « jobA1 lit l'annonce
    complète… » en 15/20 gris, l'indicateur de 18 px (anneau --line, arc --primary) qui tourne, sauf si le mouvement est
    réduit ; 8 px entre les deux (10 dans la maquette, sur la grille de 4). */
 .offer-reading { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: calc(var(--font-small) + 1px); --reading-20: 20px; line-height: var(--reading-20); color: var(--text-secondary); }
 .offer-reading-spinner { flex: none; animation: offer-reading-turn 900ms linear infinite; }
-.offer-reading-track { stroke: var(--line); }
-.offer-reading-arc { stroke: var(--primary); }
 @keyframes offer-reading-turn { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .offer-reading-spinner { animation: none; } }
 /* Refus (prompt du 10 novembre au soir, PR 25 ; OffreProvisoire, CandidaturesOrdinateurB) : une ligne, « Annonce
@@ -2825,7 +2731,6 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .detail-post .offer-facts .fact-mark { padding-top: var(--space-1); }
 /* Le bloc « L’entreprise » de la fiche d'une offre (récapitulatif du 11 novembre, PR 33 point 4) : des champs à
    libellé au-dessus (blocks.css), sans bandeau. */
-.offer-company { --block-cap: 13px; --block-cap-lh: 18px; --field-pad: 16px; --field-label-lh: 18px; --field-value-lh: 22px; }
 .offer-company-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--target-min); border-bottom: 1px solid var(--line-soft); }
 .offer-company-head + .block-field { border-top: 0; }
 .offer-company-cap { margin: 0; font-size: var(--block-cap); line-height: var(--block-cap-lh); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
@@ -2835,8 +2740,6 @@ button.link.offer-company-add { flex: none; min-height: var(--target-min); font-
 @media (max-width: 820px) {
   .detail-actions { display: grid; justify-items: start; }
 }
-/* L'action d'une ligne ouverte (« Voir sur jobs.ch ») à la marge du texte, pas collée au bord. */
-.detail-panel .detail-disclosure .disclosure-actions { padding-right: var(--space-6); }
 /* « À savoir » : les pastilles taux, télétravail, contrat, puis les faits avec leur icône. */
 .offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: var(--space-1); }
 .offer-facts .fact-mark > .icon { width: 1rem; height: 1rem; }
@@ -2853,10 +2756,6 @@ button.link.offer-company-add { flex: none; min-height: var(--target-min); font-
 /* docs/101 — Navigation et coque */
 /* Les lignes du menu du compte : l'icône à 20 px, comme dans un menu (docs/101, les trois tailles). */
 /* Téléphone : les cinq onglets de Candidatures tiennent sur la ligne, l'icône au-dessus du nom. */
-@media (max-width: 820px) {
-  /* Sur téléphone, les onglets se partagent la largeur, comme dans Figma (1.6.25 : deux onglets au Bilan). */
-  /* La pastille sur le coin haut droit de l'icône, comme dans la barre du bas (0.84.2). */
-}
 /* La pastille de nombre, une seule partout (CountBadge, 1.6.33 ; NN/g, heuristique 4) : pleine, bordée de
    la couleur du fond (--surface : blanc en clair, fond sombre en sombre) pour se détacher de l'icône qu'elle
    chevauche. Bleu pour les onglets ; orange pour la cloche (ce qui demande d'agir), chiffre blanc sur l'orange
@@ -2932,14 +2831,12 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Champs chiffrés à la largeur de leur nombre ; le texte à côté d'un champ ne se coupe pas (repris de la 1.6.66). */
 .setting-row-control .setting-number,
 .plan-usage-gauge { width: 4.5rem; }
-.setting-row-control > span:not([role="status"]) { white-space: nowrap; }
 /* `wide` (1.6.68) : un contrôle large (jeton, adresse à copier, zone de texte) passe sous le texte, sur toute
    la largeur, à toutes les tailles d'écran. */
 .setting-row.wide { flex-direction: column; align-items: stretch; }
 .setting-row.wide .setting-row-text { flex: none; }
 .setting-row.wide .setting-row-control { flex-wrap: wrap; }
 .setting-row.wide .setting-row-control > :not([role="status"]) { flex: 1 1 auto; min-width: 0; }
-.setting-row.wide .setting-row-error { text-align: left; }
 /* `inline` (1.6.71) : le texte ne réserve pas 16 rem ; l'état court reste à droite sur téléphone, un long passe dessous. */
 .setting-row.inline .setting-row-text { flex-basis: 0; min-width: 8rem; }
 .setting-row-text { display: grid; gap: var(--space-1); flex: 1 1 16rem; min-width: 0; }
@@ -2959,14 +2856,12 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .setting-row-control { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 .setting-row-status, .saved-status { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ok-text); font-size: var(--font-small); }
 .setting-row-status:empty, .saved-status:empty { position: absolute; } /* vide, il reste dans la page (message d'état prêt à parler) sans prendre de place */
-.setting-row-error { flex-basis: 100%; margin: 0; text-align: right; }
 @media (max-width: 820px) {
   .setting-row { padding: var(--space-4); }
   .setting-row.stack { flex-direction: column; align-items: stretch; }
   .setting-card > :is(.setting-row-form, .setting-row-message, .inline-confirm) { padding: var(--space-4); }
   .setting-row.stack .setting-row-text { flex: none; } /* en colonne, la base de 16 rem deviendrait une hauteur */
   .setting-row.stack .setting-row-control { flex-wrap: wrap; }
-  .setting-row.stack .setting-row-error { text-align: left; }
 }
 /* Le seuil des notifications : cinq pastilles (docs/106, décision 2). */
 /* Une partie d'une seule action : son nom à gauche, l'action à droite. */
@@ -2983,7 +2878,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .toast-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--toast-bar); transform-origin: left; animation: toast-count 6s linear forwards; }
 :is(:hover, :focus-within) > .toast-bar { animation: none; }
 @keyframes toast-count { to { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { }
 :is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
@@ -3047,12 +2941,10 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .rhythm-pause { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
 /* Une pause : le libellé au-dessus, le champ date commun (planche « Champs »), assez large pour l'année et l'icône. */
 .rhythm-pause > label { display: grid; gap: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); }
-.rhythm-pause > label input { width: min(100%, calc(var(--field-10) + var(--control-h))); }
 .rhythm-pause > .link { grid-column: 1 / -1; justify-self: start; }
 /* Les marqueurs (téléphone) : une rangée de pastilles collée sous la barre du haut. */
 @media (max-width: 820px) {
   .settings-card { padding: 0 var(--space-6); border-radius: var(--radius); }
-  .rhythm-pause { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .day-pill { transition: none; } }
 /* Les actions d'une section : des pilules bordées ; pleine largeur sur téléphone (docs/110). */
@@ -3088,7 +2980,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
   .kind-tabs > * { flex: none; }
   /* Les liens des certificats et l'aide « i » : 44 px de cible, sans marge négative (audit-grille). */
   .profile-page :is(a.link, button.link) { display: inline-flex; align-items: center; min-height: var(--target-min); }
-  .profile-page .hover-note-info { margin: 0; }
 }
 /* Les titres et les réglages, comme dans les Réglages. */
 .profile-page .form-card legend { font-weight: var(--weight-semibold); font-size: var(--font-body); }
@@ -3120,7 +3011,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Les Réglages sur le fond gris de la bande depuis la 1.6.65 : une carte blanche par réglage (planche « 5. Réglages »). */
 
 /* L'adresse des alertes (docs/104) : l'adresse, puis « Copier l'adresse » à côté. */
-.mailbox-address { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
 .mailbox-address > .link { font-size: var(--font-small); }
 /* La plateforme présentée (retour du 2026-10-20, 0.79.1) : une marge sur les côtés, pour que les
    pastilles du chemin et les bulles ne touchent plus les bords. */
@@ -3128,11 +3018,8 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 @media (max-width: 820px) { .discover { padding-left: var(--space-4); padding-right: var(--space-4); } }
 @media (max-width: 820px) {
   /* Les scènes où le personnage cachait du texte ou une icône : il passe sous la maquette (0.79.2). */
-  .discover-stage.below { display: grid; min-height: 0; }
   .discover-stage.below .dmock, .discover-scene.flip .discover-stage.below .dmock,
 .bell { position: static; }
-  .discover-stage.below .discover-character { position: static; justify-self: end; margin-top: calc(var(--space-2) * -1); }
-  .discover-scene.flip .discover-stage.below .discover-character { justify-self: start; }
 }
 
 /* « Cette note ne me correspond pas » (docs/114) : sous la note, deux questions en pilules,
@@ -3169,7 +3056,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .score-why { display: grid; gap: var(--space-1); margin: var(--space-3) 0 0; line-height: var(--leading-normal); }
 .score-why p { margin: 0; }
 .score-why .level-line { color: var(--muted); font-size: var(--font-small); }
-.gap-fill { display: grid; gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); line-height: var(--leading-normal); }
 .gap-fill label { display: grid; gap: var(--space-1); font-weight: var(--weight-semibold); font-size: var(--font-small); }
 .gap-fill input { font: inherit; font-weight: var(--weight-regular); width: 100%; }
 .gap-fill .notice { margin: 0; }
@@ -3184,7 +3070,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Le lien prend la place qui reste et se cale à droite (plutôt qu'une marge automatique, hors grille de 4) ; 44 px
    de cible au toucher. */
 .profile-gauge-next { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: flex-end; min-height: var(--target-min); font-weight: var(--weight-semibold); }
-@media (max-width: 820px) { .profile-gauge-next { justify-content: flex-start; } }
 
 /* Le visage du 1 (docs/123) : la tuile de 56 px, le grand visage de 120 px, les trois gestes. */
 .face-tile { display: inline-grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; border-radius: var(--radius); color: var(--text); transition: background-color 150ms ease; }
@@ -3208,7 +3093,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 @keyframes face-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) {
   .face-mark.wink .face-eye, .face-mark.waiting .face-eye, .face-mark.waiting .face-spark { animation: none; }
-  .face-mouth-enter-active, .face-mouth-leave-active, .face-tile { transition: none; }
 }
 /* Le mois ORP (docs/123 §2, Q). */
 .orp-month-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
@@ -3234,13 +3118,8 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Une victoire (docs/123 §2, R) : le visage ravi au-dessus de la carte, six bulles qui
    s'écartent une fois, aux couleurs de l'humeur. */
 .success-card .success-face { display: grid; place-items: center; width: 160px; height: 150px; color: var(--logo-line); }
-.victory-bubble { position: absolute; left: 50%; top: 50%; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--mint); opacity: 0; animation: victory-bubble 900ms 200ms ease-out both; }
 .victory-bubble.b2, .victory-bubble.b5 { background: #a8e6d2; width: 0.5rem; height: 0.5rem; }
-.victory-bubble.b3 { background: var(--ok); }
-.victory-bubble.b1 { --x: -80px; --y: -40px; } .victory-bubble.b2 { --x: -60px; --y: 30px; } .victory-bubble.b3 { --x: -20px; --y: -70px; }
-.victory-bubble.b4 { --x: 75px; --y: -45px; } .victory-bubble.b5 { --x: 60px; --y: 35px; } .victory-bubble.b6 { --x: 25px; --y: -72px; }
 @keyframes victory-bubble { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1); } }
-@media (prefers-reduced-motion: reduce) { }
 @media (max-width: 820px) { .success-card .success-face { width: 130px; height: 130px; } }
 /* S, rien d'urgent (docs/123 §2). */
 /* Le personnage se transforme (docs/123, complément 0.96.0 ; d'après la maquette « X ») : pendant
@@ -3304,7 +3183,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .pick-head { display: flex; align-items: flex-start; gap: var(--space-4); }
 .pick-title, .account-card-text { display: grid; gap: var(--space-1); flex: 1; min-width: 0; }
 .pick-title a { color: var(--text); text-decoration: none; }
-.pick-title a:hover strong { text-decoration: underline; }
 /* ④ Suivre (docs/124 §G) : trois lignes séparées par un filet, une action au plus chacune. */
 /* La formule (docs/125 §4) : une ligne par usage, le compte et une jauge courte, séparées par un
    filet ; ce que Plus ajoute sur fond gris (ce qu'on consulte, docs/110). */
@@ -3313,7 +3191,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .offer-company-contacts, .plan-plus { margin-top: var(--space-4); }
 .plan-limit { margin: var(--space-2) 0 var(--space-3); line-height: var(--leading-normal); }
 .plan-terms { display: flex; align-items: center; gap: var(--space-2); line-height: var(--leading-normal); }
-.plan-payments li { grid-template-columns: 1fr auto; }
 .plan-message { margin: var(--space-3) 0 0; }
 
 /* « Aller au contenu » (WCAG 2.4.1) : hors de l'écran, il apparaît en haut à gauche au focus. */
@@ -3480,23 +3357,6 @@ main:focus { outline: none; }
 /* --- La bande d'action (§3, 1.6.48 ; composant ActionBand, 1.6.49) ---
    Pleine largeur sous la conclusion, fond --accent-band ; la carte posée dessus garde les bords de la page.
    Sur ordinateur, le texte à gauche et l'action à droite ; sur téléphone, l'un sous l'autre. */
-.action-band {
-  margin-inline: calc(50% - 50vw); padding: var(--space-8) max(var(--space-4), calc(50vw - 50%));
-  background: var(--accent-band);
-}
-.action-band-card {
-  display: flex; align-items: center; gap: var(--space-8);
-  padding: var(--space-8); border-radius: var(--radius); background: var(--surface); box-shadow: var(--lift);
-}
-.action-band-body { display: grid; gap: var(--space-3); flex: 1; min-width: 0; }
-.action-band-title { margin: 0; font-size: var(--font-page); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--text); }
-.action-band-summary { margin: 0; color: var(--muted); max-width: var(--measure); }
-.action-band-action { flex: none; }
-@media (max-width: 820px) {
-  .action-band { padding-block: var(--space-5); }
-  .action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); }
-  .action-band-title { font-size: var(--font-figure); }
-}
 
 /* Ma candidature (maquette Preparer, docs/139 étape 7a). La tête : le retour à l'offre, « Ma candidature »,
    l'offre en une ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre), puis les étapes en
@@ -3529,8 +3389,6 @@ main:focus { outline: none; }
 .doc-language > button::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
 .doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--action); color: var(--on-action); box-shadow: none; }
 /* Lot 18 (§10.6, PreparerSombre) : en sombre, le numéro de l'étape en cours est plein, en --action. */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); } }
-:root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: var(--paper-shadow); }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
 .doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
@@ -3548,11 +3406,9 @@ main:focus { outline: none; }
 .apply-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .apply-files > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .apply-files .icon { color: var(--primary-graphic); }
-.form-sheet dl { margin: 0; }
 .form-sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 var(--space-3); min-height: 3.25rem; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4); border-top: 1px solid var(--line-soft); }
 .form-sheet dt { font-size: var(--font-small); color: var(--text-secondary); }
 .form-sheet dd { grid-row: 2; margin: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-.form-sheet-row > button { grid-row: 1 / 3; grid-column: 2; }
 .form-sheet > .hint { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); }
 .copy-text { min-width: 4.75rem; min-height: 2.75rem; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-weight: var(--weight-bold); }
 .prep-bar > :is(.apply-reopen, .apply-already) { align-self: center; min-height: 2.75rem; display: inline-flex; align-items: center; }
@@ -3572,7 +3428,6 @@ main:focus { outline: none; }
 .goal-reached-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-6) var(--space-2) 0; }
 .goal-reached-todo { margin: var(--space-8) 0 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
 .goal-reached-todo > span { position: relative; display: inline-block; white-space: nowrap; }
-.goal-reached-todo s { text-decoration: none; }
 .goal-reached-todo svg { position: absolute; left: -0.3em; top: 50%; width: calc(100% + 0.6em); height: 1.05em; margin-top: -0.48em; overflow: visible; opacity: 0.92; }
 .goal-reached-todo path { fill: none; stroke: var(--scribble); stroke-width: 8px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; animation: goal-strike 1s 0.7s cubic-bezier(.45, 0, .55, 1) both; }
 .goal-reached-title { margin: var(--space-1) 0 0; font-family: "Caveat Brush", "Figtree Variable", system-ui, sans-serif; font-size: var(--title-hand); font-weight: var(--weight-regular); line-height: var(--leading-none); color: var(--primary-graphic); transform: rotate(-3deg); animation: goal-write 1s 1.6s steps(22, end) both; }
@@ -3592,7 +3447,6 @@ main:focus { outline: none; }
 @media (max-width: 820px) {
   :root:has(:is(.prep-head, .sent-screen, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab, .jobs-head:not(.prep-head)) { display: none; }
   .goal-reached { min-height: 100dvh; padding-top: calc(var(--space-8) + env(safe-area-inset-top)); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom)); }
-  .goal-reached-close { top: calc(var(--space-3) + env(safe-area-inset-top)); }
   .prep-head { grid-template-columns: auto minmax(0, 1fr) auto; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }
   .prep-head h1 { grid-column: 2; font-size: var(--font-section); }
   .prep-head > .prep-back { grid-column: 1; grid-row: 1; width: 3rem; height: 3rem; justify-content: center; margin: 0 0 0 calc(-1 * var(--space-3)); color: var(--text); }
@@ -3602,7 +3456,6 @@ main:focus { outline: none; }
   .prep-offer { width: auto; gap: var(--space-3); margin: var(--space-2) 0 var(--space-3); }
   .step-tabs,
 .orp-proof-actions { width: 100%; }
-  .step-tabs > a { flex: 1 1 0; padding-inline: var(--space-2); }
   .action-bar.prep-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; display: flex; flex-direction: column; gap: var(--space-2);
     padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
@@ -3628,11 +3481,8 @@ main:focus { outline: none; }
 /* « Pas vrai » : le bouton sous le paragraphe (ordinateur), la phrase citée en gris (feuille et
    panneau, deux lignes au plus), puis le paragraphe corrigé brièvement surligné. */
 .false-claim-button { margin-top: var(--space-1); }
-.false-claim-quote { margin: 0 0 var(--space-4); color: var(--muted); line-height: var(--leading-normal); }
 .false-claim-chosen { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.letter-paragraph textarea.claim-flash { animation: claim-flash 1.2s var(--ease-out) both; }
 @keyframes claim-flash { from { background: var(--accent-soft); } to { background: transparent; } }
-@media (prefers-reduced-motion: reduce) { .letter-paragraph textarea.claim-flash { animation: none; } }
 .sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; min-height: var(--control-h); font-size: var(--font-body); }
 /* La fiche sur téléphone, une sous-page (maquette Offre, docs/139 étape 6a) : elle couvre l'écran, en-tête de
    l'app et barre du bas compris. La liste reste dessous, avec son défilement et ses filtres. En haut, le
@@ -3650,7 +3500,6 @@ main:focus { outline: none; }
   .offer-subhead .icon-button { width: 3rem; height: 3rem; border: 0; background: transparent; color: var(--text); }
   .offer-subhead .icon-button > .icon { width: 1.5rem; height: 1.5rem; }
   .offer-save[aria-pressed="true"] { color: var(--primary-text); }
-  .offer-save[aria-pressed="true"] svg { fill: currentColor; }
   .offer-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; display: flex; gap: var(--space-3);
     padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
@@ -3680,10 +3529,7 @@ main:focus { outline: none; }
 .triage-pile .pick-done .face-state-actions { justify-content: flex-start; }
 /* Les relances une à une : la même colonne que le tri ; l'envoi et le dernier échange sous le titre. */
 .follow-up-lines { display: grid; gap: var(--space-1); line-height: var(--leading-normal); }
-.follow-up-lines p { margin: 0; }
-.pick-card > .state-pill { justify-self: start; }
 /* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
-@media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
 
 /* --- L'ancienne bande d'Aujourd'hui (maquette du 8 novembre), gardée pour le Bilan (.today-band) et le Suivi ORP
    (.today-orp-card, .orp-month-band) : bande --primary-soft, la carte du mois à cheval sur son bord bas. */
@@ -3714,7 +3560,6 @@ main:focus { outline: none; }
 /* Menus « Mois précédents » et « Autres exports » (planches BilanOrdinateurMoisPrecedents et BilanOrdinateurExports du
    16 novembre) : ouverts vers le haut, 300 px, rayon 16, ombre --shadow-menu, ja-pop (défini seulement si l'appareil
    accepte les animations) ; lignes de 44 px, icône 20 px, « À remettre » en pêche à droite ; chevron du bouton retourné. */
-.bilan-orp-more { --bom-6: 6px; --bom-10: 10px; --bom-13: 0.8125rem; --bom-16: 16px; --bom-20: 20px; --bom-500: 500; }
 .bilan-orp-more .more-menu .menu { top: auto; bottom: calc(var(--target-min) + var(--bom-10)); right: auto; left: 0; width: 300px; padding: var(--bom-6) 0; border-color: var(--line); border-radius: var(--bom-16); box-shadow: var(--shadow-menu); transform-origin: bottom left; animation: ja-pop 150ms ease-out; }
 .bilan-orp-more .more-menu .menu :is(button, a) { min-height: var(--target-min); padding: 0 var(--space-4); gap: var(--space-3); font-size: var(--font-label); font-weight: var(--bom-500); }
 .bilan-orp-more .menu .icon { width: var(--bom-20); height: var(--bom-20); }
@@ -3749,7 +3594,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
   .orp-page-head + .orp-proof { margin-bottom: var(--space-3); }
   .orp-proof-actions button { flex: 1; justify-content: center; }
 }
-@media screen { }
 .bilan-band.flat { padding-bottom: var(--space-6); background: var(--bg); }
 .bilan-page .today-orp-card { margin-top: 0; }
 .bilan-orp-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: calc(-1 * var(--space-2)); }
@@ -3760,7 +3604,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 /* Maquette du 9 novembre (BilanOrdinateur ; §2.5, §10.3) : la carte du mois sans ombre, trait de 1,5 px ; « À déclarer
    à l'ORP », les recherches et les rendez-vous en cartes séparées (72 px, trait de 1,5 px, rayon 18), le statut en mot
    coloré, puis le cercle à flèche gris de 36 px. */
-.bilan-page { --bilan-17: 17px; --bilan-gap-28: 28px; --bilan-pad: 18.5px; --bilan-pad-y: 14.5px; --bilan-card-h: 72px; --bilan-bar: 10px; --bilan-lh-21: 21px; }
 .bilan-page .bilan-orp-card { gap: var(--bilan-gap-28); padding: var(--bilan-pad); border: 1.5px solid var(--card-line); box-shadow: none; }
 .bilan-orp-card .orp-month-band { gap: calc(var(--space-2) + var(--space-1) / 2); }
 .bilan-orp-card .orp-month-band-head { font-size: var(--bilan-17); }
@@ -3782,7 +3625,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .bilan-card-state { flex: none; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text); }
 .bilan-card-state.todo { color: var(--peach-text); }
 .bilan-card-more { display: inline-flex; align-items: center; gap: var(--space-2); align-self: flex-start; min-height: 48px; padding: 0 var(--space-1); border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; cursor: pointer; }
-.bilan-card-more svg { width: 16px; height: 16px; }
 /* Lot 18 (§10.5, D29, §2.3) : sur ordinateur, les listes à traits sans bordure ; le statut à droite en texte coloré,
    suivi du cercle D29 de 36 px au lieu du chevron gris. */
 .bilan-page .orp-rows, .bilan-page .orp-none { border: 0; }
@@ -3819,16 +3661,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 }
 .offers-toolbar-button .count-badge { position: static; }
 .offers-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
-.offers-chip {
-  display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-h); box-sizing: border-box;
-  padding: 0 var(--space-2) 0 var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-pill);
-  background: var(--accent-soft); color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold);
-}
-.offers-chip-remove {
-  display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; padding: 0; border: 0;
-  border-radius: 50%; background: none; color: inherit; cursor: pointer;
-}
-.offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .offers-chip-remove .icon { width: 1rem; height: 1rem; }
 @media (max-width: 820px) {
   .offers-toolbar { justify-content: space-between; }
@@ -3839,12 +3671,8 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
    sans rail), puis quatre repliables chiffrés : chaque ligne dit l'essentiel, le dépli montre le dessin. */
 /* Bilan › Résultats (maquette Explorer, onglet Bilan ; B13, B14) : la phrase, puis les blocs en cartes ; sur
    ordinateur, les chiffres et le Parcours à gauche, les lignes du détail à droite. */
-.insights > .bilan-sentence { max-width: var(--measure); margin: 0 0 var(--space-4); font-size: var(--font-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
-.bilan-sentence strong { color: var(--accent); }
 .bilan { display: grid; gap: var(--space-4); }
 .bilan-main { display: grid; gap: var(--space-4); align-content: start; }
-.action-band.bilan-site { margin: 0; padding: 0; background: none; }
-.bilan-site .action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: none; }
 .bilan-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .bilan-figures li, .bilan-funnel, .bilan-link,
 .training-list, .training-current, .training-kept li { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
@@ -3854,16 +3682,8 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .bilan-funnel,
 .training-current { display: grid; gap: var(--space-3); padding: var(--space-4); }
 .bilan-funnel h2 { margin: 0; font-size: var(--font-body); }
-.bilan-funnel ul { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .bilan-funnel li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 2.5rem; align-items: center; gap: var(--space-3); font-size: var(--font-small); }
-.bilan-funnel li > span:first-child { color: var(--text-tertiary); }
-.bilan-funnel li strong { text-align: right; font-variant-numeric: tabular-nums; }
-.bilan-funnel-track { display: block; height: 0.75rem; border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
 .bilan-funnel-track > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary-graphic); }
-.bilan-funnel-loss { margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--warning-soft); font-size: var(--font-small); line-height: var(--leading-normal); }
-.bilan-funnel-loss strong { color: var(--warning); }
-.bilan-detail .disclosure + .disclosure { margin-top: 0; }
-.bilan-detail .disclosure { border-color: var(--line); border-radius: var(--radius-card); }
 .bilan-detail .disclosure-row { padding: var(--space-3) var(--space-4); min-height: 3.75rem; }
 .bilan-link { display: flex; align-items: center; gap: var(--space-3); min-height: 3.75rem; padding: 0 var(--space-4); box-sizing: border-box; color: var(--text); text-decoration: none; }
 .bilan-link > span { display: grid; flex: 1; gap: var(--space-1); }
@@ -3881,39 +3701,20 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 @media (min-width: 821px) {
   .bilan { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: var(--space-6); }
 }
-.bilan-compare-part .bilan-subtitle, .bilan-interviews .bilan-subtitle { margin: 0; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
-
-/* Ce qui marche : une barre par groupe, le compte à droite ; trop peu de données, une ligne en gris. */
-.bilan-compare { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
-.bilan-rate { display: grid; grid-template-columns: minmax(6rem, 12rem) minmax(0, 1fr) 5rem; align-items: center; column-gap: var(--space-6); }
 
 /* Entretiens : la date en gris, l'entreprise en gras et le type dessous, l'état à droite.
    Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
-.bilan-interview-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
 .bilan-interview-list li { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
 .bilan-interview-list li + li { border-top: 1px solid var(--divider); }
-.bilan-interview-main { display: grid; gap: var(--space-1); min-width: 0; }
 .bilan-interview-main span { font-size: var(--font-small); color: var(--muted); }
-.bilan-interview-state { font-size: var(--font-small); color: var(--muted); text-align: right; }
-@media (max-width: 820px) {
-
-  .bilan-rate { grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) auto; column-gap: var(--space-3); }
-
-  .bilan-interview-list li { grid-template-columns: 3.5rem minmax(0, 1fr) auto; gap: var(--space-3); }
-}
 
 /* --- Réglages, rubriques en cartes (1.6.66, planche « 5. Réglages ») : les règles de la page ---
    La dépense de l'IA dans sa carte ; les jours de la semaine. Les règles du composant sont dans le bloc
    « .setting-* » (1.6.65, 1.6.68).
    Règle réunie plus haut avec « .checks span », même style (allègement du 16.11). */
-.setting-card-body .ai-spend { padding: var(--space-5) var(--space-6); }
 .setting-row-control .rhythm-week, .setting-row-control .rhythm-pause { margin: 0; }
 /* Les sept jours : sur téléphone, la rangée prend toute la largeur de la carte, les pastilles se la
    partagent (comme avant 1.6.66). */
-.setting-row.stack .setting-row-control .rhythm-week { flex: 1 1 100%; }
-@media (max-width: 820px) {
-  .setting-card-body .ai-spend { padding: var(--space-4); }
-}
 
 /* --- Réglages, seconde partie (1.6.67) : les éléments propres aux panneaux ---
    La jauge d'un usage de la formule à droite de sa ligne ; la case des conditions sans marge de plus ;
@@ -3931,15 +3732,9 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
    (« + Ajouter », « Tout voir »). L'état d'une recherche ou d'un site en pastille : un point de couleur
    et le mot (WCAG 1.4.1) ; vert reçue, bleu en attente, orange seulement quand il y a une action (§4). */
 .alerts-page > .alerts-sentence { margin: 0 0 var(--space-6); }
-.alerts-page > .action-band { margin-bottom: var(--space-6); }
 .alerts-section { display: grid; gap: var(--space-3); margin-bottom: var(--space-8); }
 .alerts-section-head .section-title { margin: 0; }
-.alert-date { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
 /* La recherche qu'on vient d'ajouter depuis la recherche globale : son contour en accent. */
-.site-message-text { white-space: pre-line; overflow-wrap: anywhere; }
-@media (max-width: 820px) {
-  .alerts-section { margin-bottom: var(--space-6); }
-}
 
 /* --- Recherche globale (série du 27.10, point 2 ; planche « 2. Recherche globale ») ---
    Ordinateur : le champ de 280 px à gauche de la cloche, rayon 8 comme la barre d'outils d'Offres ;
@@ -4082,12 +3877,9 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 }
 @media (prefers-reduced-motion: reduce) { .offer-line { transition: none; } }
 /* --- Tête de carte, Copier et « ⋯ » (règles §4) --- */
-/* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
-.card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); box-sizing: border-box; height: var(--control-h); }
 /* Hauteur fixe avec ou sans action (planche « vide et chargement ») : le bouton de tête en taille compacte. */
 .card-head-actions :is(button, .button-link):not(.more-button) { min-height: 2rem; height: 2rem; padding-block: 0; padding-inline: var(--space-3); font-size: var(--font-small); }
 .more-menu .menu-count, .card-head-count { color: var(--muted); font-weight: var(--weight-regular); }
-.card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 /* Copier : l'icône seule, juste à côté de la valeur, à la hauteur commune des contrôles. */
 /* Prompt du 9 novembre (PR 1) : cercle de 40 px (44 sur téléphone, --control-h), trait 1,5 px --button-outline, icône
    --text ; infobulle « Copier », nom lu « Copier : <libellé> ». */
@@ -4100,10 +3892,7 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 /* --- Vide et chargement (règles §4) --- */
 /* Un bouton occupé : les deux libellés dans la même case, la largeur du plus long ; aria-disabled
    garde le focus, l'aspect suit celui d'un bouton désactivé. */
-.busy-button { display: inline-grid; justify-items: center; align-items: center; }
 .busy-button > .busy-label { grid-area: 1 / 1; }
-.busy-button > .busy-label-on, .busy-button.busy > .busy-label:not(.busy-label-on) { visibility: hidden; }
-.busy-button.busy > .busy-label-on { visibility: visible; }
 /* Occupé, il garde sa couleur et son contraste : il n'a pas l'air désactivé (planche « Vide et chargement »). */
 .busy-button[aria-disabled="true"] { cursor: progress; }
 @media (prefers-reduced-motion: reduce) {
@@ -4135,7 +3924,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 :root { --ff-h: 56px; --ff-radius: 12px; --ff-pad-x: 14.5px; --ff-label-x: 12px; --ff-rest-top: 18px; --ff-float-top: -8px; --ff-float-size: 12px; --ff-badge-size: 11px; }
 .form-field { display: grid; gap: var(--space-1); min-width: 0; align-content: start; }
 .form-field-box { position: relative; min-width: 0; --ff-bg: var(--surface); }
-.form-field-box:has(:is(input, select, textarea):disabled) { --ff-bg: var(--field-disabled-bg); }
 .form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) { display: block; width: 100%; box-sizing: border-box; min-height: var(--ff-h); padding-inline: var(--ff-pad-x); border-radius: var(--ff-radius); background-color: var(--ff-bg); font-size: var(--font-body); }
 .form-field-box :is(input:not([type="checkbox"], [type="radio"], [type="file"]), select) { height: var(--ff-h); }
 .form-field-box textarea { padding-block: var(--space-4); }
@@ -4155,17 +3943,7 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .form-field-box:has(:is(input, select, textarea):disabled) > .form-field-label { color: var(--text-placeholder); }
 .form-field-box:has([aria-invalid="true"]) > .form-field-label { color: var(--down-text); }
 .form-field-badge { flex: none; display: inline-flex; align-items: center; height: var(--space-4); padding: 0 var(--space-2); border-radius: var(--space-2); background: var(--primary-soft); color: var(--primary-text); font-size: var(--ff-badge-size); font-weight: var(--weight-bold); }
-.form-field-hint { margin: 0; padding-inline: var(--space-4); font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
 /* Le libellé vit dans le champ : seules les largeurs courtes (NPA, date) restent limitées, pour ne pas le couper. */
-.form-field:is(.field-w-5, .field-w-10) > .form-field-box { width: min(100%, var(--field-w)); }
-@media (prefers-reduced-motion: reduce) { .form-field-label { transition: none; } }
-.field-w-5 { --field-w: var(--field-5); }
-.field-w-10 { --field-w: var(--field-10); }
-/* Une date native garde son icône de calendrier à droite : 10 caractères plus l'icône, pour que l'année
-   ne soit jamais coupée (« 28.10.2026 »). */
-.field-w-10:has(input[type="date"]) { --field-w: calc(var(--field-10) + var(--control-h)); }
-.field-w-20 { --field-w: var(--field-20); }
-.field-w-30 { --field-w: var(--field-30); }
 /* L'erreur ne repose pas que sur le rouge (WCAG 1.4.1) : une icône devant, partout où .field-error sert. */
 .field-error, .notif-row-head { display: flex; align-items: flex-start; gap: var(--space-2); }
 .field-error::before {
@@ -4182,28 +3960,17 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 
 /* Liste groupée : titre hors de la carte, une carte, lignes séparées par un filet, 48 px au moins. */
 .grouped { display: grid; gap: var(--space-2); }
-.grouped-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding-inline: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
-.grouped-card { list-style: none; margin: 0; padding: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.grouped-item + .grouped-item { border-top: 1px solid var(--divider); }
 .grouped-row {
   display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: 3rem;
   padding: var(--space-3) var(--space-4); border: 0; background: none; color: var(--text); font: inherit; text-align: left; text-decoration: none;
   white-space: normal; /* un bouton ne passe pas à la ligne par défaut ; une ligne de liste, si (jamais de « … »). */
 }
-.grouped-row-action:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
 .gs-row.active, .grouped-row-action:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-/* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras.
-   Règle réunie plus haut avec « .more-menu .menu button:hover », même style (allègement du 16.11). */
-.grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
 /* Sur le fond teinté, --muted ne fait que 4,3:1 en clair : la phrase passe en --text (16,1:1, WCAG 1.4.3). */
 .grouped-row-current .grouped-row-description { color: var(--text); }
 .grouped-row-current :is(.grouped-icon, .grouped-chevron) { color: var(--accent); }
 .grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
 .grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }
-.grouped-row-title { line-height: var(--leading-normal); }
-.grouped-row-description { font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
-.grouped-value { flex: none; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--text) 7%, var(--surface)); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-none); color: var(--text-secondary); }
-.grouped-chevron { flex: none; width: 1.1rem; height: 1.1rem; color: var(--muted); }
 /* Une radio ou une case en tête : toute la ligne est l'étiquette (WCAG 2.5.8). */
 .grouped-row > input[type="radio"], .grouped-row > input[type="checkbox"] { flex: none; margin: 0; }
 
@@ -4223,7 +3990,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .sheet-actions { display: flex; gap: var(--space-3); align-items: center; }
 @media (max-width: 599px) {
   .sheet { width: 100%; max-width: 100%; }
-  .sheet-inner::before { content: ""; align-self: center; border-radius: var(--radius-pill); }
   .sheet-full { height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
   .sheet-full .sheet-inner { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
   .sheet-full .sheet-inner::before,
@@ -4235,7 +4001,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
   .sheet { --sheet-handle-top: 12px; --sheet-handle-gap: 4px; --sheet-handle-w: 36px; --sheet-handle-h: 4px; --sheet-pad: 24px; --sheet-title-lh: 28px;
     border-radius: var(--radius-block) var(--radius-block) 0 0; }
   .sheet-inner { gap: 0; padding: 0 0 calc(var(--sheet-pad) + env(safe-area-inset-bottom)); }
-  .sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
   .sheet-head { gap: var(--space-2); padding: var(--space-1) var(--panel-close-edge) var(--space-1) var(--sheet-pad); touch-action: none; }
   /* `.sheet .sheet-title` : plus fort qu'un `h2` de page (par exemple `.orp-meeting h2`) qui contient la feuille. */
   /* Volontaire : deux tailles d'écran (≤ 599 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
@@ -4268,7 +4033,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
    avec `icon`. En-tête : pastille ronde de 48 px, titre 18 gras, sous-titre 14, croix de 44 px, trait dessous.
    Ordinateur : sous l'en-tête, 420 px, coin haut gauche de 24 px, ombre à gauche, sans voile ; corps à 20 et 22 px,
    pied fixe. Téléphone : la feuille du bas, coins de 24 px en haut. */
-.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
 .sheet-badge { flex: none; display: flex; align-items: center; justify-content: center; width: var(--panel-badge); height: var(--panel-badge); border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); }
 .sheet-badge .icon { width: var(--panel-icon); height: var(--panel-icon); stroke-width: 2.4; }
 .sheet.sheet-panel .sheet-head { gap: var(--panel-head-gap); padding: var(--panel-head-pad) var(--panel-close-edge) var(--panel-head-pad) var(--panel-pad-x); border-bottom: 1px solid var(--line-soft); }
@@ -4285,7 +4049,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
   .sheet.sheet-panel { inset: var(--panel-float-top) var(--panel-float) var(--panel-float) auto; width: 420px; max-width: 420px; height: auto; max-height: calc(100dvh - var(--panel-float-top) - var(--panel-float)); background: var(--surface); border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); box-shadow: var(--panel-float-shadow); overflow: hidden; }
   .sheet.sheet-panel::backdrop { background: transparent; }
   .sheet.sheet-panel[open] { animation: ja-slide-r 220ms cubic-bezier(.05,.7,.1,1); }
-  .sheet.sheet-panel .sheet-head { min-height: 0; }
 }
 /* Le contenu des feuilles du bas (§10.7 ; valeurs du HTML de RendezVousPreparer et AlertesTelAlerte) : rappel avec 16 px d'écart, 20 px dessous et trait ; familles à 20 px, titre
    13/16 en capitales ; lignes 12 px au-dessus et en dessous, trait --line ; libellé 13/16 juste au-dessus du texte 15/20 ;
@@ -4319,15 +4082,7 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
    barre d'onglets ; au-delà, son contenu reste dans la page. Deux actions de même largeur en rangée.
    Règle réunie plus haut avec « .topbar-page-tools », même style (allègement du 16.11). */
 .action-bar-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--space-3); }
-.action-bar-row > :is(button, a) { justify-content: center; }
 @media (max-width: 599px) {
-  .action-bar {
-    position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom); z-index: 21;
-    display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4);
-    background: var(--surface); border-radius: calc(var(--radius-sm) * 2) calc(var(--radius-sm) * 2) 0 0;
-    box-shadow: 0 -8px 24px rgb(17 17 31 / 10%);
-  }
-  :root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
   .action-bar > :is(button, a):not(.link) { width: 100%; justify-content: center; }
   :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-5) + env(safe-area-inset-bottom)); }
   /* Avec un pied de page, c'est lui qui réserve la place du panneau : ses liens restent atteignables, sans vide en double. */
@@ -4396,10 +4151,8 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 /* Le test utilisateurs (page plateforme) : le numéro du compte et sa date d'inscription, puis une
    durée par étape ; des nombres alignés à droite, lisibles en 390 px. */
 .milestones-table { justify-self: stretch; align-self: stretch; width: 100%; border: 0; border-radius: 0; background: none; }
-.milestones-table th[scope="row"] { font-size: var(--font-small); color: var(--text); }
 .milestones-since { display: block; margin-top: var(--space-1); color: var(--muted); font-weight: var(--weight-regular); font-size: var(--font-caption); }
 .bilan-rate-count, .milestones-table td { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.milestones-table thead th:not(:first-child) { text-align: right; }
 /* Le tableau suit les bords du texte de la carte (le padding des lignes) ; pas de filet sous la
    dernière ligne. */
 .milestones-table :is(th, td):first-child { padding-left: var(--space-6); }
@@ -4410,16 +4163,9 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
   .milestones-table :is(th, td):last-child { padding-right: var(--space-4); }
 }
 @media (max-width: 599px) { .milestones-table :is(th, td):not(:first-child):not(:last-child) { padding-inline: var(--space-2); } }
-
-.liquid-circle { flex: none; }
 .mascot-dot, .mascot-mouth, .liquid-circle-bg { fill: var(--surface); }
-.liquid-circle-ring { fill: none; stroke: var(--primary-graphic); stroke-width: 3.5; }
-.liquid-circle-wave { fill: var(--water); stroke: var(--primary-graphic); stroke-width: 2.5; animation: liquid-wave 1.4s linear 2; }
-.liquid-circle-rise { animation: liquid-rise 1.2s var(--ease-standard) both; }
-.liquid-circle text { font-size: var(--font-figure); font-weight: var(--weight-bold); fill: var(--text); stroke: var(--surface); stroke-width: 4.5; paint-order: stroke; }
 @keyframes liquid-wave { to { transform: translateX(-50px); } }
 @keyframes liquid-rise { from { transform: translateY(100px); } }
-@media (prefers-reduced-motion: reduce) { .liquid-circle-wave, .liquid-circle-rise { animation: none; } }
 /* Bilan › ORP (docs/139 étape 8a, maquette Explorer) : l'objectif, l'export, les dernières recherches. */
 .bilan-orp { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 .orp-goal { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
@@ -4485,19 +4231,13 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
 .training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
 .training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
-/* Les puces gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
-   (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
-.training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
 /* Formations gardées (lot 18, D29) : toute la ligne ouvre la formation, le cercle de 36 px en est la marque. */
-.training-see::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .training-section h2 { display: flex; justify-content: space-between; margin: 0; padding: 0 var(--space-1); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
-.training-section h2 span:last-child { font-weight: var(--weight-semibold); letter-spacing: 0; }
 .training-list li + li { border-top: 1px solid var(--line-soft); }
 .training-row-open { display: flex; flex: 1; justify-content: flex-start; align-items: center; gap: var(--space-3); min-width: 0; min-height: 0; padding: var(--space-3) 0 var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-row-icon { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); background: var(--peach-soft); color: var(--warning); }
 .training-row-icon.cert { background: var(--primary-soft); color: var(--primary-graphic); }
 .training-row-text, .training-current-head > span:last-child, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
-.training-row-text > strong { line-height: var(--leading-tight); }
 .training-row-tags { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
 .training-tag { padding: 0 var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); color: var(--text-tertiary); font-size: var(--font-caption); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
 .copy-text.copy-done, .training-tag.free { background: var(--success-soft); color: var(--success); }
@@ -4510,18 +4250,14 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-current-progress { margin: 0; font-weight: var(--weight-bold); }
 .training-current-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
 .training-current-actions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-4); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
-.training-current-actions a:hover { background: var(--primary-soft); }
 .training-current-actions .link { min-height: var(--target-min); font-size: var(--font-body); }
-.training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
 .training-see { flex: none; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: none; }
 .training-help { margin: 0 var(--space-1); line-height: var(--leading-normal); }
-.training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
 .training-funding-sheet a { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--btn-tertiary); padding: 0 var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-bold); text-decoration: none; }
 .training-funding-sheet a span { flex: none; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 @media (min-width: 821px) {
   .training-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
-  .training-mine { max-width: 40rem; }
 }
 
 /* L'avancement par modules (B19, maquette Explorer › Formations › Suivies) : la ligne « Module 6 sur 12 · 50 % »,
@@ -4536,9 +4272,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-modules-buttons button { display: grid; place-items: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0; border-radius: var(--radius-pill); font-size: var(--font-section); font-weight: var(--weight-bold); line-height: var(--leading-none); }
 .training-modules-less { border: 1.5px solid var(--water); background: var(--surface); color: var(--primary-text); }
 .training-modules-more { border: 0; background: var(--primary); color: var(--on-primary); }
-.training-modules-buttons button:disabled { border-color: var(--line); background: var(--surface-muted); color: var(--text-secondary); }
 .training-modules-count { min-width: 2.5rem; text-align: center; font-size: var(--font-title); font-weight: var(--weight-bold); }
-@media (prefers-reduced-motion: reduce) { .training-modules-bar span { transition: none; } }
 /* Notifications (maquette Notifications, docs/139 étape 9a). La page : retour, titre, « Tout lire » ; le filtre ;
    un groupe par jour, chaque groupe dans une carte. Le panneau de la cloche reprend les mêmes lignes. */
 .notifications-page { display: grid; gap: var(--space-4); max-width: 40rem; }
@@ -4552,7 +4286,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .notifications-group { display: grid; gap: var(--space-2); }
 .notifications-group h2 { margin: 0; padding: 0 var(--space-1); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .notifications-card { margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
-.notifications-card li + li { border-top: 1px solid var(--line-soft); }
 /* Non lue : un fond bleu très clair (la moitié de --primary-soft sur la carte, #F4F6FD de la maquette), --primary-soft
    en sombre (décision du 2026-11-04), le titre plus gras et le point bleu. */
 .notif-row { --notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface)); display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: start; gap: var(--space-3); width: 100%; box-sizing: border-box; min-height: 0; padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3); border: 0; border-radius: 0; background: var(--surface); color: var(--text); text-align: left; text-decoration: none; white-space: normal; font-weight: var(--weight-regular); }
@@ -4563,21 +4296,15 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .notif-row-action { justify-self: start; display: inline-flex; align-items: center; min-height: var(--btn-compact); margin-top: var(--space-1); padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
 /* L'icône du genre (N8) : la forme en couleur douce, le visage du 1 en bleu. */
 .notif-row-title { flex: 1; min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
-.notif-row.unread .notif-row-title { font-weight: var(--weight-bold); }
 .notif-row-time { display: flex; flex: none; align-items: center; gap: var(--space-2); padding-top: var(--space-1); font-size: var(--font-caption); color: var(--text-secondary); }
-.notif-row-text { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-tertiary); overflow-wrap: anywhere; }
 .notifications-settings { display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); text-decoration: none; }
 .notifications-empty { padding: var(--space-12) var(--space-6); }
 .bell-all { display: flex; align-items: center; justify-content: center; min-height: var(--target-min); font-weight: var(--weight-bold); text-decoration: none; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }
   :root:not([data-theme="light"]) .notif-row.unread:hover { background: var(--band); }
 }
-:root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }
 :root[data-theme="dark"] .notif-row.unread:hover { background: var(--band); }
 /* En sombre, une non lue a le fond de la pastille (N5) : un contour la garde visible. */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); } }
-:root[data-theme="dark"] .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); }
 @media (max-width: 820px) { :root:has(.notifications-head) .topbar { display: none; } }
 /* La page Compte (maquette Compte, docs/139 étape 10a). */
 .account-page { display: grid; gap: var(--space-5); max-width: 40rem; }
@@ -4630,8 +4357,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-logout-row > .icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--logout-text); }
 .account-logout-row .block-row-title { color: var(--logout-text); }
 .account-switch { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
-/* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */
-button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
 
 
 /* --- Candidatures sur ordinateur, ≥ 1 024 px (maquettes CandidaturesOrdinateur et RendezVousOrdinateur, 7.11.2026) ---
@@ -4769,14 +4494,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 
 /* CalendarDate (D26) : l'icône calendrier qui contient la date. */
 .calendar-date { flex: none; --cal-tone: var(--primary-graphic); --cal-day: var(--text); }
-.calendar-date-orp { --cal-tone: var(--warning); }
-/* Passé : le cadre et les traits en --field-border (#8C8478, permis pour les traits), le mois écrit en
-   --text-secondary comme le jour (#596070, #ABA398 en sombre : corrections du 13.11, §3, pas de #8C8478 en texte). */
-.calendar-date-past { --cal-tone: var(--field-border); --cal-month: var(--text-secondary); --cal-day: var(--text-secondary); }
-.calendar-date-frame { fill: var(--surface); stroke: var(--cal-tone); }
-.calendar-date-line { stroke: var(--cal-tone); fill: none; }
-.calendar-date-month { fill: var(--cal-month, var(--cal-tone)); font-family: inherit; }
-.calendar-date-day { fill: var(--cal-day); font-family: inherit; }
 
 /* DateTimeField : les pilules date et heure. */
 .wizard-site-actions, .dt-field { display: flex; flex-wrap: wrap; gap: var(--space-3); }
@@ -4808,7 +4525,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-field-outlined .dt-pill > .icon:first-child { display: none; }
 .dt-field-outlined .dt-pill > .icon:last-child { width: 16px; height: 16px; }
 .dt-field-outlined .dt-pill-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-.dt-field-outlined .dt-pill-empty .dt-pill-value { visibility: hidden; }
 .dt-field-outlined .dt-field-label { position: absolute; left: var(--ff-label-x); top: var(--ff-rest-top); padding: 0 var(--space-1); font-size: var(--font-body); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); pointer-events: none; white-space: nowrap; }
 .dt-field-outlined .dt-field-part:has(.dt-pill:not(.dt-pill-empty)) .dt-field-label { top: var(--ff-float-top); background: linear-gradient(to bottom, transparent 50%, var(--surface) 50%); font-size: var(--ff-float-size); line-height: var(--space-4); font-weight: var(--weight-bold); color: var(--text-lead); }
 .dt-pill-open, .dt-pill:hover { border: 2px solid var(--primary-graphic); }
@@ -4818,7 +4534,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 
 /* DateTimePanel : le sélecteur, à la place du formulaire ; plein écran sur téléphone. */
 /* DateField (lot 10) : ouvert dans une grille de formulaire, le sélecteur prend toute la ligne. */
-.date-field:has(.dt-panel) { grid-column: 1 / -1; }
 .training-modules-finish, .date-field-clear { justify-self: start; min-height: var(--target-min); }
 .date-field { display: grid; gap: var(--space-1); min-width: 0; }
 .dt-panel { display: flex; flex-direction: column; gap: var(--space-4); animation: ja-slide-l 200ms cubic-bezier(.05,.7,.1,1); }
@@ -4952,12 +4667,8 @@ a.panel-row:hover { background: var(--band); }
   .jobs-band > .offers-page, .jobs-band > .jobs-body:not(.orp-page) { max-width: var(--page-wide); margin: 0 auto; box-sizing: border-box; padding-left: var(--space-6); padding-right: var(--space-6); }
   /* Gabarit commun des planches du 13.11 (#679) : 1 280 px de contenu, comme l'en-tête. */
   :is(.jobs-head.jobs-candidatures, .jobs-candidatures-band > .offers-page, .jobs-candidatures-band > .jobs-body:not(.orp-page)) { max-width: var(--header-max); }
-  .jobs-head .jobs-segments { order: 2; }
-  .jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
   .jobs-actions .jobs-alerts-link { gap: var(--space-2); font-size: var(--font-label); color: var(--primary-text); }
   .jobs-actions .jobs-alerts-link .icon { width: 18px; height: 18px; }
-  .jobs-actions { --alerts-gap: 28px; --add-pad: 18px; }
-  .jobs-alerts-count { margin-right: var(--alerts-gap); font-size: var(--font-label); font-weight: var(--weight-semibold); color: var(--text-secondary); }
   .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   /* Planche CandidaturesOrdinateurB du 13.11 : titre de 32 px, 20 px entre les éléments de la rangée ; le nombre des
      groupes seul. */
@@ -4971,7 +4682,6 @@ a.panel-row:hover { background: var(--band); }
   .offers-list-tools .offers-toolbar .filters-search { height: var(--target-min); padding-left: calc(var(--space-8) + var(--space-2)); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background-color: var(--surface); font-size: var(--font-label); }
   .offers-list-tools .filters-search-wrap > .icon { left: var(--space-5); }
   /* Lot 17 : un champ en pilule a le même focus que le Composer, un seul anneau qui suit son arrondi. */
-  .offers-list-tools .offers-toolbar .filters-search:focus { border-color: var(--field-border); box-shadow: none; outline: 2px solid var(--primary-graphic); outline-offset: 1px; }
   .offers-list-tools .offers-toolbar-button { min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .offers-filter-column { flex: none; display: flex; width: 480px; height: 100%; }
 }
@@ -4988,13 +4698,11 @@ a.panel-row:hover { background: var(--band); }
   .sent-columns > :not(.sent-detail) { grid-column: 1; }
   /* Le volet Filtres (maquette du 14 novembre, §3) prend la place de la colonne liste. */
   .jobs-body.sent-panel-open > :not(.sent-detail, .sent-filter-panel) { display: none; }
-  .sent-columns > .sent-filter-panel { position: sticky; top: var(--space-4); height: auto; max-height: calc(100dvh - 12rem); }
   .sent-columns > .sent-detail { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; min-height: 0; }
   .sent-columns :is(.sent-goal, .sent-list, .sent-filters, .sent-none) { max-width: none; }
   .linked-list .sent-goal { --goal-18: 18px; --goal-16: 16px; padding-inline: var(--goal-18); margin-bottom: var(--goal-14); }
   .linked-list .sent-goal-head { line-height: var(--goal-18); }
   .linked-list .sent-goal-left { margin-top: calc(var(--goal-16) - var(--goal-18)); line-height: var(--goal-16); }
-  .linked-list > .sent-tools > .sent-filters { margin-bottom: var(--space-1); }
   .linked-list > .sent-tools .sent-filters-row .filters-search { --search-40: 40px; border: 1.5px solid var(--field-border); padding-left: var(--search-40); }
   .linked-list > .sent-tools .sent-filters-row .filters-search-wrap .icon { left: 14px; }
   :root:has(.sent-columns) .app-footer { display: none; }
@@ -5003,31 +4711,21 @@ a.panel-row:hover { background: var(--band); }
 .sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }
 .sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
 .today-orp-chevron, .sent-goal-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
-@media (max-width: 820px) { }
 
 /* Notifications sur ordinateur (maquette du 8 novembre, NotificationsOrdinateur) : 880 px, le titre et les onglets sur
    une ligne, les jours en titres de 18, une carte par jour, des lignes sans icône (D23) au point « non lue » à gauche. */
 .notifications-wide { --notif-34: 34px; --notif-40: 40px; --notif-14: 14px; --notif-10: 10px; --notif-3: 3px; --notif-6: 6px; --notif-500: 500; max-width: 880px; gap: var(--space-8); padding-top: var(--space-6); padding-bottom: var(--space-12); }
 .notifications-head-wide { display: flex; align-items: flex-end; gap: var(--space-3); }
 .notifications-head-wide h1 { flex: 1; margin: 0; font-size: var(--notif-34); line-height: var(--notif-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.notifications-head-wide .notifications-read-all { align-self: stretch; padding: 0 var(--space-1); font-size: var(--font-label); }
-.notifications-wide .notifications-group { gap: var(--notif-10); }
-.notifications-wide .notifications-group h2 { padding: 0 var(--space-1); font-size: var(--font-title); letter-spacing: normal; text-transform: none; color: var(--text); }
 .notif-row.notif-row-plain { display: flex; gap: var(--notif-14); padding: var(--space-4) var(--space-5); background: var(--surface); }
-.notif-row.notif-row-plain:hover { background: var(--band); }
 .notif-row-plain .notif-row-body { flex: 1; gap: 0; }
 .bell-row.unread .bell-row-dot, .notif-row-mark.on { background: var(--primary-graphic); }
 .notif-row-plain .notif-row-head { justify-content: space-between; gap: var(--space-3); }
 .notif-row-plain .notif-row-title { flex: 0 1 auto; font-weight: var(--notif-500); }
-.notif-row-plain.unread .notif-row-title { font-weight: var(--weight-bold); }
 .notif-row-plain .notif-row-time { padding-top: 0; font-size: var(--label-caps); }
 .notif-row-plain .notif-row-text { margin-top: var(--notif-3); color: var(--text-secondary); }
 .notif-row-plain .notif-row-action { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 0; margin-top: var(--notif-6); padding: 0; background: transparent; }
 .notif-row-plain .notif-row-action .icon { width: 1rem; height: 1rem; }
-:root .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; } }
-:root[data-theme="dark"] .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; }
-.notifications-wide .notifications-settings { justify-content: flex-start; justify-self: start; gap: var(--space-1); min-height: var(--target-min); font-size: var(--font-label); }
 
 /* Mes alertes e-mail sur ordinateur (maquette du 8 novembre, AlertesOrdinateur) : 880 px ; le titre, la phrase et
    « + Ajouter une recherche » ; le bandeau pêche au bouton tonal ; la liste des recherches suivies, sans cadre par
@@ -5037,8 +4735,6 @@ a.panel-row:hover { background: var(--band); }
 .alerts-back-wide .icon { width: 18px; height: 18px; }
 .alerts-head-wide { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
 .alerts-head-wide h1 { margin: 0; font-size: var(--alerts-34); line-height: var(--alerts-40); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-.alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
-.alerts-head-wide button { flex: none; white-space: nowrap; }
 /* AlertesOrdinateurVide (corrections du 13.11, §2) : Orange en bas à gauche du titre (112 px, 4 px vers la droite,
    descendu de 4 px comme sur la planche), puis 24 px jusqu'à la suite. */
 .alerts-head-empty { justify-content: flex-start; margin-bottom: var(--space-6); }
@@ -5046,7 +4742,6 @@ a.panel-row:hover { background: var(--band); }
 .alerts-banner { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); background: var(--peach-soft); border: 1px solid var(--peach); border-radius: var(--alerts-16); }
 .alerts-banner > .icon { flex: none; width: 1.5rem; height: 1.5rem; color: var(--peach-text); }
 .alerts-banner-text { display: grid; flex: 1; min-width: 0; }
-.alerts-banner-text strong { font-size: var(--font-body); }
 .alerts-banner-text span { font-size: var(--font-small); color: var(--text-secondary); }
 .alerts-tonal { flex: none; min-height: var(--target-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); white-space: nowrap; }
 .alerts-tonal:hover { background: color-mix(in srgb, var(--primary-soft) 80%, var(--water)); }
@@ -5060,7 +4755,6 @@ a.panel-row:hover { background: var(--band); }
 .alerts-head-phone .icon-button { display: inline-flex; align-items: center; justify-content: center; width: var(--target-min); height: var(--target-min); color: var(--text); }
 .alerts-sentence-phone { margin: 0 var(--space-1); font-size: var(--font-body); line-height: var(--alerts-23); color: var(--text-secondary); }
 .alerts-phone .alerts-banner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-.alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }
 .alerts-phone button.secondary { min-height: var(--alerts-40); padding: 0 var(--space-3); font-size: var(--font-small); font-weight: var(--weight-bold); }
 
 /* Réglages sur ordinateur (maquette du 8 novembre, ReglagesOrdinateur) : 880 px, le titre de 34 sans bandeau, une
@@ -5072,16 +4766,8 @@ a.panel-row:hover { background: var(--band); }
 .settings-wide .settings-sections, .settings-wide .settings-sections:has(.ai-spend) { max-width: none; margin: 0; }
 /* Panneau à boutons radio (ChoicePanel, panneaux lg et tx) : sur-titre 13/16 en capitales grises, lignes de 68 px
    séparées d'un filet, cercle de 24 px (bleu plein quand il est choisi), libellé 16/22 et précision 14/20. */
-.choice-panel { --choice-68: 68px; --choice-lh-22: 22px; --choice-lh-20: 20px; --choice-lh-16: 16px; --choice-dot: 24px; --choice-inner: 11px; --choice-gap-2: 2px; display: grid; gap: var(--space-1); }
-.choice-panel-heading { margin: 0; font-size: var(--font-caption); line-height: var(--choice-lh-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
-.choice-rad { display: flex; align-items: center; gap: var(--space-4); min-height: var(--choice-68); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); cursor: pointer; }
-.choice-rad input { appearance: none; flex: none; display: grid; place-content: center; width: var(--choice-dot); height: var(--choice-dot); margin: 0; border: 2px solid var(--text-secondary); border-radius: 50%; background: none; }
 .choice-rad input:checked { border-color: var(--primary-graphic); }
-.choice-rad input:checked::before { content: ""; width: var(--choice-inner); height: var(--choice-inner); border-radius: 50%; background: var(--primary-graphic); }
-.choice-rad input:focus-visible { outline: var(--choice-gap-2) solid var(--primary-graphic); outline-offset: var(--choice-gap-2); }
-.choice-rad-text b { display: block; font-size: var(--font-body); line-height: var(--choice-lh-22); }
 .choice-rad-text span { display: block; margin-top: var(--choice-gap-2); font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
-.choice-panel-note { margin: var(--space-3) 0 0; font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
 /* Taille du texte « Grande » (useTextSize) : tout ce qui est en rem (textes et espacements) grandit de 25 %, comme un zoom ;
    les quelques valeurs en px restent. */
 html.text-large { font-size: 125%; }
@@ -5102,11 +4788,6 @@ html.text-large { font-size: 125%; }
   .maintenance-retry { min-height: var(--target-min); padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-size: var(--font-label); font-weight: var(--weight-bold); }
   .maintenance-retry:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
   .goal-reached-actions > .goal-reached-cancel { order: 3; flex-basis: 100%; }
-  .goal-reached-hand { font-family: var(--font-hand); font-weight: var(--weight-regular); font-size: 1.45em; line-height: 0; color: var(--primary-graphic); }
-  .goal-reached { max-width: 880px; padding-top: var(--space-6); color: var(--text-secondary); }
-  .goal-reached-close, .goal-reached-todo { display: none; }
-  .goal-reached-body { flex: 0 0 auto; padding: 0; }
-  .goal-reached-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--state-10); width: auto; margin-top: var(--state-28-gap); }
   .goal-reached-actions > .primary { order: 2; min-height: var(--target-min); padding: 0 var(--space-5); font-size: var(--font-label); }
   .goal-reached-actions > .primary .icon { display: none; }
   .goal-reached-actions > .goal-reached-home { order: 1; min-height: var(--target-min); padding: 0 var(--space-4); border: 1.5px solid var(--field-border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); }
@@ -5139,30 +4820,21 @@ html.text-large { font-size: 125%; }
    150 px de large, posé sur une ombre ovale de 120 x 12 px (10 % du texte en clair, 35 % de noir en sombre).
    Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .filter-outcome-rows .criteria-row:hover, .notifications-families.blocks-page { background: transparent; }
-.notifications-families .notifications-group h2 { padding: 0; line-height: var(--space-4); letter-spacing: .06em; }
 .notifications-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .notifications-families .block-row { margin: 0; }
-.notifications-page:not(.notifications-wide) .notifications-settings { min-height: var(--btn-tertiary); color: var(--primary-text); font-size: var(--font-label); }
 .notifications-perso { --perso-shadow: color-mix(in srgb, var(--text) 10%, transparent); --perso-shadow-lift: -6px; display: flex; flex-direction: column; align-items: center; }
 /* Le Sourire de « Tout est lu » (corrections du 13.11, §7) : 140 px de haut ; en sombre, un liseré clair (--text,
    #F3EEE6) deux fois, pour que le trait foncé du personnage se détache du fond. */
 .notifications-sourire { display: block; width: auto; height: 140px; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); } }
-:root[data-theme="dark"] .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); }
 .notifications-perso-shadow { position: relative; top: var(--perso-shadow-lift); width: 120px; height: 12px; border-radius: 50%; background: var(--perso-shadow); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); } }
-:root[data-theme="dark"] .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); }
 /* En-tête de la maquette : 12 px au-dessus du bouton retour, 12 px jusqu'aux onglets puis jusqu'à la première
    famille (10 et 12 px dans le HTML, ramenés sur la grille de 4, §2.9). */
 @media (max-width: 820px) {
   .band:has(> .notifications-page:not(.notifications-wide)) { padding-top: var(--space-3); }
-  .notifications-page:not(.notifications-wide) { gap: var(--space-3); }
   /* « Tout est lu » (etats/Notifications--tout-lu) : centré dans la place sous les onglets ; titre 22 px en 800,
      phrase 15/22 en --text-tertiary, « Voir toutes les notifications » en pilule de 52 px. */
-  .notifications-page:not(.notifications-wide) .notifications-empty { --notif-empty-h: calc(100dvh - 168px); min-height: var(--notif-empty-h); box-sizing: border-box; align-content: center; padding: var(--space-6); }
   .notifications-page:not(.notifications-wide) .notifications-empty .face-state-title { margin-top: var(--space-2); font-size: var(--font-section); font-weight: var(--weight-heavy); }
   .notifications-page:not(.notifications-wide) .notifications-empty .face-state-line { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-tertiary); }
-  .notifications-page:not(.notifications-wide) .notifications-empty [data-test=show-all] { min-height: var(--btn-secondary); margin-top: var(--space-2); padding: 0 var(--space-6); border-radius: var(--radius-pill); }
 }
 
 /* --- Feuilles et panneaux, maquette du 14 novembre (§4 ; référence : le panneau « Rendez-vous ORP »,
@@ -5199,7 +4871,6 @@ html.text-large { font-size: 125%; }
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 0 var(--btn-compact);
 }
 /* `.empty-state .empty-state-title` : plus fort qu’un `h2` de page (par exemple `.orp-meeting h2`). */
-.empty-state .empty-state-title { margin: var(--es-top) 0 0; font-size: var(--es-t); line-height: var(--es-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
 .empty-state-pill {
   display: inline-flex; align-items: center; gap: var(--space-1); --es-6: 6px; margin-top: var(--space-3); padding: var(--es-6) var(--space-3);
   border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-semibold);
@@ -5210,7 +4881,6 @@ html.text-large { font-size: 125%; }
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--es-btn); margin: 0;
   padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); text-decoration: none;
 }
-.empty-state-actions > .busy-button { display: inline-grid; padding-block: var(--space-2); white-space: normal; text-align: center; }
 .empty-state-actions svg, .empty-state > .link svg { --es-18: 18px; width: var(--es-18); height: var(--es-18); }
 .empty-state-actions > .secondary { --es-22: 22px; padding-inline: var(--es-22); border: 1.5px solid var(--button-outline); background: var(--surface); color: var(--text); }
 .empty-state > .link { --es-15: 15px; --es-2: 2px; display: inline-flex; align-items: center; gap: var(--es-2); min-height: var(--target-min); margin-top: var(--es-link); font-size: var(--es-15); font-weight: var(--weight-bold); color: var(--primary-text); }
@@ -5219,7 +4889,5 @@ html.text-large { font-size: 125%; }
    hors bandeau de démo ; la scène au milieu, comme sur les planches. */
 .jobs-empty { --jobs-top: 231px; display: flex; flex-direction: column; min-height: calc(100dvh - var(--jobs-top)); padding-bottom: 0; box-sizing: border-box; }
 @media (min-width: 1024px) {
-  .empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }
-  .empty-state-actions { flex-direction: row; justify-content: center; width: auto; max-width: none; }
   .jobs-empty { --jobs-top: 153px; }
 }

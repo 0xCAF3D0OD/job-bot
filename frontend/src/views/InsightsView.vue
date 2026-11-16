@@ -251,6 +251,51 @@ const periodLine = computed(() => {
   </section>
 </template>
 
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+/* Un bloc qui n'a pas besoin de toute la largeur (docs/62 §1) : une largeur de lecture. */
+.reading-width { max-width: 40rem; }
+.action-band {
+  margin-inline: calc(50% - 50vw); padding: var(--space-8) max(var(--space-4), calc(50vw - 50%));
+  background: var(--accent-band);
+}
+.action-band-card {
+  display: flex; align-items: center; gap: var(--space-8);
+  padding: var(--space-8); border-radius: var(--radius); background: var(--surface); box-shadow: var(--lift);
+}
+.action-band-body { display: grid; gap: var(--space-3); flex: 1; min-width: 0; }
+.action-band-title { margin: 0; font-size: var(--font-page); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--text); }
+.action-band-summary { margin: 0; color: var(--muted); max-width: var(--measure); }
+.action-band-action { flex: none; }
+@media (max-width: 820px) {
+.action-band { padding-block: var(--space-5); }
+.action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); }
+.action-band-title { font-size: var(--font-figure); }
+}
+.insights > .bilan-sentence { max-width: var(--measure); margin: 0 0 var(--space-4); font-size: var(--font-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.bilan-sentence strong { color: var(--accent); }
+.action-band.bilan-site { margin: 0; padding: 0; background: none; }
+.bilan-site .action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: none; }
+.bilan-funnel ul { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.bilan-funnel li > span:first-child { color: var(--text-tertiary); }
+.bilan-funnel li strong { text-align: right; font-variant-numeric: tabular-nums; }
+.bilan-funnel-track { display: block; height: 0.75rem; border-radius: var(--radius-pill); background: var(--surface-muted); overflow: hidden; }
+.bilan-funnel-loss { margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--warning-soft); font-size: var(--font-small); line-height: var(--leading-normal); }
+.bilan-funnel-loss strong { color: var(--warning); }
+.bilan-compare-part .bilan-subtitle, .bilan-interviews .bilan-subtitle { margin: 0; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
+/* Ce qui marche : une barre par groupe, le compte à droite ; trop peu de données, une ligne en gris. */
+.bilan-compare { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+.bilan-rate { display: grid; grid-template-columns: minmax(6rem, 12rem) minmax(0, 1fr) 5rem; align-items: center; column-gap: var(--space-6); }
+.bilan-interview-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.bilan-interview-main { display: grid; gap: var(--space-1); min-width: 0; }
+.bilan-interview-state { font-size: var(--font-small); color: var(--muted); text-align: right; }
+@media (max-width: 820px) {
+.bilan-rate { grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) auto; column-gap: var(--space-3); }
+.bilan-interview-list li { grid-template-columns: 3.5rem minmax(0, 1fr) auto; gap: var(--space-3); }
+}
+.alerts-page > .action-band { margin-bottom: var(--space-6); }
+</style>
+
 <style scoped>
 /* Bilan › Résultats sur téléphone (maquette Progresser, Kevin 2026-11-06) : la phrase en gras d'un bloc, sans mot
    en bleu ; des tuiles de 72 px (chiffre sans interligne, libellé serré) ; le parcours en lignes de 26 px. */

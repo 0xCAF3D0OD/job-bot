@@ -492,3 +492,9 @@ watch(viewMonth, () => void load());
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.bilan-orp-more { --bom-6: 6px; --bom-10: 10px; --bom-13: 0.8125rem; --bom-16: 16px; --bom-20: 20px; --bom-500: 500; }
+.bilan-card-more svg { width: 16px; height: 16px; }
+</style>

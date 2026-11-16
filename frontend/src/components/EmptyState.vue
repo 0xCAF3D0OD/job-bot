@@ -57,3 +57,12 @@ withDefaults(
     <slot />
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.empty-state .empty-state-title { margin: var(--es-top) 0 0; font-size: var(--es-t); line-height: var(--es-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
+@media (min-width: 1024px) {
+.empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }
+.empty-state-actions { flex-direction: row; justify-content: center; width: auto; max-width: none; }
+}
+</style>

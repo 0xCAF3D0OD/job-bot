@@ -21,3 +21,10 @@ defineProps<{ mood: Mood; act?: boolean; wink?: boolean; small?: boolean; waitin
     />
   </span>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (prefers-reduced-motion: reduce) {
+.face-mouth-enter-active, .face-mouth-leave-active, .face-tile { transition: none; }
+}
+</style>

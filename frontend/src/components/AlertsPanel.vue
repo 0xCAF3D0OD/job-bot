@@ -380,3 +380,11 @@ onMounted(() => void load());
     </DisclosureRow>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.alerts-table td { vertical-align: top; }
+@media (max-width: 720px) {
+.alert-form { grid-template-columns: 1fr; }
+}
+</style>

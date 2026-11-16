@@ -31,3 +31,9 @@ const titleId = useId();
     </ul>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.grouped-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding-inline: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
+.grouped-card { list-style: none; margin: 0; padding: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+</style>

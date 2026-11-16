@@ -193,3 +193,15 @@ function onClick(event: MouseEvent): void {
     </div>
   </dialog>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (max-width: 599px) {
+.sheet-inner::before { content: ""; align-self: center; border-radius: var(--radius-pill); }
+.sheet-inner::before { width: var(--sheet-handle-w); height: var(--sheet-handle-h); margin: var(--sheet-handle-top) 0 var(--sheet-handle-gap); background: var(--text-disabled); }
+}
+.sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
+@media (min-width: 821px) {
+.sheet.sheet-panel .sheet-head { min-height: 0; }
+}
+</style>

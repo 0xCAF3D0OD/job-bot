@@ -565,6 +565,8 @@ onMounted(() => void load());
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.contacts-list > li > span:first-child { grid-column: 1; grid-row: 1; }
 /* Détail en deux colonnes (MODIFICATIONS du 8 novembre au soir, lot 12) : sections de 32/36 séparées par un trait,
    « Écrire à » puis « Canal » l’un sous l’autre (20 entre les deux, 8 entre libellé et champ), « Rédiger un message »
    à contour de 48, rond, 24 au-dessus ; « Prises de contact » finit à 8. */

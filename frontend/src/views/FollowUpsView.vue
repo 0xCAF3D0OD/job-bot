@@ -249,3 +249,12 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.pick-title a:hover strong { text-decoration: underline; }
+.follow-up-lines p { margin: 0; }
+@media (min-width: 600px) {
+.follow-up-main, .follow-up-row { justify-self: start; }
+}
+</style>
