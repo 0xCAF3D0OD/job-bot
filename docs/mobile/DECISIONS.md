@@ -511,6 +511,39 @@ Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
 - Voie 1 retenue : la voie 3 (couper du contenu utile pour gagner du poids) est exclue, la voie 2 seule (relever css-total) ne réglait rien.
 - Suite, une PR chacun, captures identiques au pixel près, gain mesuré par page : (a) sortir de style.css le CSS propre aux pages ; (b) premiers pas, une étape par fichier chargée à son tour ; (c) Préparer, panneaux secondaires à la demande.
 
+## Pastilles neutres sur le fond beige (Kevin, 16.11.2026)
+
+- La pastille « Case à cocher dans Job-Room » de « Pour l'ORP » garde son fond aligné sur le bord gauche du texte au-dessus, comme sur la planche BilanOrdinateurFiche.
+- Une pastille neutre posée sur le fond beige (volets, feuilles) se distingue de ce fond : fond blanc #FFFFFF et trait de 1 px #CFCBC1 (`--card-line`) ; en sombre, fond #2C2722 et trait #4E473E. Jeton `--pill-on-bg`. Le trait est dessiné à l'intérieur : la pastille garde sa taille et son alignement.
+- Relevé du 16.11 sur toutes les pages des audits et leurs volets et feuilles, à 1440 et 390 px : seule cette pastille était concernée (volet du Bilan sur ordinateur, fiche « Pour l'ORP » sur téléphone). Posée sur une carte blanche (volet d'une candidature), elle ne change pas.
+
+## Coche après le téléchargement de la lettre et du CV (Kevin, 16.11.2026, 16 h 44)
+
+- Dans « 3. Postuler », la pastille Lettre.pdf (et CV.pdf) remplace son icône de téléchargement par une coche verte (icône `done`, couleur `--ok-text`, celle de la coche passagère des téléchargements) une fois le fichier téléchargé. « Tout télécharger » coche les deux. Sur téléphone, où la pastille n'a pas d'icône, la coche s'ajoute de la même façon.
+- La pastille reste un lien cliquable pour retélécharger. Son nom accessible devient « Lettre.pdf, téléchargée » (« CV.pdf, téléchargé »), pas l'icône seule.
+- La coche est posée quand le fichier est bien arrivé : les liens de téléchargement passent déjà par `useFileDownloads`, qui récupère le fichier lui-même et montre une coche 2 secondes ; il prévient maintenant la page (`file-done`). Un échec ne coche rien. Elle est gardée dans ce navigateur (`localStorage`, clé `jobA1.telecharges`, 100 entrées au plus), par version du document : une lettre ou un CV refait repart sans coche. Rien n'est envoyé au serveur. La clé est effacée à la déconnexion (règle A-7).
+- Aucune planche ne dessine cet état : cette décision en tient lieu. Les certificats joints et les liens « Partager » du téléphone ne sont pas concernés.
+
+## Offres déjà postulées et doublons (Kevin, 16.11.2026, 16 h 45)
+
+Une offre déjà postulée ne doit plus encombrer le fil Offres, sans jamais cacher en silence une vraie nouvelle offre
+(Nielsen n° 1). On distingue le sûr du probable.
+
+- **Même lien = doublon sûr.** Même site (sans www), même chemin, même identifiant d'annonce dans l'adresse (Indeed :
+  `jk`). L'offre est rattachée à l'offre envoyée et sort de la liste. Une candidature saisie dans Envoyées avec ce
+  lien reçoit l'offre comme fiche.
+- **Même titre chez la même entreprise = doublon probable.** L'offre reste visible avec la pastille neutre
+  « Déjà postulé le … », et c'est toi qui décides. Une entreprise peut republier le même poste des mois plus tard, ou
+  ouvrir deux postes au même titre. Titre comparé sans taux ni genre ; entreprise sans SA, Sàrl, AG, GmbH, casse,
+  accents ni ponctuation, comme pour « Autres offres chez X ».
+- **Agences** : le même titre via deux agences différentes reste un cas probable : la pastille seulement, jamais de
+  fusion automatique.
+- Spontanées et candidatures saisies dans Envoyées comprises.
+- Ajout d'une offre (à la main, par l'extension, en spontanée) : la fiche existante s'ouvre avec les nouveaux liens ;
+  « Créer quand même » reste visible à côté, pas dans un menu (seconde PR).
+- Conséquence acceptée : les offres déjà cachées derrière une offre envoyée seulement par leur titre reviennent dans
+  le fil avec la pastille (3 sur le compte de Kevin le 16.11).
+
 ## Fenêtre de l'extension sur « Créer une alerte » de jobup (Kevin, 16.11.2026, 21 h 25)
 
 Section 42 de la maquette (planches ExtAlerte, ExtAlerteCodeAttente, ExtAlerteCodeColle, ExtAlerteTerminee,
