@@ -223,3 +223,114 @@ Carte choisie toujours visible (CandidaturesOrdinateurEpinglee)
 - Si la carte sort par le bas : même carte compacte fixée en bas de la liste, chevron vers le bas.
 - C'est un bouton (aria-label « Revenir à la candidature sélectionnée dans la liste ») : au clic, la liste défile jusqu'à la vraie carte (scrollIntoView, block: nearest, sans animation si prefers-reduced-motion) et la carte compacte disparaît.
 - La flèche et la pointe du rail ne sont donc jamais masquées : le détail affiché est toujours relié à une carte visible.
+
+## 19. Réglages, menu du compte, Notifications « Tout est lu »
+
+Planches : ReglagesOrdinateurComplet (nouvelle, page entière 1440 × 2340), ReglagesOrdinateur (même contenu, hauteur d'écran), NotificationsOrdinateurVide (nouvelle), Notifications et NotificationsSombre (téléphone, état « tout est lu »), et les 51 planches ordinateur qui contiennent le menu du compte. Captures ReglagesOrdinateurComplet.png, NotificationsOrdinateurVide.png, Notifications--tout-lu.png, NotificationsSombre--tout-lu.png.
+
+Menu du compte (avatar), toutes les pages ordinateur
+- Le libellé est « Apparence » (plus « Mode sombre ») et l'ordre des segments est Clair, Sombre, Auto. Même libellé, même ordre que sur la page Réglages. role="group" aria-label="Apparence".
+
+Réglages, carte Notifications
+- « Nouvelles offres » : sous-titre « Quand une offre atteint le niveau choisi ».
+- « M'avertir dès » (sous-titre « Niveau de correspondance minimum ») : contrôle segmenté Très proche / Proche / À creuser. Chaque segment a 14 px de marge intérieure à gauche et à droite, 32 px de haut, texte jamais collé au bord. Segment choisi : fond blanc, graisse 700.
+- « Notification de test » (sous-titre « Un message sur ton téléphone, pour vérifier ») : bouton pilule « Envoyer » (contour bleu, rayon = moitié de la hauteur), pas un bouton rectangulaire.
+
+Réglages, section « Extension du navigateur » (nouvelle carte, après Connexions)
+- « Extension Firefox », sous-titre « Remplit tes candidatures et tes codes, sans rien envoyer à ta place », bouton pilule « Installer l'extension » avec l'icône lien externe.
+- Une ligne par navigateur relié, nommée « <Navigateur> sur <Système> » (« Firefox sur Mac »), jamais un identifiant technique. Sous-titre « Utilisé aujourd'hui » ou « Utilisé le 9 nov. » (un seul point : ne pas ajouter de point après une abréviation qui en a déjà un).
+- Le navigateur en cours porte la pastille verte « Ce navigateur ».
+- Bouton corbeille 44 × 44 px par ligne, aria-label « Retirer Firefox sur Windows ». Après retrait : message « Navigateur retiré » avec « Annuler » pendant 6 s.
+- Les navigateurs non utilisés depuis plus de 30 jours sont repliés sous « N anciens navigateurs » (bouton avec chevron, aria-expanded), avec le lien rouge « Tout retirer » à droite (confirmation avant d'agir).
+- « Relier avec un jeton », sous-titre « Si le bouton « Relier » de l'extension ne marche pas », bouton pilule « Créer un jeton ». Il n'y a plus de champ où taper l'adresse du service à la main.
+
+Réglages, carte « Mes données »
+- Toutes les lignes ont la même graisse (600) et la même hauteur. Nouvelle ligne « État du service », sous-titre « Collecte des offres, IA et envoi des e-mails ».
+
+Notifications, état « Tout est lu » (ordinateur et téléphone)
+- Scène centrée sur toute la largeur du contenu : mascotte (200 px de haut sur ordinateur, 140 px sur téléphone), titre « Tout est lu », pastille bleue avec cloche « Offres et rappels ORP arrivent ici », bouton pilule à contour « Voir toutes les notifications ».
+- Pas de phrase flottante : hors d'une carte, un texte est soit un titre, soit un lien, soit une pastille.
+- La cloche de la barre du haut n'a pas de pastille de compteur dans cet état, et « Tout marquer comme lu » n'est pas affiché.
+
+Défauts du code vus sur les captures de production (pas de planche, c'est la règle générale)
+- Contours de carte : 1 px, même couleur partout, pas d'ombre en plus du contour. La carte « Effet des critères » du Profil n'a pas de contour bleu.
+- Espacement des lignes dans une carte : même hauteur et mêmes marges pour toutes les lignes d'une même carte.
+- Boutons : pilules partout (rayon = moitié de la hauteur), jamais rectangulaires.
+
+## 20. Aujourd'hui ordinateur : l'éventail remplace le livre
+
+Planches : AujourdhuiOrdinateurV2 et AujourdhuiOrdinateurV2Sombre (les 3 états qui montrent « 3 offres à trier »). Captures AujourdhuiOrdinateurV2(Sombre).png.
+
+- Le bloc « 3 offres à trier » de la colonne de droite ne montre plus le livre ouvert. Il montre l'éventail de la page Trier (section 12), en petit : les 3 mêmes cartes, mêmes couleurs, mêmes angles (−7°, 0°, 7°), réduites à 66 % (transform: scale(.66), origine en haut au centre), hauteur du bloc 318 px, 20 px sous le titre.
+- Sur ces mini-cartes : pas de pastilles (CDI, %, trajet, niveau), elles seraient illisibles à cette taille. Nom de l'entreprise à 13 px affichés.
+- Le bloc est un role="group" avec aria-label « 3 offres à trier, la première : <intitulé> chez <entreprise> ». Les boutons Écarter et Garder restent en dessous, sans changement.
+- Supprime tout le code, le CSS et les images du livre (couverture, signet, pages) s'il en reste dans l'app.
+- Dans le code des planches Trier, l'état « fermé » s'appelle maintenant is_ferme (avant is_livre). Le mot « livre » ne doit plus apparaître nulle part.
+
+## 21. Carte « Pas encore notée » (liste Candidatures ordinateur)
+
+Planches : CandidaturesOrdinateurB(Sombre), Epinglee(Sombre), Statut, Ajouter, Spontanee, RelanceOrdinateurV2(Sombre), états vides Envoyées et Rendez-vous.
+
+- Le texte « Pas encore notée » sur deux lignes en haut à droite disparaît.
+- À sa place, même position et même taille que le cercle de note (40 px, aligné en haut) : cercle vide en pointillés (12 tirets égaux, trait 8 sur une échelle de 100, #D5D1C7, sombre #4E473E) avec un tiret central (#8C8478, sombre #ABA398). role="img" aria-label="Pas encore notée".
+- Une pastille neutre « Pas encore notée » s'ajoute en tête de la ligne de pastilles (fond #F1EFE9, texte #3D4250 ; sombre #2B2620 / #C9C2B8), même style que les autres pastilles neutres.
+
+## 22. Nouveau compte sans offre, carte Google Emplois, Trier « Rien à trier »
+
+Planches : AujourdhuiOrdinateurNouveau(Sombre), AccueilNouveau(Sombre) (téléphone), TrierOrdinateurRien(Sombre), TrierRien(Sombre), CandidaturesOrdinateurVide(Sombre) et CandidaturesVide(Sombre) (lien ajouté). Captures du même nom.
+
+Aujourd'hui, nouveau compte sans offre
+- Bloc d'accueil : « Bienvenue, / tes offres arrivent bientôt », sous-titre « Crée ta première alerte : jobA1 s'occupe du reste. »
+- « Premiers pas » (compteur « 2 sur 3 ») : étapes faites avec coche verte et « Fait », étape suivante numérotée en bleu avec le seul bouton plein de l'écran « Créer mon alerte » (pleine largeur sur téléphone).
+- Carte Google Emplois juste sous les premiers pas (32 px d'écart). C'est une ligne à fond bleu (#E8ECFB, sombre #232B45), rayon 20 px, même hauteur que les lignes des premiers pas (88 px) : icône loupe dans un rond blanc de 36 px, titre « Des offres pour toi, en attendant », sous-titre « <Métier> · <Lieu> » (#3D4250), bouton pilule blanc sans contour « Voir sur Google Emplois » + icône lien externe (48 px de haut), croix « Masquer » 44 × 44 px. Pas de pastille, pas de date.
+- Téléphone : même carte bleue, titre et sous-titre en haut avec la croix à droite, bouton blanc pleine largeur dessous (12 px d'écart).
+- États des planches (v = pas, ferme, masque). « ferme » : premiers pas fermés, la carte passe en premier sous le bloc d'accueil ; sur téléphone la section s'appelle « Tes premières offres ». « masque » : la carte disparaît, message « Carte masquée » + « Annuler » pendant 6 s (même composant que « Offre gardée »), masquage mémorisé pour le compte, pas de réglage pour la réafficher.
+- Sous la carte, deux liens : « Ajouter une offre vue ailleurs », « Transférer mes alertes ».
+- Colonne ORP à zéro (« 0 sur 10 », « 10 candidatures d'ici le 5 décembre »). Bloc « Offres à trier » : « Rien à trier pour l'instant / Tes premières offres arrivent après ta première alerte. », sans signet ni lien « Élargir ma recherche ».
+
+Trier, 0 offre (« Rien à trier pour l'instant »)
+- Illustration des mascottes sur le banc (celle de « Pas encore d'offre »), pas celle de fin de tri (confettis = tri terminé).
+- Titre : « Rien à trier » en manuscrit + « pour l'instant ». Pastille bleue « Offres collectées chaque jour ».
+- Boutons pilule : « Voir mes candidatures » (plein) et « Gérer mes alertes » (contour), 12 px d'écart (empilés sur téléphone).
+
+Candidatures vide
+- Lien « Voir les offres sur Google Emplois » + icône lien externe, au-dessus de « Faire une candidature spontanée ». Pas de carte. Ce lien n'est pas concerné par « Masquer ». Il figure aussi dans l'état « Tes alertes sont prêtes » (planches CandidaturesOrdinateurVideAlertes et CandidaturesVideAlertes, clair et sombre).
+
+## 23. Premiers pas en 5 étapes (Aujourd'hui ordinateur et Accueil téléphone)
+
+Planches : AujourdhuiOrdinateurNouveau(Sombre) (hauteur 1200), AccueilNouveau(Sombre). États v = pas (2 sur 5), alerte (3 sur 5), ferme, masque. Captures AujourdhuiOrdinateurNouveau*--alerte.png, AccueilNouveau*--alerte.png, etc.
+
+- Une seule forme, une liste de 5 lignes, sur ordinateur et téléphone. L'ancienne carte « 2 sur 5 » disparaît partout, téléphone compris.
+- Compteur à droite du titre « Premiers pas » : « N sur 5 ».
+- 1 « Ton CV est lu » / « N compétences reprises » (coche verte, « Fait »). 2 « Tes critères sont réglés » / « Métier · Lieu · taux » (coche, « Fait »).
+- 3 avant l'alerte : rond bleu « 3 », « Créer ta première alerte » / « jobup : 2 minutes », bouton plein « Créer mon alerte » (seul bouton plein de l'écran ; pleine largeur sous la ligne sur téléphone). Après : coche, « Ta première alerte est créée » / « jobup · chaque jour », « Fait ».
+- 4 « Garder tes premières offres » et 5 « Préparer et envoyer une candidature » : rond gris (#ECE9E1, chiffre #596070), titre et sous-titre en #596070, pas de bouton, aria-disabled="true". Sous-titre « Dès ta première offre ». Quand les 3 premières étapes sont faites sans offre arrivée, le sous-titre de l'étape 4 devient « Ta première offre arrive après la prochaine collecte ».
+- Ordinateur : lignes en cartes blanches de 88 px, 12 px d'écart. Téléphone : lignes de 72 px séparées par un trait, dans la feuille blanche.
+- L'écran « C'est fait ! » reste à la fin des 5 étapes.
+
+## 24. Onboarding, étape 3 : trajet du code jobup
+
+Planches : OnboardingOrdinateurAlerteCode, ...CodeRecu, ...CodeExpire et OnboardingAlerteCode, ...CodeRecu, ...CodeExpire (téléphone), en clair et en sombre. Complète la section 15.
+
+- Sous « Recopie le code de jobup », un trajet en 3 points reliés par un trait : « jobup », « Ta boîte jobA1 » (« Boîte jobA1 » sur téléphone), « Cette page ». Chaque point : rond de 40 px avec icône, nom en gras, état dessous.
+- En attente : cadre à contour plein (plus de pointillés). Points 1 et 3 en pointillés gris (« envoie le code », « le code s'affiche »), point 2 actif en bleu avec anneau (« on écoute »), traits en pointillés. Sous un séparateur, ligne d'état avec l'indicateur tournant : « Rien reçu pour l'instant. Valide l'alerte sur jobup, on vérifie toutes les 15 s. » (téléphone : sans la fin). role="status" aria-live="polite".
+- Code reçu : les 3 points en vert avec coche (« code envoyé », « code reçu », « code affiché »), traits verts pleins, puis le champ du code et la pastille « Reçu à … » inchangés.
+- Code expiré : points 1 et 2 verts, point 3 orange avec icône d'alerte (« code expiré »), puis le bandeau « Code expiré / Renvoyer » inchangé.
+- Le serveur ne sait qu'une chose : l'e-mail est arrivé ou non. N'affiche jamais d'état intermédiaire inventé (« en route », « envoyé par jobup ») avant l'arrivée.
+- Après 2 minutes sans code : ajoute sous la ligne d'état « Toujours rien ? Vérifie que l'adresse est bien collée dans jobup. » (pas de planche, même style que la ligne d'état).
+- prefers-reduced-motion : l'indicateur ne tourne pas.
+
+## 25. Onboarding ordinateur, étape alerte : scène à la place du bonhomme seul
+
+Planches : OnboardingOrdinateurAlerte, ...AlerteCode, ...AlerteCodeRecu, ...AlerteCodeExpire, en clair et en sombre. Image source : captures/scene-boite-aux-lettres.png (fond transparent).
+
+- La mascotte seule est remplacée par la scène des trois mascottes autour de la boîte aux lettres. Largeur affichée 420 px, hauteur automatique, 40 px sous le haut de la colonne. alt="" aria-hidden="true" (décorative).
+- Sers-la en WebP, 840 px de large (2x), environ 73 Ko, avec width et height en attributs pour éviter le saut de mise en page, loading="lazy" inutile (elle est au-dessus de la ligne de flottaison).
+- Téléphone : pas d'illustration sur cette étape, inchangé.
+
+Compléments section 23 (premiers pas) :
+- Bloc d'accueil, sous-titre : « Crée ta première alerte : jobA1 s'occupe du reste. » avant l'alerte ; « Ton alerte est créée. La prochaine collecte t'apporte tes premières offres. » une fois l'alerte créée (état v = alerte).
+- Un seul bouton à la fois, sur l'étape en cours : 3 « Créer mon alerte », 4 « Trier mes offres », 5 « Préparer une candidature ». Étapes faites : « Fait », sans bouton. Étapes à venir : grisées, sans bouton.
+- Croix « Masquer les premiers pas » : 44 × 44 px à droite du compteur, aria-label « Masquer les premiers pas », bandeau « Premiers pas masqués » + « Annuler ».
+- Phrase ORP : la phrase commune de l'app (« Encore N d'ici le <date> »), pas celle de la planche.
+- Tous les bandeaux avec « Annuler » ont le trait de compte à rebours.

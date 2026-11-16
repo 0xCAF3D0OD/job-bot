@@ -1,0 +1,44 @@
+# Les décisions de Kevin, assemblées sur main après chaque fusion : chaque PR dépose un fichier
+# docs/decisions/AAAA-MM-JJ[-HHMM]-sujet.md ; ici, docs/mobile/DECISIONS.md est assemblé, trié par date.
+# Une PR ne touche donc pas DECISIONS.md : plus de conflit sur la fin du fichier.
+name: Décisions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/decisions/**"
+      - "scripts/decisions.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: decisions-main
+  cancel-in-progress: false
+
+jobs:
+  assembler:
+    name: Assembler DECISIONS.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Un envoi fait avec le jeton de l'action ne relance pas les workflows : pas de boucle.
+      # Toujours repartir de main à jour : une fusion arrivée entre-temps apporte aussi ses décisions, et
+      # un envoi refusé (l'action de l'historique a poussé juste avant) est retenté jusqu'à 3 fois.
+      - name: Assembler et enregistrer s'il a changé
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for essai in 1 2 3; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            python3 scripts/decisions.py
+            git add docs/mobile/DECISIONS.md
+            if git diff --cached --quiet; then echo "DECISIONS.md déjà à jour"; exit 0; fi
+            git commit -q -m "chore: DECISIONS.md assemblé depuis docs/decisions/"
+            git push origin HEAD:main && exit 0
+            sleep $((essai * 5))
+          done
+          exit 1

@@ -81,7 +81,7 @@ jobs:
           fetch-depth: 0
       # Aussi : un numéro de docs/ n'est pris qu'une fois. Sur une PR, la CI passe sur main + la PR,
       # donc un docs/139 déjà pris sur main entre-temps est vu (scripts/docs_numeros.py).
-      - name: Les fichiers de changelog.d, leur assemblage et les numéros de docs/
+      - name: Les fichiers de changelog.d et de docs/decisions, leur assemblage et les numéros de docs/
         run: make changelog-check
       # La base de comparaison : sur une PR, la CI travaille sur le commit de fusion de test
       # (refs/pull/N/merge), dont le premier parent est main au moment du passage. Le base.sha de
@@ -118,5 +118,15 @@ jobs:
           changed=$(git diff --name-only "$BASE" HEAD)
           if echo "$changed" | grep -qx CHANGELOG.md && ! echo "$changed" | grep -qx scripts/changelog.py; then
             echo "::error file=CHANGELOG.md::CHANGELOG.md est assemblé sur main : ajoute plutôt changelog.d/<sujet>.md et laisse CHANGELOG.md tel quel."
+            exit 1
+          fi
+      # Même principe pour les décisions de Kevin : une PR dépose docs/decisions/AAAA-MM-JJ[-HHMM]-sujet.md,
+      # et docs/mobile/DECISIONS.md est assemblé sur main par decisions.yml.
+      - name: DECISIONS.md n'est pas modifié à la main
+        if: github.event_name == 'pull_request'
+        run: |
+          changed=$(git diff --name-only "$BASE" HEAD)
+          if echo "$changed" | grep -qx docs/mobile/DECISIONS.md && ! echo "$changed" | grep -qx scripts/decisions.py; then
+            echo "::error file=docs/mobile/DECISIONS.md::DECISIONS.md est assemblé sur main : ajoute plutôt docs/decisions/AAAA-MM-JJ-HHMM-sujet.md (titre « ## … » en première ligne) et laisse DECISIONS.md tel quel."
             exit 1
           fi

@@ -40,8 +40,19 @@ NO_ANSWER_AFTER = timedelta(days=14)
 class FirstStepsOut(BaseModel):
     """Les premiers pas (docs/128 §1) : la carte en haut d'Aujourd'hui tant qu'il en manque."""
 
-    key: Literal["profile", "alerts", "keep", "prepare", "sent"]
+    key: Literal["cv", "criteria", "alerts", "keep", "send"]
     done: bool
+
+
+class FirstStepsSummaryOut(BaseModel):
+    """Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+    gardées (16.11)."""
+
+    skills: int
+    trade: str | None
+    place: str | None
+    min_rate: int | None
+    kept: int
 
 
 class InterviewToReview(BaseModel):
@@ -132,6 +143,7 @@ def _google_jobs(found: alert_service.GoogleJobs | None) -> GoogleJobsOut | None
 class TodayOut(BaseModel):
     # Les premiers pas (docs/128) : les cinq étapes, faites ou non, dans l'ordre.
     first_steps: list[FirstStepsOut] = []
+    first_steps_summary: FirstStepsSummaryOut | None = None
     first_steps_dismissed: bool = False
     # Une offre visible existe ; sinon, alertes créées : « les premières arrivent ».
     has_offers: bool = True
@@ -352,6 +364,11 @@ async def get_today(request: Request) -> TodayOut:
     async with runtime.sessionmaker.begin() as session:
         steps = await first_steps_service.load(session)
     async with runtime.sessionmaker() as session:
+        summary = (
+            await first_steps_service.summary(session)
+            if not steps.dismissed and not all(done for _, done in steps.rows())
+            else None
+        )
         google_jobs = await alert_service.google_jobs(session, steps.has_offers)
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
@@ -360,10 +377,18 @@ async def get_today(request: Request) -> TodayOut:
         - datetime.now(UTC).astimezone(LOCAL_TZ).date()
     ) <= timedelta(days=1)
     return TodayOut(
-        first_steps=[
-            FirstStepsOut(key=key, done=steps.done(i))
-            for i, key in enumerate(first_steps_service.STEPS)
-        ],
+        first_steps=[FirstStepsOut(key=key, done=done) for key, done in steps.rows()],
+        first_steps_summary=(
+            FirstStepsSummaryOut(
+                skills=summary.skills,
+                trade=summary.trade,
+                place=summary.place,
+                min_rate=summary.min_rate,
+                kept=summary.kept,
+            )
+            if summary
+            else None
+        ),
         first_steps_dismissed=steps.dismissed,
         has_offers=steps.has_offers,
         first_steps_offer_id=steps.offer_id,
