@@ -12,6 +12,9 @@ import OrpSheet from "./OrpSheet.vue";
 // pas marqué remis : « Justificatifs d’octobre à remettre », le nombre de recherches et l'échéance, « Exporter le
 // PDF » et « Déjà remis ». Ensuite : « Octobre remis à l’ORP », la date de remise, et « Annuler ».
 // Rien à remettre (aucune recherche ce mois-là) : pas de carte.
+// Bilan sur ordinateur (`wide`, maquette du 13.11 BilanOrdinateur, état octDone) : une fois remis, le bandeau vert
+// « octobre est remis ! » en Caveat Brush, la date et le nombre de recherches, « Annuler », puis le personnage au dossier.
+const props = defineProps<{ wide?: boolean }>();
 const emit = defineEmits<{ changed: [month: OrpMonth] }>();
 
 const data = ref<OrpMonth | null>(null);
@@ -31,6 +34,7 @@ onMounted(() => void load());
 
 const shown = computed(() => (data.value && data.value.count > 0 && data.value.state !== "en_cours" ? data.value : null));
 const done = computed(() => shown.value?.state === "remis");
+const banner = computed(() => done.value && props.wide);
 const searches = computed(() => plural(shown.value?.count ?? 0, "recherche", "recherches"));
 const monthName = computed(() => (shown.value ? formatMonth(shown.value.month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase()) : ""));
 const dueLine = computed(() => {
@@ -70,18 +74,21 @@ async function mark(submitted: boolean): Promise<void> {
     class="orp-proof"
   >
     <section
-      :class="['orp-proof-card', { done }]"
+      :class="['orp-proof-card', { done, banner }]"
       role="status"
       aria-labelledby="orp-proof-title"
       data-test="orp-proof"
     >
-      <AppIcon :name="done ? 'check-circle' : 'alert-circle'" />
+      <AppIcon
+        v-if="!banner"
+        :name="done ? 'check-circle' : 'alert-circle'"
+      />
       <div class="orp-proof-text">
         <h2
           id="orp-proof-title"
           data-test="orp-proof-title"
         >
-          {{ done ? `${monthName} remis à l’ORP` : `Justificatifs ${ofMonth(shown.month)} à remettre` }}
+          {{ banner ? `${monthName.toLowerCase()} est remis !` : done ? `${monthName} remis à l’ORP` : `Justificatifs ${ofMonth(shown.month)} à remettre` }}
         </h2>
         <p data-test="orp-proof-line">
           {{ done ? doneLine : dueLine }}
@@ -126,6 +133,16 @@ async function mark(submitted: boolean): Promise<void> {
           Déjà remis
         </button>
       </div>
+      <img
+        v-if="banner"
+        class="orp-proof-art"
+        src="/troupe/remis-224.webp"
+        width="113"
+        height="112"
+        alt=""
+        aria-hidden="true"
+        data-test="orp-proof-art"
+      >
     </section>
     <OrpSheet
       ref="sheet"

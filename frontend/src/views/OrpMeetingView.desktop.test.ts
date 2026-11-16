@@ -115,18 +115,25 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-to-note-1]").exists()).toBe(false);
   });
 
-  it("aucun rendez-vous : une ligne et « Nouveau rendez-vous » en tête de liste, qui ouvre le panneau ; plus de formulaire dans le détail (PR 41)", async () => {
+  it("rien à venir : une ligne en tête de liste ; aucun rendez-vous : l’état vide ; le « + Ajouter » de l’en-tête (?ajouter=1) ouvre le panneau (maquette du 14 novembre, §6)", async () => {
+    // Un rendez-vous passé, rien à venir : la pastille en tête de liste (§13 du 15 novembre, planches corrigées).
+    serve({ meeting: null, preparation: PREP, past: [NOTED], target: 10, trainings: [] });
+    const before = await open();
+    expect(before.wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
+    // La pastille seule (maquette du 15 novembre, §14) : la phrase « jobA1 prépare ta fiche la veille. » n'y est plus.
+    expect(before.wrapper.get("[data-test=rdv-list-empty]").text()).not.toContain("la veille");
+    // Aucun rendez-vous du tout (RendezVousOrdinateurVide) : l’état vide commun, centré, et son bouton d’ajout.
     serve({ meeting: null, preparation: PREP, past: [], target: 10, trainings: [] });
-    const { wrapper } = await open();
-    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("Aucun rendez-vous à venir");
-    expect(wrapper.get("[data-test=rdv-list-empty]").text()).toContain("jobA1 prépare ta fiche la veille.");
-    const add = wrapper.get("[data-test=rdv-add]");
-    expect(add.text()).toBe("Nouveau rendez-vous");
-    expect(add.attributes("aria-haspopup")).toBe("dialog");
+    const { wrapper, router } = await open();
+    expect(wrapper.get("[data-test=rdv-none-yet] h2").text()).toBe("Aucun rendez-vous");
+    expect(wrapper.find("[data-test=rdv-list-empty]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=rdv-add]").exists()).toBe(false);
     expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
     expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(false);
-    await add.trigger("click");
+    await router.push("/candidatures/rendez-vous-orp?ajouter=1");
+    await flushPromises();
+    expect(router.currentRoute.value.query.ajouter).toBeUndefined();
     expect(wrapper.findComponent({ name: "NewMeetingSheet" }).props("open")).toBe(true);
     const panel = wrapper.get("[data-test=new-meeting]");
     expect(panel.find(".sheet-title").text()).toBe("Nouveau rendez-vous");

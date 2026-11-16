@@ -99,6 +99,9 @@ describe("CvPanel", () => {
     expect(card.find("[role=radiogroup], [aria-label='Langue du CV']").exists()).toBe(true);
     expect(card.find("[data-test=cv-highlights]").exists()).toBe(false);
     expect(wrapper.find("[data-test=cv-docx]").attributes("href")).toBe("/api/cvs/21/docx");
+    // La page du CV porte le modèle choisi (Moderne par défaut), comme son PDF.
+    expect(wrapper.find("[data-test=cv]").classes()).toContain("tpl-moderne");
+    expect(wrapper.find("[data-test=cv] .cv-head .cv-name").exists()).toBe(true);
   });
 
   it("sans langue choisie, le CV prend celle de la lettre (§14)", async () => {
@@ -120,6 +123,10 @@ describe("CvPanel", () => {
     const file = wrapper.find("[data-test=cv-file]");
     expect(file.find("h2").text()).toBe("Ce CV");
     expect(file.find("[data-test=cv-changes-open]").text()).toContain("2 changements, à vérifier");
+    // Une action à faire prend l'orange d'alerte (Kevin, 15.11) ; le texte complet reste dans le nom de la ligne, coupée à l'écran.
+    expect(file.find("[data-test=cv-changes-open] .prep-file-sub").classes()).toContain("warn");
+    expect(file.find("[data-test=cv-changes-open]").attributes("aria-label")).toBe("Adapté pour cette offre, 2 changements, à vérifier");
+    expect(file.find("[data-test=cv-versions-open]").attributes("aria-label")).toMatch(/^Versions · 1, /);
     expect(file.find("[data-test=cv-versions-open]").text()).toContain("Versions · 1");
     expect(file.find("[data-test=cv-origin]").text()).toContain("Ne change pas, sert de base");
     const changes = wrapper.find("[data-test=cv-changes]");

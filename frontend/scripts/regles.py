@@ -48,6 +48,8 @@ def hand_titles() -> list[str]:
     titles += [t.strip() for t in re.findall(r'class="goal-reached-hand">([^<]+)<', goal)]
     titles += [t.strip() for t in re.findall(r'class="login-hand">([^<]+)<', login)]
     titles += re.findall(r'hand: "([^"]+)"', today)
+    # L'accroche d'un justificatif en retard (lot du 11 novembre au soir, PR 49) : sa seconde ligne, « puis 2 candidatures ».
+    titles += ["puis 0123456789 candidatures"]
     # La fin manuscrite de « Candidature envoyée. » sur ordinateur (maquette du 8 novembre, lot 8).
     sent = (FRONTEND / "src/components/ApplicationSent.vue").read_text("utf-8")
     titles += re.findall(r'\bhand="([^"]+)"', sent)

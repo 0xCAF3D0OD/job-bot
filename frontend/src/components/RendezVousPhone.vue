@@ -15,6 +15,8 @@ import {
   sheetLines,
   timeAndPlace,
   upcomingAppointments,
+  appointmentMatches,
+  meetingMatches,
 } from "../rendezVous";
 import { plural } from "../format";
 import CalendarDate from "./CalendarDate.vue";
@@ -37,6 +39,8 @@ const props = defineProps<{
   sheetLink: string;
   // Le « ⋯ » de la carte ORP (C6) : les mêmes actions que celui de la page actuelle.
   meetingItems?: MoreMenuItem[];
+  // Les mots de la recherche (maquette du 14 novembre, §6), déjà découpés par OrpMeetingView.
+  words?: string[];
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
@@ -46,15 +50,16 @@ const emit = defineEmits<{
 }>();
 
 const now = new Date();
-const items = computed(() => upcomingAppointments(props.page.meeting ?? null, props.applications, now));
+const words = computed(() => props.words ?? []);
+const items = computed(() => upcomingAppointments(props.page.meeting ?? null, props.applications, now).filter((item) => appointmentMatches(item, words.value)));
 const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
 const prepOpen = ref(false);
 
 // À noter, puis le dernier rendez-vous ORP noté.
-const toNote = computed(() => meetingsToNote(props.page, now));
-const last = computed<Meeting | null>(() => notedMeetings(props.page, now)[0] ?? null);
+const toNote = computed(() => meetingsToNote(props.page, now).filter((m) => meetingMatches(m, words.value)));
+const last = computed<Meeting | null>(() => notedMeetings(props.page, now).filter((m) => meetingMatches(m, words.value))[0] ?? null);
 // Maquette du 8 novembre (D26) : la date dans l'icône calendrier de 48 px (CalendarDate), plus de carré coloré.
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);

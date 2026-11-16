@@ -19,7 +19,9 @@ import NotificationBell from "./NotificationBell.vue";
 // Ni loupe ni menu du compte : la recherche ira dans Candidatures, le compte est un onglet de la barre du bas.
 const route = useRoute();
 const { me, loggedIn } = useAuth();
-const { last: lastJobsPage } = useJobsMemory();
+const { menuLink } = useJobsMemory();
+// Candidatures dans le menu : la dernière page retenue, ou la liste des offres depuis Préparer et Relances.
+const jobsLink = computed(() => menuLink(route.path));
 
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme", icon: "globe" }];
@@ -96,7 +98,7 @@ onUnmounted(() => window.removeEventListener("scroll", onScroll));
             :key="entry.name"
           >
             <RouterLink
-              :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
+              :to="entry.name === 'jobs' ? jobsLink : entry.path"
               :class="{ 'router-link-active': isCurrent(entry) }"
               :aria-current="isCurrent(entry) ? 'page' : undefined"
             >

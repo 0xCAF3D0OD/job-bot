@@ -290,6 +290,34 @@ async def put_offer_filters(request: Request, body: OfferFiltersVisible) -> Offe
     return body
 
 
+class SentSortModel(BaseModel):
+    """Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11)."""
+
+    sort: Literal["relancer", "recentes", "anciennes"] = "relancer"
+
+
+@router.get("/sent-sort", operation_id="getSentSort")
+async def get_sent_sort(request: Request) -> SentSortModel:
+    async with _runtime(request).sessionmaker() as session:
+        value = await session.scalar(select(Setting.value).where(Setting.key == "sent_sort"))
+    return (
+        SentSortModel(sort=value)
+        if value in ("relancer", "recentes", "anciennes")
+        else SentSortModel()
+    )
+
+
+@router.put("/sent-sort", operation_id="saveSentSort")
+async def put_sent_sort(request: Request, body: SentSortModel) -> SentSortModel:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key="sent_sort", value=body.sort)
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": body.sort})
+        )
+    return body
+
+
 # --- Notifications (0.4.0-c) -----------------------------------------------------------
 
 

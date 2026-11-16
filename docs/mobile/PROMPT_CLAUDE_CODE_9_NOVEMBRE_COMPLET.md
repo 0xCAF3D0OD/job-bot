@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # Prompt pour Claude Code : lot complet du 9 novembre 2026 (téléphone et ordinateur)
 
 Copie tout le bloc ci-dessous dans Claude Code.

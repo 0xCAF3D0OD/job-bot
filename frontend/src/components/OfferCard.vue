@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import type { Offer } from "../api/client";
@@ -29,10 +29,23 @@ const to = computed(() =>
     : { path: route.path, query: { ...route.query, offre: String(props.offer.id) } },
 );
 
-type Chip = { text: string; tone?: "peach" | "blue" | "warn"; title?: string };
+// Une pastille dit une information, jamais qu'elle manque (§11 du 15 novembre, téléphone et ordinateur) : une valeur
+// absente ou inconnue ne donne pas de pastille ; l'information reste dans « L'offre en bref » de la fiche.
+const UNKNOWN = /^(non (précisée?|indiquée?|renseignée?|communiquée?)|inconnue?|n\/a|-)$/i;
+function known(value: string | null | undefined): string | null {
+  const text = value?.trim();
+  return text && !UNKNOWN.test(text) ? text : null;
+}
+type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
+  // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
+  if (unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
+  // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le
+  // marque-page orange (planche CandidaturesOrdinateurB du 13.11).
+  if (o.status === "later") out.push({ text: "Gardée", tone: "kept" });
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
   else if (o.doubts?.length)
     out.push({ text: o.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: o.doubts.map((d) => d.text).join(" ") });
@@ -42,10 +55,10 @@ const chips = computed<Chip[]>(() => {
   if (!o.description && !o.spontaneous && o.score !== null && o.score !== undefined) out.push({ text: "Provisoire", tone: "peach" });
   const rate = rateText(o.rate_min, o.rate_max);
   if (rate) out.push({ text: rate });
-  out.push({ text: o.employment_type || "Contrat non précisé" });
+  const contract = known(o.employment_type);
+  if (contract) out.push({ text: contract });
   const remote = remoteText(o, phone.value);
   if (remote) out.push({ text: remote });
-  if (o.status === "later") out.push({ text: "Plus tard" });
   if (o.spontaneous) out.push({ text: "Spontanée", tone: "blue" });
   else if (o.added_by_you) out.push({ text: "Ajoutée par toi", tone: "blue" });
   if (props.showDate) out.push({ text: `Reçue ${dateInList(o.first_seen_at)}` });
@@ -54,31 +67,92 @@ const chips = computed<Chip[]>(() => {
 
 // La limite de la formule (docs/125) explique une offre sans note.
 const { reached } = usePlan();
+
+// Téléphone (Kevin, 15.11 ; planche Candidatures) : les puces qui ne tiennent pas sur la ligne passent dans « +N »,
+// jamais coupées. Mesuré après rendu, et de nouveau quand la carte change de largeur.
+const card = ref<{ $el: HTMLElement } | null>(null);
+const fits = ref(99);
+async function fit(): Promise<void> {
+  fits.value = 99;
+  if (!phone.value) return;
+  await nextTick();
+  const box = card.value?.$el.querySelector(".list-card-chips");
+  const edge = box?.getBoundingClientRect().right ?? 0;
+  while (box && fits.value > 1 && [...box.children].some((c) => c.getBoundingClientRect().right > edge + 0.5)) {
+    fits.value = Math.min(fits.value, chips.value.length) - 1;
+    await nextTick();
+  }
+}
+let watcher: ResizeObserver | undefined;
+onMounted(() => {
+  void fit();
+  if (typeof ResizeObserver !== "undefined" && card.value) (watcher = new ResizeObserver(() => void fit())).observe(card.value.$el);
+});
+onUnmounted(() => watcher?.disconnect());
+watch([chips, phone], () => void fit());
 </script>
 
 <template>
   <ListCard
+    ref="card"
     :title="offer.title"
     :company="offer.company ?? 'Entreprise non indiquée'"
     :location="offer.location"
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
     :to="to"
     :selected="selected"
-    :class="{ expired: offer.expired_at && offer.status !== 'applied' }"
+    :class="['list-card-offer', { expired: offer.expired_at && offer.status !== 'applied' }]"
     data-test="offer"
     @select="$emit('select')"
   >
     <template #chips>
       <span
-        v-for="chip in chips"
+        v-for="chip in chips.slice(0, fits)"
         :key="chip.text"
         :class="chip.tone"
         :title="chip.title"
         data-test="offer-chip"
-      >{{ chip.text }}</span>
+      ><svg
+        v-if="chip.tone === 'kept'"
+        class="chip-mark"
+        width="9"
+        height="12"
+        viewBox="0 0 12 15"
+        aria-hidden="true"
+        focusable="false"
+      ><path
+        d="M1 1.5A1.5 1.5 0 0 1 2.5 0h7A1.5 1.5 0 0 1 11 1.5V15L6 11.5 1 15z"
+        fill="#F2853A"
+      /></svg>{{ chip.text }}</span>
+      <span
+        v-if="fits < chips.length"
+        class="more"
+        data-test="offer-chip"
+      >+{{ chips.length - fits }}</span>
     </template>
     <template #end>
+      <svg
+        v-if="unscored"
+        class="score-ring score-unrated"
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label="Pas encore notée"
+        :title="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
+        data-test="score"
+      ><circle
+        cx="50"
+        cy="50"
+        r="42"
+        fill="none"
+        stroke-width="8"
+        stroke-dasharray="12 9.99"
+      /><path
+        d="M38 50H62"
+        stroke-width="8"
+        stroke-linecap="round"
+      /></svg>
       <ScoreRing
+        v-else
         worded
         :score="offer.score ?? null"
         :pending="profileEmpty || offer.summary_role ? 'Pas de note : ton profil est vide' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
@@ -95,4 +169,37 @@ const { reached } = usePlan();
 /* Du texte : le gris secondaire (6,3:1 sur la carte), jamais --faint, réservé à ce qui n’est pas du texte. */
 .list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--text-secondary); }
 .list-card.expired { opacity: 0.6; }
+/* §21 du 15 novembre (ordinateur 40 px, téléphone 48 px) : sans note, un cercle vide en pointillés et un tiret. */
+.score-unrated circle { stroke: var(--linked-line); }
+.score-unrated path { stroke: var(--unrated-dash); }
+.list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
+.chip-mark { flex: none; }
+/* Ordinateur, maquette du 14 novembre (§1 ; CandidaturesOrdinateurB) : l'anneau de 40 px en haut à droite, sans son
+   mot (il reste dans le nom de l'anneau, « Proche : 92 sur 100 », et dans la fiche) ; même marge de 16 px en haut et
+   à droite (ListCard). Les séparations prennent le fond de la carte, bleu pâle quand elle est choisie. */
+@media (min-width: 1024px) {
+  .list-card-end .score-ring { width: 2.5rem; height: 2.5rem; }
+  .list-card-end:has(.score-ring) { align-self: start; width: auto; }
+  .list-card-end .score-ring-word { display: none; }
+  .list-card[aria-current="true"] { --ring-gap: var(--selected-bg); }
+}
+/* Téléphone, maquette du 14 novembre (Candidatures, §1) : logo, poste et « entreprise · lieu », l'anneau de 48 px en haut à
+   droite sans son mot (il reste dans le nom de l'anneau et dans la fiche), à 20 px du haut et de la droite comme de la
+   gauche (marge de 20 px, trait de 1 px --line) ; les puces sur toute la largeur dessous, à 8 px, 6 px entre elles. */
+@media (max-width: 820px) {
+  .list-card.list-card-offer {
+ --offer-19: 19px; --offer-18: 18px; --offer-2: 2px; --offer-3: 3px; --offer-r: 6px;
+    grid-template-areas: "logo text end" "chips chips chips"; row-gap: var(--space-2); height: auto;
+    padding: var(--offer-19); border: 1px solid var(--line);
+  }
+  .list-card.list-card-offer[aria-current="true"] { padding: var(--offer-18); }
+  .list-card-offer .list-card-text { align-self: center; gap: var(--offer-2); }
+  .list-card-offer .list-card-end:has(.score-ring) { align-self: start; justify-self: end; align-items: flex-end; width: auto; margin: calc(-1 * var(--offer-2)) calc(-1 * var(--offer-2)) 0 0; }
+  .list-card-offer .list-card-end .score-ring-word { display: none; }
+  .list-card-offer .list-card-end .score-ring-wrap { justify-items: end; padding: 0; }
+  .list-card-offer > .list-card-chips { margin-top: 0; }
+  .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
+  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept) { color: var(--text-lead); }
+  .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
+}
 </style>

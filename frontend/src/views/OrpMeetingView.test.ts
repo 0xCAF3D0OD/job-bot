@@ -97,13 +97,21 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(log.find("[data-test=log-outcome-2]").text()).toBe("Modifier");
   });
 
-  it("aucune candidature encore : la feuille le dit, et mène aux offres (docs/128 §3)", async () => {
+  it("aucune candidature encore : l’état vide, puis le formulaire après « Ajouter un rendez-vous » (§13 du 15.11)", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
-    expect(wrapper.find("[data-test=sheet-none-yet]").text()).toContain("Ta feuille ORP se remplit avec tes candidatures.");
+    // RendezVousOrdinateurVide / RendezVousVide : titre, pastille, un bouton ; plus de formulaire d’emblée (décision de Kevin du 15.11).
+    const empty = wrapper.find("[data-test=rdv-none-yet]");
+    expect(empty.find("h2").text()).toBe("Aucun rendez-vous");
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("jobA1 prépare ta feuille la veille");
+    expect(empty.find("[data-test=see-offers]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sheet-summary]").exists()).toBe(false);
+    await empty.find("[data-test=rdv-none-add]").trigger("click");
+    expect(wrapper.find("[data-test=rdv-none-yet]").exists()).toBe(false);
     expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=sheet-none-yet]").text()).toContain("Ta feuille ORP se remplit avec tes candidatures.");
   });
 
   it("aucun rendez-vous prévu : une carte et « Ajouter », le formulaire dans une fenêtre du bas, plus de personnage (PR 28)", async () => {
@@ -134,7 +142,7 @@ describe("Rendez-vous ORP (docs/83)", () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
     const none = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
-    expect(none.find("[data-test=sheet-none-yet]").exists()).toBe(true);
+    expect(none.find("[data-test=rdv-none-yet]").exists()).toBe(true);
     expect(none.find("[data-illustration=personnage]").exists()).toBe(false);
     // Un rendez-vous prévu : pas de personnage.
     GET.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE } });

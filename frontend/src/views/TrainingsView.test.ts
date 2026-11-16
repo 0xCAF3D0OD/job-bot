@@ -16,7 +16,10 @@ vi.mock("../api/client", () => ({
     DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.unstubAllGlobals();
+});
 
 const training = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
@@ -47,7 +50,9 @@ const page = (items: unknown[], extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-async function mountView(path = "/formations") {
+// Téléphone par défaut : le catalogue d'abord. Sur ordinateur, la vue d'ensemble (planche BilanOrdinateur).
+async function mountView(path = "/formations", phone = true) {
+  vi.stubGlobal("matchMedia", (media: string) => ({ matches: phone && media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: TrainingsView }] });
   await router.push(path);
   const wrapper = mount(TrainingsView, { global: { plugins: [router], stubs: { teleport: true } } });
@@ -132,7 +137,7 @@ describe("TrainingsView", () => {
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
     // Sur la ligne : l'avancement noté, en étiquette (B19).
-    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · module 4/12");
+    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · Module 4 sur 12");
     expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
@@ -352,5 +357,84 @@ describe("TrainingsView", () => {
     expect(POST).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain("Indique d’abord ton domaine");
     expect(wrapper.find("#domaine-champ").exists()).toBe(true);
+  });
+
+  describe("sur ordinateur (planche BilanOrdinateur, état Formations)", () => {
+    const current = training(1, { mark: { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: 12, modules_done: 3 } });
+    const kept = training(2, {
+      title: "HashiCorp Terraform Associate",
+      provider: "HashiCorp",
+      format: "self_paced",
+      duration: "2 semaines",
+      mark: { status: "interested", progress: null, done_at: null, certified: null, funding_status: "accepted" },
+    });
+    const free = training(3, { title: "Azure Administrator (AZ-104)", provider: "Microsoft Learn", price: "free", format: "self_paced", mark: { status: "interested", progress: null, done_at: null, certified: null } });
+
+    it("montre la carte de l’ORP, En cours et Gardées, sans onglets ni catalogue", async () => {
+      GET.mockResolvedValue({ data: page([current, kept, free, training(4)]) });
+      const wrapper = await mountView("/formations", false);
+      expect(wrapper.find("[data-test=trainings-overview]").exists()).toBe(true);
+      expect(wrapper.find("[data-test=tab-catalog]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=training-orp-card]").text()).toContain("L’ORP peut financer une formation");
+      expect(wrapper.text()).toContain("En cours");
+      expect(wrapper.text()).toContain("1 formation");
+      expect(wrapper.find("[data-test=training-current]").text()).toContain("Continuer le cours");
+      expect(wrapper.find("[data-test=modules-bar]").exists()).toBe(true);
+      // Kevin, 2026-11-15 : « Module N sur 12 » suffit, plus de « Module terminé » ni de − et +.
+      expect(wrapper.find("[data-test=training-current]").text()).not.toContain("Module terminé");
+      expect(wrapper.find("[data-test=module-more]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=module-less]").exists()).toBe(false);
+      const rows = wrapper.findAll("[data-test=training-kept]");
+      expect(rows).toHaveLength(2);
+      expect(rows[0]!.text()).toContain("HashiCorp · À ton rythme · 2 semaines");
+      expect(rows[0]!.find("[data-test=training-kept-status]").text()).toBe("Financement accordé");
+      expect(rows[1]!.text()).toContain("Microsoft Learn · À ton rythme · gratuit");
+      expect(rows[1]!.find("[data-test=training-kept-status]").exists()).toBe(false);
+      expect(wrapper.findAll("[data-test=training]")).toHaveLength(0);
+    });
+
+    it("« Modules faits » se note dans « Noter l’avancement » ; au-delà du total, l’erreur et rien n’est envoyé", async () => {
+      GET.mockResolvedValue({ data: page([current]) });
+      PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) =>
+        Promise.resolve({ data: { status: "in_progress", modules_total: 12, modules_done: 3, ...body } }),
+      );
+      const wrapper = await mountView("/formations", false);
+      await wrapper.find("[data-test=training-update]").trigger("click");
+      await flushPromises();
+      const field = wrapper.find("[data-test=modules-done]");
+      expect([field.attributes("type"), field.attributes("inputmode"), field.attributes("min"), field.attributes("max")]).toEqual(["number", "numeric", "0", "12"]);
+      expect(wrapper.text()).toContain("Modules faits");
+      await field.setValue("13");
+      await flushPromises();
+      expect(PUT).not.toHaveBeenCalled();
+      expect(wrapper.text()).toContain("Pas plus de 12 modules");
+      expect(field.attributes("aria-invalid")).toBe("true");
+      expect((field.element as HTMLInputElement).value).toBe("13");
+      await field.setValue("9");
+      await flushPromises();
+      expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "in_progress", modules_total: 12, modules_done: 9 });
+      expect(wrapper.text()).not.toContain("Pas plus de 12 modules");
+      expect(wrapper.find("[data-test=training-current] .training-modules-line").text()).toContain("Module 9 sur 12");
+    });
+
+    it("« Chercher d’autres formations » ouvre le catalogue inchangé, et Suivies y ramène", async () => {
+      GET.mockResolvedValue({ data: page([current, kept, training(4)]) });
+      const wrapper = await mountView("/formations", false);
+      const link = wrapper.find("[data-test=trainings-catalog]");
+      expect(link.attributes("href")).toBe("/formations?onglet=catalogue");
+      const catalog = await mountView("/formations?onglet=catalogue", false);
+      expect(catalog.find("[data-test=trainings-overview]").exists()).toBe(false);
+      expect(catalog.find("[data-test=chip-free]").exists()).toBe(true);
+      expect(catalog.findAll("[data-test=training]").length).toBeGreaterThan(0);
+      expect(catalog.find("[data-test=tab-mine]").attributes("href")).toBe("/formations");
+    });
+
+    it("« Comment demander » ouvre la feuille Formation et chômage", async () => {
+      GET.mockResolvedValue({ data: page([]) });
+      const wrapper = await mountView("/formations", false);
+      expect(wrapper.find("[data-test=trainings-none]").exists()).toBe(true);
+      await wrapper.find("[data-test=orp-note]").trigger("click");
+      expect(wrapper.find("[data-test=orp-sheet]").exists()).toBe(true);
+    });
   });
 });

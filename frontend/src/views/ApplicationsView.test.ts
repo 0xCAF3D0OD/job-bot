@@ -444,6 +444,18 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(wrapper.find("[data-test=goal]").attributes("href")).toBe("/reglages?rubrique=recherche");
     expect(wrapper.find("[role=progressbar]").exists()).toBe(false);
     expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
+    // Sans objectif, pas de pastille : la carte reste, pour l’indiquer.
+    expect(wrapper.find("[data-test=empty-pill]").exists()).toBe(false);
+  });
+
+  it("aucune candidature (§13 du 15.11) : l’état vide, l’objectif en pastille à la place de la carte", async () => {
+    mockApi(() => month({ count: 0, target: 10 }), []);
+    const { wrapper } = await mountView();
+    const empty = wrapper.find("[data-test=applications-none-yet]");
+    expect(empty.find("h2").text()).toBe("Pas encore de candidature envoyée");
+    expect(empty.find("[data-test=empty-pill]").text()).toMatch(/^Objectif ORP d.+ : 10 candidatures$/);
+    expect(empty.text()).toContain("Voir les offres à préparer");
+    expect(wrapper.find("[data-test=goal]").exists()).toBe(false);
   });
 
   it("les rubriques : à relancer, entretiens, cette semaine, plus tôt ; la carte commune et son statut", async () => {
@@ -513,6 +525,17 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(none.find("[data-test=sent-list]").text()).toContain("Banque Exemple");
   });
 
+  it("le tri enregistré pour le compte revient à l’arrivée sans ?tri (décision de Kevin du 15.11)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/sent-sort" ? { sort: "anciennes" } : path === "/api/orp" ? month() : [application] }),
+    );
+    const { router } = await mountView("/candidatures/suivi");
+    expect(router.currentRoute.value.query.tri).toBe("anciennes");
+    expect(PUT).not.toHaveBeenCalledWith("/api/sent-sort", expect.anything());
+    const { router: linked } = await mountView("/candidatures/suivi?tri=recentes");
+    expect(linked.currentRoute.value.query.tri).toBe("recentes");
+  });
+
   it("PR 39 : statuts avec leur nombre (0 masqué), un seul choisi, gardé dans l’adresse ; le tri", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
@@ -551,61 +574,43 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(names()).toEqual(["Ancienne SA", "Silence SA", "Entretien SA", "Récente SA"]);
     await sort.setValue("recentes");
     await flushPromises();
-    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);
+    expect(names()).toEqual(["Récente SA", "Entretien SA", "Silence SA", "Ancienne SA"]);    // Le choix est enregistré pour le compte (décision de Kevin du 15.11).
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "recentes" } });
   });
-  it("PR 40 : le trait et son point suivent la carte choisie (filtre, défilement), masqués hors de l’écran", async () => {
+  it("ordinateur, maquette du 14 novembre (§3) : « Plus de filtres » ouvre le volet Filtres (statuts et tri) à la place de la liste", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
     const items = [
-      at("2026-11-05", { id: 12, company: "Récente SA", status: "en_attente" }),
-      at("2026-10-01", { id: 14, company: "Silence SA", status: "sans_reponse" }),
       at("2026-09-10", { id: 11, company: "Ancienne SA", status: "en_attente" }),
+      at("2026-11-05", { id: 12, company: "Récente SA", status: "en_attente" }),
+      at("2026-10-20", { id: 13, company: "Entretien SA", status: "entretien", interview_at: "2026-11-12T13:00:00Z" }),
     ];
     mockApi(undefined, items);
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
-    vi.stubGlobal("requestAnimationFrame", (run: () => void) => (queueMicrotask(run), 1));
-    // Une mise en page simulée : la section commence à `sectionTop`, les cartes de 80 px se suivent tous les 100 px.
-    let sectionTop = 100;
-    const rect = (top: number, height: number) => ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top, toJSON: () => ({}) });
-    const measure = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-      if (this.classList.contains("jobs-body")) return rect(sectionTop, 3000);
-      const cards = [...document.querySelectorAll(".sent-list .list-card")];
-      return rect(sectionTop + 200 + Math.max(0, cards.indexOf(this)) * 100, 80);
-    });
-    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/candidatures/suivi", component: ApplicationsView }] });
-    await router.push("/candidatures/suivi?candidature=11&tri=recentes");
-    const wrapper = mount(ApplicationsView, { attachTo: document.body, global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true, SentDetail: true } } });
-    await flushPromises();
-    // Centre du point = haut du trait + 1 px (trait de 2 px), mesuré depuis la section.
-    const gap = () => {
-      const card = wrapper.find(".sent-list .list-card[aria-current=true]").element.getBoundingClientRect();
-      const top = Number.parseFloat((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top);
-      return Math.abs(top + 1 - (card.top + card.height / 2 - sectionTop));
-    };
-    // Troisième de la liste par date, puis seule après le filtre « À relancer ».
-    expect((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top).toBe("439px");
-    expect(gap()).toBeLessThanOrEqual(2);
-    await wrapper.find("[data-test=sent-status-relancer]").trigger("click");
-    await flushPromises();
-    expect(wrapper.findAll(".sent-list .list-card")).toHaveLength(1);
-    expect((wrapper.find("[data-test=sent-link]").element as HTMLElement).style.top).toBe("239px");
-    expect(gap()).toBeLessThanOrEqual(2);
-    // La page défile : la carte passe au-dessus de l'écran, le trait disparaît ; elle revient, lui aussi.
-    sectionTop = -400;
-    window.dispatchEvent(new Event("scroll"));
-    await flushPromises();
+    const { wrapper, router } = await mountView();
+    // Plus de « Trier » ni de pastilles de statut dans la rangée.
+    expect(wrapper.find("[data-test=sent-sort]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=sent-filters] [role=group]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sent-link]").exists()).toBe(false);
-    sectionTop = -100;
-    window.dispatchEvent(new Event("scroll"));
+    await wrapper.find("[data-test=sent-filters-open]").trigger("click");
+    const panel = wrapper.find("[data-test=sent-filters-panel]");
+    expect(panel.exists()).toBe(true);
+    expect(panel.findAll("[data-test^=sent-sort-]").map((b) => b.text())).toEqual(["À relancer d’abord", "Plus récentes d’abord", "Plus anciennes d’abord"]);
+    await panel.find("[data-test=sent-status-entretien]").trigger("click");
     await flushPromises();
-    expect(gap()).toBeLessThanOrEqual(2);
-    // La carte choisie sort du filtre : plus de trait.
-    await wrapper.find("[data-test=sent-status-sans-reponse]").trigger("click");
+    expect(router.currentRoute.value.query.statut).toBe("entretien");
+    await wrapper.find("[data-test=sent-sort-recentes]").trigger("click");
     await flushPromises();
-    expect(wrapper.find(".sent-list .list-card[aria-current=true]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=sent-link]").exists()).toBe(false);
-    measure.mockRestore();
+    expect(router.currentRoute.value.query.tri).toBe("recentes");
+    expect(wrapper.find("[data-test=sent-filters-done]").text()).toBe("Afficher 1 candidature");
+    await wrapper.find("[data-test=sent-filters-reset]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.statut).toBeUndefined();
+    expect(router.currentRoute.value.query.tri).toBeUndefined();
+    // « Tout effacer » enregistre aussi le tri par défaut pour le compte.
+    expect(PUT).toHaveBeenLastCalledWith("/api/sent-sort", { body: { sort: "relancer" } });
+    await wrapper.find("[data-test=sent-filters-done]").trigger("click");
+    expect(wrapper.find("[data-test=sent-filters-panel]").exists()).toBe(false);
     vi.unstubAllGlobals();
-    wrapper.unmount();
   });
 });

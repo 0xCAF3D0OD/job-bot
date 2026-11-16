@@ -16,8 +16,7 @@ from jobbot.core.filter import Criteria
 from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus, ProfileChunk
 from jobbot.filtering.service import save_criteria
 from jobbot.runtime import Runtime
-from jobbot.scoring import backlog
-from jobbot.scoring import service
+from jobbot.scoring import backlog, service
 
 from .conftest import admin_engine, make_settings
 from .test_scoring import FakeClient, add_offer, ai, evaluation, fake, raw  # noqa: F401

@@ -4,7 +4,8 @@ import CopyButton from "./CopyButton.vue";
 // Un champ à recopier (D32, MODIFICATIONS du 8 novembre au soir, §2.4) : le libellé au-dessus de la valeur ; à droite,
 // le bouton copier (niveau 2, « Copier : <libellé> », « Copié » annoncé). `choice` : une case à cocher sur Job-Room,
 // dite par une étiquette grise, sans bouton. Une valeur absente s'écrit « Non renseigné ».
-const props = defineProps<{ label: string; value: string; choice?: boolean }>();
+// `tick` : le texte de l'étiquette (planche BilanOrdinateurFiche : « Case à cocher dans Job-Room », sans case).
+const props = withDefaults(defineProps<{ label: string; value: string; choice?: boolean; tick?: string }>(), { tick: "☐ case à cocher dans Job-Room" });
 const copyLabel = `Copier : ${props.label.charAt(0).toLowerCase()}${props.label.slice(1)}`;
 </script>
 
@@ -23,7 +24,7 @@ const copyLabel = `Copier : ${props.label.charAt(0).toLowerCase()}${props.label.
       <span
         v-if="choice && value"
         class="block-tick"
-      >☐ case à cocher dans Job-Room</span>
+      >{{ tick }}</span>
     </div>
     <CopyButton
       v-if="value && !choice"
@@ -31,5 +32,6 @@ const copyLabel = `Copier : ${props.label.charAt(0).toLowerCase()}${props.label.
       :label="copyLabel"
       test-id="field-copy"
     />
+    <slot name="action" />
   </div>
 </template>

@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous poids css-inutilise
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-libelle audit-menu audit-tri poids css-inutilise
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -87,6 +87,18 @@ test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, 
 test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au bord, débordement et cibles sur téléphone (navigateur requis)
 	cd backend && uv run --with playwright --with pytest --with fonttools --with brotli pytest -q ../frontend/scripts/test_regles.py ../frontend/scripts/test_telephone.py ../frontend/scripts/test_controles.py
 
+# Les mêmes contrôles que la CI (tests.yml, audit-telephone.yml), à lancer avant chaque push : interface, historique,
+# puis les audits ordinateur et téléphone sur la démo déjà lancée (make demo ; DEMO_URL). Tout est lancé même après
+# un échec, comme dans la CI, et la commande échoue à la fin s'il y en a eu un.
+audits-ci: ## avant chaque push : tests, types, lint, poids (et son écart avec main), historique, puis tous les audits CI ordinateur et téléphone (DEMO_URL)
+	@echec=0; \
+	for etape in "cd frontend && npm run -s test" "cd frontend && npm run -s typecheck" "cd frontend && npm run -s lint" \
+		"cd frontend && npm run -s poids" "sh frontend/scripts/poids-delta.sh" "$(MAKE) -s changelog-check" "$(MAKE) -s test-audit" \
+		"AUDIT_FORMAT=telephone $(MAKE) -s -k audit-telephone audit-grille audit-controles audit-rendez-vous audit-menu audit-libelle audit-tri" \
+		"AUDIT_FORMAT=ordinateur $(MAKE) -s -k audit-grille audit-controles audit-panneaux audit-rendez-vous audit-menu audit-libelle audit-tri"; do \
+		echo "== $$etape"; sh -c "$$etape" || { echo "ÉCHEC : $$etape"; echec=1; }; \
+	done; exit $$echec
+
 audit-telephone: ## l'audit téléphone sur la démo (320, 360, 390 px ; DEMO_URL, par défaut http://localhost:5200)
 	cd backend && uv run --with playwright python ../frontend/scripts/telephone.py $(or $(DEMO_URL),http://localhost:5200)
 
@@ -101,6 +113,15 @@ audit-panneaux: ## panneau « Ajouter » : fenêtre modale, focus gardé, Échap
 
 audit-rendez-vous: ## « Nouveau rendez-vous » : choix de la date sans défilement horizontal (1440 à 320 px), ajout annoncé et sélectionné, échec jamais silencieux (DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/rendezvous.py $(or $(DEMO_URL),http://localhost:5200)
+
+audit-menu: ## menu « Candidatures » depuis Mes alertes, Préparer et Relances : la liste des offres (1440 et 390 px ; DEMO_URL)
+	cd backend && uv run --with playwright python ../frontend/scripts/menu.py $(or $(DEMO_URL),http://localhost:5200)
+
+audit-libelle: ## libellé flottant des champs : bordure interrompue, aucun trait derrière les lettres (repos, focus, erreur ; clair et sombre ; DEMO_URL)
+	cd backend && uv run --with playwright --with pillow python ../frontend/scripts/libelle.py $(or $(DEMO_URL),http://localhost:5200)
+
+audit-tri: ## trier 3 offres (garder, écarter, garder) : boutons, clavier, « Annuler », « C’est trié ! » (390 et 1440 px ; DEMO_URL)
+	cd backend && uv run --with playwright python ../frontend/scripts/tri.py $(or $(DEMO_URL),http://localhost:5200)
 
 changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
 	python3 scripts/changelog.py

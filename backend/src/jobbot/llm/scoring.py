@@ -14,15 +14,37 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v7"
+PROMPT_VERSION = "score-v8"
+# Le prompt suivant, mesuré par `jobbot mesure-notes-courtes` avant de remplacer PROMPT_VERSION.
+NEXT_VERSION = "score-v9"
 # score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
 # score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
 # valable, elle n'est pas refaite (« Renoter » la refait, sur demande). score-v6 : la phrase
 # « pourquoi » en deux morceaux (ce qui colle, la cause de l'écart), mis dans l'ordre par la note.
 # score-v7 (prompt du 10 novembre, PR 18) : la note devient la somme de cinq parts, chacune avec sa
 # phrase (« Comment la note est calculée ») ; une note plus ancienne garde son chiffre, sans détail.
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5", "score-v6", "score-v7")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v7.md").read_text("utf-8")
+# score-v8 (lot du 11 novembre au soir, PR 45 et 47) : dans le même appel, l'IA cite les passages
+# de l'annonce qui correspondent au profil ; seules les citations retrouvées dans l'annonce sont
+# gardées (`verified_quotes`). Une note plus ancienne reste valable, sans surlignage.
+# score-v9 (Kevin, 15.11) : chaque point fort et chaque manque a aussi sa forme courte (`short`,
+# 28 caractères au plus, le doute en « ? »), écrite sur les cartes de Trier. Stockée à côté du
+# texte, sans migration ; une note plus ancienne n'en a pas et l'écran montre le texte complet.
+# Il n'est mis en service qu'après la mesure de son coût sur 20 offres (NEXT_VERSION).
+COMPATIBLE_VERSIONS = (
+    "score-v2",
+    "score-v3",
+    "score-v4",
+    "score-v5",
+    "score-v6",
+    "score-v7",
+    "score-v8",
+    "score-v9",
+)
+_PROMPTS = resources.files("jobbot.llm").joinpath("prompts")
+INSTRUCTIONS = _PROMPTS.joinpath(f"{PROMPT_VERSION}.md").read_text("utf-8")
+# Citations de l'annonce : 5 au plus, de 2 à 12 mots chacune (décision de Kevin, 11 novembre).
+QUOTE_MAX = 5
+QUOTE_WORDS = (2, 12)
 # Les cinq parts de la note et leur maximum (total 100), dans l'ordre d'affichage.
 PART_MAX: dict[str, int] = {
     "skills": 40,
@@ -38,9 +60,15 @@ MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
 
 
+# La forme courte d'un point (score-v9) : l'écran ne l'affiche qu'à 28 caractères au plus.
+SHORT_MAX = 28
+
+
 class Point(BaseModel):
     text: str = Field(max_length=300)
     chunk_ids: list[int] = Field(default_factory=list)
+    # Forme courte (score-v9) ; gardée telle quelle, même trop longue : l'écran la vérifie.
+    short: str | None = Field(default=None, max_length=300)
 
 
 class AskKeyword(BaseModel):
@@ -94,6 +122,9 @@ class ScoreOutput(BaseModel):
     # score-v7 : les cinq parts de la note et l'action qui la ferait monter.
     parts: list[ScorePart] = Field(default_factory=list, max_length=10)
     tip: ScoreTip | None = None
+    # score-v8 : les passages de l'annonce qui correspondent au profil. À la réception, il ne reste
+    # que ceux retrouvés dans l'annonce, écrits comme dans l'annonce.
+    quotes: list[str] = Field(default_factory=list)
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -161,6 +192,7 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
+        "quotes": {"type": "array", "items": {"type": "string"}},
         "tip": {
             "anyOf": [
                 {
@@ -205,9 +237,25 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "level_detail",
         "parts",
         "tip",
+        "quotes",
     ],
     "additionalProperties": False,
 }
+# score-v9 : le même schéma, chaque point avec sa forme courte (`short`).
+_SHORT_POINT_SCHEMA = {
+    **_POINT_SCHEMA,
+    "properties": {**_POINT_SCHEMA["properties"], "short": {"type": "string"}},  # type: ignore[dict-item]
+    "required": ["text", "chunk_ids", "short"],
+}
+NEXT_OUTPUT_SCHEMA: dict[str, Any] = {
+    **OUTPUT_SCHEMA,
+    "properties": {
+        **OUTPUT_SCHEMA["properties"],
+        "strengths": {"type": "array", "items": _SHORT_POINT_SCHEMA},
+        "gaps": {"type": "array", "items": _SHORT_POINT_SCHEMA},
+    },
+}
+NEXT_INSTRUCTIONS = _PROMPTS.joinpath(f"{NEXT_VERSION}.md").read_text("utf-8")
 
 
 @dataclass(frozen=True)
@@ -263,21 +311,30 @@ def offer_message(offer: OfferData) -> str:
 
 
 def request_params(
-    model: str, effort: str, chunks: list[ProfileChunkData], offer: OfferData
+    model: str,
+    effort: str,
+    chunks: list[ProfileChunkData],
+    offer: OfferData,
+    *,
+    next_prompt: bool = False,
 ) -> dict[str, Any]:
-    """Paramètres communs aux appels directs et aux lots."""
+    """Paramètres communs aux appels directs et aux lots. `next_prompt` : le prompt suivant
+    (NEXT_VERSION), pour la mesure avant sa mise en service."""
+    instructions, schema = (
+        (NEXT_INSTRUCTIONS, NEXT_OUTPUT_SCHEMA) if next_prompt else (INSTRUCTIONS, OUTPUT_SCHEMA)
+    )
     return {
         "model": model,
         "max_tokens": MAX_TOKENS,
         "system": [
-            {"type": "text", "text": INSTRUCTIONS},
+            {"type": "text", "text": instructions},
             # Consignes + profil : préfixe stable, mis en cache entre les offres.
             {"type": "text", "text": profile_block(chunks), "cache_control": {"type": "ephemeral"}},
         ],
         "messages": [{"role": "user", "content": offer_message(offer)}],
         "output_config": {
             "effort": effort,
-            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+            "format": {"type": "json_schema", "schema": schema},
         },
     }
 
@@ -390,8 +447,63 @@ def score_parts(output: ScoreOutput) -> tuple[list[ScorePart], int | None]:
     return parts, sum(p.points for p in parts)
 
 
-def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
-    """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
+# Apostrophes courbes et accents utilisés comme apostrophes : équivalents à l'apostrophe droite.
+_APOSTROPHES = "\u2019\u2018\u02bc`\u00b4"
+_SPACES = "\u00a0\u202f\u2007\u2009\u200a\u2060"
+
+
+def _normalized(text: str) -> tuple[str, list[int]]:
+    """Le texte pour la comparaison, et pour chaque caractère sa place dans le texte d'origine :
+    espaces, insécables et retours à la ligne réduits à une espace, casse ignorée, apostrophes
+    droite et courbe équivalentes."""
+    out: list[str] = []
+    places: list[int] = []
+    for place, char in enumerate(text):
+        if char.isspace() or char in _SPACES:
+            if out and out[-1] != " ":
+                out.append(" ")
+                places.append(place)
+            continue
+        low = "'" if char in _APOSTROPHES else char.lower()
+        for piece in low:
+            out.append(piece)
+            places.append(place)
+    if out and out[-1] == " ":
+        out.pop()
+        places.pop()
+    return "".join(out), places
+
+
+def verified_quotes(quotes: list[str], offer_text: str | None) -> list[str]:
+    """Les citations de l'IA retrouvées dans l'annonce, écrites comme dans l'annonce (jamais le
+    texte de l'IA). Une citation introuvable, trop courte ou trop longue est écartée, sans
+    erreur."""
+    source = (offer_text or "")[:MAX_OFFER_CHARS]
+    haystack, places = _normalized(source)
+    found: dict[str, str] = {}
+    for quote in quotes:
+        needle, _ = _normalized(quote)
+        if not QUOTE_WORDS[0] <= len(needle.split()) <= QUOTE_WORDS[1]:
+            continue
+        at = haystack.find(needle)
+        if at < 0 or needle in found:
+            continue
+        found[needle] = source[places[at] : places[at + len(needle) - 1] + 1]
+        if len(found) == QUOTE_MAX:
+            break
+    return list(found.values())
+
+
+def _short(point: Point) -> str | None:
+    """La forme courte, espaces resserrés ; vide, elle n'existe pas."""
+    return " ".join((point.short or "").split()) or None
+
+
+def parse_output(
+    text: str, chunks: list[ProfileChunkData], offer_text: str | None = None
+) -> ScoreOutput:
+    """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif, ni retrouvé dans
+    l'annonce (citations)."""
     try:
         output = ScoreOutput.model_validate(json.loads(text))
     except (json.JSONDecodeError, ValidationError) as exc:
@@ -415,6 +527,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
             "keywords_role": _keywords(output.keywords_role, 3),
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),
+            "quotes": verified_quotes(output.quotes, offer_text),
             # Une phrase, nettoyée ; le détail du niveau seulement avec un niveau.
             "why": why_sentence(total, output.why_fit, output.why_gap)
             if output.why_fit or output.why_gap
@@ -438,6 +551,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
                 "level_detail": None,
                 "parts": [],
                 "tip": None,
+                "quotes": [],
             }
         )
 
@@ -445,9 +559,14 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     for point in output.strengths:
         ids = [i for i in point.chunk_ids if i in valid]
         if ids:  # un point fort sans bloc qui le prouve est retiré (docs/06 §2)
-            strengths.append(point.model_copy(update={"chunk_ids": ids}))
+            strengths.append(point.model_copy(update={"chunk_ids": ids, "short": _short(point)}))
     gaps = [
-        point.model_copy(update={"chunk_ids": [i for i in point.chunk_ids if i in valid]})
+        point.model_copy(
+            update={
+                "chunk_ids": [i for i in point.chunk_ids if i in valid],
+                "short": _short(point),
+            }
+        )
         for point in output.gaps
     ]
     return output.model_copy(update={"strengths": strengths[:4], "gaps": gaps[:4]})

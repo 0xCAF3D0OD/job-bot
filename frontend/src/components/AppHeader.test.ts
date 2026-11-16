@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 const me = ref<{ authenticated: boolean } | null>({ authenticated: true });
 const loggedIn = computed(() => Boolean(me.value?.authenticated));
 vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me, loggedIn }) }));
-vi.mock("../composables/useJobsMemory", () => ({ useJobsMemory: () => ({ last: ref("/candidatures/offres") }) }));
+vi.mock("../composables/useJobsMemory", () => ({ useJobsMemory: () => ({ last: ref("/candidatures/offres"), menuLink: () => "/candidatures/offres" }) }));
 
 import AppHeader from "./AppHeader.vue";
 

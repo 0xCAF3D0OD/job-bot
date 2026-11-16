@@ -173,4 +173,26 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=orp-to-declare]").exists()).toBe(false);
   });
+
+  it("prochain rendez-vous pas encore fixé : le calendrier vide en pointillés ; fixé : sa date (maquette du 13.11)", async () => {
+    const meeting = (starts_at: string) => ({ id: 1, starts_at, place: "EPFL", outcome_at: null, measures: [] });
+    let page = { meeting: meeting("2026-10-30T10:00:00Z"), past: [] };
+    const serve = () => GET.mockImplementation((path: string, init?: { params?: { query?: { month?: string } } }) => {
+      if (path === "/api/orp") return Promise.resolve({ data: init?.params?.query?.month === "2026-11" ? november : october });
+      if (path === "/api/orp-meeting") return Promise.resolve({ data: page });
+      return Promise.resolve({ data: null });
+    });
+    serve();
+    let wrapper = mountView(false);
+    await flushPromises();
+    const next = () => wrapper.get("[data-test=bilan-rdv-next]");
+    expect(next().text()).toContain("Pas encore fixé");
+    expect(next().find("[data-test=bilan-rdv-empty]").exists()).toBe(true);
+    expect(next().find("[data-test=calendar-date]").exists()).toBe(false);
+    page = { meeting: meeting("2026-11-24T08:30:00Z"), past: [] };
+    wrapper = mountView(false);
+    await flushPromises();
+    expect(next().find("[data-test=bilan-rdv-empty]").exists()).toBe(false);
+    expect(next().find("[data-test=calendar-date]").classes()).toContain("calendar-date-blue");
+  });
 });

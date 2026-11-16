@@ -1,3 +1,5 @@
+Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi.
+
 # jobA1 : modifications du 8 novembre au soir (lots 11 à 18), version finale
 
 Ce document **remplace toutes les versions précédentes** de ce fichier et les anciens §8 à §14 de `PROMPT_CLAUDE_CODE.md`.

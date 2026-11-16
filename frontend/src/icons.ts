@@ -45,6 +45,8 @@ export const ICONS = {
   tag: path("M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z") + circle(8, 8, 1.3),
   // Signaler une erreur (menu de la fiche, maquette du 8 novembre).
   flag: path("M5.5 21V4.5M5.5 4.5h11l-2 4 2 4h-11"),
+  // La cible de l’objectif ORP (pastille d’Envoyées vide, §13 du 15 novembre).
+  target: circle(12, 12, 9) + circle(12, 12, 5) + circle(12, 12, 1.5, ' fill="currentColor"'),
   link: path("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1") + path("M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"),
   eye: path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3),
   // Le mot de passe affiché (maquette Connexion) : l'œil barré.
@@ -82,6 +84,10 @@ export const ICONS = {
   refresh: path("M19 12a7 7 0 1 1-2.1-5") + path("M19 4.5V9h-4.5"),
   download: path("M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"),
   upload: path("M12 15.5V4.5M7.5 9L12 4.5 16.5 9M5 19.5h14"),
+  // Partager un fichier (planche MaCandidatureV2, « Tes documents ») : la flèche qui sort de la boîte.
+  share: path("M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"),
+  // La capture de la confirmation (planche MaCandidatureV2, état formulaire).
+  camera: path("M4 8h3l2-3h6l2 3h3v11H4z") + circle(12, 13, 3.5),
   copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/>' + path("M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"),
   trash: path("M4.5 7h15M10 4h4M6.5 7l.8 12a1.5 1.5 0 0 0 1.5 1.5h6.4a1.5 1.5 0 0 0 1.5-1.5l.8-12M10 11v5.5M14 11v5.5"),
   pencil: path("M15 5l4 4L8.5 19.5H4.5v-4z") + path("M13 7l4 4"),
@@ -90,6 +96,10 @@ export const ICONS = {
   paperclip: path("M20 11.5l-8.2 8.2a5 5 0 0 1-7-7L13.4 4a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15 7.1"),
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/>' + path("M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"),
   close: path("M6 6l12 12M18 6L6 18"),
+  // La feuille d'actions d'une offre (ActionsOffre, §17 du 15 novembre) : expirée, la note ne correspond pas, partager.
+  "clock-off": circle(12, 12, 9) + path("M12 7v5l3 2M4 4l16 16"),
+  "thumbs-down": path("M10 15v4a3 3 0 0 0 3 3l4-9V2H6a2 2 0 0 0-2 2l-1.4 9a2 2 0 0 0 2 2zM17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"),
+  "share-nodes": circle(18, 5, 2.5) + circle(6, 12, 2.5) + circle(18, 19, 2.5) + path("M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"),
   "arrow-left": path("M19 12H5M11 6l-6 6 6 6"),
   "arrow-right": path("M5 12h14M13 6l6 6-6 6"),
   "arrow-up": path("M12 19V5M6 11l6-6 6 6"),

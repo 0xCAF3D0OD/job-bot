@@ -46,6 +46,8 @@ const nothingYet = computed(
   () => !!page.value && page.value.searches.every((s) => !s.active || s.cells.every((c) => c.status === "todo")),
 );
 const view = computed(() => (mode.value !== "auto" ? mode.value : nothingYet.value ? "wizard" : "summary"));
+// Ordinateur, rien en place et l’assistant ouvert sans site choisi : l’en-tête de AlertesOrdinateurVide.
+const deskEmpty = computed(() => !phone.value && view.value === "wizard" && nothingYet.value && !focus.value);
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
@@ -58,9 +60,27 @@ async function backToSummary(): Promise<void> {
   await load();
 }
 
+// Ordinateur (planche AlertesOrdinateurSite, paquet du 13 novembre) : le panneau « Alerte <site> » s'ouvre à droite,
+// au-dessus de la page, qui ne change pas ; le téléphone garde le pas à pas en pleine page.
+const deskFocus = ref<{ site: string; terms: string } | null>(null);
 function create(site: string, terms: string): void {
+  if (!phone.value) {
+    deskFocus.value = { site, terms };
+    return;
+  }
   focus.value = { site, terms };
   mode.value = "wizard";
+}
+async function deskDone(): Promise<void> {
+  const from = deskFocus.value;
+  deskFocus.value = null;
+  await load();
+  // Après le dernier site, la carte d'où l'on venait a pu changer de famille (« À créer » → « Actives ») et le
+  // focus, rendu à un élément retiré, retombe sur la page : on le pose sur la carte de ce site, là où elle est.
+  await nextTick();
+  if (!from || (document.activeElement && document.activeElement !== document.body)) return;
+  const id = page.value?.searches.find((s) => s.terms === from.terms)?.id;
+  document.querySelector<HTMLElement>(`[data-test="alert-card-${id}-${from.site}"]`)?.focus();
 }
 
 // Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même.
@@ -184,12 +204,26 @@ onMounted(async () => {
     </RouterLink>
     <header
       v-if="!phone && page"
-      class="alerts-head-wide"
+      :class="['alerts-head-wide', { 'alerts-head-empty': deskEmpty }]"
     >
+      <!-- Rien en place (AlertesOrdinateurVide, corrections du 13.11 au soir, §2) : Orange, 112 px de haut, à gauche
+           du titre ; la phrase dit qu’il n’y a encore aucune alerte. Plus d’illustration de l’ancienne série. -->
+      <img
+        v-if="deskEmpty"
+        class="alerts-head-orange"
+        src="/illustrations/orange-salut-112.webp"
+        srcset="/illustrations/orange-salut-112.webp 1x, /illustrations/orange-salut-224.webp 2x"
+        width="88"
+        height="112"
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        data-test="alerts-orange"
+      >
       <div>
         <h1>Mes alertes e-mail</h1>
         <p data-test="alerts-sentence">
-          {{ deskSentence }}
+          {{ deskEmpty ? "Aucune alerte pour l’instant. Crée-les une fois, les offres arrivent ensuite ici toutes seules." : deskSentence }}
         </p>
       </div>
       <button
@@ -246,10 +280,10 @@ onMounted(async () => {
         </button>
       </div>
       <template v-if="view === 'wizard'">
-        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : le logo transformé « cloche » au-dessus de
-             l’assistant, pas le personnage. -->
+        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : sur téléphone, le logo transformé « cloche »
+             au-dessus de l’assistant ; sur ordinateur, Orange est dans l’en-tête (corrections du 13.11, §2). -->
         <div
-          v-if="nothingYet && !focus"
+          v-if="phone && nothingYet && !focus"
           class="face-state alerts-empty"
           data-test="alerts-empty"
         >
@@ -276,6 +310,7 @@ onMounted(async () => {
         <AlertsWizard
           :page="page"
           :focus="focus"
+          :desk="!phone"
           @updated="page = $event"
           @done="backToSummary"
         />
@@ -317,6 +352,15 @@ onMounted(async () => {
         <ReceivedAlerts />
         <FirstOffers where="alerts" />
       </template>
+      <AlertsWizard
+        v-if="!phone && deskFocus"
+        :key="`${deskFocus.terms}-${deskFocus.site}`"
+        :page="page"
+        :focus="deskFocus"
+        desk
+        @updated="page = $event"
+        @done="deskDone"
+      />
     </template>
     <!-- Des blocs de chargement gardent la place (règles §6, 1.6.22). -->
     <LoadingBlocks

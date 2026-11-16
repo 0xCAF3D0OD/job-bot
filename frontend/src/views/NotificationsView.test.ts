@@ -114,16 +114,16 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     wrapper.unmount();
   });
 
-  it("tout est lu : le personnage assis et son ombre, « Tout est lu » et « Voir toutes les notifications »", async () => {
+  it("tout est lu : le Sourire et son ombre, « Tout est lu » et « Voir toutes les notifications »", async () => {
     GET.mockResolvedValue({ data: { unread: 0, items: [item(1, { read_at: hoursAgo(1) })] } });
     const { wrapper } = await mountPage();
     await wrapper.find("[data-test=filter-unread]").trigger("click");
     const empty = wrapper.find("[data-test=notifications-empty]");
     expect(empty.text()).toContain("Tout est lu");
-    // §10.9, docs/141 §3 : perso-05-assis, 150 px de large. un seul des trois : ni cloche ni logo transformé.
+    // Corrections du 13.11, §7 : le Sourire, 140 px de haut. Un seul des trois : ni cloche ni logo transformé.
     const perso = empty.get("[data-test=notifications-perso] img");
-    expect(perso.attributes("src")).toMatch(/perso-05-assis-400\.webp/);
-    expect(perso.attributes("width")).toBe("150");
+    expect(perso.attributes("src")).toMatch(/sourire-pouce-140\.webp/);
+    expect(perso.attributes("height")).toBe("140");
     expect(empty.find(".notifications-perso-shadow").exists()).toBe(true);
     expect(empty.find(".mood, .face-transform, svg").exists()).toBe(false);
     await empty.find("[data-test=show-all]").trigger("click");

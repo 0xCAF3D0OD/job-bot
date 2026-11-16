@@ -15,7 +15,7 @@ enregistrée pour la cloche de la plateforme (docs/15 §1).
 import secrets
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -51,10 +51,47 @@ BUDGET_ALERT_RATIO = Decimal("0.8")
 BUDGET_ALERT_KEY = "budget_alert_month"
 DIGEST_KEY = "offers_digest_day"
 # Ce qui peut attendre un jour de recherche (docs/86 §2) ; les rappels datés (remise ORP,
-# rendez-vous de demain) et les alertes techniques passent toujours.
+# rendez-vous de demain) et les alertes techniques passent toujours. Les noms sont ceux que
+# passent les envois (kind=...) : « contact » et « funding » ne correspondaient à aucun envoi,
+# et les relances de contacts et de financement partaient un jour de repos (15.11.2026).
 QUIET_KINDS = frozenset(
-    {"offers", "follow_up", "interview", "contact", "funding", "orp_target", "first_alert"}
+    {
+        "offers",
+        "follow_up",
+        "interview",
+        "contact_follow_up",
+        "training_funding",
+        "orp_target",
+        "first_alert",
+        "rhythm_week",
+    }
 )
+
+
+# Le jour de repos coupe les incitations, jamais les échéances obligatoires (ORP).
+# Les rappels d'échéance obligatoire (remise des preuves ORP, veille d'un rendez-vous ORP)
+# ne sont pas dans QUIET_KINDS. Un jour de repos, un tel rappel part quand même si l'échéance
+# tombe avant le prochain jour normal ou ce jour-là ; sinon il est décalé au prochain jour
+# normal, à la même heure (le travail « reminders » repasse chaque jour à 9 h). Règle de
+# Kevin du 15.11.2026. « Jour normal » : un jour de la semaine de recherche ; une pause ne
+# décale pas une obligation.
+DEADLINE_KINDS = frozenset({"orp_due", "orp_meeting"})
+
+
+async def deadline_reminder_due(session: AsyncSession, deadline: date, today: date) -> bool:
+    """Vrai si le rappel de cette échéance obligatoire part aujourd'hui (voir plus haut)."""
+    days = (await rhythm.load(session)).days
+    if today.weekday() in days or not days:
+        return True
+    following = next(
+        (
+            today + timedelta(days=n)
+            for n in range(1, 8)
+            if (today + timedelta(days=n)).weekday() in days
+        ),
+        today,
+    )
+    return deadline <= following
 
 
 # Les interrupteurs des Réglages (maquette Réglages, Kevin, 6.11) : éteint, rien ne part sur

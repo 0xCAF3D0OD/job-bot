@@ -48,8 +48,8 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function mountCard() {
-  const wrapper = mount(OrpProofCard, { global: { stubs: { RouterLink: true } } });
+async function mountCard(wide = false) {
+  const wrapper = mount(OrpProofCard, { props: { wide }, global: { stubs: { RouterLink: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -85,6 +85,24 @@ describe("OrpProofCard", () => {
     expect(DELETE).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
     expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Justificatifs d’octobre à remettre");
     expect(wrapper.emitted("changed")).toHaveLength(2);
+  });
+
+  it("Bilan sur ordinateur, une fois remis : le bandeau « octobre est remis ! » avec le personnage (maquette du 13.11)", async () => {
+    month = { ...october, state: "remis", submitted_at: "2026-11-10T09:00:00Z" };
+    const wrapper = await mountCard(true);
+    expect(wrapper.get("[data-test=orp-proof]").classes()).toContain("banner");
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("octobre est remis\u00a0!");
+    expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("Le 10 novembre · 11 recherches");
+    expect(wrapper.get("[data-test=orp-proof-art]").attributes("alt")).toBe("");
+    expect(wrapper.find("svg.icon").exists()).toBe(false);
+    expect(wrapper.get("[data-test=orp-proof-undo]").text()).toBe("Annuler");
+  });
+
+  it("téléphone : la carte remise reste sans bandeau ni personnage", async () => {
+    month = { ...october, state: "remis", submitted_at: "2026-11-10T09:00:00Z" };
+    const wrapper = await mountCard();
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Octobre remis à l’ORP");
+    expect(wrapper.find("[data-test=orp-proof-art]").exists()).toBe(false);
   });
 
   it("« Exporter le PDF » imprime la feuille du mois précédent", async () => {

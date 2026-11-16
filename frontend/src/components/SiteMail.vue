@@ -29,7 +29,6 @@ const shown = computed(() => (all.value ? items.value : items.value.slice(0, LAT
 function siteName(item: SiteMessage): string {
   return item.site === "unknown" ? "Un site" : (sourceLabel[item.site] ?? item.site);
 }
-const message = ref("");
 let timer: ReturnType<typeof setInterval> | undefined;
 let stopAt = 0;
 const WAIT_MS = 5 * 60_000;
@@ -45,12 +44,7 @@ function stop(): void {
 }
 
 async function expect(): Promise<void> {
-  message.value = "";
-  const { data } = await api.POST("/api/alert-searches/expect-code");
-  if (!data?.queued) {
-    message.value = "Déjà six relevés rapides cette heure-ci : le code arrivera au prochain relevé.";
-    return;
-  }
+  await api.POST("/api/alert-searches/expect-code");
   waiting.value = true;
   stopAt = Date.now() + WAIT_MS;
   // La page se met à jour seule : un code arrivé s'affiche en haut.
@@ -117,13 +111,6 @@ onUnmounted(stop);
           J’attends un code
         </BusyButton>
       </SettingRow>
-      <p
-        v-if="message"
-        class="setting-row-message muted"
-        role="status"
-      >
-        {{ message }}
-      </p>
       <template
         v-for="item in shown"
         :key="item.id"

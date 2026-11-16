@@ -39,6 +39,9 @@ async function mountView(documents: unknown[]) {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   const wrapper = mount(TodayView, { global: { plugins: [router] } });
   await flushPromises();
+  // L'Accueil du téléphone et l'éventail en petit sont chargés à part.
+  await vi.dynamicImportSettled();
+  await flushPromises();
   return wrapper;
 }
 

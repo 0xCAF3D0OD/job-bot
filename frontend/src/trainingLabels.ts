@@ -38,6 +38,14 @@ export const STATUSES: Record<string, string> = {
 };
 
 // Pages officielles sur les formations financées par l'assurance chômage (vérifiées le 2026-10-06).
+// Où en est le financement d'une formation suivie (B16) : l'étiquette de la ligne et des gardées.
+export const FUNDING: Record<string, string> = {
+  requested: "Financement demandé",
+  accepted: "Financement accordé",
+  granted: "Financement accordé",
+  refused: "Financement refusé",
+};
+
 export const ORP_LINKS = [
   {
     label: "Mesures relatives au marché du travail (arbeit.swiss)",
@@ -48,3 +56,13 @@ export const ORP_LINKS = [
     url: "https://www.arbeit.swiss/fr/centre-dinformation/adresses-et-liens",
   },
 ];
+
+// L'avancement d'une formation suivie, comme sur la planche BilanOrdinateur : « Module 6 sur 12 ». Avec le compteur
+// de modules (B19), le compteur ; sinon le texte libre, où « module 6/12 » s'affiche aussi « Module 6 sur 12 »
+// (rien n'est réécrit dans ce qui est enregistré).
+export function progressLabel(mark: { modules_total?: number | null; modules_done?: number | null; progress?: string | null }): string {
+  if (mark.modules_total) return `Module ${mark.modules_done ?? 0} sur ${mark.modules_total}`;
+  const text = (mark.progress ?? "").trim();
+  const parts = /^modules?\s*(\d+)\s*(?:\/|sur)\s*(\d+)$/i.exec(text);
+  return parts ? `Module ${parts[1]} sur ${parts[2]}` : text;
+}

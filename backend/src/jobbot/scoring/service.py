@@ -19,6 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts, plans, platform
 from jobbot.db.models import (
+    MANUAL_LINK_SOURCE,
+    WEB_LINK_SOURCE,
     Evaluation,
     LlmBatch,
     LlmCall,
@@ -57,14 +59,18 @@ KEPT_ASIDE = (OfferStatus.LATER, OfferStatus.PREPARING)
 # Écartées par les critères ou par la personne : une offre d'alerte n'y est pas notée (le filtre
 # évite de payer l'IA) ; ajoutée à la main, elle l'est quand même (A2 du 13 novembre).
 SET_ASIDE = (OfferStatus.FILTERED_OUT, OfferStatus.IGNORED)
-# La source d'une offre ajoutée à la main (manual_offers.SOURCE, importé ici sans cycle).
-MANUAL_SOURCE = "manual"
 # Essais manqués d'affilée avant l'état final « Note impossible ».
 MAX_ATTEMPTS = 3
 FINAL_NO_TEXT = "sans_texte"
 FINAL_EMPTY = "reponse_vide"
 FINAL_ERROR = "erreur"
 FINAL_BACKLOG = "a_rattraper"
+# Offres ajoutées à la main : notées quel que soit leur statut à partir de ce moment (minuit
+# du 16 novembre 2026 à Zurich). Les plus anciennes jamais notées : commande ponctuelle
+# `jobbot noter-offres-manuelles` (décision de Kevin du 2026-11-15). Depuis A2, la migration 0087
+# met de côté (`a_rattraper`) toute offre jamais notée d'avant : cette date ne sert plus qu'à
+# la commande.
+MANUAL_SCORED_SINCE = datetime(2026, 11, 15, 23, 0, tzinfo=UTC)
 
 # Remplaçable en test par un faux client.
 make_client = client_factory
@@ -202,7 +208,7 @@ async def candidates(
     existe. Un état final (`score_final`) n'est plus repris."""
     manual = (
         select(OfferLink.id)
-        .where(OfferLink.offer_id == Offer.id, OfferLink.source == MANUAL_SOURCE)
+        .where(OfferLink.offer_id == Offer.id, OfferLink.source == MANUAL_LINK_SOURCE)
         .exists()
     )
     eligible = and_(
@@ -233,6 +239,12 @@ async def candidates(
     if include_stale_profile:
         needs.append(Evaluation.profile_hash != current_hash)
         needs.append(Evaluation.score_error.is_not(None))
+    web_link = select(OfferLink.offer_id).where(
+        OfferLink.offer_id == Offer.id, OfferLink.source == WEB_LINK_SOURCE
+    )
+    other_link = select(OfferLink.offer_id).where(
+        OfferLink.offer_id == Offer.id, OfferLink.source != WEB_LINK_SOURCE
+    )
     rows = await session.scalars(
         select(Offer)
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
@@ -242,6 +254,10 @@ async def candidates(
             Offer.duplicate_of.is_(None),
             # Candidature spontanée : pas d'annonce à comparer au profil (docs/39 §4).
             Offer.spontaneous.is_(False),
+            # Trouvée par la recherche web des premières offres et par rien d'autre : un
+            # intitulé et un lien, pas d'annonce à noter (docs/104). Revue dans une alerte ou
+            # complétée à la main, elle a un autre lien et se note comme les autres.
+            or_(~web_link.exists(), other_link.exists()),
             or_(
                 and_(eligible, or_(*never)),
                 and_(Offer.status.in_(TO_SCORE), or_(*needs)),
@@ -330,8 +346,8 @@ async def _store(
             "summary_asks": output.summary_asks,
             "summary_offers": output.summary_offers,
             "summary_partial": partial,
-            "strengths": [p.model_dump() for p in output.strengths],
-            "gaps": [p.model_dump() for p in output.gaps],
+            "strengths": [p.model_dump(exclude_none=True) for p in output.strengths],
+            "gaps": [p.model_dump(exclude_none=True) for p in output.gaps],
             "keywords_role": output.keywords_role,
             "keywords_asks": [k.model_dump() for k in output.keywords_asks],
             "keywords_offers": output.keywords_offers,
@@ -345,6 +361,7 @@ async def _store(
             "level_detail": output.level_detail,
             "score_parts": [p.model_dump() for p in output.parts],
             "score_tip": output.tip.model_dump() if output.tip else None,
+            "passages": output.quotes,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre
@@ -463,7 +480,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                     batch_id=batch.provider_batch_id,
                 )
                 try:
-                    output = parse_output(item.result.text, profile)
+                    output = parse_output(item.result.text, profile, offer_data(offer).text)
                 except InvalidScore as exc:
                     await _store(
                         session,
@@ -578,7 +595,7 @@ async def _score_direct(
                 continue
             await record_call(session, raw, offer_id=offer.id, rate=rate)
             try:
-                output = parse_output(raw.text, profile)
+                output = parse_output(raw.text, profile, data.text)
             except InvalidScore as exc:
                 await _store(
                     session,

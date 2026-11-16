@@ -1,0 +1,1 @@
+Rendez-vous sur téléphone (maquette du 14 novembre, §6) : champ de recherche « Poste, entreprise, lieu » au-dessus des onglets, qui filtre les rendez-vous ORP et les entretiens ; le champ seul a le même style sur Envoyées et Rendez-vous

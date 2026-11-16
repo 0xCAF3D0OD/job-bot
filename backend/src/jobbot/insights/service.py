@@ -27,6 +27,7 @@ from jobbot.db.models import (
     TrainingMark,
 )
 from jobbot.followups.remind import remind_on
+from jobbot.insights.advice import Advice, channel_advice, skill_advice
 from jobbot.letters.document import MONTHS
 from jobbot.orp.service import load_target
 
@@ -107,6 +108,8 @@ class Insights:
     highlight: Highlight | None = None
     buckets: list[Bucket] = field(default_factory=list)
     interviews_upcoming: int = 0
+    # « Ce que jobA1 conseille » (Kevin, 2026-11-14) : vide sous les seuils, le bloc est caché.
+    advice: list[Advice] = field(default_factory=list)
 
 
 @dataclass
@@ -419,7 +422,13 @@ async def insights(
         if f.answered and f.application.status_at is not None
     ]
     delays = [d for d in delays if d >= 0]
-    comparisons = compare(facts, await _site_names(session), end)
+    names = await _site_names(session)
+    comparisons = compare(facts, names, end)
+    advice = [
+        found
+        for found in (channel_advice(facts, names, end), await skill_advice(session, start, end))
+        if found is not None
+    ]
     return Insights(
         funnel=Funnel(
             received=received,
@@ -440,6 +449,7 @@ async def insights(
             and f.application.interview_at > datetime.now(UTC)
             for f in facts
         ),
+        advice=advice,
     )
 
 

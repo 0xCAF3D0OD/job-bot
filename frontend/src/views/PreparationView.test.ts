@@ -1,8 +1,8 @@
+import { useDocTemplate } from "../composables/useDocTemplate";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { useUndo } from "../composables/useUndo";
 import PreparationView from "./PreparationView.vue";
 
@@ -126,6 +126,27 @@ describe("PreparationView", () => {
     );
     expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx?modele=moderne");
     expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=moderne");
+  });
+
+  it("la page de la lettre suit le modèle choisi : le nom en tête hors du Sobre", async () => {
+    mockGet([]);
+    POST.mockResolvedValue({ data: letter(11, 1) });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=letter-card] [data-test=language-fr]").trigger("click");
+    await wrapper.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    const { template } = useDocTemplate();
+    const sheet = () => wrapper.find("[data-test=letter]");
+    template.value = "bandeau";
+    await flushPromises();
+    expect(sheet().classes()).toContain("tpl-bandeau");
+    expect(sheet().attributes("data-template")).toBe("bandeau");
+    expect(wrapper.find("[data-test=letter-head]").exists()).toBe(true);
+    template.value = "sobre";
+    await flushPromises();
+    expect(sheet().classes()).toContain("tpl-sobre");
+    expect(wrapper.find("[data-test=letter-head]").exists()).toBe(false);
+    template.value = "moderne";
   });
 
   it("la version modifiée en dernier est celle affichée ; les corrections s’enregistrent", async () => {
@@ -382,14 +403,10 @@ describe("barre de candidature", () => {
     expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
     expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
 
-    // « Je n'ai pas postulé » : l'offre revient en préparation (le menu y ramène) ; la candidature part après 6 s.
+    // « Je n'ai pas postulé » : l'offre revient en préparation ; la candidature part après 6 s.
     expect(done.find("[data-test=cancel-applied]").text()).toBe("Je n’ai pas postulé");
-    useJobsMemory().remember("/candidatures/offres/7/preparer?doc=postuler");
-    useJobsMemory().sent(7);
-    expect(useJobsMemory().last.value).toBe("/candidatures/suivi");
     DELETE.mockResolvedValue({ response: { ok: true } });
     await done.find("[data-test=cancel-applied]").trigger("click");
-    expect(useJobsMemory().last.value).toBe("/candidatures/offres/7/preparer?doc=postuler");
     expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     expect(wrapper.find("[data-test=apply]").classes()).toContain("primary-link");
@@ -593,15 +610,16 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
   });
 
-  it("ordinateur (§2.2) : la note dit « Proche de ton profil » et ouvre le panneau Compatibilité", async () => {
+  it("ordinateur (§9 du 14.11) : l'anneau seul, nommé avec la note, ouvre le panneau Compatibilité", async () => {
     const scored = { ...offer, score: 80, strengths: [{ text: "Kubernetes : 40 services" }], gaps: [{ text: "Allemand : B2 demandé" }] };
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/offers/{offer_id}" ? scored : path === "/api/offers/{offer_id}/letters" ? [letter(11, 1)] : path === "/api/letters/{draft_id}/page" ? FITS : [] }),
     );
     const wrapper = await mountView();
     const score = wrapper.get("[data-test=prep-score]");
-    expect(score.text()).toContain("Proche de ton profil");
-    expect(score.text()).toContain("Voir la compatibilité");
+    expect(score.text()).not.toContain("Proche de ton profil");
+    expect(score.text()).not.toContain("Voir la compatibilité");
+    expect(score.attributes("aria-label")).toBe("Compatibilité, Proche de ton profil : 80 sur 100, voir le détail");
     expect(score.attributes("aria-haspopup")).toBe("dialog");
     await score.trigger("click");
     const sheet = wrapper.get("[data-test=compat-sheet]");

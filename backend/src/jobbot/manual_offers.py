@@ -33,7 +33,7 @@ from jobbot.core.normalize import (
     normalize_title,
     parse_rate,
 )
-from jobbot.db.models import EnrichStatus, Offer, OfferLink, OfferStatus
+from jobbot.db.models import MANUAL_LINK_SOURCE, EnrichStatus, Offer, OfferLink, OfferStatus
 from jobbot.filtering.service import run_filter
 from jobbot.letters.service import load_identity
 from jobbot.llm import alert as alert_llm
@@ -50,7 +50,7 @@ from jobbot.sources import jobposting
 
 log = get_logger(__name__)
 
-SOURCE = scoring_service.MANUAL_SOURCE
+SOURCE = MANUAL_LINK_SOURCE
 MAX_PAGE_BYTES = 2_000_000
 TIMEOUT_SECONDS = 10
 DAILY_LIMIT = 20
@@ -394,8 +394,9 @@ async def added_today(session: AsyncSession) -> int:
 
 
 async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
-    """L'offre ajoutée, puis le filtre ; la notation est mise en file aussitôt. Une offre
-    écartée par les critères est gardée : c'est ton choix, la raison s'affiche (docs/111).
+    """L'offre ajoutée, puis le filtre. La note suit, même écartée par les critères (mise en
+    file par la route, ou tout de suite par l'extension). Une offre écartée par les critères
+    est gardée : c'est ton choix, la raison s'affiche (docs/111).
     `separate` : « Ajouter comme nouvelle offre » (extension, docs/142 §3) ; même poste chez la
     même entreprise, mais une autre annonce : son empreinte (unique) reçoit un suffixe."""
     now = datetime.now(UTC)
@@ -436,8 +437,6 @@ async def add(runtime: Runtime, draft: Draft, *, separate: bool = False) -> int:
         )
         offer_id = offer.id
     await run_filter(runtime)
-    # La note part tout de suite, même écartée par les critères (A2 du 13 novembre).
-    await scoring_service.score_soon(runtime)
     log.info("manual_offer_added", offer=offer_id, read_by=draft.read_by)
     return int(offer_id)
 

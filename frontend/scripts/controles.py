@@ -20,6 +20,7 @@ import sys
 from playwright.async_api import Route, async_playwright
 
 from explore import states
+from formats import checked
 from regles import PAGES
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
@@ -112,7 +113,7 @@ async def main() -> int:
     async with async_playwright() as p:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
-        for size in SIZES:
+        for size in (s for s in SIZES if checked(s["width"])):
             phone = size["width"] < 820
             context = await browser.new_context(viewport=size, reduced_motion="reduce", has_touch=phone, is_mobile=phone)
             page = await context.new_page()

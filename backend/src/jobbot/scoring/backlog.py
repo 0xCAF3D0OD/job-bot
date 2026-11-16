@@ -1,6 +1,6 @@
 """Rattrapage des offres jamais notées d'avant la version A2 (13 novembre), sur demande.
 
-La migration 0085 a mis ces offres de côté (`score_final = 'a_rattraper'`) : la tâche des 10
+La migration 0087 a mis ces offres de côté (`score_final = 'a_rattraper'`) : la tâche des 10
 minutes ne les reprend pas d'elle-même. `jobbot rattraper-notes` les compte par compte, avec le
 coût estimé ; `--lancer` les rend à la tâche, qui les note (3 essais au plus) ou, sans texte, les
 passe en « Note impossible » sans appel. Les offres d'alerte écartées restent sans note.
@@ -11,8 +11,9 @@ from decimal import Decimal
 
 from sqlalchemy import bindparam, text
 
+from jobbot.db.models import MANUAL_LINK_SOURCE
 from jobbot.runtime import Runtime
-from jobbot.scoring.service import ESTIMATE_USD, FINAL_BACKLOG, MANUAL_SOURCE, SET_ASIDE
+from jobbot.scoring.service import ESTIMATE_USD, FINAL_BACKLOG, SET_ASIDE
 
 # Le taux par défaut des Réglages (usd_chf_rate) : une estimation, pas une facture.
 USD_CHF = Decimal("0.8")
@@ -45,7 +46,7 @@ def _params() -> dict[str, object]:
     return {
         "backlog": FINAL_BACKLOG,
         "set_aside": tuple(str(s) for s in SET_ASIDE),
-        "manual": MANUAL_SOURCE,
+        "manual": MANUAL_LINK_SOURCE,
     }
 
 

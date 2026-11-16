@@ -110,6 +110,10 @@ class Settings(BaseSettings):
     # défaut depuis la 0.82.4 : les conditions d'utilisation de jobup (déc. 2025, §7)
     # interdisent les robots et l'accès automatisé hors de leurs outils officiels.
     public_search_enabled: bool = False
+    # Les premières offres par la recherche web de l'IA (docs/104, « Premières offres par le
+    # web ») : intitulé et lien seulement, aucune page d'annonce ouverte, aucune note. Coupée
+    # par défaut ; demande une clé d'IA. Sans effet si `public_search_enabled` est allumé.
+    web_first_offers_enabled: bool = False
 
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
     enrich_enabled: bool = True

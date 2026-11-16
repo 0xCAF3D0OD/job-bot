@@ -1,4 +1,4 @@
-import type { ParseStatus } from "./api/client";
+import type { Offer, ParseStatus } from "./api/client";
 import { dateInList, dateInSentence, dateWithTime } from "./dates";
 
 export const SITE_NAMES: Record<string, string> = {
@@ -11,6 +11,8 @@ export const SITE_NAMES: Record<string, string> = {
   gmail: "Gmail",
   // Offre ajoutée par toi (docs/111) : son lien mène à l'annonce elle-même.
   manual: "l’annonce",
+  // Trouvée par la recherche web des premières offres (docs/104) : un intitulé et un lien.
+  web: "le web",
   unknown: "inconnu",
 };
 
@@ -92,6 +94,14 @@ export function colorIndex(name: string): number {
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   // Trois couleurs d'initiale : l'accent, la menthe, le ciel (jamais l'orange, docs/135).
   return hash % 3;
+}
+
+/** Ton du carré d'initiales des Candidatures sur ordinateur (planches CandidaturesOrdinateur* du 13.11.2026) : cinq
+ * tons, blanc à lettres rouges, blanc à lettres bleues, encre, bleu foncé, pêche. Même nom, même ton partout. */
+export function logoTone(name: string): number {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash % 5;
 }
 
 /** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
@@ -320,4 +330,9 @@ export function dailyPace(count: number, target: number | null | undefined, mont
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (today > last) return left;
   return Math.ceil(left / Math.max(1, workdays(today < first ? first : today, last)));
+}
+
+// Les étiquettes d'une offre à trier (carte du téléphone, éventail) : contrat, taux, puis télétravail.
+export function triageTags(offer: Offer): string[] {
+  return [offer.employment_type ?? "", rateText(offer.rate_min, offer.rate_max), remoteText(offer) ?? ""].filter(Boolean);
 }

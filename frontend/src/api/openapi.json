@@ -4258,6 +4258,66 @@
         }
       }
     },
+    "/api/sent-sort": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Sent Sort",
+        "operationId": "getSentSort",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Sent Sort",
+        "operationId": "saveSentSort",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentSortModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentSortModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -5677,7 +5737,59 @@
           "applications"
         ],
         "summary": "Draft Follow Up",
+        "description": "Le message gardé, ou un nouveau (gardé à son tour) ; `rewrite` : « Réécrire ».",
         "operationId": "draftFollowUp",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "rewrite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Rewrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpDraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Keep Follow Up",
+        "description": "« Modifier le message » : la version de la personne remplace celle qui est gardée.",
+        "operationId": "keepFollowUp",
         "parameters": [
           {
             "name": "application_id",
@@ -5689,13 +5801,23 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpDraftIn"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FollowUpDraftOut"
+                  "$ref": "#/components/schemas/FollowUpDraftIn"
                 }
               }
             }
@@ -7480,6 +7602,69 @@
         }
       }
     },
+    "/api/google-jobs": {
+      "get": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Get Google Jobs",
+        "description": "Le lien Google Emplois de Candidatures vide : aucune offre, un métier ou une alerte ;\n« Masquer » sur Aujourd'hui ne le cache pas (Kevin, 15.11).",
+        "operationId": "getGoogleJobs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GoogleJobsOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getgooglejobs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Set Google Jobs",
+        "description": "« Masquer » la carte Google Emplois d'Aujourd'hui : retenu pour le compte.",
+        "operationId": "setGoogleJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleJobsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/insights": {
       "get": {
         "tags": [
@@ -9046,6 +9231,80 @@
         }
       }
     },
+    "/api/alert-searches/watch-code": {
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Watch Code",
+        "description": "L'étape « Recopie le code » attend : relancée chaque minute, page visible, elle prolonge\nson attente de 75 secondes, 10 minutes au plus ; le relevé partagé tourne tant qu'un compte\nattend.",
+        "operationId": "watchSiteCode",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectCodeOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert-searches/codes/last": {
+      "get": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Last Code",
+        "description": "Le dernier code du site pour le compte connecté, ou rien ; ni objet ni texte de l'e-mail.",
+        "operationId": "lastSiteCode",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "jobup",
+              "title": "Site"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LastCodeOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Lastsitecode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alert-searches/messages": {
       "get": {
         "tags": [
@@ -10196,6 +10455,59 @@
           "candidates"
         ],
         "title": "AddressCandidates"
+      },
+      "AdviceOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "channel",
+              "site",
+              "skill"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "base": {
+            "type": "integer",
+            "title": "Base"
+          },
+          "base_unit": {
+            "type": "string",
+            "enum": [
+              "applications",
+              "offers"
+            ],
+            "title": "Base Unit"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "text",
+          "base",
+          "base_unit"
+        ],
+        "title": "AdviceOut"
       },
       "AiReadingOut": {
         "properties": {
@@ -14371,6 +14683,11 @@
           "queued": {
             "type": "boolean",
             "title": "Queued"
+          },
+          "mailbox_down": {
+            "type": "boolean",
+            "title": "Mailbox Down",
+            "default": false
           }
         },
         "type": "object",
@@ -14828,6 +15145,21 @@
             "type": "array",
             "title": "Queries",
             "default": []
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jobup",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           }
         },
         "type": "object",
@@ -14879,6 +15211,21 @@
             "type": "array",
             "title": "Queries",
             "default": []
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jobup",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           },
           "result": {
             "type": "string",
@@ -15171,6 +15518,27 @@
         "type": "object",
         "title": "FollowUpDateIn"
       },
+      "FollowUpDraftIn": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Subject"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "text"
+        ],
+        "title": "FollowUpDraftIn"
+      },
       "FollowUpDraftOut": {
         "properties": {
           "subject": {
@@ -15204,6 +15572,16 @@
               }
             ],
             "title": "Reason"
+          },
+          "kept": {
+            "type": "boolean",
+            "title": "Kept",
+            "default": false
+          },
+          "failed": {
+            "type": "boolean",
+            "title": "Failed",
+            "default": false
           }
         },
         "type": "object",
@@ -15840,6 +16218,50 @@
           "companies"
         ],
         "title": "GlobalSearchOut"
+      },
+      "GoogleJobsIn": {
+        "properties": {
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hidden"
+        ],
+        "title": "GoogleJobsIn",
+        "description": "« Masquer » sur la carte Google Emplois (ou l'annuler)."
+      },
+      "GoogleJobsOut": {
+        "properties": {
+          "terms": {
+            "type": "string",
+            "title": "Terms"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms",
+          "url"
+        ],
+        "title": "GoogleJobsOut",
+        "description": "« <Métier> · <Lieu> » dans la pastille ; l'adresse ne contient qu'eux et le mot « emploi »,\nqui ouvre le panneau Google Emplois."
       },
       "GroupOut": {
         "properties": {
@@ -17369,6 +17791,31 @@
         ],
         "title": "LanguageLevel",
         "description": "Niveau d'une langue (prompt du 10 novembre, PR 17). « Non renseigné » n'écarte jamais une\noffre ; « Notions » l'écarte si elle exige la langue couramment (décision de Kevin, 10.11)."
+      },
+      "LastCodeOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "valid_minutes": {
+            "type": "integer",
+            "title": "Valid Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "received_at",
+          "valid_minutes"
+        ],
+        "title": "LastCodeOut",
+        "description": "Le dernier code d'un site (section 15 du paquet du 15.11) : le code, l'heure, la durée."
       },
       "LetterDocumentOut": {
         "properties": {
@@ -19980,6 +20427,14 @@
               }
             ]
           },
+          "passages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Passages",
+            "default": []
+          },
           "scored_at": {
             "anyOf": [
               {
@@ -22087,6 +22542,17 @@
             },
             "type": "array",
             "title": "Chunk Ids"
+          },
+          "short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short"
           }
         },
         "type": "object",
@@ -22762,6 +23228,14 @@
               }
             ]
           },
+          "passages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Passages",
+            "default": []
+          },
           "scored_at": {
             "anyOf": [
               {
@@ -23123,6 +23597,14 @@
               }
             ]
           },
+          "advice": {
+            "items": {
+              "$ref": "#/components/schemas/AdviceOut"
+            },
+            "type": "array",
+            "title": "Advice",
+            "default": []
+          },
           "orp_summary": {
             "anyOf": [
               {
@@ -23260,6 +23742,23 @@
           "orp_month"
         ],
         "title": "SentOut"
+      },
+      "SentSortModel": {
+        "properties": {
+          "sort": {
+            "type": "string",
+            "enum": [
+              "relancer",
+              "recentes",
+              "anciennes"
+            ],
+            "title": "Sort",
+            "default": "relancer"
+          }
+        },
+        "type": "object",
+        "title": "SentSortModel",
+        "description": "Tri des Envoyées, gardé pour le compte (décision de Kevin du 15.11)."
       },
       "SettingsModel": {
         "properties": {
@@ -23974,16 +24473,15 @@
             "title": "First Steps Finished",
             "default": false
           },
-          "search_url": {
+          "google_jobs": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/GoogleJobsOut"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Search Url"
+            ]
           },
           "to_review": {
             "type": "integer",

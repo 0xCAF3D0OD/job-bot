@@ -42,7 +42,9 @@ const target = computed<RouteLocationRaw>(() => {
     case "profile":
       return "/profil";
     case "alerts":
-      return "/candidatures/alertes";
+      // L'étape « Alerte » des premiers pas, rouverte seule (corrections du 13.11 au soir, §1) : « Retour » et
+      // « Plus tard » y ramènent à Aujourd'hui (décision de Kevin du 14.11).
+      return { path: "/bienvenue", query: { etape: "alerte" } };
     case "keep":
       // Le tri du jour a son écran (1.6.50) : « Garder » s'y fait.
       return props.pickReady ? { name: "triage" } : "/candidatures/offres";

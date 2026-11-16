@@ -1,260 +1,215 @@
-# jobA1, maquette de référence (10 novembre 2026)
+# jobA1, maquette de référence (13 novembre 2026)
 
-Ce paquet remplace tous les précédents. Il ne contient que les écrans retenus.
-Tout fichier absent d'ici (CandidaturesOrdinateur, RendezVousOrdinateur, AujourdhuiOrdinateur, AujourdhuiOrdinateurTravail, B et C, Onboarding 1, 2, 3 et B, Cercles, Main, Personnage) est abandonné : ne pas l'implémenter.
+**Ce paquet est la seule référence.** Il remplace tous les paquets précédents de `docs/mobile/` (8, 9, 10 et 11 novembre, récapitulatif compris). Il reprend la maquette en ligne, version `1794581776-162e`.
 
-## Contenu
-- Nouveaux écrans du 10 novembre : `OnboardingOrdinateurProfil` et `OnboardingProfil` (+ `Sombre`) = étape « Complétons ton profil » quand le CV n’a pas pu être lu.
-- `PROMPT_CLAUDE_CODE_10_NOVEMBRE.md` : **à donner à Claude Code après celui du 9 novembre** (PR 13 à 20 : annonce lue automatiquement, ligne profil du Compte, détail d’une offre, onglet Rendez-vous, parcours sans CV lu, détail de la note, zone de saisie de l’Assistant, Compte / Profil / Critères / Administration). Il prime sur les fichiers précédents pour ces points.
-- `illustrations/troupe/` : les 4 personnages du logo, une scène par état de la plateforme, en clair et en sombre (MODIFICATIONS_9 §15). Ils remplacent `illustrations/personnage/`, gardé seulement pour les notifications.
-- `PROMPT_CLAUDE_CODE_9_NOVEMBRE_COMPLET.md` : **prompt complet à donner à Claude Code** (téléphone et ordinateur, toutes les décisions du 9 novembre, ordre des PR, tests).
-- `outils/audit-grille.js` : contrôle automatique de la grille et des alignements (voir MODIFICATIONS §2.9).
-- `MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md` : corrections de la version ordinateur (9 novembre). Il prime sur tout le reste pour l'ordinateur.
-- `MODIFICATIONS_8_NOVEMBRE_SOIR.md` : texte complet, final et sans contradiction des lots 11 à 18. Il prime sur `PROMPT_CLAUDE_CODE.md` en cas de doute.
-- `maquettes/` : 104 écrans `.dc.html` (à ouvrir dans un navigateur) et `canvas.json` (titres et positions, rangés par section).
-- `captures/` : un PNG par écran, du même nom, dans l'état par défaut. `captures/etats/<Fichier>--<état>.png` montre les états ouverts (menus, panneaux, onglets, sélecteur de date). `vue_ensemble.png` montre tout le canvas. `icone_calendrier.png` montre l'icône date.
-- `illustrations/` :
-  - `personnage/` : 12 poses en `-400.webp` (téléphone) et `-800.webp` (ordinateur). 01 debout, 02 bonjour, 03 cv, 04 marche, 05 assis, 06 perplexe, 07 révélation, 08 avion, 09 câbles, 10 hors ligne, 11 loupe, 12 célébration.
-  - `avatars/` : 8 avatars (Souriant, Clin d'œil, Casque, Lunettes, Bonnet, Écharpe, Café, Étoile), en 128 et 256 px WebP et 256 px PNG, découpés en cercle.
-  - `icones/calendrier-date.html` : modèle de l'icône calendrier.
-  - `accessoires/`, `fonds/` : SVG avec les jetons de couleur.
-- Pour le code, utiliser les fichiers de `illustrations/` et non les images intégrées dans les maquettes.
+## 1. Installation
 
-Le bloc Get'emAll (connexion job-bot #512, 7 écrans) est sur le canvas mais pas dans ce paquet : il appartient à un autre chantier.
+- Remplace **entièrement** `docs/mobile/maquettes/` par le dossier `maquettes/` de ce paquet. Toute planche absente de ce paquet est supprimée du dépôt.
+- Remplace le LISEZMOI de `docs/mobile/` par celui-ci.
+- Les anciens fichiers `MODIFICATIONS_*.md` et `PROMPT_CLAUDE_CODE_*.md` restent comme historique. Ajoute en première ligne de chacun : « Historique. En cas de désaccord, le LISEZMOI du 13 novembre fait foi. »
+- Mets `CLAUDE.md` à jour : il doit nommer ce paquet et reprendre la règle du point 2.
+- PR de documentation seulement : aucun fichier de l'appli.
 
-Les couleurs écrites en hexadécimal dans ce document et dans les maquettes se traduisent en jetons avec le tableau §3 de PROMPT_CLAUDE_CODE.md. Les rayons suivent D7 (§4 du même fichier).
+## 2. Qui fait foi
 
-# INDEX TÉLÉPHONE (largeur <= 820 px, décision D8)
+1. Une décision de Kevin donnée dans la conversation après le 13 novembre. Note-la dans `docs/mobile/DECISIONS.md` avec la date.
+2. Les décisions du point 4 de ce fichier.
+3. Le dessin des planches de ce paquet.
+4. Le texte des prompts, du plus récent au plus ancien.
 
-| Page | Fichier | Sombre |
-|---|---|---|
-| Accueil | AccueilSmile | AccueilSombre |
-| Candidatures, à traiter | Candidatures | CandidaturesSombre |
-| Candidatures, envoyées | Envoyees | EnvoyeesSombre |
-| Candidature envoyée, détail | EnvoyeeDetail | feuilles : EnvoyeeDetailRelance, EnvoyeeDetailDocuments, EnvoyeeDetailContacts |
-| Envoyées, statut mis à jour par e-mail | EnvoyeesStatut | |
-| Candidatures, rendez-vous (états vue, noter, dp) | RendezVous | RendezVousSombre |
-| Détail d'une offre | Offre | OffreSombre |
-| Compatibilité (feuille du bas, depuis le détail d'une offre) | OffreCompatibilite | OffreCompatibiliteSombre |
-| Préparer le rendez-vous (feuille du bas) | RendezVousPreparer | RendezVousPreparerSombre |
-| Mise en page (feuille du bas, Préparer) | PreparerMiseEnPage | PreparerMiseEnPageSombre |
-| Langue (feuille du bas, Réglages) | ReglagesLangue | |
-| Alerte e-mail (feuille du bas : à confirmer, active) | AlertesTelConfirmer, AlertesTelAlerte | |
-| Offre provisoire, lire ou coller l'annonce | OffreProvisoire | |
-| Ajouter une offre (feuille du bas) | AjouterOffreTel | |
-| Filtres (feuille du bas) | Filtres | |
-| Actions sur une offre | ActionsOffre | |
-| Préparer ma candidature | Preparer | PreparerSombre |
-| Assistant | Assistant | |
-| Pour l’ORP (une candidature, à recopier dans Job-Room) | OrpFiche | OrpFicheSombre |
-| Suivi ORP | Orp | OrpSombre |
-| Progresser, appelé « Bilan » dans la barre du bas | Explorer | ProgresserSombre |
-| Bilan, résultats | BilanResultats | |
-| Notifications | Notifications | NotificationsSombre |
-| Compte | Compte | CompteSombre |
-| Compte, choisir son image | CompteImage | |
-| Alertes e-mail | AlertesTel | |
-| Réglages | Reglages | |
-| Premiers pas | OnboardingC | |
-| Connexion | Connexion | ConnexionSombre |
-| Candidature envoyée | CandidatureEnvoyee | |
-| Objectif ORP atteint | ObjectifAtteint | |
-| Aucune offre | AucuneOffre | |
-| Erreur et attente | ErreurConnexion | |
-| Maintenance, mise à jour / annoncée | MaintenanceMaj, MaintenanceAnnoncee | MaintenanceSombre |
-| Pas de connexion | MaintenanceHorsLigne | |
-| Page introuvable | PageIntrouvable | PageIntrouvableSombre |
+Si un écran ou un état n'est dessiné nulle part, ne l'invente pas : demande la maquette.
 
-# INDEX ORDINATEUR (largeur > 820 px, décision D8)
+## 3. Contenu
 
-| Page | Fichier | États à tester |
-|---|---|---|
-| Aujourd'hui, jour de travail | AujourdhuiOrdinateurTravailD | menu = compte, notif |
-| Aujourd'hui, jour de repos | AujourdhuiOrdinateurReposD | menu = compte, notif |
-| Candidatures (à traiter, envoyées, rendez-vous) | CandidaturesOrdinateurB | tab = tr, en, rv ; q ; menu = compte, notif, actions, filtres, ajouter ; ajt = of, sp ; cmp ; ec ; dp = cal |
-| Envoyées, statut mis à jour par e-mail | CandidaturesOrdinateurStatut | |
-| Sombre (ligne artistique) : Aujourd’hui, Candidatures, Préparer, Bilan | AujourdhuiOrdinateurTravailDSombre, CandidaturesOrdinateurBSombre, PreparerOrdinateurSombre, BilanOrdinateurSombre | les autres écrans suivent la même table de couleurs (MODIFICATIONS_9 §12) |
-| Préparer, CV prêt et panneau des changements | PreparerOrdinateurCVPret, PreparerOrdinateurCVChangements | §14 |
-| Ajouter (panneau : une offre / candidature spontanée) | CandidaturesOrdinateurAjouter, CandidaturesOrdinateurSpontanee | |
-| Préparer, lettre générée | PreparerOrdinateur | |
-| Préparer, lettre et CV en cours d’écriture | PreparerOrdinateurGeneration | |
-| Préparer, la lettre n’a pas pu être écrite (échec) | PreparerOrdinateurLettreVide | |
-| Préparer, détail de la relecture (panneau) | PreparerOrdinateurRelecture | |
-| Préparer, le CV adapté n’a pas pu être préparé (échec) | PreparerOrdinateurCV | |
-| Préparer, postuler | PreparerOrdinateurPostuler | |
-| Bilan (ORP, résultats, formations) | BilanOrdinateur | tab = orp, res, form |
-| Pour l’ORP (panneau, une candidature à déclarer) | BilanOrdinateurFiche | |
-| Assistant (panneau latéral) | AssistantOrdinateur | plus, file |
-| Mon profil et mon CV | ProfilOrdinateur | pick, pv, av |
-| Toutes les notifications | NotificationsOrdinateur | tab = all, un |
-| Mes alertes e-mail | AlertesOrdinateur | al ; cf |
-| Alertes, nouveau compte et création d’une alerte | AlertesOrdinateurVide, AlertesOrdinateurSite | |
-| Réglages | ReglagesOrdinateur | lg ; tx |
-| Connexion | ConnexionOrdinateur | |
-| Premiers pas, étape 1 sans CV | OnboardingOrdinateur | |
-| Premiers pas, lecture du CV / coupure / CV lu | OnboardingOrdinateurLecture, OnboardingOrdinateurCoupure, OnboardingOrdinateurCV | |
-| Premiers pas, étape 2 et 3 | OnboardingOrdinateurEtape2, OnboardingOrdinateurEtape3 | |
-| Candidature envoyée | CandidatureEnvoyeeOrdinateur | |
-| Objectif ORP atteint | ObjectifAtteintOrdinateur | |
-| Aucune offre (filtres) | AucuneOffreOrdinateur | |
-| Page introuvable | PageIntrouvableOrdinateur | |
-| Maintenance (sans menu) | MaintenanceOrdinateur | |
-| Pas de connexion (sans menu) | HorsLigneOrdinateur | |
+- `maquettes/` : 150 planches `.dc.html`. Un fichier par écran. Le suffixe `Sombre` est le mode sombre, `Ordinateur` la version ordinateur, sinon c'est le téléphone (390 px).
+- `captures/` : 44 PNG des écrans clés. Le suffixe `--état` désigne un état de la planche.
+- `illustrations/tri/` : les personnages et la scène de fin du tri.
+- `PROMPT_PR_45_A_53_TRI_ET_VISUEL.md` : le prompt du lot « Tri et nouveau visuel », corrigé (objectif de 1 à 99, planches retirées).
 
-Extension navigateur (360 x 480) : ExtAnnonce, ExtAlerte, ExtAutreSite, ExtNonConnecte.
-Système : Systeme (règles communes), Emoticones, Animations (logo isolé, plus une référence), ModeSombre (jetons sombres, valables aussi sur ordinateur).
+## 4. Décisions à jour
 
-# RÈGLES COMMUNES
+- **Objectif du mois** : de 1 à 99, contrôlé côté serveur et côté interface. Le message est « 99 est le maximum. » Toute mention de 30 dans un ancien fichier est fausse.
+- **« Garder »** : l'offre gardée porte l'étiquette « Gardée » partout.
+- **Menu du bas** : l'onglet s'appelle « Bilan ». Le titre de la page reste « Progresser ».
+- **ORP** : toujours en barre, plus de cercle (Suivi ORP, Bilan, Accueil, Aujourd'hui, Envoyées).
+- **Trier les offres** : livre sur ordinateur, cartes sur téléphone. Fin du tri : scène avec les personnages et le récapitulatif, pas le livre.
 
-## Illustration
-- Logo transformé (soleil, loupe, cloche, roue dentée, cravate…) : indique où l'on est.
-- Personnage : seulement sur les écrans « moment » (pages d'état, premiers pas). Statique, décoratif (alt="" aria-hidden="true"). Jamais sur un écran de travail. Sur ordinateur : 240 px de haut, 360 px aux premiers pas.
-- Petites mascottes d'humeur : un état dans un petit espace (chargement, erreur dans la page, notifications).
-- Un seul des trois par écran.
+## 5. Planches retirées le 13 novembre et leur remplaçante
 
-## Cartes, boutons, icônes
-- Carte (fond blanc, bordure 1,5 px #CFCBC1) = cliquable, toute la carte est le lien. Information importante = carte d'information (même style, sans flèche, D35). Le reste : pas de cadre, traits gris légers entre les lignes. Jamais de carte dans une carte (D29).
-- Dans une carte cliquable, pas de bouton : libellé coloré (couleur du ton, 15 px, gras) suivi de ›.
-- Un seul bouton plein par écran. Les autres ont un contour.
-- Icônes seules, sans pastille de fond coloré. Tons : #8A4A16 retard, #2445C2 normal, #17734A entretien.
-- Éléments interactifs : 44 px minimum.
-- Barres de défilement : 8 px, pouce #C9C5BA, #A9A397 au survol, piste transparente.
+| Retirée | Remplacée par |
+|---|---|
+| `AccueilSmile` | `AccueilV2` |
+| `AccueilSombre` | `AccueilV2Sombre` |
+| `AujourdhuiOrdinateurTravailD` | `AujourdhuiOrdinateurV2` |
+| `AujourdhuiOrdinateurTravailDSombre` | `AujourdhuiOrdinateurV2Sombre` |
+| `Preparer` | `MaCandidatureV2` |
+| `PreparerSombre` | `MaCandidatureV2Sombre` |
+| `CandidatureEnvoyee` | `MaCandidatureV2`, état « fin » (ordinateur : `CandidatureEnvoyeeOrdinateur`) |
+| `EnvoyeeDetailRelance` | `RelanceV2` |
 
-## Titres
-- Accent manuscrit Caveat Brush sur la fin du H1 seulement (« repos. », « à envoyer. », « te revoir. »), 1.45em, #2445C2. Un seul par écran, seulement sur les écrans « moment ». Le H1 reste un seul élément.
+Plus anciennes, déjà retirées, à supprimer aussi si elles traînent dans le dépôt : `AujourdhuiOrdinateur`, `AujourdhuiOrdinateurTravail`, `AujourdhuiOrdinateurTravailB`, `AujourdhuiOrdinateurTravailC`, `CandidaturesOrdinateur`, `RendezVousOrdinateur`, `Onboarding1`, `Onboarding2`, `Onboarding3`, `OnboardingB`, `Cercles`, `Main`, `Personnage`.
 
-## Mise en page ordinateur
-- En-tête commun (AppHeader) aligné sur 1280 px. À droite, un seul groupe : bulle de recherche, cloche, avatar, 16 px entre eux (les 32 px séparent logo, menu et ce groupe). Les trois font 44 px. Cloche sans notification : rond blanc, bordure 1,5 px #D8D4CA, comme la recherche (état `lu`). Avec notifications : capsule pêche « 9+ ». Logo seul sur Maintenance, Pas de connexion, Premiers pas et Connexion.
-- Pages de lecture (Aujourd'hui, Bilan, Notifications, Alertes, Réglages, Profil, pages d'état) : contenu centré sur 880 px. Pages de travail (Candidatures, Préparer) : 1280 px.
-- Fond crème #F7F5F0 partout, jamais de bande colorée sous l'en-tête (remplacé le 9 novembre ; Aujourd'hui sera repris au prochain lot). La carte Mois ORP est une carte normale (blanc, bordure 1,5 px #CFCBC1).
-- Aujourd'hui : H1 = action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP. Tâches sur une colonne : en retard, envoyer, trier, préparer un entretien, puis « Quand tu as le temps ».
-- Candidatures : liste à gauche (cartes de 104 px), détail à droite, jamais vide (premier élément choisi par défaut). Filtre de liste « Filtrer par titre ou entreprise » + « Plus de filtres ».
-- Mode sombre : jetons de la planche ModeSombre (fond #171411, surfaces #221E1A, bordure #38322B, texte #F3EEE6).
+`AujourdhuiOrdinateurReposD` reste : c'est le jour de repos sur ordinateur, encore dans l'ancien visuel. Ne le redessine pas.
 
-## Recherche globale (ordinateur)
-- Bulle ronde de 44 px, fond blanc, bordure 1,5 px #D8D4CA. Au clic : 380 px (transition width .22s), bordure 2 px #2445C2, champ « Offres, candidatures, entreprises » et Fermer. Échap ferme.
+## 6. Ce qui n'est pas dans ce paquet
 
-## Panneaux et menus (ordinateur)
-- Cloche et K : panneau latéral non modal de 420 px à droite, sous l'en-tête, sans voile, coin haut gauche à 24 px, ombre -12px 0 32px rgba(27,31,42,.12). Focus sur le titre à l'ouverture, retour au déclencheur à la fermeture.
-  - Notifications : groupes « Nouvelles » et « Plus tôt », point bleu si non lue, pied « Voir toutes les notifications ».
-  - Compte : avatar 48 px, nom, e-mail ; « Mon compte » (Profil et CV, Alertes e-mail, Réglages), « Affichage » (Clair, Auto, Sombre), « Aide » ; pied « Se déconnecter » #B4371F.
-- Assistant : bouton flottant en bas à droite, panneau de 480 px de la même famille. Masqué quand un panneau, les filtres ou le sélecteur de date sont ouverts.
-- Plus de filtres : le panneau remplace la colonne liste (480 px). « ‹ Retour à la liste », pastilles aria-pressed, pied fixe « Tout effacer » et « Afficher n offres ».
-- Menu « … » d'un élément : role="menu", 280 px, ancré sous son bouton.
-- Un seul panneau ou menu ouvert à la fois. Couche transparente (z-index 35) : un clic à l'extérieur ferme tout. L'en-tête reste au-dessus (z-index 38) : cloche et K basculent directement de l'un à l'autre. Les filtres gardent leurs choix.
-- Clavier : flèches entre les éléments, Échap ferme et rend le focus.
+- Sept planches du lien avec Get'emAll, présentes dans la maquette en ligne et inchangées : `AutoriserGetemall`, `ConfidentialiteGetemall`, `ReglagesConnexions`, `ReglagesRetirer`, `RelierFermee`, `RelierLienInvalide`, `RelierPasTesteur`. Si elles sont dans le dépôt, garde-les telles quelles.
+- États pas encore dessinés, à ne pas coder avant la maquette :
+  - Assistant : attente de la réponse (avant le premier mot) ;
+  - en-tête : cloche sans notification, espacement recherche, cloche, avatar ;
+  - écran de fin de candidature : champ « adresse de l'entreprise » ;
+  - Alertes reçues : ligne d'une alerte non reconnue ;
+  - Aujourd'hui : carte « Objectif du mois atteint » (l'écran actuel reste tel quel).
 
-## Animations
-Keyframes ja-slide-r, ja-slide-l, ja-pop, déjà dans les maquettes. Aucune animation si prefers-reduced-motion.
-- Panneaux latéraux : 24 px depuis la droite + fondu, 220 ms, cubic-bezier(.05,.7,.1,1). Fermeture 160 ms ease-in.
-- Filtres et sélecteur de date : 16 px depuis la gauche + fondu, 200 ms.
-- Menu « … » : depuis le coin du bouton, échelle 0,96 vers 1 + fondu, 150 ms ease-out.
-- Jamais plus de 250 ms, jamais de blocage de la saisie.
+## 7. Liste des planches
 
-# COMPOSANTS PARTAGÉS
-
-## Zone de saisie (Composer)
-Pour tout message libre envoyé tel quel.
-- Une ligne : pilule min-height 56 px, rayon 28 px, fond blanc, bordure 1 px #E5E2D9, ombre 0 2px 10px rgba(27,31,42,.07). Bouton + (44 px, « Joindre un fichier »), champ (16 px, jusqu'à 6 lignes puis défile), micro (44 px, « Dicter »), Envoyer (cercle bleu de 44 px, désactivé si vide).
-- Plusieurs lignes : texte sur toute la largeur en haut, barre du bas avec + à gauche et Envoyer à droite, rayon 24 px.
-- Menu + (ja-pop) : Importer un fichier (PDF, Word, image, 10 Mo), Joindre mon CV, Joindre une offre de ma liste. Pièces jointes en pastilles dans la pilule. Glisser-déposer accepté. Entrée envoie, Maj + Entrée passe à la ligne.
-- Mention sous l'Assistant : « L'Assistant peut se tromper. Relis toujours avant d'envoyer. »
-- Emplacements : Assistant ; Préparer (« Demander une modification de la lettre », pastilles Plus court, Plus formel, Insister sur Terraform, En allemand) ; Ajouter une offre (3 lignes ordinateur, 4 lignes téléphone, « Lien ou texte de l'annonce », Envoyer = « Ajouter l'offre ») ; Coller l'annonce dans OffreProvisoire (5 lignes, « Enregistrer et refaire la note », désactivé sous 200 caractères).
-- Les champs de formulaire restent des champs de formulaire : libellé au-dessus, hauteur 48 px, bordure 1,5 px #596070 (--text-secondary), fond blanc (--surface), rayon 8 px, sans + ni Envoyer. Une seule règle pour tous les formulaires, y compris ceux qui ne sont pas dessinés (Coordonnées).
-
-## Logo de l'Assistant
-- Sans cercle dans la discussion : 32 px dans l'en-tête du panneau, 28 px à gauche de chaque message. Pas d'avatar pour les messages de l'utilisateur. L'icône de la barre du bas (téléphone) garde son cercle.
-
-## Image de profil
-- Initiales (défaut), 8 avatars ou photo (JPG ou PNG, 5 Mo, recadrage en cercle). Contour 1 px #E5E2D9.
-- Choix en grille, aria-pressed, anneau bleu de 3 px ; Annuler ou Enregistrer. Texte : « Elle s'affiche seulement dans jobA1. Elle n'est jamais envoyée aux employeurs. »
-- Remplace le K partout : en-tête 40 px, panneau Compte 48 px, Profil 72 px. Nom accessible « Compte de Kevin ».
-
-## Date et heure
-- Déclencheurs en pilule : 52 px, rayon 26 px, bordure 1,5 px #8C8478, icône calendrier ou horloge bleue, valeur en toutes lettres (« Mardi 10 novembre 2026 », « 9 h 30 »), chevron.
-- Le sélecteur prend la place du formulaire, pas de popover. Ordinateur : « ‹ Retour au formulaire », calendrier à gauche (raccourcis Demain, Lundi prochain, Dans 2 semaines, Dans 1 mois ; grille de 6 semaines, lundi en premier ; jour choisi en rond bleu, aujourd'hui en anneau, jours passés désactivés ; saisie jj.mm.aaaa), heure à droite (créneaux de 30 min de 8 h à 16 h, saisie hh:mm, encadré bleu pâle et « Valider »). Téléphone : même contenu en plein écran, « Valider » collé en bas.
-- Échap ou Retour annule. Flèches pour les jours, Page haut et bas pour les mois, Entrée valide. aria-label complet sur chaque jour.
-
-## Icône calendrier avec la date (CalendarDate)
-- Au trait : contour arrondi 2,5 px, deux anneaux, mois abrégé en capitales en haut, jour en gras au centre, fond blanc (#221E1A en sombre). Remplace les carrés colorés partout.
-- Tons : blue #2445C2 (à venir), orp #B4631F (ORP ou à noter), past #8C8478 (passé). Sombre : #AEBDFF, #F2B98E, #8C8478.
-- Tailles : 36 px (Bilan), 44 px (listes ordinateur), 48 px (téléphone), 56 px (en-tête de détail). aria-hidden si la date est écrite à côté.
-
-# TÉLÉPHONE ⇄ ORDINATEUR
-
-Un même élément a le même dessin et le même comportement sur les deux supports (WCAG 3.2.4, NN/g « Consistency and standards »). Seul le conteneur change (Material Design 3, fenêtres compacte et étendue).
-
-## Partagés
-| Élément | Téléphone | Ordinateur |
-|---|---|---|
-| Composer | Assistant, Preparer, OffreProvisoire, AjouterOffreTel | AssistantOrdinateur, PreparerOrdinateur, CandidaturesOrdinateurB (ajouter) |
-| Pastilles de suggestions | Preparer, PreparerSombre | PreparerOrdinateur |
-| Logo de l'Assistant sans cercle | Assistant | AssistantOrdinateur |
-| Icônes sans fond | partout | partout |
-| CalendarDate | RendezVous | CandidaturesOrdinateurB, Aujourd'hui, Bilan |
-| Pilules et sélecteur de date | RendezVous (plein écran) | CandidaturesOrdinateurB (à la place du formulaire) |
-| Image de profil | Compte puis CompteImage | ProfilOrdinateur |
-| Alertes e-mail | AlertesTel | AlertesOrdinateur |
-| Carte = cliquable, libellé › | partout | partout |
-
-## Différences voulues (ne pas « harmoniser »)
-| Élément | Téléphone | Ordinateur | Raison |
-|---|---|---|---|
-| Filtres | feuille du bas | à la place de la liste | Material 3 : bottom sheet en fenêtre compacte |
-| Notifications, Compte | pages entières | panneaux de 420 px | Apple HIG, navigation par pile sur iPhone |
-| Ajouter une offre | feuille du bas | dialogue | conteneur adapté |
-| Sélecteur de date | plein écran | à la place du formulaire | même logique, taille différente |
-| Bande bleu pâle, colonne de 880 px | absentes | pages « moment » | pas la place sur 390 px |
-| Navigation | barre d'onglets en bas | menu du haut | Apple HIG, Material 3 |
-| Recherche | champ en haut de liste | bulle qui se déploie | |
-
-## Pas encore dessinés
-Attente de la première collecte, entretien décroché, refus reçu, compte supprimé : reprendre la mise en page de l'écran d'état le plus proche.
-
-# CORRECTIONS DU 8 NOVEMBRE AU SOIR
-
-| Point | Maquette, état | Capture |
-|---|---|---|
-| Champs de formulaire : rayon 8 px, bordure 1,5 px #596070, fond blanc | RendezVous, CandidaturesOrdinateurB, Connexion | captures/etats/CandidaturesOrdinateurB--tab-rv.png |
-| En-tête : groupe de 16 px, éléments de 44 px, cloche sans notification | toutes les pages ordinateur, état `lu` | captures/etats/CandidaturesOrdinateurB--cloche-sans-nouvelle.png |
-| Assistant qui écrit : logo sans cercle + bulle de 3 points animés, aucune bulle vide | AssistantOrdinateur `attente`, Assistant `phase: ecrit` | captures/etats/AssistantOrdinateur--attente.png, Assistant--ecrit.png |
-| Mes alertes : lien « ‹ Candidatures » au-dessus du titre ; liste sans cadre ; « Créer l'alerte › » en libellé coloré | AlertesOrdinateur, AlertesTel | captures/AlertesOrdinateur.png, AlertesTel.png |
-| Nouveau rendez-vous sur ordinateur : formulaire dans le panneau de détail, sans carte autour (titre, Date, Heure, Lieu ou lien, Ajouter le rendez-vous, Annuler) | CandidaturesOrdinateurB `tab: rv, ajrv: true` (bouton « Ajouter ») | captures/etats/CandidaturesOrdinateurB--tab-rv-ajouter.png |
-| ~~Envoyées, détail sur ordinateur en deux colonnes~~ : remplacé le 9 novembre, voir MODIFICATIONS_9_NOVEMBRE_ORDINATEUR.md §8 | CandidaturesOrdinateurB `tab: en` | captures/etats/CandidaturesOrdinateurB--tab-en.png, --tab-en-bas.png |
-| À traiter, détail sur ordinateur en deux colonnes : à gauche la note (anneau, raisons, bandeau « Il manque l'annonce complète » en bloc arrondi, « Le détail de la note ») puis « Le poste » ; à droite « L'offre en bref » (Lieu, Contrat, Taux d'activité, Reçue, libellé au-dessus de la valeur) et « Voir l'annonce sur le site ». Titre, étiquettes et boutons restent au-dessus des colonnes. Mêmes espacements qu'Envoyées | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png, captures/etats/CandidaturesOrdinateurB--tab-tr-bas.png |
-| Formulaires de rendez-vous sur ordinateur limités à 560 px de large | CandidaturesOrdinateurB `tab: rv` et `ajrv` | captures/etats/CandidaturesOrdinateurB--tab-rv.png, --tab-rv-ajouter.png |
-| « Ce que je cherche » : libellé au-dessus de la valeur (14 px gris, puis 16 px gras), lignes de 68 px, chevron à droite | ProfilOrdinateur, OnboardingOrdinateur | captures/ProfilOrdinateur.png |
-| Rendez-vous ORP sur ordinateur : plus de pastille « Noté » ni « Pas encore noté » (les groupes « À noter » et « Passés » le disent déjà). Détail structuré : sous l'en-tête, « Ce qui a été convenu » en trois sections titrées avec une phrase d'aide (Objectif de recherches, Mesures décidées, Prochain rendez-vous), séparées par un trait, puis « Enregistrer » ; à droite « Le rendez-vous » (Date, Heure, Lieu, Objectif jusqu'ici). Date courte dans la pilule : « Mar. 10 nov. 2026 » | CandidaturesOrdinateurB `tab: rv` | captures/etats/CandidaturesOrdinateurB--tab-rv.png, --tab-rv-bas.png |
-| Préparer sur ordinateur, réorganisé comme la production : en-tête sur une ligne de 64 px centrée (« ‹ Retour à l'offre », logo, H1 = intitulé du poste, entreprise, anneau 76 + verdict, étapes) ; « Ma candidature » n'est plus affiché. À gauche la lettre (titre « Lettre de motivation », langue FR, DE, EN à droite, aperçu). À droite : « Mise en page » (modèle Sobre, Moderne, Bandeau, Classique, pour la lettre et le CV, longueur), « Pour cette offre » (deux groupes titrés « Points forts » avec coche et « À vérifier » avec point d'attention, sujet en gras et détail dessous), « Nouvelle version ». Le verdict n'est plus répété dans « Pour cette offre ». En bas : suggestions, zone de saisie, « J'ai relu la lettre » | PreparerOrdinateur | captures/PreparerOrdinateur.png, captures/etats/PreparerOrdinateur--colonne-bas.png |
-| À traiter : bouton à contour « J'ai déjà postulé » à droite de « Écarter » | CandidaturesOrdinateurB `tab: tr` | captures/CandidaturesOrdinateurB.png |
-
-# SECTIONS ET CARTES (8 et 9 novembre)
-
-Pages de lecture : le contenu à lire est posé sur le fond crème `--bg`, le même partout, en sections séparées par un trait. Une carte est un élément cliquable (avec cercle à flèche) ou une information importante (résumé du mois ORP, intitulé et note d'une offre ; rayon 18 px, sans flèche), jamais dans une autre carte : blanche avec un cadre de 1,5 px sur la page, crème sans cadre sur un fond blanc. Un seul bouton plein par écran, les autres à contour bleu. Le statut est un mot coloré après le titre. Détail : MODIFICATIONS_8_NOVEMBRE_SOIR.md, §2 (D28 à D35) et §10.
-Écrans refaits : Offre, Orp, OrpFiche (nouveau), Compte, onglet ORP de Progresser, et leurs versions sombres (OffreSombre, OrpSombre, OrpFicheSombre, CompteSombre, ProgresserSombre) ; ordinateur : Aujourd'hui, Bilan, Profil, Réglages, Notifications, Alertes.
-
-
-Note : la maquette `OnboardingC` (écran d'accueil des premiers pas) référence une image du canevas (`/_blob/fb359129…`) qui n'est pas dans `illustrations/`. Garde l'image déjà utilisée en production pour cet écran.
-
-# LOT « TRI DES OFFRES ET NOUVEAU VISUEL » (11 novembre 2026, soir)
-
-Ce lot complète le paquet de référence, il ne le remplace pas. Texte : `PROMPT_CLAUDE_CODE_11_NOVEMBRE_TRI_ET_VISUEL.md` (PR 45 à 53). Un fichier de même nom dans `maquettes/` a été remplacé par la version de ce lot (59 écrans). Images : `illustrations/tri/`.
-
-Les anciens écrans `AccueilSmile`, `AccueilSombre`, `AujourdhuiOrdinateurTravailD` et `AujourdhuiOrdinateurReposD` sont marqués « Ancien » : ne plus les implémenter.
-
-| Page | Fichier | Sombre |
-|---|---|---|
-| Trier les offres, téléphone (états carte, garde, longue) | TrierOffresV2 | TrierOffresV2Sombre |
-| Trier les offres, ordinateur (états livre, garde, longue) | TrierOffresOrdinateurV2 | TrierOffresOrdinateurV2Sombre |
-| Fin du tri, téléphone | FinDuTri | FinDuTriSombre |
-| Fin du tri, ordinateur | FinDuTriOrdinateur | FinDuTriOrdinateurSombre |
-| Accueil, téléphone (états accueil, vide) | AccueilV2 | AccueilV2Sombre |
-| Aujourd’hui, ordinateur (états accueil, vide) | AujourdhuiOrdinateurV2 | AujourdhuiOrdinateurV2Sombre |
-| Ma candidature (états lettre, fin, finpreuve) | MaCandidatureV2 | MaCandidatureV2Sombre |
-| Mois remis à l’ORP | OrpRemisV2 | OrpRemisV2Sombre |
-| Objectif du mois, ordinateur | ProfilOrdinateurObjectif | |
-| Objectif du mois, téléphone | ProfilTelObjectif | ProfilTelObjectifSombre |
-| Relance, téléphone | RelanceV2 | RelanceV2Sombre |
-| Relance, ordinateur (panneau) | RelanceOrdinateurV2 | |
-| Veille de rendez-vous, téléphone | RendezVousFeuilleV2 | RendezVousFeuilleV2Sombre |
-| Veille de rendez-vous, ordinateur (panneau) | RendezVousFeuilleOrdinateurV2 | |
+- `AccueilV2`
+- `AccueilV2Sombre`
+- `ActionsOffre`
+- `AjouterOffreTel`
+- `AlertesOrdinateur`
+- `AlertesOrdinateurSite`
+- `AlertesOrdinateurVide`
+- `AlertesTel`
+- `AlertesTelAlerte`
+- `AlertesTelConfirmer`
+- `Animations`
+- `Assistant`
+- `AssistantOrdinateur`
+- `AucuneOffre`
+- `AucuneOffreOrdinateur`
+- `AujourdhuiOrdinateurReposD`
+- `AujourdhuiOrdinateurV2`
+- `AujourdhuiOrdinateurV2Sombre`
+- `BarreOrpEtats`
+- `BarreOrpEtatsSombre`
+- `BilanOrdinateur`
+- `BilanOrdinateurFiche`
+- `BilanOrdinateurSombre`
+- `BilanResultats`
+- `CandidatureEnvoyeeOrdinateur`
+- `Candidatures`
+- `CandidaturesOrdinateurAjouter`
+- `CandidaturesOrdinateurB`
+- `CandidaturesOrdinateurBSombre`
+- `CandidaturesOrdinateurSpontanee`
+- `CandidaturesOrdinateurStatut`
+- `CandidaturesSombre`
+- `Compte`
+- `CompteImage`
+- `CompteSombre`
+- `Connexion`
+- `ConnexionOrdinateur`
+- `ConnexionSombre`
+- `CoordonneesOrdinateur`
+- `CoordonneesOrdinateurSombre`
+- `CoordonneesTel`
+- `CoordonneesTelSombre`
+- `Emoticones`
+- `Entrainement`
+- `EntrainementOrdinateur`
+- `EntrainementOrdinateurSombre`
+- `EntrainementSombre`
+- `EnvoyeeDetail`
+- `EnvoyeeDetailContacte`
+- `EnvoyeeDetailContacts`
+- `EnvoyeeDetailDocuments`
+- `Envoyees`
+- `EnvoyeesSombre`
+- `EnvoyeesStatut`
+- `ErreurConnexion`
+- `Explorer`
+- `ExtAlerte`
+- `ExtAnnonce`
+- `ExtAutreSite`
+- `ExtNonConnecte`
+- `Filtres`
+- `FinDuTri`
+- `FinDuTriAucune`
+- `FinDuTriAucuneOrdinateur`
+- `FinDuTriAucuneOrdinateurSombre`
+- `FinDuTriAucuneSombre`
+- `FinDuTriOrdinateur`
+- `FinDuTriOrdinateurSombre`
+- `FinDuTriSombre`
+- `HorsLigneOrdinateur`
+- `MaCandidatureV2`
+- `MaCandidatureV2Sombre`
+- `MaintenanceAnnoncee`
+- `MaintenanceHorsLigne`
+- `MaintenanceMaj`
+- `MaintenanceOrdinateur`
+- `MaintenanceSombre`
+- `ModeSombre`
+- `Notifications`
+- `NotificationsOrdinateur`
+- `NotificationsSombre`
+- `ObjectifAtteint`
+- `ObjectifAtteintOrdinateur`
+- `Offre`
+- `OffreCompatibilite`
+- `OffreCompatibiliteSombre`
+- `OffreProvisoire`
+- `OffreProvisoireSombre`
+- `OffreSombre`
+- `OnboardingC`
+- `OnboardingOrdinateur`
+- `OnboardingOrdinateurCV`
+- `OnboardingOrdinateurCoupure`
+- `OnboardingOrdinateurEtape2`
+- `OnboardingOrdinateurEtape3`
+- `OnboardingOrdinateurLecture`
+- `OnboardingOrdinateurProfil`
+- `OnboardingOrdinateurProfilSombre`
+- `OnboardingProfil`
+- `OnboardingProfilSombre`
+- `Orp`
+- `OrpFiche`
+- `OrpFicheSombre`
+- `OrpRemisV2`
+- `OrpRemisV2Sombre`
+- `OrpSombre`
+- `PageIntrouvable`
+- `PageIntrouvableOrdinateur`
+- `PageIntrouvableSombre`
+- `PreparerMiseEnPage`
+- `PreparerMiseEnPageSombre`
+- `PreparerOrdinateur`
+- `PreparerOrdinateurCV`
+- `PreparerOrdinateurCVChangements`
+- `PreparerOrdinateurCVPret`
+- `PreparerOrdinateurGeneration`
+- `PreparerOrdinateurLettreVide`
+- `PreparerOrdinateurPostuler`
+- `PreparerOrdinateurRelecture`
+- `PreparerOrdinateurSombre`
+- `ProfilOrdinateur`
+- `ProfilOrdinateurCV`
+- `ProfilOrdinateurCVSombre`
+- `ProfilOrdinateurObjectif`
+- `ProfilTel`
+- `ProfilTelObjectif`
+- `ProfilTelObjectifMax`
+- `ProfilTelObjectifSombre`
+- `ProfilTelSombre`
+- `ProgresserSombre`
+- `Reglages`
+- `ReglagesLangue`
+- `ReglagesOrdinateur`
+- `RelanceOrdinateurV2`
+- `RelanceOrdinateurV2Sombre`
+- `RelanceV2`
+- `RelanceV2Sombre`
+- `RendezVous`
+- `RendezVousFeuilleOrdinateurV2`
+- `RendezVousFeuilleOrdinateurV2Sombre`
+- `RendezVousFeuilleV2`
+- `RendezVousFeuilleV2Sombre`
+- `RendezVousPreparer`
+- `RendezVousPreparerSombre`
+- `RendezVousSombre`
+- `Systeme`
+- `TrierOffresOrdinateurV2`
+- `TrierOffresOrdinateurV2Sombre`
+- `TrierOffresV2`
+- `TrierOffresV2Sombre`

@@ -1,0 +1,1 @@
+États vides de Candidatures, premier lot : un seul composant d'état vide, et l'écran Offres sans offre centré sur toute la largeur, sans recherche ni filtres, avec « Tes alertes sont prêtes » quand une recherche est suivie
