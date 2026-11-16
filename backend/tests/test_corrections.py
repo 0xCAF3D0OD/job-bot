@@ -244,3 +244,40 @@ async def test_retry_score_only_after_final_failure(
     assert (await api.post(f"/api/offers/{scored}/retry-score")).status_code == 409
     assert (await api.post("/api/offers/999999/retry-score")).status_code == 404
     assert rescored == [failed]
+
+
+async def test_retry_score_of_another_account_is_404(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """C-4 : « Réessayer » ne voit pas l'offre d'un autre compte, et n'appelle pas l'IA."""
+    from jobbot import accounts
+    from jobbot.db.models import User
+
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM users WHERE username = 'compte-reessayer'"))
+    async with rt.sessionmaker.begin() as session:
+        guest = User(username="compte-reessayer", password_hash="!")
+        session.add(guest)
+        await session.flush()
+        guest_id = guest.id
+    rescored: list[int] = []
+
+    async def score_offer(_runtime: Runtime, offer_id: int) -> int:
+        rescored.append(offer_id)
+        return 66
+
+    monkeypatch.setattr(scoring, "score_offer", score_offer)
+    try:
+        with accounts.use(guest_id):
+            other = await _offer(rt, "Monteur·se d'un autre compte")
+            async with rt.sessionmaker.begin() as session:
+                evaluation = await session.scalar(
+                    select(Evaluation).where(Evaluation.offer_id == other)
+                )
+                assert evaluation is not None
+                evaluation.score, evaluation.score_final = None, scoring.FINAL_ERROR
+        assert (await api.post(f"/api/offers/{other}/retry-score")).status_code == 404
+        assert rescored == []
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE username = 'compte-reessayer'"))
