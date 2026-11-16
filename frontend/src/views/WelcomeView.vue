@@ -20,7 +20,7 @@ import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
-import { UNDO_MS } from "../composables/useUndo";
+import { offerUndo } from "../composables/useUndo";
 import { companyPlace, rateText, remoteText, scoreWord } from "../format";
 import { whyLine } from "../whyLine";
 
@@ -435,13 +435,9 @@ async function afterAlert(): Promise<void> {
   offers.value = (data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined).slice(0, 3);
 }
 
-// « Garder » et « Écarter » : comme dans Candidatures.
-// « Garder » et « Écarter » : comme dans Candidatures. « Écarter » laisse « Annuler » 6 s, comme
-// OffersView : l'offre reprend son statut d'avant et le tri revient sur elle.
-const notice = ref("");
+// « Garder » et « Écarter » : comme dans Candidatures. « Écarter » laisse « Annuler » 6 s dans le bandeau commun à trait
+// (§23 du 15.11) : l'offre reprend son statut d'avant et le tri revient sur elle.
 type Restorable = "to_review" | "later";
-const undo = ref<{ id: number; status: Restorable } | null>(null);
-let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
 async function decide(choice: "keep" | "dismiss"): Promise<void> {
   const offer = current.value;
@@ -456,16 +452,18 @@ async function decide(choice: "keep" | "dismiss"): Promise<void> {
     if (choice === "keep") kept.value += 1;
     else dismissed.value += 1;
     position.value += 1;
-    clearTimeout(undoTimer);
-    undo.value = choice === "dismiss" ? { id: offer.id, status: offer.status === "later" ? "later" : "to_review" } : null;
-    notice.value = undo.value ? "Offre écartée." : "";
-    if (undo.value) {
-      const shown = undo.value;
-      undoTimer = setTimeout(() => {
-        if (undo.value !== shown) return;
-        undo.value = null;
-        notice.value = "";
-      }, UNDO_MS);
+    if (choice === "dismiss") {
+      const status: Restorable = offer.status === "later" ? "later" : "to_review";
+      void offerUndo({
+        message: "Offre écartée.",
+        commit: () => true,
+        restore: async () => {
+          const { response } = await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status } });
+          if (!response.ok) return;
+          position.value = Math.max(0, position.value - 1);
+          dismissed.value = Math.max(0, dismissed.value - 1);
+        },
+      });
     }
   } finally {
     deciding.value = false;
@@ -502,22 +500,7 @@ const initials = (name: string | null | undefined): string =>
   (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
 const DESK_EYEBROWS: Record<number, string> = { 1: "Premiers pas", 2: "Ce que tu cherches", 3: "Tes prochaines offres", 4: "Tes premières offres" };
 
-async function undoDismiss(): Promise<void> {
-  const last = undo.value;
-  if (!last) return;
-  clearTimeout(undoTimer);
-  undo.value = null;
-  notice.value = "";
-  const { response } = await api.PATCH("/api/offers/{offer_id}/status", {
-    params: { path: { offer_id: last.id } },
-    body: { status: last.status },
-  });
-  if (!response.ok) return;
-  position.value = Math.max(0, position.value - 1);
-  dismissed.value = Math.max(0, dismissed.value - 1);
-}
 onBeforeUnmount(() => {
-  clearTimeout(undoTimer);
   clearInterval(retryTimer);
 });
 
@@ -1618,23 +1601,6 @@ async function finish(to: string): Promise<void> {
               </button>
             </div>
           </template>
-          <p
-            v-if="notice"
-            class="notice"
-            role="status"
-            data-test="welcome-notice"
-          >
-            {{ notice }}
-            <button
-              v-if="undo"
-              type="button"
-              class="link"
-              data-test="undo-status"
-              @click="undoDismiss"
-            >
-              Annuler
-            </button>
-          </p>
         </div>
       </Transition>
 

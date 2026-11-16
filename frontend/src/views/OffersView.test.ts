@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 
 import { fromQuery, toQuery } from "../composables/useOfferFilters";
+import { useUndo } from "../composables/useUndo";
 import { dayName } from "../format";
 import OffersView from "./OffersView.vue";
 
@@ -104,7 +105,8 @@ beforeEach(() =>
     ),
   ),
 );
-afterEach(() => {
+afterEach(async () => {
+  await useUndo().flush();
   GET.mockReset();
   vi.useRealTimers();
 });
@@ -480,8 +482,9 @@ describe("tri et candidature", () => {
     });
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
     // Le message propose d'annuler (docs/60 §3) : l'offre revient à son statut d'avant.
-    expect(wrapper.text()).toContain("Offre gardée.");
-    await wrapper.find("[data-test=undo-status]").trigger("click");
+    // Le bandeau commun à trait (§23 du 15.11) : le statut est parti, « Annuler » remet celui d'avant.
+    expect(useUndo().pending.value?.message).toBe("Offre gardée.");
+    await useUndo().undo();
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", {
       params: { path: { offer_id: 1 } },

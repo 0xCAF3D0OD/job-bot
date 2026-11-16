@@ -36,6 +36,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import { useDataChanged } from "../composables/useDataChanged";
+import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import PlanLimit from "../components/PlanLimit.vue";
@@ -383,7 +384,6 @@ async function manualAdded(result: {
   filled?: string[];
 }): Promise<void> {
   manualOpen.value = false;
-  undo.value = null;
   // Complétée : sa note est refaite quand le texte de l'annonce arrive.
   notice.value = result.filled?.length
     ? result.filled.includes("description")
@@ -515,37 +515,25 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   // Le signet de la sous-page (« Plus tard » et retour) laisse la fiche ouverte : l'offre reste dans « À traiter ».
   const stays = status === "preparing" || (phone.value && (status === "later" || status === "to_review"));
   if (!stays && selectedId.value === offer.id) selectedId.value = null;
+  notice.value = "";
   const previous = offer.status;
-  undo.value =
-    status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")
-      ? { id: offer.id, status: previous }
-      : null;
-  const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
-  notice.value = undo.value ? (status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
-  // « Annuler » reste 6 s (docs/108), puis le message s'efface.
-  clearTimeout(undoTimer);
-  if (undo.value) {
-    const shown = undo.value;
-    undoTimer = setTimeout(() => {
-      if (undo.value !== shown) return;
-      undo.value = null;
-      notice.value = "";
-    }, 6000);
+  // « Annuler » dans le bandeau commun à trait (§23 du 15.11, Kevin le 15.11 18 h 49) : le statut est déjà parti au
+  // serveur, « Annuler » remet celui d'avant (docs/60 §3, 6 secondes, docs/108).
+  if (status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")) {
+    const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
+    void offerUndo({
+      message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : `Passée en ${STATUS_TEXT[status]}.`,
+      commit: () => true,
+      restore: async () => {
+        await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
+        await load();
+      },
+    });
   }
   await load();
 }
-let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
 const STATUS_TEXT: Record<string, string> = { later: "Gardée", ignored: "Ignorées", to_review: "À examiner" };
-const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
-async function undoStatus(): Promise<void> {
-  const last = undo.value;
-  if (!last) return;
-  undo.value = null;
-  notice.value = "";
-  await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: last.id } }, body: { status: last.status } });
-  await load();
-}
 
 // « Signaler comme expirée » / « Pas expirée » (docs/11 §1) : prioritaire sur la détection.
 async function setExpiry(expired: boolean): Promise<void> {
@@ -647,7 +635,6 @@ useDataChanged(() => {
 });
 onUnmounted(() => {
   clearTimeout(scoreTimer);
-  clearTimeout(undoTimer);
   window.removeEventListener("keydown", onKeydown);
   window.removeEventListener("resize", measureGrid);
   document.removeEventListener("pointerdown", onPointerDown);
@@ -823,23 +810,12 @@ onUnmounted(() => {
           >
             {{ countLabel }}
           </p>
-          <!-- Téléphone (§10.1) : « Écarter » agit tout de suite, puis un message en bas, fond inversé, avec « Annuler »
-               pendant 6 secondes (Material 3, snackbar). -->
           <p
             v-if="notice"
-            :class="['notice', { 'undo-snackbar': phone && undo }]"
+            class="notice"
             role="status"
           >
             {{ notice }}
-            <button
-              v-if="undo"
-              type="button"
-              class="link"
-              data-test="undo-status"
-              @click="undoStatus"
-            >
-              Annuler
-            </button>
           </p>
           <!-- Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup. -->
           <FirstOffers
@@ -1348,21 +1324,12 @@ onUnmounted(() => {
 .offers-empty-chip .icon { width: var(--chip-14); height: var(--chip-14); stroke-width: 2.6; }
 .offers-empty-clear { min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .offers-empty-chips + .face-state-actions .primary { --empty-52: 52px; min-height: var(--empty-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); }
-/* Le message « Offre écartée » du téléphone (§10.1, captures Offre--ecartee et OffreSombre--ecartee) : au-dessus de la
-   barre du bas, à 20 px des bords, fond --text, texte --bg, « Annuler » en --inverse-link (jamais en orange, D30). */
 /* Rien encore (§13) : l'état vide occupe la hauteur sous l'en-tête. Téléphone (CandidaturesVide) : du haut de la liste
    (144 px sans le bandeau Démo) à 130 px du bas de l'écran, la marge basse de la page au-dessus de la barre d'onglets. */
 .offers-list-bare { display: flex; flex-direction: column; }
 .offers-count { margin: 0 0 var(--space-3); padding-inline: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
 @media (max-width: 820px) {
   .offers-list-bare { --bare-chrome: 274px; min-height: calc(100dvh - var(--bare-chrome)); }
-  .notice.undo-snackbar {
-    --snack-margin: 20px; --snack-bottom: 12px;
-    position: fixed; left: var(--snack-margin); right: var(--snack-margin); bottom: calc(var(--tabbar-h, 0px) + var(--snack-bottom) + env(safe-area-inset-bottom)); z-index: 45;
-    display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin: 0; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
-    border: 0; border-radius: var(--radius-sm); background: var(--text); color: var(--bg); font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--space-5);
-  }
-  .notice.undo-snackbar .link { flex: none; min-height: var(--target-min); padding: 0 var(--space-2); color: var(--inverse-link); font-weight: var(--weight-bold); text-decoration: none; }
 }
 /* Maquette ErreurConnexion (téléphone) : « Connexion perdue » puis l'attente après « Réessayer », centrés,
    titre 22 px gras, phrase 16 px, « Réessayer » en pilule de 52 px. Valeurs de l’échelle les plus proches
