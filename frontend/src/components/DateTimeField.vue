@@ -112,3 +112,8 @@ const timeText = computed(() => (props.time ? clockLabel(props.time) : empty("Ch
     </div>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.dt-field-outlined .dt-pill-empty .dt-pill-value { visibility: hidden; }
+</style>

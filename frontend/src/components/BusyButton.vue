@@ -40,3 +40,11 @@ function onClick(event: MouseEvent): void {
     role="status"
   >{{ busy ? busyLabel : "" }}</span>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.busy-button { display: inline-grid; justify-items: center; align-items: center; }
+.busy-button > .busy-label-on, .busy-button.busy > .busy-label:not(.busy-label-on) { visibility: hidden; }
+.busy-button.busy > .busy-label-on { visibility: visible; }
+.empty-state-actions > .busy-button { display: inline-grid; padding-block: var(--space-2); white-space: normal; text-align: center; }
+</style>

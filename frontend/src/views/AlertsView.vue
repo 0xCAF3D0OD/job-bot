@@ -439,3 +439,11 @@ onMounted(async () => {
     </SidePanel>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
+.alerts-head-wide button { flex: none; white-space: nowrap; }
+.alerts-banner-text strong { font-size: var(--font-body); }
+.alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }
+</style>

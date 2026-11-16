@@ -126,3 +126,13 @@ const TITLES: Record<MockKind, string> = {
     </div>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.discover-scene.flip .discover-stage .dmock { left: auto; right: 0; transform: rotate(2deg); }
+.dmock-toggle::after { content: ""; position: absolute; right: 0.15rem; top: 0.15rem; width: 0.75rem; height: 0.75rem; border-radius: var(--radius-pill); background: #fff; }
+.dmock-thumb { width: 3rem; height: 2.2rem; border-radius: var(--radius-sm); background: var(--accent-soft); flex: none; }
+@media (max-width: 820px) {
+.discover-stage .dmock { width: 92%; }
+}
+</style>

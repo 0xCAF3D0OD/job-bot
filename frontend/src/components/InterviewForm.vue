@@ -598,3 +598,8 @@ function submit(): void {
     </form>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.score-chip { min-width: 2.2rem; justify-content: center; }
+</style>

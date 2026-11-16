@@ -95,3 +95,8 @@ defineExpose({ focus });
     </template>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.date-field:has(.dt-panel) { grid-column: 1 / -1; }
+</style>

@@ -124,3 +124,8 @@ function onDeclared(): void {
     </SidePanel>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
+</style>

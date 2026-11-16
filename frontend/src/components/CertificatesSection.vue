@@ -225,3 +225,8 @@ onMounted(() => void load());
     @close="letter = null"
   />
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.certificate-notes li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--muted); }
+</style>

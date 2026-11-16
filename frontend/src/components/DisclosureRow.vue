@@ -98,3 +98,25 @@ const openInGroup = reactive<Record<string, string | null>>({});
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.disclosure:has(> .disclosure-actions) > .disclosure-panel { grid-column: 1 / -1; }
+.disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
+.disclosure.open:has(> .disclosure-actions):has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-right-radius: 0; }
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-actions { border-top-right-radius: inherit; }
+/* L'anneau suit les coins de la carte, même là où le repliable n'a pas de cadre (1.6.5). */
+.disclosure:has(> .disclosure-row:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius); }
+.disclosure-list > .disclosure:has(> .disclosure-row:focus-visible) { outline-offset: -2px; }
+.disclosure-text .disclosure-title { font-size: var(--font-body); }
+/* Ouvert et survolé, le fond passe à --accent-soft : la phrase passe en --text pour garder 4,5:1 (WCAG 1.4.3, 1.6.63). */
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-description { color: var(--text); }
+.disclosure.open .disclosure-panel { grid-template-rows: 1fr; }
+.disclosure-list > .disclosure:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.disclosure-list > .disclosure:last-child { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.orp-month-rows > .disclosure + .disclosure { margin-top: 0; }
+/* L'action d'une ligne ouverte (« Voir sur jobs.ch ») à la marge du texte, pas collée au bord. */
+.detail-panel .detail-disclosure .disclosure-actions { padding-right: var(--space-6); }
+.bilan-detail .disclosure + .disclosure { margin-top: 0; }
+.bilan-detail .disclosure { border-color: var(--line); border-radius: var(--radius-card); }
+</style>
