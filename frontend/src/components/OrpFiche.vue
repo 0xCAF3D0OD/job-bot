@@ -290,7 +290,7 @@ async function declare(): Promise<void> {
 .orp-fiche-wide .block-field-label { line-height: var(--space-4); }
 .orp-fiche-wide .block-field-value { margin-top: var(--fw-2); line-height: var(--fw-22); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .orp-fiche-wide .block-field-value.block-field-none { font-weight: var(--weight-regular); }
-.orp-fiche-wide .block-tick { margin-top: var(--fw-6); padding: var(--fw-2) var(--space-2); border-radius: var(--fw-6); background: var(--surface-muted); font-size: var(--fw-12); line-height: var(--space-4); color: var(--text-tertiary); }
+.orp-fiche-wide .block-tick { margin-top: var(--fw-6); padding: var(--fw-2) var(--space-2); border-radius: var(--fw-6); background: var(--pill-on-bg); box-shadow: inset 0 0 0 1px var(--card-line); font-size: var(--fw-12); line-height: var(--space-4); color: var(--text-tertiary); }
 .orp-fiche-complete { flex: none; display: flex; align-items: center; min-height: var(--target-min); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .orp-fiche-wide .copy-button { width: 40px; height: 40px; color: var(--primary-text); }
 .orp-fiche-wide .orp-fiche-bar { padding: var(--space-4) var(--space-6) var(--space-5); }

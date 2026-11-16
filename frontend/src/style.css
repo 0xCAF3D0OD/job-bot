@@ -28,6 +28,8 @@
   --button-outline: #C9C5BA;
   /* Trait des cartes (prompt du 9 novembre, PR 1) : #CFCBC1 en clair ; en sombre, le même que --line-strong. */
   --card-line: #CFCBC1;
+  /* Pastille neutre posée sur le fond beige (volets, feuilles ; Kevin 16.11) : blanc et trait --card-line ; sombre #2C2722. */
+  --pill-on-bg: #FFFFFF;
   /* « Complétons ton profil » (maquettes OnboardingProfil du 10 novembre) : champ désactivé (Fin, « J’y travaille
      encore »), texte d’attente (« Non renseigné »), icône du fichier illisible, phrase d’introduction. */
   --field-disabled-bg: #F2F0EB;
@@ -245,6 +247,7 @@
     --line-strong: #4E473E;
     --button-outline: #4E473E;
     --card-line: #4E473E;
+    --pill-on-bg: #2C2722;
     --field-disabled-bg: #2C2722;
     --text-placeholder: #9A9389;
     --file-error: #F2A766;
@@ -312,6 +315,7 @@
   --line-strong: #4E473E;
   --button-outline: #4E473E;
   --card-line: #4E473E;
+  --pill-on-bg: #2C2722;
   --field-disabled-bg: #2C2722;
   --text-placeholder: #9A9389;
   --file-error: #F2A766;
