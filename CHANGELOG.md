@@ -655,3 +655,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.441 | Poids : js-total relevé une fois à 431 500 octets pour le code jobup, la recherche dans le CV et les agences de placement | livrée |
 | 1.6.442 | Filtres des offres : chaque puce de statut compte avec les filtres actifs (le compteur « À traiter » restait sans filtre) | livrée |
 | 1.6.443 | « Avant ta lettre » reprend les coordonnées du CV dans les champs vides, marqués « Du CV », seulement quand la lecture est sûre | livrée |
+| 1.6.444 | Offres : les statuts s'appellent Nouvelles, Gardées, En préparation et Toutes (par défaut, en dernier) ; les candidatures envoyées sortent de « En préparation » ; « À traiter » disparaît partout (alertes, extension, Assistant). | livrée |
+| 1.6.445 | Rendez-vous : « À préparer » sur la carte entretien, l'heure et le délai jamais coupés sur les petits téléphones | livrée |
