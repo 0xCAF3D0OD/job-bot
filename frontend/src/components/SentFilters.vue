@@ -84,6 +84,13 @@ const shown = computed(() => SENT_FILTERS.filter((f) => f.value === "toutes" || 
   </div>
 </template>
 
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (min-width: 1024px) {
+.linked-list > .sent-tools > .sent-filters { margin-bottom: var(--space-1); }
+}
+</style>
+
 <style scoped>
 .sent-filters { --pill-36: 36px; --pill-13: 13px; display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
 .sent-filters-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }

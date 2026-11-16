@@ -1,0 +1,1 @@
+Poids : 274 règles qui ne servent qu'à une page ou à un composant chargé à la demande quittent style.css pour le fichier de ce composant ; chaque page charge de 0,6 à 4,2 Ko de CSS en moins (gzip), sans aucun changement visible (allègement (a) de l'issue #797)

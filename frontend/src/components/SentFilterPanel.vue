@@ -105,3 +105,10 @@ const showLabel = computed(() => `Afficher ${props.total} ${props.total > 1 ? "c
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (min-width: 1024px) {
+.sent-columns > .sent-filter-panel { position: sticky; top: var(--space-4); height: auto; max-height: calc(100dvh - 12rem); }
+}
+</style>

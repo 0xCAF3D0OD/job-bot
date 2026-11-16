@@ -221,3 +221,27 @@ onMounted(() => void refresh());
     </div>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.notifications-card li + li { border-top: 1px solid var(--line-soft); }
+.notifications-head-wide .notifications-read-all { align-self: stretch; padding: 0 var(--space-1); font-size: var(--font-label); }
+.notifications-wide .notifications-group { gap: var(--notif-10); }
+.notifications-wide .notifications-group h2 { padding: 0 var(--space-1); font-size: var(--font-title); letter-spacing: normal; text-transform: none; color: var(--text); }
+.notifications-wide .notifications-settings { justify-content: flex-start; justify-self: start; gap: var(--space-1); min-height: var(--target-min); font-size: var(--font-label); }
+.notifications-families .notifications-group h2 { padding: 0; line-height: var(--space-4); letter-spacing: .06em; }
+.notifications-page:not(.notifications-wide) .notifications-settings { min-height: var(--btn-tertiary); color: var(--primary-text); font-size: var(--font-label); }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); }
+}
+:root[data-theme="dark"] .notifications-sourire { filter: drop-shadow(0 0 1px var(--text)) drop-shadow(0 0 1px var(--text)); }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); }
+}
+:root[data-theme="dark"] .notifications-perso { --perso-shadow: rgb(0 0 0 / 35%); }
+@media (max-width: 820px) {
+.notifications-page:not(.notifications-wide) { gap: var(--space-3); }
+.notifications-page:not(.notifications-wide) .notifications-empty { --notif-empty-h: calc(100dvh - 168px); min-height: var(--notif-empty-h); box-sizing: border-box; align-content: center; padding: var(--space-6); }
+.notifications-page:not(.notifications-wide) .notifications-empty [data-test=show-all] { min-height: var(--btn-secondary); margin-top: var(--space-2); padding: 0 var(--space-6); border-radius: var(--radius-pill); }
+}
+</style>

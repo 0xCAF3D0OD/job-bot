@@ -2148,6 +2148,26 @@ onMounted(() => void load());
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+#print-root .letter-sheet { font-size: 11pt; }
+#print-root .cv-sheet { font-size: 9.5pt; }
+#print-root .screen-only { display: none !important; }
+#print-root p.print-only { display: block; text-align: left; }
+#print-root .chunk-refs { display: none; }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
+}
+:root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
+.form-sheet dl { margin: 0; }
+.form-sheet-row > button { grid-row: 1 / 3; grid-column: 2; }
+@media (max-width: 820px) {
+.step-tabs > a { flex: 1 1 0; padding-inline: var(--space-2); }
+}
+.false-claim-quote { margin: 0 0 var(--space-4); color: var(--muted); line-height: var(--leading-normal); }
+.letter-paragraph textarea.claim-flash { animation: claim-flash 1.2s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+.letter-paragraph textarea.claim-flash { animation: none; }
+}
 /* Conteneur de 1280 (D18), 24 de marge entre 821 et 1327 px. */
 .prep-desk-head.container, .prep-desk-band > .container { --prep-max: 1280px; max-width: calc(var(--prep-max) + 2 * var(--space-6)); }
 /* Préparer sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 15.1 ; captures PreparerOrdinateur et

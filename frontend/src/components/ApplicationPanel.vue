@@ -338,6 +338,8 @@ const onStatus = (event: Event): void =>
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+:is(.form-card, .disclosure, .disclosure-list) .runs .status-select { max-width: 100%; }
 /* Lot 18 (§2.2, niveau « texte ») : le lien vers la fiche « Pour l'ORP », sur téléphone. */
 .orp-fiche-link { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0; border: 0; background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-decoration: none; }
 .orp-fiche-link:hover { text-decoration: underline; }

@@ -670,6 +670,19 @@ onMounted(() => void load());
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.training-state::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent); }
+/* Les puces gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
+   (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
+.training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
+.training-section h2 span:last-child { font-weight: var(--weight-semibold); letter-spacing: 0; }
+.training-row-text > strong { line-height: var(--leading-tight); }
+.training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
+.training-modules-buttons button:disabled { border-color: var(--line); background: var(--surface-muted); color: var(--text-secondary); }
+@media (prefers-reduced-motion: reduce) {
+.training-modules-bar span { transition: none; }
+}
 /* Bilan › Formations sur ordinateur (planche BilanOrdinateur, état Formations ; Kevin, 2026-11-14) : la carte de
    l'ORP, En cours, Gardées, puis « Chercher d'autres formations » qui ouvre le catalogue inchangé. Ici et non
    dans style.css : chargé avec la page, rien au premier écran (limites de poids du 13.11). */

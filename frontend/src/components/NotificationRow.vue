@@ -50,3 +50,24 @@ const kind = computed(() => notificationKind(props.item.kind));
     </span>
   </component>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.notif-row.unread .notif-row-title { font-weight: var(--weight-bold); }
+.notif-row-text { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-tertiary); overflow-wrap: anywhere; }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }
+}
+:root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); }
+}
+:root[data-theme="dark"] .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); }
+.notif-row.notif-row-plain:hover { background: var(--band); }
+.notif-row-plain.unread .notif-row-title { font-weight: var(--weight-bold); }
+:root .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; }
+}
+:root[data-theme="dark"] .notif-row.notif-row-plain.unread .notif-row-action { box-shadow: none; }
+</style>

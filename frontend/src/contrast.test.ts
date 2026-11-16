@@ -1,13 +1,25 @@
 /// <reference types="node" />
 // Contraste du texte (docs/28 §2) : chaque couleur de texte du thème atteint 4,5:1 sur les
 // fonds où elle s'affiche, en mode clair et en mode sombre.
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 // Lancé depuis frontend/ (npm test, vitest).
 const css = readFileSync(resolve(process.cwd(), "src/style.css"), "utf8");
+// Les règles propres à un composant chargé à la demande sont sorties de style.css vers son bloc <style> (allègement du
+// 16.11, issue #797) : on les cherche dans tout le CSS de l'application.
+const vueStyles = (dir: string): string =>
+  readdirSync(dir, { withFileTypes: true })
+    .map((entry) => {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) return vueStyles(path);
+      if (!entry.name.endsWith(".vue")) return "";
+      return [...readFileSync(path, "utf8").matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
+    })
+    .join("\n");
+const appCss = `${css}\n${vueStyles(resolve(process.cwd(), "src"))}`;
 
 // Une couleur s'écrit en hexadécimal ou renvoie à un rôle (« --accent: var(--primary-graphic) », docs/139 §3) :
 // les renvois se résolvent après la fusion clair + sombre, comme dans le navigateur.
@@ -155,17 +167,17 @@ describe("le Suivi (1.6.20)", () => {
   });
 
   it("le titre d’une ligne repliable en 600, ouverte ou fermée (comme Figma)", () => {
-    expect(css).toMatch(/\.disclosure-title \{[^}]*font-weight: var\(--weight-semibold\)/);
+    expect(appCss).toMatch(/\.disclosure-title \{[^}]*font-weight: var\(--weight-semibold\)/);
   });
 });
 
 describe("les alertes (1.6.22)", () => {
   it("« Rien reçu depuis 24 heures » : le point en --orange, plus de couleur en dur", () => {
     // Depuis la pastille d'état (1.6.74), l'état « à faire » d'une alerte est une StatusPill au ton « todo ».
-    expect(css).toContain(".state-pill.todo .state-pill-dot { background: var(--orange); }");
+    expect(appCss).toContain(".state-pill.todo .state-pill-dot { background: var(--orange); }");
     // Une seule orange d'interface : --orange est l'alias de --warning (docs/139).
     expect(css).toContain("--orange: var(--warning);");
-    expect(css).not.toContain("#e08a2e");
+    expect(appCss).not.toContain("#e08a2e");
   });
 });
 
@@ -285,9 +297,9 @@ describe("les puces et le contrôle segmenté (D4, 2026-11-03)", () => {
 describe("une notification non lue (maquette Notifications, N5)", () => {
   it("le titre et le message restent lisibles sur le fond des non lues, en clair et en sombre (WCAG 1.4.3)", () => {
     // En clair, la moitié de --primary-soft sur la carte ; en sombre, --primary-soft (décision du 2026-11-04).
-    expect(css).toContain("--notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));");
-    expect(css).toContain(':root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }');
-    expect(css).toContain(':root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }');
+    expect(appCss).toContain("--notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));");
+    expect(appCss).toContain(':root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }');
+    expect(appCss).toContain(':root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }');
     const backgrounds = [mix(light["primary-soft"]!, light.surface!, 0.5), dark["primary-soft"]!];
     for (const [theme, background] of [[light, backgrounds[0]!], [dark, backgrounds[1]!]] as const) {
       expect(ratio(theme.text!, background), "titre").toBeGreaterThanOrEqual(4.5);

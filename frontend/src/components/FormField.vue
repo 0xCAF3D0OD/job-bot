@@ -74,3 +74,20 @@ const control = computed(() => ({
     </p>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.form-field-box:has(:is(input, select, textarea):disabled) { --ff-bg: var(--field-disabled-bg); }
+.form-field-hint { margin: 0; padding-inline: var(--space-4); font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
+.form-field:is(.field-w-5, .field-w-10) > .form-field-box { width: min(100%, var(--field-w)); }
+@media (prefers-reduced-motion: reduce) {
+.form-field-label { transition: none; }
+}
+.field-w-5 { --field-w: var(--field-5); }
+.field-w-10 { --field-w: var(--field-10); }
+/* Une date native garde son icône de calendrier à droite : 10 caractères plus l'icône, pour que l'année
+   ne soit jamais coupée (« 28.10.2026 »). */
+.field-w-10:has(input[type="date"]) { --field-w: calc(var(--field-10) + var(--control-h)); }
+.field-w-20 { --field-w: var(--field-20); }
+.field-w-30 { --field-w: var(--field-30); }
+</style>
