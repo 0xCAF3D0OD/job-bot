@@ -30,6 +30,7 @@ import SegmentedControl from "./SegmentedControl.vue";
 import SuggestionChips from "./SuggestionChips.vue";
 import { cvChanges, type CvChange } from "../cvChanges";
 import DocSearch from "./DocSearch.vue";
+import { highlight, type Segment } from "../newsLabels";
 
 // Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -347,22 +348,16 @@ async function undoShown(): Promise<void> {
   await undo(change);
   changeAt.value = null;
 }
-// « Pourquoi » : le texte du serveur coupé autour des mots de l'annonce qu'il cite ; « Demandé par toi » pour un
-// changement demandé par l'utilisateur ; rien sans raison.
-const why = computed<{ text: string; quote: boolean }[]>(() => {
+// « Pourquoi » : le texte du serveur, les mots de l'annonce qu'il renvoie avec la raison (`quotes`) surlignés comme
+// dans « Le poste », sans dépendre des guillemets (Kevin, 16.11) ; « Demandé par toi » pour un changement demandé
+// par l'utilisateur ; rien sans raison.
+const why = computed<Segment[]>(() => {
   const change = changeOf.value;
   const reason = change ? selected.value?.reasons?.find((r) => r.target === change.target) : null;
   if (!reason) return [];
-  if (reason.origin === "user") return [{ text: "Demandé par toi.", quote: false }];
+  if (reason.origin === "user") return [{ text: "Demandé par toi.", hit: false }];
   const text = reason.text?.trim() ?? "";
-  if (!text) return [];
-  const quotes = (reason.quotes ?? []).filter(Boolean);
-  if (!quotes.length) return [{ text, quote: false }];
-  const pattern = new RegExp(`(${quotes.map((q) => q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
-  return text
-    .split(pattern)
-    .filter(Boolean)
-    .map((part) => ({ text: part, quote: quotes.includes(part) }));
+  return text ? highlight(text, (reason.quotes ?? []).filter(Boolean)) : [];
 });
 function pickVersion(cv: Cv): void {
   show(cv);
@@ -1143,7 +1138,7 @@ onMounted(() => void load());
             v-for="(part, i) in why"
             :key="i"
           ><mark
-            v-if="part.quote"
+            v-if="part.hit"
             class="cv-why-quote"
           >{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
         </p>

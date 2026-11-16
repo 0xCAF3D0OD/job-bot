@@ -136,7 +136,7 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     const shown = cv(21, [3, 1], {
       origin_ids: [1, 2, 3],
       reasons: [
-        { target: "summary", origin: "ai", text: "L’annonce demande AWS dès sa première ligne.", quotes: ["AWS"] },
+        { target: "summary", origin: "ai", text: "L’annonce demande AWS dès sa première ligne.", quotes: ["aws"] },
         { target: 2, origin: "user", text: null, quotes: [] },
       ],
     });
