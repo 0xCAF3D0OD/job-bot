@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
+import { SCORE_HELP } from "../composables/useOfferFilters";
 import ConnectionsPanel from "../components/ConnectionsPanel.vue";
 import GetemallPanel from "../components/GetemallPanel.vue";
 import PageHero from "../components/PageHero.vue";
@@ -223,11 +224,8 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
 // Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
 // soit 85, 75 et 50 (Proche dès 75, 2026-11-05, Kevin). Une valeur d'avant (60, 70, 80, 90…) s'affiche sous le mot
 // le plus proche : 70, l'ancien seuil de Proche, reste « Proche ».
-const THRESHOLD_OPTIONS = [
-  { value: "85", label: "Très proche", test: "threshold-85" },
-  { value: "75", label: "Proche", test: "threshold-75" },
-  { value: "50", label: "À creuser", test: "threshold-50" },
-];
+// « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils, même aide.
+const THRESHOLD_OPTIONS = [85, 75, 50].map((n) => ({ value: String(n), label: `${n} et +`, test: `threshold-${n}` }));
 const threshold = computed({
   get: () => {
     const value = form.value.notify_score_threshold ?? 70;
@@ -652,7 +650,9 @@ watch(
                 </SettingRow>
                 <SettingRow
                   v-if="item.key === 'notify_offers' && form.notify_offers"
+                  v-slot="c"
                   title="M’avertir dès"
+                  :description="SCORE_HELP"
                   :saved="savedRow === 'threshold'"
                   :error="rowErrors.threshold"
                   class="notify-threshold"
@@ -663,6 +663,8 @@ watch(
                     v-model="threshold"
                     :options="THRESHOLD_OPTIONS"
                     label="M’avertir dès"
+                    :aria-labelledby="c.labelledby"
+                    :aria-describedby="c.describedby"
                     full
                   />
                 </SettingRow>

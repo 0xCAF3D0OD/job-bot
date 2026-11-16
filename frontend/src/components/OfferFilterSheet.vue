@@ -2,7 +2,17 @@
 import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
-import { BASIS_HELP, basisChoices, radioKey, type OfferFilters, type Sort } from "../composables/useOfferFilters";
+import {
+  BASIS_HELP,
+  basisChoices,
+  radioKey,
+  RATE_CHOICES,
+  REMOTE_LABEL,
+  SCORE_CHOICES,
+  SCORE_HELP,
+  type OfferFilters,
+  type Sort,
+} from "../composables/useOfferFilters";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
@@ -10,40 +20,33 @@ import GroupedRow from "./GroupedRow.vue";
 import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 
 // La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02 ;
-// décisions de Kevin du 2026-11-06) : la correspondance en mots (D3), le taux minimum (un seul choix, 5e),
+// décisions de Kevin du 2026-11-06 ; section 31 du 16.11) : la note minimale sur 100, le taux d'activité (un seul choix, 5e),
 // le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
 // Contrat et Distance attendent le serveur (issue 468). Chaque choix s'applique tout de suite ;
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
-// « Note » (prompt du 10 novembre au soir, PR 26 ; maquette Filtres) : Toutes, Sûres · n, Provisoires · n, un seul
+// « Type de note » (PR 26 ; section 31 du 16.11) : Toutes, Définitives · n, Provisoires · n, un seul
 // choix (role="radio"), les nombres du serveur, et la phrase qui dit ce qu'est une note provisoire.
 const bases = computed(() => basisChoices(props.facets));
 
-// La correspondance avec les mots de la note (D3), pas en chiffres.
-const SCORES: { label: string; min: number | null }[] = [
-  { label: "Tous", min: null },
-  { label: "À creuser et +", min: 50 },
-  { label: "Proche et +", min: 75 },
-  { label: "Très proche", min: 85 },
-];
-// Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
-const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
-// Le taux minimum, un seul choix (5e) : le serveur garde une offre dont le taux maximum l'atteint, ou au
+// « Note minimale, sur 100 » (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, mêmes seuils que
+// l'ordinateur. Une adresse d'avant (?note=60-90) garde ses bornes, et aucune case n'est marquée.
+const SCORES: SegmentOption[] = SCORE_CHOICES.map((c) => ({ value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}` }));
+const score = computed({
+  get: () => (props.filters.maxScore !== null ? "" : String(props.filters.minScore ?? "all")),
+  set: (value: string) => emit("update", { minScore: value === "all" ? null : Number(value), maxScore: null }),
+});
+// Le taux d'activité, un seul choix (5e) : le serveur garde une offre dont le taux maximum l'atteint, ou au
 // taux inconnu. Un contrôle segmenté, pas des puces qui ont l'air de se cumuler.
-const RATES: SegmentOption[] = [
-  { value: "all", label: "Tous", test: "sheet-rate-all" },
-  { value: "60", label: "60 %", test: "sheet-rate-60" },
-  { value: "80", label: "80 %", test: "sheet-rate-80" },
-  { value: "100", label: "100 %", test: "sheet-rate-100" },
-];
+const RATES: SegmentOption[] = RATE_CHOICES.map((c) => ({ value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}` }));
 const rate = computed({
   get: () => (props.filters.minRate === null ? "all" : String(props.filters.minRate)),
   set: (value: string) => emit("update", { minRate: value === "all" ? null : Number(value) }),
 });
 const SORTS: { label: string; value: Sort }[] = [
-  { label: "Par jour", value: "day" },
+  { label: "Par date", value: "day" },
   { label: "Note", value: "score" },
   { label: "Récentes", value: "recent" },
 ];
@@ -60,32 +63,29 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
     @close="emit('close')"
   >
     <div class="filter-sheet">
-      <div
-        class="filter-choices"
-        role="group"
-        aria-labelledby="sheet-score-title"
-      >
+      <div class="filter-choices">
         <h3 id="sheet-score-title">
-          Correspondance minimale
+          Note minimale, sur 100
         </h3>
-        <div class="filter-choices-row">
-          <button
-            v-for="choice in SCORES"
-            :key="choice.label"
-            type="button"
-            class="filter-choice"
-            :aria-pressed="scoreChoice === choice.min"
-            :data-test="`sheet-score-${choice.min ?? 'all'}`"
-            @click="emit('update', { minScore: choice.min, maxScore: null })"
-          >
-            {{ choice.label }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="score"
+          :options="SCORES"
+          label="Note minimale, sur 100"
+          aria-labelledby="sheet-score-title"
+          aria-describedby="sheet-score-help"
+          full
+        />
+        <p
+          id="sheet-score-help"
+          class="filter-choices-help"
+        >
+          {{ SCORE_HELP }}
+        </p>
       </div>
 
       <div class="filter-choices">
         <h3 id="sheet-basis-title">
-          Note
+          Type de note
         </h3>
         <div
           class="filter-choices-row"
@@ -121,12 +121,13 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 
       <div class="filter-choices">
         <h3 id="sheet-rate-title">
-          Taux minimum
+          Taux d’activité
         </h3>
         <SegmentedControl
           v-model="rate"
           :options="RATES"
-          label="Taux minimum"
+          label="Taux d’activité"
+          aria-labelledby="sheet-rate-title"
           full
         />
       </div>
@@ -174,7 +175,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           </template>
         </GroupedRow>
         <GroupedRow
-          title="Télétravail au moins partiel"
+          :title="REMOTE_LABEL"
           label
           data-test="sheet-remote"
         >
