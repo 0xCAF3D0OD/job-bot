@@ -115,17 +115,42 @@ onMounted(async () => {
     savedIdentity.value = who.data;
     for (const key of Object.keys(identity.value) as (keyof IdentityFields)[]) identity.value[key] = who.data[key] ?? "";
   }
-  if (has("identity") && props.documentId !== null) {
-    const { data } = await api.GET("/api/identity/from-document/{document_id}", {
-      params: { path: { document_id: props.documentId } },
-      ...QUIET,
-    });
-    for (const key of Object.keys(identity.value) as (keyof IdentityFields)[]) {
-      if (!identity.value[key] && data?.[key]) identity.value[key] = data[key]!;
-    }
-  }
+  if (has("identity")) await fillFromCv();
   if (has("identity") && !identity.value.email && me.value?.username?.includes("@")) identity.value.email = me.value.username;
 });
+
+// Les coordonnées du CV (Kevin, 16.11) : seulement dans les champs encore vides, jamais à la place d'une valeur du
+// profil. Le CV est celui donné par la page, sinon le dernier document lisible qui n'est pas un certificat (comme
+// Profil › Coordonnées). Le repérage se fait sur le serveur, sans IA, et laisse vide ce qui est douteux. Rien n'est
+// enregistré avant « Enregistrer ».
+const fromCv = ref<Partial<IdentityFields>>({});
+async function fillFromCv(): Promise<void> {
+  if (!(Object.keys(identity.value) as (keyof IdentityFields)[]).some((k) => !identity.value[k].trim())) return;
+  try {
+    let documentId = props.documentId;
+    if (documentId === null) {
+      const docs = await api.GET("/api/documents", QUIET);
+      documentId = Array.isArray(docs.data) ? (docs.data.find((d) => d.kind !== "certificate" && d.text_status === "ok")?.id ?? null) : null;
+    }
+    if (documentId === null) return;
+    const { data } = await api.GET("/api/identity/from-document/{document_id}", { params: { path: { document_id: documentId } }, ...QUIET });
+    const marked: Partial<IdentityFields> = {};
+    for (const key of Object.keys(identity.value) as (keyof IdentityFields)[]) {
+      const value = data?.[key]?.trim();
+      if (!identity.value[key].trim() && value) {
+        identity.value[key] = value;
+        marked[key] = value;
+      }
+    }
+    fromCv.value = marked;
+  } catch {
+    // Sans CV lisible, la saisie à la main suffit.
+  }
+}
+// La marque « Du CV » reste tant que le champ garde la valeur reprise ; elle part dès qu'on le modifie.
+const cvMark = (key: keyof IdentityFields): boolean => !!fromCv.value[key] && identity.value[key] === fromCv.value[key];
+const described = (base: string | undefined, key: keyof IdentityFields): string | undefined =>
+  [base, cvMark(key) ? "pc-from-cv" : ""].filter(Boolean).join(" ") || undefined;
 
 function addExperience(): void {
   experiences.value = [...experiences.value, blank()];
@@ -383,6 +408,10 @@ defineExpose({ save, saving, missingForLetter, levels });
       data-test="completion-identity"
     >
       <h2>Coordonnées</h2>
+      <span
+        id="pc-from-cv"
+        class="visually-hidden"
+      >Repris de ton CV, vérifie-le.</span>
       <p class="pc-hint">
         Pour l’en-tête de tes lettres. Jamais envoyées sans ton accord.
       </p>
@@ -390,12 +419,13 @@ defineExpose({ save, saving, missingForLetter, levels });
         <FormField
           v-slot="f"
           field-id="pc-name"
+          :badge="cvMark('name') ? 'Du CV' : ''"
           label="Prénom et nom (obligatoire)"
         >
           <input
             :id="f.id"
             v-model="identity.name"
-            :aria-describedby="f.describedby"
+            :aria-describedby="described(f.describedby, 'name')"
             type="text"
             autocomplete="name"
             maxlength="80"
@@ -407,28 +437,33 @@ defineExpose({ save, saving, missingForLetter, levels });
         <FormField
           v-slot="f"
           field-id="pc-street"
+          :badge="cvMark('street') ? 'Du CV' : ''"
           label="Adresse"
         >
           <input
             :id="f.id"
             v-model="identity.street"
-            :aria-describedby="f.describedby"
+            :aria-describedby="described(f.describedby, 'street')"
             type="text"
             autocomplete="street-address"
             maxlength="80"
             data-test="completion-street"
           >
         </FormField>
-        <div class="pc-npa">
+        <div
+          class="pc-npa"
+          :class="{ 'pc-npa-cv': cvMark('postcode') }"
+        >
           <FormField
             v-slot="f"
             field-id="pc-postcode"
+            :badge="cvMark('postcode') ? 'Du CV' : ''"
             label="NPA"
           >
             <input
               :id="f.id"
               v-model="identity.postcode"
-              :aria-describedby="f.describedby"
+              :aria-describedby="described(f.describedby, 'postcode')"
               type="text"
               inputmode="numeric"
               autocomplete="postal-code"
@@ -440,12 +475,13 @@ defineExpose({ save, saving, missingForLetter, levels });
           <FormField
             v-slot="f"
             field-id="pc-city"
+            :badge="cvMark('city') ? 'Du CV' : ''"
             label="Localité"
           >
             <input
               :id="f.id"
               v-model="identity.city"
-              :aria-describedby="f.describedby"
+              :aria-describedby="described(f.describedby, 'city')"
               type="text"
               autocomplete="address-level2"
               maxlength="80"
@@ -457,12 +493,13 @@ defineExpose({ save, saving, missingForLetter, levels });
           <FormField
             v-slot="f"
             field-id="pc-phone"
+            :badge="cvMark('phone') ? 'Du CV' : ''"
             label="Téléphone"
           >
             <input
               :id="f.id"
               v-model="identity.phone"
-              :aria-describedby="f.describedby"
+              :aria-describedby="described(f.describedby, 'phone')"
               type="tel"
               autocomplete="tel"
               maxlength="80"
@@ -472,13 +509,14 @@ defineExpose({ save, saving, missingForLetter, levels });
           <FormField
             v-slot="f"
             field-id="pc-email"
+            :badge="cvMark('email') ? 'Du CV' : ''"
             label="E-mail"
             hint="Celui de ton compte"
           >
             <input
               :id="f.id"
               v-model="identity.email"
-              :aria-describedby="f.describedby"
+              :aria-describedby="described(f.describedby, 'email')"
               type="email"
               autocomplete="email"
               maxlength="80"
@@ -518,6 +556,8 @@ defineExpose({ save, saving, missingForLetter, levels });
 .pc-pair { display: flex; flex-direction: column; gap: var(--pc-card-gap); }
 .pc-pair-always, .pc-desk .pc-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--pc-pair-gap); }
 .pc-npa { display: grid; grid-template-columns: var(--pc-npa) minmax(0, 1fr); gap: var(--pc-pair-gap); }
+/* « NPA » et la marque « Du CV » tiennent ensemble dans la bordure : sans cela le libellé est coupé en « N. ». */
+.pc-npa-cv { --pc-npa: 136px; }
 .pc-field { display: flex; flex-direction: column; gap: var(--pc-field-gap); min-width: 0; }
 .pc-field > label { font-size: var(--font-small); line-height: var(--pc-label-lh); font-weight: var(--weight-bold); color: var(--text); }
 .pc :is(.pc-lang input[type="text"], select) { width: 100%; padding: 0 var(--pc-input-pad); border-radius: var(--pc-input-radius); }
