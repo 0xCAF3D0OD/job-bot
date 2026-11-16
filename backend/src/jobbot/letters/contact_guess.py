@@ -50,13 +50,26 @@ def guess_contact(text: str) -> ContactGuess:
             and not HEADINGS.match(line)
         ):
             name = _clean(line)
-    email = EMAIL.search(head)
-    phone = PHONE.search(head)
+    # Dans le doute, on laisse vide (Kevin, 16.11) : un champ vide vaut mieux qu'un champ faux
+    # qu'on ne relit pas. Le NPA n'est repris qu'avec ses quatre chiffres suivis d'une localité ;
+    # le téléphone et l'e-mail seulement s'il n'y en a qu'un en tête du CV.
+    if not (postcode and len(postcode) == 4 and postcode.isdigit() and city):
+        postcode = city = None
+    phones = {_digits(m.group(0)) for m in PHONE.finditer(head)}
+    emails = {m.group(0).lower() for m in EMAIL.finditer(head)}
+    phone = PHONE.search(head) if len(phones) == 1 else None
+    email = EMAIL.search(head) if len(emails) == 1 else None
     return ContactGuess(
         name=name,
         street=street,
-        postcode=postcode if postcode and len(postcode) == 4 and postcode.isdigit() else None,
-        city=city if postcode else None,
+        postcode=postcode,
+        city=city,
         phone=_clean(phone.group(0)) if phone else None,
         email=email.group(0) if email else None,
     )
+
+
+def _digits(phone: str) -> str:
+    """Le même numéro écrit deux fois (« 079 … » et « +41 79 … ») ne compte qu'une fois."""
+    digits = "".join(c for c in phone if c.isdigit())
+    return digits[-9:]
