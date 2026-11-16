@@ -30,15 +30,9 @@ export default defineConfig({
               name: "commun",
               test: /node_modules[\\/].*\.m?js$|src[\\/](api[\\/]client\.ts|icons\.ts|dates\.ts|brandPaths\.ts|components[\\/]AppIcon\.vue)/,
             },
-            // Les petits composants que les pages de l'application partagent (16.11, issue « Budget JS ») : séparés, ils
-            // faisaient neuf fichiers de 0,3 à 1,6 Ko compressés chacun à part, et une ligne d'import de plus dans chaque page.
-            // Réunis : − 2,7 Ko de JS total ; chaque page qui en charge un les reçoit tous (mis en cache ensuite).
-            // Pas ceux des pages de connexion ni de l'Accueil (FormField, BusyButton, HoverNote, LoadingBlocks) : ces pages
-            // téléchargeraient le groupe entier pour un seul composant.
-            {
-              name: "partage",
-              test: /src[\\/]components[\\/](StatusPill|BottomSheet|DisclosureRow|EmptyState|SavedStatus|ShowMore|ProfileCompletionPanel|DateField|SettingRow)\.vue/,
-            },
+            // Pas de groupe « partage » (retiré le 16.11 après #795) : réunir les petits composants partagés allégeait
+            // js-total de 2,7 Ko, mais chaque page qui en chargeait un les recevait tous (Trier, Alertes, Relances,
+            // Résultats, Formations et État du service : de + 5,6 à + 12,9 Ko). Les limites portent sur les pages.
           ],
         },
       },
