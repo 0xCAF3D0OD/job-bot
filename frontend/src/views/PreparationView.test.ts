@@ -347,6 +347,19 @@ describe("barre de candidature", () => {
     expect(steps.find("[data-test=apply-where] .apply-cap").text()).toBe("Où postuler");
     expect(steps.find("[data-test=sheet-letter]").text()).toBe("Lettre.pdf");
     expect(steps.find("[data-test=download-all]").text()).toBe("Tout télécharger");
+    // La coche après le téléchargement (Kevin, 16.11) : « Tout télécharger » coche les deux, le nom le dit.
+    expect(steps.find("[data-test=sheet-letter] .icon-download").exists()).toBe(true);
+    expect(steps.find("[data-test=sheet-letter]").attributes("aria-label")).toBeUndefined();
+    const stopNavigation = (event: Event) => event.preventDefault();
+    document.addEventListener("click", stopNavigation);
+    await steps.find("[data-test=download-all]").trigger("click");
+    document.removeEventListener("click", stopNavigation);
+    expect(steps.find("[data-test=sheet-letter] .icon-check").exists()).toBe(true);
+    expect(steps.find("[data-test=sheet-letter] .icon-download").exists()).toBe(false);
+    expect(steps.find("[data-test=sheet-letter]").attributes("aria-label")).toBe("Lettre.pdf, téléchargée");
+    expect(steps.find("[data-test=sheet-cv]").attributes("aria-label")).toBe("CV.pdf, téléchargé");
+    expect(JSON.parse(localStorage.getItem("jobA1.telecharges") ?? "[]")).toEqual(expect.arrayContaining(["cv-31"]));
+    localStorage.removeItem("jobA1.telecharges");
     expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf?modele=moderne");
     // Sur ordinateur, pas de ligne « Modèle … » (maquette téléphone seulement).
     expect(steps.find("[data-test=apply-template-note]").exists()).toBe(false);
