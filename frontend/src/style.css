@@ -589,7 +589,11 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .checks li { display: flex; gap: var(--space-2); align-items: center; font-size: var(--font-small); }
 .checks .icon { color: var(--accent); width: 18px; height: 18px; }
 .checks strong { font-weight: var(--weight-semibold); }
-.checks span { color: var(--muted); }
+.checks span,
+.chunk-grid > li.inactive .chunk-card .job-title,
+.bilan-interview-day,
+.sites-card .setting-row.paused .setting-row-title,
+.gs-group-title { color: var(--muted); }
 .detail-snippet { color: var(--muted); margin: 0; line-height: var(--leading-normal); }
 .actions, .inline-confirm-actions, .inline-edit-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .actions a {
@@ -637,7 +641,9 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 
 .offer-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 .offer-list li { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: baseline; }
-.offer-list .detail { display: inline; }
+.offer-list .detail,
+#print-root .print-only,
+.contact-message-foot .hint { display: inline; }
 .link { color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
 .link { border-radius: var(--radius-sm); transition: color 0.15s, background-color 0.15s; }
 
@@ -774,11 +780,18 @@ input[type="number"] { width: 7rem; }
 .drop-zone.busy { opacity: 0.6; pointer-events: none; }
 .drop-zone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .drop-zone:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-.drop-title { color: var(--accent); font-weight: var(--weight-semibold); }
+.drop-title,
+.job-room-declared .done,
+.ai-steps li.current,
+.extension-link-done,
+.bilan-interview-state.upcoming { color: var(--accent); font-weight: var(--weight-semibold); }
 .doc-list, .review-criteria, .bilan-rates { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
 button.link { border: none; background: none; padding: 0; font: inherit; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--accent); cursor: pointer; }
 button.link { border-radius: var(--radius-sm); transition: color 0.15s, background-color 0.15s; }
-.link.danger { color: var(--down-text); }
+.link.danger,
+.danger,
+.contact-message-foot .over-limit,
+.assistant-line.error { color: var(--down-text); }
 .doc-text {
   white-space: pre-wrap;
   font-size: var(--font-small);
@@ -796,7 +809,6 @@ button.link { border-radius: var(--radius-sm); transition: color 0.15s, backgrou
 .chunk-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(max(17rem, calc((100% - 2rem) / 3)), 1fr)); gap: var(--space-4); }
 /* Carte calme d'un bloc (docs/49 §3) : 3 lignes, le type en bas, même hauteur dans la rangée. */
 .chunk-grid > li { display: flex; }
-.chunk-grid > li.inactive .chunk-card .job-title { color: var(--muted); }
 .chunk-card { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); align-items: stretch; padding: var(--space-4) var(--space-4) 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
 .chunk-card .job-title { font-weight: var(--weight-semibold); }
 .chunk-content { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
@@ -876,13 +888,20 @@ button.secondary:hover:not(:disabled), button.action-2:hover:not(:disabled), but
 .score-pending { font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); text-align: center; }
 .summary { margin: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); }
 .summary div { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: var(--space-2); }
-.summary dt { color: var(--muted); font-weight: var(--weight-semibold); }
+.summary dt,
+.calm-list li.paused .calm-row strong { color: var(--muted); font-weight: var(--weight-semibold); }
 .summary dd { margin: 0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .points { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--space-4); }
 .points h3 { font-size: var(--font-caption); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: var(--space-2); }
 .points ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); font-size: var(--font-small); }
 .points li::marker { color: var(--ok-text); }
-.points .gaps li::marker { color: var(--orange-text); }
+.points .gaps li::marker,
+.doubts li.scam,
+.follow-up-line,
+.orp-late,
+.orp-month-line .behind,
+.offer-line-note.alert,
+.offer-line-state.urgent { color: var(--orange-text); }
 .budget { display: grid; gap: var(--space-2); }
 .budget-bar { height: 0.5rem; border-radius: var(--radius-pill); background: var(--band); overflow: hidden; }
 .budget-bar span { display: block; height: 100%; background: var(--mint); border-radius: var(--radius-pill); }
@@ -900,7 +919,8 @@ button.secondary:hover:not(:disabled), button.action-2:hover:not(:disabled), but
 .proposal-check { align-items: center; flex-wrap: wrap; }
 .proposal-check input { margin-top: 0; }
 .proposal input[type="text"] { width: 100%; font-weight: var(--weight-semibold); }
-.proposal .form-field input { font-weight: inherit; }
+.proposal .form-field input,
+.form-field-optional { font-weight: inherit; }
 
 /* --- Candidatures (0.5.0-a) --- */
 
@@ -992,7 +1012,6 @@ html.search-open,
 #print-root .letter-sheet { font-size: 11pt; }
 #print-root .cv-sheet { font-size: 9.5pt; }
 #print-root .screen-only { display: none !important; }
-#print-root .print-only { display: inline; }
 #print-root p.print-only { display: block; text-align: left; }
 #print-root .chunk-refs { display: none; }
 @media print {
@@ -1039,7 +1058,6 @@ html.search-open,
 /* Un long lien (Workday, Indeed…) se coupe au lieu de pousser le bouton hors de la carte. */
 /* Déclarée dans Job-Room (docs/70 §6). */
 .job-room-declared { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; margin: 0 0 var(--space-3); font-size: var(--font-small); }
-.job-room-declared .done { color: var(--accent); font-weight: var(--weight-semibold); }
 .orp-sheet { display: none; }
 #print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
 .orp-sheet .orp-sheet-title { font-size: 12pt; margin: 0 0 4mm; }
@@ -1132,7 +1150,6 @@ html.search-open,
 /* Actualités (docs/15 §2) */
 .tab-count { margin-left: var(--space-1); vertical-align: 0.1rem; }
 .news-meta, .suivi-calendar .day-number, .day-dots .more { font-size: var(--font-caption); color: var(--muted); }
-.danger { color: var(--down-text); }
 
 .chip-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
 .chip-label { font-size: var(--font-caption); color: var(--muted); margin-right: var(--space-1); }
@@ -1149,7 +1166,16 @@ html.search-open,
 .training-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .training-head { display: flex; justify-content: space-between; gap: var(--space-2); align-items: center; }
 .training-title { font-weight: var(--weight-bold); font-size: var(--font-body); line-height: var(--leading-tight); color: var(--text); text-decoration: none; }
-.training-title:hover { color: var(--accent); }
+.training-title:hover,
+.job-room-choice,
+.back-link:hover,
+.disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title,
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-value,
+.calm-row:hover strong,
+.hover-note-info[aria-expanded="true"],
+.orp-month-line .on-track,
+.gs-follow-title,
+.offer-line:hover .offer-line-title { color: var(--accent); }
 .training-title mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: var(--radius-sm); padding: 0 0.1em; }
 .training-facts { margin: 0; font-size: var(--font-caption); color: var(--muted); }
 .training-card .hint { margin: 0; font-size: var(--font-caption); }
@@ -1213,15 +1239,20 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; max-width: 40rem; margin: 0 auto; }
 @media (max-width: 860px) { .settings-layout { padding: 0 var(--space-5); } }
 
-/* Saisie Job-Room : une section par étape de leur formulaire */
-.job-room-choice { color: var(--accent); }
+/* Saisie Job-Room : une section par étape de leur formulaire
+   Règle réunie plus haut avec « .training-title:hover », même style (allègement du 16.11). */
 
 /* Préparation : retour aux offres toujours visible */
 .back-link { display: inline-flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-4); color: var(--muted); text-decoration: none; font-size: var(--font-small); }
-.back-link:hover { color: var(--accent); }
 
 /* Mes alertes (docs/20 §1) */
-.alerts-panel { display: grid; gap: var(--space-3); }
+.alerts-panel,
+.suivi-declare,
+.orp-month-rows,
+.setting-cards,
+.bilan-interviews,
+.training-kept,
+.prep-revise { display: grid; gap: var(--space-3); }
 .alerts-panel .section-title.first { margin-top: 0; }
 .alerts-table td { vertical-align: top; }
 .alert-cell { min-width: 9rem; }
@@ -1232,14 +1263,20 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .parse.parsed, .alert-cell.received .alert-status { color: var(--ok-text); font-weight: var(--weight-semibold); }
 .alert-cell.created .alert-status { color: var(--orange-text); }
 .points .detail, .alert-cell .check { font-size: var(--font-caption); }
-.forwarding { font-size: var(--font-small); }
+.forwarding,
+.more-info .disclosure-body,
+.contacts-searches .link,
+.assistant-intro,
+.calm-row .hint,
+.bilan-orp-card .orp-month-band-line,
+.offers-chips-clear { font-size: var(--font-small); }
 .alert-form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); padding: var(--space-4); }
 .alert-form .form-actions { grid-column: 1 / -1; padding-top: 0; }
 @media (max-width: 720px) { .alert-form { grid-template-columns: 1fr; } }
 .employer-line { margin: var(--space-2) 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
 
-/* « En savoir plus » (docs/21 §2) */
-.more-info .disclosure-body { font-size: var(--font-small); }
+/* « En savoir plus » (docs/21 §2)
+   Règle réunie plus haut avec « .forwarding », même style (allègement du 16.11). */
 .more-info .disclosure-body p { margin: 0; }
 
 /* Alertes : assistant et résumé (docs/21 §4) */
@@ -1270,7 +1307,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .contacts-block + .contacts-block { padding-top: var(--space-5); border-top: 1px solid var(--divider); }
 .contacts-block h3 { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .contacts-searches { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.contacts-searches .link { font-size: var(--font-small); }
 .contacts-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
 .contacts-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); align-items: center; font-size: var(--font-small); }
 /* Le nom et ses actions sur la même ligne, l'état en dessous (docs/74). */
@@ -1288,8 +1324,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .contact-writer-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-4); }
 .contact-writer textarea { width: 100%; font: inherit; font-size: var(--font-small); }
 .contact-message-foot { display: flex; align-items: center; gap: var(--space-4); margin: 0; }
-.contact-message-foot .hint { display: inline; }
-.contact-message-foot .over-limit { color: var(--down-text); }
 
 /* Preuves ORP : une action à la fois (docs/21 §6) */
 
@@ -1318,11 +1352,22 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .suivi-todo .today-rows { margin: 0; }
 .suivi-day { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
 .suivi-day .suivi-panel-title { margin: 0; font-size: var(--font-body); }
-/* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
-.suivi-declare { display: grid; gap: var(--space-3); }
+/* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable.
+   Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
 /* Carte calme (docs/46 §2) : qui, quoi, le statut ; en bas, une seule prochaine étape. */
 /* Panneau d'une candidature (docs/46 §3). */
-.application-panel { display: grid; gap: var(--space-4); }
+.application-panel,
+.preparation-sheet,
+.profile-form, .add-search-form,
+.calm-panel,
+.criteria-layout,
+.orp-meeting,
+.certificates,
+.auth-setup,
+.triage-pile,
+.pick-step,
+.trainings,
+.notifications-families { display: grid; gap: var(--space-4); }
 .application-panel > * { min-width: 0; }
 .application-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
 .application-panel-head p { margin: 0; }
@@ -1362,7 +1407,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .coaching dl { margin: 0; display: grid; gap: var(--space-2); font-size: var(--font-small); }
 .coaching dt { font-weight: var(--weight-semibold); }
 .coaching dd { margin: 0; color: var(--muted); }
-.preparation-sheet { display: grid; gap: var(--space-4); }
 
 /* --- Assistant (docs/24) --- */
 /* Jamais plein (docs/29 §1) : il ne concurrence pas l'action principale de la page. */
@@ -1377,7 +1421,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-head-actions,
 .toast { display: flex; align-items: center; gap: var(--space-3); }
 .assistant-body { flex: 1; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
-.assistant-intro { font-size: var(--font-small); }
 .assistant-suggestions .chip { --reply-48: 48px; --reply-pad: 10px 20px; --reply-lh: 21px; min-height: var(--reply-48); padding: var(--reply-pad); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-semibold); line-height: var(--reply-lh); text-align: left; }
 .assistant-label { margin: var(--space-2) 0 var(--space-1); font-size: var(--font-caption); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 /* « Joindre une offre de ma liste » (PR 19) : la liste des candidatures au-dessus de la zone de saisie, dans la colonne. */
@@ -1396,7 +1439,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-line ul, .assistant-line ol { margin: 0 0 var(--space-2); padding-left: var(--space-5); }
 .assistant-line.user { align-self: flex-end; background: var(--accent-soft); padding: var(--space-2) var(--space-3); border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius); }
 .assistant-line.assistant { align-self: flex-start; }
-.assistant-line.error { color: var(--down-text); }
 .assistant-plain { white-space: pre-wrap; }
 .assistant-copy { margin: 0 0 var(--space-2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); padding: var(--space-2) var(--space-3); }
 .assistant-copy pre { margin: 0 0 var(--space-1); white-space: pre-wrap; font-family: inherit; font-size: var(--font-small); }
@@ -1407,7 +1449,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 
 /* --- Champs à recopier sur le site de l'employeur (docs/25 §5, docs/47) --- */
 .form-sheet-long { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.profile-form, .add-search-form { display: grid; gap: var(--space-4); }
 .extension-token { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
 .extension-token code { overflow-wrap: anywhere; font-size: var(--font-small); }
 .extension-token .hint { flex-basis: 100%; }
@@ -1507,7 +1548,6 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 /* Offres à vérifier (docs/30 §3) : étiquette sur la carte, détail des signaux. */
 .doubts { margin: var(--space-1) 0 var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--band); font-size: var(--font-small); }
 .doubts ul { margin: var(--space-1) 0 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
-.doubts li.scam { color: var(--orange-text); }
 .doubts q { display: block; color: var(--muted); font-style: italic; }
 
 /* Suivi : enseignements et formulaire ORP, une ligne ouverte à la fois */
@@ -1529,7 +1569,6 @@ button, .button-link { max-width: 100%; }
 .disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
 .disclosure-row { white-space: normal; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
-.disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
 /* La teinte couvre toute la ligne de titre, « ⋯ » compris (dernier élément à droite), que
    le pointeur soit sur le titre ou sur le menu. */
@@ -1537,8 +1576,8 @@ button, .button-link { max-width: 100%; }
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-left-radius: inherit; border-top-right-radius: inherit; }
 .disclosure.open:has(> .disclosure-actions):has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-right-radius: 0; }
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-actions { border-top-right-radius: inherit; }
-/* Sur la teinte, le résumé gris tombait à 4,3:1 : il passe à l'accent (6,9:1). */
-.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-value { color: var(--accent); }
+/* Sur la teinte, le résumé gris tombait à 4,3:1 : il passe à l'accent (6,9:1).
+   Règle réunie plus haut avec « .training-title:hover », même style (allègement du 16.11). */
 /* Le focus entoure toute la carte : autour de la seule ligne, l'anneau passait sur le contenu ouvert
    (1.6.4). Dans une liste, il reste à l'intérieur pour ne pas mordre sur la voisine. */
 .disclosure-row:focus-visible { outline: none; }
@@ -1636,7 +1675,8 @@ button, .button-link { max-width: 100%; }
   .topbar:is([data-variant="tab"], [data-variant="home"]) { border-bottom: 0; }
   .jobs-band { border-top: 0; }
   /* « + » (décision de Kevin du 15.11) : rond de 48 px, à la hauteur du champ et 8 px après lui, contour bleu de 1,5 px. */
-  .jobs-tools .offers-toolbar { gap: var(--space-2); }
+  .jobs-tools .offers-toolbar,
+.prep-revise { gap: var(--space-2); }
   .jobs-tools .offers-filter { display: contents; }
   .jobs-tools .offers-add-compact { --add-22: 22px; display: grid; flex: none; place-items: center; width: var(--field-h); height: var(--field-h); padding: 0; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); }
   .jobs-tools .offers-add-compact .icon { width: var(--add-22); height: var(--add-22); stroke-width: 2.4; }
@@ -1646,7 +1686,8 @@ button, .button-link { max-width: 100%; }
      groupe « Autres offres » : une carte, trois lignes de 64 px au moins séparées par un filet (--row-sep), cercle à
      flèche gris ; 24 px sous le groupe, au-dessus de la barre de navigation. */
   .offers-more-phone { display: block; width: 100%; height: 48px; margin: var(--space-2) 0 0; padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font: inherit; font-size: var(--font-label); }
-  .offers-more-phone strong { font-weight: var(--weight-bold); }
+  .offers-more-phone strong,
+.logo:not(.image) { font-weight: var(--weight-bold); }
   .offers-more-phone span { font-weight: var(--weight-regular); }
   .offers-other-cap { margin: var(--space-6) var(--space-1) var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-heavy); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
   .offers-other { margin: 0 0 var(--space-6); overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
@@ -1733,8 +1774,8 @@ button, .button-link { max-width: 100%; }
 .wizard-links, .training-profile, .training-funding { display: grid; gap: var(--space-2); justify-items: start; }
 .training-funding textarea { width: 100%; font: inherit; font-size: var(--font-small); }
 
-/* Relancer une candidature (docs/38) */
-.follow-up-line { color: var(--orange-text); }
+/* Relancer une candidature (docs/38)
+   Règle réunie plus haut avec « .points .gaps li::marker », même style (allègement du 16.11). */
 
 /* Candidatures spontanées (docs/39) */
 /* Le code d'un site, en tête de la page Alertes (docs/112). */
@@ -1786,7 +1827,9 @@ button, .button-link { max-width: 100%; }
 .bilan-summary { display: grid; gap: var(--space-3); justify-items: start; }
 .spontaneous-form > .form-field { width: 100%; }
 .spontaneous-form .muted, .spontaneous-form p { margin: 0; }
-.spontaneous-search { display: inline-flex; align-items: center; }
+.spontaneous-search,
+.hover-note:has(> .with-icon),
+.disclosure-chevron { display: inline-flex; align-items: center; }
 .spontaneous-candidates { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); width: 100%; }
 .spontaneous-candidates li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); font-size: var(--font-small); }
 
@@ -1853,7 +1896,8 @@ button, .button-link { max-width: 100%; }
 .panel-section { display: grid; gap: var(--space-2); padding-top: var(--space-4); margin-top: var(--space-2); border-top: 1px solid var(--border); }
 .panel-section h3 { margin: 0 0 var(--space-2); font-size: var(--font-body); font-weight: var(--weight-semibold); }
 /* De l'air entre un texte et la carte qui suit (retour du 2026-10-15) : 1rem au moins. */
-.panel-section > :is(.notice, .disclosure, .calm-list) + * { margin-top: var(--space-2); }
+.panel-section > :is(.notice, .disclosure, .calm-list) + *,
+.offer-text-acts.is-phone .offer-give { margin-top: var(--space-2); }
 
 /* Fiche d'une offre en sections (docs/45) : deux boutons, puis Pour toi, À savoir, Entreprise, Annonce. */
 .more-button { display: inline-flex; align-items: center; border: none; background: none; color: var(--muted); }
@@ -1886,11 +1930,7 @@ button, .button-link { max-width: 100%; }
 .calm-list { list-style: none; margin: var(--space-2) 0 var(--space-4); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .calm-list li { display: flex; align-items: center; gap: var(--space-3); padding-right: var(--space-4); }
 .calm-list li + li { border-top: 1px solid var(--divider); }
-.calm-list li.paused .calm-row strong { color: var(--muted); font-weight: var(--weight-semibold); }
 .calm-row { flex: 1 1 auto; min-width: 0; display: grid; gap: var(--space-1); justify-items: start; padding: var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
-.calm-row .hint { font-size: var(--font-small); }
-.calm-row:hover strong { color: var(--accent); }
-.calm-panel { display: grid; gap: var(--space-4); }
 .calm-panel-switch { font-weight: var(--weight-semibold); }
 .calm-panel .summary-rows { margin: 0; }
 .calm-panel .summary-rows > div { grid-template-columns: 8rem minmax(0, 1fr); }
@@ -2074,7 +2114,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .ai-steps li.done { color: var(--text); }
 .ai-steps li.done::before,
 .wizard-progress li.done { background: var(--ok); }
-.ai-steps li.current { color: var(--accent); font-weight: var(--weight-semibold); }
 .ai-steps li.current::before { background: linear-gradient(90deg, var(--accent) 0%, var(--accent-soft) 50%, var(--accent) 100%); background-size: 200% 100%; animation: loading-shine 1.4s ease-in-out infinite; }
 .ai-writing .hint { margin: 0; }
 .fresh-lines > * { animation: line-in var(--t-enter) var(--ease-out) both; }
@@ -2145,7 +2184,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); }
 }
 @keyframes overlay-in { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .engagement-overlay { animation: none; } .confetti { display: none; } }
+@media (prefers-reduced-motion: reduce) { .engagement-overlay { animation: none; } .confetti,
+.toast-bar,
+.victory-bubble { display: none; } }
 /* Trier une offre (docs/60 §3) : sa carte s'efface vers la droite, les suivantes remontent. */
 .offer-cards { position: relative; }
 .card-leave-active { position: absolute; left: 0; right: 0; transition: opacity var(--t-state), transform var(--t-state) var(--ease-out); }
@@ -2190,8 +2231,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
-   les critères à côté. */
-.criteria-layout { display: grid; gap: var(--space-4); }
+   les critères à côté.
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 /* Effet des critères (prompt du 10 novembre, PR 20) : les lignes de « Ce que je cherche », sans cercle ni survol. */
 .filter-outcome-section, .training-section { display: grid; gap: var(--space-2); align-content: start; }
 .filter-outcome-section .section-title { margin: 0; }
@@ -2350,7 +2391,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .extension-link { max-width: 36rem; }
 .extension-link ul { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
 .extension-link .form-actions { display: flex; gap: var(--space-4); align-items: center; margin-top: var(--space-4); }
-.extension-link-done { color: var(--accent); font-weight: var(--weight-semibold); }
 
 /* Démo publique (docs/72) : bande sous la barre du haut. */
 .demo-banner { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); align-items: baseline; justify-content: center; padding: var(--space-2) var(--space-4); background: var(--accent-soft); color: var(--text); font-size: var(--font-small); text-align: center; }
@@ -2417,8 +2457,8 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 /* Lecture seule (docs/80) : une information, pas une alerte. */
 .maintenance-bypass.reading { border-bottom-color: var(--border); color: var(--text); }
 
-/* Le rendez-vous ORP (docs/83) : la date en tête, puis la feuille, une section par carte. */
-.orp-meeting { display: grid; gap: var(--space-4); }
+/* Le rendez-vous ORP (docs/83) : la date en tête, puis la feuille, une section par carte.
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .orp-meeting h2 { margin: 0 0 var(--space-2); font-size: var(--font-body); }
 .orp-meeting-when h2 { margin: 0; }
 .orp-meeting-sheet { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
@@ -2429,9 +2469,8 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 .orp-conclusion { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3) var(--space-6); margin-bottom: var(--space-2); }
 .orp-conclusion .offers-sentence { margin: 0; }
 .orp-conclusion-actions { display: flex; align-items: center; gap: var(--space-3); flex: none; min-height: var(--control-h); }
-.orp-late { color: var(--orange-text); }
-/* Le mois : une ligne repliable par partie (1.6.23). */
-.orp-month-rows { display: grid; gap: var(--space-3); }
+/* Le mois : une ligne repliable par partie (1.6.23).
+   Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
 .orp-month-rows > .disclosure + .disclosure { margin-top: 0; }
 .orp-month-rows .disclosure-body ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
 .orp-month-rows .disclosure-body ul.orp-month-lines { padding-left: 0; list-style: none; }
@@ -2478,8 +2517,8 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
 /* Bilan : tes semaines (docs/86, 0.68.1). */
 /* « En dessous » : un constat, pas une action (règles §4) : gris neutre, comme « à venir » (1.6.27). */
 
-/* Les certificats de travail (docs/87). */
-.certificates { display: grid; gap: var(--space-4); }
+/* Les certificats de travail (docs/87).
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .certificates-hint { margin: var(--space-2) 0 0; }
 .certificate { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .certificate p { margin: 0; }
@@ -2631,8 +2670,8 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .icon-ai-dot { fill: #f4a261; }
 /* Icône et texte : l'icône devant le mot, alignée au centre. */
 .with-icon { display: inline-flex; align-items: center; gap: var(--space-2); vertical-align: middle; }
-/* Dans une description au survol, l'icône et le texte ne doivent pas agrandir le bouton (docs/94). */
-.hover-note:has(> .with-icon) { display: inline-flex; align-items: center; }
+/* Dans une description au survol, l'icône et le texte ne doivent pas agrandir le bouton (docs/94).
+   Règle réunie plus haut avec « .spontaneous-search », même style (allègement du 16.11). */
 .with-icon > .icon { width: 1.1em; height: 1.1em; }
 /* Icône seule : un bouton rond, à la hauteur commune (docs/94), sans bordure tant qu'on ne le survole pas. */
 button.icon-only {
@@ -2742,7 +2781,6 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .offer-text-acts .icon { width: 16px; height: 16px; }
 .offer-text-acts.is-phone { flex-direction: column; align-items: flex-start; gap: 0; margin-top: var(--space-1); }
 .offer-text-acts.is-phone > a { display: flex; align-items: center; gap: var(--space-2); padding: 0; color: var(--primary-text); text-decoration: none; }
-.offer-text-acts.is-phone .offer-give { margin-top: var(--space-2); }
 .offer-give-zone { display: flex; flex-direction: column; gap: var(--space-2); }
 .match-lines li, .offer-give-row { display: flex; align-items: flex-start; gap: var(--space-3); }
 .offer-give-row .form-field { flex: 1; min-width: 0; }
@@ -2846,8 +2884,8 @@ button.icon-only.chip-remove > .icon { width: 0.9rem; height: 0.9rem; }
 /* La croix du panneau latéral, à droite du titre ; celle de la bulle, centrée sur sa ligne. */
 .side-panel-head .side-panel-close { margin-left: auto; flex: none; }
 .toast > .toast-close { align-self: center; margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) calc(var(--space-2) * -1) auto; }
-/* Le chevron d'une ligne dépliable. */
-.disclosure-chevron { display: inline-flex; align-items: center; }
+/* Le chevron d'une ligne dépliable.
+   Règle réunie plus haut avec « .spontaneous-search », même style (allègement du 16.11). */
 /* « Copier » : l'icône seule, son nom en infobulle au survol et au focus du bouton (docs/101). */
 .copy-label { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
 .copy-label > .icon { width: 1.1rem; height: 1.1rem; }
@@ -2860,8 +2898,8 @@ button.icon-only.chip-remove > .icon { width: 0.9rem; height: 0.9rem; }
 button:hover > .copy-label::after, button:focus-visible > .copy-label::after, .copy-label.copy-done::after { opacity: 1; visibility: visible; transition-delay: 400ms, 400ms; }
 button:focus-visible > .copy-label::after, .copy-label.copy-done::after { transition-delay: 0s, 0s; }
 @media (hover: none) { button:hover > .copy-label:not(.copy-done)::after { opacity: 0; visibility: hidden; } }
-/* docs/102 — la demande envoyée ou les demandes fermées : le lien respire sous la phrase. */
-.auth-setup { display: grid; gap: var(--space-4); }
+/* docs/102 — la demande envoyée ou les demandes fermées : le lien respire sous la phrase.
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .auth-setup > p { margin: 0; line-height: var(--leading-normal); }
 
 /* --- Des Réglages épurés (docs/106) --- */
@@ -2881,8 +2919,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* « Enregistré », une seconde à côté du réglage qui vient de changer. */
 /* Réglages, une carte par réglage (1.6.65, planche « 5. Réglages », inspirée de la structure des
    pages des CFF) : titre en gras, phrase dessous, contrôle à droite sur la même ligne ; les lignes
-   liées dans la même carte, séparées d'un filet. */
-.setting-cards { display: grid; gap: var(--space-3); }
+   liées dans la même carte, séparées d'un filet.
+   Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
 .setting-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .setting-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-6); padding: var(--space-5) var(--space-6); }
 .setting-row + .setting-row { border-top: 1px solid var(--divider); }
@@ -2944,7 +2982,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .toast-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--toast-bar); transform-origin: left; animation: toast-count 6s linear forwards; }
 :is(:hover, :focus-within) > .toast-bar { animation: none; }
 @keyframes toast-count { to { transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce) { .toast-bar { display: none; } }
+@media (prefers-reduced-motion: reduce) { }
 :is(.undo-toast, .snackbar) > :is(button, a).link { color: var(--snackbar-action); font-weight: var(--weight-bold); }
 /* La confirmation dans la page, à l'endroit du bouton. */
 .inline-confirm { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); margin: var(--space-3) 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
@@ -2956,7 +2994,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 /* Hors échelle (docs/135 §1) : les marges négatives compensent la cible de 2,75 rem. */
 .hover-note-info { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin: -0.9rem -0.9rem -0.9rem -0.35rem; padding: 0; border: 0; background: none; color: var(--muted); vertical-align: middle; cursor: pointer; }
 .hover-note-info > span { display: grid; place-items: center; width: 1rem; height: 1rem; border: 1.5px solid currentColor; border-radius: 50%; font-size: var(--font-caption); font-weight: var(--weight-bold); line-height: var(--leading-none); font-style: normal; }
-.hover-note-info[aria-expanded="true"] { color: var(--accent); }
 .hover-note-line { display: block; margin-top: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-regular); line-height: var(--leading-normal); color: var(--muted); text-transform: none; letter-spacing: 0; white-space: normal; }
 /* Sur téléphone, le « i » remplace les pointillés sous le titre. */
 @media (max-width: 820px) { .hover-note { text-decoration: none; } }
@@ -3185,8 +3222,6 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .orp-month-line { margin: 0; line-height: var(--leading-normal); color: var(--muted); }
 .orp-month-line strong { font-weight: var(--weight-semibold); }
 .orp-month-line .reached { color: var(--ok-text); }
-.orp-month-line .on-track { color: var(--accent); }
-.orp-month-line .behind { color: var(--orange-text); }
 .face-tile.small { width: 2.5rem; height: 2.5rem; border-radius: var(--radius); }
 .orp-month.compact { display: flex; align-items: center; gap: var(--space-3) var(--space-4); flex-wrap: wrap; }
 .orp-month.compact h2 { margin: 0; font-size: var(--font-body); white-space: nowrap; }
@@ -3204,7 +3239,7 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 .victory-bubble.b1 { --x: -80px; --y: -40px; } .victory-bubble.b2 { --x: -60px; --y: 30px; } .victory-bubble.b3 { --x: -20px; --y: -70px; }
 .victory-bubble.b4 { --x: 75px; --y: -45px; } .victory-bubble.b5 { --x: 60px; --y: 35px; } .victory-bubble.b6 { --x: 25px; --y: -72px; }
 @keyframes victory-bubble { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1); } }
-@media (prefers-reduced-motion: reduce) { .victory-bubble { display: none; } }
+@media (prefers-reduced-motion: reduce) { }
 @media (max-width: 820px) { .success-card .success-face { width: 130px; height: 130px; } }
 /* S, rien d'urgent (docs/123 §2). */
 /* Le personnage se transforme (docs/123, complément 0.96.0 ; d'après la maquette « X ») : pendant
@@ -3636,8 +3671,6 @@ main:focus { outline: none; }
    raccourcis dessous. Sur téléphone, la note et les actions passent dans le panneau de commande. */
 .jobs-head.triage-head, .container.triage-page { max-width: calc(var(--page-column) + 2 * var(--space-6)); }
 .band:has(> .triage-page) { background: var(--bg); border-top: 0; padding-top: 0; }
-.triage-pile { display: grid; gap: var(--space-4); }
-.pick-step { display: grid; gap: var(--space-4); }
 .triage-pile .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5); }
 .tags, .pick-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .pick-tags li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--band); font-size: var(--font-small); font-weight: var(--weight-semibold); }
@@ -3734,7 +3767,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .bilan-card-what strong { font-weight: var(--weight-bold); }
 .bilan-orp-card .orp-month-band-head strong:last-child { font-weight: var(--weight-heavy); }
 .bilan-orp-card .orp-month-band-bar { height: var(--bilan-bar); }
-.bilan-orp-card .orp-month-band-line { font-size: var(--font-small); }
 .bilan-section-sub { margin: 0 var(--space-1) var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .bilan-declare { gap: var(--space-2); }
 .bilan-cards { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
@@ -3797,7 +3829,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 }
 .offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .offers-chip-remove .icon { width: 1rem; height: 1rem; }
-.offers-chips-clear { font-size: var(--font-small); }
 @media (max-width: 820px) {
   .offers-toolbar { justify-content: space-between; }
 }
@@ -3855,16 +3886,14 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .bilan-compare { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
 .bilan-rate { display: grid; grid-template-columns: minmax(6rem, 12rem) minmax(0, 1fr) 5rem; align-items: center; column-gap: var(--space-6); }
 
-/* Entretiens : la date en gris, l'entreprise en gras et le type dessous, l'état à droite. */
-.bilan-interviews { display: grid; gap: var(--space-3); }
+/* Entretiens : la date en gris, l'entreprise en gras et le type dessous, l'état à droite.
+   Règle réunie plus haut avec « .alerts-panel », même style (allègement du 16.11). */
 .bilan-interview-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
 .bilan-interview-list li { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
 .bilan-interview-list li + li { border-top: 1px solid var(--divider); }
-.bilan-interview-day { color: var(--muted); }
 .bilan-interview-main { display: grid; gap: var(--space-1); min-width: 0; }
 .bilan-interview-main span { font-size: var(--font-small); color: var(--muted); }
 .bilan-interview-state { font-size: var(--font-small); color: var(--muted); text-align: right; }
-.bilan-interview-state.upcoming { color: var(--accent); font-weight: var(--weight-semibold); }
 @media (max-width: 820px) {
 
   .bilan-rate { grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) auto; column-gap: var(--space-3); }
@@ -3874,8 +3903,8 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 
 /* --- Réglages, rubriques en cartes (1.6.66, planche « 5. Réglages ») : les règles de la page ---
    La dépense de l'IA dans sa carte ; les jours de la semaine. Les règles du composant sont dans le bloc
-   « .setting-* » (1.6.65, 1.6.68). */
-.sites-card .setting-row.paused .setting-row-title { color: var(--muted); }
+   « .setting-* » (1.6.65, 1.6.68).
+   Règle réunie plus haut avec « .checks span », même style (allègement du 16.11). */
 .setting-card-body .ai-spend { padding: var(--space-5) var(--space-6); }
 .setting-row-control .rhythm-week, .setting-row-control .rhythm-pause { margin: 0; }
 /* Les sept jours : sur téléphone, la rangée prend toute la largeur de la carte, les pastilles se la
@@ -3948,7 +3977,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .gs-group { padding: var(--space-2) 0; }
 .gs-group + .gs-group, .gs-group + .gs-follow, .gs-empty + .gs-follow { border-top: 1px solid var(--divider); }
 .gs-group-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; font-size: var(--font-small); }
-.gs-group-title { color: var(--muted); }
 .gs-row { display: flex; align-items: center; gap: var(--space-4); margin: 0 calc(var(--space-2) * -1); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; }
 .gs-row:hover, .gs-row.active,
 .offer-line:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
@@ -3963,7 +3991,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .gs-verdict.dig { color: var(--score-dig); }
 .gs-verdict.far { color: var(--muted); }
 .gs-follow { margin-top: var(--space-1); padding-top: var(--space-3); padding-bottom: var(--space-3); }
-.gs-follow-title { color: var(--accent); }
 .gs-bubble { flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); }
 .gs-followed { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; }
 .gs-followed-text { display: grid; gap: var(--space-1); min-width: 0; }
@@ -4004,18 +4031,15 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .offer-line-title:focus-visible { outline: none; }
 .offer-line-title:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius-sm); }
 .offer-line-sub, .offer-line-note, .offer-line-state { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); overflow-wrap: anywhere; }
-.offer-line-note.alert { color: var(--orange-text); }
 .offer-line-state { font-weight: var(--weight-semibold); }
 /* La ligne du dessous respire (§3, texte jamais collé) : elle se détache de « entreprise · lieu ». */
 .offer-line-note, .offer-line-state { margin-top: var(--space-1); }
-.offer-line-state.urgent { color: var(--orange-text); }
 .offer-line-verdict { grid-area: verdict; justify-self: end; }
 .offer-line-word.very-close { color: var(--ok-text); }
 .offer-line-word.close { color: var(--accent); }
 .offer-line-word.dig { color: var(--score-dig); }
 .offer-line-word.far { color: var(--muted); }
 .offer-line-action { grid-area: action; position: relative; justify-self: end; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
-.offer-line:hover .offer-line-title { color: var(--accent); }
 .offer-line.selected { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
 /* Les lignes d'un même jour (Offres) tiennent dans une seule carte, séparées d'un filet. */
 /* Dans une carte (Suivi, Tri du jour) : la ligne s'aligne sur le titre de la carte. */
@@ -4026,8 +4050,8 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
   .offer-line-action { justify-self: start; }
   /* Le carré de l'entreprise (maquettes Accueil et Candidatures) : deux initiales en gras sur un fond plein,
      40 px, 44 px dans la liste des Candidatures ; coins de 8 px (échelle D7). Les couleurs valent pour tous les
-     carrés du téléphone (Accueil, fiche offre, Préparer). */
-  .logo:not(.image) { font-weight: var(--weight-bold); }
+     carrés du téléphone (Accueil, fiche offre, Préparer).
+   Règle réunie plus haut avec « .offers-more-phone strong », même style (allègement du 16.11). */
   .offer-line > .logo:not(.large) { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); font-size: var(--font-small); font-weight: var(--weight-bold); }
   .logo.c0 { background: var(--primary); color: var(--on-primary); }
   .logo.c1 { background: var(--text); color: var(--bg); }
@@ -4129,7 +4153,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .form-field-box:focus-within > .form-field-label { color: var(--primary-text); }
 .form-field-box:has(:is(input, select, textarea):disabled) > .form-field-label { color: var(--text-placeholder); }
 .form-field-box:has([aria-invalid="true"]) > .form-field-label { color: var(--down-text); }
-.form-field-optional { font-weight: inherit; }
 .form-field-badge { flex: none; display: inline-flex; align-items: center; height: var(--space-4); padding: 0 var(--space-2); border-radius: var(--space-2); background: var(--primary-soft); color: var(--primary-text); font-size: var(--ff-badge-size); font-weight: var(--weight-bold); }
 .form-field-hint { margin: 0; padding-inline: var(--space-4); font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
 /* Le libellé vit dans le champ : seules les largeurs courtes (NPA, date) restent limitées, pour ne pas le couper. */
@@ -4449,8 +4472,8 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .score-ring-worded.far { --ring-text: var(--text-secondary); }
 
 /* Bilan › Formations (maquette Explorer, onglet Formations ; B15 à B19) : Catalogue · Suivies soulignés, l'encadré
-   du financement, les puces, les formations en lignes dans une carte par groupe ; Suivies en cartes. */
-.trainings { display: grid; gap: var(--space-4); }
+   du financement, les puces, les formations en lignes dans une carte par groupe ; Suivies en cartes.
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .training-funding-note { display: flex; justify-content: flex-start; align-items: center; gap: var(--space-3); width: 100%; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--peach-soft); color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-funding-note > span:nth-child(2) { display: grid; flex: 1; gap: var(--space-1); }
 .training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-kept li > span > span { font-size: var(--font-small); color: var(--text-secondary); }
@@ -4478,7 +4501,6 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-row-review { display: flex; flex: none; gap: var(--space-1); margin-right: var(--space-1); }
 .training-suggest { justify-content: center; width: 100%; min-height: var(--btn-secondary); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 .training-current-progress { margin: 0; font-weight: var(--weight-bold); }
-.training-kept { display: grid; gap: var(--space-3); }
 .training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
 .training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
 .training-funding-sheet a { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--btn-tertiary); padding: 0 var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-bold); text-decoration: none; }
@@ -4685,7 +4707,9 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-bar { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2) var(--space-2); }
 .composer-spacer { flex: 1; }
 .composer-icon, .composer-send { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); }
-.composer-icon[aria-expanded="true"] { background: var(--surface-muted); }
+.composer-icon[aria-expanded="true"],
+.composer-menu-item:hover, .composer-menu-item:focus-visible,
+.dt-day:hover:not(:disabled) { background: var(--surface-muted); }
 .composer-icon .icon, .composer-send .icon { width: 22px; height: 22px; }
 .composer-send { background: var(--action); color: var(--on-action); }
 /* Rien à envoyer (AjouterOffreTel, §17 du 15 novembre) : gris #E5E2D9, flèche #8C8478, aria-disabled. */
@@ -4713,7 +4737,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .composer-menu-up { bottom: 100%; margin-bottom: var(--space-2); transform-origin: bottom left; }
 .composer-menu-down { top: 100%; margin-top: var(--space-2); transform-origin: top left; }
 .composer-menu-item { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 52px; padding: var(--space-2) var(--space-4); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; }
-.composer-menu-item:hover, .composer-menu-item:focus-visible { background: var(--surface-muted); }
 .composer-menu-item .icon { width: 20px; height: 20px; flex: none; }
 .composer-menu-label { display: block; font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .composer-menu-hint { display: block; font-size: var(--label-caps); color: var(--text-secondary); }
@@ -4806,7 +4829,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .dt-weekday { font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--text-secondary); text-align: center; text-decoration: none; }
 .dt-day { justify-content: center; width: 40px; height: 40px; min-height: 40px; margin: 0 auto; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; font-size: var(--font-label); }
 .dt-day:disabled { color: var(--text-disabled); cursor: default; }
-.dt-day:hover:not(:disabled) { background: var(--surface-muted); }
 .dt-day-today { box-shadow: inset 0 0 0 2px var(--primary-graphic); color: var(--primary-text); font-weight: var(--weight-bold); }
 .dt-day-picked, .dt-day-picked:hover:not(:disabled) { background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); box-shadow: none; }
 .dt-typed { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
@@ -4967,8 +4989,7 @@ a.panel-row:hover { background: var(--band); }
 .sent-screen { position: fixed; inset: 0; z-index: 44; overflow-y: auto; background: var(--bg); }
 .sent-goal-count { display: inline-flex; align-items: center; gap: var(--space-2); }
 .today-orp-chevron, .sent-goal-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
-.prep-revise { display: grid; gap: var(--space-3); }
-@media (max-width: 820px) { .prep-revise { gap: var(--space-2); } }
+@media (max-width: 820px) { }
 
 /* Notifications sur ordinateur (maquette du 8 novembre, NotificationsOrdinateur) : 880 px, le titre et les onglets sur
    une ligne, les jours en titres de 18, une carte par jour, des lignes sans icône (D23) au point « non lue » à gauche. */
@@ -5101,8 +5122,8 @@ html.text-large { font-size: 125%; }
 /* Notifications sur téléphone (MODIFICATIONS du 8 novembre au soir, §10.9 ; HTML de Notifications et
    NotificationsSombre) : familles à 16 px l'une de l'autre, sur-titre 13/16 en capitales sans retrait, 8 px entre
    les cartes ; « Choisir mes notifications » 48 px, 15 px, --primary-text ; « Tout est lu » : le personnage assis,
-   150 px de large, posé sur une ombre ovale de 120 x 12 px (10 % du texte en clair, 35 % de noir en sombre). */
-.notifications-families { display: grid; gap: var(--space-4); }
+   150 px de large, posé sur une ombre ovale de 120 x 12 px (10 % du texte en clair, 35 % de noir en sombre).
+   Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
 .filter-outcome-rows .criteria-row:hover, .notifications-families.blocks-page { background: transparent; }
 .notifications-families .notifications-group h2 { padding: 0; line-height: var(--space-4); letter-spacing: .06em; }
 .notifications-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
