@@ -1238,6 +1238,11 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 .settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; max-width: 40rem; margin: 0 auto; }
 @media (max-width: 860px) { .settings-layout { padding: 0 var(--space-5); } }
+/* En-tête des sous-pages de Réglages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien,
+   le titre et les cartes sur le même bord gauche (largeur de .settings-sections, marges de .settings-layout). */
+.page-head.jobs-head.settings-head { display: block; box-sizing: content-box; max-width: 40rem; padding: var(--space-6) var(--space-6) var(--space-2); }
+.settings-head > h1 { margin: 0 0 var(--space-4); }
+@media (max-width: 860px) { .page-head.jobs-head.settings-head { padding: var(--space-5) var(--space-5) var(--space-2); } }
 
 /* Saisie Job-Room : une section par étape de leur formulaire
    Règle réunie plus haut avec « .training-title:hover », même style (allègement du 16.11). */
@@ -1251,7 +1256,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .orp-month-rows,
 .setting-cards,
 .bilan-interviews,
-.training-mine,
 .training-kept,
 .prep-revise { display: grid; gap: var(--space-3); }
 .alerts-panel .section-title.first { margin-top: 0; }
@@ -2228,8 +2232,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Des blocs à leur taille (docs/63 §2). */
 @media (min-width: 821px) {
   /* Réglages : les rubriques à la largeur de lecture. */
-  .settings-sections { max-width: 46rem; }
+  .settings-sections, .page-head.jobs-head.settings-head { max-width: 46rem; }
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
+  :root:has(.ai-spend) .page-head.jobs-head.settings-head { max-width: calc(var(--page-max) - 2 * var(--space-6)); }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté.
@@ -2738,7 +2743,7 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .detail-title h2 { margin: 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .detail-sub { margin: 0; color: var(--text-secondary); line-height: var(--leading-normal); }
 .detail-offer .status-line, .detail-offer .expired-notice { margin: 0; }
-.offer-tags, .doc-tags, .offers-chips-list, .suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.offer-tags, .offers-chips-list, .suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-tight); color: var(--text-tertiary); }
 .detail-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-1); }
 /* La correspondance (O3, O4) : le mot en couleur de la note, le chiffre en texte secondaire ; un manque
@@ -2910,8 +2915,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Une rubrique, une carte : les cartes du contenu perdent leur cadre, les parties sont séparées
    par leur titre, pas par un filet ni par une autre carte. */
 .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2) var(--space-8) var(--space-8); }
-.settings-card > * + * { margin-top: 0; }
-.settings-card > * + * { padding-top: var(--space-2); }
 /* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
 /* Téléphone (docs/106, complément 0.76.1) : la ligne dépliable est la carte ; son contenu garde
    une marge égale des deux côtés, sans barre, et les parties se resserrent. */
@@ -3008,7 +3011,8 @@ button.secondary.danger:hover:not(:disabled) { background: var(--surface); borde
 
 /* La structure des Réglages (docs/106, complément 0.77.3) : un filet fin entre deux parties,
    jamais en dernier ni au-dessus d'un bouton ; les parties serrées autour de leur titre. */
-/* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. */
+/* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. Seule règle des
+   marges entre parties (les deux `.settings-card > * + *` plus faibles, sans effet, retirés le 16.11, #792). */
 .settings-card.settings-card > * + * { margin-top: 0; padding-top: 0; border-top: 1px solid var(--divider); }
 /* Deux réglages côte à côte (docs/130 §D) : pas de filet au-dessus du second, seulement au-dessus
 
@@ -3359,7 +3363,6 @@ main:focus { outline: none; }
    description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
 @media (min-width: 861px) {
   .settings-card { background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
-  .settings-card > * + * { padding-top: 0; }
   /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
   .settings-card.settings-card > * + * { border-top: 0; }
   /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
@@ -3533,12 +3536,6 @@ main:focus { outline: none; }
 :root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: var(--paper-shadow); }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
-.doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
-.doc-card-instruction { display: grid; gap: var(--space-2); }
-.doc-card-read { display: flex; align-items: center; gap: var(--space-3); min-height: 3rem; padding-top: var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-semibold); cursor: pointer; }
-.doc-card-read input { flex: none; width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--primary); }
-.doc-tags li { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
-.prep-instruction-line { width: 100%; }
 /* Postuler (étape 7c, C7) : où l'annonce se postule et les pièces, les champs à recopier, un contact. */
 .apply-cards { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
 .apply-cards > :is(.button-link, button, .link) { justify-self: start; }
@@ -4215,6 +4212,7 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .sheet-heading { flex: 1 1 auto; min-width: 0; }
 .sheet-title { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
 .sheet-subtitle { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
+.sheet-eyebrow { display: block; font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .sheet-close, .side-panel-head .side-panel-close { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--panel-close-size); height: var(--panel-close-size); min-height: 0; padding: 0; border: var(--panel-close-bw) solid var(--panel-close-line); border-radius: 50%; background: var(--surface); color: var(--text); }
 .sheet-close:hover, .side-panel-head .side-panel-close:hover { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
 .sheet-close .icon { width: 1.1rem; height: 1.1rem; }
@@ -4368,8 +4366,6 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):disabled { border-color: var(--border); background: var(--panel); cursor: not-allowed; }
 /* « J'ai relu la lettre » (maquette Preparer) : la case de 24 px, blanche à bord foncé, en clair comme en sombre. */
-:root .doc-card-read input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
-:root .doc-card-read input[type="checkbox"]:not(:checked, :disabled) { border-color: #474C59; background: #fff; }
 /* Réglages sous 600 px : la sous-page a son titre en haut de page, la section ne le répète pas. */
 .settings-sub .settings-section > .section-title { display: none; }
 
@@ -4475,13 +4471,9 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 /* Bilan › Formations (maquette Explorer, onglet Formations ; B15 à B19) : Catalogue · Suivies soulignés, l'encadré
    du financement, les puces, les formations en lignes dans une carte par groupe ; Suivies en cartes.
    Règle réunie plus haut avec « .application-panel », même style (allègement du 16.11). */
-.trainings-tabs { display: flex; gap: var(--space-5); padding: 0 var(--space-1); border-bottom: 1px solid var(--line); }
-.trainings-tabs a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); margin-bottom: -1px; border-bottom: 3px solid transparent; border-radius: 0; color: var(--text-secondary); font-weight: var(--weight-bold); text-decoration: none; }
-.trainings-tabs a.active { color: var(--text); border-bottom-color: var(--primary-graphic); }
-.trainings-tabs .tab-count { margin: 0; }
 .training-funding-note { display: flex; justify-content: flex-start; align-items: center; gap: var(--space-3); width: 100%; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--peach-soft); color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-funding-note > span:nth-child(2) { display: grid; flex: 1; gap: var(--space-1); }
-.training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-current-head span span, .training-kept li > span > span, .training-help { font-size: var(--font-small); color: var(--text-secondary); }
+.training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-kept li > span > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
 .training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
 .training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
@@ -4489,14 +4481,13 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
    (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
 .training-chip::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
 /* Formations gardées (lot 18, D29) : toute la ligne ouvre la formation, le cercle de 36 px en est la marque. */
-.training-see::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
 .training-section h2 { display: flex; justify-content: space-between; margin: 0; padding: 0 var(--space-1); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .training-section h2 span:last-child { font-weight: var(--weight-semibold); letter-spacing: 0; }
 .training-list li + li { border-top: 1px solid var(--line-soft); }
 .training-row-open { display: flex; flex: 1; justify-content: flex-start; align-items: center; gap: var(--space-3); min-width: 0; min-height: 0; padding: var(--space-3) 0 var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
 .training-row-icon { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); background: var(--peach-soft); color: var(--warning); }
 .training-row-icon.cert { background: var(--primary-soft); color: var(--primary-graphic); }
-.training-row-text, .training-current-head > span:last-child, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
+.training-row-text, .training-kept li > span { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
 .training-row-text > strong { line-height: var(--leading-tight); }
 .training-row-tags { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
 .training-tag { padding: 0 var(--space-2); border-radius: var(--radius-sm); background: var(--surface-muted); color: var(--text-tertiary); font-size: var(--font-caption); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
@@ -4506,22 +4497,14 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-keep.on { color: var(--primary-graphic); }
 .training-row-review { display: flex; flex: none; gap: var(--space-1); margin-right: var(--space-1); }
 .training-suggest { justify-content: center; width: 100%; min-height: var(--btn-secondary); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
-.training-current-head { display: flex; align-items: center; gap: var(--space-3); }
 .training-current-progress { margin: 0; font-weight: var(--weight-bold); }
-.training-current-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
-.training-current-actions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-4); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-bold); text-decoration: none; }
-.training-current-actions a:hover { background: var(--primary-soft); }
-.training-current-actions .link { min-height: var(--target-min); font-size: var(--font-body); }
 .training-kept li { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-.training-see { flex: none; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: none; }
-.training-help { margin: 0 var(--space-1); line-height: var(--leading-normal); }
 .training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
 .training-funding-sheet a { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--btn-tertiary); padding: 0 var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-bold); text-decoration: none; }
 .training-funding-sheet a span { flex: none; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 @media (min-width: 821px) {
   .training-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
-  .training-mine { max-width: 40rem; }
 }
 
 /* L'avancement par modules (B19, maquette Explorer › Formations › Suivies) : la ligne « Module 6 sur 12 · 50 % »,
@@ -5205,6 +5188,11 @@ html.text-large { font-size: 125%; }
   border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-semibold);
 }
 .empty-state-pill svg { width: var(--space-4); height: var(--space-4); }
+/* Colonne de droite sans élément ouvert, sur ordinateur (§36 du 16.11, planches *OrdinateurAucuneOuverte) : scène de 340,
+   titre 24/30 à 24 px ; 24 px sur les côtés, 48 dessous. Pastille : marges de 8 px et flèche à 8 px du texte (6 sur la
+   planche ; grille de 4, Kevin le 16.11 à 15 h 10). */
+.empty-state.choose-detail { --es-24: 24px; --es-t: var(--es-24); --es-lh: 30px; --es-top: var(--space-6); padding: 0 var(--space-6) var(--space-12); }
+.choose-detail .empty-state-pill { gap: var(--space-2); padding-block: var(--space-2); }
 .empty-state-actions { --es-300: 300px; display: flex; flex-direction: column; gap: var(--space-3); width: 100%; max-width: var(--es-300); margin-top: var(--es-gap); }
 .empty-state-actions > * {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--es-btn); margin: 0;

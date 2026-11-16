@@ -342,9 +342,12 @@ watch(
       Réglages
     </h1>
   </header>
+  <!-- Sous-pages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien, le titre et les
+       cartes sur le même bord gauche (.settings-head, même colonne que .settings-sections). -->
   <PageHero
     v-else-if="!(wide && grouped)"
     :title="label"
+    :class="{ 'settings-head': !grouped }"
   >
     <template #back>
       <!-- Sur ordinateur, plus de page Compte (PR 20) : chaque rubrique revient aux Réglages. -->
@@ -384,6 +387,7 @@ watch(
                 description="Les candidatures demandées chaque mois."
                 :saved="savedRow === 'orp'"
                 :error="rowErrors.orp"
+                class="num-row"
                 stack
               >
                 <input
@@ -406,12 +410,12 @@ watch(
               <SettingRow
                 v-slot="c"
                 title="Date limite des justificatifs"
-                description="Le jour du mois suivant où les justificatifs sont dus."
+                description="À rendre chaque mois avant ce jour."
                 :saved="savedRow === 'due'"
                 :error="rowErrors.due"
+                class="num-row"
                 stack
               >
-                <span>le</span>
                 <input
                   v-model.number="form.orp_due_day"
                   class="setting-number"
@@ -436,9 +440,9 @@ watch(
                 description="Dès cette note, l’annonce est aussi cherchée chez l’employeur."
                 :saved="savedRow === 'employer'"
                 :error="rowErrors.employer"
+                class="num-row"
                 stack
               >
-                <span>dès</span>
                 <input
                   v-model.number="form.employer_search_threshold"
                   class="setting-number"
@@ -941,7 +945,6 @@ watch(
 .settings-wide .settings-section + .settings-section { margin-top: 0; }
 .settings-wide #donnees { order: 1; }
 .settings-wide .settings-section > .section-title { margin: 0 var(--space-1) var(--space-3); font-size: var(--font-title); color: var(--text); text-transform: none; letter-spacing: normal; }
-.settings-wide .setting-cards { border-radius: var(--radius-card); }
 .settings-wide :is(.setting-card, .rg-list) { border: 0; border-radius: 0; }
 .settings-wide :is(.setting-cards > * + *, .setting-row + .setting-row, .rg-list > * + *) { border-top: 1px solid var(--surface-muted); }
 .settings-wide :is(.account-data, .appearance) { gap: 0; }
@@ -959,4 +962,11 @@ watch(
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
 .settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
+/* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3) : champ 72 × 44 px au rayon des champs de saisie,
+   chiffre centré, unité de 120 px (assez pour « du mois suivant »), écart 12 px. Le bloc champ + unité a une largeur
+   fixe : les champs forment une colonne d'une carte à l'autre. « Enregistré » s'affiche dessous, sans rien décaler. */
+.num-row .setting-row-control { position: relative; gap: var(--space-3); }
+.num-row .setting-number { width: 72px; height: 44px; min-height: 44px; padding: 0; border-radius: var(--ff-radius); text-align: center; }
+.num-row .setting-row-control > span:not([role="status"]) { width: 120px; }
+.num-row .setting-row-status { position: absolute; top: 100%; }
 </style>

@@ -6,7 +6,6 @@ import { api, type Training } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
-import CountBadge from "../components/CountBadge.vue";
 import DomainField from "../components/DomainField.vue";
 import EmptyState from "../components/EmptyState.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -33,15 +32,14 @@ const route = useRoute();
 const { phone } = usePhone();
 // Ordinateur (planche BilanOrdinateur, état Formations ; décision de Kevin du 2026-11-14) : d'abord la carte
 // de l'ORP, « En cours » et « Gardées » ; le catalogue et ses filtres, inchangés, derrière « Chercher d'autres
-// formations » (`?onglet=catalogue`). Téléphone inchangé : le catalogue d'abord, Suivies en `?onglet=miennes`.
-const tab = computed<"catalog" | "mine">(() => {
-  const onglet = route.query.onglet;
-  if (onglet === "miennes") return "mine";
-  return phone.value || onglet === "catalogue" ? "catalog" : "mine";
-});
-const overview = computed(() => !phone.value && tab.value === "mine");
-const catalogTo = computed(() => (phone.value ? { query: {} } : { query: { onglet: "catalogue" } }));
-const mineTo = computed(() => (phone.value ? { query: { onglet: "miennes" } } : { query: {} }));
+// formations » (`?onglet=catalogue`).
+// Téléphone comme ordinateur (§37 du 16.11, accord de Kevin à 14 h 06) : « Mes formations » d'abord, le catalogue
+// derrière « Voir le catalogue » (`?onglet=catalogue`) et « ← Mes formations ». L'ancienne adresse `?onglet=miennes`
+// mène aussi à « Mes formations ».
+const tab = computed<"catalog" | "mine">(() => (route.query.onglet === "catalogue" ? "catalog" : "mine"));
+const overview = computed(() => tab.value === "mine");
+const catalogTo = { query: { onglet: "catalogue" } };
+const mineTo = { query: {} };
 const items = ref<Training[]>([]);
 const keywords = ref<string[]>([]);
 const canSuggest = ref(false);
@@ -199,6 +197,15 @@ async function suggest(): Promise<void> {
   }
 }
 
+// « Noter l'avancement » (§37 du 16.11, téléphone et ordinateur) : le compteur de modules quitte la carte pour une
+// feuille du bas ; sans nombre de modules, le panneau de la formation, comme avant, pour écrire où on en est.
+const progressId = ref<number | null>(null);
+const progressOf = computed(() => items.value.find((t) => t.id === progressId.value) ?? null);
+function noteProgress(training: Training): void {
+  if (training.mark?.modules_total) progressId.value = training.id;
+  else openId.value = training.id;
+}
+
 // Le financement (B16) : l'encadré ouvre la feuille « Formation et chômage ».
 const fundingOpen = ref(false);
 
@@ -226,42 +233,15 @@ onMounted(() => void load());
 <template>
   <section class="band">
     <div :class="['container', 'trainings', { 'trainings-desk': !phone }]">
-      <!-- Catalogue · Suivies, soulignés (second niveau, S4 ; B15), le nombre de suivies en pastille. Sur
-           ordinateur, le catalogue revient par le lien « Mes formations » (planche BilanOrdinateurCatalogue, 16.11). -->
+      <!-- Le catalogue revient par le lien « Mes formations » (planches BilanOrdinateurCatalogue et BilanCatalogue, 16.11). -->
       <RouterLink
-        v-if="!phone && tab === 'catalog'"
+        v-if="tab === 'catalog'"
         :to="mineTo"
         class="training-back"
         data-test="trainings-back"
       >
         <AppIcon name="arrow-left" />Mes formations
       </RouterLink>
-      <nav
-        v-else-if="!overview"
-        class="trainings-tabs"
-        aria-label="Formations affichées"
-      >
-        <RouterLink
-          :to="catalogTo"
-          :class="{ active: tab === 'catalog' }"
-          :aria-current="tab === 'catalog' ? 'true' : undefined"
-          data-test="tab-catalog"
-        >
-          Catalogue
-        </RouterLink>
-        <RouterLink
-          :to="mineTo"
-          :class="{ active: tab === 'mine' }"
-          :aria-current="tab === 'mine' ? 'true' : undefined"
-          data-test="tab-mine"
-        >
-          Suivies<CountBadge
-            v-if="mineCount"
-            class="tab-count"
-            :count="mineCount"
-          />
-        </RouterLink>
-      </nav>
 
       <LoadingBlocks
         v-if="!loaded"
@@ -273,7 +253,25 @@ onMounted(() => void load());
         class="trainings-overview"
         data-test="trainings-overview"
       >
+        <!-- Téléphone (planche BilanFormations) : toute la carte ouvre « Formation et chômage ». -->
+        <button
+          v-if="phone"
+          type="button"
+          class="training-orp-card"
+          data-test="orp-note"
+          @click="fundingOpen = true"
+        >
+          <span>
+            <strong>L’ORP peut financer une formation</strong>
+            <span>Avec l’accord de ta conseillère</span>
+          </span>
+          <span
+            class="arrow-circle small"
+            aria-hidden="true"
+          ><AppIcon name="arrow-right" /></span>
+        </button>
         <div
+          v-else
           class="training-orp-card"
           data-test="training-orp-card"
         >
@@ -295,8 +293,9 @@ onMounted(() => void load());
           v-if="!mineCount"
           title="Aucune formation suivie"
           scene="introuvable"
+          :width="250"
           :desktop-width="260"
-          pill="Garde une formation du catalogue avec son signet"
+          :pill="phone ? 'Garde-en une avec son signet' : 'Garde une formation du catalogue avec son signet'"
           pill-icon="bookmark"
           data-test="trainings-none"
         >
@@ -329,11 +328,19 @@ onMounted(() => void load());
               data-test="training-current"
             >
               <div class="training-now-head">
-                <span>
+                <!-- Le titre ouvre le panneau de la formation (notes, financement, profil), qui reste accessible. -->
+                <button
+                  type="button"
+                  class="training-now-open"
+                  aria-haspopup="dialog"
+                  data-test="training-now-open"
+                  @click="openId = training.id"
+                >
                   <strong>{{ training.title }}</strong>
                   <span>{{ training.provider }}</span>
-                </span>
+                </button>
                 <a
+                  v-if="!phone"
                   :href="training.url"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -356,14 +363,25 @@ onMounted(() => void load());
               >
                 {{ progressLabel(training.mark!) || "En cours" }}
               </p>
-              <button
-                type="button"
-                class="link training-now-update"
-                data-test="training-update"
-                @click="openId = training.id"
-              >
-                Noter l’avancement
-              </button>
+              <div class="training-now-actions">
+                <button
+                  type="button"
+                  class="link training-now-update"
+                  aria-haspopup="dialog"
+                  data-test="training-update"
+                  @click="noteProgress(training)"
+                >
+                  Noter l’avancement
+                </button>
+                <a
+                  v-if="phone"
+                  :href="training.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="training-now-continue"
+                  data-test="training-continue"
+                >Continuer le cours<span class="visually-hidden"> (nouvel onglet)</span></a>
+              </div>
             </li>
           </ul>
         </section>
@@ -391,10 +409,17 @@ onMounted(() => void load());
               >
                 <span class="training-kept-text">
                   <strong>{{ training.title }}</strong>
-                  <span>{{ keptMeta(training) }}</span>
+                  <span><span>{{ keptMeta(training) }}</span><span
+                    v-if="phone && keptStatus(training)"
+                    :class="['training-kept-status', keptStatus(training)!.tone]"
+                    data-test="training-kept-status"
+                  ><AppIcon
+                    v-if="training.mark!.status === 'done'"
+                    name="done"
+                  />{{ keptStatus(training)!.label }}</span></span>
                 </span>
                 <span
-                  v-if="keptStatus(training)"
+                  v-if="!phone && keptStatus(training)"
                   :class="['training-kept-status', keptStatus(training)!.tone]"
                   data-test="training-kept-status"
                 ><AppIcon
@@ -430,7 +455,7 @@ onMounted(() => void load());
             class="training-funding-icon"
             aria-hidden="true"
           ><AppIcon name="tag" /></span>
-          <span><strong>Financement possible par l’ORP</strong><span>Seulement avec l’accord préalable de l’ORP</span></span>
+          <span><strong>Financement possible par l’ORP</strong><span>{{ phone ? "Avec" : "Seulement avec" }} l’accord préalable de l’ORP</span></span>
           <span
             class="arrow-circle small"
             aria-hidden="true"
@@ -578,110 +603,6 @@ onMounted(() => void load());
           </HoverNote>
         </BusyButton>
       </template>
-      <!-- Aucune formation suivie (§37 du 16.11, planche BilanFormationsVide) : l'état vide commun. -->
-      <EmptyState
-        v-else-if="!mineCount"
-        title="Aucune formation suivie"
-        scene="introuvable"
-        :width="250"
-        pill="Garde-en une avec son signet"
-        pill-icon="bookmark"
-        data-test="trainings-none"
-      >
-        <template #actions>
-          <RouterLink
-            :to="catalogTo"
-            class="button-link primary-link"
-            data-test="trainings-none-catalog"
-          >
-            <AppIcon name="book" />Voir le catalogue
-          </RouterLink>
-        </template>
-      </EmptyState>
-      <div
-        v-else
-        class="training-mine"
-      >
-        <!-- En cours (B19) : la carte avec l'avancement noté, en attendant le compteur de modules. -->
-        <section
-          v-for="training in inProgress"
-          :key="training.id"
-          class="training-current"
-          :aria-labelledby="`training-current-${training.id}`"
-          data-test="training-current"
-        >
-          <div class="training-current-head">
-            <span
-              :class="['training-row-icon', { cert: training.kind === 'certification' }]"
-              aria-hidden="true"
-            ><AppIcon :name="training.kind === 'certification' ? 'star' : 'book'" /></span>
-            <span>
-              <strong :id="`training-current-${training.id}`">{{ training.title }}</strong>
-              <span>{{ training.provider }}</span>
-            </span>
-          </div>
-          <TrainingModules
-            v-if="training.mark!.modules_total"
-            :title="training.title"
-            :total="training.mark!.modules_total"
-            :done="training.mark!.modules_done ?? 0"
-            @save="(done) => mark(training, training.mark!.status, { modules_done: done })"
-            @finish="(done) => mark(training, 'done', { modules_done: done })"
-          />
-          <p
-            v-else
-            class="training-current-progress"
-          >
-            {{ progressLabel(training.mark!) || "En cours" }}
-          </p>
-          <div class="training-current-actions">
-            <a
-              :href="training.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="action-2"
-              data-test="training-continue"
-            >Continuer le cours<span class="visually-hidden"> (nouvel onglet)</span><AppIcon name="external" /></a>
-            <button
-              type="button"
-              class="link"
-              data-test="training-update"
-              @click="openId = training.id"
-            >
-              Noter l’avancement
-            </button>
-          </div>
-        </section>
-        <ul
-          v-if="others.length"
-          class="training-kept"
-        >
-          <li
-            v-for="training in others"
-            :key="training.id"
-            data-test="training-kept"
-          >
-            <span>
-              <strong>{{ training.title }}</strong>
-              <span>{{ training.mark!.status === "done" ? "Terminée" : "Gardée · pas encore commencée" }}</span>
-            </span>
-            <button
-              type="button"
-              class="training-see"
-              :aria-label="`Voir : ${training.title}`"
-              @click="openId = training.id"
-            >
-              <span
-                class="arrow-circle small"
-                aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
-            </button>
-          </li>
-        </ul>
-        <p class="training-help">
-          Le signet du catalogue range une formation ici. Elle passe « en cours » au premier module.
-        </p>
-      </div>
     </div>
   </section>
   <!-- « Formation et chômage » (B16) : ce qu'il faut savoir avant de s'inscrire, et les pages officielles. -->
@@ -714,6 +635,21 @@ onMounted(() => void load());
       </button>
     </template>
   </BottomSheet>
+  <BottomSheet
+    :open="!!progressOf"
+    title="Noter l’avancement"
+    data-test="progress-sheet"
+    @close="progressId = null"
+  >
+    <TrainingModules
+      v-if="progressOf && progressOf.mark?.modules_total"
+      :title="progressOf.title"
+      :total="progressOf.mark.modules_total"
+      :done="progressOf.mark.modules_done ?? 0"
+      @save="(done) => mark(progressOf!, progressOf!.mark!.status, { modules_done: done })"
+      @finish="(done) => { mark(progressOf!, 'done', { modules_done: done }); progressId = null; }"
+    />
+  </BottomSheet>
   <!-- Le suivi dans le panneau latéral, sur ordinateur comme sur téléphone (docs/44 §2). -->
   <SidePanel
     v-if="opened"
@@ -743,17 +679,18 @@ onMounted(() => void load());
 }
 .trainings-overview { --tw-10: 10px; --tw-14: 14px; --tw-18: 18px; --tw-15: 0.9375rem; --tw-13: 0.8125rem; --tw-bar: 6px; --tw-lh: 21px; --tw-row: 56px; display: grid; gap: var(--space-8); }
 .training-orp-card { display: flex; align-items: center; gap: var(--space-4); padding: var(--tw-18) var(--space-6); background: var(--surface); border: 1px solid var(--water); border-radius: var(--radius-card); box-shadow: var(--shadow-band-card); }
-.training-orp-card > span { display: grid; flex: 1; min-width: 0; }
+.training-orp-card > span:first-child { display: grid; flex: 1; min-width: 0; }
 .training-orp-card > span > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-orp-how { display: inline-flex; flex: none; align-items: center; gap: var(--space-1); min-height: var(--target-min); font-size: var(--tw-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .training-block { display: grid; gap: var(--tw-10); }
 .training-block .bilan-section-head h2 { font-size: var(--font-title); }
 .training-block-list { margin: 0; padding: 0; overflow: hidden; list-style: none; background: var(--surface); border-radius: var(--radius-card); }
 .training-block-list > li + li { border-top: 1px solid var(--surface-muted); }
-.training-now { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
+.training-now { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-4) var(--space-5); }
 .training-now-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
-.training-now-head > span, .training-kept-text { display: grid; flex: 1; min-width: 0; }
-.training-now-head > span > span, .training-kept-text > span { font-size: var(--font-small); color: var(--text-secondary); }
+.training-now-head > .training-now-open, .training-kept-text { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; }
+.training-now-open { gap: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.training-now-open > span, .training-kept-text > span { font-size: var(--font-small); color: var(--text-secondary); }
 .training-now-continue, .training-more { display: inline-flex; flex: none; align-items: center; justify-content: center; box-sizing: border-box; height: var(--target-min); padding: 0 var(--tw-18); border: var(--action-line) solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font-size: var(--tw-15); font-weight: var(--weight-semibold); white-space: nowrap; text-decoration: none; }
 .training-now-continue:hover, .training-more:hover { background: var(--primary-soft); }
 .training-more { justify-self: start; }
@@ -772,21 +709,21 @@ onMounted(() => void load());
 .training-kept-status.accepted, .training-kept-status.granted, .training-kept-status.done { color: var(--success); }
 .training-kept-status.refused { color: var(--text-secondary); }
 /* En cours sans modules (planche BilanOrdinateurFormEtats, 16.11) : le texte libre et « Noter l'avancement » sur une ligne. */
-.training-now { grid-template-columns: minmax(0, 1fr) auto; }
 .training-now > * { grid-column: 1 / -1; }
 .training-now > .training-current-progress { grid-column: 1; align-self: center; font-size: var(--tw-15); font-weight: var(--weight-regular); color: var(--text-tertiary); }
-.training-now > .training-current-progress + .training-now-update { grid-column: 2; }
+.training-now > .training-current-progress + .training-now-actions { grid-column: 2; }
 /* Le catalogue sur ordinateur (planche BilanOrdinateurCatalogue, 16.11) : « ← Mes formations », les puces (la
    choisie en plein), une colonne de groupes, des lignes d'une ligne de détails et le signet rond de 44 px. */
-.trainings-desk { --td-8: 8px; --td-12: 12px; --td-15: 0.9375rem; --td-72: 72px; gap: var(--space-8); }
+.trainings { --td-8: 8px; --td-12: 12px; --td-13: 0.8125rem; --td-15: 0.9375rem; --td-17: 1.0625rem; --td-72: 72px; --td-chip-r: 6px; }
+.trainings-desk { gap: var(--space-8); }
 .training-back { display: inline-flex; justify-self: start; align-items: center; gap: var(--td-8); min-height: var(--target-min); margin: calc(var(--td-12) * -1) 0 calc(var(--td-8) * -1); font-size: var(--td-15); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .training-chips-sep { display: none; }
 .trainings-desk .training-chips { margin-top: calc(var(--td-8) * -1); }
 .trainings-desk .training-chips-sep { display: block; flex: none; width: 1px; height: var(--space-6); margin: var(--td-8) var(--space-1); background: var(--button-outline); }
-.trainings-desk .training-chip { font-size: var(--td-15); font-weight: var(--weight-semibold); }
-.trainings-desk .training-chip[aria-pressed="true"] { border-color: var(--text); background: var(--text); color: var(--bg); }
-.trainings-desk .training-section h2 { align-items: baseline; font-size: var(--font-title); letter-spacing: 0; text-transform: none; color: var(--text); }
-.trainings-desk .training-section h2 span:last-child { font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.trainings .training-chip { font-size: var(--td-15); font-weight: var(--weight-semibold); }
+.trainings .training-chip[aria-pressed="true"] { border-color: var(--text); background: var(--text); color: var(--bg); }
+.trainings .training-section h2 { align-items: baseline; font-size: var(--font-title); letter-spacing: 0; text-transform: none; color: var(--text); }
+.trainings .training-section h2 span:last-child { font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .trainings-desk .training-row-open { gap: var(--space-4); min-height: var(--td-72); padding-left: var(--space-5); }
 .trainings-desk .training-row-icon { border-radius: var(--td-12); background: var(--primary-soft); color: var(--primary-text); }
 .trainings-desk .training-row-icon.cert { background: var(--peach-soft); color: var(--peach-text); }
@@ -795,6 +732,42 @@ onMounted(() => void load());
 .trainings-desk .training-funding-note > span:nth-child(2) { gap: 0; }
 .trainings-desk .training-funding-note > span:nth-child(2) > span { color: var(--peach-text); }
 .trainings-desk .training-funding-icon { width: 2.5rem; height: 2.5rem; }
-.trainings-desk .training-keep { width: var(--target-min); height: var(--target-min); margin-right: var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); color: var(--primary-text); }
-.trainings-desk .training-keep.on { border-color: var(--primary-soft); background: var(--primary-soft); }
+.trainings .training-keep { width: var(--target-min); height: var(--target-min); margin-right: var(--space-4); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); color: var(--primary-text); }
+.trainings .training-keep.on { border-color: var(--primary-soft); background: var(--primary-soft); }
+.training-now-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+/* Téléphone (planches BilanFormations et BilanCatalogue du 16.11, §37) : sections espacées de 22, intertitres de 17 ;
+   En cours et Gardées en cartes séparées à filet de 1,5 px ; la barre puis « Module 3 sur 12 » ; « Noter
+   l'avancement » à gauche, « Continuer le cours » à droite ; Gardées sur 2 lignes, statut en pastille ; catalogue sans
+   icône, titre sur une ligne, « organisme · format » et le prix en pastille, signet rond de 44 px. */
+@media (max-width: 820px) {
+  .trainings-overview { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .training-orp-card { gap: var(--space-3); width: 100%; padding: var(--space-4); color: var(--text); font: inherit; font-weight: var(--weight-regular); text-align: left; }
+  .training-orp-card strong { font-size: var(--tw-15); }
+  .training-orp-card > span > span { font-size: var(--tw-13); }
+  .training-block { gap: var(--space-2); }
+  .training-block .bilan-section-head h2, .trainings .training-section h2 { font-size: var(--td-17); }
+  .training-block-list { display: grid; gap: var(--space-2); overflow: visible; background: none; }
+  .training-block-list > li, .trainings .training-list { overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+  .training-block-list > li + li { border-top: 1.5px solid var(--card-line); }
+  .training-now { gap: 0; padding: var(--space-4); }
+  .training-now-head strong, .training-kept-text strong, .training-row-text > strong { overflow-wrap: anywhere; }
+  .training-now-open > span { margin-top: var(--space-1); }
+  .training-now .training-modules { grid-template-columns: 1fr; row-gap: var(--space-2); margin-top: var(--space-3); }
+  .training-now .training-modules-line { grid-row: 2; grid-column: 1; }
+  .training-now > .training-current-progress { margin-top: var(--space-3); font-size: var(--font-small); color: var(--text-lead); }
+  .training-now-actions { margin-top: var(--space-3); }
+  .training-kept-row { padding: var(--space-3) var(--space-4); }
+  .training-kept-row, .training-row-open { min-height: 68px; }
+  .training-kept-text > span { display: flex; align-items: center; gap: var(--space-2); }
+  .training-kept-text > span > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .training-kept-status, .training-row-tags > .training-tag { padding: var(--space-1) var(--space-2); border-radius: var(--td-chip-r); font-size: var(--font-caption); line-height: normal; }
+  .training-kept-status { background: var(--success-soft); }
+  .training-kept-status .icon { width: 12px; height: 12px; }
+  .training-more { width: 100%; }
+  .training-row-icon { display: none; }
+  .training-row-text { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; align-items: center; gap: var(--space-1) var(--space-2); }
+  .training-row-text > strong { grid-column: 1 / -1; font-size: var(--td-15); }
+  .training-row-text > span:nth-child(2) { min-width: 0; overflow: hidden; font-size: var(--td-13); text-overflow: ellipsis; white-space: nowrap; }
+  .trainings .training-keep { margin-right: var(--space-3); }
+}
 </style>

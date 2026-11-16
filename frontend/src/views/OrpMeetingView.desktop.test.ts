@@ -64,11 +64,21 @@ afterEach(() => {
 });
 
 describe("Rendez-vous sur ordinateur", () => {
-  it("deux colonnes : le prochain rendez-vous ORP ouvert, un rendez-vous noté s’ouvre dans ?rdv=", async () => {
+  it("deux colonnes : rien d’ouvert à l’arrivée (§36), puis le rendez-vous ORP et un rendez-vous noté s’ouvrent dans ?rdv=", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [NOTED], target: 10, trainings: [] });
     const { wrapper, router } = await open();
     expect(wrapper.find("[data-test=rdv-desktop]").exists()).toBe(true);
+    // Rien d'ouvert (§36 du 16.11, décision de Kevin) : aucune carte choisie, « Choisis un rendez-vous » à droite.
+    expect(wrapper.get("[data-test=rdv-item-orp]").attributes("aria-current")).toBeUndefined();
+    expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
+    const choose = wrapper.get("[data-test=choose-detail]");
+    expect(choose.get("h2").text()).toBe("Choisis un rendez-vous");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Préparation et feuille ORP s’affichent ici");
+    await wrapper.get("[data-test=rdv-item-orp]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.rdv).toBe("orp");
     expect(wrapper.get("[data-test=rdv-item-orp]").attributes("aria-current")).toBe("true");
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(false);
     // Deux lignes (§39 du 16.11) : le titre et sa pastille, puis l'heure, le délai et le lieu ; ni surtitre ni rangée vide.
     const card = wrapper.get("[data-test=rdv-item-orp]");
     expect(card.findAll(".rdv-item-text > *").map((line) => line.classes()[0])).toEqual(["rdv-item-line", "rdv-item-sub"]);
@@ -89,11 +99,11 @@ describe("Rendez-vous sur ordinateur", () => {
   it("un rendez-vous passé et non noté : « À noter » ouvre ce qui a été convenu dans le détail, en deux colonnes (lot 14)", async () => {
     const held = { ...MEETING, starts_at: "2026-10-13T08:00:00Z" };
     serve({ meeting: held, preparation: PREP, past: [], target: 10, trainings: [] });
-    const { wrapper } = await open();
+    const { wrapper } = await open("?rdv=passe-1");
     const item = wrapper.get("[data-test=rdv-to-note-1]");
     // Sans pastille « Pas encore noté » : le groupe « À noter » le dit.
     expect(item.text()).not.toContain("noté");
-    // Sans rendez-vous à venir, le premier à noter est choisi.
+    // Ouvert par l'adresse (?rdv=) : rien ne s'ouvre seul depuis le §36.
     expect(item.attributes("aria-current")).toBe("true");
     const detail = wrapper.get("[data-test=rdv-detail-past]");
     expect(detail.get("h2").text()).toMatch(/^Rendez-vous ORP du 13 octobre/);

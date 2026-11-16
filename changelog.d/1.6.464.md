@@ -1,0 +1,1 @@
+Bilan › Formations sur téléphone : « Mes formations » d'abord et le catalogue derrière « Voir le catalogue », compteur de modules dans la feuille « Noter l'avancement » (téléphone et ordinateur), lignes du catalogue sur deux lignes sans icône (planches du 16.11)

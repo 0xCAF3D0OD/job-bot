@@ -230,6 +230,36 @@ describe("OffersView", () => {
     vi.unstubAllGlobals();
   });
 
+  it("ordinateur large (§36 du 16.11) : rien d’ouvert à l’arrivée, « Choisis une offre » ; après Écarter, la scène revient et « Annuler » rouvre l’offre", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    const wrapper = await mountAt("/offres");
+    expect(router.currentRoute.value.query.offre).toBeUndefined();
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    const choose = wrapper.get("[data-test=choose-detail]");
+    expect(choose.get("h2").text()).toBe("Choisis une offre");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Son détail s’affiche ici");
+    expect(wrapper.find("[aria-current=true]").exists()).toBe(false);
+    await wrapper.get("[data-test=offer]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(false);
+    PATCH.mockResolvedValue({ data: { id: 1, status: "ignored" } });
+    mockOffers(page([offer(2, "Deux")]));
+    await wrapper.get("[data-test=offer-discard]").trigger("click");
+    await flushPromises();
+    // Aucune autre offre ne s'ouvre : la scène revient, avec « Offre écartée · Annuler ».
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(true);
+    expect(router.currentRoute.value.query.offre).toBeUndefined();
+    expect(useUndo().pending.value?.message).toBe("Offre écartée");
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    await useUndo().undo();
+    await flushPromises();
+    expect(router.currentRoute.value.query.offre).toBe("1");
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
@@ -358,6 +388,40 @@ describe("OffersView", () => {
       expect(card(id).get("[data-test=score]").attributes("aria-label")).toBe("Pas de note");
       expect(chips(id)[0]).toBe("Pas de note");
     }
+  });
+
+  it("renotée sous le filtre de note (Kevin, 16.11) : l’offre reste ouverte en tête, « Hors de tes filtres », la nouvelle note est annoncée", async () => {
+    const before = offer(5, "DevOps Engineer", { score: 55, description: "", text_reading: "refused" });
+    const after = { ...before, score: 38, description: "Le texte complet de l’annonce." };
+    let listed: unknown[] = [before];
+    GET.mockImplementation((path: string) => {
+      if (path === "/api/profile-chunks") return Promise.resolve({ data: [] });
+      if (path === "/api/offers/{offer_id}") return Promise.resolve({ data: after });
+      return Promise.resolve(page(listed));
+    });
+    PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 38 } });
+    const wrapper = await mountAt("/offres?note=50");
+    await wrapper.get("[data-offer-row='5']").get("[data-test=offer]").trigger("click");
+    await flushPromises();
+    await wrapper.get("[data-test=give-offer]").trigger("click");
+    await wrapper.get("[data-test=paste-offer-text]").trigger("click");
+    await flushPromises();
+    await wrapper.get("[data-test=paste-sheet] textarea").setValue("a".repeat(300));
+    listed = [];
+    await wrapper.get("[data-test=paste-sheet] [data-test=composer-send]").trigger("click");
+    await flushPromises();
+    await flushPromises();
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(true);
+    const chips = wrapper.get("[data-offer-row='5']").findAll("[data-test=offer-chip]");
+    expect(chips[0]?.text()).toBe("Hors de tes filtres");
+    expect(chips[0]?.classes()).toEqual([]);
+    const note = wrapper.get("[data-test=outside-note]");
+    expect(note.text()).toBe("Nouvelle note : 38. Elle sort de ton filtre « 50 et + ».");
+    expect(note.attributes("aria-live")).toBe("polite");
+    // Un autre filtre : la règle commune revient, l'offre quitte la liste.
+    await router.push("/offres?note=70");
+    await flushPromises();
+    expect(wrapper.find("[data-offer-row='5']").exists()).toBe(false);
   });
 
   it("section 35 du 16.11 : pastille « Agence » en tête, ligne dans la fiche, filtre « Masquer les agences »", async () => {

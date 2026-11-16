@@ -1,0 +1,1 @@
+Réglages « Objectif ORP et sites » : le retour au-dessus du titre et sur le bord gauche des cartes (toutes les sous-pages de Réglages et État du service), les champs chiffrés en colonne fixe (72 px, 44 px de haut, rayon des champs de saisie, chiffre centré), « [5] du mois suivant » et « À rendre chaque mois avant ce jour. »

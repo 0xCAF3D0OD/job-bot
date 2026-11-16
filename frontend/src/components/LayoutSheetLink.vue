@@ -11,7 +11,8 @@ import TemplatePicker from "./TemplatePicker.vue";
 // de 44 px. Il ouvre la feuille : la phrase, les quatre modèles en grille de deux colonnes (appliqués tout de suite),
 // « Tient sur une page A4. », puis la langue en trois boutons. Choisir une langue ne rédige rien (C3) : le bouton du
 // bas propose « Rédiger à nouveau en … ». La ligne « Retoucher dans Canva » attend la connexion Canva.
-const props = defineProps<{ title: string; titleId: string; name?: string | null; options: SegmentOption[]; languageLabel: string }>();
+// `compact` (étape CV sur téléphone, §37 du 16.11) : seulement le lien « Modèle », dans la rangée d'outils.
+const props = defineProps<{ title: string; titleId: string; name?: string | null; options: SegmentOption[]; languageLabel: string; compact?: boolean }>();
 const language = defineModel<string>({ required: true });
 const { template } = useDocTemplate();
 const open = ref(false);
@@ -23,7 +24,21 @@ const summary = computed(() => {
 </script>
 
 <template>
-  <div class="doc-layout-head">
+  <button
+    v-if="compact"
+    type="button"
+    class="doc-layout-change"
+    aria-haspopup="dialog"
+    :aria-label="`Changer le modèle ou la langue, ${summary}`"
+    data-test="layout-change"
+    @click="open = true"
+  >
+    Modèle
+  </button>
+  <div
+    v-else
+    class="doc-layout-head"
+  >
     <span class="doc-layout-titles">
       <h2 :id="titleId">{{ title }}</h2>
       <span

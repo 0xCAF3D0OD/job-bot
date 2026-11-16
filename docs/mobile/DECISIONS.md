@@ -361,11 +361,79 @@ Précisions de Kevin (16.11.2026, 13 h 52) :
 - Un bloc ajouté a lui aussi une raison, même règle (mots de l'annonce, vérifiés). Son contenu vient toujours des blocs existants de l'utilisateur, jamais inventé.
 - « Demandé par toi » suit le changement : gardé si la nouvelle version contient encore la demande. Sinon, l'interface affiche une fois « N de tes demandes ne sont pas reprises dans cette version » avec un bouton « Les réappliquer » (PR d'affichage). Le serveur garde la liste des demandes de l'utilisateur pour pouvoir les réappliquer.
 
+## Offre renotée hors des filtres (Kevin, 16.11.2026, 13 h 39)
+
+- Après « Refaire la note » (texte collé, lien donné ou lecture de l’annonce), une offre dont la nouvelle note sort des
+  filtres de la liste ne disparaît plus : elle reste ouverte et en tête de liste, avec la pastille neutre « Hors de tes
+  filtres », jusqu’au prochain changement de filtre ou au départ de la page.
+- Dans la fiche, sous la note : « Nouvelle note : {n}. Elle sort de ton filtre « {seuil} ». », avec le libellé du filtre
+  de note en vigueur ; la phrase est annoncée (aria-live="polite").
+- Si on change ensuite le statut de l’offre (écarter, garder…), la règle commune revient.
+
+## Réglages « Objectif ORP et sites » (Kevin, 16.11.2026, 13 h 51)
+
+Pas de planche pour cette page : la référence est le message de Kevin. Ordinateur et téléphone, clair et sombre.
+
+1. En-tête : « ← Retour aux réglages » passe au-dessus du titre, pas à côté. Le lien, le titre et les cartes commencent au même bord gauche. Même en-tête sur toutes les sous-pages de Réglages.
+2. Les champs chiffrés forment une colonne fixe, alignée d'une carte à l'autre. Grille de la carte : texte 1fr, champ 72 px, unité de largeur fixe (assez pour « du mois suivant »), écart 12 px. Le « le » devant le jour est retiré : « [5] du mois suivant ».
+3. Les champs prennent le rayon standard des champs de saisie de l'app (12 px, celui du champ à libellé flottant), pas la pilule. Hauteur 44 px, chiffre centré.
+4. Description de « Date limite des justificatifs » : « À rendre chaque mois avant ce jour. » « Objectif mensuel de l'ORP » garde « Les candidatures demandées chaque mois. »
+
+## Colonne de droite sans élément ouvert, sur ordinateur (§36, Kevin, 16.11.2026, 13 h 52)
+
+- Offres, Envoyées et Rendez-vous sur ordinateur : rien d'ouvert à l'arrivée ; la colonne de droite montre la scène
+  « Choisis une offre », « Choisis une candidature » ou « Choisis un rendez-vous » (scènes choisis-* du paquet du 16.11).
+  La première carte ne s'ouvre plus d'elle-même.
+- `?offre=`, `?candidature=` et `?rdv=` ouvrent toujours l'élément.
+- Après « Écarter » : l'offre quitte la liste, aucune autre ne s'ouvre, la scène « Choisis une offre » s'affiche avec
+  la confirmation commune « Offre écartée · Annuler » (bandeau à trait). « Annuler » remet l'offre à sa place,
+  choisie, son détail ouvert.
+
+Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
+
+- Pastille en sombre : #AEBDFF (`--primary-text`), comme les autres états vides, et non le #C9D3FF de la planche.
+- Pastille : la grille de 4 l'emporte ; marges de 8 px (6 sur la planche).
+- Bandeau « Offre écartée · Annuler » en bas à droite, comme partout dans l'application ; la planche sera corrigée.
+- Nouvelle scène d'erreur du Bilan (§36) : dans une PR à part.
+
 ## Formations : catalogue vide pour « Mon domaine » (Kevin, 16.11.2026, 13 h 53)
 
 - Quand le catalogue vérifié n'a rien pour « Mon domaine », avant tout filtre : titre « Rien dans le catalogue pour {domaine} », pastille « Le catalogue couvre surtout l'informatique pour l'instant », bouton principal « Chercher des formations en {domaine} » (la recherche web existante). {domaine} est le premier mot-clé de « Mon domaine ».
 - « Aucune formation avec ces filtres » reste seulement quand ce sont les filtres qui vident la liste.
 - Le catalogue des soins viendra d'une liste sourcée fournie par Kevin : aucune formation inventée.
+
+## Offre écartée sans note : la date de mise à l'écart, « Remettre dans le tri » (Kevin, 16.11.2026, 13 h 53)
+
+- §30 du paquet du 16.11 : dans la fiche, « Écartée le 12 nov. » à la place de « Écartée » seul ; lien « Remettre dans le tri » (téléphone : dernière ligne de la carte de note ; ordinateur : à droite de la ligne de note) ; plus de bouton « Écarter » sur une offre déjà écartée (téléphone : « Préparer ma candidature » prend toute la largeur).
+- Option A : une colonne `offers.set_aside_at`, posée à chaque mise à l'écart (la personne, Trier, l'assistant, les critères). Pas de rattrapage : une offre écartée avant la colonne affiche « Écartée » seul.
+- « Remettre dans le tri » vide la date ; une nouvelle mise à l'écart pose la nouvelle date.
+- Format de date habituel : « 12 nov. », l'année seulement si ce n'est pas l'année en cours.
+
+## Bilan › Formations sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- « Mes formations » d'abord (carte de l'ORP, En cours, Gardées), le catalogue derrière « Voir le catalogue » et « Chercher d'autres formations », comme sur ordinateur. Les onglets Catalogue / Suivies disparaissent ; « ← Mes formations » ramène depuis le catalogue (planches BilanFormations et BilanCatalogue, §37).
+- Le compteur « − N + » quitte la carte « En cours » : « Noter l'avancement » ouvre une feuille du bas qui le contient. Même chose sur ordinateur. Sans nombre de modules, « Noter l'avancement » ouvre le panneau de la formation, comme avant.
+- Le titre de la carte « En cours » ouvre le panneau de la formation (notes, financement, profil), pour que ces fonctions restent accessibles.
+- Catalogue sur téléphone : lignes sur deux lignes (titre ; « organisme · format » et le prix), sans icône, signet rond de 44 px. L'avancement et le financement restent dans le panneau.
+
+## Bilan › ORP sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- La carte « Mois ORP · novembre · 7 sur 10 », avec sa barre et son chevron, remplace l'anneau ; elle déplie et replie le mois.
+- Cartes de recherche sur 2 lignes : entreprise + pastille d'état, puis poste · date.
+- Replié : les trois premières à déclarer. Déplié : toutes, puis les recherches du mois, puis « Replier le mois ». Plus de « Afficher l'autre ».
+- En bas, deux pilules « Mois précédents » et « Autres exports », chacune ouvre sa feuille du bas ; « Exporter le formulaire (PDF) » passe dans « Autres exports ».
+- Règle : hors d'une carte, seulement un titre ou un lien. Une phrase vraiment utile devient une pastille. Les phrases sous les intertitres sont retirées.
+
+## Ma candidature › CV sur téléphone (Kevin, 16.11.2026, 14 h 06)
+
+- Kevin : « pas besoin de proposition, code-le selon les planches MaCandidatureCV, MaCandidatureCVPourquoi, MaCandidatureCVRecherche, dans une PR à part » (§37 du paquet du 16.11).
+- Sous les étapes : « Changements · N » (pilule, surligne les passages changés), la loupe ronde de 44 px, le lien « Modèle » (la feuille Mise en page et langue). La recherche remplace la rangée.
+- Le CV entier s'affiche tout de suite, sans aperçu à toucher ; la page suit le thème clair ou sombre.
+- Toucher un passage surligné ouvre « Changement N sur M » : Avant, Maintenant, Pourquoi (la raison du serveur, mots de l'annonce surlignés ; « Demandé par toi » pour une demande de l'utilisateur), « Annuler ce changement », précédent et suivant.
+- La retouche est le champ « Demander une modification du CV » ; le bouton du bas devient « J'ai relu, continuer » (note la relecture, puis Postuler), comme sur ordinateur.
+- Retirés du téléphone parce qu'absents des planches : l'aperçu à toucher, les mots mis en avant sous l'aperçu (ils restent en gras dans le CV), la case « J'ai relu le CV » (remplacée par le bouton du bas), « Modifier le texte avec l'Assistant » (remplacé par le champ).
+- Kevin, 16.11 à 15 h 51 : les quatre fonctions retirées du téléphone (l'aperçu à toucher, les mots sous l'aperçu, la case « J'ai relu le CV », « Modifier le texte avec l'Assistant ») sont enlevées pour de bon ; les planches les remplacent.
+- Kevin, 16.11 à 15 h 51 : le surlignage de « Pourquoi » ne dépend pas des guillemets. Avec chaque raison, l'IA donne à part la liste des mots tirés de l'annonce (`words`, prompt cv-v2) ; le serveur les vérifie dans le texte de l'offre et les renvoie dans `quotes` ; le téléphone les surligne avec la même fonction que « Mon domaine » (`highlight`, sans majuscules, mots entiers).
 
 ## Un seul relèvement du CSS pour #764, #770 et #771 (Kevin, 16.11.2026, 14 h 08)
 

@@ -4,6 +4,7 @@ import { computed } from "vue";
 import type { Training } from "../api/client";
 import { languageLabel } from "../newsLabels";
 import { FORMATS, FUNDING, SHORT_FORMATS, progressLabel } from "../trainingLabels";
+import { usePhone } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 
@@ -16,9 +17,13 @@ const emit = defineEmits<{ open: []; interest: []; review: [keep: boolean] }>();
 
 const cert = computed(() => props.training.kind === "certification");
 const status = computed(() => props.training.mark?.status ?? null);
+// Sur téléphone (planche BilanCatalogue, §37 du 16.11) : « organisme · format » et le prix seulement ; l'avancement
+// et le financement restent dans le panneau de la formation.
+const { phone } = usePhone();
 const meta = computed(() => {
   const t = props.training;
   const format = SHORT_FORMATS[t.format] ?? t.format;
+  if (phone.value) return `${t.provider} · ${format}`;
   return `${t.provider} · ${format.charAt(0).toUpperCase()}${format.slice(1)} · ${languageLabel(t.language)}`;
 });
 // L'avancement (B19) : « Module 6 sur 12 », sinon le texte libre.
@@ -71,12 +76,12 @@ function onKeep(): void {
             data-test="training-price"
           >{{ training.price === "free" ? "Gratuit" : "Payant" }}</span>
           <span
-            v-if="progress"
+            v-if="progress && !phone"
             class="training-tag progress"
             data-test="training-progress"
           >{{ progress }}</span>
           <span
-            v-if="training.mark?.funding_status"
+            v-if="training.mark?.funding_status && !phone"
             class="training-tag"
             data-test="funding-badge"
           >{{ FUNDING[training.mark.funding_status] }}</span>

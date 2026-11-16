@@ -14,7 +14,10 @@ export type Scene =
   | "un"
   | "envoyees-vide"
   | "rendez-vous-vide"
-  | "erreur";
+  | "erreur"
+  | "choisis-offre"
+  | "choisis-candidature"
+  | "choisis-rendez-vous";
 
 // Les fichiers de public/troupe/ : `phone` et `desk` sont les largeurs des deux fichiers (2× de la largeur
 // affichée dans les maquettes : 680 pour 340 px) ; `ratio`, largeur sur hauteur, pour réserver la place.
@@ -34,6 +37,11 @@ export const SCENES: Record<Scene, { phone: number; desk: number; ratio: number 
   "rendez-vous-vide": { phone: 234, desk: 360, ratio: 387 / 518 },
   // Bilan indisponible (§29 du 16 novembre, planche BilanOrdinateurErreur) : affichée à 360 px.
   erreur: { phone: 480, desk: 840, ratio: 840 / 377 },
+  // Colonne de droite sans élément ouvert (§36 du 16 novembre) : affichées à 340 px, sur ordinateur seulement ;
+  // un seul fichier de 680 px (2×), réduit depuis le 840 du paquet pour tenir dans le budget des images.
+  "choisis-offre": { phone: 680, desk: 680, ratio: 680 / 342 },
+  "choisis-candidature": { phone: 680, desk: 680, ratio: 680 / 333 },
+  "choisis-rendez-vous": { phone: 680, desk: 680, ratio: 680 / 321 },
 };
 
 // Servies telles quelles depuis public/troupe/ ; `TROUPE` change quand les images changent.

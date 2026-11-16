@@ -645,4 +645,20 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(wrapper.find("[data-test=sent-filters-panel]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
+
+  it("ordinateur (§36 du 16.11) : rien d’ouvert à l’arrivée, « Choisis une candidature » ; ?candidature= ouvre toujours", async () => {
+    const items = [at("2026-11-05", { id: 12, company: "Récente SA", status: "en_attente" })];
+    mockApi(undefined, items);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper, router } = await mountView();
+    expect(wrapper.find("[data-test=sent-detail]").exists()).toBe(false);
+    const choose = wrapper.get("[data-test=choose-detail]");
+    expect(choose.get("h2").text()).toBe("Choisis une candidature");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Suivi, relances et documents s’affichent ici");
+    await router.push({ query: { candidature: "12" } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-detail]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=choose-detail]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
 });

@@ -35,7 +35,9 @@ import { languageLabel } from "./ProfileCompletionForm.vue";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
-const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
+// `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
+// renotée reste dans la liste hors de ses filtres.
+const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
 
 // Les contacts dans le panneau latéral (docs/32 §2.2) ; l'entreprise a sa section (docs/45).
 const contactsCount = ref(0);
@@ -68,7 +70,7 @@ const emit = defineEmits<{
   applied: [];
   expiry: [expired: boolean];
   address: [address: string];
-  changed: [];
+  changed: [rescored?: true];
 }>();
 
 // Annonce chez l'employeur (docs/20 §2) : lien vérifié, ou recherche à la demande.
@@ -252,7 +254,7 @@ const scored = computed(() => props.offer.score !== null && props.offer.score !=
 const correcting = ref(false);
 // La carte de correspondance (O3, O4) : le mot en titre, le chiffre dans l'anneau (D12), les lignes ✓ et (!).
 const matchWord = computed(() => (scored.value ? scoreWord(props.offer.score!) : null));
-const matchTone = computed(() => matchWord.value?.tone ?? "none");
+const matchTone = computed(() => matchWord.value?.tone ?? (aside.value ? "aside" : "none"));
 // A2 (Kevin, 16.11) : une note impossible (après trois échecs, ou sans texte) le dit, avec sa cause ; une offre
 // écartée sans note n'affiche jamais « Pas encore notée ». Un échec pas encore final est une attente : la tâche des
 // 10 minutes refait la note.
@@ -261,10 +263,21 @@ const retryable = computed(() => finalCause.value === "reponse_vide" || finalCau
 const setAside = computed(
   () => !scored.value && !props.offer.added_by_you && (props.offer.status === "filtered_out" || props.offer.status === "ignored"),
 );
+// §30 du 16.11 : écartée sans note, « Écartée le 12 nov. » (date de la mise à l'écart, décision de Kevin du 16.11) ; une
+// offre écartée avant la date enregistrée garde « Écartée » seul. « Remettre dans le tri » la remet dans les offres à
+// traiter (sa note part alors, dans le plafond du jour) ; « Écarter » disparaît.
+const aside = computed(() => setAside.value && !finalCause.value);
+const discarded = computed(() => props.offer.status === "ignored" || props.offer.status === "filtered_out");
 const matchTitle = computed(() => {
   if (matchWord.value) return MATCH_TITLE[matchWord.value.tone]!;
   if (finalCause.value) return "Note impossible";
-  return setAside.value ? "Écartée" : "Pas encore notée";
+  if (!setAside.value) return "Pas encore notée";
+  const at = props.offer.set_aside_at;
+  if (!at) return "Écartée";
+  // « 12 nov. », l'année seulement si ce n'est pas l'année en cours (décision du 16.11) ; ici plutôt que dans dates.ts,
+  // pour ne pas alourdir le socle commun à toutes les pages.
+  const year = new Date(at).getFullYear() === new Date().getFullYear() ? undefined : "numeric";
+  return `Écartée le ${new Date(at).toLocaleDateString("fr-CH", { day: "numeric", month: "short", year, timeZone: "Europe/Zurich" })}`;
 });
 // Sans profil, la note n'arrive jamais : la fiche le dit et envoie vers Profil › Expériences (test du 10 novembre).
 const { empty: profileEmpty, refresh: refreshProfile } = useProfileEmpty();
@@ -306,7 +319,7 @@ const matchSub = computed(() => {
   if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
   if (finalCause.value === "sans_texte") return "L’annonce est trop courte pour être notée.";
   if (finalCause.value) return "La note n’a pas pu être calculée.";
-  if (!scored.value) return setAside.value ? "" : "La note arrive dès que l’annonce est lue.";
+  if (!scored.value) return setAside.value ? "Pas de note : jobA1 ne note pas les offres écartées." : "La note arrive dès que l’annonce est lue.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
   // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
@@ -750,6 +763,20 @@ watch(
           >
             Voir la compatibilité<AppIcon name="chevron" />
           </button>
+          <template v-else-if="aside">
+            <span
+              class="aside-pill"
+              data-test="aside-pill"
+            >Pas de note</span>
+            <button
+              type="button"
+              class="oc-note-link"
+              data-test="back-to-triage"
+              @click="emit('status', 'to_review')"
+            >
+              Remettre dans le tri<AppIcon name="chevron" />
+            </button>
+          </template>
           <button
             v-else-if="needsProfile"
             type="button"
@@ -789,6 +816,15 @@ watch(
           {{ matchSub }}
         </p>
         <p
+          v-if="outsideNote"
+          class="oc-note-sub"
+          role="status"
+          aria-live="polite"
+          data-test="outside-note"
+        >
+          {{ outsideNote }}
+        </p>
+        <p
           v-if="redone"
           class="redone oc-note-redone"
           role="status"
@@ -816,7 +852,7 @@ watch(
           <OfferTextNotice
             ref="textNotice"
             :offer="offer"
-            @changed="emit('changed')"
+            @changed="emit('changed', true)"
             @refresh="emit('changed')"
           />
         </div>
@@ -911,7 +947,7 @@ watch(
             {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
           </RouterLink>
           <button
-            v-if="offer.status !== 'ignored'"
+            v-if="!discarded"
             type="button"
             class="secondary"
             data-test="offer-discard"
@@ -1078,7 +1114,7 @@ watch(
           {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
         </RouterLink>
         <button
-          v-if="offer.status !== 'ignored'"
+          v-if="!discarded"
           type="button"
           class="secondary"
           data-test="offer-discard"
@@ -1148,7 +1184,7 @@ watch(
       data-test="offer-bar"
     >
       <button
-        v-if="offer.status !== 'ignored'"
+        v-if="!discarded"
         type="button"
         class="secondary action-2 offer-bar-discard"
         data-test="offer-discard"
@@ -1219,6 +1255,15 @@ watch(
               >
                 {{ matchSub }}
               </p>
+              <p
+                v-if="outsideNote"
+                class="match-sub"
+                role="status"
+                aria-live="polite"
+                data-test="outside-note"
+              >
+                {{ outsideNote }}
+              </p>
               <button
                 v-if="retryable"
                 type="button"
@@ -1257,7 +1302,7 @@ watch(
           <OfferTextNotice
             v-if="partial"
             :offer="offer"
-            @changed="emit('changed')"
+            @changed="emit('changed', true)"
             @refresh="emit('changed')"
           />
           <p
@@ -1271,16 +1316,17 @@ watch(
           <!-- Téléphone (§10.1) et ordinateur (MODIFICATIONS du 9 novembre, §2.1) : une seule ligne cliquable, « Voir la
                compatibilité », sur la ligne de texte du verdict ; le détail est dans le panneau. -->
           <button
-            v-if="(sub || columns) && scored"
+            v-if="(sub || columns) && scored || aside"
             type="button"
             class="compat-open"
-            aria-haspopup="dialog"
-            data-test="compat-open"
-            @click="compatOpen = true"
+            :aria-haspopup="scored ? 'dialog' : undefined"
+            :data-test="scored ? 'compat-open' : 'back-to-triage'"
+            @click="scored ? (compatOpen = true) : emit('status', 'to_review')"
           >
             <!-- « Voir la compatibilité » sur téléphone comme sur ordinateur (décision de Kevin du 15.11) ; sur téléphone,
-                 aligné sur le contenu de la carte, chevron à droite, que la note soit provisoire ou non. -->
-            Voir la compatibilité
+                 aligné sur le contenu de la carte, chevron à droite, que la note soit provisoire ou non. Offre écartée
+                 sans note (§30 du 16.11) : « Remettre dans le tri », même style. -->
+            {{ scored ? "Voir la compatibilité" : "Remettre dans le tri" }}
             <AppIcon name="chevron" />
           </button>
           <DisclosureRow
@@ -1668,7 +1714,9 @@ watch(
 .oc-note-line { display: flex; align-items: center; gap: var(--oc-10); margin-top: var(--space-3); padding-top: var(--space-1); border-top: 1px solid var(--line); }
 .oc-note-line .match-title { margin: 0; font-size: var(--font-label); font-weight: var(--weight-bold); }
 .oc-note-line .match-title.is-none { color: var(--text-secondary); }
-.oc-note-line .provisional-pill { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
+/* §30 : la pastille neutre « Pas de note » d'une offre écartée, celle des cartes de la liste (ListCard). */
+.aside-pill { background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-caption); }
+.oc-note-line > span { flex: none; padding: var(--oc-2) var(--space-2); border-radius: var(--oc-chip-r); font-weight: var(--weight-semibold); }
 .oc-note-sub { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
 .oc-note-link:hover { text-decoration: underline; }

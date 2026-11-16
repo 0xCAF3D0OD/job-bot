@@ -30,7 +30,7 @@ import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
-import { activeChips, activeCount, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -202,6 +202,19 @@ const remainingLabel = computed(() => ` · ${remaining.value} ${remaining.value 
 // Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
 // comptée dans aucun jour.
 const pinnedId = ref<number | null>(null);
+// Offre renotée depuis sa fiche (Kevin, 16.11) : si sa nouvelle note la sort des filtres, elle reste en tête,
+// ouverte, avec la pastille « Hors de tes filtres », jusqu'au prochain changement de filtre ou au départ de la page. Si
+// son statut change ensuite (écartée, gardée…), elle suit la règle commune.
+const outside = ref<Offer | null>(null);
+const outsideId = computed(() => (pinnedId.value === outside.value?.id ? pinnedId.value : null));
+// « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
+const outsideNote = computed(() => {
+  const offer = selected.value;
+  const f = filters.value;
+  if (!offer || offer.id !== outsideId.value || offer.score === null || offer.score === undefined) return null;
+  const out = (f.minScore !== null && offer.score < f.minScore) || (f.maxScore !== null && offer.score > f.maxScore);
+  return out ? `Nouvelle note : ${offer.score}. Elle sort de ton filtre « ${scoreLabel(f)} ».` : null;
+});
 const byDay = computed(() => filters.value.sort === "day");
 // À traiter (C2, C8) : les offres en préparation viennent d'abord (le serveur les met en tête) ; triées
 // par jour, elles ont leur propre titre, « En préparation », avant les jours.
@@ -252,17 +265,11 @@ const gridTop = ref(0);
 function measureGrid(): void {
   if (grid.value) gridTop.value = Math.round(grid.value.getBoundingClientRect().top + window.scrollY);
 }
-// Sur ordinateur, une offre est toujours ouverte à droite (maquette) : sans ?offre=, la première de la liste.
-// L'adresse est remplacée, pas empilée : le retour arrière ne repasse pas par elle.
-watch(wide, () => void nextTick(() => {
-  measureGrid();
-  selectFirst();
-}));
-function selectFirst(): void {
-  if (!wide.value || routeOfferId() || failed.value) return;
-  const first = shown.value[0];
-  if (first) void router.replace({ query: { ...route.query, offre: String(first.id) } });
-}
+// Sur ordinateur, rien n'est ouvert à l'arrivée ni après « Écarter » (§36 du 16 novembre, décision de Kevin du
+// 16.11) : sans ?offre=, la colonne de droite montre « Choisis une offre ».
+watch(wide, () => void nextTick(measureGrid));
+// La colonne de droite sans offre ouverte (§36) : seulement à côté d'une liste qui a des offres.
+const choosing = computed(() => linked.value && !selected.value && !failed.value && firstLoaded.value && !emptyWithFilters.value && !bare.value && items.value.length > 0);
 
 // L'offre ouverte est l'élément dont parle l'assistant (docs/24 §2.2).
 watch(selected, (offer) => {
@@ -478,8 +485,10 @@ async function load(append = false): Promise<void> {
     });
     if (current !== requestId) return; // une requête plus récente est partie entre-temps
     if (!data) throw new Error("réponse vide");
-    items.value = append ? [...items.value, ...data.items] : data.items;
-    if (!append) pinnedId.value = null;
+    const kept = append ? null : await keptOutside(data.items);
+    if (current !== requestId) return;
+    items.value = append ? [...items.value, ...data.items] : kept ? [kept, ...data.items] : data.items;
+    if (!append) pinnedId.value = kept ? kept.id : null;
     total.value = data.total;
     counts.value = data.counts;
     facets.value = data.facets;
@@ -493,12 +502,20 @@ async function load(append = false): Promise<void> {
       loading.value = false;
       retrying.value = false;
       firstLoaded.value = true;
-      void nextTick(() => {
-        measureGrid();
-        selectFirst();
-      });
+      void nextTick(measureGrid);
     }
   }
+}
+
+// L'offre renotée, relue si la liste ne la rend plus ; null si elle y est, a changé de statut, ou n'existe plus.
+async function keptOutside(listed: Offer[]): Promise<Offer | null> {
+  const keep = outside.value;
+  outside.value = null;
+  if (!keep || listed.some((o) => o.id === keep.id)) return null;
+  const data = (await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: keep.id } } }).catch(() => null))?.data;
+  if (data?.status !== keep.status) return null;
+  outside.value = data;
+  return data;
 }
 
 async function setStatus(status: "to_review" | "later" | "ignored" | "preparing", target: Offer | null = selected.value): Promise<void> {
@@ -521,14 +538,18 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   const previous = offer.status;
   // « Annuler » dans le bandeau commun à trait (§23 du 15.11, Kevin le 15.11 18 h 49) : le statut est déjà parti au
   // serveur, « Annuler » remet celui d'avant (docs/60 §3, 6 secondes, docs/108).
-  if (status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")) {
-    const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée.";
+  // « Écarter » depuis « En préparation » a aussi son « Annuler » (§36 du 16.11 : la planche écarte une offre en préparation).
+  const undoable = previous === "to_review" || previous === "later" || previous === "ignored" || (status === "ignored" && previous === "preparing");
+  if (status in STATUS_TEXT && previous !== status && undoable) {
+    const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée";
     void offerUndo({
       message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : status === "to_review" ? "Remise dans Nouvelles." : `Passée en ${STATUS_TEXT[status]}.`,
       commit: () => true,
       restore: async () => {
         await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
         await load();
+        // Sur ordinateur, l'offre revient à sa place, choisie, son détail ouvert (§36, décision de Kevin du 16.11).
+        if (linked.value && items.value.some((o) => o.id === offer.id)) selectOffer(offer.id);
       },
     });
   }
@@ -609,7 +630,10 @@ function onKeydown(event: KeyboardEvent): void {
 // (ajoutée à la main, ou par un lien) en serait effacée et sa fiche refermée aussitôt.
 watch(
   () => JSON.stringify(toQuery(filters.value)),
-  () => void load(),
+  () => {
+    outside.value = null;
+    void load();
+  },
 );
 
 async function loadChunkTitles(): Promise<void> {
@@ -1072,6 +1096,7 @@ onUnmounted(() => {
                 :offer="row.offer"
                 :selected="row.offer.id === selectedId"
                 :show-date="!byDay || row.offer.id === pinnedId"
+                :outside="row.offer.id === outsideId"
                 @select="selectOffer(row.offer.id)"
               />
             </li>
@@ -1185,14 +1210,32 @@ onUnmounted(() => {
             <OfferDetail
               :offer="selected"
               :chunk-titles="chunkTitles"
+              :outside-note="outsideNote"
               @close="selectedId = null"
               @status="setStatus"
               @applied="openApplication"
               @expiry="setExpiry"
               @address="setAddress"
-              @changed="load()"
+              @changed="(rescored) => { if (rescored) outside = selected; load(); }"
             />
           </component>
+        </div>
+        <div
+          v-else-if="choosing"
+          class="detail-column"
+        >
+          <LinkedDetail :list="listEl">
+            <EmptyState
+              class="choose-detail"
+              data-test="choose-detail"
+              scene="choisis-offre"
+              title="Choisis une offre"
+              pill="Son détail s’affiche ici"
+              pill-icon="arrow-left"
+              :width="340"
+              :desktop-width="340"
+            />
+          </LinkedDetail>
         </div>
       </Transition>
     </div>

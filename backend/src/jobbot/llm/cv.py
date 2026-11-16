@@ -59,8 +59,12 @@ NEXT_OUTPUT_SCHEMA: dict[str, Any] = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"target": {"type": "string"}, "reason": {"type": "string"}},
-                "required": ["target", "reason"],
+                "properties": {
+                    "target": {"type": "string"},
+                    "reason": {"type": "string"},
+                    "words": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["target", "reason", "words"],
                 "additionalProperties": False,
             },
         },
@@ -153,6 +157,13 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> CvOutput:
     )
 
 
+def _words(value: object) -> tuple[str, ...]:
+    """Les mots de l'annonce donnés avec une raison (`words`), 12 au plus ; rien si mal formés."""
+    if not isinstance(value, list):
+        return ()
+    return tuple(str(w).strip() for w in value[:12] if isinstance(w, str) and w.strip())
+
+
 def parse_reasons(
     text: str, output: CvOutput, chunks: list[ProfileChunkData], offer_text: str | None
 ) -> list[cv_reasons.Reason]:
@@ -164,13 +175,13 @@ def parse_reasons(
         return []
     if not isinstance(raw, list):
         return []
-    pairs = [
-        (str(r.get("target", "")), str(r.get("reason", "")))
+    triples = [
+        (str(r.get("target", "")), str(r.get("reason", "")), _words(r.get("words")))
         for r in raw[:40]
         if isinstance(r, dict)
     ]
     return cv_reasons.validate(
-        pairs,
+        triples,
         offer_text or "",
         summary=output.summary,
         kept=output.chunk_ids,
