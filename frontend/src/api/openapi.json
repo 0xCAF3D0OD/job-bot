@@ -15306,6 +15306,10 @@
               }
             ],
             "title": "Min Rate"
+          },
+          "kept": {
+            "type": "integer",
+            "title": "Kept"
           }
         },
         "type": "object",
@@ -15313,10 +15317,11 @@
           "skills",
           "trade",
           "place",
-          "min_rate"
+          "min_rate",
+          "kept"
         ],
         "title": "FirstStepsSummaryOut",
-        "description": "Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux."
+        "description": "Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres\ngardées (16.11)."
       },
       "FocusIn": {
         "properties": {

@@ -5458,7 +5458,8 @@ export interface components {
         };
         /**
          * FirstStepsSummaryOut
-         * @description Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux.
+         * @description Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+         *     gardées (16.11).
          */
         FirstStepsSummaryOut: {
             /** Skills */
@@ -5469,6 +5470,8 @@ export interface components {
             place: string | null;
             /** Min Rate */
             min_rate: number | null;
+            /** Kept */
+            kept: number;
         };
         /**
          * FocusIn

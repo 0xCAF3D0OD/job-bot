@@ -87,7 +87,7 @@ function clearStorage(): void {
 
 describe("Les premiers pas (docs/128)", () => {
   it("cinq lignes, « 2 sur 5 » : les faites cochées, la prochaine avec le seul bouton, garder et envoyer grisés (§23 du 15.11)", async () => {
-    const summary = { skills: 12, trade: "DevOps", place: "Lausanne", min_rate: 80 };
+    const summary = { skills: 12, trade: "DevOps", place: "Lausanne", min_rate: 80, kept: 0 };
     mockGet(starting(2, { has_offers: false, first_steps_summary: summary }));
     const wrapper = await mountView();
     const list = wrapper.find("[data-test=first-steps]");
@@ -213,11 +213,14 @@ describe("Les premiers pas (docs/128)", () => {
   });
 
   it("étape 5 en cours : « Préparer une candidature » sur la dernière offre gardée", async () => {
-    mockGet(starting(4, { first_steps_offer_id: 7 }));
+    const summary = { skills: 12, trade: "DevOps", place: "Lausanne", min_rate: 80, kept: 3 };
+    mockGet(starting(4, { first_steps_offer_id: 7, first_steps_summary: summary }));
     const wrapper = await mountView();
     const action = wrapper.find("[data-test=first-steps-action]");
     expect(action.text()).toBe("Préparer une candidature");
     expect(action.attributes("href")).toBe("/candidatures/offres/7/preparer");
+    // Le vrai nombre d'offres gardées (Kevin, 16.11).
+    expect(wrapper.find("[data-test=first-step-keep]").text()).toContain("3 offres gardées");
     expect(wrapper.find("[data-test=first-step-keep]").text()).toContain("Fait");
   });
 

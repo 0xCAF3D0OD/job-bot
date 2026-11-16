@@ -55,12 +55,14 @@ KEPT = (OfferStatus.PREPARING, OfferStatus.APPLIED)
 class Summary:
     """Les sous-titres des lignes faites : « 12 compétences reprises », « DevOps · Lausanne ·
     80 à 100 % ». Le métier tel que la personne l'a écrit à l'accueil, le premier lieu qui n'est
-    pas un canton, le taux minimum des critères."""
+    pas un canton, le taux minimum des critères, le nombre d'offres gardées (« 3 offres
+    gardées », Kevin le 16.11)."""
 
     skills: int
     trade: str | None
     place: str | None
     min_rate: int | None
+    kept: int = 0
 
 
 @dataclass(frozen=True)
@@ -195,11 +197,15 @@ async def summary(session: AsyncSession) -> Summary:
     locations = [v for v in rows.get("locations") or [] if isinstance(v, str)]
     places = [v for v in locations if not is_canton(v)]
     rate = rows.get("min_rate")
+    kept = await session.scalar(
+        select(func.count()).select_from(Offer).where(Offer.status.in_(KEPT))
+    )
     return Summary(
         skills=skills or 0,
         trade=trade.strip() or None if isinstance(trade, str) else None,
         place=places[0] if places else None,
         min_rate=rate if isinstance(rate, int) else None,
+        kept=kept or 0,
     )
 
 

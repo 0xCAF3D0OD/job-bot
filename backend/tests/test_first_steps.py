@@ -64,6 +64,7 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
         "trade": None,
         "place": None,
         "min_rate": None,
+        "kept": 0,
     }
     assert page["has_offers"] is False and page["first_steps_dismissed"] is False
 
@@ -120,6 +121,8 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     page = (await client.get("/api/today")).json()
     assert done(page)[-1] == "keep" and page["has_offers"] is True
     assert page["first_steps_offer_id"] == offer_id
+    # « 1 offre gardée » : les offres en préparation ou envoyées (Kevin, 16.11).
+    assert page["first_steps_summary"]["kept"] == 1
 
     async with fresh.sessionmaker.begin() as session:
         session.add(Draft(offer_id=offer_id, kind="letter", version=1, language="fr", content={}))

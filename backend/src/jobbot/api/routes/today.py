@@ -45,12 +45,14 @@ class FirstStepsOut(BaseModel):
 
 
 class FirstStepsSummaryOut(BaseModel):
-    """Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux."""
+    """Les sous-titres des lignes faites (§22 du 15.11) : compétences, métier, lieu, taux, offres
+    gardées (16.11)."""
 
     skills: int
     trade: str | None
     place: str | None
     min_rate: int | None
+    kept: int
 
 
 class InterviewToReview(BaseModel):
@@ -382,6 +384,7 @@ async def get_today(request: Request) -> TodayOut:
                 trade=summary.trade,
                 place=summary.place,
                 min_rate=summary.min_rate,
+                kept=summary.kept,
             )
             if summary
             else None

@@ -49,7 +49,8 @@ function row(key: Key, done: boolean): Row {
       : { title: "Créer ta première alerte", sub: "jobup : 2 minutes", action: "Créer mon alerte", to: { path: "/bienvenue", query: { etape: "alerte" } } },
     keep: {
       title: "Garder tes premières offres",
-      sub: done ? "Offre gardée" : "Tes premières offres sont arrivées",
+      // « 1 offre gardée », « 3 offres gardées » : le vrai nombre (Kevin, 16.11).
+      sub: done ? plural(props.summary?.kept || 1, "offre gardée", "offres gardées") : "Tes premières offres sont arrivées",
       action: "Trier mes offres",
       to: props.pickReady ? { name: "triage" } : "/candidatures/offres",
     },
