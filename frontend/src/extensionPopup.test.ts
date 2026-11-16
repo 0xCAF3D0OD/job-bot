@@ -20,6 +20,8 @@ export interface Page {
   // Ce que rend chaque script injecté dans la page, par nom de fonction.
   scripts: Record<string, Frame[] | ((args: unknown[]) => Frame[])>;
   granted?: boolean;
+  // L'alerte jobup suivie par le fond (section 42), pour cet onglet.
+  flow?: Record<string, unknown> | null;
 }
 
 export const calls: { path: string; init?: RequestInit }[] = [];
@@ -50,7 +52,13 @@ export async function openPopup(page: Page): Promise<Document> {
       query: vi.fn(async () => [page.tab]),
       create: vi.fn(),
     },
-    runtime: { sendMessage: vi.fn(async () => ({ ok: true })) },
+    runtime: {
+      sendMessage: vi.fn(async (message: { type?: string; summary?: string; emailEmpty?: boolean }) => {
+        if (message?.type === "alert-flow") return page.flow ?? null;
+        if (message?.type === "alert-track") return page.flow ?? { step: "filled", summary: message.summary, emailEmpty: message.emailEmpty };
+        return { ok: true };
+      }),
+    },
     scripting: {
       executeScript: vi.fn(async ({ func, args = [] }: { func?: { name: string }; args?: unknown[] }) => {
         const name = func?.name ?? "";
@@ -321,12 +329,12 @@ describe("formulaire d’alerte (ExtAlerte)", () => {
     });
   });
 
-  it("jobup : « Adresse jobA1 remplie », la pastille du formulaire, rien d’autre demandé", async () => {
-    await openPopup(alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true));
+  it("jobs.ch : « Adresse jobA1 remplie », la pastille du formulaire, rien d’autre demandé", async () => {
+    await openPopup(alertPage("https://www.jobs.ch/fr/offres-emplois/?term=devops", true));
     expect(shownState()).toBe("alerte");
-    expect(document.getElementById("site-name")?.textContent).toBe("jobup.ch · Créer une alerte");
+    expect(document.getElementById("site-name")?.textContent).toBe("jobs.ch · Créer une alerte");
     expect(document.getElementById("al-title")?.textContent).toBe("Adresse jobA1 remplie");
-    expect(document.getElementById("al-text")?.textContent).toBe("Vérifie le formulaire sur jobup, puis valide-le toi-même.");
+    expect(document.getElementById("al-text")?.textContent).toBe("Vérifie le formulaire sur jobs.ch, puis valide-le toi-même.");
     expect(document.getElementById("al-address")?.textContent).toBe("kevin.k3x@alertes.joba1.ch");
     expect(visible("al-hint")).toBe(true);
     // D'abord reconnaître le formulaire (sans adresse), puis remplir.
@@ -374,15 +382,15 @@ describe("formulaire d’alerte (ExtAlerte)", () => {
     expect(chrome.storage.local.set).toHaveBeenCalledWith({ fillLinkedIn: true });
   });
 
-  it("« J’ai créé l’alerte » : la route de l’assistant, « Alerte jobup enregistrée »", async () => {
-    const page = alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true);
-    page.api["/api/extension/alerts/jobup"] = { site: "jobup", marked: 2 };
+  it("« J’ai créé l’alerte » : la route de l’assistant, « Alerte jobs.ch enregistrée »", async () => {
+    const page = alertPage("https://www.jobs.ch/fr/offres-emplois/?term=devops", true);
+    page.api["/api/extension/alerts/jobsch"] = { site: "jobsch", marked: 2 };
     await openPopup(page);
     await click("al-created");
     const put = calls.find((c) => c.init?.method === "PUT");
-    expect(put?.path).toBe("/api/extension/alerts/jobup");
+    expect(put?.path).toBe("/api/extension/alerts/jobsch");
     expect(document.getElementById("al-done")?.getAttribute("role")).toBe("status");
-    expect(document.getElementById("al-done-title")?.textContent).toBe("Alerte jobup enregistrée");
+    expect(document.getElementById("al-done-title")?.textContent).toBe("Alerte jobs.ch enregistrée");
   });
 
   it("sur jobup sans fenêtre d’alerte ouverte : on continue (annonce, ou rien à faire)", async () => {
@@ -391,6 +399,94 @@ describe("formulaire d’alerte (ExtAlerte)", () => {
     await openPopup(page);
     expect(shownState()).toBe("idle");
     expect(alertCalls()).toEqual([null]);
+  });
+});
+
+// L'alerte jobup suivie (section 42, ExtAlerte, …CodeAttente, …CodeColle, …Terminee, …CodeSecours) :
+// la liste en 4 étapes ; jobA1 remplit et colle, la personne clique sur jobup.
+describe("l’alerte jobup suivie (section 42)", () => {
+  const JOBUP = "https://www.jobup.ch/fr/emplois/?term=DevOps&location=Lausanne";
+  const CODE = { code: { site: "jobup", code: "482913", received_at: "2026-11-16T21:00:00Z" } };
+  let clipboard: string[];
+  beforeEach(() => {
+    clipboard = [];
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn(async (t: string) => void clipboard.push(t)) },
+    });
+  });
+  const flowPage = (flow: Record<string, unknown> | null, url = JOBUP, filled = true): Page => {
+    const page = alertPage(url, filled);
+    page.flow = flow;
+    page.api["/api/extension/codes"] = CODE;
+    return page;
+  };
+  const current = () => [...document.querySelectorAll("#aj-steps li")].map((li) => (li.classList.contains("done") ? "fait" : li.getAttribute("aria-current") ? "en cours" : "à venir"));
+  const runtime = () => (globalThis as unknown as { chrome: { runtime: { sendMessage: ReturnType<typeof vi.fn> } } }).chrome.runtime;
+
+  it("formulaire rempli (ExtAlerte) : la liste, la recherche, l’étape 2 en cours, le fond prévenu", async () => {
+    await openPopup(flowPage(null));
+    expect(shownState()).toBe("alerte-jobup");
+    expect(document.getElementById("site-name")?.textContent).toBe("jobup.ch · Créer une alerte");
+    expect(current()).toEqual(["fait", "en cours", "à venir", "à venir"]);
+    expect(text("aj-summary")).toBe("DevOps · Lausanne, adresse jobA1");
+    expect(text("aj-2-title")).toBe("Clique sur « Créer l’alerte » sur jobup");
+    expect(text("aj-2-sub")).toBe("Vérifie d’abord le formulaire. jobA1 ne valide jamais à ta place.");
+    expect(text("aj-3-sub")).toBe("jobA1 le collera dans jobup.");
+    expect(visible("aj-empty")).toBe(false);
+    expect(alertCalls()).toEqual([null, "kevin.k3x@alertes.joba1.ch"]);
+    expect(runtime().sendMessage).toHaveBeenCalledWith({ type: "alert-track", tabId: 1, summary: "DevOps · Lausanne, adresse jobA1", emailEmpty: false });
+    // Aucun bouton plein : rien à valider dans la fenêtre.
+    expect(document.querySelectorAll("#alerte-jobup button.primary")).toHaveLength(0);
+  });
+
+  it("champ e-mail resté vide : « Copier l’adresse jobA1 »", async () => {
+    await openPopup(flowPage(null, JOBUP, false));
+    expect(visible("aj-empty")).toBe(true);
+    await click("aj-copy-address");
+    expect(clipboard).toEqual(["kevin.k3x@alertes.joba1.ch"]);
+  });
+
+  it("code en attente (ExtAlerteCodeAttente), même sur la page du code", async () => {
+    await openPopup(flowPage({ step: "sent", summary: "DevOps · Lausanne, adresse jobA1" }, "https://auth.jobup.ch/u/email-identifier/challenge?state=x"));
+    expect(shownState()).toBe("alerte-jobup");
+    expect(current()).toEqual(["fait", "fait", "en cours", "à venir"]);
+    expect(text("aj-2-title")).toBe("Alerte envoyée à jobup");
+    expect(visible("aj-2-sub")).toBe(false);
+    expect(visible("aj-wait")).toBe(true);
+    expect(document.getElementById("aj-wait")?.getAttribute("role")).toBe("status");
+    expect(visible("aj-code")).toBe(false);
+  });
+
+  it("code collé (ExtAlerteCodeColle) : les 6 cases, l’étape 4 en cours", async () => {
+    await openPopup(flowPage({ step: "code-pasted", summary: "" }));
+    expect(current()).toEqual(["fait", "fait", "fait", "en cours"]);
+    expect(text("aj-3-title")).toBe("Code collé dans jobup");
+    expect([...document.querySelectorAll("#aj-code span")].map((s) => s.textContent).join("")).toBe("482913");
+    expect(text("aj-4-sub")).toBe("Clique sur « Confirmer » sur jobup.");
+    expect(visible("aj-copy-code")).toBe(false);
+    expect(visible("aj-wait")).toBe(false);
+  });
+
+  it("secours (ExtAlerteCodeSecours) : le code affiché et « Copier le code », jamais gardé", async () => {
+    await openPopup(flowPage({ step: "fallback", summary: "" }));
+    expect(current()).toEqual(["fait", "fait", "en cours", "à venir"]);
+    expect(text("aj-3-title")).toBe("Code reçu, à coller toi-même");
+    expect(visible("aj-warn")).toBe(true);
+    await click("aj-copy-code");
+    expect(clipboard).toEqual(["482913"]);
+    const { chrome } = globalThis as unknown as { chrome: { storage: { local: { set: ReturnType<typeof vi.fn> } } } };
+    expect(JSON.stringify(chrome.storage.local.set.mock.calls)).not.toContain("482913");
+    expect(JSON.stringify(runtime().sendMessage.mock.calls)).not.toContain("482913");
+  });
+
+  it("terminé (ExtAlerteTerminee) : « Alerte créée sur jobup » et « Ouvrir jobA1 »", async () => {
+    await openPopup(flowPage({ step: "created", summary: "" }));
+    expect(visible("aj-steps")).toBe(false);
+    expect(visible("aj-done")).toBe(true);
+    expect(document.getElementById("aj-done")?.getAttribute("role")).toBe("status");
+    expect(visible("aj-open")).toBe(true);
+    expect(text("aj-open")).toBe("Ouvrir jobA1");
   });
 });
 

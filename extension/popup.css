@@ -31,6 +31,12 @@
   --field-border: #857E73;
   /* Contour des boutons secondaires (maquette ExtAnnonce, #C9C5BA). */
   --outline: #C9C5BA;
+  /* Section 42 (ExtAlerte*) : contour de la liste, chiffre d'une étape à venir, texte d'alerte,
+     texte sur le bleu des graphiques. */
+  --line-strong: #CFCBC1;
+  --text-step: #3D4250;
+  --warning-text: #8A4A16;
+  --on-graphic: #FFFFFF;
   --radius-card: 18px;
   --radius-pill: 999px;
   --target-min: 44px;
@@ -57,6 +63,10 @@
     --danger: #FF8A73;
     --field-border: #857D72;
     --outline: #857D72;
+    --line-strong: #4E473E;
+    --text-step: #D9D2C7;
+    --warning-text: #F2B98E;
+    --on-graphic: #171411;
     color-scheme: dark;
   }
 }
@@ -260,3 +270,30 @@ html.accueil body { border-radius: var(--radius-card); box-shadow: 0 6px 24px rg
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 .actions.tight-link { gap: 2px; }
 .text-link.start { align-self: flex-start; }
+
+/* L'alerte jobup suivie (section 42, ExtAlerte*) : la liste en 4 étapes, comme dans jobA1. */
+main:has(> #alerte-jobup:not([hidden])) { gap: 12px; padding-top: 14px; }
+#alerte-jobup { gap: 12px; }
+.aj-steps { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 16px; }
+.aj-steps li { display: flex; gap: 10px; padding: 11px 12px; }
+.aj-steps li + li { border-top: 1px solid var(--line); }
+.aj-num { flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 14px; background: var(--surface-muted); color: var(--text-step); font-size: 14px; font-weight: 800; }
+.aj-num svg { display: none; }
+.aj-steps li[aria-current="step"] .aj-num { background: var(--primary-graphic); color: var(--on-graphic); }
+.aj-steps li.done .aj-num { background: var(--success); color: var(--surface); }
+.aj-steps li.done .aj-num svg { display: block; }
+.aj-steps li.done .aj-num span { display: none; }
+.aj-text { flex: 1; min-width: 0; }
+.aj-text > b { display: block; padding-top: 4px; font-size: 14px; line-height: 19px; }
+.aj-sub { display: block; margin-top: 1px; font-size: 13px; line-height: 18px; color: var(--text-secondary); }
+.aj-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--text-step); }
+.aj-note .spin { flex: none; border-color: var(--outline); border-top-color: var(--primary-graphic); }
+.aj-note.warn { color: var(--warning-text); }
+.aj-note svg { flex: none; }
+.aj-code { display: flex; gap: 5px; margin-top: 8px; }
+.aj-code span { display: flex; align-items: center; justify-content: center; width: 30px; height: 38px; border: 1.5px solid var(--success); border-radius: 8px; background: var(--surface); font-size: 17px; font-weight: 800; }
+.aj-copy { display: inline-flex; align-items: center; gap: 6px; height: 40px; margin-top: 8px; padding: 0 14px; border: 0; border-radius: 20px; background: var(--primary-soft); color: var(--primary-text); font-size: 14px; font-weight: 700; }
+#aj-empty .link { font-size: 13px; text-decoration: underline; }
+.aj-done { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; text-align: center; }
+.aj-done-mark { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 28px; background: var(--success); color: var(--surface); }
+.aj-primary { display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 24px; background: var(--primary-graphic); color: var(--on-graphic); font-size: 16px; font-weight: 700; text-decoration: none; }

@@ -109,6 +109,35 @@ maquette).
   `/api/extension/`, le code est partagé. Confirmation « Alerte jobup enregistrée ». Journal : le site et le nombre
   de recherches, jamais l'adresse.
 
+## 4 bis. L'alerte jobup suivie (section 42 de la maquette, 16.11.2026)
+
+Planches ExtAlerte, ExtAlerteCodeAttente, ExtAlerteCodeColle, ExtAlerteTerminee, ExtAlerteCodeSecours (et Sombre) ;
+règles de Kevin dans `docs/decisions/2026-11-16-2125-extension-alerte-jobup.md`, contrat avec la page jobA1 dans
+`docs/decisions/2026-11-16-2130-extension-contrat-page.md`. jobup seulement : jobs.ch et LinkedIn gardent le §4.
+
+- **La fenêtre** (`popup.js`, état `alerte-jobup`) : la liste en 4 étapes de jobA1 (Formulaire rempli ; Clique sur
+  « Créer l'alerte » sur jobup ; Code de confirmation ; Valide le code sur jobup). Le résumé de la recherche est lu
+  dans l'adresse de la page (`term`, `location`), pas dans la page. « Copier l'adresse jobA1 » quand le champ e-mail
+  n'a pas pu être rempli. Plus de bouton « J'ai créé l'alerte » sur jobup.
+- **Le suivi** (`background.js`) : la fenêtre confie l'onglet au fond (`alert-track`) ; le fond suit cet onglet et
+  lui seul (s'il quitte jobup, le suivi s'arrête). Toutes les 4 s, pendant 20 minutes au plus, `jobA1AlertProbe`
+  (`alertes.js`) dit seulement si le formulaire est ouvert, si un champ de code est là, si la page demande un code,
+  si l'alerte est créée. Étapes : `filled` → `sent` (jobup demande le code ; le relevé rapide de docs/112 commence)
+  → `code-pasted` (code reçu depuis l'envoi, collé par `jobA1PasteCode`, sans clic) ou `fallback` (champ introuvable,
+  ou page du code sans accès) → `created` (champ du code parti, ou page du code quittée, ou texte « alerte créée »),
+  qui appelle `PUT /api/extension/alerts/jobup` (le `mark_created` existant).
+- **Le code** : lu par la requête authentifiée existante, seulement s'il est arrivé après l'envoi de l'alerte ; mis
+  dans le champ puis oublié. Jamais dans `chrome.storage`, ni dans la console, ni dans un message à la page jobA1.
+  La fenêtre le relit sur la plateforme pour l'afficher (code collé, secours) et l'oublie à sa fermeture.
+- **Jamais de clic** sur jobup : ni « Créer l'alerte », ni « Confirmer ». Sur la page du code `auth.jobup.ch`, le
+  remplissage de docs/112 §3 ne clique plus « Continuer » (jobs.ch inchangé).
+- **La page jobA1** : `page-joba1.js`, enregistré sur l'adresse de la plateforme seulement (accès donné à la
+  liaison), pose `data-joba1-extension` sur `<html>`, envoie `ready`, et relaie l'étape (`alert-progress`).
+- **La fenêtre se ferme** dès qu'on clique dans la page (règle des navigateurs) : le suivi continue en arrière-plan,
+  et l'étape revient à chaque ouverture.
+- **Écart connu** : les pages types du code (`extension/fixtures/alertes/jobup-code*.html`) sont reconstituées ;
+  la détection de « créée » repose sur la disparition du champ du code. À vérifier sur le vrai jobup.
+
 ## 5. Transfert Gmail (D)
 
 Pas d'écran dans la maquette : 7 écrans dessinés dans le style de la fenêtre, validés par Kevin le 9.11.2026

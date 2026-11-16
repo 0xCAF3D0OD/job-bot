@@ -11,7 +11,12 @@ const tabs = new Map<number, { id: number; url: string }>();
 const executeScript = vi.fn();
 
 const chrome = {
-  runtime: { onInstalled: on("installed"), onMessage: on("message"), getURL: (p: string) => `moz-extension://x/${p}` },
+  runtime: {
+    onInstalled: on("installed"),
+    onMessage: on("message"),
+    getURL: (p: string) => `moz-extension://x/${p}`,
+    sendMessage: vi.fn(async () => undefined),
+  },
   tabs: {
     onUpdated: on("updated"),
     onRemoved: on("removed"),
@@ -20,6 +25,8 @@ const chrome = {
       tabs.set(tab.id, tab);
       return tab;
     }),
+    query: vi.fn(async () => [...tabs.values()]),
+    sendMessage: vi.fn(async () => undefined),
     get: vi.fn(async (id: number) => {
       const tab = tabs.get(id);
       if (!tab) throw new Error("onglet fermé");
@@ -42,7 +49,11 @@ const chrome = {
 };
 
 beforeAll(async () => {
-  Object.assign(globalThis, { chrome });
+  Object.assign(globalThis, { chrome, jobA1FlowManual: true });
+  // @ts-expect-error script de l'extension, sans types
+  await import("../../extension/alert-selectors.js");
+  // @ts-expect-error script de l'extension, sans types
+  await import("../../extension/alertes.js");
   // @ts-expect-error script de l'extension, sans types
   await import("../../extension/background.js");
 });
@@ -120,7 +131,17 @@ describe("les codes des sites", () => {
     expect(codes().codePage("https://piege.exemple.com/challenge")).toBeNull();
   });
 
-  it("remplit le champ du code et clique « Continuer »", () => {
+  it("sur jobup, remplit le code sans cliquer « Continuer » (section 42, règle 1)", () => {
+    document.body.innerHTML =
+      '<form><input id="code" name="code" type="text"><button type="submit">Continuer</button></form>';
+    const clicked = vi.fn((event: Event) => event.preventDefault());
+    document.querySelector("form")!.addEventListener("submit", clicked);
+    expect((codes().fillCode as (code: string, click: boolean) => boolean)("482913", false)).toBe(true);
+    expect((document.querySelector("#code") as HTMLInputElement).value).toBe("482913");
+    expect(clicked).not.toHaveBeenCalled();
+  });
+
+  it("remplit le champ du code et clique « Continuer » (jobs.ch)", () => {
     document.body.innerHTML =
       '<form><input name="email" type="hidden"><input id="code" name="code" type="text"><button type="submit">Continuer</button></form>';
     const clicked = vi.fn((event: Event) => event.preventDefault());
@@ -153,7 +174,7 @@ describe("les codes des sites", () => {
     ]);
     expect(fetch.mock.calls[1]![0]).toBe("https://joba1.exemple.ch/api/extension/codes?site=jobup");
     expect(executeScript).toHaveBeenCalledWith(
-      expect.objectContaining({ target: { tabId: 5 }, args: ["482913"] }),
+      expect.objectContaining({ target: { tabId: 5 }, args: ["482913", false] }),
     );
   });
 
@@ -165,5 +186,123 @@ describe("les codes des sites", () => {
     });
     expect(await codes().watchCode(6, { site: "jobup", host: "auth.jobup.ch" }, async () => undefined)).toBe(false);
     expect(executeScript).not.toHaveBeenCalled();
+  });
+});
+
+// L'alerte jobup suivie (section 42, docs/142 §4 bis) : l'onglet de l'alerte seulement, jamais de
+// clic, le code jamais gardé ni écrit dans la console, l'état secours quand le champ manque.
+type Flow = { tabId: number; site: string; step: string; summary: string; emailEmpty: boolean };
+type FlowApi = {
+  trackAlert: (m: { tabId: number; summary: string; emailEmpty: boolean }) => Promise<Flow>;
+  stepFlow: (tabId: number) => Promise<Flow | null>;
+  pageProgress: (sender: { tab?: { url: string } }) => Promise<{ site: string; step: string } | null>;
+};
+const flowApi = () => (globalThis as unknown as { jobA1Flow: FlowApi }).jobA1Flow;
+
+describe("l’alerte jobup suivie", () => {
+  const ALERT = "https://www.jobup.ch/fr/emplois/?term=DevOps&location=Lausanne";
+  const CODE_PAGE = "https://auth.jobup.ch/u/email-identifier/challenge?state=x";
+  let probe: { form: boolean; code: boolean; asks: boolean; done: boolean } | null;
+  let pasted: boolean;
+  let codeAnswer: unknown;
+  let fetchCalls: { url: string; method?: string }[];
+
+  beforeEach(() => {
+    Object.assign(local, { base: "https://joba1.exemple.ch", token: "jbx_secret" });
+    tabs.set(7, { id: 7, url: ALERT });
+    probe = { form: true, code: false, asks: false, done: false };
+    pasted = true;
+    codeAnswer = { code: null };
+    fetchCalls = [];
+    executeScript.mockImplementation(async ({ func }: { func: { name: string } }) => {
+      if (func.name === "jobA1AlertProbe") {
+        if (!probe) throw new Error("pas d’accès");
+        return [{ result: probe }];
+      }
+      if (func.name === "jobA1PasteCode") return [{ result: pasted }];
+      return [{ result: null }];
+    });
+    Object.assign(globalThis, {
+      fetch: vi.fn(async (url: string, options: { method?: string } = {}) => {
+        fetchCalls.push({ url, method: options.method });
+        return { ok: true, json: async () => (url.includes("/codes?") ? codeAnswer : { code: null }) };
+      }),
+    });
+  });
+
+  const step = async () => (await flowApi().stepFlow(7))?.step;
+  const freshCode = () => ({ code: { site: "jobup", code: "482913", received_at: new Date().toISOString() } });
+
+  it("formulaire rempli, alerte envoyée, code collé, alerte créée ; jamais de clic, jamais le code gardé", async () => {
+    const log = vi.spyOn(console, "log");
+    const flow = await flowApi().trackAlert({ tabId: 7, summary: "DevOps · Lausanne, adresse jobA1", emailEmpty: false });
+    expect(flow.step).toBe("filled");
+    // Le formulaire est encore là : on attend le clic de la personne.
+    expect(await step()).toBe("filled");
+    // jobup demande le code : la plateforme est prévenue (relevé rapide).
+    probe = { form: false, code: true, asks: true, done: false };
+    expect(await step()).toBe("sent");
+    expect(fetchCalls.at(-1)).toEqual({ url: "https://joba1.exemple.ch/api/extension/codes/expect", method: "POST" });
+    expect(await step()).toBe("sent");
+    codeAnswer = freshCode();
+    expect(await step()).toBe("code-pasted");
+    expect(executeScript).toHaveBeenCalledWith(expect.objectContaining({ target: { tabId: 7 }, args: [expect.anything(), "482913"] }));
+    // La personne clique « Confirmer » : le champ disparaît, l'alerte est notée créée.
+    probe = { form: false, code: false, asks: false, done: false };
+    expect(await step()).toBe("created");
+    expect(fetchCalls.at(-1)).toEqual({ url: "https://joba1.exemple.ch/api/extension/alerts/jobup", method: "PUT" });
+    // Le code n'est ni gardé, ni écrit dans la console.
+    expect(JSON.stringify(session)).not.toContain("482913");
+    expect(JSON.stringify(log.mock.calls)).not.toContain("482913");
+    // Aucune fonction injectée ne clique : seulement lire la page et coller le code.
+    const injected = new Set(executeScript.mock.calls.map(([options]) => (options as { func: { name: string } }).func.name));
+    expect(injected).toEqual(new Set(["jobA1AlertProbe", "jobA1PasteCode"]));
+  });
+
+  it("champ du code introuvable : l’état secours, le code à copier depuis la fenêtre", async () => {
+    await flowApi().trackAlert({ tabId: 7, summary: "", emailEmpty: false });
+    probe = { form: false, code: false, asks: true, done: false };
+    expect(await step()).toBe("sent");
+    codeAnswer = freshCode();
+    expect(await step()).toBe("fallback");
+    expect(executeScript.mock.calls.some(([o]) => (o as { func: { name: string } }).func.name === "jobA1PasteCode")).toBe(false);
+  });
+
+  it("page du code sans accès : alerte envoyée, secours, puis créée quand la page du code est quittée", async () => {
+    await flowApi().trackAlert({ tabId: 7, summary: "", emailEmpty: false });
+    tabs.get(7)!.url = CODE_PAGE;
+    probe = null;
+    expect(await step()).toBe("sent");
+    codeAnswer = freshCode();
+    expect(await step()).toBe("fallback");
+    tabs.get(7)!.url = "https://www.jobup.ch/fr/emplois/?term=DevOps";
+    probe = { form: false, code: false, asks: false, done: false };
+    expect(await step()).toBe("created");
+  });
+
+  it("un vieux code (arrivé avant l’envoi de l’alerte) n’est pas collé", async () => {
+    await flowApi().trackAlert({ tabId: 7, summary: "", emailEmpty: false });
+    probe = { form: false, code: true, asks: true, done: false };
+    expect(await step()).toBe("sent");
+    codeAnswer = { code: { site: "jobup", code: "111111", received_at: new Date(Date.now() - 5 * 60_000).toISOString() } };
+    expect(await step()).toBe("sent");
+  });
+
+  it("l’onglet quitte jobup : le suivi s’arrête, rien n’est fait ailleurs", async () => {
+    await flowApi().trackAlert({ tabId: 7, summary: "", emailEmpty: false });
+    tabs.get(7)!.url = "https://piege.exemple.com/";
+    expect(await flowApi().stepFlow(7)).toBeNull();
+    expect(executeScript).not.toHaveBeenCalled();
+    expect(session.alertFlow).toBeUndefined();
+  });
+
+  it("la page jobA1, et elle seule, reçoit l’étape, sans code ni adresse", async () => {
+    tabs.set(9, { id: 9, url: "https://joba1.exemple.ch/bienvenue" });
+    tabs.set(10, { id: 10, url: "https://piege.exemple.com/" });
+    await flowApi().trackAlert({ tabId: 7, summary: "DevOps", emailEmpty: false });
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledTimes(1);
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(9, { type: "alert-progress", site: "jobup", step: "filled" });
+    expect(await flowApi().pageProgress({ tab: { url: "https://joba1.exemple.ch/bienvenue" } })).toEqual({ site: "jobup", step: "filled" });
+    expect(await flowApi().pageProgress({ tab: { url: "https://piege.exemple.com/" } })).toBeNull();
   });
 });
