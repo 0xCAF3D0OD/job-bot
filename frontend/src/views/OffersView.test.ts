@@ -290,11 +290,11 @@ describe("OffersView", () => {
     expect(router.currentRoute.value.query).toEqual({ statut: "to_review" });
   });
 
-  it("groupe « Note » (PR 26) : Toutes, Sûres · n, Provisoires · n en boutons radio ; le choix part à l’API et dans l’adresse", async () => {
+  it("groupe « Type de note » (PR 26, section 31) : Toutes, Définitives · n, Provisoires · n en boutons radio ; le choix part à l’API et dans l’adresse", async () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const group = wrapper.find("[role=radiogroup][aria-labelledby=pop-basis]");
-    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes", "Sûres · 104", "Provisoires · 312"]);
+    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes", "Définitives · 104", "Provisoires · 312"]);
     expect(wrapper.find("[data-test=pop-basis-all]").attributes("aria-checked")).toBe("true");
     await wrapper.find("[data-test=pop-basis-provisional]").trigger("click");
     await flushPromises();
@@ -314,7 +314,7 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const dialog = wrapper.find("[data-test=filters-dialog]");
-    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Correspondance minimale", "Note", "Taux minimum"]);
+    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Note minimale, sur 100", "Type de note", "Taux d’activité"]);
     expect(dialog.findAll("[aria-pressed]").length).toBe(14);
     expect(dialog.find(".filter-panel-body [data-test=filters-done]").exists()).toBe(false);
     expect(dialog.find(".filter-panel-foot [data-test=filters-done]").exists()).toBe(true);
@@ -933,15 +933,15 @@ describe("Offres, barre d’outils (1.6.55)", () => {
   });
 
   it("les filtres actifs en pastilles : le nombre sur « Filtrer », la croix retire, « Tout effacer » vide", async () => {
-    const wrapper = await mountAt("/offres?note=70&canton=VD&canton=GE&externe=1&q=dev");
+    const wrapper = await mountAt("/offres?note=75&canton=VD&canton=GE&externe=1&q=dev");
     const chips = wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text());
     // La recherche n'a pas de pastille : son champ est dans la barre.
-    expect(chips).toEqual(["Note minimale : Proche et plus", "Canton : VD", "Canton : GE", "Chez l’employeur"]);
+    expect(chips).toEqual(["Note minimale : 75 et +", "Canton : VD", "Canton : GE", "Chez l’employeur"]);
     expect(wrapper.find("[data-test=filters-count]").text()).toBe("4");
     expect(wrapper.find("[data-test=filters-toggle]").attributes("aria-label")).toBe("Filtrer, 4 filtres actifs");
     await wrapper.find("[data-test=chip-remove-canton-VD]").trigger("click");
     await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ note: "70", canton: ["GE"], externe: "1", q: "dev" });
+    expect(router.currentRoute.value.query).toEqual({ note: "75", canton: ["GE"], externe: "1", q: "dev" });
     await wrapper.find("[data-test=chips-reset]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({});

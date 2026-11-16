@@ -12,7 +12,7 @@ describe("offres à vérifier (docs/30 §3)", () => {
   });
 });
 
-describe("filtre « Note » : sûres ou provisoires (PR 26)", () => {
+describe("filtre « Type de note » : définitives ou provisoires (PR 26, section 31)", () => {
   it("garde le choix dans l’adresse, compte pour un filtre et a sa pastille", () => {
     expect(DEFAULT_FILTERS.basis).toBeNull();
     expect(toQuery({ ...DEFAULT_FILTERS, basis: "provisional" })).toEqual({ base: "provisoire" });
@@ -22,6 +22,6 @@ describe("filtre « Note » : sûres ou provisoires (PR 26)", () => {
     expect(fromQuery({ base: "autre" }).basis).toBeNull();
     expect(activeCount({ ...DEFAULT_FILTERS, basis: "sure" })).toBe(1);
     expect(activeChips({ ...DEFAULT_FILTERS, basis: "provisional" })).toEqual([{ key: "basis", label: "Notes provisoires", patch: { basis: null } }]);
-    expect(activeChips({ ...DEFAULT_FILTERS, basis: "sure" })[0]?.label).toBe("Notes sûres");
+    expect(activeChips({ ...DEFAULT_FILTERS, basis: "sure" })[0]?.label).toBe("Notes définitives");
   });
 });

@@ -2,19 +2,31 @@
 import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
-import { basisChoices, DEFAULT_FILTERS, radioKey, type OfferFilters, type Sort, type View } from "../composables/useOfferFilters";
+import {
+  BASIS_HELP,
+  basisChoices,
+  DEFAULT_FILTERS,
+  radioKey,
+  RATE_CHOICES,
+  REMOTE_LABEL,
+  SCORE_CHOICES,
+  SCORE_HELP,
+  type OfferFilters,
+  type Sort,
+  type View,
+} from "../composables/useOfferFilters";
 import AppIcon from "./AppIcon.vue";
 import "../filterPanel.css";
 
 // Le panneau « Filtres » de l'ordinateur (maquette du 8 novembre, CandidaturesOrdinateurB état « filtres », docs/143,
 // D24) : il remplace la colonne liste (même largeur, toute la hauteur, entrée ja-slide-l), le détail reste à droite.
-// En tête, « ‹ Retour à la liste » et le titre. Les choix restent si on le ferme d'un clic à l'extérieur. Statut, Trier, Correspondance minimale et Taux minimum en pastilles (aria-pressed), puis le
+// En tête, « ‹ Retour à la liste » et le titre. Les choix restent si on le ferme d'un clic à l'extérieur. Statut, Trier, Note minimale et Taux d'activité en pastilles (aria-pressed), puis le
 // télétravail et les offres écartées. Seul le milieu défile ; le pied reste en bas avec « Tout effacer » et
 // « Afficher n offres », qui referme. Chaque choix s'applique tout de suite (comme la feuille du téléphone).
 const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>; facets: OfferFacets; total: number }>();
-// « Note » (prompt du 10 novembre au soir, PR 26 ; filtres de CandidaturesOrdinateurB) : Toutes, Sûres · n,
-// Provisoires · n, un seul choix (role="radio"), avec les nombres du serveur. La phrase d'explication n'est que dans la
-// feuille du téléphone, comme dans les maquettes.
+// « Type de note » (PR 26 ; section 31 du 16.11) : Toutes, Définitives · n, Provisoires · n, un seul choix
+// (role="radio"), avec les nombres du serveur, et dessous la phrase qui dit ce qu'est une note provisoire (comme au
+// téléphone). Les libellés sont ceux de la section 31 : des mots compris sans connaître jobA1.
 const bases = computed(() => basisChoices(props.facets));
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
@@ -25,7 +37,7 @@ const VIEWS: { label: string; value: View }[] = [
   { label: "Gardées", value: "later" },
 ];
 const SORTS: { label: string; value: Sort }[] = [
-  { label: "Par jour", value: "day" },
+  { label: "Par date", value: "day" },
   { label: "Par note", value: "score" },
 ];
 // En préparation se trie par dernière action (docs/43) : le choix n'existe que là, et part avec elle.
@@ -35,19 +47,6 @@ function selectView(view: View): void {
   else if (props.filters.sort === "activity") emit("update", { view, sort: DEFAULT_FILTERS.sort });
   else emit("update", { view });
 }
-// La correspondance en mots (D3), mêmes seuils que la feuille du téléphone.
-const SCORES: { label: string; min: number | null }[] = [
-  { label: "Toutes", min: null },
-  { label: "À creuser et +", min: 50 },
-  { label: "Proche et +", min: 75 },
-  { label: "Très proche", min: 85 },
-];
-const RATES: { label: string; value: number | null }[] = [
-  { label: "Tous", value: null },
-  { label: "60 %", value: 60 },
-  { label: "80 %", value: 80 },
-  { label: "100 %", value: 100 },
-];
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
 const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
@@ -117,17 +116,17 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         </div>
       </div>
       <hr>
-      <div
-        class="filter-panel-group"
-        role="group"
-        aria-labelledby="pop-score"
-      >
-        <span id="pop-score">Correspondance minimale</span>
-        <div>
+      <div class="filter-panel-group">
+        <span id="pop-score">Note minimale, sur 100</span>
+        <div
+          role="group"
+          aria-labelledby="pop-score"
+        >
           <button
-            v-for="choice in SCORES"
+            v-for="choice in SCORE_CHOICES"
             :key="choice.label"
             type="button"
+            aria-describedby="pop-score-help"
             :aria-pressed="scoreChoice === choice.min"
             :data-test="`pop-score-${choice.min ?? 'all'}`"
             @click="emit('update', { minScore: choice.min, maxScore: null })"
@@ -135,13 +134,20 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             {{ choice.label }}
           </button>
         </div>
+        <p
+          id="pop-score-help"
+          class="filter-choices-help"
+        >
+          {{ SCORE_HELP }}
+        </p>
       </div>
       <hr>
       <div class="filter-panel-group">
-        <span id="pop-basis">Note</span>
+        <span id="pop-basis">Type de note</span>
         <div
           role="radiogroup"
           aria-labelledby="pop-basis"
+          aria-describedby="pop-basis-help"
           @keydown="radioKey"
         >
           <button
@@ -157,6 +163,12 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             {{ choice.label }}
           </button>
         </div>
+        <p
+          id="pop-basis-help"
+          class="filter-choices-help"
+        >
+          {{ BASIS_HELP }}
+        </p>
       </div>
       <hr>
       <div
@@ -164,10 +176,10 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         role="group"
         aria-labelledby="pop-rate"
       >
-        <span id="pop-rate">Taux minimum</span>
+        <span id="pop-rate">Taux d’activité</span>
         <div>
           <button
-            v-for="choice in RATES"
+            v-for="choice in RATE_CHOICES"
             :key="choice.label"
             type="button"
             :aria-pressed="filters.minRate === choice.value"
@@ -179,7 +191,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         </div>
       </div>
       <hr>
-      <label class="filter-panel-switch">Télétravail au moins partiel<input
+      <label class="filter-panel-switch">{{ REMOTE_LABEL }}<input
         type="checkbox"
         role="switch"
         :checked="filters.remote !== null"

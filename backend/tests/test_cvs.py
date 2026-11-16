@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from sqlalchemy import select, text, update
 
 from jobbot.api.app import create_app
-from jobbot.db.models import LlmCall, Offer, OfferStatus, ProfileChunk, Setting
+from jobbot.db.models import Draft, LlmCall, Offer, OfferStatus, ProfileChunk, Setting
 from jobbot.letters.cv_document import highlight
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
@@ -216,6 +216,116 @@ async def test_new_version_and_errors(api: AsyncClient, rt: Runtime, fake: FakeC
     assert (await api.post(f"/api/offers/{offer_id}/cvs", json={})).status_code == 502
     assert (await api.get("/api/cvs/999999/docx")).status_code == 404
     assert (await api.get("/api/offers/999999/cvs")).status_code == 404
+
+
+async def _content(runtime: Runtime, draft_id: int) -> dict[str, Any]:
+    async with runtime.sessionmaker() as session:
+        draft = await session.scalar(select(Draft).where(Draft.id == draft_id))
+        assert draft is not None
+        return dict(draft.content)
+
+
+async def _set_reasons(runtime: Runtime, draft_id: int, reasons: list[dict[str, Any]]) -> None:
+    async with runtime.sessionmaker.begin() as session:
+        draft = await session.get(Draft, draft_id)
+        assert draft is not None
+        draft.content = {**draft.content, "reasons": reasons}
+
+
+async def test_api_reasons_and_user_origin(
+    api: AsyncClient,
+    rt: Runtime,
+    fake: FakeClient,
+) -> None:
+    offer_id, ids = await setup(rt)
+    fake.response = answer([ids["k8s"], ids["stage"]])
+    cv = (await api.post(f"/api/offers/{offer_id}/cvs", json={})).json()
+    # cv-v1 en service : pas de raison.
+    assert cv["reasons"] == []
+    await _set_reasons(
+        rt,
+        cv["id"],
+        [
+            {
+                "target": "summary",
+                "text": "L'annonce demande « Terraform ».",
+                "quotes": ["Terraform"],
+            },
+            {
+                "target": ids["k8s"],
+                "text": "L'annonce cite « Kubernetes ».",
+                "quotes": ["Kubernetes"],
+            },
+        ],
+    )
+    listed = (await api.get(f"/api/offers/{offer_id}/cvs")).json()[0]
+    assert listed["reasons"] == [
+        {
+            "target": "summary",
+            "origin": "ai",
+            "text": "L'annonce demande « Terraform ».",
+            "quotes": ["Terraform"],
+        },
+        {
+            "target": ids["k8s"],
+            "origin": "ai",
+            "text": "L'annonce cite « Kubernetes ».",
+            "quotes": ["Kubernetes"],
+        },
+    ]
+
+    # Une retouche du résumé : le profil devient « Demandé par toi », le bloc garde sa raison.
+    edited = (
+        await api.put(
+            f"/api/cvs/{cv['id']}",
+            json={
+                "headline": cv["headline"],
+                "summary": "Mon résumé.",
+                "chunk_ids": cv["chunk_ids"],
+            },
+        )
+    ).json()
+    assert [(r["target"], r["origin"], r["text"]) for r in edited["reasons"]] == [
+        (ids["k8s"], "ai", "L'annonce cite « Kubernetes »."),
+        ("summary", "user", None),
+    ]
+
+    # « Demander une modification du CV » : ce que la consigne change est demandé par toi.
+    fake.response = answer(
+        [ids["stage"], ids["k8s"], ids["langues"], ids["ecole"]], summary="Mon résumé."
+    )
+    second = (
+        await api.post(f"/api/offers/{offer_id}/cvs", json={"instruction": "stage d'abord"})
+    ).json()
+    assert {(r["target"], r["origin"]) for r in second["reasons"]} == {
+        ("summary", "user"),
+        (ids["stage"], "user"),
+        (ids["k8s"], "user"),
+    }
+    assert all(r["text"] is None for r in second["reasons"])
+    assert [(r["target"], r["kind"], r["applied"]) for r in second["user_requests"]] == [
+        ("summary", "summary", True),
+        (ids["stage"], "moved", True),
+        (ids["k8s"], "moved", True),
+    ]
+
+    # Nouvelle version sans consigne : les demandes restent connues ; celles qu'elle ne reprend
+    # pas sont « applied: false » (« N de tes demandes ne sont pas reprises », à réappliquer).
+    fake.response = answer([ids["k8s"], ids["stage"]])
+    third = (await api.post(f"/api/offers/{offer_id}/cvs", json={})).json()
+    assert [(r["target"], r["applied"]) for r in third["user_requests"]] == [
+        ("summary", False),
+        (ids["stage"], False),
+        (ids["k8s"], False),
+    ]
+    assert third["reasons"] == []
+    stored = await _content(rt, third["id"])
+    assert stored["user_requests"][0] == {
+        "target": "summary",
+        "kind": "summary",
+        "text": "Mon résumé.",
+    }
+    assert stored["user_requests"][1] == {"target": ids["stage"], "kind": "moved", "after": None}
 
 
 def test_highlight() -> None:

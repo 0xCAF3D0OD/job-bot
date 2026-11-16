@@ -7,11 +7,11 @@ import { sourceLabel } from "../format";
 export type View = "pending" | "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
 
-// Télétravail (docs/26 §4) : au moins partiel, ou complet.
+// Télétravail (docs/26 §4) : possible, même partiel, ou complet.
 export type Remote = "partial" | "full";
 
-// Filtre « Note » (prompt du 10 novembre au soir, PR 26) : notée sur l'annonce complète (sûre) ou sur l'extrait de
-// l'alerte seulement (provisoire).
+// Filtre « Type de note » (PR 26 ; section 31 du 16.11) : notée sur l'annonce complète (définitive) ou sur l'extrait
+// de l'alerte seulement (provisoire). La valeur reste "sure" dans le code et l'adresse (?base=sure).
 export type Basis = "sure" | "provisional";
 
 export interface OfferFilters {
@@ -33,14 +33,14 @@ export interface OfferFilters {
   showFilteredOut: boolean;
   // À traiter avec les offres expirées (« Afficher aussi › Expirées », docs/139 5e), ?expirees=montrer.
   showExpired: boolean;
-  // Notes sûres ou provisoires seulement, ?base=sure ou ?base=provisoire ; null : toutes.
+  // Notes définitives ou provisoires seulement, ?base=sure ou ?base=provisoire ; null : toutes.
   basis: Basis | null;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
   // À traiter (docs/139, C2) : à examiner, plus tard et en préparation.
   view: "pending",
-  // Par jour, la mieux notée d'abord dans chaque jour (retour d'usage du 2026-10-14).
+  // Par date, la mieux notée d'abord dans chaque jour (retour d'usage du 2026-10-14).
   sort: "day",
   q: "",
   sources: [],
@@ -131,19 +131,29 @@ export function activeCount(filters: OfferFilters): number {
   );
 }
 
-// Les choix de la note en mots (format.ts, scoreWord) : 50 « À creuser », 75 « Proche », 85 « Très proche ».
-export const SCORE_CHOICES = [
+// « Note minimale, sur 100 » (section 31 du 16.11) : les seuils des mots de la note (format.ts, scoreWord), 50 « À
+// creuser », 75 « Proche », 85 « Très proche », écrits en chiffres. Communs au panneau, à la feuille et aux pastilles.
+export const SCORE_CHOICES: { label: string; min: number | null }[] = [
   { label: "Toutes", min: null },
-  { label: "À creuser et plus", min: 50 },
-  { label: "Proche et plus", min: 70 },
-  { label: "Très proche", min: 85 },
-] as const;
+  { label: "50 et +", min: 50 },
+  { label: "75 et +", min: 75 },
+  { label: "85 et +", min: 85 },
+];
+export const SCORE_HELP = "À quel point l’offre correspond à ton profil.";
+// « Taux d'activité » (section 31 du 16.11) : un seul choix, mêmes valeurs qu'avant.
+export const RATE_CHOICES: { label: string; value: number | null }[] = [
+  { label: "Tous", value: null },
+  { label: "Dès 60 %", value: 60 },
+  { label: "Dès 80 %", value: 80 },
+  { label: "100 %", value: 100 },
+];
+export const REMOTE_LABEL = "Télétravail possible, même partiel";
 
-/** Les trois choix du groupe « Note », avec les nombres réels du serveur (hors « Toutes »). */
+/** Les trois choix du groupe « Type de note », avec les nombres réels du serveur (hors « Toutes »). */
 export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null }[] {
   return [
     { label: "Toutes", value: null },
-    { label: `Sûres · ${facets.sure ?? 0}`, value: "sure" },
+    { label: `Définitives · ${facets.sure ?? 0}`, value: "sure" },
     { label: `Provisoires · ${facets.provisional ?? 0}`, value: "provisional" },
   ];
 }
@@ -180,13 +190,9 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
   if (filters.minScore !== null || filters.maxScore !== null)
     chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
   if (filters.basis)
-    chips.push({ key: "basis", label: filters.basis === "sure" ? "Notes sûres" : "Notes provisoires", patch: { basis: null } });
+    chips.push({ key: "basis", label: filters.basis === "sure" ? "Notes définitives" : "Notes provisoires", patch: { basis: null } });
   if (filters.remote)
-    chips.push({
-      key: "remote",
-      label: `Télétravail : ${filters.remote === "full" ? "complet" : "au moins partiel"}`,
-      patch: { remote: null },
-    });
+    chips.push({ key: "remote", label: filters.remote === "full" ? "Télétravail complet" : REMOTE_LABEL, patch: { remote: null } });
   for (const source of filters.sources)
     chips.push({
       key: `source-${source}`,
@@ -200,7 +206,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
       patch: { cantons: filters.cantons.filter((c) => c !== canton) },
     });
   if (filters.minRate !== null)
-    chips.push({ key: "rate", label: `Taux minimum : ${filters.minRate} %`, patch: { minRate: null } });
+    chips.push({ key: "rate", label: `Taux d’activité : ${filters.minRate === 100 ? "" : "dès "}${filters.minRate} %`, patch: { minRate: null } });
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l’employeur", patch: { externalOnly: false } });
   if (filters.hideDoubtful)
     chips.push({ key: "doubtful", label: "Sans les offres à vérifier", patch: { hideDoubtful: false } });
