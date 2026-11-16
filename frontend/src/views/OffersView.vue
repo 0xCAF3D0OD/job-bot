@@ -11,7 +11,6 @@ import GoalReached from "../components/GoalReached.vue";
 import { firstGoal } from "../composables/useGoalMoment";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
-import ChooseDetail from "../components/ChooseDetail.vue";
 import LinkedDetail, { Plain } from "../components/LinkedDetail.vue";
 import LinkedPin from "../components/LinkedPin.vue";
 import ShowMore from "../components/ShowMore.vue";
@@ -1194,10 +1193,15 @@ onUnmounted(() => {
           class="detail-column"
         >
           <LinkedDetail :list="listEl">
-            <ChooseDetail
+<EmptyState
+              class="choose-detail"
+              data-test="choose-detail"
               scene="choisis-offre"
               title="Choisis une offre"
-              hint="Son détail s’affiche ici"
+              pill="Son détail s’affiche ici"
+              pill-icon="arrow-left"
+              :width="340"
+              :desktop-width="340"
             />
           </LinkedDetail>
         </div>

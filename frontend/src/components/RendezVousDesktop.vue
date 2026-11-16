@@ -28,7 +28,7 @@ import {
 } from "../rendezVous";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
-import ChooseDetail from "./ChooseDetail.vue";
+import EmptyState from "./EmptyState.vue";
 import LinkedDetail from "./LinkedDetail.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
@@ -513,11 +513,16 @@ const list = ref<HTMLElement | null>(null);
       class="rdv-detail"
       :list="list"
     >
-      <ChooseDetail
-        scene="choisis-rendez-vous"
-        title="Choisis un rendez-vous"
-        hint="Préparation et feuille ORP s’affichent ici"
-      />
+<EmptyState
+              class="choose-detail"
+              data-test="choose-detail"
+              scene="choisis-rendez-vous"
+              title="Choisis un rendez-vous"
+              pill="Préparation et feuille ORP s’affichent ici"
+              pill-icon="arrow-left"
+              :width="340"
+              :desktop-width="340"
+            />
     </LinkedDetail>
   </div>
 </template>

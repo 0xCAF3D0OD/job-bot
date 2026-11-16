@@ -236,7 +236,7 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
     const choose = wrapper.get("[data-test=choose-detail]");
     expect(choose.get("h2").text()).toBe("Choisis une offre");
-    expect(choose.get(".choose-hint").text()).toBe("Son détail s’affiche ici");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Son détail s’affiche ici");
     expect(wrapper.find("[aria-current=true]").exists()).toBe(false);
     await wrapper.get("[data-test=offer]").trigger("click");
     await flushPromises();

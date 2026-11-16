@@ -654,7 +654,7 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(wrapper.find("[data-test=sent-detail]").exists()).toBe(false);
     const choose = wrapper.get("[data-test=choose-detail]");
     expect(choose.get("h2").text()).toBe("Choisis une candidature");
-    expect(choose.get(".choose-hint").text()).toBe("Suivi, relances et documents s’affichent ici");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Suivi, relances et documents s’affichent ici");
     await router.push({ query: { candidature: "12" } });
     await flushPromises();
     expect(wrapper.find("[data-test=sent-detail]").exists()).toBe(true);

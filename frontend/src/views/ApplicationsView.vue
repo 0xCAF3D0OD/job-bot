@@ -47,7 +47,6 @@ import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import SentCard from "../components/SentCard.vue";
 import SentDetail from "../components/SentDetail.vue";
-import ChooseDetail from "../components/ChooseDetail.vue";
 import LinkedDetail from "../components/LinkedDetail.vue";
 import LinkedPin from "../components/LinkedPin.vue";
 import { usePhone } from "../composables/usePhone";
@@ -650,10 +649,15 @@ onUnmounted(() => assistant.setFocus(null));
       aria-label="Aucune candidature ouverte"
     >
       <LinkedDetail :list="sentList">
-        <ChooseDetail
-          scene="choisis-candidature"
-          title="Choisis une candidature"
-          hint="Suivi, relances et documents s’affichent ici"
+<EmptyState
+            class="choose-detail"
+            data-test="choose-detail"
+            scene="choisis-candidature"
+            title="Choisis une candidature"
+            pill="Suivi, relances et documents s’affichent ici"
+            pill-icon="arrow-left"
+            :width="340"
+            :desktop-width="340"
         />
       </LinkedDetail>
     </aside>

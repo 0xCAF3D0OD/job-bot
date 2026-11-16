@@ -73,7 +73,7 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(wrapper.find("[data-test=rdv-detail]").exists()).toBe(false);
     const choose = wrapper.get("[data-test=choose-detail]");
     expect(choose.get("h2").text()).toBe("Choisis un rendez-vous");
-    expect(choose.get(".choose-hint").text()).toBe("Préparation et feuille ORP s’affichent ici");
+    expect(choose.get("[data-test=empty-pill]").text()).toBe("Préparation et feuille ORP s’affichent ici");
     await wrapper.get("[data-test=rdv-item-orp]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query.rdv).toBe("orp");
