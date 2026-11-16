@@ -426,13 +426,19 @@ describe("TrainingsView", () => {
       expect(catalog.find("[data-test=trainings-overview]").exists()).toBe(false);
       expect(catalog.find("[data-test=chip-free]").exists()).toBe(true);
       expect(catalog.findAll("[data-test=training]").length).toBeGreaterThan(0);
-      expect(catalog.find("[data-test=tab-mine]").attributes("href")).toBe("/formations");
+      // Planche BilanOrdinateurCatalogue (16.11) : « ← Mes formations » à la place des onglets, groupes comptés en toutes lettres.
+      expect(catalog.find("[data-test=tab-mine]").exists()).toBe(false);
+      expect(catalog.find("[data-test=trainings-back]").attributes("href")).toBe("/formations");
+      expect(catalog.find("[data-test=training-section-certifications] h2").text()).toMatch(/formations?$/);
     });
 
     it("« Comment demander » ouvre la feuille Formation et chômage", async () => {
       GET.mockResolvedValue({ data: page([]) });
       const wrapper = await mountView("/formations", false);
       expect(wrapper.find("[data-test=trainings-none]").exists()).toBe(true);
+      // Planche BilanOrdinateurFormVide (16.11) : la pastille et « Voir le catalogue ».
+      expect(wrapper.find("[data-test=empty-pill]").text()).toBe("Garde une formation du catalogue avec son signet");
+      expect(wrapper.find("[data-test=trainings-none-catalog]").attributes("href")).toBe("/formations?onglet=catalogue");
       await wrapper.find("[data-test=orp-note]").trigger("click");
       expect(wrapper.find("[data-test=orp-sheet]").exists()).toBe(true);
     });
