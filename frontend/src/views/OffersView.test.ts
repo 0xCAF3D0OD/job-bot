@@ -356,6 +356,40 @@ describe("OffersView", () => {
     }
   });
 
+  it("renotée sous le filtre de note (Kevin, 16.11) : l’offre reste ouverte en tête, « Hors de tes filtres », la nouvelle note est annoncée", async () => {
+    const before = offer(5, "DevOps Engineer", { score: 55, description: "", text_reading: "refused" });
+    const after = { ...before, score: 38, description: "Le texte complet de l’annonce." };
+    let listed: unknown[] = [before];
+    GET.mockImplementation((path: string) => {
+      if (path === "/api/profile-chunks") return Promise.resolve({ data: [] });
+      if (path === "/api/offers/{offer_id}") return Promise.resolve({ data: after });
+      return Promise.resolve(page(listed));
+    });
+    PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 38 } });
+    const wrapper = await mountAt("/offres?note=50");
+    await wrapper.get("[data-offer-row='5']").get("[data-test=offer]").trigger("click");
+    await flushPromises();
+    await wrapper.get("[data-test=give-offer]").trigger("click");
+    await wrapper.get("[data-test=paste-offer-text]").trigger("click");
+    await flushPromises();
+    await wrapper.get("[data-test=paste-sheet] textarea").setValue("a".repeat(300));
+    listed = [];
+    await wrapper.get("[data-test=paste-sheet] [data-test=composer-send]").trigger("click");
+    await flushPromises();
+    await flushPromises();
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(true);
+    const chips = wrapper.get("[data-offer-row='5']").findAll("[data-test=offer-chip]");
+    expect(chips[0]?.text()).toBe("Hors de tes filtres");
+    expect(chips[0]?.classes()).toEqual([]);
+    const note = wrapper.get("[data-test=outside-note]");
+    expect(note.text()).toBe("Nouvelle note : 38. Elle sort de ton filtre « À creuser et plus ».");
+    expect(note.attributes("aria-live")).toBe("polite");
+    // Un autre filtre : la règle commune revient, l'offre quitte la liste.
+    await router.push("/offres?note=70");
+    await flushPromises();
+    expect(wrapper.find("[data-offer-row='5']").exists()).toBe(false);
+  });
+
   it("détail : candidature, raisons, texte complet, fermeture", async () => {
     mockOffers(
       page([

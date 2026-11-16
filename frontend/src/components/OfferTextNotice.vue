@@ -23,7 +23,13 @@ import FormField from "./FormField.vue";
 // (une fois par offre) ; si le site est lent, jobA1 réessaie une fois de lui-même et la fiche se recharge un moment.
 const props = defineProps<{ offer: Offer }>();
 // `changed` : le texte est enregistré, ou la lecture a abouti ; `refresh` : relire l'offre (la lecture continue).
-const emit = defineEmits<{ changed: []; refresh: [] }>();
+// `rescored` (Kevin, 16.11), juste avant `changed` : l'offre vient d'être renotée sur l'annonce complète ; la liste la
+// garde même si sa nouvelle note sort des filtres.
+const emit = defineEmits<{ changed: []; refresh: []; rescored: [] }>();
+function rescored(): void {
+  emit("rescored");
+  emit("changed");
+}
 
 const MIN_TEXT = 200;
 
@@ -60,7 +66,7 @@ async function readNow(): Promise<void> {
     const { data } = await api.POST("/api/offers/{offer_id}/read", { params: { path: { offer_id: id } } });
     if (id !== props.offer.id) return;
     if (data?.saved) {
-      emit("changed");
+      rescored();
       return;
     }
     if (data?.paste) {
@@ -131,7 +137,7 @@ async function readLink(): Promise<void> {
     if (data?.saved) {
       giving.value = false;
       url.value = "";
-      emit("changed");
+      rescored();
       return;
     }
     const detail = (refused as { detail?: unknown } | undefined)?.detail;
@@ -182,7 +188,7 @@ async function save(): Promise<void> {
     }
     pasting.value = false;
     text.value = "";
-    emit("changed");
+    rescored();
   } catch {
     error.value = "API injoignable : réessaie dans un moment.";
   } finally {

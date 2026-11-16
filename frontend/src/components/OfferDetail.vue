@@ -33,7 +33,9 @@ import { languageLabel } from "./ProfileCompletionForm.vue";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
-const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
+// `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
+// renotée reste dans la liste hors de ses filtres.
+const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
 
 // Les contacts dans le panneau latéral (docs/32 §2.2) ; l'entreprise a sa section (docs/45).
 const contactsCount = ref(0);
@@ -62,6 +64,7 @@ watch(
 );
 const emit = defineEmits<{
   close: [];
+  rescored: [];
   status: [status: "to_review" | "later" | "ignored" | "preparing"];
   applied: [];
   expiry: [expired: boolean];
@@ -752,6 +755,15 @@ watch(
           {{ matchSub }}
         </p>
         <p
+          v-if="outsideNote"
+          class="oc-note-sub"
+          role="status"
+          aria-live="polite"
+          data-test="outside-note"
+        >
+          {{ outsideNote }}
+        </p>
+        <p
           v-if="redone"
           class="redone oc-note-redone"
           role="status"
@@ -781,6 +793,7 @@ watch(
             :offer="offer"
             @changed="emit('changed')"
             @refresh="emit('changed')"
+            @rescored="emit('rescored')"
           />
         </div>
         <div class="oc-row oc-post">
@@ -1174,6 +1187,15 @@ watch(
               >
                 {{ matchSub }}
               </p>
+              <p
+                v-if="outsideNote"
+                class="match-sub"
+                role="status"
+                aria-live="polite"
+                data-test="outside-note"
+              >
+                {{ outsideNote }}
+              </p>
               <button
                 v-if="retryable"
                 type="button"
@@ -1214,6 +1236,7 @@ watch(
             :offer="offer"
             @changed="emit('changed')"
             @refresh="emit('changed')"
+            @rescored="emit('rescored')"
           />
           <p
             v-else-if="redone"

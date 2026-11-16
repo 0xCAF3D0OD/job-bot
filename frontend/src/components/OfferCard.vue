@@ -15,7 +15,8 @@ import { usePhone } from "../composables/usePhone";
 // commune, avec l'anneau et son mot à droite. Ce qui demande attention (écartée, à vérifier, retirée) et la note
 // provisoire deviennent des puces ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
 // « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par date », où le titre du jour la donne.
-const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
+// `outside` (Kevin, 16.11) : l'offre renotée gardée en tête alors que sa note sort des filtres.
+const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean; outside?: boolean }>();
 defineEmits<{ select: [] }>();
 const { phone } = usePhone();
 const route = useRoute();
@@ -48,6 +49,8 @@ type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept"; title?: s
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
+  // Pastille neutre, en tête (Kevin, 16.11).
+  if (props.outside) out.push({ text: "Hors de tes filtres" });
   // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
   // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
   if (setAside.value) out.push({ text: "Écartée" });
