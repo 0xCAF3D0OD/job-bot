@@ -3640,9 +3640,15 @@ main:focus { outline: none; }
 .jobs-band > .offers-page, .criteria-summary, .bilan-page-resultats, .bilan-page-formations { padding-top: var(--space-6); }
 .bilan-orp-wide { display: flex; flex-direction: column; gap: var(--space-8); }
 .bilan-orp-more .more-trigger, .alerts-wide button.secondary { min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); font-weight: var(--weight-semibold); }
-/* Menus « Mois précédents » et « Autres exports » (sans planche, Kevin 16.11) : le style du menu ⋯ de la fiche d'offre
-   (280 px, --shadow-menu, ja-pop, défini seulement si l'appareil accepte les animations), ouvert vers le haut. */
-.bilan-orp-more .more-menu .menu { top: auto; bottom: calc(var(--target-min) + var(--space-1)); right: auto; left: 0; width: 280px; border-color: var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-menu); transform-origin: bottom left; animation: ja-pop 150ms ease-out; }
+/* Menus « Mois précédents » et « Autres exports » (planches BilanOrdinateurMoisPrecedents et BilanOrdinateurExports du
+   16 novembre) : ouverts vers le haut, 300 px, rayon 16, ombre --shadow-menu, ja-pop (défini seulement si l'appareil
+   accepte les animations) ; lignes de 44 px, icône 20 px, « À remettre » en pêche à droite ; chevron du bouton retourné. */
+.bilan-orp-more { --bom-6: 6px; --bom-10: 10px; --bom-13: 0.8125rem; --bom-16: 16px; --bom-20: 20px; --bom-500: 500; }
+.bilan-orp-more .more-menu .menu { top: auto; bottom: calc(var(--target-min) + var(--bom-10)); right: auto; left: 0; width: 300px; padding: var(--bom-6) 0; border-color: var(--line); border-radius: var(--bom-16); box-shadow: var(--shadow-menu); transform-origin: bottom left; animation: ja-pop 150ms ease-out; }
+.bilan-orp-more .more-menu .menu :is(button, a) { min-height: var(--target-min); padding: 0 var(--space-4); gap: var(--space-3); font-size: var(--font-label); font-weight: var(--bom-500); }
+.bilan-orp-more .menu .icon { width: var(--bom-20); height: var(--bom-20); }
+.bilan-orp-more .menu-note { margin-left: auto; font-size: var(--bom-13); font-weight: var(--weight-bold); color: var(--peach-text); }
+.bilan-orp-more .more-trigger[aria-expanded="true"] .more-chevron { transform: rotate(180deg); }
 /* « Justificatifs déjà remis à l'ORP » (récapitulatif du 11 novembre, PR 29 ; maquettes Orp et BilanOrdinateur) : la
    carte du mois précédent, blanche, filet de 1,5 px, rayon 18 ; sur téléphone les deux boutons passent dessous, à
    parts égales. */

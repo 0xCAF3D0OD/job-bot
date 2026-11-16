@@ -52,7 +52,9 @@ const monthItems = computed<MoreMenuItem[]>(() => {
   if (viewingPast.value) items.push({ label: `Revenir à ${formatMonth(thisMonth()).toLowerCase()}`, test: "orp-month-current", icon: "calendar", run: go(thisMonth()) });
   for (let i = 1; i <= PAST_MONTHS; i += 1) {
     const month = shiftMonth(thisMonth(), -i);
-    if (month !== viewMonth.value) items.push({ label: capitalMonth(month), test: `orp-month-${month}`, icon: "calendar", run: go(month) });
+    // Le mois dont les justificatifs restent à remettre porte « À remettre » (planche BilanOrdinateurMoisPrecedents).
+    const note = previous.value?.month === month && previous.value.state === "a_remettre" ? "À remettre" : undefined;
+    if (month !== viewMonth.value) items.push({ label: capitalMonth(month), test: `orp-month-${month}`, icon: "calendar", run: go(month), note });
   }
   return items;
 });
@@ -102,6 +104,8 @@ const declareAll = ref(false);
 const pendingShown = computed(() => (declareAll.value || expanded.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
 // « Voir tout le mois et les justificatifs » et le chevron de la carte : le mois déplié, sur place.
 const allTo = computed(() => ({ path: "/bilan", query: { ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
+// Planche BilanOrdinateurMois : le mois déplié se replie (« Replier le mois », la carte du mois), sans ?tout=1.
+const foldTo = computed(() => ({ path: "/bilan", query: viewingPast.value ? { orp: viewMonth.value } : {} }));
 const declared = computed(() => (shownMonth.value?.rows ?? []).filter((row) => row.declared_at));
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);
@@ -192,9 +196,10 @@ watch(viewMonth, () => void load());
           @changed="load()"
         />
         <RouterLink
-          :to="shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
+          :to="expanded ? foldTo : shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
           class="today-orp-card bilan-orp-card"
-          :aria-label="cardLabel"
+          :aria-label="expanded ? cardLabel.replace('Voir tout le mois', 'Replier le mois') : cardLabel"
+          :aria-expanded="expanded || undefined"
           data-test="orp-goal"
         >
           <OrpMonthBar
@@ -207,7 +212,7 @@ watch(viewMonth, () => void load());
             band
           />
           <AppIcon
-            name="chevron"
+            :name="expanded ? 'chevron-up' : 'chevron'"
             class="today-orp-chevron"
           />
         </RouterLink>
@@ -301,12 +306,19 @@ watch(viewMonth, () => void load());
             :limit="expanded ? undefined : LAST_WIDE"
             :link="shownMonth.month"
           >
-            <template
-              v-if="!expanded"
-              #last
-            >
+            <template #last>
               <li>
                 <RouterLink
+                  v-if="expanded"
+                  :to="foldTo"
+                  class="bilan-card-more"
+                  aria-expanded="true"
+                  data-test="orp-fold"
+                >
+                  Replier le mois<AppIcon name="chevron-up" />
+                </RouterLink>
+                <RouterLink
+                  v-else
                   :to="allTo"
                   class="bilan-card-more"
                   data-test="orp-all"
@@ -317,7 +329,16 @@ watch(viewMonth, () => void load());
             </template>
           </OrpSearchRows>
           <RouterLink
-            v-if="!declared.length && !expanded"
+            v-if="!declared.length && expanded"
+            :to="foldTo"
+            class="bilan-card-more"
+            aria-expanded="true"
+            data-test="orp-fold"
+          >
+            Replier le mois<AppIcon name="chevron-up" />
+          </RouterLink>
+          <RouterLink
+            v-else-if="!declared.length"
             :to="allTo"
             class="bilan-card-more"
             data-test="orp-all"
@@ -418,6 +439,7 @@ watch(viewMonth, () => void load());
             :inline="false"
             trigger="Mois précédents"
             trigger-icon="calendar"
+            chevron
             test-id="orp-months"
           />
           <MoreMenu
@@ -425,6 +447,7 @@ watch(viewMonth, () => void load());
             :inline="false"
             trigger="Autres exports"
             trigger-icon="download"
+            chevron
             test-id="orp-exports"
           />
         </div>
