@@ -1249,6 +1249,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/retry-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Score
+         * @description « Réessayer » d'une note impossible après trois échecs de l'IA (A2, décision de Kevin
+         *     du 16.11) : un seul essai, tout de suite ; s'il échoue, la tâche des 10 minutes reprend
+         *     jusqu'au 3e. Refusé hors de cet état, pour ne pas relancer l'IA sur une offre notée.
+         */
+        post: operations["retryScore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interview.ics": {
         parameters: {
             query?: never;
@@ -7758,6 +7780,11 @@ export interface components {
              */
             result: "queued" | "already_queued";
         };
+        /** RetryScoreOut */
+        RetryScoreOut: {
+            /** Score */
+            score: number | null;
+        };
         /** ReviewCriterionOut */
         ReviewCriterionOut: {
             /** Key */
@@ -11541,6 +11568,51 @@ export interface operations {
             };
             /** @description Offre inconnue */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retryScore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryScoreOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est pas en échec : rien à refaire */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

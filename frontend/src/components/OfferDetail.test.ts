@@ -419,6 +419,28 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(line.get("[data-test=give-to-score]").attributes("aria-controls")).toBe("offer-give-zone");
   });
 
+  it("A2 : note impossible, une ligne selon la cause ; « Réessayer » après un échec de l’IA (Kevin, 16.11)", async () => {
+    desktop();
+    const short = await mountDetail(offer({ score: null, score_final: "sans_texte" }));
+    expect(short.get("[data-test=match-title]").text()).toBe("Note impossible");
+    expect(short.get("[data-test=match-sub]").text()).toBe("L’annonce est trop courte pour être notée.");
+    expect(short.find("[data-test=retry-score]").exists()).toBe(false);
+    POST.mockResolvedValue({ data: { score: 70 } });
+    const failed = await mountDetail(offer({ score: null, score_final: "erreur" }));
+    expect(failed.get("[data-test=match-sub]").text()).toBe("La note n’a pas pu être calculée.");
+    await failed.get("[data-test=retry-score]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/retry-score", { params: { path: { offer_id: 4 } } });
+    expect(failed.emitted("changed")).toBeTruthy();
+  });
+
+  it("A2 : une offre écartée sans note n’affiche jamais « Pas encore notée »", async () => {
+    desktop();
+    const wrapper = await mountDetail(offer({ score: null, status: "filtered_out", filter_reasons: ["Mot exclu : stage"] }));
+    expect(wrapper.get("[data-test=match-title]").text()).toBe("Écartée");
+    expect(wrapper.text()).not.toContain("Pas encore notée");
+  });
+
   it("sous 1 024 px, une seule colonne", async () => {
     const wrapper = await mountDetail(offer());
     expect(wrapper.find("[data-test=detail-columns]").exists()).toBe(false);

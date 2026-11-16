@@ -334,6 +334,26 @@ describe("OffersView", () => {
     expect(lastQuery()).toMatchObject({ q: "devops" });
   });
 
+  it("A2 (Kevin, 16.11) : écartée sans note, pastille « Écartée » sans anneau ; note impossible, cercle et « Pas de note »", async () => {
+    mockOffers(
+      page([
+        offer(8, "Stage DevOps", { status: "filtered_out", filter_reasons: ["Type : stage (« stage »)"] }),
+        offer(9, "Monteur", { score_final: "erreur" }),
+        offer(10, "Peintre", { score_final: "sans_texte" }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres?ecartees=montrer");
+    const card = (id: number) => wrapper.get(`[data-offer-row='${id}']`);
+    const chips = (id: number) => card(id).findAll("[data-test=offer-chip]").map((c) => c.text());
+    expect(card(8).find("[data-test=score]").exists()).toBe(false);
+    expect(chips(8)[0]).toBe("Écartée");
+    expect(card(8).text()).not.toContain("Pas encore notée");
+    for (const id of [9, 10]) {
+      expect(card(id).get("[data-test=score]").attributes("aria-label")).toBe("Pas de note");
+      expect(chips(id)[0]).toBe("Pas de note");
+    }
+  });
+
   it("détail : candidature, raisons, texte complet, fermeture", async () => {
     mockOffers(
       page([
