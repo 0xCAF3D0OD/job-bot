@@ -76,8 +76,6 @@ export const ICONS = {
   // Get'emAll (maquettes de la connexion, 2026-11-06) : sa bulle, les deux flèches entre les apps, et « jamais ».
   chat: path("M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z") + path("M9 10.5h6"),
   swap: path("M5 9h14M15 5l4 4-4 4M19 15H5M9 11l-4 4 4 4"),
-  // Agence de placement (section 35 du 16.11, planches OffreAgence et CandidaturesOrdinateurAgence) : deux flèches opposées.
-  agency: path("M7 7h11l-3-3M17 17H6l3 3"),
   ban: circle(12, 12, 8) + path("m6.5 17.5 11-11"),
   play: path("M8 5.5v13l10.5-6.5z"),
   lock: '<rect x="5" y="10.5" width="14" height="10" rx="2"/>' + path("M8 10.5V8a4 4 0 0 1 8 0v2.5"),

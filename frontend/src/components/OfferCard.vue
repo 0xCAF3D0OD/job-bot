@@ -5,7 +5,6 @@ import { useRoute } from "vue-router";
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
 import { rateText, remoteText } from "../format";
-import AppIcon from "./AppIcon.vue";
 import ListCard from "./ListCard.vue";
 import ScoreRing from "./ScoreRing.vue";
 import { usePlan } from "../composables/usePlan";
@@ -139,11 +138,20 @@ watch([chips, phone], () => void fit());
       ><path
         d="M1 1.5A1.5 1.5 0 0 1 2.5 0h7A1.5 1.5 0 0 1 11 1.5V15L6 11.5 1 15z"
         fill="#F2853A"
-      /></svg><AppIcon
+      /></svg><svg
         v-if="chip.tone === 'agency'"
-        name="agency"
         class="chip-mark"
-      />{{ chip.text }}</span>
+        :width="phone ? 12 : 14"
+        :height="phone ? 12 : 14"
+        :stroke-width="phone ? 2.6 : 2.4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      ><path d="M7 7h11l-3-3M17 17H6l3 3" /></svg>{{ chip.text }}</span>
       <span
         v-if="fits < chips.length"
         class="more"
@@ -195,7 +203,6 @@ watch([chips, phone], () => void fit());
 .list-card-chips > .kept { background: var(--peach-soft); color: var(--peach-text); font-weight: var(--weight-bold); }
 .chip-mark { flex: none; }
 .list-card-chips > .agency { background: var(--agency-bg); color: var(--agency-text); font-weight: var(--weight-bold); }
-.agency > .icon { width: 14px; height: 14px; stroke-width: 2.4; }
 /* Ordinateur, maquette du 14 novembre (§1 ; CandidaturesOrdinateurB) : l'anneau de 40 px en haut à droite, sans son
    mot (il reste dans le nom de l'anneau, « Proche : 92 sur 100 », et dans la fiche) ; même marge de 16 px en haut et
    à droite (ListCard). Les séparations prennent le fond de la carte, bleu pâle quand elle est choisie. */
@@ -223,7 +230,5 @@ watch([chips, phone], () => void fit());
   .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
   .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
   .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
-  /* Planche CandidaturesAgence (paquet du 16.11 mis à jour) : l'icône de 12 px, trait de 2,6. */
-  .agency > .icon { width: 12px; height: 12px; stroke-width: 2.6; }
 }
 </style>
