@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
-import ProfileCompletionPanel from "../components/ProfileCompletionPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import ApplyActions from "../components/ApplyActions.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
-import OfferCompatSheet from "../components/OfferCompatSheet.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -21,9 +19,7 @@ import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
-import ApplicationSent from "../components/ApplicationSent.vue";
-import GoalReached from "../components/GoalReached.vue";
-import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
+import type { FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
@@ -49,6 +45,13 @@ import { usePlan } from "../composables/usePlan";
 import { offerUndo } from "../composables/useUndo";
 import { sentencesAt, withoutSentence } from "../letterSentences";
 import PlanLimit from "../components/PlanLimit.vue";
+// Chargés à la demande (allègement (c), issue #797) : les écrans d'après l'envoi et les panneaux secondaires ne
+// pèsent pas sur l'ouverture de Préparer. Un panneau n'est monté qu'à sa première ouverture, puis reste en place.
+const ApplicationSent = defineAsyncComponent(() => import("../components/ApplicationSent.vue"));
+const GoalReached = defineAsyncComponent(() => import("../components/GoalReached.vue"));
+const OfferCompatSheet = defineAsyncComponent(() => import("../components/OfferCompatSheet.vue"));
+const FalseClaimSheet = defineAsyncComponent(() => import("../components/FalseClaimSheet.vue"));
+const ProfileCompletionPanel = defineAsyncComponent(() => import("../components/ProfileCompletionPanel.vue"));
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -414,6 +417,8 @@ const noProfile = ref(false);
 // « Ajouter une expérience » ouvre le formulaire des premiers pas en panneau (PR 17, point 5) ; au retour, la
 // préparation repart (lettre et CV adapté). Le même panneau demande le nom et l'adresse avant une lettre.
 const completion = ref<"" | "profile" | "identity">("");
+const completionSeen = ref(false);
+watch(completion, (open) => { if (open) completionSeen.value = true; });
 const identityAsked = ref(false);
 let pendingForce = false;
 const COMPLETION_SECTIONS = { profile: ["experiences", "languages", "identity"], identity: ["identity"] } as const;
@@ -641,6 +646,8 @@ function closeLetterSearch(): void {
   letterSearchButton.value?.focus();
 }
 const claimOpen = ref(false);
+const claimSeen = ref(false);
+watch(claimOpen, (open) => { if (open) claimSeen.value = true; });
 const claimBusy = ref(false);
 const claimError = ref("");
 const flashed = ref<number | null>(null);
@@ -773,6 +780,8 @@ const layoutNote = computed(() => {
 });
 // Le panneau Compatibilité depuis la note de l'en-tête (§2.2) : les mêmes familles que la fiche de l'offre.
 const compatOpen = ref(false);
+const compatSeen = ref(false);
+watch(compatOpen, (open) => { if (open) compatSeen.value = true; });
 const compat = computed(() => {
   const o = offer.value;
   const point = (text: string) => {
@@ -2116,7 +2125,7 @@ onMounted(() => void load());
   </section>
 
   <OfferCompatSheet
-    v-if="offer && !phone && verdict"
+    v-if="compatSeen && offer && !phone && verdict"
     :open="compatOpen"
     :score="offer.score ?? null"
     :stale="offer.score_stale"
@@ -2129,7 +2138,7 @@ onMounted(() => void load());
     @close="compatOpen = false"
   />
   <FalseClaimSheet
-    v-if="selected && claim"
+    v-if="claimSeen && selected && claim"
     :open="claimOpen"
     :sentence="claim?.sentence ?? ''"
     :busy="claimBusy"
@@ -2139,6 +2148,7 @@ onMounted(() => void load());
     @confirm="confirmClaim"
   />
   <ProfileCompletionPanel
+    v-if="completionSeen"
     :open="!!completion"
     :title="completion === 'identity' ? 'Avant ta lettre' : 'Ajouter une expérience'"
     :sections="completion ? [...COMPLETION_SECTIONS[completion]] : undefined"
