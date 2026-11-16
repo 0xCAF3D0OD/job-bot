@@ -1,7 +1,7 @@
 """Tables de la version 0.1. Les suivantes arrivent avec leurs versions (cadrage §5)."""
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
@@ -20,6 +20,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     and_,
+    event,
     false,
     func,
     text,
@@ -235,6 +236,26 @@ class Offer(Base):
         ForeignKey("offers.id", ondelete="SET NULL"), index=True
     )
     seen_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # §30 du 16.11 (décision de Kevin, 13 h 53) : le moment de la mise à l'écart (par la personne,
+    # Trier, l'assistant ou les critères), pour « Écartée le 12 nov. ». Vidée quand l'offre revient
+    # dans le tri ; posée à nouveau à chaque nouvelle mise à l'écart. Pas de rattrapage : vide pour
+    # une offre écartée avant la colonne. Niveau « Personnelle » (D-1), comme le reste de l'offre ;
+    # cloisonnée par la RLS de la table, exportée et effacée avec la ligne.
+    set_aside_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# Les états « écartée » (par les critères ou par la personne), comme SET_ASIDE de la notation.
+_SET_ASIDE_STATES = (OfferStatus.FILTERED_OUT, OfferStatus.IGNORED)
+
+
+@event.listens_for(Offer.status, "set")
+def _stamp_set_aside(offer: Offer, value: object, old: object, _initiator: object) -> None:
+    """Une seule règle pour toutes les écritures de l'état (route, Trier, assistant, filtre) :
+    entrer dans un état écarté (ou passer de l'un à l'autre) pose la date ; en sortir la vide ;
+    réécrire le même état ne change rien."""
+    if value == old:
+        return
+    offer.set_aside_at = datetime.now(UTC) if value in _SET_ASIDE_STATES else None
 
 
 class OfferLink(Base):

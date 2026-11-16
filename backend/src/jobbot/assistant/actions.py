@@ -267,7 +267,10 @@ async def confirm(session: AsyncSession, action: ChatAction) -> None:
             await _put(session, "rhythm_pause_until", pause[1].isoformat() if pause else None)
     elif action.kind == "offer_status":
         offer = await _offer(session, action.target_id)
-        action.previous = {"status": str(offer.status)}
+        action.previous = {
+            "status": str(offer.status),
+            "set_aside_at": offer.set_aside_at.isoformat() if offer.set_aside_at else None,
+        }
         offer.status = OfferStatus(action.value)
     elif action.kind == "offer_expiry":
         offer = await _offer(session, action.target_id)
@@ -315,6 +318,10 @@ async def undo(session: AsyncSession, action: ChatAction) -> None:
         if offer.status != action.value:
             raise ActionRefused("l'offre a changé depuis : rien n'est annulé")
         offer.status = OfferStatus(previous["status"])
+        # Annuler rend aussi la date de mise à l'écart d'avant (§30 du 16.11).
+        if "set_aside_at" in previous:
+            aside = previous["set_aside_at"]
+            offer.set_aside_at = datetime.fromisoformat(aside) if aside else None
     elif action.kind == "offer_expiry":
         offer = await _offer(session, action.target_id)
         if (offer.expired_at is not None) != (action.value == "expired"):

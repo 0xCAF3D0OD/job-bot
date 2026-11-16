@@ -110,6 +110,9 @@ class OfferOut(BaseModel):
     enrich_status: Literal["pending", "ok", "expired", "failed", "skipped"] = "pending"
     # Offre retirée : page introuvable, ou plus vue dans les alertes depuis 30 jours.
     expired_at: datetime | None = None
+    # « Écartée le 12 nov. » (§30 du 16.11) : vide hors d'un état écarté, et pour une offre écartée
+    # avant la colonne.
+    set_aside_at: datetime | None = None
     expiry_source: Literal["page", "age", "manual"] | None = None
     # Choix de Kevin, prioritaire sur la détection automatique.
     expiry_override: Literal["expired", "alive"] | None = None

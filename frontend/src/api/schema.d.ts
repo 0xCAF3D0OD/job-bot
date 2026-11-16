@@ -7149,6 +7149,8 @@ export interface components {
             enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
             /** Expired At */
             expired_at?: string | null;
+            /** Set Aside At */
+            set_aside_at?: string | null;
             /** Expiry Source */
             expiry_source?: ("page" | "age" | "manual") | null;
             /** Expiry Override */
@@ -8147,6 +8149,8 @@ export interface components {
             enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
             /** Expired At */
             expired_at?: string | null;
+            /** Set Aside At */
+            set_aside_at?: string | null;
             /** Expiry Source */
             expiry_source?: ("page" | "age" | "manual") | null;
             /** Expiry Override */
