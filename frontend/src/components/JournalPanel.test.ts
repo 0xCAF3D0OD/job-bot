@@ -128,4 +128,15 @@ describe("JournalView", () => {
     await more().trigger("click");
     expect(wrapper.emitted("collapse")).toHaveLength(1);
   });
+  it("le focus va sur la première alerte ajoutée : à l’ouverture (focusFrom) puis après « Afficher plus » (Kevin, 17.11)", async () => {
+    GET.mockResolvedValueOnce({ data: { items: Array.from({ length: 10 }, (_, i) => ({ ...search, id: i + 1 })), total: 12 } });
+    GET.mockResolvedValueOnce({ data: { items: [{ ...search, id: 11 }, { ...search, id: 12 }], total: 12 } });
+    const wrapper = mount(JournalView, { props: { focusFrom: 3 }, attachTo: document.body });
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.findAll("[data-test=search]")[3]?.element);
+    await wrapper.find("[data-test=journal-more]").trigger("click");
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.findAll("[data-test=search]")[10]?.element);
+    wrapper.unmount();
+  });
 });

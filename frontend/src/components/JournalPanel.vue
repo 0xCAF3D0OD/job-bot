@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
 import { useCollect } from "../composables/useCollect";
@@ -13,6 +13,14 @@ import { frenchName, parseStatusLabel, plural, rateText, SITE_NAMES, sourceLabel
 // Ouvert depuis « Alertes reçues » (ReceivedAlerts), le journal porte le seul bouton du bas (K20, audit du 17.11) :
 // « Afficher plus (n) » tant qu'il reste des alertes, puis « Afficher moins », qui replie le journal sur les 3 dernières.
 const emit = defineEmits<{ collapse: [] }>();
+// Le focus va sur la première alerte ajoutée (Kevin, 17.11) : à l'ouverture depuis les 3 dernières, la 4e ligne
+// (focusFrom) ; après « Afficher plus », la première ligne de la page chargée.
+const props = defineProps<{ focusFrom?: number }>();
+const table = ref<HTMLElement | null>(null);
+async function focusRow(index: number): Promise<void> {
+  await nextTick();
+  table.value?.querySelectorAll<HTMLElement>("[data-test=search]")[index]?.focus();
+}
 
 // L'analyse d'une alerte en pastille (§4) : réussie en vert, le rouge seulement pour un vrai échec.
 const PARSE_TONE: Record<ParseStatus, "neutral" | "ok" | "error"> = { parsed: "ok", empty: "neutral", unrecognized: "neutral", failed: "error" };
@@ -72,7 +80,10 @@ const allShown = computed({
   get: () => items.value.length >= total.value,
   set: (open: boolean) => {
     if (loading.value) return;
-    if (open) void load(true);
+    if (open) {
+      const from = items.value.length;
+      void load(true).then(() => focusRow(from));
+    }
     else emit("collapse");
   },
 });
@@ -81,7 +92,10 @@ watch([source, parseStatus], () => {
   selected.value = null;
   void load();
 });
-onMounted(() => void load());
+onMounted(async () => {
+  await load();
+  if (props.focusFrom !== undefined) await focusRow(props.focusFrom);
+});
 </script>
 
 <template>
@@ -148,6 +162,7 @@ onMounted(() => void load());
 
     <table
       v-if="items.length"
+      ref="table"
       class="runs clickable"
     >
       <thead>

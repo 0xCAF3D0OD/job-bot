@@ -27,7 +27,7 @@ function line(item: Search): string {
   return `${what} · ${dateWithTime(item.received_at)}`;
 }
 
-// Replié depuis le journal, le focus revient sur « Afficher plus » (le bouton du journal disparaît avec lui).
+// « Afficher moins » : le focus reste sur le bouton, devenu « Afficher plus » à la même place (Kevin, 17.11).
 const section = ref<HTMLElement | null>(null);
 async function collapse(): Promise<void> {
   all.value = false;
@@ -55,6 +55,7 @@ onMounted(async () => {
     </div>
     <JournalPanel
       v-if="all"
+      :focus-from="LATEST"
       @collapse="collapse"
     />
     <SettingCard v-else>
