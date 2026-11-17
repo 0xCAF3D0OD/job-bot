@@ -7324,6 +7324,11 @@ export interface components {
              * @default 0
              */
             provisional: number;
+            /**
+             * Rates
+             * @default []
+             */
+            rates: components["schemas"]["Facet"][];
         };
         /**
          * OfferFiltersVisible
