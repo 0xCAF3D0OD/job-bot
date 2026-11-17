@@ -2,7 +2,7 @@
 
 > Statut : **plan validé par Kevin le 2026-11-17** (13 h 30), avec six ajouts obligatoires et ses réponses aux questions. Aucun code encore : la PR 1 attend la planche ReglagesLangue redessinée par Kevin, la fusion de #833 et celle du fil Compte et Réglages.
 > Origine : la demande de Kevin du 2026-11-17 : « commencer à pouvoir choisir la langue de la plateforme […] anglais, allemand, italien, albanais, portugais et espagnol, en plus du français ».
-> Décisions : `docs/decisions/2026-11-17-1330-langues-plateforme.md`, `docs/decisions/2026-11-17-1330-poids-catalogues-langues.md`.
+> Décisions : `docs/decisions/2026-11-17-1330-langues-plateforme.md`, `docs/decisions/2026-11-17-1417-poids-pages-traduites.md` (qui remplace `2026-11-17-1330-poids-catalogues-langues.md`).
 > Glossaire : `docs/i18n/` (un fichier par langue).
 
 ## 1. Les langues
@@ -52,7 +52,7 @@ Une langue non relue reste visible et grisée « Bientôt » dans le sélecteur,
 
 ## 6. Découpage en PR
 
-**PR 1, l'outil et le sélecteur** : après la planche ReglagesLangue à sept langues de Kevin, #833 et le fil Compte et Réglages. `t()` et ses pluriels, catalogues à la demande, langue de l'appareil et du navigateur, `<html lang>`, locale de formatage, sélecteur, mesure de poids des catalogues, `make i18n-check`. Aucun écran traduit. Le surpoids de `t()` est compensé dans la PR.
+**PR 1, l'outil et le sélecteur** : après la planche ReglagesLangue à sept langues de Kevin, #833 et le fil Compte et Réglages. `t()` et ses pluriels, catalogues à la demande, langue de l'appareil et du navigateur, `<html lang>`, locale de formatage, sélecteur, mesure des pages traduites, `make i18n-check`. Aucun écran traduit. Le surpoids est compensé par une PR à part avant elle : le panneau de l'Assistant chargé à la demande (Kevin, 17.11, 14 h 01).
 
 **Une PR par écran ensuite**, les sept langues à la fois, et dans la même PR les notifications et les réponses de l'IA qui concernent cet écran (pas de PR à part plus tard). Ordre :
 
@@ -68,12 +68,12 @@ Une langue non relue reste visible et grisée « Bientôt » dans le sélecteur,
 
 - Captures en français identiques au pixel : 1440 et 390 px, clair et sombre.
 - Captures en allemand avant fusion, sur les écrans où le texte s'allonge : onglets dossier, boutons pleine largeur, pastilles des offres, titre manuscrit de l'Accueil, feuilles du bas. **Jamais de « … » dans un onglet ou un bouton.** Un audit le vérifie sur les captures en allemand.
-- Le poids avant et après de la page, et de chacun de ses catalogues.
+- Le poids avant et après de la page, et le tableau de la page dans sa langue la plus lourde.
 - `make audits-ci` passé, dont `make i18n-check`.
 
 ## 8. Poids
 
-Voir `docs/decisions/2026-11-17-1330-poids-catalogues-langues.md`. En résumé : la limite de chaque page, mesurée en français, ne bouge pas ; chaque catalogue (page × langue) reçoit sa limite dans la PR qui le crée (sa mesure + 5 %, jamais relevée) ; le code et le catalogue d'une page restent ensemble sous 365 Kio.
+Voir `docs/decisions/2026-11-17-1417-poids-pages-traduites.md`. Chaque page est mesurée en français et, hors du français, avec i18n.ts, son catalogue et `commun` dans la langue la plus lourde. Les deux doivent rester sous la limite actuelle de la page : il n'y a pas de nouvelle limite. `poids.mjs` imprime le tableau page / langue / taille / limite / marge pour la PR.
 
 ## 9. Reste ouvert
 
