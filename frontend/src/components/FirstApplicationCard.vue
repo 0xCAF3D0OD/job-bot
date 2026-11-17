@@ -10,11 +10,9 @@ import IconButton from "./IconButton.vue";
 // reste utilisable. Le logo dans un rond avec quatre points de couleur, le titre, « {Entreprise} · {date courte} »
 // (Kevin, 17.11), la barre du mois ORP (les candidatures d'avant en bleu, la nouvelle en pêche), puis « Voir », qui
 // ouvre la candidature. role="status", sans prendre le focus ; affichée une seule fois (le serveur le retient).
-// Comme la carte de main : elle se ferme seule après 4 secondes, avec « Fermer » ou Échap.
-const props = withDefaults(
-  defineProps<{ company: string; sentAt: string; applicationId: number; count: number; target: number | null; closeAfterMs?: number }>(),
-  { closeAfterMs: 4000 },
-);
+// Elle ne disparaît jamais seule (Kevin, 17.11 : elle contient une action, WCAG 2.2.1) : elle reste jusqu'à « Fermer »,
+// Échap, ou la sortie de la page. Aucun minuteur.
+const props = defineProps<{ company: string; sentAt: string; applicationId: number; count: number; target: number | null }>();
 const emit = defineEmits<{ close: [] }>();
 
 // Un segment par candidature de l'objectif ; la dernière comptée est la nouvelle. Sans objectif réglé, ni barre ni
@@ -28,11 +26,9 @@ const line = computed(() => `${props.company} · ${dayMonthShort(props.sentAt)}`
 const to = computed(() => ({ path: "/candidatures/suivi", query: { candidature: String(props.applicationId) } }));
 
 const leaving = ref(false);
-let timer: ReturnType<typeof setTimeout> | undefined;
 function close(): void {
   if (leaving.value) return;
   leaving.value = true;
-  clearTimeout(timer);
   // Le temps qu'elle redescende en s'effaçant (250 ms).
   setTimeout(() => emit("close"), 250);
 }
@@ -41,10 +37,8 @@ function onKey(event: KeyboardEvent): void {
 }
 onMounted(() => {
   document.addEventListener("keydown", onKey);
-  if (props.closeAfterMs > 0) timer = setTimeout(close, props.closeAfterMs);
 });
 onUnmounted(() => {
-  clearTimeout(timer);
   document.removeEventListener("keydown", onKey);
 });
 </script>

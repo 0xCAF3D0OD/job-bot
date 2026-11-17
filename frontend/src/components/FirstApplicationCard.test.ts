@@ -34,7 +34,18 @@ describe("FirstApplicationCard", () => {
     wrapper.unmount();
   });
 
-  it("se ferme avec « Fermer », Échap, ou seule après 4 secondes", async () => {
+  it("reste ouverte : toujours visible après 10 s, sans minuteur (Kevin, 17.11)", () => {
+    vi.useFakeTimers();
+    const wrapper = mount(FirstApplicationCard, { props, global: { plugins: [router] }, attachTo: document.body });
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(10_000);
+    expect(find("[data-test=first-steps-done]")).not.toBeNull();
+    expect(find(".fa-card.leaving")).toBeNull();
+    expect(wrapper.emitted("close")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("se ferme avec « Fermer » ou Échap", async () => {
     vi.useFakeTimers();
     const wrapper = mount(FirstApplicationCard, { props, global: { plugins: [router] }, attachTo: document.body });
     (find("button[aria-label=Fermer]") as HTMLButtonElement).click();
@@ -48,10 +59,6 @@ describe("FirstApplicationCard", () => {
     expect(byKey.emitted("close")).toHaveLength(1);
     byKey.unmount();
 
-    const alone = mount(FirstApplicationCard, { props, global: { plugins: [router] }, attachTo: document.body });
-    vi.advanceTimersByTime(4250);
-    expect(alone.emitted("close")).toHaveLength(1);
-    alone.unmount();
   });
 
   it("sans objectif réglé : ni barre ni « sur N »", () => {
