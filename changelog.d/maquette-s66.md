@@ -1,0 +1,1 @@
+Maquette §66 du 17.11 : loupe de l'ordinateur nommée « Ouvrir la recherche » dans une zone role="search", champ et croix de 44 px ; pastille de nombre orange #A95A1A (5,0:1) ; « Non renseigné » en #756D61 / #9C9488 ; « À compléter » en #F2B98E et « Se déconnecter » en #FF9A85 en sombre ; boutons Fermer ronds de 44 px ; champs, listes et boutons toujours en Figtree
