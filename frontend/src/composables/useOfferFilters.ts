@@ -1,8 +1,9 @@
 import { computed, shallowRef, watch } from "vue";
 import { useRoute, useRouter, type LocationQuery } from "vue-router";
 
-import type { Source } from "../api/client";
+import type { OfferFacets, Source } from "../api/client";
 import { sourceLabel } from "../format";
+import { t } from "../i18n";
 
 export type View = "pending" | "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
@@ -155,6 +156,23 @@ export const RATE_CHOICES: { label: string; value: number | null }[] = [
 ];
 export const REMOTE_LABEL = "Télétravail possible, même partiel";
 
+// Le nombre d'offres sous chaque choix de Note et de Taux (§65 du 17.11) : le chiffre seul, calculé par le serveur
+// avec tous les autres filtres actifs ; le choix actif donne le même nombre que « Afficher n offres ».
+type ChoiceFacets = Pick<OfferFacets, "scores" | "unscored" | "rates">;
+const MAX_SHOWN = 99_999;
+export function choiceCount(count: number): string {
+  return count > MAX_SHOWN ? t("100 k+") : new Intl.NumberFormat("fr-CH").format(count);
+}
+/** Note : les tranches de 5 points de la courbe des notes (sans le filtre de note), dès le seuil du choix. */
+export function scoreCount(facets: ChoiceFacets, min: number | null): number {
+  const scored = (facets.scores ?? []).slice(min === null ? 0 : min / 5).reduce((sum, n) => sum + n, 0);
+  return min === null ? scored + (facets.unscored ?? 0) : scored;
+}
+/** Taux : la facette du serveur (« all », « 60 », « 80 », « 100 »), sans le filtre du taux. */
+export function rateCount(facets: ChoiceFacets, value: number | null): number {
+  return (facets.rates ?? []).find((f) => f.value === String(value ?? "all"))?.count ?? 0;
+}
+
 /** Les trois choix du groupe « Type de note », avec les nombres réels du serveur (hors « Toutes »). */
 export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null }[] {
   return [
@@ -207,7 +225,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
   if (status)
     chips.push({ key: "view", label: `Statut : ${status}`, patch: { view: DEFAULT_FILTERS.view, sort: filters.sort === "activity" ? DEFAULT_FILTERS.sort : filters.sort } });
   if (filters.minScore !== null || filters.maxScore !== null)
-    chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
+    chips.push({ key: "score", label: t("Note {seuil}", { seuil: scoreLabel(filters) }), patch: { minScore: null, maxScore: null } });
   if (filters.basis)
     chips.push({ key: "basis", label: filters.basis === "sure" ? "Notes définitives" : "Notes provisoires", patch: { basis: null } });
   if (filters.remote)
@@ -225,7 +243,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
       patch: { cantons: filters.cantons.filter((c) => c !== canton) },
     });
   if (filters.minRate !== null)
-    chips.push({ key: "rate", label: `Taux d’activité : ${filters.minRate === 100 ? "" : "dès "}${filters.minRate} %`, patch: { minRate: null } });
+    chips.push({ key: "rate", label: filters.minRate === 100 ? t("Taux 100 %") : t("Taux dès {taux} %", { taux: filters.minRate }), patch: { minRate: null } });
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l’employeur", patch: { externalOnly: false } });
   if (filters.hideDoubtful)
     chips.push({ key: "doubtful", label: "Sans les offres à vérifier", patch: { hideDoubtful: false } });

@@ -3287,6 +3287,9 @@ main:focus { outline: none; }
 /* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
 .segmented-label { white-space: nowrap; }
 .segmented .tab-count { margin: 0; }
+/* Un nombre sous le libellé (planche Filtres, §65) : segment de 56 px, libellé et nombre l'un sous l'autre. */
+.segmented > button:has(.segmented-sub) { flex-direction: column; gap: 1px; min-height: 3.5rem; line-height: var(--leading-tight); }
+.segmented-sub { font-size: var(--font-caption); font-weight: var(--weight-regular); color: var(--text-secondary); }
 
 @media (prefers-reduced-motion: reduce) {
   .segmented > :is(a, button) { transition: none; }

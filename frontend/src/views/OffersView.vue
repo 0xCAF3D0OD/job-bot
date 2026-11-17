@@ -68,7 +68,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0 });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [] });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
@@ -109,7 +109,7 @@ const chips = computed(() => activeChips(filters.value));
 // Aucune offre avec ces filtres, sur téléphone (AucuneOffre, §13 et §17 du 15 novembre) : les filtres actifs passent en
 // pastilles sous le titre, sans la rangée du haut ni le bloc « Autres offres ».
 const phoneEmptyFiltered = computed(() => phone.value && !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
-// « Note minimale : 75 et +, Taux d’activité : dès 80 %. Élargis un critère pour voir plus d'offres. »
+// « Note 75 et +, Taux dès 80 %. Élargis un critère pour voir plus d'offres. » (pastilles nommées, §65)
 const emptyFiltersLine = computed(() => {
   const q = filters.value.q.trim();
   const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];

@@ -10,8 +10,9 @@ import CountBadge from "./CountBadge.vue";
 // `full` : les segments se partagent toute la largeur (2 ou 3 choix sur téléphone). Un libellé n'est
 // jamais coupé : le test téléphone de la CI le vérifie en 320 px (.segmented-label). `count` : une pastille de
 // nombre après le libellé (Candidatures sur ordinateur), absente à zéro. `name` : le nom accessible complet quand le
-// libellé visible est une abréviation (FR → « Français »).
-export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string; name?: string };
+// libellé visible est une abréviation (FR → « Français »). `sub` : un nombre sous le libellé (planche Filtres, §65 du
+// 17.11 : le nombre d'offres de chaque choix de Note et de Taux).
+export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string; name?: string; sub?: string };
 const props = withDefaults(defineProps<{ options: SegmentOption[]; label: string; full?: boolean }>(), { full: false });
 const model = defineModel<string>({ required: true });
 const asLinks = props.options.some((option) => option.to);
@@ -60,7 +61,10 @@ const asLinks = props.options.some((option) => option.to);
         class="tab-count"
         :title="option.hint"
         :count="option.count"
-      />
+      /><span
+        v-if="option.sub"
+        class="segmented-sub"
+      >{{ option.sub }}</span>
     </button>
   </div>
 </template>

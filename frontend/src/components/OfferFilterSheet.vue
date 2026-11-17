@@ -5,11 +5,14 @@ import type { OfferFacets } from "../api/client";
 import {
   BASIS_HELP,
   basisChoices,
+  choiceCount,
   radioKey,
+  rateCount,
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
   SCORE_HELP,
+  scoreCount,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -44,14 +47,19 @@ const bases = computed(() => basisChoices(props.facets));
 
 // « Note minimale, sur 100 » (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, mêmes seuils que
 // l'ordinateur. Une adresse d'avant (?note=60-90) garde ses bornes, et aucune case n'est marquée.
-const SCORES: SegmentOption[] = SCORE_CHOICES.map((c) => ({ value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}` }));
+// Sous chaque choix, son nombre d'offres (§65 du 17.11).
+const SCORES = computed<SegmentOption[]>(() =>
+  SCORE_CHOICES.map((c) => ({ value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}`, sub: choiceCount(scoreCount(props.facets, c.min)) })),
+);
 const score = computed({
   get: () => (props.filters.maxScore !== null ? "" : String(props.filters.minScore ?? "all")),
   set: (value: string) => emit("update", { minScore: value === "all" ? null : Number(value), maxScore: null }),
 });
 // Le taux d'activité, un seul choix (5e) : le serveur garde une offre dont le taux maximum l'atteint, ou au
 // taux inconnu. Un contrôle segmenté, pas des puces qui ont l'air de se cumuler.
-const RATES: SegmentOption[] = RATE_CHOICES.map((c) => ({ value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}` }));
+const RATES = computed<SegmentOption[]>(() =>
+  RATE_CHOICES.map((c) => ({ value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}`, sub: choiceCount(rateCount(props.facets, c.value)) })),
+);
 const rate = computed({
   get: () => (props.filters.minRate === null ? "all" : String(props.filters.minRate)),
   set: (value: string) => emit("update", { minRate: value === "all" ? null : Number(value) }),

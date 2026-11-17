@@ -1156,7 +1156,7 @@ describe("Offres, barre d’outils (1.6.55)", () => {
     const wrapper = await mountAt("/offres?note=75&canton=VD&canton=GE&externe=1&q=dev");
     const chips = wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text());
     // La recherche n'a pas de pastille : son champ est dans la barre.
-    expect(chips).toEqual(["Note minimale : 75 et +", "Canton : VD", "Canton : GE", "Chez l’employeur"]);
+    expect(chips).toEqual(["Note 75 et +", "Canton : VD", "Canton : GE", "Chez l’employeur"]);
     expect(wrapper.find("[data-test=filters-count]").text()).toBe("4");
     expect(wrapper.find("[data-test=filters-toggle]").attributes("aria-label")).toBe("Filtrer, 4 filtres actifs");
     await wrapper.find("[data-test=chip-remove-canton-VD]").trigger("click");
