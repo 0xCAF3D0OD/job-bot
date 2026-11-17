@@ -50,7 +50,7 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
   it("« Se déconnecter » dans sa carte, en rouge, l’adresse dessous ; pas sans connexion (§10.4, PR 8 du 9 novembre)", async () => {
     const wrapper = await mountPage();
     const button = wrapper.get("[data-test=logout]");
-    expect(button.find(".block-row-title").text()).toBe("Se déconnecter");
+    expect(button.find(".account-logout-title").text()).toBe("Se déconnecter");
     expect(button.get("[data-test=logout-email]").text()).toBe("kevin@example.ch");
     expect(button.classes()).toContain("account-logout-row");
     expect(button.element.closest(".account-group")).not.toBeNull();
@@ -74,24 +74,23 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
   it("une carte par groupe (PR 8 du 9 novembre)", async () => {
     const wrapper = await mountPage();
     const groups = wrapper.findAll(".account-group");
-    // Profil, Mon parcours, Préférences, Recherche et outils, Confidentialité et aide, Se déconnecter.
-    expect(groups).toHaveLength(6);
-    expect(groups[1]!.findAll(".block-row").map((r) => r.find(".block-row-name").text())).toEqual(["Formations", "CV et lettres"]);
+    // Mon parcours, Préférences, Recherche et outils, Confidentialité et aide, Se déconnecter (le profil a sa carte, §51).
+    expect(groups).toHaveLength(5);
+    expect(groups[0]!.findAll(".account-line").map((r) => r.find(".account-line-title").text())).toEqual(["Formations", "CV et lettres"]);
   });
 
   it("la carte du profil, puis les quatre groupes et leurs liens", async () => {
     const wrapper = await mountPage();
     const card = wrapper.get("[data-test=account-profile-card]");
     expect(card.attributes("href")).toBe("/profil");
-    // La ligne profil (CompteImage) : toute la ligne est le lien ; l'image (initiales) et sa pastille crayon décorative.
+    // La ligne profil (§51, planche Compte) : toute la ligne est le lien ; l'image (initiales), le nom, « Mon profil et
+    // mon CV ».
     expect(card.find("button").exists()).toBe(false);
     const image = card.get("[data-test=account-image]");
     expect(image.get("[data-test=profile-image]").text()).toBe("KD");
-    expect(image.get(".account-image-badge").attributes("aria-hidden")).toBe("true");
-    expect(image.find(".account-image-badge .icon").exists()).toBe(true);
     expect(card.text()).toContain("Kevin Di Nocera");
-    expect(card.text()).toContain("CV, compétences, postes recherchés");
-    expect(wrapper.findAll(".account-block .block-cap").map((t) => t.text())).toEqual([
+    expect(card.text()).toContain("Mon profil et mon CV");
+    expect(wrapper.findAll(".account-block .account-cap").map((t) => t.text())).toEqual([
       "Mon parcours",
       "Préférences",
       "Recherche et outils",
@@ -100,24 +99,30 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(href(wrapper, "account-trainings")).toBe("/bilan/formations");
     // « Mes CV » compte les CV, pas les certificats (C5).
     expect(href(wrapper, "account-cv")).toBe("/profil?onglet=parcours");
-    expect(wrapper.get("[data-test=account-cv] .block-row-line").text()).toBe(", 2 documents");
-    // D29 : chaque ligne a son cercle à flèche, décoratif ; la carte du profil aussi.
-    expect(card.get(".arrow-circle").attributes("aria-hidden")).toBe("true");
-    expect(wrapper.get("[data-test=account-page]").element.closest(".blocks-page")).not.toBeNull();
+    // §51 : la valeur utile à droite, en gris, avant le chevron.
+    expect(wrapper.get("[data-test=account-cv] .account-line-value").text()).toBe(", 2");
+    // §49 : un chevron décoratif sur chaque ligne ; la carte du profil aussi.
+    expect(card.get(".account-line-chevron").attributes("aria-hidden")).toBe("true");
+    expect(wrapper.get("[data-test=account-trainings] .account-line-chevron").attributes("aria-hidden")).toBe("true");
     expect(href(wrapper, "account-criteria")).toBe("/profil");
     expect(href(wrapper, "account-notifications")).toBe("/reglages?rubrique=notifications");
-    expect(wrapper.get("[data-test=account-appearance]").text()).toContain("Automatique");
+    expect(wrapper.get("[data-test=account-appearance]").text()).toContain("Auto");
     expect(href(wrapper, "account-ai-data")).toBe("/tes-donnees#ia");
     expect(wrapper.get("[data-test=account-ai-data]").text()).toBe("L’IA et tes données");
+    expect(wrapper.get("[data-test=account-help] .account-line-title").text()).toBe("Aide");
     expect(href(wrapper, "account-help")).toBe("mailto:aide@example.ch");
-    // PR 34 (maquettes Compte du 10 novembre) : une icône décorative avant le texte de chaque ligne, sauf le profil.
-    const icons = (test: string) => wrapper.get(`[data-test=${test}] .block-row-icon`);
+    // Une icône décorative avant le texte de chaque ligne, sauf le profil ; une couleur par section (§51).
+    const icons = (test: string) => wrapper.get(`[data-test=${test}] .account-line-icon`);
+    expect(icons("account-trainings").classes()).toContain("violet");
+    expect(icons("account-cv").classes()).toContain("blue");
+    expect(icons("account-criteria").classes()).toContain("green");
+    expect(icons("account-notifications").classes()).toContain("peach");
     expect(icons("account-trainings").attributes("data-icon")).toBe("graduation");
     expect(icons("account-data").attributes("data-icon")).toBe("database");
     expect(icons("account-ai-data").attributes("data-icon")).toBe("shield");
     expect(icons("account-help").attributes("data-icon")).toBe("help");
     expect(icons("account-orp").attributes("aria-hidden")).toBe("true");
-    expect(card.find(".block-row-icon").exists()).toBe(false);
+    expect(card.find(".account-line-icon").exists()).toBe(false);
     // L'administration et l'état du service, à l'exploitant seulement.
     expect(wrapper.find("[data-test=account-admin]").exists()).toBe(false);
     expect(wrapper.find("[data-test=account-diagnostic]").exists()).toBe(false);
@@ -125,13 +130,13 @@ describe("AccountView (maquette Compte, étape 10a ; blocs du lot 18, §10.4)", 
     expect(collectNow).toHaveBeenCalled();
   });
 
-  it("l’image choisie dans Profil s’affiche sur la ligne, la pastille reste dans le conteneur de 52 px", async () => {
+  it("l’image choisie dans Profil s’affiche sur la ligne (§51 : sans pastille crayon)", async () => {
     forgetProfileImage();
     DATA["/api/profile-image"] = { avatar: 3 };
     const wrapper = await mountPage();
     const image = wrapper.get("[data-test=account-profile-card] [data-test=account-image]");
     expect(image.get("img").attributes("src")).toContain("avatar-3");
-    expect(image.find(".account-image-badge").exists()).toBe(true);
+    expect(image.find(".account-image-badge").exists()).toBe(false);
     expect(wrapper.findComponent({ name: "AvatarPicker" }).exists()).toBe(false);
     delete DATA["/api/profile-image"];
     forgetProfileImage();

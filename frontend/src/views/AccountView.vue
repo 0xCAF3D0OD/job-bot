@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
-import BlockRow from "../components/BlockRow.vue";
+import AccountLine from "../components/AccountLine.vue";
 import PageHero from "../components/PageHero.vue";
 import ProfileImage from "../components/ProfileImage.vue";
 import { useAuth } from "../composables/useAuth";
@@ -14,8 +14,6 @@ import { usePlan } from "../composables/usePlan";
 import { useProfileImage } from "../composables/useProfileImage";
 import { useProfiles } from "../composables/useProfiles";
 import { useTheme } from "../composables/useTheme";
-import { plural } from "../format";
-import "../blocks.css";
 
 // Prompt du 9 novembre, PR 8 (maquettes Compte et CompteSombre) : une carte par groupe (profil ; Mon parcours ;
 // Préférences ; Confidentialité et aide ; Se déconnecter), lignes séparées par un trait fin, comme Réglages ; plus de
@@ -51,7 +49,8 @@ const initials = computed(() =>
     .map((word) => word.charAt(0).toUpperCase())
     .join(""),
 );
-const THEME_LABEL = { auto: "Automatique", light: "Clair", dark: "Sombre" } as const;
+// Les valeurs à droite des lignes (§51) : « Auto », « Clair », « Sombre », comme la planche.
+const THEME_LABEL = { auto: "Auto", light: "Clair", dark: "Sombre" } as const;
 const owner = computed(() => Boolean(me.value?.is_owner));
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3), jamais dans la démo.
@@ -104,46 +103,39 @@ onMounted(() => {
 
 <template>
   <PageHero title="Compte" />
-  <section class="band blocks-page account-blocks">
+  <!-- LISEZMOI §51 du 17.11 (planches Compte, CompteSombre, CompteImage) : la ligne profil, puis des groupes de lignes
+       d’une seule ligne de texte, 56 px, la valeur utile à droite avant le chevron, une couleur par icône de section.
+       « Recherche et outils », Connexions, État du service et le choix du profil d’essai ne sont pas dessinés : gardés
+       (règle 3 de CLAUDE.md), au même style. -->
+  <section class="band account-v2">
     <div
       class="container account-page"
       data-test="account-page"
     >
-      <!-- La ligne profil (CompteImage.dc.html, demande de Kevin du 9 novembre) : toute la ligne est le lien vers le
-           Profil. L’image de 52 px (celle choisie dans Profil, sinon les initiales), la pastille crayon décorative dans un conteneur de la taille de l’image, le nom, puis « CV,
-           compétences, postes recherchés » sur deux lignes au plus. -->
-      <section class="block account-card-wrap">
-        <div class="account-group account-profile-group">
-          <RouterLink
-            to="/profil"
-            class="block-row account-card"
-            data-test="account-profile-card"
-          >
-            <span
-              class="account-image"
-              data-test="account-image"
-            >
-              <ProfileImage
-                :choice="image.choice.value"
-                :initials="initials || image.initials.value"
-                :size="52"
-              />
-              <span
-                class="account-image-badge"
-                aria-hidden="true"
-              ><AppIcon name="pencil" /></span>
-            </span>
-            <span class="account-card-text">
-              <strong class="account-card-name">{{ name || "Ton profil" }}</strong>
-              <span class="account-card-line">CV, compétences, postes recherchés</span>
-            </span>
-            <span
-              class="arrow-circle"
-              aria-hidden="true"
-            ><AppIcon name="arrow-right" /></span>
-          </RouterLink>
-        </div>
-      </section>
+      <RouterLink
+        to="/profil"
+        class="account-profile"
+        data-test="account-profile-card"
+      >
+        <span
+          class="account-image"
+          data-test="account-image"
+        >
+          <ProfileImage
+            :choice="image.choice.value"
+            :initials="initials || image.initials.value"
+            :size="48"
+          />
+        </span>
+        <span class="account-profile-text">
+          <strong class="account-profile-name">{{ name || "Ton profil" }}</strong>
+          <span class="account-profile-line">Mon profil et mon CV</span>
+        </span>
+        <span
+          class="account-line-chevron"
+          aria-hidden="true"
+        ><AppIcon name="chevron" /></span>
+      </RouterLink>
 
       <!-- Les profils d'essai de l'exploitant (docs/65), venus du menu du compte (C2) : seulement s'il y en a. -->
       <label
@@ -167,62 +159,63 @@ onMounted(() => {
         </select>
       </label>
 
-      <!-- Lot 18 (§10.4 ; maquettes Compte et CompteSombre) : des blocs à sur-titre, une ligne à flèche (D29) par
-           élément. « Recherche et outils » n’est pas dessiné : ses réglages restent, dans un bloc à part. -->
       <section
-        class="block account-block"
+        class="account-block"
         aria-labelledby="account-path"
       >
         <h2
           id="account-path"
-          class="block-cap"
+          class="account-cap"
         >
           Mon parcours
         </h2>
         <div class="account-group">
-          <BlockRow
+          <AccountLine
             title="Formations"
             to="/bilan/formations"
             icon="graduation"
+            tone="violet"
             data-test="account-trainings"
           />
-          <BlockRow
+          <AccountLine
             title="CV et lettres"
-            :lines="cvCount === null ? [] : [plural(cvCount, 'document', 'documents')]"
+            :value="cvCount === null ? undefined : String(cvCount)"
             :to="{ path: '/profil', query: { onglet: 'parcours' } }"
             icon="file"
+            tone="blue"
             data-test="account-cv"
           />
         </div>
       </section>
 
       <section
-        class="block account-block"
+        class="account-block"
         aria-labelledby="account-prefs"
       >
         <h2
           id="account-prefs"
-          class="block-cap"
+          class="account-cap"
         >
           Préférences
         </h2>
         <div class="account-group">
-          <BlockRow
+          <AccountLine
             title="Critères de recherche"
-            :lines="['Postes, lieux, taux d’activité']"
             to="/profil"
             icon="search"
+            tone="green"
             data-test="account-criteria"
           />
-          <BlockRow
+          <AccountLine
             title="Notifications"
             :to="rubric('notifications')"
             icon="bell"
+            tone="peach"
             data-test="account-notifications"
           />
-          <BlockRow
+          <AccountLine
             title="Apparence"
-            :lines="[THEME_LABEL[theme]]"
+            :value="THEME_LABEL[theme]"
             :to="rubric('affichage')"
             icon="moon"
             data-test="account-appearance"
@@ -231,48 +224,48 @@ onMounted(() => {
       </section>
 
       <section
-        class="block account-block"
+        class="account-block"
         aria-labelledby="account-tools"
       >
         <h2
           id="account-tools"
-          class="block-cap"
+          class="account-cap"
         >
           Recherche et outils
         </h2>
         <div class="account-group">
-          <BlockRow
+          <AccountLine
             title="Objectif ORP et sites"
             :to="rubric('recherche')"
             icon="flag"
             data-test="account-orp"
           />
-          <BlockRow
+          <AccountLine
             title="Rythme"
             :to="rubric('rythme')"
             icon="clock"
             data-test="account-rhythm"
           />
-          <BlockRow
+          <AccountLine
             title="IA"
             :to="rubric('ia')"
             icon="ai"
             data-test="account-ai"
           />
-          <BlockRow
+          <AccountLine
             title="Agenda"
             :to="rubric('outils')"
             icon="calendar"
             data-test="account-tools"
           />
-          <BlockRow
+          <AccountLine
             title="Formule"
-            :lines="[planName]"
+            :value="planName"
             :to="rubric('formule')"
             icon="tag"
             data-test="account-plan"
           />
-          <BlockRow
+          <AccountLine
             v-if="owner"
             title="Administration"
             :to="rubric('plateforme')"
@@ -280,10 +273,10 @@ onMounted(() => {
             data-test="account-admin"
           />
           <!-- Venu du menu du compte (C2). La démo ne collecte rien (docs/72). -->
-          <BlockRow
+          <AccountLine
             v-if="me && !me.demo"
             title="Collecter maintenant"
-            :lines="[running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis']"
+            :value="running ? 'En cours…' : undefined"
             :aria-busy="running || undefined"
             :aria-disabled="running || undefined"
             icon="refresh"
@@ -303,60 +296,45 @@ onMounted(() => {
       </p>
 
       <section
-        class="block account-block"
+        class="account-block"
         aria-labelledby="account-privacy"
       >
         <h2
           id="account-privacy"
-          class="block-cap"
+          class="account-cap"
         >
           Confidentialité et aide
         </h2>
         <div class="account-group">
-          <BlockRow
+          <AccountLine
             title="Mes données"
             :to="rubric('donnees')"
             icon="database"
             data-test="account-data"
           />
           <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
-          <BlockRow
+          <AccountLine
             v-if="me?.auth_enabled && !me.demo"
             title="Connexions"
             :to="rubric('connexions')"
             icon="plug"
             data-test="account-connections"
           />
-          <BlockRow
+          <AccountLine
             title="L’IA et tes données"
             :to="{ path: '/tes-donnees', hash: '#ia' }"
             icon="shield"
             data-test="account-ai-data"
           />
-          <a
-            v-if="operatorEmail"
-            :href="`mailto:${operatorEmail}`"
-            class="block-row small"
-            data-test="account-help"
-          >
-            <AppIcon
-              name="help"
-              class="block-row-icon"
-            />
-            <span class="block-row-text"><span class="block-row-title">Aide et contact</span></span>
-            <span
-              class="arrow-circle"
-              aria-hidden="true"
-            ><AppIcon name="external" /></span>
-          </a>
-          <BlockRow
-            v-else
-            title="Aide et contact"
-            to="/a-propos"
+          <!-- « Aide » (§51) : l'« Aide et contact » d'avant, l'e-mail de l'exploitant ou la page À propos. -->
+          <AccountLine
+            title="Aide"
+            :href="operatorEmail ? `mailto:${operatorEmail}` : undefined"
+            :to="operatorEmail ? undefined : '/a-propos'"
             icon="help"
             data-test="account-help"
           />
-          <BlockRow
+          <AccountLine
             v-if="showDiagnostic"
             title="État du service"
             to="/reglages/diagnostic"
@@ -365,32 +343,29 @@ onMounted(() => {
           />
         </div>
       </section>
-      <!-- Prompt du 9 novembre, PR 8 (Compte, CompteSombre) : « Se déconnecter » dans sa propre carte, en rouge, avec
-           l’adresse e-mail dessous. -->
-      <section
+      <!-- « Se déconnecter » dans sa propre carte, en rouge, l’adresse e-mail dessous (inchangé au §51). -->
+      <div
         v-if="me?.auth_enabled && phone"
-        class="block account-block account-logout-block"
+        class="account-group account-logout-group"
       >
-        <div class="account-group">
-          <button
-            type="button"
-            class="block-row small account-logout-row"
-            data-test="logout"
-            @click="signOut"
-          >
-            <AppIcon name="logout" />
-            <span class="block-row-text">
-              <span class="block-row-title">Se déconnecter</span>
-              <span
-                v-if="image.email.value"
-                class="block-row-line"
-                data-test="logout-email"
-              >{{ image.email.value }}</span>
-            </span>
-          </button>
-        </div>
-      </section>
-      <!-- Ordinateur : inchangé (MODIFICATIONS_9 ordinateur, §4), le lien rouge sous les blocs. -->
+        <button
+          type="button"
+          class="account-logout-row"
+          data-test="logout"
+          @click="signOut"
+        >
+          <AppIcon name="logout" />
+          <span class="account-logout-text">
+            <span class="account-logout-title">Se déconnecter</span>
+            <span
+              v-if="image.email.value"
+              class="account-logout-email"
+              data-test="logout-email"
+            >{{ image.email.value }}</span>
+          </span>
+        </button>
+      </div>
+      <!-- Ordinateur : le lien rouge sous les blocs (MODIFICATIONS_9 ordinateur, §4). -->
       <button
         v-else-if="me?.auth_enabled"
         type="button"
@@ -403,3 +378,41 @@ onMounted(() => {
     </div>
   </section>
 </template>
+
+<style>
+/* La page Compte (LISEZMOI §51 du 17.11 ; planches Compte, CompteSombre). Valeurs de la planche posées sur la grille de
+   4 (audit-grille) : 14 px → 16 px d'écart et de marge, titres de groupe 18 px → 20 px au-dessus. */
+.account-v2 { --acc-cap: 13px; --acc-cap-lh: 18px; --acc-name: 17px; --acc-name-lh: 24px; --acc-line-lh: 20px; --acc-title-lh: 22px; --acc-value: 15px; --acc-chevron: 24px; --acc-chevron-icon: 20px; }
+.account-v2.band { padding: var(--space-3) 0 var(--space-12); border-top: 0; }
+.account-v2 > .container { padding: 0 var(--space-5); }
+.account-v2 .account-page { display: grid; gap: 0; max-width: 40rem; }
+.account-v2 .account-cap { margin: var(--space-5) var(--space-1) var(--space-2); font-size: var(--acc-cap); line-height: var(--acc-cap-lh); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+.account-v2 :is(.account-profile, .account-group) { background: var(--surface); border: 1px solid var(--row-sep); border-radius: var(--radius-card); overflow: hidden; }
+.account-v2 .account-profile { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); color: var(--text); text-decoration: none; }
+.account-v2 .account-image { flex: none; display: inline-flex; }
+.account-v2 .account-image .profile-image { color: var(--avatar-initials); box-shadow: none; }
+.account-v2 .account-profile-text { display: grid; flex: 1; min-width: 0; }
+.account-v2 .account-profile-name { font-size: var(--acc-name); line-height: var(--acc-name-lh); overflow-wrap: anywhere; }
+.account-v2 .account-profile-line { font-size: var(--font-small); line-height: var(--acc-line-lh); color: var(--text-secondary); }
+.account-line { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; margin: 0; padding: 0 var(--space-4); border: 0; background: transparent; font: inherit; text-align: left; color: var(--text); text-decoration: none; cursor: pointer; }
+.account-line + .account-line { border-top: 1px solid var(--line-soft); }
+.account-line-icon { flex: none; width: 22px; height: 22px; stroke-width: 2; color: var(--row-icon); }
+.account-line-icon.violet { color: var(--agency-text); }
+.account-line-icon.blue { color: var(--primary-graphic); }
+.account-line-icon.green { color: var(--success); }
+.account-line-icon.peach { color: var(--icon-peach); }
+.account-line-title { flex: 1; min-width: 0; font-size: var(--font-body); line-height: var(--acc-title-lh); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-line-value { flex: none; font-size: var(--acc-value); color: var(--text-secondary); }
+/* Le chevron des listes (LISEZMOI §49) : 20 px, trait 2,4, --chevron, dans une zone de 24 px. */
+.account-v2 .account-line-chevron { flex: none; display: grid; place-items: center; width: var(--acc-chevron); height: var(--acc-chevron); margin-left: calc(var(--space-2) * -1); color: var(--chevron); }
+.account-v2 .account-line-chevron .icon { width: var(--acc-chevron-icon); height: var(--acc-chevron-icon); stroke-width: 2.4; }
+.account-line[aria-disabled="true"] { cursor: progress; }
+.account-v2 .account-switch { margin-top: var(--space-4); }
+.account-v2 .account-logout-group { margin-top: var(--space-6); }
+.account-logout-row { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; padding: var(--space-2) var(--space-4); border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.account-logout-row > .icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--logout-text); }
+.account-logout-text { display: grid; min-width: 0; }
+.account-logout-title { font-weight: var(--weight-bold); line-height: var(--acc-title-lh); color: var(--logout-text); }
+.account-logout-email { font-size: var(--font-small); line-height: var(--acc-line-lh); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-v2 .account-page-logout { justify-self: start; margin: var(--space-4) var(--space-4) 0; padding: 0; }
+</style>
