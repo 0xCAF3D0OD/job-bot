@@ -2887,6 +2887,59 @@
         }
       }
     },
+    "/api/offers/manual/{offer_id}/unfill": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Unfill",
+        "description": "« Annuler » après « Ouvrir l'offre » : les champs remplis redeviennent vides\n(Kevin, 17.11).",
+        "operationId": "unfillManualOffer",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualUnfillIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualUnfillOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/score-correction": {
       "get": {
         "tags": [
@@ -18948,6 +19001,14 @@
             "type": "array",
             "title": "Filled",
             "default": []
+          },
+          "filled_values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Filled Values",
+            "default": {}
           }
         },
         "type": "object",
@@ -19257,6 +19318,76 @@
         },
         "type": "object",
         "title": "ManualReadOut"
+      },
+      "ManualUnfillIn": {
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "title": "ManualUnfillIn"
+      },
+      "ManualUnfillOut": {
+        "properties": {
+          "reverted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reverted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reverted"
+        ],
+        "title": "ManualUnfillOut"
       },
       "MatchOut": {
         "properties": {

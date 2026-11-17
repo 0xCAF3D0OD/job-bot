@@ -1190,6 +1190,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/manual/{offer_id}/unfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unfill
+         * @description « Annuler » après « Ouvrir l'offre » : les champs remplis redeviennent vides
+         *     (Kevin, 17.11).
+         */
+        post: operations["unfillManualOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/score-correction": {
         parameters: {
             query?: never;
@@ -6629,6 +6650,13 @@ export interface components {
              * @default []
              */
             filled: string[];
+            /**
+             * Filled Values
+             * @default {}
+             */
+            filled_values: {
+                [key: string]: string;
+            };
         };
         /** ManualContext */
         ManualContext: {
@@ -6702,6 +6730,22 @@ export interface components {
              * @default false
              */
             paste: boolean;
+        };
+        /** ManualUnfillIn */
+        ManualUnfillIn: {
+            /** Company */
+            company?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** ManualUnfillOut */
+        ManualUnfillOut: {
+            /** Reverted */
+            reverted: string[];
         };
         /** MatchOut */
         MatchOut: {
@@ -11635,6 +11679,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    unfillManualOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualUnfillIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualUnfillOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

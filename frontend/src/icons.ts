@@ -68,6 +68,8 @@ export const ICONS = {
   bang: path("M12 7v6M12 17h.01"),
   // L'erreur d'un champ (maquette Connexion) : le rond et le point d'exclamation.
   "alert-circle": circle(12, 12, 9) + path("M12 7v6M12 16.5v.5"),
+  // Information (Kevin, 17.11) : cercle de rayon 9, trait de y = 11 à 16, point à y = 8. Le cercle « ! » reste aux alertes.
+  info: circle(12, 12, 9) + path("M12 11v5M12 7.75v.5"),
   "x-circle": circle(12, 12, 8.5) + path("M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"),
   star: path("M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"),
   trend: path("M7 17L17 7M9 7h8v8"),

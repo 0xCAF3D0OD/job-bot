@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<{ initialUrl?: string | null; initialText
   formId: undefined,
 });
 const emit = defineEmits<{
-  added: [result: { id: number; existing: boolean; status: string; reasons: string[]; filled?: string[] }];
+  added: [result: { id: number; existing: boolean; status: string; reasons: string[]; filled?: string[]; filled_values?: Record<string, string> }];
 }>();
 
 type Mode = "link" | "text";
@@ -68,6 +68,8 @@ const existingKind = ref<"link" | "post" | null>(null);
 const existingTitle = ref("");
 const existingCompany = ref("");
 const existingAdded = ref<string | null>(null);
+// Les champs vides de l'offre déjà là que cette annonce remplit : « Ouvrir l'offre » les ajoute (Kevin, 17.11).
+const fillable = ref<string[]>([]);
 const duplicate = computed(() => shown.value && existingId.value !== null && existingKind.value !== null);
 const duplicateText = computed(() => {
   const added = existingAdded.value ? `ajoutée ${dateInSentence(existingAdded.value)}` : "";
@@ -174,6 +176,7 @@ async function read(value: string = entry.value): Promise<void> {
     existingTitle.value = d.existing_title ?? "";
     existingCompany.value = d.existing_company ?? "";
     existingAdded.value = d.existing_added ?? null;
+    fillable.value = d.fillable ?? [];
     readEntry.value = typed;
     textOpen.value = false;
     shown.value = true;
@@ -196,6 +199,7 @@ function byHand(): void {
   matchesTrade.value = true;
   existingId.value = null;
   existingKind.value = null;
+  fillable.value = [];
   problem.value = "";
   readEntry.value = entry.value.trim();
   textOpen.value = true;
@@ -391,8 +395,13 @@ defineExpose({
         role="alert"
         data-test="manual-existing"
       >
-        <AppIcon name="alert-circle" />
-        <span>{{ duplicateText }}</span>
+        <AppIcon name="info" />
+        <span>
+          {{ duplicateText }}
+          <template v-if="fillable.length">
+            <br><span data-test="manual-fillable">Ouvrir l’offre complète aussi les informations qui lui manquent.</span>
+          </template>
+        </span>
       </p>
       <div class="manual-duplicate-actions">
         <BusyButton
@@ -639,7 +648,7 @@ defineExpose({
 .manual-quota { justify-self: start; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--warning-soft); color: var(--warning); font-weight: var(--weight-semibold); }
 /* Déjà là : le message sous le champ, icône et texte, puis ses boutons (retour de Kevin sur la #818). */
 .manual-duplicate { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-semibold); }
-.manual-duplicate .icon { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--primary); }
+.manual-duplicate .icon { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--text-secondary); }
 .manual-duplicate-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .manual-pdf { justify-self: start; gap: var(--space-2); }
 .manual-read { display: grid; gap: var(--space-4); }

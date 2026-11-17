@@ -399,13 +399,25 @@ async function manualAdded(result: {
   status: string;
   reasons: string[];
   filled?: string[];
+  filled_values?: Record<string, string>;
 }): Promise<void> {
   manualOpen.value = false;
-  // Complétée : sa note est refaite quand le texte de l'annonce arrive.
-  notice.value = result.filled?.length
-    ? result.filled.includes("description")
-      ? "Offre complétée : sa note est refaite avec le texte de l’annonce."
-      : "Offre complétée."
+  // Complétée (Kevin, 17.11) : « {n} information(s) ajoutée(s) à l'offre » avec « Annuler », comme Écarter (6 s) ;
+  // « Annuler » remet vides les champs remplis.
+  const values = result.filled_values ?? {};
+  const added = Object.keys(values).length;
+  if (added) {
+    void offerUndo({
+      message: added > 1 ? `${added} informations ajoutées à l’offre` : "1 information ajoutée à l’offre",
+      commit: () => true,
+      restore: async () => {
+        await api.POST("/api/offers/manual/{offer_id}/unfill", { params: { path: { offer_id: result.id } }, body: values });
+        await load();
+      },
+    });
+  }
+  notice.value = added
+    ? ""
     : result.existing
       ? "Elle était déjà dans ta liste"
       : result.status === "filtered_out"

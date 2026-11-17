@@ -1,0 +1,1 @@
+Ajouter une offre déjà là : icône « info » (le cercle « ! » reste aux alertes), phrase « Ouvrir l'offre complète aussi les informations qui lui manquent », et « {n} information(s) ajoutée(s) à l'offre » avec « Annuler » pendant 6 s

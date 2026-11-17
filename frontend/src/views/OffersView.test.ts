@@ -255,6 +255,23 @@ describe("OffersView", () => {
     vi.unstubAllGlobals();
   });
 
+  it("offre déjà là complétée (Kevin, 17.11) : « 2 informations ajoutées à l’offre » ; « Annuler » les retire", async () => {
+    mockOffers(page([offer(4, "Quatre")]));
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=add-open]").trigger("click");
+    await flushPromises();
+    const values = { description: "Tu fabriques nos meubles.", url: "https://bois.ch/emplois/1" };
+    wrapper.findComponent({ name: "ManualOfferForm" }).vm.$emit("added", {
+      id: 4, existing: true, status: "to_review", reasons: [], filled: ["description", "url"], filled_values: values,
+    });
+    await flushPromises();
+    expect(useUndo().pending.value?.message).toBe("2 informations ajoutées à l’offre");
+    POST.mockResolvedValue({ data: { reverted: ["description", "url"] } });
+    await useUndo().undo();
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/manual/{offer_id}/unfill", { params: { path: { offer_id: 4 } }, body: values });
+  });
+
   it("ordinateur large (§36 du 16.11) : rien d’ouvert à l’arrivée, « Choisis une offre » ; après Écarter, la scène revient et « Annuler » rouvre l’offre", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));

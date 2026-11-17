@@ -182,6 +182,9 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(message.text()).toBe("Cette offre est déjà dans tes candidatures (ajoutée le 3 novembre).");
     expect(wrapper.find("[data-test=manual-separate]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-draft]").exists()).toBe(false);
+    expect(message.find("[data-icon=info]").exists()).toBe(true);
+    // Rien à compléter : pas de phrase.
+    expect(wrapper.find("[data-test=manual-fillable]").exists()).toBe(false);
     expect((wrapper.vm as unknown as { duplicate: boolean }).duplicate).toBe(true);
     POST.mockResolvedValueOnce({ data: { id: 4, existing: true, status: "to_review", reasons: [], filled: ["url"] } });
     await wrapper.find("[data-test=manual-open-existing]").trigger("click");
@@ -194,11 +197,11 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
   it("même poste ailleurs (Kevin, 16.11) : « Ouvrir l’offre » et « Ajouter quand même », une offre à part", async () => {
     const wrapper = await mountForm();
     POST.mockResolvedValueOnce({
-      data: { draft: draft({ existing_offer_id: 4, existing_kind: "post", existing_title: "Menuisier CFC", existing_company: "Bois & Fils SA", existing_added: "2026-11-03" }) },
+      data: { draft: draft({ existing_offer_id: 4, existing_kind: "post", existing_title: "Menuisier CFC", existing_company: "Bois & Fils SA", existing_added: "2026-11-03", fillable: ["description"] }) },
     });
     await send(wrapper, "https://bois.ch/emplois/1");
     expect(wrapper.find("[data-test=manual-existing]").text()).toBe(
-      "Une offre très proche est déjà là : Menuisier CFC chez Bois & Fils SA, ajoutée le 3 novembre.",
+      "Une offre très proche est déjà là : Menuisier CFC chez Bois & Fils SA, ajoutée le 3 novembre. Ouvrir l’offre complète aussi les informations qui lui manquent.",
     );
     expect(wrapper.find("[data-test=manual-open-existing]").text()).toContain("Ouvrir l’offre");
     expect(wrapper.find("[data-test=manual-separate]").text()).toContain("Ajouter quand même");
