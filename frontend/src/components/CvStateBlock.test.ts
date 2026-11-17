@@ -86,7 +86,13 @@ describe("CvStateBlock", () => {
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/documents/{document_id}/read", { params: { path: { document_id: 4 } } });
     expect(wrapper.find("[data-test=cv-state-cours]").exists()).toBe(true);
+    // Le style de ChargementCV dans la carte (§53) : titre manuscrit, barre, étapes ; le parcours ne bloque pas.
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(wrapper.find("[data-test=cv-state-cours] .loading-steps-title").text()).toBe("Je lis ton CV,environ 30 secondes");
     expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Lecture du CV");
+    expect(wrapper.find("[data-test=cv-state-cours] ol").attributes("role")).toBeUndefined();
+    expect(live.text()).toContain("Tu peux quitter cette page");
     // Le suivi interroge le serveur jusqu'à la fin de la lecture.
     await vi.advanceTimersByTimeAsync(3000);
     await flushPromises();

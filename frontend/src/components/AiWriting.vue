@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
 import AppIcon from "./AppIcon.vue";
+
+// La lettre (§53, planche ChargementLettre ; Kevin, 17.11) : l'attente ne bloque pas l'écran, elle prend seulement le
+// style de la planche dans sa zone. « CV adapté » et « puis j'adapte ton CV » seulement quand un CV se prépare en même
+// temps (`withCv`, lu au début de l'attente : les étapes restent celles du travail lancé). Chargé à la demande : les autres attentes gardent leurs étapes.
+const LoadingSteps = defineAsyncComponent(() => import("./LoadingSteps.vue"));
 
 // L'IA rédige (docs/59 §4) : la seule vraie attente de la plateforme (10 à 30 s). Une barre
 // d'étapes, l'étape en cours en violet, les faites cochées ; elle avance avec le temps
 // habituel de chaque étape et s'arrête sur la dernière jusqu'à l'arrivée du texte.
-const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback" }>();
+const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback"; withCv?: boolean }>();
+
 
 const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint: string }> = {
   letter: {
@@ -41,7 +47,17 @@ onUnmounted(() => clearInterval(timer));
 </script>
 
 <template>
+  <LoadingSteps
+    v-if="kind === 'letter'"
+    class="ai-writing-letter"
+    :lines="['J’écris ta lettre,', withCv ? 'puis j’adapte ton CV' : 'environ 30 secondes']"
+    :steps="withCv ? ['Annonce lue', 'Lettre', 'CV adapté', 'Relecture'] : ['Annonce lue', 'Lettre', 'Relecture']"
+    :every-ms="7000"
+    label="Écriture de la lettre"
+    data-test="ai-writing"
+  />
   <div
+    v-else
     class="ai-writing"
     role="status"
     data-test="ai-writing"
@@ -71,6 +87,7 @@ onUnmounted(() => clearInterval(timer));
 
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.ai-writing-letter { padding: var(--space-6) var(--space-5); }
 .ai-steps li::before { content: ""; height: 4px; border-radius: var(--radius-pill); background: var(--border); transition: background-color var(--t-state); }
 @media (max-width: 599px) {
 .ai-steps { gap: var(--space-1); }

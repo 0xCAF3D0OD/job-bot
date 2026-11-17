@@ -15,8 +15,48 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="jobA1" />
+    <!-- L'apparence choisie (Compte › Apparence, useTheme) avant le premier dessin : l'écran de lancement la suit. -->
+    <script>try{var t=localStorage.getItem("jobA1-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+    <!-- L'écran de lancement (§53, planche ChargementLancement ; Kevin, 17.11) : seulement pendant le vrai chargement à
+         froid. Il disparaît dès que la première page a du contenu dans <main id="contenu">, sans une ligne de JavaScript
+         (rien à ajouter au poids des pages) et jamais de délai ajouté. Navigateur sans :has() : pas d'écran de lancement,
+         comme avant. L'animation tient en 1,2 s au plus : le 1 se dessine, les deux points, le sourire, puis « jobA1 ».
+         Mouvement réduit : tout d'un coup. -->
+    <style>
+      #lancement{display:none}
+      @supports selector(:has(a)){#lancement{display:flex}body:has(#contenu>*) #lancement{display:none}}
+      #lancement{position:fixed;inset:0;z-index:2147483647;flex-direction:column;align-items:center;justify-content:center;background:#F7F5F0;color:#1B1F2A;font-family:"Figtree Variable",system-ui,-apple-system,"Segoe UI",sans-serif;--l-line:#2445C2}
+      @media (prefers-color-scheme:dark){:root:not([data-theme=light]) #lancement{background:#171411;color:#F3EEE6;--l-line:#7D95FF}}
+      :root[data-theme=dark] #lancement{background:#171411;color:#F3EEE6;--l-line:#7D95FF}
+      #lancement .l-line{fill:none;stroke:var(--l-line);stroke-width:13;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60}
+      #lancement .l-eye{fill:var(--l-line)}
+      #lancement .l-spark{fill:#E8B48A}
+      #lancement .l-one{animation:l-draw .4s cubic-bezier(.2,0,0,1) both}
+      #lancement .l-dot{transform-box:fill-box;transform-origin:center;animation:l-pop .3s cubic-bezier(.2,0,0,1) .4s both}
+      #lancement .l-spark{animation-delay:.48s}
+      #lancement .l-smile{animation:l-draw .3s cubic-bezier(.2,0,0,1) .6s both}
+      #lancement .l-txt{margin-top:14px;height:40px;font-size:34px;font-weight:800;letter-spacing:-.02em;animation:l-in .3s cubic-bezier(.2,0,0,1) .9s both}
+      @keyframes l-draw{from{stroke-dashoffset:60;opacity:0}1%{opacity:1}to{stroke-dashoffset:0;opacity:1}}
+      @keyframes l-pop{0%{opacity:0;transform:scale(.4)}70%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+      @keyframes l-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+      @media (prefers-reduced-motion:reduce){#lancement *{animation:none!important}}
+    </style>
   </head>
   <body>
+    <div
+      id="lancement"
+      data-test="lancement"
+    >
+      <svg width="104" height="104" viewBox="8 8 86 86" role="img" aria-label="jobA1">
+        <g transform="rotate(-6 50 50)">
+          <path class="l-line l-one" d="M43 31 L54 22 V56" />
+          <circle class="l-dot l-eye" cx="24" cy="45" r="10" />
+          <circle class="l-dot l-spark" cx="76" cy="41" r="10" />
+          <path class="l-line l-smile" d="M28 72 C 40 82, 60 82, 72 70" />
+        </g>
+      </svg>
+      <span class="l-txt" aria-hidden="true">jobA1</span>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

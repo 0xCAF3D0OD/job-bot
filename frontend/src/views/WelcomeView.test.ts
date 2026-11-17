@@ -232,6 +232,32 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
   });
 
+  it("téléphone : pendant la lecture du CV, l’écran plein de ChargementCV (§53), puis retour à l’étape", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
+    let answer: (value: unknown) => void = () => {};
+    POST.mockImplementation((path: string) =>
+      path === "/api/documents/{document_id}/understand"
+        ? new Promise((resolve) => (answer = resolve))
+        : Promise.resolve({ data: path === "/api/documents" ? { id: 3, filename: "cv.pdf" } : {} }),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    const screen = wrapper.find("[data-test=cv-reading-screen]");
+    expect(screen.exists()).toBe(true);
+    expect(screen.find(".loading-steps-title").text()).toBe("Je lis ton CV,environ 20 secondes");
+    expect(screen.findAll("li").map((li) => li.text().replace(/ : .*/, ""))).toEqual(["Coordonnées", "Expériences", "Compétences", "Langues"]);
+    expect(screen.find("[role=progressbar]").attributes("aria-label")).toBe("Lecture du CV");
+    expect(wrapper.find("[data-test=welcome-continue]").exists()).toBe(false);
+    answer({ data: { chunks: [{ kind: "competence", title: "Kubernetes", content: "…", tags: [], duplicate_of: null }], roles: [], min_rate: null, languages: [], remote: null }, response: { status: 200 } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=cv-reading-screen]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
+  });
+
   it("le CV enregistré mais pas lu (502) : ni « Importé et analysé » ni « Pré-rempli depuis ton CV »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
     POST.mockImplementation((path: string) =>

@@ -1562,6 +1562,7 @@ onMounted(() => void load());
             <AiWriting
               v-else-if="writing && !selected"
               kind="letter"
+              :with-cv="cvState === 'busy'"
             />
 
             <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
