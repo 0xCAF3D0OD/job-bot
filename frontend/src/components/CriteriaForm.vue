@@ -86,9 +86,10 @@ const languagesHelp = computed(() => {
 // en pastilles sur téléphone (le premier, puis « +N »), sous un titre court qui tient sur une ligne (`short`).
 const summary = computed(() => {
   const f = form.value;
+  // Liste vide : « Toute la Suisse » (section 43 du 17.11), comme dans les premiers pas, les alertes et l’extension.
   const places = f.locations.map(placeLabel);
   const rows: { key: string; label: string; value: string; items: string[]; short?: string }[] = [
-    { key: "lieux", label: "Lieux", value: places.length ? places.join(", ") : "partout", items: places.length ? places : ["Partout"] },
+    { key: "lieux", label: "Lieux", value: places.length ? places.join(", ") : "Toute la Suisse", items: places.length ? places : ["Toute la Suisse"] },
   ];
   const policy = REMOTE_POLICIES.find((p) => p.value === f.remote_policy);
   const [remoteLabel, remoteValue] = (policy?.summary ?? "").split(/\s:\s/);
@@ -253,7 +254,7 @@ onMounted(() => void load());
       <fieldset id="criteria-lieux">
         <legend>Lieux acceptés</legend>
         <p class="setting-desc">
-          Communes (Lausanne) ou cantons (VD). Vide : partout.
+          Communes (Lausanne) ou cantons (VD). Vide : Toute la Suisse.
         </p>
         <TagInput
           id="locations"

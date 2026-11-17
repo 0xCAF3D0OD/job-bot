@@ -702,3 +702,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.488 | Journal d'accès de Caddy sans identifiant ni paramètre : le chemin seul, chaque nombre remplacé par :id, sans query string ni Referer | livrée |
 | 1.6.489 | Première candidature notée : carte posée en bas avec l'entreprise, la date et le mois ORP (section 44) | livrée |
 | 1.6.490 | Téléphone : les feuilles du bas deviennent des îlots blancs à 8 px des bords, trois hauteurs (fit, medium, large) et une seule ouverte à la fois | livrée |
+| 1.6.491 | Les feuilles du bas en îlot allégées : chaque page pèse moins que main, Filtres en grande taille, Compatibilité en taille moyenne, poignée en cible de 44 px | livrée |
+| 1.6.492 | Toute la Suisse quand la liste de lieux est vide, aussi dans Gérer mes recherches, l’assistant d’alertes et le Profil (section 43 du 17.11) | livrée |

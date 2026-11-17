@@ -69,6 +69,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
   <BottomSheet
     :open="open"
     title="Filtres"
+    size="large"
     class="filters-dialog"
     data-test="filters-sheet"
     @close="emit('close')"
@@ -269,7 +270,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 </template>
 
 <style scoped>
-.filters-dialog { max-height: calc(100dvh - 9.625rem); }
 /* « Statut » : un fieldset sans cadre, sa légende comme le titre des autres groupes. */
 .filter-status { min-width: 0; margin: 0; padding: 0; border: 0; }
 .filter-status > legend { float: left; width: 100%; padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); color: var(--text); }
