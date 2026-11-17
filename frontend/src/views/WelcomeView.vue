@@ -5,7 +5,6 @@ import { useRoute, useRouter } from "vue-router";
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
 import { api, QUIET, type AlertsPage, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
-import AlertSiteSteps from "../components/AlertSiteSteps.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -15,6 +14,7 @@ import WelcomeCriteria, { type CriteriaSources } from "../components/WelcomeCrit
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
+import WelcomeAlertSteps from "../components/WelcomeAlertSteps.vue";
 import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
@@ -126,10 +126,10 @@ const alertBusy = ref(false);
 // Rouverte depuis la carte Premiers pas d'Aujourd'hui : « Retour », « Plus tard » et « J'ai créé l'alerte » y ramènent.
 const fromToday = route?.query.etape === "alerte";
 const alertSearch = computed(() => alerts.value?.searches.find((s) => s.active) ?? null);
-const alertSiteName = computed(() => alerts.value?.sites.find((site) => site.slug === ALERT_SITE)?.name ?? "jobup");
 const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.url ?? null);
 const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
-const alertLinks = computed(() => (alertUrl.value ? [{ key: "jobup", url: alertUrl.value, label: `Ouvrir ${alertSiteName.value}` }] : []));
+// Le code de jobup est arrivé (WelcomeAlertSteps) : « J'ai validé l'alerte » à la place de « J'ai créé l'alerte ».
+const codeReceived = ref(false);
 async function loadAlerts(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
   if (data) alerts.value = data;
@@ -618,7 +618,7 @@ async function finish(to: string): Promise<void> {
             v-else-if="step === 3"
             class="wdk-title"
           >
-            Une alerte, et elles arrivent seules
+            Crée ton alerte sur jobup
           </h1>
           <h1
             v-else
@@ -814,22 +814,20 @@ async function finish(to: string): Promise<void> {
             </div>
           </template>
 
-          <!-- Section 15 du paquet du 15.11 : plus de phrase sous le titre ; l'étape « Recopie le code de jobup ». -->
+          <!-- Section 41 du paquet du 16.11 : la phrase sous le titre, puis une carte de 4 étapes ; le code en lecture seule. -->
           <template v-else-if="step === 3">
-            <div
-              class="wdk-card wdk-alert"
+            <p class="wdk-lead">
+              Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
+            </p>
+            <WelcomeAlertSteps
+              v-if="alerts"
+              v-model:received="codeReceived"
+              desk
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :mailbox="alerts.mailbox"
               data-test="welcome-alert"
-            >
-              <AlertSiteSteps
-                v-if="alerts"
-                :site-name="alertSiteName"
-                :search-label="alertLabel"
-                :links="alertLinks"
-                :mailbox="alerts.mailbox"
-                code
-                code-help="jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici."
-              />
-            </div>
+            />
             <div class="wdk-foot">
               <button
                 type="button"
@@ -855,7 +853,7 @@ async function finish(to: string): Promise<void> {
                   data-test="welcome-alert-done"
                   @click="alertDone"
                 >
-                  J’ai créé l’alerte
+                  {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
                 </button>
               </span>
             </div>
@@ -1192,21 +1190,18 @@ async function finish(to: string): Promise<void> {
           </template>
 
           <template v-else-if="step === 3">
-            <div
-              class="welcome-alert"
+            <p class="welcome-lead welcome-alert-lead">
+              Pour recevoir les nouvelles offres, crée une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres. Environ 2 minutes.
+            </p>
+            <WelcomeAlertSteps
+              v-if="alerts"
+              v-model:received="codeReceived"
+              :desk="false"
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :mailbox="alerts.mailbox"
               data-test="welcome-alert"
-            >
-              <AlertSiteSteps
-                v-if="alerts"
-                :site-name="alertSiteName"
-                :search-label="alertLabel"
-                :links="alertLinks"
-                :mailbox="alerts.mailbox"
-                address-help="Copie-la, puis colle-la dans le champ e-mail de l’alerte."
-                code
-                code-trail="telephone"
-              />
-            </div>
+            />
           </template>
           <template v-else>
             <template v-if="sorting && current">
@@ -1348,7 +1343,7 @@ async function finish(to: string): Promise<void> {
             data-test="welcome-alert-done"
             @click="alertDone"
           >
-            J’ai créé l’alerte
+            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
           </button>
           <button
             type="button"
@@ -1478,9 +1473,8 @@ async function finish(to: string): Promise<void> {
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
 /* L'alerte sur téléphone (OnboardingC, étape 3) : le rappel 16/12 px, les étapes à 14 px ; « Plus tard » de 44 px sous
    le bouton principal. */
-.welcome-alert { --wa-14: 14px; }
-.welcome-alert .alert-site-search { margin: 0 0 var(--space-3); }
-.welcome-alert .alert-site-steps > li { padding: var(--wa-14) 0; }
+/* Section 41 : la phrase 22 px de haut en --text-lead, 16 px au-dessus de la carte (l'écart de l'écran). */
+.welcome-alert-lead { font-size: var(--font-label); color: var(--text-lead); }
 .welcome-alert-actions { display: flex; flex-direction: column; }
 .welcome-alert-later { align-self: center; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
@@ -1555,17 +1549,9 @@ async function finish(to: string): Promise<void> {
 .wdk-offer-text .tone-dig { color: var(--peach-text); }
 .wdk-small { height: var(--wdk-40); min-height: var(--wdk-40); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
 .wdk-offer-done { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
-/* L'alerte sur ordinateur (OnboardingOrdinateurAlerte) : carte 6/22,5/2 px, rappel 14 px, titres d'étape à 5 px dans la
-   planche, ramenés sur la grille de 4 px que le contrôle « grille » exige (bordure de 1,5 px comprise : 8/24/4 px,
-   rappel 12/16, titres à 4) ; pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux ; Orange 260 px
-   de large ; le pied à 8 px de la carte. */
-.wdk-alert { --wdk-alert-x: 22.5px; --wdk-alert-top: 6.5px; --wdk-alert-bottom: 2.5px; margin-top: var(--wdk-28); padding: var(--wdk-alert-top) var(--wdk-alert-x) var(--wdk-alert-bottom); }
-.wdk-alert .alert-site-search { margin: var(--space-3) 0 var(--space-4); }
-.wdk-alert .alert-site-steps > li { padding: var(--space-4) 0; }
-.wdk-alert .alert-site-step-title { padding-top: var(--space-1); }
+/* L'alerte sur ordinateur (section 41) : pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux. */
 .wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
 .wdk-foot-end .wdk-link { font-size: var(--font-body); }
-.wdk-alert + .wdk-foot { margin-top: var(--space-2); }
 .wdk-mailbox { width: 420px; height: auto; margin-top: var(--wdk-40); }
 .wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
 .wdk-scene .illu { width: var(--wdk-scene); }
