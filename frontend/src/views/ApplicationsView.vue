@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -386,6 +386,24 @@ function openApplication(id: number): void {
   void router.push({ query: { ...route.query, candidature: String(id) } });
 }
 const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
+// Sur téléphone, la candidature remplace la liste : elle s'ouvre en haut, et le retour (navigateur ou app) ramène la
+// liste à la même position de défilement (Kevin, 17.11, point 1). Lu avant le rendu, quand la liste est encore là.
+let listScroll: number | null = null;
+watch(
+  openId,
+  (now, before) => {
+    if (twoColumns.value) return;
+    if (now !== null && before === null) {
+      listScroll = window.scrollY;
+      void nextTick(() => window.scrollTo(0, 0));
+    } else if (now === null && before !== null && listScroll !== null) {
+      const top = listScroll;
+      listScroll = null;
+      void nextTick(() => window.scrollTo(0, top));
+    }
+  },
+  { flush: "pre" },
+);
 // « Ajouter » de « Il manque l’adresse de l’entreprise », sur l’écran de fin (corrections du 13.11 au soir, §8) :
 // `?candidature=ID&modifier=adresse` ouvre « Modifier la candidature », le curseur dans l’adresse ; c’est elle que
 // lit le suivi ORP. Une seule fois : le paramètre est retiré de l’adresse.

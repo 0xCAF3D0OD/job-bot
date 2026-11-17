@@ -1,0 +1,1 @@
+Envoyées sur téléphone : fermer une candidature (retour du navigateur ou de l'app) ramène la liste à la même position de défilement ; le bouton rond de Candidatures et le bouton Assistant ne cachent plus l'élément qui reçoit le focus ; « Écartées surtout pour » n'a plus d'état au survol (décision de Kevin du 17.11)

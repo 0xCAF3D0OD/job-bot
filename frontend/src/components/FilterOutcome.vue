@@ -81,3 +81,12 @@ function reasonLine(reason: Reason): string {
     </template>
   </section>
 </template>
+
+<style>
+/* Des lignes d'information, pas des liens (choix (a) de Kevin du 17.11, audit N22) : ni chevron, ni main, ni survol. */
+.criteria-rows.filter-outcome-rows .criteria-row { cursor: default; }
+.criteria-rows.filter-outcome-rows .criteria-row:hover { border-color: var(--card-line); background: var(--surface); }
+@media (max-width: 820px) {
+  .criteria-rows.filter-outcome-rows .criteria-row:hover { background: transparent; }
+}
+</style>

@@ -390,13 +390,17 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
   });
 
-  it("sur téléphone, ouvrir une candidature lui donne son adresse : le retour la ferme sans quitter la page (audit N25)", async () => {
+  it("sur téléphone, ouvrir une candidature lui donne son adresse : le retour la ferme sans quitter la page, à la même position (audit N25)", async () => {
     mockApi(() => month(), [application]);
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     const { wrapper, router } = await mountView("/candidatures/suivi");
     vi.unstubAllGlobals();
+    // Le retour ramène la liste à sa position de défilement (Kevin, 17.11, point 1).
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(window, "scrollY", { value: 600, configurable: true });
     await wrapper.find("[data-test=application]").trigger("click");
     await flushPromises();
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 0);
     expect(router.currentRoute.value.query.candidature).toBe(String(application.id));
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(true);
     router.back();
@@ -405,6 +409,9 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi");
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 600);
+    scrollTo.mockRestore();
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
   });
 
   it("la notification « Comment s’est passé ton entretien ? » ouvre la candidature et « Faire le point » (16.11)", async () => {

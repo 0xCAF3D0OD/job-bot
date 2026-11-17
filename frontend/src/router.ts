@@ -295,6 +295,9 @@ export const router = createRouter({
     if (to.hash) return { el: to.hash, top: 80 };
     // Ouvrir ou fermer la sous-page d'une offre (téléphone, étape 6, O1) : la liste dessous garde son défilement.
     if (to.name === "offers" && from.name === "offers" && to.params.id !== from.params.id) return false;
+    // Ouvrir ou fermer une candidature des Envoyées sur téléphone (`?candidature=`, Kevin 17.11, point 1) : Envoyées
+    // garde le défilement de la liste et le rend au retour (ApplicationsView).
+    if (to.name === "applications" && from.name === "applications" && to.query.candidature !== from.query.candidature) return false;
     return { top: 0 };
   },
 });
