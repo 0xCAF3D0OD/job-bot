@@ -703,6 +703,11 @@ Deux retours de Kevin sur la #818.
 - §55 : le disque de l'onglet actif passe à l'encre #1B1F2A, icône blanche, ombre 0 4px 12px rgba(27,31,42,.25) ; en sombre, crème #F3EEE6, icône #171411, ombre rgba(0,0,0,.4) (jeton `--nav-dot-shadow`). Libellé actif à l'encre (#F3EEE6 en sombre), gras. Le bleu plein reste aux actions.
 - Onglet Assistant actif (Kevin, 17.11.2026, 12 h 41) : pas de mascotte ni de rond couleur surface ; même règle que les 4 autres onglets : dans le disque, la bulle de la barre en 26 px, trait 2,2 px, currentColor, étincelle #E8B48A ; clair disque #1B1F2A, icône #FFFFFF ; sombre disque #F3EEE6, icône #171411, ombre 0 4px 12px rgba(0,0,0,.4). Planches Assistant et AssistantSombre.
 
+## « M’avertir dès » : seuils de main gardés (Kevin, 17.11.2026)
+
+- Le LISEZMOI §56 dessine Très proche « 90 et plus », Proche « 75 et plus », À creuser « 60 et plus ». Kevin garde les seuils de main, alignés le 16.11 sur « Note minimale » des filtres : 85, 75 et 50. Les valeurs enregistrées ne changent pas.
+- Seuls la forme et les libellés suivent le §56 : les mots (Très proche, Proche, À creuser) en libellé, « 85 et plus », « 75 et plus », « 50 et plus » en précision, dans la feuille à boutons radio (téléphone) et le menu (ordinateur).
+
 ## Rappel des justificatifs en haut de l'Accueil (Kevin, 17.11.2026, 13 h 21)
 
 - §57 du LISEZMOI_CORRECTIONS du 17.11, planches AccueilJustificatif et AccueilJustificatifSombre : une PR à part.
@@ -734,6 +739,15 @@ retour ; sur ordinateur aussi Échap et le clic à l'extérieur), avec le même 
 entrée d'historique par application. Annuler = « Tout effacer », ou retour après la fermeture, qui ramène aux filtres
 d'avant. Les pastilles sous la barre et « Effacer les filtres » des listes vides appliquent tout de suite : une entrée
 chacun.
+
+Réponses de Kevin (17.11, 14 h 07) :
+
+- Le tri d'Envoyées est une préférence du compte : il n'entre pas dans l'historique (replaceState, jamais pushState).
+  Retour = page précédente. L'adresse et la liste montrent toujours le même tri : revenir à une entrée d'avant
+  remet aussitôt le tri choisi dans l'adresse. Les filtres de statut gardent la règle : une entrée par application.
+- Pas de clignotement : la liste affichée reste jusqu'à ce que la liste filtrée soit prête, puis elle est remplacée
+  d'un coup. Retour pendant l'ouverture : l'entrée choisie est remise avant que le routeur ne lise l'adresse, la liste
+  ne repasse jamais par les filtres d'avant.
 
 ## Accueil : la scène des 4 personnages (Kevin, 17.11.2026, 13 h 21 et 13 h 27)
 
