@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
 import AppFooter from "./components/AppFooter.vue";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
@@ -51,11 +51,7 @@ const { phone: wide } = usePhone("(min-width: 1024px)");
 // Le mode concentration (PR 42) cache l'en-tête comme une page nue.
 const { focus } = useFocusMode();
 const bare = computed(() => focus.value || (!!route.meta.bare && !(route.name === "not-found" && wide.value && !phone.value && loggedIn.value)));
-// Il attend la première page : avant, le contenu est vide et le pied de page s'affichait en haut de l'écran, puis
-// redescendait quand la page arrivait (saut au chargement, lot 4 de l'audit du 17.11).
-const routed = ref(false);
-void useRouter().isReady().then(() => (routed.value = true));
-const footer = computed(() => routed.value && !bare.value && (!phone.value || !loggedIn.value || route.path === "/compte"));
+const footer = computed(() => !bare.value && (!phone.value || !loggedIn.value || route.path === "/compte"));
 // Un changement de page ferme le panneau ou le menu ouvert (docs/143, D24).
 watch(() => route.fullPath, () => closeAllLayers());
 function skipToContent(): void {

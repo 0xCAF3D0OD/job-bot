@@ -25,3 +25,9 @@ const LINKS = [
     </nav>
   </footer>
 </template>
+
+<style>
+/* Avant la première page, le contenu est vide : le pied de page attend, au lieu de s'afficher en haut de l'écran puis de
+   redescendre quand la page arrive (saut au chargement, lot 4 de l'audit du 17.11). */
+#contenu:empty + .app-footer { display: none; }
+</style>
