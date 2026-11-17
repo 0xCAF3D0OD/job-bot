@@ -312,12 +312,14 @@ function onStatus(value: ApplicationStatus): void {
             v-if="sentRows.length"
             title="Ce que tu as envoyé"
             :rows="sentRows"
+            flat
             data-test="section-documents"
           />
           <SentRows
             v-if="findRows.length"
             title="Trouver un contact"
             :rows="findRows"
+            flat
             data-test="section-contacts"
           />
         </div>
@@ -742,19 +744,16 @@ function onStatus(value: ApplicationStatus): void {
 .sent-plain p { margin: 0; color: var(--peach-text); font-size: var(--font-label); }
 .sent-plain .link { min-height: var(--target-min); font-weight: var(--weight-bold); }
 .sent-side { display: flex; flex-direction: column; gap: var(--sent-8); }
-.sent-rows { padding-bottom: 0; }
-/* Dans une feuille (§45 du 17.11) : plus de carte, des lignes simples de 64 px entre deux traits #E5E2D9. */
-.sent-rows-bare { padding: 0; border: 0; border-block: 1px solid var(--line); border-radius: 0; background: none; }
-.sent-rows.sent-rows-bare a { min-height: calc(var(--space-8) * 2); margin: 0; padding: var(--space-3) var(--space-1); border-top-color: var(--line); }
-.sent-rows-bare a:first-of-type { border-top: 0; }
 .sent-rows h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); line-height: var(--space-6); }
-.sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+.sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line-soft); border-radius: 0; color: var(--text); text-decoration: none; }
 /* Lignes-liens d'une carte (PR 33 point 5) : ni rayon ni bordure propre, pas de soulignement ; un filet de 1 px entre
    les lignes, la dernière suit le rayon de la carte. */
-.sent-rows { overflow: hidden; }
-.sent-rows a { border-radius: 0; }
+.sent-rows { padding-bottom: 0; overflow: hidden; }
 .sent-rows a:hover { background: var(--primary-soft); }
 .sent-rows a > .icon { flex: none; color: var(--primary-text); }
+/* Dans une feuille (§45 du 17.11) : plus de carte, des lignes simples de 64 px ; un trait #E5E2D9 au-dessus de chaque ligne et sous la dernière. */
+.sent-rows-bare { border-bottom: 1px solid var(--line); }
+.sent-rows-bare a { min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-1); border-top-color: var(--line); }
 .sent-row-text { flex: 1; min-width: 0; }
 .sent-row-text b { display: block; font-size: var(--font-label); line-height: var(--space-5); }
 .sent-row-text span { display: block; font-size: var(--sent-13); line-height: var(--space-5); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -787,7 +786,6 @@ function onStatus(value: ApplicationStatus): void {
 .sd-steps .sent-step-line { left: calc(50% + var(--sent-28) / 2 + var(--sent-8)); right: calc(-50% + var(--sent-28) / 2 + var(--sent-8)); }
 .sd-docs { padding: var(--sent-18-5) 0 0; overflow: hidden; }
 .sd-docs-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
-.sd-docs-cols > .sent-rows { padding: 0; border: 0; border-radius: 0; background: none; }
 .sd-docs-cols > .sent-rows + .sent-rows { border-left: 1px solid var(--line); }
 .sd-docs .sent-rows h3 { --sd-22: 22px; margin: 0; padding: 0 var(--space-6) var(--space-3); font-size: var(--font-body); line-height: var(--sd-22); }
 .sd-docs .sent-rows a { box-sizing: border-box; min-height: var(--sent-64); margin: 0; padding: var(--space-3) var(--space-6); border-top-color: var(--line); }
