@@ -10,6 +10,10 @@ import StatusPill from "./StatusPill.vue";
 import { dateWithTime } from "../dates";
 import { frenchName, parseStatusLabel, plural, rateText, SITE_NAMES, sourceLabel } from "../format";
 
+// Ouvert depuis « Alertes reçues » (ReceivedAlerts), le journal porte le seul bouton du bas (K20, audit du 17.11) :
+// « Afficher plus (n) » tant qu'il reste des alertes, puis « Afficher moins », qui replie le journal sur les 3 dernières.
+const emit = defineEmits<{ collapse: [] }>();
+
 // L'analyse d'une alerte en pastille (§4) : réussie en vert, le rouge seulement pour un vrai échec.
 const PARSE_TONE: Record<ParseStatus, "neutral" | "ok" | "error"> = { parsed: "ok", empty: "neutral", unrecognized: "neutral", failed: "error" };
 
@@ -20,6 +24,8 @@ const parseStatus = ref<ParseStatus | "">("");
 const items = ref<Search[]>([]);
 const total = ref(0);
 const loading = ref(false);
+// Le bouton du bas n'apparaît qu'une fois la première page arrivée : pas d'« Afficher moins » qui change de texte.
+const loaded = ref(false);
 const failed = ref(false);
 const selected = ref<SearchDetail | null>(null);
 const { running: collecting, collectNow } = useCollect();
@@ -45,6 +51,7 @@ async function load(append = false): Promise<void> {
     failed.value = true;
   } finally {
     loading.value = false;
+    loaded.value = true;
   }
 }
 
@@ -59,14 +66,14 @@ async function select(search: Search): Promise<void> {
   selected.value = data ?? null;
 }
 
-// « Afficher plus (n) » charge la page suivante, sur place ; tout chargé, « Afficher moins » revient
-// à la première page (règles §4, ShowMore).
+// « Afficher plus (n) » charge la page suivante, sur place ; tout chargé, « Afficher moins » replie le journal
+// (règles §4, ShowMore).
 const allShown = computed({
   get: () => items.value.length >= total.value,
   set: (open: boolean) => {
     if (loading.value) return;
     if (open) void load(true);
-    else items.value = items.value.slice(0, PAGE_SIZE);
+    else emit("collapse");
   },
 });
 
@@ -241,7 +248,7 @@ onMounted(() => void load());
     </table>
 
     <ShowMore
-      v-if="total > PAGE_SIZE"
+      v-if="loaded"
       v-model="allShown"
       :hidden="total - items.length"
       test-id="journal-more"
