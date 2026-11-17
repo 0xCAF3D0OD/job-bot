@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dateInList, dateInSentence, dateWithTime, dayFamily, dayGroup, inDays, meetingDate, sinceDays, timeInCard, timeInList, timeOfDay } from "./dates";
+import { dateInList, dateInSentence, dateWithTime, dayFamily, dayMonthShort, dayGroup, inDays, meetingDate, sinceDays, timeInCard, timeInList, timeOfDay } from "./dates";
 
 // Midi à Zurich le 27 octobre 2026 (heure d'hiver depuis le 25 : UTC+1).
 const now = new Date("2026-10-27T11:00:00Z");
@@ -53,5 +53,12 @@ describe("Les dates de jobA1 (1.6.74, règle §5)", () => {
     expect(sinceDays("2026-10-26T08:00:00Z", now)).toBe("depuis hier");
     expect(inDays("2026-10-30T08:00:00Z", now)).toBe("dans 3 jours");
     expect(inDays("2026-10-28T08:00:00Z", now)).toBe("demain");
+  });
+});
+
+describe("dayMonthShort", () => {
+  it("écrit toujours « 12 nov. », même le jour même (section 44)", () => {
+    expect(dayMonthShort("2026-11-12")).toBe("12 nov.");
+    expect(dayMonthShort("2026-05-01")).toBe("1 mai");
   });
 });

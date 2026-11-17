@@ -55,6 +55,15 @@ class FirstStepsSummaryOut(BaseModel):
     kept: int
 
 
+class FirstApplicationOut(BaseModel):
+    """La première candidature sur la carte « Première candidature notée » (section 44, Kevin le
+    17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre."""
+
+    id: int
+    company: str
+    sent_at: date
+
+
 class InterviewToReview(BaseModel):
     """Entretien passé sans retour (docs/23 §1)."""
 
@@ -151,6 +160,8 @@ class TodayOut(BaseModel):
     first_steps_offer_id: int | None = None
     # Les cinq étapes faites, la réussite pas encore montrée : la carte de réussite.
     first_steps_finished: bool = False
+    # Seulement avec `first_steps_finished` : la candidature que la carte de réussite nomme.
+    first_application: FirstApplicationOut | None = None
     # Tant qu'aucune offre n'est arrivée et que la carte n'est pas masquée (docs/144, accord de
     # Kevin du 15.11) : la recherche du métier sur Google Emplois.
     google_jobs: GoogleJobsOut | None = None
@@ -373,6 +384,9 @@ async def get_today(request: Request) -> TodayOut:
             else None
         )
         google_jobs = await alert_service.google_jobs(session, steps.has_offers)
+        first_sent = (
+            await first_steps_service.first_application(session) if steps.just_finished else None
+        )
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
     soon = meeting is not None and (
@@ -396,6 +410,13 @@ async def get_today(request: Request) -> TodayOut:
         has_offers=steps.has_offers,
         first_steps_offer_id=steps.offer_id,
         first_steps_finished=steps.just_finished,
+        first_application=(
+            FirstApplicationOut(
+                id=first_sent.id, company=first_sent.company, sent_at=first_sent.sent_at
+            )
+            if first_sent
+            else None
+        ),
         google_jobs=_google_jobs(google_jobs),
         to_review=to_review,
         pending=pending,

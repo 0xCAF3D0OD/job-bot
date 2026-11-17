@@ -107,23 +107,24 @@ async function findEmployer(): Promise<void> {
   }
 }
 
-// « Ce n'est pas une agence » (section 35 du 16.11) : gardé pour cette entreprise, dans ce compte ; la liste relue, la
-// pastille et la ligne partent.
+// « Ce n'est pas une agence » (section 35 du 16.11) et « C'est une agence de placement » (menu de la fiche, Kevin
+// 16.11 23 h 33) : gardés pour cette entreprise, dans ce compte, la dernière correction l'emporte ; la liste relue, la
+// pastille et la ligne suivent. « Correction enregistrée · Annuler » avec le trait, comme « Offre écartée » : la
+// correction est déjà partie, « Annuler » la retire.
 const agencyBusy = ref(false);
-async function notAgency(): Promise<void> {
+async function correctAgency(agency: boolean): Promise<void> {
   agencyBusy.value = true;
   try {
+    const url = agency ? "/api/offers/{offer_id}/agency" : "/api/offers/{offer_id}/not-agency";
     const path = { offer_id: props.offer.id };
-    const { data } = await api.POST("/api/offers/{offer_id}/not-agency", { params: { path } });
+    const { data } = await api.POST(url, { params: { path } });
     if (!data) return;
     emit("changed");
-    // « Correction enregistrée · Annuler » avec le trait, comme « Offre écartée » (Kevin, 16.11) : la correction est
-    // déjà partie, « Annuler » la retire.
     void offerUndo({
       message: "Correction enregistrée.",
       commit: () => true,
       restore: async () => {
-        await api.DELETE("/api/offers/{offer_id}/not-agency", { params: { path } });
+        await api.DELETE(url, { params: { path } });
         emit("changed");
       },
     });
@@ -131,6 +132,13 @@ async function notAgency(): Promise<void> {
     agencyBusy.value = false;
   }
 }
+// Le choix du menu, seulement quand la ligne Agence n'est pas là et que l'offre nomme une entreprise.
+const markAgency = computed<MoreMenuItem[]>(() => {
+  const o = props.offer;
+  return o.agency || o.spontaneous || !o.company?.trim()
+    ? []
+    : [{ label: "C’est une agence de placement", test: "mark-agency", icon: "flag", run: () => void correctAgency(true) }];
+});
 
 // Le seul lien vers l'annonce de toute la fiche, hors menu « … » (prompt récapitulatif du 11 novembre, PR 25) :
 // « Voir l'annonce sur [source] », dans « Le poste » sur téléphone et dans « L'offre en bref » sur ordinateur.
@@ -458,6 +466,8 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
   if (withBar.value && scored.value) {
     items.push({ label: "Signaler une erreur dans l’offre", test: "score-correction-menu", icon: "flag", separator: true, run: () => (correcting.value = true) });
   }
+  // Après « Signaler une erreur dans l'offre », dans le même groupe ; seul, il ouvre le groupe par un trait.
+  items.push(...markAgency.value.map((item) => ({ ...item, separator: !(withBar.value && scored.value) })));
   if (o.status !== "applied") {
     items.push({ label: "J’ai postulé", test: "mark-applied", icon: "check-circle", separator: true, run: () => emit("applied") });
     items.push(
@@ -491,6 +501,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   if (withBar.value && scored.value) {
     items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
   }
+  items.push(...markAgency.value);
   if (assistant.available.value) {
     items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   }
@@ -514,6 +525,7 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     );
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
+  items.push(...markAgency.value);
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
   if (shareUrl.value) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
@@ -711,7 +723,7 @@ watch(
           :company="offer.company"
           :duplicate="offer.agency_duplicate"
           :busy="agencyBusy"
-          @correct="notAgency"
+          @correct="correctAgency(false)"
         />
         <div
           v-if="statusLabel && offer.status === 'applied'"
@@ -1090,7 +1102,7 @@ watch(
         :company="offer.company"
         :duplicate="offer.agency_duplicate"
         :busy="agencyBusy"
-        @correct="notAgency"
+        @correct="correctAgency(false)"
       />
       <div
         v-if="offer.status !== 'applied' && !sub"

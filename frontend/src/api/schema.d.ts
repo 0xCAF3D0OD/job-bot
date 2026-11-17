@@ -1473,6 +1473,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/agency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Agency */
+        post: operations["markAgency"];
+        /** Unmark Agency */
+        delete: operations["unmarkAgency"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/employer": {
         parameters: {
             query?: never;
@@ -3638,7 +3656,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Board Detail
+         * @description Le retour complet d'une ligne. Pour le modifier : « Faire le point » (PUT ci-dessus).
+         */
+        get: operations["getInterviewBoardDetail"];
         /** Update Interview */
         put: operations["updateInterview"];
         post?: never;
@@ -3850,6 +3872,26 @@ export interface paths {
          * @description « Terminer et voir le retour », à tout moment après une réponse.
          */
         post: operations["finishPractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Board
+         * @description Tous les entretiens du compte, du plus récent au plus ancien, par pages de 20.
+         */
+        get: operations["listInterviewBoard"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4514,6 +4556,134 @@ export interface components {
             content: string;
             /** By Ai */
             by_ai: boolean;
+        };
+        /** BoardDetailOut */
+        BoardDetailOut: {
+            /** Kind */
+            kind?: ("rh" | "manager" | "technique" | "test" | "final" | "autre") | null;
+            /** Held At */
+            held_at?: string | null;
+            /** Format */
+            format?: ("sur_place" | "visio" | "telephone") | null;
+            /** Duration */
+            duration?: ("moins_30" | "30_60" | "plus_60") | null;
+            /** Interviewers */
+            interviewers?: ("rh" | "manager" | "equipe" | "direction")[];
+            /** People Count */
+            people_count?: number | null;
+            /** Rating */
+            rating: number;
+            /** Stress */
+            stress?: number | null;
+            /** Interest */
+            interest?: ("more" | "same" | "less") | null;
+            /** Outlook */
+            outlook?: ("positive" | "unsure" | "negative") | null;
+            /** Questions */
+            questions?: components["schemas"]["InterviewQuestion"][];
+            /** Salary Asked */
+            salary_asked?: boolean | null;
+            /** Salary Answer */
+            salary_answer?: string | null;
+            /** Went Well */
+            went_well?: string | null;
+            /** Went Badly */
+            went_badly?: string | null;
+            /** To Prepare */
+            to_prepare?: string[];
+            /** My Questions */
+            my_questions?: string | null;
+            /** Missed Questions */
+            missed_questions?: string | null;
+            /** Learned */
+            learned?: string | null;
+            /** Warnings */
+            warnings?: string | null;
+            /** Next Step */
+            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            /** Next Step At */
+            next_step_at?: string | null;
+            /** Thanks */
+            thanks?: ("sent" | "no" | "todo") | null;
+            /** Employer Feedback */
+            employer_feedback?: string | null;
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /**
+             * Point
+             * @enum {string}
+             */
+            point: "a_venir" | "a_faire" | "fait";
+            /**
+             * Issue
+             * @enum {string}
+             */
+            issue: "en_attente" | "retenu" | "pas_retenu";
+        };
+        /** BoardLineOut */
+        BoardLineOut: {
+            /** Interview Id */
+            interview_id: number | null;
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Kind */
+            kind: ("rh" | "manager" | "technique" | "test" | "final" | "autre") | null;
+            /** Rating */
+            rating: number | null;
+            /** Stress */
+            stress: number | null;
+            /** Outlook */
+            outlook: ("positive" | "unsure" | "negative") | null;
+            /** Next Step */
+            next_step: ("rien" | "entretien" | "reponse" | "test") | null;
+            /** Next Step At */
+            next_step_at: string | null;
+            /** Thanks Sent */
+            thanks_sent: boolean | null;
+            /**
+             * Point
+             * @enum {string}
+             */
+            point: "a_venir" | "a_faire" | "fait";
+            /**
+             * Issue
+             * @enum {string}
+             */
+            issue: "en_attente" | "retenu" | "pas_retenu";
+            /** Questions Count */
+            questions_count: number;
+        };
+        /** BoardPage */
+        BoardPage: {
+            /** Items */
+            items: components["schemas"]["BoardLineOut"][];
+            /** Total */
+            total: number;
         };
         /** Body_oauthCallbackForm */
         Body_oauthCallbackForm: {
@@ -5542,6 +5712,22 @@ export interface components {
             retained: number;
             /** Reasons */
             reasons: components["schemas"]["FilterReasonOut"][];
+        };
+        /**
+         * FirstApplicationOut
+         * @description La première candidature sur la carte « Première candidature notée » (section 44, Kevin le
+         *     17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre.
+         */
+        FirstApplicationOut: {
+            /** Id */
+            id: number;
+            /** Company */
+            company: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
         };
         /** FirstOffersOut */
         FirstOffersOut: {
@@ -8757,6 +8943,7 @@ export interface components {
              * @default false
              */
             first_steps_finished: boolean;
+            first_application?: components["schemas"]["FirstApplicationOut"] | null;
             google_jobs?: components["schemas"]["GoogleJobsOut"] | null;
             /** To Review */
             to_review: number;
@@ -12247,6 +12434,68 @@ export interface operations {
         };
     };
     unmarkNotAgency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markAgency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmarkAgency: {
         parameters: {
             query?: never;
             header?: never;
@@ -16800,6 +17049,37 @@ export interface operations {
             };
         };
     };
+    getInterviewBoardDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interview_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     updateInterview: {
         parameters: {
             query?: never;
@@ -17296,6 +17576,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listInterviewBoard: {
+        parameters: {
+            query?: {
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardPage"];
+                };
             };
             /** @description Validation Error */
             422: {

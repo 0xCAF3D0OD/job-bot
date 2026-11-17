@@ -741,6 +741,33 @@ describe("offres expirées", () => {
   });
 });
 
+describe("« C’est une agence de placement » (Kevin, 16.11 23 h 33)", () => {
+  it("dans le menu de la fiche, gardé côté serveur, liste relue, « Annuler » retire la correction", async () => {
+    POST.mockResolvedValue({ data: { id: 1 } });
+    DELETE.mockResolvedValue({ data: { id: 1 } });
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=more]").trigger("click");
+    const calls = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    await wrapper.get("[data-test=mark-agency]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/agency", { params: { path: { offer_id: 1 } } });
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBeGreaterThan(calls);
+    expect(useUndo().pending.value?.message).toBe("Correction enregistrée.");
+    await useUndo().undo();
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/offers/{offer_id}/agency", { params: { path: { offer_id: 1 } } });
+  });
+
+  it("absent quand la ligne Agence est déjà là", async () => {
+    mockOffers(page([offer(11, "DevOps", { company: "Galaxi Consulting", agency: "probable" })]));
+    const wrapper = await mountAt("/offres?offre=11");
+    await wrapper.find("[data-test=more]").trigger("click");
+    expect(wrapper.find("[data-test=mark-agency]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=not-agency]").exists()).toBe(true);
+  });
+});
+
 describe("expiration signalée", () => {
   it("signaler comme expirée puis « Pas expirée »", async () => {
     PATCH.mockResolvedValue({ data: { id: 1 } });

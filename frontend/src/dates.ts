@@ -199,6 +199,11 @@ export function longDate(day: string): string {
   return capital(clean(longDay.format(dayToDate(day))).replace(",", ""));
 }
 
+/** « 12 nov. », toujours, sans « aujourd’hui » (carte « Première candidature notée », section 44 du 17.11). */
+export function dayMonthShort(day: string): string {
+  return clean(dayMonth.format(dayToDate(day)));
+}
+
 /** « Mar. 10 nov. 2026 » (pilule étroite du téléphone, maquette RendezVous). */
 export function shortDate(day: string): string {
   return capital(clean(shortDay.format(dayToDate(day))).replace(",", ""));
