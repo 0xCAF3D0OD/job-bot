@@ -763,7 +763,7 @@ onMounted(() => void load());
   .training-block-list > li, .trainings .training-list { overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .training-block-list > li + li { border-top: 1.5px solid var(--card-line); }
   .training-now { gap: 0; padding: var(--space-4); }
-  .training-now-head strong, .training-kept-text strong, .training-row-text > strong { overflow-wrap: anywhere; }
+  .training-now-head strong, .training-kept-text strong { overflow-wrap: anywhere; }
   .training-now-open > span { margin-top: var(--space-1); }
   .training-now .training-modules { grid-template-columns: 1fr; row-gap: var(--space-2); margin-top: var(--space-3); }
   .training-now .training-modules-line { grid-row: 2; grid-column: 1; }
@@ -779,7 +779,10 @@ onMounted(() => void load());
   .training-more { width: 100%; }
   .training-row-icon { display: none; }
   .training-row-text { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; align-items: center; gap: var(--space-1) var(--space-2); }
-  .training-row-text > strong { grid-column: 1 / -1; font-size: var(--td-15); }
+  /* BilanCatalogue (K34 de l'audit) : le titre sur une ligne, coupé avec « … » (le titre entier reste dans le panneau et
+     dans le nom du marque-page) ; « Payant » juste après « organisme · format », 12 px avant le marque-page. */
+  .training-row-text > strong { grid-column: 1 / -1; overflow: hidden; font-size: var(--td-15); text-overflow: ellipsis; white-space: nowrap; }
+  .trainings .training-row { gap: var(--space-3); }
   .training-row-text > span:nth-child(2) { min-width: 0; overflow: hidden; font-size: var(--td-13); text-overflow: ellipsis; white-space: nowrap; }
   .trainings .training-keep { margin-right: var(--space-3); }
 }
