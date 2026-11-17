@@ -2505,7 +2505,6 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
   .tab-bar .active { color: var(--text); font-weight: var(--weight-bold); }
   .tab-bar .active .tab-bar-icon { animation: tab-round-in var(--t-standard) var(--ease-standard) both; width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--text); color: var(--on-action); box-shadow: 0 4px 12px var(--nav-dot-shadow); }
   .tab-bar .active .tab-bar-icon .icon { width: 1.625rem; height: 1.625rem; }
-  .tab-assistant-ring { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: var(--surface); }
   .tab-bar a:focus-visible, .tab-bar button:focus-visible { outline: none; }
   .tab-bar a:focus-visible .tab-bar-icon, .tab-bar button:focus-visible .tab-bar-icon { outline: 2px solid var(--primary-graphic); outline-offset: 2px; border-radius: var(--radius-pill); }
   .tab-bar-count { position: absolute; top: -0.1rem; left: calc(50% + 0.3rem); }

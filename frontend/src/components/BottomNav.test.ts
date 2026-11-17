@@ -93,9 +93,9 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     await router.push("/assistant");
     await flushPromises();
     const tab = wrapper.find("[data-test=tab-assistant]");
-    // Actif : la mascotte dans son rond clair, sur le disque (planche Assistant).
-    expect(tab.find("[data-test=tab-assistant-ring] [data-test=assistant-mascot]").exists()).toBe(true);
-    expect(tab.find("[data-icon=assistant]").exists()).toBe(false);
+    // Actif : la même bulle dans le disque, comme les 4 autres onglets (Kevin, 17.11, 12 h 41).
+    expect(tab.find("[data-icon=assistant]").exists()).toBe(true);
+    expect(tab.find("[data-test=assistant-mascot]").exists()).toBe(false);
     expect(tab.classes()).toContain("active");
     expect(tab.attributes("aria-current")).toBe("page");
     expect(wrapper.find("[data-test=tab-today]").classes()).not.toContain("active");

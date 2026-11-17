@@ -7,7 +7,6 @@ import { useAssistant } from "../composables/useAssistant";
 import { useFocusMode } from "../composables/useFocusMode";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
-import AssistantMascot from "./AssistantMascot.vue";
 import CountBadge from "./CountBadge.vue";
 
 // La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02) : cinq onglets, Accueil, Candidatures, Assistant,
@@ -86,17 +85,7 @@ onMounted(() => void refresh());
         :data-test="`tab-${tab.name}`"
       >
         <span class="tab-bar-icon">
-          <!-- L'Assistant (LISEZMOI du 17.11, §50) : la bulle au trait comme les autres onglets ; actif, la mascotte
-               dans un rond clair posé sur le disque (planche Assistant). -->
-          <span
-            v-if="tab.name === 'assistant' && tab.active"
-            class="tab-assistant-ring"
-            data-test="tab-assistant-ring"
-          >
-            <AssistantMascot :size="34" />
-          </span>
           <AppIcon
-            v-else
             :name="tab.icon"
           />
           <CountBadge
