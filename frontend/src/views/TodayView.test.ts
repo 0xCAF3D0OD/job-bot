@@ -477,3 +477,21 @@ describe("Aujourd’hui, les moments (docs/123 §2)", () => {
     expect(document.body.querySelector("[data-test=goal-moment]")).toBeNull();
   });
 });
+
+describe("La scène des 4 personnages (§59 du 17.11) : un seul des trois par écran", () => {
+  it("dans le bandeau pêche, 340 px de large, décorative ; pas de « Pas de connexion » avec elle", async () => {
+    mockGet(today());
+    const wrapper = await mountView();
+    const scene = wrapper.find(".aj-hero [data-illustration=troupe]");
+    expect(scene.attributes("data-scene")).toBe("accueil-orp");
+    expect(scene.attributes("alt")).toBe("");
+    expect(scene.attributes("style")).toContain("--troupe-w-wide: 340px");
+    expect(wrapper.find(".network-error, [data-test=network-error]").exists()).toBe(false);
+  });
+
+  it("panne de réseau : « Pas de connexion » seul, sans la scène", async () => {
+    GET.mockRejectedValue(new TypeError("Failed to fetch"));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-illustration=troupe]").exists()).toBe(false);
+  });
+});
