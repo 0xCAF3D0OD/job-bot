@@ -414,6 +414,9 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     mockApi(() => month(), [held]);
     const { wrapper, router } = await mountView(`/candidatures/suivi?candidature=${held.id}&retour=1`);
     vi.useRealTimers();
+    // Le formulaire est chargé à la demande.
+    await vi.dynamicImportSettled();
+    await flushPromises();
     const form = wrapper.findComponent({ name: "InterviewForm" });
     expect(form.exists()).toBe(true);
     expect(form.props("company")).toBe("Acme SA");

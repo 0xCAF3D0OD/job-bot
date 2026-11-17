@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -21,7 +21,8 @@ import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import InterviewForm from "../components/InterviewForm.vue";
+// Le formulaire d'entretien ne s'ouvre qu'après un clic : chargé à la demande, comme l'Assistant (poids de Suivi, audit du 17.11).
+const InterviewForm = defineAsyncComponent(() => import("../components/InterviewForm.vue"));
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import MomentScreen from "../components/MomentScreen.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
