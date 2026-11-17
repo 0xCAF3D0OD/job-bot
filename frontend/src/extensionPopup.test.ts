@@ -440,6 +440,13 @@ describe("l’alerte jobup suivie (section 42)", () => {
     expect(document.querySelectorAll("#alerte-jobup button.primary")).toHaveLength(0);
   });
 
+  it("adresse jobup sans lieu : « {mots} · Toute la Suisse »", async () => {
+    await openPopup(flowPage(null, "https://www.jobup.ch/fr/emplois/?term=DevOps"));
+    expect(text("aj-summary")).toBe("DevOps · Toute la Suisse, adresse jobA1");
+    await openPopup(flowPage(null, "https://www.jobup.ch/fr/emplois/?term=DevOps&location=%20"));
+    expect(text("aj-summary")).toBe("DevOps · Toute la Suisse, adresse jobA1");
+  });
+
   it("champ e-mail resté vide : « Copier l’adresse jobA1 »", async () => {
     await openPopup(flowPage(null, JOBUP, false));
     expect(visible("aj-empty")).toBe(true);
