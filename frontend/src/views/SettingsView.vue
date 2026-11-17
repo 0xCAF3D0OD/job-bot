@@ -355,6 +355,48 @@ const allReady = computed(
     expectedPanels.value.every((name) => readyPanels.value.includes(name)),
 );
 const waiting = computed(() => grouped.value && !allReady.value);
+// Retour sur la ligne d’origine (accord de Kevin du 17.11, K39) : la ligne cliquée et le défilement sont gardés pour
+// la session ; au retour d’une rubrique ou d’État du service, la page revient à ce défilement et met le focus clavier
+// sur la ligne, au lieu de remonter en haut.
+const RETURN_KEY = "jobA1-retour-ligne";
+function rememberRow(event: MouseEvent): void {
+  const row = (event.target as HTMLElement).closest<HTMLElement>(":is(a, button)[data-test^=account-]");
+  if (!row || row.dataset.test === "account-collect") return;
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ path: route.path, test: row.dataset.test, y: row.getBoundingClientRect().top }));
+  } catch {
+    // Stockage refusé (navigation privée) : on revient en haut, comme avant.
+  }
+}
+function restoreRow(): void {
+  let saved: { path?: string; test?: string; y?: number } | null = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(RETURN_KEY) ?? "null");
+  } catch {
+    return;
+  }
+  // Venu d’une rubrique : par le lien de retour (back) ou par le retour du navigateur (forward).
+  const { back, forward } = (history.state ?? {}) as { back?: unknown; forward?: unknown };
+  const fromRubric = [back, forward].some((path) => typeof path === "string" && path.startsWith("/reglages"));
+  if (!saved || saved.path !== route.path || !fromRubric) return;
+  try {
+    sessionStorage.removeItem(RETURN_KEY);
+  } catch {
+    // rien à effacer
+  }
+  const { test, y = 0 } = saved;
+  requestAnimationFrame(() => {
+    // La ligne à la même hauteur dans la fenêtre qu’au moment du clic.
+    const row = document.querySelector<HTMLElement>(`[data-test="${test}"]`);
+    if (!row) return;
+    scrollBy(0, row.getBoundingClientRect().top - y);
+    row.focus({ preventScroll: true });
+  });
+}
+watch(
+  () => grouped.value && allReady.value,
+  (ready) => ready && restoreRow(),
+);
 usePageReady("settings", () => allReady.value);
 watch(
   [allReady, active],
@@ -404,7 +446,10 @@ watch(
     </template>
   </PageHero>
   <section class="band">
-    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]">
+    <div
+      :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]"
+      @click.capture="rememberRow"
+    >
       <h1
         v-if="wide && grouped"
         class="settings-wide-title"

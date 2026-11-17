@@ -30,11 +30,14 @@ const { phone } = usePhone();
     class="settings-head"
   >
     <template #back>
+      <!-- Sur ordinateur, plus de page Compte : « Retour au compte » ouvrait le panneau du profil (accord de Kevin du
+           17.11, K43). Le retour mène aux Réglages, sur la ligne « État du service ». -->
       <RouterLink
-        to="/compte"
+        to="/reglages"
         class="back-link"
+        data-test="settings-back"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />Retour au compte</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />Retour aux réglages</span>
       </RouterLink>
     </template>
   </PageHero>

@@ -18,7 +18,8 @@ const { list, current, load, choose } = useProfiles();
 const { running, message: collectMessage, collectNow } = useCollect();
 
 const owner = computed(() => Boolean(me.value?.is_owner));
-const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
+// L’exploitant n’a pas de formule : « Sans limite », pas « Essentiel » (audit du 17.11, N2).
+const planName = computed(() => (plan.value?.unlimited ? "Sans limite" : plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
 const router = useRouter();
 // Des boutons, pas des liens : RouterLink marquerait chaque ligne « page en cours » (même chemin, /reglages).
