@@ -11,14 +11,17 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.agency import (
+    MARKED_AGENCIES,
+    NO_CORRECTIONS,
     NOT_AGENCIES,
     AgencyKind,
+    Corrections,
     Duplicate,
     agency_condition,
     agency_kind,
     company_key,
     duplicate,
-    load_not_agencies,
+    load_corrections,
     recent_applications,
 )
 from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
@@ -387,11 +390,11 @@ def _offer_out(
     links: list[OfferLinkOut],
     evaluation: Evaluation | None = None,
     current_hash: str | None = None,
-    not_agencies: frozenset[str] = frozenset(),
+    corrections: Corrections = NO_CORRECTIONS,
     sent: list[Duplicate] | None = None,
     posts: dict[tuple[str, str], list[tuple[date, int | None]]] | None = None,
 ) -> OfferOut:
-    agency = agency_kind(offer, not_agencies)
+    agency = agency_kind(offer, corrections)
     found = duplicate(offer, sent) if agency and sent else None
     remote: dict[str, object] = {}
     if evaluation is not None and evaluation.remote:
@@ -425,10 +428,10 @@ def _offer_out(
 
 
 async def _sent_if_agency(
-    session: AsyncSession, offers: Sequence[Offer], not_agencies: frozenset[str]
+    session: AsyncSession, offers: Sequence[Offer], corrections: Corrections
 ) -> list[Duplicate]:
     """Les candidatures des 90 derniers jours, lues seulement si une offre est une agence."""
-    if not any(agency_kind(o, not_agencies) for o in offers):
+    if not any(agency_kind(o, corrections) for o in offers):
         return []
     return await recent_applications(session, datetime.now(LOCAL_TZ).date())
 
@@ -542,7 +545,7 @@ def _escape_like(term: str) -> str:
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-def _doubtful(not_agencies: frozenset[str]) -> ColumnElement[bool]:
+def _doubtful(corrections: Corrections) -> ColumnElement[bool]:
     """Les mêmes signaux que `_doubts`, en SQL, pour « Masquer les offres à vérifier »."""
     scam = Offer.id.in_(
         select(Evaluation.offer_id).where(func.jsonb_array_length(Evaluation.scam_signals) > 0)
@@ -554,7 +557,7 @@ def _doubtful(not_agencies: frozenset[str]) -> ColumnElement[bool]:
     hidden = or_(
         Offer.company.is_(None),
         func.btrim(Offer.company) == "",
-        agency_condition(not_agencies),
+        agency_condition(corrections),
     )
     return and_(Offer.spontaneous.is_(False), or_(scam, permanent, hidden))
 
@@ -582,16 +585,16 @@ def _filters(
     remote: str | None = None,
     hide_doubtful: bool = False,
     hide_agencies: bool = False,
-    not_agencies: frozenset[str] = frozenset(),
+    corrections: Corrections = NO_CORRECTIONS,
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
     Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
     conditions: list[ColumnElement[bool]] = [Offer.duplicate_of.is_(None)]
     if hide_doubtful:
-        conditions.append(_doubtful(not_agencies).is_(False))
+        conditions.append(_doubtful(corrections).is_(False))
     if hide_agencies:
         # « Masquer les agences de placement » (section 35 du 16.11) : les mêmes que la pastille.
-        conditions.append(not_(agency_condition(not_agencies)))
+        conditions.append(not_(agency_condition(corrections)))
     if (remote_filter := _remote_condition(remote)) is not None:
         conditions.append(remote_filter)
     if q:
@@ -708,7 +711,7 @@ async def list_offers(
     filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte."""
     runtime = _runtime(request)
     async with runtime.sessionmaker() as session:
-        not_agencies = await load_not_agencies(session)
+        corrections = await load_corrections(session)
     score = (
         select(Evaluation.score)
         .where(Evaluation.offer_id == Offer.id, Evaluation.scored_at.is_not(None))
@@ -748,7 +751,7 @@ async def list_offers(
         remote,
         hide_doubtful,
         hide_agencies,
-        not_agencies,
+        corrections,
     )
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
@@ -771,10 +774,10 @@ async def list_offers(
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(
-        q, [], cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies, not_agencies
+        q, [], cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies, corrections
     )
     without_cantons = _filters(
-        q, sources, [], min_rate, external_only, remote, hide_doubtful, hide_agencies, not_agencies
+        q, sources, [], min_rate, external_only, remote, hide_doubtful, hide_agencies, corrections
     )
     for bound in (
         *([score >= min_score] if min_score is not None else []),
@@ -887,7 +890,7 @@ async def list_offers(
     async with runtime.sessionmaker() as session:
         current_hash = profile_hash(await active_profile(session))
         criteria = await load_criteria(session)
-        recent = await _sent_if_agency(session, offers, not_agencies)
+        recent = await _sent_if_agency(session, offers, corrections)
         posts = await applied_before(session)
     logos = await _logo_keys(runtime)
     return OfferPage(
@@ -899,7 +902,7 @@ async def list_offers(
                         links[o.id],
                         evaluations.get(o.id),
                         current_hash,
-                        not_agencies,
+                        corrections,
                         recent,
                         posts,
                     ),
@@ -925,12 +928,12 @@ async def get_offer(request: Request, offer_id: int) -> OfferOut:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
         current_hash = profile_hash(await active_profile(session))
         criteria = await load_criteria(session)
-        not_agencies = await load_not_agencies(session)
-        sent = await _sent_if_agency(session, [offer], not_agencies)
+        corrections = await load_corrections(session)
+        sent = await _sent_if_agency(session, [offer], corrections)
         posts = await applied_before(session)
     links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
     out = _offer_out(
-        offer, links[offer_id], evaluations.get(offer_id), current_hash, not_agencies, sent, posts
+        offer, links[offer_id], evaluations.get(offer_id), current_hash, corrections, sent, posts
     )
     return _with_languages(_with_logo(out, await _logo_keys(runtime)), offer, criteria)
 
@@ -957,34 +960,51 @@ def _with_logo(out: OfferOut, logos: set[str]) -> OfferOut:
     return out
 
 
-async def _set_not_agency(request: Request, offer_id: int, *, keep: bool) -> OfferOut:
-    """« Ce n'est pas une agence » (section 35 du 16.11) : gardé pour l'entreprise de l'offre,
-    dans ce compte seulement (réglage `not_agencies`) ; `keep=False` revient sur la correction.
-    L'offre est relue sous la RLS du compte (C-5) : celle d'un autre compte donne 404."""
+async def _correct_agency(request: Request, offer_id: int, *, agency: bool, keep: bool) -> OfferOut:
+    """« Ce n'est pas une agence » (section 35 du 16.11) et « C'est une agence de placement »
+    (Kevin, 16.11 23 h 33) : gardés pour l'entreprise de l'offre, dans ce compte seulement
+    (réglages `not_agencies` et `agencies`). La dernière correction l'emporte : elle retire
+    l'entreprise de l'autre liste. `keep=False` revient sur la correction. L'offre est relue sous
+    la RLS du compte (C-5) : celle d'un autre compte donne 404."""
     async with _runtime(request).sessionmaker.begin() as session:
         offer = await session.get(Offer, offer_id)
         key = company_key(offer.company) if offer is not None else ""
         if offer is None or not key:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
-        names = set(await load_not_agencies(session))
-        names = names | {key} if keep else names - {key}
-        value = sorted(names)
-        await session.execute(
-            pg_insert(Setting)
-            .values(key=NOT_AGENCIES, value=value)
-            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
-        )
+        current = await load_corrections(session)
+        mine, other = (current.yes, current.no) if agency else (current.no, current.yes)
+        lists = {
+            MARKED_AGENCIES if agency else NOT_AGENCIES: mine | {key} if keep else mine - {key},
+            NOT_AGENCIES if agency else MARKED_AGENCIES: other - {key} if keep else other,
+        }
+        for name, names in lists.items():
+            value = sorted(names)
+            await session.execute(
+                pg_insert(Setting)
+                .values(key=name, value=value)
+                .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
+            )
     return await get_offer(request, offer_id)
 
 
 @router.post("/offers/{offer_id}/not-agency", operation_id="markNotAgency")
 async def mark_not_agency(request: Request, offer_id: int) -> OfferOut:
-    return await _set_not_agency(request, offer_id, keep=True)
+    return await _correct_agency(request, offer_id, agency=False, keep=True)
 
 
 @router.delete("/offers/{offer_id}/not-agency", operation_id="unmarkNotAgency")
 async def unmark_not_agency(request: Request, offer_id: int) -> OfferOut:
-    return await _set_not_agency(request, offer_id, keep=False)
+    return await _correct_agency(request, offer_id, agency=False, keep=False)
+
+
+@router.post("/offers/{offer_id}/agency", operation_id="markAgency")
+async def mark_agency(request: Request, offer_id: int) -> OfferOut:
+    return await _correct_agency(request, offer_id, agency=True, keep=True)
+
+
+@router.delete("/offers/{offer_id}/agency", operation_id="unmarkAgency")
+async def unmark_agency(request: Request, offer_id: int) -> OfferOut:
+    return await _correct_agency(request, offer_id, agency=True, keep=False)
 
 
 @router.post(

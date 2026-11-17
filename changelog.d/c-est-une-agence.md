@@ -1,0 +1,1 @@
+Offres : « C'est une agence de placement » dans le menu de la fiche marque à la main une entreprise comme agence, pour toutes ses offres, avec « Annuler » ; la dernière correction l'emporte sur la détection

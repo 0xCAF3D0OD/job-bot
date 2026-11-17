@@ -1,10 +1,12 @@
 """Agences de placement (section 35 de la maquette du 16.11, décision de Kevin du 16.11).
 
 Sans IA : une agence connue par son nom (sûr), ou une annonce qui recrute « pour notre client »
-(probable). La correction « Ce n'est pas une agence » est gardée par compte, pour l'entreprise
-(réglage `not_agencies`). Le répertoire SECO n'est pas lu tant que le SECO n'a pas donné son
-accord écrit. Les mêmes règles en Python (la fiche) et en SQL (le filtre), pour qu'une offre
-marquée « Agence » soit aussi celle que « Masquer les agences de placement » cache.
+(probable). Les corrections « Ce n'est pas une agence » et « C'est une agence de placement »
+(Kevin, 16.11 23 h 33) sont gardées par compte, pour l'entreprise (réglages `not_agencies` et
+`agencies`) ; la dernière l'emporte sur la détection. Le répertoire SECO n'est pas lu tant que
+le SECO n'a pas donné son accord écrit. Les mêmes règles en Python (la fiche) et en SQL (le
+filtre), pour qu'une offre marquée « Agence » soit aussi celle que « Masquer les agences de
+placement » cache.
 """
 
 import re
@@ -25,11 +27,25 @@ AgencyKind = Literal["known", "probable"]
 # autour) qui ne sont pas des agences. Niveau : personnelle (D-1), exportée et effacée avec les
 # réglages du compte.
 NOT_AGENCIES = "not_agencies"
+# Dans l'autre sens : les entreprises que la personne a marquées « agence de placement ». Une
+# entreprise n'est que dans l'une des deux listes : la dernière correction retire l'autre.
+MARKED_AGENCIES = "agencies"
 # Une candidature envoyée à un poste proche, ces 90 derniers jours (décision de Kevin du 16.11).
 DUPLICATE_DAYS = 90
 
 _ACCENTED = "àâäáãåéèêëíìîïóòôöõúùûüçñÿ"
 _PLAIN = "aaaaaaeeeeiiiiooooouuuucny"
+
+
+@dataclass(frozen=True)
+class Corrections:
+    """Les corrections du compte, par entreprise (`company_key`)."""
+
+    yes: frozenset[str] = frozenset()
+    no: frozenset[str] = frozenset()
+
+
+NO_CORRECTIONS = Corrections()
 
 
 def company_key(company: str | None) -> str:
@@ -46,11 +62,13 @@ def _for_client(text: str | None) -> bool:
     return any(normalize_text(p) in body for p in CLIENT_PHRASES)
 
 
-def agency_kind(offer: Offer, not_agencies: frozenset[str]) -> AgencyKind | None:
-    """« known » : agence connue ; « probable » : l'annonce recrute pour un client."""
-    if offer.spontaneous or company_key(offer.company) in not_agencies:
+def agency_kind(offer: Offer, corrections: Corrections) -> AgencyKind | None:
+    """« known » : agence connue ou marquée par la personne ; « probable » : l'annonce recrute
+    pour un client."""
+    key = company_key(offer.company)
+    if offer.spontaneous or key in corrections.no:
         return None
-    if _known(offer.company):
+    if key in corrections.yes or _known(offer.company):
         return "known"
     if _for_client(offer.description or offer.snippet) or offer.employer_status == "agency":
         return "probable"
@@ -64,23 +82,33 @@ def _norm(column: Any) -> ColumnElement[str]:
     return func.regexp_replace(lowered, "[^a-z0-9]+", " ", "g")
 
 
-def agency_condition(not_agencies: frozenset[str]) -> ColumnElement[bool]:
+def agency_condition(corrections: Corrections) -> ColumnElement[bool]:
     """Les offres que `agency_kind` marque, en SQL."""
+    key = func.lower(func.btrim(func.coalesce(Offer.company, "")))
     name = literal(" ").concat(_norm(Offer.company)).concat(" ")
     known = or_(*(name.like(f"% {normalize_text(a)} %") for a in AGENCIES))
     body = _norm(func.coalesce(func.nullif(Offer.description, ""), Offer.snippet))
     for_client = or_(*(body.like(f"%{normalize_text(p)}%") for p in CLIENT_PHRASES))
-    found = or_(known, for_client, func.coalesce(Offer.employer_status, "") == "agency")
-    conditions = [Offer.spontaneous.is_(False), found]
-    if not_agencies:
-        key = func.lower(func.btrim(func.coalesce(Offer.company, "")))
-        conditions.append(key.not_in(sorted(not_agencies)))
+    found = [known, for_client, func.coalesce(Offer.employer_status, "") == "agency"]
+    if corrections.yes:
+        found.append(key.in_(sorted(corrections.yes)))
+    conditions = [Offer.spontaneous.is_(False), or_(*found)]
+    if corrections.no:
+        conditions.append(key.not_in(sorted(corrections.no)))
     return and_(*conditions)
 
 
-async def load_not_agencies(session: AsyncSession) -> frozenset[str]:
-    value = await session.scalar(select(Setting.value).where(Setting.key == NOT_AGENCIES))
-    return frozenset(str(v) for v in value) if isinstance(value, list) else frozenset()
+async def load_corrections(session: AsyncSession) -> Corrections:
+    rows = await session.execute(
+        select(Setting.key, Setting.value).where(Setting.key.in_([MARKED_AGENCIES, NOT_AGENCIES]))
+    )
+    lists = {
+        k: frozenset(str(v) for v in value) if isinstance(value, list) else frozenset()
+        for k, value in rows
+    }
+    return Corrections(
+        yes=lists.get(MARKED_AGENCIES, frozenset()), no=lists.get(NOT_AGENCIES, frozenset())
+    )
 
 
 def _title(value: str) -> str:
