@@ -19,7 +19,7 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         // Un seul fichier pour ce que toute page charge avec l'application (#664) : Vue, vue-router, openapi-fetch,
-        // et nos modules que l'entrée importe toujours (client de l'API, icônes, dates, logo). Séparés, ils
+        // et nos modules que l'entrée importe toujours (client de l'API, icônes, dates, langue, logo). Séparés, ils
         // faisaient autant de fichiers compressés chacun à part et une ligne d'import longue dans chaque page.
         // Le budget (scripts/poids.mjs) compte tous les fichiers : regrouper ce qui se charge ensemble l'allège,
         // découper l'alourdirait. Rien ne change dans ce que chaque page télécharge.
@@ -28,7 +28,7 @@ export default defineConfig({
           groups: [
             {
               name: "commun",
-              test: /node_modules[\\/].*\.m?js$|src[\\/](api[\\/]client\.ts|icons\.ts|dates\.ts|brandPaths\.ts|components[\\/]AppIcon\.vue)/,
+              test: /node_modules[\\/].*\.m?js$|src[\\/](api[\\/]client\.ts|icons\.ts|dates\.ts|lang\.ts|brandPaths\.ts|components[\\/]AppIcon\.vue)/,
             },
             // Pas de groupe « partage » (retiré le 16.11 après #795) : réunir les petits composants partagés allégeait
             // js-total de 2,7 Ko, mais chaque page qui en chargeait un les recevait tous (Trier, Alertes, Relances,

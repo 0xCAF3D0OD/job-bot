@@ -1,0 +1,1 @@
+Les écrans de chargement de la maquette du 17.11 (§53) : le logo animé au lancement, la lecture du CV en plein écran dans les premiers pas sur téléphone, et le style des étapes ailleurs (Profil, premiers pas sur ordinateur, écriture de la lettre)

@@ -1,5 +1,6 @@
 import type { Offer, ParseStatus } from "./api/client";
 import { dateInList, dateInSentence, dateWithTime } from "./dates";
+import { dateFormat, formatLocale } from "./lang";
 
 export const SITE_NAMES: Record<string, string> = {
   jobup: "jobup",
@@ -47,7 +48,7 @@ export function dayName(iso: string, now: Date = new Date()): string {
   if (before === 0) return "Aujourd’hui";
   if (before === 1) return "Hier";
   const sameYear = dayKey(iso).slice(0, 4) === dayKey(now.toISOString()).slice(0, 4);
-  const text = new Date(iso).toLocaleDateString("fr-CH", {
+  const text = new Date(iso).toLocaleDateString(formatLocale(), {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -137,7 +138,7 @@ export const applicationStatusLabel: Record<
   sans_reponse: "Sans réponse",
 };
 
-const monthFormat = new Intl.DateTimeFormat("fr-CH", { month: "long", year: "numeric", timeZone: "UTC" });
+const monthFormat = () => dateFormat({ month: "long", year: "numeric", timeZone: "UTC" });
 
 /** « 2026-10 » → « octobre 2026 ». */
 // « 2026-10-15 » en date locale, à minuit (sans le décalage UTC de `new Date("2026-10-15")`).
@@ -150,12 +151,12 @@ export function localDate(day: string): Date {
 // §11). Le serveur reporte ce jour au premier jour ouvrable du canton (`due_date`) ; sans lui, le 5 tel quel.
 export const ORP_DEADLINE_DAY = 5;
 
-const DAY_MONTH = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const DAY_MONTH = () => dateFormat({ day: "numeric", month: "long" });
 /** L'échéance d'un mois ORP en toutes lettres, « 5 décembre » : celle du serveur, sinon le 5 du mois suivant. */
 export function orpDueDay(month: string, due?: string | null): string {
-  if (due) return DAY_MONTH.format(localDate(due));
+  if (due) return DAY_MONTH().format(localDate(due));
   const [year, m] = month.split("-").map(Number);
-  return DAY_MONTH.format(new Date(year ?? 2000, m ?? 1, ORP_DEADLINE_DAY));
+  return DAY_MONTH().format(new Date(year ?? 2000, m ?? 1, ORP_DEADLINE_DAY));
 }
 /** « Encore 9 d’ici le 5 décembre » (§10.3, §11) ; « Objectif du mois atteint » une fois l'objectif tenu. */
 export function orpLeftLine(count: number, target: number, month: string, due?: string | null): string {
@@ -171,7 +172,7 @@ export function orpChannel(method: string): string {
 
 export function formatMonth(month: string): string {
   const [year, m] = month.split("-").map(Number);
-  return monthFormat.format(new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1, 1)));
+  return monthFormat().format(new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1, 1)));
 }
 
 // « de septembre », « d'octobre », « d'août » : le nom du mois après « de », élidé.

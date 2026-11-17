@@ -202,3 +202,31 @@ def test_google_jobs_url() -> None:
         == "https://www.google.com/search?q=charg%C3%A9e+de+communication+emploi+Lausanne&udm=8"
     )
     assert google_jobs_url("DevOps", None) == "https://www.google.com/search?q=DevOps+emploi&udm=8"
+
+
+async def test_removed_search_is_kept_hidden_and_comes_back(api: AsyncClient) -> None:
+    """Retirée, la recherche quitte la page mais sa ligne reste, en pause, pour ignorer les
+    e-mails du site (Kevin, 17.11) ; la même recherche ajoutée de nouveau reprend cette ligne."""
+    page = (await api.get("/api/alert-searches")).json()
+    devops = page["searches"][0]
+    after = (await api.delete(f"/api/alert-searches/{devops['id']}")).json()
+    assert devops["id"] not in [s["id"] for s in after["searches"]]
+    async with admin_engine().begin() as conn:
+        row = (
+            await conn.execute(
+                text("SELECT active, removed_at FROM alert_searches WHERE id = :id"),
+                {"id": devops["id"]},
+            )
+        ).one()
+    assert row.active is False and row.removed_at is not None
+    assert (await api.delete(f"/api/alert-searches/{devops['id']}")).status_code == 404
+    assert (
+        await api.patch(f"/api/alert-searches/{devops['id']}", json={"active": True})
+    ).status_code == 404
+
+    back = (
+        await api.post("/api/alert-searches", json={"terms": "devops", "location": "lausanne"})
+    ).json()
+    again = next(s for s in back["searches"] if s["id"] == devops["id"])
+    assert again["active"] is True
+    assert len(back["searches"]) == len(page["searches"])
