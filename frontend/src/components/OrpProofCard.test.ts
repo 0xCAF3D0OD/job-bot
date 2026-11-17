@@ -56,7 +56,7 @@ async function mountCard(wide = false) {
 
 describe("OrpProofCard", () => {
   it("demande le mois précédent et dit ce qui reste à remettre, échéance passée", async () => {
-    const wrapper = await mountCard();
+    const wrapper = await mountCard(true);
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: "2026-10" } } });
     expect(wrapper.get("[data-test=orp-proof]").attributes("role")).toBe("status");
     expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Justificatifs d’octobre à remettre");
@@ -67,16 +67,16 @@ describe("OrpProofCard", () => {
 
   it("avant l’échéance : « échéance le 5 novembre »", async () => {
     vi.setSystemTime(new Date("2026-11-03T10:00:00"));
-    const wrapper = await mountCard();
+    const wrapper = await mountCard(true);
     expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("11 recherches · échéance le 5 novembre");
   });
 
   it("« Déjà remis » enregistre la remise ; la carte donne la date et « Annuler » revient en arrière", async () => {
-    const wrapper = await mountCard();
+    const wrapper = await mountCard(true);
     await wrapper.get("[data-test=orp-proof-mark]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
-    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Octobre remis à l’ORP");
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("octobre est remis\u00a0!");
     expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("Le 10 novembre · 11 recherches");
     expect(wrapper.find("[data-test=orp-proof-mark]").exists()).toBe(false);
     expect(wrapper.emitted("changed")).toHaveLength(1);
@@ -98,11 +98,33 @@ describe("OrpProofCard", () => {
     expect(wrapper.get("[data-test=orp-proof-undo]").text()).toBe("Annuler");
   });
 
-  it("téléphone : la carte remise reste sans bandeau ni personnage", async () => {
-    month = { ...october, state: "remis", submitted_at: "2026-11-10T09:00:00Z" };
+  it("téléphone (§58 du 17.11) : une tâche à cocher dans la section « En retard », jamais barrée", async () => {
     const wrapper = await mountCard();
-    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Octobre remis à l’ORP");
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("En retard1");
+    expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("En retard depuis le 5 novembre");
+    const check = wrapper.get("[data-test=orp-proof-check]");
+    expect(check.attributes("role")).toBe("checkbox");
+    expect(check.attributes("aria-checked")).toBe("false");
+    expect(check.attributes("aria-label")).toBe("Marquer les justificatifs d’octobre comme remis");
+    await check.trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("Remis");
+    expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("Remis le 10 novembre");
+    expect(wrapper.get("[data-test=orp-proof-check]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("s, del").exists()).toBe(false);
     expect(wrapper.find("[data-test=orp-proof-art]").exists()).toBe(false);
+    await wrapper.get("[data-test=orp-proof-undo]").trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledTimes(1);
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("En retard1");
+  });
+
+  it("téléphone, avant l’échéance : « À remettre » et « À remettre avant le 5 novembre »", async () => {
+    vi.setSystemTime(new Date("2026-11-03T10:00:00"));
+    const wrapper = await mountCard();
+    expect(wrapper.get("[data-test=orp-proof-title]").text()).toBe("À remettre1");
+    expect(wrapper.get("[data-test=orp-proof-line]").text()).toBe("À remettre avant le 5 novembre");
   });
 
   it("« Exporter le PDF » imprime la feuille du mois précédent", async () => {
@@ -116,7 +138,7 @@ describe("OrpProofCard", () => {
 
   it("l’enregistrement échoue : rien ne change et la carte le dit", async () => {
     PUT.mockResolvedValueOnce({ error: { detail: "non" } });
-    const wrapper = await mountCard();
+    const wrapper = await mountCard(true);
     await wrapper.get("[data-test=orp-proof-mark]").trigger("click");
     await flushPromises();
     expect(wrapper.get("[role=alert]").text()).toBe("Rien n’a été enregistré. Réessaie.");

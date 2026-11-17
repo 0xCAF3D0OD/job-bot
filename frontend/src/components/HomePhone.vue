@@ -9,6 +9,7 @@ import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import LiquidCircle from "./LiquidCircle.vue";
 import ScoreRing from "./ScoreRing.vue";
+import TaskCheck from "./TaskCheck.vue";
 import TroupeScene from "./TroupeScene.vue";
 import { HOME_SCENE } from "../troupe";
 
@@ -20,7 +21,17 @@ import { HOME_SCENE } from "../troupe";
 // jours, l'Accueil ne reçoit ni son code ni son CSS.
 const OrpReminder = defineAsyncComponent(() => import("./OrpReminder.vue"));
 // Une ligne de « À faire » : un nombre et un libellé ; ou, pour « Relire ton CV » (PR 22), une icône et une ligne de détail.
-export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw; icon?: IconName; detail?: string };
+export type HomeTodo = {
+  key: string;
+  test: string;
+  count: number;
+  label: string;
+  to: RouteLocationRaw;
+  icon?: IconName;
+  detail?: string;
+  /** Une tâche faite hors de l'app (§61 du 17.11) : le cercle à cocher à la place du nombre. */
+  check?: { done: boolean; busy: boolean };
+};
 
 const props = defineProps<{
   name: string | null;
@@ -38,6 +49,7 @@ const props = defineProps<{
   /** Le rappel des justificatifs à remettre (§57 du 17.11) : posé seulement quand un mois est à remettre. */
   reminder?: { month: string; due: string; late: boolean; to: RouteLocationRaw } | null;
 }>();
+const emit = defineEmits<{ check: [done: boolean] }>();
 
 // « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
 const orpLine = computed(() => {
@@ -272,14 +284,29 @@ function facts(offer: Offer): string[] {
         <li
           v-for="todo in todos"
           :key="todo.key"
+          :class="{ 'home-todo-checkable': todo.check }"
         >
+          <TaskCheck
+            v-if="todo.check"
+            :checked="todo.check.done"
+            :label="todo.check.done ? `Annuler : ${todo.label.replace('Remettre les', 'justificatifs')} pas encore remis` : `Marquer comme remis : ${todo.label.replace('Remettre les', 'justificatifs')}`"
+            tone="late"
+            :busy="todo.check.busy"
+            data-test="todo-orp-check"
+            @toggle="(on) => emit('check', on)"
+          />
           <RouterLink
             :to="todo.to"
-            :class="{ 'home-todo-alert': todo.icon }"
+            :class="{ 'home-todo-alert': todo.icon || todo.check }"
             :data-test="todo.test"
           >
             <span
-              v-if="todo.icon"
+              v-if="todo.check"
+              class="home-todo-icon home-todo-check"
+              aria-hidden="true"
+            />
+            <span
+              v-else-if="todo.icon"
               class="home-todo-icon"
             ><AppIcon :name="todo.icon" /></span>
             <strong v-else>{{ todo.count }}</strong>
@@ -358,6 +385,9 @@ function facts(offer: Offer): string[] {
 .home-todo a > .home-todo-icon { display: flex; flex: none; width: calc(var(--space-8) - 0.125rem); }
 .home-todo .home-todo-icon .icon { color: var(--peach-text); width: var(--space-6); height: var(--space-6); }
 .home-todo-title { display: block; font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* §61 (AccueilV2) : le cercle orange de 26 px (zone de 44) sur la place de l’icône ; le lien garde toute la ligne. */
+.home-todo li.home-todo-checkable { position: relative; }
+.home-todo-checkable > .task-check { position: absolute; z-index: 1; top: 50%; left: calc((var(--space-8) - 0.125rem - var(--target-min)) / 2); transform: translateY(-50%); }
 .home-todo-detail { display: block; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--peach-text); }
 .home-card { animation: content-in var(--t-standard) var(--ease-standard) backwards; }
 </style>

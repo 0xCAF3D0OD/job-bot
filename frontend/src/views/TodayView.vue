@@ -12,6 +12,7 @@ import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
+import TaskCheck from "../components/TaskCheck.vue";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
 import TroupeScene from "../components/TroupeScene.vue";
@@ -107,7 +108,7 @@ const CV_TASK = { key: "cv", test: "cv-unread", icon: "file-alert", title: "Reli
 
 // Les tâches du téléphone (« À faire », A4) : icône, titre avec un verbe, une
 // ligne de détail, un bouton à contour) ; seulement ce qui a quelque chose à faire, le daté d'abord.
-type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw };
+type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw; check?: boolean };
 const tasks = computed<Task[]>(() => {
   const t = today.value;
   if (!t || starting.value) return [];
@@ -163,6 +164,25 @@ const tasks = computed<Task[]>(() => {
   return list;
 });
 
+// « Remettre les justificatifs » se coche (§61 du 17.11, planches AccueilV2 et AujourdhuiOrdinateurV2) : le cercle orange
+// marque le mois comme remis (le même appel que « Déjà remis » du Bilan) ; coché, la tâche reste à sa place avec la
+// coche verte et « Remis le … » jusqu'au prochain chargement, et le cercle annule. Jamais de texte barré.
+const orpDone = ref<string | null>(null);
+const orpBusy = ref(false);
+async function markOrp(on: boolean): Promise<void> {
+  const month = today.value?.orp_due_month;
+  if (!month || orpBusy.value) return;
+  orpBusy.value = true;
+  try {
+    const params = { params: { path: { month } } };
+    const { error } = on ? await api.PUT("/api/orp/{month}/submission", params) : await api.DELETE("/api/orp/{month}/submission", params);
+    if (error === undefined) orpDone.value = on ? new Date().toISOString() : null;
+  } catch {
+    // Rien n'a changé : le cercle reste comme il était.
+  } finally {
+    orpBusy.value = false;
+  }
+}
 // Les preuves ORP à remettre (docs/95 §2) : en tête quand l'échéance approche.
 const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
   const t = today.value;
@@ -177,7 +197,8 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
       title: `Remettre les justificatifs ${ofMonth(t.orp_due_month)}`,
-      detail: days < 0 ? `En retard depuis ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
+      check: true,
+      detail: orpDone.value ? `Remis ${dateInSentence(orpDone.value)}.` : days < 0 ? `En retard depuis ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd’hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
       // La carte « Justificatifs … à remettre » est en tête du Bilan › ORP sur ordinateur, du Suivi ORP sur
       // téléphone (récapitulatif du 11 novembre, PR 29).
@@ -354,14 +375,23 @@ const todos = computed<HomeTodo[]>(() => {
     }
     const count =
       group === "follow" ? t.to_follow_up : group === "preparing" ? preparing.value.length : group === "alerts" ? t.alerts_waiting : 1;
-    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to, ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}) });
+    list.push({
+      key: group,
+      test: `todo-${task.test}`,
+      count,
+      label: "",
+      to: task.to,
+      ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}),
+      // §61 : « Remettre les justificatifs » se coche, avec sa ligne (« En retard depuis le 5 novembre »).
+      ...(task.check ? { check: { done: !!orpDone.value, busy: orpBusy.value }, detail: task.detail } : {}),
+    });
   }
   for (const todo of list) {
     const n = todo.count;
     todo.label = {
       meeting: "Rendez-vous ORP à préparer",
       interview: many(n, "Entretien à préparer", "Entretiens à préparer"),
-      orp: t.orp_due_month ? `Justificatifs ${ofMonth(t.orp_due_month)} à remettre` : "Justificatifs à remettre",
+      orp: t.orp_due_month ? `Remettre les justificatifs ${ofMonth(t.orp_due_month)}` : "Remettre les justificatifs",
       follow: many(n, "Relance à envoyer", "Relances à envoyer"),
       preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
       review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),
@@ -501,6 +531,7 @@ const { me } = useAuth();
     :todos="todos"
     :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
     :reminder="reminder"
+    @check="markOrp"
   >
     <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
     <RouterLink
@@ -732,14 +763,30 @@ const { me } = useAuth();
           <li
             v-for="(task, i) in group.items"
             :key="task.key"
+            :class="{ 'aj-checkable': task.check }"
           >
+            <!-- La tâche faite hors de l'app se coche (§61) : le cercle est à côté du lien, posé sur la place du numéro. -->
+            <TaskCheck
+              v-if="task.check"
+              :checked="!!orpDone"
+              :label="orpDone ? `Annuler : ${task.title.replace('Remettre les', 'justificatifs')} pas encore remis` : `Marquer comme remis : ${task.title.replace('Remettre les', 'justificatifs')}`"
+              tone="late"
+              :busy="orpBusy"
+              data-test="orp-task-check"
+              @toggle="markOrp"
+            />
             <RouterLink
               :to="task.to"
               :class="['today-task', `tone-${task.tone}`]"
               :data-test="task.test"
             >
+              <span
+                v-if="task.check"
+                class="aj-num aj-num-check"
+                aria-hidden="true"
+              />
               <b
-                v-if="group.numbered"
+                v-else-if="group.numbered"
                 class="aj-num"
                 aria-hidden="true"
               >{{ i + 1 }}</b>
@@ -882,6 +929,11 @@ const { me } = useAuth();
 .today-task.tone-interview { --tone-text: var(--success); }
 .aj-num { flex: none; display: grid; place-items: center; width: var(--aj-num); height: var(--aj-num); border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: var(--aj-16); font-weight: var(--weight-bold); }
 .tone-late .aj-num { background: var(--peach-text); color: var(--surface); }
+/* « Remettre les justificatifs » (§61, AujourdhuiOrdinateurV2) : le cercle à cocher de 26 px (zone de 44) à la place du
+   numéro de 36 ; la place du numéro reste vide sous lui, le lien garde toute la ligne. */
+.aj-checkable { position: relative; }
+.aj-checkable > .task-check { position: absolute; z-index: 1; top: 50%; left: var(--space-4); transform: translateY(-50%); }
+.today-task .aj-num-check { background: none; }
 .aj-icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--tone-text); }
 .aj-task-main { flex: 1; min-width: 0; }
 .aj-task-main strong { display: block; font-size: var(--aj-18); line-height: var(--space-6); font-weight: var(--weight-bold); overflow-wrap: anywhere; }

@@ -27,6 +27,24 @@ function home(props: Partial<InstanceType<typeof HomePhone>["$props"]> = {}) {
 }
 
 describe("L’Accueil du téléphone (docs/139 étape 4)", () => {
+  it("« Remettre les justificatifs » se coche (§61 du 17.11) : le cercle orange à la place du nombre, à côté du lien", async () => {
+    const view = home({
+      todos: [
+        { key: "orp", test: "todo-orp-urgent", count: 1, label: "Remettre les justificatifs d’octobre", detail: "En retard depuis le 5 novembre.", to: "/bilan/orp", check: { done: false, busy: false } },
+        { key: "follow", test: "todo-follow-ups", count: 13, label: "Relances à envoyer", to: "/candidatures/suivi" },
+      ],
+    });
+    const check = view.get("[data-test=todo-orp-check]");
+    expect(check.attributes("role")).toBe("checkbox");
+    expect(check.classes()).toContain("late");
+    expect(check.element.closest("a")).toBeNull();
+    expect(view.get("[data-test=todo-orp-urgent]").text()).toContain("En retard depuis le 5 novembre.");
+    expect(view.get("[data-test=todo-orp-urgent]").find("strong").exists()).toBe(false);
+    expect(view.get("[data-test=todo-follow-ups] strong").text()).toBe("13");
+    await check.trigger("click");
+    expect(view.emitted("check")).toEqual([[true]]);
+  });
+
   it("bonjour, ORP en cercle liquide, les offres et « Tout voir », À faire en nombres", () => {
     const view = home();
     expect(view.find("h1").text()).toBe("Bonjour Kevin.");
