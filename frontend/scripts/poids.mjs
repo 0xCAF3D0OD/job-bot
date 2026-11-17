@@ -56,7 +56,8 @@ export const LIMITS = {
   "js-inscription": 97_900,
   "js-acces": 98_000,
   "js-bienvenue": 119_200,
-  "js-bienvenue-etapes": 119_200,
+  // Exception du 17.11 (docs/decisions/2026-11-17-1354-poids-ecrans-de-chargement.md) : 119 200 → 119 400.
+  "js-bienvenue-etapes": 119_400,
   "js-getemall": 96_300,
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
