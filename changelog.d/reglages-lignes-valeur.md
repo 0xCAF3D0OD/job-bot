@@ -1,0 +1,1 @@
+Réglages et menu du compte (LISEZMOI §56) : « M’avertir dès » et « Apparence » en lignes avec la valeur et un chevron, feuille à boutons radio sur téléphone, menu sur ordinateur ; seuils 85, 75 et 50 gardés ; sur téléphone, les feuilles Langue et Taille du texte se ferment dès qu’on choisit

@@ -1,10 +1,11 @@
 // L'apparence (maquette Réglages, « Affichage ») : Clair, Sombre, Auto, retenue sur l'appareil.
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { useTextSize } from "../composables/useTextSize";
 import { useTheme } from "../composables/useTheme";
 import AppearancePanel from "./AppearancePanel.vue";
+import ChoicePanel from "./ChoicePanel.vue";
 
 afterEach(() => useTheme().setTheme("auto"));
 
@@ -90,6 +91,27 @@ describe("Langue et Taille du texte sur ordinateur (ReglagesOrdinateur, MODIFICA
     expect(document.documentElement.classList.contains("text-large")).toBe(true);
     expect(localStorage.getItem("jobA1-text-size")).toBe("large");
     expect(wrapper.get("[data-test=text-size-row]").text()).toBe("Taille du texteGrande");
+    wrapper.unmount();
+  });
+  it("téléphone : choisir une taille l’applique et ferme la feuille ; les flèches la laissent ouverte", async () => {
+    const wrapper = mount(AppearancePanel, { props: { detailed: true, phone: true }, attachTo: document.body });
+    await wrapper.get("[data-test=text-size-row]").trigger("click");
+    await flushPromises();
+    const large = document.querySelector<HTMLInputElement>("[data-test=choice-large] input")!;
+    large.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    large.checked = true;
+    large.dispatchEvent(new Event("change"));
+    await flushPromises();
+    expect(localStorage.getItem("jobA1-text-size")).toBe("large");
+    const sizePanel = wrapper.findAllComponents(ChoicePanel)[1]!;
+    expect(sizePanel.emitted("close")).toBeUndefined();
+    const browser = document.querySelector<HTMLInputElement>("[data-test=choice-browser] input")!;
+    browser.checked = true;
+    browser.dispatchEvent(new Event("change"));
+    await flushPromises();
+    expect(localStorage.getItem("jobA1-text-size")).toBe("browser");
+    expect(sizePanel.emitted("close")).toHaveLength(1);
+    expect(sizePanel.props("open")).toBe(false);
     wrapper.unmount();
   });
 });
