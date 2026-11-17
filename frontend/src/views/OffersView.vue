@@ -1172,9 +1172,9 @@ onUnmounted(() => {
                   <span><span class="visually-hidden">, </span>{{ plural(farCount, "offre", "offres") }}{{ showFar ? (farCount > 1 ? " affichées" : " affichée") : ", notées plus bas" }}</span>
                 </span>
                 <span
-                  class="arrow-circle"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon :name="showFar ? 'chevron-up' : 'arrow-right'" /></span>
+                ><AppIcon :name="showFar ? 'chevron-up' : 'chevron'" /></span>
               </button>
               <button
                 v-if="filters.view === 'pending' && counts.expired > 0"
@@ -1189,9 +1189,9 @@ onUnmounted(() => {
                   <span><span class="visually-hidden">, </span>{{ plural(counts.expired, "offre", "offres") }}{{ filters.showExpired ? (counts.expired > 1 ? " affichées" : " affichée") : ", pour mémoire" }}</span>
                 </span>
                 <span
-                  class="arrow-circle"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon :name="filters.showExpired ? 'chevron-up' : 'arrow-right'" /></span>
+                ><AppIcon :name="filters.showExpired ? 'chevron-up' : 'chevron'" /></span>
               </button>
               <button
                 type="button"
@@ -1205,9 +1205,9 @@ onUnmounted(() => {
                   <span><span class="visually-hidden">, </span>À une entreprise sans offre publiée</span>
                 </span>
                 <span
-                  class="arrow-circle"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </button>
             </div>
           </template>

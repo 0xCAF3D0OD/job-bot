@@ -238,9 +238,9 @@ async function remove(): Promise<void> {
         >
           <span class="rg-label">Exporter mes données<span class="rg-sub">CV, candidatures et suivi ORP en un fichier</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </button>
         <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
              de passe dedans, sous sa ligne. -->
@@ -291,9 +291,9 @@ async function remove(): Promise<void> {
         >
           <span class="rg-label">L’IA et tes données<span class="rg-sub">Ce qui part à l’IA et ce qui reste chez jobA1</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </RouterLink>
         <!-- Données personnelles (fonction de main absente de la planche) : les compteurs et les durées de garde. -->
         <RouterLink
@@ -306,9 +306,9 @@ async function remove(): Promise<void> {
             data-test="account-counts"
           >{{ counts }}</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </RouterLink>
         <button
           v-if="summary?.can_delete && !confirming"

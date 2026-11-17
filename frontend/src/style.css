@@ -513,15 +513,10 @@ button.action-1 { background: var(--action); border-color: var(--action); color:
 button.primary:hover:not(:disabled), button.action-1:hover:not(:disabled) { background: color-mix(in srgb, var(--action) 88%, var(--text)); border-color: color-mix(in srgb, var(--action) 88%, var(--text)); color: var(--on-action); }
 button.action-2 { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
 :root { --action-line: 1.5px; }
-/* Cercle des lignes à flèche (D29) : contour de 2 px, flèche de 18, décoratif. 36 px dans les lignes de réglages. */
-/* Cercle-flèche des cartes cliquables (MODIFICATIONS du 9 novembre, §10.1) : gris #596070 (sombre #ABA398), le bleu
-   reste à l'action principale (D30). Jamais plus clair : il serait lu comme « désactivé ». Les notifications gardent le
-   bleu (.arrow-circle.notif). */
-.arrow-circle { --circle: 40px; flex: none; display: inline-grid; place-items: center; box-sizing: border-box; width: var(--circle); height: var(--circle); border: var(--circle-line) solid var(--text-secondary); border-radius: var(--radius-pill); color: var(--text-secondary); }
-.arrow-circle.notif { border-color: var(--primary-graphic); color: var(--primary-text); }
-.arrow-circle.small { --circle: 36px; }
-.arrow-circle .icon { width: 18px; height: 18px; }
-:root { --circle-line: 2px; }
+/* Chevron des lignes cliquables (LISEZMOI du 17.11, §49, remplace le cercle-flèche D29) : un › de 20 px, trait 2,4,
+   dans une zone de 24 px, décoratif ; toute la ligne reste la cible (≥ 44 px). Gris #8C8478, sombre #ABA398 (--chevron). */
+.list-chevron { flex: none; display: inline-grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--chevron); }
+.list-chevron .icon { --list-chevron: 20px; width: var(--list-chevron); height: var(--list-chevron); stroke-width: 2.4; }
 button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-small); }
 
 .toast {
@@ -3668,7 +3663,7 @@ main:focus { outline: none; }
 /* Lot 18 (§10.5) : Résultats et Formations sur le fond des blocs, blocs sans bordure, cercles D29 de 36 px. */
 .bilan-page .band { background: none; }
 .bilan-page :is(.bilan-figures li, .bilan-funnel, .bilan-link, .action-band-card, .bilan-detail .disclosure, .training-list, .training-current, .training-kept li) { border: 0; box-shadow: none; }
-.bilan-link > .arrow-circle, .training-funding-note > .arrow-circle { flex: none; }
+.bilan-link > .list-chevron, .training-funding-note > .list-chevron { flex: none; }
 @media (min-width: 821px) {
   .bilan { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: var(--space-6); }
 }

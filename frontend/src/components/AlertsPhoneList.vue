@@ -336,7 +336,6 @@ function remove(): void {
 .alerts-families.desk .block-row { gap: var(--space-4); min-height: var(--row-72); padding: var(--alerts-pad-y) var(--alerts-pad-x); border-radius: var(--radius-card); }
 .alerts-families.desk .block-row:hover { border-color: var(--primary-graphic); }
 .alerts-families .block-row.highlighted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.alerts-families.desk .block-row .arrow-circle { --circle: 36px; }
 /* Traits droits entre les lignes de la feuille, aucun sous la dernière (§65 ; K46 de l'audit) : un lien ne prend pas
    l'arrondi des liens, que son trait suivrait. */
 .alert-sheet .sheet-items > .sheet-link { border-radius: 0; }
