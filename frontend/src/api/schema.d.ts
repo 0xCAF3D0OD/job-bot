@@ -3173,6 +3173,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trainings/in-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count In Progress
+         * @description « Formations · 2 en cours » de la page Compte (LISEZMOI §51, Kevin 17.11).
+         *
+         *     Un nombre seul, sans le catalogue, pour un appel qui ne retarde pas la page. Même périmètre
+         *     que la liste : le profil choisi, les formations non écartées.
+         */
+        get: operations["countTrainingsInProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trainings/diplomas": {
         parameters: {
             query?: never;
@@ -9185,6 +9208,11 @@ export interface components {
         TrainingReview: {
             /** Keep */
             keep: boolean;
+        };
+        /** TrainingsInProgress */
+        TrainingsInProgress: {
+            /** In Progress */
+            in_progress: number;
         };
         /**
          * Understanding
@@ -16057,6 +16085,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    countTrainingsInProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingsInProgress"];
                 };
             };
         };

@@ -7,3 +7,8 @@
   restait après compensation dans la PR (marques en CSS, « : fait » en CSS, lancement sans JavaScript).
 - Pour la suite : tout autre dépassement de cette limite, ou de n'importe quelle autre, demande une nouvelle décision
   écrite de Kevin. Pas de nouvelle hausse silencieuse.
+
+Précision du 17.11, 16 h : l'exception n'a pas servi. Entre-temps, l'allègement des premiers pas fusionné sur main
+(un fichier par étape, page téléphone à part) a ramené la page à environ 108 Ko : avec les écrans de chargement, elle
+reste sous 119 200 o. La limite n'a donc pas été relevée et reste à 119 200 o. La règle pour la suite s'applique
+toujours.

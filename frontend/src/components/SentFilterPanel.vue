@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
+import { useFilterEntry } from "../filterHistory";
 import AppIcon from "./AppIcon.vue";
 import "../filterPanel.css";
 
@@ -10,6 +11,8 @@ import "../filterPanel.css";
 // « À relancer d’abord » (par défaut), « Plus récentes d’abord », et « Plus anciennes d’abord », gardé de main.
 const props = defineProps<{ filter: SentFilter; sort: SentSort; counts: Record<SentFilter, number>; total: number }>();
 const emit = defineEmits<{ "update:filter": [value: SentFilter]; "update:sort": [value: SentSort]; reset: []; close: [] }>();
+// Une entrée d’historique par application ; retour pendant l’ouverture ferme sans appliquer (Kevin, 17.11).
+useFilterEntry(() => emit("close"));
 
 const SORTS: { value: SentSort; label: string }[] = [
   { value: "relancer", label: "À relancer d’abord" },

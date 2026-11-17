@@ -10,6 +10,7 @@ import WelcomeView from "./WelcomeView.vue";
 // import() se résout dans le même tour que dans le navigateur.
 await Promise.all([
   import("../components/WelcomeCriteria.vue"),
+  import("../components/WelcomeQuestions.vue"),
   import("../components/WelcomeAlertSteps.vue"),
   import("../components/WelcomeAlertExtension.vue"),
   import("../components/WelcomeProfileStep.vue"),
@@ -115,11 +116,20 @@ function calls(path: string): Record<string, unknown>[] {
   return PUT.mock.calls.filter((c) => c[0] === path).map((c) => (c[1] as { body: Record<string, unknown> }).body);
 }
 
-// Des critères aux premières offres : « Continuer », puis « Plus tard » à l'étape de l'alerte.
+// Des critères aux premières offres : « Continuer » (sur téléphone, à chaque question, §60), puis « Plus tard » à
+// l'étape de l'alerte.
 async function toOffers(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"], from = "welcome-continue"): Promise<void> {
-  await click(wrapper, from);
+  if (wrapper.find(".wq").exists()) await throughQuestions(wrapper);
+  else await click(wrapper, from);
   await click(wrapper, "welcome-alert-later");
 }
+
+// Sur téléphone, « Continuer » jusqu'au bout des questions (§60) : 6, ou 5 sans ORP.
+async function throughQuestions(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"]): Promise<void> {
+  for (let i = 0; i < 6 && wrapper.find(".wq").exists(); i++) await click(wrapper, "welcome-continue");
+}
+
+const question = (wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"]): string => wrapper.get(".wq-count").text();
 
 async function click(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"], test: string): Promise<void> {
   await wrapper.find(`[data-test=${test}]`).trigger("click");
@@ -212,21 +222,26 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const added = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
     expect(added).toHaveLength(1);
     expect(added[0]![1]).toMatchObject({ body: { title: "Kubernetes", document_id: 3 } });
-    // Les postes du CV en puces dans la ligne « Postes recherchés » ; le crayon ouvre leur panneau (section 41).
-    expect(wrapper.findAll("[data-test=criteria-roles] li").map((li) => li.text())).toEqual(["DevOps Engineer", "SRE"]);
-    expect(wrapper.find("[data-test=criteria-roles-edit]").attributes("aria-label")).toBe("Modifier les postes");
-    expect(wrapper.find("[data-test=role-input]").exists()).toBe(false);
-    await click(wrapper, "criteria-roles-edit");
-    expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
+    // Question 1 sur 6 (§60) : les postes du CV en pastilles cochées, « Depuis ton CV » au-dessus ; « + Autre poste »
+    // ouvre le champ.
+    expect(question(wrapper)).toBe("Question 1 sur 6");
+    expect(wrapper.get("h1").text()).toBe("Quels postes cherches-tu\u00A0?");
+    expect(wrapper.find("[data-test=question-cv]").text()).toBe("Depuis ton CV");
     const roles = wrapper.findAll("[data-test=roles] button[aria-pressed]");
     expect(roles.map((r) => r.text())).toEqual(["DevOps Engineer", "SRE"]);
     expect(roles.every((r) => r.attributes("aria-pressed") === "true")).toBe(true);
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(false);
+    await click(wrapper, "role-other");
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
 
-    // CV lu : les langues quand même, pré-remplies (PR 17) ; celle du CV en « Courant », les autres « Non renseigné ».
-    const languages = wrapper.find("[data-test=completion-languages]");
-    expect(languages.findAll("[data-test=completion-language] b").map((b) => b.text())).toEqual(["Français", "Allemand", "Italien", "Anglais"]);
-    expect((languages.find("[data-test=completion-level-anglais]").element as HTMLSelectElement).value).toBe("fluent");
-    await languages.find("[data-test=completion-level-francais]").setValue("native");
+    // Question 6 : les langues, pré-remplies (PR 17) ; celle du CV en « Courant », placée d'abord, « Depuis ton CV ».
+    for (let i = 0; i < 5; i++) await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 6 sur 6");
+    const languages = wrapper.get("[data-test=languages]");
+    expect(languages.findAll("b").map((b) => b.text())).toEqual(["Anglais", "Français", "Allemand", "Italien"]);
+    expect(wrapper.text()).toContain("Depuis ton CV");
+    expect((languages.get("[data-test=level-anglais]").element as HTMLSelectElement).value).toBe("fluent");
+    await languages.get("[data-test=level-francais]").setValue("native");
     await toOffers(wrapper);
     expect(calls("/api/criteria").at(-1)).toMatchObject({
       language_levels: { francais: "native", allemand: "unknown", italien: "unknown", anglais: "fluent" },
@@ -285,9 +300,12 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(step.get("[data-test=welcome-profile-file]").text()).toContain("cv.pdf");
     expect(step.get("[data-test=welcome-profile-file]").text()).toContain("La lecture a échoué.");
     await click(wrapper, "welcome-profile-later");
-    const lead = wrapper.find(".welcome-lead").text();
-    expect(lead).not.toContain("Pré-rempli");
-    expect(lead).toContain("Ton CV n’a pas pu être lu");
+    // Les questions (§60), sans « Depuis ton CV ».
+    expect(question(wrapper)).toBe("Question 1 sur 6");
+    expect(wrapper.find("[data-test=question-cv]").exists()).toBe(false);
+    // À la place, la pastille orange, même forme et même place (Kevin, 17.11, 15 h 07).
+    expect(wrapper.get("[data-test=question-cv-unread]").text()).toBe("Ton CV n’a pas pu être lu");
+    expect(wrapper.text()).not.toContain("Pré-rempli");
   });
 
   it("sans CV : « Complétons ton profil », une expérience, les langues et le nom, puis les critères", async () => {
@@ -323,6 +341,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     // Retour aux critères, sans redemander les langues ; elles partent avec les critères.
     expect(wrapper.find("[data-test=welcome-profile]").exists()).toBe(false);
     expect(wrapper.find("[data-test=completion-languages]").exists()).toBe(false);
+    expect(question(wrapper)).toBe("Question 1 sur 6");
     await toOffers(wrapper);
     expect(calls("/api/criteria").at(-1)).toMatchObject({ language_levels: { francais: "native", allemand: "notions" } });
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français");
@@ -330,40 +349,63 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
-    await click(wrapper, "criteria-roles-edit");
+    await click(wrapper, "role-other");
     await wrapper.find("[data-test=role-input]").setValue("Aide-soignante");
     await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 2 sur 6");
+    await throughQuestions(wrapper);
     expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4, roles: ["Infirmière", "Aide-soignante"] });
   });
 
-  it("les critères : postes (trois au plus), lieux en puces, l’ORP et ses recherches par mois", async () => {
+  it("les critères, une question par écran (§60) : postes (trois au plus), lieu, taux, ORP, objectif, langues", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
-    await click(wrapper, "criteria-roles-edit");
+    // La barre de 6 segments remplace celle des 5 étapes pendant les questions.
+    const bar = wrapper.get("[role=progressbar]");
+    expect(bar.attributes("aria-label")).toBe("Question 1 sur 6");
+    expect(bar.findAll("span.done")).toHaveLength(1);
+    await click(wrapper, "role-other");
     for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {
       await wrapper.find("[data-test=role-input]").setValue(role);
-      await click(wrapper, "role-add");
+      await wrapper.find("[data-test=role-input]").trigger("keydown", { key: "Enter" });
     }
     const roles = wrapper.findAll("[data-test=roles] button[aria-pressed]");
     expect(roles).toHaveLength(4);
     expect(roles.filter((r) => r.attributes("aria-pressed") === "true")).toHaveLength(3);
     expect(roles[3]!.attributes("aria-disabled")).toBe("true");
-    expect(wrapper.text()).toContain("Trois postes au plus.");
 
-    expect(wrapper.find("[data-test=criteria-places]").text()).toContain("VD");
+    // 2. Lieu : les villes enregistrées en pastilles cochées, « Toute la Suisse » décochée.
+    await click(wrapper, "welcome-continue");
+    expect(wrapper.get("h1").text()).toBe("Où veux-tu travailler\u00A0?");
+    expect(wrapper.get("[data-test=place-all]").attributes("aria-pressed")).toBe("false");
+    expect(wrapper.text()).toContain("VD");
+    // 3. Taux : un seul choix parmi les 7 valeurs, 80 % enregistré, « Dès 80 % » coché.
+    await click(wrapper, "welcome-continue");
+    const rates = wrapper.findAll("[data-test=rates] button");
+    expect(rates.map((r) => r.text())).toEqual(["Tous", "Dès 50\u00A0%", "Dès 60\u00A0%", "Dès 70\u00A0%", "Dès 80\u00A0%", "Dès 90\u00A0%", "100\u00A0%"]);
+    expect(rates.filter((r) => r.attributes("aria-checked") === "true").map((r) => r.text())).toEqual(["Dès 80\u00A0%"]);
+    // 4. ORP : « Oui » par défaut ; 5. l'objectif, de 1 à 99.
+    await click(wrapper, "welcome-continue");
+    expect(wrapper.get("[data-test=orp-yes]").attributes("aria-checked")).toBe("true");
+    await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 5 sur 6");
     expect(wrapper.find("[data-test=target]").text()).toBe("10");
     await click(wrapper, "target-plus");
     await click(wrapper, "target-plus");
     expect(wrapper.find("[data-test=target]").text()).toBe("12");
+    // 6. Langues, puis tout part ensemble.
+    await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 6 sur 6");
+    expect(PUT.mock.calls.some((c) => c[0] === "/api/criteria")).toBe(false);
 
     await click(wrapper, "welcome-continue");
     expect(calls("/api/criteria").at(-1)).toEqual({
       ...CRITERIA,
       locations: ["VD"],
-      // Le taux a sa ligne sur téléphone aussi (section 41) : celui déjà enregistré est gardé.
+      // Le taux enregistré est gardé tant qu'on ne touche pas aux pastilles.
       min_rate: 80,
       remote_policy: "from_switzerland",
-      // Plus aucune langue écartée d'office (PR 17) : « Non renseigné » n'écarte rien.
-      language_levels: {},
+      // « Non renseigné » n'écarte rien (PR 17).
+      language_levels: { francais: "unknown", allemand: "unknown", italien: "unknown", anglais: "unknown" },
     });
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 12, orp_due_day: 5 });
     expect(calls("/api/welcome").at(-1)).toMatchObject({
@@ -376,9 +418,56 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(PUT.mock.calls.some((c) => c[0] === "/api/notifications/phone")).toBe(false);
   });
 
+  it("le lieu et le taux (§60) : une ville tapée devient une pastille, « Toute la Suisse » efface ; le taux choisi", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    await click(wrapper, "welcome-continue");
+    await click(wrapper, "place-all");
+    expect(wrapper.get("[data-test=place-all]").attributes("aria-pressed")).toBe("true");
+    await wrapper.get("[data-test=place-input]").setValue("Lausanne");
+    await wrapper.get("[data-test=place-input]").trigger("keydown", { key: "Enter" });
+    expect(wrapper.get("[data-test=place-all]").attributes("aria-pressed")).toBe("false");
+    expect(wrapper.get("[aria-label='Retirer Lausanne']").attributes("aria-pressed")).toBe("true");
+    await click(wrapper, "welcome-continue");
+    const rate = (label: string) => wrapper.findAll("[data-test=rates] button").find((b) => b.text() === label)!;
+    await rate("Dès 60\u00A0%").trigger("click");
+    await throughQuestions(wrapper);
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ locations: ["Lausanne"], min_rate: 60 });
+    expect(calls("/api/welcome").filter((c) => c.sources).at(-1)).toEqual({ sources: { roles: "default", places: "user", rate: "user" } });
+  });
+
+  it("« Tous » : peu importe ; le retour revient à la question d’avant, sans l’objectif si « Non »", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    await click(wrapper, "welcome-continue");
+    await click(wrapper, "welcome-continue");
+    const rate = (label: string) => wrapper.findAll("[data-test=rates] button").find((b) => b.text() === label)!;
+    await rate("Tous").trigger("click");
+    await click(wrapper, "welcome-continue");
+    await click(wrapper, "orp-no");
+    await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 6 sur 6");
+    await click(wrapper, "welcome-back");
+    expect(question(wrapper)).toBe("Question 4 sur 6");
+    await click(wrapper, "welcome-back");
+    expect(question(wrapper)).toBe("Question 3 sur 6");
+    await throughQuestions(wrapper);
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ min_rate: null });
+    // Retour depuis l'alerte : la dernière question.
+    await click(wrapper, "welcome-back");
+    expect(question(wrapper)).toBe("Question 6 sur 6");
+    // Retour depuis la question 1 : le CV.
+    for (let i = 0; i < 4; i++) await click(wrapper, "welcome-back");
+    expect(question(wrapper)).toBe("Question 1 sur 6");
+    await click(wrapper, "welcome-back");
+    expect(wrapper.find(".wq").exists()).toBe(false);
+    expect(wrapper.find("[data-test=cv-upload]").exists()).toBe(true);
+  });
+
   it("sans ORP : pas d’objectif, pas de remise dans la ligne des valeurs par défaut", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
-    await wrapper.find("[data-test=orp-switch]").setValue(false);
+    for (let i = 0; i < 3; i++) await click(wrapper, "welcome-continue");
+    await click(wrapper, "orp-no");
+    await click(wrapper, "welcome-continue");
+    expect(question(wrapper)).toBe("Question 6 sur 6");
     expect(wrapper.find("[data-test=target]").exists()).toBe(false);
     await toOffers(wrapper);
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: null });
@@ -460,8 +549,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("l’alerte (étape 4 sur 5) : 4 étapes, la première recherche, jobup, l’adresse, le code en lecture seule ; « J’ai créé l’alerte » note jobup", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
-    expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer");
-    await click(wrapper, "welcome-continue");
+    expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer»");
+    await throughQuestions(wrapper);
     expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4 });
     expect(wrapper.get("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");
     expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");

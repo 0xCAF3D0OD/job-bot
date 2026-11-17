@@ -26,6 +26,7 @@ const DATA: Record<string, unknown> = {
   "/api/identity": { name: "Kevin Di Nocera", email: "kevin@example.ch" },
   "/api/documents": [{ id: 1, kind: null }, { id: 2, kind: "certificate" }, { id: 3, kind: null }],
   "/api/privacy": { contact: "Kevin, aide@example.ch" },
+  "/api/trainings/in-progress": { in_progress: 2 },
 };
 
 async function mountPage() {
@@ -174,5 +175,19 @@ describe("Collecter maintenant (reprise de la 502)", () => {
     await flushPromises();
     expect(button().attributes("aria-busy")).toBeUndefined();
     expect(status.text()).toBe("Collecte lancée. Le journal se met à jour d’ici une minute.");
+  });
+  it("« Formations · 2 en cours » ; à 0 ou si l’appel échoue, la ligne seule (Kevin, 17.11)", async () => {
+    const wrapper = await mountPage();
+    expect(wrapper.get("[data-test=account-trainings]").text()).toBe("Formations, 2 en cours");
+    DATA["/api/trainings/in-progress"] = { in_progress: 0 };
+    expect((await mountPage()).get("[data-test=account-trainings]").text()).toBe("Formations");
+    delete DATA["/api/trainings/in-progress"];
+    GET.mockImplementation((path: string) =>
+      path === "/api/trainings/in-progress" ? Promise.reject(new Error("réseau")) : Promise.resolve({ data: DATA[path] ?? null }),
+    );
+    const failed = mount(AccountView, { global: { plugins: [createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] })] } });
+    await flushPromises();
+    expect(failed.get("[data-test=account-trainings]").text()).toBe("Formations");
+    DATA["/api/trainings/in-progress"] = { in_progress: 2 };
   });
 });

@@ -359,6 +359,17 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
+  it("la feuille « ⋯ » : « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11)", async () => {
+    phone();
+    for (const [status, shown] of [["later", true], ["ignored", true], ["preparing", false], ["to_review", false]] as const) {
+      const wrapper = await mountDetail(offer({ status }));
+      await wrapper.find("[data-test=detail-more]").trigger("click");
+      expect(wrapper.find("[data-test=offer-actions] [data-test=offer-action-back-to-review]").exists()).toBe(shown);
+      wrapper.unmount();
+    }
+    vi.unstubAllGlobals();
+  });
+
   it("une offre où j’ai postulé : pas de barre", async () => {
     phone();
     const wrapper = await mountDetail(offer({ status: "applied" }));
