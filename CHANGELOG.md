@@ -716,3 +716,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.502 | Le panneau de l'Assistant se charge à la première ouverture : environ 10 Ko de moins sur chaque page, bouton inchangé | livrée |
 | 1.6.503 | Réglages et menu du compte (LISEZMOI §56) : « M’avertir dès » et « Apparence » en lignes avec la valeur et un chevron, feuille à boutons radio sur téléphone, menu sur ordinateur ; seuils 85, 75 et 50 gardés ; sur téléphone, les feuilles Langue et Taille du texte se ferment dès qu’on choisit | livrée |
 | 1.6.504 | Filtres : le tri d’Envoyées reste hors de l’historique, et retour pendant l’ouverture d’une feuille applique sans clignotement | livrée |
+| 1.6.505 | Alertes vides sur ordinateur : la carte « Ta recherche », une ligne par site et le volet « Modifier » qui écrit les critères du Profil puis recalcule les recherches | livrée |

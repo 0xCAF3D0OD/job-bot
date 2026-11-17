@@ -38,6 +38,7 @@ onUnmounted(hold);
     @focusout="release"
   >
     <span>{{ message }}</span>
+    <slot />
     <IconButton
       icon="close"
       label="Fermer"

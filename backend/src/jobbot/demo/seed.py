@@ -104,7 +104,7 @@ async def _profile(session: AsyncSession) -> tuple[Profile, dict[str, int]]:
     for key, value in {
         **data.IDENTITY,
         "orp_monthly_target": data.ORP_TARGET,
-        "welcome": {"done": True, "trade": data.TRADE},
+        "welcome": {"done": True, "trade": data.TRADE, "roles": list(data.ROLES)},
     }.items():
         session.add(Setting(key=key, value=value))
     await save_criteria(
@@ -615,10 +615,15 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
             ),
         ]
     )
-    devops = AlertSearch(terms="DevOps", location="Lausanne")
-    platform = AlertSearch(terms="Platform Engineer", location="Genève")
-    session.add_all([devops, platform])
+    # Une recherche par poste et par lieu des critères (« Ta recherche », Kevin 17.11) : 3 × 2 = 6.
+    searches = [
+        AlertSearch(terms=role, location=place)
+        for role in data.ROLES
+        for place in ("Vaud", "Genève")
+    ]
+    session.add_all(searches)
     await session.flush()
+    devops, platform = searches[0], searches[3]
     for site in ("jobup", "indeed", "jobsch"):
         session.add(AlertSetup(search_id=devops.id, site=site))
     session.add(AlertSetup(search_id=platform.id, site="jobup"))

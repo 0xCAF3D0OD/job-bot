@@ -1,19 +1,21 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { useUndo } from "../composables/useUndo";
 import AlertsView from "./AlertsView.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
 const DELETE = vi.fn();
+const PATCH = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
     PUT: (...a: unknown[]) => PUT(...a),
     DELETE: (...a: unknown[]) => DELETE(...a),
-    PATCH: vi.fn(),
+    PATCH: (...a: unknown[]) => PATCH(...a),
   },
 }));
 afterEach(() => vi.resetAllMocks());
@@ -51,65 +53,51 @@ async function mountView(data: unknown) {
   GET.mockResolvedValue({ data });
   const wrapper = mount(AlertsView, { global: { stubs: { teleport: true } } });
   await flushPromises();
+  // Les volets et la vue de départ sont chargés à la demande (règle du poids).
+  await vi.dynamicImportSettled();
+  await flushPromises();
   return wrapper;
 }
 
-describe("Alertes, assistant (docs/21 §4)", () => {
-  it("rien en place : assistant en trois étapes, un site à la fois", async () => {
+describe("Alertes vides sur ordinateur (AlertesOrdinateurVide et Site, option A de Kevin du 17.11)", () => {
+  it("la carte « Ta recherche », une ligne par site, le volet du site avec le même texte", async () => {
     const todo = page([search(1, [cell("jobup"), cell("linkedin")]), search(2, [cell("jobup"), cell("linkedin")])]);
     PUT.mockResolvedValue({ data: todo });
-    DELETE.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
     const wrapper = await mountView(todo);
-    expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(true);
-    // Ordinateur, rien en place (AlertesOrdinateurVide, corrections du 13.11, §2) : Orange à gauche du titre, plus
-    // le logo transformé ; jamais le personnage de l'ancienne série.
-    expect(wrapper.find("[data-test=alerts-orange]").attributes("height")).toBe("112");
-    expect(wrapper.find("[data-test=alerts-sentence]").text()).toContain("Aucune alerte pour l’instant.");
-    expect(wrapper.find("[data-test=alerts-empty]").exists()).toBe(false);
-    expect(wrapper.find("[data-illustration=personnage]").exists()).toBe(false);
-
-    // Étape 1 : retirer une recherche.
-    expect(wrapper.findAll("[data-test=wizard-search]")).toHaveLength(2);
-    await wrapper.findAll("[data-test=wizard-search] button")[1]!.trigger("click");
     await flushPromises();
-    expect(wrapper.findAll("[data-test=wizard-search]")).toHaveLength(1);
-    // L'exemple suit la recherche, pas un métier au hasard (docs/104 §5).
-    expect(wrapper.find("[data-test=wizard-terms]").attributes("placeholder")).toBe("Mots (DevOps)");
-    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    // Orange à gauche du titre, la pastille « Aucune alerte pour l’instant », « + Ajouter une recherche » à droite.
+    expect(wrapper.find("[data-test=alerts-orange]").attributes("height")).toBe("112");
+    expect(wrapper.find("[data-test=alerts-sentence]").text()).toBe("Aucune alerte pour l’instant");
+    expect(wrapper.find("[data-test=add-search]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alerts-search-summary]").text()).toBe("DevOps, Kubernetes · Lausanne");
+    expect(wrapper.find("[data-test=alerts-search-edit]").text()).toBe("Modifier");
+    expect(wrapper.findAll("[data-test=alerts-start] .alerts-family-title").map((h) => h.text())).toEqual([
+      "Ta recherche",
+      "À créer · 2 sites",
+    ]);
+    // L'ordre de la planche : jobup, LinkedIn…
+    const rows = wrapper.findAll("[data-test^=alerts-start-]");
+    expect(rows.map((r) => r.find(".block-row-name").text())).toEqual(["jobup", "LinkedIn"]);
+    expect(rows[0]!.text()).toContain("Le plus utilisé en Suisse romande");
+    expect(rows[0]!.find(".block-row-aside").text()).toContain("À créer");
 
-    // Étape 2, sur ordinateur (planche AlertesOrdinateurSite) : le panneau « Alerte jobup » à droite, « Site 1 sur 2 »,
-    // les trois étapes numérotées, « Plus tard » et « J'ai créé l'alerte » ; l'étape 1 reste derrière.
+    await rows[0]!.trigger("click");
+    await flushPromises();
     const panel = () => wrapper.find(".alert-site-panel");
     expect(panel().find("h2").text()).toBe("Alerte jobup");
-    expect(panel().attributes("aria-label")).toBe("Alerte jobup");
     expect(panel().find(".side-panel-eyebrow").text()).toBe("Site 1 sur 2");
-    expect(panel().findAll(".alert-site-progress li").map((li) => li.classes().includes("done"))).toEqual([true, false]);
-    expect(panel().find("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne");
-    expect(panel().findAll(".alert-site-step-title").map((b) => b.text())).toEqual([
-      "Ouvre jobup avec ta recherche",
-      "Mets cette adresse comme destinataire",
-      "Recopie le code de jobup",
-      "Termine l’alerte sur jobup, puis reviens ici",
+    expect(panel().find("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps, Kubernetes · Lausanne");
+    expect(panel().findAll("[data-test=wizard-open]").map((a) => a.text())).toEqual([
+      expect.stringContaining("Ouvrir jobup : DevOps"),
+      expect.stringContaining("Ouvrir jobup : Kubernetes"),
     ]);
-    expect(panel().find("[data-test=wizard-address]").text()).toBe("moi@exemple.ch");
-    expect(wrapper.find("[data-test=alerts-wizard] h2").text()).toBe("Offres à recevoir");
-    expect(wrapper.find("[data-test=wizard-site-done]").text()).toBe("J’ai créé l’alerte");
-    expect(wrapper.find("[data-test=wizard-skip]").text()).toBe("Plus tard");
-    expect(wrapper.find("[data-test=wizard-open]").attributes("href")).toBe("https://jobup.example/?term=DevOps");
-    expect(wrapper.find("[data-test=wizard-open]").text()).toContain("Ouvrir jobup");
     await wrapper.find("[data-test=wizard-site-done]").trigger("click");
     await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", {
-      params: { path: { search_id: 1, site: "jobup" } },
-    });
+    expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: 1, site: "jobup" } } });
+    expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: 2, site: "jobup" } } });
     expect(panel().find("h2").text()).toBe("Alerte LinkedIn");
     expect(panel().find(".side-panel-eyebrow").text()).toBe("Site 2 sur 2");
-    await wrapper.find("[data-test=wizard-skip]").trigger("click");
-    await flushPromises();
-
-    // Étape 3.
-    expect(wrapper.text()).toContain("C’est prêt");
-    expect(wrapper.text()).toContain("moi@exemple.ch");
   });
 });
 
@@ -126,7 +114,10 @@ describe("Alertes, assistant : le bouton bleu ajoute aussi (2026-11-05)", () => 
     await wrapper.find("[data-test=wizard-next]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "DevOps", location: null } });
-    expect(wrapper.find(".alert-site-panel h2").text()).toBe("Alerte jobup");
+    // Une recherche active : l'écran « Ta recherche » et ses lignes de sites prennent la suite (option A, 17.11).
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(wrapper.find("[data-test=alerts-start-jobup]").exists()).toBe(true);
   });
 });
 
@@ -219,6 +210,14 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     const one = page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]);
     POST.mockResolvedValue({ data: page([...one.searches, search(2, [cell("jobup")])]) });
     const wrapper = await mountView(one);
+    // « + Ajouter » écrit les critères du Profil (une seule source, Kevin 17.11), puis recalcule les recherches.
+    const criteria = { locations: ["Lausanne"], min_rate: null, keywords: [] };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/criteria" ? { data: { criteria } } : path === "/api/welcome" ? { data: { roles: ["DevOps"] } } : { data: one },
+      ),
+    );
+    PUT.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/criteria" ? { criteria } : { roles: [] } }));
     expect(wrapper.find("[data-test=alerts-note]").exists()).toBe(false);
     await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");
     const sheet = wrapper.find("[data-test=alert-sheet]");
@@ -228,9 +227,30 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     await wrapper.find("[data-test=add-search]").trigger("click");
     await wrapper.find("[data-test=add-search-terms]").setValue("Kubernetes");
     await wrapper.find("[data-test=add-search-form]").trigger("submit");
+    await vi.dynamicImportSettled();
     await flushPromises();
-    expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "Kubernetes", location: null } });
+    expect(PUT).toHaveBeenCalledWith("/api/criteria", { body: { ...criteria, locations: ["Lausanne"], min_rate: null } });
+    expect(PUT).toHaveBeenCalledWith("/api/welcome", { body: { roles: ["DevOps", "Kubernetes"] } });
+    expect(DELETE).not.toHaveBeenCalled();
+    expect(POST).toHaveBeenCalledTimes(1);
+    expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "Kubernetes", location: "Lausanne" } });
     expect(wrapper.find("[data-test=alert-card-2-jobup]").exists()).toBe(true);
+  });
+
+  it("« Ne plus suivre » : la recherche passe en pause, les critères du Profil ne changent pas", async () => {
+    const one = page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]);
+    const wrapper = await mountView(one);
+    PATCH.mockResolvedValue({ data: page([search(1, [cell("jobup")], { active: false })]) });
+    await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");
+    await wrapper.find("[data-test=alert-remove]").trigger("click");
+    await flushPromises();
+    const { pending, flush } = useUndo();
+    expect(pending.value?.message).toBe("Tu ne suis plus DevOps. Tes critères du Profil ne changent pas.");
+    expect(wrapper.find("[data-test=alert-card-1-jobup]").exists()).toBe(false);
+    await flush();
+    expect(PATCH).toHaveBeenCalledWith("/api/alert-searches/{search_id}", { params: { path: { search_id: 1 } }, body: { active: false }, keepalive: false });
+    expect(DELETE).not.toHaveBeenCalled();
+    expect(PUT).not.toHaveBeenCalled();
   });
 
   it("ajout sans mot : l’erreur sous le champ, le curseur dedans, « (facultatif) » sur le lieu", async () => {
@@ -323,7 +343,8 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     const todo = { ...page([search(1, [cell("jobup"), cell("linkedin")])]), mailbox: "alertes+lea-abc12345@joba1.ch", personal_address: true };
     PUT.mockResolvedValue({ data: todo });
     const wrapper = await mountView(todo);
-    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=alerts-start-jobup]").trigger("click");
     await flushPromises();
     await wrapper.find("[data-test=wizard-open]").trigger("click");
     await flushPromises();
@@ -338,7 +359,8 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     Object.assign(navigator, { clipboard: { writeText } });
     const todo = page([search(1, [cell("jobup"), cell("linkedin")])]);
     const wrapper = await mountView(todo);
-    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=alerts-start-jobup]").trigger("click");
     await flushPromises();
     const panel = wrapper.find(".alert-site-panel");
     expect(panel.find("[data-test=alert-site-copied]").text()).toBe("");
