@@ -26,6 +26,7 @@ from jobbot.notify import service as notify_service
 from jobbot.rhythm.service import DEFAULT_DAYS, DEFAULT_HOUR
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring_service
+from jobbot.scoring.scale import NOTIFY_DEFAULT
 from jobbot.scoring.service import budget_details
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.filter import FILTER_JOB
@@ -91,7 +92,8 @@ class FilterResponse(BaseModel):
 
 class SettingsModel(BaseModel):
     orp_monthly_target: int | None = Field(default=None, ge=1, le=100)
-    notify_score_threshold: int = Field(default=70, ge=0, le=100)
+    # « M'avertir dès » : 50, 75 ou 85 (échelle unique du §65, Kevin 17.11), « Proche » par défaut.
+    notify_score_threshold: int = Field(default=NOTIFY_DEFAULT, ge=0, le=100)
     llm_monthly_budget_chf: float = Field(default=10, ge=0, le=1000)
     # Jour de remise des preuves ORP du mois précédent (docs/09 §5).
     orp_due_day: int = Field(default=5, ge=2, le=28)
