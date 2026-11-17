@@ -27,19 +27,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Numéroter et assembler
-        run: python3 scripts/changelog.py --number
       # Un envoi fait avec le jeton de l'action ne relance pas les workflows : pas de boucle.
+      # Toujours repartir de main à jour : une fusion arrivée entre-temps apporte ses fragments, qui
+      # prennent les numéros suivants, et un envoi refusé (une autre fusion, ou l'action des décisions
+      # qui a poussé juste avant) est retenté jusqu'à 5 fois au lieu d'échouer.
       - name: Enregistrer s'il a changé
         run: |
-          git add -A changelog.d CHANGELOG.md
-          if git diff --cached --quiet; then echo "Rien à numéroter, CHANGELOG.md déjà à jour"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: numéros attribués et CHANGELOG.md assemblé depuis changelog.d/"
-          git pull --rebase origin main
-          # Une autre fusion arrivée entre-temps : ses fragments prennent les numéros suivants.
-          python3 scripts/changelog.py --number
-          git add -A changelog.d CHANGELOG.md
-          git diff --cached --quiet || git commit --amend --no-edit
-          git push origin HEAD:main
+          for essai in 1 2 3 4 5; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            python3 scripts/changelog.py --number
+            git add -A changelog.d CHANGELOG.md
+            if git diff --cached --quiet; then echo "Rien à numéroter, CHANGELOG.md déjà à jour"; exit 0; fi
+            git commit -q -m "chore: numéros attribués et CHANGELOG.md assemblé depuis changelog.d/"
+            git push origin HEAD:main && exit 0
+            sleep $((essai * 5))
+          done
+          exit 1
