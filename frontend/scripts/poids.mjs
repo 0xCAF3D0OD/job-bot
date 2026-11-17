@@ -112,6 +112,7 @@ export const LIMITS = {
   images: 4_893_100,
 };
 
+
 // Affichés à chaque mesure, sans limite (Kevin, 16.11) : ce n'est pas ce que charge une page.
 const TOTALS = ["js-total", "css-total"];
 
@@ -274,6 +275,13 @@ for (const [page, paths] of Object.entries(PAGES)) {
   groups[`js-${page}`] = jsOf(loaded(paths));
   groups[`css-${page}`] = cssOf(loaded(paths));
 }
+// Les catalogues de langue (src/locales/<langue>/<page>.json), chargés à la demande hors du français.
+const CATALOG = /src\/locales\/(\w+)\/([\w-]+)\.json$/;
+const catalogs = Object.keys(manifest).filter((key) => CATALOG.test(key));
+for (const key of catalogs) {
+  const [, lang, page] = key.match(CATALOG);
+  groups[`cat-${lang}-${page}`] = [manifest[key].file];
+}
 
 // Une limite sans page (une page retirée de PAGES) : le dire plutôt que planter.
 const orphans = Object.keys(LIMITS).filter((name) => !groups[name]);
@@ -306,12 +314,36 @@ let failed = false;
 // Toutes les vues, et tout bloc chargé à part (import() hors des vues), sont mesurés dans une page.
 const inPages = new Set(Object.values(PAGES).flat());
 const unmeasured = Object.keys(manifest)
-  .filter((key) => /src\/views\/\w+\.vue$/.test(key) || manifest[key].isDynamicEntry)
+  // Les catalogues et i18n.ts sont comptés dans chaque page hors du français (plus bas).
+  .filter((key) => (/src\/views\/\w+\.vue$/.test(key) || manifest[key].isDynamicEntry) && !CATALOG.test(key) && !key.endsWith("src/i18n.ts"))
   .map((key) => key.replace(/^.*?src\//, ""))
   .filter((file) => !inPages.has(file));
 if (unmeasured.length) {
   failed = true;
   console.log(`TROP vues ou blocs chargés à part sans limite : ${unmeasured.join(", ")} (à ajouter dans PAGES, et leurs limites dans LIMITS)`);
+}
+// Hors du français (Kevin, 17.11, docs/decisions/2026-11-17-1417-poids-pages-traduites.md) : chaque page compte aussi
+// avec ce qu'elle charge dans une autre langue (i18n.ts, son catalogue et `commun`), pour la langue la plus lourde,
+// quelle qu'elle soit. Même limite que la page en français, pas de limite à part ; un dépassement ne passe qu'avec
+// une décision écrite dans docs/decisions/.
+const i18nKey = Object.keys(manifest).find((key) => key.endsWith("src/i18n.ts"));
+const i18nSize = i18nKey ? sizes(manifest[i18nKey].file).gzip : 0;
+// Sans catalogue encore (PR 1, aucun écran traduit), la page et i18n.ts seuls, sous le nom « aucune ».
+const found = [...new Set(catalogs.map((key) => key.match(CATALOG)[1]))].sort();
+const languages = found.length ? found : ["aucune"];
+const translated = [];
+for (const page of Object.keys(PAGES)) {
+  const name = `js-${page}`;
+  if (!LIMITS[name]) continue;
+  const catalogOf = (lang, of) => (groups[`cat-${lang}-${of}`] ? limited(`cat-${lang}-${of}`) : 0);
+  const [lang, size] = languages
+    .map((code) => [code, limited(name) + i18nSize + catalogOf(code, page) + catalogOf(code, "commun")])
+    .reduce((a, b) => (b[1] > a[1] ? b : a));
+  translated.push({ page, lang, size, limit: LIMITS[name] });
+  if (size > LIMITS[name]) {
+    failed = true;
+    console.log(`TROP ${page} en ${lang} : ${size} o, ${size - LIMITS[name]} o au-dessus de la limite de la page (${LIMITS[name]} o) ; une décision écrite dans docs/decisions/ ou un allègement`);
+  }
 }
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {
@@ -377,6 +409,15 @@ if (arg("--base")) {
         (rows.length ? `| Mesure | main | branche | écart | limite |\n|---|---:|---:|---:|---:|\n${rows.join("\n")}\n` : "Aucune page changée.\n"),
     );
   }
+}
+
+// Le tableau des pages dans leur langue la plus lourde, pour la description de la PR (Kevin, 17.11).
+if (translated.length) {
+  const table =
+    `| Page | Langue la plus lourde | Taille (gzip, o) | Limite | Marge |\n|---|---|---:|---:|---:|\n` +
+    translated.map((t) => `| ${t.page} | ${t.lang} | ${t.size} | ${t.limit} | ${t.limit - t.size} |`).join("\n");
+  console.log(`\nPages hors du français (page + i18n.ts + catalogues, langue la plus lourde) :\n${table}`);
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n## Pages hors du français\n\n${table}\n`);
 }
 
 // Les polices (woff2, déjà compressées) : relevées pour le tableau de poids des PR, sans limite. Aucune n'est
