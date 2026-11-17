@@ -1575,7 +1575,7 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-check { flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); }
 .welcome-cv-change { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); cursor: pointer; }
 .welcome-skills { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
-.welcome-skills p, .welcome-label, .welcome-field legend { margin: 0; padding: 0; font-weight: var(--weight-bold); }
+.welcome-skills p { margin: 0; padding: 0; font-weight: var(--weight-bold); }
 .welcome-skills p { font-size: var(--font-small); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; }
 .welcome-skills ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .welcome-skills li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
@@ -1676,7 +1676,7 @@ async function finish(to: string): Promise<void> {
 @media (prefers-reduced-motion: reduce) { .wdk-bar span { animation: none; } }
 .wdk-file-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
 .wdk-found { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-3) 0 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
-.wdk-found .icon, .wdk-tag .icon { width: var(--space-4); height: var(--space-4); }
+.wdk-found .icon { width: var(--space-4); height: var(--space-4); }
 .wdk-note { display: flex; gap: var(--space-3); margin: var(--space-5) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
 .wdk-note .icon { flex: none; width: var(--wdk-18); height: var(--wdk-18); }
 .wdk-note a { padding: var(--space-1) 0; color: var(--primary-text); font-weight: var(--weight-bold); }

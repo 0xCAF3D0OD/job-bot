@@ -432,35 +432,34 @@ defineExpose({
 .wq-bar { display: flex; gap: var(--wq-6); padding-top: var(--wq-6); }
 .wq-bar span { flex: 1; height: 5px; border-radius: var(--wq-3); background: var(--line); transition: background-color 0.4s; }
 .wq-bar span.done { background: var(--primary-graphic); }
-.wq-screen { display: flex; flex-direction: column; align-items: flex-start; }
+.wq-screen { display: flex; flex-direction: column; }
 .wq-count { margin: var(--wq-14) 0 0; font-size: var(--wq-13); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .wq-title { margin: var(--space-2) 0 var(--wq-6); font-size: var(--wq-26); line-height: var(--wq-32); font-weight: var(--weight-heavy); }
 .wq-title:focus { outline: none; }
 .wq-help { margin: 0 0 var(--wq-18); font-size: var(--wq-15); line-height: var(--wq-22); color: var(--text-secondary); }
 .wq-title + :not(.wq-help) { margin-top: var(--wq-14); }
-.wq-cv { display: inline-flex; align-items: center; gap: var(--wq-6); height: 28px; margin-bottom: var(--space-3); padding: 0 var(--wq-10); border-radius: var(--wq-14); background: var(--success-soft); color: var(--success); font-size: var(--wq-13); font-weight: var(--weight-bold); }
+.wq-cv { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--wq-6); height: 28px; margin-bottom: var(--space-3); padding: 0 var(--wq-10); border-radius: var(--wq-14); background: var(--success-soft); color: var(--success); font-size: var(--wq-13); font-weight: var(--weight-bold); }
 .wq-cv-langs { margin-bottom: var(--wq-10); }
-.wq-chips { align-self: stretch; display: flex; flex-wrap: wrap; gap: var(--wq-10); }
+.wq-chips { display: flex; flex-wrap: wrap; gap: var(--wq-10); }
 .wq-chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 51px; padding: 0 var(--space-4); border-radius: var(--wq-14); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-semibold); cursor: pointer; }
 .wq-chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 .wq-chip svg, .wq-card svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.wq-chip[aria-disabled="true"] { cursor: default; }
 .wq input.wq-field { box-sizing: border-box; width: 100%; height: 59px; margin-top: var(--wq-14); padding: 0 var(--space-4); border-radius: var(--wq-16); background: var(--surface); border: 1.5px solid var(--card-line); color: var(--text); font-size: var(--font-body); }
 .wq input.wq-field::placeholder { color: var(--text-secondary); opacity: 1; }
 .wq-chips + input.wq-field { margin-top: var(--space-3); }
 .wq-places { margin-top: var(--wq-14); }
 .wq-title + input.wq-field { margin-top: 0; }
 .wq-help + input.wq-field { margin-top: 0; }
-.wq-cards { display: flex; flex-direction: column; gap: var(--space-3); align-self: stretch; }
+.wq-cards { display: flex; flex-direction: column; gap: var(--space-3); }
 .wq-card { display: flex; align-items: center; line-height: normal; gap: var(--space-3); padding: var(--space-4) var(--wq-18); border-radius: var(--wq-18); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); text-align: left; white-space: normal; cursor: pointer; }
 .wq-card.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 .wq-card-text { flex: 1; }
 .wq-card-text b { display: block; font-size: var(--wq-17); }
 .wq-card-text span { display: block; margin-top: var(--wq-2); font-size: var(--font-small); line-height: var(--wq-20); font-weight: var(--weight-regular); color: var(--text-secondary); }
-.wq-steps { display: flex; align-items: center; justify-content: center; gap: var(--space-6); align-self: stretch; margin-top: var(--space-2); }
+.wq-steps { display: flex; align-items: center; justify-content: center; gap: var(--space-6); margin-top: var(--space-2); }
 .wq-stepper { display: grid; place-items: center; width: 59px; height: 59px; padding: 0; border-radius: 50%; border: 1.5px solid var(--button-outline); background: var(--surface); color: var(--text); font-size: var(--wq-26); font-weight: var(--weight-regular); }
 .wq-target { min-width: 70px; text-align: center; font-size: var(--wq-48); font-weight: var(--weight-heavy); }
-.wq-langs { align-self: stretch; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--wq-18); overflow: hidden; }
+.wq-langs { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--wq-18); overflow: hidden; }
 .wq-lang { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: 0 var(--space-4); }
 .wq-lang + .wq-lang { border-top: 1px solid var(--surface-muted); }
 .wq-lang b { flex: 1; font-size: var(--font-body); }
@@ -471,7 +470,7 @@ defineExpose({
 .wq-level svg { width: 18px; height: 18px; fill: none; stroke: var(--field-border); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 /* Le choix du niveau du téléphone, invisible, posé sur le niveau et son chevron. */
 .wq-level select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.wq-add { min-height: var(--target-min); margin-top: var(--space-1); padding: 0; background: none; border: 0; font-size: var(--wq-15); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
+.wq-add { align-self: flex-start; min-height: var(--target-min); margin-top: var(--space-1); padding: 0; background: none; border: 0; font-size: var(--wq-15); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
 /* L'écran et « Continuer » de WelcomeView pendant les questions : foncé, le guillemet de 22 px à droite. Ces règles
    viennent avec ce fichier, chargé seulement sur téléphone. */
 .welcome-questions { gap: 0; padding-top: 0; }
