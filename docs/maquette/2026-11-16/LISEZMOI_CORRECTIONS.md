@@ -637,3 +637,50 @@ Fenêtre de l'extension sur la page « Créer une alerte » de jobup (360 × 480
 - Même liste en 4 étapes que dans jobA1 : 1 Formulaire rempli, 2 « Clique sur « Créer l'alerte » sur jobup », 3 Code de confirmation, 4 « Valide le code sur jobup ».
 - États : rempli (+ lien « Copier l'adresse jobA1 » si un champ est vide) ; code en attente ; code collé (6 cases vertes, l'étape 4 devient l'étape en cours) ; terminé (« Alerte créée sur jobup » + « Ouvrir jobA1 ») ; secours si le champ du code est introuvable (code affiché + « Copier le code »).
 - Règles : l'extension remplit des champs mais ne clique JAMAIS sur un bouton de jobup (ni créer, ni confirmer). Le code ne va jamais dans les logs, ni côté extension ni côté serveur. L'extension n'agit que sur la page d'alerte ouverte.
+
+## 43. Lieu sans CV, texte de l'extension, Statut sur téléphone (17.11.2026)
+
+Captures : lieu_avant_apres.png, statut_tel.png.
+
+Lieu
+- L'adresse est retirée du CV avant toute lecture : aucun lieu n'est tiré du CV. La ligne Lieu n'a jamais la pastille « Depuis ton CV » (Postes et Taux : pastille seulement si la valeur vient du CV).
+- Liste vide : « Toute la Suisse ». Sinon la liste telle que tapée, séparée par des virgules.
+- Recherche affichée : « {mots} · {lieu} », ex. « DevOps · Toute la Suisse ». Dans l'extension (lue dans l'adresse jobup), afficher aussi « Toute la Suisse » quand l'adresse n'a pas de lieu.
+- Planches mises à jour : premiers pas (étapes 2 et 3, téléphone et ordinateur), fenêtres de l'extension, AlertesOrdinateurVide, AlertesOrdinateurSite.
+
+Extension
+- « Installe l'extension jobA1 » : « Gratuite, pour Firefox. » Le choix « Avec l'extension / À la main » ne s'affiche que sur Firefox (ou si l'extension est détectée).
+
+Filtres téléphone (Filtres + FiltresSombre)
+- Groupe « Statut » en tête de la feuille, choix unique : Toutes / Nouvelles / Gardées / En préparation, avec leurs nombres. Même style que « Type de note ». Partagé avec l'ordinateur. « Tout effacer » remet « Toutes ».
+
+## 44. Carte « Première candidature notée » (17.11.2026)
+
+Planches : AccueilPremiereCandidature, AujourdhuiOrdinateurPremiereCandidature, chacune + Sombre. Capture : carte_avant_apres.png.
+
+- Plus de voile ni de grand logo par-dessus l'écran. Carte posée en bas (téléphone : 16 px des bords, au-dessus de la barre de navigation ; ordinateur : 400 px de large, 32 px du bas et de la droite). L'app reste utilisable.
+- Contenu, aligné à gauche : rond 44 px avec le logo (28 px) et 4 petits points de couleur ; titre « Première candidature notée » (17 px, gras) ; « {Entreprise} · {date courte} » (15 px, gras, texte secondaire foncé) ; bouton Fermer 44 px.
+- Barre du mois ORP : 10 segments de 8 px (faites en bleu #2445C2, la nouvelle en pêche #E8B48A, le reste #E5E2D9), puis « Compte pour ton mois ORP : {n} sur {objectif} » et le lien « Voir » (ouvre la candidature).
+- role="status", sans prendre le focus. Affichée une seule fois. Rien sur « C'est fait ! ».
+
+## 45. Feuilles du bas sur téléphone : îlots (17.11.2026)
+
+Planches (avec leur Sombre quand il existe) : Filtres, FiltresEnvoyees, ActionsOffre, OffreCompatibilite, RendezVousPreparer, PreparerMiseEnPage, ReglagesLangue, AlertesTelConfirmer, AlertesTelAlerte, OrpMoisPrecedents, OrpExports, MaCandidatureCVPourquoi, EnvoyeeDetailDocuments, EnvoyeeDetailContacts, EnvoyeeDetailContacte. Captures : ilots_v1.png, feuilles_avant_apres.png.
+
+- Îlot : la feuille est à 8 px des bords gauche, droit et bas (+ la zone de sécurité du bas), rayon 28 px sur les 4 coins, ombre 0 12px 32px rgba(27,31,42,.2). En sombre : trait 1 px #38322B autour. Même famille que les volets de droite sur ordinateur.
+- Croix : partout un rond 44 px, trait 1.5 px #C9C5BA, fond blanc, à 20 px du bord droit de la feuille. Plus de croix nue.
+- Listes dans une feuille : lignes simples séparées par un trait 1 px #E5E2D9. Plus de carte bordée dans la feuille (« Ce que tu as envoyé », « Trouver un contact »).
+- « Actions sur une offre » : feuille en îlot au lieu de deux blocs flottants. En-tête logo + poste + entreprise + croix (plus de bouton « Annuler »). 4 actions en lignes simples, puis « Écarter l'offre » en rouge, en dernier, après une bande de séparation de 8 px. Pas de poignée.
+- Glisser vers le bas ferme la feuille. Une seule feuille à la fois.
+
+## 46. Feuilles du bas : fond blanc, 3 hauteurs, rendez-vous en page (17.11.2026)
+
+Captures : feuilles_blanc.png, feuilles_suite.png. 50 planches téléphone mises à jour (toutes les feuilles, y compris celles de Bilan, Rendez-vous, Coordonnées, Ajouter, Compte, Objectif, Offre provisoire).
+
+- Fond des feuilles : blanc #FFFFFF (sombre : #221E1A, couleur des cartes). Le beige #F7F5F0 reste réservé au fond de la plateforme. Îlot partout (section 45).
+- 3 hauteurs :
+  - courte : la feuille épouse son contenu, poignée masquée (Actions, Autres exports, Mois précédents, Langue, Alertes, Mise en page, Objectif, Ce que tu as envoyé, Trouver un contact, J'ai contacté quelqu'un…) ;
+  - moyenne : Compatibilité, 50 % de l'écran (422 px sur 844), poignée visible, glisser vers le haut pour la hauteur grande ;
+  - grande : Filtres, jusqu'à 780 px sur 844, poignée visible.
+- « Préparer le rendez-vous » sur téléphone : page entière (fond beige), flèche de retour à gauche du titre à la place de la croix. Sur ordinateur, inchangé (volet).
+- « Pourquoi » d'un changement du CV : feuille non bloquante, pas de voile, aria-modal="false", le CV reste lisible et utilisable au-dessus.
