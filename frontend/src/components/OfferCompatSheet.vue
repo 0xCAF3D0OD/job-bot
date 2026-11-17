@@ -258,11 +258,11 @@ const families = computed(() =>
 .compat-sum-sub { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .compat-family { padding-top: var(--space-5); }
 .compat-family-title { margin: 0 0 var(--space-1); font-size: var(--panel-caps-size, 13px); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
-.compat-family.gap .compat-family-title { color: var(--peach-text); }
 .compat-points { margin: 0; padding: 0; list-style: none; }
 .compat-point { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--line-soft); }
 .compat-point > .icon { flex: none; width: var(--space-6); height: var(--space-6); margin-top: var(--space-2); color: var(--success); }
-.compat-family.gap .compat-point > .icon, .compat-family.gap .compat-value { color: var(--peach-text); }
+/* §65 : « À vérifier » comme « Points forts », titre gris et texte à l'encre ; l'orange reste sur l'icône seule. */
+.compat-family.gap .compat-point > .icon { color: var(--peach-text); }
 .compat-point-text { min-width: 0; }
 .compat-key { font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
 .compat-value { margin-top: var(--space-1); font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
