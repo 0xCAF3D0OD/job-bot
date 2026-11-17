@@ -703,6 +703,14 @@ Deux retours de Kevin sur la #818.
 - §55 : le disque de l'onglet actif passe à l'encre #1B1F2A, icône blanche, ombre 0 4px 12px rgba(27,31,42,.25) ; en sombre, crème #F3EEE6, icône #171411, ombre rgba(0,0,0,.4) (jeton `--nav-dot-shadow`). Libellé actif à l'encre (#F3EEE6 en sombre), gras. Le bleu plein reste aux actions.
 - Onglet Assistant actif (Kevin, 17.11.2026, 12 h 41) : pas de mascotte ni de rond couleur surface ; même règle que les 4 autres onglets : dans le disque, la bulle de la barre en 26 px, trait 2,2 px, currentColor, étincelle #E8B48A ; clair disque #1B1F2A, icône #FFFFFF ; sombre disque #F3EEE6, icône #171411, ombre 0 4px 12px rgba(0,0,0,.4). Planches Assistant et AssistantSombre.
 
+## Écrans de chargement, LISEZMOI §53 (Kevin, 17.11.2026, 12 h 03)
+
+- Lecture du CV : écran plein de la planche ChargementCV seulement dans les premiers pas, juste après l'envoi du CV (la personne n'a rien d'autre à faire). Sur téléphone, « Continuer » était déjà grisé pendant la lecture : rien de ce qui marchait ne disparaît. Sur ordinateur, les premiers pas laissaient continuer pendant la lecture : ce parcours reste, avec le style seul.
+- Partout ailleurs (relire le CV depuis Profil, changer de CV) : le parcours actuel, qui ne bloque pas, avec seulement le style (titre manuscrit, barre de progression, étapes cochées) dans la carte existante.
+- Lancement : un ajout, affiché seulement pendant le vrai chargement à froid. Jamais de délai artificiel, environ 1,2 s d'animation au plus (la planche en dessine 1,4 s : les étapes sont resserrées). Avec prefers-reduced-motion, le logo est fixe.
+- Écriture de la lettre : écran plein seulement si l'attente bloque déjà l'écran. Elle ne le bloque pas (elle occupe la zone de la lettre dans Préparer) : style seul, dans cette zone.
+- Complément (Kevin, 17.11.2026, 14 h 43, point 6) : l'avancement estimé est validé. À la réponse, la barre et les étapes finissent en moins de 0,5 s (ici 0,3 s, puis le bloc laisse la place 0,4 s après). Au-delà de la durée habituelle + 50 %, la barre est remplacée par « Ça prend un peu plus de temps que d'habitude » (role="status"), jamais une barre figée.
+
 ## « M’avertir dès » : seuils de main gardés (Kevin, 17.11.2026)
 
 - Le LISEZMOI §56 dessine Très proche « 90 et plus », Proche « 75 et plus », À creuser « 60 et plus ». Kevin garde les seuils de main, alignés le 16.11 sur « Note minimale » des filtres : 85, 75 et 50. Les valeurs enregistrées ne changent pas.
@@ -758,6 +766,34 @@ Réponses de Kevin (17.11, 14 h 07) :
 - Un seul des trois par écran (docs/141) : le petit visage du 1 à côté de « Rien à trier » sur l'Accueil du téléphone est retiré, la scène le remplace (« Il n'y a plus d'autre personnage dans l'app », §59). L'image orange-liste.webp, qui ne servait qu'à l'accroche, est retirée.
 - Retrait du petit visage à côté de « Rien à trier » validé par Kevin (17.11.2026, 14 h 07).
 
+## jobA1 en sept langues : plan validé (Kevin, 17.11.2026, 13 h 30)
+
+- Langues : français (par défaut), allemand, italien, anglais, albanais, portugais, espagnol. Cadrage : docs/147-langues-plateforme.md.
+- Plan accepté sur le principe : fonction maison `t()`, pas de vue-i18n ; catalogues chargés par page ; français inchangé (texte du code) ; une PR par écran ; une langue reste grisée « Bientôt » tant qu'une personne dont c'est la langue maternelle ne l'a pas relue.
+- Ordre : l'outil et le sélecteur (PR 1) après #833 et le fil Compte et Réglages ; les écrans sur lesquels un autre fil travaille passent en dernier.
+- Ajouts obligatoires avant le premier jet :
+  1. Glossaire figé par langue, versionné dans le dépôt (docs/i18n/), utilisé pour tous les écrans : ORP / RAV / URC, justificatifs, recherches d'emploi, gain intermédiaire, formulaire de preuves de recherches, conseiller. Termes officiels du SECO et des cantons. Le contrôle automatique vérifie que le glossaire est respecté.
+  2. Dates, nombres et montants par Intl, jamais traduits à la main, avec la variante suisse (de-CH, fr-CH, it-CH ; « 1'000 » en allemand).
+  3. Pluriels et accords par Intl.PluralRules, pas par phrases concaténées.
+  4. Deux réglages séparés : langue de l'interface et langue des documents (lettre, CV). Changer l'interface ne change jamais la langue des documents.
+  5. Notifications et réponses de l'IA dans la langue de l'interface, dans la PR de l'écran concerné, pas dans une PR à part plus tard.
+  6. Captures en allemand avant fusion sur les écrans où le texte s'allonge : onglets dossier, boutons pleine largeur, pastilles des offres, titre manuscrit de l'Accueil, feuilles du bas. Jamais de « … » dans un onglet ou un bouton.
+- Réponses aux questions du plan :
+  1. Premier lancement : langue du navigateur si elle fait partie des sept, sinon le français ; un choix enregistré passe toujours avant. Texte dans une autre langue que l'interface (annonces, lettres affichées) : attribut `lang` sur le bloc (WCAG 3.1.2). Pages légales : traduction relue et mention « la version française fait foi ».
+  2. La langue est enregistrée sur le compte (S1), pour les notifications.
+  3. Poids : voir 2026-11-17-1330-poids-catalogues-langues.md.
+  4. Kevin redessine la planche ReglagesLangue avec les sept langues (nom dans sa propre langue, grisées « Bientôt » tant qu'elles ne sont pas relues). La PR 1 l'attend.
+  5. Variantes : fr-CH, de-CH (sans ß), it-CH, en-GB, pt-PT, es-ES, sq.
+  6. Relecture : qui relit, à compléter par Kevin. Une langue n'est activée qu'après relecture ; l'allemand et l'italien d'abord.
+  7. Italien dans les lettres : pas maintenant.
+
+## Poids des catalogues de langue (Kevin, 17.11.2026, 13 h 30)
+
+- La limite de chaque page reste celle d'aujourd'hui, mesurée en français (docs/decisions/2026-11-16-1518-limites-par-page.md). Elle ne change pas avec les traductions.
+- Chaque catalogue (une page × une langue) reçoit sa propre limite dans la PR qui le crée : sa mesure gzip + 5 %, arrondie à la centaine d'octets inférieure, jamais relevée ensuite, comme les autres limites.
+- Le code d'une page et son catalogue le plus lourd restent ensemble sous le budget public de 365 Kio gzip (téléphone moyen en 4G, The Performance Inequality Gap 2024).
+- `poids.mjs` mesure les catalogues à partir de la PR 1 ; chaque PR d'écran affiche le poids avant et après de la page et de ses catalogues.
+
 ## « Ta recherche » des Alertes : l'écran de la planche, une seule source, les critères du Profil (Kevin, 17.11.2026, 13 h 39 à 13 h 43)
 
 - Option A (13 h 39) : sur ordinateur, Alertes vides avec au moins une recherche = l'écran des planches AlertesOrdinateurVide et AlertesOrdinateurSite. Carte « Ta recherche » (postes · lieux), puis « À créer » avec une ligne par site (jobup, LinkedIn, jobs.ch, Indeed, Job-Room), chaque ligne ouvre le volet du site.
@@ -782,10 +818,35 @@ Réponses de Kevin (17.11, 14 h 07) :
 - « C'est une agence de placement » et « Demander à l'assistant » : toujours (quand l'action a un sens : entreprise connue
   et pas déjà marquée agence ; assistant disponible).
 
+## Poids des premiers pas pour les écrans de chargement (Kevin, 17.11.2026, 13 h 54)
+
+- Exception écrite à la règle des limites de poids (issue #797) : la limite `js-bienvenue-etapes` (premiers pas, toutes
+  étapes) passe de 119 200 à 119 400 octets (gzip). Montant exact : +200 o, pas plus.
+- Raison : les écrans de chargement du §53, validés par Kevin. À la réponse, la barre et les étapes finissent tout de
+  suite (0,3 s) et le bloc est retiré à 0,4 s ; au-delà du temps prévu + 50 %, une phrase remplace la barre. L'écart
+  restait après compensation dans la PR (marques en CSS, « : fait » en CSS, lancement sans JavaScript).
+- Pour la suite : tout autre dépassement de cette limite, ou de n'importe quelle autre, demande une nouvelle décision
+  écrite de Kevin. Pas de nouvelle hausse silencieuse.
+
+Précision du 17.11, 16 h : l'exception n'a pas servi. Entre-temps, l'allègement des premiers pas fusionné sur main
+(un fichier par étape, page téléphone à part) a ramené la page à environ 108 Ko : avec les écrans de chargement, elle
+reste sous 119 200 o. La limite n'a donc pas été relevée et reste à 119 200 o. La règle pour la suite s'applique
+toujours.
+
 ## Assistant chargé à la demande (Kevin, 17.11.2026, 14 h 01)
 
 - Pour compenser le poids de la PR 1 des langues (docs/147, environ +240 o par page), Kevin choisit une PR à part, avant elle : le bouton flottant de l'Assistant reste dans le socle et s'affiche tout de suite ; le panneau (AssistantPanel) ne se télécharge qu'à la première ouverture (bouton, question posée d'ailleurs, page Assistant du téléphone).
 - Poids : environ −10 Ko gzip sur chaque page. Nouvelle page mesurée « assistant » (page Assistant du téléphone, mesure + 5 %) et pire cas « suivi-assistant » (Suivi avec le panneau ouvert), qui garde les limites de Suivi d'avant l'allègement.
+
+## Poids des pages traduites : la page avec son catalogue le plus lourd (Kevin, 17.11.2026, 14 h 17)
+
+Remplace 2026-11-17-1330-poids-catalogues-langues.md (limite propre à chaque catalogue et budget public de 365 Kio).
+
+- Pour chaque page : sa taille, plus ce qu'elle charge hors du français (i18n.ts, son catalogue et le catalogue `commun`), dans la langue la plus lourde. Toutes les langues sont mesurées et on prend le maximum ; la langue n'est jamais fixée en dur, elle peut changer d'une page à l'autre.
+- On compare aux limites actuelles des pages. Pas de nouvelle limite.
+- En CI, un échec indique la page, la langue et l'écart en octets.
+- La description de chaque PR de traduction contient un tableau page / langue la plus lourde / taille / limite / marge (`poids.mjs` l'imprime).
+- Une page qui dépasse dans une langue suit la règle d'aujourd'hui : une décision écrite dans docs/decisions/, jamais une hausse silencieuse.
 
 ## Premiers pas sur téléphone : taux et lieu (Kevin, 17.11.2026, 14 h 43)
 
