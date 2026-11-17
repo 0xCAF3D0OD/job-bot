@@ -619,4 +619,62 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await click(wrapper, "welcome-back");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 2 sur 4");
   });
+
+  it("section 42 : hors Firefox et sans extension, pas de choix, le parcours à la main seul (Kevin, 16.11, 23 h 29)", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    expect(wrapper.find("[data-test=welcome-alert-via]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=welcome-alert]").isVisible()).toBe(true);
+    expect(wrapper.get("[data-test=welcome-alert-extension]").isVisible()).toBe(false);
+    expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(true);
+  });
+
+  it("section 42 : sur Firefox, « Avec l’extension / À la main », à la main par défaut sans extension ; chaque parcours garde son avancée", async () => {
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0");
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    const group = wrapper.get("[data-test=welcome-alert-via]");
+    expect(group.attributes("role")).toBe("radiogroup");
+    const radios = group.findAll("[role=radio]");
+    expect(radios.map((r) => [`${r.get("b").text()} ${r.get("span").text()}`, r.attributes("aria-checked")])).toEqual([
+      ["Avec l’extension environ 1 minute", "false"],
+      ["À la main environ 2 minutes", "true"],
+    ]);
+    expect(GET.mock.calls.some((c) => String(c[0]).includes("extension"))).toBe(false);
+    await wrapper.get("[data-test=wizard-open]").trigger("click");
+    await click(wrapper, "welcome-alert-via-extension");
+    expect(wrapper.get("[data-test=welcome-alert-extension]").isVisible()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-ext-install]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(false);
+    await group.trigger("keydown", { key: "ArrowRight" });
+    await flushPromises();
+    expect(wrapper.get("[data-test=welcome-alert-via-main]").attributes("aria-checked")).toBe("true");
+    // Le parcours à la main a gardé son avancée : jobup ouvert, l'étape 3 en cours.
+    expect(wrapper.get("[data-test=welcome-alert-step-3]").attributes("aria-current")).toBe("step");
+    ua.mockRestore();
+  });
+
+  it("section 42 : l’extension détectée (quel que soit le navigateur) est choisie par défaut ; à « created », la page passe aux offres toute seule", async () => {
+    document.documentElement.dataset.joba1Extension = "0.64.0";
+    try {
+      const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+      await click(wrapper, "welcome-criteria");
+      const extension = wrapper.get("[data-test=welcome-alert-via-extension]");
+      expect(extension.attributes("aria-checked")).toBe("true");
+      expect(extension.text()).toContain("installée · environ 1 minute");
+      expect(wrapper.findAll("[data-test=welcome-alert-extension] li.wa-step")).toHaveLength(2);
+      expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=welcome-alert-later]").exists()).toBe(true);
+      window.dispatchEvent(new MessageEvent("message", {
+        data: { source: "joba1-extension", type: "alert-progress", site: "jobup", step: "created" },
+        source: window,
+        origin: window.location.origin,
+      }));
+      await flushPromises();
+      expect(calls("/api/welcome").at(-1)).toEqual({ step: 5 });
+      expect(wrapper.find("[data-test=welcome-alert-via]").exists()).toBe(false);
+    } finally {
+      delete document.documentElement.dataset.joba1Extension;
+    }
+  });
 });

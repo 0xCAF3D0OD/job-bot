@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
@@ -14,10 +14,12 @@ import WelcomeCriteria, { type CriteriaSources } from "../components/WelcomeCrit
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
+import WelcomeAlertExtension from "../components/WelcomeAlertExtension.vue";
 import WelcomeAlertSteps from "../components/WelcomeAlertSteps.vue";
 import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
+import { useJobA1Extension } from "../composables/useJobA1Extension";
 import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { companyPlace, rateText, remoteText, scoreWord } from "../format";
@@ -130,6 +132,42 @@ const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === 
 const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
 // Le code de jobup est arrivé (WelcomeAlertSteps) : « J'ai validé l'alerte » à la place de « J'ai créé l'alerte ».
 const codeReceived = ref(false);
+// Section 42 du 16.11, ordinateur seulement : créer l'alerte avec l'extension ou à la main. Par défaut l'extension si
+// elle est détectée (attribut sur <html> ou message, jamais une requête au serveur), sinon à la main.
+const extension = useJobA1Extension(ALERT_SITE);
+const VIAS = [
+  { key: "extension", label: "Avec l’extension", time: "environ 1 minute" },
+  { key: "main", label: "À la main", time: "environ 2 minutes" },
+] as const;
+type Via = (typeof VIAS)[number]["key"];
+const chosenVia = ref<Via | null>(null);
+// L'extension n'existe que pour Firefox (Kevin, 16.11, 23 h 29) : le choix ne s'affiche que sur Firefox, ou partout si
+// l'extension est détectée ; sinon le parcours à la main seul, comme sur téléphone.
+const firefox = /firefox\//i.test(navigator.userAgent);
+const viaChoice = computed(() => firefox || !!extension.version.value);
+const via = computed<Via>({
+  get: () => (viaChoice.value ? chosenVia.value ?? (extension.version.value ? "extension" : "main") : "main"),
+  set: (value) => (chosenVia.value = value),
+});
+function onViaKey(event: KeyboardEvent): void {
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+  event.preventDefault();
+  via.value = via.value === "main" ? "extension" : "main";
+  const group = event.currentTarget as HTMLElement;
+  void nextTick(() => group.querySelector<HTMLElement>("[aria-checked=true]")?.focus());
+}
+// L'extension a vu l'alerte créée sur jobup (elle l'a notée au serveur) : la page passe à la suite toute seule. En
+// secours, une alerte jobup déjà notée créée quand on revient sur l'onglet fait de même.
+watch(extension.step, (value) => {
+  if (value === "created" && step.value === 3 && desk.value) void afterAlert();
+});
+async function checkCreated(): Promise<void> {
+  if (document.visibilityState !== "visible" || step.value !== 3 || !desk.value || via.value !== "extension" || !extension.version.value) return;
+  await loadAlerts();
+  if (alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.status === "created") void afterAlert();
+}
+onMounted(() => document.addEventListener("visibilitychange", checkCreated));
+onUnmounted(() => document.removeEventListener("visibilitychange", checkCreated));
 async function loadAlerts(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
   if (data) alerts.value = data;
@@ -819,8 +857,41 @@ async function finish(to: string): Promise<void> {
             <p class="wdk-lead">
               Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
             </p>
+            <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
+                 l’avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
+            <div
+              v-if="viaChoice"
+              class="wdk-via"
+              role="radiogroup"
+              aria-label="Comment créer l’alerte"
+              data-test="welcome-alert-via"
+              @keydown="onViaKey"
+            >
+              <button
+                v-for="option in VIAS"
+                :key="option.key"
+                type="button"
+                role="radio"
+                :aria-checked="via === option.key"
+                :tabindex="via === option.key ? 0 : -1"
+                :class="['wdk-via-option', { on: via === option.key }]"
+                :data-test="`welcome-alert-via-${option.key}`"
+                @click="via = option.key"
+              >
+                <b>{{ option.label }}</b>
+                <span>{{ option.key === "extension" && extension.version.value ? "installée · " : "" }}{{ option.time }}</span>
+              </button>
+            </div>
+            <WelcomeAlertExtension
+              v-show="via === 'extension'"
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :installed="!!extension.version.value"
+              :progress="extension.step.value"
+            />
             <WelcomeAlertSteps
               v-if="alerts"
+              v-show="via === 'main'"
               v-model:received="codeReceived"
               desk
               :search-label="alertLabel"
@@ -847,6 +918,7 @@ async function finish(to: string): Promise<void> {
                   Plus tard
                 </button>
                 <button
+                  v-if="via === 'main'"
                   type="button"
                   class="primary wdk-cta"
                   :disabled="alertBusy"
@@ -1552,6 +1624,18 @@ async function finish(to: string): Promise<void> {
 /* L'alerte sur ordinateur (section 41) : pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux. */
 .wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
 .wdk-foot-end .wdk-link { font-size: var(--font-body); }
+/* Section 42 du 16.11 : le choix « Avec l'extension / À la main », deux options de 56 px dans un fond gris. */
+.wdk-via { --wdk-via-h: 56px; --wdk-via-pad: 4px; --wdk-via-r: 16px; --wdk-via-option-r: 12px; --wdk-via-sub: 13px;
+  --wdk-via-shadow: 0 1px 2px rgb(27 31 42 / 12%);
+  display: flex; gap: var(--wdk-via-pad); margin-top: var(--space-5); padding: var(--wdk-via-pad); background: var(--surface-muted); border-radius: var(--wdk-via-r); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wdk-via { --wdk-via-shadow: 0 1px 2px rgb(0 0 0 / 30%); } }
+:root[data-theme="dark"] .wdk-via { --wdk-via-shadow: 0 1px 2px rgb(0 0 0 / 30%); }
+.wdk-via-option { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: var(--wdk-via-h); padding: 0 var(--space-3); border: 0; border-radius: var(--wdk-via-option-r); background: transparent; color: var(--text-tertiary); font: inherit; cursor: pointer; }
+.wdk-via-option b { font-size: var(--wdk-16); line-height: var(--wdk-22); font-weight: var(--weight-semibold); }
+.wdk-via-option span { font-size: var(--wdk-via-sub); line-height: var(--wdk-18); color: var(--text-secondary); }
+.wdk-via-option.on { background: var(--surface); box-shadow: var(--wdk-via-shadow); color: var(--text); }
+.wdk-via-option.on b { font-weight: var(--weight-heavy); }
+.wdk-via ~ .wa-desk { margin-top: var(--space-4); }
 .wdk-mailbox { width: 420px; height: auto; margin-top: var(--wdk-40); }
 .wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
 .wdk-scene .illu { width: var(--wdk-scene); }
