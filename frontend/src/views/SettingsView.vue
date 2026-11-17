@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
-import { SCORE_HELP } from "../composables/useOfferFilters";
 import ConnectionsPanel from "../components/ConnectionsPanel.vue";
 import GetemallPanel from "../components/GetemallPanel.vue";
 import PageHero from "../components/PageHero.vue";
@@ -23,7 +22,8 @@ import DateField from "../components/DateField.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsMore from "../components/SettingsMore.vue";
 import SettingsSection from "../components/SettingsSection.vue";
-import SegmentedControl from "../components/SegmentedControl.vue";
+import ChoiceMenu from "../components/ChoiceMenu.vue";
+import ChoiceSheet from "../components/ChoiceSheet.vue";
 import AppearancePanel from "../components/AppearancePanel.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
@@ -224,8 +224,16 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
 // Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
 // soit 85, 75 et 50 (Proche dès 75, 2026-11-05, Kevin). Une valeur d'avant (60, 70, 80, 90…) s'affiche sous le mot
 // le plus proche : 70, l'ancien seuil de Proche, reste « Proche ».
-// « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils, même aide.
-const THRESHOLD_OPTIONS = [85, 75, 50].map((n) => ({ value: String(n), label: `${n} et +`, test: `threshold-${n}` }));
+// « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils. LISEZMOI §56 du
+// 17.11 : les mots en libellé, le seuil en précision (« 85 et plus ») ; les seuils de main restent (85, 75, 50) tant
+// que Kevin n'a pas dit s'il veut ceux de la planche (90, 75, 60), qui changeraient les valeurs enregistrées.
+const THRESHOLD_OPTIONS = [
+  { n: 85, label: "Très proche" },
+  { n: 75, label: "Proche" },
+  { n: 50, label: "À creuser" },
+].map(({ n, label }) => ({ value: String(n), label, hint: `${n} et plus`, test: `threshold-${n}` }));
+const thresholdLabel = computed(() => THRESHOLD_OPTIONS.find((o) => o.value === threshold.value)?.label ?? "");
+const thresholdSheet = ref(false);
 const threshold = computed({
   get: () => {
     const value = form.value.notify_score_threshold ?? 70;
@@ -652,24 +660,34 @@ watch(
                     @change="setSwitch(item.key, !form[item.key])"
                   >
                 </SettingRow>
+                <!-- LISEZMOI §56 du 17.11 : une ligne, la valeur et un chevron ; sur téléphone toute la ligne ouvre la
+                     feuille à boutons radio, sur ordinateur la valeur ouvre un menu. -->
                 <SettingRow
                   v-if="item.key === 'notify_offers' && form.notify_offers"
-                  v-slot="c"
                   title="M’avertir dès"
-                  :description="SCORE_HELP"
+                  description="Niveau de correspondance minimum"
                   :saved="savedRow === 'threshold'"
                   :error="rowErrors.threshold"
-                  class="notify-threshold"
+                  :class="['notify-threshold', { 'rg-tap': phone }]"
                   data-test="threshold-row"
-                  stack
+                  @click="phone && (thresholdSheet = true)"
                 >
-                  <SegmentedControl
+                  <button
+                    v-if="phone"
+                    type="button"
+                    class="rg-value-button"
+                    aria-haspopup="dialog"
+                    :aria-label="`M’avertir dès : ${thresholdLabel}`"
+                    data-test="threshold-open"
+                  >
+                    {{ thresholdLabel }}<AppIcon name="chevron" />
+                  </button>
+                  <ChoiceMenu
+                    v-else
                     v-model="threshold"
-                    :options="THRESHOLD_OPTIONS"
                     label="M’avertir dès"
-                    :aria-labelledby="c.labelledby"
-                    :aria-describedby="c.describedby"
-                    full
+                    :choices="THRESHOLD_OPTIONS"
+                    test-id="threshold-menu"
                   />
                 </SettingRow>
               </template>
@@ -899,6 +917,15 @@ watch(
       </div>
     </div>
   </section>
+  <ChoiceSheet
+    v-if="phone"
+    v-model="threshold"
+    :open="thresholdSheet"
+    title="M’avertir dès"
+    hint="Niveau de correspondance minimum"
+    :choices="THRESHOLD_OPTIONS"
+    @close="thresholdSheet = false"
+  />
 </template>
 
 <style>
@@ -952,13 +979,14 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .settings-phone input[type="checkbox"][role="switch"]::after { top: 3px; left: 3px; width: 26px; height: 26px; }
 .settings-phone input[type="checkbox"][role="switch"]:checked::after { transform: translateX(20px); }
 .settings-grouped .appearance-row { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; padding: var(--rg-12) var(--rg-14); }
-.settings-phone .appearance-row { flex-direction: column; align-items: stretch; gap: var(--space-3); padding: var(--rg-14); }
-.settings-phone .appearance-row .segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: var(--rg-14); }
-.settings-phone .appearance-row .segmented > button { min-height: 44px; border: 0; border-radius: var(--rg-10); font-size: var(--rg-14); }
 .settings-grouped :is(.rg-link-row, .rg-danger-row) { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; margin: 0; padding: 0 var(--rg-14); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; white-space: normal; cursor: pointer; }
 .settings-grouped .rg-label { flex: 1; min-width: 0; }
 .settings-grouped .rg-value { min-width: 0; font-size: var(--rg-15); color: var(--text-secondary); text-align: right; }
 .settings-grouped .rg-link-row > .icon:last-child { width: 18px; height: 18px; color: var(--text-secondary); }
+/* « M’avertir dès » sur téléphone (§56) : toute la ligne ouvre la feuille ; la valeur et le chevron comme Langue. */
+.settings-grouped .rg-tap { cursor: pointer; }
+.rg-value-button { display: inline-flex; align-items: center; gap: var(--rg-6); min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-size: var(--rg-15); color: var(--text-secondary); cursor: pointer; }
+.rg-value-button .icon { width: 18px; height: 18px; }
 .settings-grouped .rg-lead { width: 20px; height: 20px; color: var(--primary-graphic); }
 .settings-grouped .rg-link-two { padding-block: var(--rg-12); }
 .settings-grouped .rg-sub { display: block; margin-top: var(--space-1); }
@@ -977,8 +1005,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .settings-wide .rg-link-row { min-height: 64px; }
 .settings-wide :is(.setting-row-title, .rg-label, .rg-danger-row) { font-size: var(--rg-15); }
 .settings-wide :is(.setting-row-description, .account-data .rg-sub) { font-size: var(--font-small); line-height: var(--rg-20); }
-.settings-wide .appearance-row .segmented { padding: var(--space-1); gap: 0; border-radius: var(--rg-19); }
-.settings-wide .appearance-row .segmented > button { min-height: 32px; padding: 0 var(--space-4); border: 0; border-radius: var(--rg-16); color: var(--text); font-size: var(--rg-14); }
 .settings-wide .rg-link-row > .icon:last-child { width: 20px; height: 20px; }
 .settings-wide .account-data .rg-link-row { min-height: 56px; }
 .settings-wide .account-data .rg-label { font-weight: var(--weight-regular); line-height: var(--rg-21); }
@@ -986,7 +1012,6 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .settings-wide .rg-danger-row { min-height: 56px; padding: 0 var(--rg-20); color: var(--danger); font-weight: var(--weight-bold); }
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
-.settings-grouped .setting-row.notify-threshold { padding-top: 0; border-top: 0; min-height: 0; }
 /* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3) : champ 72 × 44 px au rayon des champs de saisie,
    chiffre centré, unité de 120 px (assez pour « du mois suivant »), écart 12 px. Le bloc champ + unité a une largeur
    fixe : les champs forment une colonne d'une carte à l'autre. « Enregistré » s'affiche dessous, sans rien décaler. */

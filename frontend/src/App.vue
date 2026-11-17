@@ -8,7 +8,7 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 import AppIcon from "./components/AppIcon.vue";
 import AppHeader from "./components/AppHeader.vue";
 import BottomNav from "./components/BottomNav.vue";
-import AssistantPanel from "./components/AssistantPanel.vue";
+import AssistantLauncher from "./components/AssistantLauncher.vue";
 import AppToast from "./components/AppToast.vue";
 import UndoToast from "./components/UndoToast.vue";
 import PageTransition from "./components/PageTransition.vue";
@@ -188,5 +188,5 @@ onUnmounted(() => {
   />
   <DismissLayer />
   <PageTransition />
-  <AssistantPanel v-if="loggedIn && !bare" />
+  <AssistantLauncher v-if="loggedIn && !bare" />
 </template>
