@@ -524,6 +524,14 @@ Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
 - La coche est posée quand le fichier est bien arrivé : les liens de téléchargement passent déjà par `useFileDownloads`, qui récupère le fichier lui-même et montre une coche 2 secondes ; il prévient maintenant la page (`file-done`). Un échec ne coche rien. Elle est gardée dans ce navigateur (`localStorage`, clé `jobA1.telecharges`, 100 entrées au plus), par version du document : une lettre ou un CV refait repart sans coche. Rien n'est envoyé au serveur. La clé est effacée à la déconnexion (règle A-7).
 - Aucune planche ne dessine cet état : cette décision en tient lieu. Les certificats joints et les liens « Partager » du téléphone ne sont pas concernés.
 
+## Filtres des Offres gardés jusqu'à la fermeture de l'onglet (Kevin, 16.11.2026, 16 h 44)
+
+- Constat : le filtre choisi (par exemple « Nouvelles ») retombait sur « Toutes » après une candidature, parce que les filtres vivent dans l'adresse (`?statut=to_review`) et que « Retour aux offres » (écran « C'est fait ! »), l'onglet Offres et les autres liens pointent sur `/candidatures/offres` sans filtre.
+- Les filtres des Offres (statut, tri, note, taux, sites, cantons, télétravail, agences, écartées, expirées, recherche) sont gardés pour l'onglet du navigateur (`sessionStorage`, clé `jobA1.offres-filtres`) et remis quand on revient sur Offres par un lien qui n'en porte aucun. Ils durent jusqu'à la fermeture de l'onglet et sont effacés à la déconnexion (règle A-7).
+- Un lien qui porte un filtre précis (par exemple « Tout voir » de Top du jour → note 75 et plus) l'emporte sur les filtres gardés.
+- Le statut choisi devient une pastille, « Statut : Nouvelles » (Gardées, En préparation), comptée dans le nombre du bouton Filtres ; « Tout effacer » apparaît dès qu'un filtre est actif et retire aussi le statut (avant, il le gardait). Le tri n'a pas de pastille et reste en place, sauf « Dernière action », propre à En préparation.
+- Complément (Kevin, 17.11.2026, 0 h 29 et 0 h 33) : « Tout effacer » retire aussi le statut, à condition que le statut soit dans le panneau Filtres et compté dans le nombre de filtres actifs ; après « Tout effacer », le nombre affiché est 0. Sur téléphone, la feuille Filtres reçoit en tête un groupe « Statut » (fieldset et légende, `role="radiogroup"`, un seul choix) : Toutes · n, Nouvelles · n, Gardées · n, En préparation · n, avec les nombres de l'ordinateur et le style de « Type de note » (puces de 44 px, coche sur le choix actif). Le statut est le même des deux côtés. La planche Filtres ne le dessine pas : cette décision en tient lieu.
+
 ## Offres déjà postulées et doublons (Kevin, 16.11.2026, 16 h 45)
 
 Une offre déjà postulée ne doit plus encombrer le fil Offres, sans jamais cacher en silence une vraie nouvelle offre
@@ -570,3 +578,17 @@ Précisions de Kevin (16.11.2026, 23 h 05, sur #805) :
 - Plus tard, dans une PR à part : quand la fenêtre jobs.ch passera à la liste en 4 étapes, retirer aussi le clic
   automatique sur « Continuer » pour jobs.ch. LinkedIn garde sa fenêtre actuelle avec « J'ai créé l'alerte »
   jusqu'à nouvel ordre.
+
+## Ajouter une offre déjà là (Kevin, 17.11.2026, 0 h 29)
+
+Retour de Kevin sur la #818. On ne crée plus directement une offre déjà présente.
+
+1. Pas d'encadré. Le message va sous le champ « Lien ou texte de l'annonce » (icône et texte, `role="alert"`), puis
+   ses boutons. Tant qu'il est affiché, ces boutons remplacent « Ajouter l'offre » du bas.
+2. Doublon sûr (même lien) : « Cette offre est déjà dans tes candidatures (ajoutée le {date}). » Un seul bouton plein,
+   « Ouvrir l'offre ». Pas d'« Ajouter quand même » : le serveur ouvre l'offre déjà là même si on le lui demande.
+3. Doublon probable (même titre et même entreprise, lien différent) : « Une offre très proche est déjà là : {titre}
+   chez {entreprise}, ajoutée le {date}. » Bouton plein « Ouvrir l'offre », bouton contour « Ajouter quand même ».
+   L'offre ajoutée quand même porte la pastille « Déjà postulé le … » si une candidature a été envoyée, comme dans le
+   fil (#810).
+4. Changer le lien ou le texte du champ fait disparaître le message et revenir « Ajouter l'offre ».
