@@ -168,17 +168,40 @@ describe("OffersView", () => {
     expect(filtered.find("[data-test=offers-reset]").classes()).toContain("link");
   });
 
-  it("compte neuf avec des recherches suivies : « Tes alertes sont prêtes », jamais « Créer mes alertes » (§13 du 15 novembre)", async () => {
+  it("compte neuf avec des recherches suivies : « Tes premières offres arrivent bientôt » (§41 du 16.11)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-16T12:30:00Z")); // 13 h 30 en Suisse
     const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
     mockOffers({ data: { ...page([]).data, counts: none } });
-    const wrapper = await mountAt("/offres", { followedSearches: ref(3) });
+    const wrapper = await mountAt("/offres", { followedSearches: ref(3), nextCollectAt: ref("2026-11-16T18:00:00Z") });
     const empty = wrapper.find("[data-test=offers-none-yet]");
-    expect(empty.find("h2").text()).toBe("Tes alertes sont prêtes");
-    // L'heure de la prochaine collecte n'est pas connue : la pastille ne l'invente pas.
-    expect(empty.find("[data-test=empty-pill]").text()).toBe("Offres collectées chaque jour");
+    expect(empty.find("h2").text()).toBe("Tes premières offres arrivent bientôt");
+    expect(empty.find("[data-test=empty-text]").text()).toBe(
+      "jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.",
+    );
+    // L'heure vient du serveur (sa planification).
+    expect(empty.find("[data-test=empty-pill]").text()).toBe("En attente des premières offres · prochaine vérification ce soir vers 19 h");
     expect(empty.find("[data-test=offers-none-add]").classes()).toContain("primary");
     expect(empty.find("[data-test=offers-none-alerts]").text()).toBe("Voir mes alertes");
     expect(empty.text()).not.toContain("Créer mes alertes");
+    // La candidature spontanée quitte cet état ; elle reste dans « Ajouter ».
+    expect(empty.find("[data-test=offers-none-spontaneous]").exists()).toBe(false);
+    // Sans heure connue (planificateur arrêté) : pas d'heure inventée.
+    const unknown = await mountAt("/offres", { followedSearches: ref(3), nextCollectAt: ref(null) });
+    expect(unknown.find("[data-test=offers-none-yet] [data-test=empty-pill]").text()).toBe("En attente des premières offres");
+    vi.useRealTimers();
+  });
+
+  it("compte neuf avec alertes, sur téléphone : la pastille tient sur une ligne (§41 du 16.11)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("max-width"), addEventListener() {}, removeEventListener() {} }));
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-16T12:30:00Z"));
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    mockOffers({ data: { ...page([]).data, counts: none } });
+    const wrapper = await mountAt("/offres", { followedSearches: ref(3), nextCollectAt: ref("2026-11-16T18:00:00Z") });
+    expect(wrapper.find("[data-test=offers-none-yet] [data-test=empty-pill]").text()).toBe("Prochaine vérification ce soir vers 19 h");
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it("compte neuf : le lien Google Emplois sous les boutons, avec ou sans alerte (§22 du 15.11)", async () => {
@@ -192,8 +215,8 @@ describe("OffersView", () => {
       const link = wrapper.get("[data-test=offers-none-yet] [data-test=offers-none-google]");
       expect(link.text()).toBe("Voir les offres sur Google Emplois");
       expect(link.attributes()).toMatchObject({ href: url, target: "_blank", rel: "noopener noreferrer", "aria-label": "Voir les offres sur Google Emplois (nouvel onglet)" });
-      // Au-dessus de « Faire une candidature spontanée ».
-      expect(link.element.nextElementSibling?.getAttribute("data-test")).toBe("offers-none-spontaneous");
+      // Sans alerte, au-dessus de « Faire une candidature spontanée » ; avec alertes, le dernier lien (§41 du 16.11).
+      expect(link.element.nextElementSibling?.getAttribute("data-test") ?? null).toBe(followed ? null : "offers-none-spontaneous");
     }
     // Sans métier, le serveur n'envoie rien : pas de lien.
     GET.mockImplementation((path: string) =>

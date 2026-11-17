@@ -13,6 +13,8 @@ import TroupeScene from "./TroupeScene.vue";
 withDefaults(
   defineProps<{
     title: string;
+    // La phrase sous le titre, seulement là où une planche la dessine (Candidatures vide avec alertes, §41 du 16.11).
+    text?: string;
     scene?: Scene;
     pill?: string;
     pillIcon?: IconName;
@@ -20,7 +22,7 @@ withDefaults(
     width?: number;
     desktopWidth?: number;
   }>(),
-  { scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2", width: 260, desktopWidth: 400 },
+  { text: undefined, scene: undefined, pill: undefined, pillIcon: "clock", heading: "h2", width: 260, desktopWidth: 400 },
 );
 </script>
 
@@ -43,6 +45,13 @@ withDefaults(
         {{ title }}
       </slot>
     </component>
+    <p
+      v-if="text"
+      class="empty-state-text"
+      data-test="empty-text"
+    >
+      {{ text }}
+    </p>
     <span
       v-if="pill"
       class="empty-state-pill"
@@ -62,8 +71,12 @@ withDefaults(
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .empty-state .empty-state-title { margin: var(--es-top) 0 0; font-size: var(--es-t); line-height: var(--es-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
 .choose-detail .empty-state-pill { gap: var(--space-2); padding-block: var(--space-2); }
+/* La phrase sous le titre (CandidaturesVideAlertes, §41 du 16.11) : 15/22 (16/24 sur ordinateur), --text-lead, 8 px sous le
+   titre, 300 px au plus (460 sur ordinateur) ; la pastille reste 12 px dessous. */
+.empty-state-text { --es-text: 15px; --es-text-lh: 22px; --es-text-w: 300px; max-width: var(--es-text-w); margin: var(--space-2) 0 0; font-size: var(--es-text); line-height: var(--es-text-lh); color: var(--text-lead); }
 @media (min-width: 1024px) {
 .empty-state { --es-t: var(--title-login); --es-lh: var(--title-block); --es-top: 28px; --es-btn: var(--btn-secondary); --es-gap: 28px; --es-link: var(--space-5); --es-72: 72px; padding: 0 0 var(--es-72); }
 .empty-state-actions { flex-direction: row; justify-content: center; width: auto; max-width: none; }
+.empty-state-text { --es-text: var(--font-body); --es-text-lh: 24px; --es-text-w: 460px; }
 }
 </style>

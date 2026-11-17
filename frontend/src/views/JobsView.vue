@@ -22,6 +22,9 @@ const router = useRouter();
 const followed = ref<number | null>(null);
 // L'état vide des Offres (§13 du 15 novembre) change selon qu'une recherche est suivie ou non.
 provide("followedSearches", followed);
+// La prochaine collecte planifiée (§41 du 16.11), pour la pastille de Candidatures vide.
+const nextCollectAt = ref<string | null>(null);
+provide("nextCollectAt", nextCollectAt);
 const { phone } = usePhone();
 const { phone: wide } = usePhone("(min-width: 1024px)");
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
@@ -61,6 +64,7 @@ async function refresh(): Promise<void> {
     api.GET("/api/orp"),
     api.GET("/api/alert-searches").catch(() => ({ data: undefined })),
   ]);
+  nextCollectAt.value = today.data?.next_collect_at ?? null;
   followed.value = searches.data?.searches ? searches.data.searches.filter((search) => search.active).length : null;
   counts.value = {
     // « À traiter » : le nombre de la phrase de la liste, calculé au même endroit (docs/139, C2).
