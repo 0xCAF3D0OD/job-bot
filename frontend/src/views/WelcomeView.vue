@@ -1324,6 +1324,7 @@ async function finish(to: string): Promise<void> {
             v-model:target="target"
             v-model:levels="languageLevels"
             :reading="reading"
+            :cv-unread="cvUnread"
             :sources="sources"
             :max-roles="MAX_ROLES"
             :cv-languages="cvLanguages"

@@ -14,6 +14,8 @@ import type { CriteriaSources } from "./WelcomeCriteria.vue";
 const props = defineProps<{
   sources: CriteriaSources;
   reading: boolean;
+  // Le CV envoyé n'a pas pu être lu : la pastille orange remplace « Depuis ton CV » (Kevin, 17.11, 15 h 07).
+  cvUnread: boolean;
   maxRoles: number;
   cvLanguages: string[];
   savedLevels: Record<string, Level>;
@@ -31,7 +33,7 @@ const levels = defineModel<Record<string, Level> | null>("levels", { required: t
 const QUESTIONS: Record<number, { title: string; help: string }> = {
   1: { title: "Quels postes cherches-tu", help: "Choisis-en un ou plusieurs." },
   2: { title: "Où veux-tu travailler", help: "Laisse vide pour toute la Suisse." },
-  3: { title: "À quel taux", help: "Choisis-en un." },
+  3: { title: "À quel taux", help: "Le taux minimum que tu acceptes. Les offres au-dessus restent affichées." },
   4: { title: "Es-tu inscrit à l’ORP", help: "" },
   5: { title: "Combien de recherches par mois", help: "L’objectif fixé avec ton conseiller ORP." },
   6: { title: "Quelles langues parles-tu", help: "« Non renseigné » n’écarte aucune offre." },
@@ -184,6 +186,11 @@ defineExpose({
             class="wq-cv"
             data-test="question-cv"
           ><AppIcon name="tick" />Depuis ton CV</span>
+          <span
+            v-else-if="cvUnread"
+            class="wq-cv wq-cv-unread"
+            data-test="question-cv-unread"
+          ><AppIcon name="alert-circle" />Ton CV n’a pas pu être lu</span>
           <p
             v-if="reading && !roles.length"
             class="wq-help"
@@ -439,6 +446,8 @@ defineExpose({
 .wq-help { margin: 0 0 var(--wq-18); font-size: var(--wq-15); line-height: var(--wq-22); color: var(--text-secondary); }
 .wq-title + :not(.wq-help) { margin-top: var(--wq-14); }
 .wq-cv { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--wq-6); height: 28px; margin-bottom: var(--space-3); padding: 0 var(--wq-10); border-radius: var(--wq-14); background: var(--success-soft); color: var(--success); font-size: var(--wq-13); font-weight: var(--weight-bold); }
+.wq-cv-unread { background: var(--warning-soft); color: var(--warning); }
+.wq-cv .icon { width: var(--wq-14); height: var(--wq-14); }
 .wq-cv-langs { margin-bottom: var(--wq-10); }
 .wq-chips { display: flex; flex-wrap: wrap; gap: var(--wq-10); }
 .wq-chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 51px; padding: 0 var(--space-4); border-radius: var(--wq-14); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-semibold); cursor: pointer; }

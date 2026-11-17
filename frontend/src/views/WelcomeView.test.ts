@@ -273,6 +273,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     // Les questions (§60), sans « Depuis ton CV ».
     expect(question(wrapper)).toBe("Question 1 sur 6");
     expect(wrapper.find("[data-test=question-cv]").exists()).toBe(false);
+    // À la place, la pastille orange, même forme et même place (Kevin, 17.11, 15 h 07).
+    expect(wrapper.get("[data-test=question-cv-unread]").text()).toBe("Ton CV n’a pas pu être lu");
     expect(wrapper.text()).not.toContain("Pré-rempli");
   });
 
