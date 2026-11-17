@@ -700,3 +700,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.486 | Tableau des retours d'entretien, côté serveur : liste paginée de tous les entretiens du compte (point et issue) et retour complet, en lecture seule | livrée en partie (serveur seul) ; l'écran attend la planche de Kevin |
 | 1.6.487 | L’extension affiche « Toute la Suisse » quand l’alerte jobup n’a pas de lieu | livrée |
 | 1.6.488 | Journal d'accès de Caddy sans identifiant ni paramètre : le chemin seul, chaque nombre remplacé par :id, sans query string ni Referer | livrée |
+| 1.6.489 | Première candidature notée : carte posée en bas avec l'entreprise, la date et le mois ORP (section 44) | livrée |
+| 1.6.490 | Téléphone : les feuilles du bas deviennent des îlots blancs à 8 px des bords, trois hauteurs (fit, medium, large) et une seule ouverte à la fois | livrée |
