@@ -12,7 +12,7 @@ import { useProfiles } from "../composables/useProfiles";
 import { useTheme, type Theme } from "../composables/useTheme";
 import AppIcon from "./AppIcon.vue";
 import ProfileImage from "./ProfileImage.vue";
-import SegmentedControl from "./SegmentedControl.vue";
+import ChoiceMenu from "./ChoiceMenu.vue";
 import SidePanel from "./SidePanel.vue";
 
 // Le panneau du compte (maquette du 8 novembre, docs/143, D24 ; remplace le menu « Compte, Se déconnecter » de
@@ -34,9 +34,9 @@ const operatorEmail = ref<string | null>(null);
 const label = computed(() => (image.firstName.value ? `Compte de ${image.firstName.value}` : "Compte"));
 const themeModel = computed({ get: () => theme.value, set: (value: string) => setTheme(value as Theme) });
 const THEMES = [
-  { value: "light", label: "Clair" },
-  { value: "auto", label: "Auto" },
-  { value: "dark", label: "Sombre" },
+  { value: "light", label: "Clair", test: "theme-light" },
+  { value: "dark", label: "Sombre", test: "theme-dark" },
+  { value: "auto", label: "Auto", test: "theme-auto" },
 ];
 
 // Les lignes de détail se lisent à l'ouverture : la date du dernier CV et le nombre de recherches suivies.
@@ -176,14 +176,15 @@ watch(
         <h3 class="panel-eyebrow">
           Affichage
         </h3>
+        <!-- LISEZMOI §56 du 17.11 : « Apparence » et sa valeur, qui ouvre un menu (Clair, Sombre, Auto). -->
         <div class="panel-row panel-row-static">
           <AppIcon name="moon" />
-          <span class="panel-row-text panel-row-title">Mode sombre</span>
-          <SegmentedControl
+          <span class="panel-row-text panel-row-title">Apparence</span>
+          <ChoiceMenu
             v-model="themeModel"
-            :options="THEMES"
-            label="Mode sombre"
-            data-test="account-theme"
+            label="Apparence"
+            :choices="THEMES"
+            test-id="account-theme"
           />
         </div>
         <h3 class="panel-eyebrow">

@@ -10,22 +10,48 @@ afterEach(() => useTheme().setTheme("auto"));
 
 describe("Apparence", () => {
   it("Auto par défaut ; Sombre et Clair posent data-theme et sont retenus ; Auto les enlève", async () => {
-    const wrapper = mount(AppearancePanel);
-    const checked = () => wrapper.find("[aria-checked=true]").text();
-    expect(checked()).toBe("Auto");
+    // LISEZMOI §56 (17.11) : sur ordinateur, « Apparence » et sa valeur ouvrent un menu (Clair, Sombre, Auto).
+    const wrapper = mount(AppearancePanel, { attachTo: document.body });
+    const value = () => wrapper.get("[data-test=appearance-menu]").text();
+    expect(value()).toBe("Auto");
     expect(document.documentElement.dataset.theme).toBeUndefined();
+    await wrapper.get("[data-test=appearance-menu]").trigger("click");
+    expect(wrapper.findAll("[role=menuitemradio]").map((b) => b.text())).toEqual(["Clair", "Sombre", "Auto"]);
 
     await wrapper.find("[data-test=theme-dark]").trigger("click");
-    expect(checked()).toBe("Sombre");
+    expect(value()).toBe("Sombre");
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(localStorage.getItem("jobA1-theme")).toBe("dark");
 
+    await wrapper.get("[data-test=appearance-menu]").trigger("click");
     await wrapper.find("[data-test=theme-light]").trigger("click");
     expect(document.documentElement.dataset.theme).toBe("light");
 
+    await wrapper.get("[data-test=appearance-menu]").trigger("click");
     await wrapper.find("[data-test=theme-auto]").trigger("click");
     expect(document.documentElement.dataset.theme).toBeUndefined();
     expect(localStorage.getItem("jobA1-theme")).toBe("auto");
+    wrapper.unmount();
+  });
+
+  it("téléphone : la ligne ouvre une feuille à boutons radio ; choisir applique et ferme (§56)", async () => {
+    const wrapper = mount(AppearancePanel, { props: { phone: true }, attachTo: document.body });
+    const row = wrapper.get("[data-test=appearance-row]");
+    expect(row.attributes("aria-haspopup")).toBe("dialog");
+    expect(row.text()).toBe("ApparenceAuto");
+    await row.trigger("click");
+    const sheet = document.querySelector("[data-test=choice-sheet]")!;
+    const radios = [...sheet.querySelectorAll<HTMLElement>("[role=radio]")];
+    expect(radios.map((r) => [r.textContent?.trim(), r.getAttribute("aria-checked")])).toEqual([
+      ["Clair", "false"],
+      ["Sombre", "false"],
+      ["AutoComme le téléphone", "true"],
+    ]);
+    radios[1]!.click();
+    await wrapper.vm.$nextTick();
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(wrapper.get("[data-test=appearance-row]").text()).toBe("ApparenceSombre");
+    wrapper.unmount();
   });
 });
 

@@ -4,22 +4,25 @@ import { computed, ref } from "vue";
 import { useTextSize, type TextSize } from "../composables/useTextSize";
 import { useTheme, type Theme } from "../composables/useTheme";
 import AppIcon from "./AppIcon.vue";
+import ChoiceMenu from "./ChoiceMenu.vue";
 import ChoicePanel from "./ChoicePanel.vue";
-import SegmentedControl from "./SegmentedControl.vue";
+import ChoiceSheet from "./ChoiceSheet.vue";
 
 // Apparence (maquette Réglages, « Affichage ») : Clair, Sombre, Auto ; Auto par défaut, la page suit le
 // téléphone ou l'ordinateur (ModeSombre). Le choix vaut pour cet appareil.
 // `detailed` (ordinateur, maquette ReglagesOrdinateur, MODIFICATIONS_9 §2.10) : deux lignes de plus, Langue et Taille
 // du texte, la valeur et un chevron ; chacune ouvre son panneau à boutons radio.
-// `phone` (planche Reglages du 14.11) : Apparence seule dans sa carte, segments pleine largeur de 44 px, puis Langue et
-// Taille du texte dans une seconde carte. Sur ordinateur (ReglagesOrdinateur) : les trois lignes dans une seule carte.
+// LISEZMOI §56 du 17.11 (planches Reglages, ReglagesOrdinateur) : « Apparence » devient une ligne comme Langue et Taille
+// du texte, la valeur actuelle et un chevron, dans la même carte. Sur téléphone (`phone`), la ligne ouvre une feuille à
+// boutons radio (Clair, Sombre, Auto « Comme le téléphone ») ; sur ordinateur, un menu.
 const props = withDefaults(defineProps<{ detailed?: boolean; phone?: boolean }>(), { detailed: false, phone: false });
 const { theme, setTheme } = useTheme();
 const OPTIONS = [
   { value: "light", label: "Clair", test: "theme-light" },
   { value: "dark", label: "Sombre", test: "theme-dark" },
-  { value: "auto", label: "Auto", test: "theme-auto" },
+  { value: "auto", label: "Auto", hint: "Comme le téléphone", test: "theme-auto" },
 ];
+const themeLabel = computed(() => OPTIONS.find((option) => option.value === theme.value)?.label ?? "");
 const model = computed({
   get: () => theme.value,
   set: (value: string) => setTheme(value as Theme),
@@ -47,7 +50,7 @@ const sizeLabel = computed(() =>
     ? "Selon le téléphone"
     : (SIZES.find((s) => s.value === textSize.value)?.label ?? ""),
 );
-const panel = ref<"" | "language" | "size">("");
+const panel = ref<"" | "language" | "size" | "theme">("");
 </script>
 
 <template>
@@ -56,19 +59,38 @@ const panel = ref<"" | "language" | "size">("");
     data-test="appearance-panel"
   >
     <div class="rg-list appearance-card">
-      <div class="appearance-row">
+      <button
+        v-if="phone"
+        type="button"
+        class="rg-link-row"
+        aria-haspopup="dialog"
+        data-test="appearance-row"
+        @click="panel = 'theme'"
+      >
         <span
           id="appearance-title"
           class="rg-label"
         >Apparence</span>
-        <SegmentedControl
+        <span class="rg-value">{{ themeLabel }}</span>
+        <AppIcon name="chevron" />
+      </button>
+      <div
+        v-else
+        class="appearance-row"
+        data-test="appearance-row"
+      >
+        <span
+          id="appearance-title"
+          class="rg-label"
+        >Apparence</span>
+        <ChoiceMenu
           v-model="model"
-          :options="OPTIONS"
           label="Apparence"
-          :full="phone"
+          :choices="OPTIONS"
+          test-id="appearance-menu"
         />
       </div>
-      <template v-if="detailed && !phone">
+      <template v-if="detailed">
         <button
           type="button"
           class="rg-link-row"
@@ -93,34 +115,15 @@ const panel = ref<"" | "language" | "size">("");
         </button>
       </template>
     </div>
-    <div
-      v-if="detailed && phone"
-      class="rg-list"
-    >
-      <button
-        type="button"
-        class="rg-link-row"
-        aria-haspopup="dialog"
-        data-test="language-row"
-        @click="panel = 'language'"
-      >
-        <span class="rg-label">Langue</span>
-        <span class="rg-value">Français</span>
-        <AppIcon name="chevron" />
-      </button>
-      <button
-        type="button"
-        class="rg-link-row"
-        aria-haspopup="dialog"
-        data-test="text-size-row"
-        @click="panel = 'size'"
-      >
-        <span class="rg-label">Taille du texte</span>
-        <span class="rg-value">{{ sizeLabel }}</span>
-        <AppIcon name="chevron" />
-      </button>
-    </div>
   </div>
+  <ChoiceSheet
+    v-if="phone"
+    v-model="model"
+    :open="panel === 'theme'"
+    title="Apparence"
+    :choices="OPTIONS"
+    @close="panel = ''"
+  />
   <template v-if="detailed">
     <ChoicePanel
       :open="panel === 'language'"
