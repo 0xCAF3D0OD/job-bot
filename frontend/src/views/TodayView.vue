@@ -375,23 +375,14 @@ const todos = computed<HomeTodo[]>(() => {
     }
     const count =
       group === "follow" ? t.to_follow_up : group === "preparing" ? preparing.value.length : group === "alerts" ? t.alerts_waiting : 1;
-    list.push({
-      key: group,
-      test: `todo-${task.test}`,
-      count,
-      label: "",
-      to: task.to,
-      ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}),
-      // §61 : « Remettre les justificatifs » se coche, avec sa ligne (« En retard depuis le 5 novembre »).
-      ...(task.check ? { check: { done: !!orpDone.value, busy: orpBusy.value }, detail: task.detail } : {}),
-    });
+    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to, ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}) });
   }
   for (const todo of list) {
     const n = todo.count;
     todo.label = {
       meeting: "Rendez-vous ORP à préparer",
       interview: many(n, "Entretien à préparer", "Entretiens à préparer"),
-      orp: t.orp_due_month ? `Remettre les justificatifs ${ofMonth(t.orp_due_month)}` : "Remettre les justificatifs",
+      orp: t.orp_due_month ? `Justificatifs ${ofMonth(t.orp_due_month)} à remettre` : "Justificatifs à remettre",
       follow: many(n, "Relance à envoyer", "Relances à envoyer"),
       preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
       review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),
@@ -531,7 +522,6 @@ const { me } = useAuth();
     :todos="todos"
     :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
     :reminder="reminder"
-    @check="markOrp"
   >
     <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
     <RouterLink
