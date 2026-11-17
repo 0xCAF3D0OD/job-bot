@@ -121,9 +121,3 @@ function cal(iso: string): { day: number; month: number } {
   </BottomSheet>
 </template>
 
-<style scoped>
-/* RendezVousPreparer (§46) : fond de la plateforme, flèche sans cercle à 12 px du bord, 8 px avant le titre. */
-.rdv-prep-page { background: var(--bg); }
-.rdv-prep-page :deep(.sheet-head) { gap: var(--space-2); padding: 0 var(--space-5) var(--space-2) var(--space-3); }
-.rdv-prep-page :deep(.sheet-close) { order: -1; border: 0; background: none; }
-</style>
