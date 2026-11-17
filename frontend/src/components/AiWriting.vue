@@ -68,3 +68,11 @@ onUnmounted(() => clearInterval(timer));
     </p>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.ai-steps li::before { content: ""; height: 4px; border-radius: var(--radius-pill); background: var(--border); transition: background-color var(--t-state); }
+@media (max-width: 599px) {
+.ai-steps { gap: var(--space-1); }
+}
+</style>

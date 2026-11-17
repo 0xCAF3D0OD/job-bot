@@ -156,3 +156,9 @@ onUnmounted(stop);
     </SettingCard>
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.alert-date { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
+.site-message-text { white-space: pre-line; overflow-wrap: anywhere; }
+</style>

@@ -42,6 +42,7 @@ from jobbot.db.models import (
     Setting,
 )
 from jobbot.employer import service as employer_service
+from jobbot.filtering.duplicates import applied_before, sent_on
 from jobbot.filtering.service import load_criteria
 from jobbot.llm.scoring import PART_MAX, profile_hash
 from jobbot.log import get_logger
@@ -134,6 +135,10 @@ class OfferOut(BaseModel):
     # candidature envoyée ces 90 derniers jours à un poste proche.
     agency: Literal["known", "probable"] | None = None
     agency_duplicate: "AgencyDuplicateOut | None" = None
+    # Doublon probable (décision de Kevin du 16.11) : une candidature au même titre chez la même
+    # entreprise, envoyée depuis une autre fiche ou saisie dans Envoyées ; la plus récente. L'offre
+    # reste visible avec la pastille « Déjà postulé le … ».
+    applied_before: date | None = None
     # Logo de l'entreprise disponible sur /api/offers/{id}/logo (docs/14 §4).
     has_logo: bool = False
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
@@ -387,6 +392,7 @@ def _offer_out(
     current_hash: str | None = None,
     corrections: Corrections = NO_CORRECTIONS,
     sent: list[Duplicate] | None = None,
+    posts: dict[tuple[str, str], list[tuple[date, int | None]]] | None = None,
 ) -> OfferOut:
     agency = agency_kind(offer, corrections)
     found = duplicate(offer, sent) if agency and sent else None
@@ -416,6 +422,7 @@ def _offer_out(
                 else None
             ),
             "text_reading": text_reading(offer),
+            "applied_before": sent_on(offer, posts or {}),
         }
     )
 
@@ -884,13 +891,20 @@ async def list_offers(
         current_hash = profile_hash(await active_profile(session))
         criteria = await load_criteria(session)
         recent = await _sent_if_agency(session, offers, corrections)
+        posts = await applied_before(session)
     logos = await _logo_keys(runtime)
     return OfferPage(
         items=[
             _with_languages(
                 _with_logo(
                     _offer_out(
-                        o, links[o.id], evaluations.get(o.id), current_hash, corrections, recent
+                        o,
+                        links[o.id],
+                        evaluations.get(o.id),
+                        current_hash,
+                        corrections,
+                        recent,
+                        posts,
                     ),
                     logos,
                 ),
@@ -916,9 +930,10 @@ async def get_offer(request: Request, offer_id: int) -> OfferOut:
         criteria = await load_criteria(session)
         corrections = await load_corrections(session)
         sent = await _sent_if_agency(session, [offer], corrections)
+        posts = await applied_before(session)
     links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
     out = _offer_out(
-        offer, links[offer_id], evaluations.get(offer_id), current_hash, corrections, sent
+        offer, links[offer_id], evaluations.get(offer_id), current_hash, corrections, sent, posts
     )
     return _with_languages(_with_logo(out, await _logo_keys(runtime)), offer, criteria)
 

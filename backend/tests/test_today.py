@@ -86,6 +86,13 @@ async def test_day(rt: Runtime) -> None:
         day = (await api.get("/api/today")).json()
         assert day["to_review"] == 1
         assert day["month_target"] == 20
+        # La prochaine collecte planifiée (§41 du 16.11), dans les 24 heures ;
+        # rien si le planificateur est arrêté.
+        if rt.settings.scheduler_enabled:
+            next_at = datetime.fromisoformat(day["next_collect_at"])
+            assert timedelta(0) < next_at - datetime.now(UTC) <= timedelta(hours=24)
+        else:
+            assert day["next_collect_at"] is None
         assert day["month_count"] == (2 if old.month == today.month else 1)
         # 12 jours et au moins 14 jours : les deux sont à relancer.
         assert day["to_follow_up"] == 2

@@ -902,6 +902,31 @@ watch(
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.summary-rows > div + div { border-top: 1px solid var(--border); }
+.ai-spend { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-6) var(--space-6); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.rhythm-pause > label input { width: min(100%, calc(var(--field-10) + var(--control-h))); }
+@media (max-width: 820px) {
+.rhythm-pause { grid-template-columns: minmax(0, 1fr); }
+}
+.plan-payments li { grid-template-columns: 1fr auto; }
+.setting-card-body .ai-spend { padding: var(--space-5) var(--space-6); }
+.setting-row.stack .setting-row-control .rhythm-week { flex: 1 1 100%; }
+@media (max-width: 820px) {
+.setting-card-body .ai-spend { padding: var(--space-4); }
+}
+.milestones-table th[scope="row"] { font-size: var(--font-small); color: var(--text); }
+.milestones-table thead th:not(:first-child) { text-align: right; }
+/* Supprimer le compte (maquette Réglages, étape 10b) : seul dans sa carte, au contour rouge clair. */
+button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
+.choice-panel { --choice-68: 68px; --choice-lh-22: 22px; --choice-lh-20: 20px; --choice-lh-16: 16px; --choice-dot: 24px; --choice-inner: 11px; --choice-gap-2: 2px; display: grid; gap: var(--space-1); }
+.choice-panel-heading { margin: 0; font-size: var(--font-caption); line-height: var(--choice-lh-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.choice-rad { display: flex; align-items: center; gap: var(--space-4); min-height: var(--choice-68); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.choice-rad input { appearance: none; flex: none; display: grid; place-content: center; width: var(--choice-dot); height: var(--choice-dot); margin: 0; border: 2px solid var(--text-secondary); border-radius: 50%; background: none; }
+.choice-rad input:checked::before { content: ""; width: var(--choice-inner); height: var(--choice-inner); border-radius: 50%; background: var(--primary-graphic); }
+.choice-rad input:focus-visible { outline: var(--choice-gap-2) solid var(--primary-graphic); outline-offset: var(--choice-gap-2); }
+.choice-rad-text b { display: block; font-size: var(--font-body); line-height: var(--choice-lh-22); }
+.choice-panel-note { margin: var(--space-3) 0 0; font-size: var(--font-small); line-height: var(--choice-lh-20); color: var(--text-secondary); }
 /* Réglages, refaits d'après les planches du 14 novembre (Reglages pour le téléphone, ReglagesOrdinateur dès 1 024 px).
    Sans `scoped` (classes propres à la page, rg-* et settings-grouped/-phone/-wide) : le CSS reste sous la limite de
    poids. Téléphone : listes bordées de 1 px, rayon 18, lignes de 64 px (16/600, aide 13/18). Ordinateur : une carte

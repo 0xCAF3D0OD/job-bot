@@ -49,3 +49,8 @@ const shown = computed(() =>
     </li>
   </ul>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.site-code-value { font-size: var(--font-figure); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+</style>

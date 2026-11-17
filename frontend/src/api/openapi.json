@@ -18989,6 +18989,11 @@
             "type": "boolean",
             "title": "Fill",
             "default": false
+          },
+          "separate": {
+            "type": "boolean",
+            "title": "Separate",
+            "default": false
           }
         },
         "type": "object",
@@ -19174,6 +19179,55 @@
             "type": "array",
             "title": "Fillable",
             "default": []
+          },
+          "existing_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "link",
+                  "post"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Kind"
+          },
+          "existing_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Title"
+          },
+          "existing_company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Company"
+          },
+          "existing_added": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Added"
           }
         },
         "type": "object",
@@ -20861,6 +20915,18 @@
                 "type": "null"
               }
             ]
+          },
+          "applied_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Before"
           },
           "has_logo": {
             "type": "boolean",
@@ -23720,6 +23786,18 @@
               }
             ]
           },
+          "applied_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Before"
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -25209,6 +25287,18 @@
               }
             ],
             "title": "Last Collect At"
+          },
+          "next_collect_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Collect At"
           },
           "alerts_waiting": {
             "type": "integer",

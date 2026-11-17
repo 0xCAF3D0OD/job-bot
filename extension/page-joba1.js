@@ -9,8 +9,20 @@
 (() => {
   const version = chrome.runtime.getManifest().version;
   const post = (data) => window.postMessage({ source: "joba1-extension", ...data }, location.origin);
-  document.documentElement.dataset.joba1Extension = version;
-  post({ type: "ready", version });
+  // À document_start, <html> peut ne pas exister encore (Firefox surtout) : on l'attend.
+  const mark = () => {
+    document.documentElement.dataset.joba1Extension = version;
+    post({ type: "ready", version });
+  };
+  if (document.documentElement) mark();
+  else {
+    const watch = new MutationObserver(() => {
+      if (!document.documentElement) return;
+      watch.disconnect();
+      mark();
+    });
+    watch.observe(document, { childList: true });
+  }
 
   const STEPS = ["filled", "sent", "code-pasted", "fallback", "created"];
   const progress = (state) => {

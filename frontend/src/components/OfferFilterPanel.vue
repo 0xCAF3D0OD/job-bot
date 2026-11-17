@@ -5,12 +5,12 @@ import type { OfferFacets } from "../api/client";
 import {
   BASIS_HELP,
   basisChoices,
-  DEFAULT_FILTERS,
   radioKey,
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
   SCORE_HELP,
+  viewPatch,
   type OfferFilters,
   type Sort,
   type View,
@@ -45,9 +45,7 @@ const SORTS: { label: string; value: Sort }[] = [
 // En préparation se trie par dernière action (docs/43) : le choix n'existe que là, et part avec elle.
 const sorts = computed(() => (props.filters.view === "in_progress" ? [{ label: "Dernière action", value: "activity" as Sort }, ...SORTS] : SORTS));
 function selectView(view: View): void {
-  if (view === "in_progress") emit("update", { view, sort: "activity" });
-  else if (props.filters.sort === "activity") emit("update", { view, sort: DEFAULT_FILTERS.sort });
-  else emit("update", { view });
+  emit("update", viewPatch(view, props.filters.sort));
 }
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));

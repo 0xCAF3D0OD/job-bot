@@ -1,0 +1,1 @@
+Premiers pas, étape 3 « Crée ton alerte sur jobup » : une carte de 4 étapes, le code de jobup dans 6 cases en lecture seule (attente, reçu, expiré), « J'ai validé l'alerte » une fois le code reçu ; un test vérifie que le code n'apparaît jamais dans les logs (§41 du 16.11)

@@ -511,6 +511,47 @@ Précisions de Kevin (16.11.2026, 15 h 10), sur les écarts de la #798 :
 - Voie 1 retenue : la voie 3 (couper du contenu utile pour gagner du poids) est exclue, la voie 2 seule (relever css-total) ne réglait rien.
 - Suite, une PR chacun, captures identiques au pixel près, gain mesuré par page : (a) sortir de style.css le CSS propre aux pages ; (b) premiers pas, une étape par fichier chargée à son tour ; (c) Préparer, panneaux secondaires à la demande.
 
+## Pastilles neutres sur le fond beige (Kevin, 16.11.2026)
+
+- La pastille « Case à cocher dans Job-Room » de « Pour l'ORP » garde son fond aligné sur le bord gauche du texte au-dessus, comme sur la planche BilanOrdinateurFiche.
+- Une pastille neutre posée sur le fond beige (volets, feuilles) se distingue de ce fond : fond blanc #FFFFFF et trait de 1 px #CFCBC1 (`--card-line`) ; en sombre, fond #2C2722 et trait #4E473E. Jeton `--pill-on-bg`. Le trait est dessiné à l'intérieur : la pastille garde sa taille et son alignement.
+- Relevé du 16.11 sur toutes les pages des audits et leurs volets et feuilles, à 1440 et 390 px : seule cette pastille était concernée (volet du Bilan sur ordinateur, fiche « Pour l'ORP » sur téléphone). Posée sur une carte blanche (volet d'une candidature), elle ne change pas.
+
+## Coche après le téléchargement de la lettre et du CV (Kevin, 16.11.2026, 16 h 44)
+
+- Dans « 3. Postuler », la pastille Lettre.pdf (et CV.pdf) remplace son icône de téléchargement par une coche verte (icône `done`, couleur `--ok-text`, celle de la coche passagère des téléchargements) une fois le fichier téléchargé. « Tout télécharger » coche les deux. Sur téléphone, où la pastille n'a pas d'icône, la coche s'ajoute de la même façon.
+- La pastille reste un lien cliquable pour retélécharger. Son nom accessible devient « Lettre.pdf, téléchargée » (« CV.pdf, téléchargé »), pas l'icône seule.
+- La coche est posée quand le fichier est bien arrivé : les liens de téléchargement passent déjà par `useFileDownloads`, qui récupère le fichier lui-même et montre une coche 2 secondes ; il prévient maintenant la page (`file-done`). Un échec ne coche rien. Elle est gardée dans ce navigateur (`localStorage`, clé `jobA1.telecharges`, 100 entrées au plus), par version du document : une lettre ou un CV refait repart sans coche. Rien n'est envoyé au serveur. La clé est effacée à la déconnexion (règle A-7).
+- Aucune planche ne dessine cet état : cette décision en tient lieu. Les certificats joints et les liens « Partager » du téléphone ne sont pas concernés.
+
+## Filtres des Offres gardés jusqu'à la fermeture de l'onglet (Kevin, 16.11.2026, 16 h 44)
+
+- Constat : le filtre choisi (par exemple « Nouvelles ») retombait sur « Toutes » après une candidature, parce que les filtres vivent dans l'adresse (`?statut=to_review`) et que « Retour aux offres » (écran « C'est fait ! »), l'onglet Offres et les autres liens pointent sur `/candidatures/offres` sans filtre.
+- Les filtres des Offres (statut, tri, note, taux, sites, cantons, télétravail, agences, écartées, expirées, recherche) sont gardés pour l'onglet du navigateur (`sessionStorage`, clé `jobA1.offres-filtres`) et remis quand on revient sur Offres par un lien qui n'en porte aucun. Ils durent jusqu'à la fermeture de l'onglet et sont effacés à la déconnexion (règle A-7).
+- Un lien qui porte un filtre précis (par exemple « Tout voir » de Top du jour → note 75 et plus) l'emporte sur les filtres gardés.
+- Le statut choisi devient une pastille, « Statut : Nouvelles » (Gardées, En préparation), comptée dans le nombre du bouton Filtres ; « Tout effacer » apparaît dès qu'un filtre est actif et retire aussi le statut (avant, il le gardait). Le tri n'a pas de pastille et reste en place, sauf « Dernière action », propre à En préparation.
+- Complément (Kevin, 17.11.2026, 0 h 29 et 0 h 33) : « Tout effacer » retire aussi le statut, à condition que le statut soit dans le panneau Filtres et compté dans le nombre de filtres actifs ; après « Tout effacer », le nombre affiché est 0. Sur téléphone, la feuille Filtres reçoit en tête un groupe « Statut » (fieldset et légende, `role="radiogroup"`, un seul choix) : Toutes · n, Nouvelles · n, Gardées · n, En préparation · n, avec les nombres de l'ordinateur et le style de « Type de note » (puces de 44 px, coche sur le choix actif). Le statut est le même des deux côtés. La planche Filtres ne le dessine pas : cette décision en tient lieu.
+
+## Offres déjà postulées et doublons (Kevin, 16.11.2026, 16 h 45)
+
+Une offre déjà postulée ne doit plus encombrer le fil Offres, sans jamais cacher en silence une vraie nouvelle offre
+(Nielsen n° 1). On distingue le sûr du probable.
+
+- **Même lien = doublon sûr.** Même site (sans www), même chemin, même identifiant d'annonce dans l'adresse (Indeed :
+  `jk`). L'offre est rattachée à l'offre envoyée et sort de la liste. Une candidature saisie dans Envoyées avec ce
+  lien reçoit l'offre comme fiche.
+- **Même titre chez la même entreprise = doublon probable.** L'offre reste visible avec la pastille neutre
+  « Déjà postulé le … », et c'est toi qui décides. Une entreprise peut republier le même poste des mois plus tard, ou
+  ouvrir deux postes au même titre. Titre comparé sans taux ni genre ; entreprise sans SA, Sàrl, AG, GmbH, casse,
+  accents ni ponctuation, comme pour « Autres offres chez X ».
+- **Agences** : le même titre via deux agences différentes reste un cas probable : la pastille seulement, jamais de
+  fusion automatique.
+- Spontanées et candidatures saisies dans Envoyées comprises.
+- Ajout d'une offre (à la main, par l'extension, en spontanée) : la fiche existante s'ouvre avec les nouveaux liens ;
+  « Créer quand même » reste visible à côté, pas dans un menu (seconde PR).
+- Conséquence acceptée : les offres déjà cachées derrière une offre envoyée seulement par leur titre reviennent dans
+  le fil avec la pastille (3 sur le compte de Kevin le 16.11).
+
 ## Fenêtre de l'extension sur « Créer une alerte » de jobup (Kevin, 16.11.2026, 21 h 25)
 
 Section 42 de la maquette (planches ExtAlerte, ExtAlerteCodeAttente, ExtAlerteCodeColle, ExtAlerteTerminee,
@@ -537,3 +578,55 @@ Précisions de Kevin (16.11.2026, 23 h 05, sur #805) :
 - Plus tard, dans une PR à part : quand la fenêtre jobs.ch passera à la liste en 4 étapes, retirer aussi le clic
   automatique sur « Continuer » pour jobs.ch. LinkedIn garde sa fenêtre actuelle avec « J'ai créé l'alerte »
   jusqu'à nouvel ordre.
+
+## Extension et page jobA1 : détection et suivi de l'alerte (Kevin, 16.11.2026, 21 h 30)
+
+Section 42 de la maquette : à l'étape « Crée ton alerte sur jobup » des premiers pas, sur ordinateur seulement, le
+choix « Avec l'extension · environ 1 minute » / « À la main · environ 2 minutes ». Le contrat entre l'extension
+(`extension/page-joba1.js`) et la page (`useJobA1Extension`), sans requête au serveur pour la détection :
+
+1. **Détection.** Sur l'adresse de la plateforme reliée, au chargement (`document_start`), l'extension pose
+   `data-joba1-extension="x.y.z"` sur `<html>` et envoie
+   `postMessage({ source: "joba1-extension", type: "ready", version }, location.origin)`. La page lit d'abord
+   l'attribut, puis écoute `ready` (extension installée pendant que la page est ouverte). Par défaut, le choix est
+   « Avec l'extension » si l'extension est détectée (« installée · environ 1 minute »), sinon « À la main ».
+2. **Suivi.** L'extension envoie
+   `postMessage({ source: "joba1-extension", type: "alert-progress", site: "jobup", step })`, avec `step` parmi
+   `filled`, `sent`, `code-pasted`, `fallback`, `created`. Jamais le code, jamais l'adresse.
+3. **Demande.** La page peut demander l'étape courante :
+   `postMessage({ source: "joba1-page", type: "alert-progress?" }, location.origin)`. Des deux côtés, un message ne
+   compte que si `event.source === window`, la même origine et le bon `source`.
+4. **Alerte créée.** À `created`, l'extension appelle `PUT /api/extension/alerts/jobup` (route existante
+   `mark_created`). La page passe d'elle-même à l'étape suivante, sans bouton « J'ai créé l'alerte ». En secours,
+   quand on revient sur l'onglet, la page relit `/api/alert-searches` et avance si jobup est noté créé.
+5. **Ouvrir jobup.** Le bouton « Ouvrir jobup avec ma recherche » garde l'adresse `cells[].url` de
+   `/api/alert-searches`.
+6. **Secours.** `fallback` (champ du code introuvable sur jobup) : la ligne « Code collé dans jobup » devient
+   « Le code est dans la fenêtre de l'extension ».
+
+Le suivi en direct affiche : Formulaire rempli, Alerte envoyée à jobup, Code collé dans jobup, En attente de ta
+confirmation sur jobup. Changer d'option garde l'avancée de chaque parcours. Téléphone : pas de choix, parcours à la
+main seul. Ordinateur (Kevin, 16.11, 23 h 29) : l'extension n'existe que pour Firefox, donc le choix ne s'affiche que sur
+Firefox, ou sur tout navigateur où l'extension est détectée ; ailleurs, parcours à la main seul. Texte : « Gratuite,
+pour Firefox. ». Les règles de l'extension elle-même sont dans `2026-11-16-2125-extension-alerte-jobup.md`.
+
+## Ajouter une offre déjà là (Kevin, 17.11.2026, 0 h 29)
+
+Retour de Kevin sur la #818. On ne crée plus directement une offre déjà présente.
+
+1. Pas d'encadré. Le message va sous le champ « Lien ou texte de l'annonce » (icône et texte, `role="alert"`), puis
+   ses boutons. Tant qu'il est affiché, ces boutons remplacent « Ajouter l'offre » du bas.
+2. Doublon sûr (même lien) : « Cette offre est déjà dans tes candidatures (ajoutée le {date}). » Un seul bouton plein,
+   « Ouvrir l'offre ». Pas d'« Ajouter quand même » : le serveur ouvre l'offre déjà là même si on le lui demande.
+3. Doublon probable (même titre et même entreprise, lien différent) : « Une offre très proche est déjà là : {titre}
+   chez {entreprise}, ajoutée le {date}. » Bouton plein « Ouvrir l'offre », bouton contour « Ajouter quand même ».
+   L'offre ajoutée quand même porte la pastille « Déjà postulé le … » si une candidature a été envoyée, comme dans le
+   fil (#810).
+4. Changer le lien ou le texte du champ fait disparaître le message et revenir « Ajouter l'offre ».
+
+## Préparer : l'étape CV chargée à son ouverture (Kevin, 17.11.2026, 0 h 29)
+
+- L'étape CV de Préparer se charge à son ouverture. Elle est préchargée au survol ou au focus de l'onglet « CV », sinon quand le navigateur est au repos (`requestIdleCallback`).
+- Si le chargement dépasse 300 ms, un squelette de l'onglet s'affiche (les blocs de chargement communs), jamais un écran vide.
+- Le gain réel est mesuré et donné dans la PR.
+- Candidatures prend 1,4 Ko de JS depuis la #816 (les panneaux de Préparer y deviennent des blocs séparés) : on le laisse, sans PR de compensation, puisque la page reste 7,8 Ko sous sa limite.

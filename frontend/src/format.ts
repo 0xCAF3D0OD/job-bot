@@ -336,3 +336,13 @@ export function dailyPace(count: number, target: number | null | undefined, mont
 export function triageTags(offer: Offer): string[] {
   return [offer.employment_type ?? "", rateText(offer.rate_min, offer.rate_max), remoteText(offer) ?? ""].filter(Boolean);
 }
+/** La prochaine collecte, dans une phrase (Candidatures vide, §41 du 16.11) : « ce soir vers 19 h »,
+ *  « cet après-midi vers 15 h », « demain matin vers 7 h ». L'heure vient du serveur, jamais inventée. */
+export function collectWhen(iso: string, now: Date = new Date()): string {
+  const at = new Date(iso);
+  const hour = Number(at.toLocaleString("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: ZURICH }));
+  const part = hour < 12 ? "matin" : hour < 18 ? "après-midi" : "soir";
+  const today = dayKey(now.toISOString()) === dayKey(iso);
+  const day = today ? { matin: "ce matin", "après-midi": "cet après-midi", soir: "ce soir" }[part] : `demain ${part}`;
+  return `${day} vers ${hour} h`;
+}

@@ -1,0 +1,1 @@
+Premiers pas, étape 3 sur ordinateur : choix « Avec l'extension » ou « À la main » ; l'extension est détectée par un attribut sur la page ou un message, jamais par une requête au serveur ; avec l'extension installée, un suivi en direct (l'étape seulement, jamais le code) et la page passe d'elle-même à la suite quand l'alerte est créée (§42 du 16.11)

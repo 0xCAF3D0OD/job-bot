@@ -67,3 +67,10 @@ onMounted(async () => {
     />
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (max-width: 820px) {
+.alerts-section { margin-bottom: var(--space-6); }
+}
+</style>

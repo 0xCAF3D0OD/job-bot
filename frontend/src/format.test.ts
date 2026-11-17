@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { cityOnly, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText } from "./format";
+import { cityOnly, collectWhen, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -85,5 +85,17 @@ describe("L’échéance ORP en toutes lettres (MODIFICATIONS du 9 novembre, §1
     expect(orpLeftLine(13, 13, "2026-11")).toBe("Objectif du mois atteint");
     expect(orpChannel("Électronique")).toBe("formulaire en ligne");
     expect(orpChannel("LinkedIn")).toBe("LinkedIn");
+  });
+});
+
+describe("collectWhen (§41 du 16.11)", () => {
+  const now = new Date("2026-11-16T12:30:00Z"); // 13 h 30 en Suisse
+  it("le jour même : ce matin, cet après-midi, ce soir", () => {
+    expect(collectWhen("2026-11-16T14:00:00Z", now)).toBe("cet après-midi vers 15 h");
+    expect(collectWhen("2026-11-16T18:00:00Z", now)).toBe("ce soir vers 19 h");
+    expect(collectWhen("2026-11-16T06:00:00Z", new Date("2026-11-16T05:00:00Z"))).toBe("ce matin vers 7 h");
+  });
+  it("le lendemain : demain matin", () => {
+    expect(collectWhen("2026-11-17T06:00:00Z", now)).toBe("demain matin vers 7 h");
   });
 });

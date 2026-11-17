@@ -6,6 +6,15 @@ import { useAssistant } from "../composables/useAssistant";
 import { useUndo } from "../composables/useUndo";
 import WelcomeView from "./WelcomeView.vue";
 
+// Chaque étape des premiers pas est un fichier chargé à part (defineAsyncComponent) : chargées une fois d'avance, leur
+// import() se résout dans le même tour que dans le navigateur.
+await Promise.all([
+  import("../components/WelcomeCriteria.vue"),
+  import("../components/WelcomeAlertSteps.vue"),
+  import("../components/WelcomeAlertExtension.vue"),
+  import("../components/WelcomeProfileStep.vue"),
+]);
+
 const GET = vi.fn();
 const PUT = vi.fn();
 const POST = vi.fn();
@@ -419,7 +428,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(router.currentRoute.value.path).toBe("/compte");
   });
 
-  it("l’alerte (étape 4 sur 5) : la première recherche, jobup, l’adresse ; « J’ai créé l’alerte » note jobup", async () => {
+  it("l’alerte (étape 4 sur 5) : 4 étapes, la première recherche, jobup, l’adresse, le code en lecture seule ; « J’ai créé l’alerte » note jobup", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
     expect(wrapper.get("[data-test=welcome-continue]").text()).toBe("Continuer");
     await click(wrapper, "welcome-continue");
@@ -427,23 +436,22 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");
     expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");
     const alert = wrapper.get("[data-test=welcome-alert]");
-    // Section 15 du paquet du 15.11 : plus de phrase sous le titre.
-    expect(wrapper.text()).not.toContain("Crée une alerte sur jobup");
-    // Une seule recherche, la première ; les autres restent dans Mes alertes (décision de Kevin du 14.11).
-    expect(alert.get("[data-test=alert-site-search]").text()).toBe("Recherche : DevOps · Lausanne et 30 km");
+    // Section 41 du paquet du 16.11 : la phrase sous le titre, puis 4 étapes ; une seule recherche, la première.
+    expect(wrapper.text()).toContain("Pour recevoir les nouvelles offres, crée une alerte sur jobup.");
+    expect(alert.findAll("li.wa-step")).toHaveLength(4);
+    expect(alert.get("[data-test=welcome-alert-step-1]").attributes("aria-current")).toBe("step");
+    expect(alert.text()).toContain("jobA1 a préparé ta recherche : DevOps · Lausanne et 30 km.");
     expect(alert.text()).not.toContain("SRE");
     const open = alert.get("[data-test=wizard-open]");
     expect(open.attributes("href")).toBe("https://www.jobup.ch/fr/emplois/?term=DevOps");
-    expect(open.text()).toContain("Ouvrir jobup");
+    expect(open.attributes("target")).toBe("_blank");
+    expect(open.text()).toContain("Ouvrir jobup avec ma recherche");
     expect(alert.get("[data-test=wizard-address]").text()).toBe("lea+0mwdr89t@alertes.joba1.ch");
-    expect(alert.text()).toContain("Copie-la, puis colle-la dans le champ e-mail de l’alerte.");
-    expect(alert.text()).toContain("Recopie le code de jobup");
-    // Section 24 du paquet du 15.11 : le trajet du code, version téléphone (« Boîte jobA1 », sans la fréquence).
-    const trail = alert.get("[data-test=code-trail]");
-    expect(trail.classes()).toContain("telephone");
-    expect(trail.text()).toContain("Boîte jobA1");
-    expect(trail.text()).toContain("Rien reçu pour l’instant. Valide l’alerte sur jobup.");
-    expect(alert.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
+    expect(alert.get("[data-test=alert-site-copy]").attributes("aria-label")).toBe("Copier l’adresse");
+    // Le code se lit dans 6 cases, jamais dans un champ de saisie.
+    expect(alert.get("[data-test=welcome-code]").findAll("span")).toHaveLength(6);
+    expect(alert.find("input").exists()).toBe(false);
+    expect(alert.text()).toContain("Termine l’alerte sur jobup");
     expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
 
     await click(wrapper, "welcome-alert-done");
@@ -597,26 +605,85 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await flushPromises();
     expect(wrapper.find("[data-test=welcome-keep]").exists()).toBe(true);
   });
-  it("étape 3 sur 4 : « Une alerte, et elles arrivent seules », les étapes dans une carte, la scène de la boîte aux lettres à droite", async () => {
+  it("étape 3 sur 4 : « Crée ton alerte sur jobup », 4 étapes dans une carte, la scène de la boîte aux lettres à droite", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
     await click(wrapper, "welcome-criteria");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
-    expect(wrapper.get("h1").text()).toBe("Une alerte, et elles arrivent seules");
-    // Section 15 du paquet du 15.11 : plus de phrase sous le titre.
-    expect(wrapper.text()).not.toContain("t’envoie ses nouvelles offres");
+    expect(wrapper.get("h1").text()).toBe("Crée ton alerte sur jobup");
+    // Section 41 du paquet du 16.11 : la phrase sous le titre, sans durée, puis une carte de 4 étapes.
+    expect(wrapper.get(".wdk-lead").text()).toBe("Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.");
     const card = wrapper.get("[data-test=welcome-alert]");
-    expect(card.classes()).toContain("wdk-card");
-    expect(card.text()).toContain("jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici.");
-    expect(card.text()).toContain("Termine l’alerte sur jobup, puis reviens ici");
+    expect(card.classes()).toContain("wa-desk");
+    expect(card.findAll("li.wa-step")).toHaveLength(4);
+    expect(card.text()).toContain("Le code de confirmation s’affiche ici");
+    expect(card.find("input").exists()).toBe(false);
+    expect(wrapper.get("[data-test=welcome-alert-done]").text()).toBe("J’ai créé l’alerte");
     // Section 25 du paquet du 15.11 : la scène à la place d'Orange seul, 420 px, servie en WebP 840 px.
     const scene = wrapper.get("[data-test=welcome-mailbox]");
     expect(scene.attributes("src")).toBe("/illustrations/scene-boite-aux-lettres-840.webp");
     expect(scene.attributes("alt")).toBe("");
     expect(scene.attributes("aria-hidden")).toBe("true");
     expect([scene.attributes("width"), scene.attributes("height")]).toEqual(["420", "299"]);
-    expect(card.find("[data-test=code-trail]").classes()).toContain("ordinateur");
     expect(wrapper.find("[data-illustration]").exists()).toBe(false);
     await click(wrapper, "welcome-back");
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 2 sur 4");
+  });
+
+  it("section 42 : hors Firefox et sans extension, pas de choix, le parcours à la main seul (Kevin, 16.11, 23 h 29)", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    expect(wrapper.find("[data-test=welcome-alert-via]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=welcome-alert]").isVisible()).toBe(true);
+    expect(wrapper.get("[data-test=welcome-alert-extension]").isVisible()).toBe(false);
+    expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(true);
+  });
+
+  it("section 42 : sur Firefox, « Avec l’extension / À la main », à la main par défaut sans extension ; chaque parcours garde son avancée", async () => {
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0");
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+    await click(wrapper, "welcome-criteria");
+    const group = wrapper.get("[data-test=welcome-alert-via]");
+    expect(group.attributes("role")).toBe("radiogroup");
+    const radios = group.findAll("[role=radio]");
+    expect(radios.map((r) => [`${r.get("b").text()} ${r.get("span").text()}`, r.attributes("aria-checked")])).toEqual([
+      ["Avec l’extension environ 1 minute", "false"],
+      ["À la main environ 2 minutes", "true"],
+    ]);
+    expect(GET.mock.calls.some((c) => String(c[0]).includes("extension"))).toBe(false);
+    await wrapper.get("[data-test=wizard-open]").trigger("click");
+    await click(wrapper, "welcome-alert-via-extension");
+    expect(wrapper.get("[data-test=welcome-alert-extension]").isVisible()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-ext-install]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(false);
+    await group.trigger("keydown", { key: "ArrowRight" });
+    await flushPromises();
+    expect(wrapper.get("[data-test=welcome-alert-via-main]").attributes("aria-checked")).toBe("true");
+    // Le parcours à la main a gardé son avancée : jobup ouvert, l'étape 3 en cours.
+    expect(wrapper.get("[data-test=welcome-alert-step-3]").attributes("aria-current")).toBe("step");
+    ua.mockRestore();
+  });
+
+  it("section 42 : l’extension détectée (quel que soit le navigateur) est choisie par défaut ; à « created », la page passe aux offres toute seule", async () => {
+    document.documentElement.dataset.joba1Extension = "0.64.0";
+    try {
+      const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers: [OFFER] });
+      await click(wrapper, "welcome-criteria");
+      const extension = wrapper.get("[data-test=welcome-alert-via-extension]");
+      expect(extension.attributes("aria-checked")).toBe("true");
+      expect(extension.text()).toContain("installée · environ 1 minute");
+      expect(wrapper.findAll("[data-test=welcome-alert-extension] li.wa-step")).toHaveLength(2);
+      expect(wrapper.find("[data-test=welcome-alert-done]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=welcome-alert-later]").exists()).toBe(true);
+      window.dispatchEvent(new MessageEvent("message", {
+        data: { source: "joba1-extension", type: "alert-progress", site: "jobup", step: "created" },
+        source: window,
+        origin: window.location.origin,
+      }));
+      await flushPromises();
+      expect(calls("/api/welcome").at(-1)).toEqual({ step: 5 });
+      expect(wrapper.find("[data-test=welcome-alert-via]").exists()).toBe(false);
+    } finally {
+      delete document.documentElement.dataset.joba1Extension;
+    }
   });
 });

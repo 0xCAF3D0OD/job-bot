@@ -1,4 +1,4 @@
-import { computed } from "vue";
+import { computed, shallowRef, watch } from "vue";
 import { useRoute, useRouter, type LocationQuery } from "vue-router";
 
 import type { Source } from "../api/client";
@@ -183,6 +183,15 @@ export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">)
   return choice ? choice.label : `${filters.minScore ?? 0}–${filters.maxScore ?? 100}`;
 }
 
+/** Le changement de statut : En préparation se trie par dernière action (docs/43), choix qui part avec elle.
+ *  Partagé par le panneau de l'ordinateur et la feuille du téléphone. */
+export function viewPatch(view: View, sort: Sort): Partial<OfferFilters> {
+  if (view === "in_progress") return { view, sort: "activity" };
+  return sort === "activity" ? { view, sort: DEFAULT_FILTERS.sort } : { view };
+}
+
+const STATUS_CHIP: Partial<Record<View, string>> = { to_review: "Nouvelles", later: "Gardées", in_progress: "En préparation" };
+
 export interface FilterChip {
   key: string;
   label: string;
@@ -193,6 +202,10 @@ export interface FilterChip {
  *  La recherche n'en a une que si son champ est caché (téléphone : il est dans la feuille). */
 export function activeChips(filters: OfferFilters): FilterChip[] {
   const chips: FilterChip[] = [];
+  // Le statut choisi, en premier (Kevin, 16.11) : gardé d'une visite à l'autre, il doit se voir et se retirer.
+  const status = STATUS_CHIP[filters.view];
+  if (status)
+    chips.push({ key: "view", label: `Statut : ${status}`, patch: { view: DEFAULT_FILTERS.view, sort: filters.sort === "activity" ? DEFAULT_FILTERS.sort : filters.sort } });
   if (filters.minScore !== null || filters.maxScore !== null)
     chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
   if (filters.basis)
@@ -225,10 +238,38 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
   return chips;
 }
 
+// Les filtres gardés jusqu'à la fermeture de l'onglet (Kevin, 16.11, docs/decisions/2026-11-16-1644-filtres-gardes.md) :
+// revenir sur Offres par un lien sans filtre (« Retour aux offres », onglet Offres) les remet ; un lien qui en porte
+// un (« Tout voir » de Top du jour) l'emporte. Effacés à la déconnexion (useAuth).
+const KEPT_KEY = "jobA1.offres-filtres";
+const FILTER_KEYS = ["statut", "tri", "q", "site", "canton", "taux", "note", "externe", "teletravail", "verifier", "agences", "ecartees", "expirees", "base"];
+const hasFilters = (query: LocationQuery): boolean => FILTER_KEYS.some((key) => query[key] != null);
+
+function keptFilters(): LocationQuery | null {
+  try {
+    const kept = toQuery(fromQuery(JSON.parse(sessionStorage.getItem(KEPT_KEY) ?? "{}") as LocationQuery));
+    return hasFilters(kept) ? kept : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useOfferFilters() {
   const route = useRoute();
   const router = useRouter();
-  const filters = computed(() => fromQuery(route.query));
+  // Arrivée sans filtre dans l'adresse : les filtres gardés, tout de suite (pas de liste « Toutes » le temps du replace).
+  const restoring = shallowRef(hasFilters(route.query) ? null : keptFilters());
+  if (restoring.value)
+    void router.replace({ query: { ...route.query, ...restoring.value } }).finally(() => (restoring.value = null));
+  const filters = computed(() => fromQuery(restoring.value ? { ...route.query, ...restoring.value } : route.query));
+  watch(filters, (next) => {
+    if (restoring.value || route.name !== "offers") return;
+    try {
+      sessionStorage.setItem(KEPT_KEY, JSON.stringify(toQuery(next)));
+    } catch {
+      // Stockage refusé : les filtres restent dans l'adresse seulement.
+    }
+  }, { immediate: true });
   // Dernier état demandé : deux clics rapides se cumulent même si l'adresse n'est pas encore
   // à jour (router.replace est asynchrone).
   let pending: OfferFilters | null = null;
@@ -246,7 +287,8 @@ export function useOfferFilters() {
 
   function reset(): void {
     const current = pending ?? filters.value;
-    navigate({ ...DEFAULT_FILTERS, view: current.view, sort: current.sort });
+    // « Tout effacer » retire aussi le statut (Kevin, 16.11) ; le tri reste, sauf « Dernière action », propre à En préparation.
+    navigate({ ...DEFAULT_FILTERS, sort: current.sort === "activity" ? DEFAULT_FILTERS.sort : current.sort });
   }
 
   return { filters, update, reset };

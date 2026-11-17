@@ -5,7 +5,9 @@ import { api } from "../api/client";
 import type { ComposerItem } from "../composer";
 import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
+import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import Composer from "./Composer.vue";
 import FormField from "./FormField.vue";
 
@@ -58,20 +60,20 @@ const shown = ref(false);
 const readBy = ref<ReadBy>("main");
 const matchesTrade = ref(true);
 const existingId = ref<number | null>(null);
-// Déjà là, avec des champs vides que cette annonce remplit (son texte, son lien…) : « Compléter
-// l'offre » les ajoute, sans rien remplacer (demande de Kevin, 2026-11-05).
-type Fillable = "company" | "location" | "description" | "url";
-const fillable = ref<Fillable[]>([]);
-const FILLABLE_WORDS: Record<Fillable, string> = {
-  company: "l’entreprise",
-  location: "le lieu",
-  description: "le texte de l’annonce",
-  url: "le lien",
-};
-const completing = computed(() => existingId.value !== null && fillable.value.length > 0);
-const missingWords = computed(() => {
-  const words = fillable.value.map((f) => FILLABLE_WORDS[f]);
-  return words.length > 1 ? `${words.slice(0, -1).join(", ")} et ${words.at(-1)}` : (words[0] ?? "");
+// Déjà là (décision de Kevin du 16.11, retour sur la #818) : un message sous le champ, puis ses boutons, à la place
+// d'« Ajouter l'offre ». Même lien : « Ouvrir l'offre » seul. Même poste chez la même entreprise, lien différent :
+// « Ouvrir l'offre » et « Ajouter quand même ». Ouvrir ajoute à l'offre déjà là le lien et les champs vides que cette
+// annonce remplit, sans rien remplacer (demande de Kevin, 2026-11-05).
+const existingKind = ref<"link" | "post" | null>(null);
+const existingTitle = ref("");
+const existingCompany = ref("");
+const existingAdded = ref<string | null>(null);
+const duplicate = computed(() => shown.value && existingId.value !== null && existingKind.value !== null);
+const duplicateText = computed(() => {
+  const added = existingAdded.value ? `ajoutée ${dateInSentence(existingAdded.value)}` : "";
+  if (existingKind.value === "link") return `Cette offre est déjà dans tes candidatures${added ? ` (${added})` : ""}.`;
+  const at = existingCompany.value ? ` chez ${existingCompany.value}` : "";
+  return `Une offre très proche est déjà là : ${existingTitle.value}${at}${added ? `, ${added}` : ""}.`;
 });
 
 onMounted(async () => {
@@ -168,12 +170,10 @@ async function read(value: string = entry.value): Promise<void> {
     readBy.value = d.read_by;
     matchesTrade.value = d.matches_trade;
     existingId.value = d.existing_offer_id ?? null;
-    fillable.value = d.fillable ?? [];
-    // Déjà dans la liste, et rien à lui ajouter : on l'ouvre tout de suite (PR 38), sans fiche à relire.
-    if (existingId.value !== null && !fillable.value.length) {
-      openExisting();
-      return;
-    }
+    existingKind.value = d.existing_kind ?? (existingId.value !== null ? "post" : null);
+    existingTitle.value = d.existing_title ?? "";
+    existingCompany.value = d.existing_company ?? "";
+    existingAdded.value = d.existing_added ?? null;
     readEntry.value = typed;
     textOpen.value = false;
     shown.value = true;
@@ -195,7 +195,7 @@ function byHand(): void {
   readBy.value = "main";
   matchesTrade.value = true;
   existingId.value = null;
-  fillable.value = [];
+  existingKind.value = null;
   problem.value = "";
   readEntry.value = entry.value.trim();
   textOpen.value = true;
@@ -266,14 +266,24 @@ async function importPdf(event: Event): Promise<void> {
   }
 }
 
+const separating = ref(false);
+function open(): void {
+  separating.value = false;
+  void add(null);
+}
+function addAnyway(): void {
+  separating.value = true;
+  void add(null, true);
+}
+
 async function submit(event: Event): Promise<void> {
-  if (reading.value || saving.value || importing.value) return;
+  if (reading.value || saving.value || importing.value || duplicate.value) return;
   if (shown.value) await add(event);
   else if (!full.value) await read();
 }
 
-async function add(event: Event): Promise<void> {
-  if (!(await valid(event.currentTarget, "title"))) return;
+async function add(event: Event | null, separate = false): Promise<void> {
+  if (event && !(await valid(event.currentTarget, "title"))) return;
   error.value = "";
   saving.value = true;
   try {
@@ -286,7 +296,10 @@ async function add(event: Event): Promise<void> {
         description: draft.description.trim() || null,
         url: draft.url.trim() || null,
         read_by: readBy.value,
-        fill: completing.value,
+        // Déjà là (décision de Kevin du 16.11) : la fiche existante s'ouvre, avec le lien et les champs vides que cette
+        // annonce remplit ; « Ajouter quand même » (doublon probable) en fait une offre à part.
+        fill: existingId.value !== null && !separate,
+        separate,
       },
     });
     if (!data) {
@@ -310,9 +323,6 @@ const textLine = computed(
   () => `${chars.value} ${draft.description.trim().length > 1 ? "caractères" : "caractère"}${readBy.value === "page" || (readBy.value === "ia" && mode.value === "link") ? " · cookies et formulaire retirés" : ""}`,
 );
 
-function openExisting(): void {
-  if (existingId.value !== null) emit("added", { id: existingId.value, existing: true, status: "", reasons: [] });
-}
 // Maquette du 8 novembre (LISEZMOI, Composer) : 3 lignes sur ordinateur, 4 sur téléphone (AjouterOffreTel).
 const { phone } = usePhone();
 
@@ -320,9 +330,10 @@ const { phone } = usePhone();
 defineExpose({
   shown,
   full,
+  duplicate,
   busy: computed(() => reading.value || saving.value),
-  label: computed(() => (completing.value && shown.value ? "Compléter l’offre" : "Ajouter l’offre")),
-  busyLabel: computed(() => (reading.value ? "Lecture de l’annonce…" : completing.value ? "Ajout des champs…" : "Ajout…")),
+  label: computed(() => "Ajouter l’offre"),
+  busyLabel: computed(() => (reading.value ? "Lecture de l’annonce…" : "Ajout…")),
 });
 </script>
 
@@ -374,6 +385,41 @@ defineExpose({
     >
       {{ entryError }}
     </p>
+    <template v-if="duplicate">
+      <p
+        class="manual-duplicate"
+        role="alert"
+        data-test="manual-existing"
+      >
+        <AppIcon name="alert-circle" />
+        <span>{{ duplicateText }}</span>
+      </p>
+      <div class="manual-duplicate-actions">
+        <BusyButton
+          type="button"
+          class="primary"
+          :busy="saving && !separating"
+          busy-label="Ouverture…"
+          :disabled="saving"
+          data-test="manual-open-existing"
+          @click="open"
+        >
+          Ouvrir l’offre
+        </BusyButton>
+        <BusyButton
+          v-if="existingKind === 'post'"
+          type="button"
+          class="secondary"
+          :busy="saving && separating"
+          busy-label="Ajout…"
+          :disabled="saving || full"
+          data-test="manual-separate"
+          @click="addAnyway"
+        >
+          Ajouter quand même
+        </BusyButton>
+      </div>
+    </template>
     <!-- Téléphone (AjouterOffreTel, §17 du 15 novembre) : l'aide « Fonctionne avec… » liée au champ ; à 5 ajouts ou
          moins, la pastille orange du quota à sa place. Ordinateur : la ligne du quota, comme avant. -->
     <p
@@ -459,7 +505,7 @@ defineExpose({
       {{ pdfProblem }}
     </p>
     <section
-      v-if="shown"
+      v-if="shown && !duplicate"
       class="manual-read"
       data-test="manual-draft"
     >
@@ -467,22 +513,7 @@ defineExpose({
         {{ readBy === "main" ? "À remplir toi-même" : "Ce que jobA1 a lu" }}
       </h3>
       <p
-        v-if="completing"
-        class="notice"
-        data-test="manual-existing"
-      >
-        Cette offre est déjà dans tes offres, sans {{ missingWords }} : « Compléter l’offre » les ajoute,
-        sans rien remplacer.
-        <button
-          type="button"
-          class="link"
-          @click="openExisting"
-        >
-          L’ouvrir
-        </button>
-      </p>
-      <p
-        v-else-if="!matchesTrade && tradeName"
+        v-if="!matchesTrade && tradeName"
         class="notice"
         data-test="manual-off-trade"
       >
@@ -587,14 +618,14 @@ defineExpose({
           </p>
         </div>
       </div>
-      <p
-        v-if="error"
-        class="notice error"
-        role="alert"
-      >
-        {{ error }}
-      </p>
     </section>
+    <p
+      v-if="error && shown"
+      class="notice error"
+      role="alert"
+    >
+      {{ error }}
+    </p>
   </form>
 </template>
 
@@ -606,6 +637,10 @@ defineExpose({
 .manual-form :deep(.composer textarea) { --manual-104: 104px; min-height: var(--manual-104); }
 .manual-help, .manual-quota { margin: calc(var(--space-2) - var(--space-4)) var(--space-1) 0; font-size: var(--manual-13); }
 .manual-quota { justify-self: start; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--warning-soft); color: var(--warning); font-weight: var(--weight-semibold); }
+/* Déjà là : le message sous le champ, icône et texte, puis ses boutons (retour de Kevin sur la #818). */
+.manual-duplicate { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-semibold); }
+.manual-duplicate .icon { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--primary); }
+.manual-duplicate-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .manual-pdf { justify-self: start; gap: var(--space-2); }
 .manual-read { display: grid; gap: var(--space-4); }
 .manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }

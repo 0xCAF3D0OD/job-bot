@@ -37,3 +37,10 @@ withDefaults(
     </div>
   </header>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+/* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); box-sizing: border-box; height: var(--control-h); }
+.card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+</style>

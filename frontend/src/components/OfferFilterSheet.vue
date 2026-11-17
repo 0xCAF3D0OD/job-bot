@@ -10,8 +10,10 @@ import {
   REMOTE_LABEL,
   SCORE_CHOICES,
   SCORE_HELP,
+  viewPatch,
   type OfferFilters,
   type Sort,
+  type View,
 } from "../composables/useOfferFilters";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
@@ -24,8 +26,17 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 // le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
 // Contrat et Distance attendent le serveur (issue 468). Chaque choix s'applique tout de suite ;
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
-const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
+const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number; counts: Record<View, number> }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
+
+// « Statut » en tête (Kevin, 17.11 0 h 33, docs/decisions/2026-11-16-1644-filtres-gardes.md) : un seul choix, les mêmes
+// nombres que l'ordinateur, le même filtre que lui (gardé dans l'adresse et l'onglet) ; « Tout effacer » remet Toutes.
+const VIEWS: { label: string; value: View }[] = [
+  { label: "Toutes", value: "pending" },
+  { label: "Nouvelles", value: "to_review" },
+  { label: "Gardées", value: "later" },
+  { label: "En préparation", value: "in_progress" },
+];
 
 // « Type de note » (PR 26 ; section 31 du 16.11) : Toutes, Définitives · n, Provisoires · n, un seul
 // choix (role="radio"), les nombres du serveur, et la phrase qui dit ce qu'est une note provisoire.
@@ -63,6 +74,35 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
     @close="emit('close')"
   >
     <div class="filter-sheet">
+      <fieldset class="filter-choices filter-status">
+        <legend id="sheet-view-title">
+          Statut
+        </legend>
+        <div
+          class="filter-choices-row"
+          role="radiogroup"
+          aria-labelledby="sheet-view-title"
+          @keydown="radioKey"
+        >
+          <button
+            v-for="choice in VIEWS"
+            :key="choice.value"
+            type="button"
+            class="filter-choice"
+            role="radio"
+            :aria-checked="filters.view === choice.value"
+            :tabindex="filters.view === choice.value ? 0 : -1"
+            :data-test="`sheet-view-${choice.value}`"
+            @click="emit('update', viewPatch(choice.value, filters.sort))"
+          >
+            <AppIcon
+              v-if="filters.view === choice.value"
+              name="tick"
+            />{{ choice.label }} · {{ counts[choice.value] }}
+          </button>
+        </div>
+      </fieldset>
+
       <div class="filter-choices">
         <h3 id="sheet-score-title">
           Note minimale, sur 100
@@ -230,6 +270,9 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 
 <style scoped>
 .filters-dialog { max-height: calc(100dvh - 9.625rem); }
+/* « Statut » : un fieldset sans cadre, sa légende comme le titre des autres groupes. */
+.filter-status { min-width: 0; margin: 0; padding: 0; border: 0; }
+.filter-status > legend { float: left; width: 100%; padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); color: var(--text); }
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }

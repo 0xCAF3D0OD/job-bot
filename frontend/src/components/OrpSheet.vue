@@ -130,3 +130,11 @@ defineExpose({ printPdf });
     </article>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+#print-root .print-sheet { position: static; border: 0; box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: none; width: auto; }
+@media print {
+#print-root.landscape { page: landscape; }
+}
+</style>
