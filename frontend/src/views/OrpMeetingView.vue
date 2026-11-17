@@ -880,7 +880,7 @@ onMounted(() => void load());
                 <button
                   v-if="!item.outcome_at"
                   type="button"
-                  class="secondary small"
+                  class="orp-log-note"
                   :data-test="`log-outcome-${item.id}`"
                   @click="noting = item.id"
                 >
@@ -921,3 +921,13 @@ onMounted(() => void load());
     />
   </section>
 </template>
+
+<style>
+/* « Noter ce qui a été convenu » dans le carnet (K28 de l'audit du 17.11) : la pilule bleu pâle de 48 px des planches
+   BilanResultats et RendezVousPreparer, texte centré, 12 px sous la ligne du rendez-vous ; à sa largeur sur ordinateur. */
+.orp-log .orp-log-note {
+  display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); margin-top: var(--space-3);
+  padding: 0 var(--space-6); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text);
+  font-size: var(--font-label); font-weight: var(--weight-bold);
+}
+</style>

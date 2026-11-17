@@ -345,9 +345,10 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-3); margin: 0; font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
 .rdv-agreed dt { color: var(--text-secondary); }
 .rdv-agreed dd { margin: 0; }
-/* « Noter ce qui a été convenu » : 48 px, en pilule bleu pâle (maquette du 7.11). */
+/* « Noter ce qui a été convenu » : 48 px, en pilule bleu pâle, texte centré (RendezVousPreparer ; K29 de l'audit). */
+.rdv-note { justify-content: center; }
 .rdv-note, .rdv-edit-note {
-  min-height: var(--btn-secondary); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft);
+  min-height: var(--btn-tertiary); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft);
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
 }
 .rdv-edit-note { align-self: flex-start; min-height: var(--target-min); padding: 0; border-radius: 0; background: transparent; }
