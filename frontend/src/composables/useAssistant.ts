@@ -1,6 +1,9 @@
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
 
 import { api } from "../api/client";
+import { openLayerKind, pickerOpen } from "./useDismissLayer";
+import { usePhone } from "./usePhone";
 
 // Élément choisi sur la page (docs/24 §2.2), envoyé avec chaque question.
 export type AssistantFocus = {
@@ -125,4 +128,19 @@ export function suggestionsFor(page: string, value: AssistantFocus | null): stri
   const list = byPage[page] ?? ["Que faire aujourd’hui ?", "Où en suis-je pour l’ORP ce mois-ci ?", "Comment créer mes alertes ?"];
   // Les « ? » ont laissé la place à l'assistant (docs/53) : il explique la page ouverte.
   return [...list, HOW_IT_WORKS];
+}
+
+// Où le bouton flottant de l'Assistant s'affiche, pour le lanceur (AssistantLauncher) et le panneau (AssistantPanel).
+export function useAssistantPlace() {
+  const route = useRoute();
+  const { phone } = usePhone();
+  // La page Assistant du téléphone (docs/139 Q4, étape 11a) : le même panneau, sur toute la page, au-dessus de la
+  // barre du bas ; la discussion reste quand on change d'onglet. Un raccourci « Demander à l'assistant » y mène.
+  const page = computed(() => phone.value && route.name === "assistant");
+  // Les Réglages et les Notifications du téléphone (maquettes, Kevin, 6.11) : pages sans barre ni bouton flottant.
+  // Préparer (maquette du 8 novembre) : la lettre se retouche dans sa propre zone de saisie, le bouton reste masqué.
+  const quiet = computed(() => (phone.value && ["settings", "notifications"].includes(String(route.name))) || route.name === "preparation");
+  // Le bouton flottant se cache quand un autre panneau, les filtres ou le sélecteur de date sont ouverts.
+  const fabHidden = computed(() => (openLayerKind.value !== null && openLayerKind.value !== "assistant") || pickerOpen.value > 0);
+  return { page, quiet, fabHidden };
 }
