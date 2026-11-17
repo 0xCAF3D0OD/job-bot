@@ -6,10 +6,51 @@ import type { Router } from "vue-router";
 // 1. une seule entrée par application, avec les filtres dans l’adresse : les choix faits pendant l’ouverture remplacent
 //    l’adresse de l’entrée ajoutée à l’ouverture ; à la fermeture, elle reste si l’adresse a changé, sinon on revient
 //    en arrière. Retour, une fois fermé, ramène alors les filtres d’avant ;
-// 2. toute fermeture applique, le bouton retour compris (Kevin, 17.11, 13 h 43, remplace la règle de 13 h 27) : retour
-//    pendant l’ouverture fait revenir le navigateur à l’entrée d’avant ; si l’adresse avait changé, on la remet par une
-//    nouvelle entrée (la même application), sinon on ferme seulement.
+// 2. toute fermeture applique, le bouton retour compris (13 h 43) : retour pendant l’ouverture fait revenir le
+//    navigateur à l’entrée d’avant ; si l’adresse avait changé, l’entrée choisie est remise AVANT que le routeur ne lise
+//    l’adresse (écouteur posé avant le sien), pour que la liste ne montre jamais les filtres d’avant (14 h 07) ;
+// 3. le tri d’Envoyées est une préférence du compte, hors de l’historique (14 h 07) : « tri » y est neutre
+//    (`NEUTRAL`) ; un changement de tri seul ne crée pas d’entrée, et la page remet son tri dans l’adresse.
 // `sheet` marque l’entrée, `sheetHref` garde l’adresse à l’ouverture (reprise telle quelle d’une feuille à l’autre).
+
+/** Paramètres d’adresse hors de l’historique, par page : le tri d’Envoyées, préférence du compte (Kevin, 17.11). */
+const NEUTRAL: Record<string, string[]> = { "/candidatures/suivi": ["tri"] };
+
+/** Deux adresses qui ne diffèrent que par des paramètres neutres comptent comme la même application. */
+function sameApplication(a: string, b: string): boolean {
+  if (a === b) return true;
+  try {
+    const [x, y] = [new URL(a), new URL(b)];
+    if (x.pathname !== y.pathname) return false;
+    for (const name of NEUTRAL[x.pathname] ?? []) {
+      x.searchParams.delete(name);
+      y.searchParams.delete(name);
+    }
+    x.searchParams.sort();
+    y.searchParams.sort();
+    return x.href === y.href;
+  } catch {
+    return false;
+  }
+}
+
+function withoutMark(state: Record<string, unknown> | null): Record<string, unknown> {
+  const rest = { ...(state ?? {}) };
+  delete rest.sheet;
+  delete rest.sheetHref;
+  return rest;
+}
+
+// Les écouteurs du bouton retour passent AVANT celui du routeur : main.ts importe ce module en premier, avant que
+// createWebHistory() (router.ts) ne pose le sien ; Chrome appelle les écouteurs de window dans l’ordre d’inscription.
+const backListeners = new Set<() => void>();
+if (typeof window !== "undefined") window.addEventListener("popstate", () => [...backListeners].forEach((listener) => listener()));
+export function onBack(listener: () => void): void {
+  backListeners.add(listener);
+}
+export function offBack(listener: () => void): void {
+  backListeners.delete(listener);
+}
 
 /** Ajoute (ou reprend, `inherited`) l’entrée de `key`. Rend false si l’historique n’est pas disponible. */
 export function enterEntry(key: string, inherited: boolean): boolean {
@@ -26,14 +67,11 @@ export function enterEntry(key: string, inherited: boolean): boolean {
 export function leaveEntry(key: string): void {
   const state = window.history.state as Record<string, unknown> | null;
   if (state?.sheet !== key) return;
-  if (state.sheetHref === window.location.href) {
+  if (sameApplication(String(state.sheetHref), window.location.href)) {
     window.history.back();
     return;
   }
-  const rest = { ...state };
-  delete rest.sheet;
-  delete rest.sheetHref;
-  window.history.replaceState(rest, "", window.location.href);
+  window.history.replaceState(withoutMark(state), "", window.location.href);
 }
 
 let serial = 0;
@@ -45,57 +83,58 @@ export function useEntryTracker(): { start: () => void; stop: () => void; reappl
   let active = false;
   let opened = "";
   let last = "";
-  watch(
-    () => router?.currentRoute.value.fullPath,
-    () => {
-      // Seulement sur l’entrée de la feuille : le navigateur peut avoir fini le retour avant l’événement popstate.
-      if (active && (window.history.state as Record<string, unknown> | null)?.sheet) last = window.location.href;
-    },
-  );
+  let lastState: Record<string, unknown> | null = null;
+  function sample(): void {
+    // Seulement sur l’entrée de la feuille (après un retour, l’adresse est déjà celle d’avant).
+    const state = window.history.state as Record<string, unknown> | null;
+    if (!active || !state?.sheet) return;
+    last = window.location.href;
+    lastState = state;
+  }
+  watch(() => router?.currentRoute.value.fullPath, sample);
   return {
     start() {
       active = true;
-      last = window.location.href;
-      opened = String((window.history.state as Record<string, unknown> | null)?.sheetHref ?? last);
+      opened = String((window.history.state as Record<string, unknown> | null)?.sheetHref ?? window.location.href);
+      sample();
     },
     stop() {
       active = false;
     },
-    // Appelé sur l’événement popstate : le navigateur est déjà revenu à l’entrée d’avant.
+    // Sur popstate, avant le routeur : le navigateur est revenu à l’entrée d’avant, le routeur pas encore. On remet
+    // l’entrée choisie par-dessus ; le routeur lit alors l’adresse choisie et la liste ne bouge pas.
     reapply() {
+      sample();
       active = false;
-      if (!router || last === opened || !last.startsWith(window.location.origin)) return;
-      // `force` : la navigation du retour (vers l’adresse d’avant) est encore en cours et sera annulée ; le routeur
-      // croit toujours être à l’adresse choisie et refuserait sinon un doublon, sans ajouter l’entrée.
-      const { path, query, hash } = router.resolve(last.slice(window.location.origin.length));
-      void router.push({ path, query, hash, force: true });
+      if (!last || sameApplication(last, opened)) return;
+      window.history.pushState(withoutMark(lastState), "", last);
     },
   };
 }
 
 /** Pour un panneau monté pendant son ouverture (« Plus de filtres » sur ordinateur, v-if) : l’entrée à l’arrivée,
  *  la fermeture qui applique au départ ; retour pendant l’ouverture applique aussi et appelle `onBack`. */
-export function useFilterEntry(onBack: () => void): void {
+export function useFilterEntry(close: () => void): void {
   const key = `panel-${(serial += 1)}`;
   const tracker = useEntryTracker();
   let mine = false;
   function onPopState(): void {
     if (!mine) return;
     mine = false;
-    window.removeEventListener("popstate", onPopState);
+    offBack(onPopState);
     tracker.reapply();
-    onBack();
+    close();
   }
   onMounted(() => {
     mine = enterEntry(key, false);
     if (mine) {
       tracker.start();
-      window.addEventListener("popstate", onPopState);
+      onBack(onPopState);
     }
   });
   onBeforeUnmount(() => {
     tracker.stop();
-    window.removeEventListener("popstate", onPopState);
+    offBack(onPopState);
     if (!mine) return;
     mine = false;
     leaveEntry(key);

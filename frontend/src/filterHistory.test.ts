@@ -3,6 +3,7 @@ import { defineComponent, h, ref } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { describe, expect, it } from "vitest";
 
+import BottomSheet from "./components/BottomSheet.vue";
 import OfferFilterChips from "./components/OfferFilterChips.vue";
 import OfferFilterPanel from "./components/OfferFilterPanel.vue";
 import OfferFilterSheet from "./components/OfferFilterSheet.vue";
@@ -88,8 +89,13 @@ describe("Filtres et historique (Kevin, 17.11)", () => {
     await show();
     await wrapper.find("[data-test=sheet-view-to_review]").trigger("click");
     await settle();
+    // Pas de clignotement (14 h 07) : le routeur ne repasse jamais par les filtres d’avant.
+    const seen: unknown[] = [];
+    const stop = router.afterEach((to) => void seen.push(to.query.statut));
     window.history.back();
     await settle();
+    stop();
+    expect(seen).not.toContain("later");
     expect(open.value).toBe(false);
     expect(router.currentRoute.value.query.statut).toBe("to_review");
     expect(window.history.state?.sheet).toBeUndefined();
@@ -156,6 +162,26 @@ describe("Filtres et historique (Kevin, 17.11)", () => {
     router.back();
     await settle();
     expect(router.currentRoute.value.query).toEqual({ statut: "later", note: "75" });
+    wrapper.unmount();
+  });
+
+  it("Envoyées : le tri seul n’entre pas dans l’historique (préférence du compte, 14 h 07)", async () => {
+    const open = ref(false);
+    const Page = () => h(BottomSheet, { open: open.value, title: "Filtres", onClose: () => (open.value = false) });
+    const router = createRouter({ history: createWebHistory(), routes: [{ path: "/candidatures/suivi", name: "applications", component: Page }] });
+    await router.push("/candidatures/suivi?statut=relancer");
+    await router.isReady();
+    const wrapper = mount({ template: "<router-view />" }, { global: { plugins: [router] }, attachTo: document.body });
+    const before = window.history.state?.position;
+    open.value = true;
+    await settle();
+    await router.replace({ query: { ...router.currentRoute.value.query, tri: "anciennes" } });
+    await settle();
+    open.value = false;
+    await settle();
+    // Pas d’entrée gardée : on est revenu à l’entrée d’avant (la page y remet son tri, ApplicationsView).
+    expect(window.history.state?.position).toBe(before);
+    expect(window.history.state?.sheet).toBeUndefined();
     wrapper.unmount();
   });
 });

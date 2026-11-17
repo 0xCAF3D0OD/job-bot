@@ -1,3 +1,6 @@
+// En premier : son écouteur du bouton retour doit passer avant celui du routeur (filterHistory.ts).
+import "./filterHistory";
+
 import { createApp } from "vue";
 
 import App from "./App.vue";
