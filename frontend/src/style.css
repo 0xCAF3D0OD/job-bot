@@ -1222,7 +1222,7 @@ html.search-open,
 /* L'en-tête de Candidatures suit la largeur de l'onglet : Offres à 1 280 px (1.6.29). */
 .jobs-head.wide { max-width: var(--page-wide); }
 .jobs-head h1 { font-size: var(--font-page); margin: 0 0 var(--space-4); }
-.jobs-segments, .orp-sheet-name { margin-bottom: var(--space-4); }
+.orp-sheet-name { margin-bottom: var(--space-4); }
 /* Le titre et « Alertes » (docs/139 étape 5a, C1) : un lien à côté du titre ; sur téléphone, dans l'en-tête. */
 .jobs-title { display: flex; align-items: baseline; gap: var(--space-4); }
 .jobs-alerts-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--space-6); font-weight: var(--weight-bold); text-decoration: none; }
@@ -1673,7 +1673,6 @@ button, .button-link { max-width: 100%; }
   .jobs-tools .offers-filter { display: contents; }
   .jobs-tools .offers-add-compact { --add-22: 22px; display: grid; flex: none; place-items: center; width: var(--field-h); height: var(--field-h); padding: 0; border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); }
   .jobs-tools .offers-add-compact .icon { width: var(--add-22); height: var(--add-22); stroke-width: 2.4; }
-  .jobs-segments { margin-bottom: var(--space-2); }
   /* Bas de la liste des offres (prompt du 10 novembre, fin de soirée, PR 35 ; maquettes Candidatures et
      CandidaturesSombre) : « Afficher n offres de plus » en bouton contour pleine largeur (48 px, bord de 1,5 px), puis le
      groupe « Autres offres » : une carte, trois lignes de 64 px au moins séparées par un filet (--row-sep), cercle à
@@ -3385,15 +3384,6 @@ main:focus { outline: none; }
 .prep-offer-text { display: grid; flex: 1; min-width: 0; margin: 0; }
 .prep-offer-title { font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
 .prep-offer-sub { color: var(--text-secondary); font-size: var(--font-small); line-height: var(--leading-normal); }
-.step-tabs { width: fit-content; }
-.step-tabs > a { flex: none; gap: var(--space-2); padding-inline: var(--space-5); font-size: var(--font-body); }
-.step-dot { display: inline-grid; place-items: center; flex: none; width: 1.375rem; height: 1.375rem; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-caption); font-weight: var(--weight-bold); line-height: var(--leading-none); }
-.step-dot.done { background: none; color: var(--success); }
-.step-dot.done > .icon { width: 1.375rem; height: 1.375rem; }
-.segmented > a[aria-current="step"] {
-  border-color: var(--line); background: var(--surface); color: var(--text); font-weight: var(--weight-bold);
-  box-shadow: 0 1px 2px rgb(27 31 42 / 12%);
-}
 /* Les cartes Lettre et CV (étape 7b, C4, C5) : le titre et la langue en tête, le document entier dessous sur un
    fond --surface-muted (la feuille), puis « Modifier le texte » et « J'ai relu la lettre ». */
 .doc-card { display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
@@ -3463,7 +3453,6 @@ main:focus { outline: none; }
   .prep-back-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .prep-head > .prep-more { grid-column: 3; grid-row: 1; width: 3rem; height: 3rem; border: 0; background: transparent; color: var(--text); }
   .prep-offer { width: auto; gap: var(--space-3); margin: var(--space-2) 0 var(--space-3); }
-  .step-tabs,
 .orp-proof-actions { width: 100%; }
   .action-bar.prep-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; display: flex; flex-direction: column; gap: var(--space-2);
@@ -4312,14 +4301,9 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
    pilule. Le HTML donne 44 px aux boutons ; ils prennent 48 px comme les vues, une rangée ayant une seule hauteur
    (docs/94, audit-controles). */
 @media (min-width: 1024px) {
-  .jobs-head, .jobs-head.wide {
-    --jobs-h1: 28px; --jobs-seg-pad: 18px; --jobs-seg-radius: 24px; --jobs-btn-text: 15px;
-    display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) var(--space-8) var(--space-4);
-  }
+  .jobs-head, .jobs-head.wide { --jobs-h1: 28px; display: flex; align-items: flex-end; gap: var(--space-4); padding: var(--space-5) var(--space-8) 0; }
   .jobs-head .jobs-title { order: 1; align-items: center; }
-  .jobs-head h1 { margin: 0; font-size: var(--jobs-h1); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
-  .jobs-head .jobs-segments { margin: 0; padding: var(--space-1); border-radius: var(--jobs-seg-radius); }
-  .jobs-head .jobs-segments > :is(a, button) { min-height: var(--btn-compact); padding: 0 var(--jobs-seg-pad); border: 0; border-radius: var(--radius-card); font-size: var(--jobs-btn-text); color: var(--text); }
+  .jobs-head h1 { margin: 0 0 var(--space-2); font-size: var(--jobs-h1); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
   /* Les outils de la vue (.jobs-tools) ne s'affichent pas sur ordinateur (bloc du 8 novembre, plus bas) : leurs règles
      d'ici sont retirées (CSS mort, 14.11). */
   .jobs-band > .offers-page { max-width: none; padding: 0 var(--space-8); }
@@ -4615,10 +4599,10 @@ a.panel-row:hover { background: var(--band); }
   :is(.jobs-head.jobs-candidatures, .jobs-candidatures-band > .offers-page, .jobs-candidatures-band > .jobs-body:not(.orp-page)) { max-width: var(--header-max); }
   .jobs-actions .jobs-alerts-link { gap: var(--space-2); font-size: var(--font-label); color: var(--primary-text); }
   .jobs-actions .jobs-alerts-link .icon { width: 18px; height: 18px; }
-  .jobs-actions .jobs-add { min-height: var(--field-h); padding: 0 var(--add-pad); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
+  .jobs-actions .jobs-add { min-height: var(--target-min); padding: 0 var(--add-pad); border: 1.5px solid var(--button-outline); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
   /* Planche CandidaturesOrdinateurB du 13.11 : titre de 32 px, 20 px entre les éléments de la rangée ; le nombre des
      groupes seul. */
-  .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); padding-top: var(--space-2); padding-bottom: var(--space-5); }
+  .jobs-head.jobs-candidatures { --jobs-h1: 32px; gap: var(--space-5); margin-bottom: var(--space-4); padding-top: var(--space-2); }
   .offer-day-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .offers-list .offer-day { margin-top: var(--space-1); }
   .offers-list .offer-day-title { line-height: normal; }
