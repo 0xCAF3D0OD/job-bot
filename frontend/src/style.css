@@ -112,13 +112,13 @@
   --agency-bg: #EFE9F7;
   --agency-text: #5B3E8C;
   --scribble: #F09A66;
-  /* Les statuts, toujours avec un mot. L'orange (--warning) reste à ce qui demande d'agir (D5) ; « À creuser » est
-     en gris chaud (--score-dig). Le rouge, aux erreurs et aux actions destructives. */
+  /* Les statuts, toujours avec un mot. L'orange (--warning) reste à ce qui demande d'agir (D5), et colore aussi la
+     note « À creuser » (--score-dig, échelle 50/75/85 du §65, Kevin 17.11). Le rouge, aux erreurs et aux actions destructives. */
   --success: #17734A;
   --success-soft: #E3F3EA;
   --warning: #A8540E;
   --warning-soft: #FCEEDD;
-  --score-dig: #6F6459;
+  --score-dig: #A8540E;
   /* L'anneau et la jauge de « Loin » : un gris froid plus clair que le mot (en --text-secondary), 3:1 au moins sur
      la carte (WCAG 1.4.11) et distinct du gris chaud d'« À creuser » (1,75:1 entre eux, et deux teintes). */
   --neutral-graphic: #878E9B;
@@ -299,7 +299,7 @@
     --success: #62D497;
     --success-soft: #1C3527;
     --warning: #F2A766;
-    --score-dig: #B39A82;
+    --score-dig: #F2A766;
     --warning-soft: #3A2A1C;
     --neutral-graphic: #6B707C;
     --neutral-soft: #2E2A26;
@@ -371,7 +371,7 @@
   --success: #62D497;
   --success-soft: #1C3527;
   --warning: #F2A766;
-  --score-dig: #B39A82;
+  --score-dig: #F2A766;
   --warning-soft: #3A2A1C;
   --neutral-graphic: #6B707C;
   --neutral-soft: #2E2A26;
@@ -2667,7 +2667,7 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-tight); color: var(--text-tertiary); }
 .detail-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-1); }
 /* La correspondance (O3, O4) : le mot en couleur de la note, le chiffre en texte secondaire ; un manque
-   en gris chaud (--score-dig), jamais en orange (D5).
+   dans la couleur de « À creuser » (--score-dig).
    Règle réunie plus haut avec « .disclosure-row:has(.disclosure-text) », même style (allègement du 16.11). */
 .match-head { display: flex; align-items: center; gap: var(--space-3); }
 .match-head .score-ring-wrap { padding: 0; }
