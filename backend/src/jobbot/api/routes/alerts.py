@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from jobbot import accounts, welcome
 from jobbot.alerts import service, trades
@@ -125,7 +125,9 @@ async def _page(runtime: Runtime) -> AlertsPage:
         sites = list(await session.scalars(select(Site).where(followed()).order_by(Site.id)))
         searches = list(
             await session.scalars(
-                select(AlertSearch).order_by(AlertSearch.active.desc(), AlertSearch.id)
+                select(AlertSearch)
+                .where(AlertSearch.removed_at.is_(None))
+                .order_by(AlertSearch.active.desc(), AlertSearch.id)
             )
         )
         rows = [(s, await service.cells(session, s, sites)) for s in searches]
@@ -202,13 +204,23 @@ async def list_alert_searches(request: Request) -> AlertsPage:
 
 @router.post("", operation_id="addAlertSearch", status_code=status.HTTP_201_CREATED)
 async def add_alert_search(request: Request, body: AlertSearchIn) -> AlertsPage:
+    terms = " ".join(body.terms.split())
+    location = " ".join((body.location or "").split()) or None
     async with _runtime(request).sessionmaker.begin() as session:
-        session.add(
-            AlertSearch(
-                terms=" ".join(body.terms.split()),
-                location=" ".join((body.location or "").split()) or None,
+        # La même recherche, retirée plus tôt : elle revient (ses e-mails ne sont plus ignorés).
+        removed = await session.scalar(
+            select(AlertSearch)
+            .where(
+                AlertSearch.removed_at.is_not(None),
+                func.lower(AlertSearch.terms) == terms.lower(),
+                func.lower(func.coalesce(AlertSearch.location, "")) == (location or "").lower(),
             )
+            .limit(1)
         )
+        if removed is not None:
+            removed.removed_at, removed.active = None, True
+        else:
+            session.add(AlertSearch(terms=terms, location=location))
     return await _page(_runtime(request))
 
 
@@ -260,7 +272,7 @@ async def follow_search(request: Request, body: FollowIn) -> FollowOut:
                 await session.flush()
                 created.append(same.id)
             elif not same.active:
-                same.active = True
+                same.active, same.removed_at = True, None
             ids.append(same.id)
             searches.append(same)
         sites = list(await session.scalars(select(Site).where(followed()).order_by(Site.id)))
@@ -286,7 +298,7 @@ async def update_alert_search(
 ) -> AlertsPage:
     async with _runtime(request).sessionmaker.begin() as session:
         search = await session.get(AlertSearch, search_id)
-        if search is None:
+        if search is None or search.removed_at is not None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "recherche introuvable")
         if body.terms is not None:
             search.terms = " ".join(body.terms.split())
@@ -301,9 +313,11 @@ async def update_alert_search(
 async def delete_alert_search(request: Request, search_id: int) -> AlertsPage:
     async with _runtime(request).sessionmaker.begin() as session:
         search = await session.get(AlertSearch, search_id)
-        if search is None:
+        if search is None or search.removed_at is not None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "recherche introuvable")
-        await session.delete(search)
+        # Retirée, pas effacée (Kevin, 17.11) : en pause et hors de la page, la ligne permet
+        # d'ignorer les e-mails que le site envoie encore pour elle.
+        search.active, search.removed_at = False, datetime.now(UTC)
     return await _page(_runtime(request))
 
 
@@ -311,7 +325,8 @@ async def delete_alert_search(request: Request, search_id: int) -> AlertsPage:
 async def mark_alert_created(request: Request, search_id: int, site: str) -> AlertsPage:
     """« J'ai créé l'alerte » sur ce site."""
     async with _runtime(request).sessionmaker.begin() as session:
-        if await session.get(AlertSearch, search_id) is None:
+        search = await session.get(AlertSearch, search_id)
+        if search is None or search.removed_at is not None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "recherche introuvable")
         try:
             marked = await service.mark_created(session, [search_id], site)

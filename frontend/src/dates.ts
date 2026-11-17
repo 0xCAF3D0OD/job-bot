@@ -3,12 +3,16 @@
 // hier, sinon la date ; l'heure seulement quand elle compte (« aujourd'hui à 14 h »).
 // Seule exception : la feuille ORP imprimée, qui reprend le format du formulaire officiel.
 
+import { dateFormat } from "./lang";
+
 const ZONE = "Europe/Zurich";
-const dayMonth = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", timeZone: ZONE });
-const dayMonthYear = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", year: "numeric", timeZone: ZONE });
-const longDayMonth = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", timeZone: ZONE });
-const longDayMonthYear = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric", timeZone: ZONE });
-const weekdayLong = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long", timeZone: ZONE });
+// Les formats d'affichage suivent la langue de l'interface (docs/147 §4) ; en français, fr-CH comme avant.
+const dayMonth = () => dateFormat({ day: "numeric", month: "short", timeZone: ZONE });
+const dayMonthYear = () => dateFormat({ day: "numeric", month: "short", year: "numeric", timeZone: ZONE });
+const longDayMonth = () => dateFormat({ day: "numeric", month: "long", timeZone: ZONE });
+const longDayMonthYear = () => dateFormat({ day: "numeric", month: "long", year: "numeric", timeZone: ZONE });
+const weekdayLong = () => dateFormat({ weekday: "long", day: "numeric", month: "long", timeZone: ZONE });
+// Pour calculer le jour et l'heure à Zurich seulement, jamais affiché : reste en fr-CH.
 const parts = new Intl.DateTimeFormat("fr-CH", {
   year: "numeric",
   month: "2-digit",
@@ -51,13 +55,13 @@ export function dateInList(value: string | Date, now: Date = new Date()): string
   const days = calendarDays(date, now);
   if (days === 0) return "aujourd’hui";
   if (days === 1) return "hier";
-  return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear).format(date));
+  return clean((zoned(date).year === zoned(now).year ? dayMonth : dayMonthYear)().format(date));
 }
 
 /** Dans une phrase : « le 12 octobre » (« le 12 octobre 2025 » une autre année). */
 export function dateInSentence(value: string | Date, now: Date = new Date()): string {
   const date = toDate(value);
-  const text = (zoned(date).year === zoned(now).year ? longDayMonth : longDayMonthYear).format(date);
+  const text = (zoned(date).year === zoned(now).year ? longDayMonth : longDayMonthYear)().format(date);
   return `le ${clean(text).replace(/^1 /, "1er ")}`;
 }
 
@@ -75,7 +79,7 @@ export function dateWithTime(value: string | Date, now: Date = new Date()): stri
 /** Un rendez-vous : « jeudi 29 octobre à 9 h 30 ». */
 export function meetingDate(value: string | Date): string {
   const date = toDate(value);
-  return `${clean(weekdayLong.format(date)).replace(/ 1 /, " 1er ")} à ${timeOfDay(date)}`;
+  return `${clean(weekdayLong().format(date)).replace(/ 1 /, " 1er ")} à ${timeOfDay(date)}`;
 }
 
 /** Depuis quand : « depuis aujourd'hui », « depuis hier », « depuis 9 jours ». */
@@ -201,7 +205,7 @@ export function longDate(day: string): string {
 
 /** « 12 nov. », toujours, sans « aujourd’hui » (carte « Première candidature notée », section 44 du 17.11). */
 export function dayMonthShort(day: string): string {
-  return clean(dayMonth.format(dayToDate(day)));
+  return clean(dayMonth().format(dayToDate(day)));
 }
 
 /** « Mar. 10 nov. 2026 » (pilule étroite du téléphone, maquette RendezVous). */

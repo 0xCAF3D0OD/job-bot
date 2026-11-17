@@ -163,6 +163,9 @@ MANUAL_LINK_SOURCE = "manual"
 # L'e-mail d'un expéditeur qui n'est aucun site (Stripe, une banque…) : ni copie, ni objet, ni
 # lien ; seul son Message-ID reste, pour que la collecte ne le relise pas. Hors du journal.
 IGNORED_KIND = "ignored"
+# L'alerte d'une recherche que la personne a retirée ou ne suit plus (Kevin, 17.11) : gardée au
+# journal du site, mais ni ses offres ni elle ne comptent (ni Offres, ni preuve ORP).
+STOPPED_KIND = "stopped"
 
 
 def received_alert() -> ColumnElement[bool]:
@@ -1108,6 +1111,9 @@ class AlertSearch(Base):
     location: Mapped[str | None] = mapped_column(Text)
     active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Retirée par la personne (Kevin, 17.11) : la ligne reste, en pause et hors de la page, pour
+    # que les e-mails que le site envoie encore pour elle soient ignorés (migration 0091).
+    removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AlertSetup(Base):

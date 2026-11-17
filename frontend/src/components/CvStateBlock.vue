@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, defineAsyncComponent, ref, watch } from "vue";
 
 import { api, type Chunk, type ChunkProposal, type DocumentOut } from "../api/client";
 import { dateInSentence } from "../dates";
@@ -19,7 +19,14 @@ const emit = defineEmits<{ replace: []; changed: [] }>();
 const reading = useCvReading();
 const state = computed(() => reading.stateOf(props.doc));
 // Le message après un dépôt (PR 24) passe avant l'état, jusqu'à « Fermer », « Plus tard » ou « Relire ».
-const shown = computed(() => props.notice ?? (state.value === "fait" ? null : state.value));
+// §53 (Kevin, 17.11) : quand la lecture réussit, la barre et les étapes finissent (0,4 s) avant l'état suivant.
+const finishing = ref(false);
+watch(state, (now, before) => {
+  if (before !== "cours" || (now !== "lu" && now !== "fait")) return;
+  finishing.value = true;
+  setTimeout(() => (finishing.value = false), 400);
+});
+const shown = computed(() => (finishing.value ? "cours" : (props.notice ?? (state.value === "fait" ? null : state.value))));
 const busy = ref(false);
 const failed = ref("");
 
@@ -31,20 +38,12 @@ async function read(): Promise<void> {
   busy.value = false;
 }
 
-// La barre avance sur les 30 secondes annoncées, sans jamais finir seule : la fin vient du serveur.
-const elapsed = ref(0);
-let tick: ReturnType<typeof setInterval> | undefined;
-watch(
-  () => shown.value === "cours",
-  (running) => {
-    clearInterval(tick);
-    elapsed.value = 0;
-    if (running) tick = setInterval(() => (elapsed.value += 1), 1000);
-  },
-  { immediate: true },
-);
-onBeforeUnmount(() => clearInterval(tick));
-const progress = computed(() => Math.min(90, Math.round(10 + (elapsed.value / 30) * 80)));
+// La lecture en cours (§53, Kevin, 17.11) : le parcours ne bloque pas, seul le style de ChargementCV entre dans la
+// carte ; la barre et les étapes avancent sur les 30 secondes annoncées, la fin vient du serveur (LoadingSteps).
+// Chargé à la demande, seulement quand une lecture est en cours.
+const LoadingSteps = defineAsyncComponent(() => import("./LoadingSteps.vue"));
+const CV_STEPS = ["Coordonnées", "Expériences", "Compétences", "Langues"];
+const CV_LINES = ["Je lis ton CV,", "environ 30 secondes"];
 
 // « Choisir les éléments » : la liste trouvée, cochée par défaut sauf les doublons.
 const choosing = ref<{ items: ChunkProposal[]; existing: Chunk[] } | null>(null);
@@ -87,28 +86,10 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
       :class="`cv-state-${shown}`"
       :data-test="`cv-state-${shown}`"
     >
-      <!-- L'icône de 24 (22 pour la lecture en cours) : exclamation orange, coche verte, information bleue. -->
+      <!-- L'icône de 24 : exclamation orange, coche verte, information bleue ; la lecture en cours n'en a plus (§53 :
+           ses étapes ont chacune leur cercle). -->
       <svg
-        v-if="shown === 'cours'"
-        class="cv-state-icon cv-state-spinner"
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke-width="2.8"
-        stroke-linecap="round"
-        aria-hidden="true"
-      ><circle
-        cx="12"
-        cy="12"
-        r="9"
-        class="cv-state-track"
-      /><path
-        d="M12 3a9 9 0 0 1 9 9"
-        class="cv-state-arc"
-      /></svg>
-      <svg
-        v-else-if="shown === 'lu' || shown === 'deja'"
+        v-if="shown === 'lu' || shown === 'deja'"
         class="cv-state-icon"
         width="24"
         height="24"
@@ -142,7 +123,7 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
         r="9"
       /><path d="M12 11v5.5M12 7.5h.01" /></svg>
       <svg
-        v-else
+        v-else-if="shown !== 'cours'"
         class="cv-state-icon"
         width="24"
         height="24"
@@ -181,24 +162,17 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
         </template>
 
         <template v-else-if="shown === 'cours'">
-          <p class="cv-state-title">
-            Lecture de ton CV…
+          <LoadingSteps
+            :lines="CV_LINES"
+            :steps="CV_STEPS"
+            :every-ms="7500"
+            :done="finishing"
+            quiet
+            label="Lecture du CV"
+          />
+          <p class="cv-state-text cv-state-leave">
+            Tu peux quitter cette page&#8239;: on te prévient quand c’est prêt.
           </p>
-          <p class="cv-state-text">
-            Environ 30 secondes. Tu peux quitter cette page&#8239;: on te prévient quand c’est prêt.
-          </p>
-          <div class="cv-state-actions">
-            <div
-              class="cv-state-progress"
-              role="progressbar"
-              aria-label="Lecture du CV"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              :aria-valuenow="progress"
-            >
-              <span :style="{ width: `${progress}%` }" />
-            </div>
-          </div>
         </template>
 
         <template v-else-if="shown === 'lu'">
@@ -373,11 +347,6 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
 .cv-state-icon { flex: none; color: var(--peach-text); }
 .cv-state-lu .cv-state-icon, .cv-state-deja .cv-state-icon { color: var(--success); }
 .cv-state-nouveau .cv-state-icon { color: var(--primary-text); }
-.cv-state-track { stroke: var(--line); }
-.cv-state-arc { stroke: var(--primary); }
-.cv-state-spinner { animation: cv-state-turn 1s linear infinite; }
-@keyframes cv-state-turn { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .cv-state-spinner { animation: none; } }
 .cv-state-body { flex: 1; min-width: 0; }
 .cv-state-title { margin: 0; font-size: var(--font-body); line-height: 1.375em; font-weight: var(--weight-bold); color: var(--text); }
 .cv-state-text { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-tertiary); }
@@ -389,8 +358,7 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
 .cv-state-link { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .cv-state-link:hover { text-decoration: underline; }
 .cv-state-hint { font-size: var(--font-small); color: var(--text-secondary); }
-.cv-state-progress { flex: 1; height: 0.375rem; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; }
-.cv-state-progress span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--primary); transition: width 1s linear; }
+.cv-state-leave { margin-top: var(--space-5); }
 .cv-state-failed { margin: var(--space-2) 0 0; font-size: var(--font-small); color: var(--peach-text); }
 .cv-state-close { flex: none; width: 2.75rem; height: 2.75rem; margin: -0.625rem -0.625rem 0 0; padding: 0; border: 0; background: none; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 </style>

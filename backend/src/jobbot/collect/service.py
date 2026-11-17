@@ -17,12 +17,14 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
+from jobbot.alerts import service as alert_service
 from jobbot.collect import topic
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
     IGNORED_KIND,
     PUBLIC_SEARCH_PREFIX,
+    STOPPED_KIND,
     EnrichStatus,
     Notification,
     Offer,
@@ -284,6 +286,13 @@ async def ingest_email(
         async with runtime.sessionmaker() as session:
             stems = await topic.trade_stems(session)
         offers = [raw for raw in offers if topic.on_topic(raw.title, stems)]
+
+    # L'alerte d'une recherche retirée ou que la personne ne suit plus (Kevin, 17.11) : le site
+    # continue d'écrire tant que l'alerte n'est pas supprimée chez lui ; ses offres sont ignorées.
+    if kind is None and status == ParseStatus.PARSED and source != Source.UNKNOWN:
+        async with runtime.sessionmaker() as session:
+            if await alert_service.stopped(session, alert.alert_label, email.subject):
+                kind, offers = STOPPED_KIND, []
 
     async with runtime.sessionmaker.begin() as session:
         search_id = await session.scalar(

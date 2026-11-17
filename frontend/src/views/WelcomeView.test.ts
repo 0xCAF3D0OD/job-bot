@@ -211,6 +211,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
     await input.trigger("change");
     await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
     expect(wrapper.find("[data-test=cv-skills]").text()).toContain("Kubernetes");
     expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
@@ -245,6 +247,34 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
       language_levels: { francais: "native", allemand: "unknown", italien: "unknown", anglais: "fluent" },
     });
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
+  });
+
+  it("téléphone : pendant la lecture du CV, l’écran plein de ChargementCV (§53), puis retour à l’étape", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
+    let answer: (value: unknown) => void = () => {};
+    POST.mockImplementation((path: string) =>
+      path === "/api/documents/{document_id}/understand"
+        ? new Promise((resolve) => (answer = resolve))
+        : Promise.resolve({ data: path === "/api/documents" ? { id: 3, filename: "cv.pdf" } : {} }),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    const screen = wrapper.find("[data-test=cv-reading-screen]");
+    expect(screen.exists()).toBe(true);
+    expect(screen.find(".loading-steps-title").text()).toBe("Je lis ton CV,environ 20 secondes");
+    expect(screen.findAll("li").map((li) => li.text().replace(/ : .*/, ""))).toEqual(["Coordonnées", "Expériences", "Compétences", "Langues"]);
+    expect(screen.find("[role=progressbar]").attributes("aria-label")).toBe("Lecture du CV");
+    expect(wrapper.find("[data-test=welcome-continue]").exists()).toBe(false);
+    answer({ data: { chunks: [{ kind: "competence", title: "Kubernetes", content: "…", tags: [], duplicate_of: null }], roles: [], min_rate: null, languages: [], remote: null }, response: { status: 200 } });
+    await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
+    expect(wrapper.find("[data-test=cv-reading-screen]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
   });
 
   it("le CV enregistré mais pas lu (502) : ni « Importé et analysé » ni « Pré-rempli depuis ton CV »", async () => {
@@ -626,6 +656,8 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
     await input.trigger("change");
     await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 2 postes, 1 compétence trouvés");
     expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("formations-vide");
     await click(wrapper, "welcome-continue");
@@ -675,6 +707,8 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await flushPromises();
     expect(attempts).toBe(2);
     expect(wrapper.find("[data-test=cv-paused]").exists()).toBe(false);
+    await vi.advanceTimersByTimeAsync(400); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 1 poste trouvé");
   });
 
