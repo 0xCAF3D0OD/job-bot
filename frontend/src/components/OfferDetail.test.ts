@@ -339,17 +339,20 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("la feuille « ⋯ » (ActionsOffre, §17) : J’ai déjà postulé, Écarter, puis les actions de la fiche, Annuler à part", async () => {
+  it("la feuille « ⋯ » (ActionsOffre, §45) : J’ai déjà postulé, les actions de la fiche, puis Écarter en dernier ; croix, pas d’Annuler", async () => {
     phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
     const titles = sheet.findAll(".offer-action").map((t) => t.text());
-    expect(titles.slice(0, 2)).toEqual(["J’ai déjà postulé", "Écarter l’offre"]);
+    expect(titles.slice(0, 3)).toEqual(["J’ai déjà postulé", "Signaler comme expirée", "Cette note ne me correspond pas"]);
     expect(titles).toContain("Partager");
-    expect(sheet.find("[data-test=offer-actions-cancel]").text()).toBe("Annuler");
-    expect(titles).toContain("Signaler comme expirée");
-    expect(titles).toContain("Cette note ne me correspond pas");
+    expect(titles.at(-1)).toBe("Écarter l’offre");
+    expect(sheet.find(".offer-actions-end [data-test=offer-action-discard]").exists()).toBe(true);
+    expect(sheet.find("[data-test=offer-actions-cancel]").exists()).toBe(false);
+    expect(sheet.find("[data-test=sheet-close]").attributes("aria-label")).toBe("Fermer");
+    expect(sheet.find("[data-test=sheet-handle]").exists()).toBe(false);
+    expect(sheet.find(".sheet-title").text()).toBe(wrapper.props("offer").title);
     expect(titles).not.toContain("Plus tard");
     await sheet.find("[data-test=offer-action-score-correction-menu]").trigger("click");
     expect(wrapper.find("[data-test=score-correction-sheet] .score-correction-card.bare").exists()).toBe(true);
