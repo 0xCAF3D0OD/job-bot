@@ -104,8 +104,8 @@ onMounted(() => {
 <template>
   <PageHero title="Compte" />
   <!-- LISEZMOI §51 du 17.11 (planches Compte, CompteSombre, CompteImage) : la ligne profil, puis des groupes de lignes
-       d'une seule ligne de texte, 56 px, la valeur utile à droite avant le chevron, une couleur par icône de section.
-       « Recherche et outils », Connexions, État du service et le choix du profil d'essai ne sont pas dessinés : gardés
+       d’une seule ligne de texte, 56 px, la valeur utile à droite avant le chevron, une couleur par icône de section.
+       « Recherche et outils », Connexions, État du service et le choix du profil d’essai ne sont pas dessinés : gardés
        (règle 3 de CLAUDE.md), au même style. -->
   <section class="band account-v2">
     <div
@@ -131,10 +131,10 @@ onMounted(() => {
           <strong class="account-profile-name">{{ name || "Ton profil" }}</strong>
           <span class="account-profile-line">Mon profil et mon CV</span>
         </span>
-        <AppIcon
-          name="chevron"
+        <span
           class="account-line-chevron"
-        />
+          aria-hidden="true"
+        ><AppIcon name="chevron" /></span>
       </RouterLink>
 
       <!-- Les profils d'essai de l'exploitant (docs/65), venus du menu du compte (C2) : seulement s'il y en a. -->
@@ -382,17 +382,18 @@ onMounted(() => {
 <style>
 /* La page Compte (LISEZMOI §51 du 17.11 ; planches Compte, CompteSombre). Valeurs de la planche posées sur la grille de
    4 (audit-grille) : 14 px → 16 px d'écart et de marge, titres de groupe 18 px → 20 px au-dessus. */
+.account-v2 { --acc-cap: 13px; --acc-cap-lh: 18px; --acc-name: 17px; --acc-name-lh: 24px; --acc-line-lh: 20px; --acc-title-lh: 22px; --acc-value: 15px; --acc-chevron: 24px; --acc-chevron-icon: 20px; }
 .account-v2.band { padding: var(--space-3) 0 var(--space-12); border-top: 0; }
 .account-v2 > .container { padding: 0 var(--space-5); }
 .account-v2 .account-page { display: grid; gap: 0; max-width: 40rem; }
-.account-v2 .account-cap { margin: var(--space-5) var(--space-1) var(--space-2); font-size: 13px; line-height: 18px; font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+.account-v2 .account-cap { margin: var(--space-5) var(--space-1) var(--space-2); font-size: var(--acc-cap); line-height: var(--acc-cap-lh); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .account-v2 :is(.account-profile, .account-group) { background: var(--surface); border: 1px solid var(--row-sep); border-radius: var(--radius-card); overflow: hidden; }
 .account-v2 .account-profile { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); color: var(--text); text-decoration: none; }
 .account-v2 .account-image { flex: none; display: inline-flex; }
 .account-v2 .account-image .profile-image { color: var(--avatar-initials); box-shadow: none; }
 .account-v2 .account-profile-text { display: grid; flex: 1; min-width: 0; }
-.account-v2 .account-profile-name { font-size: 17px; line-height: 24px; overflow-wrap: anywhere; }
-.account-v2 .account-profile-line { font-size: var(--font-small); line-height: 20px; color: var(--text-secondary); }
+.account-v2 .account-profile-name { font-size: var(--acc-name); line-height: var(--acc-name-lh); overflow-wrap: anywhere; }
+.account-v2 .account-profile-line { font-size: var(--font-small); line-height: var(--acc-line-lh); color: var(--text-secondary); }
 .account-line { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; margin: 0; padding: 0 var(--space-4); border: 0; background: transparent; font: inherit; text-align: left; color: var(--text); text-decoration: none; cursor: pointer; }
 .account-line + .account-line { border-top: 1px solid var(--line-soft); }
 .account-line-icon { flex: none; width: 22px; height: 22px; stroke-width: 2; color: var(--row-icon); }
@@ -400,17 +401,18 @@ onMounted(() => {
 .account-line-icon.blue { color: var(--primary-graphic); }
 .account-line-icon.green { color: var(--success); }
 .account-line-icon.peach { color: var(--icon-peach); }
-.account-line-title { flex: 1; min-width: 0; font-size: var(--font-body); line-height: 22px; font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.account-line-value { flex: none; font-size: 15px; color: var(--text-secondary); }
+.account-line-title { flex: 1; min-width: 0; font-size: var(--font-body); line-height: var(--acc-title-lh); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-line-value { flex: none; font-size: var(--acc-value); color: var(--text-secondary); }
 /* Le chevron des listes (LISEZMOI §49) : 20 px, trait 2,4, --chevron, dans une zone de 24 px. */
-.account-v2 .account-line-chevron { flex: none; box-sizing: content-box; width: 20px; height: 20px; padding: 2px; margin-left: calc(var(--space-2) * -1); stroke-width: 2.4; color: var(--chevron); }
+.account-v2 .account-line-chevron { flex: none; display: grid; place-items: center; width: var(--acc-chevron); height: var(--acc-chevron); margin-left: calc(var(--space-2) * -1); color: var(--chevron); }
+.account-v2 .account-line-chevron .icon { width: var(--acc-chevron-icon); height: var(--acc-chevron-icon); stroke-width: 2.4; }
 .account-line[aria-disabled="true"] { cursor: progress; }
 .account-v2 .account-switch { margin-top: var(--space-4); }
 .account-v2 .account-logout-group { margin-top: var(--space-6); }
 .account-logout-row { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; padding: var(--space-2) var(--space-4); border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .account-logout-row > .icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--logout-text); }
 .account-logout-text { display: grid; min-width: 0; }
-.account-logout-title { font-weight: var(--weight-bold); line-height: 22px; color: var(--logout-text); }
-.account-logout-email { font-size: var(--font-small); line-height: 20px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-logout-title { font-weight: var(--weight-bold); line-height: var(--acc-title-lh); color: var(--logout-text); }
+.account-logout-email { font-size: var(--font-small); line-height: var(--acc-line-lh); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-v2 .account-page-logout { justify-self: start; margin: var(--space-4) var(--space-4) 0; padding: 0; }
 </style>

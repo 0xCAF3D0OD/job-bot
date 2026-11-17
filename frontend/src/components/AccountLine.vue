@@ -34,9 +34,9 @@ defineEmits<{ click: [] }>();
       v-if="value"
       class="account-line-value"
     ><span class="visually-hidden">, </span>{{ value }}</span>
-    <AppIcon
-      :name="href ? 'external' : 'chevron'"
+    <span
       class="account-line-chevron"
-    />
+      aria-hidden="true"
+    ><AppIcon :name="href ? 'external' : 'chevron'" /></span>
   </component>
 </template>
