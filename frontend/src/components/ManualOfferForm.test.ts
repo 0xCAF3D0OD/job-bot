@@ -122,6 +122,7 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
       url: "https://bois.ch/emplois/1",
       read_by: "page",
       fill: false,
+      separate: false,
     });
     expect(wrapper.emitted("added")).toEqual([[{ id: 9, existing: false, status: "to_review", reasons: [] }]]);
   });
@@ -169,28 +170,54 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(POST.mock.calls[1]![1].body).toMatchObject({ title: "Menuisier", url: "https://ch.indeed.com/viewjob?jk=1", read_by: "main" });
   });
 
-  it("déjà dans la liste : pas de fiche, l’offre existante s’ouvre tout de suite (PR 38)", async () => {
+  it("même lien (Kevin, 16.11) : le message sous le champ, « Ouvrir l’offre » seul, à la place d’« Ajouter l’offre »", async () => {
     const wrapper = await mountForm();
-    POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4 }) } });
+    POST.mockResolvedValueOnce({
+      data: { draft: draft({ existing_offer_id: 4, existing_kind: "link", existing_title: "Menuisier", existing_company: "Bois & Fils", existing_added: "2026-11-03" }) },
+    });
     await send(wrapper, "https://bois.ch/emplois/1");
+    const message = wrapper.find("[data-test=manual-existing]");
+    expect(message.attributes("role")).toBe("alert");
+    expect(message.find("[data-icon]").exists()).toBe(true);
+    expect(message.text()).toBe("Cette offre est déjà dans tes candidatures (ajoutée le 3 novembre).");
+    expect(wrapper.find("[data-test=manual-separate]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-draft]").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("déjà");
-    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "", reasons: [] }]]);
+    expect((wrapper.vm as unknown as { duplicate: boolean }).duplicate).toBe(true);
+    POST.mockResolvedValueOnce({ data: { id: 4, existing: true, status: "to_review", reasons: [], filled: ["url"] } });
+    await wrapper.find("[data-test=manual-open-existing]").trigger("click");
+    await flushPromises();
+    // Ouvrir ajoute le lien et les champs vides que cette annonce remplit, sans rien remplacer.
+    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: true, separate: false });
+    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "to_review", reasons: [], filled: ["url"] }]]);
   });
 
-  // Une offre de LinkedIn sans texte : la page de l'annonce la complète, sans rien remplacer.
-  it("déjà là sans texte ni lien : « Compléter l’offre » les ajoute", async () => {
+  it("même poste ailleurs (Kevin, 16.11) : « Ouvrir l’offre » et « Ajouter quand même », une offre à part", async () => {
     const wrapper = await mountForm();
-    POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4, fillable: ["description", "url"] }) } });
+    POST.mockResolvedValueOnce({
+      data: { draft: draft({ existing_offer_id: 4, existing_kind: "post", existing_title: "Menuisier CFC", existing_company: "Bois & Fils SA", existing_added: "2026-11-03" }) },
+    });
     await send(wrapper, "https://bois.ch/emplois/1");
-    expect(wrapper.find("[data-test=manual-existing]").text()).toContain(
-      "sans le texte de l’annonce et le lien\u202f: « Compléter l’offre » les ajoute, sans rien remplacer.",
+    expect(wrapper.find("[data-test=manual-existing]").text()).toBe(
+      "Une offre très proche est déjà là : Menuisier CFC chez Bois & Fils SA, ajoutée le 3 novembre.",
     );
-    expect((wrapper.vm as unknown as { label: string }).label).toBe("Compléter l’offre");
-    POST.mockResolvedValueOnce({ data: { id: 4, existing: true, status: "to_review", reasons: [], filled: ["description", "url"] } });
-    await send(wrapper);
-    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: true, description: "Tu fabriques nos meubles." });
-    expect(wrapper.emitted("added")).toEqual([[{ id: 4, existing: true, status: "to_review", reasons: [], filled: ["description", "url"] }]]);
+    expect(wrapper.find("[data-test=manual-open-existing]").text()).toContain("Ouvrir l’offre");
+    expect(wrapper.find("[data-test=manual-separate]").text()).toContain("Ajouter quand même");
+    POST.mockResolvedValueOnce({ data: { id: 12, existing: false, status: "new", reasons: [] } });
+    await wrapper.find("[data-test=manual-separate]").trigger("click");
+    await flushPromises();
+    expect(POST.mock.calls[1]![1].body).toMatchObject({ fill: false, separate: true });
+    expect(wrapper.emitted("added")).toEqual([[{ id: 12, existing: false, status: "new", reasons: [] }]]);
+  });
+
+  it("changer le champ fait disparaître le message et revenir « Ajouter l’offre »", async () => {
+    const wrapper = await mountForm();
+    POST.mockResolvedValueOnce({ data: { draft: draft({ existing_offer_id: 4, existing_kind: "post", existing_title: "Menuisier" }) } });
+    await send(wrapper, "https://bois.ch/emplois/1");
+    expect(wrapper.find("[data-test=manual-existing]").exists()).toBe(true);
+    await wrapper.find("[data-test=manual-entry]").setValue("https://bois.ch/emplois/2");
+    expect(wrapper.find("[data-test=manual-existing]").exists()).toBe(false);
+    expect((wrapper.vm as unknown as { duplicate: boolean; label: string }).duplicate).toBe(false);
+    expect((wrapper.vm as unknown as { label: string }).label).toBe("Ajouter l’offre");
   });
 
   it("au maximum du jour, la lecture est fermée", async () => {

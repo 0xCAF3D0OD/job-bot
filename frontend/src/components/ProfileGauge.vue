@@ -61,3 +61,10 @@ const next = computed(() => parts.value?.find((p) => !p.done) ?? null);
     </RouterLink>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (max-width: 820px) {
+.profile-gauge-next { justify-content: flex-start; }
+}
+</style>

@@ -23,3 +23,13 @@ withDefaults(defineProps<{ tone?: "neutral" | "todo" | "ok" | "error"; dot?: boo
     <slot />
   </span>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.state-pill { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; min-height: 1.5rem; padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: var(--panel); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-tight); white-space: nowrap; }
+.state-pill-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--muted); }
+.state-pill.todo .state-pill-dot { background: var(--orange); }
+.state-pill.ok .state-pill-dot { background: var(--ok); }
+.state-pill.error .state-pill-dot { background: var(--down); }
+.pick-card > .state-pill { justify-self: start; }
+</style>

@@ -33,3 +33,17 @@ onBeforeUnmount(() => {
     <slot />
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.action-bar-row > :is(button, a) { justify-content: center; }
+@media (max-width: 599px) {
+.action-bar {
+    position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom); z-index: 21;
+    display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4);
+    background: var(--surface); border-radius: calc(var(--radius-sm) * 2) calc(var(--radius-sm) * 2) 0 0;
+    box-shadow: 0 -8px 24px rgb(17 17 31 / 10%);
+  }
+:root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+}
+</style>

@@ -257,6 +257,8 @@ onMounted(async () => {
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--band); border: 1px solid var(--border); overflow-x: auto; font-size: var(--font-small); }
 /* Maquette Connexion (390 px) : valeurs exactes du HTML de la maquette, couleurs des jetons. */
 .login-page { display: flex; min-height: 100dvh; background: var(--bg); color: var(--text); }
 .login-art { display: none; }

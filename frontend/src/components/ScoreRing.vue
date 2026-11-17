@@ -88,3 +88,11 @@ const dash = computed(() => `${(((value.value ?? 0) * CIRCUMFERENCE) / 100).toFi
     >{{ word.word }}</span>
   </span>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.score-ring-track { stroke: var(--ring-soft); stroke-width: 9; }
+.score-ring-arc { stroke: var(--ring); stroke-width: 9; }
+.score-ring-ticks { stroke: var(--ring-gap, var(--surface)); stroke-width: 3.5; }
+.score-ring-wrap.provisional .score-ring-arc { opacity: 0.45; }
+</style>

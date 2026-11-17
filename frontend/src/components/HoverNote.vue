@@ -155,3 +155,15 @@ onBeforeUnmount(() => {
     >{{ text }}</span>
   </span>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+button .hover-note { text-decoration: none; cursor: inherit; }
+.hover-note-bubble::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 0.5rem; }
+@media (prefers-reduced-motion: reduce) {
+.hover-note-bubble { animation: none; }
+}
+@media (max-width: 599px) {
+.profile-page .hover-note-info { margin: 0; }
+}
+</style>

@@ -168,3 +168,13 @@ onMounted(() => void refresh());
     <RouterView />
   </section>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+@media (min-width: 1024px) {
+.jobs-head .jobs-segments { order: 2; }
+.jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.jobs-actions { --alerts-gap: 28px; --add-pad: 18px; }
+.jobs-alerts-count { margin-right: var(--alerts-gap); font-size: var(--font-label); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+}
+</style>

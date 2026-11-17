@@ -74,3 +74,13 @@ const control = computed(() => ({
     </p>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.setting-row-control > span:not([role="status"]) { white-space: nowrap; }
+.setting-row.wide .setting-row-error { text-align: left; }
+.setting-row-error { flex-basis: 100%; margin: 0; text-align: right; }
+@media (max-width: 820px) {
+.setting-row.stack .setting-row-error { text-align: left; }
+}
+</style>

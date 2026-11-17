@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
-import CvPanel from "../components/CvPanel.vue";
-import ProfileCompletionPanel from "../components/ProfileCompletionPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import ApplyActions from "../components/ApplyActions.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
-import OfferCompatSheet from "../components/OfferCompatSheet.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -21,9 +18,7 @@ import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
-import ApplicationSent from "../components/ApplicationSent.vue";
-import GoalReached from "../components/GoalReached.vue";
-import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
+import type { FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
@@ -49,6 +44,34 @@ import { usePlan } from "../composables/usePlan";
 import { offerUndo } from "../composables/useUndo";
 import { sentencesAt, withoutSentence } from "../letterSentences";
 import PlanLimit from "../components/PlanLimit.vue";
+// Chargés à la demande (allègement (c), issue #797) : les écrans d'après l'envoi et les panneaux secondaires ne
+// pèsent pas sur l'ouverture de Préparer. Un panneau n'est monté qu'à sa première ouverture, puis reste en place.
+const ApplicationSent = defineAsyncComponent(() => import("../components/ApplicationSent.vue"));
+const GoalReached = defineAsyncComponent(() => import("../components/GoalReached.vue"));
+const OfferCompatSheet = defineAsyncComponent(() => import("../components/OfferCompatSheet.vue"));
+const FalseClaimSheet = defineAsyncComponent(() => import("../components/FalseClaimSheet.vue"));
+const ProfileCompletionPanel = defineAsyncComponent(() => import("../components/ProfileCompletionPanel.vue"));
+// L'étape CV se charge à son ouverture (Kevin, 17.11) : préchargée dès qu'on survole ou atteint l'onglet « CV », sinon
+// quand le navigateur est au repos. Si elle tarde plus de 300 ms, les blocs de chargement (LoadingBlocks attend
+// lui-même 300 ms) remplacent l'écran vide.
+let cvPanelLoad: Promise<unknown> | null = null;
+const loadCvPanel = () => (cvPanelLoad ??= import("../components/CvPanel.vue"));
+const CvPanel = defineAsyncComponent({
+  loader: loadCvPanel as () => Promise<typeof import("../components/CvPanel.vue")>,
+  loadingComponent: { render: () => h(LoadingBlocks, { heights: ["3rem", "32rem"] }) },
+  delay: 0,
+});
+function preloadCvPanel(event: Event): void {
+  if ((event.target as Element | null)?.closest?.("[data-test=tab-cv]")) void loadCvPanel();
+}
+let idleHandle: number | undefined;
+onMounted(() => {
+  const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1));
+  idleHandle = idle(() => void loadCvPanel());
+});
+onUnmounted(() => {
+  if (idleHandle !== undefined) (window.cancelIdleCallback ?? window.clearTimeout)(idleHandle);
+});
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -124,6 +147,28 @@ async function sharePdf(event: MouseEvent, href: string, name: string): Promise<
     await nav.share({ files: [new File([blob], name, { type: "application/pdf" })], title: name });
   } catch {
     // Partage annulé ou refusé : rien à dire.
+  }
+}
+// La coche des pièces téléchargées (Kevin, 16.11, docs/decisions/2026-11-16-1644-coche-telechargement.md) : posée quand
+// le fichier est bien arrivé (« file-done », useFileDownloads), gardée dans ce navigateur par version du document (une lettre refaite repart sans coche), effacée à la
+// déconnexion (useAuth). Le lien reste cliquable pour retélécharger.
+const DOWNLOADED_KEY = "jobA1.telecharges";
+function readDownloaded(): string[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(DOWNLOADED_KEY) ?? "[]");
+    return Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+const downloaded = ref<string[]>(readDownloaded());
+function markDownloaded(key: string): void {
+  if (downloaded.value.includes(key)) return;
+  downloaded.value = [...downloaded.value, key].slice(-100);
+  try {
+    localStorage.setItem(DOWNLOADED_KEY, JSON.stringify(downloaded.value));
+  } catch {
+    // Stockage refusé : la coche tient jusqu'au rechargement.
   }
 }
 function downloadAll(): void {
@@ -392,6 +437,8 @@ const noProfile = ref(false);
 // « Ajouter une expérience » ouvre le formulaire des premiers pas en panneau (PR 17, point 5) ; au retour, la
 // préparation repart (lettre et CV adapté). Le même panneau demande le nom et l'adresse avant une lettre.
 const completion = ref<"" | "profile" | "identity">("");
+const completionSeen = ref(false);
+watch(completion, (open) => { if (open) completionSeen.value = true; });
 const identityAsked = ref(false);
 let pendingForce = false;
 const COMPLETION_SECTIONS = { profile: ["experiences", "languages", "identity"], identity: ["identity"] } as const;
@@ -619,6 +666,8 @@ function closeLetterSearch(): void {
   letterSearchButton.value?.focus();
 }
 const claimOpen = ref(false);
+const claimSeen = ref(false);
+watch(claimOpen, (open) => { if (open) claimSeen.value = true; });
 const claimBusy = ref(false);
 const claimError = ref("");
 const flashed = ref<number | null>(null);
@@ -751,6 +800,8 @@ const layoutNote = computed(() => {
 });
 // Le panneau Compatibilité depuis la note de l'en-tête (§2.2) : les mêmes familles que la fiche de l'offre.
 const compatOpen = ref(false);
+const compatSeen = ref(false);
+watch(compatOpen, (open) => { if (open) compatSeen.value = true; });
 const compat = computed(() => {
   const o = offer.value;
   const point = (text: string) => {
@@ -899,6 +950,8 @@ onMounted(() => void load());
       :steps="steps"
       :current="tab"
       label="Étapes de la candidature"
+      @pointerover="preloadCvPanel"
+      @focusin="preloadCvPanel"
     />
   </PageHero>
   <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
@@ -956,6 +1009,8 @@ onMounted(() => void load());
       :current="tab"
       label="Étapes de la candidature"
       numbered
+      @pointerover="preloadCvPanel"
+      @focusin="preloadCvPanel"
     />
   </header>
 
@@ -1115,18 +1170,28 @@ onMounted(() => void load());
                   v-if="currentLetterId"
                   :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
                   download
+                  :aria-label="downloaded.includes(`lettre-${currentLetterId}`) ? 'Lettre.pdf, téléchargée' : undefined"
                   data-test="sheet-letter"
+                  @file-done="markDownloaded(`lettre-${currentLetterId}`)"
                 ><AppIcon name="file" />Lettre.pdf<AppIcon
-                  v-if="!phone"
+                  v-if="downloaded.includes(`lettre-${currentLetterId}`)"
+                  name="done"
+                /><AppIcon
+                  v-else-if="!phone"
                   name="download"
                 /></a>
                 <a
                   v-if="currentCvId"
                   :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
                   download
+                  :aria-label="downloaded.includes(`cv-${currentCvId}`) ? 'CV.pdf, téléchargé' : undefined"
                   data-test="sheet-cv"
+                  @file-done="markDownloaded(`cv-${currentCvId}`)"
                 ><AppIcon name="file" />CV.pdf<AppIcon
-                  v-if="!phone"
+                  v-if="downloaded.includes(`cv-${currentCvId}`)"
+                  name="done"
+                /><AppIcon
+                  v-else-if="!phone"
                   name="download"
                 /></a>
               </PrepCertificates>
@@ -2084,7 +2149,7 @@ onMounted(() => void load());
   </section>
 
   <OfferCompatSheet
-    v-if="offer && !phone && verdict"
+    v-if="compatSeen && offer && !phone && verdict"
     :open="compatOpen"
     :score="offer.score ?? null"
     :stale="offer.score_stale"
@@ -2097,7 +2162,7 @@ onMounted(() => void load());
     @close="compatOpen = false"
   />
   <FalseClaimSheet
-    v-if="selected && claim"
+    v-if="claimSeen && selected && claim"
     :open="claimOpen"
     :sentence="claim?.sentence ?? ''"
     :busy="claimBusy"
@@ -2107,6 +2172,7 @@ onMounted(() => void load());
     @confirm="confirmClaim"
   />
   <ProfileCompletionPanel
+    v-if="completionSeen"
     :open="!!completion"
     :title="completion === 'identity' ? 'Avant ta lettre' : 'Ajouter une expérience'"
     :sections="completion ? [...COMPLETION_SECTIONS[completion]] : undefined"
@@ -2116,6 +2182,26 @@ onMounted(() => void load());
 </template>
 
 <style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+#print-root .letter-sheet { font-size: 11pt; }
+#print-root .cv-sheet { font-size: 9.5pt; }
+#print-root .screen-only { display: none !important; }
+#print-root p.print-only { display: block; text-align: left; }
+#print-root .chunk-refs { display: none; }
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
+}
+:root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
+.form-sheet dl { margin: 0; }
+.form-sheet-row > button { grid-row: 1 / 3; grid-column: 2; }
+@media (max-width: 820px) {
+.step-tabs > a { flex: 1 1 0; padding-inline: var(--space-2); }
+}
+.false-claim-quote { margin: 0 0 var(--space-4); color: var(--muted); line-height: var(--leading-normal); }
+.letter-paragraph textarea.claim-flash { animation: claim-flash 1.2s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+.letter-paragraph textarea.claim-flash { animation: none; }
+}
 /* Conteneur de 1280 (D18), 24 de marge entre 821 et 1327 px. */
 .prep-desk-head.container, .prep-desk-band > .container { --prep-max: 1280px; max-width: calc(var(--prep-max) + 2 * var(--space-6)); }
 /* Préparer sur ordinateur (MODIFICATIONS du 8 novembre au soir, lot 15.1 ; captures PreparerOrdinateur et
@@ -2266,6 +2352,7 @@ onMounted(() => void load());
 .apply-card .apply-files { display: flex; flex: 1; flex-wrap: wrap; gap: var(--space-3); }
 .apply-card .apply-files > a { min-height: var(--apply-40); font-size: var(--apply-15); border-radius: var(--radius-pill); }
 .apply-card .apply-files .icon-download { color: var(--primary-text); }
+.apply-card .apply-files .icon-done { color: var(--ok-text); }
 .apply-card .apply-attach > .hint { order: 1; flex-basis: 100%; margin: 0; }
 .apply-all { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--apply-40); padding: 0 var(--space-4); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font: inherit; font-size: var(--apply-15); font-weight: var(--weight-bold); cursor: pointer; }
 .apply-all:hover { background: var(--selected-bg); }

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
 import { api, QUIET, type AlertsPage, type CriteriaIn, type Offer, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
-import AlertSiteSteps from "../components/AlertSiteSteps.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -15,9 +14,12 @@ import WelcomeCriteria, { type CriteriaSources } from "../components/WelcomeCrit
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
+import WelcomeAlertExtension from "../components/WelcomeAlertExtension.vue";
+import WelcomeAlertSteps from "../components/WelcomeAlertSteps.vue";
 import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
+import { useJobA1Extension } from "../composables/useJobA1Extension";
 import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { companyPlace, rateText, remoteText, scoreWord } from "../format";
@@ -126,10 +128,46 @@ const alertBusy = ref(false);
 // Rouverte depuis la carte Premiers pas d'Aujourd'hui : « Retour », « Plus tard » et « J'ai créé l'alerte » y ramènent.
 const fromToday = route?.query.etape === "alerte";
 const alertSearch = computed(() => alerts.value?.searches.find((s) => s.active) ?? null);
-const alertSiteName = computed(() => alerts.value?.sites.find((site) => site.slug === ALERT_SITE)?.name ?? "jobup");
 const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.url ?? null);
 const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
-const alertLinks = computed(() => (alertUrl.value ? [{ key: "jobup", url: alertUrl.value, label: `Ouvrir ${alertSiteName.value}` }] : []));
+// Le code de jobup est arrivé (WelcomeAlertSteps) : « J'ai validé l'alerte » à la place de « J'ai créé l'alerte ».
+const codeReceived = ref(false);
+// Section 42 du 16.11, ordinateur seulement : créer l'alerte avec l'extension ou à la main. Par défaut l'extension si
+// elle est détectée (attribut sur <html> ou message, jamais une requête au serveur), sinon à la main.
+const extension = useJobA1Extension(ALERT_SITE);
+const VIAS = [
+  { key: "extension", label: "Avec l’extension", time: "environ 1 minute" },
+  { key: "main", label: "À la main", time: "environ 2 minutes" },
+] as const;
+type Via = (typeof VIAS)[number]["key"];
+const chosenVia = ref<Via | null>(null);
+// L'extension n'existe que pour Firefox (Kevin, 16.11, 23 h 29) : le choix ne s'affiche que sur Firefox, ou partout si
+// l'extension est détectée ; sinon le parcours à la main seul, comme sur téléphone.
+const firefox = /firefox\//i.test(navigator.userAgent);
+const viaChoice = computed(() => firefox || !!extension.version.value);
+const via = computed<Via>({
+  get: () => (viaChoice.value ? chosenVia.value ?? (extension.version.value ? "extension" : "main") : "main"),
+  set: (value) => (chosenVia.value = value),
+});
+function onViaKey(event: KeyboardEvent): void {
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+  event.preventDefault();
+  via.value = via.value === "main" ? "extension" : "main";
+  const group = event.currentTarget as HTMLElement;
+  void nextTick(() => group.querySelector<HTMLElement>("[aria-checked=true]")?.focus());
+}
+// L'extension a vu l'alerte créée sur jobup (elle l'a notée au serveur) : la page passe à la suite toute seule. En
+// secours, une alerte jobup déjà notée créée quand on revient sur l'onglet fait de même.
+watch(extension.step, (value) => {
+  if (value === "created" && step.value === 3 && desk.value) void afterAlert();
+});
+async function checkCreated(): Promise<void> {
+  if (document.visibilityState !== "visible" || step.value !== 3 || !desk.value || via.value !== "extension" || !extension.version.value) return;
+  await loadAlerts();
+  if (alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.status === "created") void afterAlert();
+}
+onMounted(() => document.addEventListener("visibilitychange", checkCreated));
+onUnmounted(() => document.removeEventListener("visibilitychange", checkCreated));
 async function loadAlerts(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
   if (data) alerts.value = data;
@@ -618,7 +656,7 @@ async function finish(to: string): Promise<void> {
             v-else-if="step === 3"
             class="wdk-title"
           >
-            Une alerte, et elles arrivent seules
+            Crée ton alerte sur jobup
           </h1>
           <h1
             v-else
@@ -814,22 +852,53 @@ async function finish(to: string): Promise<void> {
             </div>
           </template>
 
-          <!-- Section 15 du paquet du 15.11 : plus de phrase sous le titre ; l'étape « Recopie le code de jobup ». -->
+          <!-- Section 41 du paquet du 16.11 : la phrase sous le titre, puis une carte de 4 étapes ; le code en lecture seule. -->
           <template v-else-if="step === 3">
+            <p class="wdk-lead">
+              Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
+            </p>
+            <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
+                 l’avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
             <div
-              class="wdk-card wdk-alert"
-              data-test="welcome-alert"
+              v-if="viaChoice"
+              class="wdk-via"
+              role="radiogroup"
+              aria-label="Comment créer l’alerte"
+              data-test="welcome-alert-via"
+              @keydown="onViaKey"
             >
-              <AlertSiteSteps
-                v-if="alerts"
-                :site-name="alertSiteName"
-                :search-label="alertLabel"
-                :links="alertLinks"
-                :mailbox="alerts.mailbox"
-                code
-                code-help="jobup l’envoie à ton adresse jobA1 quand tu valides l’alerte. Il s’affiche ici."
-              />
+              <button
+                v-for="option in VIAS"
+                :key="option.key"
+                type="button"
+                role="radio"
+                :aria-checked="via === option.key"
+                :tabindex="via === option.key ? 0 : -1"
+                :class="['wdk-via-option', { on: via === option.key }]"
+                :data-test="`welcome-alert-via-${option.key}`"
+                @click="via = option.key"
+              >
+                <b>{{ option.label }}</b>
+                <span>{{ option.key === "extension" && extension.version.value ? "installée · " : "" }}{{ option.time }}</span>
+              </button>
             </div>
+            <WelcomeAlertExtension
+              v-show="via === 'extension'"
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :installed="!!extension.version.value"
+              :progress="extension.step.value"
+            />
+            <WelcomeAlertSteps
+              v-if="alerts"
+              v-show="via === 'main'"
+              v-model:received="codeReceived"
+              desk
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :mailbox="alerts.mailbox"
+              data-test="welcome-alert"
+            />
             <div class="wdk-foot">
               <button
                 type="button"
@@ -849,13 +918,14 @@ async function finish(to: string): Promise<void> {
                   Plus tard
                 </button>
                 <button
+                  v-if="via === 'main'"
                   type="button"
                   class="primary wdk-cta"
                   :disabled="alertBusy"
                   data-test="welcome-alert-done"
                   @click="alertDone"
                 >
-                  J’ai créé l’alerte
+                  {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
                 </button>
               </span>
             </div>
@@ -1192,21 +1262,18 @@ async function finish(to: string): Promise<void> {
           </template>
 
           <template v-else-if="step === 3">
-            <div
-              class="welcome-alert"
+            <p class="welcome-lead welcome-alert-lead">
+              Pour recevoir les nouvelles offres, crée une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres. Environ 2 minutes.
+            </p>
+            <WelcomeAlertSteps
+              v-if="alerts"
+              v-model:received="codeReceived"
+              :desk="false"
+              :search-label="alertLabel"
+              :url="alertUrl"
+              :mailbox="alerts.mailbox"
               data-test="welcome-alert"
-            >
-              <AlertSiteSteps
-                v-if="alerts"
-                :site-name="alertSiteName"
-                :search-label="alertLabel"
-                :links="alertLinks"
-                :mailbox="alerts.mailbox"
-                address-help="Copie-la, puis colle-la dans le champ e-mail de l’alerte."
-                code
-                code-trail="telephone"
-              />
-            </div>
+            />
           </template>
           <template v-else>
             <template v-if="sorting && current">
@@ -1348,7 +1415,7 @@ async function finish(to: string): Promise<void> {
             data-test="welcome-alert-done"
             @click="alertDone"
           >
-            J’ai créé l’alerte
+            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
           </button>
           <button
             type="button"
@@ -1478,9 +1545,8 @@ async function finish(to: string): Promise<void> {
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
 /* L'alerte sur téléphone (OnboardingC, étape 3) : le rappel 16/12 px, les étapes à 14 px ; « Plus tard » de 44 px sous
    le bouton principal. */
-.welcome-alert { --wa-14: 14px; }
-.welcome-alert .alert-site-search { margin: 0 0 var(--space-3); }
-.welcome-alert .alert-site-steps > li { padding: var(--wa-14) 0; }
+/* Section 41 : la phrase 22 px de haut en --text-lead, 16 px au-dessus de la carte (l'écart de l'écran). */
+.welcome-alert-lead { font-size: var(--font-label); color: var(--text-lead); }
 .welcome-alert-actions { display: flex; flex-direction: column; }
 .welcome-alert-later { align-self: center; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
@@ -1555,17 +1621,21 @@ async function finish(to: string): Promise<void> {
 .wdk-offer-text .tone-dig { color: var(--peach-text); }
 .wdk-small { height: var(--wdk-40); min-height: var(--wdk-40); padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--font-label); }
 .wdk-offer-done { font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
-/* L'alerte sur ordinateur (OnboardingOrdinateurAlerte) : carte 6/22,5/2 px, rappel 14 px, titres d'étape à 5 px dans la
-   planche, ramenés sur la grille de 4 px que le contrôle « grille » exige (bordure de 1,5 px comprise : 8/24/4 px,
-   rappel 12/16, titres à 4) ; pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux ; Orange 260 px
-   de large ; le pied à 8 px de la carte. */
-.wdk-alert { --wdk-alert-x: 22.5px; --wdk-alert-top: 6.5px; --wdk-alert-bottom: 2.5px; margin-top: var(--wdk-28); padding: var(--wdk-alert-top) var(--wdk-alert-x) var(--wdk-alert-bottom); }
-.wdk-alert .alert-site-search { margin: var(--space-3) 0 var(--space-4); }
-.wdk-alert .alert-site-steps > li { padding: var(--space-4) 0; }
-.wdk-alert .alert-site-step-title { padding-top: var(--space-1); }
+/* L'alerte sur ordinateur (section 41) : pied à droite « Plus tard » puis « J'ai créé l'alerte », 24 px entre eux. */
 .wdk-foot-end { display: flex; align-items: center; gap: var(--space-6); }
 .wdk-foot-end .wdk-link { font-size: var(--font-body); }
-.wdk-alert + .wdk-foot { margin-top: var(--space-2); }
+/* Section 42 du 16.11 : le choix « Avec l'extension / À la main », deux options de 56 px dans un fond gris. */
+.wdk-via { --wdk-via-h: 56px; --wdk-via-pad: 4px; --wdk-via-r: 16px; --wdk-via-option-r: 12px; --wdk-via-sub: 13px;
+  --wdk-via-shadow: 0 1px 2px rgb(27 31 42 / 12%);
+  display: flex; gap: var(--wdk-via-pad); margin-top: var(--space-5); padding: var(--wdk-via-pad); background: var(--surface-muted); border-radius: var(--wdk-via-r); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wdk-via { --wdk-via-shadow: 0 1px 2px rgb(0 0 0 / 30%); } }
+:root[data-theme="dark"] .wdk-via { --wdk-via-shadow: 0 1px 2px rgb(0 0 0 / 30%); }
+.wdk-via-option { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: var(--wdk-via-h); padding: 0 var(--space-3); border: 0; border-radius: var(--wdk-via-option-r); background: transparent; color: var(--text-tertiary); font: inherit; cursor: pointer; }
+.wdk-via-option b { font-size: var(--wdk-16); line-height: var(--wdk-22); font-weight: var(--weight-semibold); }
+.wdk-via-option span { font-size: var(--wdk-via-sub); line-height: var(--wdk-18); color: var(--text-secondary); }
+.wdk-via-option.on { background: var(--surface); box-shadow: var(--wdk-via-shadow); color: var(--text); }
+.wdk-via-option.on b { font-weight: var(--weight-heavy); }
+.wdk-via ~ .wa-desk { margin-top: var(--space-4); }
 .wdk-mailbox { width: 420px; height: auto; margin-top: var(--wdk-40); }
 .wdk-scene { display: flex; justify-content: center; align-items: flex-start; padding-top: var(--wdk-48); }
 .wdk-scene .illu { width: var(--wdk-scene); }

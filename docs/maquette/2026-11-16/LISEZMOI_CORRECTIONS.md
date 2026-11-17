@@ -613,3 +613,27 @@ Candidatures vide (avant les premières offres)
 - Le lien « Faire une candidature spontanée » est retiré de cet état (il reste dans « Ajouter »).
 
 Plus tard (hors de cette livraison) : avec l'extension du navigateur, le formulaire jobup est déjà rempli et le code collé tout seul.
+
+## 42. Créer l'alerte : avec l'extension ou à la main (16.11.2026)
+
+Planches : OnboardingOrdinateurAlerte, …AlerteCode, …CodeRecu, …CodeExpire (à la main), OnboardingOrdinateurAlerteExtInstaller, OnboardingOrdinateurAlerteExt, OnboardingOrdinateurAlerteExtSuivi, ExtAlerte, ExtAlerteCodeAttente, ExtAlerteCodeColle, ExtAlerteTerminee, ExtAlerteCodeSecours, toutes avec leur version Sombre. Captures : choix_v1.png, extension_v1.png.
+
+Choix dans jobA1 (ordinateur uniquement)
+- Sous l'introduction, un sélecteur à 2 options (role="radiogroup", chaque option role="radio" + aria-checked) : « Avec l'extension · environ 1 minute » et « À la main · environ 2 minutes ». On peut changer à tout moment, l'avancée de chaque parcours est gardée.
+- Par défaut : « Avec l'extension » si l'extension est détectée (le sélecteur affiche alors « installée · environ 1 minute »), sinon « À la main ».
+- Phrase d'introduction identique partout : « Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C'est ainsi que jobA1 reçoit tes offres. » La durée n'est que dans le sélecteur.
+- Téléphone : pas de sélecteur, parcours « À la main » seul (les extensions ne marchent pas sur la plupart des navigateurs mobiles).
+
+Avec l'extension, pas encore installée (3 étapes)
+1. « Installe l'extension jobA1 » + bouton « Installer l'extension » (page du magasin d'extensions du navigateur).
+2. « Ouvre jobup ». 3. « Crée l'alerte, puis confirme le code ».
+
+Avec l'extension installée (2 étapes)
+1. « Ouvre jobup » + bouton « Ouvrir jobup avec ma recherche ».
+2. « Crée l'alerte, puis confirme le code ». Pendant le parcours, liste de suivi en direct (role="status") : Formulaire rempli, Alerte envoyée à jobup, Code collé dans jobup, En attente de ta confirmation sur jobup.
+- Pas de bouton « J'ai créé l'alerte » : la page passe à la suite toute seule quand jobA1 sait que l'alerte est créée. « Retour » et « Plus tard » restent.
+
+Fenêtre de l'extension sur la page « Créer une alerte » de jobup (360 × 480)
+- Même liste en 4 étapes que dans jobA1 : 1 Formulaire rempli, 2 « Clique sur « Créer l'alerte » sur jobup », 3 Code de confirmation, 4 « Valide le code sur jobup ».
+- États : rempli (+ lien « Copier l'adresse jobA1 » si un champ est vide) ; code en attente ; code collé (6 cases vertes, l'étape 4 devient l'étape en cours) ; terminé (« Alerte créée sur jobup » + « Ouvrir jobA1 ») ; secours si le champ du code est introuvable (code affiché + « Copier le code »).
+- Règles : l'extension remplit des champs mais ne clique JAMAIS sur un bouton de jobup (ni créer, ni confirmer). Le code ne va jamais dans les logs, ni côté extension ni côté serveur. L'extension n'agit que sur la page d'alerte ouverte.

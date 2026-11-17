@@ -6608,6 +6608,11 @@ export interface components {
              * @default false
              */
             fill: boolean;
+            /**
+             * Separate
+             * @default false
+             */
+            separate: boolean;
         };
         /** ManualAddOut */
         ManualAddOut: {
@@ -6664,6 +6669,14 @@ export interface components {
              * @default []
              */
             fillable: ("company" | "location" | "description" | "url")[];
+            /** Existing Kind */
+            existing_kind?: ("link" | "post") | null;
+            /** Existing Title */
+            existing_title?: string | null;
+            /** Existing Company */
+            existing_company?: string | null;
+            /** Existing Added */
+            existing_added?: string | null;
         };
         /** ManualPdfOut */
         ManualPdfOut: {
@@ -7172,6 +7185,8 @@ export interface components {
             /** Agency */
             agency?: ("known" | "probable") | null;
             agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
+            /** Applied Before */
+            applied_before?: string | null;
             /**
              * Has Logo
              * @default false
@@ -8172,6 +8187,8 @@ export interface components {
             /** Agency */
             agency?: ("known" | "probable") | null;
             agency_duplicate?: components["schemas"]["AgencyDuplicateOut"] | null;
+            /** Applied Before */
+            applied_before?: string | null;
             /**
              * Has Logo
              * @default false

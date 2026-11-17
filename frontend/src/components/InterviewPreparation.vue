@@ -247,3 +247,8 @@ onMounted(async () => {
     </article>
   </div>
 </template>
+
+<style>
+/* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+.preparation-sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+</style>
