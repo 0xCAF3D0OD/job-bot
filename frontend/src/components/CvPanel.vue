@@ -1109,10 +1109,12 @@ onMounted(() => void load());
       </div>
     </section>
 
-    <!-- Téléphone (§37 du 16.11, planche MaCandidatureCVPourquoi) : un changement à la fois. -->
+    <!-- Téléphone (§37 du 16.11, planche MaCandidatureCVPourquoi) : un changement à la fois. §46 du 17.11 : feuille non
+         bloquante, sans voile (aria-modal="false"), le CV reste lisible et utilisable au-dessus ; Échap la ferme. -->
     <BottomSheet
       v-if="phone"
       :open="!!changeOf"
+      modeless
       :title="changeOf?.title ?? ''"
       :eyebrow="changeOf ? `Changement ${(changeAt ?? 0) + 1} sur ${changes.length}` : ''"
       data-test="cv-change-sheet"

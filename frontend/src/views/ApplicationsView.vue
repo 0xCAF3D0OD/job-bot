@@ -123,9 +123,10 @@ onMounted(async () => {
 const worded = computed(() => (wanted.value.length ? all.value.filter(matches) : all.value));
 const statusCounts = computed(() => sentCounts(worded.value));
 const filtering = computed(() => wanted.value.length > 0 || statusFilter.value !== "toutes");
+// « Effacer les filtres » sous la liste : appliqué hors du panneau, il crée son entrée d’historique (Kevin, 17.11).
 function clearFilters(): void {
   words.value = "";
-  void router.replace({ query: { ...route.query, q: undefined, statut: undefined } });
+  void router.push({ query: { ...route.query, q: undefined, statut: undefined } });
 }
 // « Tout effacer » de la feuille Filtres (téléphone) : les mots, le statut et le tri.
 function resetPhoneSentFilters(): void {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
@@ -7,14 +7,18 @@ import type { IconName } from "../icons";
 import { companyPlace, orpLeftLine, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
-import FaceMark from "./FaceMark.vue";
 import LiquidCircle from "./LiquidCircle.vue";
 import ScoreRing from "./ScoreRing.vue";
+import TroupeScene from "./TroupeScene.vue";
+import { HOME_SCENE } from "../troupe";
 
 // L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile ; écarts A1 à A9 validés le 2026-11-02) :
 // « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
 // dose du jour, tant qu'il y en a, et « Tout voir » ; sans bouton « Trier », A3 annulé le 2026-11-05 par
 // Kevin), À faire (un nombre, un libellé). L'ordinateur garde sa page.
+// Le rappel des justificatifs (§57 du 17.11) est chargé à part, seulement quand un mois est à remettre : les autres
+// jours, l'Accueil ne reçoit ni son code ni son CSS.
+const OrpReminder = defineAsyncComponent(() => import("./OrpReminder.vue"));
 // Une ligne de « À faire » : un nombre et un libellé ; ou, pour « Relire ton CV » (PR 22), une icône et une ligne de détail.
 export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw; icon?: IconName; detail?: string };
 
@@ -31,6 +35,8 @@ const props = defineProps<{
   todos: HomeTodo[];
   /** Un jour de repos (planche AccueilV2, état « repos », 14 novembre) : la phrase sous « Jour de repos. ». */
   restSub?: string | null;
+  /** Le rappel des justificatifs à remettre (§57 du 17.11) : posé seulement quand un mois est à remettre. */
+  reminder?: { month: string; due: string; late: boolean; to: RouteLocationRaw } | null;
 }>();
 
 // « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
@@ -116,7 +122,17 @@ function facts(offer: Offer): string[] {
     class="home"
     data-test="home-phone"
   >
+    <OrpReminder
+      v-if="reminder"
+      v-bind="reminder"
+    />
     <div class="home-hello">
+      <!-- La scène des 4 personnages (§59 du 17.11) : centrée au-dessus du titre, 110 px de haut. -->
+      <TroupeScene
+        :scene="HOME_SCENE"
+        :height="110"
+        full
+      />
       <!-- Un jour de repos : « Jour de repos. » à la main, puis la phrase (planche AccueilV2, état « repos »). -->
       <template v-if="restSub != null">
         <h1
@@ -238,10 +254,6 @@ function facts(offer: Offer): string[] {
         class="home-empty"
         data-test="home-offers-empty"
       >
-        <FaceMark
-          mood="content"
-          :size="32"
-        />
         {{ emptyText }}
       </p>
     </section>
@@ -287,6 +299,7 @@ function facts(offer: Offer): string[] {
 .home h1, .home h2 { margin: 0; font-weight: var(--weight-bold); letter-spacing: -0.03em; line-height: var(--leading-none); }
 .home-hello { display: grid; gap: var(--space-4); padding: var(--space-5) var(--space-5) var(--space-12); }
 .home-hello h1 { font-size: var(--title-hello); }
+.home-hello > .troupe { justify-self: center; }
 /* Un jour de repos (AccueilV2, état « repos ») : 25 px à la main, bleu, penché de 2° ; la phrase 15/22 dessous. */
 .home-hello { --home-25: 1.5625rem; --home-15: 0.9375rem; --home-lh-22: 1.4667; }
 .home-hello h1.home-rest { font-size: var(--home-25); font-weight: var(--weight-regular); letter-spacing: 0; }
