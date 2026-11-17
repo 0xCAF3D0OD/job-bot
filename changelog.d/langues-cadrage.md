@@ -1,2 +1,2 @@
-Cadrage des sept langues de la plateforme : règles validées, décisions et glossaire par langue (documentation seule)
-État : cadrage seul ; l'outil et le sélecteur attendent la planche ReglagesLangue
+Langue de jobA1 : les sept langues dans Réglages (planche ReglagesLangue, §62), l'outil de traduction et la mesure des pages traduites ; seul le français est disponible, les autres langues sont « Bientôt » jusqu'à leur relecture
+État : aucun écran traduit encore (lot A ensuite) ; l'allemand et l'italien seront activés en premier, après relecture

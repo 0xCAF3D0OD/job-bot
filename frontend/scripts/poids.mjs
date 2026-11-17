@@ -328,11 +328,13 @@ if (unmeasured.length) {
 // une décision écrite dans docs/decisions/.
 const i18nKey = Object.keys(manifest).find((key) => key.endsWith("src/i18n.ts"));
 const i18nSize = i18nKey ? sizes(manifest[i18nKey].file).gzip : 0;
-const languages = [...new Set(catalogs.map((key) => key.match(CATALOG)[1]))].sort();
+// Sans catalogue encore (PR 1, aucun écran traduit), la page et i18n.ts seuls, sous le nom « aucune ».
+const found = [...new Set(catalogs.map((key) => key.match(CATALOG)[1]))].sort();
+const languages = found.length ? found : ["aucune"];
 const translated = [];
 for (const page of Object.keys(PAGES)) {
   const name = `js-${page}`;
-  if (!LIMITS[name] || !languages.length) continue;
+  if (!LIMITS[name]) continue;
   const catalogOf = (lang, of) => (groups[`cat-${lang}-${of}`] ? limited(`cat-${lang}-${of}`) : 0);
   const [lang, size] = languages
     .map((code) => [code, limited(name) + i18nSize + catalogOf(code, page) + catalogOf(code, "commun")])
