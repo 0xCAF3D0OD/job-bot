@@ -187,12 +187,13 @@ const orpLate = computed(() => {
   const due = today.value?.orp_due_date;
   return !!orpTask.value && !!due && localDate(due).getTime() < startOfDay(new Date());
 });
-// Le rappel du haut de l'Accueil du téléphone (§57 du 17.11) : le mois à remettre, à l'heure ou en retard ; il mène à la
-// même page ORP que la tâche « Remettre les justificatifs ».
+// Le rappel du haut de l'Accueil du téléphone (§57 du 17.11 ; Kevin 17.11, 13 h 43) : avant l'échéance, seulement les
+// 5 derniers jours (comme la tâche en tête de « À faire ») ; après, chaque jour. Il mène à la même page ORP que la tâche
+// « Remettre les justificatifs ».
 const reminder = computed(() => {
   const t = today.value;
   const orp = orpTask.value;
-  if (!t?.orp_due_month || !t.orp_due_date || !orp) return null;
+  if (!t?.orp_due_month || !t.orp_due_date || !orp?.urgent) return null;
   return { month: t.orp_due_month, due: t.orp_due_date, late: orpLate.value, to: orp.task.to };
 });
 // L'accroche d'un jour de retard (AujourdhuiOrdinateurV2, état « accueil ») : « 1 justificatif en retard, » en brun,

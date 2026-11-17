@@ -100,6 +100,19 @@ describe("Rappel des justificatifs en haut de l’Accueil (§57 du 17.11, planch
     expect(wrapper.find("[data-test=orp-reminder]").exists()).toBe(true);
   });
 
+  it("avant l’échéance : seulement les 5 derniers jours, « À remettre avant le … »", async () => {
+    const inDays = (n: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const far = await mountView(day({ orp_due_month: "2025-10", orp_due_date: inDays(9) }));
+    expect(far.find("[data-test=orp-reminder]").exists()).toBe(false);
+    far.unmount();
+    const near = await mountView(day({ orp_due_month: "2025-10", orp_due_date: inDays(3) }));
+    expect(near.find("[data-test=orp-reminder]").text()).toContain("À remettre avant le");
+  });
+
   it("rien quand aucun mois n’est à remettre (mois « Déjà remis »)", async () => {
     const wrapper = await mountView(day({ orp_due_month: null, orp_due_date: null }));
     expect(wrapper.find("[data-test=orp-reminder]").exists()).toBe(false);
