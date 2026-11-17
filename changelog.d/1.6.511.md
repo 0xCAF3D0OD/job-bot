@@ -1,0 +1,1 @@
+Poids : l'attente de la lettre (§53) sort d'AiWriting dans son propre composant ; Suivi, Rendez-vous ORP, Résultats et Entraînement ne la téléchargent plus (−315 o), et suivi-assistant repasse sous sa limite dans le cas « hors du français »

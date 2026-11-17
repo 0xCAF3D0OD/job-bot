@@ -223,7 +223,8 @@ def cmd_score_compare(args: argparse.Namespace) -> int:
     """Compare la note d'un autre modèle à la note actuelle (docs/125 §9)."""
     from jobbot import accounts
     from jobbot.runtime import Runtime
-    from jobbot.scoring.compare import compare, word
+    from jobbot.scoring.compare import compare
+    from jobbot.scoring.scale import word
 
     settings = _settings()
     if not settings.llm_configured:

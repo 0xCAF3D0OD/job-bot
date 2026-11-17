@@ -31,7 +31,7 @@ import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
-import { collectWhen, dayKey, dayName, plural } from "../format";
+import { SCORE_DIG, collectWhen, dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
@@ -179,7 +179,7 @@ const selected = computed(() => items.value.find((o) => o.id === selectedId.valu
 // Les offres « Loin » (note sous 50) cachées sur téléphone (maquette Candidatures, Kevin 2026-11-06) : un lien en
 // bas de liste les montre, avec leur nombre (les tranches de note du serveur, toute la liste). Pas quand un
 // filtre de note est posé : il dit déjà quoi montrer. Une offre sans note reste visible.
-const FAR_BELOW = 50;
+const FAR_BELOW = SCORE_DIG;
 const showFar = ref(false);
 const hidesFar = computed(() => phone.value && filters.value.minScore === null && filters.value.maxScore === null);
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));

@@ -161,7 +161,7 @@ async def test_api_settings(api: AsyncClient) -> None:
     defaults = (await api.get("/api/settings")).json()
     assert defaults == {
         "orp_monthly_target": None,
-        "notify_score_threshold": 70,
+        "notify_score_threshold": 75,
         "llm_monthly_budget_chf": 10,
         "orp_due_day": 5,
         "employer_search_threshold": 70,
@@ -177,7 +177,7 @@ async def test_api_settings(api: AsyncClient) -> None:
     }
     new = {
         "orp_monthly_target": 8,
-        "notify_score_threshold": 75,
+        "notify_score_threshold": 85,
         "llm_monthly_budget_chf": 5,
         "orp_due_day": 10,
         "employer_search_threshold": 70,

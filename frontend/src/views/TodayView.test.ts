@@ -397,7 +397,10 @@ describe("Aujourd’hui sur ordinateur (maquette AujourdhuiOrdinateurV2 du 13 no
     expect(section.find("[data-test=orp-urgent] .aj-action").text()).toBe("Remettre");
     // Les tâches sont numérotées ; celle en retard est la première et le dit (PR 49).
     expect(section.element.querySelector("ol")).not.toBeNull();
-    expect(section.findAll(".aj-num").map((n) => n.text())).toEqual(["1", "2", "3", "4", "5", "6"]);
+    // « Remettre les justificatifs » se coche (§61 du 17.11) : un cercle à la place du 1, les autres gardent leur numéro.
+    expect(section.findAll(".aj-num").map((n) => n.text())).toEqual(["", "2", "3", "4", "5", "6"]);
+    expect(section.get("[data-test=orp-task-check]").attributes("role")).toBe("checkbox");
+    expect(section.get("[data-test=orp-task-check]").attributes("aria-checked")).toBe("false");
     expect(section.find("[data-test=orp-urgent]").text()).toMatch(/En retard depuis le \d/);
     // L'accroche : le retard d'abord, à la main, puis le rythme du jour.
     const hands = wrapper.findAll("[data-test=today-sentence] .aj-hand").map((h) => h.text());
@@ -417,8 +420,8 @@ describe("Aujourd’hui sur ordinateur (maquette AujourdhuiOrdinateurV2 du 13 no
     expect(triage.text()).toContain("Dont 1 très proche de ton profil");
     expect(triage.attributes("href")).toBe("/aujourdhui/tri");
     expect(section.find("[data-test=upcoming-interview]").text()).toMatch(/Bientôt SA · (aujourd’hui|demain) à/);
-    // Toute la carte est le lien : pas de bouton dedans.
-    expect(section.find("button").exists()).toBe(false);
+    // Toute la carte est le lien : pas de bouton dedans (le cercle à cocher est à côté du lien, pas dedans).
+    expect(section.find("a button").exists()).toBe(false);
     const later = wrapper.find("[data-test=today-later]");
     expect(later.find("h2").text()).toBe("Quand tu as le temps");
     const follow = later.find("[data-test=follow-ups]");

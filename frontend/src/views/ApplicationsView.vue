@@ -26,7 +26,6 @@ const InterviewForm = defineAsyncComponent(() => import("../components/Interview
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import MomentScreen from "../components/MomentScreen.vue";
 import OrpBlocks from "../components/OrpBlocks.vue";
-import OrpProofCard from "../components/OrpProofCard.vue";
 import OrpGoalCard from "../components/OrpGoalCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -56,6 +55,9 @@ import { sentSections, type SentSection } from "../sentList";
 import SentFilterPanel from "../components/SentFilterPanel.vue";
 import SentFilters from "../components/SentFilters.vue";
 import SentPhoneFilters from "../components/SentPhoneFilters.vue";
+// Les justificatifs du mois passé (§58 du 17.11) : seulement sur la page Suivi ORP du téléphone, chargés à part pour ne
+// pas peser sur les autres vues de Candidatures (limite de poids js-suivi).
+const OrpProofCard = defineAsyncComponent(() => import("../components/OrpProofCard.vue"));
 
 // Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
 // - Candidatures › Envoyées (maquette Envoyees, 7.11.2026) : l'objectif ORP du mois et sa barre, puis les
