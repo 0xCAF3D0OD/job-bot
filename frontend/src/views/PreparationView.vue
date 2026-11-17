@@ -13,7 +13,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import ActionBar from "../components/ActionBar.vue";
-import AiWriting from "../components/AiWriting.vue";
+import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
@@ -1566,9 +1566,8 @@ onMounted(() => void load());
                 </div>
               </div>
             </div>
-            <AiWriting
+            <AiWritingLetter
               v-else-if="writing && !selected"
-              kind="letter"
               :with-cv="cvState === 'busy'"
               :done="letterDone"
             />
