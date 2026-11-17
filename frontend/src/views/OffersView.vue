@@ -750,6 +750,7 @@ onUnmounted(() => {
             :filters="filters"
             :facets="facets"
             :total="shownTotal"
+            :counts="counts"
             @update="update"
             @reset="reset"
             @close="closeFilters"
