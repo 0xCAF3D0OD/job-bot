@@ -15544,6 +15544,26 @@
         ],
         "title": "FilterSummaryOut"
       },
+      "FirstApplicationOut": {
+        "properties": {
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "sent_at"
+        ],
+        "title": "FirstApplicationOut",
+        "description": "La première candidature sur la carte « Première candidature notée » (section 44, Kevin le\n17.11) : l'entreprise et la date d'envoi."
+      },
       "FirstOffersOut": {
         "properties": {
           "status": {
@@ -25234,6 +25254,16 @@
             "type": "boolean",
             "title": "First Steps Finished",
             "default": false
+          },
+          "first_application": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FirstApplicationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "google_jobs": {
             "anyOf": [

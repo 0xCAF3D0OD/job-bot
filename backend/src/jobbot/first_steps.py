@@ -13,6 +13,7 @@ une étape plus loin est faite, jusqu'à la première candidature envoyée.
 """
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Literal
 
 from sqlalchemy import Select, func, select
@@ -207,6 +208,27 @@ async def summary(session: AsyncSession) -> Summary:
         min_rate=rate if isinstance(rate, int) else None,
         kept=kept or 0,
     )
+
+
+@dataclass(frozen=True)
+class FirstApplication:
+    """La première candidature, pour la carte « Première candidature notée » (section 44,
+    Kevin le 17.11) : « Logitech · 12 nov. »."""
+
+    company: str
+    sent_at: date
+
+
+async def first_application(session: AsyncSession) -> FirstApplication | None:
+    """La plus ancienne candidature envoyée : l'entreprise et la date d'envoi."""
+    row = (
+        await session.execute(
+            select(Application.company, Application.sent_at)
+            .order_by(Application.sent_at, Application.id)
+            .limit(1)
+        )
+    ).first()
+    return FirstApplication(company=row.company, sent_at=row.sent_at) if row else None
 
 
 async def dismiss(session: AsyncSession, dismissed: bool) -> None:
