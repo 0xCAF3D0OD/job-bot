@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
-import CvPanel from "../components/CvPanel.vue";
 import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
@@ -52,6 +51,27 @@ const GoalReached = defineAsyncComponent(() => import("../components/GoalReached
 const OfferCompatSheet = defineAsyncComponent(() => import("../components/OfferCompatSheet.vue"));
 const FalseClaimSheet = defineAsyncComponent(() => import("../components/FalseClaimSheet.vue"));
 const ProfileCompletionPanel = defineAsyncComponent(() => import("../components/ProfileCompletionPanel.vue"));
+// L'étape CV se charge à son ouverture (Kevin, 17.11) : préchargée dès qu'on survole ou atteint l'onglet « CV », sinon
+// quand le navigateur est au repos. Si elle tarde plus de 300 ms, les blocs de chargement (LoadingBlocks attend
+// lui-même 300 ms) remplacent l'écran vide.
+let cvPanelLoad: Promise<unknown> | null = null;
+const loadCvPanel = () => (cvPanelLoad ??= import("../components/CvPanel.vue"));
+const CvPanel = defineAsyncComponent({
+  loader: loadCvPanel as () => Promise<typeof import("../components/CvPanel.vue")>,
+  loadingComponent: { render: () => h(LoadingBlocks, { heights: ["3rem", "32rem"] }) },
+  delay: 0,
+});
+function preloadCvPanel(event: Event): void {
+  if ((event.target as Element | null)?.closest?.("[data-test=tab-cv]")) void loadCvPanel();
+}
+let idleHandle: number | undefined;
+onMounted(() => {
+  const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1));
+  idleHandle = idle(() => void loadCvPanel());
+});
+onUnmounted(() => {
+  if (idleHandle !== undefined) (window.cancelIdleCallback ?? window.clearTimeout)(idleHandle);
+});
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -930,6 +950,8 @@ onMounted(() => void load());
       :steps="steps"
       :current="tab"
       label="Étapes de la candidature"
+      @pointerover="preloadCvPanel"
+      @focusin="preloadCvPanel"
     />
   </PageHero>
   <!-- Ordinateur (lot 15.1, capture PreparerOrdinateur) : une ligne de 64 px. Le retour, un trait, le logo, le poste en
@@ -987,6 +1009,8 @@ onMounted(() => void load());
       :current="tab"
       label="Étapes de la candidature"
       numbered
+      @pointerover="preloadCvPanel"
+      @focusin="preloadCvPanel"
     />
   </header>
 

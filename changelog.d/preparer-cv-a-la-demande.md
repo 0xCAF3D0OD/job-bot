@@ -1,0 +1,1 @@
+Poids : l'étape CV de Préparer se charge à son ouverture, préchargée au survol ou au focus de l'onglet « CV », sinon quand le navigateur est au repos ; des blocs de chargement s'affichent si elle tarde plus de 300 ms. Préparer s'ouvre avec 8,8 Ko de JS en moins (gzip), sans changement visible (décision de Kevin du 17.11)
