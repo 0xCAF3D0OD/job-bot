@@ -743,7 +743,9 @@ function onStatus(value: ApplicationStatus): void {
 .sent-plain .link { min-height: var(--target-min); font-weight: var(--weight-bold); }
 .sent-side { display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-rows { padding-bottom: 0; }
-.sent-rows-bare { padding-top: 0; }
+/* Dans une feuille (§45 du 17.11) : plus de carte, des lignes simples de 64 px entre deux traits #E5E2D9. */
+.sent-rows-bare { padding: 0; border: 0; border-block: 1px solid var(--line); border-radius: 0; background: none; }
+.sent-rows.sent-rows-bare a { min-height: calc(var(--space-8) * 2); margin: 0; padding: var(--space-3) var(--space-1); border-top-color: var(--line); }
 .sent-rows-bare a:first-of-type { border-top: 0; }
 .sent-rows h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); line-height: var(--space-6); }
 .sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
