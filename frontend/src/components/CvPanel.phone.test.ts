@@ -153,6 +153,9 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(passage.attributes("role")).toBe("button");
     await passage.trigger("click");
     const sheet = () => wrapper.get("[data-test=cv-change-sheet]");
+    // §46 du 17.11 : non bloquante, sans voile ; le CV reste utilisable au-dessus.
+    expect(sheet().attributes("aria-modal")).toBe("false");
+    expect(sheet().classes()).toContain("sheet-modeless");
     expect(sheet().get("[data-test=sheet-eyebrow]").text()).toBe("Changement 1 sur 2");
     expect(sheet().get(".sheet-title").text()).toBe("Profil");
     expect(sheet().get("[data-test=cv-why]").text()).toBe("Pourquoi : L’annonce demande AWS dès sa première ligne.");

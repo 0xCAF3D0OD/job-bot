@@ -39,6 +39,7 @@ const props = withDefaults(
     title: string;
     subtitle?: string;
     eyebrow?: string;
+    back?: boolean;
     full?: boolean;
     icon?: IconName | "";
     labelledBy?: string;
@@ -291,11 +292,11 @@ function onClick(event: MouseEvent): void {
         <button
           type="button"
           class="sheet-close"
-          aria-label="Fermer"
+          :aria-label="back ? 'Retour' : 'Fermer'"
           data-test="sheet-close"
           @click="emit('close')"
         >
-          <AppIcon name="close" />
+          <AppIcon :name="back ? 'arrow-left' : 'close'" />
         </button>
       </header>
       <div class="sheet-body">
