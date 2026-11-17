@@ -56,25 +56,25 @@ button:active,a:active{transform:scale(.97)}
 
 <sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
 <button type="button" class="fade" tabindex="-1" aria-hidden="true" onClick="{{closeSheet}}" style="position: absolute; inset: 0; z-index: 8; border: 0; padding: 0; background: rgba(0,0,0,0.60); cursor: default"></button>
-<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sht" style="position: absolute; z-index: 9; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 14px; padding: 10px 20px 26px; background: #221E1A; border-radius: 26px 26px 0 0">
-<span aria-hidden="true" style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D9DCE6"></span>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sht" style="border: 1px solid #38322B; box-sizing: border-box; box-shadow: 0 12px 32px rgba(27,31,42,0.2); position: absolute; z-index: 9; left: 8px; right: 8px; bottom: 8px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 10px 20px 26px; background: #221E1A; border-radius: 28px">
+<span aria-hidden="true" style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: transparent"></span>
 <sc-if value="{{sheetOrp}}" hint-placeholder-val="{{ false }}">
 <h2 id="sht" style="margin: 4px 0 0; font-size: 20px; font-weight: 800">Formation et chômage</h2>
 <p style="margin: 0; font-size: 15px; line-height: 22px; color: #D9D2C7">L'ORP peut financer une formation. Il faut d'abord la demander à ta conseillère et attendre son accord, avant de t'inscrire.</p>
 <a href="#arbeit" style="min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; border-top: 1px solid #2C2722; font-size: 15px; font-weight: 700; text-decoration: none">Mesures du marché du travail, arbeit.swiss<span style="font-size: 13px; font-weight: 600; color: #ABA398">nouvel onglet</span></a>
 <a href="#orp" style="min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; border-top: 1px solid #2C2722; font-size: 15px; font-weight: 700; text-decoration: none">Adresses des ORP<span style="font-size: 13px; font-weight: 600; color: #ABA398">nouvel onglet</span></a>
-<button type="button" onClick="{{closeSheet}}" style="height: 54px; border: 0; border-radius: 27px; background: #7D95FF; color: #171411; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Compris</button>
+<button type="button" onClick="{{closeSheet}}" style="height: 54px; border: 0; border-radius: 27px; background: #7D95FF; color: #221E1A; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Compris</button>
 </sc-if>
 <sc-if value="{{sheetItem}}" hint-placeholder-val="{{ false }}">
 <span style="align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: #232B45; color: #AEBDFF; font-size: 12px; font-weight: 700">{{cur.type}}</span>
 <h2 id="sht" style="margin: -4px 0 0; font-size: 20px; line-height: 28px; font-weight: 800">{{cur.title}}</h2>
-<div style="display: flex; flex-direction: column; background: #171411; border-radius: 14px">
+<div style="display: flex; flex-direction: column; background: #221E1A; border-radius: 14px">
 <div style="display: flex; justify-content: space-between; padding: 12px 14px; font-size: 15px"><span style="color: #ABA398">Organisme</span><span style="font-weight: 700; text-align: right">{{cur.org}}</span></div>
 <div style="display: flex; justify-content: space-between; padding: 12px 14px; border-top: 1px solid #2C2722; font-size: 15px"><span style="color: #ABA398">Format</span><span style="font-weight: 700">{{cur.meta}}</span></div>
 <div style="display: flex; justify-content: space-between; padding: 12px 14px; border-top: 1px solid #2C2722; font-size: 15px"><span style="color: #ABA398">Prix</span><span style="font-weight: 700">{{cur.price}}</span></div>
 </div>
 <p style="margin: 0; font-size: 13px; line-height: 19px; color: #ABA398">{{cur.note}}</p>
-<a href="#site" style="height: 54px; border-radius: 27px; background: #7D95FF; color: #171411; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Voir la formation<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">(nouvel onglet)</span></a>
+<a href="#site" style="height: 54px; border-radius: 27px; background: #7D95FF; color: #221E1A; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Voir la formation<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">(nouvel onglet)</span></a>
 <button type="button" onClick="{{cur.keep}}" style="height: 48px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #AEBDFF; cursor: pointer">{{cur.keepLabel}}</button>
 </sc-if>
 </section>
