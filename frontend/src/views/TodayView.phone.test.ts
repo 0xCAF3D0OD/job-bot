@@ -68,3 +68,41 @@ describe("Accueil du téléphone un jour de repos (planche AccueilV2, état « r
     expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);
   });
 });
+
+describe("Rappel des justificatifs en haut de l’Accueil (§57 du 17.11, planche AccueilJustificatif)", () => {
+  const todayKey = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" });
+  const LATE = { orp_due_month: "2025-10", orp_due_date: "2025-11-05" };
+
+  it("en retard : un îlot role=status, sans prendre le focus, « Exporter » vers la page ORP du mois", async () => {
+    const wrapper = await mountView(day(LATE));
+    const reminder = wrapper.find("[data-test=orp-reminder]");
+    expect(reminder.attributes("role")).toBe("status");
+    expect(reminder.text()).toContain("Justificatifs d’octobre à remettre");
+    expect(reminder.text()).toContain("Échéance passée le 5 novembre");
+    expect(wrapper.find("[data-test=orp-reminder-export]").attributes("href")).toBe("/bilan/orp?mois=2025-10");
+    expect(wrapper.find("[data-test=orp-reminder-close]").attributes("aria-label")).toBe("Fermer pour aujourd’hui");
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("au plus une fois par jour, et « Fermer pour aujourd’hui » le retire", async () => {
+    const wrapper = await mountView(day(LATE));
+    expect(localStorage.getItem("jobA1.rappel-orp")).toBe(todayKey());
+    await wrapper.find("[data-test=orp-reminder-close]").trigger("click");
+    expect(wrapper.find("[data-test=orp-reminder]").exists()).toBe(false);
+    wrapper.unmount();
+    const again = await mountView(day(LATE));
+    expect(again.find("[data-test=orp-reminder]").exists()).toBe(false);
+  });
+
+  it("revient le lendemain", async () => {
+    localStorage.setItem("jobA1.rappel-orp", "2000-01-01");
+    const wrapper = await mountView(day(LATE));
+    expect(wrapper.find("[data-test=orp-reminder]").exists()).toBe(true);
+  });
+
+  it("rien quand aucun mois n’est à remettre (mois « Déjà remis »)", async () => {
+    const wrapper = await mountView(day({ orp_due_month: null, orp_due_date: null }));
+    expect(wrapper.find("[data-test=orp-reminder]").exists()).toBe(false);
+    expect(localStorage.getItem("jobA1.rappel-orp")).toBeNull();
+  });
+});
