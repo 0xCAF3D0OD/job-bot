@@ -133,6 +133,9 @@ onMounted(() => {
 /* Une carte de groupe comme Compte : trait de 1,5 px, lignes à flèche (D29) séparées par un filet de 1 px
    (--row-sep) ; 64 px de haut, 20 px de marge, le titre en gras, sa ligne en gris dessous. */
 .settings-more-group { --more-row-h: 64px; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+/* Sur ordinateur, la section est déjà une carte bordée (.settings-wide .setting-cards) : pas de second cadre dedans,
+   sinon deux traits se suivent au-dessus de la première ligne (audit du 17.11, K37). */
+.settings-wide .settings-more-group { border: 0; border-radius: 0; }
 .settings-more-group > .block-row { display: flex; align-items: center; gap: var(--space-4); width: 100%; box-sizing: border-box; min-height: var(--more-row-h); margin: 0; padding: var(--space-3) var(--space-5); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .settings-more-group > .block-row:hover { background: var(--band); }
 .settings-more-group > .block-row + .block-row { border-top: 1px solid var(--row-sep); }

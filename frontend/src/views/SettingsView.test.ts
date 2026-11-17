@@ -100,6 +100,29 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     expect(desktop.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text())).toEqual(["Nouvelles offres", "M’avertir dès", "Relances", "Objectif ORP"]);
     expect(desktop.find("[data-test=section-affichage]").exists()).toBe(false);
   });
+
+  it("Rythme : un seul calendrier de pause ouvert à la fois (K41)", async () => {
+    mockGet(false);
+    const { wrapper } = await mountSettings("rythme");
+    await wrapper.get("[data-test=pause-until] [data-test=dt-date]").trigger("click");
+    expect(wrapper.findAll("[data-test=date-time-panel]")).toHaveLength(1);
+    await wrapper.get("[data-test=pause-from] [data-test=dt-date]").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAll("[data-test=date-time-panel]")).toHaveLength(1);
+    expect(wrapper.find("[data-test=pause-from] [data-test=date-time-panel]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=pause-until] [data-test=dt-date]").exists()).toBe(true);
+  });
+
+  it("une rubrique seule a le même en-tête que la page Réglages : la flèche vers le compte, puis son nom (N6)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet(false);
+    const { wrapper } = await mountSettings("rythme");
+    expect(wrapper.find(".rg-phone-head h1").text()).toBe("Rythme");
+    const back = wrapper.get("[data-test=settings-back]");
+    expect(back.attributes("href")).toBe("/compte");
+    expect(back.attributes("aria-label")).toBe("Retour au compte");
+    expect(wrapper.find(".back-link").exists()).toBe(false);
+  });
 });
 
 describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {

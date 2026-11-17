@@ -62,11 +62,28 @@ function onKeydown(event: KeyboardEvent): void {
   }
 }
 
-function onDocumentClick(event: MouseEvent): void {
-  if (open.value && root.value && !root.value.contains(event.target as Node)) close();
+// Toute la ligne ouvre le menu (audit du 17.11, K40) : posé dans une ligne `.choice-menu-row` (Apparence, « M’avertir
+// dès »), un clic n’importe où sur la ligne fait comme un clic sur la valeur, comme Langue et Taille du texte. Le
+// bouton reste le seul élément du clavier : la ligne n’ajoute pas d’arrêt de tabulation.
+let row: HTMLElement | null = null;
+function onRowClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (root.value?.contains(target) || target.closest("a, button, input, select, textarea")) return;
+  void toggle();
 }
-onMounted(() => document.addEventListener("click", onDocumentClick));
-onUnmounted(() => document.removeEventListener("click", onDocumentClick));
+function onDocumentClick(event: MouseEvent): void {
+  const target = event.target as Node;
+  if (open.value && root.value && !root.value.contains(target) && !row?.contains(target)) close();
+}
+onMounted(() => {
+  document.addEventListener("click", onDocumentClick);
+  row = root.value?.closest<HTMLElement>(".choice-menu-row") ?? null;
+  row?.addEventListener("click", onRowClick);
+});
+onUnmounted(() => {
+  document.removeEventListener("click", onDocumentClick);
+  row?.removeEventListener("click", onRowClick);
+});
 </script>
 
 <template>
@@ -126,5 +143,8 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
 .choice-menu .menu button { min-height: 44px; }
 .choice-menu .menu button[aria-checked="true"] { color: var(--text); font-weight: var(--weight-bold); }
 .choice-menu-label { flex: 1; }
+.choice-menu-row { cursor: pointer; }
+/* Dans une ligne, la valeur et le chevron au même écart et au même bord que Langue et Taille du texte. */
+.choice-menu-row .choice-menu-button { gap: var(--space-4); padding-right: 0; }
 .choice-menu .menu .icon { color: var(--primary-graphic); }
 </style>
