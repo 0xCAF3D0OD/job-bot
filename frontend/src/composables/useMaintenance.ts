@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import { api, MAINTENANCE_EVENT, MAINTENANCE_READ_EVENT } from "../api/client";
 
@@ -85,6 +85,11 @@ function onReadOnly(event: Event): void {
   const detail = (event as CustomEvent<string | null>).detail;
   refused.value = `Maintenance en cours : tu peux consulter, pas encore enregistrer.${detail ? ` ${detail}` : ""}`;
   apply({ active: true, mode: "lecture", message: detail, bypass: false });
+}
+
+/** Un bandeau de maintenance est affiché en haut des pages (exploitant ou lecture seule), sans rien d'autre à charger. */
+export function useMaintenanceBanner() {
+  return { banner: computed(() => bypass.value || reading.value) };
 }
 
 export function useMaintenance() {
