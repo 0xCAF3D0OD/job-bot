@@ -175,17 +175,28 @@ class Cell:
 
 def _received(searches: list[Search], site: str, terms: str) -> datetime | None:
     """Dernière alerte de ce site dont l'objet ou le libellé contient tous les mots."""
-    words = normalize_text(terms).split()
-    if not words:
-        return None
     latest: datetime | None = None
     for row in searches:
-        if row.source != site:
-            continue
-        text = f" {normalize_text(f'{row.alert_label or ""} {row.subject or ""}')} "
-        if all(f" {word} " in text for word in words):
+        if row.source == site and _matches(terms, row.alert_label, row.subject):
             latest = max(latest, row.received_at) if latest else row.received_at
     return latest
+
+
+def _matches(terms: str, label: str | None, subject: str | None) -> bool:
+    """Tous les mots de la recherche dans le libellé ou l'objet de l'alerte."""
+    words = normalize_text(terms).split()
+    text = f" {normalize_text(f'{label or ""} {subject or ""}')} "
+    return bool(words) and all(f" {word} " in text for word in words)
+
+
+async def stopped(session: AsyncSession, label: str | None, subject: str | None) -> bool:
+    """L'alerte d'une recherche retirée ou que la personne ne suit plus (Kevin, 17.11) : ses mots
+    sont dans le libellé ou l'objet, et ceux d'aucune recherche suivie. Un e-mail qu'on ne peut
+    rattacher à aucune recherche est gardé, par prudence."""
+    searches = list(await session.scalars(select(AlertSearch)))
+    if any(s.active and _matches(s.terms, label, subject) for s in searches):
+        return False
+    return any(not s.active and _matches(s.terms, label, subject) for s in searches)
 
 
 async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -> list[Cell]:

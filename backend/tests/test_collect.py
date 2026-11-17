@@ -9,7 +9,16 @@ from sqlalchemy import func, select, text, update
 
 from jobbot.api.app import create_app
 from jobbot.collect import service
-from jobbot.db.models import EnrichStatus, JobRun, Offer, OfferLink, OfferSighting, Search, Source
+from jobbot.db.models import (
+    AlertSearch,
+    EnrichStatus,
+    JobRun,
+    Offer,
+    OfferLink,
+    OfferSighting,
+    Search,
+    Source,
+)
 from jobbot.mail.imap import FetchedEmail, MailboxError
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -496,3 +505,48 @@ def test_next_collect_follows_the_schedule() -> None:
     # de collecte en été).
     summer = next_collect(datetime(2026, 7, 1, 19, 30, tzinfo=UTC)).astimezone(zurich)
     assert (summer.day, summer.hour) == (2, 8)
+
+
+@pytest.mark.usefixtures("parsers")
+async def test_alert_of_a_removed_search_is_ignored(
+    collect_runtime: Runtime, runtime: Runtime, mailbox: FakeMailbox
+) -> None:
+    """Le site écrit encore pour une recherche retirée ou que la personne ne suit plus (Kevin,
+    17.11) : l'e-mail reste au journal, ses offres n'arrivent pas. Une recherche suivie avec les
+    mêmes mots, ou un e-mail qu'on ne peut rattacher à aucune recherche, sont gardés."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE alert_searches CASCADE"))
+    async with runtime.sessionmaker.begin() as session:
+        session.add_all(
+            [
+                AlertSearch(terms="Kubernetes", location="Vaud", active=False, removed_at=T0),
+                AlertSearch(terms="SRE", location=None, active=False),
+                AlertSearch(terms="DevOps", location="Genève", active=False, removed_at=T0),
+                AlertSearch(terms="DevOps", location="Vaud"),
+            ]
+        )
+    for n, subject in enumerate(["Kubernetes à Lausanne", "SRE", "DevOps", "Nouvelles offres"]):
+        mailbox.add(
+            make_email(
+                message_id=f"<s{n}@jobup.ch>",
+                sender="alerts@jobup.ch",
+                received_at=T0,
+                subject=subject,
+                offers=[(f"Poste {n}", "Acme SA", "Lausanne", f"https://j/s{n}", f"S{n}")],
+            ),
+            f"<s{n}@jobup.ch>",
+        )
+    result = await service.collect(collect_runtime)
+    assert result.new_searches == 4
+    async with collect_runtime.sessionmaker() as session:
+        kinds = dict((await session.execute(select(Search.subject, Search.kind))).all())
+        titles = set(await session.scalars(select(Offer.title)))
+    assert kinds == {
+        "Kubernetes à Lausanne": "stopped",
+        "SRE": "stopped",
+        "DevOps": None,
+        "Nouvelles offres": None,
+    }
+    assert titles == {"Poste 2", "Poste 3"}
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE alert_searches CASCADE"))
