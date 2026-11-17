@@ -144,7 +144,9 @@ export const PAGES = {
     // L'écriture de la lettre au style ChargementLettre (§53), chargée seulement pendant l'attente.
     "components/LoadingSteps.vue",
   ],
-  suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
+  // Suivi avec les prises de contact ouvertes (ContactsPanel, chargé à l'ouverture depuis l'audit du 17.11) ; avec
+  // l'Assistant ouvert, ce panneau latéral est fermé (un seul panneau à la fois).
+  suivi: ["views/JobsView.vue", "views/ApplicationsView.vue", "components/ContactsPanel.vue"],
   alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
   // Alertes vides sur ordinateur avec l'écran « Ta recherche » et son volet, chargés à la demande (Kevin, 17.11) : le
   // pire cas garde les limites des Alertes, pour qu'ouvrir le volet ne coûte jamais plus que la page.

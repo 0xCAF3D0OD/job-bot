@@ -86,7 +86,7 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       :data-test="testId"
       @click="toggle"
     >
-      {{ current }}<AppIcon name="chevron" />
+      <span class="choice-menu-value">{{ current }}</span><AppIcon name="chevron" />
     </button>
     <ul
       v-if="open"

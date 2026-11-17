@@ -159,10 +159,40 @@ const searching = ref(false);
 const proposals = ref<RegistryCandidate[]>([]);
 const registryMessage = ref("");
 
+// « Adresse trouvée » seulement si l'adresse affichée change (audit du 17.11, K6) : le serveur peut connaître
+// l'entreprise sans que l'adresse de l'offre bouge. La recherche reste « en cours » jusqu'à la fiche relue, puis
+// la phrase dit ce que la fiche montre. Sans relecture au bout de 10 s, on n'affirme rien.
+const RELOAD_WAIT_MS = 10_000;
+let awaited: { before: string | null; found: string; timer: ReturnType<typeof setTimeout> } | null = null;
+function awaitReload(found: string): void {
+  if (awaited) clearTimeout(awaited.timer);
+  awaited = {
+    before: props.offer.company_address ?? null,
+    found,
+    timer: setTimeout(() => {
+      awaited = null;
+      searching.value = false;
+    }, RELOAD_WAIT_MS),
+  };
+  emit("changed");
+}
+watch(
+  () => props.offer,
+  (offer) => {
+    if (!awaited) return;
+    clearTimeout(awaited.timer);
+    const changed = (offer.company_address ?? null) !== awaited.before;
+    registryMessage.value = changed ? awaited.found : "Aucune nouvelle adresse trouvée.";
+    awaited = null;
+    searching.value = false;
+  },
+);
+
 async function searchRegistry(): Promise<void> {
   searching.value = true;
   registryMessage.value = "";
   proposals.value = [];
+  let waiting = false;
   try {
     const { data } = await api.POST("/api/offers/{offer_id}/address-candidates", {
       params: { path: { offer_id: props.offer.id } },
@@ -170,12 +200,12 @@ async function searchRegistry(): Promise<void> {
     if (!data) {
       registryMessage.value = "Registre IDE injoignable, réessaie plus tard.";
     } else if (data.chosen_uid && props.offer.company_address_source !== "registry") {
-      registryMessage.value = "Adresse trouvée dans le registre IDE.";
-      emit("changed");
+      waiting = true;
+      awaitReload("Adresse trouvée dans le registre IDE.");
     } else if (data.web_address) {
-      registryMessage.value = "Adresse trouvée sur Internet : vérifie la source.";
       proposals.value = data.candidates;
-      emit("changed");
+      waiting = true;
+      awaitReload("Adresse trouvée sur Internet : vérifie la source.");
     } else {
       proposals.value = data.candidates;
       const web = data.web_unavailable
@@ -188,7 +218,7 @@ async function searchRegistry(): Promise<void> {
   } catch {
     registryMessage.value = "API injoignable.";
   } finally {
-    searching.value = false;
+    if (!waiting) searching.value = false;
   }
 }
 
@@ -1613,10 +1643,14 @@ watch(
         </div>
         <p
           v-if="searching"
-          class="hint"
+          class="hint offer-busy"
           role="status"
+          data-test="registry-busy"
         >
-          Recherche dans le registre IDE…
+          <span
+            class="offer-busy-ring"
+            aria-hidden="true"
+          />Recherche dans le registre IDE…
         </p>
         <div
           v-if="registryMessage || proposals.length"
@@ -1656,8 +1690,12 @@ watch(
         >
           <span
             v-if="employerBusy"
+            class="offer-busy"
             role="status"
-          >Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
+          ><span
+            class="offer-busy-ring"
+            aria-hidden="true"
+          />Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
           <span
             v-else-if="offer.employer_url && offer.employer_checked_at"
           >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
@@ -1735,7 +1773,9 @@ watch(
 .oc-note-link { flex: none; display: inline-flex; align-items: center; gap: var(--oc-2); min-height: var(--target-min); margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
 .oc-note-link:hover { text-decoration: underline; }
 .oc-note-link .icon { width: 18px; height: 18px; }
-.oc-note-redone { margin: var(--space-2) 0 0; }
+/* Audit du 17.11, K8 : le bandeau « Note refaite » finit à 24 px du bord de la carte, comme sur les côtés (8 de la carte
+   + 16 ici), au lieu de 8. */
+.oc-note-redone { margin: var(--space-2) 0 var(--space-4); }
 .oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
 .oc-row { margin: 0; padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); }
 .oc-post { padding-bottom: var(--space-4); }
@@ -1763,6 +1803,16 @@ watch(
 .oc-link-row:hover b { text-decoration: underline; }
 .oc-link-row .icon { flex: none; width: 20px; height: 20px; }
 .oc-company { padding: var(--oc-head-top) var(--oc-x); }
+/* Recherche en cours (audit du 17.11, K6) : le cercle qui tourne des écrans de chargement (LoadingSteps, étape en
+   cours), à la taille du texte, devant la phrase ; immobile si le mouvement est réduit. */
+.offer-busy { display: flex; align-items: center; gap: var(--space-2); }
+.offer-busy-ring { flex: none; box-sizing: border-box; width: 1em; height: 1em; border: 2px solid var(--line-strong); border-right-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: offer-busy-turn 0.9s linear infinite; }
+@keyframes offer-busy-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .offer-busy-ring { animation: none; } }
+/* Audit du 17.11, N27 : sur ordinateur, chaque lien seul de la fiche a une cible de 24 px de haut au moins (WCAG 2.5.8),
+   sans rien déplacer : un lien dans le texte prend la marge en haut et en bas, un bouton-lien la reprend en négatif. */
+.offer-cards .contacts-searches a.link { padding-block: var(--space-1); }
+.offer-cards :is(.oc-company .more-direct, [data-test="contact-add"]) { min-height: var(--space-6); margin-block: calc((var(--space-5) - var(--space-6)) / 2); }
 /* Le détail d'une offre sur téléphone, version du 9 novembre (MODIFICATIONS §10.1, D35 ; HTML des maquettes Offre,
    OffreSombre, OffreCompatibilite) : fond --bg partout ; en-tête à 20 px ; deux cartes d’information (D35) blanches à
    trait de 1,5 px --card-line, rayon 18, 20 px dedans trait compris, 12 px au-dessus, à 20 px des bords : le poste
