@@ -698,3 +698,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.484 | Ajouter une offre déjà là : icône « info » (le cercle « ! » reste aux alertes), phrase « Ouvrir l'offre complète aussi les informations qui lui manquent », et « {n} information(s) ajoutée(s) à l'offre » avec « Annuler » pendant 6 s | livrée |
 | 1.6.485 | Offres : « C'est une agence de placement » dans le menu de la fiche marque à la main une entreprise comme agence, pour toutes ses offres, avec « Annuler » ; la dernière correction l'emporte sur la détection | livrée |
 | 1.6.486 | Tableau des retours d'entretien, côté serveur : liste paginée de tous les entretiens du compte (point et issue) et retour complet, en lecture seule | livrée en partie (serveur seul) ; l'écran attend la planche de Kevin |
+| 1.6.487 | L’extension affiche « Toute la Suisse » quand l’alerte jobup n’a pas de lieu | livrée |
+| 1.6.488 | Journal d'accès de Caddy sans identifiant ni paramètre : le chemin seul, chaque nombre remplacé par :id, sans query string ni Referer | livrée |
