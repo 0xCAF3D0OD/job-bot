@@ -1,4 +1,4 @@
-"""« M'avertir dès » sur l'échelle unique 50 / 75 / 85 (§65, décision de Kevin du 17.11.2026, 16 h 46)
+"""« M'avertir dès » sur l'échelle unique 50 / 75 / 85 (§65, Kevin, 17.11.2026, 16 h 46)
 
 Revision ID: 0091
 Revises: 0090
@@ -35,7 +35,7 @@ COUNT = sa.text(
 
 
 def nearest(value: int) -> int:
-    # Recopié de jobbot.scoring.scale.nearest_level : une migration ne dépend pas du code qui change.
+    # Recopié de jobbot.scoring.scale.nearest_level : une migration ne dépend pas du code.
     return min(LEVELS, key=lambda level: (abs(level - value), -level))
 
 

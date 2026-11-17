@@ -219,7 +219,8 @@ def test_highlight_says_the_same_gap_in_a_word_and_a_sentence() -> None:
     )
     assert highlight([scores]) == Highlight(
         "Proches",
-        "Plus souvent une réponse que les offres loin de ton profil (moins de 50) : 4 sur 6, contre 1 sur 8.",
+        "Plus souvent une réponse que les offres loin de ton profil (moins de 50) : "
+        "4 sur 6, contre 1 sur 8.",
     )
     follow = Comparison(
         "follow_up",

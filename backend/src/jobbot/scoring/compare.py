@@ -13,7 +13,6 @@ from jobbot.llm.client import Refused
 from jobbot.llm.pricing import cost_usd
 from jobbot.llm.scoring import parse_output, request_params
 from jobbot.runtime import Runtime
-from jobbot.scoring.scale import word
 from jobbot.scoring.service import (
     active_profile,
     budget_state,
