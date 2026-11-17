@@ -13,6 +13,7 @@ from jobbot.llm.client import Refused
 from jobbot.llm.pricing import cost_usd
 from jobbot.llm.scoring import parse_output, request_params
 from jobbot.runtime import Runtime
+from jobbot.scoring.scale import word
 from jobbot.scoring.service import (
     active_profile,
     budget_state,
@@ -20,17 +21,6 @@ from jobbot.scoring.service import (
     offer_data,
     record_call,
 )
-
-
-def word(score: int) -> str:
-    """Les mots de la note (docs/121 §C.5)."""
-    if score >= 85:
-        return "Très proche"
-    if score >= 75:
-        return "Proche"
-    if score >= 50:
-        return "À creuser"
-    return "Loin"
 
 
 @dataclass(frozen=True)

@@ -36,7 +36,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 
 const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
-  notify_score_threshold: 70,
+  notify_score_threshold: SCORE_SCALE.close,
   llm_monthly_budget_chf: 10,
   orp_due_day: 5,
   employer_search_threshold: 70,
@@ -222,13 +222,9 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
   form.value.offers_notify_mode = mode;
   void saveMode();
 }
-// Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
-// soit 85, 75 et 50 (Proche dès 75, 2026-11-05, Kevin). Une valeur d'avant (60, 70, 80, 90…) s'affiche sous le mot
-// le plus proche : 70, l'ancien seuil de Proche, reste « Proche ».
-// « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils. LISEZMOI §56 du
-// 17.11 : les mots en libellé, le seuil en précision (« 85 et plus ») ; les seuils de main restent (85, 75, 50) tant
-// que Kevin n'a pas dit s'il veut ceux de la planche (90, 75, 60), qui changeraient les valeurs enregistrées.
-// Échelle unique (Kevin, 17.11, §65) : les seuils viennent de SCORE_SCALE, comme le cercle et le filtre Note.
+// « M'avertir dès » (C11, D3 ; §56 du 17.11 : le mot en libellé, le seuil en précision « 85 et plus »). Échelle
+// unique du §65 (Kevin, 17.11) : les seuils de SCORE_SCALE, comme le cercle et le filtre Note. Les valeurs d'avant
+// (70, 80…) sont passées au niveau le plus proche par la migration 0091.
 const THRESHOLD_OPTIONS = [
   { n: SCORE_SCALE.veryClose, label: "Très proche" },
   { n: SCORE_SCALE.close, label: "Proche" },
@@ -236,13 +232,10 @@ const THRESHOLD_OPTIONS = [
 ].map(({ n, label }) => ({ value: String(n), label, hint: `${n} et plus`, test: `threshold-${n}` }));
 const thresholdLabel = computed(() => THRESHOLD_OPTIONS.find((o) => o.value === threshold.value)?.label ?? "");
 const thresholdSheet = ref(false);
-const LEGACY_CLOSE = 70;
 const threshold = computed({
   get: () => {
-    const value = form.value.notify_score_threshold ?? 70;
-    // 70, l'ancien défaut encore enregistré, reste « Proche » tant que les valeurs enregistrées ne sont pas migrées.
-    const close = value >= LEGACY_CLOSE;
-    return String(value >= SCORE_SCALE.veryClose ? SCORE_SCALE.veryClose : close ? SCORE_SCALE.close : SCORE_SCALE.dig);
+    const value = form.value.notify_score_threshold ?? SCORE_SCALE.close;
+    return String(value >= SCORE_SCALE.veryClose ? SCORE_SCALE.veryClose : value >= SCORE_SCALE.close ? SCORE_SCALE.close : SCORE_SCALE.dig);
   },
   set: (value: string) => void setThreshold(Number(value)),
 });

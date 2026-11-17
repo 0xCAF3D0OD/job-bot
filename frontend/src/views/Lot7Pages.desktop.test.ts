@@ -103,7 +103,7 @@ describe("Réglages sur ordinateur (ReglagesOrdinateur)", () => {
         data:
           path === "/api/notifications"
             ? { configured: false, server: "https://ntfy.sh" }
-            : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10, rhythm_days: [0, 1, 2, 3, 4] },
+            : { orp_monthly_target: null, notify_score_threshold: 75, llm_monthly_budget_chf: 10, rhythm_days: [0, 1, 2, 3, 4] },
       }),
     );
     const r = router();

@@ -28,7 +28,7 @@ from jobbot.filtering.service import run_filter
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring_service
-from jobbot.scoring.compare import word
+from jobbot.scoring.scale import word
 
 log = get_logger(__name__)
 

@@ -213,13 +213,13 @@ def test_highlight_says_the_same_gap_in_a_word_and_a_sentence() -> None:
         "score",
         "Proximité",
         [
-            Group("high", "80 et plus", "Les offres notées 80 et plus", 4, 6),
-            Group("low", "moins de 60", "Les offres notées moins de 60", 1, 8),
+            Group("close", "proches", "Les offres proches de ton profil (75 et plus)", 4, 6),
+            Group("far", "loin", "Les offres loin de ton profil (moins de 50)", 1, 8),
         ],
     )
     assert highlight([scores]) == Highlight(
-        "Notées 80 et plus",
-        "Plus souvent une réponse que les offres notées moins de 60 : 4 sur 6, contre 1 sur 8.",
+        "Proches",
+        "Plus souvent une réponse que les offres loin de ton profil (moins de 50) : 4 sur 6, contre 1 sur 8.",
     )
     follow = Comparison(
         "follow_up",
