@@ -8,7 +8,7 @@ let serial = 0;
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from "vue";
 
-import { enterEntry, leaveEntry, useEntryTracker } from "../filterHistory";
+import { enterEntry, leaveEntry, offBack, onBack, useEntryTracker } from "../filterHistory";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
@@ -96,11 +96,11 @@ function pushEntry(inherited: boolean): void {
   if (!enterEntry(key, inherited)) return;
   tracker.start();
   historyEntry = true;
-  window.addEventListener("popstate", onPopState);
+  onBack(onPopState);
 }
 // Fermer applique : les filtres choisis restent (filterHistory.ts, Kevin 17.11).
 function dropEntry(): void {
-  window.removeEventListener("popstate", onPopState);
+  offBack(onPopState);
   tracker.stop();
   if (!historyEntry) return;
   historyEntry = false;
@@ -110,7 +110,7 @@ function dropEntry(): void {
 // Une seule feuille à la fois : la nouvelle reprend l’entrée d’historique et le bouton d’origine de la précédente.
 let handedOver = false;
 function handOver(): HTMLElement | null {
-  window.removeEventListener("popstate", onPopState);
+  offBack(onPopState);
   tracker.stop();
   historyEntry = false;
   handedOver = true;

@@ -18,3 +18,12 @@ retour ; sur ordinateur aussi Échap et le clic à l'extérieur), avec le même 
 entrée d'historique par application. Annuler = « Tout effacer », ou retour après la fermeture, qui ramène aux filtres
 d'avant. Les pastilles sous la barre et « Effacer les filtres » des listes vides appliquent tout de suite : une entrée
 chacun.
+
+Réponses de Kevin (17.11, 14 h 07) :
+
+- Le tri d'Envoyées est une préférence du compte : il n'entre pas dans l'historique (replaceState, jamais pushState).
+  Retour = page précédente. L'adresse et la liste montrent toujours le même tri : revenir à une entrée d'avant
+  remet aussitôt le tri choisi dans l'adresse. Les filtres de statut gardent la règle : une entrée par application.
+- Pas de clignotement : la liste affichée reste jusqu'à ce que la liste filtrée soit prête, puis elle est remplacée
+  d'un coup. Retour pendant l'ouverture : l'entrée choisie est remise avant que le routeur ne lise l'adresse, la liste
+  ne repasse jamais par les filtres d'avant.

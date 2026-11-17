@@ -103,13 +103,26 @@ const statusFilter = computed<SentFilter>({
   get: () => sentFilterOf(route.query.statut),
   set: (value) => void router.replace({ query: { ...route.query, statut: value === "toutes" ? undefined : value } }),
 });
+// Le tri est une préférence du compte, hors de l'historique (Kevin, 17.11, 14 h 07) : le choix vit ici, l'adresse le
+// suit par replace. Revenir à une entrée d'avant (retour) ne change pas le tri : l'adresse reprend aussitôt le choix,
+// et la liste ne montre jamais un autre tri que l'adresse (filterHistory.ts, « tri » neutre sur Envoyées).
+const chosenSort = ref<SentSort>(sentSortOf(route.query.tri));
 const sentSort = computed<SentSort>({
-  get: () => sentSortOf(route.query.tri),
+  get: () => chosenSort.value,
   set: (value) => {
     saveSort(value);
-    void router.replace({ query: { ...route.query, tri: value === "relancer" ? undefined : value } });
+    chooseSort(value);
   },
 });
+function chooseSort(value: SentSort): void {
+  chosenSort.value = value;
+  syncSort();
+}
+function syncSort(): void {
+  if (route.name !== "applications" || sentSortOf(route.query.tri) === chosenSort.value) return;
+  void router.replace({ query: { ...route.query, tri: chosenSort.value === "relancer" ? undefined : chosenSort.value } });
+}
+watch(() => route.query.tri, syncSort);
 // Le tri est gardé pour le compte (décision de Kevin du 15.11) : sans ?tri dans l'adresse, le tri enregistré revient ;
 // chaque choix (et « Tout effacer ») est enregistré, jamais un simple changement d'adresse.
 function saveSort(sort: SentSort): void {
@@ -118,7 +131,7 @@ function saveSort(sort: SentSort): void {
 onMounted(async () => {
   if (route.query.tri !== undefined) return;
   const saved = (await api.GET("/api/sent-sort").catch(() => undefined))?.data?.sort;
-  if ((saved === "recentes" || saved === "anciennes") && route.query.tri === undefined) void router.replace({ query: { ...route.query, tri: saved } });
+  if ((saved === "recentes" || saved === "anciennes") && route.query.tri === undefined) chooseSort(saved);
 });
 const worded = computed(() => (wanted.value.length ? all.value.filter(matches) : all.value));
 const statusCounts = computed(() => sentCounts(worded.value));
@@ -132,6 +145,7 @@ function clearFilters(): void {
 function resetPhoneSentFilters(): void {
   words.value = "";
   saveSort("relancer");
+  chosenSort.value = "relancer";
   void router.replace({ query: { ...route.query, q: undefined, statut: undefined, tri: undefined } });
 }
 // Les rubriques d'Envoyées (« à relancer d'abord ») ; triées par date, une seule liste sans rubrique.
@@ -421,6 +435,7 @@ watch(twoColumns, (wide) => {
 const shownCount = computed(() => sections.value.reduce((n, section) => n + section.items.length, 0));
 function resetSentFilters(): void {
   saveSort("relancer");
+  chosenSort.value = "relancer";
   void router.replace({ query: { ...route.query, statut: undefined, tri: undefined } });
 }
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
