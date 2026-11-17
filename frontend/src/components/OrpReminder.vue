@@ -78,14 +78,15 @@ const detail = computed(() => {
 /* Planches AccueilJustificatif (+ Sombre) : îlot 12/8/12/14 au-dessus de la barre du haut, rond 40 px, 15/20 gras puis
    13/18 brun, « Exporter » 44 px bleu ; la croix est le bouton rond commun (44 px sur téléphone). */
 .orp-reminder {
+  --orp-r-14: 14px; --orp-r-13: 13px; --orp-r-18: 18px; --orp-r-20: 20px;
   position: fixed; top: calc(var(--space-2) + env(safe-area-inset-top)); left: var(--space-2); right: var(--space-2); z-index: 60;
-  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-2) var(--space-3) 14px;
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-2) var(--space-3) var(--orp-r-14);
   border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); background: var(--surface); box-shadow: var(--panel-float-shadow);
 }
 .orp-reminder > span:first-child { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--peach-soft); color: var(--peach-text); }
 .orp-reminder > span:first-child .icon { width: 20px; height: 20px; }
 .orp-reminder-text { flex: 1; min-width: 0; }
-.orp-reminder b { display: block; font-size: var(--font-label); line-height: 20px; }
-.orp-reminder b + span { display: block; font-size: 13px; line-height: 18px; color: var(--peach-text); }
-.orp-reminder a { display: flex; align-items: center; height: var(--target-min); padding: 0 14px; border-radius: var(--radius-pill); background: var(--action); color: var(--on-action); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
+.orp-reminder b { display: block; font-size: var(--font-label); line-height: var(--orp-r-20); }
+.orp-reminder b + span { display: block; font-size: var(--orp-r-13); line-height: var(--orp-r-18); color: var(--peach-text); }
+.orp-reminder a { display: flex; align-items: center; height: var(--target-min); padding: 0 var(--orp-r-14); border-radius: var(--radius-pill); background: var(--action); color: var(--on-action); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 </style>
