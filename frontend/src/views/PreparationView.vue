@@ -505,6 +505,7 @@ async function saveThenWrite(): Promise<void> {
 }
 // La rédaction, puis la relecture : le bouton dit ce qui se passe vraiment (BusyButton).
 const phase = ref<"write" | "review">("write");
+const letterDone = ref(false);
 async function reviewLetter(letter: Letter): Promise<Letter> {
   try {
     const { data } = await api.POST("/api/letters/{draft_id}/review", { params: { path: { draft_id: letter.id } } });
@@ -596,6 +597,12 @@ async function write(force = false): Promise<void> {
     // La relecture avant l'affichage (rédacteur, puis relecteur) : la lettre s'affiche relue.
     phase.value = "review";
     const reviewed = await reviewLetter(data);
+    // §53 (Kevin, 17.11) : sur téléphone, la barre et les étapes finissent (0,4 s) avant que la lettre s'affiche.
+    if (phone.value) {
+      letterDone.value = true;
+      await new Promise((done) => setTimeout(done, 400));
+      letterDone.value = false;
+    }
     letters.value = [reviewed, ...letters.value];
     instruction.value = "";
     revision.value = "";
@@ -1562,6 +1569,8 @@ onMounted(() => void load());
             <AiWriting
               v-else-if="writing && !selected"
               kind="letter"
+              :with-cv="cvState === 'busy'"
+              :done="letterDone"
             />
 
             <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->

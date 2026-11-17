@@ -173,6 +173,9 @@ describe("« Proposer à partir du CV » : la même lecture que la carte Mon CV 
     const { useCvReading } = await import("../composables/useCvReading");
     await useCvReading().load();
     await flushPromises();
+    // La barre et les étapes finissent d'abord (0,4 s, §53).
+    await new Promise((done) => setTimeout(done, 420));
+    await flushPromises();
     expect(wrapper.find(".doc-read-state [data-test=cv-state-lu]").exists()).toBe(true);
   });
 

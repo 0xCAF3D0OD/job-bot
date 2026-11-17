@@ -141,6 +141,8 @@ export const PAGES = {
     "components/FalseClaimSheet.vue",
     "components/ProfileCompletionPanel.vue",
     "components/CvPanel.vue",
+    // L'écriture de la lettre au style ChargementLettre (§53), chargée seulement pendant l'attente.
+    "components/LoadingSteps.vue",
   ],
   suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
   alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
@@ -156,7 +158,8 @@ export const PAGES = {
   entrainement: ["views/PracticeView.vue"],
   notifications: ["views/NotificationsView.vue"],
   compte: ["views/AccountView.vue"],
-  profil: ["views/ProfileView.vue"],
+  // Profil avec la lecture du CV en cours (§53) : les étapes de ChargementCV, chargées seulement pendant la lecture.
+  profil: ["views/ProfileView.vue", "components/LoadingSteps.vue"],
   reglages: ["views/SettingsView.vue"],
   diagnostic: ["views/DiagnosticView.vue"],
   connexion: ["views/LoginView.vue"],
@@ -171,6 +174,8 @@ export const PAGES = {
     "components/WelcomeAlertSteps.vue",
     "components/WelcomeAlertExtension.vue",
     "components/WelcomeProfileStep.vue",
+    // La lecture du CV (ChargementCV, §53), chargée seulement pendant la lecture.
+    "components/LoadingSteps.vue",
   ],
   // Les mêmes premiers pas sur téléphone (§60 du 17.11) : les questions à la place du bloc des critères, jamais
   // l'extension. Mêmes limites que la page ci-dessus.
@@ -179,6 +184,8 @@ export const PAGES = {
     "components/WelcomeQuestions.vue",
     "components/WelcomeAlertSteps.vue",
     "components/WelcomeProfileStep.vue",
+    // La lecture du CV en écran plein (ChargementCV, §53), chargée seulement pendant la lecture.
+    "components/LoadingSteps.vue",
   ],
   getemall: ["views/GetemallAuthorizeView.vue"],
   extension: ["views/ExtensionLinkView.vue"],

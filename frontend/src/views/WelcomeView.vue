@@ -13,6 +13,8 @@ import SceneIllustration, { type SceneName } from "../components/SceneIllustrati
 import type WelcomeCriteriaComponent from "../components/WelcomeCriteria.vue";
 import type { CriteriaSources } from "../components/WelcomeCriteria.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+// Les écrans de chargement (§53) : chargés à la demande, seulement quand un CV se lit.
+const LoadingSteps = defineAsyncComponent(() => import("../components/LoadingSteps.vue"));
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
@@ -93,6 +95,9 @@ onUnmounted(() => {
 type Understanding = components["schemas"]["Understanding"];
 type Step = 0 | 1 | 2 | 3 | 4;
 const MAX_ROLES = 3;
+// La lecture du CV (ChargementCV, §53) : quatre étapes, environ 20 secondes en tout.
+const CV_STEPS = ["Coordonnées", "Expériences", "Compétences", "Langues"];
+const CV_LINES = ["Je lis ton CV,", "environ 20 secondes"];
 const DUE_DAY = 5;
 // Le gribouillis qui barre le premier mot de chaque titre : le tracé de la maquette (comme « C'est fait ! »).
 const SCRIBBLE =
@@ -137,6 +142,7 @@ let retryTimer: ReturnType<typeof setInterval> | undefined;
 const RETRY_S = 5;
 const uploading = ref(false);
 const reading = ref(false);
+const readDone = ref(false);
 const cvError = ref("");
 // « Complétons ton profil » (prompt du 10 novembre, PR 17) : l'étape 1 quand le CV n'a pas pu être lu ou qu'il n'y en a
 // pas ; la raison en clair, sous le nom du fichier.
@@ -376,6 +382,10 @@ async function understand(documentId: number): Promise<void> {
       ...(rateFound && sources.value.rate !== "user" ? { rate: "cv" as const } : {}),
     });
     saveChunks();
+    // §53 (Kevin, 17.11) : la barre et les étapes finissent sous les yeux (0,4 s) avant de laisser la place.
+    readDone.value = true;
+    await new Promise((done) => setTimeout(done, 400));
+    readDone.value = false;
   } catch {
     // La connexion est tombée : le CV est enregistré, la lecture reprend seule (OnboardingOrdinateurCoupure).
     understanding.value = null;
@@ -786,7 +796,19 @@ async function finish(to: string): Promise<void> {
                 </label>
               </div>
               <template v-if="readState === 'reading' || readState === 'paused'">
+                <!-- §53 sur ordinateur (Kevin, 17.11) : la lecture ne bloque pas ; seul le style de ChargementCV entre
+                     dans la carte. En pause, la barre orange arrêtée reste. -->
+                <LoadingSteps
+                  v-if="readState === 'reading'"
+                  class="wdk-loading"
+                  :lines="CV_LINES"
+                  :steps="CV_STEPS"
+                  :every-ms="5000"
+                  :done="readDone"
+                  label="Lecture du CV"
+                />
                 <div
+                  v-else
                   class="wdk-bar"
                   role="progressbar"
                   aria-label="Lecture du CV"
@@ -1130,6 +1152,20 @@ async function finish(to: string): Promise<void> {
       </button>
     </div>
   </section>
+  <!-- Téléphone (§53, planche ChargementCV ; Kevin, 17.11) : la lecture bloquait déjà « Continuer » ; elle prend
+       l’écran entier. Coupure ou échec : retour à l’étape, avec ses messages. -->
+  <LoadingSteps
+    v-else-if="loaded && step === 1 && readState === 'reading'"
+    class="loading-steps-full"
+    :lines="CV_LINES"
+    :steps="CV_STEPS"
+    :every-ms="5000"
+    :done="readDone"
+    label="Lecture du CV"
+    data-test="cv-reading-screen"
+  >
+    <BrandMark :size="64" />
+  </LoadingSteps>
   <section
     v-else-if="loaded"
     :class="['welcome', { 'welcome-blue': step === 0 }]"
@@ -1219,7 +1255,7 @@ async function finish(to: string): Promise<void> {
                 <span class="welcome-cv-check"><AppIcon name="check" /></span>
                 <span>
                   <strong>{{ cvName }}</strong>
-                  <small data-test="cv-reading">{{ reading ? "Lecture de ton CV…" : understanding ? "Importé et analysé" : "Importé, mais pas pu être lu : tu compléteras à l’étape suivante" }}</small>
+                  <small data-test="cv-reading">{{ understanding ? "Importé et analysé" : "Importé, mais pas pu être lu : tu compléteras à l’étape suivante" }}</small>
                 </span>
                 <label class="link welcome-cv-change">
                   Changer
@@ -1675,6 +1711,7 @@ async function finish(to: string): Promise<void> {
 .wdk-file.paused .wdk-bar span { background: var(--warning); animation-play-state: paused; }
 @keyframes wdk-read { from { width: 8%; } to { width: 92%; } }
 @media (prefers-reduced-motion: reduce) { .wdk-bar span { animation: none; } }
+.wdk-loading { margin-top: var(--space-5); }
 .wdk-file-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
 .wdk-found { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-3) 0 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
 .wdk-found .icon { width: var(--space-4); height: var(--space-4); }
