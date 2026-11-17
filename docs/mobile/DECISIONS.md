@@ -610,6 +610,14 @@ main seul. Ordinateur (Kevin, 16.11, 23 h 29) : l'extension n'existe que pour Fi
 Firefox, ou sur tout navigateur où l'extension est détectée ; ailleurs, parcours à la main seul. Texte : « Gratuite,
 pour Firefox. ». Les règles de l'extension elle-même sont dans `2026-11-16-2125-extension-alerte-jobup.md`.
 
+## « C'est une agence de placement » (Kevin, 16.11.2026, 23 h 33)
+
+- Pour marquer à la main une offre que la détection n'a pas repérée : un choix « C'est une agence de placement » dans le menu de la fiche (« … »), à côté de « Signaler une erreur dans l'offre ». Pas de bouton visible sur la fiche.
+- Effet immédiat : la pastille « Agence » sur la carte et la ligne « Agence de placement » sur la fiche (texte de la section 35), sans recharger la page.
+- La correction est gardée pour cette entreprise, dans ce compte, et vaut pour ses autres offres, comme « Ce n'est pas une agence » dans l'autre sens. La dernière correction de la personne l'emporte sur la détection automatique.
+- « Ce n'est pas une agence » reste un lien visible, affiché seulement quand la ligne Agence est là.
+- Rien n'est envoyé au répertoire SECO, qui n'est pas lu automatiquement sans son accord écrit.
+
 ## Ajouter une offre déjà là (Kevin, 17.11.2026, 0 h 29)
 
 Retour de Kevin sur la #818. On ne crée plus directement une offre déjà présente.
@@ -644,3 +652,40 @@ Deux retours de Kevin sur la #818.
    remplir. Après l'ouverture, si au moins un champ a été complété, un message bref s'affiche en bas :
    « {n} information(s) ajoutée(s) à l'offre », avec « Annuler ». C'est le même composant que le message d'Écarter
    (6 s). « Annuler » remet les champs comme avant.
+
+## Extension : « Toute la Suisse » quand l'alerte jobup n'a pas de lieu (Kevin, 17.11.2026, 9 h 09)
+
+- Lieu, option B : jamais de pastille sur Lieu, « Toute la Suisse » si le lieu est vide, la recherche s'écrit
+  « {mots} · {lieu} ».
+- Dans la fenêtre de l'extension sur jobup « Créer une alerte », la recherche lue dans l'adresse jobup s'affiche donc
+  « {mots} · Toute la Suisse » quand l'adresse n'a pas de lieu (`searchSummary`, extension/popup.js).
+
+## Journal d'accès de Caddy sans identifiant (Kevin, 17.11.2026, 11 h 07)
+
+- Le journal d'accès de Caddy masque les identifiants dans toutes les adresses : `/api/<ressource>/<nombre>` devient
+  `/api/<ressource>/:id`.
+- La query string n'est jamais journalisée, pour qu'aucun code ni jeton ne s'y retrouve.
+- La durée de conservation reste de 7 jours.
+- Test : `GET /api/interviews/123?x=1` apparaît dans le journal comme `/api/interviews/:id`, sans paramètre
+  (`make test-journal-caddy`). Kevin vérifie lui-même en production après le déploiement.
+- Mise en œuvre : le champ `request>uri` est retiré et un champ `path` (le chemin seul) le remplace, avec le filtre
+  `regexp`. Le filtre `query` ne peut retirer que des paramètres nommés un à un, et Caddy n'enchaîne pas deux filtres
+  sur un même champ. Le Referer est retiré aussi, car il peut contenir une adresse avec ses paramètres.
+
+## Tableau des retours d'entretien, données (Kevin, 17.11.2026, 11 h 10)
+
+- Une PR serveur seule, sans écran. L'écran attend la planche de Kevin : volet à droite sur ordinateur, page entière
+  sur téléphone. Accès provisoire : une ligne « Retours d'entretien » dans Bilan › Résultats.
+- Deux états par ligne :
+  - `point` : `a_venir` | `a_faire` | `fait` (le retour « Faire le point ») ;
+  - `issue` : `en_attente` | `retenu` | `pas_retenu` (la réponse de l'entreprise).
+- La liste donne : entreprise, poste, date, type, ressenti, stress, suite, prochaine étape, remerciement envoyé
+  (oui/non), point, issue et le nombre de questions notées. Aucun texte libre dans la liste : notes et questions
+  seulement dans le détail.
+- Lecture seule : aucune écriture en base, rien envoyé à l'IA, rien journalisé (ni contenu, ni identifiant
+  d'entretien dans les journaux).
+- Seulement les entretiens de la personne connectée : un autre compte reçoit 404 (test).
+- Tri du plus récent au plus ancien, pages de 20.
+- Une ligne ouvre le retour complet ; pour le modifier, on repasse par « Faire le point ».
+- Le bloc « Entretiens » retiré de Bilan › Résultats sur ordinateur est voulu (point 3 du récapitulatif du
+  11 novembre, #651) : pas de régression, pas d'issue.
