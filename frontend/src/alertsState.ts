@@ -161,3 +161,25 @@ export function alertsBand(page: AlertsPage, now: Date): Band | null {
   }
   return null;
 }
+
+/** « Ta recherche » (planches AlertesOrdinateurVide et Site, Kevin 17.11) : les postes des recherches actives, puis les
+ *  lieux ; 3 postes et 2 lieux au plus, puis « +n » ; « Toute la Suisse » sans lieu. `full` : tout, pour les lecteurs
+ *  d'écran. La ligne « Recherche : … » du volet d'un site reprend le même texte. */
+export function searchSummary(searches: Pick<Search, "terms" | "location" | "active">[]): { text: string; full: string } {
+  const distinct = (values: string[]) => [...new Map(values.map((v) => [v.toLowerCase(), v])).values()];
+  const active = searches.filter((s) => s.active);
+  const terms = distinct(active.map((s) => s.terms.trim()).filter(Boolean));
+  const places = distinct(active.map((s) => (s.location ? placeLabel(s.location) : "")).filter(Boolean));
+  const cut = (list: string[], max: number) => list.slice(0, max).join(", ") + (list.length > max ? ` +${list.length - max}` : "");
+  const where = (max: number) => (places.length ? cut(places, max) : "Toute la Suisse");
+  return { text: `${cut(terms, 3)} · ${where(2)}`, full: `${terms.join(", ")} · ${where(places.length || 1)}` };
+}
+
+/** Les sites de « À créer » sur ordinateur, dans l'ordre et avec la ligne de la planche AlertesOrdinateurVide. */
+export const START_SITES: Record<string, { order: number; line: string }> = {
+  jobup: { order: 0, line: "Le plus utilisé en Suisse romande" },
+  linkedin: { order: 1, line: "Sur place et en télétravail" },
+  jobsch: { order: 2, line: "Même recherche, en français et en allemand" },
+  indeed: { order: 3, line: "Demande une confirmation par e-mail" },
+  jobroom: { order: 4, line: "Le site de l’ORP" },
+};

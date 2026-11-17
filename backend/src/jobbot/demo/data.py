@@ -25,8 +25,11 @@ OCCUPATION = "Ingénieur·e DevOps"
 ORP_TARGET = 10
 DOMAIN_KEYWORDS = ["DevOps", "Kubernetes", "Cloud"]
 
-# Prérequis : la Suisse romande, au moins 80 %, ni stage ni temporaire.
-LOCATIONS = ("VD", "GE", "FR", "NE")
+# Prérequis : Vaud et Genève, au moins 80 %, ni stage ni temporaire. Deux lieux et trois postes = six recherches
+# d'alertes, sous la limite de 8 (Kevin, 17.11.2026, 14 h 27).
+LOCATIONS = ("VD", "GE")
+# Les postes recherchés (premiers pas, « Ta recherche » des Alertes).
+ROLES = ("DevOps", "Platform Engineer", "Cloud Engineer")
 MIN_RATE = 80
 EXCLUDED_TYPES = ("stage", "temporaire")
 
@@ -297,7 +300,7 @@ OFFERS = [
         "o12",
         "SRE junior",
         "Témoin Industrie SA",
-        "Fribourg",
+        "Morges",
         "jobup",
         70,
         extra="Premier poste, ou deux ans d'expérience au plus.",
@@ -402,7 +405,7 @@ OFFERS = [
         "o23",
         "DevOps Engineer",
         "Brouillon Énergie SA",
-        "Neuchâtel",
+        "Yverdon-les-Bains",
         "jobsch",
         75,
         applied=_a(2, 0.68, status="refus", reason="pas de réponse détaillée"),
@@ -420,7 +423,7 @@ OFFERS = [
         "o25",
         "Ingénieur·e DevOps",
         "Témoin Industrie SA",
-        "Fribourg",
+        "Vevey",
         "jobup",
         71,
         applied=_a(2, 0.92, status="refus", reason="profil plus junior recherché"),
@@ -452,7 +455,7 @@ OFFERS = [
         "o29",
         "Cloud Engineer (Azure)",
         "Témoin Industrie SA",
-        "Fribourg",
+        "Renens",
         "jobup",
         67,
         days_ago=2,
@@ -460,7 +463,7 @@ OFFERS = [
         missing=("Bicep",),
     ),
     OfferSpec(
-        "o30", "Ingénieur·e infrastructure", "Bac à sable SA", "Neuchâtel", "indeed", 63, days_ago=5
+        "o30", "Ingénieur·e infrastructure", "Bac à sable SA", "Nyon", "indeed", 63, days_ago=5
     ),
     OfferSpec(
         "o31",
@@ -550,7 +553,7 @@ MANUAL_APPLICATIONS = [
     (3, 0.05, "Exemple SA", "Administrateur·rice systèmes", "Lausanne", "refus"),
     (3, 0.12, "Démo Sàrl", "Technicien·ne infrastructure", "Genève", "sans_reponse"),
     (3, 0.2, "Essai Systèmes SA", "Ingénieur·e systèmes", "Renens", "refus"),
-    (3, 0.3, "Témoin Industrie SA", "Ingénieur·e DevOps", "Fribourg", "sans_reponse"),
+    (3, 0.3, "Témoin Industrie SA", "Ingénieur·e DevOps", "Morges", "sans_reponse"),
     (3, 0.4, "Fictif Cloud SA", "Cloud Engineer", "Genève", "refus"),
     (3, 0.5, "Maquette Médias Sàrl", "Administrateur·rice Linux", "Vevey", "sans_reponse"),
     (3, 0.6, "Bac à sable SA", "Ingénieur·e infrastructure", "Lausanne", "refus"),
