@@ -373,6 +373,29 @@ async def test_complete_existing_offer_with_link(
     assert again["draft"]["fillable"] == []
     assert ai.calls == []
 
+    # « Annuler » (Kevin, 17.11) : les champs remplis redeviennent vides, rien d'autre ne bouge ;
+    # une valeur qui a changé depuis reste.
+    assert set(done["filled_values"]) == {"description", "url"}
+    stale = await api.post(
+        f"/api/offers/manual/{offer_id}/unfill", json={"description": "autre texte"}
+    )
+    assert stale.json() == {"reverted": []}
+    undone = await api.post(f"/api/offers/manual/{offer_id}/unfill", json=done["filled_values"])
+    assert undone.json() == {"reverted": ["description", "url"]}
+    async with rt.sessionmaker() as session:
+        offer = await session.get(Offer, offer_id)
+        assert offer is not None
+        assert (offer.company, offer.location, offer.description, offer.snippet) == (
+            "Exemple SA",
+            "Renens",
+            None,
+            "Extrait de LinkedIn",
+        )
+        sources = set(
+            await session.scalars(select(OfferLink.source).where(OfferLink.offer_id == offer_id))
+        )
+        assert sources == {"linkedin"}
+
 
 async def test_existing_offer_or_create_anyway(
     api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch, ai: FakeClient

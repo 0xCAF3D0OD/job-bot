@@ -118,8 +118,21 @@ class ManualAddOut(BaseModel):
     status: str
     # La raison, quand les critères l'écartent (elle est gardée quand même).
     reasons: list[str]
-    # Les champs de l'offre déjà là remplis par cette fiche.
+    # Les champs de l'offre déjà là remplis par cette fiche, et les valeurs écrites :
+    # « Annuler » les renvoie à /unfill (Kevin, 17.11).
     filled: list[str] = []
+    filled_values: dict[str, str] = {}
+
+
+class ManualUnfillIn(BaseModel):
+    company: str | None = Field(default=None, max_length=300)
+    location: str | None = Field(default=None, max_length=300)
+    description: str | None = Field(default=None, max_length=manual_offers.MAX_TEXT)
+    url: str | None = Field(default=None, max_length=2000)
+
+
+class ManualUnfillOut(BaseModel):
+    reverted: list[str]
 
 
 @router.get("", operation_id="getManualOfferContext")
@@ -206,7 +219,7 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
         contract=(body.contract or "").strip() or None,
         read_by=body.read_by,
     )
-    filled: list[str] = []
+    filled: dict[str, str] = {}
     async with runtime.sessionmaker() as session:
         found_draft = await manual_offers._complete(session, draft)
     # « Ajouter quand même » : doublon probable seulement ; même lien, l'offre déjà là s'ouvre.
@@ -238,5 +251,14 @@ async def add(request: Request, body: ManualAddIn) -> ManualAddOut:
             existing=existing is not None,
             status=offer.status if offer is not None else "new",
             reasons=reasons,
-            filled=filled,
+            filled=list(filled),
+            filled_values=filled,
         )
+
+
+@router.post("/{offer_id}/unfill", operation_id="unfillManualOffer")
+async def unfill(request: Request, offer_id: int, body: ManualUnfillIn) -> ManualUnfillOut:
+    """« Annuler » après « Ouvrir l'offre » : les champs remplis redeviennent vides
+    (Kevin, 17.11)."""
+    values = {k: v for k, v in body.model_dump().items() if v}
+    return ManualUnfillOut(reverted=await manual_offers.unfill(_runtime(request), offer_id, values))

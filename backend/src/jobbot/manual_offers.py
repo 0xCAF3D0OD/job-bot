@@ -352,38 +352,73 @@ async def _manual_link(session: AsyncSession, offer_id: int) -> OfferLink | None
     )
 
 
-async def fill(runtime: Runtime, offer_id: int, draft: Draft) -> list[str]:
+async def fill(runtime: Runtime, offer_id: int, draft: Draft) -> dict[str, str]:
     """Compléter l'offre déjà là avec l'annonce relue : seulement ses champs vides, rien n'est
     remplacé ni effacé. Le texte arrivé, la note faite sur l'extrait est refaite (docs/111)."""
     async with runtime.sessionmaker.begin() as session:
         # Relue sous la RLS du compte : l'id vient de la recherche du doublon, jamais du client.
         offer = await session.get(Offer, offer_id)
         if offer is None:
-            return []
-        filled: list[str] = []
+            return {}
+        filled: dict[str, str] = {}
         company = (draft.company or "").strip()[:300]
         if not (offer.company or "").strip() and company:
             offer.company = company
-            filled.append("company")
+            filled["company"] = company
         location = (draft.location or "").strip()[:300]
         if not (offer.location or "").strip() and location:
             offer.location = location
             offer.canton = offer.canton or canton_of(location)
             if offer.rate_min is None:
                 offer.rate_min, offer.rate_max = parse_rate(location)
-            filled.append("location")
+            filled["location"] = location
         description = (draft.description or "").strip()
         if not (offer.description or "").strip() and description:
             offer.description = description
             offer.snippet = offer.snippet or description[:500]
-            filled.append("description")
+            filled["description"] = description
         if draft.url and await _manual_link(session, offer_id) is None:
             session.add(
                 OfferLink(offer_id=offer_id, source=SOURCE, external_id=None, url=draft.url)
             )
-            filled.append("url")
-    log.info("manual_offer_filled", offer=offer_id, fields=filled)
+            filled["url"] = draft.url
+    log.info("manual_offer_filled", offer=offer_id, fields=list(filled))
     return filled
+
+
+async def unfill(runtime: Runtime, offer_id: int, values: dict[str, str]) -> list[str]:
+    """« Annuler » après « Ouvrir l'offre » (Kevin, 17.11) : remet vides les champs que `fill`
+    a remplis. Un champ n'est vidé que s'il porte encore exactement la valeur écrite : ce qui a
+    changé depuis reste, et rien d'autre n'est touché. L'offre est relue sous la RLS du compte."""
+    reverted: list[str] = []
+    async with runtime.sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            return []
+        if (company := values.get("company")) and offer.company == company:
+            offer.company = None
+            reverted.append("company")
+        if (location := values.get("location")) and offer.location == location:
+            offer.location = None
+            if offer.canton and offer.canton == canton_of(location):
+                offer.canton = None
+            if offer.rate_min is not None and (offer.rate_min, offer.rate_max) == parse_rate(
+                location
+            ):
+                offer.rate_min = offer.rate_max = None
+            reverted.append("location")
+        if (description := values.get("description")) and offer.description == description:
+            offer.description = None
+            if offer.snippet == description[:500]:
+                offer.snippet = None
+            reverted.append("description")
+        if url := values.get("url"):
+            link = await _manual_link(session, offer_id)
+            if link is not None and link.url == url:
+                await session.delete(link)
+                reverted.append("url")
+    log.info("manual_offer_unfilled", offer=offer_id, fields=reverted)
+    return reverted
 
 
 async def read(runtime: Runtime, url: str | None, text: str | None) -> Draft:
