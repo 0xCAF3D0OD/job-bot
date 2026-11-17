@@ -11,6 +11,8 @@ import CalendarDate from "./CalendarDate.vue";
 // et RendezVousPreparerSombre), ouverte depuis la carte « À venir » du rendez-vous ORP : le rappel (calendrier,
 // « Rendez-vous ORP », date · lieu) ; « Où tu en es », le libellé au-dessus de la valeur ; « Tes questions au
 // conseiller · n cochées », cases de 24 px sur des lignes de 44 px au moins ; puis « Imprimer ou télécharger en PDF ».
+// §46 du 17.11 (décision de Kevin du 17.11) : une page entière sur fond beige, pas une feuille ; la flèche « Retour » à
+// gauche du titre à la place de la croix. Retour, Échap et le retour du téléphone la ferment (BottomSheet).
 type Question = components["schemas"]["QuestionIO"];
 
 defineProps<{
@@ -36,6 +38,9 @@ function cal(iso: string): { day: number; month: number } {
   <BottomSheet
     :open="open"
     title="Préparer le rendez-vous"
+    full
+    back
+    class="rdv-prep-page"
     data-test="rdv-prep-sheet"
     @close="emit('close')"
   >
@@ -115,3 +120,4 @@ function cal(iso: string): { day: number; month: number } {
     >Imprimer ou télécharger en PDF<AppIcon name="chevron" /></a>
   </BottomSheet>
 </template>
+

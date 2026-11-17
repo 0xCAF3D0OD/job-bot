@@ -15,6 +15,7 @@ import {
   type Sort,
   type View,
 } from "../composables/useOfferFilters";
+import { useFilterEntry } from "../filterHistory";
 import AppIcon from "./AppIcon.vue";
 import "../filterPanel.css";
 
@@ -29,6 +30,8 @@ const props = defineProps<{ filters: OfferFilters; counts: Record<View, number>;
 // téléphone). Les libellés sont ceux de la section 31 : des mots compris sans connaître jobA1.
 const bases = computed(() => basisChoices(props.facets));
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
+// Une entrée d’historique par application ; retour pendant l’ouverture ferme sans appliquer (Kevin, 17.11).
+useFilterEntry(() => emit("close"));
 
 // Statut (section 38 du 16.11) : l'ordre du parcours d'une offre ; « Toutes » (les offres pas encore envoyées)
 // reste le choix par défaut, même en dernier.
