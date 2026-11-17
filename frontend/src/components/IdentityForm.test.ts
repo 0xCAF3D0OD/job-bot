@@ -19,7 +19,7 @@ describe("IdentityForm", () => {
             ? { name: "Camille Exemple", street: null, postcode: null, city: null, phone: null, email: null }
             : path === "/api/notifications"
               ? { configured: false, server: "https://ntfy.sh" }
-              : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 },
+              : { orp_monthly_target: null, notify_score_threshold: 75, llm_monthly_budget_chf: 10 },
       }),
     );
     const { api } = await import("../api/client");

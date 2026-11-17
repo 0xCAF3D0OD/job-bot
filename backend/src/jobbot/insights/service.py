@@ -30,6 +30,7 @@ from jobbot.followups.remind import remind_on
 from jobbot.insights.advice import Advice, channel_advice, skill_advice
 from jobbot.letters.document import MONTHS
 from jobbot.orp.service import load_target
+from jobbot.scoring import scale
 
 ENOUGH = 5
 ANSWERED = (ApplicationStatus.ENTRETIEN, ApplicationStatus.REFUS, ApplicationStatus.ENGAGEMENT)
@@ -206,13 +207,15 @@ def _source_subject(key: str, name: str) -> str:
 
 
 def _score_band(score: int | None) -> tuple[str, str, str]:
+    """Les tranches de la note sur l'échelle unique (§65, Kevin 17.11) : Proches dès 75, À creuser
+    de 50 à 74, Loin en dessous de 50."""
     if score is None:
         return "none", "sans note", "Les offres sans note"
-    if score >= 80:
-        return "high", "80 et plus", "Les offres notées 80 et plus"
-    if score >= 60:
-        return "middle", "60 à 79", "Les offres notées de 60 à 79"
-    return "low", "moins de 60", "Les offres notées moins de 60"
+    if score >= scale.CLOSE:
+        return "close", "proches", f"Les offres proches de ton profil ({scale.CLOSE} et plus)"
+    if score >= scale.DIG:
+        return "dig", "à creuser", f"Les offres à creuser ({scale.DIG} à {scale.CLOSE - 1})"
+    return "far", "loin", f"Les offres loin de ton profil (moins de {scale.DIG})"
 
 
 def _add(groups: dict[str, Group], key: str, label: str, subject: str, answered: bool) -> None:
@@ -259,9 +262,9 @@ def compare(facts: list[Facts], names: dict[str, str], today: date) -> list[Comp
                 fact.answered,
             )
     order = {
-        "high": 0,
-        "middle": 1,
-        "low": 2,
+        "close": 0,
+        "dig": 1,
+        "far": 2,
         "none": 3,
         "with": 0,
         "without": 1,
@@ -331,7 +334,7 @@ def _word(key: str, group: Group) -> str:
             return "Ajoutées à la main"
         return group.label
     if key == "score":
-        return "Sans note" if group.key == "none" else f"Notées {group.label}"
+        return "Sans note" if group.key == "none" else group.label[0].upper() + group.label[1:]
     return group.label[0].upper() + group.label[1:]
 
 

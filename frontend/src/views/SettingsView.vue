@@ -30,12 +30,13 @@ import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
+import { SCORE_CLOSE, SCORE_DIG, SCORE_VERY_CLOSE } from "../format";
 import FaceState from "../components/FaceState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 
 const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
-  notify_score_threshold: 70,
+  notify_score_threshold: SCORE_CLOSE,
   llm_monthly_budget_chf: 10,
   orp_due_day: 5,
   employer_search_threshold: 70,
@@ -221,23 +222,20 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
   form.value.offers_notify_mode = mode;
   void saveMode();
 }
-// Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
-// soit 85, 75 et 50 (Proche dès 75, 2026-11-05, Kevin). Une valeur d'avant (60, 70, 80, 90…) s'affiche sous le mot
-// le plus proche : 70, l'ancien seuil de Proche, reste « Proche ».
-// « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils. LISEZMOI §56 du
-// 17.11 : les mots en libellé, le seuil en précision (« 85 et plus ») ; les seuils de main restent (85, 75, 50) tant
-// que Kevin n'a pas dit s'il veut ceux de la planche (90, 75, 60), qui changeraient les valeurs enregistrées.
+// « M'avertir dès » (C11, D3 ; §56 du 17.11 : le mot en libellé, le seuil en précision « 85 et plus »). Échelle
+// unique du §65 (Kevin, 17.11) : les seuils SCORE_* de format.ts, comme le cercle et le filtre Note. Les valeurs d'avant
+// (70, 80…) sont passées au niveau le plus proche par la migration 0092.
 const THRESHOLD_OPTIONS = [
-  { n: 85, label: "Très proche" },
-  { n: 75, label: "Proche" },
-  { n: 50, label: "À creuser" },
+  { n: SCORE_VERY_CLOSE, label: "Très proche" },
+  { n: SCORE_CLOSE, label: "Proche" },
+  { n: SCORE_DIG, label: "À creuser" },
 ].map(({ n, label }) => ({ value: String(n), label, hint: `${n} et plus`, test: `threshold-${n}` }));
 const thresholdLabel = computed(() => THRESHOLD_OPTIONS.find((o) => o.value === threshold.value)?.label ?? "");
 const thresholdSheet = ref(false);
 const threshold = computed({
   get: () => {
-    const value = form.value.notify_score_threshold ?? 70;
-    return value >= 85 ? "85" : value >= 70 ? "75" : "50";
+    const value = form.value.notify_score_threshold ?? SCORE_CLOSE;
+    return String(value >= SCORE_VERY_CLOSE ? SCORE_VERY_CLOSE : value >= SCORE_CLOSE ? SCORE_CLOSE : SCORE_DIG);
   },
   set: (value: string) => void setThreshold(Number(value)),
 });
