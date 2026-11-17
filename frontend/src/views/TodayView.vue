@@ -12,7 +12,6 @@ import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
-import FirstApplicationCard from "../components/FirstApplicationCard.vue";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
 import { usePhone } from "../composables/usePhone";
@@ -44,6 +43,8 @@ const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
 const HomePhone = defineAsyncComponent(loadHomePhone);
 const TriageMini = defineAsyncComponent(loadTriageMini);
+// « Première candidature notée » ne s'affiche qu'une fois : chargée à part, elle ne pèse pas sur l'Accueil.
+const FirstApplicationCard = defineAsyncComponent(() => import("../components/FirstApplicationCard.vue"));
 const today = ref<Today | null>(null);
 // L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
 const { phone } = usePhone();
