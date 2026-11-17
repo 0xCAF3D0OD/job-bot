@@ -21273,6 +21273,14 @@
             "type": "integer",
             "title": "Provisional",
             "default": 0
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Rates",
+            "default": []
           }
         },
         "type": "object",
