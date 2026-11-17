@@ -249,7 +249,7 @@ onMounted(() => void refresh());
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 /* §48 : pastille active à l'encre, inactive blanche au trait #DDD8CC (sombre #221E1A, trait #38322B). */
-.notif-pills { --notif-pill-line: #DDD8CC; --notif-pill-pad: 16.5px; display: flex; gap: var(--space-2); }
+.notif-pills { --notif-pill-line: #DDD8CC; --notif-pill-pad: 14.5px; display: flex; gap: var(--space-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notif-pills { --notif-pill-line: var(--line); } }
 :root[data-theme="dark"] .notif-pills { --notif-pill-line: var(--line); }
 .notif-pill {
