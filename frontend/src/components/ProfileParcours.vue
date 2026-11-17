@@ -240,7 +240,9 @@ function closeEditor(): void {
   const id = editing.value?.id ?? null;
   editing.value = null;
   if (route && router && (route.query.bloc !== undefined || route.query.nouveau !== undefined)) {
-    const { bloc: _bloc, nouveau: _nouveau, ...query } = route.query;
+    const query = { ...route.query };
+    delete query.bloc;
+    delete query.nouveau;
     void router.replace({ query });
   }
   void nextTick(() => {

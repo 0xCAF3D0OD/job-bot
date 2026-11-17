@@ -298,7 +298,7 @@ function celebrateIf(id: number, status: string | undefined, company: string): v
   else if (status === "entretien" && before !== "entretien" && before !== "engagement") interviewWon.value = { id, company };
   else if (status === "refus" && before !== "refus") refused.value = { id, company };
   // L'écran plein prend toute la place : le panneau de la candidature se ferme.
-  if (interviewWon.value || refused.value) openId.value = null;
+  if (interviewWon.value || refused.value) closeScreen();
 }
 // « Préparer l'entretien » ouvre la préparation de cette candidature.
 function prepareWon(): void {
@@ -367,13 +367,23 @@ async function remove(application: Application): Promise<void> {
 // (Modifier, entretien) s'ouvrent à sa place : ils passeraient sinon dessous.
 const openId = ref<number | null>(null);
 // Une candidature ouverte depuis Aujourd'hui (docs/95 §3) : `?candidature=ID`, avec son mois.
+// Sans deux colonnes (téléphone, tablette), l'adresse porte la candidature ouverte : le retour du téléphone la
+// ferme au lieu de quitter la page (audit du 17.11, N25). Quand `?candidature=` disparaît, l'écran se ferme.
 watch(
   () => route.query.candidature,
   (id) => {
     if (typeof id === "string" && Number(id)) openId.value = Number(id);
+    else if (!twoColumns.value) openId.value = null;
   },
   { immediate: true },
 );
+// Ouvrir une candidature depuis la liste, les blocs ORP ou « À déclarer » : sur deux colonnes, elle s'affiche à droite
+// (pas d'entrée d'historique, on passe de l'une à l'autre) ; sinon, une entrée `?candidature=ID`, comme une offre.
+function openApplication(id: number): void {
+  openId.value = id;
+  if (twoColumns.value || route.query.candidature === String(id)) return;
+  void router.push({ query: { ...route.query, candidature: String(id) } });
+}
 const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
 // « Ajouter » de « Il manque l’adresse de l’entreprise », sur l’écran de fin (corrections du 13.11 au soir, §8) :
 // `?candidature=ID&modifier=adresse` ouvre « Modifier la candidature », le curseur dans l’adresse ; c’est elle que
@@ -778,7 +788,7 @@ onUnmounted(() => assistant.setFocus(null));
             <OrpBlocks
               v-if="phone"
               :data="orp"
-              @open="openId = $event"
+              @open="openApplication($event)"
               @export="sheet?.printPdf()"
             />
             <OrpGoalCard
@@ -867,7 +877,7 @@ onUnmounted(() => assistant.setFocus(null));
               <OrpSearchRows
                 :rows="orp.rows"
                 open
-                @open="openId = $event"
+                @open="openApplication($event)"
               />
             </section>
             <button
@@ -984,7 +994,7 @@ onUnmounted(() => assistant.setFocus(null));
                       :application="application"
                       :section="section.key"
                       :selected="(shown?.id ?? openId) === application.id"
-                      @select="openId = application.id"
+                      @select="openApplication(application.id)"
                     />
                   </li>
                 </template>
@@ -1024,8 +1034,8 @@ onUnmounted(() => assistant.setFocus(null));
                     :urgent="item.incomplete"
                     action="Déclarer"
                     :action-test="`declare-${item.id}`"
-                    @select="openId = item.id"
-                    @action="openId = item.id"
+                    @select="openApplication(item.id)"
+                    @action="openApplication(item.id)"
                   />
                 </li>
               </ul>
@@ -1092,7 +1102,7 @@ onUnmounted(() => assistant.setFocus(null));
                       <ApplicationCard
                         :application="application"
                         :orp-row="rowsById.get(application.id) ?? null"
-                        @open="openId = $event.id"
+                        @open="openApplication($event.id)"
                         @status="setStatus"
                         @edit="edit"
                         @interview="openInterview"
@@ -1149,7 +1159,7 @@ onUnmounted(() => assistant.setFocus(null));
     v-else-if="opened && !twoColumns"
     open
     :title="opened.company"
-    @close="openId = null"
+    @close="closeScreen"
   >
     <ApplicationPanel
       :application="opened"

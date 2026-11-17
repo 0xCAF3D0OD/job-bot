@@ -315,6 +315,8 @@ describe("Suivi en calendrier (docs/22)", () => {
     const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=day-2026-10-02]").trigger("click");
     await wrapper.find("[data-test=day-panel] [data-test=application-card] [data-test=offer-line-open]").trigger("click");
+    // La candidature ouverte prend son adresse (?candidature=, audit N25) : on laisse la navigation finir.
+    await flushPromises();
     await wrapper.find("[data-test=application-panel] [data-test=panel-status]").setValue("refus");
     await flushPromises();
     const moment = wrapper.find("[data-test=refusal-moment]");
@@ -385,6 +387,23 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     expect(wrapper.find(".side-panel").exists()).toBe(false);
     await screen.find("[data-test=sent-back]").trigger("click");
     await flushPromises();
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
+  });
+
+  it("sur téléphone, ouvrir une candidature lui donne son adresse : le retour la ferme sans quitter la page (audit N25)", async () => {
+    mockApi(() => month(), [application]);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper, router } = await mountView("/candidatures/suivi");
+    vi.unstubAllGlobals();
+    await wrapper.find("[data-test=application]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.candidature).toBe(String(application.id));
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(true);
+    router.back();
+    await flushPromises();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi");
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
   });
 
