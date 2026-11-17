@@ -7,6 +7,9 @@ import AppIcon from "./AppIcon.vue";
 import ChoiceMenu from "./ChoiceMenu.vue";
 import ChoicePanel from "./ChoicePanel.vue";
 import ChoiceSheet from "./ChoiceSheet.vue";
+import LanguagePanel from "./LanguagePanel.vue";
+import { lang } from "../lang";
+import { LANGUAGES } from "../languages";
 
 // Apparence (maquette Réglages, « Affichage ») : Clair, Sombre, Auto ; Auto par défaut, la page suit le
 // téléphone ou l'ordinateur (ModeSombre). Le choix vaut pour cet appareil.
@@ -28,13 +31,8 @@ const model = computed({
   set: (value: string) => setTheme(value as Theme),
 });
 
-// La langue de jobA1 : l'interface n'existe qu'en français pour l'instant ; Deutsch et English restent visibles,
-// grisés, jusqu'à leur traduction (question pour Kevin dans la PR).
-const LANGUAGES = [
-  { value: "fr", label: "Français", hint: "Langue actuelle" },
-  { value: "de", label: "Deutsch", hint: "Allemand", disabled: true },
-  { value: "en", label: "English", hint: "Anglais", disabled: true },
-];
+// La langue de jobA1 (§62, docs/147) : la valeur de la ligne est le nom de la langue choisie, écrit dans sa langue.
+const language = computed(() => LANGUAGES.find((l) => l.code === lang.value) ?? LANGUAGES[0]);
 const SIZES = [
   { value: "browser", label: "Selon le navigateur", hint: "Suit le zoom de ton navigateur" },
   { value: "large", label: "Grande", hint: "Texte agrandi de 25 %" },
@@ -99,7 +97,10 @@ const panel = ref<"" | "language" | "size" | "theme">("");
           @click="panel = 'language'"
         >
           <span class="rg-label">Langue</span>
-          <span class="rg-value">Français</span>
+          <span
+            class="rg-value"
+            :lang="language.code"
+          >{{ language.name }}</span>
           <AppIcon name="chevron" />
         </button>
         <button
@@ -125,14 +126,9 @@ const panel = ref<"" | "language" | "size" | "theme">("");
     @close="panel = ''"
   />
   <template v-if="detailed">
-    <ChoicePanel
+    <LanguagePanel
       :open="panel === 'language'"
       :sheet="phone"
-      title="Langue"
-      heading="Langue de jobA1"
-      :choices="LANGUAGES"
-      model-value="fr"
-      note="La langue des lettres se choisit dans Préparer (FR, DE, EN)."
       @close="panel = ''"
     />
     <ChoicePanel

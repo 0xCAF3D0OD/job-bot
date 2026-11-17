@@ -6,6 +6,7 @@ import { useTextSize } from "../composables/useTextSize";
 import { useTheme } from "../composables/useTheme";
 import AppearancePanel from "./AppearancePanel.vue";
 import ChoicePanel from "./ChoicePanel.vue";
+import LanguagePanel from "./LanguagePanel.vue";
 
 afterEach(() => useTheme().setTheme("auto"));
 
@@ -65,19 +66,49 @@ describe("Langue et Taille du texte sur ordinateur (ReglagesOrdinateur, MODIFICA
     expect(wrapper.find("[data-test=text-size-row]").exists()).toBe(false);
   });
 
-  it("deux lignes, la valeur et un chevron ; Langue ouvre un panneau où seul le français est disponible", async () => {
+  it("deux lignes, la valeur et un chevron ; Langue ouvre les sept langues, seul le français est disponible (§62)", async () => {
     const wrapper = mount(AppearancePanel, { props: { detailed: true }, attachTo: document.body });
     expect(wrapper.get("[data-test=language-row]").text()).toBe("LangueFrançais");
+    expect(wrapper.get("[data-test=language-row] .rg-value").attributes("lang")).toBe("fr");
     expect(wrapper.get("[data-test=text-size-row]").text()).toBe("Taille du texteSelon le navigateur");
     await wrapper.get("[data-test=language-row]").trigger("click");
-    const panel = [...document.querySelectorAll("[data-test=choice-panel]")].find((p) => p.querySelector("h3")?.textContent?.includes("Langue de jobA1"))!;
-    const radios = [...panel.querySelectorAll<HTMLInputElement>("input[type=radio]")];
-    expect(radios.map((r) => [r.value, r.checked, r.disabled])).toEqual([
-      ["fr", true, false],
-      ["de", false, true],
-      ["en", false, true],
+    await flushPromises();
+    const panel = document.querySelector("[data-test=language-panel]")!;
+    const rows = [...panel.querySelectorAll<HTMLElement>("[role=radio]")];
+    expect(rows.map((r) => [r.querySelector(".language-name")!.getAttribute("lang"), r.getAttribute("aria-checked"), r.getAttribute("aria-disabled")])).toEqual([
+      ["fr", "true", null],
+      ["de", "false", "true"],
+      ["it", "false", "true"],
+      ["en", "false", "true"],
+      ["pt", "false", "true"],
+      ["es", "false", "true"],
+      ["sq", "false", "true"],
     ]);
-    expect(panel.textContent).toContain("La langue des lettres se choisit dans Préparer (FR, DE, EN).");
+    expect(rows.map((r) => r.querySelector(".language-name")!.textContent)).toEqual(["Français", "Deutsch", "Italiano", "English", "Português", "Español", "Shqip"]);
+    expect(rows[0]!.textContent).toContain("Langue actuelle");
+    expect(rows[1]!.textContent).toBe("DeutschAllemandBientôt");
+    // Une langue pas encore relue ne se choisit pas.
+    rows[1]!.click();
+    await flushPromises();
+    expect(document.documentElement.lang).not.toBe("de");
+    expect(rows[1]!.getAttribute("aria-checked")).toBe("false");
+    // Les flèches parcourent les lignes.
+    rows[0]!.focus();
+    rows[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(document.activeElement).toBe(rows[1]);
+    expect(panel.textContent).toContain("Les lettres ont leur propre langue");
+    expect(panel.textContent).toContain("Tu la choisis dans Préparer, pour chaque candidature.");
+    wrapper.unmount();
+  });
+
+  it("téléphone : la langue dans la feuille en îlot, qui se ferme dès qu’on choisit la langue en cours", async () => {
+    const wrapper = mount(AppearancePanel, { props: { detailed: true, phone: true }, attachTo: document.body });
+    await wrapper.get("[data-test=language-row]").trigger("click");
+    await flushPromises();
+    const panel = wrapper.findComponent(LanguagePanel);
+    document.querySelector<HTMLElement>("[data-test=language-fr]")!.click();
+    await flushPromises();
+    expect(panel.emitted("close")).toHaveLength(1);
     wrapper.unmount();
   });
 
@@ -103,7 +134,7 @@ describe("Langue et Taille du texte sur ordinateur (ReglagesOrdinateur, MODIFICA
     large.dispatchEvent(new Event("change"));
     await flushPromises();
     expect(localStorage.getItem("jobA1-text-size")).toBe("large");
-    const sizePanel = wrapper.findAllComponents(ChoicePanel)[1]!;
+    const sizePanel = wrapper.findAllComponents(ChoicePanel)[0]!;
     expect(sizePanel.emitted("close")).toBeUndefined();
     const browser = document.querySelector<HTMLInputElement>("[data-test=choice-browser] input")!;
     browser.checked = true;
