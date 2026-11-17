@@ -169,7 +169,8 @@ async def _draft(runtime: Runtime, page: Page) -> manual_offers.Draft:
 
 
 async def _fill(runtime: Runtime, offer_id: int, draft: manual_offers.Draft, path: str) -> Sent:
-    filled = await manual_offers.fill(runtime, offer_id, draft)
+    # Les noms des champs seulement, jamais leurs valeurs (J-1).
+    filled = list(await manual_offers.fill(runtime, offer_id, draft))
     if "description" in filled:
         await run_filter(runtime)
     score, label = await _score(runtime, offer_id, "description" in filled)
