@@ -82,7 +82,8 @@ async def test_not_configured(runtime: Runtime, sent: list[Message]) -> None:
 
 
 async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Message]) -> None:
-    await scored(rt, 1, 72)
+    # Seuil par défaut 75, « Proche » (échelle 50 / 75 / 85, migration 0092).
+    await scored(rt, 1, 78)
     await scored(rt, 2, 88)
     await scored(rt, 3, 40)
     await scored(rt, 4, 95, status=OfferStatus.FILTERED_OUT)
@@ -95,7 +96,7 @@ async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Messa
     assert message.message.splitlines() == [
         "La meilleure : Offre 2 chez Acme SA, très proche.",
         "88 · Offre 2 — Acme SA (Lausanne, VD)",
-        "72 · Offre 1 — Acme SA (Lausanne, VD)",
+        "78 · Offre 1 — Acme SA (Lausanne, VD)",
     ]
     assert (
         message.priority == 4
@@ -111,7 +112,7 @@ async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Messa
     assert (await service.notify_new_scores(rt)).offers == 0
     async with rt.sessionmaker.begin() as session:
         await session.execute(
-            update(Setting).where(Setting.key == "notify_score_threshold").values(value=70)
+            update(Setting).where(Setting.key == "notify_score_threshold").values(value=75)
         )
     assert len(sent) == 1
 

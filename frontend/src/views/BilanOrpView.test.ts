@@ -6,7 +6,11 @@ import { reactive, ref } from "vue";
 import BilanOrpView from "./BilanOrpView.vue";
 
 const GET = vi.fn();
-vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a), POST: vi.fn() } }));
+const PUT = vi.fn();
+const DELETE = vi.fn();
+vi.mock("../api/client", () => ({
+  api: { GET: (...a: unknown[]) => GET(...a), POST: vi.fn(), PUT: (...a: unknown[]) => PUT(...a), DELETE: (...a: unknown[]) => DELETE(...a) },
+}));
 const route = reactive<{ query: Record<string, string> }>({ query: {} });
 const push = vi.fn();
 vi.mock("vue-router", () => ({ useRoute: () => route, useRouter: () => ({ push: (...a: unknown[]) => push(...a) }) }));
@@ -68,10 +72,33 @@ describe("Bilan › ORP sur téléphone (§37 du 16.11, planches OrpMois, OrpMoi
     expect(cards[2]!.find(".orp-phone-chip.todo").text()).toBe("Infos à compléter");
     // Plus de « Afficher l'autre » ni de phrase sous les intertitres (règle de Kevin du 16.11) ; replié, pas de recherches.
     expect(wrapper.find("[data-test=orp-declare-more]").exists()).toBe(false);
-    expect(wrapper.find("p").exists()).toBe(false);
+    // (La feuille fermée des justificatifs, §58, a sa phrase : elle n'est pas sous un intertitre.)
+    expect(wrapper.findAll("p").filter((p) => !p.element.closest("dialog"))).toHaveLength(0);
     expect(wrapper.find("[data-test=orp-searches]").exists()).toBe(false);
     expect(wrapper.find("[data-test=orp-months]").text()).toBe("Mois précédents");
     expect(wrapper.find("[data-test=orp-exports]").text()).toBe("Autres exports");
+  });
+
+  it("« À déclarer à l’ORP » (§61 du 17.11) : le cercle coche la candidature, elle reste en place et le compteur baisse", async () => {
+    PUT.mockResolvedValue({});
+    DELETE.mockResolvedValue({});
+    const wrapper = mountView(10);
+    await flushPromises();
+    const check = wrapper.get("[data-test=orp-declare-check-1]");
+    expect(check.attributes("role")).toBe("checkbox");
+    expect(check.attributes("aria-label")).toBe("Marquer Vaud Network comme déclarée");
+    await check.trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", { params: { path: { application_id: 1 } } });
+    const declare = wrapper.get("[data-test=orp-to-declare]");
+    expect(declare.get("h2").text()).toBe("À déclarer à l’ORP · 3");
+    expect(declare.get("[data-test=orp-declare-check-1]").attributes("aria-checked")).toBe("true");
+    expect(declare.get("[data-test=orp-declare-1] .bilan-card-what > span").text()).toMatch(/^Déclarée · \d+ \S+$/);
+    expect(declare.find("s, del").exists()).toBe(false);
+    await declare.get("[data-test=orp-declare-check-1]").trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", { params: { path: { application_id: 1 } } });
+    expect(wrapper.get("[data-test=orp-to-declare] h2").text()).toBe("À déclarer à l’ORP · 4");
   });
 
   it("déplié : toutes à déclarer, les recherches du mois avec leur pastille, puis « Replier le mois »", async () => {

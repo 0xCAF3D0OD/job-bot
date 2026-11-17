@@ -33,7 +33,7 @@ function mockGet(configured: boolean): void {
           ? { configured, server: "https://ntfy.sh" }
           : {
               orp_monthly_target: null,
-              notify_score_threshold: 70,
+              notify_score_threshold: 75,
               llm_monthly_budget_chf: 10,
               rhythm_days: [0, 1, 2, 3, 4],
               offers_notify_mode: "daily",
@@ -49,7 +49,7 @@ describe("SettingsView, notifications", () => {
       Promise.resolve(
         path === "/api/notifications"
           ? { data: undefined, error: { detail: "Not Found" }, response: { status: 404 } }
-          : { data: { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 } },
+          : { data: { orp_monthly_target: null, notify_score_threshold: 75, llm_monthly_budget_chf: 10 } },
       ),
     );
     const { wrapper } = await mountSettings("notifications");
@@ -104,7 +104,7 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
 
 describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
   function settings(extra: Record<string, unknown> = {}) {
-    return { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 5, ...extra };
+    return { orp_monthly_target: 20, notify_score_threshold: 75, llm_monthly_budget_chf: 10, orp_due_day: 5, ...extra };
   }
   function serveSettings() {
     GET.mockImplementation((path: string) =>
@@ -128,7 +128,7 @@ describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
     expect(put).toHaveBeenCalledWith("/api/settings", {
       body: {
         orp_monthly_target: 20,
-        notify_score_threshold: 70,
+        notify_score_threshold: 75,
         llm_monthly_budget_chf: 10,
         orp_due_day: 10,
         rhythm_pause_from: null,
@@ -250,7 +250,7 @@ describe("SettingsView, comptes (docs/65)", () => {
         data:
           path === "/api/notifications"
             ? { configured: false, server: "https://ntfy.sh", personal: true, topic: null }
-            : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 5 },
+            : { orp_monthly_target: null, notify_score_threshold: 75, llm_monthly_budget_chf: 5 },
       }),
     );
     PUT.mockResolvedValue({
@@ -354,6 +354,7 @@ describe("Des Réglages épurés (docs/106)", () => {
       }),
     );
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.get("[data-test=threshold-menu]").text()).toBe("Proche");
+    // Échelle unique 50 / 75 / 85 (§65) : 72 est dans « À creuser » (50 à 74).
+    expect(wrapper.get("[data-test=threshold-menu]").text()).toBe("À creuser");
   });
 });

@@ -1,7 +1,7 @@
 /* jobA1, design tokens (mobile + ordinateur). Source : docs/mobile/maquettes/Systeme.dc.html et ModeSombre.dc.html
    Corrigé le 2026-11-02 selon les décisions de docs/regles-ui-ergonomie.md (D1 à D10) : « À creuser » passe de
-   --warning au gris chaud --score-dig (D5). Les maquettes montrent encore « À creuser » en orange et le chiffre au
-   centre de l'anneau : les lire avec ces décisions (docs/139 §2). */
+   --warning au gris chaud --score-dig (D5). Le 2026-11-17 (§65, échelle 50/75/85, Kevin), « À creuser » repasse en
+   orange (même valeur que --warning) ; le chiffre reste au centre de l'anneau (docs/139 §2). */
 
 :root {
   /* Surfaces */
@@ -51,7 +51,7 @@
   --success: #17734A;          /* Proche, Preuve */
   --success-soft: #E3F3EA;
   --warning: #A8540E;          /* À joindre, relances : ce qui demande d'agir (D5, 2026-11-02) */
-  --score-dig: #6F6459;        /* « À creuser » : gris chaud, jamais l'orange (D5) ; 4,75:1 sur --surface-muted */
+  --score-dig: #A8540E;        /* « À creuser » (50 à 74) : l'orange de --warning, échelle 50/75/85 (§65, Kevin 17.11) */
   --warning-soft: #FCEEDD;
   --neutral: #596070;          /* Loin (le mot) */
   --neutral-graphic: #878E9B;  /* Loin (anneau, jauge) : 3:1 sur la carte, distinct de --score-dig (2026-11-02) */
@@ -132,7 +132,7 @@
     --success: #62D497;
     --success-soft: #1C3527;
     --warning: #F2A766;
-    --score-dig: #B39A82;
+    --score-dig: #F2A766;
     --warning-soft: #3A2A1C;
     --neutral: #ABA398;
     --neutral-graphic: #6B707C;
@@ -172,7 +172,7 @@
   --success: #62D497;
   --success-soft: #1C3527;
   --warning: #F2A766;
-  --score-dig: #B39A82;
+  --score-dig: #F2A766;
   --warning-soft: #3A2A1C;
   --neutral: #ABA398;
   --neutral-graphic: #6B707C;

@@ -44,7 +44,7 @@ const CRITERIA = {
 };
 const SETTINGS = {
   orp_monthly_target: null,
-  notify_score_threshold: 70,
+  notify_score_threshold: 75,
   llm_monthly_budget_chf: 5,
   orp_due_day: 12,
   employer_search_threshold: 70,

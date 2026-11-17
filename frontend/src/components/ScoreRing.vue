@@ -5,7 +5,7 @@ import { scoreWord } from "../format";
 
 // L'anneau de la note (maquette Systeme, règle 1 ; D3, D5) : une piste complète en couleur pâle, des
 // graduations tous les 25 % découpées dans la couleur du fond, un arc rempli selon la note, dans la couleur du
-// mot (Très proche et Proche en --success, À creuser en --score-dig, Loin en --neutral-graphic), jamais en bleu.
+// mot (Très proche et Proche en --success, À creuser en --score-dig orange, Loin en --neutral-graphic), jamais en bleu.
 // `worded` : le mot dessous. Le chiffre est toujours au centre, pour qu'on lise d'emblée une note (2026-11-05, Kevin).
 // Sans note : pas d'anneau, « Pas encore notée » en texte (la raison au survol et pour les lecteurs d'écran).
 // `bare` : l'anneau et son chiffre, sans le mot, quand le mot est écrit à côté (fiche d'une offre, étape 6b).

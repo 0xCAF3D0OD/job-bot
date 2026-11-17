@@ -60,9 +60,10 @@ describe("les variables de docs/mobile/tokens.css (docs/139)", () => {
     }
   });
 
-  it("« À creuser » reste en gris chaud, jamais l’orange (D5, 2026-11-02)", () => {
-    expect(styleLight.get("score-dig")).not.toBe(styleLight.get("warning"));
-    expect(styleDark.get("score-dig")).not.toBe(styleDark.get("warning"));
+  // D5 (2026-11-02) voulait « À creuser » en gris chaud ; l'échelle 50/75/85 du §65 (Kevin, 17.11) le passe en orange.
+  it("« À creuser » prend l’orange de --warning (échelle 50/75/85, 17.11.2026)", () => {
+    expect(styleLight.get("score-dig")).toBe(styleLight.get("warning"));
+    expect(styleDark.get("score-dig")).toBe(styleDark.get("warning"));
   });
 });
 
