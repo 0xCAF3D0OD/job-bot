@@ -227,13 +227,11 @@ const subtitle = computed(() => (props.meeting ? `Rendez-vous ORP du ${dateText(
 .outcome-counter > span { min-width: 2.25rem; text-align: center; font-size: var(--out-24); font-weight: var(--weight-heavy); }
 .outcome-counter small, .outcome-next small { font-size: var(--font-small); color: var(--text-secondary); }
 .outcome-next { display: grid; gap: var(--out-6); }
-/* Le pied : sa marge négative ne vaut qu'entre 600 et 820 px, où la feuille a 16 px de marge intérieure. Ailleurs la
-   feuille n'en a pas, et le pied dépassait de 16 px du volet de 440 px (défaut du 13 novembre). */
+/* Le pied : un trait au-dessus. Depuis les feuilles en îlot (§45 du 17.11), la feuille n'a plus de marge intérieure
+   entre 600 et 820 px : la marge négative qui y compensait faisait déborder le pied de 16 px. */
 .outcome-sheet .sheet-actions { justify-content: flex-end; border-top: 1px solid var(--line); }
-.outcome-sheet .sheet-actions > button { white-space: nowrap; }
-@media (min-width: 600px) and (max-width: 820px) { .outcome-sheet .sheet-actions { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4) 0; } }
 /* « Mesures décidées » : une ligne de 56 px au départ (le trait compris, comme le champ commun), le champ grandit avec le
    texte au lieu de le couper. */
 .outcome-sheet textarea[data-test="outcome-measures"] { min-height: var(--ff-h); padding-block: calc(var(--space-4) - 1px); }
-.outcome-sheet .sheet-actions > button { min-height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
+.outcome-sheet .sheet-actions > button { white-space: nowrap; min-height: var(--btn-secondary); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-weight: var(--weight-bold); }
 </style>

@@ -17,7 +17,8 @@ export type Scene =
   | "erreur"
   | "choisis-offre"
   | "choisis-candidature"
-  | "choisis-rendez-vous";
+  | "choisis-rendez-vous"
+  | "accueil-orp";
 
 // Les fichiers de public/troupe/ : `phone` et `desk` sont les largeurs des deux fichiers (2× de la largeur
 // affichée dans les maquettes : 680 pour 340 px) ; `ratio`, largeur sur hauteur, pour réserver la place.
@@ -42,7 +43,13 @@ export const SCENES: Record<Scene, { phone: number; desk: number; ratio: number 
   "choisis-offre": { phone: 680, desk: 680, ratio: 680 / 342 },
   "choisis-candidature": { phone: 680, desk: 680, ratio: 680 / 333 },
   "choisis-rendez-vous": { phone: 680, desk: 680, ratio: 680 / 321 },
+  // La scène de l'Accueil (§59 du 17.11, image définitive « les 4 autour de la feuille ORP ») : le fichier de 840 px
+  // du paquet tel quel, clair et sombre ; affichée à 110 px de haut sur téléphone et 340 px de large sur ordinateur.
+  "accueil-orp": { phone: 840, desk: 840, ratio: 840 / 280 },
 };
+
+// La scène de l'Accueil, téléphone et ordinateur (§59 du 17.11) : la changer ici suffit.
+export const HOME_SCENE: Scene = "accueil-orp";
 
 // Servies telles quelles depuis public/troupe/ ; `TROUPE` change quand les images changent.
 export const TROUPE = "20261109";

@@ -707,3 +707,12 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.493 | Compte (LISEZMOI §51) : lignes simples de 56 px, valeur à droite, chevron, une couleur par icône, « Aide » | livrée en partie ; §56 (M'avertir dès et Apparence en lignes à feuille ou menu) à suivre dans la même PR |
 | 1.6.494 | Téléphone : la barre du bas prend la nouvelle icône Assistant (bulle au trait, étincelle pêche) et un disque actif à l'encre, crème en sombre (§50 et §55 du 17.11) | livrée |
 | 1.6.495 | Les écrans passent aux feuilles en îlot : Actions sur une offre refaite, listes des Envoyées sans carte, Langue et Taille du texte en feuille sur téléphone | livrée |
+| 1.6.496 | « Préparer le rendez-vous » en page entière sur téléphone, « Pourquoi » d'un changement du CV en feuille sans voile | livrée |
+| 1.6.497 | Filtres : le choix fait dans la feuille du téléphone reste après la fermeture ; une entrée d’historique par application, retour pendant l’ouverture annule | livrée |
+| 1.6.498 | Premiers pas sur téléphone : une question par écran (postes, lieu, taux, ORP, objectif, langues), §60 du 17.11 | livrée |
+| 1.6.499 | Téléphone : un rappel en îlot en haut de l'Accueil quand des justificatifs ORP sont à remettre, une fois par jour, fermable pour la journée (§57 du 17.11) | livrée |
+| 1.6.500 | Aujourd'hui : la scène des 4 personnages du logo remplace le rond orange, au-dessus du titre sur téléphone et dans le bandeau pêche sur ordinateur (§59 du 17.11) | livrée |
+| 1.6.501 | Feuille Actions d'une offre : « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée | livrée |
+| 1.6.502 | Le panneau de l'Assistant se charge à la première ouverture : environ 10 Ko de moins sur chaque page, bouton inchangé | livrée |
+| 1.6.503 | Réglages et menu du compte (LISEZMOI §56) : « M’avertir dès » et « Apparence » en lignes avec la valeur et un chevron, feuille à boutons radio sur téléphone, menu sur ordinateur ; seuils 85, 75 et 50 gardés ; sur téléphone, les feuilles Langue et Taille du texte se ferment dès qu’on choisit | livrée |
+| 1.6.504 | Filtres : le tri d’Envoyées reste hors de l’historique, et retour pendant l’ouverture d’une feuille applique sans clignotement | livrée |

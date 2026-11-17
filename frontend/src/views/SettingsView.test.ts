@@ -327,12 +327,14 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.findAll("[data-test=section-notifications] [data-test=settings-card]")).toHaveLength(1);
     // Sur ordinateur, ce qui était sur la page Compte suit les notifications (PR 20).
     expect(wrapper.find("[data-test=section-plus] [data-test=account-orp]").exists()).toBe(true);
-    const choices = wrapper.findAll("[data-test=notify-switches] [role=radio]").map((b) => b.text());
-    // Comme « Note minimale » des filtres (Kevin, 16.11) : en chiffres, mêmes seuils, même aide reliée.
-    expect(choices).toEqual(["85 et +", "75 et +", "50 et +"]);
-    const group = wrapper.find("[data-test=threshold-row] [role=radiogroup]");
-    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
-    expect(wrapper.find(`#${group.attributes("aria-labelledby")}`).text()).toBe("M’avertir dès");
+    // LISEZMOI §56 (17.11) : sur ordinateur, la valeur et un chevron ouvrent un menu ; les mots, le seuil en précision.
+    const opener = wrapper.get("[data-test=threshold-menu]");
+    expect(opener.attributes("aria-haspopup")).toBe("menu");
+    expect(opener.attributes("aria-label")).toBe("M’avertir dès : Proche");
+    expect(wrapper.get("[data-test=threshold-row]").text()).toContain("Niveau de correspondance minimum");
+    await opener.trigger("click");
+    const choices = wrapper.findAll("[data-test=threshold-row] [role=menuitemradio]").map((b) => b.text());
+    expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
     expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
 
     await wrapper.find("[data-test=threshold-85]").trigger("click");
@@ -352,6 +354,6 @@ describe("Des Réglages épurés (docs/106)", () => {
       }),
     );
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.get("[data-test=threshold-menu]").text()).toBe("Proche");
   });
 });

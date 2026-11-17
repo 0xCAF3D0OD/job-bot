@@ -13,10 +13,30 @@ const BottomSheet = defineAsyncComponent(() => import("./BottomSheet.vue"));
 export type Choice = { value: string; label: string; hint: string; disabled?: boolean };
 
 // `sheet` (planche ReglagesLangue, §46 du 17.11) : sur téléphone, une feuille du bas courte au lieu du panneau de droite.
-defineProps<{ open: boolean; title: string; heading: string; choices: Choice[]; modelValue: string; note?: string; sheet?: boolean }>();
+const props = defineProps<{ open: boolean; title: string; heading: string; choices: Choice[]; modelValue: string; note?: string; sheet?: boolean }>();
 const emit = defineEmits<{ close: []; "update:modelValue": [value: string] }>();
 const name = useId();
 const headingId = `${name}-heading`;
+
+// Feuille à choix unique (Kevin, 17.11 13 h 40, comme les feuilles du §56) : choisir applique tout de suite et ferme la
+// feuille ; BottomSheet rend alors le focus à la ligne. Les flèches du clavier ne font que parcourir les choix (un
+// bouton radio natif se coche en passant) : seuls un toucher, un clic, Espace ou Entrée ferment. Le panneau de droite,
+// sur ordinateur, reste ouvert.
+let arrows = false;
+function onKeydown(event: KeyboardEvent): void {
+  arrows = event.key.startsWith("Arrow");
+  const input = event.target as HTMLInputElement;
+  // Espace sur un choix non coché le coche (onChange ferme) ; sur le choix coché, ou Entrée, on ferme ici.
+  if (props.sheet && input.matches("input") && (event.key === "Enter" || (event.key === " " && input.checked))) {
+    event.preventDefault();
+    emit("close");
+  }
+}
+function onChange(value: string): void {
+  emit("update:modelValue", value);
+  if (props.sheet && !arrows) emit("close");
+  arrows = false;
+}
 </script>
 
 <template>
@@ -39,6 +59,7 @@ const headingId = `${name}-heading`;
       <div
         role="radiogroup"
         :aria-labelledby="headingId"
+        @keydown="onKeydown"
       >
         <label
           v-for="choice in choices"
@@ -52,7 +73,7 @@ const headingId = `${name}-heading`;
             :value="choice.value"
             :checked="modelValue === choice.value"
             :disabled="choice.disabled"
-            @change="emit('update:modelValue', choice.value)"
+            @change="onChange(choice.value)"
           >
           <span class="choice-rad-text">
             <b>{{ choice.label }}</b>

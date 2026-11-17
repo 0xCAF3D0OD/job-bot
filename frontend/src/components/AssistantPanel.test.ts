@@ -394,3 +394,12 @@ describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2
     expect(assistant.open.value).toBe(false);
   });
 });
+
+describe("AssistantPanel chargé à la demande (AssistantLauncher, allègement du 17.11)", () => {
+  it("arrivé déjà ouvert : prévient le lanceur et charge les discussions récentes, comme à l'ouverture", async () => {
+    const wrapper = await mountPanel();
+    expect(wrapper.emitted("ready")).toHaveLength(1);
+    expect(GET).toHaveBeenCalledWith("/api/assistant/conversations");
+    expect(wrapper.find("[data-test=assistant-panel]").exists()).toBe(true);
+  });
+});

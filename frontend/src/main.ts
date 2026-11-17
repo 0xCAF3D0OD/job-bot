@@ -1,3 +1,6 @@
+// En premier : son écouteur du bouton retour doit passer avant celui du routeur (backListeners.ts).
+import "./backListeners";
+
 import { createApp } from "vue";
 
 import App from "./App.vue";

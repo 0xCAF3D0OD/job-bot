@@ -99,6 +99,10 @@ describe("Rendez-vous sur téléphone", () => {
       /^Rendez-vous ORP, feuille prête, mardi 10 novembre à 9 h 30, dans \d+ jours, ORP Renens$/,
     );
     expect(orp.find("[data-test=rdv-pdf]").exists()).toBe(false);
+    // §46 du 17.11 : une page entière, la flèche « Retour » à la place de la croix.
+    const prep = wrapper.get("[data-test=rdv-prep-sheet]");
+    expect(prep.classes()).toContain("sheet-full");
+    expect(prep.get("[data-test=sheet-close]").attributes("aria-label")).toBe("Retour");
     expect(wrapper.findAll("[data-test=rdv-prep-lines] li").map((li) => li.text())).toEqual([
       "Ton mois6 recherches sur 10",
       "Ce qui bloqueFormulaires en ligne : 0 réponse sur 9",

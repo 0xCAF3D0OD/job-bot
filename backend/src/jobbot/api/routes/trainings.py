@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -226,6 +226,33 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
         diplomas_detected=sorted(detected),
         diplomas_declared=sorted(declared),
     )
+
+
+class TrainingsInProgress(BaseModel):
+    in_progress: int
+
+
+@router.get("/in-progress", operation_id="countTrainingsInProgress")
+async def count_in_progress(request: Request) -> TrainingsInProgress:
+    """« Formations · 2 en cours » de la page Compte (LISEZMOI §51, Kevin 17.11).
+
+    Un nombre seul, sans le catalogue, pour un appel qui ne retarde pas la page. Même périmètre
+    que la liste : le profil choisi, les formations non écartées.
+    """
+    async with _runtime(request).sessionmaker.begin() as session:
+        profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
+        count = await session.scalar(
+            select(func.count())
+            .select_from(TrainingMark)
+            .join(Training, Training.id == TrainingMark.training_id)
+            .where(
+                TrainingMark.profile_id == profile.id,
+                TrainingMark.status == "in_progress",
+                Training.dismissed.is_(False),
+                or_(Training.profile_id.is_(None), Training.profile_id == profile.id),
+            )
+        )
+    return TrainingsInProgress(in_progress=count or 0)
 
 
 @router.put("/diplomas", operation_id="setTrainingDiplomas")
