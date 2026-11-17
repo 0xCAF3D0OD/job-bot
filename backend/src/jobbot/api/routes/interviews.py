@@ -3,13 +3,13 @@
 from datetime import date, datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import Application, Interview, InterviewPractice, Offer
-from jobbot.interviews import practice, service
+from jobbot.interviews import board, practice, service
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["interviews"])
@@ -523,3 +523,64 @@ async def delete_practice(request: Request, practice_id: int) -> None:
         if item is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "entraînement introuvable")
         await session.delete(item)
+
+
+# --- Tableau des retours d'entretien (décision de Kevin du 17.11.2026) --------------------
+# Lecture seule : rien n'est écrit, rien ne part à l'IA, rien n'est journalisé au-delà de la
+# ligne « http_request » commune, qui ne garde que le modèle de route (sans identifiant).
+
+
+class BoardLineOut(BaseModel):
+    # Pas de texte libre ici (notes, questions) : seulement dans le détail.
+    interview_id: int | None
+    application_id: int
+    company: str
+    job_title: str
+    day: date
+    kind: Kind | None
+    rating: int | None
+    stress: int | None
+    outlook: Literal["positive", "unsure", "negative"] | None
+    next_step: NextStep | None
+    next_step_at: date | None
+    thanks_sent: bool | None
+    point: board.Point
+    issue: board.Issue
+    questions_count: int
+
+
+class BoardPage(BaseModel):
+    items: list[BoardLineOut]
+    total: int
+
+
+class BoardDetailOut(InterviewOut):
+    company: str
+    job_title: str
+    point: board.Point
+    issue: board.Issue
+
+
+@router.get("/interviews", operation_id="listInterviewBoard")
+async def list_board(request: Request, offset: Annotated[int, Query(ge=0)] = 0) -> BoardPage:
+    """Tous les entretiens du compte, du plus récent au plus ancien, par pages de 20."""
+    async with _runtime(request).sessionmaker() as session:
+        found, total = await board.page(session, offset)
+    return BoardPage(items=[BoardLineOut(**line.__dict__) for line in found], total=total)
+
+
+@router.get("/interviews/{interview_id}", operation_id="getInterviewBoardDetail")
+async def get_board_detail(request: Request, interview_id: int) -> BoardDetailOut:
+    """Le retour complet d'une ligne. Pour le modifier : « Faire le point » (PUT ci-dessus)."""
+    async with _runtime(request).sessionmaker() as session:
+        found = await board.detail(session, interview_id)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
+        review, application = found
+        return BoardDetailOut(
+            **InterviewOut.model_validate(review).model_dump(),
+            company=application.company,
+            job_title=application.job_title,
+            point="fait",
+            issue=board.issue_of(application),
+        )
