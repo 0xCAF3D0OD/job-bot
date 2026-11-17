@@ -11,8 +11,8 @@ import AssistantMascot from "./AssistantMascot.vue";
 import CountBadge from "./CountBadge.vue";
 
 // La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02) : cinq onglets, Accueil, Candidatures, Assistant,
-// Bilan, Compte, libellés toujours visibles. L'onglet actif est un rond bleu plein posé dans un creux de la barre
-// (seule exception à la pastille teintée) ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
+// Bilan, Compte, libellés toujours visibles. L'onglet actif est un rond plein posé dans un creux de la barre,
+// à l'encre (crème en sombre ; LISEZMOI du 17.11, §55), seule exception à la pastille teintée ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
 // rond loin du texte. Candidatures porte le nombre d'offres à examiner. Les écrans de travail (Préparer, le tri,
 // l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50), comme les Réglages et les Notifications (Kevin, 6.11).
 // Assistant mène à sa page (étape 11a), seulement quand l'IA est branchée ; la barre attend de le savoir pour se
@@ -27,13 +27,13 @@ const toReview = ref(0);
 const { focus } = useFocusMode();
 const visible = computed(() => assistantKnown.value && !HIDDEN.has(String(route.name)) && !route.meta.bare && !focus.value);
 
-type Tab = { name: string; label: string; icon?: "home" | "briefcase" | "trend" | "user"; to: string; active: boolean };
+type Tab = { name: string; label: string; icon: "home" | "briefcase" | "assistant" | "trend" | "user"; to: string; active: boolean };
 const tabs = computed<Tab[]>(() => {
   const list: Tab[] = [
     { name: "today", label: "Accueil", icon: "home", to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
     { name: "jobs", label: "Candidatures", icon: "briefcase", to: menuLink(route.path), active: route.path.startsWith("/candidatures") },
   ];
-  if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", to: "/assistant", active: route.name === "assistant" });
+  if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", icon: "assistant", to: "/assistant", active: route.name === "assistant" });
   list.push(
     { name: "bilan", label: "Bilan", icon: "trend", to: "/bilan", active: route.path.startsWith("/bilan") },
     {
@@ -86,18 +86,18 @@ onMounted(() => void refresh());
         :data-test="`tab-${tab.name}`"
       >
         <span class="tab-bar-icon">
-          <!-- L'Assistant dans son cercle (maquette AccueilSmile, barre du bas) : un rond clair cerclé de bleu,
-               la mascotte au 6/10. -->
+          <!-- L'Assistant (LISEZMOI du 17.11, §50) : la bulle au trait comme les autres onglets ; actif, la mascotte
+               dans un rond clair posé sur le disque (planche Assistant). -->
           <span
-            v-if="tab.name === 'assistant'"
+            v-if="tab.name === 'assistant' && tab.active"
             class="tab-assistant-ring"
             data-test="tab-assistant-ring"
           >
-            <AssistantMascot :size="tab.active ? 20 : 19" />
+            <AssistantMascot :size="34" />
           </span>
           <AppIcon
             v-else
-            :name="tab.icon!"
+            :name="tab.icon"
           />
           <CountBadge
             v-if="tab.name === 'jobs' && toReview"

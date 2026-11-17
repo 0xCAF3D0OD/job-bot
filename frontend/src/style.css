@@ -70,6 +70,8 @@
   --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
   --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
   --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
+  /* Le disque de l'onglet actif de la barre du bas (LISEZMOI du 17.11, §55). */
+  --nav-dot-shadow: rgba(27,31,42,.25);
   /* Le libellé d'action d'une carte cliquable (D22 : couleur du ton, 15 px, 700) et les textes de 15 px des maquettes. */
   --font-label: 0.9375rem;
   --text: #1B1F2A;
@@ -266,6 +268,7 @@
     --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
     --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
     --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
+    --nav-dot-shadow: rgba(0,0,0,.4);
     --text: #F3EEE6;
     --text-secondary: #ABA398;
     --text-tertiary: #C7BFB3;
@@ -334,6 +337,7 @@
   --shadow-menu: 0 12px 32px rgba(27,31,42,.16);
   --shadow-band-card: 0 4px 16px rgba(36,69,194,.10);
   --shadow-composer: 0 2px 10px rgba(27,31,42,.07);
+  --nav-dot-shadow: rgba(0,0,0,.4);
   --text: #F3EEE6;
   --text-secondary: #ABA398;
   --text-tertiary: #C7BFB3;
@@ -2497,15 +2501,11 @@ button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: v
   .tab-bar-label { white-space: nowrap; }
   .tab-bar-icon { position: relative; display: grid; place-items: center; width: 3.5rem; height: 2rem; }
   .tab-bar-icon .icon { width: 1.5rem; height: 1.5rem; stroke-width: var(--icon-stroke); }
-  /* L'onglet actif : le rond bleu plein de 56 px, l'icône en blanc, le libellé en bleu et en gras. */
-  .tab-bar .active { color: var(--primary-text); font-weight: var(--weight-bold); }
-  .tab-bar .active .tab-bar-icon { animation: tab-round-in var(--t-standard) var(--ease-standard) both; width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--action); color: var(--on-action); box-shadow: 0 8px 20px color-mix(in srgb, var(--action) 42%, transparent), 0 2px 6px rgb(0 0 0 / 18%); }
+  /* L'onglet actif (§55 du 17.11) : le rond de 56 px à l'encre (crème en sombre), l'icône en blanc (encre en sombre), le libellé à l'encre et en gras ; le bleu plein reste aux actions. */
+  .tab-bar .active { color: var(--text); font-weight: var(--weight-bold); }
+  .tab-bar .active .tab-bar-icon { animation: tab-round-in var(--t-standard) var(--ease-standard) both; width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--text); color: var(--on-action); box-shadow: 0 4px 12px var(--nav-dot-shadow); }
   .tab-bar .active .tab-bar-icon .icon { width: 1.625rem; height: 1.625rem; }
-  .tab-assistant-ring { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1.6px solid var(--primary); border-radius: var(--radius-pill); background: var(--surface); }
-  .tab-bar .active .tab-assistant-ring { width: 2.25rem; height: 2.25rem; border-color: var(--on-primary); }
-  .tab-bar .active .mascot-face { fill: var(--on-primary); }
-  .tab-bar .active :is(.mascot-line) { stroke: var(--primary); }
-  .tab-bar .active :is(.mascot-dot, .mascot-mouth) { fill: var(--primary); }
+  .tab-assistant-ring { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: var(--surface); }
   .tab-bar a:focus-visible, .tab-bar button:focus-visible { outline: none; }
   .tab-bar a:focus-visible .tab-bar-icon, .tab-bar button:focus-visible .tab-bar-icon { outline: 2px solid var(--primary-graphic); outline-offset: 2px; border-radius: var(--radius-pill); }
   .tab-bar-count { position: absolute; top: -0.1rem; left: calc(50% + 0.3rem); }

@@ -87,11 +87,15 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     const wrapper = mount(BottomNav, { global: { plugins: [router] } });
     await flushPromises();
     expect(wrapper.find("[data-test=tab-assistant]").attributes("href")).toBe("/assistant");
-    // La mascotte dans son cercle (maquette AccueilSmile).
-    expect(wrapper.find("[data-test=tab-assistant] [data-test=tab-assistant-ring] [data-test=assistant-mascot]").exists()).toBe(true);
+    // Inactif : la bulle au trait avec son étincelle, comme les autres icônes (LISEZMOI du 17.11, §50).
+    expect(wrapper.find("[data-test=tab-assistant] [data-icon=assistant]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=tab-assistant] [data-test=assistant-mascot]").exists()).toBe(false);
     await router.push("/assistant");
     await flushPromises();
     const tab = wrapper.find("[data-test=tab-assistant]");
+    // Actif : la mascotte dans son rond clair, sur le disque (planche Assistant).
+    expect(tab.find("[data-test=tab-assistant-ring] [data-test=assistant-mascot]").exists()).toBe(true);
+    expect(tab.find("[data-icon=assistant]").exists()).toBe(false);
     expect(tab.classes()).toContain("active");
     expect(tab.attributes("aria-current")).toBe("page");
     expect(wrapper.find("[data-test=tab-today]").classes()).not.toContain("active");
