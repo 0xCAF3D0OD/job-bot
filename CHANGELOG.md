@@ -704,3 +704,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.490 | Téléphone : les feuilles du bas deviennent des îlots blancs à 8 px des bords, trois hauteurs (fit, medium, large) et une seule ouverte à la fois | livrée |
 | 1.6.491 | Les feuilles du bas en îlot allégées : chaque page pèse moins que main, Filtres en grande taille, Compatibilité en taille moyenne, poignée en cible de 44 px | livrée |
 | 1.6.492 | Toute la Suisse quand la liste de lieux est vide, aussi dans Gérer mes recherches, l’assistant d’alertes et le Profil (section 43 du 17.11) | livrée |
+| 1.6.493 | Compte (LISEZMOI §51) : lignes simples de 56 px, valeur à droite, chevron, une couleur par icône, « Aide » | livrée en partie ; §56 (M'avertir dès et Apparence en lignes à feuille ou menu) à suivre dans la même PR |
+| 1.6.494 | Téléphone : la barre du bas prend la nouvelle icône Assistant (bulle au trait, étincelle pêche) et un disque actif à l'encre, crème en sombre (§50 et §55 du 17.11) | livrée |
