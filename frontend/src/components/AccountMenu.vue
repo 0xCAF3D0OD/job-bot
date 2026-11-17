@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onMounted, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import { dateInList } from "../dates";
@@ -12,8 +12,10 @@ import { useProfiles } from "../composables/useProfiles";
 import { useTheme, type Theme } from "../composables/useTheme";
 import AppIcon from "./AppIcon.vue";
 import ProfileImage from "./ProfileImage.vue";
-import ChoiceMenu from "./ChoiceMenu.vue";
 import SidePanel from "./SidePanel.vue";
+
+// Le menu « Apparence » (§56) ne se charge qu’à l’ouverture du panneau : il ne pèse pas sur le premier écran.
+const ChoiceMenu = defineAsyncComponent(() => import("./ChoiceMenu.vue"));
 
 // Le panneau du compte (maquette du 8 novembre, docs/143, D24 ; remplace le menu « Compte, Se déconnecter » de
 // docs/89) : l'image choisie, en haut à droite de l'ordinateur, ouvre un panneau latéral non modal de 420 px.
