@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
@@ -15,6 +15,9 @@ import ScoreRing from "./ScoreRing.vue";
 // « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
 // dose du jour, tant qu'il y en a, et « Tout voir » ; sans bouton « Trier », A3 annulé le 2026-11-05 par
 // Kevin), À faire (un nombre, un libellé). L'ordinateur garde sa page.
+// Le rappel des justificatifs (§57 du 17.11) est chargé à part, seulement quand un mois est à remettre : les autres
+// jours, l'Accueil ne reçoit ni son code ni son CSS.
+const OrpReminder = defineAsyncComponent(() => import("./OrpReminder.vue"));
 // Une ligne de « À faire » : un nombre et un libellé ; ou, pour « Relire ton CV » (PR 22), une icône et une ligne de détail.
 export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw; icon?: IconName; detail?: string };
 
@@ -31,6 +34,8 @@ const props = defineProps<{
   todos: HomeTodo[];
   /** Un jour de repos (planche AccueilV2, état « repos », 14 novembre) : la phrase sous « Jour de repos. ». */
   restSub?: string | null;
+  /** Le rappel des justificatifs à remettre (§57 du 17.11) : posé seulement quand un mois est à remettre. */
+  reminder?: { month: string; due: string; late: boolean; to: RouteLocationRaw } | null;
 }>();
 
 // « Encore 2 d’ici le 5 décembre » : l'échéance ORP du mois, pas sa fin (MODIFICATIONS du 9 novembre, §11).
@@ -116,6 +121,10 @@ function facts(offer: Offer): string[] {
     class="home"
     data-test="home-phone"
   >
+    <OrpReminder
+      v-if="reminder"
+      v-bind="reminder"
+    />
     <div class="home-hello">
       <!-- Un jour de repos : « Jour de repos. » à la main, puis la phrase (planche AccueilV2, état « repos »). -->
       <template v-if="restSub != null">
