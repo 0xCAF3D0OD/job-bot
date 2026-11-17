@@ -14,6 +14,8 @@ import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
+import TroupeScene from "../components/TroupeScene.vue";
+import { HOME_SCENE } from "../troupe";
 import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
@@ -28,6 +30,8 @@ import IconButton from "../components/IconButton.vue";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
+// La scène des 4 personnages (§59 du 17.11) à droite du texte de l'accroche, 340 px de large ; la même sur téléphone,
+// au-dessus du titre (HomePhone). Une seule constante, HOME_SCENE (troupe.ts).
 // Aujourd'hui sur ordinateur (maquettes AujourdhuiOrdinateurV2 et AujourdhuiOrdinateurV2Sombre du 13 novembre, états
 // « accueil », « vide » et « atteint »), en deux colonnes. À gauche : l'accroche sur un fond pêche (« Bonjour Kevin »,
 // le titre du jour et sa fin à la main ; avec un justificatif en retard, deux lignes manuscrites, le retard d'abord ;
@@ -621,12 +625,12 @@ const { me } = useAuth();
             {{ lateCatch ? lateCatch.sub : newcomer ? newcomerSub : goalReached ? reachedSub : heading.sub }}
           </p>
         </div>
-        <img
-          src="/tri/orange-liste.webp"
-          alt=""
-          width="174"
-          height="168"
-        >
+        <TroupeScene
+          :scene="HOME_SCENE"
+          :width="340"
+          :desktop-width="340"
+          full
+        />
       </section>
 
       <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
@@ -839,18 +843,12 @@ const { me } = useAuth();
    tailles hors échelle sont nommées ici. Sous 1100 px de large, la colonne de droite passe sous celle de gauche. */
 .aj {
   --aj-w: 1280px; --aj-side: 440px; --aj-40: 40px; --aj-r: 32px; --aj-28: 28px; --aj-44: 2.75rem; --aj-17: 1.0625rem; --aj-26: 1.625rem; --aj-22: 1.375rem; --aj-18: 1.125rem; --aj-16: 1rem; --aj-15: 0.9375rem;
-  --aj-img: 168px; --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25;
+  --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25;
   display: grid; grid-template-columns: minmax(0, 1fr) var(--aj-side); gap: var(--aj-40); box-sizing: border-box; max-width: calc(var(--aj-w) + 2 * var(--space-6)); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12);
 }
 .aj-main { display: flex; flex-direction: column; min-width: 0; }
 .aj-hero { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-8) var(--aj-40); border-radius: var(--aj-r); background: var(--peach-soft); }
 .aj-hero > div { flex: 1; min-width: 0; }
-.aj-hero img { flex: none; width: auto; height: var(--aj-img); }
-/* En sombre, le personnage de l'accroche a un contour clair, comme ceux du tri. */
-:root[data-theme="dark"] .aj-hero img { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .aj-hero img { filter: drop-shadow(0 0 1px #F3EEE6) drop-shadow(0 0 1px #F3EEE6); }
-}
 .aj-hello { margin: 0; font-size: var(--aj-16); color: var(--text-lead); }
 .aj-late, .aj-title { margin: var(--space-3) 0 0; }
 .aj-late { font-size: var(--aj-44); line-height: var(--leading-none); font-weight: var(--weight-regular); }

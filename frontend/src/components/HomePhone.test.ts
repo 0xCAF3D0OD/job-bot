@@ -101,3 +101,15 @@ describe("Le cercle liquide (D6)", () => {
     });
   });
 });
+
+describe("La scène des 4 personnages (§59 du 17.11)", () => {
+  it("au-dessus du titre, 110 px de haut, décorative ; plus de visage à côté de « Rien à trier »", () => {
+    const wrapper = home({ offers: [] });
+    const scene = wrapper.find(".home-hello > [data-illustration=troupe]");
+    expect(scene.attributes("data-scene")).toBe("accueil-orp");
+    expect(scene.attributes("height")).toBe("110");
+    expect(scene.attributes("alt")).toBe("");
+    expect(wrapper.find(".home-hello").element.firstElementChild).toBe(scene.element);
+    expect(wrapper.find("[data-test=home-offers-empty] svg, [data-test=home-offers-empty] .face").exists()).toBe(false);
+  });
+});

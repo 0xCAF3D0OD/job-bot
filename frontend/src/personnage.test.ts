@@ -38,6 +38,9 @@ export const TROUPE_SCREENS: Record<string, string> = {
   "components/MomentScreen.vue": "candidature envoyée, entretien décroché",
   "components/GoalReached.vue": "objectif ORP atteint",
   "views/WelcomeView.vue": "premiers pas sur téléphone (le « 1 » seul)",
+  // §59 du 17.11 : la scène de l'Accueil, au-dessus du titre sur téléphone, dans le bandeau pêche sur ordinateur.
+  "components/HomePhone.vue": "Accueil du téléphone (§59)",
+  "views/TodayView.vue": "Aujourd’hui sur ordinateur (§59)",
 };
 
 // Les écrans où l'image et un autre des trois sont dans des branches qui s'excluent : le fichier
@@ -47,6 +50,8 @@ const EXCLUSIVE: Record<string, string> = {
   "views/NotificationsView.vue": "views/NotificationsView.test.ts",
   // Les scènes avec des personnes sur ordinateur, le « 1 » seul sur téléphone.
   "views/WelcomeView.vue": "views/WelcomeView.test.ts",
+  // La scène avec la page chargée ; « Pas de connexion » (NetworkError) seulement quand la page n'a pas pu charger.
+  "views/TodayView.vue": "views/TodayView.test.ts",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
