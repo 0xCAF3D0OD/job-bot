@@ -15546,6 +15546,10 @@
       },
       "FirstApplicationOut": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "company": {
             "type": "string",
             "title": "Company"
@@ -15558,11 +15562,12 @@
         },
         "type": "object",
         "required": [
+          "id",
           "company",
           "sent_at"
         ],
         "title": "FirstApplicationOut",
-        "description": "La première candidature sur la carte « Première candidature notée » (section 44, Kevin le\n17.11) : l'entreprise et la date d'envoi."
+        "description": "La première candidature sur la carte « Première candidature notée » (section 44, Kevin le\n17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre."
       },
       "FirstOffersOut": {
         "properties": {

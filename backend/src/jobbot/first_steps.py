@@ -215,20 +215,22 @@ class FirstApplication:
     """La première candidature, pour la carte « Première candidature notée » (section 44,
     Kevin le 17.11) : « Logitech · 12 nov. »."""
 
+    id: int
     company: str
     sent_at: date
 
 
 async def first_application(session: AsyncSession) -> FirstApplication | None:
-    """La plus ancienne candidature envoyée : l'entreprise et la date d'envoi."""
+    """La plus ancienne candidature envoyée : l'entreprise, la date d'envoi, et son numéro pour
+    le lien « Voir »."""
     row = (
         await session.execute(
-            select(Application.company, Application.sent_at)
+            select(Application.id, Application.company, Application.sent_at)
             .order_by(Application.sent_at, Application.id)
             .limit(1)
         )
     ).first()
-    return FirstApplication(company=row.company, sent_at=row.sent_at) if row else None
+    return FirstApplication(id=row.id, company=row.company, sent_at=row.sent_at) if row else None
 
 
 async def dismiss(session: AsyncSession, dismissed: bool) -> None:

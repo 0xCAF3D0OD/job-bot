@@ -5546,9 +5546,11 @@ export interface components {
         /**
          * FirstApplicationOut
          * @description La première candidature sur la carte « Première candidature notée » (section 44, Kevin le
-         *     17.11) : l'entreprise et la date d'envoi.
+         *     17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre.
          */
         FirstApplicationOut: {
+            /** Id */
+            id: number;
             /** Company */
             company: string;
             /**

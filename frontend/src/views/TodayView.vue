@@ -12,6 +12,7 @@ import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
+import FirstApplicationCard from "../components/FirstApplicationCard.vue";
 import type { HomeTodo } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
 import { usePhone } from "../composables/usePhone";
@@ -821,17 +822,15 @@ const { me } = useAuth();
   >
     <p>{{ today.month_count }} candidatures sur {{ today.month_target }}.</p>
   </SuccessCard>
-  <SuccessCard
-    v-else-if="stepsWon"
-    face
-    wink
-    keep-focus
-    title="Première candidature notée"
-    test-id="first-steps-done"
+  <FirstApplicationCard
+    v-else-if="stepsWon && today?.first_application"
+    :company="today.first_application.company"
+    :sent-at="today.first_application.sent_at"
+    :application-id="today.first_application.id"
+    :count="today.month_count"
+    :target="today.month_target ?? null"
     @close="stepsWon = false"
-  >
-    <p>Elle compte pour ton mois ORP.</p>
-  </SuccessCard>
+  />
 </template>
 
 <style scoped>

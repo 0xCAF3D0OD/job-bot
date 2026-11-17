@@ -57,8 +57,9 @@ class FirstStepsSummaryOut(BaseModel):
 
 class FirstApplicationOut(BaseModel):
     """La première candidature sur la carte « Première candidature notée » (section 44, Kevin le
-    17.11) : l'entreprise et la date d'envoi."""
+    17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre."""
 
+    id: int
     company: str
     sent_at: date
 
@@ -410,7 +411,9 @@ async def get_today(request: Request) -> TodayOut:
         first_steps_offer_id=steps.offer_id,
         first_steps_finished=steps.just_finished,
         first_application=(
-            FirstApplicationOut(company=first_sent.company, sent_at=first_sent.sent_at)
+            FirstApplicationOut(
+                id=first_sent.id, company=first_sent.company, sent_at=first_sent.sent_at
+            )
             if first_sent
             else None
         ),

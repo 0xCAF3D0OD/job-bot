@@ -150,7 +150,8 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     assert len(done(page)) == 5 and page["first_steps_finished"] is True
     assert page["first_steps_summary"] is None
     # La carte nomme la première candidature : « Acme · 2 oct. » (section 44, Kevin le 17.11).
-    assert page["first_application"] == {"company": "Acme", "sent_at": "2026-10-02"}
+    first = page["first_application"]
+    assert first["company"] == "Acme" and first["sent_at"] == "2026-10-02" and first["id"] > 0
     # D'autres lectures d'Aujourd'hui (la barre d'onglets) ne la consomment pas ; une fois
     # montrée, l'interface le dit et elle ne revient plus.
     assert (await client.get("/api/today")).json()["first_steps_finished"] is True
