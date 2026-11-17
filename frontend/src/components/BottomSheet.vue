@@ -267,6 +267,7 @@ function onClick(event: MouseEvent): void {
           class="sheet-badge"
           aria-hidden="true"
         ><AppIcon :name="icon" /></span>
+        <slot name="lead" />
         <div class="sheet-heading">
           <!-- Au-dessus du titre, en petit (« Changement 2 sur 4 », §37 du 16.11). -->
           <span
