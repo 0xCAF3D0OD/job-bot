@@ -106,6 +106,8 @@
   --success-wash: #EAF4EE;
   /* Le texte sur --peach-soft : le bloc date du rendez-vous ORP (maquette RendezVous, 6.11.2026). */
   --peach-text: #8A4A16;
+  /* La pastille « n recherches · 8 au maximum » du volet « Ta recherche » (Kevin, 17.11), texte --peach-text. */
+  --limit-soft: #FDF0E2;
   /* Agence de placement (section 35 du 16.11) : la pastille et le rond de la fiche, ~7:1. */
   --agency-bg: #EFE9F7;
   --agency-text: #5B3E8C;
@@ -291,6 +293,7 @@
     --peach-wash: #2E241C;
     --success-wash: #1F2E26;
     --peach-text: #F2B98E;
+    --limit-soft: #3A2A1C;
     --agency-bg: #2E2540;
     --agency-text: #C9B3F0;
     --success: #62D497;
@@ -362,6 +365,7 @@
   --peach-wash: #2E241C;
   --success-wash: #1F2E26;
   --peach-text: #F2B98E;
+  --limit-soft: #3A2A1C;
   --agency-bg: #2E2540;
   --agency-text: #C9B3F0;
   --success: #62D497;
