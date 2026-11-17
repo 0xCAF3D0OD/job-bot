@@ -77,6 +77,10 @@ export const ICONS = {
   message: path("M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H5A1.5 1.5 0 0 1 3.5 16V6A1.5 1.5 0 0 1 5 4.5z"),
   // Get'emAll (maquettes de la connexion, 2026-11-06) : sa bulle, les deux flèches entre les apps, et « jamais ».
   chat: path("M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z") + path("M9 10.5h6"),
+  // L'onglet Assistant de la barre du bas (LISEZMOI du 17.11, §50) : une bulle au trait, une étincelle pêche pleine.
+  assistant:
+    path("M7.9 20A9 9 0 1 0 4 16.1L2 22Z") +
+    path("M12 7.5Q12.6 11.4 16.5 12 12.6 12.6 12 16.5 11.4 12.6 7.5 12 11.4 11.4 12 7.5Z", ' fill="var(--spark)" stroke="none"'),
   swap: path("M5 9h14M15 5l4 4-4 4M19 15H5M9 11l-4 4 4 4"),
   ban: circle(12, 12, 8) + path("m6.5 17.5 11-11"),
   play: path("M8 5.5v13l10.5-6.5z"),
