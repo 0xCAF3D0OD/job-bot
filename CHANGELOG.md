@@ -709,3 +709,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.495 | Les écrans passent aux feuilles en îlot : Actions sur une offre refaite, listes des Envoyées sans carte, Langue et Taille du texte en feuille sur téléphone | livrée |
 | 1.6.496 | « Préparer le rendez-vous » en page entière sur téléphone, « Pourquoi » d'un changement du CV en feuille sans voile | livrée |
 | 1.6.497 | Filtres : le choix fait dans la feuille du téléphone reste après la fermeture ; une entrée d’historique par application, retour pendant l’ouverture annule | livrée |
+| 1.6.498 | Premiers pas sur téléphone : une question par écran (postes, lieu, taux, ORP, objectif, langues), §60 du 17.11 | livrée |
