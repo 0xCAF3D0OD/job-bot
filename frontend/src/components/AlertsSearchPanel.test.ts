@@ -40,10 +40,25 @@ describe("Le volet « Ta recherche » (Kevin, 17.11)", () => {
       ["+ Autre poste", undefined],
     ]);
     expect(wrapper.find("[data-test=search-panel-places]").text()).toContain("Lausanne");
+    // « Toute la Suisse » remplace tous les autres lieux.
+    expect(wrapper.find("[data-test=search-panel-everywhere]").attributes("aria-pressed")).toBe("false");
+    await wrapper.find("[data-test=search-panel-everywhere]").trigger("click");
+    expect(wrapper.find("[data-test=search-panel-places]").text()).toBe("");
+    expect(wrapper.find("[data-test=search-panel-everywhere]").attributes("aria-pressed")).toBe("true");
     const rates = wrapper.findAll("[role=radio]");
     expect(rates.map((r) => r.text())).toEqual(["Tous", "Dès 50 %", "Dès 60 %", "Dès 70 %", "Dès 80 %", "Dès 90 %", "100 %"]);
     expect(rates[0]!.attributes("aria-checked")).toBe("true");
     expect(wrapper.find(".alerts-search-info").text()).toBe("Ces critères servent aussi à trier tes offres.");
+  });
+
+  it("une ville comprise dans un canton coché ne compte pas en plus", async () => {
+    const wrapper = await mountPanel();
+    for (const place of ["Vaud", "Morges", "Genève", "Sion"]) {
+      await wrapper.find("[data-test=search-panel-place-input]").setValue(place);
+      await wrapper.find("[data-test=search-panel-place-input]").trigger("keydown.enter");
+    }
+    // 2 postes × (Vaud, Genève, Sion) = 6 : Lausanne et Morges sont dans Vaud.
+    expect(wrapper.find("[data-test=search-panel-save]").attributes("disabled")).toBeUndefined();
   });
 
   it("au-delà de 8 recherches : « Enregistrer » désactivé, le message relié par aria-describedby", async () => {
@@ -56,7 +71,7 @@ describe("Le volet « Ta recherche » (Kevin, 17.11)", () => {
     const save = wrapper.find("[data-test=search-panel-save]");
     expect(save.attributes("disabled")).toBeDefined();
     expect(save.attributes("aria-describedby")).toBe("search-panel-limit");
-    expect(wrapper.find("#search-panel-limit").text()).toBe("8 recherches au maximum. Retire un poste ou un lieu.");
+    expect(wrapper.find("#search-panel-limit").text()).toBe("10 recherches · 8 au maximum : retire un poste ou un lieu");
     // Retirer un poste : 5 recherches, « Enregistrer » revient.
     await wrapper.findAll("[data-test=search-panel-roles] .filter-choice")[1]!.trigger("click");
     expect(wrapper.find("[data-test=search-panel-save]").attributes("disabled")).toBeUndefined();

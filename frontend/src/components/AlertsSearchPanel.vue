@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import type { AlertsPage } from "../api/client";
 import {
   combinations,
-  LIMIT_MESSAGE,
+  limitMessage,
   loadSearchCriteria,
   MAX_ROLES,
   MAX_SEARCHES,
@@ -22,7 +22,7 @@ import SidePanel from "./SidePanel.vue";
 // Le volet « Ta recherche » (« Modifier » de la carte des Alertes, Kevin 17.11) : les critères du Profil, avec les
 // éléments des premiers pas en attendant sa planche. Postes en pastilles à choix multiple (3 au plus) et « + Autre
 // poste », lieux (champ « Ville ou région » et pastilles, « Toute la Suisse » sans lieu), taux en choix unique. Au-delà
-// de 8 recherches, « Enregistrer » est désactivé et le message le dit (aria-describedby).
+// de 8 recherches, « Enregistrer » est désactivé et la pastille orange le dit (aria-describedby, Kevin 17.11, 14 h 27).
 const props = defineProps<{ open: boolean; page: AlertsPage }>();
 const emit = defineEmits<{ close: []; saved: [result: SavedSearches] }>();
 
@@ -208,13 +208,22 @@ async function save(): Promise<void> {
               @click="places = places.filter((p) => p !== place)"
             />
           </li>
-          <li
-            v-if="!places.length"
-            class="tag"
-          >
-            Toute la Suisse
-          </li>
         </ul>
+        <!-- « Toute la Suisse » remplace tous les autres lieux (Kevin, 17.11, 14 h 27). -->
+        <div class="filter-choices-row">
+          <button
+            type="button"
+            class="filter-choice"
+            :aria-pressed="!places.length"
+            data-test="search-panel-everywhere"
+            @click="places = []"
+          >
+            <AppIcon
+              v-if="!places.length"
+              name="tick"
+            />Toute la Suisse
+          </button>
+        </div>
       </fieldset>
 
       <fieldset>
@@ -247,11 +256,11 @@ async function save(): Promise<void> {
       <p
         v-if="tooMany"
         id="search-panel-limit"
-        class="field-error"
+        class="alerts-search-limit"
         role="status"
         data-test="search-panel-limit"
       >
-        {{ LIMIT_MESSAGE }}
+        {{ limitMessage(count) }}
       </p>
       <p
         v-if="failed"
@@ -295,6 +304,7 @@ async function save(): Promise<void> {
 .alerts-search-form fieldset { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; margin: 0; padding: 0; border: 0; }
 .alerts-search-note { margin: 0; font-size: var(--font-small); color: var(--text-secondary); }
 .alerts-search-panel .side-panel-foot { justify-content: flex-end; gap: var(--space-6); }
+.alerts-search-limit { align-self: flex-start; margin: 0; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--limit-soft); color: var(--peach-text); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--space-5); }
 .alerts-search-info { display: flex; gap: var(--space-3); margin: 0; padding: var(--space-3) var(--space-4); border-radius: calc(var(--space-3) + var(--space-1) / 2); background: var(--surface); font-size: var(--font-small); line-height: var(--space-5); }
 .alerts-search-info .icon { flex: none; width: 20px; height: 20px; color: var(--primary-graphic); }
 </style>

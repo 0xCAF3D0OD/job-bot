@@ -1,19 +1,21 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { useUndo } from "../composables/useUndo";
 import AlertsView from "./AlertsView.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
 const DELETE = vi.fn();
+const PATCH = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
     PUT: (...a: unknown[]) => PUT(...a),
     DELETE: (...a: unknown[]) => DELETE(...a),
-    PATCH: vi.fn(),
+    PATCH: (...a: unknown[]) => PATCH(...a),
   },
 }));
 afterEach(() => vi.resetAllMocks());
@@ -233,6 +235,22 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     expect(POST).toHaveBeenCalledTimes(1);
     expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "Kubernetes", location: "Lausanne" } });
     expect(wrapper.find("[data-test=alert-card-2-jobup]").exists()).toBe(true);
+  });
+
+  it("« Ne plus suivre » : la recherche passe en pause, les critères du Profil ne changent pas", async () => {
+    const one = page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]);
+    const wrapper = await mountView(one);
+    PATCH.mockResolvedValue({ data: page([search(1, [cell("jobup")], { active: false })]) });
+    await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");
+    await wrapper.find("[data-test=alert-remove]").trigger("click");
+    await flushPromises();
+    const { pending, flush } = useUndo();
+    expect(pending.value?.message).toBe("Tu ne suis plus DevOps. Tes critères du Profil ne changent pas.");
+    expect(wrapper.find("[data-test=alert-card-1-jobup]").exists()).toBe(false);
+    await flush();
+    expect(PATCH).toHaveBeenCalledWith("/api/alert-searches/{search_id}", { params: { path: { search_id: 1 } }, body: { active: false }, keepalive: false });
+    expect(DELETE).not.toHaveBeenCalled();
+    expect(PUT).not.toHaveBeenCalled();
   });
 
   it("ajout sans mot : l’erreur sous le champ, le curseur dedans, « (facultatif) » sur le lieu", async () => {

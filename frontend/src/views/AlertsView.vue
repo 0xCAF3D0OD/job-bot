@@ -161,11 +161,13 @@ async function add(): Promise<void> {
     addError.value = "3 postes au maximum. Retire un poste dans « Ta recherche ».";
     return;
   }
-  if (criteria.combinations(next).length > criteria.MAX_SEARCHES) {
-    addError.value = criteria.LIMIT_MESSAGE;
+  const count = criteria.combinations(next).length;
+  if (count > criteria.MAX_SEARCHES) {
+    addError.value = `${criteria.limitMessage(count)}.`;
     return;
   }
-  const saved = await criteria.saveSearchCriteria(next, current);
+  // Une recherche demandée ici, même mise de côté par « Ne plus suivre », est de nouveau suivie.
+  const saved = await criteria.saveSearchCriteria(next, current, { terms, location: place ? criteria.searchPlace(place) : null });
   if (!saved) {
     addFailed.value = true;
     return;
@@ -190,18 +192,23 @@ const writingMessage = computed(() => {
   return `Pense à supprimer aussi l’alerte sur ${list}, sinon ${names.length > 1 ? "ils continueront" : "il continuera"} de t’écrire.`;
 });
 
-// Supprimer une recherche : tout de suite à l'écran, « Annuler » pendant 6 s (§4).
+// « Ne plus suivre » : tout de suite à l'écran, « Annuler » pendant 6 s (§4). La recherche reste enregistrée, en pause :
+// c'est l'exclusion de ce poste × lieu, qu'un recalcul ne recrée pas ; les critères du Profil ne changent pas (ils
+// trient aussi les offres). Retirer un poste ou un lieu partout passe par « Ta recherche » (Kevin, 17.11, 14 h 27).
 async function remove(group: SearchGroup): Promise<void> {
   const before = page.value;
   if (!before) return;
-  page.value = { ...before, searches: before.searches.filter((s) => !group.ids.includes(s.id)) };
+  page.value = { ...before, searches: before.searches.map((s) => (group.ids.includes(s.id) ? { ...s, active: false } : s)) };
   await offerUndo({
-    // Téléphone (§10.8) : le même message qu'« Offre écartée » (§10.1).
-    message: phone.value ? "Recherche retirée." : `« ${group.terms} » n’est plus suivie.`,
+    message: `Tu ne suis plus ${group.terms}. Tes critères du Profil ne changent pas.`,
     commit: async (keepalive) => {
       let latest: AlertsPage | undefined;
       for (const id of group.ids) {
-        const { data } = await api.DELETE("/api/alert-searches/{search_id}", { params: { path: { search_id: id } }, keepalive });
+        const { data } = await api.PATCH("/api/alert-searches/{search_id}", {
+          params: { path: { search_id: id } },
+          body: { active: false },
+          keepalive,
+        });
         if (!data) return false;
         latest = data;
       }
