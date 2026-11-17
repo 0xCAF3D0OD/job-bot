@@ -485,7 +485,8 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [];
   if (o.status !== "applied") {
     items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
-    if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
+    // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
+  if (o.status === "later" || o.status === "ignored") {
       items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
       items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
@@ -514,7 +515,8 @@ const sheetOpen = ref(false);
 const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
-  if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
+  // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
+  if (o.status === "later" || o.status === "ignored") {
     items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
   }
   if (o.status !== "applied") {
