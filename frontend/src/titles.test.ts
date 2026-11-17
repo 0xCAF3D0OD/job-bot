@@ -38,6 +38,9 @@ const MAQUETTE = new Set([
   "./components/ProfileDesktop.vue : Mon parcours",
   // Maquette ProfilTel (prompt du 10 novembre, PR 20) : le titre du Profil sur téléphone.
   "./views/ProfileView.vue : Mon profil",
+  // Planches AlertesOrdinateurVide et AlertesOrdinateurSite du 17.11, titre du volet donné par Kevin le 17.11.
+  "./components/AlertsDeskStart.vue : Ta recherche",
+  "./components/AlertsSearchPanel.vue : Ta recherche",
 ]);
 
 function template(source: string): string {

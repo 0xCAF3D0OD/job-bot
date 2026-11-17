@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import { searchSummary, START_SITES } from "../alertsState";
 import AlertSiteSteps from "./AlertSiteSteps.vue";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
@@ -27,7 +28,9 @@ const busy = ref(false);
 
 const searches = computed(() =>
   props.page.searches.filter(
-    (s) => s.active && (!props.focus || s.terms.trim().toLowerCase() === props.focus.terms.trim().toLowerCase()),
+    (s) =>
+      s.active &&
+      (!props.focus || !props.focus.terms || s.terms.trim().toLowerCase() === props.focus.terms.trim().toLowerCase()),
   ),
 );
 // Les exemples des champs suivent ta recherche (le métier choisi à l'accueil), pas un métier
@@ -36,8 +39,16 @@ const termsExample = computed(() => props.page.searches[0]?.terms ?? "ton métie
 const placeExample = computed(() => props.page.searches.find((s) => s.location)?.location ?? "Lausanne");
 // Sites avec une recherche à ouvrir (les sites ajoutés sans adresse sont laissés de côté). Dans le panneau ouvert
 // depuis une carte, seulement les sites encore à créer (et celui de la carte).
+// Ouvert depuis une ligne de site de « À créer » (focus sans mots, AlertesOrdinateurVide) : toutes les recherches,
+// les sites dans l'ordre de la planche.
+const allSearches = computed(() => !!props.focus && !props.focus.terms);
+const ordered = computed(() =>
+  allSearches.value
+    ? [...props.page.sites].sort((a, b) => (START_SITES[a.slug]?.order ?? 9) - (START_SITES[b.slug]?.order ?? 9))
+    : props.page.sites,
+);
 const sites = computed(() =>
-  props.page.sites.filter(
+  ordered.value.filter(
     (site) =>
       searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.url) &&
       (!props.desk ||
@@ -134,7 +145,7 @@ function closePanel(): void {
   else step.value = 1;
 }
 const panelSearch = computed(() =>
-  searches.value
+  allSearches.value ? searchSummary(searches.value).text : searches.value
     .filter((s) => cellUrl(s.id))
     .map((s) => `${s.terms} · ${s.location || "Toute la Suisse"}`)
     .join(", "),

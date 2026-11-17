@@ -40,6 +40,7 @@ export const LIMITS = {
   "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
   "js-alertes": 124_800,
+  "js-alertes-ta-recherche": 124_800,
   "js-rendez-vous-orp": 134_700,
   "js-relances": 106_100,
   "js-bilan": 114_900,
@@ -74,6 +75,7 @@ export const LIMITS = {
   "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
   "css-alertes": 63_000,
+  "css-alertes-ta-recherche": 63_000,
   "css-rendez-vous-orp": 66_300,
   "css-relances": 60_300,
   "css-bilan": 62_100,
@@ -130,6 +132,9 @@ export const PAGES = {
   ],
   suivi: ["views/JobsView.vue", "views/ApplicationsView.vue"],
   alertes: ["views/JobsView.vue", "views/AlertsView.vue"],
+  // Alertes vides sur ordinateur avec l'écran « Ta recherche » et son volet, chargés à la demande (Kevin, 17.11) : le
+  // pire cas garde les limites des Alertes, pour qu'ouvrir le volet ne coûte jamais plus que la page.
+  "alertes-ta-recherche": ["views/JobsView.vue", "views/AlertsView.vue", "components/AlertsDeskStart.vue", "components/AlertsSearchPanel.vue"],
   "rendez-vous-orp": ["views/JobsView.vue", "views/OrpMeetingView.vue"],
   relances: ["views/FollowUpsView.vue"],
   bilan: ["views/BilanView.vue", "views/BilanOrpView.vue"], // Bilan › ORP

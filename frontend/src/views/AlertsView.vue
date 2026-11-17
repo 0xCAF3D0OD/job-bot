@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, defineAsyncComponent, nextTick, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type AlertsPage } from "../api/client";
+import type { SavedSearches } from "../searchCriteria";
 import { alertsDigest } from "../alertsDigest";
 import { alertsBand, searchGroups, type SearchGroup } from "../alertsState";
 import AlertsPhoneList from "../components/AlertsPhoneList.vue";
@@ -10,6 +11,7 @@ import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import AppIcon from "../components/AppIcon.vue";
+import AppToast from "../components/AppToast.vue";
 import FaceTransform from "../components/FaceTransform.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import FormField from "../components/FormField.vue";
@@ -28,6 +30,9 @@ import { plural } from "../format";
 // conclusion, une seule bande d'action (§3), puis « Mes recherches » (une carte par recherche, une
 // ligne par site), les messages des sites et les alertes reçues, chacun en trois lignes avec « Tout
 // voir » (divulgation progressive). L'assistant reste l'entrée tant que rien n'est en place.
+// Ordinateur, rien en place : la carte « Ta recherche » et son volet, chargés seulement quand ils servent.
+const AlertsDeskStart = defineAsyncComponent(() => import("../components/AlertsDeskStart.vue"));
+const AlertsSearchPanel = defineAsyncComponent(() => import("../components/AlertsSearchPanel.vue"));
 const { last: lastJobsPage } = useJobsMemory();
 const page = ref<AlertsPage | null>(null);
 // Ordinateur (maquette AlertesOrdinateur du 9 novembre, §2.8) : une page à elle, sur 880 px, à toutes les largeurs
@@ -48,6 +53,9 @@ const nothingYet = computed(
 const view = computed(() => (mode.value !== "auto" ? mode.value : nothingYet.value ? "wizard" : "summary"));
 // Ordinateur, rien en place et l’assistant ouvert sans site choisi : l’en-tête de AlertesOrdinateurVide.
 const deskEmpty = computed(() => !phone.value && view.value === "wizard" && nothingYet.value && !focus.value);
+// Avec au moins une recherche : la carte « Ta recherche » et les sites (option A de Kevin, 17.11) ; sans recherche,
+// l'assistant reste l'entrée (aucune planche pour ce cas).
+const deskStart = computed(() => deskEmpty.value && !!page.value?.searches.some((s) => s.active));
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/alert-searches");
@@ -119,6 +127,8 @@ async function bandAction(): Promise<void> {
 
 // « + Ajouter » : une recherche, des mots et un lieu ; elle arrive « à créer » sur chaque site.
 const adding = ref(false);
+// « Modifier » de la carte « Ta recherche » : le volet du même nom (critères du Profil, Kevin 17.11).
+const editing = ref(false);
 const form = ref({ terms: "", location: "" });
 const addError = ref("");
 const addFailed = ref(false);
@@ -130,17 +140,55 @@ async function add(): Promise<void> {
     document.querySelector<HTMLInputElement>("[data-test=add-search-terms]")?.focus();
     return;
   }
-  const { data } = await api.POST("/api/alert-searches", {
-    body: { terms: form.value.terms.trim(), location: form.value.location.trim() || null },
-  });
-  if (!data) {
+  // Une seule source, les critères du Profil (Kevin, 17.11) : le poste et le lieu s'y ajoutent, puis les recherches
+  // sont recalculées (poste × lieu), avec les mêmes limites que le volet « Ta recherche ».
+  const current = page.value;
+  const criteria = await import("../searchCriteria");
+  const loaded = current && (await criteria.loadSearchCriteria(current));
+  if (!current || !loaded) {
     addFailed.value = true;
     return;
   }
-  page.value = data;
+  const terms = form.value.terms.trim();
+  const place = form.value.location.trim();
+  const same = (list: string[], value: string) => list.some((v) => v.toLowerCase() === value.toLowerCase());
+  const next = {
+    roles: same(loaded.roles, terms) ? loaded.roles : [...loaded.roles, terms],
+    places: !place || same(loaded.places.map(criteria.searchPlace), criteria.searchPlace(place)) ? loaded.places : [...loaded.places, place],
+    rate: loaded.rate,
+  };
+  if (next.roles.length > criteria.MAX_ROLES) {
+    addError.value = "3 postes au maximum. Retire un poste dans « Ta recherche ».";
+    return;
+  }
+  if (criteria.combinations(next).length > criteria.MAX_SEARCHES) {
+    addError.value = criteria.LIMIT_MESSAGE;
+    return;
+  }
+  const saved = await criteria.saveSearchCriteria(next, current);
+  if (!saved) {
+    addFailed.value = true;
+    return;
+  }
+  searchSaved(saved);
   adding.value = false;
   form.value = { terms: "", location: "" };
 }
+
+// Après « Ta recherche » ou « + Ajouter une recherche » : la page à jour ; une recherche supprimée qui était déjà
+// créée sur un site, le site continuera d'écrire : le rappel (Kevin, 17.11).
+const stillWriting = ref<SavedSearches["stillWriting"]>([]);
+function searchSaved(saved: SavedSearches): void {
+  if (saved.page) page.value = saved.page;
+  editing.value = false;
+  stillWriting.value = saved.stillWriting;
+}
+const writingMessage = computed(() => {
+  const names = stillWriting.value.map((s) => s.name);
+  if (!names.length) return "";
+  const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}` : names[0];
+  return `Pense à supprimer aussi l’alerte sur ${list}, sinon ${names.length > 1 ? "ils continueront" : "il continuera"} de t’écrire.`;
+});
 
 // Supprimer une recherche : tout de suite à l'écran, « Annuler » pendant 6 s (§4).
 async function remove(group: SearchGroup): Promise<void> {
@@ -222,12 +270,23 @@ onMounted(async () => {
       >
       <div>
         <h1>Mes alertes e-mail</h1>
-        <p data-test="alerts-sentence">
-          {{ deskEmpty ? "Aucune alerte pour l’instant. Crée-les une fois, les offres arrivent ensuite ici toutes seules." : deskSentence }}
+        <!-- AlertesOrdinateurVide du 17.11 : sous le titre, la pastille « Aucune alerte pour l’instant ». -->
+        <p
+          v-if="deskEmpty"
+          class="status-pill alerts-empty-pill"
+          data-test="alerts-sentence"
+        >
+          <AppIcon name="bell" />Aucune alerte pour l’instant
+        </p>
+        <p
+          v-else
+          data-test="alerts-sentence"
+        >
+          {{ deskSentence }}
         </p>
       </div>
       <button
-        v-if="view === 'summary'"
+        v-if="view === 'summary' || deskEmpty"
         type="button"
         class="secondary action-2"
         data-test="add-search"
@@ -307,7 +366,15 @@ onMounted(async () => {
         >
           <span class="with-icon"><AppIcon name="arrow-left" />Retour aux alertes</span>
         </button>
+        <!-- Ordinateur, rien en place (option A de Kevin, 17.11) : la carte « Ta recherche » et une ligne par site. -->
+        <AlertsDeskStart
+          v-if="deskStart"
+          :page="page"
+          @open="create($event, '')"
+          @edit="editing = true"
+        />
         <AlertsWizard
+          v-else
           :page="page"
           :focus="focus"
           :desk="!phone"
@@ -367,6 +434,28 @@ onMounted(async () => {
       v-else
       :heights="['3rem', '17.5rem', '3.5rem', '3.5rem']"
     />
+    <AlertsSearchPanel
+      v-if="editing && page"
+      open
+      :page="page"
+      @close="editing = false"
+      @saved="searchSaved"
+    />
+    <AppToast
+      v-if="writingMessage"
+      :message="writingMessage"
+      @close="stillWriting = []"
+    >
+      <a
+        v-for="site in stillWriting.filter((s) => s.url)"
+        :key="site.site"
+        :href="site.url!"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="toast-link"
+        :data-test="`still-writing-${site.site}`"
+      >Ouvrir {{ site.name }}<span class="visually-hidden"> (nouvel onglet)</span></a>
+    </AppToast>
     <SidePanel
       v-if="adding"
       open
@@ -444,6 +533,10 @@ onMounted(async () => {
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .alerts-head-wide p { margin: var(--space-2) 0 0; font-size: var(--alerts-17); line-height: var(--alerts-26); color: var(--text-secondary); }
 .alerts-head-wide button { flex: none; white-space: nowrap; }
+/* La pastille « Aucune alerte pour l’instant » (AlertesOrdinateurVide du 17.11) : 14/20 600, cloche de 16 px. */
+.alerts-head-wide .alerts-empty-pill { gap: calc(var(--space-1) * 1.5); margin-top: calc(var(--space-5) / 2); padding: calc(var(--space-1) * 1.5) var(--space-3); font-size: var(--font-small); line-height: var(--space-5); color: var(--primary-text); }
+.alerts-empty-pill .icon { width: 16px; height: 16px; }
+.alerts-head-empty > button { margin-left: auto; }
 .alerts-banner-text strong { font-size: var(--font-body); }
 .alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }
 </style>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AlertsPage } from "./api/client";
-import { NOTHING_YET_DAYS, QUIET_DAYS, alertsBand, placeLabel, searchGroups, siteState } from "./alertsState";
+import { NOTHING_YET_DAYS, QUIET_DAYS, alertsBand, placeLabel, searchGroups, searchSummary, siteState } from "./alertsState";
 import { onDay } from "./format";
 
 const NOW = new Date("2026-10-27T12:00:00Z");
@@ -100,5 +100,17 @@ describe("état des alertes (planche « 6. Alertes »)", () => {
     const fresh = page();
     fresh.searches[0]!.cells[1]!.created_at = ago(2);
     expect(alertsBand(fresh, NOW)).toBeNull();
+  });
+});
+
+describe("searchSummary : la carte « Ta recherche » (Kevin, 17.11)", () => {
+  const s = (terms: string, location: string | null, active = true) => ({ terms, location, active });
+  it("postes · lieux ; « Toute la Suisse » sans lieu ; cantons en entier", () => {
+    expect(searchSummary([s("DevOps", null)])).toEqual({ text: "DevOps · Toute la Suisse", full: "DevOps · Toute la Suisse" });
+    expect(searchSummary([s("DevOps", "VD"), s("DevOps", "Genève"), s("SRE", "VD", false)]).text).toBe("DevOps · Vaud, Genève");
+  });
+  it("au-delà de 3 postes et de 2 lieux : « +n », le texte complet à part", () => {
+    const all = ["A", "B", "C", "D"].flatMap((t) => ["Lausanne", "Genève", "Sion"].map((l) => s(t, l)));
+    expect(searchSummary(all)).toEqual({ text: "A, B, C +1 · Lausanne, Genève +1", full: "A, B, C, D · Lausanne, Genève, Sion" });
   });
 });
