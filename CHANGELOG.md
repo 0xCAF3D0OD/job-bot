@@ -718,3 +718,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.504 | Filtres : le tri d’Envoyées reste hors de l’historique, et retour pendant l’ouverture d’une feuille applique sans clignotement | livrée |
 | 1.6.505 | Alertes vides sur ordinateur : la carte « Ta recherche », une ligne par site et le volet « Modifier » qui écrit les critères du Profil puis recalcule les recherches | livrée |
 | 1.6.506 | Onglets « dossier » sur Candidatures, le Bilan et les étapes de Ma candidature, à la place du sélecteur segmenté (§47) | livrée |
+| 1.6.507 | Les e-mails d'une recherche d'alerte retirée ou plus suivie sont ignorés : gardés au journal du site, leurs offres n'arrivent pas | livrée |
