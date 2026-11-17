@@ -95,6 +95,7 @@ const families = computed(() =>
   <BottomSheet
     :open="open"
     title="Compatibilité"
+    size="medium"
     data-test="compat-sheet"
     @close="$emit('close')"
   >

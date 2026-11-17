@@ -312,12 +312,6 @@ function onClick(event: MouseEvent): void {
 
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
-.sheet-handle { display: none; }
-@media (max-width: 599px) {
-  /* La poignée (feuilles « medium » et « large ») : un bouton de 48 × 16 px autour d’un trait de 36 × 4 px, centré. */
-  .sheet-handle { --sheet-handle-w: 36px; --sheet-handle-h: 4px; --sheet-handle-box: 48px; flex: none; display: flex; align-items: center; justify-content: center; align-self: center; width: var(--sheet-handle-box); height: var(--space-4); min-height: 0; margin-top: calc(-1 * var(--space-2)); padding: 0; border: 0; border-radius: var(--radius-pill); background: none; touch-action: none; cursor: grab; }
-  .sheet-handle::before { content: ""; width: var(--sheet-handle-w); height: var(--sheet-handle-h); border-radius: var(--radius-pill); background: var(--text-disabled); }
-}
 .sheet-panel { --panel-radius: 24px; --panel-pad-x: 22px; --panel-pad-y: 20px; --panel-badge: 48px; --panel-title: var(--panel-title-size); --panel-head-gap: 14px; --panel-head-pad: 18px; --panel-icon: 22px; }
 @media (min-width: 821px) {
 .sheet.sheet-panel .sheet-head { min-height: 0; }

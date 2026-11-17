@@ -89,10 +89,9 @@ const titleId = useId();
    texte 17/600, trait entre elles ; « Annuler » 17/700 bleu texte. */
 .offer-actions-sheet {
   --act-10: 10px; --act-17: 1.0625rem; --act-row: 56px;
-  inset: auto var(--act-10) var(--space-6); width: auto; max-width: none; margin: 0; border-radius: 0; background: none; box-shadow: none;
+  inset: auto var(--act-10) var(--space-6); border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .offer-actions-sheet :deep(.sheet-inner) { gap: var(--space-2); padding: 0; }
-.offer-actions-sheet :deep(.sheet-inner)::before { display: none; }
 .offer-actions-sheet :deep(.sheet-body) { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; overflow: visible; }
 .offer-actions-card, .offer-actions-cancel { overflow: hidden; border-radius: var(--title-sub); background: var(--surface); }
 .offer-actions-card { display: flex; flex-direction: column; }

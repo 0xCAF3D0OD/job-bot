@@ -71,6 +71,7 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
   <BottomSheet
     :open="open"
     title="Filtres des envoyées"
+    size="large"
     class="filters-dialog"
     data-test="sent-filters-sheet"
     @close="open = false"
@@ -157,7 +158,6 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
 <style scoped>
 /* §4 du 14 novembre (feuilles) : libellés de section en capitales 13/700 gris, espacement .05em ; en bas, « Tout effacer »
    et le bouton alignés à droite, 24 px entre eux, le bouton en pilule de 52 px à la largeur de son texte. */
-.filters-dialog { max-height: calc(100dvh - 9.625rem); }
 .filter-sheet .filter-choices h3 { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .filters-dialog :deep(.sheet-actions) { justify-content: flex-end; gap: var(--space-6); margin: 0 calc(var(--sheet-pad) * -1); padding: var(--space-3) var(--space-5) 0 var(--sheet-pad); border-top: 1px solid var(--line); }
 .filters-dialog :deep(.sheet-actions > .primary) { flex: none; }

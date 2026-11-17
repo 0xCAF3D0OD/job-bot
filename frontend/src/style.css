@@ -3974,68 +3974,65 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 /* Une radio ou une case en tête : toute la ligne est l'étiquette (WCAG 2.5.8). */
 .grouped-row > input[type="radio"], .grouped-row > input[type="checkbox"] { flex: none; margin: 0; }
 
-/* Feuille du bas : au centre sur ordinateur ; collée en bas sur téléphone ; plein écran avec `full`. */
-.sheet { box-sizing: border-box; width: min(32rem, calc(100vw - 2 * var(--space-4))); max-height: 85dvh; padding: 0; border: 0; border-radius: var(--space-5); background: var(--bg); color: var(--text); box-shadow: 0 24px 64px rgb(17 17 31 / 24%); }
+/* Feuille du bas (îlot du 17 novembre, §45 et §46 ; Kevin 17.11) : sur téléphone et tablette (≤ 820 px), à 8 px des bords
+   et du bas (+ zone de sécurité), rayon 28 px, fond --surface (#221E1A en sombre, avec le trait --panel-float-line),
+   ombre --panel-float-shadow ; titre 20/28 800 à 24 px du bord, croix de 44 px à 20 px ; `size` : fit (contenu),
+   medium (50 %), large (jusqu'à 64 px du haut). L'en-tête et la barre d'actions restent, seul le corps défile.
+   Sur ordinateur, la même feuille en volet à droite (plus bas). Plein écran avec `full`. */
+.sheet { --sheet-island: 8px; --sheet-radius: 28px; --sheet-gap-top: 64px; --sheet-pad: 24px; --sheet-title-lh: 28px; --sheet-max: calc(100dvh - var(--sheet-gap-top) - env(safe-area-inset-bottom));
+  box-sizing: border-box; inset: auto var(--sheet-island) calc(var(--sheet-island) + env(safe-area-inset-bottom)); width: auto; max-width: none; max-height: var(--sheet-max); margin: 0; padding: 0; overflow: hidden;
+  border: 1px solid var(--panel-float-line); border-radius: var(--sheet-radius); background: var(--surface); color: var(--text); box-shadow: var(--panel-float-shadow); }
 .sheet::backdrop { background: var(--voile, rgb(27 31 42 / 45%)); }
-.sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); max-height: inherit; padding: var(--space-4); box-sizing: border-box; }
-.sheet-head { display: flex; align-items: center; gap: var(--space-3); }
+.sheet-inner { display: flex; flex-direction: column; height: 100%; max-height: inherit; padding: var(--space-3) 0 var(--sheet-pad); box-sizing: border-box; }
+.sheet-head { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--panel-close-edge) var(--space-2) var(--sheet-pad); touch-action: none; }
+.sheet-handle + .sheet-head { padding-top: 0; }
 .sheet-heading { flex: 1 1 auto; min-width: 0; }
-.sheet-title { margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-title { margin: 0; }
 .sheet-subtitle { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); }
 .sheet-eyebrow { display: block; font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .sheet-close, .side-panel-head .side-panel-close { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--panel-close-size); height: var(--panel-close-size); min-height: 0; padding: 0; border: var(--panel-close-bw) solid var(--panel-close-line); border-radius: 50%; background: var(--surface); color: var(--text); }
 .sheet-close:hover, .side-panel-head .side-panel-close:hover { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
-.sheet-close .icon { width: 1.1rem; height: 1.1rem; }
-/* Lot 17 : 4 px de marge dans le corps qui défile, pour que l'anneau des champs (et de la pilule du Composer) ne soit pas coupé. */
-.sheet-body { --focus-room: 4px; overflow: auto; display: grid; gap: var(--space-4); margin: calc(-1 * var(--focus-room)); padding: var(--focus-room); }
-.sheet-actions { display: flex; gap: var(--space-3); align-items: center; }
-@media (max-width: 599px) {
-  .sheet.sheet-full { inset: 0; width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+.sheet-close .icon { width: var(--space-6); height: var(--space-6); }
+.sheet-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: grid; align-content: start; gap: var(--space-4); padding: var(--space-2) var(--sheet-pad) 0; }
+.sheet-actions { flex: none; display: flex; gap: var(--space-3); align-items: center; padding: var(--space-4) var(--sheet-pad) 0; }
+.sheet-modeless { position: fixed; z-index: 45; }
+.sheet[open] { animation: sheet-rise 320ms cubic-bezier(.2,.8,.2,1); }
+@media (max-width: 599px) { .undo-toast.inline { display: none; } }
+@media (max-width: 820px) {
+  .sheet.sheet-full { inset: 0; width: 100%; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; }
   .sheet-full .sheet-inner { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
-  .undo-toast.inline { display: none; }
   /* L'action principale prend la place qui reste (« Afficher 3 offres »). */
   .sheet-actions > .primary { flex: 1 1 auto; justify-content: center; }
-  /* Îlot du 17 novembre (§45, §46) : 8 px des bords et du bas (+ zone de sécurité), rayon 28 px, fond --surface, trait
-     --panel-float-line en sombre, ombre --panel-float-shadow ; titre 20/28 800 à 24 px du bord, croix de 44 px à 20 px. */
-  dialog.sheet { --sheet-island: 8px; --sheet-radius: 28px; --sheet-gap-top: 64px; --sheet-pad: 24px; --sheet-title-lh: 28px;
-    --sheet-max: calc(100dvh - var(--sheet-gap-top) - env(safe-area-inset-bottom));
-    inset: auto var(--sheet-island) calc(var(--sheet-island) + env(safe-area-inset-bottom)); width: auto; max-width: none; max-height: var(--sheet-max); margin: 0; overflow: hidden;
-    border: 1px solid var(--panel-float-line); border-radius: var(--sheet-radius); background: var(--surface); box-shadow: var(--panel-float-shadow); }
   .sheet-medium.sheet-h-medium, .sheet-large.sheet-h-medium { height: 50dvh; }
   .sheet-medium.sheet-h-large { height: var(--sheet-max); }
-  .sheet-inner { gap: 0; height: 100%; padding: var(--space-3) 0 var(--sheet-pad); }
-  .sheet-handle + .sheet-head { padding-top: 0; }
-  .sheet-head { flex: none; gap: var(--space-2); padding: var(--space-1) var(--panel-close-edge) var(--space-2) var(--sheet-pad); touch-action: none; }
   /* `.sheet .sheet-title` : plus fort qu'un `h2` de page (par exemple `.orp-meeting h2`) qui contient la feuille. */
-  /* Volontaire : deux tailles d'écran (≤ 599 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
+  /* Volontaire : deux tailles d'écran (≤ 820 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
   .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
   .sheet-close { border-color: var(--button-outline); }
-  .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
-  .sheet-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: var(--space-2) var(--sheet-pad) 0; align-content: start; }
-  .sheet-actions { flex: none; padding: var(--space-4) var(--sheet-pad) 0; }
-  .sheet-modeless { position: fixed; z-index: 45; }
-  .sheet[open] { animation: sheet-rise 320ms cubic-bezier(.2,.8,.2,1); }
+  /* La poignée (medium et large) : un bouton de 48 × 44 px (cible tactile) autour d'un trait de 36 × 4 px ; il n'occupe que
+     16 px de hauteur, le reste passe sur l'en-tête, au milieu, où il n'y a rien. */
+  .sheet-handle { position: relative; z-index: 1; flex: none; display: grid; place-items: start center; align-self: center; width: 48px; height: var(--target-min); margin: calc(-1 * var(--space-2)) 0 calc(var(--space-4) - var(--target-min)); padding: var(--space-1) 0 0; border: 0; background: none; touch-action: none; }
+  .sheet-handle::before { content: ""; width: 36px; height: 4px; border-radius: var(--radius-pill); background: var(--text-disabled); }
 }
 @keyframes sheet-rise { from { transform: translateY(100%); } }
 /* Ordinateur (prompt du 9 novembre, PR 1 ; panneaux des maquettes AlertesOrdinateur, BilanOrdinateur) : la même
    feuille s'ouvre en panneau à droite, 440 px, sur toute la hauteur, fond crème, voile var(--voile), entrée
    ja-panel de 250 ms ; titre 22/28 800 sur 76 px, croix de 48 px, corps à 24 px des bords. Seul le panneau défile. */
 @media (min-width: 821px) {
-  .sheet { --sheet-pad: 24px; --sheet-head-h: 76px; --sheet-title-lh: 28px; position: fixed; inset: var(--panel-float) var(--panel-float) var(--panel-float) auto; width: 440px; max-width: 440px; height: auto; max-height: calc(100dvh - 2 * var(--panel-float)); margin: 0; border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); background: var(--bg); box-shadow: var(--panel-float-shadow); overflow: hidden; }
+  .sheet { --sheet-head-h: 76px; position: fixed; inset: var(--panel-float) var(--panel-float) var(--panel-float) auto; width: 440px; max-width: 440px; height: auto; max-height: calc(100dvh - 2 * var(--panel-float)); border-radius: var(--panel-float-r); background: var(--bg); }
   .sheet[open] { animation: ja-panel 250ms cubic-bezier(.2,.8,.2,1) both; }
-  .sheet-inner { gap: 0; height: 100%; padding: 0; }
-  .sheet-head { flex: none; min-height: var(--sheet-head-h); padding: 0 var(--panel-close-edge) 0 var(--sheet-pad); }
-  /* Volontaire : deux tailles d'écran (≤ 599 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
+  .sheet-inner { padding: 0; }
+  .sheet-head { gap: var(--space-3); min-height: var(--sheet-head-h); padding: 0 var(--panel-close-edge) 0 var(--sheet-pad); }
+  /* Volontaire : deux tailles d'écran (≤ 820 px et ≥ 821 px), ne pas fusionner (Kevin, 15.11). */
   .sheet .sheet-title { font-size: var(--panel-title-size); line-height: var(--sheet-title-lh); font-weight: var(--weight-heavy); }
-  .sheet-close .icon { width: var(--space-6); height: var(--space-6); }
-  .sheet-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: var(--space-2) var(--sheet-pad) var(--sheet-pad); align-content: start; }
-  .sheet-actions { flex: none; padding: var(--space-4) var(--sheet-pad) var(--sheet-pad); }
+  .sheet-body, .sheet-actions { padding-bottom: var(--sheet-pad); }
+  .sheet-handle { display: none; }
 }
 @keyframes ja-panel { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* Le panneau à formulaire (paquet du 11 novembre, PR 37 ; maquette CandidaturesOrdinateurAjouter) : même feuille,
    avec `icon`. En-tête : pastille ronde de 48 px, titre 18 gras, sous-titre 14, croix de 44 px, trait dessous.
    Ordinateur : sous l'en-tête, 420 px, coin haut gauche de 24 px, ombre à gauche, sans voile ; corps à 20 et 22 px,
-   pied fixe. Téléphone : la feuille du bas, coins de 24 px en haut. */
+   pied fixe. Téléphone : la feuille du bas en îlot, comme les autres. */
 .sheet-badge { flex: none; display: flex; align-items: center; justify-content: center; width: var(--panel-badge); height: var(--panel-badge); border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); }
 .sheet-badge .icon { width: var(--panel-icon); height: var(--panel-icon); stroke-width: 2.4; }
 .sheet.sheet-panel .sheet-head { gap: var(--panel-head-gap); padding: var(--panel-head-pad) var(--panel-close-edge) var(--panel-head-pad) var(--panel-pad-x); border-bottom: 1px solid var(--line-soft); }
@@ -4045,11 +4042,10 @@ button.orp-proof-undo, button.orp-proof-undo:hover:not(:disabled) { flex: none; 
 .sheet.sheet-panel .sheet-body { padding: var(--panel-pad-y) var(--panel-pad-x); gap: var(--space-6); }
 .sheet.sheet-panel .sheet-actions { padding: var(--space-4) var(--panel-pad-x); border-top: 1px solid var(--line-soft); }
 @media (max-width: 820px) {
-  .sheet.sheet-panel { border-radius: var(--panel-radius) var(--panel-radius) 0 0; background: var(--surface); }
   .sheet.sheet-panel .sheet-actions { padding-bottom: 0; }
 }
 @media (min-width: 821px) {
-  .sheet.sheet-panel { inset: var(--panel-float-top) var(--panel-float) var(--panel-float) auto; width: 420px; max-width: 420px; height: auto; max-height: calc(100dvh - var(--panel-float-top) - var(--panel-float)); background: var(--surface); border: 1px solid var(--panel-float-line); border-radius: var(--panel-float-r); box-shadow: var(--panel-float-shadow); overflow: hidden; }
+  .sheet.sheet-panel { inset: var(--panel-float-top) var(--panel-float) var(--panel-float) auto; width: 420px; max-width: 420px; max-height: calc(100dvh - var(--panel-float-top) - var(--panel-float)); background: var(--surface); }
   .sheet.sheet-panel::backdrop { background: transparent; }
   .sheet.sheet-panel[open] { animation: ja-slide-r 220ms cubic-bezier(.05,.7,.1,1); }
 }
