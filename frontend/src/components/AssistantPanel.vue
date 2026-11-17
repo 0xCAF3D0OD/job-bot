@@ -7,10 +7,10 @@ import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT
 import { dateInList } from "../dates";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
-import { focusBody, greetingText, shortCompany, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { focusBody, greetingText, shortCompany, suggestionsFor, useAssistant, useAssistantPlace } from "../composables/useAssistant";
 import { useDailyDose } from "../composables/useDailyDose";
 import { announceDataChanged } from "../composables/useDataChanged";
-import { pickerOpen, useDismissLayer, openLayerKind } from "../composables/useDismissLayer";
+import { useDismissLayer } from "../composables/useDismissLayer";
 import { usePhone } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
 import BrandMark from "./BrandMark.vue";
@@ -64,13 +64,11 @@ function showFound(reply: Line): void {
 
 // Ordinateur (maquette du 8 novembre, docs/143, D24) : le panneau latéral non modal de 480 px passe par la couche
 // commune : un seul panneau à la fois, clic à l'extérieur et Échap le ferment, le focus revient au bouton flottant.
-// Le bouton flottant se cache quand un autre panneau, les filtres ou le sélecteur de date sont ouverts.
 const layer = useDismissLayer("assistant", () => (open.value = false));
 watch(open, (value) => {
   if (value && !phone.value) layer.show(fab.value);
   else if (!value) layer.hide(false);
 });
-const fabHidden = computed(() => (openLayerKind.value !== null && openLayerKind.value !== "assistant") || pickerOpen.value > 0);
 // Sous l'en-tête : le haut du panneau suit le bas de l'en-tête.
 const panelTop = ref(0);
 watch(open, (value) => {
@@ -329,16 +327,29 @@ async function send(text: string = draft.value): Promise<void> {
 // Entrée envoie, Maj + Entrée passe à la ligne : le Composer s'en charge.
 const { phone } = usePhone();
 
-// La page Assistant du téléphone (docs/139 Q4, étape 11a) : le même panneau, sur toute la page, au-dessus de la
-// barre du bas ; la discussion reste quand on change d'onglet. Un raccourci « Demander à l'assistant » y mène.
-const page = computed(() => phone.value && route.name === "assistant");
-// Les Réglages et les Notifications du téléphone (maquettes, Kevin, 6.11) : pages sans barre ni bouton flottant.
-// Préparer (maquette du 8 novembre) : la lettre se retouche dans sa propre zone de saisie, le bouton reste masqué.
-const quiet = computed(() => (phone.value && ["settings", "notifications"].includes(String(route.name))) || route.name === "preparation");
+const { page, quiet, fabHidden } = useAssistantPlace();
 watch(open, (value) => {
   if (!value || !phone.value) return;
   open.value = false;
   void router.push({ name: "assistant" });
+});
+// Chargé à la demande (AssistantLauncher, allègement du 17.11) : le panneau peut arriver déjà ouvert, sur un clic du
+// bouton ou une question posée d'ailleurs. Il fait alors ce que font les observateurs de `open` à l'ouverture.
+const emit = defineEmits<{ ready: [] }>();
+onMounted(async () => {
+  emit("ready");
+  if (!open.value) return;
+  if (phone.value) {
+    open.value = false;
+    void router.push({ name: "assistant" });
+    return;
+  }
+  // Le bouton du lanceur, encore affiché à cet instant : le focus y revient à la fermeture.
+  layer.show(fab.value ?? document.querySelector<HTMLElement>("[data-test=assistant-open]"));
+  panelTop.value = Math.max(0, document.querySelector<HTMLElement>("[data-test=app-header]")?.getBoundingClientRect().bottom ?? 0);
+  if (!conversationId.value) await loadRecent();
+  await nextTick();
+  input.value?.focus();
 });
 
 // Le premier message de la page (décision de Kevin du 2026-11-05, AS3) : écrit par l'app, sans IA, avec les
