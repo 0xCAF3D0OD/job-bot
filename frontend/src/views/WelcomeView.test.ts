@@ -6,6 +6,15 @@ import { useAssistant } from "../composables/useAssistant";
 import { useUndo } from "../composables/useUndo";
 import WelcomeView from "./WelcomeView.vue";
 
+// Chaque étape des premiers pas est un fichier chargé à part (defineAsyncComponent) : chargées une fois d'avance, leur
+// import() se résout dans le même tour que dans le navigateur.
+await Promise.all([
+  import("../components/WelcomeCriteria.vue"),
+  import("../components/WelcomeAlertSteps.vue"),
+  import("../components/WelcomeAlertExtension.vue"),
+  import("../components/WelcomeProfileStep.vue"),
+]);
+
 const GET = vi.fn();
 const PUT = vi.fn();
 const POST = vi.fn();

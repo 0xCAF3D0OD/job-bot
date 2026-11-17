@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import sparkles from "../assets/accessoires/accessoire-etincelles.webp";
@@ -10,13 +10,12 @@ import BrandMark from "../components/BrandMark.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import SceneIllustration, { type SceneName } from "../components/SceneIllustration.vue";
-import WelcomeCriteria, { type CriteriaSources } from "../components/WelcomeCriteria.vue";
+import type WelcomeCriteriaComponent from "../components/WelcomeCriteria.vue";
+import type { CriteriaSources } from "../components/WelcomeCriteria.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import TroupeScene from "../components/TroupeScene.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import ProfileCompletionForm, { languageLabel, type Level } from "../components/ProfileCompletionForm.vue";
-import WelcomeAlertExtension from "../components/WelcomeAlertExtension.vue";
-import WelcomeAlertSteps from "../components/WelcomeAlertSteps.vue";
-import WelcomeProfileStep from "../components/WelcomeProfileStep.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useAuth } from "../composables/useAuth";
 import { useJobA1Extension } from "../composables/useJobA1Extension";
@@ -24,6 +23,52 @@ import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { companyPlace, rateText, remoteText, scoreWord } from "../format";
 import { whyLine } from "../whyLine";
+
+// Une étape, un fichier chargé à part (allègement (b), issue #797) : seule l'étape affichée pèse sur l'ouverture des
+// premiers pas. Les autres sont préchargées quand le navigateur est au repos ; si l'une tarde plus de 300 ms, les blocs
+// de chargement (LoadingBlocks attend lui-même 300 ms) remplacent l'écran vide.
+const STEP_LOADERS = {
+  criteria: () => import("../components/WelcomeCriteria.vue"),
+  alertSteps: () => import("../components/WelcomeAlertSteps.vue"),
+  alertExtension: () => import("../components/WelcomeAlertExtension.vue"),
+  profile: () => import("../components/WelcomeProfileStep.vue"),
+};
+const stepLoads = new Map<keyof typeof STEP_LOADERS, Promise<unknown>>();
+function loadStep<K extends keyof typeof STEP_LOADERS>(key: K): ReturnType<(typeof STEP_LOADERS)[K]> {
+  if (!stepLoads.has(key)) stepLoads.set(key, STEP_LOADERS[key]());
+  return stepLoads.get(key) as ReturnType<(typeof STEP_LOADERS)[K]>;
+}
+const stepLoading = { render: () => h(LoadingBlocks, { heights: ["4rem", "16rem"] }) };
+const WelcomeCriteria = defineAsyncComponent({
+  loader: () => loadStep("criteria"),
+  loadingComponent: stepLoading,
+  delay: 0,
+});
+const WelcomeAlertSteps = defineAsyncComponent({
+  loader: () => loadStep("alertSteps"),
+  loadingComponent: stepLoading,
+  delay: 0,
+});
+const WelcomeAlertExtension = defineAsyncComponent({
+  loader: () => loadStep("alertExtension"),
+  loadingComponent: stepLoading,
+  delay: 0,
+});
+const WelcomeProfileStep = defineAsyncComponent({
+  loader: () => loadStep("profile"),
+  loadingComponent: stepLoading,
+  delay: 0,
+});
+let idleHandle: number | undefined;
+onMounted(() => {
+  const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1));
+  idleHandle = idle(() => {
+    for (const key of Object.keys(STEP_LOADERS) as (keyof typeof STEP_LOADERS)[]) void loadStep(key);
+  });
+});
+onUnmounted(() => {
+  if (idleHandle !== undefined) (window.cancelIdleCallback ?? window.clearTimeout)(idleHandle);
+});
 
 // Les premiers pas (maquette OnboardingC, docs/139 étape 11b ; O1 à O10, Kevin, 2026-11-05) : quatre étapes, une
 // barre en quatre segments et « Passer » en haut.
@@ -106,7 +151,7 @@ const target = ref(10);
 // Le taux minimum (OnboardingOrdinateurEtape2, carte « Taux d'activité ») : celui du CV s'il le dit, sinon peu importe.
 const rate = ref<number | null>(null);
 // Le bloc des critères (WelcomeCriteria, section 41) : ses panneaux de modification et le poste tapé sans « + ».
-const criteriaBlock = ref<InstanceType<typeof WelcomeCriteria> | null>(null);
+const criteriaBlock = ref<InstanceType<typeof WelcomeCriteriaComponent> | null>(null);
 // La provenance des lignes Postes, Lieu et Taux (Kevin, 16.11, #806), gardée dans l'état des premiers pas : « cv » quand
 // la valeur vient de la lecture du CV, « user » dès qu'elle est modifiée et validée. Lieu ne vient jamais du CV.
 const sources = ref<CriteriaSources>({ roles: "default", places: "default", rate: "default" });

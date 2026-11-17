@@ -56,6 +56,7 @@ export const LIMITS = {
   "js-inscription": 97_900,
   "js-acces": 98_000,
   "js-bienvenue": 119_200,
+  "js-bienvenue-etapes": 119_200,
   "js-getemall": 96_300,
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
@@ -89,6 +90,7 @@ export const LIMITS = {
   "css-inscription": 59_300,
   "css-acces": 59_300,
   "css-bienvenue": 66_700,
+  "css-bienvenue-etapes": 66_700,
   "css-getemall": 60_100,
   "css-extension": 59_000,
   "css-la-plateforme": 59_000,
@@ -143,6 +145,15 @@ export const PAGES = {
   inscription: ["views/SignupView.vue"],
   acces: ["views/AccessView.vue"],
   bienvenue: ["views/WelcomeView.vue"],
+  // Les premiers pas avec toutes leurs étapes chargées à part (allègement (b), issue #797) : le pire cas garde les
+  // limites des premiers pas d'avant l'allègement, pour que parcourir toutes les étapes ne coûte jamais plus qu'avant.
+  "bienvenue-etapes": [
+    "views/WelcomeView.vue",
+    "components/WelcomeCriteria.vue",
+    "components/WelcomeAlertSteps.vue",
+    "components/WelcomeAlertExtension.vue",
+    "components/WelcomeProfileStep.vue",
+  ],
   getemall: ["views/GetemallAuthorizeView.vue"],
   extension: ["views/ExtensionLinkView.vue"],
   "la-plateforme": ["views/DiscoverView.vue"],

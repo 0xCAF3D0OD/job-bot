@@ -220,7 +220,9 @@ const LEAD_NO_CV =
 .wps-title { margin: var(--space-3) 0 0; font-size: var(--wps-30); line-height: var(--wps-36); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .wps-title:focus { outline: none; }
 .wps-lead { margin: var(--space-3) 0 0; font-size: var(--font-body); line-height: var(--wps-24); color: var(--text-lead); }
-.wdk-lead.wps-lead { font-size: var(--wdk-18); line-height: var(--wdk-28); }
+/* Sur ordinateur, la couleur de .wdk-lead (WelcomeView) l'emportait par l'ordre des feuilles ; l'étape étant chargée à
+   part depuis l'allègement (b), cet ordre change : la couleur est donc dite ici. */
+.wdk-lead.wps-lead { font-size: var(--wdk-18); line-height: var(--wdk-28); color: var(--text-tertiary); }
 .wps-file { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-4); margin-top: var(--space-6); padding: var(--wps-pad); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .wdk .wps-file { align-items: center; padding: var(--wps-desk-pad); }
 .wps-file-icon { flex: none; width: var(--wps-24); height: var(--wps-24); color: var(--file-error); stroke-width: 2; }
