@@ -9,6 +9,7 @@ import ShowMore from "./ShowMore.vue";
 import StatusPill from "./StatusPill.vue";
 import { dateWithTime } from "../dates";
 import { frenchName, parseStatusLabel, plural, rateText, SITE_NAMES, sourceLabel } from "../format";
+import { displayTitle } from "../offerTitle";
 
 // L'analyse d'une alerte en pastille (§4) : réussie en vert, le rouge seulement pour un vrai échec.
 const PARSE_TONE: Record<ParseStatus, "neutral" | "ok" | "error"> = { parsed: "ok", empty: "neutral", unrecognized: "neutral", failed: "error" };
@@ -208,7 +209,7 @@ onMounted(() => void load());
                   :key="offer.id"
                   data-test="detail-offer"
                 >
-                  <strong>{{ offer.title }}</strong>
+                  <strong>{{ displayTitle(offer.title, offer) }}</strong>
                   <StatusPill
                     v-if="offer.is_first"
                     :dot="false"

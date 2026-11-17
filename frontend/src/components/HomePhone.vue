@@ -11,6 +11,7 @@ import LiquidCircle from "./LiquidCircle.vue";
 import ScoreRing from "./ScoreRing.vue";
 import TroupeScene from "./TroupeScene.vue";
 import { HOME_SCENE } from "../troupe";
+import { displayTitle } from "../offerTitle";
 
 // L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile ; écarts A1 à A9 validés le 2026-11-02) :
 // « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
@@ -235,7 +236,7 @@ function facts(offer: Offer): string[] {
                 worded
               />
             </span>
-            <strong>{{ offer.title }}</strong>
+            <strong>{{ displayTitle(offer.title, offer) }}</strong>
             <span class="home-card-where">{{ companyPlace(offer.company, offer.location, true) }}</span>
             <span
               v-if="facts(offer).length"
