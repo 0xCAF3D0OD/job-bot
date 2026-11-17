@@ -1,7 +1,8 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { cityOnly, collectWhen, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText } from "./format";
+import { SCORE_CHOICES } from "./composables/useOfferFilters";
+import { SCORE_SCALE, cityOnly, collectWhen, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText, scoreWord } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -97,5 +98,24 @@ describe("collectWhen (§41 du 16.11)", () => {
   });
   it("le lendemain : demain matin", () => {
     expect(collectWhen("2026-11-17T06:00:00Z", now)).toBe("demain matin vers 7 h");
+  });
+});
+
+// L'échelle unique 50 / 75 / 85 (Kevin, 17.11, LISEZMOI §65) : les limites de chaque mot.
+describe("scoreWord, échelle 50 / 75 / 85", () => {
+  it.each([
+    [49, "Loin", "far"],
+    [50, "À creuser", "dig"],
+    [74, "À creuser", "dig"],
+    [75, "Proche", "close"],
+    [84, "Proche", "close"],
+    [85, "Très proche", "very-close"],
+  ])("%i → %s", (score, word, tone) => {
+    expect(scoreWord(score)).toMatchObject({ word, tone });
+  });
+
+  it("une seule constante pour le cercle, le filtre Note et « M'avertir dès »", () => {
+    expect(SCORE_SCALE).toEqual({ veryClose: 85, close: 75, dig: 50 });
+    expect(SCORE_CHOICES.map((c) => c.min)).toEqual([null, SCORE_SCALE.dig, SCORE_SCALE.close, SCORE_SCALE.veryClose]);
   });
 });

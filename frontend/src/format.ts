@@ -104,13 +104,17 @@ export function logoTone(name: string): number {
   return hash % 5;
 }
 
-/** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
-// La note en mots (docs/121 §C.5), sur les seuils des couleurs : 85, 75, 50 (Proche dès 75, 2026-11-05, Kevin).
+/** L'échelle unique de la note (décision de Kevin du 17.11, LISEZMOI §65) : 85 Très proche, 75 Proche (vert), 50 À
+ *  creuser (orange), en dessous Loin (gris). Une seule constante pour le cercle, les mots, « M'avertir dès » et le
+ *  filtre Note. */
+export const SCORE_SCALE = { veryClose: 85, close: 75, dig: 50 } as const;
+
+// La note en mots (docs/121 §C.5), sur les seuils de SCORE_SCALE.
 export type ScoreTone = "very-close" | "close" | "dig" | "far";
 export function scoreWord(score: number): { word: string; mood: "ravi" | "content" | "attentif" | "neutre"; tone: ScoreTone } {
-  if (score >= 85) return { word: "Très proche", mood: "ravi", tone: "very-close" };
-  if (score >= 75) return { word: "Proche", mood: "content", tone: "close" };
-  if (score >= 50) return { word: "À creuser", mood: "attentif", tone: "dig" };
+  if (score >= SCORE_SCALE.veryClose) return { word: "Très proche", mood: "ravi", tone: "very-close" };
+  if (score >= SCORE_SCALE.close) return { word: "Proche", mood: "content", tone: "close" };
+  if (score >= SCORE_SCALE.dig) return { word: "À creuser", mood: "attentif", tone: "dig" };
   return { word: "Loin", mood: "neutre", tone: "far" };
 }
 

@@ -30,6 +30,7 @@ import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
+import { SCORE_SCALE } from "../format";
 import FaceState from "../components/FaceState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 
@@ -227,17 +228,21 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
 // « M'avertir dès » en chiffres, comme « Note minimale » des filtres (Kevin, 16.11) : mêmes seuils. LISEZMOI §56 du
 // 17.11 : les mots en libellé, le seuil en précision (« 85 et plus ») ; les seuils de main restent (85, 75, 50) tant
 // que Kevin n'a pas dit s'il veut ceux de la planche (90, 75, 60), qui changeraient les valeurs enregistrées.
+// Échelle unique (Kevin, 17.11, §65) : les seuils viennent de SCORE_SCALE, comme le cercle et le filtre Note.
 const THRESHOLD_OPTIONS = [
-  { n: 85, label: "Très proche" },
-  { n: 75, label: "Proche" },
-  { n: 50, label: "À creuser" },
+  { n: SCORE_SCALE.veryClose, label: "Très proche" },
+  { n: SCORE_SCALE.close, label: "Proche" },
+  { n: SCORE_SCALE.dig, label: "À creuser" },
 ].map(({ n, label }) => ({ value: String(n), label, hint: `${n} et plus`, test: `threshold-${n}` }));
 const thresholdLabel = computed(() => THRESHOLD_OPTIONS.find((o) => o.value === threshold.value)?.label ?? "");
 const thresholdSheet = ref(false);
+const LEGACY_CLOSE = 70;
 const threshold = computed({
   get: () => {
     const value = form.value.notify_score_threshold ?? 70;
-    return value >= 85 ? "85" : value >= 70 ? "75" : "50";
+    // 70, l'ancien défaut encore enregistré, reste « Proche » tant que les valeurs enregistrées ne sont pas migrées.
+    const close = value >= LEGACY_CLOSE;
+    return String(value >= SCORE_SCALE.veryClose ? SCORE_SCALE.veryClose : close ? SCORE_SCALE.close : SCORE_SCALE.dig);
   },
   set: (value: string) => void setThreshold(Number(value)),
 });

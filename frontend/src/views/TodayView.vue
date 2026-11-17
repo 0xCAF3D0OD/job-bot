@@ -21,7 +21,7 @@ import { useCollect } from "../composables/useCollect";
 import { useCvReading } from "../composables/useCvReading";
 import { DOSE_CATCH_UP, isTriagePending, markTriageDone, pickDose, triageDoneToday, unmarkTriageDone } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { dailyPace, daysBefore, localDate, ofMonth, plural } from "../format";
+import { SCORE_SCALE, dailyPace, daysBefore, localDate, ofMonth, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { firstGoal } from "../composables/useGoalMoment";
@@ -283,7 +283,7 @@ const deskTasks = computed<{ todo: DeskTask[]; later: DeskTask[] }>(() => {
     });
   }
   if (triagePending.value) {
-    const near = dose.value.filter((o) => (o.score ?? 0) >= 85).length;
+    const near = dose.value.filter((o) => (o.score ?? 0) >= SCORE_SCALE.veryClose).length;
     todo.push({
       key: "triage",
       test: "triage",
