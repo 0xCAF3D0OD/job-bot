@@ -401,9 +401,9 @@ function searchSummary(url) {
     const words = (params.get("term") || "").trim();
     const place = (params.get("location") || "").trim();
     const radius = (params.get("radius") || "").trim();
-    const where = place && /^\d+$/.test(radius) ? `${place} et ${radius} km` : place;
-    const search = [words, where].filter(Boolean).join(" · ");
-    return search ? `${search}, adresse jobA1` : "Adresse jobA1";
+    // Sans lieu, jobup cherche dans tout le pays (option B du 17.11).
+    const where = !place ? "Toute la Suisse" : /^\d+$/.test(radius) ? `${place} et ${radius} km` : place;
+    return `${[words, where].filter(Boolean).join(" · ")}, adresse jobA1`;
   } catch {
     return "Adresse jobA1";
   }
