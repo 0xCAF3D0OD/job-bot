@@ -4,6 +4,7 @@ import App from "./App.vue";
 import { router } from "./router";
 import { useTextSize } from "./composables/useTextSize";
 import { useTheme } from "./composables/useTheme";
+import { applyLang, lang } from "./lang";
 import "@fontsource-variable/figtree";
 import "./style.css";
 
@@ -40,4 +41,10 @@ probe.remove();
 // L'apparence choisie (Clair, Sombre) avant le premier rendu : pas d'éclair de l'autre thème.
 useTheme().apply();
 useTextSize().apply();
+// La langue de l'interface (docs/147) : `<html lang>`, puis, hors du français, le catalogue de chaque page avant de
+// l'afficher (et `commun`, sur toutes les pages). En français, ni i18n.ts ni catalogue ne sont chargés.
+applyLang();
+router.beforeResolve(async (to) => {
+  if (lang.value !== "fr") await (await import("./i18n")).loadRoute(String(to.name));
+});
 createApp(App).use(router).mount("#app");

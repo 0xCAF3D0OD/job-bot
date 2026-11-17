@@ -58,6 +58,7 @@ export const LIMITS = {
   "js-bienvenue": 119_200,
   "js-bienvenue-etapes": 119_200,
   "js-getemall": 96_300,
+  "js-traductions": 93800, // socle + i18n.ts, hors du français (docs/147), mesure du 17.11 + 5 %
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
   "js-tes-donnees": 97_800,
@@ -100,7 +101,14 @@ export const LIMITS = {
   "css-a-propos": 59_000,
   "css-introuvable": 60_000,
   images: 4_893_100,
+  // Les catalogues de langue, un par page et par langue (« cat-de-alertes »), docs/147 et
+  // docs/decisions/2026-11-17-1330-poids-catalogues-langues.md : chacun reçoit sa limite dans la PR qui le crée (sa
+  // mesure + 5 %, jamais relevée). Un catalogue sans limite fait échouer le budget.
 };
+
+// Le budget public d'un téléphone moyen en 4G (The Performance Inequality Gap 2024) : le code d'une page et ses
+// catalogues de langue (celui de la page et `commun`) restent ensemble en dessous.
+const PUBLIC_JS = 365 * 1024;
 
 // Affichés à chaque mesure, sans limite (Kevin, 16.11) : ce n'est pas ce que charge une page.
 const TOTALS = ["js-total", "css-total"];
@@ -163,6 +171,8 @@ export const PAGES = {
   conditions: ["views/TermsView.vue"],
   "a-propos": ["views/AboutView.vue"],
   introuvable: ["views/NotFoundView.vue"],
+  // Les traductions (docs/147) : `t()` et le chargement des catalogues, chargés hors du français seulement.
+  traductions: ["i18n.ts"],
 };
 
 // Les dossiers d'illustrations : WebP (ou SVG) seulement. Les icônes de l'application (favicon, écran d'accueil)
@@ -245,6 +255,13 @@ for (const [page, paths] of Object.entries(PAGES)) {
   groups[`js-${page}`] = jsOf(loaded(paths));
   groups[`css-${page}`] = cssOf(loaded(paths));
 }
+// Les catalogues de langue (src/locales/<langue>/<page>.json), chargés à la demande hors du français.
+const CATALOG = /src\/locales\/(\w+)\/([\w-]+)\.json$/;
+const catalogs = Object.keys(manifest).filter((key) => CATALOG.test(key));
+for (const key of catalogs) {
+  const [, lang, page] = key.match(CATALOG);
+  groups[`cat-${lang}-${page}`] = [manifest[key].file];
+}
 
 // Une limite sans page (une page retirée de PAGES) : le dire plutôt que planter.
 const orphans = Object.keys(LIMITS).filter((name) => !groups[name]);
@@ -263,7 +280,7 @@ if (arg("--json")) {
 }
 
 if (process.argv.includes("--releve")) {
-  for (const name of Object.keys(LIMITS)) {
+  for (const name of [...Object.keys(LIMITS), ...Object.keys(groups).filter((n) => n.startsWith("cat-") && !LIMITS[n])]) {
     console.log(`  "${name}": ${Math.floor((limited(name) * 1.05) / 100) * 100},`);
   }
   process.exit(0);
@@ -277,12 +294,27 @@ let failed = false;
 // Toutes les vues, et tout bloc chargé à part (import() hors des vues), sont mesurés dans une page.
 const inPages = new Set(Object.values(PAGES).flat());
 const unmeasured = Object.keys(manifest)
-  .filter((key) => /src\/views\/\w+\.vue$/.test(key) || manifest[key].isDynamicEntry)
+  .filter((key) => (/src\/views\/\w+\.vue$/.test(key) || manifest[key].isDynamicEntry) && !CATALOG.test(key))
   .map((key) => key.replace(/^.*?src\//, ""))
   .filter((file) => !inPages.has(file));
 if (unmeasured.length) {
   failed = true;
   console.log(`TROP vues ou blocs chargés à part sans limite : ${unmeasured.join(", ")} (à ajouter dans PAGES, et leurs limites dans LIMITS)`);
+}
+const noLimit = Object.keys(groups).filter((name) => name.startsWith("cat-") && !LIMITS[name]);
+if (noLimit.length) {
+  failed = true;
+  console.log(`TROP catalogues de langue sans limite : ${noLimit.join(", ")} (leur mesure + 5 % dans LIMITS, docs/147 §8)`);
+}
+for (const name of Object.keys(groups).filter((n) => n.startsWith("cat-"))) {
+  const [, lang, page] = name.match(/^cat-(\w+)-([\w-]+)$/);
+  if (!groups[`js-${page}`]) continue;
+  const i18n = Object.keys(manifest).find((key) => key.endsWith("src/i18n.ts"));
+  const total = limited(`js-${page}`) + (i18n ? sizes(manifest[i18n].file).gzip : 0) + limited(name) + (page === "commun" || !groups[`cat-${lang}-commun`] ? 0 : limited(`cat-${lang}-commun`));
+  if (total > PUBLIC_JS) {
+    failed = true;
+    console.log(`TROP js-${page} en ${lang} : ${kb(total)} avec ses catalogues, au-dessus du budget public de ${kb(PUBLIC_JS)}`);
+  }
 }
 console.log(`${"".padEnd(5)}${"mesure".padEnd(17)}${"brut".padStart(10)}${"gzip".padStart(10)}${"brotli".padStart(10)}   limite`);
 for (const [name, limit] of Object.entries(LIMITS)) {

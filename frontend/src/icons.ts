@@ -16,7 +16,6 @@ export const ICONS = {
   banknote: '<rect x="2" y="6" width="20" height="12" rx="2"/>' + circle(12, 12, 2.5) + path("M6 10v.01M18 14v.01"),
   inbox: path("M4 13l2.5-7h11L20 13v6H4z") + path("M4 13h4.5l1 2h5l1-2H20"),
   briefcase: '<rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/>' + path("M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12.5h17"),
-  "list-check": path("M4 6.5l1.5 1.5L8 5.5M4 12.5l1.5 1.5L8 11.5M4 18.5l1.5 1.5L8 17.5M11 7h9M11 13h9M11 19h9"),
   stats: path("M4.5 4v16h16") + path("M9 16v-4M12.5 16V8M16 16v-6"),
   book: path("M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z") + path("M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"),
   news: '<rect x="3.5" y="5" width="17" height="14" rx="2"/>' + path("M7 9h6M7 12.5h10M7 16h10"),
@@ -29,7 +28,6 @@ export const ICONS = {
   plug: path("M9 3.5v4M15 3.5v4M6.5 7.5h11v3a5.5 5.5 0 0 1-11 0z") + path("M12 16v4.5"),
   bell: path("M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16z") + path("M10 20a2 2 0 0 0 4 0"),
   filter: path("M4 5h16l-6.2 7.5v5.8l-3.6 1.7v-7.5z"),
-  folder: path("M3.5 7a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"),
   mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/>' + path("M4 7l8 6 8-6"),
   "clipboard-check": '<rect x="5" y="5" width="14" height="16" rx="2"/>' + path("M9 5V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9 13.5l2 2 4-4"),
   // Métadonnées
@@ -98,8 +96,7 @@ export const ICONS = {
   trash: path("M4.5 7h15M10 4h4M6.5 7l.8 12a1.5 1.5 0 0 0 1.5 1.5h6.4a1.5 1.5 0 0 0 1.5-1.5l.8-12M10 11v5.5M14 11v5.5"),
   pencil: path("M15 5l4 4L8.5 19.5H4.5v-4z") + path("M13 7l4 4"),
   plus: path("M12 5v14M5 12h14"),
-  // Le Composer (maquette du 8 novembre, docs/143) : joindre, dicter.
-  paperclip: path("M20 11.5l-8.2 8.2a5 5 0 0 1-7-7L13.4 4a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15 7.1"),
+  // Le Composer (maquette du 8 novembre, docs/143) : dicter.
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/>' + path("M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"),
   close: path("M6 6l12 12M18 6L6 18"),
   // La feuille d'actions d'une offre (ActionsOffre, §17 du 15 novembre) : expirée, la note ne correspond pas, partager.
