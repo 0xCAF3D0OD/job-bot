@@ -8536,6 +8536,28 @@
         }
       }
     },
+    "/api/trainings/in-progress": {
+      "get": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Count In Progress",
+        "description": "« Formations · 2 en cours » de la page Compte (LISEZMOI §51, Kevin 17.11).\n\nUn nombre seul, sans le catalogue, pour un appel qui ne retarde pas la page. Même périmètre\nque la liste : le profil choisi, les formations non écartées.",
+        "operationId": "countTrainingsInProgress",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingsInProgress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/trainings/diplomas": {
       "put": {
         "tags": [
@@ -26738,6 +26760,19 @@
         ],
         "title": "TrainingReview",
         "description": "Suggestion de l'IA : la garder (vérifiée) ou l'écarter (ne plus la proposer)."
+      },
+      "TrainingsInProgress": {
+        "properties": {
+          "in_progress": {
+            "type": "integer",
+            "title": "In Progress"
+          }
+        },
+        "type": "object",
+        "required": [
+          "in_progress"
+        ],
+        "title": "TrainingsInProgress"
       },
       "Understanding": {
         "properties": {

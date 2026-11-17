@@ -150,6 +150,8 @@ async def test_catalog_filter_and_marks(rt: Runtime) -> None:
             json={"status": "done", "done_at": "2026-09-30", "certified": True},
         )
         assert done.json()["certified"] is True
+        # « Formations · 1 en cours » de la page Compte : seules les formations en cours comptent.
+        assert (await api.get("/api/trainings/in-progress")).json() == {"in_progress": 1}
         # Suivie, la formation AWS reste visible même filtrée sur « Mon domaine ».
         mine = (await api.get("/api/trainings", params={"domain_only": True})).json()["items"]
         assert aws["id"] in {t["id"] for t in mine}
