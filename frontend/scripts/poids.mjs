@@ -57,6 +57,7 @@ export const LIMITS = {
   "js-acces": 98_000,
   "js-bienvenue": 119_200,
   "js-bienvenue-etapes": 119_200,
+  "js-bienvenue-etapes-telephone": 119_200,
   "js-getemall": 96_300,
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
@@ -91,6 +92,7 @@ export const LIMITS = {
   "css-acces": 59_300,
   "css-bienvenue": 66_700,
   "css-bienvenue-etapes": 66_700,
+  "css-bienvenue-etapes-telephone": 66_700,
   "css-getemall": 60_100,
   "css-extension": 59_000,
   "css-la-plateforme": 59_000,
@@ -153,6 +155,14 @@ export const PAGES = {
     "components/WelcomeCriteria.vue",
     "components/WelcomeAlertSteps.vue",
     "components/WelcomeAlertExtension.vue",
+    "components/WelcomeProfileStep.vue",
+  ],
+  // Les mêmes premiers pas sur téléphone (§60 du 17.11) : les questions à la place du bloc des critères, jamais
+  // l'extension. Mêmes limites que la page ci-dessus.
+  "bienvenue-etapes-telephone": [
+    "views/WelcomeView.vue",
+    "components/WelcomeQuestions.vue",
+    "components/WelcomeAlertSteps.vue",
     "components/WelcomeProfileStep.vue",
   ],
   getemall: ["views/GetemallAuthorizeView.vue"],
