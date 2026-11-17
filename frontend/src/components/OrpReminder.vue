@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
-import { useMaintenanceBanner } from "../composables/useMaintenance";
 import { dateInSentence } from "../dates";
 import { dayKey, ofMonth } from "../format";
 import AppIcon from "./AppIcon.vue";
@@ -41,8 +40,8 @@ onMounted(() => {
 });
 
 // Le rappel ne cache jamais un bandeau du haut, maintenance ou démo (K33 de l'audit du 17.11) : il se pose 8 px sous le
-// dernier, remonte avec lui quand la page défile, puis reste à sa place habituelle, 8 px sous le haut de l'écran.
-const { banner } = useMaintenanceBanner();
+// dernier, remonte avec lui quand la page défile, puis reste à sa place habituelle, 8 px sous le haut de l'écran. Un
+// bandeau qui arrive après le rappel (la maintenance se lit au démarrage) le déplace aussi.
 const top = ref<string | undefined>(undefined);
 let frame = 0;
 function place(): void {
@@ -53,15 +52,20 @@ function place(): void {
     top.value = bottom > 0 ? `${Math.round(bottom) + 8}px` : undefined;
   });
 }
-watch([open, banner], async ([isOpen]) => {
+const banners = new MutationObserver(place);
+watch(open, async (isOpen) => {
   globalThis.removeEventListener("scroll", place);
+  banners.disconnect();
   if (!isOpen) return;
   await nextTick();
   place();
   globalThis.addEventListener("scroll", place, { passive: true });
-}, { immediate: true });
+  const root = document.getElementById("app");
+  if (root) banners.observe(root, { childList: true });
+});
 onUnmounted(() => {
   globalThis.removeEventListener("scroll", place);
+  banners.disconnect();
   cancelAnimationFrame(frame);
 });
 
