@@ -1,0 +1,1 @@
+Échelle de note unique 50 / 75 / 85 : « À creuser » en orange, une seule constante de seuils pour le cercle, les mots, « M'avertir dès » (valeurs migrées vers 50, 75 ou 85, défaut 75), le filtre Note et le Bilan (§65)
