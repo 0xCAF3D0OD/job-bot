@@ -124,6 +124,7 @@ const panel = ref<"" | "language" | "size">("");
   <template v-if="detailed">
     <ChoicePanel
       :open="panel === 'language'"
+      :sheet="phone"
       title="Langue"
       heading="Langue de jobA1"
       :choices="LANGUAGES"
@@ -134,6 +135,7 @@ const panel = ref<"" | "language" | "size">("");
     <ChoicePanel
       v-model="size"
       :open="panel === 'size'"
+      :sheet="phone"
       title="Taille du texte"
       heading="Taille du texte"
       :choices="SIZES"
