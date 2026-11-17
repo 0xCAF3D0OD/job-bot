@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FormField from "./FormField.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import {
   api,
@@ -228,6 +229,29 @@ function editChunk(chunk: Chunk): void {
   };
 }
 
+// Fermer le bloc (croix, Échap, clic à côté, après l'enregistrement ; audit du 17.11, N26, WCAG 2.4.3) : ouvert depuis
+// le Profil (?bloc=, ?nouveau=), le bouton qui l'a ouvert n'est plus dans la page. Le focus va alors sur la carte du
+// bloc, ou sur « Ajouter », jamais sur le corps de la page ; l'adresse perd ?bloc= pour qu'un rechargement ne le
+// rouvre pas.
+// Sans routeur (composant monté seul, tests) : rien à retirer de l'adresse.
+const route = useRoute() as ReturnType<typeof useRoute> | undefined;
+const router = useRouter() as ReturnType<typeof useRouter> | undefined;
+function closeEditor(): void {
+  const id = editing.value?.id ?? null;
+  editing.value = null;
+  if (route && router && (route.query.bloc !== undefined || route.query.nouveau !== undefined)) {
+    const { bloc: _bloc, nouveau: _nouveau, ...query } = route.query;
+    void router.replace({ query });
+  }
+  void nextTick(() => {
+    const active = document.activeElement;
+    // Le panneau peut encore être là le temps de sa sortie animée : son bouton ne compte pas.
+    if (active && active !== document.body && active.isConnected && !active.closest("[data-test=side-panel]")) return;
+    const target = (id !== null && document.querySelector<HTMLElement>(`[data-test=open-chunk-${id}]`)) || document.querySelector<HTMLElement>("[data-test=new-chunk]");
+    target?.focus();
+  });
+}
+
 async function saveChunk(): Promise<void> {
   if (!editing.value) return;
   const { id, form } = editing.value;
@@ -235,7 +259,7 @@ async function saveChunk(): Promise<void> {
     ? await api.POST("/api/profile-chunks", { body: form })
     : await api.PUT("/api/profile-chunks/{chunk_id}", { params: { path: { chunk_id: id } }, body: form });
   if (result.data) {
-    editing.value = null;
+    closeEditor();
     await Promise.all([loadChunks(), loadDocuments()]);
   } else {
     message.value = "Refusé : le titre et le contenu sont obligatoires.";
@@ -518,7 +542,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     v-if="editing"
     open
     :title="editing.id === null ? capital(`Ajouter ${formNoun.a}`) : (editedChunk?.title ?? capital(formNoun.one))"
-    @close="editing = null"
+    @close="closeEditor"
   >
     <form
       class="calm-panel chunk-form"
