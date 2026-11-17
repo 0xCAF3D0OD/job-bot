@@ -1283,8 +1283,9 @@ onUnmounted(() => {
     />
     <!-- Le seul bouton d'action du panneau, dans le pied (D30, PR 38). -->
     <template #actions>
+      <!-- Offre déjà là : ses boutons remplacent « Ajouter l'offre », sous le champ (retour de Kevin sur la #818). -->
       <BusyButton
-        v-if="manualOpen"
+        v-if="manualOpen && !manualForm?.duplicate"
         type="submit"
         form="add-offer-form"
         class="primary"
@@ -1296,7 +1297,7 @@ onUnmounted(() => {
         {{ manualForm?.label ?? "Ajouter l’offre" }}
       </BusyButton>
       <button
-        v-else-if="spontaneousForm?.created"
+        v-else-if="!manualOpen && spontaneousForm?.created"
         type="button"
         class="primary"
         data-test="spontaneous-prepare"
@@ -1305,7 +1306,7 @@ onUnmounted(() => {
         Préparer la candidature
       </button>
       <BusyButton
-        v-else
+        v-else-if="!manualOpen"
         type="submit"
         form="add-spontaneous-form"
         class="primary"
@@ -1344,7 +1345,7 @@ onUnmounted(() => {
       @added="manualAdded"
     />
     <template
-      v-if="manualForm?.shown"
+      v-if="manualForm?.shown && !manualForm?.duplicate"
       #actions
     >
       <BusyButton

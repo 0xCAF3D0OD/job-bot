@@ -1,0 +1,1 @@
+Ajouter une offre : une offre déjà là est signalée sous le champ. Même lien : « Ouvrir l'offre » seul. Même titre chez la même entreprise, lien différent (spontanées comprises) : « Ouvrir l'offre » ou « Ajouter quand même »
