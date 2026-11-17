@@ -134,6 +134,7 @@ let retryTimer: ReturnType<typeof setInterval> | undefined;
 const RETRY_S = 5;
 const uploading = ref(false);
 const reading = ref(false);
+const readDone = ref(false);
 const cvError = ref("");
 // « Complétons ton profil » (prompt du 10 novembre, PR 17) : l'étape 1 quand le CV n'a pas pu être lu ou qu'il n'y en a
 // pas ; la raison en clair, sous le nom du fichier.
@@ -348,6 +349,10 @@ async function understand(documentId: number): Promise<void> {
       ...(rateFound && sources.value.rate !== "user" ? { rate: "cv" as const } : {}),
     });
     saveChunks();
+    // §53 (Kevin, 17.11) : la barre et les étapes finissent sous les yeux (0,4 s) avant de laisser la place.
+    readDone.value = true;
+    await new Promise((done) => setTimeout(done, 400));
+    readDone.value = false;
   } catch {
     // La connexion est tombée : le CV est enregistré, la lecture reprend seule (OnboardingOrdinateurCoupure).
     understanding.value = null;
@@ -766,6 +771,7 @@ async function finish(to: string): Promise<void> {
                   :lines="CV_LINES"
                   :steps="CV_STEPS"
                   :every-ms="5000"
+                  :done="readDone"
                   label="Lecture du CV"
                 />
                 <div
@@ -1121,6 +1127,7 @@ async function finish(to: string): Promise<void> {
     :lines="CV_LINES"
     :steps="CV_STEPS"
     :every-ms="5000"
+    :done="readDone"
     label="Lecture du CV"
     data-test="cv-reading-screen"
   >

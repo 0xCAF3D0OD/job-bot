@@ -7,9 +7,11 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 // reste en cours jusqu'à la réponse, et la barre s'arrête à 90 % ; la fin vient toujours du serveur (le parent retire
 // le composant). La classe `loading-steps-full`, posée par la page : l'écran plein des premiers pas sur téléphone
 // (le logo en slot) ; sinon, le bloc dans sa carte.
-// L'étape en cours est dite par aria-current, les faites par « : fait » (contenu CSS).
+// Les étapes faites et en cours sont dites par « : fait » et « : en cours » (contenu CSS, moins de code à charger).
 // `quiet` : dans une zone déjà annoncée (la carte « Mon CV »), la liste n'est pas une seconde zone d'état.
-const props = defineProps<{ lines: string[]; steps: string[]; everyMs: number; label: string; quiet?: boolean }>();
+// `done` (Kevin, 17.11, point 6) : la réponse est là ; barre et étapes finissent en 0,3 s, la page retire le bloc 0,4 s
+// après. Au-delà de la durée habituelle + 50 %, la barre laisse la place à une phrase, jamais une barre figée.
+const props = defineProps<{ lines: string[]; steps: string[]; everyMs: number; label: string; quiet?: boolean; done?: boolean }>();
 
 // Une étape de plus à chaque `everyMs` ; la barre glisse d'un cran à l'autre en 5 s (aria-valuemin et max : 0 et 100
 // par défaut).
@@ -17,19 +19,31 @@ const tick = ref(0);
 let timer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => (timer = setInterval(() => tick.value++, props.everyMs)));
 onBeforeUnmount(() => clearInterval(timer));
-const current = computed(() => Math.min(tick.value, props.steps.length - 1));
-// 10 % au départ, puis un cran par étape, sans dépasser 90 % : la fin vient du serveur.
-const progress = computed(() => 10 + (Math.min(tick.value, props.steps.length) / props.steps.length) * 80);
+const current = computed(() => (props.done ? 99 : Math.min(tick.value, props.steps.length - 1)));
+// 10 % au départ, puis un cran par étape, sans dépasser 90 % : la fin (100 %) vient du serveur.
+const progress = computed(() => (props.done ? 100 : 10 + (Math.min(tick.value, props.steps.length) / props.steps.length) * 80));
+const slow = computed(() => !props.done && tick.value >= props.steps.length * 1.5);
 </script>
 
 <template>
-  <div class="loading-steps">
+  <div
+    class="loading-steps"
+    :class="{ done }"
+  >
     <!-- Le logo de 64 px de l'écran plein, donné par la page (elle a déjà BrandMark). -->
     <slot />
     <p class="loading-steps-title">
       <span>{{ lines[0] }}</span><span class="loading-steps-sub">{{ lines[1] }}</span>
     </p>
+    <p
+      v-if="slow"
+      class="loading-steps-slow"
+      role="status"
+    >
+      Ça prend un peu plus de temps que d’habitude
+    </p>
     <div
+      v-else
       class="loading-steps-bar"
       role="progressbar"
       :aria-label="label"
@@ -45,7 +59,6 @@ const progress = computed(() => 10 + (Math.min(tick.value, props.steps.length) /
         v-for="(step, index) in steps"
         :key="step"
         :class="index < current ? 'is-done' : index === current ? 'is-current' : 'is-todo'"
-        :aria-current="index === current ? 'step' : undefined"
       >
         <!-- La marque : coche verte, cercle qui tourne ou cercle vide, dessinée en CSS (moins de code à charger). -->
         <i class="loading-steps-mark" />{{ step }}
@@ -65,6 +78,8 @@ const progress = computed(() => 10 + (Math.min(tick.value, props.steps.length) /
 .loading-steps-title .loading-steps-sub { margin-top: var(--space-1); color: var(--peach-text); }
 .loading-steps-bar { margin-top: calc(var(--space-6) + var(--space-1)); height: var(--space-2); border-radius: var(--space-1); background: var(--line); overflow: hidden; }
 .loading-steps-bar i { display: block; height: 100%; border-radius: var(--space-1); background: var(--primary-graphic); transition: width 5s linear; }
+.done .loading-steps-bar i { transition-duration: 0.3s; }
+.loading-steps-slow { margin: calc(var(--space-6) + var(--space-1)) 0 0; font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .loading-steps-list { list-style: none; margin: var(--space-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: calc(var(--space-4) + var(--space-1) / 2); }
 .loading-steps-list li { display: flex; gap: calc(var(--space-3) + var(--space-1) / 2); align-items: flex-start; font-size: calc(var(--font-body) * 1.0625); line-height: calc(var(--space-6) + var(--space-1) / 2); font-weight: calc(var(--weight-regular) + 100); }
 .loading-steps-mark { flex: none; box-sizing: border-box; width: var(--space-6); height: var(--space-6); margin-top: 1px; border-radius: var(--radius-pill); border: 2px solid var(--line-strong); }
@@ -73,7 +88,8 @@ const progress = computed(() => 10 + (Math.min(tick.value, props.steps.length) /
 .is-current .loading-steps-mark { border-width: 2.5px; border-right-color: var(--primary-graphic); animation: loading-steps-turn 0.9s linear infinite; }
 @keyframes loading-steps-turn { to { transform: rotate(360deg); } }
 /* « : fait », lu par les lecteurs d'écran et caché à l'œil (en CSS : moins de code à charger). */
-.loading-steps-list .is-done::after { content: " : fait"; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.loading-steps-list .is-done::after, .loading-steps-list .is-current::after { content: " : fait"; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.loading-steps-list .is-current::after { content: " : en cours"; }
 .loading-steps-list .is-current { font-weight: var(--weight-bold); }
 .loading-steps-list .is-todo { color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) {

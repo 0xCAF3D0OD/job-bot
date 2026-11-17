@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue";
+import { computed, defineAsyncComponent, ref, watch } from "vue";
 
 import { api, type Chunk, type ChunkProposal, type DocumentOut } from "../api/client";
 import { dateInSentence } from "../dates";
@@ -19,7 +19,14 @@ const emit = defineEmits<{ replace: []; changed: [] }>();
 const reading = useCvReading();
 const state = computed(() => reading.stateOf(props.doc));
 // Le message après un dépôt (PR 24) passe avant l'état, jusqu'à « Fermer », « Plus tard » ou « Relire ».
-const shown = computed(() => props.notice ?? (state.value === "fait" ? null : state.value));
+// §53 (Kevin, 17.11) : quand la lecture réussit, la barre et les étapes finissent (0,4 s) avant l'état suivant.
+const finishing = ref(false);
+watch(state, (now, before) => {
+  if (before !== "cours" || (now !== "lu" && now !== "fait")) return;
+  finishing.value = true;
+  setTimeout(() => (finishing.value = false), 400);
+});
+const shown = computed(() => (finishing.value ? "cours" : (props.notice ?? (state.value === "fait" ? null : state.value))));
 const busy = ref(false);
 const failed = ref("");
 
@@ -159,6 +166,7 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
             :lines="CV_LINES"
             :steps="CV_STEPS"
             :every-ms="7500"
+            :done="finishing"
             quiet
             label="Lecture du CV"
           />

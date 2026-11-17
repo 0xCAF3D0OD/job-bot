@@ -11,7 +11,7 @@ const LoadingSteps = defineAsyncComponent(() => import("./LoadingSteps.vue"));
 // L'IA rédige (docs/59 §4) : la seule vraie attente de la plateforme (10 à 30 s). Une barre
 // d'étapes, l'étape en cours en violet, les faites cochées ; elle avance avec le temps
 // habituel de chaque étape et s'arrête sur la dernière jusqu'à l'arrivée du texte.
-const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback"; withCv?: boolean }>();
+const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback"; withCv?: boolean; done?: boolean }>();
 
 
 const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint: string }> = {
@@ -53,6 +53,7 @@ onUnmounted(() => clearInterval(timer));
     :lines="['J’écris ta lettre,', withCv ? 'puis j’adapte ton CV' : 'environ 30 secondes']"
     :steps="withCv ? ['Annonce lue', 'Lettre', 'CV adapté', 'Relecture'] : ['Annonce lue', 'Lettre', 'Relecture']"
     :every-ms="7000"
+    :done="done"
     label="Écriture de la lettre"
     data-test="ai-writing"
   />

@@ -201,6 +201,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
     await input.trigger("change");
     await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
     expect(wrapper.find("[data-test=cv-skills]").text()).toContain("Kubernetes");
     expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
@@ -253,6 +255,8 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(screen.find("[role=progressbar]").attributes("aria-label")).toBe("Lecture du CV");
     expect(wrapper.find("[data-test=welcome-continue]").exists()).toBe(false);
     answer({ data: { chunks: [{ kind: "competence", title: "Kubernetes", content: "…", tags: [], duplicate_of: null }], roles: [], min_rate: null, languages: [], remote: null }, response: { status: 200 } });
+    await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
     await flushPromises();
     expect(wrapper.find("[data-test=cv-reading-screen]").exists()).toBe(false);
     expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
@@ -563,6 +567,8 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
     await input.trigger("change");
     await flushPromises();
+    await new Promise((done) => setTimeout(done, 420)); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 2 postes, 1 compétence trouvés");
     expect(wrapper.get("[data-illustration]").attributes("data-illustration")).toBe("formations-vide");
     await click(wrapper, "welcome-continue");
@@ -612,6 +618,8 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     await flushPromises();
     expect(attempts).toBe(2);
     expect(wrapper.find("[data-test=cv-paused]").exists()).toBe(false);
+    await vi.advanceTimersByTimeAsync(400); // la fin de la lecture se montre 0,4 s (§53)
+    await flushPromises();
     expect(wrapper.get("[data-test=cv-summary]").text()).toBe("Lu : 1 poste trouvé");
   });
 

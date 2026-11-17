@@ -96,6 +96,10 @@ describe("CvStateBlock", () => {
     // Le suivi interroge le serveur jusqu'à la fin de la lecture.
     await vi.advanceTimersByTimeAsync(3000);
     await flushPromises();
+    // La réponse est là : barre et étapes finissent en 0,4 s, puis l'état suivant (§53).
+    expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("100");
+    await vi.advanceTimersByTimeAsync(400);
+    await flushPromises();
     expect(live.text()).toContain("2 éléments trouvés");
     expect(wrapper.find("[data-test=cv-choose]").exists()).toBe(true);
   });
