@@ -1,7 +1,7 @@
 """« M'avertir dès » sur l'échelle unique 50 / 75 / 85 (§65, Kevin, 17.11.2026, 16 h 46)
 
-Revision ID: 0091
-Revises: 0090
+Revision ID: 0092
+Revises: 0091
 Create Date: 2026-11-17
 
 `settings.notify_score_threshold` ne prend plus que 50, 75 ou 85, les seuils du cercle de score et
@@ -21,8 +21,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0091"
-down_revision: str | None = "0090"
+revision: str = "0092"
+down_revision: str | None = "0091"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

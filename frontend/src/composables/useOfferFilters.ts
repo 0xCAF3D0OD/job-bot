@@ -2,7 +2,7 @@ import { computed, shallowRef, watch } from "vue";
 import { useRoute, useRouter, type LocationQuery } from "vue-router";
 
 import type { Source } from "../api/client";
-import { SCORE_SCALE, sourceLabel } from "../format";
+import { SCORE_CLOSE, SCORE_DIG, SCORE_VERY_CLOSE, sourceLabel } from "../format";
 
 export type View = "pending" | "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
@@ -137,13 +137,13 @@ export function activeCount(filters: OfferFilters): number {
   );
 }
 
-// « Note minimale, sur 100 » (section 31 du 16.11) : les seuils des mots de la note (format.ts, SCORE_SCALE), 50 « À
+// « Note minimale, sur 100 » (section 31 du 16.11) : les seuils des mots de la note (format.ts, SCORE_*), 50 « À
 // creuser », 75 « Proche », 85 « Très proche », écrits en chiffres. Communs au panneau, à la feuille et aux pastilles.
 export const SCORE_CHOICES: { label: string; min: number | null }[] = [
   { label: "Toutes", min: null },
-  { label: `${SCORE_SCALE.dig} et +`, min: SCORE_SCALE.dig },
-  { label: `${SCORE_SCALE.close} et +`, min: SCORE_SCALE.close },
-  { label: `${SCORE_SCALE.veryClose} et +`, min: SCORE_SCALE.veryClose },
+  { label: `${SCORE_DIG} et +`, min: SCORE_DIG },
+  { label: `${SCORE_CLOSE} et +`, min: SCORE_CLOSE },
+  { label: `${SCORE_VERY_CLOSE} et +`, min: SCORE_VERY_CLOSE },
 ];
 export const SCORE_HELP = "À quel point l’offre correspond à ton profil.";
 // « Taux d'activité » (section 31 du 16.11) : un seul choix, mêmes valeurs qu'avant.

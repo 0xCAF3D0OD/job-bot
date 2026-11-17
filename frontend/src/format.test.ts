@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import { SCORE_CHOICES } from "./composables/useOfferFilters";
-import { SCORE_SCALE, cityOnly, collectWhen, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText, scoreWord } from "./format";
+import { SCORE_CLOSE, SCORE_DIG, SCORE_VERY_CLOSE, cityOnly, collectWhen, dayKey, dayName, dayShort, gapSkill, initials, orpChannel, orpDueDay, orpLeftLine, orpPace, remoteText, scoreWord } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -115,7 +115,7 @@ describe("scoreWord, échelle 50 / 75 / 85", () => {
   });
 
   it("une seule constante pour le cercle, le filtre Note et « M'avertir dès »", () => {
-    expect(SCORE_SCALE).toEqual({ veryClose: 85, close: 75, dig: 50 });
-    expect(SCORE_CHOICES.map((c) => c.min)).toEqual([null, SCORE_SCALE.dig, SCORE_SCALE.close, SCORE_SCALE.veryClose]);
+    expect([SCORE_DIG, SCORE_CLOSE, SCORE_VERY_CLOSE]).toEqual([50, 75, 85]);
+    expect(SCORE_CHOICES.map((c) => c.min)).toEqual([null, SCORE_DIG, SCORE_CLOSE, SCORE_VERY_CLOSE]);
   });
 });

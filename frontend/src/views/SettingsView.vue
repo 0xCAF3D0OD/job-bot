@@ -30,13 +30,13 @@ import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
-import { SCORE_SCALE } from "../format";
+import { SCORE_CLOSE, SCORE_DIG, SCORE_VERY_CLOSE } from "../format";
 import FaceState from "../components/FaceState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 
 const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
-  notify_score_threshold: SCORE_SCALE.close,
+  notify_score_threshold: SCORE_CLOSE,
   llm_monthly_budget_chf: 10,
   orp_due_day: 5,
   employer_search_threshold: 70,
@@ -223,19 +223,19 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
   void saveMode();
 }
 // « M'avertir dès » (C11, D3 ; §56 du 17.11 : le mot en libellé, le seuil en précision « 85 et plus »). Échelle
-// unique du §65 (Kevin, 17.11) : les seuils de SCORE_SCALE, comme le cercle et le filtre Note. Les valeurs d'avant
-// (70, 80…) sont passées au niveau le plus proche par la migration 0091.
+// unique du §65 (Kevin, 17.11) : les seuils SCORE_* de format.ts, comme le cercle et le filtre Note. Les valeurs d'avant
+// (70, 80…) sont passées au niveau le plus proche par la migration 0092.
 const THRESHOLD_OPTIONS = [
-  { n: SCORE_SCALE.veryClose, label: "Très proche" },
-  { n: SCORE_SCALE.close, label: "Proche" },
-  { n: SCORE_SCALE.dig, label: "À creuser" },
+  { n: SCORE_VERY_CLOSE, label: "Très proche" },
+  { n: SCORE_CLOSE, label: "Proche" },
+  { n: SCORE_DIG, label: "À creuser" },
 ].map(({ n, label }) => ({ value: String(n), label, hint: `${n} et plus`, test: `threshold-${n}` }));
 const thresholdLabel = computed(() => THRESHOLD_OPTIONS.find((o) => o.value === threshold.value)?.label ?? "");
 const thresholdSheet = ref(false);
 const threshold = computed({
   get: () => {
-    const value = form.value.notify_score_threshold ?? SCORE_SCALE.close;
-    return String(value >= SCORE_SCALE.veryClose ? SCORE_SCALE.veryClose : value >= SCORE_SCALE.close ? SCORE_SCALE.close : SCORE_SCALE.dig);
+    const value = form.value.notify_score_threshold ?? SCORE_CLOSE;
+    return String(value >= SCORE_VERY_CLOSE ? SCORE_VERY_CLOSE : value >= SCORE_CLOSE ? SCORE_CLOSE : SCORE_DIG);
   },
   set: (value: string) => void setThreshold(Number(value)),
 });

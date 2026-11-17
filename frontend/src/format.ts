@@ -108,14 +108,16 @@ export function logoTone(name: string): number {
 /** L'échelle unique de la note (décision de Kevin du 17.11, LISEZMOI §65) : 85 Très proche, 75 Proche (vert), 50 À
  *  creuser (orange), en dessous Loin (gris). Une seule constante pour le cercle, les mots, « M'avertir dès » et le
  *  filtre Note. */
-export const SCORE_SCALE = { veryClose: 85, close: 75, dig: 50 } as const;
+export const SCORE_VERY_CLOSE = 85;
+export const SCORE_CLOSE = 75;
+export const SCORE_DIG = 50;
 
-// La note en mots (docs/121 §C.5), sur les seuils de SCORE_SCALE.
+// La note en mots (docs/121 §C.5), sur ces seuils.
 export type ScoreTone = "very-close" | "close" | "dig" | "far";
 export function scoreWord(score: number): { word: string; mood: "ravi" | "content" | "attentif" | "neutre"; tone: ScoreTone } {
-  if (score >= SCORE_SCALE.veryClose) return { word: "Très proche", mood: "ravi", tone: "very-close" };
-  if (score >= SCORE_SCALE.close) return { word: "Proche", mood: "content", tone: "close" };
-  if (score >= SCORE_SCALE.dig) return { word: "À creuser", mood: "attentif", tone: "dig" };
+  if (score >= SCORE_VERY_CLOSE) return { word: "Très proche", mood: "ravi", tone: "very-close" };
+  if (score >= SCORE_CLOSE) return { word: "Proche", mood: "content", tone: "close" };
+  if (score >= SCORE_DIG) return { word: "À creuser", mood: "attentif", tone: "dig" };
   return { word: "Loin", mood: "neutre", tone: "far" };
 }
 

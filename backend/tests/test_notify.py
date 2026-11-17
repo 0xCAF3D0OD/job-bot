@@ -82,7 +82,7 @@ async def test_not_configured(runtime: Runtime, sent: list[Message]) -> None:
 
 
 async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Message]) -> None:
-    # Seuil par défaut 75, « Proche » (échelle 50 / 75 / 85, migration 0091).
+    # Seuil par défaut 75, « Proche » (échelle 50 / 75 / 85, migration 0092).
     await scored(rt, 1, 78)
     await scored(rt, 2, 88)
     await scored(rt, 3, 40)
