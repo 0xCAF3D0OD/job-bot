@@ -7,6 +7,9 @@
 {$DEMO_DOMAIN} {
 	encode zstd gzip
 
+	# Le journal d'accès ne garde que le chemin, identifiants masqués (voir le bloc `log`).
+	log_append path {http.request.uri.path}
+
 	# Rien de lourd à envoyer : la démo refuse toute écriture.
 	request_body {
 		max_size 1MB
@@ -69,6 +72,14 @@ Disallow: /
 	log {
 		output file /data/access.log {
 			roll_keep_for 168h
+		}
+		# Comme deploy/prod/Caddyfile (décision de Kevin du 17.11.2026) : ni adresse complète, ni
+		# query string, ni Referer ; le chemin seul, chaque nombre remplacé par `:id`.
+		format filter {
+			wrap json
+			request>uri delete
+			request>headers>Referer delete
+			path regexp "/[0-9]+\b" "/:id"
 		}
 	}
 }
