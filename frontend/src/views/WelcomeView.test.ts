@@ -346,10 +346,11 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("h1").text()).toBe("Où veux-tu travailler\u00A0?");
     expect(wrapper.get("[data-test=place-all]").attributes("aria-pressed")).toBe("false");
     expect(wrapper.text()).toContain("VD");
-    // 3. Taux : 80 % enregistré, « 100 % » et « 80 à 100 % » cochées.
+    // 3. Taux : un seul choix parmi les 7 valeurs, 80 % enregistré, « Dès 80 % » coché.
     await click(wrapper, "welcome-continue");
     const rates = wrapper.findAll("[data-test=rates] button");
-    expect(rates.filter((r) => r.attributes("aria-pressed") === "true").map((r) => r.text())).toEqual(["100 %", "80 à 100 %"]);
+    expect(rates.map((r) => r.text())).toEqual(["Tous", "Dès 50\u00A0%", "Dès 60\u00A0%", "Dès 70\u00A0%", "Dès 80\u00A0%", "Dès 90\u00A0%", "100\u00A0%"]);
+    expect(rates.filter((r) => r.attributes("aria-checked") === "true").map((r) => r.text())).toEqual(["Dès 80\u00A0%"]);
     // 4. ORP : « Oui » par défaut ; 5. l'objectif, de 1 à 99.
     await click(wrapper, "welcome-continue");
     expect(wrapper.get("[data-test=orp-yes]").attributes("aria-checked")).toBe("true");
@@ -385,7 +386,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(PUT.mock.calls.some((c) => c[0] === "/api/notifications/phone")).toBe(false);
   });
 
-  it("le lieu et le taux (§60) : une ville tapée devient une pastille, « Toute la Suisse » efface ; le plus bas des taux", async () => {
+  it("le lieu et le taux (§60) : une ville tapée devient une pastille, « Toute la Suisse » efface ; le taux choisi", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
     await click(wrapper, "welcome-continue");
     await click(wrapper, "place-all");
@@ -396,18 +397,18 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("[aria-label='Retirer Lausanne']").attributes("aria-pressed")).toBe("true");
     await click(wrapper, "welcome-continue");
     const rate = (label: string) => wrapper.findAll("[data-test=rates] button").find((b) => b.text() === label)!;
-    await rate("60 à 80 %").trigger("click");
+    await rate("Dès 60\u00A0%").trigger("click");
     await throughQuestions(wrapper);
     expect(calls("/api/criteria").at(-1)).toMatchObject({ locations: ["Lausanne"], min_rate: 60 });
     expect(calls("/api/welcome").filter((c) => c.sources).at(-1)).toEqual({ sources: { roles: "default", places: "user", rate: "user" } });
   });
 
-  it("« Moins de 60 % » ou aucun taux : peu importe ; le retour revient à la question d’avant, sans l’objectif si « Non »", async () => {
+  it("« Tous » : peu importe ; le retour revient à la question d’avant, sans l’objectif si « Non »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
     await click(wrapper, "welcome-continue");
     await click(wrapper, "welcome-continue");
     const rate = (label: string) => wrapper.findAll("[data-test=rates] button").find((b) => b.text() === label)!;
-    await rate("Moins de 60 %").trigger("click");
+    await rate("Tous").trigger("click");
     await click(wrapper, "welcome-continue");
     await click(wrapper, "orp-no");
     await click(wrapper, "welcome-continue");

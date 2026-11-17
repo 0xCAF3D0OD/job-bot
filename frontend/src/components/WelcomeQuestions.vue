@@ -31,7 +31,7 @@ const levels = defineModel<Record<string, Level> | null>("levels", { required: t
 const QUESTIONS: Record<number, { title: string; help: string }> = {
   1: { title: "Quels postes cherches-tu", help: "Choisis-en un ou plusieurs." },
   2: { title: "Où veux-tu travailler", help: "Laisse vide pour toute la Suisse." },
-  3: { title: "À quel taux", help: "Tu peux en choisir plusieurs." },
+  3: { title: "À quel taux", help: "Choisis-en un." },
   4: { title: "Es-tu inscrit à l’ORP", help: "" },
   5: { title: "Combien de recherches par mois", help: "L’objectif fixé avec ton conseiller ORP." },
   6: { title: "Quelles langues parles-tu", help: "« Non renseigné » n’écarte aucune offre." },
@@ -83,21 +83,16 @@ function wholeSwitzerland(): void {
   emit("edited", "places");
 }
 
-// 3. Taux : le serveur garde un seul taux minimum. Les pastilles cochées sont celles dont le bas est au-dessus de ce
-// minimum ; en cocher ou décocher enregistre le plus bas des taux choisis, « Moins de 60 % » ou aucun = peu importe.
+// 3. Taux : un seul choix parmi les 7 valeurs déjà enregistrées, sans migration (Kevin, 17.11, 14 h 43, points 1 et
+// 13) ; le minimum choisi part tel quel, « Tous » = peu importe.
 const RATES = [
-  { label: "100 %", min: 100 },
-  { label: "80 à 100 %", min: 80 },
-  { label: "60 à 80 %", min: 60 },
-  { label: "Moins de 60 %", min: 0 },
-] as const;
-const chosenRates = ref<Set<number>>(new Set(rate.value ? RATES.filter((r) => r.min && r.min >= rate.value!).map((r) => r.min) : []));
-function toggleRate(min: number): void {
-  const next = new Set(chosenRates.value);
-  if (next.has(min)) next.delete(min);
-  else next.add(min);
-  chosenRates.value = next;
-  rate.value = !next.size || next.has(0) ? null : Math.min(...next);
+  { label: "Tous", min: null },
+  ...[50, 60, 70, 80, 90].map((min) => ({ label: `Dès ${min}\u00A0%`, min })),
+  { label: "100\u00A0%", min: 100 },
+];
+function chooseRate(min: number | null): void {
+  if (rate.value === min) return;
+  rate.value = min;
   emit("edited", "rate");
 }
 
@@ -287,18 +282,21 @@ defineExpose({
         <div
           v-else-if="question === 3"
           class="wq-chips"
+          role="radiogroup"
+          aria-label="Taux d’activité"
           data-test="rates"
         >
           <button
             v-for="choice in RATES"
-            :key="choice.min"
+            :key="choice.label"
             type="button"
-            :class="['wq-chip', { on: chosenRates.has(choice.min) }]"
-            :aria-pressed="chosenRates.has(choice.min)"
-            @click="toggleRate(choice.min)"
+            role="radio"
+            :class="['wq-chip', { on: rate === choice.min }]"
+            :aria-checked="rate === choice.min"
+            @click="chooseRate(choice.min)"
           >
             {{ choice.label }}<svg
-              v-if="chosenRates.has(choice.min)"
+              v-if="rate === choice.min"
               viewBox="0 0 24 24"
               aria-hidden="true"
             ><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
