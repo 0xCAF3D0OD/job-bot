@@ -1,5 +1,19 @@
 import { useDocTemplate } from "../composables/useDocTemplate";
-import { flushPromises, mount } from "@vue/test-utils";
+import { flushPromises as flushVue, mount } from "@vue/test-utils";
+// Les panneaux secondaires de Préparer sont chargés à la demande (defineAsyncComponent) : on attend aussi leur import.
+async function flushPromises(): Promise<void> {
+  await flushVue();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await flushVue();
+}
+// Chargés une fois d'avance : leur import() se résout alors dans le même tour que dans le navigateur.
+await Promise.all([
+  import("../components/ApplicationSent.vue"),
+  import("../components/GoalReached.vue"),
+  import("../components/OfferCompatSheet.vue"),
+  import("../components/FalseClaimSheet.vue"),
+  import("../components/ProfileCompletionPanel.vue"),
+]);
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -642,6 +656,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(score.attributes("aria-label")).toBe("Compatibilité, Proche de ton profil : 80 sur 100, voir le détail");
     expect(score.attributes("aria-haspopup")).toBe("dialog");
     await score.trigger("click");
+    await flushPromises(); // le panneau se charge à sa première ouverture
     const sheet = wrapper.get("[data-test=compat-sheet]");
     expect(sheet.text()).toContain("Kubernetes");
     expect(sheet.text()).toContain("B2 demandé");
@@ -869,6 +884,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     const text = two.paragraphs[1]!.text;
     await choose(wrapper, 1, text.indexOf("production"), text.indexOf("production") + 5);
     await wrapper.find("[data-test=false-claim]").trigger("click");
+    await flushPromises(); // le panneau se charge à sa première ouverture
     const sheet = wrapper.find("[data-test=false-claim-sheet]");
     expect(sheet.find("[data-test=false-claim-quote]").text()).toBe("« Il tourne en production à l’État de Vaud. »");
     await sheet.find("[data-test=false-claim-confirm]").trigger("click");
@@ -882,6 +898,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     expect(area().value).toBe(text);
     await choose(wrapper, 1, text.indexOf("production"), text.indexOf("production") + 5);
     await wrapper.find("[data-test=false-claim]").trigger("click");
+    await flushPromises(); // le panneau se charge à sa première ouverture
     await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
     await useUndo().flush();
     await flushPromises();
@@ -896,6 +913,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     const wrapper = await mountView();
     await choose(wrapper, 1, 0, 5);
     await wrapper.find("[data-test=false-claim]").trigger("click");
+    await flushPromises(); // le panneau se charge à sa première ouverture
     await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
     await flushPromises();
     // Aucun paragraphe vide ne reste à sa place.
@@ -918,6 +936,7 @@ describe("« Pas vrai » (30.10.2026)", () => {
     const wrapper = await mountView();
     await choose(wrapper, 1, 0, 5);
     await wrapper.find("[data-test=false-claim]").trigger("click");
+    await flushPromises(); // le panneau se charge à sa première ouverture
     await wrapper.find("[data-test=false-claim-rewrite] input").setValue(true);
     await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
     await flushPromises();

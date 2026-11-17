@@ -1,0 +1,1 @@
+Poids : Préparer charge à la demande ses panneaux secondaires (Compatibilité, « Pas vrai », Compléter le profil) et les écrans d'après l'envoi (« Candidature envoyée », « C'est fait ! ») ; la page s'ouvre avec 12,3 Ko de JS et 3,9 Ko de CSS en moins (gzip), sans changement visible (allègement (c) de l'issue #797)
