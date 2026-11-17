@@ -93,6 +93,23 @@ function choose(option: string): void {
   choice.value = choice.value === option ? "" : option;
   if (choice.value === OTHER) void nextTick(() => body.value?.querySelector<HTMLElement>("[data-test=answer-other]")?.focus());
 }
+// Motif « Radio Group » (ARIA APG ; Kevin, 17.11) : Tab entre dans le groupe sur le choix actif (ou le premier) puis en
+// sort ; les flèches passent d'un choix à l'autre et le cochent, Début et Fin vont aux extrémités.
+function onChoiceKey(event: KeyboardEvent, index: number): void {
+  const options = panel.value?.choices ?? [];
+  const steps: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  let next: number;
+  if (event.key in steps) next = (index + steps[event.key]! + options.length) % options.length;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = options.length - 1;
+  else return;
+  event.preventDefault();
+  touched.value = true;
+  error.value = "";
+  choice.value = options[next]!;
+  const buttons = (event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLElement>("[role=radio]");
+  buttons?.[next]?.focus();
+}
 // Les milliers se groupent pendant la saisie ; seuls les chiffres restent.
 function onSalary(event: Event): void {
   const input = event.target as HTMLInputElement;
@@ -229,13 +246,15 @@ async function save(): Promise<void> {
             :aria-label="panel.label"
           >
             <button
-              v-for="option in panel.choices"
+              v-for="(option, index) in panel.choices"
               :key="option"
               type="button"
               role="radio"
               :aria-checked="choice === option"
+              :tabindex="choice === option || (!panel.choices.includes(choice) && index === 0) ? 0 : -1"
               :data-test="`answer-choice-${option}`"
               @click="choose(option)"
+              @keydown="onChoiceKey($event, index)"
             >
               <AppIcon
                 v-if="choice === option"
