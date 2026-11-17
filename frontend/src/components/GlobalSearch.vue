@@ -8,7 +8,6 @@ import { useAuth } from "../composables/useAuth";
 import { UNDO_MS } from "../composables/useUndo";
 import { colorIndex, companyPlace, scoreWord } from "../format";
 import { applicationLine, companyLine, followMessage } from "../searchText";
-import { displayTitle } from "../offerTitle";
 import AppIcon from "./AppIcon.vue";
 
 // La recherche globale (série du 27.10, point 2 ; planche « 2. Recherche globale ») : dans tes offres,
@@ -399,7 +398,7 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
                     aria-hidden="true"
                   >{{ (o.company ?? o.title).charAt(0).toUpperCase() }}</span>
                   <span class="gs-text">
-                    <strong>{{ displayTitle(o.title, o) }}</strong>
+                    <strong>{{ o.title }}</strong>
                     <span>{{ companyPlace(o.company, o.location) }}</span>
                   </span>
                   <span

@@ -100,6 +100,7 @@ onMounted(async () => {
         <li>Le contenu des alertes des sites que l’IA lit.</li>
         <li>Le métier et la région que tu cherches, pour trouver tes premières offres sur le web.</li>
         <li>Un document que tu joins à une question de l’Assistant (« + »), sans tes coordonnées.</li>
+        <li>Une capture d’écran d’annonce que tu donnes pour refaire une note : l’IA en recopie le texte, l’image n’est pas gardée.</li>
         <li>
           <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la
           plateforme les ajoute elle-même aux lettres.

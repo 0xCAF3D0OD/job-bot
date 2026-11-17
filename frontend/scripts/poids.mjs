@@ -37,6 +37,7 @@ export const LIMITS = {
   "js-accueil-ordinateur": 115_000,
   "js-trier": 106_000,
   "js-candidatures": 175_500,
+  "js-candidatures-fichier": 175_500,
   "js-preparer": 157_400,
   "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
@@ -76,6 +77,7 @@ export const LIMITS = {
   "css-accueil-ordinateur": 64_400,
   "css-trier": 65_000,
   "css-candidatures": 72_500,
+  "css-candidatures-fichier": 72_500,
   "css-preparer": 70_500,
   "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
@@ -130,6 +132,8 @@ export const PAGES = {
   "accueil-telephone-rappel": ["views/TodayView.vue", "components/HomePhone.vue", "components/FirstApplicationCard.vue", "components/OrpReminder.vue"],
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
+  // La fiche d'une offre qui lit un fichier pour « Refaire la note » (Q1 du 17.11), chargé au premier fichier.
+  "candidatures-fichier": ["views/JobsView.vue", "views/OffersView.vue", "offerFile.ts"],
   preparer: ["views/PreparationView.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.

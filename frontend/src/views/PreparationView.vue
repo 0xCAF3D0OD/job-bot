@@ -44,7 +44,6 @@ import { usePlan } from "../composables/usePlan";
 import { offerUndo } from "../composables/useUndo";
 import { sentencesAt, withoutSentence } from "../letterSentences";
 import PlanLimit from "../components/PlanLimit.vue";
-import { displayTitle } from "../offerTitle";
 // Chargés à la demande (allègement (c), issue #797) : les écrans d'après l'envoi et les panneaux secondaires ne
 // pèsent pas sur l'ouverture de Préparer. Un panneau n'est monté qu'à sa première ouverture, puis reste en place.
 const ApplicationSent = defineAsyncComponent(() => import("../components/ApplicationSent.vue"));
@@ -826,7 +825,7 @@ const compat = computed(() => {
 const verdict = computed(() => (offer.value?.score === null || offer.value?.score === undefined ? null : scoreWord(Math.round(offer.value.score))));
 // « Ma candidature » ne s'affiche plus sur ordinateur ; il reste dans le titre de l'onglet (lot 15.1).
 watch([offer, () => route.fullPath], ([o]) => {
-  if (o) void nextTick(() => (document.title = `Ma candidature, ${displayTitle(o.title, o)}, jobA1`));
+  if (o) void nextTick(() => (document.title = `Ma candidature, ${o.title}, jobA1`));
 });
 // « J'ai relu la lettre » sur ordinateur (lot 15.1) et « J'ai relu, continuer » sur téléphone (§9) : un bouton plein.
 // Il note la relecture, gardée avec la version pour un autre appareil, puis passe au CV ; un refus le dit et reste là.
@@ -949,7 +948,7 @@ onMounted(() => void load());
         <span
           class="prep-offer-title"
           data-test="prep-offer-title"
-        >{{ displayTitle(offer.title, offer) }}</span>
+        >{{ offer.title }}</span>
         <span class="prep-offer-sub">{{ companyPlace(offer.company, offer.location, true) }}</span>
       </p>
     </div>
@@ -2164,7 +2163,7 @@ onMounted(() => void load());
     :stale="offer.score_stale"
     :verdict="MATCH_TITLE[verdict.tone] ?? ''"
     :tone="verdict.tone"
-    :subtitle="`${displayTitle(offer.title, offer)} · ${offer.company ?? 'Entreprise non indiquée'}`"
+    :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
     :strengths="compat.strengths"
     :gaps="compat.gaps"
     :how="compat.how"

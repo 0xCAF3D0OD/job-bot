@@ -1605,6 +1605,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read File
+         * @description Le texte du fichier d'une annonce, donné sur la fiche (Kevin, 17.11, Q1) : un PDF lu sans
+         *     IA, ou une capture PNG ou JPG recopiée par l'IA. Un fichier à la fois ; il n'est ni rangé ni
+         *     journalisé (E-5, J-1). Rien n'est enregistré ici : la personne relit le texte, puis
+         *     « Refaire la note » l'enregistre et renote l'offre.
+         */
+        post: operations["readOfferFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/criteria": {
         parameters: {
             query?: never;
@@ -4724,6 +4747,11 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_readOfferFile */
+        Body_readOfferFile: {
+            /** File */
+            file: string;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -7325,6 +7353,15 @@ export interface components {
              */
             provisional: number;
         };
+        /** OfferFileOut */
+        OfferFileOut: {
+            /** Text */
+            text?: string | null;
+            /** Problem */
+            problem?: ("no-text" | "too-big" | "not-supported" | "unreadable" | "ai-off" | "ai-down" | "budget") | null;
+            /** Limit */
+            limit?: string | null;
+        };
         /**
          * OfferFiltersVisible
          * @description Filtres affichés dans le panneau ; statut, recherche et tri le sont toujours.
@@ -8684,7 +8721,7 @@ export interface components {
             orp_monthly_target?: number | null;
             /**
              * Notify Score Threshold
-             * @default 70
+             * @default 75
              */
             notify_score_threshold: number;
             /**
@@ -12790,6 +12827,55 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    readOfferFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_readOfferFile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferFileOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop de fichiers : « Réessaie dans n minutes » */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

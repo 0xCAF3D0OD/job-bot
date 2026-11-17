@@ -7,16 +7,14 @@
 
 // Sigles et noms propres courants dans les annonces, écrits comme il faut. Clé : le mot en minuscules.
 const KNOWN = new Map(
-  [
-    "AWS", "GCP", "SRE", "CI/CD", "DevOps", "DevSecOps", "MLOps", "FinOps", "IT", "ICT", "IoT", "HR", "RH", "SAP", "UX", "UI",
-    "QA", "CEO", "CFO", "CTO", "COO", "CIO", "CISO", "IA", "AI", "ML", "LLM", "BI", "PHP", "SQL", "NoSQL", "ERP", "CRM", "HES",
-    "HEG", "EPFL", "ETH", "CFC", "AFP", "ORP", "SEO", "SEA", "API", "REST", "SaaS", "B2B", "B2C", ".NET", "C#", "C++", "iOS",
-    "macOS", "JavaScript", "TypeScript", "Java", "Python", "Kotlin", "Swift", "React", "Angular", "Vue.js", "Node.js",
-    "Azure", "Linux", "Windows", "Kubernetes", "Docker", "Terraform", "Salesforce", "PostgreSQL", "Oracle", "Microsoft",
-    "Google", "SharePoint", "PMO", "KAM", "HSE", "QHSE", "R&D", "PME", "CDI", "CDD", "SA", "AG", "GmbH", "Sàrl",
-    "H/F", "F/H", "M/F", "F/M", "H/F/X", "M/W", "W/M", "M/W/D", "W/M/D", "M/F/D", "VD", "GE", "VS", "NE", "JU", "ZH", "BS",
-    "TI", "FR", "BE",
-  ].map((word) => [word.toLowerCase(), word] as const),
+  (
+    "AWS GCP SRE CI/CD DevOps DevSecOps MLOps IT ICT IoT HR RH SAP UX UI QA CEO CFO CTO COO CIO IA AI ML LLM BI PHP SQL " +
+    "ERP CRM HES HEG EPFL ETH CFC AFP ORP SEO API SaaS B2B .NET C# C++ iOS JavaScript TypeScript Java Python React Azure " +
+    "Linux Kubernetes Docker Terraform Salesforce SharePoint PMO HSE QHSE R&D PME CDI CDD SA AG GmbH Sàrl H/F F/H M/F " +
+    "M/W/D W/M/D VD GE VS NE JU ZH BS TI"
+  )
+    .split(" ")
+    .map((word) => [word.toLowerCase(), word]),
 );
 // Un mot : lettres et chiffres, avec « / », « . », « + », « # », « & » à l'intérieur (CI/CD, Node.js, C++, C#, R&D).
 const WORD = /\.?[\p{L}\p{N}][\p{L}\p{N}+#&]*(?:[/.][\p{L}\p{N}+#&]+)*/gu;
