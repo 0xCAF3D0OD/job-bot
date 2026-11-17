@@ -4,11 +4,12 @@ import AppIcon from "./AppIcon.vue";
 // Une carte de lignes de 56 px (§8.1 et §8.3) : « Ce que tu as envoyé » et « Trouver un contact », dans la colonne de
 // droite sur ordinateur ou dans leur feuille sur téléphone. Un téléchargement ou un lien externe par ligne.
 export type SentRow = { label: string; sub: string; href: string; download: boolean; test: string };
-defineProps<{ rows: SentRow[]; title?: string }>();
+// `flat` : sans carte, dans la carte « Documents et contacts » de l'ordinateur ; sans titre, dans une feuille.
+defineProps<{ rows: SentRow[]; title?: string; flat?: boolean }>();
 </script>
 
 <template>
-  <section :class="['sent-card', 'sent-rows', { 'sent-rows-bare': !title }]">
+  <section :class="['sent-rows', { 'sent-card': title && !flat, 'sent-rows-bare': !title }]">
     <h3 v-if="title">
       {{ title }}
     </h3>
