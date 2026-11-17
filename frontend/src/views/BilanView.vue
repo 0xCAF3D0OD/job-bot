@@ -3,18 +3,18 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 
 import PageHero from "../components/PageHero.vue";
-import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
+import FolderTabs, { type FolderTab } from "../components/FolderTabs.vue";
 import { usePhone } from "../composables/usePhone";
 import type { BilanTab } from "../router";
 
 // Le Bilan (docs/42, docs/126 §1), une entrée du menu : « Qu'est-ce qui marche, et quoi
-// améliorer ? ». Trois sous-onglets en contrôle segmenté, sur téléphone et sur ordinateur (docs/139
-// étape 8, maquette Explorer ; B1 et B2, Kevin, 2026-11-04) : ORP, Résultats, Formations.
+// améliorer ? ». Trois sous-onglets, sur téléphone et sur ordinateur (docs/139 étape 8 ; B1 et B2, Kevin,
+// 2026-11-04) : ORP, Résultats, Formations, en onglets « dossier » depuis le 17.11 (§47).
 const route = useRoute();
 const { phone } = usePhone();
 const tab = computed<BilanTab>(() => (route.meta.tab as BilanTab | undefined) ?? "orp");
 
-const segments = computed<SegmentOption[]>(() => [
+const segments = computed<FolderTab[]>(() => [
   { value: "orp", label: "ORP", to: "/bilan", test: "bilan-tab-orp" },
   // Le mois choisi dans les Résultats suit le lien de l'onglet.
   {
@@ -36,11 +36,11 @@ const segments = computed<SegmentOption[]>(() => [
       :class="['today-band bilan-band', 'flat']"
       data-test="bilan-band"
     >
-      <div class="today-band-inner bilan-band-inner">
+      <div class="today-band-inner bilan-band-inner folder-head">
         <h1>Bilan</h1>
-        <SegmentedControl
-          :model-value="tab"
-          :options="segments"
+        <FolderTabs
+          :selected="tab"
+          :tabs="segments"
           label="Bilan"
           class="bilan-segments"
         />
@@ -55,11 +55,10 @@ const segments = computed<SegmentOption[]>(() => [
     v-else
     title="Bilan"
   >
-    <SegmentedControl
-      :model-value="tab"
-      :options="segments"
+    <FolderTabs
+      :selected="tab"
+      :tabs="segments"
       label="Bilan"
-      :full="phone"
       class="bilan-segments"
     />
   </PageHero>
@@ -76,6 +75,10 @@ const segments = computed<SegmentOption[]>(() => [
 </template>
 
 <style>
+/* Onglets dossier sur ordinateur (§47, planche BilanOrdinateur) : le titre et les onglets posés sur la ligne. */
+.bilan-band-inner.folder-head { align-items: flex-end; border-bottom: 1.5px solid var(--tab-line); }
+.bilan-band-inner.folder-head h1 { margin-bottom: var(--space-2); }
+.bilan-band-inner .bilan-segments { height: auto; border: 0; }
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .bilan-page { --bilan-17: 17px; --bilan-gap-28: 28px; --bilan-pad: 18.5px; --bilan-pad-y: 14.5px; --bilan-card-h: 72px; --bilan-bar: 10px; --bilan-lh-21: 21px; }
 </style>
