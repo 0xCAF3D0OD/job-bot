@@ -43,6 +43,8 @@ const loadHomePhone = () => import("../components/HomePhone.vue");
 const loadTriageMini = () => import("../components/TriageMini.vue");
 const HomePhone = defineAsyncComponent(loadHomePhone);
 const TriageMini = defineAsyncComponent(loadTriageMini);
+// « Première candidature notée » ne s'affiche qu'une fois : chargée à part, elle ne pèse pas sur l'Accueil.
+const FirstApplicationCard = defineAsyncComponent(() => import("../components/FirstApplicationCard.vue"));
 const today = ref<Today | null>(null);
 // L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
 const { phone } = usePhone();
@@ -821,17 +823,15 @@ const { me } = useAuth();
   >
     <p>{{ today.month_count }} candidatures sur {{ today.month_target }}.</p>
   </SuccessCard>
-  <SuccessCard
-    v-else-if="stepsWon"
-    face
-    wink
-    keep-focus
-    title="Première candidature notée"
-    test-id="first-steps-done"
+  <FirstApplicationCard
+    v-else-if="stepsWon && today?.first_application"
+    :company="today.first_application.company"
+    :sent-at="today.first_application.sent_at"
+    :application-id="today.first_application.id"
+    :count="today.month_count"
+    :target="today.month_target ?? null"
     @close="stepsWon = false"
-  >
-    <p>Elle compte pour ton mois ORP.</p>
-  </SuccessCard>
+  />
 </template>
 
 <style scoped>

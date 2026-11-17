@@ -5713,6 +5713,22 @@ export interface components {
             /** Reasons */
             reasons: components["schemas"]["FilterReasonOut"][];
         };
+        /**
+         * FirstApplicationOut
+         * @description La première candidature sur la carte « Première candidature notée » (section 44, Kevin le
+         *     17.11) : l'entreprise et la date d'envoi ; « Voir » l'ouvre.
+         */
+        FirstApplicationOut: {
+            /** Id */
+            id: number;
+            /** Company */
+            company: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+        };
         /** FirstOffersOut */
         FirstOffersOut: {
             /**
@@ -8927,6 +8943,7 @@ export interface components {
              * @default false
              */
             first_steps_finished: boolean;
+            first_application?: components["schemas"]["FirstApplicationOut"] | null;
             google_jobs?: components["schemas"]["GoogleJobsOut"] | null;
             /** To Review */
             to_review: number;

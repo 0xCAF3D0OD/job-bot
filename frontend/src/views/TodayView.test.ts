@@ -260,9 +260,11 @@ describe("Les premiers pas (docs/128)", () => {
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=first-steps]").exists()).toBe(false);
     PUT.mockResolvedValue({ response: { ok: true } });
-    mockGet(today({ first_steps_finished: true }));
+    mockGet(today({ first_steps_finished: true, first_application: { id: 7, company: "Logitech", sent_at: "2026-11-12" } }));
     wrapper = await mountView();
     expect(document.body.textContent).toContain("Première candidature notée");
+    // « {Entreprise} · {date courte} » (section 44, Kevin le 17.11).
+    expect(document.body.querySelector("[data-test=first-application-line]")?.textContent).toBe("Logitech · 12 nov.");
     expect(PUT).toHaveBeenCalledWith("/api/first-steps", { body: { celebrated: true } });
     wrapper.unmount();
   });

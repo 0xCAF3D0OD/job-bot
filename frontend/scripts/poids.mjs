@@ -110,9 +110,10 @@ const TOTALS = ["js-total", "css-total"];
 // échouer le budget : une nouvelle page reçoit ses limites dans la PR qui la crée.
 export const PAGES = {
   accueil: ["views/TodayView.vue"], // le premier écran
-  // Aujourd'hui charge ensuite, à part, son bloc selon l'écran : l'accueil du téléphone ou le mini-tri de l'ordinateur.
-  "accueil-telephone": ["views/TodayView.vue", "components/HomePhone.vue"],
-  "accueil-ordinateur": ["views/TodayView.vue", "components/TriageMini.vue"],
+  // Aujourd'hui charge ensuite, à part, son bloc selon l'écran : l'accueil du téléphone ou le mini-tri de l'ordinateur ;
+  // et, une seule fois, la carte « Première candidature notée » (section 44), comptée dans le pire cas des deux.
+  "accueil-telephone": ["views/TodayView.vue", "components/HomePhone.vue", "components/FirstApplicationCard.vue"],
+  "accueil-ordinateur": ["views/TodayView.vue", "components/TriageMini.vue", "components/FirstApplicationCard.vue"],
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   preparer: ["views/PreparationView.vue"],
