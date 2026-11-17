@@ -1,6 +1,10 @@
 import { getCurrentInstance, onBeforeUnmount, onMounted, watch } from "vue";
 import type { Router } from "vue-router";
 
+import { offBack, onBack } from "./backListeners";
+
+export { offBack, onBack };
+
 // L’entrée d’historique d’une feuille ou d’un panneau de filtres (Kevin, 17.11,
 // docs/decisions/2026-11-17-1327-filtres-historique.md) :
 // 1. une seule entrée par application, avec les filtres dans l’adresse : les choix faits pendant l’ouverture remplacent
@@ -39,17 +43,6 @@ function withoutMark(state: Record<string, unknown> | null): Record<string, unkn
   delete rest.sheet;
   delete rest.sheetHref;
   return rest;
-}
-
-// Les écouteurs du bouton retour passent AVANT celui du routeur : main.ts importe ce module en premier, avant que
-// createWebHistory() (router.ts) ne pose le sien ; Chrome appelle les écouteurs de window dans l’ordre d’inscription.
-const backListeners = new Set<() => void>();
-if (typeof window !== "undefined") window.addEventListener("popstate", () => [...backListeners].forEach((listener) => listener()));
-export function onBack(listener: () => void): void {
-  backListeners.add(listener);
-}
-export function offBack(listener: () => void): void {
-  backListeners.delete(listener);
 }
 
 /** Ajoute (ou reprend, `inherited`) l’entrée de `key`. Rend false si l’historique n’est pas disponible. */
