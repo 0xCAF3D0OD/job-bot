@@ -284,5 +284,9 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* Un nombre sous le libellé (planche Filtres, §65) : segment de 56 px, libellé et nombre l'un sous l'autre. Ici
+   plutôt que dans style.css : la feuille est seule à en montrer. */
+:deep(.segmented > button:has(.segmented-sub)) { flex-direction: column; gap: 1px; min-height: 3.5rem; line-height: var(--leading-tight); }
+:deep(.segmented-sub) { font-size: var(--font-caption); font-weight: var(--weight-regular); color: var(--text-secondary); }
 .filters-show { min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>

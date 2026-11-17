@@ -4,6 +4,7 @@ import { useRoute, useRouter, type LocationQuery } from "vue-router";
 import type { OfferFacets, Source } from "../api/client";
 import { sourceLabel } from "../format";
 import { t } from "../i18n";
+import { radioKey } from "../radioKey";
 
 export type View = "pending" | "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
@@ -159,6 +160,8 @@ export const REMOTE_LABEL = "Télétravail possible, même partiel";
 // Le nombre d'offres sous chaque choix de Note et de Taux (§65 du 17.11) : le chiffre seul, calculé par le serveur
 // avec tous les autres filtres actifs ; le choix actif donne le même nombre que « Afficher n offres ».
 type ChoiceFacets = Pick<OfferFacets, "scores" | "unscored" | "rates">;
+export { radioKey };
+
 const MAX_SHOWN = 99_999;
 export function choiceCount(count: number): string {
   return count > MAX_SHOWN ? t("100 k+") : new Intl.NumberFormat("fr-CH").format(count);
@@ -182,18 +185,6 @@ export function basisChoices(facets: { sure?: number; provisional?: number }): {
   ];
 }
 export const BASIS_HELP = "Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.";
-
-/** Les flèches d'un groupe de boutons radio : le choix suit le focus (WAI-ARIA, radiogroup). */
-export function radioKey(event: KeyboardEvent): void {
-  const step = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
-  if (!step) return;
-  const radios = Array.from((event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>("[role=radio]"));
-  const next = radios[(radios.indexOf(event.target as HTMLElement) + step + radios.length) % radios.length];
-  if (!next) return;
-  event.preventDefault();
-  next.focus();
-  next.click();
-}
 
 /** La note filtrée en mots ; une adresse d'avant (?note=60-90) garde ses bornes. */
 export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">): string {
