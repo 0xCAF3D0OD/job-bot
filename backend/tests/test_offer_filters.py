@@ -141,7 +141,7 @@ async def test_rate_counts_follow_the_other_filters(api: AsyncClient) -> None:
         return {f["value"]: f["count"] for f in body["facets"]["rates"]}
 
     everything = (await api.get("/api/offers", params={"view": "to_review"})).json()
-    # 100 % (80–100), 60 % (60), taux inconnu (toujours visible).
+    # 100 % (80-100), 60 % (60), taux inconnu (toujours visible).
     assert rates(everything) == {"all": 3, "60": 3, "80": 2, "100": 2}
     for value in (60, 80, 100):
         chosen = (
