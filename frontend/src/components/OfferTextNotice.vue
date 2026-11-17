@@ -498,6 +498,7 @@ export function resetRequested(): void {
       enough="assez pour noter"
       :busy="saving || importing"
       :plus-items="FILE_ITEMS"
+      plus-direction="down"
       :accept="FILE_ACCEPT"
       data-test="paste-text"
       @attach="attach"
