@@ -8,6 +8,7 @@ let serial = 0;
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from "vue";
 
+import { enterEntry, leaveEntry, useEntryTracker } from "../filterHistory";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
@@ -83,31 +84,34 @@ function onHandleKey(event: KeyboardEvent): void {
 
 // Le bouton retour : une entrée d'historique (même adresse, même état du routeur) tant que la feuille est ouverte.
 let historyEntry = false;
+// Retour pendant l’ouverture applique aussi les choix faits dans la feuille (Kevin, 17.11, filterHistory.ts).
+const tracker = useEntryTracker();
 function onPopState(): void {
   if (!historyEntry) return;
   historyEntry = false;
+  tracker.reapply();
   emit("close");
 }
 function pushEntry(inherited: boolean): void {
-  if (typeof window === "undefined" || !window.history?.pushState) return;
-  const state = { ...(window.history.state ?? {}), sheet: key };
-  // Reprise de la feuille précédente : son entrée d’historique devient la nôtre (pas de retour en arrière entre deux).
-  if (inherited && window.history.state?.sheet) window.history.replaceState(state, "", window.location.href);
-  else window.history.pushState(state, "", window.location.href);
+  if (!enterEntry(key, inherited)) return;
+  tracker.start();
   historyEntry = true;
   window.addEventListener("popstate", onPopState);
 }
+// Fermer applique : les filtres choisis restent (filterHistory.ts, Kevin 17.11).
 function dropEntry(): void {
   window.removeEventListener("popstate", onPopState);
+  tracker.stop();
   if (!historyEntry) return;
   historyEntry = false;
-  if (window.history.state?.sheet === key) window.history.back();
+  leaveEntry(key);
 }
 
 // Une seule feuille à la fois : la nouvelle reprend l’entrée d’historique et le bouton d’origine de la précédente.
 let handedOver = false;
 function handOver(): HTMLElement | null {
   window.removeEventListener("popstate", onPopState);
+  tracker.stop();
   historyEntry = false;
   handedOver = true;
   emit("close");

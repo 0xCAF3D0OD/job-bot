@@ -274,21 +274,24 @@ export function useOfferFilters() {
   // à jour (router.replace est asynchrone).
   let pending: OfferFilters | null = null;
 
-  function navigate(next: OfferFilters): void {
+  // `push` : un choix appliqué hors d’une feuille ou d’un panneau (pastilles, « Tout effacer » sous la barre) crée son
+  // entrée d’historique ; dans une feuille, l’adresse de l’entrée ouverte est remplacée (filterHistory.ts, Kevin 17.11).
+  function navigate(next: OfferFilters, push = false): void {
     pending = next;
-    void router.replace({ query: toQuery(next) }).finally(() => {
+    const query = toQuery(next);
+    void (push ? router.push({ query }) : router.replace({ query })).finally(() => {
       if (pending === next) pending = null;
     });
   }
 
-  function update(patch: Partial<OfferFilters>): void {
-    navigate({ ...(pending ?? filters.value), ...patch });
+  function update(patch: Partial<OfferFilters>, push = false): void {
+    navigate({ ...(pending ?? filters.value), ...patch }, push);
   }
 
-  function reset(): void {
+  function reset(push = false): void {
     const current = pending ?? filters.value;
     // « Tout effacer » retire aussi le statut (Kevin, 16.11) ; le tri reste, sauf « Dernière action », propre à En préparation.
-    navigate({ ...DEFAULT_FILTERS, sort: current.sort === "activity" ? DEFAULT_FILTERS.sort : current.sort });
+    navigate({ ...DEFAULT_FILTERS, sort: current.sort === "activity" ? DEFAULT_FILTERS.sort : current.sort }, push);
   }
 
   return { filters, update, reset };

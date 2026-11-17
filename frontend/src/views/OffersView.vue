@@ -804,8 +804,8 @@ onUnmounted(() => {
     <OfferFilterChips
       v-if="!phoneEmptyFiltered"
       :chips="chips"
-      @update="update"
-      @reset="reset"
+      @update="(patch) => update(patch, true)"
+      @reset="reset(true)"
     />
 
     <div
@@ -1032,7 +1032,7 @@ onUnmounted(() => {
                 type="button"
                 class="secondary offers-empty-reset"
                 data-test="offers-reset"
-                @click="reset"
+                @click="reset(true)"
               >
                 Tout effacer
               </button>
@@ -1050,7 +1050,7 @@ onUnmounted(() => {
               type="button"
               class="link offers-empty-clear"
               data-test="offers-reset"
-              @click="reset"
+              @click="reset(true)"
             >
               Tout effacer
             </button>
@@ -1081,7 +1081,7 @@ onUnmounted(() => {
               type="button"
               class="link"
               data-test="offers-reset"
-              @click="reset"
+              @click="reset(true)"
             >
               Effacer les filtres
             </button>
