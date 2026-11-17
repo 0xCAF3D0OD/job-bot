@@ -9,6 +9,9 @@
 (site) {
 	encode zstd gzip
 
+	# Le journal d'accès ne garde que le chemin, identifiants masqués (voir `(journal)`).
+	log_append path {http.request.uri.path}
+
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
@@ -55,6 +58,21 @@
 	}
 }
 
+# Le journal d'accès (décision de Kevin du 17.11.2026) : ni identifiant, ni paramètre.
+# - L'adresse complète (`request>uri`, avec sa query string) n'est jamais écrite : aucun code ni
+#   jeton passé en paramètre n'arrive dans le journal. Le Referer non plus (il peut en contenir).
+# - Seul le chemin est gardé, dans le champ `path`, chaque nombre remplacé par `:id` :
+#   GET /api/interviews/123?x=1 s'écrit « /api/interviews/:id ».
+# Vérification locale : make test-journal-caddy.
+(journal) {
+	format filter {
+		wrap json
+		request>uri delete
+		request>headers>Referer delete
+		path regexp "/[0-9]+\b" "/:id"
+	}
+}
+
 # --- La vraie plateforme ---------------------------------------------------------------------
 {$APP_DOMAIN} {
 	# Un document déposé fait 10 Mo au plus (docs/exploitation.md, « Limites des requêtes »).
@@ -70,6 +88,7 @@
 		output file /data/access-app.log {
 			roll_keep_for 168h
 		}
+		import journal
 	}
 }
 
@@ -94,5 +113,6 @@ Disallow: /
 		output file /data/access-demo.log {
 			roll_keep_for 168h
 		}
+		import journal
 	}
 }
