@@ -6,7 +6,7 @@ import { api } from "../api/client";
 import type { JobsTab } from "../router";
 import AppIcon from "../components/AppIcon.vue";
 import CountBadge from "../components/CountBadge.vue";
-import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
+import FolderTabs, { type FolderTab } from "../components/FolderTabs.vue";
 import { plural } from "../format";
 import { usePhone } from "../composables/usePhone";
 
@@ -29,6 +29,7 @@ const { phone } = usePhone();
 const { phone: wide } = usePhone("(min-width: 1024px)");
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
+const fresh = ref({ offres: 0, "rendez-vous": 0 });
 
 // Le titre reste « Candidatures » (docs/88) : le segment choisi dit où l'on est.
 type View = Exclude<JobsTab, "alertes">;
@@ -37,16 +38,23 @@ const TABS: { key: View; label: string; path: string; hint: string }[] = [
   { key: "suivi", label: "Envoyées", path: "/candidatures/suivi", hint: "à relancer ou à compléter" },
   { key: "rendez-vous", label: "Rendez-vous", path: "/candidatures/rendez-vous-orp", hint: "" },
 ];
-const segments = computed<SegmentOption[]>(() =>
-  TABS.map((item) => ({
-    value: item.key,
-    label: item.label,
-    to: link(item.path),
-    test: `jobs-tab-${item.key}`,
-    // Les maquettes (téléphone, et ordinateur dès 1 024 px) n'ont pas de nombre dans les segments.
-    count: phone.value || wide.value ? undefined : badge(item.key),
-    hint: `${badge(item.key)} ${item.hint}`,
-  })),
+// Les pastilles des onglets (§47 du 17.11, planches téléphone et ordinateur dès 1 024 px) : les nouvelles offres
+// (accent) et les rendez-vous à noter (orange) ; rien à zéro, rien sur Envoyées. Entre 821 et 1 023 px, sans planche,
+// les nombres d'avant restent : à traiter et à relancer.
+const segments = computed<FolderTab[]>(() =>
+  TABS.map((item) => {
+    const planche = phone.value || wide.value;
+    const count = planche ? (item.key === "suivi" ? 0 : fresh.value[item.key]) : item.key === "rendez-vous" ? 0 : badge(item.key);
+    return {
+      value: item.key,
+      label: item.label,
+      to: link(item.path),
+      test: `jobs-tab-${item.key}`,
+      count,
+      tone: item.key === "rendez-vous" ? "orange" : "accent",
+      hint: planche ? `${count} ${item.key === "rendez-vous" ? "à noter" : "nouvelles"}` : `${count} ${item.hint}`,
+    };
+  }),
 );
 
 // Le mois choisi suit d'un onglet à l'autre (Suivi et Preuves ORP).
@@ -74,6 +82,8 @@ async function refresh(): Promise<void> {
     alertes: today.data?.alerts_waiting ?? 0,
     "rendez-vous": 0,
   };
+  // Les pastilles des planches (§47) : les offres nouvelles (statut « Nouvelles », §38) et les rendez-vous passés à noter.
+  fresh.value = { offres: today.data?.to_review ?? 0, "rendez-vous": today.data?.interviews_to_review?.length ?? 0 };
 }
 
 // « + Ajouter » de l'en-tête (maquette du 14 novembre, §6) : sur Rendez-vous, le seul bouton d'ajout ; il ouvre le
@@ -96,7 +106,7 @@ onMounted(() => void refresh());
        une page à elle, sans les vues. -->
   <div
     v-if="!((wide || phone) && tab === 'alertes')"
-    :class="['jobs-head', 'jobs-candidatures', { wide: tab === 'offres' }]"
+    :class="['jobs-head', 'jobs-candidatures', 'folder-head', { wide: tab === 'offres' }]"
   >
     <div class="jobs-title">
       <h1>Candidatures</h1>
@@ -127,13 +137,12 @@ onMounted(() => void refresh());
       id="jobs-tools"
       class="jobs-tools"
     />
-    <!-- Les trois vues en contrôle segmenté, sur téléphone et sur ordinateur (D4, 2026-11-03) ; sur ordinateur,
-         à la largeur du texte, avec le nombre de chaque vue. -->
-    <SegmentedControl
-      :model-value="tab"
-      :options="segments"
+    <!-- Les trois vues en onglets « dossier » (§47 du 17.11), sur téléphone et sur ordinateur ; sur ordinateur, à
+         droite du titre, la ligne traversant tout l’en-tête. -->
+    <FolderTabs
+      :selected="tab"
+      :tabs="segments"
       label="Candidatures"
-      :full="phone"
       class="jobs-segments"
     />
     <div
@@ -172,8 +181,12 @@ onMounted(() => void refresh());
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 @media (min-width: 1024px) {
-.jobs-head .jobs-segments { order: 2; }
-.jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+/* Onglets dossier (§47 du 17.11) : la ligne traverse l'en-tête sous le titre, les onglets et les actions ; le titre
+   est remonté de 8 px, « Mes alertes e-mail » et « Ajouter » de 12 px (6 et 10 sur la planche, mis sur la grille de 4). */
+.jobs-head.folder-head { position: relative; }
+.jobs-head.folder-head::after { content: ""; position: absolute; left: var(--space-6); right: var(--space-6); bottom: -1.5px; height: 1.5px; background: var(--tab-line); }
+.jobs-head .jobs-segments { order: 2; height: auto; padding: 0; border: 0; }
+.jobs-actions { order: 3; display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3) auto; }
 .jobs-actions { --alerts-gap: 28px; --add-pad: 18px; }
 .jobs-alerts-count { margin-right: var(--alerts-gap); font-size: var(--font-label); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 }

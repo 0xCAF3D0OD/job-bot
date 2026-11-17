@@ -2188,15 +2188,8 @@ onMounted(() => void load());
 #print-root .screen-only { display: none !important; }
 #print-root p.print-only { display: block; text-align: left; }
 #print-root .chunk-refs { display: none; }
-@media (prefers-color-scheme: dark) {
-:root:not([data-theme="light"]) .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
-}
-:root[data-theme="dark"] .step-tabs > a[aria-current="step"] .step-dot { background: var(--action); color: var(--on-action); }
 .form-sheet dl { margin: 0; }
 .form-sheet-row > button { grid-row: 1 / 3; grid-column: 2; }
-@media (max-width: 820px) {
-.step-tabs > a { flex: 1 1 0; padding-inline: var(--space-2); }
-}
 .false-claim-quote { margin: 0 0 var(--space-4); color: var(--muted); line-height: var(--leading-normal); }
 .letter-paragraph textarea.claim-flash { animation: claim-flash 1.2s var(--ease-out) both; }
 @media (prefers-reduced-motion: reduce) {

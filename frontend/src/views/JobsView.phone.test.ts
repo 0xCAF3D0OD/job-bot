@@ -62,9 +62,11 @@ describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidature
     expect(filters.attributes("aria-label")).toBe("Filtres");
     expect(filters.text()).toBe("");
 
-    // Les vues en contrôle segmenté ; la vue ouverte porte aria-current.
+    // Les vues en onglets « dossier » (§47 du 17.11) ; la vue ouverte porte aria-current et aria-selected. La
+    // pastille des nouvelles offres suit le libellé.
     const segments = wrapper.findAll(".jobs-segments a");
-    expect(segments.map((s) => s.text())).toEqual(["Offres", "Envoyées", "Rendez-vous"]);
+    expect(segments.map((s) => s.find(".folder-tab-label").text())).toEqual(["Offres", "Envoyées", "Rendez-vous"]);
+    expect(segments[0]!.attributes("aria-selected")).toBe("true");
     expect(segments[0]!.attributes("aria-current")).toBe("page");
 
     // Au-dessus des vues : la recherche (C4) et le « + » rond (décision de Kevin du 15.11).
