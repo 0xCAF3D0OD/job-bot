@@ -79,6 +79,18 @@ async function loadCvCount(): Promise<void> {
   }
 }
 
+// « Formations · 2 en cours » (Kevin, 17.11 13 h 40) : un petit appel qui ne retarde pas la page. La ligne s’affiche
+// tout de suite, le nombre la rejoint quand il arrive, sans indicateur ; en cas d’échec ou à 0, « Formations › » seul.
+const trainingsInProgress = ref(0);
+async function loadTrainings(): Promise<void> {
+  try {
+    const { data } = await api.GET("/api/trainings/in-progress");
+    trainingsInProgress.value = data?.in_progress ?? 0;
+  } catch {
+    trainingsInProgress.value = 0;
+  }
+}
+
 async function loadContact(): Promise<void> {
   try {
     const { data } = await api.GET("/api/privacy");
@@ -96,6 +108,7 @@ onMounted(() => {
   void loadName();
   void loadCvCount();
   void loadContact();
+  void loadTrainings();
   void load();
   void image.load();
 });
@@ -172,6 +185,7 @@ onMounted(() => {
         <div class="account-group">
           <AccountLine
             title="Formations"
+            :value="trainingsInProgress > 0 ? `${trainingsInProgress} en cours` : undefined"
             to="/bilan/formations"
             icon="graduation"
             tone="violet"
