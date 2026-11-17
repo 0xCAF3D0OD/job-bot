@@ -1,0 +1,1 @@
+Filtres : le nombre d'offres sous chaque choix de Note et de Taux d'activité, calculé avec les autres filtres actifs (le choix actif égale « Afficher n offres »), et des pastilles nommées « Note 75 et + », « Taux dès 80 % » (§65)

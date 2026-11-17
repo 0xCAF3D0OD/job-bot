@@ -31,8 +31,8 @@ describe("filtres des offres : libellés compréhensibles (section 31)", () => {
 
   it("les pastilles des filtres actifs reprennent les mêmes mots", () => {
     const labels = activeChips({ ...DEFAULT_FILTERS, minScore: 85, basis: "sure", remote: "partial", minRate: 80 }).map((c) => c.label);
-    expect(labels).toEqual(["Note minimale : 85 et +", "Notes définitives", "Télétravail possible, même partiel", "Taux d’activité : dès 80 %"]);
-    expect(activeChips({ ...DEFAULT_FILTERS, minRate: 100 })[0]?.label).toBe("Taux d’activité : 100 %");
+    expect(labels).toEqual(["Note 85 et +", "Notes définitives", "Télétravail possible, même partiel", "Taux dès 80 %"]);
+    expect(activeChips({ ...DEFAULT_FILTERS, minRate: 100 })[0]?.label).toBe("Taux 100 %");
     expect(activeChips({ ...DEFAULT_FILTERS, remote: "full" })[0]?.label).toBe("Télétravail complet");
   });
 
