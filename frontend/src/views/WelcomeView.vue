@@ -29,6 +29,7 @@ import { whyLine } from "../whyLine";
 // de chargement (LoadingBlocks attend lui-même 300 ms) remplacent l'écran vide.
 const STEP_LOADERS = {
   criteria: () => import("../components/WelcomeCriteria.vue"),
+  questions: () => import("../components/WelcomeQuestions.vue"),
   alertSteps: () => import("../components/WelcomeAlertSteps.vue"),
   alertExtension: () => import("../components/WelcomeAlertExtension.vue"),
   profile: () => import("../components/WelcomeProfileStep.vue"),
@@ -41,6 +42,11 @@ function loadStep<K extends keyof typeof STEP_LOADERS>(key: K): ReturnType<(type
 const stepLoading = { render: () => h(LoadingBlocks, { heights: ["4rem", "16rem"] }) };
 const WelcomeCriteria = defineAsyncComponent({
   loader: () => loadStep("criteria"),
+  loadingComponent: stepLoading,
+  delay: 0,
+});
+const WelcomeQuestions = defineAsyncComponent({
+  loader: () => loadStep("questions"),
   loadingComponent: stepLoading,
   delay: 0,
 });
@@ -63,7 +69,9 @@ let idleHandle: number | undefined;
 onMounted(() => {
   const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1));
   idleHandle = idle(() => {
-    for (const key of Object.keys(STEP_LOADERS) as (keyof typeof STEP_LOADERS)[]) void loadStep(key);
+    // Le téléphone n'ouvre jamais le bloc des critères ni l'extension ; l'ordinateur jamais les questions (§60).
+    const skip = desk.value ? ["questions"] : ["criteria", "alertExtension"];
+    for (const key of Object.keys(STEP_LOADERS) as (keyof typeof STEP_LOADERS)[]) if (!skip.includes(key)) void loadStep(key);
   });
 });
 onUnmounted(() => {
@@ -150,6 +158,30 @@ const orp = ref(true);
 const target = ref(10);
 // Le taux minimum (OnboardingOrdinateurEtape2, carte « Taux d'activité ») : celui du CV s'il le dit, sinon peu importe.
 const rate = ref<number | null>(null);
+// Sur téléphone, l'étape 2 pose une question par écran (§60 du 17.11, WelcomeQuestions) : 1 Postes, 2 Lieu, 3 Taux,
+// 4 ORP, 5 Objectif (seulement si inscrit à l'ORP), 6 Langues. La flèche de retour revient à la question précédente.
+const question = ref(1);
+const questionsBlock = ref<{ flush: () => void } | null>(null);
+function nextQuestion(): void {
+  questionsBlock.value?.flush();
+  if (question.value >= 6) {
+    void confirmCriteria();
+    return;
+  }
+  question.value = question.value === 4 && !orp.value ? 6 : question.value + 1;
+}
+function back(): void {
+  if (fromToday && step.value === 3) {
+    void router.replace("/aujourdhui");
+    return;
+  }
+  if (step.value === 2 && question.value > 1) {
+    question.value = question.value === 6 && !orp.value ? 4 : question.value - 1;
+    return;
+  }
+  if (step.value === 3) question.value = 6;
+  go((step.value - 1) as Step);
+}
 // Le bloc des critères (WelcomeCriteria, section 41) : ses panneaux de modification et le poste tapé sans « + ».
 const criteriaBlock = ref<InstanceType<typeof WelcomeCriteriaComponent> | null>(null);
 // La provenance des lignes Postes, Lieu et Taux (Kevin, 16.11, #806), gardée dans l'état des premiers pas : « cv » quand
@@ -266,6 +298,7 @@ onMounted(async () => {
 });
 
 function go(next: Step): void {
+  if (next === 2 && step.value < 2) question.value = 1;
   step.value = next;
   void remember({ step: next + 1 });
   // Retour du tri vers l'alerte : la recherche et l'adresse sont relues si elles manquent.
@@ -1109,7 +1142,7 @@ async function finish(to: string): Promise<void> {
           icon="arrow-left"
           label="Étape précédente"
           data-test="welcome-back"
-          @click="fromToday && step === 3 ? router.replace('/aujourdhui') : go((step - 1) as Step)"
+          @click="back"
         />
         <span class="welcome-brand"><BrandMark :size="30" />jobA1</span>
         <button
@@ -1123,6 +1156,7 @@ async function finish(to: string): Promise<void> {
         </button>
       </header>
       <div
+        v-if="step !== 2"
         class="welcome-progress"
         role="progressbar"
         :aria-label="`Étape ${step + 1} sur 5`"
@@ -1144,10 +1178,11 @@ async function finish(to: string): Promise<void> {
       >
         <div
           :key="step"
-          class="welcome-screen"
+          :class="['welcome-screen', { 'welcome-questions': step === 2 }]"
           :data-test="`welcome-step-${step + 1}`"
         >
           <h1
+            v-if="step !== 2"
             class="welcome-title"
           >
             <template v-if="TITLES[step]!.lead">
@@ -1276,35 +1311,26 @@ async function finish(to: string): Promise<void> {
             </p>
           </template>
 
-          <template v-else-if="step === 2">
-            <p class="welcome-lead">
-              {{ fromCv ? "jobA1 a rempli ces critères avec ton CV. Vérifie-les et modifie-les si besoin." : cvUnread ? "Ton CV n’a pas pu être lu : indique tes postes et tes lieux. Modifiable à tout moment dans Compte." : "Modifiable à tout moment dans Compte." }}
-            </p>
-            <WelcomeCriteria
-              ref="criteriaBlock"
-              v-model:roles="roles"
-              v-model:picked="picked"
-              v-model:places="places"
-              v-model:rate="rate"
-              v-model:orp="orp"
-              v-model:target="target"
-              :desk="desk"
-              :reading="reading"
-              :sources="sources"
-              :max-roles="MAX_ROLES"
-              @edited="(key) => setSources({ [key]: 'user' })"
-            />
-            <!-- CV lu : les langues quand même, pré-remplies (prompt du 10 novembre, PR 17, point 1). -->
-            <ProfileCompletionForm
-              v-if="understanding"
-              ref="levelsForm"
-              class="welcome-langs"
-              :sections="['languages']"
-              languages-only
-              :desk="desk"
-              :cv-languages="cvLanguages"
-            />
-          </template>
+          <!-- §60 du 17.11 : une question par écran (planches PremiersPas1Postes à PremiersPas6Langues). -->
+          <WelcomeQuestions
+            v-else-if="step === 2"
+            ref="questionsBlock"
+            v-model:question="question"
+            v-model:roles="roles"
+            v-model:picked="picked"
+            v-model:places="places"
+            v-model:rate="rate"
+            v-model:orp="orp"
+            v-model:target="target"
+            v-model:levels="languageLevels"
+            :reading="reading"
+            :cv-unread="cvUnread"
+            :sources="sources"
+            :max-roles="MAX_ROLES"
+            :cv-languages="cvLanguages"
+            :saved-levels="(criteria?.language_levels ?? {}) as Record<string, Level>"
+            @edited="(key) => setSources({ [key]: 'user' })"
+          />
 
           <template v-else-if="step === 3">
             <p class="welcome-lead welcome-alert-lead">
@@ -1443,11 +1469,14 @@ async function finish(to: string): Promise<void> {
         <button
           v-else-if="step === 2"
           type="button"
-          class="primary welcome-cta"
+          class="welcome-cta welcome-ink"
           data-test="welcome-continue"
-          @click="confirmCriteria"
+          @click="nextQuestion"
         >
-          Continuer<AppIcon name="arrow-right" />
+          Continuer<span
+            class="welcome-guillemet"
+            aria-hidden="true"
+          >»</span>
         </button>
         <div
           v-else-if="step === 3"
@@ -1547,7 +1576,7 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-check { flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); }
 .welcome-cv-change { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); cursor: pointer; }
 .welcome-skills { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
-.welcome-skills p, .welcome-label, .welcome-field legend { margin: 0; padding: 0; font-weight: var(--weight-bold); }
+.welcome-skills p { margin: 0; padding: 0; font-weight: var(--weight-bold); }
 .welcome-skills p { font-size: var(--font-small); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; }
 .welcome-skills ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .welcome-skills li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
@@ -1564,8 +1593,8 @@ async function finish(to: string): Promise<void> {
 .welcome-cv-hill { position: absolute; left: 0; bottom: 6px; width: 70%; height: 70px; fill: var(--primary-soft); }
 .welcome-cv-ground { position: absolute; left: var(--space-6); right: var(--space-2); bottom: 0; height: 10px; border-radius: var(--radius-sm); background: var(--surface-muted); }
 .welcome-cv-person { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
-/* Section 41 : Langues 20 px sous le bloc ORP sur téléphone (16 + 4), 28 px sur ordinateur ; « Retour » 8 px sous « Ajouter une langue ». */
-.welcome-langs { margin-top: var(--space-1); }
+/* Section 41 : Langues 28 px sous le bloc ORP sur ordinateur ; « Retour » 8 px sous « Ajouter une langue ». Le téléphone
+   pose les langues à part depuis le §60 (WelcomeQuestions). */
 .wdk .welcome-langs { margin-top: var(--wdk-28); }
 .welcome-langs + .wdk-foot { margin-top: var(--space-2); }
 .welcome-offer { display: grid; gap: var(--space-3); padding: var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: 0 10px 30px rgba(27, 31, 42, 0.10); }
@@ -1648,7 +1677,7 @@ async function finish(to: string): Promise<void> {
 @media (prefers-reduced-motion: reduce) { .wdk-bar span { animation: none; } }
 .wdk-file-note { margin: var(--space-2) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
 .wdk-found { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-3) 0 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--success); }
-.wdk-found .icon, .wdk-tag .icon { width: var(--space-4); height: var(--space-4); }
+.wdk-found .icon { width: var(--space-4); height: var(--space-4); }
 .wdk-note { display: flex; gap: var(--space-3); margin: var(--space-5) 0 0; font-size: var(--font-small); line-height: var(--wdk-20); color: var(--text-secondary); }
 .wdk-note .icon { flex: none; width: var(--wdk-18); height: var(--wdk-18); }
 .wdk-note a { padding: var(--space-1) 0; color: var(--primary-text); font-weight: var(--weight-bold); }

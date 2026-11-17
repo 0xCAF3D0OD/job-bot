@@ -702,3 +702,66 @@ Deux retours de Kevin sur la #818.
 - §50 : l'onglet Assistant inactif est une bulle au trait (24 px, même trait que les 4 autres icônes) avec une étincelle pêche #E8B48A (`--spark`) au centre ; icône `assistant` de icons.ts.
 - §55 : le disque de l'onglet actif passe à l'encre #1B1F2A, icône blanche, ombre 0 4px 12px rgba(27,31,42,.25) ; en sombre, crème #F3EEE6, icône #171411, ombre rgba(0,0,0,.4) (jeton `--nav-dot-shadow`). Libellé actif à l'encre (#F3EEE6 en sombre), gras. Le bleu plein reste aux actions.
 - Onglet Assistant actif (Kevin, 17.11.2026, 12 h 41) : pas de mascotte ni de rond couleur surface ; même règle que les 4 autres onglets : dans le disque, la bulle de la barre en 26 px, trait 2,2 px, currentColor, étincelle #E8B48A ; clair disque #1B1F2A, icône #FFFFFF ; sombre disque #F3EEE6, icône #171411, ombre 0 4px 12px rgba(0,0,0,.4). Planches Assistant et AssistantSombre.
+
+## Rappel des justificatifs en haut de l'Accueil (Kevin, 17.11.2026, 13 h 21)
+
+- §57 du LISEZMOI_CORRECTIONS du 17.11, planches AccueilJustificatif et AccueilJustificatifSombre : une PR à part.
+- Îlot avec les jetons des feuilles en îlot de la #828, sans nouveau CSS d'îlot : 8 px des bords, rayon 24 px, ombre 0 12px 32px rgba(27,31,42,.2) ; en sombre, fond #221E1A et trait #38322B (la planche sombre n'a pas de trait : la décision de Kevin passe avant).
+- role="status", pas de prise de focus. Bouton « Exporter », qui ouvre la page ORP du mois, et croix « Fermer pour aujourd'hui ».
+- Au plus une fois par jour, seulement quand des justificatifs sont à remettre ou en retard ; disparaît dès que le mois est marqué remis (case cochée §58/§61 ou « Déjà remis »). Lecture retenue : le rappel se montre à la première ouverture de l'Accueil du jour, puis plus avant le lendemain ; la date est gardée dans le navigateur (`jobA1.rappel-orp`), rien sur le serveur.
+- Téléphone seulement : aucune planche ordinateur ne le dessine ; Kevin (17.11.2026, 14 h 07) : rien sur ordinateur.
+- Texte non dessiné : avant l'échéance, « À remettre avant le 5 décembre » (« À remettre aujourd'hui » le jour même), la phrase de la tâche n° 1. Le rond de l'icône prend --peach-soft (#FDEDE3 ; #3A281E en sombre) au lieu du #FDF0E2 de la planche, qui garde ce fond clair en sombre.
+- Précision (Kevin, 17.11.2026, 13 h 43) : avant l'échéance, le rappel ne s'affiche que pendant les 5 derniers jours (« À remettre avant le 5 décembre »), comme la tâche en tête de « À faire » ; après l'échéance, chaque jour à la première ouverture.
+- Poids (Kevin, 17.11.2026, 14 h 07) : pas de compensation pour les +464 o de CSS les jours de rappel, la page reste sous sa limite.
+
+## Filtres et bouton retour (Kevin, 17.11.2026, 13 h 27)
+
+Bug : sur téléphone, un choix fait dans la feuille Filtres (Statut, Note minimale…) était annulé à la fermeture. La
+feuille ajoute une entrée d'historique à l'ouverture et revenait en arrière en se fermant, ce qui ramenait l'adresse
+d'avant, donc les filtres d'avant.
+
+Option choisie : garder l'entrée d'historique quand un filtre a changé. Règles précisées par Kevin (13 h 27), pour tous
+les filtres (Offres, Envoyées), sur téléphone et sur ordinateur :
+
+1. Une seule entrée d'historique par application (« Afficher N offres » ou une fermeture qui applique), avec les
+   filtres dans l'adresse. Pas une entrée par case cochée. Retour ramène les filtres d'avant.
+2. Feuille ouverte + retour (bouton retour Android ou du navigateur) : la feuille se ferme sans appliquer, la liste
+   revient à l'état d'avant, aucune nouvelle entrée.
+3. « Tout effacer » suit la règle 1 : une entrée quand on applique.
+
+Précision de Kevin (17.11, 13 h 43), qui remplace la règle 2 : toute fermeture applique (croix, glisser, voile, bouton
+retour ; sur ordinateur aussi Échap et le clic à l'extérieur), avec le même effet que « Afficher N offres » et une seule
+entrée d'historique par application. Annuler = « Tout effacer », ou retour après la fermeture, qui ramène aux filtres
+d'avant. Les pastilles sous la barre et « Effacer les filtres » des listes vides appliquent tout de suite : une entrée
+chacun.
+
+## Accueil : la scène des 4 personnages (Kevin, 17.11.2026, 13 h 21 et 13 h 27)
+
+- §59 du LISEZMOI_CORRECTIONS du 17.11 : la scène des 4 personnages du logo remplace le rond orange de l'accroche.
+- Image définitive (13 h 27), à la place de l'image provisoire choisis-candidature : accueil-orp, clair et sombre. Fichier de 840 px des planches AccueilV2 et AccueilV2Sombre, tel quel (les fichiers de 480 px ne sont pas dans le zip ; avec eux, les images dépassaient leur limite).
+- Téléphone : centrée au-dessus du titre, 110 px de haut. Ordinateur : à droite du texte dans le bandeau pêche, 340 px de large, hauteur auto (au lieu de 150 px de haut). alt="".
+- Une seule constante, `HOME_SCENE` (frontend/src/troupe.ts) : remplacer l'image tient en une ligne (plus le fichier dans public/troupe/).
+- Un seul des trois par écran (docs/141) : le petit visage du 1 à côté de « Rien à trier » sur l'Accueil du téléphone est retiré, la scène le remplace (« Il n'y a plus d'autre personnage dans l'app », §59). L'image orange-liste.webp, qui ne servait qu'à l'accroche, est retirée.
+- Retrait du petit visage à côté de « Rien à trier » validé par Kevin (17.11.2026, 14 h 07).
+
+## Feuille « Actions sur une offre » : les lignes en plus de la planche (Kevin, 17.11.2026, 13 h 43)
+- On garde les 3 lignes absentes de la première planche ActionsOffre ; la planche est mise à jour.
+- « Remettre dans Nouvelles » : seulement si l'offre est gardée ou écartée (plus pour une offre en préparation).
+- « C'est une agence de placement » et « Demander à l'assistant » : toujours (quand l'action a un sens : entreprise connue
+  et pas déjà marquée agence ; assistant disponible).
+
+## Premiers pas sur téléphone : taux et lieu (Kevin, 17.11.2026, 14 h 43)
+
+- Taux (question 3 du §60) : un seul choix parmi les 7 valeurs déjà enregistrées, sans migration : « Tous, Dès 50 %,
+  Dès 60 %, Dès 70 %, Dès 80 %, Dès 90 %, 100 % ». Le minimum choisi est enregistré tel quel (« Tous » = peu importe).
+  Plus de fourchettes « 60 à 80 % ». Mêmes pastilles dans le Profil et le volet « Ta recherche » ; le filtre « Taux
+  d'activité » de la liste garde ses 4 valeurs. Remplace la réponse « Tous, Dès 60 %, Dès 80 %, 100 % » donnée juste avant.
+- Lieu (question 2) : une ville tapée devient une pastille cochée sous le champ et « Toute la Suisse » se décoche ;
+  toucher « Toute la Suisse » efface les villes. Lieu vide = « Toute la Suisse », jamais tiré du CV (§43).
+
+## Premiers pas sur téléphone : CV pas lu et aide du taux (Kevin, 17.11.2026, 15 h 07)
+
+- Question 1 : si le CV n'a pas été lu, la pastille orange « Ton CV n'a pas pu être lu » remplace « Depuis ton CV », même
+  forme et même place. Pas de phrase hors pastille. Planche à venir : PremiersPas1PostesSansCV (+ Sombre).
+- Question 3 (§64, planche PremiersPas3Taux à jour) : sous-titre « Le taux minimum que tu acceptes. Les offres au-dessus
+  restent affichées. » à la place de « Choisis-en un. ».

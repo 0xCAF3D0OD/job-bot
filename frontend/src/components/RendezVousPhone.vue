@@ -335,32 +335,32 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-peach { background: var(--peach-soft); color: var(--peach-text); }
 /* L'heure et le délai ne sont jamais coupés ; seul ce qui suit l'est (§39, Kevin 16.11). */
 .rdv-when { display: flex; min-width: 0; white-space: nowrap; }
-.rdv-agreed { font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
 /* Hors du flux (aucun écart de plus dans la carte) : le bouton couvre toute la carte. */
 .rdv-prepare { position: absolute; inset: 0; padding: 0; border: 0; border-radius: var(--radius-card); background: transparent; cursor: pointer; }
-/* La carte entière est la cible (maquette : un lien sur toute la carte). */
-.rdv-prepare::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-card); }
-.rdv-prepare:focus-visible { outline: none; }
-.rdv-prepare:focus-visible::after { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }
+/* La carte entière est la cible (maquette : un lien sur toute la carte) ; le contour de focus suit son rayon. */
+.rdv-prepare:focus-visible { outline: 2px solid var(--primary-graphic); outline-offset: 2px; }
 .rdv-last { flex-direction: column; gap: var(--space-3); }
 .rdv-last-head { display: flex; align-items: center; gap: var(--space-4); }
 .rdv-last-title { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); line-height: var(--leading-normal); }
-.rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-3); margin: 0; }
+.rdv-agreed { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-3); margin: 0; font-size: calc(var(--font-small) + 1px); line-height: 1.4em; }
 .rdv-agreed dt { color: var(--text-secondary); }
 .rdv-agreed dd { margin: 0; }
 /* « Noter ce qui a été convenu » : 48 px, en pilule bleu pâle (maquette du 7.11). */
-.rdv-note {
+.rdv-note, .rdv-edit-note {
   min-height: var(--btn-secondary); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft);
   color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
 }
-.rdv-edit-note {
-  align-self: flex-start; min-height: var(--target-min); padding: 0; border: 0; border-radius: 0; background: transparent;
-  color: var(--primary-text); font: inherit; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); cursor: pointer;
-}
+.rdv-edit-note { align-self: flex-start; min-height: var(--target-min); padding: 0; border-radius: 0; background: transparent; }
 .rdv-log {
   align-items: center; justify-content: space-between; width: 100%; min-height: var(--btn-secondary);
   padding: 0 var(--space-4); font: inherit; text-align: left; cursor: pointer;
 }
 .rdv-log-title { flex: 1; min-width: 0; white-space: normal; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
 .rdv-log-count { flex: none; display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); color: var(--text-secondary); }
+/* « Préparer le rendez-vous » en page entière (RendezVousPreparer, §46 du 17.11) : fond de la plateforme, flèche sans
+   cercle à 12 px du bord, à gauche du titre. */
+.rdv-prep-page { inset: 0; height: auto; max-height: none; border: 0; border-radius: 0; background: var(--bg); }
+.rdv-prep-page :deep(.sheet-inner) { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
+.rdv-prep-page :deep(.sheet-head) { padding-left: var(--space-3); }
+.rdv-prep-page :deep(.sheet-close) { order: -1; border: 0; background: none; }
 </style>

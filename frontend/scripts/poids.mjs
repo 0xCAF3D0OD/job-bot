@@ -33,6 +33,7 @@ const DIST = arg("--dist") ?? new URL("../dist/", import.meta.url).pathname;
 export const LIMITS = {
   "js-accueil": 108_600, // Aujourd'hui : le premier écran
   "js-accueil-telephone": 113_700,
+  "js-accueil-telephone-rappel": 113_700, // la limite de l'Accueil du téléphone (§57 du 17.11)
   "js-accueil-ordinateur": 115_000,
   "js-trier": 106_000,
   "js-candidatures": 175_500,
@@ -57,6 +58,7 @@ export const LIMITS = {
   "js-acces": 98_000,
   "js-bienvenue": 119_200,
   "js-bienvenue-etapes": 119_200,
+  "js-bienvenue-etapes-telephone": 119_200,
   "js-getemall": 96_300,
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
@@ -67,6 +69,7 @@ export const LIMITS = {
   "js-introuvable": 94_800,
   "css-accueil": 61_800, // Aujourd'hui : le premier écran
   "css-accueil-telephone": 63_200,
+  "css-accueil-telephone-rappel": 63_200, // la limite de l'Accueil du téléphone (§57 du 17.11)
   "css-accueil-ordinateur": 64_400,
   "css-trier": 65_000,
   "css-candidatures": 72_500,
@@ -91,6 +94,7 @@ export const LIMITS = {
   "css-acces": 59_300,
   "css-bienvenue": 66_700,
   "css-bienvenue-etapes": 66_700,
+  "css-bienvenue-etapes-telephone": 66_700,
   "css-getemall": 60_100,
   "css-extension": 59_000,
   "css-la-plateforme": 59_000,
@@ -114,6 +118,9 @@ export const PAGES = {
   // et, une seule fois, la carte « Première candidature notée » (section 44), comptée dans le pire cas des deux.
   "accueil-telephone": ["views/TodayView.vue", "components/HomePhone.vue", "components/FirstApplicationCard.vue"],
   "accueil-ordinateur": ["views/TodayView.vue", "components/TriageMini.vue", "components/FirstApplicationCard.vue"],
+  // Le rappel des justificatifs (§57 du 17.11), chargé à part les jours où un mois est à remettre : l'Accueil du
+  // téléphone avec lui, sous la même limite que sans lui.
+  "accueil-telephone-rappel": ["views/TodayView.vue", "components/HomePhone.vue", "components/FirstApplicationCard.vue", "components/OrpReminder.vue"],
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   preparer: ["views/PreparationView.vue"],
@@ -153,6 +160,14 @@ export const PAGES = {
     "components/WelcomeCriteria.vue",
     "components/WelcomeAlertSteps.vue",
     "components/WelcomeAlertExtension.vue",
+    "components/WelcomeProfileStep.vue",
+  ],
+  // Les mêmes premiers pas sur téléphone (§60 du 17.11) : les questions à la place du bloc des critères, jamais
+  // l'extension. Mêmes limites que la page ci-dessus.
+  "bienvenue-etapes-telephone": [
+    "views/WelcomeView.vue",
+    "components/WelcomeQuestions.vue",
+    "components/WelcomeAlertSteps.vue",
     "components/WelcomeProfileStep.vue",
   ],
   getemall: ["views/GetemallAuthorizeView.vue"],
