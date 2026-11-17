@@ -712,3 +712,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.498 | Premiers pas sur téléphone : une question par écran (postes, lieu, taux, ORP, objectif, langues), §60 du 17.11 | livrée |
 | 1.6.499 | Téléphone : un rappel en îlot en haut de l'Accueil quand des justificatifs ORP sont à remettre, une fois par jour, fermable pour la journée (§57 du 17.11) | livrée |
 | 1.6.500 | Aujourd'hui : la scène des 4 personnages du logo remplace le rond orange, au-dessus du titre sur téléphone et dans le bandeau pêche sur ordinateur (§59 du 17.11) | livrée |
+| 1.6.501 | Feuille Actions d'une offre : « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée | livrée |
