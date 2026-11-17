@@ -447,10 +447,9 @@ defineExpose({
 .wq-title + :not(.wq-help) { margin-top: var(--wq-14); }
 .wq-cv { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--wq-6); height: 28px; margin-bottom: var(--space-3); padding: 0 var(--wq-10); border-radius: var(--wq-14); background: var(--success-soft); color: var(--success); font-size: var(--wq-13); font-weight: var(--weight-bold); }
 .wq-cv-unread { background: var(--warning-soft); color: var(--warning); }
-.wq-cv .icon { width: var(--wq-14); height: var(--wq-14); }
 .wq-cv-langs { margin-bottom: var(--wq-10); }
 .wq-chips { display: flex; flex-wrap: wrap; gap: var(--wq-10); }
-.wq-chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 51px; padding: 0 var(--space-4); border-radius: var(--wq-14); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-semibold); cursor: pointer; }
+.wq-chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 51px; padding: 0 var(--space-4); border-radius: var(--wq-14); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-semibold); }
 .wq-chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 .wq-chip svg, .wq-card svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .wq input.wq-field { box-sizing: border-box; width: 100%; height: 59px; margin-top: var(--wq-14); padding: 0 var(--space-4); border-radius: var(--wq-16); background: var(--surface); border: 1.5px solid var(--card-line); color: var(--text); font-size: var(--font-body); }
@@ -460,7 +459,7 @@ defineExpose({
 .wq-title + input.wq-field { margin-top: 0; }
 .wq-help + input.wq-field { margin-top: 0; }
 .wq-cards { display: flex; flex-direction: column; gap: var(--space-3); }
-.wq-card { display: flex; align-items: center; line-height: normal; gap: var(--space-3); padding: var(--space-4) var(--wq-18); border-radius: var(--wq-18); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); text-align: left; white-space: normal; cursor: pointer; }
+.wq-card { display: flex; align-items: center; line-height: normal; gap: var(--space-3); padding: var(--space-4) var(--wq-18); border-radius: var(--wq-18); background: var(--surface); border: 1.5px solid var(--line); color: var(--text); text-align: left; white-space: normal; }
 .wq-card.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 .wq-card-text { flex: 1; }
 .wq-card-text b { display: block; font-size: var(--wq-17); }
@@ -479,11 +478,11 @@ defineExpose({
 .wq-level svg { width: 18px; height: 18px; fill: none; stroke: var(--field-border); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 /* Le choix du niveau du téléphone, invisible, posé sur le niveau et son chevron. */
 .wq-level select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.wq-add { align-self: flex-start; min-height: var(--target-min); margin-top: var(--space-1); padding: 0; background: none; border: 0; font-size: var(--wq-15); font-weight: var(--weight-bold); color: var(--primary-text); cursor: pointer; }
+.wq-add { align-self: flex-start; min-height: var(--target-min); margin-top: var(--space-1); padding: 0; background: none; border: 0; font-size: var(--wq-15); font-weight: var(--weight-bold); color: var(--primary-text); }
 /* L'écran et « Continuer » de WelcomeView pendant les questions : foncé, le guillemet de 22 px à droite. Ces règles
    viennent avec ce fichier, chargé seulement sur téléphone. */
 .welcome-questions { gap: 0; padding-top: 0; }
-.welcome-cta.welcome-ink { --welcome-ink-size: 17px; padding: 0 var(--space-6); border: 0; background: var(--text); color: var(--bg); font-size: var(--welcome-ink-size); cursor: pointer; }
+.welcome-cta.welcome-ink { --welcome-ink-size: 17px; padding: 0 var(--space-6); border: 0; background: var(--text); color: var(--bg); font-size: var(--welcome-ink-size); }
 .welcome-guillemet { font-size: var(--title-sub); }
 @media (prefers-reduced-motion: reduce) { .wq-bar span { transition: none; } }
 </style>
