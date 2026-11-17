@@ -238,7 +238,7 @@ onMounted(() => void load());
               </form>
               <template v-else>
                 <strong>{{ search.terms }}</strong><br>
-                <span class="muted">{{ search.location || "toute la Suisse" }}</span>
+                <span class="muted">{{ search.location || "Toute la Suisse" }}</span>
               </template>
             </td>
             <td
@@ -367,7 +367,7 @@ onMounted(() => void load());
           v-for="search in paused"
           :key="search.id"
         >
-          {{ search.terms }} · {{ search.location || "toute la Suisse" }}
+          {{ search.terms }} · {{ search.location || "Toute la Suisse" }}
           <button
             type="button"
             class="link"

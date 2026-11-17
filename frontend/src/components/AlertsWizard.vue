@@ -196,7 +196,7 @@ function copyOnOpen(): void {
           class="chip"
           data-test="wizard-search"
         >
-          {{ search.terms }} · {{ search.location || "toute la Suisse" }}
+          {{ search.terms }} · {{ search.location || "Toute la Suisse" }}
           <IconButton
             icon="close"
             :label="`Retirer ${search.terms}`"
@@ -280,7 +280,7 @@ function copyOnOpen(): void {
             class="button-link"
             data-test="wizard-open"
             @click="copyOnOpen"
-          ><span class="with-icon">Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+          ><span class="with-icon">Ouvrir {{ site.name }} : {{ search.terms }} · {{ search.location || "Toute la Suisse" }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </template>
         <a
           v-for="link in remoteLinks"

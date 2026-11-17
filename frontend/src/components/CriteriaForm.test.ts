@@ -60,6 +60,19 @@ describe("CriteriaView", () => {
 });
 
 describe("CriteriaForm, déjà saisis", () => {
+  it("sans lieu, « Toute la Suisse » (section 43 du 17.11)", async () => {
+    GET.mockResolvedValue({
+      data: {
+        criteria: { locations: [], remote_policy: "from_switzerland", min_rate: null, excluded_types: [], banned_words: [], language_levels: {} },
+        keywords: { contract_types: {}, language_names: {}, requirement_words: [] },
+        saved_at: "2026-10-01T08:00:00Z",
+      },
+    });
+    const wrapper = mount(CriteriaView);
+    await flushPromises();
+    expect(wrapper.get("[data-test=criteria-row-lieux] .criteria-row-value").text()).toBe("Toute la Suisse");
+  });
+
   it("montre un résumé, puis le formulaire pré-rempli sur « Modifier »", async () => {
     GET.mockResolvedValue({
       data: {

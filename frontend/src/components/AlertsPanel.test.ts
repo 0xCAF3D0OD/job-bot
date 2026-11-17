@@ -93,6 +93,14 @@ const editable = (terms: string, location: string | null) => ({ id: 1, terms, lo
 const onePage = (s: unknown) => ({ data: { mailbox: null, folder: null, sites: [], searches: [s], to_confirm: [] } });
 
 describe("AlertsPanel, modifier sur place (docs/108, 0.77.1)", () => {
+  it("sans lieu, « Toute la Suisse » (section 43 du 17.11)", async () => {
+    GET.mockResolvedValue(onePage(editable("patissier", null)));
+    const wrapper = mount(AlertsPanel);
+    await flushPromises();
+    expect(wrapper.text()).toContain("Toute la Suisse");
+    expect(wrapper.text()).not.toContain("toute la Suisse");
+  });
+
   it("les mots et le lieu deviennent des champs dans la ligne ; Échap annule", async () => {
     GET.mockResolvedValue(onePage(editable("patissier", null)));
     PATCH.mockResolvedValue(onePage(editable("boulanger", "Lausanne")));
