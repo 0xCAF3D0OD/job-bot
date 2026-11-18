@@ -5178,7 +5178,7 @@ export interface components {
              * @default linkedin_invite
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date
@@ -5208,7 +5208,7 @@ export interface components {
              * Channel
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
+
+import { radioKey } from "../radioKey";
 
 import { api, type Contact } from "../api/client";
 import { isoDay } from "../contactLabels";
@@ -7,32 +9,57 @@ import FormField from "./FormField.vue";
 
 // « J'ai contacté quelqu'un » (prompt du 10 novembre au soir, PR 28 ; maquettes CandidaturesOrdinateurB état `ct` et
 // EnvoyeeDetailContacte) : Nom, Rôle (facultatif), Comment. Sur ordinateur, la carte dépliée sous l'historique, avec
-// « Annuler » et « Enregistrer » à contour ; sur téléphone (`sheet`), dans la fenêtre du bas, la phrase d'abord et
-// « Enregistrer » plein. Le contact est daté d'aujourd'hui ; il entre dans l'historique et la prochaine relance est
+// « Annuler » et « Enregistrer » à contour ; sur téléphone (`sheet`), dans la fenêtre du bas et
+// « Enregistrer » plein, sans phrase sous le titre (§72g). Le contact est daté d'aujourd'hui ; il entre dans l'historique et la prochaine relance est
 // proposée 7 jours après. Le rôle et le moyen restent des choix (ceux de docs/31), pour le journal et les rappels.
 const props = defineProps<{ applicationId: number; sheet?: boolean }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
 
+// Rôle et Comment en pastilles (Kevin, 18.11, §72 ; planche EnvoyeeDetailContacte) : un choix à la fois, un nouveau clic
+// sur la pastille choisie la désélectionne ; « Autre » ouvre un champ « Précise », gardé dans la note du contact.
 const ROLE_CHOICES: { value: Contact["role"]; label: string }[] = [
   { value: "recruiter", label: "Recrutement" },
-  { value: "manager", label: "Futur responsable" },
-  { value: "team", label: "Membre de l’équipe" },
-  { value: "alumni", label: "Ancien de ton école" },
+  { value: "manager", label: "Responsable du poste" },
+  { value: "team", label: "Équipe" },
+  { value: "other", label: "Autre" },
 ];
 const CHANNEL_CHOICES: { value: Contact["channel"]; label: string }[] = [
   { value: "linkedin_message", label: "LinkedIn" },
   { value: "email", label: "E-mail" },
   { value: "phone", label: "Téléphone" },
+  { value: "in_person", label: "En personne" },
   { value: "other", label: "Autre" },
 ];
 
 const name = ref("");
 const role = ref<Contact["role"] | "">("");
-const channel = ref<Contact["channel"]>("linkedin_message");
+const channel = ref<Contact["channel"] | "">("linkedin_message");
+const roleOther = ref("");
+const channelOther = ref("");
 const nameError = ref("");
 const message = ref("");
 const busy = ref(false);
 const form = ref<HTMLFormElement | null>(null);
+
+const roleLabel = useId();
+const channelLabel = useId();
+function pickRole(value: Contact["role"]): void {
+  role.value = role.value === value ? "" : value;
+}
+function pickChannel(value: Contact["channel"]): void {
+  channel.value = channel.value === value ? "" : value;
+}
+// Le groupe a une seule entrée au clavier : la pastille choisie, sinon la première.
+function tabStop<T extends string>(current: T | "", value: T, first: T): 0 | -1 {
+  return current === value || (!current && value === first) ? 0 : -1;
+}
+function note(): string | null {
+  const parts = [
+    role.value === "other" && roleOther.value.trim() ? `Rôle : ${roleOther.value.trim()}` : "",
+    channel.value === "other" && channelOther.value.trim() ? `Moyen : ${channelOther.value.trim()}` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
 
 async function save(): Promise<void> {
   if (busy.value) return;
@@ -49,8 +76,9 @@ async function save(): Promise<void> {
         application_id: props.applicationId,
         name: name.value.trim(),
         role: role.value || "other",
-        channel: channel.value,
+        channel: channel.value || "other",
         contacted_on: isoDay(),
+        note: note(),
       },
     });
     if (!data) {
@@ -59,6 +87,8 @@ async function save(): Promise<void> {
     }
     name.value = "";
     role.value = "";
+    roleOther.value = "";
+    channelOther.value = "";
     emit("saved");
   } catch {
     message.value = "Enregistrement impossible : réessaie dans un instant.";
@@ -77,12 +107,6 @@ async function save(): Promise<void> {
     data-test="contact-quick"
     @submit.prevent="save"
   >
-    <p
-      v-if="sheet"
-      class="contact-quick-lead"
-    >
-      jobA1 le note dans l’historique et adapte la prochaine relance.
-    </p>
     <div class="contact-quick-who">
       <FormField
         v-slot="{ id, describedby, invalid }"
@@ -101,47 +125,85 @@ async function save(): Promise<void> {
           data-test="contact-name"
         >
       </FormField>
-      <FormField
-        v-slot="{ id }"
-        label="Rôle"
-        optional
-      >
-        <select
-          :id="id"
-          v-model="role"
-          data-test="contact-role"
-        >
-          <option value="">
-            Non précisé
-          </option>
-          <option
-            v-for="choice in ROLE_CHOICES"
-            :key="choice.value"
-            :value="choice.value"
-          >
-            {{ choice.label }}
-          </option>
-        </select>
-      </FormField>
     </div>
-    <FormField
-      v-slot="{ id }"
-      label="Comment"
-    >
-      <select
-        :id="id"
-        v-model="channel"
-        data-test="contact-channel"
+    <div class="contact-quick-choices">
+      <div
+        :id="roleLabel"
+        class="contact-quick-label"
       >
-        <option
-          v-for="choice in CHANNEL_CHOICES"
+        Son rôle<span class="contact-quick-optional"> · facultatif</span>
+      </div>
+      <div
+        class="filter-choices-row"
+        role="radiogroup"
+        :aria-labelledby="roleLabel"
+        data-test="contact-role"
+        @keydown="radioKey"
+      >
+        <button
+          v-for="choice in ROLE_CHOICES"
           :key="choice.value"
-          :value="choice.value"
+          type="button"
+          class="filter-choice contact-choice"
+          role="radio"
+          :aria-checked="role === choice.value"
+          :tabindex="tabStop(role, choice.value, 'recruiter')"
+          :data-test="`contact-role-${choice.value}`"
+          @click="pickRole(choice.value)"
         >
           {{ choice.label }}
-        </option>
-      </select>
-    </FormField>
+        </button>
+      </div>
+      <input
+        v-if="role === 'other'"
+        v-model="roleOther"
+        type="text"
+        class="contact-quick-other"
+        maxlength="200"
+        placeholder="Précise"
+        aria-label="Son rôle, autre"
+        data-test="contact-role-precise"
+      >
+    </div>
+    <div class="contact-quick-choices">
+      <div
+        :id="channelLabel"
+        class="contact-quick-label"
+      >
+        Comment
+      </div>
+      <div
+        class="filter-choices-row"
+        role="radiogroup"
+        :aria-labelledby="channelLabel"
+        data-test="contact-channel"
+        @keydown="radioKey"
+      >
+        <button
+          v-for="choice in CHANNEL_CHOICES"
+          :key="choice.value"
+          type="button"
+          class="filter-choice contact-choice"
+          role="radio"
+          :aria-checked="channel === choice.value"
+          :tabindex="tabStop(channel, choice.value, 'linkedin_message')"
+          :data-test="`contact-channel-${choice.value}`"
+          @click="pickChannel(choice.value)"
+        >
+          {{ choice.label }}
+        </button>
+      </div>
+      <input
+        v-if="channel === 'other'"
+        v-model="channelOther"
+        type="text"
+        class="contact-quick-other"
+        maxlength="200"
+        placeholder="Précise"
+        aria-label="Comment, autre"
+        data-test="contact-channel-precise"
+      >
+    </div>
     <p
       v-if="message"
       class="field-error"
@@ -178,7 +240,15 @@ async function save(): Promise<void> {
    Téléphone (fenêtre du bas) : sans carte, les champs l'un sous l'autre, « Enregistrer » plein de 52 px. */
 .contact-quick { --cq-pad: 18px; --cq-save-h: 52px; display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-3); padding: var(--space-5); background: var(--surface); border: var(--action-line) solid var(--card-line); border-radius: var(--radius-card); }
 .contact-quick .form-field { margin: 0; min-width: 0; }
-.contact-quick-who { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
+.contact-quick-who { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+/* Rôle et Comment (planche EnvoyeeDetailContacte, §72) : titre 14/700, 4 px au-dessus et 8 px en dessous ; pastilles de
+   44 px, 14 px de côté, 15/600, trait de 1,5 px (2 px bleu pour la choisie), 8 px entre elles ; « Précise » 52 px à 10 px. */
+.contact-quick-choices { display: grid; }
+.contact-quick-label { margin: var(--space-1) 0 var(--space-2); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text); }
+.contact-quick-optional { font-weight: var(--weight-medium); color: var(--text-secondary); }
+.contact-quick .contact-choice { min-height: var(--target-min); padding: 0 var(--cq-chip-pad, 14px); border: 0; box-shadow: inset 0 0 0 var(--action-line) var(--card-line); font-size: var(--cq-chip-font, 15px); font-weight: var(--weight-semibold); }
+.contact-quick .contact-choice[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--primary-graphic); }
+.contact-quick .contact-quick-other { display: block; width: 100%; height: var(--cq-save-h); margin-top: var(--cq-other-gap, 10px); padding: 0 var(--cq-other-pad, 14px); border: 2px solid var(--primary-graphic); border-radius: var(--radius-field, 12px); background: var(--surface); font-size: var(--font-body); color: var(--text); }
 .contact-quick-actions { display: flex; justify-content: flex-end; gap: var(--space-3); }
 .contact-quick-actions button { height: var(--target-min); min-height: var(--target-min); padding: 0 var(--cq-pad); border-radius: var(--radius-pill); font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
 .contact-quick-cancel { border: 0; background: transparent; color: var(--primary-text); }
@@ -186,7 +256,6 @@ async function save(): Promise<void> {
 .contact-quick-save[aria-disabled="true"] { opacity: 0.6; cursor: default; }
 .contact-quick.contact-quick-sheet { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
 .contact-quick-sheet .contact-quick-who { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
-.contact-quick-lead { margin: 0; font-size: calc(var(--font-small) + 1px); line-height: var(--cq-lead-lh, 22px); color: var(--text-tertiary); }
-.contact-quick-sheet .contact-quick-actions { display: grid; }
+.contact-quick-sheet .contact-quick-actions { display: grid; justify-content: stretch; }
 .contact-quick-sheet .contact-quick-actions button { width: 100%; height: var(--cq-save-h); min-height: var(--cq-save-h); justify-content: center; font-size: var(--font-body); }
 </style>

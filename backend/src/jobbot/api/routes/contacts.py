@@ -15,7 +15,7 @@ from jobbot.runtime import Runtime
 router = APIRouter(prefix="/api", tags=["contacts"])
 
 Role = Literal["recruiter", "manager", "team", "alumni", "other"]
-Channel = Literal["linkedin_invite", "linkedin_message", "email", "phone", "other"]
+Channel = Literal["linkedin_invite", "linkedin_message", "email", "phone", "in_person", "other"]
 
 
 def _runtime(request: Request) -> Runtime:
