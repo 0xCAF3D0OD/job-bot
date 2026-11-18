@@ -27,6 +27,7 @@ import ScoreCorrection from "./ScoreCorrection.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
+import { usePlan } from "../composables/usePlan";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import { offerUndo } from "../composables/useUndo";
 import { displayTitle } from "../offerTitle";
@@ -34,6 +35,7 @@ import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
 
+import BusyButton from "./BusyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
 // `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
@@ -159,6 +161,9 @@ const postLink = computed(() => {
 const searching = ref(false);
 const proposals = ref<RegistryCandidate[]>([]);
 const registryMessage = ref("");
+// Planche OffreAdresseNonTrouvee (18.11) : « Pas trouvée au registre » après une recherche faite ici sans résultat (le
+// serveur ne garde pas les recherches vaines) ; la pastille « Trouvée au registre du commerce » vient de la source.
+const notFound = ref(false);
 
 // « Adresse trouvée » seulement si l'adresse affichée change (audit du 17.11, K6) : le serveur peut connaître
 // l'entreprise sans que l'adresse de l'offre bouge. La recherche reste « en cours » jusqu'à la fiche relue, puis
@@ -183,7 +188,9 @@ watch(
     if (!awaited) return;
     clearTimeout(awaited.timer);
     const changed = (offer.company_address ?? null) !== awaited.before;
-    registryMessage.value = changed ? awaited.found : "Aucune nouvelle adresse trouvée.";
+    // Trouvée au registre : la pastille le dit (planche OffreAdresseTrouvee) ; trouvée sur Internet : la phrase.
+    registryMessage.value = changed ? awaited.found : offer.company_address ? "Aucune nouvelle adresse trouvée." : "";
+    notFound.value = !changed && !offer.company_address;
     awaited = null;
     searching.value = false;
   },
@@ -192,6 +199,7 @@ watch(
 async function searchRegistry(): Promise<void> {
   searching.value = true;
   registryMessage.value = "";
+  notFound.value = false;
   proposals.value = [];
   let waiting = false;
   try {
@@ -202,7 +210,7 @@ async function searchRegistry(): Promise<void> {
       registryMessage.value = "Registre IDE injoignable, réessaie plus tard.";
     } else if (data.chosen_uid && props.offer.company_address_source !== "registry") {
       waiting = true;
-      awaitReload("Adresse trouvée dans le registre IDE.");
+      awaitReload("");
     } else if (data.web_address) {
       proposals.value = data.candidates;
       waiting = true;
@@ -212,9 +220,11 @@ async function searchRegistry(): Promise<void> {
       const web = data.web_unavailable
         ? ` Recherche sur Internet impossible : ${data.web_unavailable}.`
         : " Rien de fiable sur Internet non plus.";
-      registryMessage.value = data.candidates.length
-        ? `Pas de correspondance sûre : choisis parmi le registre, ou saisis l’adresse.${web}`
-        : `Aucune entreprise à ce nom dans le registre.${web} Saisis l’adresse à la main.`;
+      if (data.candidates.length) registryMessage.value = `Pas de correspondance sûre : choisis parmi le registre, ou saisis l’adresse.${web}`;
+      else {
+        notFound.value = true;
+        registryMessage.value = data.web_unavailable ? `Recherche sur Internet impossible : ${data.web_unavailable}.` : "";
+      }
     }
   } catch {
     registryMessage.value = "API injoignable.";
@@ -349,6 +359,32 @@ async function retryScore(): Promise<void> {
     retrying.value = false;
   }
 }
+// « Pas encore notée » (planche OffreNonNotee du 18.11 ; Kevin, 17.11, Q2) : l'anneau pointillé des cartes, la phrase,
+// puis « Noter maintenant » (environ 10 secondes, compte dans la formule ; le coût au survol pour l'exploitant seul).
+// Jamais sur une offre écartée, sans profil ou dont la note a échoué (ces cas ont leur propre phrase).
+const unrated = computed(() => !scored.value && !setAside.value && !finalCause.value && !needsProfile.value);
+const { aiNote } = usePlan();
+const scoringNow = ref(false);
+const scoreNowError = ref("");
+async function scoreNow(): Promise<void> {
+  if (scoringNow.value) return;
+  scoringNow.value = true;
+  scoreNowError.value = "";
+  try {
+    const { data } = await api.POST("/api/offers/{offer_id}/score-now", { params: { path: { offer_id: props.offer.id } } });
+    if (data?.limit) scoreNowError.value = data.limit;
+    else if (data?.score === null || data?.score === undefined) scoreNowError.value = "La note n’a pas pu être calculée : réessaie dans un moment.";
+    emit("changed", true);
+  } catch {
+    scoreNowError.value = "API injoignable : réessaie dans un moment.";
+  } finally {
+    scoringNow.value = false;
+  }
+}
+watch(
+  () => props.offer.id,
+  () => (scoreNowError.value = ""),
+);
 async function profileSaved(): Promise<void> {
   completing.value = false;
   await refreshProfile();
@@ -358,7 +394,7 @@ const matchSub = computed(() => {
   if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
   if (finalCause.value === "sans_texte") return "L’annonce est trop courte pour être notée.";
   if (finalCause.value) return "La note n’a pas pu être calculée.";
-  if (!scored.value) return setAside.value ? "Pas de note : jobA1 ne note pas les offres écartées." : "La note arrive dès que l’annonce est lue.";
+  if (!scored.value) return setAside.value ? "Pas de note : jobA1 ne note pas les offres écartées." : "jobA1 n’a pas encore comparé cette offre à ton profil.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
   // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
@@ -648,6 +684,7 @@ watch(
     editingAddress.value = false;
     proposals.value = [];
     registryMessage.value = "";
+    notFound.value = false;
   },
 );
 </script>
@@ -1278,6 +1315,25 @@ watch(
               large
               bare
             />
+            <svg
+              v-else-if="unrated"
+              class="match-unrated"
+              viewBox="0 0 100 100"
+              aria-hidden="true"
+              focusable="false"
+              data-test="match-unrated"
+            ><circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke-width="9"
+              stroke-dasharray="12 9.99"
+            /><path
+              d="M38 50H62"
+              stroke-width="9"
+              stroke-linecap="round"
+            /></svg>
             <div>
               <div class="match-title-row">
                 <h3
@@ -1330,6 +1386,32 @@ watch(
                 Compléter mon profil<AppIcon name="chevron" />
               </button>
             </div>
+          </div>
+          <div
+            v-if="unrated"
+            class="match-now"
+            data-test="score-now-block"
+          >
+            <BusyButton
+              class="match-now-button"
+              :busy="scoringNow"
+              busy-label="Notation en cours"
+              data-test="score-now"
+              @click="scoreNow"
+            >
+              <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
+                Noter maintenant
+              </HoverNote>
+            </BusyButton>
+            <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+            <p
+              v-if="scoreNowError"
+              class="field-error"
+              role="alert"
+              data-test="score-now-error"
+            >
+              {{ scoreNowError }}
+            </p>
           </div>
           <ul
             v-if="matchLines.length && (sub ? provisional : !columns)"
@@ -1611,48 +1693,62 @@ watch(
                 </button>
               </div>
             </form>
+            <p
+              v-else-if="searching"
+              class="block-field-value offer-busy address-busy"
+              role="status"
+              data-test="registry-busy"
+            >
+              <span
+                class="offer-busy-ring"
+                aria-hidden="true"
+              />Recherche de l’adresse…
+            </p>
             <template v-else-if="offer.company_address">
-              <div class="block-field-value">
-                {{ offer.company_address.split("\n").join(", ") }}
+              <div class="block-field-value address-lines">
+                {{ offer.company_address }}
               </div>
-              <div class="hint">
+              <span
+                v-if="offer.company_address_source === 'registry'"
+                class="grey-pill address-pill"
+                data-test="address-registry"
+              >Trouvée au registre du commerce</span>
+              <div
+                v-else
+                class="hint"
+              >
                 {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
               </div>
             </template>
-            <div
-              v-else
-              class="block-field-value block-field-none"
-            >
-              Non renseignée
-            </div>
+            <template v-else>
+              <div class="block-field-value block-field-none">
+                Non renseignée
+              </div>
+              <span
+                v-if="notFound"
+                class="grey-pill address-pill"
+                data-test="address-not-found"
+              >Pas trouvée au registre</span>
+            </template>
           </div>
           <CopyButton
-            v-if="offer.company_address && !editingAddress"
+            v-if="offer.company_address && !editingAddress && !searching"
             :value="offer.company_address.split('\n').join(', ')"
             label="Copier : adresse"
             test-id="address-copy"
           />
-          <button
-            v-else-if="!editingAddress"
-            type="button"
-            class="link offer-company-add"
-            data-test="add-address"
-            @click="startAddress"
-          >
-            Compléter
-          </button>
         </div>
-        <p
-          v-if="searching"
-          class="hint offer-busy"
-          role="status"
-          data-test="registry-busy"
+        <!-- « Modifier l'adresse » ou « Ajouter l'adresse » : une ligne avec chevron sous l'adresse (planches
+             OffreAdresseTrouvee et OffreAdresseNonTrouvee du 18.11). -->
+        <button
+          v-if="!editingAddress && !searching"
+          type="button"
+          class="address-row"
+          data-test="add-address"
+          @click="startAddress"
         >
-          <span
-            class="offer-busy-ring"
-            aria-hidden="true"
-          />Recherche dans le registre IDE…
-        </p>
+          {{ offer.company_address ? "Modifier l’adresse" : "Ajouter l’adresse" }}<AppIcon name="chevron" />
+        </button>
         <div
           v-if="registryMessage || proposals.length"
           class="registry-proposals"
@@ -1776,6 +1872,22 @@ watch(
 .oc-note-link .icon { width: 18px; height: 18px; }
 /* Audit du 17.11, K8 : le bandeau « Note refaite » finit à 24 px du bord de la carte, comme sur les côtés (8 de la carte
    + 16 ici), au lieu de 8. */
+/* « Pas encore notée » (planche OffreNonNotee du 18.11) : l'anneau pointillé des cartes (60 px), puis sous un trait,
+   « Noter maintenant » tonal pleine largeur (52 px) et la pastille grise centrée, 10 px dessous. */
+.match-unrated { flex: none; width: 60px; height: 60px; }
+.match-unrated circle { stroke: var(--linked-line); }
+.match-unrated path { stroke: var(--unrated-dash); }
+.match-now { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-2) + 2px); margin: var(--space-4) calc(-1 * var(--space-4)) 0; padding: calc(var(--space-3) + 2px) var(--space-4) 0; border-top: 1px solid var(--line-soft); }
+.match-now-button { width: 100%; height: 52px; min-height: 52px; border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.grey-pill { display: inline-flex; align-items: center; min-height: 30px; padding: 5px var(--space-3); border-radius: 15px; background: var(--line-soft); color: var(--text-lead); font-size: 13px; font-weight: var(--weight-semibold); text-align: center; }
+.match-now .field-error { align-self: stretch; margin: 0; }
+/* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
+   « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
+.address-lines { white-space: pre-line; }
+.address-pill { margin-top: calc(var(--space-2) + 2px); }
+.address-busy { display: flex; align-items: center; color: var(--text-secondary); }
+.address-row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--target-min); padding: var(--space-3) 0; border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--primary-text); font-size: 15px; font-weight: var(--weight-bold); text-align: left; }
+.address-row .icon { flex: none; color: var(--text-secondary); }
 .oc-note-redone { margin: var(--space-2) 0 var(--space-4); }
 .oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
 .oc-row { margin: 0; padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); }
