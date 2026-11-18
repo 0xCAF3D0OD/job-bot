@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 
 import { api, type Search } from "../api/client";
 import { dateWithTime } from "../dates";
@@ -11,7 +11,8 @@ import ShowMore from "./ShowMore.vue";
 
 // Les alertes reçues (planche « 6. Alertes », 1.6.70) : les trois dernières, le site et le nombre
 // d'offres en titre, la recherche et l'heure en phrase ; « Afficher plus », en bas, déplie sur place le
-// journal complet, avec ses filtres (divulgation progressive ; règles §4, ShowMore).
+// journal complet, avec ses filtres (divulgation progressive ; règles §4, ShowMore). Ouvert, le journal porte le seul
+// bouton du bas : jamais deux « Afficher plus / moins » l'un sous l'autre (K20, audit du 17.11).
 const LATEST = 3;
 const items = ref<Search[]>([]);
 const total = ref(0);
@@ -26,6 +27,14 @@ function line(item: Search): string {
   return `${what} · ${dateWithTime(item.received_at)}`;
 }
 
+// « Afficher moins » : le focus reste sur le bouton, devenu « Afficher plus » à la même place (Kevin, 17.11).
+const section = ref<HTMLElement | null>(null);
+async function collapse(): Promise<void> {
+  all.value = false;
+  await nextTick();
+  section.value?.querySelector<HTMLElement>("[data-test=received-all]")?.focus();
+}
+
 onMounted(async () => {
   const { data } = await api.GET("/api/searches", { params: { query: { limit: LATEST, offset: 0 } } });
   items.value = data?.items ?? [];
@@ -35,6 +44,7 @@ onMounted(async () => {
 
 <template>
   <section
+    ref="section"
     class="alerts-section"
     data-test="received-alerts"
   >
@@ -43,7 +53,11 @@ onMounted(async () => {
         Alertes reçues
       </h2>
     </div>
-    <JournalPanel v-if="all" />
+    <JournalPanel
+      v-if="all"
+      :focus-from="LATEST"
+      @collapse="collapse"
+    />
     <SettingCard v-else>
       <SettingRow
         v-for="item in items"
@@ -60,7 +74,7 @@ onMounted(async () => {
       </p>
     </SettingCard>
     <ShowMore
-      v-if="total > LATEST || all"
+      v-if="total > LATEST && !all"
       v-model="all"
       :hidden="Math.max(total - LATEST, 0)"
       test-id="received-all"

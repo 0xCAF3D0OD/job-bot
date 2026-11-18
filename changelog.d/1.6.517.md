@@ -1,0 +1,1 @@
+Candidatures sur téléphone : les onglets ne montent plus de 60 px en changeant d'onglet, et « Alertes » ne glisse plus quand le bouton Filtres arrive ; leurs places sont gardées pendant le chargement (audit du 17.11, K16 et N19)

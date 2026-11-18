@@ -2,6 +2,8 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
+import { defineComponent, h } from "vue";
+
 import ChoiceMenu from "./ChoiceMenu.vue";
 
 const CHOICES = [
@@ -36,6 +38,22 @@ describe("ChoiceMenu", () => {
     await wrapper.get("[role=menu]").trigger("keydown", { key: "Escape" });
     expect(wrapper.find("[role=menu]").exists()).toBe(false);
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("dans une ligne `.choice-menu-row`, un clic sur le texte de la ligne ouvre et referme le menu (audit du 17.11, K40)", async () => {
+    const Host = defineComponent({
+      setup: () => () =>
+        h("div", { class: "choice-menu-row" }, [
+          h("span", { class: "title" }, "Apparence"),
+          h(ChoiceMenu, { label: "Apparence", choices: CHOICES, modelValue: "auto" }),
+        ]),
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await wrapper.get(".title").trigger("click");
+    expect(wrapper.find("[role=menu]").exists()).toBe(true);
+    await wrapper.get(".title").trigger("click");
+    expect(wrapper.find("[role=menu]").exists()).toBe(false);
     wrapper.unmount();
   });
 });
