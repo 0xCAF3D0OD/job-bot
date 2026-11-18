@@ -201,7 +201,7 @@ async def test_privacy_text_public_and_set_by_owner(runtime: Runtime, secured: R
 
 
 async def test_debrief_in_export_and_gone_with_the_account(secured: Runtime, account: int) -> None:
-    """« Faire le point » (0093) : ressenti, suite et notes sont dans l'export du compte, et partent
+    """« Faire le point » (0096) : ressenti, suite et notes sont dans l'export du compte, et partent
     avec lui (règles V-2, V-3 de docs/regles-securite-donnees.md)."""
     camille = await guest(secured)
     with accounts.use(camille):

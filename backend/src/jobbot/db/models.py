@@ -1155,7 +1155,7 @@ class Interview(Base):
     duration: Mapped[str | None] = mapped_column(Text)
     interviewers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     people_count: Mapped[int | None] = mapped_column(SmallInteger)
-    # Note sur 5 du formulaire complet ; facultative depuis « Faire le point » (0093), qui demande
+    # Note sur 5 du formulaire complet ; facultative depuis « Faire le point » (0096), qui demande
     # seulement le ressenti en trois mots (`feeling`). Au moins l'un des deux.
     rating: Mapped[int | None] = mapped_column(SmallInteger)
     feeling: Mapped[str | None] = mapped_column(Text)

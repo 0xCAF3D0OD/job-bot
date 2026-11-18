@@ -1,7 +1,7 @@
 """« Faire le point » en page entière (planche FairePoint, accord de Kevin du 18.11.2026, 14 h 38)
 
-Revision ID: 0093
-Revises: 0092
+Revision ID: 0096
+Revises: 0095
 Create Date: 2026-11-18
 
 `interviews.feeling` : « Comment ça s'est passé ? » (bien, moyen, pas_bien). `interviews.notes` :
@@ -24,8 +24,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0093"
-down_revision: str | None = "0092"
+revision: str = "0096"
+down_revision: str | None = "0095"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
