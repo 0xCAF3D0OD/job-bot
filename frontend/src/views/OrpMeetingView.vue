@@ -434,16 +434,8 @@ onMounted(() => {
       @add="openAdd"
     />
     <template v-else>
-      <!-- Un rendez-vous passé à noter passe en premier, avant le formulaire (corrections du 9 novembre). -->
-      <RendezVousPhone
-        v-if="compact"
-        part="to-note"
-        :page="page"
-        :applications="applications"
-        :sheet-link="sheetLink"
-        :words="words"
-        @note="noting = $event"
-      />
+      <!-- Ordre de la planche RendezVous du 18.11 (Kevin, 18.11) : « À venir », puis « À noter », puis les derniers
+           rendez-vous ORP. Avant : « À noter » en premier (corrections du 9 novembre). -->
       <RendezVousPhone
         v-if="compact"
         part="upcoming"
@@ -454,6 +446,15 @@ onMounted(() => {
         :words="words"
         @toggle="toggle"
         @prepare="preparing = $event"
+      />
+      <RendezVousPhone
+        v-if="compact"
+        part="to-note"
+        :page="page"
+        :applications="applications"
+        :sheet-link="sheetLink"
+        :words="words"
+        @note="noting = $event"
       />
       <div
         v-if="searchEmpty"
