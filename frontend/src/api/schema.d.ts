@@ -2681,6 +2681,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orp-meeting/nom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Orp Sheet Identity */
+        get: operations["getOrpSheetIdentity"];
+        /**
+         * Save Orp Sheet Identity
+         * @description Ton nom, ton conseiller, ton office régional, gardés dans ton compte (§70).
+         */
+        put: operations["saveOrpSheetIdentity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orp-meeting/feuille.pdf": {
         parameters: {
             query?: never;
@@ -2690,7 +2711,8 @@ export interface paths {
         };
         /**
          * Get Orp Meeting Sheet
-         * @description La feuille sur une page A4 ; ton nom seulement si tu le donnes (`name`).
+         * @description La feuille sur une page A4 ; ton nom, ton conseiller et ton office régional s'ils sont
+         *     enregistrés (« Ton nom sur la feuille », §70). `name` remplace le nom enregistré.
          */
         get: operations["getOrpMeetingSheet"];
         put?: never;
@@ -7184,6 +7206,28 @@ export interface components {
             weeks: components["schemas"]["MonthWeekOut"][];
         };
         /**
+         * NearFacets
+         * @description Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
+         *     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
+         *     « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
+         *     offres ».
+         */
+        NearFacets: {
+            /** Views */
+            views: components["schemas"]["Facet"][];
+            /** Sure */
+            sure: number;
+            /** Provisional */
+            provisional: number;
+            /** Rates */
+            rates: components["schemas"]["Facet"][];
+            /**
+             * Contracts
+             * @default []
+             */
+            contracts: components["schemas"]["Facet"][];
+        };
+        /**
          * NewsPreferences
          * @description « Mon domaine » et filtres, retenus d'une visite à l'autre (docs/16 §2-3).
          */
@@ -7339,13 +7383,7 @@ export interface components {
              * @default []
              */
             contracts: components["schemas"]["Facet"][];
-            /** Distance From */
-            distance_from?: string | null;
-            /**
-             * Distances
-             * @default []
-             */
-            distances: components["schemas"]["Facet"][];
+            near?: components["schemas"]["NearFacets"] | null;
         };
         /**
          * OfferFiltersVisible
@@ -8761,6 +8799,32 @@ export interface components {
              * @default false
              */
             notify_news: boolean;
+        };
+        /**
+         * SheetIdentityIn
+         * @description Seuls les champs envoyés sont enregistrés (un champ à la fois, quand on le quitte) ; vide =
+         *     retiré.
+         */
+        SheetIdentityIn: {
+            /** Name */
+            name?: string | null;
+            /** Advisor */
+            advisor?: string | null;
+            /** Office */
+            office?: string | null;
+        };
+        /**
+         * SheetIdentityOut
+         * @description « Ton nom sur la feuille » (§70) : le conseiller pré-rempli par le rendez-vous, s'il est
+         *     connu.
+         */
+        SheetIdentityOut: {
+            /** Name */
+            name: string | null;
+            /** Advisor */
+            advisor: string | null;
+            /** Office */
+            office: string | null;
         };
         /** SignupIn */
         SignupIn: {
@@ -12395,7 +12459,7 @@ export interface operations {
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
                 contracts?: components["schemas"]["Contract"][];
-                distance?: ("15" | "30" | "50" | "unknown") | null;
+                hide_far?: boolean;
             };
             header?: never;
             path?: never;
@@ -15208,6 +15272,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrpSheetIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetIdentityOut"];
+                };
+            };
+        };
+    };
+    saveOrpSheetIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SheetIdentityIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetIdentityOut"];
+                };
             };
             /** @description Validation Error */
             422: {

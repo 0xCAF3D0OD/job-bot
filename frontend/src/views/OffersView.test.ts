@@ -676,13 +676,36 @@ describe("tri et candidature", () => {
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
     // Le message propose d'annuler (docs/60 §3) : l'offre revient à son statut d'avant.
     // Le bandeau commun à trait (§23 du 15.11) : le statut est parti, « Annuler » remet celui d'avant.
-    expect(useUndo().pending.value?.message).toBe("Offre gardée.");
+    expect(useUndo().pending.value?.message).toBe("Déplacée dans Gardées");
     await useUndo().undo();
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", {
       params: { path: { offer_id: 1 } },
       body: { status: "to_review" },
     });
+  });
+
+  it("K5 (Kevin, 17.11) : l'offre gardée reste à sa place avec « Gardée » jusqu'au changement de liste ; « Voir » ouvre Gardées", async () => {
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux"), offer(3, "Trois")]));
+    const wrapper = await mountAt("/offres");
+    PATCH.mockResolvedValue({ data: { id: 2, status: "later" } });
+    // Le serveur ne rend plus l'offre gardée dans cette liste.
+    mockOffers(page([offer(1, "Une"), offer(3, "Trois")]));
+    await wrapper.findAll("[data-test=offer]")[1]!.trigger("click");
+    await wrapper.find("[data-test=more]").trigger("click");
+    await wrapper.find("[data-test=later]").trigger("click");
+    await flushPromises();
+    const cards = wrapper.findAll("[data-test=offer]");
+    expect(cards.map((c) => c.text().includes("Deux"))).toEqual([false, true, false]);
+    expect(cards[1]!.text()).toContain("Gardée");
+    expect(useUndo().pending.value?.message).toBe("Déplacée dans Gardées");
+    expect(useUndo().pending.value?.see).toBeTypeOf("function");
+    // « Voir » : la liste Gardées ; en quittant la liste, l'offre n'est plus gardée en place.
+    mockOffers(page([offer(1, "Une"), offer(3, "Trois")]));
+    await useUndo().see();
+    await flushPromises();
+    expect(router.currentRoute.value.query.statut).toBe("later");
+    expect(wrapper.findAll("[data-test=offer]").some((c) => c.text().includes("Deux"))).toBe(false);
   });
 
   it("« Marquer comme envoyée » pré-remplit puis enregistre la candidature", async () => {

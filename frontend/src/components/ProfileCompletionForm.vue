@@ -585,7 +585,7 @@ defineExpose({ save, saving, missingForLetter, levels });
 .pc-lang b { flex: 1; min-width: 0; font-size: var(--font-body); }
 .pc-lang .pc-lang-name-input { flex: 1; min-width: 0; }
 .pc select.pc-level { flex: none; width: var(--pc-level-w); max-width: calc(100% - 6rem); }
-.pc .pc-level.pc-placeholder { color: var(--text-placeholder); }
+.pc .pc-level.pc-placeholder { color: var(--unset-text); }
 .pc-link { display: inline-flex; align-items: center; gap: var(--pc-link-gap); min-height: var(--target-min); margin-top: var(--pc-link-gap); padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--pc-hint); font-weight: var(--weight-bold); cursor: pointer; }
 .pc-link .icon { width: 18px; height: 18px; }
 .pc-message { margin-top: var(--space-6); }

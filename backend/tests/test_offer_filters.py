@@ -186,6 +186,87 @@ async def test_unknown_contract_is_refused_not_silently_empty(api: AsyncClient) 
     assert response.status_code == 422
 
 
+async def test_near_counts_match_the_phone_button(api: AsyncClient, runtime: Runtime) -> None:
+    """Téléphone (Kevin, 18.11, choix a) : la liste cache les offres « Loin » (sous 50) sans filtre
+    de note, et « Afficher n offres » vaut total moins ces offres. Avec `hide_far`, le nombre du
+    choix actif (Statut, Type de note, Taux, Contrat, Distance) égale toujours ce nombre ; sans
+    offre « Loin », rien ne change."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    rows = [
+        (42, 100, OfferStatus.TO_REVIEW, "1020 Renens VD"),
+        (30, 60, OfferStatus.LATER, "Morges, VD"),
+        (63, 100, OfferStatus.TO_REVIEW, "Morges, VD"),
+        (88, 80, OfferStatus.TO_REVIEW, None),
+        (None, None, OfferStatus.TO_REVIEW, "Fribourg"),
+    ]
+    async with runtime.sessionmaker.begin() as session:
+        session.add(Setting(key="identity_postcode", value="1020"))
+        for n, (score, rate, state, place) in enumerate(rows):
+            offer = Offer(
+                fingerprint=f"far{n}",
+                title=f"Offre {n}",
+                first_seen_at=NOW + timedelta(minutes=n),
+                last_seen_at=NOW,
+                status=state,
+                rate_max=rate,
+                location=place,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    score=score,
+                    scored_at=NOW if score is not None else None,
+                )
+            )
+
+    def facet(items: list[dict[str, Any]], value: str) -> int:
+        return next(f["count"] for f in items if f["value"] == value)
+
+    async def button(**params: Any) -> tuple[int, dict[str, Any]]:
+        body = (await api.get("/api/offers", params={"hide_far": True, **params})).json()
+        far = sum(body["facets"]["scores"][:10])
+        return body["total"] - far, body["facets"]["near"]
+
+    for view in ("pending", "to_review", "later"):
+        shown, near = await button(view=view)
+        assert facet(near["views"], view) == shown
+    for rate in (60, 80, 100):
+        shown, near = await button(view="pending", min_rate=rate)
+        assert facet(near["rates"], str(rate)) == shown
+    # Contrat (issue #468) : ces offres n'ont pas de contrat, « Non précisé » les compte.
+    shown, near = await button(view="pending", contracts=["non_precise"])
+    assert facet(near["contracts"], "non_precise") == shown
+    # Distance (issue #468) : un choix de km et « Lieu non précisé ».
+    for choice in ("15", "50", "unknown"):
+        shown, near = await button(view="pending", distance=choice)
+        assert facet(near["distances"], choice) == shown
+    shown, near = await button(view="pending")
+    assert facet(near["rates"], "all") == facet(near["distances"], "all") == shown == 3
+    shown, near = await button(view="pending", basis="provisional")
+    assert near["provisional"] == shown == 2
+    # Sans `hide_far`, ou avec un filtre de note, les nombres restent ceux de la liste.
+    plain = (await api.get("/api/offers", params={"view": "pending"})).json()
+    assert plain["facets"]["near"] is None
+    assert facet(plain["facets"]["rates"], "all") == plain["total"] == 5
+    scored = (await api.get("/api/offers", params={"hide_far": True, "min_score": 50})).json()
+    assert scored["facets"]["near"] is None
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'identity_postcode'"))
+
+
+async def test_near_counts_without_far_offers(api: AsyncClient) -> None:
+    """Aucune offre « Loin » : les nombres « near » égalent ceux de la liste."""
+    body = (await api.get("/api/offers", params={"view": "to_review", "hide_far": True})).json()
+    near = body["facets"]["near"]
+    assert near["rates"] == body["facets"]["rates"]
+    assert next(f["count"] for f in near["views"] if f["value"] == "to_review") == body["total"]
+
+
 async def test_invalid_parameters(api: AsyncClient) -> None:
     assert (await api.get("/api/offers", params={"sources": "Monster!"})).status_code == 422
     assert (await api.get("/api/offers", params={"min_rate": 0})).status_code == 422
@@ -245,7 +326,12 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
             ]
         )
     page = (await api.get("/api/offers", params={"view": "all", "sort": "activity"})).json()
-    mine = {"Lettre aujourd'hui", "Envoyée hier", "Envoyée il y a 5 jours", "Préparation sans document"}
+    mine = {
+        "Lettre aujourd'hui",
+        "Envoyée hier",
+        "Envoyée il y a 5 jours",
+        "Préparation sans document",
+    }
     assert [o["title"] for o in page["items"] if o["title"] in mine] == [
         "Lettre aujourd'hui",
         "Envoyée hier",
@@ -254,7 +340,10 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
     ]
     # En préparation : sans les envoyées, qui sont dans Envoyées (section 38 du 16.11).
     page = (await api.get("/api/offers", params={"view": "in_progress", "sort": "activity"})).json()
-    assert [o["title"] for o in page["items"]] == ["Lettre aujourd'hui", "Préparation sans document"]
+    assert [o["title"] for o in page["items"]] == [
+        "Lettre aujourd'hui",
+        "Préparation sans document",
+    ]
     assert page["counts"]["in_progress"] == 2
 
 
@@ -449,7 +538,9 @@ async def test_counts_pending_is_the_badge_and_total_is_the_list(
     assert searched["counts"]["pending_all"] == badge
     assert searched["counts"]["pending"] == searched["total"] == len(searched["items"]) == 1
     # Dans une autre vue, la puce « À traiter » compte aussi avec les filtres.
-    in_progress = (await api.get("/api/offers", params={"view": "in_progress", "q": "comptable"})).json()
+    in_progress = (
+        await api.get("/api/offers", params={"view": "in_progress", "q": "comptable"})
+    ).json()
     assert in_progress["counts"]["pending_all"] == badge
     assert in_progress["counts"]["pending"] == 1
     assert in_progress["total"] == len(in_progress["items"])
