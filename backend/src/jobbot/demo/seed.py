@@ -630,7 +630,13 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
 
     # Formations : le catalogue du dépôt, deux suivies.
     await sync_catalog(session)
-    trainings = list(await session.scalars(select(Training).where(Training.origin == "catalog")))
+    # Dans l'ordre du catalogue : sans ordre, Postgres rend les lignes dans un ordre libre, et la
+    # formation suivie changeait d'un remplissage à l'autre (le test d'affichage compare au pixel).
+    trainings = list(
+        await session.scalars(
+            select(Training).where(Training.origin == "catalog").order_by(Training.id)
+        )
+    )
     picked = [t for t in trainings if "Kubernetes" in (t.tags or [])][:1]
     picked += [t for t in trainings if t not in picked and "Terraform" in (t.tags or [])][:1]
     for training, status in zip(picked, ("in_progress", "interested"), strict=False):
