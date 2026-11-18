@@ -1292,6 +1292,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/score-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Score Now
+         * @description « Noter maintenant » d'une offre « Pas encore notée » (Kevin, 17.11, Q2 ; planche
+         *     OffreNonNotee du 18.11) : la note tout de suite, environ 10 secondes. Elle compte dans la
+         *     formule ; épuisée, rien ne part à l'IA. Refusé sur une offre déjà notée.
+         */
+        post: operations["scoreOfferNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interview.ics": {
         parameters: {
             query?: never;
@@ -7524,6 +7546,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */
@@ -8348,6 +8372,13 @@ export interface components {
             /** Pause Until */
             pause_until?: string | null;
         };
+        /** ScoreNowOut */
+        ScoreNowOut: {
+            /** Score */
+            score?: number | null;
+            /** Limit */
+            limit?: string | null;
+        };
         /**
          * ScorePartOut
          * @description Une part de la note (PR 18) : `max` vient de PART_MAX, `points` de la notation.
@@ -8526,6 +8557,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */
@@ -12226,6 +12259,51 @@ export interface operations {
                 content?: never;
             };
             /** @description La note n'est pas en échec : rien à refaire */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scoreOfferNow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoreNowOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description L'offre est déjà notée */
             409: {
                 headers: {
                     [name: string]: unknown;

@@ -3198,6 +3198,55 @@
         }
       }
     },
+    "/api/offers/{offer_id}/score-now": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Score Now",
+        "description": "« Noter maintenant » d'une offre « Pas encore notée » (Kevin, 17.11, Q2 ; planche\nOffreNonNotee du 18.11) : la note tout de suite, environ 10 secondes. Elle compte dans la\nformule ; épuisée, rien ne part à l'IA. Refusé sur une offre déjà notée.",
+        "operationId": "scoreOfferNow",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreNowOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "409": {
+            "description": "L'offre est déjà notée"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/interview.ics": {
       "get": {
         "tags": [
@@ -21948,6 +21997,17 @@
             ],
             "title": "Company Address Url"
           },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
+          },
           "employer_url": {
             "anyOf": [
               {
@@ -24256,6 +24316,34 @@
         "title": "RhythmWeek",
         "description": "Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine."
       },
+      "ScoreNowOut": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "ScoreNowOut"
+      },
       "ScorePartOut": {
         "properties": {
           "key": {
@@ -24817,6 +24905,17 @@
               }
             ],
             "title": "Company Address Url"
+          },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
           },
           "employer_url": {
             "anyOf": [
