@@ -280,6 +280,8 @@ def result_text(status: str, reason: str | None, interview_at: datetime | None) 
         return "en suspens (entretien)"
     if status == "sans_reponse":
         return "en suspens (sans réponse)"
+    if status == "reponse":
+        return "en suspens (réponse reçue)"
     return "en suspens"
 
 

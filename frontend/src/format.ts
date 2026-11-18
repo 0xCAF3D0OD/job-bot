@@ -129,11 +129,12 @@ export const methodLabel: Record<"electronique" | "ecrit" | "telephone" | "perso
 };
 
 export const applicationStatusLabel: Record<
-  "en_attente" | "relancee" | "entretien" | "refus" | "engagement" | "sans_reponse",
+  "en_attente" | "relancee" | "reponse" | "entretien" | "refus" | "engagement" | "sans_reponse",
   string
 > = {
   en_attente: "En attente",
   relancee: "Relancée",
+  reponse: "Réponse reçue",
   entretien: "Entretien",
   refus: "Refus",
   engagement: "Poste obtenu",

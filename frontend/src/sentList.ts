@@ -65,7 +65,7 @@ export function sentWhen(a: Application, section: SentSectionKey, now: Date = ne
     const text = meetingChip(a.interview_at).replace(/^(\p{L}{3})\p{L}*/u, "$1.");
     return `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
   }
-  if ((a.status === "refus" || a.status === "engagement") && a.status_at) return `réponse ${dateInList(a.status_at, now)}`;
+  if ((a.status === "refus" || a.status === "engagement" || a.status === "reponse") && a.status_at) return `réponse ${dateInList(a.status_at, now)}`;
   return sentDay(day(a), now).replace(/^le /, "");
 }
 
@@ -78,6 +78,7 @@ export function sentStatus(a: Application, section: SentSectionKey): SentStatus 
   if (a.status === "entretien") return { word: "Entretien", icon: "calendar", tone: "green" };
   if (a.status === "engagement") return { word: "Poste obtenu", icon: "done", tone: "green" };
   if (a.status === "refus") return { word: "Refusée", icon: "close", tone: "muted" };
+  if (a.status === "reponse") return { word: "Réponse reçue", icon: "mail", tone: "grey" };
   if (a.status === "relancee") return { word: "Relancée", icon: "reply", tone: "grey" };
   return { word: "Envoyée", icon: "send", tone: "grey" };
 }

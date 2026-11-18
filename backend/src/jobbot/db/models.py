@@ -577,6 +577,8 @@ class ApplicationMethod(StrEnum):
 class ApplicationStatus(StrEnum):
     EN_ATTENTE = "en_attente"
     RELANCEE = "relancee"
+    # L'employeur a répondu, sans entretien ni refus (Kevin, 18.11.2026, migration 0093).
+    REPONSE = "reponse"
     ENTRETIEN = "entretien"
     REFUS = "refus"
     ENGAGEMENT = "engagement"

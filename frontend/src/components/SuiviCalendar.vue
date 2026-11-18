@@ -19,7 +19,7 @@ const MAX_DOTS = 3;
 // Statut par la couleur seule (choix du 2026-10-14) : blanc en attente, orange relancée,
 // violet entretien, rouge refus, vert clair engagement, gris sans réponse ; légende dessous et
 // statuts lus par les lecteurs d'écran.
-const LEGEND = ["en_attente", "relancee", "entretien", "refus", "engagement", "sans_reponse"] as const;
+const LEGEND = ["en_attente", "relancee", "reponse", "entretien", "refus", "engagement", "sans_reponse"] as const;
 const WEEKDAYS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 
 function iso(date: Date): string {

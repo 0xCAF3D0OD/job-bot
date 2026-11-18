@@ -12263,6 +12263,7 @@
         "enum": [
           "en_attente",
           "relancee",
+          "reponse",
           "entretien",
           "refus",
           "engagement",
