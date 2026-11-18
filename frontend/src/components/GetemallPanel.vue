@@ -20,6 +20,9 @@ const confirming = ref(false);
 const dialog = ref<HTMLDialogElement | null>(null);
 let returnTo: HTMLElement | null = null;
 
+// Prévient la page Réglages quand le premier chargement est fini : elle montre ses sections d’un coup (audit du 17.11, N23).
+const emit = defineEmits<{ ready: [] }>();
+
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/partenaires/getemall");
   state.value = data ?? null;
@@ -63,7 +66,13 @@ async function revoke(): Promise<void> {
   await load();
 }
 
-onMounted(load);
+onMounted(async () => {
+  try {
+    await load();
+  } finally {
+    emit("ready");
+  }
+});
 </script>
 
 <template>

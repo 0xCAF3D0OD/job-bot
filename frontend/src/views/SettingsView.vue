@@ -66,7 +66,8 @@ const WEEK = [
 ];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 const loaded = ref(false);
-usePageReady("settings", () => loaded.value);
+// La réponse sur les notifications du téléphone : avant elle, la carte du téléphone changerait de texte sous les yeux.
+const statusChecked = ref(false);
 const notifications = ref<{ configured: boolean; server: string; personal?: boolean; topic?: string | null } | null>(
   null,
 );
@@ -106,6 +107,8 @@ onMounted(async () => {
     notificationsUnknown.value = !status.data;
   } catch {
     notificationsUnknown.value = true;
+  } finally {
+    statusChecked.value = true;
   }
 });
 
@@ -206,6 +209,22 @@ async function savePause(): Promise<void> {
     return;
   }
   await persist("pause", { rhythm_pause_from: from, rhythm_pause_until: until });
+}
+// Un seul calendrier de pause ouvert (audit du 17.11, K41) : ouvrir « Du » pendant que « Jusqu’au » est ouvert referme
+// « Jusqu’au » (il est recréé, fermé), au lieu de serrer deux calendriers illisibles côte à côte.
+// Le calendrier ouvert dans la page entier sous l'en-tête collant (N20) : le focus sur le jour faisait défiler la page
+// et cachait « Retour au formulaire » sous l'en-tête. Ajusté avant l'affichage suivant, sans saut visible.
+const pauseKeys = ref({ from: 0, until: 0 });
+function onPauseClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  const field = target.closest<HTMLElement>("[data-test=dt-date]")?.closest<HTMLElement>("[data-test^=pause-]");
+  if (!field) return;
+  pauseKeys.value[field.dataset.test === "pause-from" ? "until" : "from"] += 1;
+  requestAnimationFrame(() => {
+    const box = field.querySelector(".dt-panel:not(.dt-panel-full)")?.getBoundingClientRect();
+    const top = (document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0) + 8;
+    if (box?.height) scrollBy(0, box.top < top ? box.top - top : Math.min(Math.max(0, box.bottom + 8 - innerHeight), box.top - top));
+  });
 }
 async function endPause(): Promise<void> {
   form.value.rhythm_pause_from = null;
@@ -318,10 +337,71 @@ const shows = (id: SectionId): boolean => (grouped.value ? groupSet.value.has(id
 const label = computed(() =>
   grouped.value ? "Réglages" : (sections.value.find((s) => s.id === active.value)?.label ?? "Réglages"),
 );
+// La page Réglages d'un seul tenant (audit du 17.11, N23) : ses sections arrivaient l'une après l'autre et poussaient
+// celles du dessous (Connexions, Mes données). Elles restent cachées, sous des blocs gris, jusqu'à ce que chaque
+// panneau ait reçu ses données, puis s'affichent ensemble : là ou pas là, jamais à moitié.
+const readyPanels = ref<string[]>([]);
+function panelReady(name: string): void {
+  if (!readyPanels.value.includes(name)) readyPanels.value = [...readyPanels.value, name];
+}
+const expectedPanels = computed(() => [
+  ...(shows("connexions") ? ["connections", "extension", "getemall"] : []),
+  ...(shows("donnees") ? ["account-data"] : []),
+]);
+const allReady = computed(
+  () =>
+    loaded.value &&
+    (!shows("notifications") || statusChecked.value) &&
+    expectedPanels.value.every((name) => readyPanels.value.includes(name)),
+);
+const waiting = computed(() => grouped.value && !allReady.value);
+// Retour sur la ligne d’origine (accord de Kevin du 17.11, K39) : la ligne cliquée et le défilement sont gardés pour
+// la session ; au retour d’une rubrique ou d’État du service, la page revient à ce défilement et met le focus clavier
+// sur la ligne, au lieu de remonter en haut.
+const RETURN_KEY = "jobA1-retour-ligne";
+function rememberRow(event: MouseEvent): void {
+  const row = (event.target as HTMLElement).closest<HTMLElement>(":is(a, button)[data-test^=account-]");
+  if (!row || row.dataset.test === "account-collect") return;
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ path: route.path, test: row.dataset.test, y: row.getBoundingClientRect().top }));
+  } catch {
+    // Stockage refusé (navigation privée) : on revient en haut, comme avant.
+  }
+}
+function restoreRow(): void {
+  let saved: { path?: string; test?: string; y?: number } | null = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(RETURN_KEY) ?? "null");
+  } catch {
+    return;
+  }
+  // Venu d’une rubrique : par le lien de retour (back) ou par le retour du navigateur (forward).
+  const { back, forward } = (history.state ?? {}) as { back?: unknown; forward?: unknown };
+  const fromRubric = [back, forward].some((path) => typeof path === "string" && path.startsWith("/reglages"));
+  if (!saved || saved.path !== route.path || !fromRubric) return;
+  try {
+    sessionStorage.removeItem(RETURN_KEY);
+  } catch {
+    // rien à effacer
+  }
+  const { test, y = 0 } = saved;
+  requestAnimationFrame(() => {
+    // La ligne à la même hauteur dans la fenêtre qu’au moment du clic.
+    const row = document.querySelector<HTMLElement>(`[data-test="${test}"]`);
+    if (!row) return;
+    scrollBy(0, row.getBoundingClientRect().top - y);
+    row.focus({ preventScroll: true });
+  });
+}
 watch(
-  [loaded, active],
+  () => grouped.value && allReady.value,
+  (ready) => ready && restoreRow(),
+);
+usePageReady("settings", () => allReady.value);
+watch(
+  [allReady, active],
   async () => {
-    if (!grouped.value || !loaded.value || active.value === "notifications") return;
+    if (!grouped.value || !allReady.value || active.value === "notifications") return;
     await nextTick();
     document.getElementById(active.value)?.scrollIntoView?.({ block: "start" });
   },
@@ -330,10 +410,10 @@ watch(
 </script>
 
 <template>
-  <!-- Téléphone, page Réglages (planche Reglages du 14.11, §6) : la flèche de 24 px dans un bouton de 48 px, puis
-       le titre ; plus de « Retour au compte » ni de bandeau. -->
+  <!-- Téléphone (planche Reglages du 14.11, §6) : la flèche dans un bouton de 48 px, puis le titre ; le même en-tête
+       sur chaque rubrique ouverte seule (audit du 17.11, N6). -->
   <header
-    v-if="phone && grouped"
+    v-if="phone"
     class="rg-phone-head"
   >
     <RouterLink
@@ -345,11 +425,9 @@ watch(
       <AppIcon name="arrow-left" />
     </RouterLink>
     <h1 data-test="settings-title">
-      Réglages
+      {{ label }}
     </h1>
   </header>
-  <!-- Sous-pages (consigne de Kevin du 16.11, point 1) : le retour au-dessus du titre, et le lien, le titre et les
-       cartes sur le même bord gauche (.settings-head, même colonne que .settings-sections). -->
   <PageHero
     v-else-if="!(wide && grouped)"
     :title="label"
@@ -358,17 +436,20 @@ watch(
     <template #back>
       <!-- Sur ordinateur, plus de page Compte (PR 20) : chaque rubrique revient aux Réglages. -->
       <RouterLink
-        v-if="phone || active !== 'notifications'"
-        :to="phone ? '/compte' : '/reglages'"
+        v-if="active !== 'notifications'"
+        to="/reglages"
         class="back-link"
         data-test="settings-back"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />{{ phone ? "Retour au compte" : "Retour aux réglages" }}</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />Retour aux réglages</span>
       </RouterLink>
     </template>
   </PageHero>
   <section class="band">
-    <div :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]">
+    <div
+      :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]"
+      @click.capture="rememberRow"
+    >
       <h1
         v-if="wide && grouped"
         class="settings-wide-title"
@@ -376,7 +457,15 @@ watch(
       >
         Réglages
       </h1>
-      <div class="settings-sections">
+      <!-- Le temps du chargement de la page entière : des blocs gris, puis toutes les sections d'un coup (N23). -->
+      <LoadingBlocks
+        v-if="waiting"
+        :heights="wide ? ['20rem', '13rem', '16rem'] : ['20rem', '13rem']"
+      />
+      <div
+        v-show="!waiting"
+        class="settings-sections"
+      >
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
@@ -529,8 +618,10 @@ watch(
                   role="group"
                   :aria-labelledby="c.labelledby"
                   :aria-describedby="c.describedby"
+                  @click.capture="onPauseClick"
                 >
                   <DateField
+                    :key="`from-${pauseKeys.from}`"
                     :model-value="form.rhythm_pause_from ?? null"
                     label="Du"
                     title="Pause à partir du"
@@ -538,6 +629,7 @@ watch(
                     @update:model-value="form.rhythm_pause_from = $event; void savePause()"
                   />
                   <DateField
+                    :key="`until-${pauseKeys.until}`"
                     :model-value="form.rhythm_pause_until ?? null"
                     label="Jusqu’au"
                     title="Pause jusqu’au"
@@ -666,7 +758,7 @@ watch(
                   description="Niveau de correspondance minimum"
                   :saved="savedRow === 'threshold'"
                   :error="rowErrors.threshold"
-                  :class="['notify-threshold', { 'rg-tap': phone }]"
+                  :class="['notify-threshold', phone ? 'rg-tap' : 'choice-menu-row']"
                   data-test="threshold-row"
                   @click="phone && (thresholdSheet = true)"
                 >
@@ -876,7 +968,10 @@ watch(
         >
           <!-- Mes données (planches Reglages et ReglagesOrdinateur du 14.11) : une liste, Exporter puis « L’IA et tes
                données », puis Supprimer mon compte ; la connexion (fonction de main absente des planches) reste dessous. -->
-          <AccountDataPanel :phone="phone" />
+          <AccountDataPanel
+            :phone="phone"
+            @ready="panelReady('account-data')"
+          />
           <SessionPanel />
         </SettingsSection>
 
@@ -886,9 +981,9 @@ watch(
           title="Connexions"
           cards
         >
-          <ConnectionsPanel />
-          <ExtensionPanel />
-          <GetemallPanel />
+          <ConnectionsPanel @ready="panelReady('connections')" />
+          <ExtensionPanel @ready="panelReady('extension')" />
+          <GetemallPanel @ready="panelReady('getemall')" />
         </SettingsSection>
 
         <SettingsSection
@@ -1016,4 +1111,16 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .num-row .setting-number { width: 72px; height: 44px; min-height: 44px; padding: 0; border-radius: var(--ff-radius); text-align: center; }
 .num-row .setting-row-control > span:not([role="status"]) { width: 120px; }
 .num-row .setting-row-status { position: absolute; top: 100%; }
+/* Sur une rubrique seule au téléphone, l'interrupteur reste à droite du texte, comme dans Notifications (audit du
+   17.11, N7) : la base de 16 rem du texte le faisait passer dessous, à gauche. */
+.settings-sub .setting-row:has(> .setting-row-control > [role="switch"]) { flex-wrap: nowrap; }
+/* Ce qui suit le calendrier ouvert passe devant l'ombre couleur de fond de son « Valider » collé (DateTimePanel, conteneur
+   étroit) : elle effaçait le libellé « Jusqu’au » sous le calendrier de « Du » (K41). */
+.rhythm-pause > .date-field:has(.dt-panel) ~ * { position: relative; z-index: 1; }
+/* Le menu d'Apparence et de « M’avertir dès » sort de sa carte : rogné par overflow: hidden, il s'ouvrait invisible
+   (audit du 17.11, K40). La première et la dernière carte gardent alors l'arrondi de la section. */
+.settings-grouped :is(.setting-cards, .setting-card, .rg-list):has(.choice-menu) { overflow: visible; }
+.settings-wide .setting-cards:has(.choice-menu) .appearance-card { border-radius: var(--radius-card); }
+.settings-wide .setting-cards:has(.choice-menu) > :first-child { border-top-left-radius: var(--radius-card); border-top-right-radius: var(--radius-card); }
+.settings-wide .setting-cards:has(.choice-menu) > :last-child { border-bottom-left-radius: var(--radius-card); border-bottom-right-radius: var(--radius-card); }
 </style>

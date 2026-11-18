@@ -26,6 +26,8 @@ type Summary = {
 // rouge sous la liste. Sur ordinateur (ReglagesOrdinateur) : lignes à flèche ronde, « Supprimer mon compte » en
 // dernière ligne de la liste, en rouge.
 withDefaults(defineProps<{ phone?: boolean }>(), { phone: false });
+// Prévient la page Réglages quand le premier chargement est fini : elle montre ses sections d’un coup (audit du 17.11, N23).
+const emit = defineEmits<{ ready: [] }>();
 const summary = ref<Summary | null>(null);
 const confirming = ref(false);
 const password = ref("");
@@ -56,8 +58,12 @@ const counts = computed(() => {
 });
 
 onMounted(async () => {
-  const { data } = await api.GET("/api/account/data");
-  summary.value = data ?? null;
+  try {
+    const { data } = await api.GET("/api/account/data");
+    summary.value = data ?? null;
+  } finally {
+    emit("ready");
+  }
   // Venu d'un lien « ?fermer=1 » (docs/105) : la confirmation est ouverte.
   if (route.query.fermer && summary.value?.can_delete) {
     confirming.value = true;
