@@ -360,5 +360,5 @@ const readOn = computed(() => (props.doc.read_at ? dateInSentence(props.doc.read
 .cv-state-hint { font-size: var(--font-small); color: var(--text-secondary); }
 .cv-state-leave { margin-top: var(--space-5); }
 .cv-state-failed { margin: var(--space-2) 0 0; font-size: var(--font-small); color: var(--peach-text); }
-.cv-state-close { flex: none; width: 2.75rem; height: 2.75rem; margin: -0.625rem -0.625rem 0 0; padding: 0; border: 0; background: none; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.cv-state-close { flex: none; width: 2.75rem; height: 2.75rem; margin: -0.625rem -0.625rem 0 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 </style>

@@ -104,9 +104,9 @@ describe("CriteriaForm, déjà saisis", () => {
       // « Langues » avec les niveaux (PR 17), plus « Langues non parlées ».
       ["Langues", "Français\u202f: langue maternelle, Allemand\u202f: notions"],
     ]);
-    // À droite, le cercle D29 de 36 px (décoratif), plus de chevron gris.
+    // À droite, le chevron de liste (§49 du 17.11), décoratif.
     for (const row of summary.findAll("button.criteria-row")) {
-      expect(row.find(".arrow-circle.small").attributes("aria-hidden")).toBe("true");
+      expect(row.find(".list-chevron").attributes("aria-hidden")).toBe("true");
     }
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
     await wrapper.find("[data-test=criteria-row-taux]").trigger("click");

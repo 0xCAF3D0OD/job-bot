@@ -27,6 +27,8 @@ import { dateInSentence, meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
+import FieldSaveStatus from "../components/FieldSaveStatus.vue";
+import { useSheetIdentity } from "../sheetIdentity";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import RendezVousPhone from "../components/RendezVousPhone.vue";
 import OfferSearch from "../components/OfferSearch.vue";
@@ -49,7 +51,16 @@ usePageReady("orp-meeting", () => !!page.value);
 const failed = ref(false);
 const editing = ref(false);
 const custom = ref("");
-const name = ref("");
+// « Ton nom sur la feuille » (§70, Kevin 18.11) : gardé dans le compte, enregistré quand on quitte la case (la page
+// FeuilleNom sur téléphone ; ici, la case de la carte « La feuille », avec le même retour).
+const identity = useSheetIdentity();
+const name = computed({
+  get: () => identity.values.name,
+  set: (value: string) => {
+    identity.values.name = value;
+    identity.edit("name");
+  },
+});
 const message = ref("");
 // Le rendez-vous dont on note ce qui a été convenu (0.67.2).
 const noting = ref<number | null>(null);
@@ -348,7 +359,10 @@ watch(
   { immediate: true },
 );
 
-onMounted(() => void load());
+onMounted(() => {
+  void load();
+  void identity.load();
+});
 </script>
 
 <template>
@@ -631,9 +645,17 @@ onMounted(() => void load());
                 type="text"
                 maxlength="120"
                 autocomplete="name"
-                :aria-describedby="describedby"
+                :aria-describedby="`${describedby ?? ''} ${id}-save`.trim()"
                 :aria-invalid="invalid"
+                data-test="sheet-name"
+                @change="identity.save('name')"
               >
+              <FieldSaveStatus
+                :id="`${id}-save`"
+                :state="identity.states.name"
+                reserve
+                @retry="identity.save('name')"
+              />
             </FormField>
             <!-- Une colonne (décision du 25/10) : la seule action principale, puis l'IA en contour. -->
             <div class="form-actions orp-sheet-actions">

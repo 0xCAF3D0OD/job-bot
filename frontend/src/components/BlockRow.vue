@@ -53,8 +53,8 @@ defineEmits<{ click: [] }>();
       :class="['block-row-aside', aside.tone]"
     ><span class="visually-hidden">, </span>{{ aside.text }}</span>
     <span
-      class="arrow-circle"
+      class="list-chevron"
       aria-hidden="true"
-    ><AppIcon name="arrow-right" /></span>
+    ><AppIcon name="chevron" /></span>
   </component>
 </template>

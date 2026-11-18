@@ -7390,13 +7390,74 @@
         }
       }
     },
+    "/api/orp-meeting/nom": {
+      "get": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Get Orp Sheet Identity",
+        "operationId": "getOrpSheetIdentity",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetIdentityOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Save Orp Sheet Identity",
+        "description": "Ton nom, ton conseiller, ton office régional, gardés dans ton compte (§70).",
+        "operationId": "saveOrpSheetIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SheetIdentityIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetIdentityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orp-meeting/feuille.pdf": {
       "get": {
         "tags": [
           "orp"
         ],
         "summary": "Get Orp Meeting Sheet",
-        "description": "La feuille sur une page A4 ; ton nom seulement si tu le donnes (`name`).",
+        "description": "La feuille sur une page A4 ; ton nom, ton conseiller et ton office régional s'ils sont\nenregistrés (« Ton nom sur la feuille », §70). `name` remplace le nom enregistré.",
         "operationId": "getOrpMeetingSheet",
         "parameters": [
           {
@@ -25467,6 +25528,94 @@
         },
         "type": "object",
         "title": "SettingsModel"
+      },
+      "SheetIdentityIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "advisor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office"
+          }
+        },
+        "type": "object",
+        "title": "SheetIdentityIn",
+        "description": "Seuls les champs envoyés sont enregistrés (un champ à la fois, quand on le quitte) ; vide =\nretiré."
+      },
+      "SheetIdentityOut": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "advisor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "advisor",
+          "office"
+        ],
+        "title": "SheetIdentityOut",
+        "description": "« Ton nom sur la feuille » (§70) : le conseiller pré-rempli par le rendez-vous, s'il est\nconnu."
       },
       "SignupIn": {
         "properties": {

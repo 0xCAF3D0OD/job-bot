@@ -339,9 +339,9 @@ watch(viewMonth, () => void load());
             <span class="bilan-card-what"><strong>{{ row.company }}</strong><span>{{ row.job_title }} · {{ orpChannel(row.method) }}</span></span>
             <span :class="['bilan-card-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Infos à compléter" : "Prête" }}</span>
             <span
-              class="arrow-circle small"
+              class="list-chevron"
               aria-hidden="true"
-            ><AppIcon name="arrow-right" /></span>
+            ><AppIcon name="chevron" /></span>
           </button>
           <button
             v-if="!declareAll && !expanded && pending.length > DECLARE_SHOWN"
@@ -444,9 +444,9 @@ watch(viewMonth, () => void load());
                 <span class="bilan-card-what"><strong>{{ pastTitle(item.starts_at).replace(" ORP", "") }}</strong><span>{{ [item.place, `${dateText(item.starts_at).toLowerCase()}, ${timeAndPlace(item.starts_at, null)}`].filter(Boolean).join(" · ") }}</span></span>
                 <span class="bilan-card-state todo">À noter</span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </li>
             <li>
@@ -491,9 +491,9 @@ watch(viewMonth, () => void load());
                 <span class="bilan-card-what"><strong>Prochain rendez-vous</strong></span>
                 <span class="bilan-card-state">{{ nextMeeting ? `${dateText(nextMeeting.starts_at)}, ${timeAndPlace(nextMeeting.starts_at, null)}` : "Pas encore fixé" }}</span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </li>
           </ul>
@@ -611,9 +611,9 @@ watch(viewMonth, () => void load());
                   <span>{{ checked.has(row.application_id) ? `Déclarée · ${checked.get(row.application_id)}` : `${row.job_title} · ${shortDay(row)}` }}</span>
                 </span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </div>
           </section>
@@ -643,9 +643,9 @@ watch(viewMonth, () => void load());
                 <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
               </span>
               <span
-                class="arrow-circle small"
+                class="list-chevron"
                 aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
+              ><AppIcon name="chevron" /></span>
             </button>
             <RouterLink
               :to="foldTo"

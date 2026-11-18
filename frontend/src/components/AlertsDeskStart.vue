@@ -60,9 +60,9 @@ const sites = computed(() =>
           @click="emit('edit')"
         >
           Modifier<span
-            class="arrow-circle small notif"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </button>
       </div>
     </section>
