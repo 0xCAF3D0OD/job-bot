@@ -29,6 +29,7 @@ import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import { offerUndo } from "../composables/useUndo";
+import { displayTitle } from "../offerTitle";
 import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
@@ -577,7 +578,7 @@ const saidAloud = ref("");
 async function share(): Promise<void> {
   const url = shareUrl.value;
   if (!url) return;
-  const title = [props.offer.title, props.offer.company].filter(Boolean).join(" · ");
+  const title = [displayTitle(props.offer.title, props.offer), props.offer.company].filter(Boolean).join(" · ");
   if (typeof navigator.share === "function") {
     await navigator.share({ title, url }).catch(() => undefined);
     return;
@@ -724,7 +725,7 @@ watch(
               tabindex="-1"
               data-test="offer-detail-title"
             >
-              {{ offer.title }}
+              {{ displayTitle(offer.title, offer) }}
             </h2>
             <p
               class="oc-sub"
@@ -1079,7 +1080,7 @@ watch(
           tabindex="-1"
           data-test="offer-detail-title"
         >
-          {{ offer.title }}
+          {{ displayTitle(offer.title, offer) }}
         </h2>
         <p
           class="detail-sub"
@@ -1209,7 +1210,7 @@ watch(
       :stale="offer.score_stale"
       :verdict="columns ? (matchWord?.word ?? matchTitle) : matchTitle"
       :tone="matchTone"
-      :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
+      :subtitle="`${displayTitle(offer.title, offer)} · ${offer.company ?? 'Entreprise non indiquée'}`"
       :note="columns ? matchSub : undefined"
       :strengths="compatStrengths"
       :gaps="compatGaps"
