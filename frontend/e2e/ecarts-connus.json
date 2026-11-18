@@ -80,13 +80,6 @@
     },
     {
       "ecran": "envoyees",
-      "format": "telephone",
-      "regle": "a",
-      "element": "span.list-card-chips",
-      "raison": "les puces des Envoyées passent sur 2 lignes et sortent de la carte (le bug signalé par Kevin le 18.11) ; corrigé par la PR #869, qui retire cette ligne"
-    },
-    {
-      "ecran": "envoyees",
       "format": "ordinateur",
       "regle": "b",
       "element": "span.empty-state-pill",
