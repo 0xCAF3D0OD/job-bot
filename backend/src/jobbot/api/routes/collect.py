@@ -521,6 +521,18 @@ class OfferFacets(BaseModel):
     # seulement (provisoires), sans ce filtre lui-même.
     sure: int = 0
     provisional: int = 0
+    # Filtre « Taux d'activité » (§65 du 17.11) : le nombre d'offres de chaque choix (« all »,
+    # « 60 », « 80 », « 100 »), avec tous les autres filtres actifs mais sans celui du taux.
+    rates: list[Facet] = []
+
+
+# Les choix du filtre « Taux d'activité » (section 31 du 16.11) : dès 60, dès 80, 100 %.
+RATE_CHOICES = (60, 80, 100)
+
+
+def _rate_condition(min_rate: int) -> ColumnElement[bool]:
+    """« Dès n % » : une offre sans taux connu reste visible."""
+    return or_(Offer.rate_max.is_(None), Offer.rate_max >= min_rate)
 
 
 # Accents retirés côté base, sans extension PostgreSQL (unaccent n'est pas toujours installé).
@@ -608,8 +620,7 @@ def _filters(
     if cantons:
         conditions.append(Offer.canton.in_([c.upper() for c in cantons]))
     if min_rate is not None:
-        # Une offre sans taux connu reste visible.
-        conditions.append(or_(Offer.rate_max.is_(None), Offer.rate_max >= min_rate))
+        conditions.append(_rate_condition(min_rate))
     if external_only:
         conditions.append(Offer.apply_kind == "external")
     return conditions
@@ -753,6 +764,7 @@ async def list_offers(
         hide_agencies,
         corrections,
     )
+    filtered = len(conditions)
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
     if min_score is not None:
@@ -793,6 +805,23 @@ async def list_offers(
     if view_condition is not None:
         without_sources.append(view_condition)
         without_cantons.append(view_condition)
+    # Sans le filtre du taux : les nombres sous chaque choix (§65), le choix actif donnant le
+    # même nombre que « Afficher n offres ». Les filtres de note et de type de note restent.
+    without_rate = [
+        *_filters(
+            q,
+            sources,
+            cantons,
+            None,
+            external_only,
+            remote,
+            hide_doubtful,
+            hide_agencies,
+            corrections,
+        ),
+        *conditions[filtered:],
+        *([view_condition] if view_condition is not None else []),
+    ]
 
     async with runtime.sessionmaker() as session:
         # « À traiter » sans les filtres : « 12 sur 38 offres », une seule source (docs/139).
@@ -852,6 +881,14 @@ async def list_offers(
                 ).where(*without_basis)
             )
         ).one()
+        rate_row = (
+            await session.execute(
+                select(
+                    func.count(),
+                    *(func.count().filter(_rate_condition(rate)) for rate in RATE_CHOICES),
+                ).where(*without_rate)
+            )
+        ).one()
 
     live: dict[str, int] = {}
     for offer_status, expired, count in grouped:
@@ -879,6 +916,10 @@ async def list_offers(
         unscored=unscored,
         sure=int(basis_row[0]),
         provisional=int(basis_row[1]),
+        rates=[
+            Facet(value=str(value), count=int(count))
+            for value, count in zip(("all", *map(str, RATE_CHOICES)), rate_row, strict=True)
+        ],
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[
             Facet(value=str(v), count=c)

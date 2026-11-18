@@ -27,10 +27,20 @@ const kind = computed(() => notificationKind(props.item.kind));
     data-test="notification"
     @click="emit('open', item)"
   >
-    <span
-      :class="['notif-card-icon', { late: kind.late }]"
-      :data-icon="kind.icon"
-    ><AppIcon :name="kind.icon" /></span>
+    <!-- §48 du 17.11 : le point bleu « Non lue » à gauche ; sa place reste sur les lignes lues, les icônes restent alignées. -->
+    <span class="notif-card-lead">
+      <span class="notif-card-dot-slot"><span
+        v-if="unread"
+        class="notif-card-dot"
+        role="img"
+        aria-label="Non lue"
+        data-test="unread-dot"
+      /></span>
+      <span
+        :class="['notif-card-icon', { late: kind.late }]"
+        :data-icon="kind.icon"
+      ><AppIcon :name="kind.icon" /></span>
+    </span>
     <span class="block-row-text">
       <span class="notif-card-title">{{ item.title }}</span>
       <span
@@ -38,22 +48,13 @@ const kind = computed(() => notificationKind(props.item.kind));
         class="notif-card-text"
       ><span class="visually-hidden">, </span>{{ text }}</span>
       <span class="notif-card-info">
-        <template v-if="unread">
-          <span
-            class="notif-card-dot"
-            aria-hidden="true"
-            data-test="unread-dot"
-          />
-          <span class="notif-card-unread"><span class="visually-hidden">, </span>Non lue</span>
-          <span aria-hidden="true">·</span>
-        </template>
         <span><span class="visually-hidden">, </span>{{ timeInCard(item.created_at) }}</span>
       </span>
     </span>
     <span
-      class="arrow-circle notif"
+      class="list-chevron"
       aria-hidden="true"
-    ><AppIcon name="arrow-right" /></span>
+    ><AppIcon name="chevron" /></span>
   </component>
 </template>
 
@@ -70,5 +71,7 @@ const kind = computed(() => notificationKind(props.item.kind));
 .notif-card-text { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--row-line-lh); color: var(--text-secondary); overflow-wrap: anywhere; }
 .notif-card-info { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); font-size: var(--label-caps); line-height: var(--space-4); color: var(--text-secondary); }
 .notif-card-dot { flex: none; width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--primary-graphic); }
-.notif-card-unread { font-weight: var(--weight-bold); color: var(--primary-text); }
+.notif-card-lead { display: flex; flex: none; align-items: center; gap: var(--space-2); }
+.notif-card-dot-slot { display: flex; flex: none; width: 8px; height: 8px; }
+.blocks-page .block-row.notif-card.unread, .notif-card.unread { background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface)); }
 </style>

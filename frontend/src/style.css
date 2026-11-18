@@ -14,7 +14,7 @@
   --line: #E5E2D9;
   --line-soft: #EFECE5;
   /* Le trait entre deux lignes d’une carte de groupe (Compte ; 9 novembre) : #E5E2D9 en clair depuis le prompt du
-     10 novembre (PR 20, point 3 ; #EFECE5 avant), #38322B en sombre ; « Se déconnecter » en #B4371F, #FF9B85 en sombre. */
+     10 novembre (PR 20, point 3 ; #EFECE5 avant), #38322B en sombre ; « Se déconnecter » en #B4371F, #FF9A85 en sombre (§66). */
   --row-sep: #E5E2D9;
   /* Ligne profil du Compte (CompteImage, demande de Kevin du 9 novembre) : contour de la pastille crayon, initiales. */
   --avatar-badge-line: #E5E2D9;
@@ -62,6 +62,9 @@
   --linked-line: #D5D1C7;
   /* Tiret du cercle « Pas encore notée » (§21 du 15 novembre). */
   --unrated-dash: #8C8478;
+  /* §66 du 17.11 : « Non renseigné » lisible (4,5:1 au moins) ; « À compléter » des Coordonnées. */
+  --unset-text: #756D61;
+  --todo-text: var(--warning);
   --linked-selected-bg: #EEF1FC;
   /* Vignettes de modèle (PreparerOrdinateur) : la feuille blanche et ses lignes grises ; en sombre, le fond et #5E574F. */
   --thumb-paper: #FFFFFF;
@@ -220,6 +223,8 @@
   /* La barre « Postuler » du téléphone : la place qu'elle réserve sous le contenu (1.6.12). */
   --dock-h: 5.5rem;
   --weight-regular: 400;
+  /* Les nombres sous les choix des filtres (planche Filtres) : Figtree est chargée en variable, le 500 existe. */
+  --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
   /* Les chiffres des blocs date de Rendez-vous (maquette RendezVous, 6.11.2026). */
@@ -245,7 +250,7 @@
     --row-sep: #38322B;
     --avatar-badge-line: #3A352E;
     --avatar-initials: #AEBDFF;
-    --logout-text: #FF9B85;
+    --logout-text: #FF9A85;
     --icon-peach: #F2B98E;
     --chevron: #ABA398;
     --bg: #171411;
@@ -266,6 +271,8 @@
     --selected-bg: #232B45;
     --linked-line: #4E473E;
     --unrated-dash: #ABA398;
+    --unset-text: #9C9488;
+    --todo-text: #F2B98E;
     --linked-selected-bg: #232B45;
     --thumb-paper: #171411;
     --thumb-line: #5E574F;
@@ -317,7 +324,7 @@
   --row-sep: #38322B;
   --avatar-badge-line: #3A352E;
   --avatar-initials: #AEBDFF;
-  --logout-text: #FF9B85;
+  --logout-text: #FF9A85;
   --icon-peach: #F2B98E;
   --chevron: #ABA398;
   --bg: #171411;
@@ -338,6 +345,8 @@
   --selected-bg: #232B45;
   --linked-line: #4E473E;
   --unrated-dash: #ABA398;
+  --unset-text: #9C9488;
+  --todo-text: #F2B98E;
   --linked-selected-bg: #232B45;
   --thumb-paper: #171411;
   --thumb-line: #5E574F;
@@ -482,6 +491,9 @@ p.notice { padding-right: max(var(--space-4), calc(100% - var(--measure))); }
 /* Candidatures : ses vues ont leurs propres marges, dans la même bande grise (docs/43 n° 1). */
 .jobs-band { padding: 0; }
 
+/* §66 du 17.11 : aucun texte en police système, même dans un champ, une liste ou un bouton hors des règles ci-dessous. */
+:where(button, input, select, textarea, optgroup) { font-family: inherit; }
+
 /* --- Boutons --- */
 
 button {
@@ -513,15 +525,10 @@ button.action-1 { background: var(--action); border-color: var(--action); color:
 button.primary:hover:not(:disabled), button.action-1:hover:not(:disabled) { background: color-mix(in srgb, var(--action) 88%, var(--text)); border-color: color-mix(in srgb, var(--action) 88%, var(--text)); color: var(--on-action); }
 button.action-2 { background: var(--surface); border: var(--action-line) solid var(--primary-graphic); color: var(--primary-text); }
 :root { --action-line: 1.5px; }
-/* Cercle des lignes à flèche (D29) : contour de 2 px, flèche de 18, décoratif. 36 px dans les lignes de réglages. */
-/* Cercle-flèche des cartes cliquables (MODIFICATIONS du 9 novembre, §10.1) : gris #596070 (sombre #ABA398), le bleu
-   reste à l'action principale (D30). Jamais plus clair : il serait lu comme « désactivé ». Les notifications gardent le
-   bleu (.arrow-circle.notif). */
-.arrow-circle { --circle: 40px; flex: none; display: inline-grid; place-items: center; box-sizing: border-box; width: var(--circle); height: var(--circle); border: var(--circle-line) solid var(--text-secondary); border-radius: var(--radius-pill); color: var(--text-secondary); }
-.arrow-circle.notif { border-color: var(--primary-graphic); color: var(--primary-text); }
-.arrow-circle.small { --circle: 36px; }
-.arrow-circle .icon { width: 18px; height: 18px; }
-:root { --circle-line: 2px; }
+/* Chevron des lignes cliquables (LISEZMOI du 17.11, §49, remplace le cercle-flèche D29) : un › de 20 px, trait 2,4,
+   dans une zone de 24 px, décoratif ; toute la ligne reste la cible (≥ 44 px). Gris #8C8478, sombre #ABA398 (--chevron). */
+.list-chevron { flex: none; display: inline-grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--chevron); }
+.list-chevron .icon { --list-chevron: 20px; width: var(--list-chevron); height: var(--list-chevron); stroke-width: 2.4; }
 button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-small); }
 
 .toast {
@@ -1215,6 +1222,8 @@ html.search-open,
 /* Menu du compte : Profil, Réglages, profil affiché, déconnexion */
 .account-menu { position: relative; }
 .icon-button { border-radius: var(--radius-pill); width: 2.4rem; height: 2.4rem; padding: 0; justify-content: center; }
+/* §66 du 17.11 : chaque bouton Fermer est rond, 44 px. */
+.toast-close.icon-button, .detail-close.icon-button, .success-close.icon-button { width: var(--target-min); height: var(--target-min); border-radius: 50%; }
 .icon-button .icon { width: 1.15rem; height: 1.15rem; }
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
@@ -3668,7 +3677,7 @@ main:focus { outline: none; }
 /* Lot 18 (§10.5) : Résultats et Formations sur le fond des blocs, blocs sans bordure, cercles D29 de 36 px. */
 .bilan-page .band { background: none; }
 .bilan-page :is(.bilan-figures li, .bilan-funnel, .bilan-link, .action-band-card, .bilan-detail .disclosure, .training-list, .training-current, .training-kept li) { border: 0; box-shadow: none; }
-.bilan-link > .arrow-circle, .training-funding-note > .arrow-circle { flex: none; }
+.bilan-link > .list-chevron, .training-funding-note > .list-chevron { flex: none; }
 @media (min-width: 821px) {
   .bilan { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: var(--space-6); }
 }
@@ -3719,17 +3728,18 @@ main:focus { outline: none; }
   .topbar-actions { grid-column: 4; justify-self: end; }
 }
 .global-search { position: relative; }
-.global-search-box:not(.sheet) { position: relative; }
+.global-search-box:not(.sheet) { --gs-edge: -2px; position: relative; }
 /* La bulle de l'ordinateur (maquette du 8 novembre, D24) : 44 px fermée, 380 px ouverte. */
 .global-search-box:not(.sheet) .global-search-field { position: relative; gap: 0; width: 44px; height: 44px; box-sizing: border-box; border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); overflow: hidden; }
 .global-search-box.expanded:not(.sheet) .global-search-field { width: 380px; border: 2px solid var(--primary-graphic); }
 @media (prefers-reduced-motion: no-preference) { .global-search-box:not(.sheet) .global-search-field { transition: width 220ms cubic-bezier(.05,.7,.1,1); } }
 .global-search-box:not(.sheet) .gs-open { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; min-width: 0; background: transparent; }
 .global-search-box:not(.sheet) .global-search-input-wrap { flex: 1 1 auto; min-width: 0; }
-.global-search-box:not(.sheet) .global-search-input-wrap input { width: 100%; height: 40px; min-height: 0; border: 0; background: transparent; box-shadow: none; }
+/* §66 du 17.11 : le champ se clique sur toute sa hauteur de 44 px, trait compris. */
+.global-search-box:not(.sheet) .global-search-input-wrap input { width: 100%; height: 44px; margin: var(--gs-edge) 0; min-height: 0; border: 0; background: transparent; box-shadow: none; }
 .global-search-box:not(.sheet):not(.expanded) .global-search-input-wrap { opacity: 0; }
 .global-search-box:not(.sheet) .global-search-input-wrap > .icon { color: var(--text); }
-.gs-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin-right: var(--space-1); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); }
+.gs-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: var(--gs-edge) var(--gs-edge) var(--gs-edge) 0; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text); }
 .global-search-field { display: flex; align-items: center; gap: var(--space-3); }
 .global-search-input-wrap > .icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .global-search-input-wrap input {

@@ -75,7 +75,12 @@ describe("NotificationsView (maquette Notifications, étape 9a)", () => {
     expect(rows[3]!.element.tagName).toBe("BUTTON");
     expect(wrapper.find("[data-test=notifications-settings]").attributes("href")).toBe("/reglages?rubrique=notifications");
 
+    // §48 du 17.11 : un filtre en deux pastilles (aria-pressed), pas des onglets.
+    expect(wrapper.get(".notif-pills").attributes("role")).toBe("group");
+    expect(wrapper.find("[data-test=filter-all]").attributes("aria-pressed")).toBe("true");
     await wrapper.find("[data-test=filter-unread]").trigger("click");
+    expect(wrapper.find("[data-test=filter-unread]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=filter-all]").attributes("aria-pressed")).toBe("false");
     expect(wrapper.findAll("[data-test=notification]")).toHaveLength(2);
     wrapper.unmount();
   });

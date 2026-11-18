@@ -18,7 +18,7 @@ const item = (extra: Record<string, unknown> = {}) => ({
 const mountCard = (extra: Record<string, unknown> = {}) => mount(NotificationCard, { props: { item: item(extra) }, global: { plugins: [router] } });
 
 describe("NotificationCard (MODIFICATIONS du 8 novembre au soir, §10.9)", () => {
-  it("une carte cliquable : icône, titre, première ligne, « Non lue » · heure, cercle à flèche", () => {
+  it("une carte cliquable : icône, titre, première ligne, point « Non lue », heure, chevron", () => {
     const wrapper = mountCard();
     const card = wrapper.get("[data-test=notification]");
     expect(card.element.tagName).toBe("A");
@@ -27,10 +27,11 @@ describe("NotificationCard (MODIFICATIONS du 8 novembre au soir, §10.9)", () =>
     expect(card.findAll("a, button")).toHaveLength(0);
     expect(wrapper.get(".notif-card-icon").attributes("data-icon")).toBe("briefcase");
     expect(wrapper.get(".notif-card-text").text()).toBe(", La meilleure : Infomaniak, très proche.");
-    // La couleur n'est jamais le seul repère : le mot « Non lue » suit le point, décoratif.
-    expect(wrapper.get("[data-test=unread-dot]").attributes("aria-hidden")).toBe("true");
-    expect(wrapper.get(".notif-card-info").text()).toMatch(/^, Non lue·, \d\d:\d\d$/);
-    expect(wrapper.find(".arrow-circle").attributes("aria-hidden")).toBe("true");
+    // §48 du 17.11 : le point bleu à gauche, lu « Non lue » par les lecteurs d'écran ; le titre reste en gras.
+    expect(wrapper.get("[data-test=unread-dot]").attributes("aria-label")).toBe("Non lue");
+    expect(wrapper.get("[data-test=unread-dot]").attributes("role")).toBe("img");
+    expect(wrapper.get(".notif-card-info").text()).toMatch(/^, \d\d:\d\d$/);
+    expect(wrapper.find(".list-chevron").attributes("aria-hidden")).toBe("true");
   });
 
   it("lue : ni point ni « Non lue » ; sans description, la carte n’a que le titre et l’heure", () => {

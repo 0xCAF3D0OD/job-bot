@@ -228,9 +228,9 @@ const periodLine = computed(() => {
         >
           <span><strong>Mois par mois</strong><span>{{ goalLine }}</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </RouterLink>
         <DisclosureRow
           title="Ce qui marche"

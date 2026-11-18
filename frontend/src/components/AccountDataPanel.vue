@@ -26,6 +26,8 @@ type Summary = {
 // rouge sous la liste. Sur ordinateur (ReglagesOrdinateur) : lignes à flèche ronde, « Supprimer mon compte » en
 // dernière ligne de la liste, en rouge.
 withDefaults(defineProps<{ phone?: boolean }>(), { phone: false });
+// Prévient la page Réglages quand le premier chargement est fini : elle montre ses sections d’un coup (audit du 17.11, N23).
+const emit = defineEmits<{ ready: [] }>();
 const summary = ref<Summary | null>(null);
 const confirming = ref(false);
 const password = ref("");
@@ -56,8 +58,12 @@ const counts = computed(() => {
 });
 
 onMounted(async () => {
-  const { data } = await api.GET("/api/account/data");
-  summary.value = data ?? null;
+  try {
+    const { data } = await api.GET("/api/account/data");
+    summary.value = data ?? null;
+  } finally {
+    emit("ready");
+  }
   // Venu d'un lien « ?fermer=1 » (docs/105) : la confirmation est ouverte.
   if (route.query.fermer && summary.value?.can_delete) {
     confirming.value = true;
@@ -238,9 +244,9 @@ async function remove(): Promise<void> {
         >
           <span class="rg-label">Exporter mes données<span class="rg-sub">CV, candidatures et suivi ORP en un fichier</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </button>
         <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
              de passe dedans, sous sa ligne. -->
@@ -291,9 +297,9 @@ async function remove(): Promise<void> {
         >
           <span class="rg-label">L’IA et tes données<span class="rg-sub">Ce qui part à l’IA et ce qui reste chez jobA1</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </RouterLink>
         <!-- Données personnelles (fonction de main absente de la planche) : les compteurs et les durées de garde. -->
         <RouterLink
@@ -306,9 +312,9 @@ async function remove(): Promise<void> {
             data-test="account-counts"
           >{{ counts }}</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </RouterLink>
         <button
           v-if="summary?.can_delete && !confirming"

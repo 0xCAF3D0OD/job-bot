@@ -27,9 +27,13 @@ const open = ref<number | null>(null);
 const letter = ref<{ documentId?: number; language?: "fr" | "de" } | null>(null);
 
 async function load(): Promise<void> {
-  const { data } = await api.GET("/api/certificates");
-  page.value = data ?? null;
-  emit("loaded", data?.certificates.length ?? 0);
+  try {
+    const { data } = await api.GET("/api/certificates");
+    page.value = data ?? null;
+  } finally {
+    // Même en échec : la page qui attend les certificats pour s'afficher d'un coup ne reste pas en chargement.
+    emit("loaded", page.value?.certificates.length ?? 0);
+  }
 }
 
 async function readInDetail(item: Certificate): Promise<void> {

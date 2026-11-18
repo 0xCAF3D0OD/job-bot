@@ -5,7 +5,7 @@ import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CountBadge from "./CountBadge.vue";
 import OfferSearch from "./OfferSearch.vue";
-import { radioKey } from "../composables/useOfferFilters";
+import { radioKey } from "../radioKey";
 import { plural } from "../format";
 import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
 
