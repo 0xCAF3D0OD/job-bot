@@ -1708,7 +1708,7 @@ watch(
           />
         </div>
         <!-- Planche OffreAdresseTrouvee (18.11) : le titre « L'entreprise » au-dessus d'une carte (Nom, Adresse,
-             « Modifier l'adresse »), puis la carte « Site de l'entreprise ». -->
+             « Modifier l’adresse »), puis la carte « Site de l’entreprise ». -->
         <div class="company-card">
           <CopyField
             label="Nom"
@@ -1875,6 +1875,7 @@ watch(
           <span>
             <b>Site de l’entreprise</b>
             <span class="company-site-host">{{ website.host }}</span>
+            <span class="visually-hidden"> (nouvel onglet)</span>
           </span>
           <AppIcon name="chevron" />
         </a>
