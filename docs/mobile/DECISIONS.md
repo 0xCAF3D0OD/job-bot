@@ -928,6 +928,14 @@ Réponses aux trois questions de #851 :
 Ordre choisi le 18.11 à 8 h 42 (issue #468) : le serveur de Contrat d'abord, puis celui de Distance, dans deux PR
 séparées.
 
+## « Ton nom sur la feuille » (Kevin, 18.11.2026, 8 h 39 et 8 h 50)
+
+- Une page à part, « Ton nom sur la feuille » (planches FeuilleNom et FeuilleNomSombre, §70), avec trois champs enregistrés dans le compte : le nom ; le conseiller ORP, pré-rempli depuis le rendez-vous s'il est connu ; l'office régional, nouvelle donnée.
+- Sous chaque champ : « Enregistrement… » (role="status"), puis « Enregistré » quand on le quitte ; si l'enregistrement échoue, « Pas enregistré · Réessayer », et la saisie reste dans le champ.
+- Entrée : la ligne « Ton nom sur la feuille › » dans la carte « La feuille » de « Préparer le rendez-vous » (planche PreparerRendezVous, §71).
+- Ordinateur : la case actuelle reste, avec le même retour.
+- L'office régional peut être vidé ; ces champs partent avec l'export et la suppression du compte, comme les autres données.
+
 ## Accueil téléphone d'après AccueilV2 (Kevin, 17.11.2026 et 18.11.2026, 8 h 44)
 
 - 17.11 : l'Accueil du téléphone est refait d'après AccueilV2 dans une seule PR : §40 (titre écrit à la main, ordre À faire → ORP → Top du jour → offres à trier, barre « Mois ORP », feuille « Top du jour », « N offres à trier »), §54 (feuilles empilées au défilement) et §61 (cercle orange sur « Remettre les justificatifs », les autres tâches gardent leur numéro). La colonne « offre ouverte » suit dans une PR serveur à part.
