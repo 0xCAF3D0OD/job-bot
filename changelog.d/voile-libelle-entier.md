@@ -1,0 +1,1 @@
+Fenêtres : le voile passe au-dessus de la barre du haut, qui ne cache plus le titre ; un champ étroit s'élargit pour que son libellé ne soit jamais coupé (« Nombre de personnes ») ; sur ordinateur, le bandeau « Annuler » s'affiche en bas à gauche, 400 × 56, aux couleurs de la planche (audit N29 et N30)
