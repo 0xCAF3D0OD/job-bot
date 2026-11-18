@@ -209,14 +209,16 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     });
   }
 
-  it("barre « ← Candidature » et « … » (maquette du 14 novembre) ; titre en H1, mots de statut, sans avatar ni Suivi", async () => {
+  it("barre « ← Candidature » et « … » (maquette du 14 novembre) ; titre en H1, mots de statut, frise de 4 étapes (§40)", async () => {
     const wrapper = mountPhone({ id: 20 });
     await flushPromises();
     expect(wrapper.find("[data-test=sent-back]").attributes("aria-label")).toBe("Retour aux envoyées");
     expect(wrapper.find(".sent-screen-title").text()).toBe("Candidature");
     expect(wrapper.find("[data-test=panel-title]").element.tagName).toBe("H1");
     expect(wrapper.find(".sent-head-logo").exists()).toBe(false);
-    expect(wrapper.find("[data-test=sent-steps]").exists()).toBe(false);
+    const steps = wrapper.findAll("[data-test=sent-steps] li");
+    expect(steps.map((s) => s.text())).toEqual(["Envoyée (faite)", "Réponse (en cours)", "Entretien", "Décision"]);
+    expect(steps[1]!.attributes("aria-current")).toBe("step");
     expect(wrapper.find("[data-test=word-no-answer]").exists()).toBe(true);
     await wrapper.find("[data-test=sent-back]").trigger("click");
     expect(wrapper.emitted("close")).toHaveLength(1);
@@ -256,5 +258,37 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     expect(sheet.findAll("label").map((l) => l.text())).toEqual(["Nom", "Rôle (facultatif)", "Comment"]);
     expect(sheet.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Enregistrer"]);
     expect(sheet.find("[data-test=contact-save]").classes()).toContain("primary");
+  });
+
+  it("EnvoyeeDetail (18.11) : plus de carte « Pour l’ORP », l’état ORP est sur la ligne d’état", async () => {
+    const declared = mountPhone({ id: 24 });
+    await flushPromises();
+    expect(declared.find("[data-test=section-orp]").exists()).toBe(false);
+    expect(declared.find("[data-test=word-declared]").text()).toBe("Déclarée à l’ORP");
+    expect(declared.find("[data-test=word-to-declare]").exists()).toBe(false);
+    const todo = mount(SentDetail, {
+      props: { phone: true, application: { ...application, id: 25 } as never, orpRow: { declared_at: null, date: "02.11.2026", missing: ["Adresse"], job_room: [] } as never },
+      global: { stubs: { teleport: true, ContactsPanel: true, RouterLink: { props: ["to"], template: "<a :data-to=\"JSON.stringify(to)\"><slot /></a>" } } },
+    });
+    await flushPromises();
+    expect(todo.find("[data-test=section-orp]").exists()).toBe(false);
+    expect(todo.find("[data-test=word-declared]").exists()).toBe(false);
+    const link = todo.find("[data-test=word-to-declare]");
+    expect(link.text()).toBe("À déclarer à l’ORP");
+    expect(JSON.parse(link.attributes("data-to")!)).toEqual({ path: "/bilan/orp/candidature/25", query: { mois: "2026-11" } });
+    // Le texte « Pour l’ORP » n’apparaît plus nulle part dans l’écran.
+    expect(todo.text()).not.toContain("Pour l’ORP");
+  });
+
+  it("Historique replié : titre en casse normale, résumé, chevron ; la liste s’ouvre au toucher", async () => {
+    const wrapper = mountPhone({ id: 26 });
+    await flushPromises();
+    const row = wrapper.find("[data-test=sent-history-open]");
+    expect(row.text()).toMatch(/^Historique\d+ étapes? · dernière le /);
+    expect(row.attributes("aria-expanded")).toBe("false");
+    expect(wrapper.find("[data-test=sent-history]").attributes("style")).toContain("display: none");
+    await row.trigger("click");
+    expect(row.attributes("aria-expanded")).toBe("true");
+    expect(wrapper.find("[data-test=sent-history]").attributes("style") ?? "").not.toContain("display: none");
   });
 });

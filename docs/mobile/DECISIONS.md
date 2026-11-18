@@ -922,6 +922,13 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 - Un toast l'accompagne : « Déplacée dans Gardées », avec « Voir » (ouvre la liste Gardées) et « Annuler » (choix de Kevin du 17.11 au soir, carte de décision : « Annuler » est gardé). « Remise dans Nouvelles » a aussi « Voir ». Une offre écartée garde son message actuel, sans « Voir » : elle n'a pas de liste dans Offres.
 - Le détail se referme comme avant (§36 du 16.11 sur ordinateur).
 
+## Adresse du registre copiée seulement dans un champ vide (Kevin, 17.11.2026, 22 h 05)
+
+- Quand le registre IDE connaît déjà l'entreprise (cache), « Chercher l'adresse » copie son adresse dans l'offre, seulement si le champ adresse est vide.
+- Une adresse saisie par l'utilisateur, ou trouvée ailleurs, n'est jamais écrasée.
+- Un test couvre les deux cas : champ vide, adresse copiée ; champ rempli, adresse inchangée.
+- Origine : audit du 17.11, K6 (la fiche disait « Adresse trouvée » et restait « Non renseignée »).
+
 ## Nombres des filtres : graisse, ordinateur, choix à 0, Contrat et Distance (Kevin, 18.11.2026, 8 h 32)
 
 Réponses aux trois questions de #851 :
@@ -953,3 +960,33 @@ séparées.
 - « Top du jour » : jusqu'à 3 offres notées 75 et plus parmi les offres à trier, gardées ou en préparation (jamais envoyées) ; ces offres ne sont jamais dans « N offres à trier ».
 - Après le tri du jour, la feuille « N offres à trier » disparaît (aucune offre n'est plus « à trier ») ; les meilleures restent visibles dans « Top du jour ». Avant, les cartes « Offres » restaient après le tri : à Kevin de dire s'il veut une feuille pour ce cas, aucune planche ne le dessine.
 - « Relire ton CV » devient une ligne numérotée comme les autres (verbe « Relire », « ton CV ») ; l'ancienne icône document disparaît, la planche n'en dessine pas.
+
+## Contrôle visuel avant toute PR d'interface (Kevin, 18.11.2026, 9 h 25)
+
+Trop de bugs d'affichage arrivaient jusqu'à Kevin (dernier en date : les pastilles qui débordent dans Envoyées). Une PR qui touche l'interface n'est prête que si ces quatre points sont faits.
+
+1. Règle permanente (CLAUDE.md, section Interface) : partir de la planche de la maquette (dossier maquettes/ du zip), jamais d'un composant existant qui « ressemble » ; ne jamais livrer un écran sans l'avoir vu en capture ; une information n'apparaît qu'une fois par carte.
+2. Captures obligatoires avant d'ouvrir la PR : Playwright, chaque écran touché, en 390×844 et 1440×900, en clair et en sombre ; pour chaque écran, une image côte à côte, planche à gauche, app à droite, dans la description de la PR, écarts entourés en rouge ; un écart volontaire dit pourquoi.
+3. Test automatique de l'affichage, qui fait échouer la CI : toHaveScreenshot sur Accueil, Candidatures (Offres, Envoyées, Rendez-vous), fiche d'une offre, Bilan, Réglages, Profil, téléphone et ordinateur, clair et sombre ; et un script de contrôle sur ces écrans qui échoue si : (a) un élément dépasse de sa carte ou de l'écran, ou un texte est coupé sans « … » ; (b) une pastille fait plus de 32 px de haut, ou un élément s'étire (align-self: stretch non voulu) ; (c) le même texte d'état apparaît deux fois dans une carte ; (d) une police autre que Figtree apparaît ; (e) un contraste de texte est sous 4,5:1 (3:1 dès 18 px) ; (f) une zone cliquable fait moins de 24×24 px ; (g) un bouton ou un lien n'a pas d'action, ou une icône cliquable n'a pas de nom ; (h) un texte noir sur fond sombre, ou un fond blanc en mode sombre. Ce test arrive dans une PR à part, avant toute autre PR d'interface.
+4. Avant d'écrire « prêt à relire », relire ses captures et répondre dans la PR : « J'ai comparé chaque écran à sa planche : oui / non, écarts : … ».
+
+## Détail d'une candidature envoyée sur téléphone (Kevin, 18.11.2026, 9 h 26)
+
+Suivre la planche EnvoyeeDetail (+Sombre) :
+
+- Plus de carte « Pour l'ORP » (titre « Pour l'ORP » et lien « Pour l'ORP › » : le même texte deux fois). L'état ORP va dans la carte du haut, sur la ligne d'état : déclarée, « ✓ Déclarée à l'ORP » en vert #17734A ; pas encore déclarée, « À déclarer à l'ORP › », lien vers la déclaration du mois, en bleu #1A3496.
+- Historique : titre en casse normale « Historique » (§67), ligne repliable avec résumé (« 3 étapes · dernière le 31 oct., déclarée à l'ORP ») et chevron ; le détail des étapes s'ouvre au toucher (aria-expanded).
+- « Ce que tu as envoyé / Trouver un contact » : une seule carte, lignes séparées par un trait 1 px #EFECE5, pas de bloc arrondi à l'intérieur (jamais de carte dans une carte).
+
+## Réglages, Rythme et pause (§70, Kevin, 18.11.2026, 9 h 39)
+
+- « Dès qu'elles arrivent » est le premier choix de la feuille « Heure du message » ; quand il est choisi, il s'affiche comme valeur de la ligne.
+- Sur ordinateur, les champs Du / Jusqu'au restent en attendant la planche ordinateur, qui reprendra le même calendrier à plage unique dans une fenêtre accrochée à la ligne.
+- La pause n'est enregistrée qu'au toucher d'« Enregistrer », sur téléphone comme sur ordinateur.
+- La section « Extension du navigateur » de la planche Reglages viendra plus tard, dans une autre PR.
+
+## Accueil téléphone : une tâche bloquante ou en retard a un rond orange, pas de numéro (Kevin, 18.11.2026, 10 h 15)
+
+- Écart 1 de la #858 : la version de la PR est gardée. Après le tri du jour, seulement « Top du jour » (75 et plus), en liste, comme AccueilV2. Le carrousel « Offres » de main disparaît.
+- Écart 2 de la #858 : une tâche bloquante ou en retard n'a pas de numéro. Elle a un rond orange vide (#B4631F, en sombre la couleur pêche), comme « Remettre les justificatifs » dans AccueilV2. « Relire ton CV » a donc ce rond, puis 2, 3, 4… pour les autres tâches. Son sous-titre reste en orange, « · 30 secondes » inclus.
+- Ordinateur (même règle, planche AujourdhuiOrdinateurV2, qui dessine le rond pour les justificatifs) : « Relire ton CV » perd son « 1 » sur fond orange et prend le même rond vide de 26 px, aligné au pixel avec le cercle à cocher des justificatifs.

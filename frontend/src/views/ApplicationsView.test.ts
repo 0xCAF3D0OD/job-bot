@@ -543,13 +543,38 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     expect(read(0)).toEqual([true, ["Envoyée il y a 12 jours"], "Sans réponse"]);
     expect(read(1)).toEqual([true, ["Jeudi 12 nov., 14 h"], "Entretien"]);
     expect(cards[1]!.find("[data-test=sent-chip]").classes()).toContain("green");
-    // Cette semaine, la plus récente d'abord, avec le canal.
-    expect(read(2)).toEqual([true, ["Envoyée jeudi", "Par e-mail"], "Relancée"]);
-    expect(read(3)).toEqual([true, ["Envoyée mardi", "Formulaire en ligne"], "Envoyée"]);
-    expect(read(4)).toEqual([true, ["Envoyée lundi", "Par e-mail"], "Envoyée"]);
+    // Cette semaine, la plus récente d'abord ; une seule puce (§2 du 14.11), le canal est dans l'Historique.
+    expect(read(2)).toEqual([true, ["Envoyée jeudi"], "Relancée"]);
+    expect(read(3)).toEqual([true, ["Envoyée mardi"], "Envoyée"]);
+    expect(read(4)).toEqual([true, ["Envoyée lundi"], "Envoyée"]);
     expect(read(5)).toEqual([true, ["Envoyée le 21 oct."], "Refusée"]);
     // Rien d'autre dans la carte : ni action, ni « ⋯ ».
     expect(cards[0]!.findAll("button")).toHaveLength(0);
+  });
+
+  it("téléphone (planche Envoyees, §27) : le poste et sa pastille d’état, puis « entreprise · quand » ; ni puce ni colonne de statut", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T08:00:00Z"));
+    mockApi(() => month({ month: "2026-11" }), [
+      at("2026-10-26", { id: 1, company: "Muette SA", job_title: "DevOps Engineer" }),
+      at("2026-11-03", { id: 4, company: "Romandie", job_title: "Ingénieur Cloud", application_url: "https://exemple.ch/postuler" }),
+    ]);
+    const { wrapper } = await mountView();
+    const cards = wrapper.findAll("[data-test=application]");
+    expect(cards[0]!.find("[data-test=list-card-title]").text()).toBe("DevOps Engineer");
+    expect(cards[0]!.find("[data-test=sent-status]").text()).toBe("Sans réponse");
+    expect(cards[0]!.find("[data-test=sent-status]").classes()).toContain("peach");
+    expect(cards[0]!.find("[data-test=sent-line]").text()).toBe("Muette SA · il y a 12 j");
+    expect(cards[0]!.attributes("aria-label")).toBe("DevOps Engineer, Muette SA, Sans réponse, il y a 12 j");
+    expect(cards[1]!.find("[data-test=sent-line]").text()).toBe("Romandie · mardi");
+    expect(wrapper.findAll("[data-test=sent-chip]")).toHaveLength(0);
+    // Chaque information une seule fois par carte.
+    for (const card of cards) {
+      const words = card.text();
+      expect(words.split(card.find("[data-test=sent-status]").text()).length).toBe(2);
+    }
+    vi.unstubAllGlobals();
   });
 
   it("une carte ouvre le panneau de la candidature et se marque", async () => {

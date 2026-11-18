@@ -163,6 +163,9 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
                     Training.dismissed.is_(False),
                     or_(Training.profile_id.is_(None), Training.profile_id == profile.id),
                 )
+                # Un ordre fixe : sans lui, Postgres rend les lignes dans un ordre libre, et
+                # « la formation en cours » du Bilan changeait d'un chargement à l'autre.
+                .order_by(Training.id)
             )
         ).all()
     items: list[TrainingOut] = []
