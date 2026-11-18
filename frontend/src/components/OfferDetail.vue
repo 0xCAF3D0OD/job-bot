@@ -935,17 +935,9 @@ watch(
           class="match-now oc-now"
           data-test="score-now-block"
         >
-          <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
-          <p
-            v-if="scoreNowError"
-            class="field-error"
-            role="alert"
-            data-test="score-now-error"
-          >
-            {{ scoreNowError }}
-          </p>
           <!-- §72e (Kevin, 18.11) : « Noter maintenant » en ligne lien avec chevron, comme « Voir la compatibilité » :
-               un seul bouton plein par écran. -->
+               un seul bouton plein par écran ; la pastille dessous
+               (planche OffreNonNotee du §72, Kevin le 18.11 à 21 h 37). -->
           <BusyButton
             class="match-now-link"
             :busy="scoringNow"
@@ -958,6 +950,15 @@ watch(
             </HoverNote>
             <AppIcon name="chevron" />
           </BusyButton>
+          <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+          <p
+            v-if="scoreNowError"
+            class="field-error"
+            role="alert"
+            data-test="score-now-error"
+          >
+            {{ scoreNowError }}
+          </p>
         </div>
         <p
           v-if="outsideNote"
@@ -1454,17 +1455,9 @@ watch(
             class="match-now"
             data-test="score-now-block"
           >
-            <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
-            <p
-              v-if="scoreNowError"
-              class="field-error"
-              role="alert"
-              data-test="score-now-error"
-            >
-              {{ scoreNowError }}
-            </p>
             <!-- §72e (Kevin, 18.11) : « Noter maintenant » en ligne lien avec chevron, comme « Voir la compatibilité » :
-                 un seul bouton plein par écran. -->
+                 un seul bouton plein par écran ; la pastille dessous
+                 (planche OffreNonNotee du §72, Kevin le 18.11 à 21 h 37). -->
             <BusyButton
               class="match-now-link"
               :busy="scoringNow"
@@ -1477,6 +1470,15 @@ watch(
               </HoverNote>
               <AppIcon name="chevron" />
             </BusyButton>
+            <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+            <p
+              v-if="scoreNowError"
+              class="field-error"
+              role="alert"
+              data-test="score-now-error"
+            >
+              {{ scoreNowError }}
+            </p>
           </div>
           <ul
             v-if="matchLines.length && (sub ? provisional : !columns)"
@@ -1961,23 +1963,22 @@ watch(
 .match-unrated { flex: none; width: 60px; height: 60px; }
 .match-unrated circle { stroke: var(--linked-line); }
 .match-unrated path { stroke: var(--unrated-dash); }
-.match-now { --now-gap: 12px; --now-pad: var(--space-4); --now-row: 56px; --now-chevron: 24px; align-self: stretch; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: var(--now-gap); margin: var(--space-4) 0 0; }
-/* §72e (Kevin, 18.11) : « Noter maintenant » en ligne lien pleine largeur, sous un trait, texte bleu gras, chevron à
-   droite, comme « Voir la compatibilité ». Dernière ligne de la carte : elle en touche le bas. */
-.match-now-link { align-self: stretch; justify-items: stretch; width: calc(100% + 2 * var(--now-pad)); max-width: none; min-height: var(--now-row); margin: 0 calc(-1 * var(--now-pad)); padding: 0 var(--now-pad); border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
+/* « Noter maintenant » (planche OffreNonNotee du §72, Kevin le 18.11) : sous un trait, la ligne lien bleue 15 px grasse,
+   chevron de 20 px à droite, puis la pastille alignée à gauche sur le texte. La planche met 14 + 4 px au-dessus du lien
+   de 44 px et 2 px sous lui ; ici 16 px et un lien de 48 px, même position du texte et de la pastille, sur la grille de 4. */
+.match-now { --now-pad: var(--space-4); --now-top: 16px; --now-row: 48px; --now-chevron: 20px; display: flex; flex-direction: column; align-items: flex-start; margin: var(--space-4) calc(-1 * var(--now-pad)) 0; padding: var(--now-top) var(--now-pad) 0; border-top: 1px solid var(--line-soft); }
+.match-now-link { align-self: stretch; justify-items: stretch; width: 100%; max-width: none; min-height: var(--now-row); margin: 0; padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
 .match-now-link > .busy-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .match-now-link .icon { flex: none; width: var(--now-chevron); height: var(--now-chevron); }
-.match-now:last-child > .match-now-link { margin-bottom: calc(-1 * var(--now-pad)); border-radius: 0 0 var(--radius-card) var(--radius-card); }
+.match-now .field-error { align-self: stretch; margin: var(--space-2) 0 0; }
 .grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
 .oc-now { --now-pad: 0px; }
-.oc-now > .match-now-link { width: 100%; }
 /* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
    phrase 15/21 px grise 4 px dessous. */
 .expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }
 .expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
 .expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
-.match-now .field-error { align-self: stretch; margin: 0; }
 /* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
    « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
 .address-lines { white-space: pre-line; }
