@@ -1,7 +1,8 @@
 // Le détail d'une candidature envoyée (§8 du 9 novembre) : mots de statut, Suivi en 5 étapes, Historique.
 import { describe, expect, it } from "vitest";
 
-import { sentHistory, sentSteps, sentWords } from "./sentDetail";
+import { phoneSteps, sentHistory, sentSteps, sentWords } from "./sentDetail";
+import { sentWhen } from "./sentList";
 
 const now = new Date("2026-11-08T10:00:00");
 const base = {
@@ -79,5 +80,33 @@ describe("L’Historique", () => {
       "Relance envoyée",
       "Candidature envoyée sur linkedin.com",
     ]);
+  });
+});
+
+describe("Téléphone : la frise de 4 étapes (EnvoyeeDetail, §40)", () => {
+  const states = (extra: object) => phoneSteps({ ...(base as object), ...extra } as never).map((s) => `${s.label}:${s.state}`);
+  it("en attente : Réponse en cours", () => {
+    expect(states({})).toEqual(["Envoyée:done", "Réponse:current", "Entretien:todo", "Décision:todo"]);
+  });
+  it("entretien à venir : Entretien en cours ; passé : Décision en cours", () => {
+    expect(states({ status: "entretien" })).toEqual(["Envoyée:done", "Réponse:done", "Entretien:current", "Décision:todo"]);
+    expect(states({ status: "entretien", interviews: [{ held_at: "2026-11-02", rating: 4 }] })).toEqual(["Envoyée:done", "Réponse:done", "Entretien:done", "Décision:current"]);
+  });
+  it("refus sans entretien : l’étape Entretien reste grise, la décision est faite", () => {
+    expect(states({ status: "refus" })).toEqual(["Envoyée:done", "Réponse:done", "Entretien:todo", "Décision:done"]);
+  });
+});
+
+describe("Téléphone : la ligne « entreprise · quand » d’une carte d’Envoyées (§27)", () => {
+  const a = (extra: object) => ({ ...(base as object), ...extra }) as never;
+  it("à relancer : il y a N j, depuis la relance s’il y en a une", () => {
+    expect(sentWhen(a({ sent_at: "2026-10-27" }), "follow", now)).toBe("il y a 12 j");
+    expect(sentWhen(a({ status: "relancee", followed_up_at: "2026-11-01" }), "follow", now)).toBe("il y a 7 j");
+  });
+  it("entretien : le jour court et l’heure ; réponse reçue ; sinon le jour d’envoi", () => {
+    expect(sentWhen(a({ status: "entretien", interview_at: "2026-11-12T13:00:00Z" }), "interviews", now)).toBe("jeu. 12 nov., 14 h");
+    expect(sentWhen(a({ status: "refus", status_at: "2026-11-07T09:00:00Z" }), "earlier", now)).toBe("réponse hier");
+    expect(sentWhen(a({ sent_at: "2026-11-03" }), "week", now)).toBe("mardi");
+    expect(sentWhen(a({ sent_at: "2026-10-21" }), "earlier", now)).toBe("21 oct.");
   });
 });

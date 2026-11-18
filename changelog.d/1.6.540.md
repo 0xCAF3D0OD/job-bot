@@ -1,0 +1,1 @@
+Envoyées sur téléphone refaites d'après les planches Envoyees et EnvoyeeDetail : carte sur 2 lignes (poste et pastille d'état, « entreprise · quand »), détail sans carte « Pour l'ORP » (état ORP sur la ligne d'état), frise de 4 étapes, Historique replié ; une seule puce par carte sur ordinateur ; règle du contrôle visuel dans CLAUDE.md

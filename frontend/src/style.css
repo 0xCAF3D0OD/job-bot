@@ -550,6 +550,15 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
   font-size: var(--font-small);
 }
 
+/* Ordinateur (planche CandidaturesOrdinateurEcartee) : le bandeau en bas à gauche, aligné sur le contenu de la page,
+   à 24 px du bas, 400 px de large, 56 px de haut au moins, coins de 16 px. Le bouton Assistant reste seul à droite. */
+@media (min-width: 821px) {
+  .toast:not(.inline) { --toast-w: 400px; --toast-h: 56px; --toast-r: 16px; left: max(var(--space-6), calc((100vw - var(--page-wide)) / 2)); right: auto; bottom: var(--space-6); width: min(var(--toast-w), calc(100vw - 2 * var(--space-6))); max-width: none; box-sizing: border-box; min-height: var(--toast-h); }
+  /* Fond --text (inversé en sombre : #F3EEE6, texte #171411), texte 15/600, « Voir » et « Annuler » 15/800 en --inverse-link. */
+  .undo-toast:not(.inline) { gap: var(--space-3); padding: 0 var(--space-2) 0 var(--space-5); border-radius: var(--toast-r); background: var(--text); color: var(--bg); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+  .undo-toast:not(.inline) > button.link { color: var(--inverse-link); font-size: var(--font-label); font-weight: var(--weight-heavy); text-decoration: none; }
+}
+
 /* --- Onglets en bascule --- */
 
 /* --- Pastilles --- */
@@ -839,7 +848,8 @@ button.link { border-radius: var(--radius-sm); transition: color 0.15s, backgrou
 .chunk-card .job-title { font-weight: var(--weight-semibold); }
 .chunk-content { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 .chunk-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; min-height: 2.6rem; border-top: 1px solid var(--divider); font-size: var(--font-small); color: var(--muted); }
-.overlay { position: fixed; inset: 0; z-index: 30; background: rgb(17 17 31 / 35%); display: grid; place-items: center; padding: var(--space-4); overflow: auto; }
+/* Au-dessus de la barre du haut (38), d'une candidature ouverte en plein écran (44) et des panneaux (46) ; sous le voile de page (50) (audit du 17.11, N29). */
+.overlay { position: fixed; inset: 0; z-index: 47; background: rgb(17 17 31 / 35%); display: grid; place-items: center; padding: var(--space-4); overflow: auto; }
 .editor { width: min(40rem, 100%); padding-top: var(--space-6); }
 .editor h3 { font-size: var(--font-section); }
 .editor input[type="text"] { width: 100%; }
