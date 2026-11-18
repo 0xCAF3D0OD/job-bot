@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, type OfferFilters } from "../composables/useOfferFilters";
 import OfferFilterSheet from "./OfferFilterSheet.vue";
 
-const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores: [], unscored: 0, sure: 104, provisional: 312 };
+// 20 tranches de 5 points : 10 offres de 0 à 49, 50 de 50 à 74, 13 de 75 à 84, 8 de 85 à 100 ; 3 sans note.
+const scores = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 10, 10, 10, 10, 6, 7, 2, 3, 3];
+const rates = [{ value: "all", count: 84 }, { value: "60", count: 72 }, { value: "80", count: 60 }, { value: "100", count: 33 }];
+const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates };
 
 const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
 
@@ -21,13 +24,13 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     // Note minimale (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, titre et aide reliés.
     const scores = wrapper.find("[role=radiogroup][aria-labelledby=sheet-score-title]");
     expect(wrapper.find("#sheet-score-title").text()).toBe("Note minimale, sur 100");
-    expect(scores.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
+    expect(scores.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(scores.find("[data-test=sheet-score-all]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
     // Le taux d'activité, un seul choix : un groupe de radios, pas des puces (5e), titre relié.
     const rates = wrapper.find("[role=radiogroup][aria-labelledby=sheet-rate-title]");
     expect(wrapper.find("#sheet-rate-title").text()).toBe("Taux d’activité");
-    expect(rates.findAll("[role=radio]").map((b) => b.text())).toEqual(["Tous", "Dès 60 %", "Dès 80 %", "100 %"]);
+    expect(rates.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Tous", "Dès 60 %", "Dès 80 %", "100 %"]);
     expect(rates.find("[data-test=sheet-rate-all]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find("[data-test=sheet-sort-day]").text()).toBe("Par date");
     expect(wrapper.find("[data-test=sheet-sort-day]").attributes("aria-pressed")).toBe("true");
@@ -57,6 +60,20 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(mountSheet({ view: "expired" }).find("[data-test=sheet-filtered-out]").exists()).toBe(false);
   });
 
+  it("§65 : le nombre d'offres sous chaque choix de Note et de Taux, le choix actif égal à « Afficher n offres »", () => {
+    const counts = (wrapper: ReturnType<typeof mountSheet>, title: string) =>
+      wrapper.find(`[role=radiogroup][aria-labelledby=${title}]`).findAll(".segmented-sub").map((s) => s.text());
+    const all = mountSheet({}, 84);
+    expect(counts(all, "sheet-score-title")).toEqual(["84", "71", "21", "8"]);
+    expect(counts(all, "sheet-rate-title")).toEqual(["84", "72", "60", "33"]);
+    // Le choix actif : le même nombre que le bouton (le serveur compte avec les mêmes filtres).
+    const close = mountSheet({ minScore: 75 }, 21);
+    const active = close.find("[data-test=sheet-score-75]");
+    expect(active.attributes("aria-checked")).toBe("true");
+    expect(active.find(".segmented-sub").text()).toBe("21");
+    expect(close.find("[data-test=sheet-show]").text()).toBe("Afficher 21 offres");
+  });
+
   it("chaque choix s’applique tout de suite", async () => {
     const wrapper = mountSheet();
     await wrapper.find("[data-test=sheet-view-to_review]").trigger("click");
@@ -84,7 +101,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
       const chosen = mountSheet({ minScore: min });
       expect(chosen.findAll("[data-test^=sheet-score][aria-checked=true]").map((b) => b.attributes("data-test"))).toEqual([`sheet-score-${min}`]);
     }
-    expect(mountSheet({ minRate: 80 }).findAll("[data-test^=sheet-rate][aria-checked=true]").map((b) => b.text())).toEqual(["Dès 80 %"]);
+    expect(mountSheet({ minRate: 80 }).findAll("[data-test^=sheet-rate][aria-checked=true] .segmented-label").map((b) => b.text())).toEqual(["Dès 80 %"]);
     // Une adresse d'avant (?note=60-90) garde ses bornes : aucun choix marqué.
     expect(mountSheet({ minScore: 60, maxScore: 90 }).findAll("[data-test^=sheet-score][aria-checked=true]")).toHaveLength(0);
   });

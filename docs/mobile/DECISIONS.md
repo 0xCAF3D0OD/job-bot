@@ -893,3 +893,16 @@ Précision de Kevin (17.11.2026, 16 h 46) :
 - Bilan › Résultats : tranches « Proches » dès 75, « À creuser » de 50 à 74, « Loin » en dessous de 50, même
   constante (`jobbot.scoring.scale`).
 - La recherche employeurs (70) reste hors périmètre : ce seuil n'est affiché qu'en chiffre, jamais avec un mot.
+
+## Réglages : retour sur la ligne d'origine, retour aux réglages, Formule sans limite (Kevin, 17.11.2026, 21 h 05)
+
+Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, Réglages) :
+
+- Ordinateur : « Retour au compte » (État du service) devient « Retour aux réglages » et mène à la page Réglages (K43).
+- Réglages : en quittant une rubrique, on revient sur la ligne d'origine ; le focus clavier est posé sur cette ligne et la position de défilement est restaurée (K39).
+- Formule sans limite : afficher « Sans limite » et l'utilisation du mois (ex. « 42 utilisés ce mois »), sans barre de progression (K38, N2).
+
+## Retour d'une candidature et bouton rond flottant (Kevin, 17.11.2026, 21 h 05)
+
+- Téléphone : une candidature ouverte a sa propre adresse (`?candidature=ID`). Le retour du navigateur et le retour de l'app ferment la fiche et ramènent à la liste, à la même position de défilement (audit du 17.11, N25).
+- Bouton rond flottant (Candidatures sur téléphone, Assistant sur ordinateur) : il ne se masque pas au défilement. La page a un `scroll-padding-bottom` égal à la hauteur du bouton plus sa marge : un élément qui reçoit le focus ne passe jamais dessous (WCAG 2.4.11), et le dernier élément de la page reste entièrement visible au-dessus du bouton.

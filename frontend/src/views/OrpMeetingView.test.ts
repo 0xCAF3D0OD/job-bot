@@ -274,7 +274,8 @@ describe("Rendez-vous, l’essentiel d’abord (1.6.23, décisions du 25/10)", (
     // toute sa largeur (règles §3, 1.6.32).
     expect(when.find("strong").text()).toMatch(/octobre à\u00a0\d{1,2} h( \d\d)?$/);
     expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body", "orp-meeting"]);
-    expect(wrapper.find(".orp-conclusion [data-test=go-prepare]").text()).toBe("Préparer");
+    // Plus de lien « Préparer » vers la section juste en dessous (K30, Kevin 17.11).
+    expect(wrapper.find("[data-test=go-prepare]").exists()).toBe(false);
     expect(wrapper.find(".orp-conclusion [data-test=meeting-more]").exists()).toBe(true);
     // Plus de carte « Le prochain rendez-vous » : la phrase la remplace.
     expect(wrapper.find("[data-test=meeting]").exists()).toBe(false);
