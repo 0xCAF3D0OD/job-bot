@@ -767,3 +767,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.553 | Filtres des envoyées sur téléphone refaits d'après la planche FiltresEnvoyees : titres « Statut » et « Trier » en casse normale, pastilles au trait de la planche, bouton « Afficher » qui prend la place restante sans être coupé | livrée |
 | 1.6.554 | Rendez-vous sur téléphone dans l'ordre de la planche RendezVous : « À venir », « À noter », puis « Derniers rendez-vous ORP », titre rétabli | livrée |
 | 1.6.555 | Rendez-vous sur téléphone : pas de bouton Filtres, sa place de 44 px est gardée pour que « Alertes » ne bouge pas d'un onglet à l'autre | livrée |
+| 1.6.556 | Une offre « Pas encore notée » propose « Noter maintenant » (compte dans la formule), et la recherche d'adresse montre son état sur la fiche : en cours, trouvée au registre, pas trouvée (planches du 18.11) | livrée |
+| 1.6.557 | « Coller le texte de l'annonce » lit le presse-papiers : le texte copié arrive dans la fenêtre de collage, prêt pour « Refaire la note » | livrée |
+| 1.6.558 | Alertes : une alerte déclarée créée reste « À confirmer » tant que le site n'a rien envoyé à l'adresse jobA1, et l'étape des premiers pas n'est faite qu'à ce moment | livrée |
