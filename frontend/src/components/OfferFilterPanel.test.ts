@@ -11,7 +11,8 @@ function mountPanel(patch: Partial<OfferFilters> = {}) {
   return mount(OfferFilterPanel, { props: { filters: { ...DEFAULT_FILTERS, ...patch }, counts, facets, total: 404 } });
 }
 
-const texts = (wrapper: ReturnType<typeof mountPanel>, prefix: string) => wrapper.findAll(`[data-test^=${prefix}]`).map((b) => b.text());
+const texts = (wrapper: ReturnType<typeof mountPanel>, prefix: string) =>
+  wrapper.findAll(`[data-test^=${prefix}]`).map((b) => (b.find(".filter-panel-label").exists() ? b.find(".filter-panel-label") : b).text());
 
 // Section 31 du 16.11 : « Filtres : des mots que tout le monde comprend » (panneau de CandidaturesOrdinateurB).
 describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
@@ -45,7 +46,7 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
   it("mêmes seuils (50, 75, 85) et mêmes taux, un seul choix marqué", async () => {
     for (const min of [50, 75, 85])
       expect(mountPanel({ minScore: min }).findAll("[data-test^=pop-score][aria-pressed=true]").map((b) => b.attributes("data-test"))).toEqual([`pop-score-${min}`]);
-    expect(mountPanel({ minRate: 80 }).findAll("[data-test^=pop-rate][aria-pressed=true]").map((b) => b.text())).toEqual(["Dès 80 %"]);
+    expect(mountPanel({ minRate: 80 }).findAll("[data-test^=pop-rate][aria-pressed=true]").map((b) => b.attributes("data-test"))).toEqual(["pop-rate-80"]);
     // Une adresse d'avant (?note=60-90) : aucun choix marqué.
     expect(mountPanel({ minScore: 60, maxScore: 90 }).findAll("[data-test^=pop-score][aria-pressed=true]")).toHaveLength(0);
     const wrapper = mountPanel();
@@ -53,5 +54,24 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minScore: 75, maxScore: null }]);
     await wrapper.find("[data-test=pop-rate-60]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minRate: 60 }]);
+  });
+
+  // Kevin, 18.11 : les nombres de la feuille du téléphone aussi sur l'ordinateur, même calcul ; un choix à 0 grisé.
+  it("le nombre d'offres sous chaque choix de Note et de Taux, le choix actif égal à « Afficher n offres »", () => {
+    const scores = [...Array(10).fill(1), ...Array(5).fill(10), 6, 7, 0, 0, 0];
+    const rates = [{ value: "all", count: 84 }, { value: "60", count: 72 }, { value: "80", count: 0 }, { value: "100", count: 120000 }];
+    const wrapper = mount(OfferFilterPanel, {
+      props: { filters: { ...DEFAULT_FILTERS, minScore: 75 }, counts, facets: { ...facets, scores, unscored: 3, rates }, total: 13 },
+    });
+    const subs = (prefix: string) => wrapper.findAll(`[data-test^=${prefix}] .filter-panel-sub`).map((s) => s.text());
+    expect(subs("pop-score")).toEqual(["76", "63", "13", "0"]);
+    expect(subs("pop-rate")).toEqual(["84", "72", "0", "100 k+"]);
+    expect(wrapper.find("[data-test=pop-score-75] .filter-panel-sub").text()).toBe("13");
+    expect(wrapper.find("[data-test=filters-done]").text()).toBe("Afficher 13 offres");
+    // À 0 : grisé, toujours cliquable ; le choix actif n'est jamais grisé.
+    expect(wrapper.find("[data-test=pop-score-85]").classes()).toContain("choice-empty");
+    expect(wrapper.find("[data-test=pop-rate-80]").classes()).toContain("choice-empty");
+    expect(wrapper.find("[data-test=pop-rate-80]").attributes("disabled")).toBeUndefined();
+    expect(wrapper.find("[data-test=pop-score-75]").classes()).not.toContain("choice-empty");
   });
 });
