@@ -84,7 +84,10 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_follow_ups: false } } as never);
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Notifications", "Affichage", "Mes données"]);
+    expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Notifications", "Affichage", "Recherche", "Mes données"]);
+    // La section Recherche du §70 (18.11) : Rythme et « Recherche et outils ».
+    expect(wrapper.get("[data-test=account-rhythm]").attributes("href")).toBe("/reglages?rubrique=rythme");
+    expect(wrapper.get("[data-test=account-research-tools]").attributes("href")).toBe("/reglages?rubrique=recherche-outils");
     const rows = wrapper.findAll("[data-test=notify-switches] .setting-row-title").map((t) => t.text());
     expect(rows).toEqual(["Nouvelles offres", "M’avertir dès", "Relances", "Objectif ORP"]);
     expect(wrapper.findAll("[data-test=notify-switches] input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([true, true, true]);
@@ -116,12 +119,71 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
   it("une rubrique seule a le même en-tête que la page Réglages : la flèche vers le compte, puis son nom (N6)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet(false);
-    const { wrapper } = await mountSettings("rythme");
-    expect(wrapper.find(".rg-phone-head h1").text()).toBe("Rythme");
+    const { wrapper } = await mountSettings("ia");
+    expect(wrapper.find(".rg-phone-head h1").text()).toBe("IA");
     const back = wrapper.get("[data-test=settings-back]");
     expect(back.attributes("href")).toBe("/compte");
     expect(back.attributes("aria-label")).toBe("Retour au compte");
     expect(wrapper.find(".back-link").exists()).toBe(false);
+  });
+});
+
+describe("SettingsView, Rythme et Recherche et outils sur téléphone (§70, 18.11)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const phone = () =>
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+
+  it("Rythme : jours en ronds, heure du message en feuille, pause enregistrée par « Enregistrer »", async () => {
+    phone();
+    mockGet(false);
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockImplementation((_path, init) => Promise.resolve({ data: (init as { body: object }).body } as never));
+    const { wrapper } = await mountSettings("rythme");
+    expect(wrapper.get("[data-test=settings-back]").attributes("href")).toBe("/reglages?rubrique=notifications");
+    expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Jours de recherche", "Message du jour", "Pause"]);
+    expect(wrapper.get("[data-test=rhythm-day-0]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.get("[data-test=rhythm-note]").text()).toBe("jobA1 cherche des offres du lundi au vendredi.");
+    await wrapper.get("[data-test=rhythm-day-5]").trigger("click");
+    await flushPromises();
+    expect(put.mock.calls.at(-1)?.[1]).toMatchObject({ body: { rhythm_days: [0, 1, 2, 3, 4, 5] } });
+    expect(wrapper.get("[data-test=rhythm-note]").text()).toBe("jobA1 cherche des offres le lundi, mardi, mercredi, jeudi, vendredi, samedi.");
+    // « Dès qu’elles arrivent » reste, en premier choix de la feuille de l’heure.
+    expect(wrapper.get("[data-test=rhythm-hour-row]").text()).toContain("9 h 00");
+    await wrapper.get("[data-test=rhythm-hour-row]").trigger("click");
+    await wrapper.get("[data-test=hour-instant]").trigger("click");
+    await flushPromises();
+    expect(put.mock.calls.at(-1)?.[1]).toMatchObject({ body: { offers_notify_mode: "instant" } });
+    expect(wrapper.get("[data-test=rhythm-hour-row]").text()).toContain("Dès qu’elles arrivent");
+    // La pause : deux touchers, puis Enregistrer.
+    expect(wrapper.get("[data-test=rhythm-pause-row]").text()).toContain("Aucune pause");
+    await wrapper.get("[data-test=rhythm-pause-row]").trigger("click");
+    await flushPromises();
+    const days = wrapper.findAll("[data-test^=pause-day-]:not([aria-disabled])");
+    const [first, last] = [days[3]!, days[9]!];
+    const iso = (el: typeof first) => el.attributes("data-test")!.slice("pause-day-".length);
+    const calls = put.mock.calls.length;
+    await first.trigger("click");
+    await last.trigger("click");
+    expect(wrapper.get("[data-test=pause-summary]").text()).toContain("7 jours");
+    expect(put.mock.calls.length).toBe(calls);
+    await wrapper.get("[data-test=pause-save]").trigger("click");
+    await flushPromises();
+    expect(put.mock.calls.at(-1)?.[1]).toMatchObject({ body: { rhythm_pause_from: iso(first), rhythm_pause_until: iso(last) } });
+    expect(wrapper.get("[data-test=rhythm-pause-row]").text()).toContain("Pause du");
+  });
+
+  it("Recherche et outils : Recherche puis Outils, la collecte en bouton « Lancer »", async () => {
+    phone();
+    mockGet(false);
+    const { wrapper } = await mountSettings("recherche-outils");
+    expect(wrapper.find(".rg-phone-head h1").text()).toBe("Recherche et outils");
+    expect(wrapper.get("[data-test=settings-back]").attributes("href")).toBe("/reglages?rubrique=notifications");
+    expect(wrapper.findAll(".settings-section > .section-title").map((h) => h.text())).toEqual(["Recherche", "Outils"]);
+    expect(wrapper.find("[data-test=account-orp]").text()).toContain("Objectif ORP");
+    expect(wrapper.find("[data-test=account-sites]").text()).toContain("Sites suivis");
+    expect(wrapper.find("[data-test=account-ai]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=account-tools]").text()).toContain("Agenda");
+    expect(wrapper.find("[data-test=account-plan]").exists()).toBe(true);
   });
 });
 
@@ -313,7 +375,9 @@ describe("SettingsView, comptes (docs/65)", () => {
 describe("SettingsView, le bon rythme (docs/86)", () => {
   it("les jours, la pause et le message des offres s’appliquent tout de suite", async () => {
     mockGet(false);
-    const PUT = vi.mocked((await import("../api/client")).api.PUT).mockResolvedValue({ data: null } as never);
+    const PUT = vi
+      .mocked((await import("../api/client")).api.PUT)
+      .mockImplementation((_path, init) => Promise.resolve({ data: { ...(init as { body: object }).body } } as never));
     const { wrapper } = await mountSettings("rythme");
     const last = () => (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
     expect((wrapper.find("[data-test=rhythm-day-0]").element as HTMLInputElement).checked).toBe(true);
@@ -328,6 +392,9 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
     // Une pause, puis la terminer.
     await pickDate(wrapper, "pause-from", "2099-10-26");
     await pickDate(wrapper, "pause-until", "2099-11-01");
+    // Rien n’est enregistré avant « Enregistrer » (Kevin, 18.11).
+    expect(last().rhythm_pause_from ?? null).toBeNull();
+    await wrapper.get("[data-test=pause-save]").trigger("click");
     await flushPromises();
     expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2099-10-26", "2099-11-01"]);
     await wrapper.find("[data-test=pause-end]").trigger("click");
