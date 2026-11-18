@@ -315,11 +315,10 @@ const currentVersionLine = computed(() => {
   if (!cv) return "";
   return `Actuelle : ${cv.instruction ? `« ${cv.instruction} »` : "adaptée"}, ${onDayAt(cv.edited_at ?? cv.created_at)}`;
 });
-// « jobA1 a ajusté ton CV pour l’annonce d’Alpstack » : « d’ » devant une voyelle.
+// « Ajusté pour Alpstack. » (§72k du 18.11).
 const forCompany = computed(() => {
   const name = props.offer.company?.trim();
-  if (!name) return "pour cette annonce";
-  return `pour l’annonce ${/^[aeiouyàâéèêîôûh]/i.test(name) ? "d’" : "de "}${name}`;
+  return name ? `pour ${name}` : "pour cette annonce";
 });
 async function undo(change: CvChange): Promise<void> {
   if (change.undo && (await save(change.undo))) savedAt.value = Date.now();
@@ -1188,7 +1187,7 @@ onMounted(() => void load());
       @close="changesOpen = false"
     >
       <p class="cv-changes-intro">
-        jobA1 a ajusté ton CV {{ forCompany }}. Vérifie chaque point : rien n’est inventé, tout vient de ton CV d’origine.
+        Ajusté {{ forCompany }}. Rien n’est inventé.
       </p>
       <ul class="cv-changes">
         <li
@@ -1212,7 +1211,7 @@ onMounted(() => void load());
         </li>
       </ul>
       <p class="cv-changes-note">
-        Ton CV d’origine ne change pas. Ces changements valent pour cette candidature seulement.
+        Ton CV d’origine ne change pas.
       </p>
       <SavedStatus :at="savedAt" />
     </BottomSheet>

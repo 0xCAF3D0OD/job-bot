@@ -85,7 +85,7 @@ describe("IdentityForm", () => {
     // Une marque part dès que la valeur proposée est effacée.
     await wrapper.find("[data-test=identity-city]").setValue("");
     expect(wrapper.find("[data-test=identity-from-cv]").text()).toContain("3 champs repris");
-    expect(wrapper.text()).toContain("Elles ne sont jamais envoyées à l’IA.");
+    expect(wrapper.text()).toContain("Pour tes lettres et formulaires. Jamais envoyées à l’IA.");
     // « Annuler » vide les valeurs proposées et non enregistrées.
     const cancel = wrapper.findAll("button").find((b) => b.text() === "Annuler");
     expect(cancel).toBeDefined();
@@ -244,7 +244,7 @@ describe("IdentityForm, « Pour les formulaires de candidature » (récapitulati
     expect(rows[4]!.find("[data-icon=lock]").exists()).toBe(true);
     expect(rows[5]!.find(".identity-answer-optional").text()).toBe("Facultatif");
     expect(wrapper.find(".identity-ai").text()).toBe(
-      "Ces informations servent à l’en-tête de tes lettres et aux formulaires de candidature. Elles ne sont jamais envoyées à l’IA.",
+      "Pour tes lettres et formulaires. Jamais envoyées à l’IA.",
     );
     wrapper.unmount();
   });
@@ -281,7 +281,7 @@ describe("IdentityForm, « Pour les formulaires de candidature » (récapitulati
     const sheet = wrapper.find("[data-test=answer-sheet]");
     expect(sheet.find("h2").text()).toBe("Tes prétentions salariales\u202F?");
     expect(sheet.find("[data-test=answer-before]").text()).toBe("Tu avais écrit : « 90 à 100k selon le poste »");
-    expect(sheet.text()).toContain("Visible seulement par toi. Utilisé seulement si un formulaire le demande, jamais envoyé à l’IA.");
+    expect(sheet.text()).toContain("Visible par toi seul, jamais envoyé à l’IA.");
     expect(sheet.find<HTMLInputElement>("[data-test=answer-mode-auto]").element.checked).toBe(true);
     await sheet.find("[data-test=answer-mode-demander]").setValue();
     await sheet.find("[data-test=answer-form]").trigger("submit");

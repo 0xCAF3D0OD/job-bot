@@ -70,7 +70,7 @@ async function confirm(): Promise<void> {
   <BottomSheet
     :open="open"
     title="Ton image"
-    subtitle="Elle s’affiche seulement dans jobA1. Elle n’est jamais envoyée aux employeurs."
+    subtitle="Visible seulement dans jobA1."
     @close="emit('close')"
   >
     <ul

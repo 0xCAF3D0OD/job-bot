@@ -85,7 +85,7 @@ describe("TrainingsView", () => {
     expect(note.text()).toBe("Financement possible par l’ORPAvec l’accord préalable de l’ORP");
     await note.trigger("click");
     const sheet = wrapper.find("[data-test=orp-sheet]");
-    expect(sheet.text()).toContain("Il faut d’abord la demander à l’ORP et attendre son accord");
+    expect(sheet.text()).toContain("Demande l’accord de ta conseillère avant de t’inscrire.");
     expect(sheet.findAll("a")).toHaveLength(2);
     // Les groupes, avec leur nombre ; une ligne sur deux lignes (planche BilanCatalogue, §37) : titre, « éditeur · format », le prix.
     expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications1");

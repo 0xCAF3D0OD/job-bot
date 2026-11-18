@@ -501,7 +501,7 @@ export function resetRequested(): void {
     @close="pasting = false"
   >
     <p class="hint">
-      Sur la page de l’annonce, sélectionne tout le texte, copie-le et colle-le ici. Tout le texte est accepté, même très long.
+      Copie tout le texte de l’annonce et colle-le ici.
     </p>
     <Composer
       v-model="text"

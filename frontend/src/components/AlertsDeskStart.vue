@@ -50,7 +50,7 @@ const sites = computed(() =>
               class="visually-hidden"
             >{{ summary.full }}</span>
           </b>
-          <span class="block-row-line">Reprise de tes critères. Chaque site t’envoie ses nouvelles offres, jobA1 les trie.</span>
+          <span class="block-row-line">Reprise de tes critères.</span>
         </span>
         <button
           type="button"

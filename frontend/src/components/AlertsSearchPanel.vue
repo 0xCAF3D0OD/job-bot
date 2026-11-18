@@ -271,7 +271,7 @@ async function save(): Promise<void> {
       </p>
       <!-- L'encadré d'information (style de la section 62 du 17.11). -->
       <p class="alerts-search-info">
-        <AppIcon name="info" />Ces critères servent aussi à trier tes offres.
+        <AppIcon name="info" />Les mêmes que dans ton Profil.
       </p>
     </form>
     <template #footer>

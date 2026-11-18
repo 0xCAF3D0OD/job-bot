@@ -23,7 +23,7 @@ describe("Candidature spontanée (docs/39)", () => {
     POST.mockResolvedValueOnce({ data: { company_address: "Rue 1\n1000 Lausanne", company_address_source: "registry" } });
     const wrapper = mount(SpontaneousForm, { global: { plugins: [router] } });
     // Maquette CandidaturesOrdinateurSpontanee (PR 38) : la phrase, trois champs, « Pourquoi » facultatif.
-    expect(wrapper.find("[data-test=spontaneous-lead]").text()).toBe("Pour une entreprise qui n’a pas publié d’offre. jobA1 prépare une lettre et un CV adaptés.");
+    expect(wrapper.find("[data-test=spontaneous-lead]").text()).toBe("Pour une entreprise sans offre publiée.");
     expect(wrapper.findAll(".form-field-label").map((l) => l.text())).toEqual(["Entreprise", "Poste visé", "Pourquoi cette entreprise\u202f? (facultatif)"]);
     expect(wrapper.findAll(".form-field-hint").map((l) => l.text())).toEqual([
       "Par exemple\u202f: Ingénieur DevOps",

@@ -145,7 +145,7 @@ defineExpose({
       class="spontaneous-lead"
       data-test="spontaneous-lead"
     >
-      Pour une entreprise qui n’a pas publié d’offre. jobA1 prépare une lettre et un CV adaptés.
+      Pour une entreprise sans offre publiée.
     </p>
     <FormField
       v-slot="{ id, describedby, invalid }"

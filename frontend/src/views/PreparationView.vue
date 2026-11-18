@@ -611,7 +611,7 @@ async function write(force = false): Promise<void> {
     setTimeout(() => (fresh.value = false), 1000);
   } catch {
     error.value = "API injoignable.";
-    letterFailed.value = "La connexion a coupé pendant l’écriture. Rien n’est perdu : jobA1 reprend avec ton CV et l’annonce.";
+    letterFailed.value = "La connexion a coupé. Rien n’est perdu.";
   } finally {
     writing.value = false;
     phase.value = "write";
@@ -1162,7 +1162,7 @@ onMounted(() => void load());
               v-if="applyLink"
               class="apply-where-text"
             >
-              {{ phone ? "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." : "Le formulaire s’ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l’envoi." }}
+              Reviens ici pour marquer l’envoi.
             </p>
             <div
               ref="attachRow"

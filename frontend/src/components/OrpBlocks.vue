@@ -131,7 +131,7 @@ const ficheTo = (row: OrpRow) => ({ path: `/bilan/orp/candidature/${row.applicat
         class="block-help"
         data-test="orp-proof-note"
       >
-        L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture.
+        Garde un justificatif pour chacune.
       </p>
       <div class="orp-blocks-rows">
         <BlockRow

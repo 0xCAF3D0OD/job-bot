@@ -318,7 +318,7 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
     expect(wrapper.find("[data-test=alerts-family-confirm] .alerts-family-title").text()).toBe("À confirmer · 1");
     expect(wrapper.find("[data-test=alerts-family-confirm] .alerts-family-help").text()).toContain("jobup attend ta confirmation");
     expect(wrapper.find("[data-test=alert-card-1-jobup] .block-row-aside").text().replace(/^, /, "")).toBe("Confirmation demandée");
-    expect(wrapper.find("[data-test=alerts-note]").text()).toContain("transférés par ton filtre Gmail");
+    expect(wrapper.find("[data-test=alerts-note]").text()).toContain("reçus sur ton adresse jobA1");
     await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");
     const link = wrapper.find("[data-test=alert-confirm]");
     expect(link.attributes("href")).toBe("https://jobs.example/confirm?t=1");
