@@ -9,9 +9,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import OrpMeeting
+from jobbot.orp import identity, redaction
 from jobbot.orp import meeting as service
 from jobbot.orp import outcome as outcomes
-from jobbot.orp import redaction
 from jobbot.orp.service import load_target
 from jobbot.orp.sheet import sheet_pdf
 from jobbot.runtime import Runtime
@@ -108,6 +108,24 @@ class PreparationOut(BaseModel):
     has_applications: bool = True
     # Les chiffres des deux mois, en une ligne chacun sur la page (docs/131).
     months: list[MonthFactsOut] = []
+
+
+class SheetIdentityOut(BaseModel):
+    """« Ton nom sur la feuille » (§70) : le conseiller pré-rempli par le rendez-vous, s'il est
+    connu."""
+
+    name: str | None
+    advisor: str | None
+    office: str | None
+
+
+class SheetIdentityIn(BaseModel):
+    """Seuls les champs envoyés sont enregistrés (un champ à la fois, quand on le quitte) ; vide =
+    retiré."""
+
+    name: Annotated[str, Field(max_length=120)] | None = None
+    advisor: Annotated[str, Field(max_length=120)] | None = None
+    office: Annotated[str, Field(max_length=120)] | None = None
 
 
 class MeetingPage(BaseModel):
@@ -221,6 +239,25 @@ async def save_orp_meeting_questions(request: Request, body: QuestionsIn) -> Mee
     return await _page(runtime)
 
 
+@router.get("/nom", operation_id="getOrpSheetIdentity")
+async def get_orp_sheet_identity(request: Request) -> SheetIdentityOut:
+    async with _runtime(request).sessionmaker() as session:
+        found = await identity.load(session)
+    return SheetIdentityOut(**found.__dict__)
+
+
+@router.put("/nom", operation_id="saveOrpSheetIdentity")
+async def save_orp_sheet_identity(request: Request, body: SheetIdentityIn) -> SheetIdentityOut:
+    """Ton nom, ton conseiller, ton office régional, gardés dans ton compte (§70)."""
+    runtime = _runtime(request)
+    values = {field: getattr(body, field) for field in body.model_fields_set}
+    async with runtime.sessionmaker.begin() as session:
+        await identity.save(session, values)
+    async with runtime.sessionmaker() as session:
+        found = await identity.load(session)
+    return SheetIdentityOut(**found.__dict__)
+
+
 @router.get(
     "/feuille.pdf",
     operation_id="getOrpMeetingSheet",
@@ -228,13 +265,19 @@ async def save_orp_meeting_questions(request: Request, body: QuestionsIn) -> Mee
     responses={200: {"content": {"application/pdf": {}}}},
 )
 async def get_orp_meeting_sheet(request: Request, name: str | None = None) -> Response:
-    """La feuille sur une page A4 ; ton nom seulement si tu le donnes (`name`)."""
+    """La feuille sur une page A4 ; ton nom, ton conseiller et ton office régional s'ils sont
+    enregistrés (« Ton nom sur la feuille », §70). `name` remplace le nom enregistré."""
     runtime = _runtime(request)
     async with runtime.sessionmaker() as session:
         prep = await service.prepare(session)
         found = await service.next_meeting(session, datetime.now(UTC))
+        who = await identity.load(session)
     pdf = sheet_pdf(
-        prep, starts_at=found.starts_at if found else None, name=(name or "").strip()[:120] or None
+        prep,
+        starts_at=found.starts_at if found else None,
+        name=(name or "").strip()[:120] or who.name,
+        advisor=who.advisor,
+        office=who.office,
     )
     return Response(
         pdf,
