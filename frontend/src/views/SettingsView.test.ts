@@ -117,6 +117,16 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     expect(sheet.findAll(".pause-month .pause-week").length).toBeGreaterThan(1);
     expect(sheet.get("[data-test=pause-summary]").text()).toContain("1er clic : Du, 2e clic : Jusqu’au");
     expect(sheet.get("[data-test=pause-summary]").text()).toContain("Clique sur le premier jour");
+    // Deux mois à la fois ; flèches de 44 px (Kevin, 18.11, point 3), pas de défilement.
+    const titles = () => sheet.findAll(".pause-month h3").map((h) => h.text());
+    expect(titles()).toHaveLength(2);
+    const first = titles();
+    expect(sheet.get("[data-test=pause-prev]").attributes("aria-label")).toBe("Mois précédent");
+    expect(sheet.get("[data-test=pause-prev]").attributes("aria-disabled")).toBe("true");
+    await sheet.get("[data-test=pause-next]").trigger("click");
+    expect(titles()[0]).toBe(first[1]);
+    await sheet.get("[data-test=pause-prev]").trigger("click");
+    expect(titles()).toEqual(first);
   });
 
   it("une rubrique seule a le même en-tête que la page Réglages : la flèche vers le compte, puis son nom (N6)", async () => {
