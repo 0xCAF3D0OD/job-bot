@@ -5,11 +5,14 @@ import type { OfferFacets } from "../api/client";
 import {
   BASIS_HELP,
   basisChoices,
+  choiceCount,
   radioKey,
+  rateCount,
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
   SCORE_HELP,
+  scoreCount,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -52,6 +55,11 @@ function selectView(view: View): void {
 }
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
+// Sous chaque choix de Note et de Taux, son nombre d'offres, avec les autres filtres actifs : le même calcul que la
+// feuille du téléphone, donc le choix actif montre le nombre de « Afficher n offres » (Kevin, 18.11). À 0, le choix
+// reste cliquable, grisé.
+const scores = computed(() => SCORE_CHOICES.map((c) => ({ ...c, count: scoreCount(props.facets, c.min) })));
+const rates = computed(() => RATE_CHOICES.map((c) => ({ ...c, count: rateCount(props.facets, c.value) })));
 const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
 </script>
 
@@ -90,6 +98,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             v-for="choice in VIEWS"
             :key="choice.value"
             type="button"
+            :class="{ 'choice-empty': counts[choice.value] === 0 }"
             :aria-pressed="filters.view === choice.value"
             :data-test="`pop-view-${choice.value}`"
             @click="selectView(choice.value)"
@@ -126,15 +135,16 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           aria-labelledby="pop-score"
         >
           <button
-            v-for="choice in SCORE_CHOICES"
+            v-for="choice in scores"
             :key="choice.label"
             type="button"
+            :class="['filter-panel-counted', { 'choice-empty': choice.count === 0 }]"
             aria-describedby="pop-score-help"
             :aria-pressed="scoreChoice === choice.min"
             :data-test="`pop-score-${choice.min ?? 'all'}`"
             @click="emit('update', { minScore: choice.min, maxScore: null })"
           >
-            {{ choice.label }}
+            <span class="filter-panel-label">{{ choice.label }}</span><span class="filter-panel-sub">{{ choiceCount(choice.count) }}</span>
           </button>
         </div>
         <p
@@ -158,6 +168,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             :key="choice.value ?? 'all'"
             type="button"
             role="radio"
+            :class="{ 'choice-empty': choice.count === 0 }"
             :aria-checked="filters.basis === choice.value"
             :tabindex="filters.basis === choice.value ? 0 : -1"
             :data-test="`pop-basis-${choice.value ?? 'all'}`"
@@ -182,14 +193,15 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         <span id="pop-rate">Taux d’activité</span>
         <div>
           <button
-            v-for="choice in RATE_CHOICES"
+            v-for="choice in rates"
             :key="choice.label"
             type="button"
+            :class="['filter-panel-counted', { 'choice-empty': choice.count === 0 }]"
             :aria-pressed="filters.minRate === choice.value"
             :data-test="`pop-rate-${choice.value ?? 'all'}`"
             @click="emit('update', { minRate: choice.value })"
           >
-            {{ choice.label }}
+            <span class="filter-panel-label">{{ choice.label }}</span><span class="filter-panel-sub">{{ choiceCount(choice.count) }}</span>
           </button>
         </div>
       </div>
