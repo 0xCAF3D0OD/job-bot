@@ -73,3 +73,13 @@ describe("filtre Contrat", () => {
     expect(DEFAULT_FILTERS.contracts).toEqual([]);
   });
 });
+
+describe("Filtre « Distance » dans l’adresse (issue 468)", () => {
+  it("?distance=30 et ?distance=inconnu ; une valeur inconnue est ignorée, jamais une liste vidée sans le dire", () => {
+    expect(fromQuery({ distance: "30" }).distance).toBe("30");
+    expect(fromQuery({ distance: "inconnu" }).distance).toBe("unknown");
+    expect(fromQuery({ distance: "20" }).distance).toBeNull();
+    expect(toQuery({ ...DEFAULT_FILTERS, distance: "unknown" }).distance).toBe("inconnu");
+    expect(activeCount({ ...DEFAULT_FILTERS, distance: "15" })).toBe(1);
+  });
+});

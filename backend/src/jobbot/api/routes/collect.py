@@ -26,6 +26,7 @@ from jobbot.agency import (
 )
 from jobbot.core.contract import Contract
 from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
+from jobbot.core.geo import EARTH_KM, Point, locate, locate_zip
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import (
@@ -531,19 +532,75 @@ class OfferFacets(BaseModel):
     # Téléphone (Kevin, 18.11, choix a) : avec `hide_far`, les mêmes nombres sans les offres
     # « Loin » que la liste cache ; absent sinon.
     near: "NearFacets | None" = None
+    # Filtre « Distance depuis… » (issue #468, Kevin, 18.11) : la commune des coordonnées
+    # (« Renens »), et le nombre d'offres de chaque choix (« all », « 15 », « 30 », « 50 »,
+    # « unknown » = lieu non précisé), avec les autres filtres mais sans celui-ci. Vides sans
+    # domicile reconnu : le groupe ne s'affiche pas.
+    distance_from: str | None = None
+    distances: list[Facet] = []
 
 
 class NearFacets(BaseModel):
     """Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
-    « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
-    offres »."""
+    « in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors
+    « Afficher n offres »."""
 
     views: list[Facet]
     sure: int
     provisional: int
     rates: list[Facet]
     contracts: list[Facet] = []
+    distances: list[Facet] = []
+
+
+# Les choix du filtre « Distance » (planche Filtres) : 15, 30 et 50 km à vol d'oiseau.
+DISTANCE_CHOICES = (15, 30, 50)
+UNKNOWN_PLACE = "unknown"
+
+
+def _distance_facets(row: Sequence[int] | None) -> list[Facet]:
+    """Les nombres « all », « 15 », « 30 », « 50 » et « unknown » ; vides sans domicile reconnu."""
+    if row is None:
+        return []
+    keys = ("all", *map(str, DISTANCE_CHOICES), UNKNOWN_PLACE)
+    return [Facet(value=key, count=int(count)) for key, count in zip(keys, row, strict=True)]
+
+
+def _distance_km(home: Point) -> ColumnElement[float]:
+    """La distance à vol d'oiseau entre le domicile et l'offre (haversine, comme core.geo)."""
+    lat, lon = func.radians(Offer.latitude), func.radians(Offer.longitude)
+    home_lat, home_lon = func.radians(home.lat), func.radians(home.lon)
+    h = func.power(func.sin((lat - home_lat) / 2), 2) + func.cos(home_lat) * func.cos(
+        lat
+    ) * func.power(func.sin((lon - home_lon) / 2), 2)
+    return 2 * EARTH_KM * func.asin(func.least(1.0, func.sqrt(h)))
+
+
+def _distance_condition(home: Point | None, distance: str | None) -> ColumnElement[bool] | None:
+    """« 30 km » : les offres situées à 30 km ou moins ; « Lieu non précisé » : les autres.
+    Sans domicile reconnu, aucun filtre de km : rien ne disparaît sans le dire."""
+    if distance == UNKNOWN_PLACE:
+        return Offer.latitude.is_(None)
+    if distance is None or home is None:
+        return None
+    return and_(Offer.latitude.is_not(None), _distance_km(home) <= int(distance))
+
+
+async def _home(session: AsyncSession) -> tuple[str | None, Point | None]:
+    """La commune des coordonnées de la personne et son point : numéro postal d'abord, sinon le
+    nom de la commune. Lu pour le calcul seulement, jamais journalisé (R-1)."""
+    rows = {
+        row.key: row.value
+        for row in await session.scalars(
+            select(Setting).where(Setting.key.in_(("identity_postcode", "identity_city")))
+        )
+    }
+    city = rows.get("identity_city") if isinstance(rows.get("identity_city"), str) else None
+    postcode = rows.get("identity_postcode")
+    point = locate_zip(postcode if isinstance(postcode, str) else None) or locate(city)
+    label = (city or "").strip() or (postcode if isinstance(postcode, str) else None)
+    return (label, point) if point else (None, None)
 
 
 # Les choix du filtre « Taux d'activité » (section 31 du 16.11) : dès 60, dès 80, 100 %.
@@ -619,6 +676,7 @@ def _filters(
     hide_agencies: bool = False,
     corrections: Corrections = NO_CORRECTIONS,
     contracts: Sequence[str] = (),
+    place: ColumnElement[bool] | None = None,
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
     Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
@@ -646,6 +704,8 @@ def _filters(
         # Plusieurs choix : l'une des catégories. « Non précisé » est un choix comme les autres,
         # jamais une offre écartée en silence.
         conditions.append(Offer.contract.in_(contracts))
+    if place is not None:
+        conditions.append(place)
     if external_only:
         conditions.append(Offer.apply_kind == "external")
     return conditions
@@ -741,6 +801,7 @@ async def list_offers(
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
     contracts: Annotated[list[Contract], Query(max_length=5)] = [],  # noqa: B006
+    distance: Literal["15", "30", "50", "unknown"] | None = None,
     hide_far: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
@@ -750,6 +811,8 @@ async def list_offers(
     runtime = _runtime(request)
     async with runtime.sessionmaker() as session:
         corrections = await load_corrections(session)
+        home_name, home = await _home(session)
+    place = _distance_condition(home, distance)
     score = (
         select(Evaluation.score)
         .where(Evaluation.offer_id == Offer.id, Evaluation.scored_at.is_not(None))
@@ -791,6 +854,7 @@ async def list_offers(
         hide_agencies,
         corrections,
         contracts,
+        place=place,
     )
     filtered = len(conditions)
     # Sans le filtre de note : base de la courbe des notes.
@@ -833,6 +897,7 @@ async def list_offers(
         hide_agencies,
         corrections,
         contracts,
+        place=place,
     )
     without_cantons = _filters(
         q,
@@ -845,6 +910,7 @@ async def list_offers(
         hide_agencies,
         corrections,
         contracts,
+        place=place,
     )
     for bound in (
         *([score >= min_score] if min_score is not None else []),
@@ -874,6 +940,7 @@ async def list_offers(
             hide_agencies,
             corrections,
             contracts,
+            place=place,
         ),
         *conditions[filtered:],
         *([view_condition] if view_condition is not None else []),
@@ -891,6 +958,24 @@ async def list_offers(
             hide_doubtful,
             hide_agencies,
             corrections,
+            place=place,
+        ),
+        *conditions[filtered:],
+        *([view_condition] if view_condition is not None else []),
+    ]
+    # Sans le filtre de distance : le nombre sous chaque choix, « Lieu non précisé » compris.
+    without_distance = [
+        *_filters(
+            q,
+            sources,
+            cantons,
+            min_rate,
+            external_only,
+            remote,
+            hide_doubtful,
+            hide_agencies,
+            corrections,
+            contracts,
         ),
         *conditions[filtered:],
         *([view_condition] if view_condition is not None else []),
@@ -963,6 +1048,28 @@ async def list_offers(
                 ).where(*without_rate)
             )
         ).one()
+
+        async def distance_counts(*where: ColumnElement[bool]) -> Sequence[int] | None:
+            if home is None:
+                return None
+            return tuple(
+                (
+                    await session.execute(
+                        select(
+                            func.count(),
+                            *(
+                                func.count().filter(
+                                    Offer.latitude.is_not(None), _distance_km(home) <= km
+                                )
+                                for km in DISTANCE_CHOICES
+                            ),
+                            func.count().filter(Offer.latitude.is_(None)),
+                        ).where(*where)
+                    )
+                ).one()
+            )
+
+        distance_row = await distance_counts(*without_distance)
         contract_rows = dict(
             (
                 await session.execute(
@@ -1036,6 +1143,7 @@ async def list_offers(
                     Facet(value=contract.value, count=int(near_contracts.get(contract.value, 0)))
                     for contract in Contract
                 ],
+                distances=_distance_facets(await distance_counts(*without_distance, *near)),
             )
 
     live: dict[str, int] = {}
@@ -1072,6 +1180,8 @@ async def list_offers(
             Facet(value=contract.value, count=int(contract_rows.get(contract.value, 0)))
             for contract in Contract
         ],
+        distance_from=home_name,
+        distances=_distance_facets(distance_row),
         near=near_facets,
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[

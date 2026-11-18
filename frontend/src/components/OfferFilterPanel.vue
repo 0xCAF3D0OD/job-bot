@@ -8,6 +8,8 @@ import {
   choiceCount,
   CONTRACT_CHOICES,
   contractCount,
+  DISTANCE_CHOICES,
+  distanceCount,
   radioKey,
   rateCount,
   RATE_CHOICES,
@@ -16,6 +18,7 @@ import {
   SCORE_HELP,
   scoreCount,
   toggleContract,
+  UNKNOWN_PLACE_LABEL,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -65,6 +68,12 @@ const scores = computed(() => SCORE_CHOICES.map((c) => ({ ...c, count: scoreCoun
 const rates = computed(() => RATE_CHOICES.map((c) => ({ ...c, count: rateCount(props.facets, c.value) })));
 // Contrat (issue 468, Kevin 18.11) : plusieurs choix, « CDI · 120 » comme Statut.
 const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(props.facets, c.value) })));
+// Distance (issue 468, Kevin 18.11) : un seul choix, le nombre sous chaque choix comme Taux ; « Lieu non précisé · n »
+// pour les offres sans lieu reconnu. Absent sans commune connue.
+const distances = computed(() => [
+  ...DISTANCE_CHOICES.map((c) => ({ ...c, count: distanceCount(props.facets, c.value), counted: true })),
+  { label: UNKNOWN_PLACE_LABEL, value: "unknown" as const, count: distanceCount(props.facets, "unknown"), counted: false },
+]);
 const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
 </script>
 
@@ -231,6 +240,34 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           </button>
         </div>
       </div>
+      <template v-if="facets.distance_from && facets.distances?.length">
+        <hr>
+        <div
+          class="filter-panel-group"
+          role="group"
+          aria-labelledby="pop-distance"
+        >
+          <span id="pop-distance">{{ `Distance depuis ${facets.distance_from}` }}</span>
+          <div>
+            <button
+              v-for="choice in distances"
+              :key="choice.value ?? 'all'"
+              type="button"
+              :class="{ 'filter-panel-counted': choice.counted, 'choice-empty': choice.count === 0 }"
+              :aria-pressed="filters.distance === choice.value"
+              :data-test="`pop-distance-${choice.value ?? 'all'}`"
+              @click="emit('update', { distance: choice.value })"
+            >
+              <template v-if="choice.counted">
+                <span class="filter-panel-label">{{ choice.label }}</span><span class="filter-panel-sub">{{ choiceCount(choice.count) }}</span>
+              </template>
+              <template v-else>
+                {{ choice.label }} · {{ choiceCount(choice.count) }}
+              </template>
+            </button>
+          </div>
+        </div>
+      </template>
       <hr>
       <label class="filter-panel-switch">{{ REMOTE_LABEL }}<input
         type="checkbox"
