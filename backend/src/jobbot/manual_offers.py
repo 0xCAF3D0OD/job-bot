@@ -714,16 +714,20 @@ CAPTURE_ESTIMATE_USD = Decimal("0.01")
 
 
 async def capture_text(
-    runtime: Runtime, offer_id: int, data: bytes, media_type: capture_llm.ImageType
+    runtime: Runtime, offer_id: int | None, data: bytes, media_type: capture_llm.ImageType
 ) -> str:
-    """Le texte d'une capture d'annonce, recopié par l'IA, nettoyé comme un texte collé."""
+    """Le texte d'une capture d'annonce, recopié par l'IA, nettoyé comme un texte collé.
+    `offer_id` : l'offre de la fiche (« Refaire la note ») ; None : une offre pas encore
+    ajoutée (« Ajouter une offre », §72 du 18.11)."""
     settings = runtime.settings
     if not settings.llm_configured:
         raise ReadProblem(FILE_AI_OFF, paste=True, reason=FILE_AI_OFF)
     async with runtime.sessionmaker() as session:
-        await _load(session, offer_id)
-        # La formule : la note refaite comptera l'offre ; plus de notes ce mois, pas d'appel.
-        if offer_id not in await plans.scored_this_month(session):
+        if offer_id is not None:
+            await _load(session, offer_id)
+        # La formule : la note (refaite, ou celle de l'offre ajoutée) comptera l'offre ; plus de
+        # notes ce mois, pas d'appel.
+        if offer_id is None or offer_id not in await plans.scored_this_month(session):
             await plans.check(session, plans.SCORE)
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if spend + CAPTURE_ESTIMATE_USD * rate > budget:
@@ -746,6 +750,19 @@ async def capture_text(
     async with runtime.sessionmaker() as session:
         identity = await load_identity(session)
     return clean_capture(found.text, identity.name)[:MAX_TEXT]
+
+
+async def manual_file_text(runtime: Runtime, data: bytes) -> str:
+    """Le texte d'un fichier d'annonce donné dans « Ajouter une offre » (§72 du 18.11) : PDF
+    sans IA, PNG ou JPG par l'IA, comme sur la fiche. Rien n'est créé ici."""
+    if len(data) > MAX_PDF_BYTES:
+        raise ReadProblem(PDF_TOO_BIG, paste=True, reason=PDF_TOO_BIG)
+    if data.startswith(b"%PDF-"):
+        return await asyncio.to_thread(pdf_text, data)
+    media_type = capture_llm.image_type(data)
+    if media_type is None:
+        raise ReadProblem(FILE_NOT_ONE, paste=True, reason=FILE_NOT_ONE)
+    return await capture_text(runtime, None, data, media_type)
 
 
 def clean_capture(text: str, name: str | None) -> str:

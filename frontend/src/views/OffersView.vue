@@ -1367,7 +1367,7 @@ onUnmounted(() => {
     v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
-    subtitle="Colle le lien ou le texte de l’annonce, ou importe son PDF. jobA1 la lit et la note."
+    subtitle="Colle le lien ou le texte de l’annonce. jobA1 la lit et la note."
     class="manual-sheet"
     @close="manualOpen = false"
   >

@@ -58,23 +58,82 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(last.find("[data-test=manual-count]").text()).toBe("Tu peux encore en ajouter une aujourd’hui.");
   });
 
-  it("téléphone (maquette AjouterOffreTel) : la zone de saisie de 4 lignes, + pour le PDF", async () => {
+  it("téléphone (planche AjouterOffreTel, §72) : « Coller » et « Capture ou PDF » au-dessus du champ, sans +, la pastille de la formule", async () => {
     phone.value = true;
     const wrapper = await mountForm();
-    expect(wrapper.find("[data-test=composer-input]").attributes("rows")).toBe("4");
+    expect(wrapper.find("[data-test=manual-paste]").text()).toBe("Coller");
+    expect(wrapper.find("[data-test=manual-file]").text()).toBe("Capture ou PDF");
+    const input = wrapper.find("[data-test=composer-input]");
+    expect(input.attributes("rows")).toBe("4");
+    expect(input.attributes("placeholder")).toBe("Ou colle ici le lien ou le texte");
+    expect(input.attributes("aria-label")).toBe("Lien ou texte de l’annonce");
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Ajouter l’offre");
-    expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-pdf]").exists()).toBe(false);
-    // §17 du 15 novembre : flèche aria-disabled tant que le champ est vide ; l'aide liée au champ, pas de quota au-dessus de 5.
+    expect(wrapper.find("[data-test=manual-pdf-file]").attributes("accept")).toBe("application/pdf,.pdf,image/png,image/jpeg");
+    // §17 du 15 novembre : flèche aria-disabled tant que le champ est vide ; les pastilles liées au champ.
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-disabled")).toBe("true");
     const help = wrapper.find("[data-test=manual-help]");
-    expect(help.text()).toBe("Fonctionne avec jobup, jobs.ch, LinkedIn et les sites d’entreprises.");
-    expect(wrapper.find("[data-test=composer-input]").attributes("aria-describedby")).toBe(help.attributes("id"));
+    expect(help.text()).toBe("Capture ou PDF : compte dans ta formule");
+    expect(input.attributes("aria-describedby")).toBe(help.attributes("id"));
     expect(wrapper.find("[data-test=manual-count]").exists()).toBe(false);
     wrapper.unmount();
+    // À 5 ajouts ou moins, la pastille orange du quota rejoint celle de la formule.
     const low = await mountForm({}, "Menuisier", 17);
     expect(low.find("[data-test=manual-count]").text()).toBe("Plus que 3 ajouts aujourd’hui");
-    expect(low.find("[data-test=manual-help]").exists()).toBe(false);
+    expect(low.find("[data-test=manual-help]").text()).toContain("Capture ou PDF : compte dans ta formule");
+  });
+
+  describe("téléphone, « Coller » (Kevin, 18.11)", () => {
+    afterEach(() => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    });
+    it("le texte copié arrive dans le champ", async () => {
+      phone.value = true;
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: vi.fn(async () => "  https://bois.ch/emplois/1 \n") } });
+      const wrapper = await mountForm();
+      await wrapper.find("[data-test=manual-paste]").trigger("click");
+      await flushPromises();
+      expect(wrapper.find<HTMLTextAreaElement>("[data-test=composer-input]").element.value).toBe("https://bois.ch/emplois/1");
+      expect(document.activeElement).toBe(wrapper.find("[data-test=composer-input]").element);
+      wrapper.unmount();
+    });
+    it("accès refusé : le champ reste vide et prend le curseur, pour coller à la main", async () => {
+      phone.value = true;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { readText: vi.fn(async () => Promise.reject(new DOMException("refusé", "NotAllowedError"))) },
+      });
+      const wrapper = await mountForm();
+      await wrapper.find("[data-test=manual-paste]").trigger("click");
+      await flushPromises();
+      expect(wrapper.find<HTMLTextAreaElement>("[data-test=composer-input]").element.value).toBe("");
+      expect(document.activeElement).toBe(wrapper.find("[data-test=composer-input]").element);
+      wrapper.unmount();
+    });
+  });
+
+  it("téléphone, « Capture ou PDF » : le texte du fichier arrive dans le champ ; la formule épuisée le dit", async () => {
+    phone.value = true;
+    const wrapper = await mountForm();
+    const input = wrapper.find("[data-test=manual-pdf-file]");
+    const capture = new File(["\x89PNG"], "capture.png", { type: "image/png" });
+    Object.defineProperty(input.element, "files", { value: [capture], configurable: true });
+    POST.mockResolvedValueOnce({ data: { text: "Menuisière CFC\nBois & Fils, Sion", problem: null, limit: null } });
+    await input.trigger("change");
+    await vi.waitFor(() => expect(POST).toHaveBeenCalledTimes(1));
+    await flushPromises();
+    expect(POST.mock.calls[0]![0]).toBe("/api/offers/manual/file");
+    expect(wrapper.find<HTMLTextAreaElement>("[data-test=composer-input]").element.value).toBe("Menuisière CFC\nBois & Fils, Sion");
+    expect(wrapper.find("[data-test=manual-pdf-done]").text()).toBe("Texte du fichier repris. Relis-le, puis ajoute l’offre.");
+
+    POST.mockResolvedValueOnce({ data: { text: null, problem: null, limit: "Les 30 offres notées du mois sont utilisées." } });
+    Object.defineProperty(input.element, "files", { value: [capture], configurable: true });
+    await input.trigger("change");
+    await vi.waitFor(() => expect(POST).toHaveBeenCalledTimes(2));
+    await flushPromises();
+    expect(wrapper.find("[data-test=manual-pdf-problem]").text()).toBe("Les 30 offres notées du mois sont utilisées.");
+    wrapper.unmount();
   });
 
   it("un texte collé est lu comme un texte ; champ vide : l’erreur sous le champ", async () => {
