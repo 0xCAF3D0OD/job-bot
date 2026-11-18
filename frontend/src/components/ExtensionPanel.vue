@@ -23,6 +23,9 @@ const tokens = ref<Token[]>([]);
 const created = ref<string | null>(null);
 const origin = globalThis.location?.origin ?? "";
 
+// Prévient la page Réglages quand le premier chargement est fini : elle montre ses sections d’un coup (audit du 17.11, N23).
+const emit = defineEmits<{ ready: [] }>();
+
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/extension-tokens");
   tokens.value = Array.isArray(data) ? data : [];
@@ -58,7 +61,13 @@ function lastUsed(token: Token): string {
   return `Navigateur relié · utilisé ${onDay(token.last_used_at)}.`;
 }
 
-onMounted(load);
+onMounted(async () => {
+  try {
+    await load();
+  } finally {
+    emit("ready");
+  }
+});
 </script>
 
 <template>

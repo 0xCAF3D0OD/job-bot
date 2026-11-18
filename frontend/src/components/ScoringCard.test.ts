@@ -30,7 +30,7 @@ describe("ScoringCard", () => {
     GET.mockResolvedValue({ data: base });
     const wrapper = mount(ScoringCard);
     await flushPromises();
-    expect(wrapper.text()).toContain("2.40 / 10 CHF");
+    expect(wrapper.text()).toContain("2,40 CHF sur 10,00");
     expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("24");
     expect(wrapper.find("[data-test=rescore]").exists()).toBe(false);
     // Des lignes (1.6.67) : l'état écrit en mots, les notées à droite de leur ligne.

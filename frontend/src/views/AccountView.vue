@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -24,6 +24,7 @@ import { useTheme } from "../composables/useTheme";
 // rubrique des Réglages.
 const { me, logout } = useAuth();
 const router = useRouter();
+const route = useRoute();
 
 // « Se déconnecter » sous les blocs, en --danger (§10.4, 9 novembre) : comme le pied du panneau du compte.
 async function signOut(): Promise<void> {
@@ -52,7 +53,8 @@ const initials = computed(() =>
 // Les valeurs à droite des lignes (§51) : « Auto », « Clair », « Sombre », comme la planche.
 const THEME_LABEL = { auto: "Auto", light: "Clair", dark: "Sombre" } as const;
 const owner = computed(() => Boolean(me.value?.is_owner));
-const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
+// L’exploitant n’a pas de formule : « Sans limite », pas « Essentiel » (audit du 17.11, N2).
+const planName = computed(() => (plan.value?.unlimited ? "Sans limite" : plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3), jamais dans la démo.
 const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
 // « Aide et contact » : l'e-mail de l'exploitant s'il en a donné un, sinon la page À propos qui montre son contact.
@@ -104,7 +106,47 @@ function onProfileChange(event: Event): void {
   choose(Number((event.target as HTMLSelectElement).value));
 }
 
+// Retour sur la ligne d’origine (accord de Kevin du 17.11, K39) : la ligne cliquée et le défilement sont gardés pour
+// la session ; au retour d’une rubrique ou d’État du service, la page revient à ce défilement et met le focus clavier
+// sur la ligne, au lieu de remonter en haut.
+const RETURN_KEY = "jobA1-retour-ligne";
+function rememberRow(event: MouseEvent): void {
+  const row = (event.target as HTMLElement).closest<HTMLElement>(":is(a, button)[data-test^=account-]");
+  if (!row || row.dataset.test === "account-collect") return;
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ path: route.path, test: row.dataset.test, y: row.getBoundingClientRect().top }));
+  } catch {
+    // Stockage refusé (navigation privée) : on revient en haut, comme avant.
+  }
+}
+function restoreRow(): void {
+  let saved: { path?: string; test?: string; y?: number } | null = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(RETURN_KEY) ?? "null");
+  } catch {
+    return;
+  }
+  // Venu d’une rubrique : par le lien de retour (back) ou par le retour du navigateur (forward).
+  const { back, forward } = (history.state ?? {}) as { back?: unknown; forward?: unknown };
+  const fromRubric = [back, forward].some((path) => typeof path === "string" && path.startsWith("/reglages"));
+  if (!saved || saved.path !== route.path || !fromRubric) return;
+  try {
+    sessionStorage.removeItem(RETURN_KEY);
+  } catch {
+    // rien à effacer
+  }
+  const { test, y = 0 } = saved;
+  requestAnimationFrame(() => {
+    // La ligne à la même hauteur dans la fenêtre qu’au moment du clic.
+    const row = document.querySelector<HTMLElement>(`[data-test="${test}"]`);
+    if (!row) return;
+    scrollBy(0, row.getBoundingClientRect().top - y);
+    row.focus({ preventScroll: true });
+  });
+}
+
 onMounted(() => {
+  restoreRow();
   void loadName();
   void loadCvCount();
   void loadContact();
@@ -120,7 +162,10 @@ onMounted(() => {
        d’une seule ligne de texte, 56 px, la valeur utile à droite avant le chevron, une couleur par icône de section.
        « Recherche et outils », Connexions, État du service et le choix du profil d’essai ne sont pas dessinés : gardés
        (règle 3 de CLAUDE.md), au même style. -->
-  <section class="band account-v2">
+  <section
+    class="band account-v2"
+    @click.capture="rememberRow"
+  >
     <div
       class="container account-page"
       data-test="account-page"
