@@ -20,4 +20,5 @@ Mise en œuvre (à valider par Kevin dans la PR) :
 - Un lieu d'annonce n'a un point que s'il est sans ambiguïté : numéro postal connu, ou nom de localité dans un seul
   endroit (le canton cité tranche). « Buchs » sans canton, « Neuchâtel / Berne » ou « Suisse romande » vont dans
   « Lieu non précisé ».
-- Choix par défaut « Toutes » (la planche part de 50 km) : un défaut à 50 km retirerait des offres de la liste de main.
+- Choix par défaut « Toutes » (la planche s'ouvre sur 30 km et « Tout effacer » y revient à 50 km) : un défaut en km
+  retirerait des offres de la liste de main.
