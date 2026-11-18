@@ -215,19 +215,13 @@ function entryChanged(): void {
   }
 }
 
-// Le PDF de l'annonce : son texte, lu par le serveur, arrive dans le champ ; la personne le relit, puis ajoute.
-const PDF_PROBLEMS: Record<string, string> = {
-  "no-text": "Ce PDF ne contient pas de texte. Colle le texte de l’annonce.",
-  "too-big": "Ce PDF est trop lourd (5 Mo au plus). Colle le texte de l’annonce.",
-  "not-pdf": "Ce fichier n’est pas un PDF. Colle le texte de l’annonce.",
-  unreadable: "Ce PDF ne peut pas être lu. Colle le texte de l’annonce.",
-};
-const MAX_PDF = 5 * 1024 * 1024;
+// « Capture ou PDF » : son texte, lu par le serveur, arrive dans le champ ; la personne le relit, puis ajoute.
 const picker = ref<HTMLInputElement | null>(null);
 const importing = ref(false);
 const pdfProblem = ref("");
 const pdfDone = ref(false);
 function pickPdf(): void {
+  if (importing.value || full.value) return;
   picker.value?.click();
 }
 async function importPdf(event: Event): Promise<void> {
@@ -237,43 +231,11 @@ async function importPdf(event: Event): Promise<void> {
   if (!file || importing.value) return;
   pdfProblem.value = "";
   pdfDone.value = false;
-  if (phone.value) {
-    await importFile(file);
-    return;
-  }
-  if (file.size > MAX_PDF) {
-    pdfProblem.value = PDF_PROBLEMS["too-big"]!;
-    return;
-  }
-  importing.value = true;
-  try {
-    const { data, error: refused } = await api.POST("/api/offers/manual/pdf", {
-      body: { file: "" },
-      bodySerializer: () => {
-        const form = new FormData();
-        form.append("file", file);
-        return form;
-      },
-    });
-    if (!data) {
-      const detail = (refused as { detail?: unknown } | undefined)?.detail;
-      pdfProblem.value = typeof detail === "string" ? detail : "Import impossible pour l’instant : réessaie.";
-    } else if (!data.text) {
-      pdfProblem.value = PDF_PROBLEMS[data.problem ?? "unreadable"] ?? PDF_PROBLEMS.unreadable!;
-    } else {
-      entry.value = data.text;
-      mode.value = "text";
-      entryChanged();
-      problem.value = "";
-      pdfDone.value = true;
-    }
-  } finally {
-    importing.value = false;
-  }
+  await importFile(file);
 }
 
-// Téléphone (planche AjouterOffreTel, §72 du 18.11) : « Capture ou PDF » lit un PDF sans IA ou une capture PNG ou JPG
-// par l'IA, avec la règle de la fiche (Q1 du 17.11 : 5 Mo, 20 par heure, la capture compte dans la formule). Le texte
+// Planche AjouterOffreTel (§72d du 18.11), téléphone et ordinateur (Kevin, 18.11, 16 h 21 : même contenu partout) :
+// « Capture ou PDF » lit un PDF sans IA ou une capture PNG ou JPG par l'IA, avec la règle de la fiche (Q1 du 17.11 : 5 Mo, 20 par heure, la capture compte dans la formule). Le texte
 // arrive dans le champ, à relire avant « Ajouter l'offre ». La lecture est chargée au premier fichier (offerFile.ts).
 async function importFile(file: File): Promise<void> {
   importing.value = true;
@@ -298,6 +260,12 @@ async function importFile(file: File): Promise<void> {
 // d'autorisation du système, arrive dans le champ. Accès refusé ou presse-papiers vide : le curseur va dans le champ,
 // où l'on colle à la main.
 const form = ref<HTMLFormElement | null>(null);
+// Les deux boutons de la barre du champ ; leurs icônes, dessinées par la planche, restent dans le gabarit (dans
+// icons.ts, elles pèseraient sur toutes les pages).
+const TOOLS = [
+  { id: "paste", label: "Coller" },
+  { id: "file", label: "Capture ou PDF" },
+] as const;
 async function pasteClipboard(): Promise<void> {
   let copied = "";
   try {
@@ -393,78 +361,59 @@ defineExpose({
     novalidate
     @submit.prevent="submit"
   >
-    <!-- Téléphone (planche AjouterOffreTel, §72 du 18.11) : deux boutons tonals au-dessus du champ, « Coller » et
-         « Capture ou PDF » ; plus de + dans la barre du champ. Leurs icônes, dessinées par la planche, restent ici :
-         dans icons.ts, elles pèseraient sur toutes les pages. -->
-    <div
-      v-if="phone"
-      class="manual-tools"
-    >
-      <button
-        type="button"
-        class="manual-tool"
-        data-test="manual-paste"
-        @click="pasteClipboard"
-      >
-        <svg
-          class="icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        ><rect
-          x="6"
-          y="4"
-          width="12"
-          height="17"
-          rx="2"
-        /><path d="M9 4V3h6v1" /></svg>Coller
-      </button>
-      <button
-        type="button"
-        class="manual-tool manual-tool-wide"
-        :aria-disabled="importing || full ? 'true' : undefined"
-        data-test="manual-file"
-        @click="!importing && !full && pickPdf()"
-      >
-        <svg
-          class="icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        ><rect
-          x="4"
-          y="5"
-          width="16"
-          height="14"
-          rx="2"
-        /><circle
-          cx="9"
-          cy="10"
-          r="1.5"
-        /><path d="m20 16-5-5-8 8" /></svg>Capture ou PDF
-      </button>
-    </div>
     <Composer
       v-if="phone"
       v-model="entry"
       :rows="4"
-      placeholder="Ou colle ici le lien ou le texte"
-      label="Lien ou texte de l’annonce"
+      placeholder="Lien ou texte de l’annonce"
       send-label="Ajouter l’offre"
       :busy="reading || full"
       :describedby="helpId"
       data-test="manual-entry"
       @update:model-value="entryChanged"
       @send="read"
-    />
+    >
+      <!-- Planche AjouterOffreTel (§72d du 18.11) : « Coller » et « Capture ou PDF » dans la barre du champ, à gauche de
+           la flèche ; boutons texte bleus de 44 px, icône et texte, sans fond. -->
+      <template #tools>
+        <button
+          v-for="tool in TOOLS"
+          :key="tool.id"
+          type="button"
+          class="manual-tool"
+          :aria-disabled="tool.id === 'file' && (importing || full) ? 'true' : undefined"
+          :data-test="`manual-${tool.id}`"
+          @click="tool.id === 'paste' ? pasteClipboard() : pickPdf()"
+        >
+          <svg
+            class="icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          ><template v-if="tool.id === 'paste'"><rect
+            x="6"
+            y="4"
+            width="12"
+            height="17"
+            rx="2"
+          /><path d="M9 4V3h6v1" /></template><template v-else><rect
+            x="4"
+            y="5"
+            width="16"
+            height="14"
+            rx="2"
+          /><circle
+            cx="9"
+            cy="10"
+            r="1.5"
+          /><path d="m20 16-5-5-8 8" /></template></svg>{{ tool.label }}
+        </button>
+      </template>
+    </Composer>
     <FormField
       v-else
       v-slot="{ id, describedby, invalid }"
@@ -483,6 +432,49 @@ defineExpose({
         @input="entryChanged"
       />
     </FormField>
+    <!-- Ordinateur (Kevin, 18.11, 16 h 21) : les mêmes « Coller » et « Capture ou PDF », sous le champ, alignés à droite
+         comme dans la barre du champ du téléphone ; ils remplacent « Importer le PDF de l’annonce ». -->
+    <div
+      v-if="!phone && !shown"
+      class="manual-desk-tools"
+    >
+      <button
+        v-for="tool in TOOLS"
+        :key="tool.id"
+        type="button"
+        class="manual-tool"
+        :aria-disabled="tool.id === 'file' && (importing || full) ? 'true' : undefined"
+        :data-test="`manual-${tool.id}`"
+        @click="tool.id === 'paste' ? pasteClipboard() : pickPdf()"
+      >
+        <svg
+          class="icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        ><template v-if="tool.id === 'paste'"><rect
+          x="6"
+          y="4"
+          width="12"
+          height="17"
+          rx="2"
+        /><path d="M9 4V3h6v1" /></template><template v-else><rect
+          x="4"
+          y="5"
+          width="16"
+          height="14"
+          rx="2"
+        /><circle
+          cx="9"
+          cy="10"
+          r="1.5"
+        /><path d="m20 16-5-5-8 8" /></template></svg>{{ tool.label }}
+      </button>
+    </div>
     <p
       v-if="phone && entryError"
       class="field-error"
@@ -559,7 +551,7 @@ defineExpose({
       class="hint"
       role="status"
     >
-      {{ importing ? (phone ? "Lecture du fichier…" : "Lecture du PDF…") : "Lecture de l’annonce…" }}
+      {{ importing ? "Lecture du fichier…" : "Lecture de l’annonce…" }}
     </p>
     <p
       v-else-if="pdfDone && !shown"
@@ -567,7 +559,7 @@ defineExpose({
       role="status"
       data-test="manual-pdf-done"
     >
-      {{ phone ? "Texte du fichier repris. Relis-le, puis ajoute l’offre." : "Texte du PDF repris. Relis-le, puis ajoute l’offre." }}
+      Texte du fichier repris. Relis-le, puis ajoute l’offre.
     </p>
     <p
       v-if="mode === 'text' && !shown && !reading"
@@ -595,23 +587,14 @@ defineExpose({
     <input
       ref="picker"
       type="file"
-      :accept="phone ? 'application/pdf,.pdf,image/png,image/jpeg' : 'application/pdf,.pdf'"
+      accept="application/pdf,.pdf,image/png,image/jpeg"
       class="visually-hidden"
       tabindex="-1"
       aria-hidden="true"
       data-test="manual-pdf-file"
       @change="importPdf"
     >
-    <button
-      v-if="!shown && !phone"
-      type="button"
-      class="secondary manual-pdf"
-      :disabled="importing || full"
-      data-test="manual-pdf"
-      @click="pickPdf"
-    >
-      <AppIcon name="upload" />Importer le PDF de l’annonce
-    </button>
+
     <p
       v-if="pdfProblem"
       class="notice"
@@ -751,14 +734,13 @@ defineExpose({
 /* AjouterOffreTel : champ de 104 px (4 lignes de 24 et ses marges), aide 13 px 8 px dessous (10 sur la planche), quota en
    pastille orange (avertissement). */
 .manual-form :deep(.composer textarea) { --manual-104: 104px; min-height: var(--manual-104); }
-/* Planche AjouterOffreTel (§72 du 18.11) : boutons tonals de 48 px, 10 px entre eux (1 et 1,5 de large), 12 px au-dessus du
-   champ ; pastilles de 13 px sous le champ, 10 px plus bas, 8 px entre elles. */
-.manual-tools { --manual-10: 10px; --manual-48: 48px; display: flex; gap: var(--manual-10); margin-bottom: calc(var(--space-3) - var(--space-4)); }
-.manual-tool { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-width: 0; height: var(--manual-48); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-bold); white-space: nowrap; cursor: pointer; }
+/* Planche AjouterOffreTel (§72d du 18.11) : boutons texte bleus de 44 px, icône 18 px et texte, sans fond ; pastilles de
+   13 px sous le champ, 10 px plus bas, 8 px entre elles. */
+.manual-tool { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-pill); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-small); font-weight: var(--weight-bold); white-space: nowrap; cursor: pointer; }
 .manual-tool .icon { flex: none; width: 18px; height: 18px; }
-.manual-tool-wide { flex: 1.5; }
 .manual-tool[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; }
-@media (hover: hover) { .manual-tool:hover { background: color-mix(in srgb, var(--primary-soft) 80%, var(--water)); } }
+@media (hover: hover) { .manual-tool:hover { background: var(--primary-soft); } }
+.manual-desk-tools { display: flex; justify-content: flex-end; gap: var(--space-1); margin-top: calc(var(--space-1) - var(--space-4)); }
 .manual-pills { --manual-10: 10px; --manual-5: 5px; display: flex; flex-wrap: wrap; gap: var(--space-2); margin: calc(var(--manual-10) - var(--space-4)) 0 0; }
 .manual-pill, .manual-quota { display: inline-flex; padding: var(--manual-5) var(--space-3); border-radius: var(--radius-pill); font-size: var(--manual-13); font-weight: var(--weight-semibold); }
 .manual-pill { background: var(--line-soft); color: var(--text-lead); }
@@ -767,7 +749,6 @@ defineExpose({
 .manual-duplicate { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-semibold); }
 .manual-duplicate .icon { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--text-secondary); }
 .manual-duplicate-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.manual-pdf { justify-self: start; gap: var(--space-2); }
 .manual-read { display: grid; gap: var(--space-4); }
 .manual-read-cap { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--manual-13); font-weight: var(--weight-bold); letter-spacing: 0.08em; text-transform: uppercase; }
 .manual-read-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }

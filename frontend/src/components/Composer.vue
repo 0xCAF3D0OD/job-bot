@@ -16,9 +16,6 @@ const props = withDefaults(
   defineProps<{
     modelValue: string;
     placeholder: string;
-    // Le nom du champ quand il diffère de l'indication (AjouterOffreTel, §72 : « Ou colle ici… » pour « Lien ou texte de
-    // l'annonce ») ; vide : l'indication.
-    label?: string;
     rows?: number;
     mic?: boolean;
     sendLabel?: string;
@@ -42,7 +39,7 @@ const props = withDefaults(
     // Envoyer reste visible, gris et `aria-disabled` tant qu'il n'y a rien à envoyer.
     stacked?: boolean;
   }>(),
-  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, sendText: "", enough: "", stacked: false, describedby: "", label: "" },
+  { rows: 1, mic: false, sendLabel: "Envoyer", plusItems: () => [], plusDirection: "up", minChars: 0, attachments: () => [], accept: "", busy: false, sendText: "", enough: "", stacked: false, describedby: "" },
 );
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -260,7 +257,7 @@ defineExpose({ focus: () => area.value?.focus() });
         :rows="rows"
         :value="modelValue"
         :placeholder="placeholder"
-        :aria-label="label || placeholder"
+        :aria-label="placeholder"
         :aria-describedby="[minChars > 0 ? counterId : '', describedby].filter(Boolean).join(' ') || undefined"
         data-test="composer-input"
         @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
@@ -309,6 +306,8 @@ defineExpose({ focus: () => area.value?.focus() });
         <AppIcon name="plus" />
       </button>
       <span class="composer-spacer" />
+      <!-- Des boutons de la page, à gauche de l'envoi (« Coller », « Capture ou PDF » : AjouterOffreTel, §72d). -->
+      <slot name="tools" />
       <button
         v-if="sendText"
         type="button"

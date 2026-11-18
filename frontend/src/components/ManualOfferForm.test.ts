@@ -52,24 +52,28 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect(wrapper.find("[data-test=composer-send]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-restart]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-count]").text()).toBe("Tu peux encore en ajouter 18 aujourd’hui.");
-    expect(wrapper.find("[data-test=manual-pdf]").text()).toBe("Importer le PDF de l’annonce");
+    // Kevin, 18.11 : « Coller » et « Capture ou PDF » aussi sur ordinateur, à la place de « Importer le PDF ».
+    expect(wrapper.find("[data-test=manual-paste]").text()).toBe("Coller");
+    expect(wrapper.find("[data-test=manual-file]").text()).toBe("Capture ou PDF");
     wrapper.unmount();
     const last = await mountForm({}, "Menuisier", 19);
     expect(last.find("[data-test=manual-count]").text()).toBe("Tu peux encore en ajouter une aujourd’hui.");
   });
 
-  it("téléphone (planche AjouterOffreTel, §72) : « Coller » et « Capture ou PDF » au-dessus du champ, sans +, la pastille de la formule", async () => {
+  it("téléphone (planche AjouterOffreTel, §72d) : « Coller » et « Capture ou PDF » dans la barre du champ, sans +, la pastille de la formule", async () => {
     phone.value = true;
     const wrapper = await mountForm();
     expect(wrapper.find("[data-test=manual-paste]").text()).toBe("Coller");
     expect(wrapper.find("[data-test=manual-file]").text()).toBe("Capture ou PDF");
     const input = wrapper.find("[data-test=composer-input]");
     expect(input.attributes("rows")).toBe("4");
-    expect(input.attributes("placeholder")).toBe("Ou colle ici le lien ou le texte");
+    expect(input.attributes("placeholder")).toBe("Lien ou texte de l’annonce");
     expect(input.attributes("aria-label")).toBe("Lien ou texte de l’annonce");
+    // Dans la barre du champ, avant la flèche d'envoi.
+    const bar = wrapper.find(".composer-bar");
+    expect(bar.findAll("button").map((b) => b.attributes("data-test"))).toEqual(["manual-paste", "manual-file", "composer-send"]);
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-label")).toBe("Ajouter l’offre");
     expect(wrapper.find("[data-test=composer-plus]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=manual-pdf]").exists()).toBe(false);
     expect(wrapper.find("[data-test=manual-pdf-file]").attributes("accept")).toBe("application/pdf,.pdf,image/png,image/jpeg");
     // §17 du 15 novembre : flèche aria-disabled tant que le champ est vide ; les pastilles liées au champ.
     expect(wrapper.find("[data-test=composer-send]").attributes("aria-disabled")).toBe("true");
@@ -154,9 +158,9 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     POST.mockResolvedValueOnce({ data: { id: 9, existing: false, status: "to_review", reasons: [] } });
     await send(wrapper, "https://bois.ch/emplois/1");
     expect(POST.mock.calls[0]).toEqual(["/api/offers/manual/read", { body: { url: "https://bois.ch/emplois/1" } }]);
-    // Le champ reste, le PDF disparaît.
+    // Le champ reste, « Coller » et « Capture ou PDF » disparaissent.
     expect(wrapper.find("[data-test=manual-entry]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=manual-pdf]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=manual-file]").exists()).toBe(false);
     const read = wrapper.find("[data-test=manual-draft]");
     expect(read.find("h3").text()).toBe("Ce que jobA1 a lu");
     expect(read.findAll(".form-field-text").map((l) => l.text())).toEqual(["Poste", "Entreprise", "Lieu", "Contrat"]);
@@ -285,7 +289,7 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
   it("au maximum du jour, la lecture est fermée", async () => {
     const wrapper = await mountForm({}, "Menuisier", 20);
     expect(wrapper.find("[data-test=manual-count]").text()).toContain("c’est le maximum");
-    expect(wrapper.find<HTMLButtonElement>("[data-test=manual-pdf]").element.disabled).toBe(true);
+    expect(wrapper.find("[data-test=manual-file]").attributes("aria-disabled")).toBe("true");
     expect((wrapper.vm as unknown as { full: boolean }).full).toBe(true);
     await send(wrapper, "https://bois.ch/emplois/1");
     expect(POST).not.toHaveBeenCalled();
@@ -296,39 +300,40 @@ describe("Ajouter une offre (docs/111 ; panneau du 11 novembre, PR 38)", () => {
     expect((wrapper.find("[data-test=manual-entry]").element as HTMLTextAreaElement).value).toBe("Menuisier à Sion, 100 %");
   });
 
-  it("« Importer le PDF de l’annonce » : le texte lu par le serveur arrive dans le champ, à relire", async () => {
+  it("ordinateur, « Capture ou PDF » : le texte lu par le serveur arrive dans le champ, à relire", async () => {
     const wrapper = await mountForm();
     const file = new File(["%PDF-1.4"], "annonce.pdf", { type: "application/pdf" });
     const input = wrapper.find("[data-test=manual-pdf-file]");
-    expect(input.attributes("accept")).toBe("application/pdf,.pdf");
-    POST.mockResolvedValueOnce({ data: { text: "Menuisier CFC\nBois & Fils, Sion", problem: null } });
+    expect(input.attributes("accept")).toBe("application/pdf,.pdf,image/png,image/jpeg");
+    POST.mockResolvedValueOnce({ data: { text: "Menuisier CFC\nBois & Fils, Sion", problem: null, limit: null } });
     Object.defineProperty(input.element, "files", { value: [file], configurable: true });
     await input.trigger("change");
+    await vi.waitFor(() => expect(POST).toHaveBeenCalledTimes(1));
     await flushPromises();
     const [path, options] = POST.mock.calls[0] as [string, { bodySerializer: () => FormData }];
-    expect(path).toBe("/api/offers/manual/pdf");
+    expect(path).toBe("/api/offers/manual/file");
     expect(options.bodySerializer().get("file")).toBe(file);
     expect((wrapper.find("[data-test=manual-entry]").element as HTMLTextAreaElement).value).toBe("Menuisier CFC\nBois & Fils, Sion");
-    expect(wrapper.find("[data-test=manual-pdf-done]").text()).toBe("Texte du PDF repris. Relis-le, puis ajoute l’offre.");
+    expect(wrapper.find("[data-test=manual-pdf-done]").text()).toBe("Texte du fichier repris. Relis-le, puis ajoute l’offre.");
     // Rien n'est lu par l'IA avant « Ajouter l'offre » ; la phrase dit ce qui se passera.
     expect(POST).toHaveBeenCalledTimes(1);
     expect(wrapper.find("[data-test=manual-text-hint]").text()).toContain("Lu par l’IA");
   });
 
-  it("un PDF sans texte, ou trop lourd : la phrase dit quoi faire", async () => {
+  it("un fichier sans texte, ou trop lourd : la phrase dit quoi faire", async () => {
     const wrapper = await mountForm();
     const input = wrapper.find("[data-test=manual-pdf-file]");
-    POST.mockResolvedValueOnce({ data: { text: null, problem: "no-text" } });
+    POST.mockResolvedValueOnce({ data: { text: null, problem: "no-text", limit: null } });
     Object.defineProperty(input.element, "files", { value: [new File(["%PDF"], "scan.pdf")], configurable: true });
     await input.trigger("change");
+    await vi.waitFor(() => expect(POST).toHaveBeenCalledTimes(1));
     await flushPromises();
-    expect(wrapper.find("[data-test=manual-pdf-problem]").text()).toBe("Ce PDF ne contient pas de texte. Colle le texte de l’annonce.");
+    expect(wrapper.find("[data-test=manual-pdf-problem]").text()).toBe("Je ne trouve pas de texte d’annonce dans ce fichier. Colle le texte de l’annonce.");
     const big = new File(["x"], "gros.pdf");
     Object.defineProperty(big, "size", { value: 6 * 1024 * 1024 });
     Object.defineProperty(input.element, "files", { value: [big], configurable: true });
     await input.trigger("change");
-    await flushPromises();
-    expect(wrapper.find("[data-test=manual-pdf-problem]").text()).toBe("Ce PDF est trop lourd (5 Mo au plus). Colle le texte de l’annonce.");
+    await vi.waitFor(() => expect(wrapper.find("[data-test=manual-pdf-problem]").text()).toBe("Ce fichier est trop lourd (5 Mo au plus). Colle le texte de l’annonce."));
     expect(POST).toHaveBeenCalledTimes(1);
   });
 });
