@@ -24,10 +24,10 @@ import CalendarDate from "./CalendarDate.vue";
 import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
-// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Trois parties,
-// posées par OrpMeetingView : « À noter » en premier (corrections du 9 novembre : un rendez-vous passé à noter passe
-// avant le formulaire), « À venir » (le prochain rendez-vous ORP et les entretiens, par date), puis le dernier rendez-vous
-// noté et le Carnet ORP ; « Noter » ouvre la feuille de la vue.
+// Candidatures › Rendez-vous sur téléphone (planches RendezVous et RendezVousSombre du 18.11). Trois parties, posées
+// par OrpMeetingView dans l'ordre de la planche : « À venir » (le prochain rendez-vous ORP et les entretiens, par date),
+// « À noter » (un rendez-vous passé à noter), puis « Derniers rendez-vous ORP » (le dernier noté et le Carnet ORP) ;
+// « Noter » ouvre la feuille de la vue.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -273,13 +273,19 @@ function cal(iso: string): { day: number; month: number } {
     </article>
   </section>
   <template v-else-if="part === 'past'">
-    <!-- Plus de titre « Derniers rendez-vous ORP » (corrections du 9 novembre) : la ligne « Carnet ORP » suffit. -->
+    <!-- Le titre « Derniers rendez-vous ORP » revient avec la planche RendezVous du 18.11 (Kevin, 18.11), sans nombre. -->
     <section
       v-if="last || page.past.length"
       class="rdv-part"
-      aria-label="Rendez-vous ORP passés"
+      aria-labelledby="rdv-derniers"
       data-test="rdv-past"
     >
+      <h2
+        id="rdv-derniers"
+        class="rdv-title"
+      >
+        Derniers rendez-vous ORP
+      </h2>
       <article
         v-if="last"
         class="rdv-card rdv-last"

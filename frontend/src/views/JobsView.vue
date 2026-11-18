@@ -131,9 +131,10 @@ onMounted(() => void refresh());
           />
         </RouterLink>
         <!-- La place du bouton Filtres d'Offres et d'Envoyées, le temps que la vue le pose : « Alertes » ne glisse
-             plus de 44 px sous le doigt (audit du 17.11, N19). Masquée dès que le bouton est là. -->
+             plus de 44 px sous le doigt (audit du 17.11, N19). Masquée dès que le bouton est là. Gardée aussi sur
+             Rendez-vous, qui n’a pas de bouton Filtres : « Alertes » reste à la même place (planche RendezVous, §72). -->
         <span
-          v-if="phone && (tab === 'offres' || tab === 'suivi')"
+          v-if="phone && (tab === 'offres' || tab === 'suivi' || tab === 'rendez-vous')"
           class="jobs-filter-slot"
           aria-hidden="true"
         />
