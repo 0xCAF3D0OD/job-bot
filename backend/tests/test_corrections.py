@@ -9,6 +9,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
+from jobbot import plans
 from jobbot.api.app import create_app
 from jobbot.db.models import Evaluation, LlmCall, Offer, OfferStatus, ProfileChunk, ScoreCorrection
 from jobbot.filtering.service import load_criteria
@@ -281,3 +282,53 @@ async def test_retry_score_of_another_account_is_404(
     finally:
         async with admin_engine().begin() as conn:
             await conn.execute(text("DELETE FROM users WHERE username = 'compte-reessayer'"))
+
+
+async def test_score_now_only_for_an_unscored_offer(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """« Noter maintenant » (Q2, planche OffreNonNotee du 18.11) : la note tout de suite d'une
+    offre pas encore notée ; une offre notée ou inconnue est refusée, sans appel à l'IA."""
+    waiting = await _offer(rt, "Monteur·se")
+    scored = await _offer(rt, "Menuisier·ère")
+    async with rt.sessionmaker.begin() as session:
+        evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == waiting))
+        assert evaluation is not None
+        evaluation.score = None
+    noted: list[int] = []
+
+    async def score_offer(_runtime: Runtime, offer_id: int) -> int:
+        noted.append(offer_id)
+        return 71
+
+    monkeypatch.setattr(scoring, "score_offer", score_offer)
+    response = await api.post(f"/api/offers/{waiting}/score-now")
+    assert response.status_code == 200 and response.json() == {"score": 71, "limit": None}
+    assert (await api.post(f"/api/offers/{scored}/score-now")).status_code == 409
+    assert (await api.post("/api/offers/999999/score-now")).status_code == 404
+    assert noted == [waiting]
+
+
+async def test_score_now_counts_in_the_plan(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Formule épuisée : la phrase de la formule, et rien ne part à l'IA."""
+    waiting = await _offer(rt, "Monteur·se")
+    async with rt.sessionmaker.begin() as session:
+        await session.execute(
+            text(f"UPDATE evaluations SET score = NULL WHERE offer_id = {waiting}")
+        )
+    noted: list[int] = []
+
+    async def score_offer(_runtime: Runtime, offer_id: int) -> int:
+        noted.append(offer_id)
+        return 71
+
+    async def exhausted(_session: Any, key: str) -> None:
+        raise plans.LimitReached(key, 30)
+
+    monkeypatch.setattr(scoring, "score_offer", score_offer)
+    monkeypatch.setattr(plans, "check", exhausted)
+    body = (await api.post(f"/api/offers/{waiting}/score-now")).json()
+    assert body["score"] is None and body["limit"].startswith("Les 30 offres notées du mois")
+    assert noted == []

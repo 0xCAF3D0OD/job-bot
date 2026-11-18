@@ -22,6 +22,7 @@ export type SiteState =
   | { kind: "received"; label: string }
   | { kind: "quiet"; label: string; days: number }
   | { kind: "waiting"; label: string }
+  | { kind: "pending"; label: string }
   | { kind: "silent"; label: string; days: number }
   | { kind: "todo"; label: string };
 
@@ -34,6 +35,9 @@ export function siteState(cell: Pick<Cell, "status" | "received_at" | "created_a
     if (days >= QUIET_DAYS) return { kind: "quiet", label: `rien ${sinceDays(cell.received_at, now)}`, days };
     return { kind: "received", label: `Reçue ${onDay(cell.received_at, now)}` };
   }
+  // Déclarée créée, mais le site n'a encore rien écrit à l'adresse jobA1 (ni code, ni message, ni alerte) : l'alerte
+  // n'existe peut-être pas sur le site. Jamais « Active » sans cette preuve (Kevin, 18.11).
+  if (cell.status === "pending") return { kind: "pending", label: "À confirmer" };
   if (cell.created_at) {
     const days = daysSince(cell.created_at, now);
     if (days >= NOTHING_YET_DAYS) return { kind: "silent", label: "Rien reçu depuis la création", days };

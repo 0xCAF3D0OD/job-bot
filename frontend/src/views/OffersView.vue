@@ -68,7 +68,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [], contracts: [] });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [], contracts: [], distances: [] });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
@@ -504,6 +504,7 @@ async function load(append = false): Promise<void> {
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,
           contracts: f.contracts.length ? f.contracts : undefined,
+          distance: f.distance ?? undefined,
           // Téléphone : les nombres des choix sans les offres « Loin » cachées (Kevin, 18.11, choix a).
           hide_far: hidesFar.value || undefined,
         },
@@ -912,12 +913,12 @@ onUnmounted(() => {
           <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
           <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
           <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
-               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
+               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. Plus de phrase sous le
+               titre avec des alertes (CandidaturesVideAlertes, Kevin, 18.11, §72g). -->
           <EmptyState
             v-else-if="noneYet"
             scene="aucune-offre"
             :title="alertsReady ? 'Tes premières offres arrivent bientôt' : 'Pas encore d’offre'"
-            :text="alertsReady ? 'jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.' : undefined"
             :pill="nonePill"
             data-test="offers-none-yet"
           >
@@ -1367,7 +1368,6 @@ onUnmounted(() => {
     v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
-    subtitle="Colle le lien ou le texte de l’annonce, ou importe son PDF. jobA1 la lit et la note."
     class="manual-sheet"
     @close="manualOpen = false"
   >

@@ -3,19 +3,20 @@ import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
 import {
-  BASIS_HELP_PHONE,
   basisChoices,
   choiceCount,
   CONTRACT_CHOICES,
   contractCount,
+  DISTANCE_CHOICES,
+  distanceCount,
   radioKey,
   rateCount,
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
-  SCORE_HELP_PHONE,
   scoreCount,
   toggleContract,
+  UNKNOWN_PLACE_LABEL,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -30,7 +31,7 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 // La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02 ;
 // décisions de Kevin du 2026-11-06 ; section 31 du 16.11) : la note minimale sur 100, le taux d'activité (un seul choix, 5e),
 // le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
-// Contrat (issue 468, Kevin 18.11) ; Distance attend le serveur. Chaque choix s'applique tout de suite ;
+// Contrat et Distance (issue 468, Kevin 18.11). Chaque choix s'applique tout de suite ;
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
 // `far` : les offres « Loin » que la liste cache (0 si elles se voient). Tant qu'elles sont cachées, les nombres des
 // choix les retirent aussi (`facets.near` du serveur) : le choix actif égale toujours « Afficher n offres » (Kevin,
@@ -39,7 +40,14 @@ const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferF
 const near = computed(() => ((props.far ?? 0) > 0 ? props.facets.near ?? null : null));
 const shownFacets = computed<OfferFacets>(() =>
   near.value
-    ? { ...props.facets, sure: near.value.sure, provisional: near.value.provisional, rates: near.value.rates, contracts: near.value.contracts }
+    ? {
+        ...props.facets,
+        sure: near.value.sure,
+        provisional: near.value.provisional,
+        rates: near.value.rates,
+        contracts: near.value.contracts,
+        distances: near.value.distances,
+      }
     : props.facets,
 );
 const shownCounts = computed<Record<View, number>>(() => {
@@ -91,6 +99,19 @@ const rate = computed({
 // « Contrat » (issue 468, Kevin 18.11) : plusieurs choix, « CDI · 120 » comme Statut, « Non précisé » compris ; un
 // choix à 0 reste visible et cliquable, grisé.
 const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(shownFacets.value, c.value) })));
+// « Distance depuis Renens » (issue 468, Kevin 18.11) : un seul choix à vol d'oiseau, le nombre sous chaque choix comme
+// Note et Taux ; « Lieu non précisé · n » à part, pour les offres sans lieu reconnu. Absent sans commune connue.
+const DISTANCES = computed<SegmentOption[]>(() =>
+  DISTANCE_CHOICES.map((c) => {
+    const n = distanceCount(shownFacets.value, c.value);
+    return { value: c.value ?? "all", label: c.label, test: `sheet-distance-${c.value ?? "all"}`, sub: choiceCount(n), empty: n === 0 };
+  }),
+);
+const distance = computed({
+  get: () => props.filters.distance ?? "all",
+  set: (value: string) => emit("update", { distance: value === "all" ? null : (value as "15" | "30" | "50") }),
+});
+const unknownPlaces = computed(() => distanceCount(shownFacets.value, "unknown"));
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par date", value: "day" },
   { label: "Note", value: "score" },
@@ -148,15 +169,8 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           :options="SCORES"
           label="Note minimale, sur 100"
           aria-labelledby="sheet-score-title"
-          aria-describedby="sheet-score-help"
           full
         />
-        <p
-          id="sheet-score-help"
-          class="filter-choices-help"
-        >
-          {{ SCORE_HELP_PHONE }}
-        </p>
       </div>
 
       <div class="filter-choices">
@@ -167,7 +181,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           class="filter-choices-row"
           role="radiogroup"
           aria-labelledby="sheet-basis-title"
-          aria-describedby="sheet-basis-help"
           @keydown="radioKey"
         >
           <button
@@ -187,12 +200,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             />{{ choice.label }}
           </button>
         </div>
-        <p
-          id="sheet-basis-help"
-          class="filter-choices-help"
-        >
-          {{ BASIS_HELP_PHONE }}
-        </p>
       </div>
 
       <div class="filter-choices">
@@ -229,6 +236,36 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           </button>
         </div>
       </fieldset>
+
+      <div
+        v-if="facets.distance_from && facets.distances?.length"
+        class="filter-choices"
+      >
+        <h3 id="sheet-distance-title">
+          {{ `Distance depuis ${facets.distance_from}` }}
+        </h3>
+        <SegmentedControl
+          v-model="distance"
+          :options="DISTANCES"
+          :label="`Distance depuis ${facets.distance_from}`"
+          aria-labelledby="sheet-distance-title"
+          full
+        />
+        <div class="filter-choices-row">
+          <button
+            type="button"
+            :class="['filter-choice', { 'choice-empty': unknownPlaces === 0 }]"
+            :aria-pressed="filters.distance === 'unknown'"
+            data-test="sheet-distance-unknown"
+            @click="emit('update', { distance: filters.distance === 'unknown' ? null : 'unknown' })"
+          >
+            <AppIcon
+              v-if="filters.distance === 'unknown'"
+              name="tick"
+            />{{ UNKNOWN_PLACE_LABEL }} · {{ choiceCount(unknownPlaces) }}
+          </button>
+        </div>
+      </div>
 
       <div
         class="filter-choices"
@@ -336,8 +373,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 /* Le contour des puces non choisies : 1,5 px, gris des boutons secondaires (planche Filtres, --button-outline). */
 .filter-choice { border-width: 1.5px; }
 .filter-choice:not([aria-checked="true"], [aria-pressed="true"]) { border-color: var(--button-outline); }
-.filter-sheet { --help-pill-x: 10px; }
-.filter-choices-help { justify-self: start; padding: var(--space-1) var(--help-pill-x); border-radius: var(--radius-pill); background: var(--line-soft); color: var(--text-lead); font-size: var(--panel-caps-size); font-weight: var(--weight-semibold); }
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
