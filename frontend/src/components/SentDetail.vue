@@ -793,12 +793,11 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sdt-words .green { color: var(--success); }
 .sdt-words .grey { color: var(--text-tertiary); }
 .sdt-words .muted { color: var(--text-secondary); }
-/* « À déclarer à l’ORP › » : un lien bleu, cible de 24 px au moins dans la ligne. */
-/* La ligne d'état ORP qui reste à faire (Kevin, 18.11) : bleu « À déclarer », orange « À compléter » ; une cible de
-   44 px de haut sans agrandir la ligne de 20 px. */
+/* La ligne d'état ORP qui reste à faire (Kevin, 18.11) : bleu « À déclarer », orange « À compléter » (#B4631F
+   de la maquette, sombre #F2B98E : --icon-peach, le même orange que l'Accueil) ; une cible de 44 px de haut sans agrandir la ligne de 20 px. */
 .sent-orp-todo { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin: calc((var(--space-5) - var(--target-min)) / 2) 0; text-decoration: none; }
 .sent-orp-todo.blue { color: var(--primary-text); }
-.sent-orp-todo.orange { color: var(--peach-text); }
+.sent-orp-todo.orange { color: var(--icon-peach); }
 .sent-orp-todo .icon { width: var(--sent-16); height: var(--sent-16); }
 .sd-remote { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-secondary); }
 .sdt-steps { --sdt-24: 24px; position: relative; display: flex; margin: 0; padding: var(--space-4) 0 0; border-top: 1px solid var(--line); list-style: none; }
