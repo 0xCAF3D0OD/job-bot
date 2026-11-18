@@ -84,10 +84,10 @@ SCREENS: list[tuple[str, str | None]] = [
     # « Tout est lu » : tout lire, puis l'onglet « Non lues ».
     ("notifications", "[data-test=read-all] && [data-test=filter-unread]"),
     # Envoyées, détail poussé et ses 3 feuilles (PR 5b, §8.3) : la 2e candidature « À relancer » de la démo.
-    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card"),
-    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=follow-sheet-open]"),
-    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-docs-open]"),
-    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card && [data-test=sent-find-open]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) [data-test=application]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) [data-test=application] && [data-test=follow-sheet-open]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) [data-test=application] && [data-test=sent-docs-open]"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) [data-test=application] && [data-test=sent-find-open]"),
     # Les 4 personnages du logo (PR 11, §15) : la page introuvable.
     ("adresse-inconnue", None),
     # Profil en page unique sur téléphone (maquette ProfilTel, PR 20), et la page des documents.
@@ -112,7 +112,7 @@ DESK_SCREENS: list[tuple[str, str | None]] = [
     ("candidatures/offres/{offer}/preparer?doc=postuler", "[data-test=contacts-open]"),
     # Envoyées (PR 5, §8.1) : le détail seul ; la liste, partagée avec À traiter, garde les valeurs de la maquette.
     ("candidatures/suivi", None),
-    ("candidatures/suivi", ".sent-list li:nth-child(3) .list-card"),
+    ("candidatures/suivi", ".sent-list li:nth-child(3) [data-test=application]"),
     # Profil en page unique (PR 9b) et la fenêtre « Modifier ».
     ("profil", None),
     ("profil", "[data-test=profile-edit]"),

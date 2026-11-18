@@ -4,8 +4,8 @@ import { computed, defineAsyncComponent, ref, watch } from "vue";
 import { api, type Application, type ApplicationStatus, type ContactsPage, type Interview, type OrpRow } from "../api/client";
 import { followUpDue, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
-import { applicationStatusLabel, colorIndex, companyPlace, initials } from "../format";
-import { sentHistory, sentSteps, sentWords } from "../sentDetail";
+import { applicationStatusLabel, companyPlace } from "../format";
+import { phoneSteps as stepsOnPhone, sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
 import NewMeetingSheet from "./NewMeetingSheet.vue";
@@ -33,7 +33,6 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const company = computed(() => props.application.company || props.application.job_title);
 const words = computed(() => sentWords(props.application, props.orpRow));
 const steps = computed(() => sentSteps(props.application, props.orpRow));
 const history = computed(() => sentHistory(props.application, props.orpRow));
@@ -46,6 +45,17 @@ const remoteAbroad = computed(
   () => props.application.remote_full && !/suisse|switzerland|schweiz/i.test(props.application.remote_region ?? ""),
 );
 const orpTodo = computed(() => !!props.orpRow && (!props.orpRow.declared_at || props.orpRow.missing.length > 0));
+// Téléphone (EnvoyeeDetail) : « À déclarer à l’ORP › » ouvre la fiche du mois de la candidature (« 02.11.2026 » donne
+// 2026-11), qui dit aussi ce qui manque. La frise de 4 étapes ; le trait vert va jusqu’à l’étape en cours.
+const ficheTo = computed(() => {
+  const [, m, y] = (props.orpRow?.date ?? "").split(".");
+  return { path: `/bilan/orp/candidature/${props.application.id}`, query: m && y ? { mois: `${y}-${m}` } : {} };
+});
+const phoneSteps = computed(() => stepsOnPhone(props.application));
+const phoneReach = computed(() => {
+  const current = phoneSteps.value.findIndex((s) => s.state === "current");
+  return current >= 0 ? current : phoneSteps.value.map((s) => s.state).lastIndexOf("done");
+});
 
 // Les recherches de contacts (docs/31) : la même source que l'ancien bloc « Trouver quelqu'un ».
 const contacts = ref<ContactsPage | null>(null);
@@ -390,32 +400,27 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
         </section>
       </section>
     </template>
+    <!-- Téléphone, refait d’après la planche EnvoyeeDetail (+Sombre) du 18.11 : 1. la carte du haut (poste, entreprise,
+         la ligne d’état avec l’état ORP, la frise Envoyée, Réponse, Entretien, Décision, §40) ; 2. la relance
+         conseillée ou l’entretien ; 3. une carte « Ce que tu as envoyé / Trouver un contact », lignes séparées d’un
+         trait de 1 px ; 4. « Historique » replié, puis « J’ai contacté quelqu’un ». Plus de carte « Pour l’ORP ». -->
     <template v-else>
-      <div class="sent-card sent-head">
-        <div class="sent-head-top">
-          <span
-            v-if="!phone"
-            :class="['list-card-logo', 'sent-head-logo', `c${colorIndex(company)}`]"
-            aria-hidden="true"
-          >{{ initials(company) }}</span>
-          <div class="sent-head-title">
-            <component
-              :is="phone ? 'h1' : 'h2'"
-              data-test="panel-title"
-            >
-              {{ application.job_title }}
-            </component>
-            <p>{{ companyPlace(application.company, application.location) }}</p>
-          </div>
-          <MoreMenu
-            v-if="!phone"
-            :items="menuItems"
-            label="Plus d’actions"
-            test-id="panel-more"
-          />
+      <section
+        class="sdt-head"
+        aria-labelledby="sdt-title"
+        data-test="sent-title-card"
+      >
+        <div class="sent-head-title">
+          <h1
+            id="sdt-title"
+            data-test="panel-title"
+          >
+            {{ application.job_title }}
+          </h1>
+          <p>{{ companyPlace(application.company, application.location) }}</p>
         </div>
         <p
-          class="sent-words"
+          class="sdt-words"
           data-test="sent-words"
         >
           <span
@@ -427,190 +432,158 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
             v-if="word.check"
             name="done"
           />{{ word.text }}</span>
+          <RouterLink
+            v-if="orpRow && !orpRow.declared_at"
+            :to="ficheTo"
+            class="sdt-declare"
+            data-test="word-to-declare"
+          >
+            À déclarer à l’ORP<AppIcon name="chevron" />
+          </RouterLink>
         </p>
-        <!-- Pas de graphique de suivi sur téléphone (§8.3) : les mots disent où on en est. -->
         <ol
-          v-if="!phone"
-          class="sent-steps"
-          aria-label="Suivi de la candidature"
+          class="sdt-steps"
+          aria-label="Étapes de la candidature"
           data-test="sent-steps"
         >
+          <span
+            class="sdt-track"
+            aria-hidden="true"
+          />
+          <span
+            class="sdt-track on"
+            :style="{ width: `${25 * phoneReach}%` }"
+            aria-hidden="true"
+          />
           <li
-            v-for="(step, i) in steps"
+            v-for="step in phoneSteps"
             :key="step.label"
             :class="step.state"
             :aria-current="step.state === 'current' ? 'step' : undefined"
           >
             <span
-              v-if="i < steps.length - 1"
-              :class="['sent-step-line', { on: steps[i + 1]!.state !== 'todo' }]"
-              aria-hidden="true"
-            />
-            <span
-              class="sent-step-dot"
+              class="sdt-dot"
               aria-hidden="true"
             ><AppIcon
               v-if="step.state === 'done'"
               name="done"
             /></span>
-            <span class="sent-step-label">{{ step.label }}</span>
-            <span class="sent-step-sub">{{ step.sub }}</span>
+            <span class="sdt-step-label">{{ step.label }}<span class="visually-hidden">{{ step.state === "done" ? " (faite)" : step.state === "current" ? " (en cours)" : "" }}</span></span>
           </li>
         </ol>
-      </div>
-
-      <div class="sent-grid">
-        <div class="sent-main">
-          <FollowUpCard
-            v-if="followUp"
-            :application="application"
-            :compact="phone"
-            :linkedin-url="linkedinUrl"
-            @edit="emit('edit', application)"
-            @done="emit('changed')"
-          />
-          <div
-            v-else-if="noAnswerDue(application)"
-            class="sent-card sent-plain"
-            data-test="panel-no-answer"
-          >
-            <p>Pas de réponse depuis la relance.</p>
-            <button
-              type="button"
-              class="link"
-              @click="emit('status', application, 'sans_reponse')"
-            >
-              Passer en Sans réponse
-            </button>
-          </div>
-          <ApplicationInterviews
-            v-if="hasInterviews"
-            class="sent-card"
-            :application="application"
-            @interview="(app, i) => emit('interview', app, i)"
-            @prepare="emit('prepare', application)"
-            @practice="emit('practice', application)"
-          />
-          <ApplicationOrp
-            v-if="orpTodo || remoteAbroad"
-            class="sent-card"
-            :application="application"
-            :orp-row="orpRow ?? null"
-            @edit="emit('edit', application)"
-            @changed="emit('changed')"
-          />
-          <section
-            v-if="phone && (sentRows.length || findRows.length)"
-            class="sent-card sent-links"
-            aria-label="Documents et contacts"
-          >
-            <button
-              v-if="sentRows.length"
-              type="button"
-              data-test="sent-docs-open"
-              @click="docsOpen = true"
-            >
-              <span class="sent-row-text"><b>Ce que tu as envoyé</b><span>{{ sentSummary }}</span></span>
-              <AppIcon name="chevron" />
-            </button>
-            <button
-              v-if="findRows.length"
-              type="button"
-              data-test="sent-find-open"
-              @click="findOpen = true"
-            >
-              <span class="sent-row-text"><b>Trouver un contact</b><span>{{ findSummary }}</span></span>
-              <AppIcon name="chevron" />
-            </button>
-          </section>
-          <section
-            class="sent-history"
-            aria-labelledby="sent-history-title"
-            data-test="sent-history"
-          >
-            <p
-              id="sent-history-title"
-              class="sent-cap"
-            >
-              Historique
-            </p>
-            <ul>
-              <li
-                v-for="(event, i) in history"
-                :key="i"
-              >
-                <span class="sent-history-date">{{ event.date }}</span>
-                <span class="sent-history-text">{{ event.title }}<span
-                  v-if="event.detail"
-                  class="sent-history-detail"
-                >{{ event.detail }}</span></span>
-              </li>
-            </ul>
-            <button
-              v-if="phone"
-              type="button"
-              class="link sent-contacted"
-              aria-haspopup="dialog"
-              data-test="contacted-open"
-              @click="contactedOpen = true"
-            >
-              <span class="with-icon">J’ai contacté quelqu’un<AppIcon name="chevron" /></span>
-            </button>
-            <template v-else>
-              <button
-                type="button"
-                class="sent-contacted-fold"
-                :aria-expanded="contactedOpen"
-                aria-controls="sent-contacted-zone"
-                data-test="contacted-open"
-                @click="contactedOpen = !contactedOpen"
-              >
-                J’ai contacté quelqu’un<AppIcon :name="contactedOpen ? 'chevron-up' : 'chevron-down'" />
-              </button>
-              <div
-                v-show="contactedOpen"
-                id="sent-contacted-zone"
-                data-test="contacted-zone"
-              >
-                <ContactQuickForm
-                  v-if="contactedOpen"
-                  :key="`quick-${application.id}`"
-                  :application-id="application.id"
-                  @saved="contactSaved"
-                  @cancel="contactedOpen = false"
-                />
-              </div>
-            </template>
-            <button
-              v-if="application.contacts?.length"
-              type="button"
-              class="link sent-contacts-all"
-              data-test="contacts-open"
-              @click="contactsOpen = true"
-            >
-              Voir les prises de contact
-            </button>
-          </section>
-        </div>
-        <aside
-          v-if="!phone"
-          class="sent-side"
-          aria-label="Documents et contacts"
+      </section>
+      <FollowUpCard
+        v-if="followUp"
+        :application="application"
+        compact
+        :linkedin-url="linkedinUrl"
+        @edit="emit('edit', application)"
+        @done="emit('changed')"
+      />
+      <div
+        v-else-if="noAnswerDue(application)"
+        class="sent-card sent-plain"
+        data-test="panel-no-answer"
+      >
+        <p>Pas de réponse depuis la relance.</p>
+        <button
+          type="button"
+          class="link"
+          @click="emit('status', application, 'sans_reponse')"
         >
-          <SentRows
-            v-if="sentRows.length"
-            title="Ce que tu as envoyé"
-            :rows="sentRows"
-            data-test="section-documents"
-          />
-          <SentRows
-            v-if="findRows.length"
-            title="Trouver un contact"
-            :rows="findRows"
-            data-test="section-contacts"
-          />
-        </aside>
+          Passer en Sans réponse
+        </button>
       </div>
+      <ApplicationInterviews
+        v-if="hasInterviews"
+        class="sent-card"
+        :application="application"
+        @interview="(app, i) => emit('interview', app, i)"
+        @prepare="emit('prepare', application)"
+        @practice="emit('practice', application)"
+      />
+      <!-- Pas sur la planche : le rappel télétravail à l’étranger (docs/26 §6), gardé seul en attendant la décision de Kevin. -->
+      <p
+        v-if="remoteAbroad"
+        class="sent-card sdt-remote"
+        data-test="remote-orp"
+      >
+        Employeur à l’étranger ? Vérifie le contrat et les assurances avec ton conseiller.
+      </p>
+      <section
+        v-if="sentRows.length || findRows.length"
+        class="sdt-links"
+        aria-label="Documents et contacts"
+      >
+        <button
+          v-if="sentRows.length"
+          type="button"
+          data-test="sent-docs-open"
+          @click="docsOpen = true"
+        >
+          <span class="sdt-link-text"><b>Ce que tu as envoyé</b><span>{{ sentSummary }}</span></span>
+          <AppIcon name="chevron" />
+        </button>
+        <button
+          v-if="findRows.length"
+          type="button"
+          data-test="sent-find-open"
+          @click="findOpen = true"
+        >
+          <span class="sdt-link-text"><b>Trouver un contact</b><span>{{ findSummary }}</span></span>
+          <AppIcon name="chevron" />
+        </button>
+      </section>
+      <section
+        class="sdt-history"
+        aria-label="Historique"
+      >
+        <button
+          type="button"
+          class="sdt-history-row"
+          :aria-expanded="historyOpen"
+          aria-controls="sdt-history-list"
+          data-test="sent-history-open"
+          @click="historyOpen = !historyOpen"
+        >
+          <span class="sdt-link-text"><b>Historique</b><span>{{ historySummary }}</span></span>
+          <AppIcon name="chevron-down" />
+        </button>
+        <ul
+          v-show="historyOpen"
+          id="sdt-history-list"
+          data-test="sent-history"
+        >
+          <li
+            v-for="(event, i) in history"
+            :key="i"
+          >
+            <span class="sdt-history-date">{{ event.date }}</span>
+            <span class="sdt-history-text">{{ event.title }}<span
+              v-if="event.detail"
+              class="sdt-history-detail"
+            >{{ event.detail }}</span></span>
+          </li>
+        </ul>
+        <button
+          type="button"
+          class="link sdt-contacted"
+          aria-haspopup="dialog"
+          data-test="contacted-open"
+          @click="contactedOpen = true"
+        >
+          J’ai contacté quelqu’un<AppIcon name="chevron" />
+        </button>
+        <button
+          v-if="application.contacts?.length"
+          type="button"
+          class="link sent-contacts-all"
+          data-test="contacts-open"
+          @click="contactsOpen = true"
+        >
+          Voir les prises de contact
+        </button>
+      </section>
     </template>
     <!-- Sur téléphone, des feuilles du bas (BottomSheet) ; sur ordinateur, des panneaux à droite. -->
     <template v-if="phone">
@@ -713,9 +686,7 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
    cercles ; colonne droite de 280, lignes de 56 ; Historique sur le crème, 20 px plus bas. */
 .sent-detail-cards { --sent-8: 8px; --sent-18-5: 18.5px; --sent-22-5: 22.5px; --sent-56: 56px; --sent-72: 72px; --sent-19: 19px; --sent-30: 30px; --sent-28: 28px; --sent-14: 14px; --sent-13: 13px; --sent-16: 16px; --sent-18: 18px; --sent-2: 2px; --sent-64: 64px; display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-card { padding: var(--sent-18-5); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-.sent-head { display: flex; flex-direction: column; padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); }
 .sent-head-top { display: flex; align-items: flex-start; gap: var(--space-4); }
-.sent-head-top .sent-head-logo { width: var(--sent-56); height: var(--sent-56); font-size: var(--sent-19); }
 .sent-head-title { flex: 1; min-width: 0; }
 .sent-head-title h2 { margin: 0; font-size: var(--space-6); line-height: var(--sent-30); font-weight: var(--weight-heavy); }
 .sent-head-title p { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
@@ -740,12 +711,9 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sent-steps .current .sent-step-label { color: var(--primary-text); }
 .sent-steps .todo .sent-step-label { color: var(--text-secondary); }
 .sent-step-sub { font-size: var(--sent-13); line-height: var(--sent-16); color: var(--text-secondary); }
-.sent-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sent-8); align-items: start; }
-.sent-main { display: flex; flex-direction: column; gap: var(--sent-8); min-width: 0; }
-.sent-main > .sent-card > h3, .sent-main .panel-section-head h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); }
+.sent-detail-phone > .sent-card > h3, .sent-detail-phone .panel-section-head h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); }
 .sent-plain p { margin: 0; color: var(--peach-text); font-size: var(--font-label); }
 .sent-plain .link { min-height: var(--target-min); font-weight: var(--weight-bold); }
-.sent-side { display: flex; flex-direction: column; gap: var(--sent-8); }
 .sent-rows h3 { margin: 0 0 var(--space-3); font-size: var(--font-body); line-height: var(--space-6); }
 .sent-rows a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); margin: 0 calc(-1 * var(--sent-18-5)); padding: var(--sent-8) var(--sent-18-5); border-top: 1px solid var(--line-soft); border-radius: 0; color: var(--text); text-decoration: none; }
 /* Lignes-liens d'une carte (PR 33 point 5) : ni rayon ni bordure propre, pas de soulignement ; un filet de 1 px entre
@@ -760,7 +728,6 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sent-row-text b { display: block; font-size: var(--font-label); line-height: var(--space-5); }
 .sent-row-text span { display: block; font-size: var(--sent-13); line-height: var(--space-5); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sent-history { margin-top: calc(var(--space-5) - var(--sent-8)); }
-.sent-cap { margin: 0 0 var(--space-1); font-size: var(--sent-13); line-height: var(--sent-16); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
 .sent-history ul { margin: 0; padding: 0; list-style: none; }
 .sent-history li { display: flex; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--line-soft); }
 .sent-history-date { flex: none; width: var(--sent-64); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--text-secondary); }
@@ -770,7 +737,6 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sent-contacted-fold { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--target-min); min-height: var(--target-min); margin-top: var(--space-2); padding: 0 var(--space-3) 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-contacted-fold .icon { width: 20px; height: 20px; }
 .sent-contacts-all { display: flex; align-items: center; min-height: var(--target-min); font-size: var(--font-small); font-weight: var(--weight-bold); }
-.sent-contacted { min-height: var(--target-min); margin-top: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .sent-status-choices { display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; }
 .sent-status-choices label { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-56); border-top: 1px solid var(--line-soft); font-size: var(--font-label); font-weight: var(--weight-semibold); }
 /* Ordinateur, maquette du 14 novembre (§8 Envoyées, §9) : 16 px entre les cartes ; le suivi seul dans sa carte, 5 colonnes
@@ -804,16 +770,59 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sent-screen-title { --sent-48: 48px; --sent-17: 17px; display: flex; align-items: center; gap: var(--space-1); font-size: var(--sent-17); font-weight: var(--weight-bold); }
 .sent-screen-back { display: inline-flex; align-items: center; justify-content: center; width: var(--sent-48); height: var(--sent-48); min-height: var(--sent-48); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text); }
 .sent-screen-back .icon { width: 24px; height: 24px; }
-.sent-detail-phone .sent-head-title h1 { margin: 0; font-size: var(--sent-22); line-height: var(--sent-28-line); font-weight: var(--weight-heavy); }
-.sent-detail-phone .sent-head-title p { margin: 0; line-height: var(--space-5); }
-.sent-detail-phone .sent-words { margin-top: var(--space-5); }
-.sent-detail-phone .sent-main { gap: var(--space-3); }
-.sent-links { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-.sent-links button { display: flex; align-items: center; gap: var(--space-3); min-height: var(--sent-72-row); padding: var(--space-3) var(--sent-18-5); border: 0; background: none; color: var(--text); font: inherit; text-align: left; }
-.sent-links button + button { border-top: 1px solid var(--line-soft); }
-.sent-links .sent-row-text b { font-size: var(--font-body); line-height: var(--space-6); }
-.sent-links .sent-row-text span { margin-top: var(--space-1); font-size: var(--font-small); }
-.sent-links button > .icon { flex: none; color: var(--text-secondary); }
-.sent-detail-phone .sent-history { margin-top: var(--space-2); }
+/* Téléphone, planche EnvoyeeDetail (HTML) : 12 px entre les cartes. Carte du haut : marges 18,5 / 18,5 / 22,5, trait
+   1,5 --card-line, rayon 18, 20 px entre ses blocs ; titre 22/28 800, entreprise 15/20 à 2 px ; ligne d’état 15/20 gras,
+   16 px entre les mots ; frise : trait 1 px au-dessus, 16 px, ronds de 24 (fait : vert plein et coche ; en cours :
+   anneau orange de 3 ; à venir : anneau gris de 2), libellés 12/16. */
+/* 4 px sous la barre (planche : marge haute de 4) au lieu des 12 entre les cartes. */
+.sent-screen-top + .sdt-head { margin-top: calc(var(--space-1) - var(--space-3)); }
+.sdt-head { display: flex; flex-direction: column; gap: var(--space-5); padding: var(--sent-18-5) var(--sent-18-5) var(--sent-22-5); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.sdt-head h1 { margin: 0; font-size: var(--sent-22); line-height: var(--sent-28-line); font-weight: var(--weight-heavy); letter-spacing: -0.2px; }
+.sdt-head .sent-head-title p { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-secondary); }
+.sdt-words { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-4); row-gap: var(--space-1); margin: 0; font-size: var(--font-label); line-height: var(--space-5); font-weight: var(--weight-bold); }
+.sdt-words > span { display: inline-flex; align-items: center; gap: var(--sent-8); }
+.sdt-words .icon { width: var(--sent-16); height: var(--sent-16); stroke-width: 2.6; }
+.sdt-words .peach { color: var(--peach-text); }
+.sdt-words .green { color: var(--success); }
+.sdt-words .grey { color: var(--text-tertiary); }
+.sdt-words .muted { color: var(--text-secondary); }
+/* « À déclarer à l’ORP › » : un lien bleu, cible de 24 px au moins dans la ligne. */
+.sdt-declare { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin: calc((var(--space-5) - var(--target-min)) / 2) 0; color: var(--primary-text); text-decoration: none; }
+.sdt-declare .icon { width: var(--sent-16); height: var(--sent-16); }
+.sdt-steps { --sdt-24: 24px; position: relative; display: flex; margin: 0; padding: var(--space-4) 0 0; border-top: 1px solid var(--line); list-style: none; }
+.sdt-track { position: absolute; left: 12.5%; right: 12.5%; top: calc(var(--space-4) + var(--sdt-24) / 2 - 1px); height: var(--sent-2); background: var(--card-line); }
+.sdt-track.on { right: auto; background: var(--success); }
+.sdt-steps > li { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 0; }
+.sdt-dot { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--sdt-24); height: var(--sdt-24); border: var(--sent-2) solid var(--card-line); border-radius: 50%; background: var(--surface); }
+.sdt-steps .done .sdt-dot { border: 0; background: var(--success); color: var(--surface); }
+.sdt-steps .current .sdt-dot { border: 3px solid var(--peach-text); }
+.sdt-dot .icon { width: var(--sent-14); height: var(--sent-14); stroke-width: 3; }
+.sdt-step-label { font-size: var(--font-caption); line-height: var(--sent-16); font-weight: var(--weight-medium); color: var(--text-secondary); }
+.sdt-steps .done .sdt-step-label { font-weight: var(--weight-bold); color: var(--text); }
+.sdt-steps .current .sdt-step-label { font-weight: var(--weight-bold); color: var(--peach-text); }
+.sdt-remote { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-secondary); }
+/* Une carte, deux lignes de 72 à chevron gris, séparées d’un trait de 1 px --line-soft ; aucune carte dans la carte. */
+.sdt-links { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.sdt-links button { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; min-height: var(--sent-72-row); margin: 0; padding: var(--space-3) var(--sent-18-5); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sdt-links button + button { border-top: 1px solid var(--line-soft); }
+.sdt-links button > .icon, .sdt-history-row > .icon { flex: none; width: 24px; height: 24px; color: var(--text-secondary); }
+.sdt-link-text { flex: 1; min-width: 0; }
+.sdt-link-text b { display: block; font-size: var(--font-body); line-height: var(--sent-22); }
+.sdt-link-text span { display: block; margin-top: var(--space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+/* Historique : sur le crème, 8 px plus bas ; ligne de 56 entre deux traits de 1 px, résumé 13/18, chevron qui se
+   retourne ; puis les étapes (date 56 px 14/20 gras, texte 15/20, détail 13/18). */
+.sdt-history { margin-top: var(--sent-8); }
+.sdt-history-row { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--sent-56); margin: 0; padding: var(--space-2) 0; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; }
+.sdt-history-row .sdt-link-text span { white-space: normal; font-size: var(--sent-13); line-height: var(--sent-18); }
+.sdt-history-row > .icon { transition: rotate var(--t-fast); }
+.sdt-history-row[aria-expanded="true"] > .icon { rotate: 180deg; }
+.sdt-history ul { margin: 0; padding: 0; list-style: none; }
+.sdt-history li { display: flex; gap: var(--space-4); padding: var(--space-3) 0; }
+.sdt-history li + li { border-top: 1px solid var(--line); }
+.sdt-history-date { flex: none; width: var(--sent-56); font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-bold); color: var(--text-secondary); }
+.sdt-history-text { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--font-label); line-height: var(--space-5); }
+.sdt-history-detail { display: block; font-size: var(--sent-13); line-height: var(--sent-18); color: var(--text-secondary); }
+.sdt-contacted { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin-top: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
+.sdt-contacted .icon { width: 20px; height: 20px; }
 .sent-sheet-help { margin: 0 0 var(--space-4); font-size: var(--font-label); line-height: var(--sent-22); color: var(--text-secondary); }
 </style>
