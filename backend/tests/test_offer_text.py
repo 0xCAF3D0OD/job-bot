@@ -1,17 +1,23 @@
 """Compléter une offre venue d'une alerte : lire son annonce, ou coller son texte (fiche)."""
 
+import io
+import json
 from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
+from reportlab.pdfgen import canvas
 from sqlalchemy import select
 
-from jobbot import manual_offers
+from jobbot import manual_offers, plans
 from jobbot.api.app import create_app
+from jobbot.api.routes import manual_offers as manual_routes
 from jobbot.api.routes import offer_text
-from jobbot.db.models import Offer, OfferLink
+from jobbot.db.models import LlmCall, Offer, OfferLink
+from jobbot.llm.client import RawResult
+from jobbot.llm.pricing import Usage
 from jobbot.logos import service as logos
 from jobbot.runtime import Runtime
 from jobbot.scoring import service
@@ -505,3 +511,214 @@ async def test_given_link_unknown_offer_spontaneous_and_limit(
         ).status_code == 200
     late = await api.post(f"/api/offers/{offer_id}/read-link", json={"url": EMPLOYER})
     assert late.status_code == 429 and "Réessaie dans" in late.json()["detail"]
+
+
+def _pdf(*lines: str) -> bytes:
+    buffer = io.BytesIO()
+    sheet = canvas.Canvas(buffer)
+    for index, line in enumerate(lines):
+        sheet.drawString(72, 760 - 20 * index, line)
+    sheet.save()
+    return buffer.getvalue()
+
+
+# --- « Refaire la note » avec un fichier (Kevin, 17.11, Q1) ------------------------------------
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+CAPTURE = "Administrateur Linux\nExemple SA, Lausanne\n" + LONG
+
+
+class CaptureClient:
+    """L'IA qui recopie la capture : ce qu'elle reçoit, et le texte qu'elle renvoie."""
+
+    def __init__(self, found: bool = True, text: str = CAPTURE) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.body = {"found": found, "text": text}
+
+    async def score(self, params: dict[str, Any]) -> RawResult:
+        self.calls.append(params)
+        return RawResult(
+            json.dumps(self.body), "claude-haiku-4-5-20251001", Usage(1500, 0, 0, 300), "end_turn"
+        )
+
+
+def capture_ai(monkeypatch: pytest.MonkeyPatch, client: CaptureClient) -> CaptureClient:
+    offer_text.file_per_account.hits.clear()
+    monkeypatch.setattr(service, "make_client", lambda _settings: client)
+    return client
+
+
+async def test_offer_pdf_is_read_without_ai(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    client = capture_ai(monkeypatch, CaptureClient())
+    data = _pdf("Administrateur Linux a 100 %", "Exemple SA, Lausanne", "Tu geres nos serveurs.")
+
+    sent = await api.post(f"/api/offers/{offer_id}/file", files={"file": ("a.pdf", data, "x")})
+
+    assert sent.json() == {
+        "text": "Administrateur Linux a 100 %\nExemple SA, Lausanne\nTu geres nos serveurs.",
+        "problem": None,
+        "limit": None,
+    }
+    # Sans IA, et rien d'enregistré : la personne relit le texte, puis « Refaire la note ».
+    assert client.calls == []
+    assert await description(ai, offer_id) is None
+
+
+async def test_offer_capture_is_copied_by_ai_and_not_kept(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+
+    async def identity(_session: Any) -> Any:
+        return type("Identity", (), {"name": "Alex Fictif"})()
+
+    monkeypatch.setattr(manual_offers, "load_identity", identity)
+    client = capture_ai(monkeypatch, CaptureClient(text=CAPTURE + "\nConnecté : Alex Fictif"))
+
+    sent = await api.post(f"/api/offers/{offer_id}/file", files={"file": ("c.png", PNG, "x")})
+
+    body = sent.json()
+    assert body["problem"] is None and body["text"].startswith("Administrateur Linux\nExemple SA")
+    # Le nom de la personne est retiré du texte recopié, comme d'un texte collé (I-1).
+    assert "Fictif" not in body["text"]
+    # L'image part à l'IA comme donnée, avec son type lu sur le contenu (E-5, I-2).
+    picture = client.calls[0]["messages"][0]["content"][0]
+    assert picture["type"] == "image" and picture["source"]["media_type"] == "image/png"
+    # L'appel est compté (I-5) ; rien n'est enregistré sur l'offre avant « Refaire la note ».
+    async with ai.sessionmaker() as session:
+        purposes = list(await session.scalars(select(LlmCall.purpose)))
+    assert "offer_capture" in purposes
+    assert await description(ai, offer_id) is None
+
+
+async def test_offer_file_refusals(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    client = capture_ai(monkeypatch, CaptureClient(found=False, text=""))
+
+    async def problem(data: bytes) -> str | None:
+        sent = await api.post(f"/api/offers/{offer_id}/file", files={"file": ("f", data, "x")})
+        found: str | None = sent.json()["problem"]
+        return found
+
+    # Le type se lit sur le contenu : un Word, un GIF ou une page HTML sont refusés, sans IA.
+    assert await problem(b"PK\x03\x04 word") == "not-supported"
+    assert await problem(b"<html>") == "not-supported"
+    assert client.calls == []
+    # Une image sans annonce.
+    assert await problem(PNG) == "no-text"
+    # Une offre d'un autre compte ou inconnue : 404 (C-5).
+    unknown = await api.post("/api/offers/999999/file", files={"file": ("c.png", PNG, "x")})
+    assert unknown.status_code == 404
+    # Plus de 5 Mo.
+    monkeypatch.setattr(manual_offers, "MAX_PDF_BYTES", 10)
+    assert await problem(PNG) == "too-big"
+
+
+async def test_offer_capture_counts_in_the_plan(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    offer_id = await alert_offer(ai)
+    client = capture_ai(monkeypatch, CaptureClient())
+
+    async def scored(_session: Any, _now: Any = None) -> set[int]:
+        return set()
+
+    async def exhausted(session: Any, key: str) -> None:
+        raise plans.LimitReached(key, 30)
+
+    # L'offre n'est pas encore comptée ce mois et la formule est épuisée : pas d'appel à l'IA.
+    monkeypatch.setattr(plans, "scored_this_month", scored)
+    monkeypatch.setattr(plans, "check", exhausted)
+    sent = await api.post(f"/api/offers/{offer_id}/file", files={"file": ("c.png", PNG, "x")})
+    assert sent.json()["limit"].startswith("Les 30 offres notées du mois")
+    assert client.calls == []
+
+
+# --- « Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) -------
+
+
+def manual_ai(monkeypatch: pytest.MonkeyPatch, client: CaptureClient) -> CaptureClient:
+    manual_routes.pdf_per_account.hits.clear()
+    monkeypatch.setattr(service, "make_client", lambda _settings: client)
+    return client
+
+
+async def test_manual_file_pdf_without_ai_and_capture_by_ai(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = manual_ai(monkeypatch, CaptureClient())
+    data = _pdf("Administrateur Linux a 100 %", "Exemple SA, Lausanne")
+
+    pdf = await api.post("/api/offers/manual/file", files={"file": ("a.pdf", data, "x")})
+    assert pdf.json() == {
+        "text": "Administrateur Linux a 100 %\nExemple SA, Lausanne",
+        "problem": None,
+        "limit": None,
+    }
+    # Le PDF se lit sans IA.
+    assert client.calls == []
+
+    capture = await api.post("/api/offers/manual/file", files={"file": ("c.png", PNG, "x")})
+    body = capture.json()
+    assert body["problem"] is None and body["text"].startswith("Administrateur Linux\nExemple SA")
+    picture = client.calls[0]["messages"][0]["content"][0]
+    assert picture["type"] == "image" and picture["source"]["media_type"] == "image/png"
+    # L'appel est compté (I-5), sans offre : rien n'est créé avant « Ajouter l'offre ».
+    async with ai.sessionmaker() as session:
+        calls = list(await session.execute(select(LlmCall.purpose, LlmCall.offer_id)))
+    assert ("offer_capture", None) in [tuple(row) for row in calls]
+
+
+async def test_manual_file_refusals_and_plan(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+    fake: FakeClient,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = manual_ai(monkeypatch, CaptureClient(found=False, text=""))
+
+    async def send(data: bytes) -> dict[str, Any]:
+        sent = await api.post("/api/offers/manual/file", files={"file": ("f", data, "x")})
+        found: dict[str, Any] = sent.json()
+        return found
+
+    # Le type se lit sur le contenu : ni Word ni HTML, sans IA.
+    assert (await send(b"PK\x03\x04 word"))["problem"] == "not-supported"
+    assert (await send(b"<html>"))["problem"] == "not-supported"
+    assert client.calls == []
+    assert (await send(PNG))["problem"] == "no-text"
+
+    # Formule épuisée : la capture est refusée avant tout appel à l'IA ; le PDF reste lisible.
+    calls = len(client.calls)
+
+    async def exhausted(session: Any, key: str) -> None:
+        raise plans.LimitReached(key, 30)
+
+    monkeypatch.setattr(plans, "check", exhausted)
+    assert (await send(PNG))["limit"].startswith("Les 30 offres notées du mois")
+    assert len(client.calls) == calls
+    pdf = _pdf("Administrateur Linux a 100 %", "Exemple SA, Lausanne")
+    assert (await send(pdf))["text"] == "Administrateur Linux a 100 %\nExemple SA, Lausanne"
+
+    monkeypatch.setattr(manual_offers, "MAX_PDF_BYTES", 10)
+    assert (await send(PNG))["problem"] == "too-big"

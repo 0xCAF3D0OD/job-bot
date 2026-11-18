@@ -16,6 +16,31 @@ export type Remote = "partial" | "full";
 // de l'alerte seulement (provisoire). La valeur reste "sure" dans le code et l'adresse (?base=sure).
 export type Basis = "sure" | "provisional";
 
+// Filtre « Contrat » (issue #468, Kevin, 18.11) : plusieurs choix ; « Non précisé » en est un, avec son nombre. Les
+// valeurs restent celles du serveur dans le code et l'adresse (?contrat=cdi&contrat=non_precise).
+export type Contract = "cdi" | "cdd" | "stage" | "temporaire" | "non_precise";
+export const CONTRACT_CHOICES: { label: string; value: Contract }[] = [
+  { label: "CDI", value: "cdi" },
+  { label: "CDD", value: "cdd" },
+  { label: "Stage", value: "stage" },
+  { label: "Temporaire", value: "temporaire" },
+  { label: "Non précisé", value: "non_precise" },
+];
+const CONTRACTS = CONTRACT_CHOICES.map((c) => c.value);
+
+// Filtre « Distance depuis… » (issue #468, Kevin, 18.11) : un seul choix, à vol d'oiseau depuis la commune des
+// coordonnées ; « Lieu non précisé » en est un, avec son nombre (une offre sans lieu reconnu n'est jamais exclue sans le
+// dire). ?distance=30, ?distance=inconnu.
+export type Distance = "15" | "30" | "50" | "unknown";
+export const DISTANCE_CHOICES: { label: string; value: Distance | null }[] = [
+  { label: "Toutes", value: null },
+  { label: "15 km", value: "15" },
+  { label: "30 km", value: "30" },
+  { label: "50 km", value: "50" },
+];
+export const UNKNOWN_PLACE_LABEL = "Lieu non précisé";
+const DISTANCES: Distance[] = ["15", "30", "50", "unknown"];
+
 export interface OfferFilters {
   view: View;
   sort: Sort;
@@ -39,6 +64,10 @@ export interface OfferFilters {
   showExpired: boolean;
   // Notes définitives ou provisoires seulement, ?base=sure ou ?base=provisoire ; null : toutes.
   basis: Basis | null;
+  // Les contrats cochés, ?contrat=cdi ; vide : tous.
+  contracts: Contract[];
+  // La distance choisie, ?distance=30 ; null : toutes.
+  distance: Distance | null;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -59,6 +88,8 @@ export const DEFAULT_FILTERS: OfferFilters = {
   showFilteredOut: false,
   showExpired: false,
   basis: null,
+  contracts: [],
+  distance: null,
 };
 
 const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -97,7 +128,16 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     showFilteredOut: one(query.ecartees) === "montrer",
     showExpired: one(query.expirees) === "montrer",
     basis: one(query.base) === "sure" ? "sure" : one(query.base) === "provisoire" ? "provisional" : null,
+    // Une valeur inconnue est ignorée : elle ne vide jamais la liste sans le dire (Kevin, 18.11).
+    contracts: CONTRACTS.filter((c) => list(query.contrat).includes(c)),
+    distance: distanceFromQuery(one(query.distance)),
   };
+}
+
+function distanceFromQuery(value: string | undefined): Distance | null {
+  const distance = value === "inconnu" ? "unknown" : value;
+  // Une valeur inconnue est ignorée, comme pour le contrat.
+  return DISTANCES.find((d) => d === distance) ?? null;
 }
 
 export function toQuery(filters: OfferFilters): LocationQuery {
@@ -118,6 +158,8 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.showFilteredOut) query.ecartees = "montrer";
   if (filters.showExpired) query.expirees = "montrer";
   if (filters.basis) query.base = filters.basis === "sure" ? "sure" : "provisoire";
+  if (filters.contracts.length) query.contrat = [...filters.contracts];
+  if (filters.distance) query.distance = filters.distance === "unknown" ? "inconnu" : filters.distance;
   return query;
 }
 
@@ -135,7 +177,9 @@ export function activeCount(filters: OfferFilters): number {
     (filters.hideAgencies ? 1 : 0) +
     (filters.showFilteredOut ? 1 : 0) +
     (filters.showExpired ? 1 : 0) +
-    (filters.basis ? 1 : 0)
+    (filters.basis ? 1 : 0) +
+    filters.contracts.length +
+    (filters.distance ? 1 : 0)
   );
 }
 
@@ -147,7 +191,6 @@ export const SCORE_CHOICES: { label: string; min: number | null }[] = [
   { label: `${SCORE_CLOSE} et +`, min: SCORE_CLOSE },
   { label: `${SCORE_VERY_CLOSE} et +`, min: SCORE_VERY_CLOSE },
 ];
-export const SCORE_HELP = "À quel point l’offre correspond à ton profil.";
 // « Taux d'activité » (section 31 du 16.11) : un seul choix, mêmes valeurs qu'avant.
 export const RATE_CHOICES: { label: string; value: number | null }[] = [
   { label: "Tous", value: null },
@@ -176,6 +219,26 @@ export function rateCount(facets: ChoiceFacets, value: number | null): number {
   return (facets.rates ?? []).find((f) => f.value === String(value ?? "all"))?.count ?? 0;
 }
 
+/** Contrat : la facette du serveur, une ligne par catégorie (même à 0), sans le filtre du contrat. */
+export function contractCount(facets: { contracts?: { value: string; count: number }[] }, value: Contract): number {
+  return facets.contracts?.find((f) => f.value === value)?.count ?? 0;
+}
+export function contractLabel(value: Contract): string {
+  return CONTRACT_CHOICES.find((c) => c.value === value)?.label ?? value;
+}
+/** Cocher ou décocher un contrat, dans l'ordre des choix. */
+export function toggleContract(current: Contract[], value: Contract): Contract[] {
+  return CONTRACTS.filter((c) => (c === value ? !current.includes(c) : current.includes(c)));
+}
+
+/** Distance : la facette du serveur (« all », « 15 », « 30 », « 50 », « unknown »), sans le filtre de distance. */
+export function distanceCount(facets: { distances?: { value: string; count: number }[] }, value: Distance | null): number {
+  return facets.distances?.find((f) => f.value === (value ?? "all"))?.count ?? 0;
+}
+export function distanceLabel(value: Distance): string {
+  return value === "unknown" ? UNKNOWN_PLACE_LABEL : `${value} km`;
+}
+
 /** Les trois choix du groupe « Type de note », avec les nombres réels du serveur (hors « Toutes »). */
 export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null; count?: number }[] {
   const sure = facets.sure ?? 0;
@@ -186,7 +249,6 @@ export function basisChoices(facets: { sure?: number; provisional?: number }): {
     { label: `Provisoires · ${provisional}`, value: "provisional", count: provisional },
   ];
 }
-export const BASIS_HELP = "Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.";
 
 /** La note filtrée en mots ; une adresse d'avant (?note=60-90) garde ses bornes. */
 export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">): string {
@@ -235,6 +297,18 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
       label: `Canton : ${canton}`,
       patch: { cantons: filters.cantons.filter((c) => c !== canton) },
     });
+  for (const contract of filters.contracts)
+    chips.push({
+      key: `contract-${contract}`,
+      label: t("Contrat : {contrat}", { contrat: contractLabel(contract) }),
+      patch: { contracts: filters.contracts.filter((c) => c !== contract) },
+    });
+  if (filters.distance)
+    chips.push({
+      key: "distance",
+      label: filters.distance === "unknown" ? t(UNKNOWN_PLACE_LABEL) : t("Distance : {distance}", { distance: distanceLabel(filters.distance) }),
+      patch: { distance: null },
+    });
   if (filters.minRate !== null)
     chips.push({ key: "rate", label: filters.minRate === 100 ? t("Taux 100 %") : t("Taux dès {taux} %", { taux: filters.minRate }), patch: { minRate: null } });
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l’employeur", patch: { externalOnly: false } });
@@ -253,7 +327,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
 // revenir sur Offres par un lien sans filtre (« Retour aux offres », onglet Offres) les remet ; un lien qui en porte
 // un (« Tout voir » de Top du jour) l'emporte. Effacés à la déconnexion (useAuth).
 const KEPT_KEY = "jobA1.offres-filtres";
-const FILTER_KEYS = ["statut", "tri", "q", "site", "canton", "taux", "note", "externe", "teletravail", "verifier", "agences", "ecartees", "expirees", "base"];
+const FILTER_KEYS = ["statut", "tri", "q", "site", "canton", "taux", "note", "externe", "teletravail", "verifier", "agences", "ecartees", "expirees", "base", "contrat", "distance"];
 const hasFilters = (query: LocationQuery): boolean => FILTER_KEYS.some((key) => query[key] != null);
 
 function keptFilters(): LocationQuery | null {

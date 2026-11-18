@@ -1,12 +1,12 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, watch, type FunctionalComponent } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInList, dateInSentence } from "../dates";
-import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { cityOnly, expiredText, frenchName, gapSkill, onDay, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import AgencyNote from "./AgencyNote.vue";
@@ -19,7 +19,7 @@ import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
-import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
+import type { CompatPoint, TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
@@ -27,14 +27,20 @@ import ScoreCorrection from "./ScoreCorrection.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { usePhone } from "../composables/usePhone";
+import { usePlan } from "../composables/usePlan";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import { offerUndo } from "../composables/useUndo";
+import { displayTitle } from "../offerTitle";
 import type { CompletionSection } from "./ProfileCompletionForm.vue";
 import ProfileCompletionPanel from "./ProfileCompletionPanel.vue";
 import { languageLabel } from "./ProfileCompletionForm.vue";
 
+import BusyButton from "./BusyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
+// Feuille de la compatibilité, ouverte à la demande : chargée à part, comme dans PreparationView (limite de poids,
+// décision de Kevin du 18.11, 13 h 37).
+const OfferCompatSheet = defineAsyncComponent(() => import("./OfferCompatSheet.vue"));
 // `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
 // renotée reste dans la liste hors de ses filtres.
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
@@ -158,6 +164,9 @@ const postLink = computed(() => {
 const searching = ref(false);
 const proposals = ref<RegistryCandidate[]>([]);
 const registryMessage = ref("");
+// Planche OffreAdresseNonTrouvee (18.11) : « Pas trouvée au registre » après une recherche faite ici sans résultat (le
+// serveur ne garde pas les recherches vaines) ; la pastille « Trouvée au registre du commerce » vient de la source.
+const notFound = ref(false);
 
 // « Adresse trouvée » seulement si l'adresse affichée change (audit du 17.11, K6) : le serveur peut connaître
 // l'entreprise sans que l'adresse de l'offre bouge. La recherche reste « en cours » jusqu'à la fiche relue, puis
@@ -182,7 +191,9 @@ watch(
     if (!awaited) return;
     clearTimeout(awaited.timer);
     const changed = (offer.company_address ?? null) !== awaited.before;
-    registryMessage.value = changed ? awaited.found : "Aucune nouvelle adresse trouvée.";
+    // Trouvée au registre : la pastille le dit (planche OffreAdresseTrouvee) ; trouvée sur Internet : la phrase.
+    registryMessage.value = changed ? awaited.found : offer.company_address ? "Aucune nouvelle adresse trouvée." : "";
+    notFound.value = !changed && !offer.company_address;
     awaited = null;
     searching.value = false;
   },
@@ -191,6 +202,7 @@ watch(
 async function searchRegistry(): Promise<void> {
   searching.value = true;
   registryMessage.value = "";
+  notFound.value = false;
   proposals.value = [];
   let waiting = false;
   try {
@@ -201,7 +213,7 @@ async function searchRegistry(): Promise<void> {
       registryMessage.value = "Registre IDE injoignable, réessaie plus tard.";
     } else if (data.chosen_uid && props.offer.company_address_source !== "registry") {
       waiting = true;
-      awaitReload("Adresse trouvée dans le registre IDE.");
+      awaitReload("");
     } else if (data.web_address) {
       proposals.value = data.candidates;
       waiting = true;
@@ -211,9 +223,11 @@ async function searchRegistry(): Promise<void> {
       const web = data.web_unavailable
         ? ` Recherche sur Internet impossible : ${data.web_unavailable}.`
         : " Rien de fiable sur Internet non plus.";
-      registryMessage.value = data.candidates.length
-        ? `Pas de correspondance sûre : choisis parmi le registre, ou saisis l’adresse.${web}`
-        : `Aucune entreprise à ce nom dans le registre.${web} Saisis l’adresse à la main.`;
+      if (data.candidates.length) registryMessage.value = `Pas de correspondance sûre : choisis parmi le registre, ou saisis l’adresse.${web}`;
+      else {
+        notFound.value = true;
+        registryMessage.value = data.web_unavailable ? `Recherche sur Internet impossible : ${data.web_unavailable}.` : "";
+      }
     }
   } catch {
     registryMessage.value = "API injoignable.";
@@ -348,6 +362,32 @@ async function retryScore(): Promise<void> {
     retrying.value = false;
   }
 }
+// « Pas encore notée » (planche OffreNonNotee du 18.11 ; Kevin, 17.11, Q2) : l'anneau pointillé des cartes, la phrase,
+// puis « Noter maintenant » (environ 10 secondes, compte dans la formule ; le coût au survol pour l'exploitant seul).
+// Jamais sur une offre écartée, sans profil ou dont la note a échoué (ces cas ont leur propre phrase).
+const unrated = computed(() => !scored.value && !setAside.value && !finalCause.value && !needsProfile.value);
+const { aiNote } = usePlan();
+const scoringNow = ref(false);
+const scoreNowError = ref("");
+async function scoreNow(): Promise<void> {
+  if (scoringNow.value) return;
+  scoringNow.value = true;
+  scoreNowError.value = "";
+  try {
+    const { data } = await api.POST("/api/offers/{offer_id}/score-now", { params: { path: { offer_id: props.offer.id } } });
+    if (data?.limit) scoreNowError.value = data.limit;
+    else if (data?.score === null || data?.score === undefined) scoreNowError.value = "La note n’a pas pu être calculée : réessaie dans un moment.";
+    emit("changed", true);
+  } catch {
+    scoreNowError.value = "API injoignable : réessaie dans un moment.";
+  } finally {
+    scoringNow.value = false;
+  }
+}
+watch(
+  () => props.offer.id,
+  () => (scoreNowError.value = ""),
+);
 async function profileSaved(): Promise<void> {
   completing.value = false;
   await refreshProfile();
@@ -357,7 +397,7 @@ const matchSub = computed(() => {
   if (needsProfile.value) return "Il manque ton profil pour noter cette offre.";
   if (finalCause.value === "sans_texte") return "L’annonce est trop courte pour être notée.";
   if (finalCause.value) return "La note n’a pas pu être calculée.";
-  if (!scored.value) return setAside.value ? "Pas de note : jobA1 ne note pas les offres écartées." : "La note arrive dès que l’annonce est lue.";
+  if (!scored.value) return setAside.value ? "Pas de note : jobA1 ne note pas les offres écartées." : "jobA1 n’a pas encore comparé cette offre à ton profil.";
   // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
   // Note provisoire (maquette OffreProvisoire du 10 novembre) : pendant la lecture automatique de l'annonce, elle
   // attend le texte complet ; si le site bloque la lecture, les exigences n'ont pas pu être vérifiées.
@@ -507,12 +547,14 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
     );
   }
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  items.unshift(...nearbyItem.value);
   return items;
 });
 const menuItems = computed<MoreMenuItem[]>(() => {
   if (wide.value) return desktopItems.value;
   const o = props.offer;
   const items: MoreMenuItem[] = [];
+  items.push(...nearbyItem.value);
   if (o.status !== "applied") {
     items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
@@ -544,7 +586,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
 const sheetOpen = ref(false);
 const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
-  const items: MoreMenuItem[] = [];
+  const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
     items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
@@ -577,7 +619,7 @@ const saidAloud = ref("");
 async function share(): Promise<void> {
   const url = shareUrl.value;
   if (!url) return;
-  const title = [props.offer.title, props.offer.company].filter(Boolean).join(" · ");
+  const title = [displayTitle(props.offer.title, props.offer), props.offer.company].filter(Boolean).join(" · ");
   if (typeof navigator.share === "function") {
     await navigator.share({ title, url }).catch(() => undefined);
     return;
@@ -589,8 +631,29 @@ async function share(): Promise<void> {
     saidAloud.value = "Copie impossible.";
   }
 }
-// Offre expirée (O7) : le bouton principal mène aux offres proches, par le titre du poste.
+// Offre expirée (O7) : « Voir des offres proches », par le titre du poste, dans le « ⋯ » ; la barre dit « Écrire
+// quand même » (planche OffreExpiree du 18.11, Kevin le 18.11 : le lien reste dans le menu).
 const nearbyLink = computed(() => ({ path: "/candidatures/offres", query: { q: props.offer.title } }));
+const expiredShown = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
+const expiredWrite = computed(() => expiredShown.value && props.offer.status !== "preparing");
+const nearbyItem = computed<MoreMenuItem[]>(() =>
+  expiredWrite.value ? [{ label: "Voir des offres proches", test: "nearby", icon: "search", run: () => void router.push(nearbyLink.value) }] : [],
+);
+// La carte « Offre expirée » : le titre et la phrase de la planche quand la page de l'annonce a été vérifiée ; une
+// expiration supposée (30 jours sans alerte) ou signalée par toi garde sa phrase, la planche ne la dessine pas.
+const expiredCard = computed(() => {
+  const o = props.offer;
+  if (!o.expired_at) return null;
+  const tail = "Tu peux encore écrire à l’entreprise.";
+  if (o.expiry_source !== "page") return { title: "", text: `${expiredText(o)} ${tail}` };
+  let host = "";
+  try {
+    host = new URL(o.links.find((l) => l.url)?.url ?? "").hostname.replace(/^www\./, "");
+  } catch {
+    host = "";
+  }
+  return { title: "L’annonce n’est plus en ligne", text: `Vérifiée ${onDay(o.expired_at)}${host ? ` sur ${host}` : ""}. ${tail}` };
+});
 
 // Partie « Entreprise » (docs/74) : l'adresse visible, les actions dans son « ⋯ ».
 const canSearchEmployer = computed(
@@ -599,6 +662,18 @@ const canSearchEmployer = computed(
     props.offer.employer_status !== "agency" &&
     !(props.offer.employer_url && props.offer.employer_checked_at),
 );
+// « Site de l'entreprise » (planche OffreAdresseTrouvee) : seulement une adresse http(s) ; le nom du site sans « www. ».
+const website = computed(() => {
+  const raw = props.offer.company_website;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return { href: url.href, host: url.hostname.replace(/^www\./, "") };
+  } catch {
+    return null;
+  }
+});
 const companyItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
@@ -647,6 +722,7 @@ watch(
     editingAddress.value = false;
     proposals.value = [];
     registryMessage.value = "";
+    notFound.value = false;
   },
 );
 </script>
@@ -724,7 +800,7 @@ watch(
               tabindex="-1"
               data-test="offer-detail-title"
             >
-              {{ offer.title }}
+              {{ displayTitle(offer.title, offer) }}
             </h2>
             <p
               class="oc-sub"
@@ -774,13 +850,6 @@ watch(
             Voir le suivi
           </RouterLink>
         </div>
-        <p
-          v-if="offer.expired_at && offer.status !== 'applied'"
-          class="notice expired-notice"
-          data-test="expired"
-        >
-          {{ expiredText(offer) }}
-        </p>
         <div
           class="oc-note-line"
           data-test="section-for-you"
@@ -853,12 +922,39 @@ watch(
           </button>
         </div>
         <p
-          v-if="!scored && (needsProfile || finalCause)"
+          v-if="!scored && (needsProfile || finalCause || unrated)"
           class="oc-note-sub"
           data-test="match-sub"
         >
           {{ matchSub }}
         </p>
+        <!-- Kevin, 18.11 : sur ordinateur, la carte « Pas encore notée » de la planche OffreNonNotee, dans le panneau. -->
+        <div
+          v-if="unrated"
+          class="match-now oc-now"
+          data-test="score-now-block"
+        >
+          <BusyButton
+            class="match-now-button"
+            :busy="scoringNow"
+            busy-label="Notation en cours"
+            data-test="score-now"
+            @click="scoreNow"
+          >
+            <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
+              Noter maintenant
+            </HoverNote>
+          </BusyButton>
+          <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+          <p
+            v-if="scoreNowError"
+            class="field-error"
+            role="alert"
+            data-test="score-now-error"
+          >
+            {{ scoreNowError }}
+          </p>
+        </div>
         <p
           v-if="outsideNote"
           class="oc-note-sub"
@@ -877,6 +973,23 @@ watch(
           <AppIcon name="done" />Note refaite sur l’annonce complète.
         </p>
       </header>
+      <section
+        v-if="expiredShown && expiredCard"
+        :class="['expired-card', { 'oc-card': columns, 'detail-card': !columns, 'grille-info': sub }]"
+        role="status"
+        data-test="expired"
+      >
+        <span class="expired-pill">Offre expirée</span>
+        <h3
+          v-if="expiredCard.title"
+          class="expired-title"
+        >
+          {{ expiredCard.title }}
+        </h3>
+        <p class="expired-text">
+          {{ expiredCard.text }}
+        </p>
+      </section>
 
       <section
         class="oc-card oc-apply"
@@ -975,20 +1088,11 @@ watch(
           data-test="triage"
         >
           <RouterLink
-            v-if="offer.expired_at && offer.status !== 'preparing'"
-            :to="nearbyLink"
-            class="button-link primary-link"
-            data-test="nearby"
-          >
-            Voir des offres proches
-          </RouterLink>
-          <RouterLink
-            v-else
             :to="prepareLink"
             class="button-link primary-link"
             data-test="prepare"
           >
-            {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+            {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
           </RouterLink>
           <button
             v-if="!discarded"
@@ -1079,7 +1183,7 @@ watch(
           tabindex="-1"
           data-test="offer-detail-title"
         >
-          {{ offer.title }}
+          {{ displayTitle(offer.title, offer) }}
         </h2>
         <p
           class="detail-sub"
@@ -1109,13 +1213,6 @@ watch(
           Voir le suivi
         </RouterLink>
       </div>
-      <p
-        v-if="offer.expired_at && offer.status !== 'applied'"
-        class="notice expired-notice"
-        data-test="expired"
-      >
-        {{ expiredText(offer) }}
-      </p>
       <ul
         class="offer-tags"
         data-test="offer-tags"
@@ -1142,20 +1239,11 @@ watch(
         data-test="triage"
       >
         <RouterLink
-          v-if="offer.expired_at && offer.status !== 'preparing'"
-          :to="nearbyLink"
-          class="button-link primary-link"
-          data-test="nearby"
-        >
-          Voir des offres proches
-        </RouterLink>
-        <RouterLink
-          v-else
           :to="prepareLink"
           class="button-link primary-link"
           data-test="prepare"
         >
-          {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+          {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
         </RouterLink>
         <button
           v-if="!discarded"
@@ -1209,7 +1297,7 @@ watch(
       :stale="offer.score_stale"
       :verdict="columns ? (matchWord?.word ?? matchTitle) : matchTitle"
       :tone="matchTone"
-      :subtitle="`${offer.title} · ${offer.company ?? 'Entreprise non indiquée'}`"
+      :subtitle="`${displayTitle(offer.title, offer)} · ${offer.company ?? 'Entreprise non indiquée'}`"
       :note="columns ? matchSub : undefined"
       :strengths="compatStrengths"
       :gaps="compatGaps"
@@ -1237,20 +1325,11 @@ watch(
         Écarter
       </button>
       <RouterLink
-        v-if="offer.expired_at && offer.status !== 'preparing'"
-        :to="nearbyLink"
-        class="button-link primary-link offer-bar-main"
-        data-test="nearby"
-      >
-        Voir des offres proches
-      </RouterLink>
-      <RouterLink
-        v-else
         :to="prepareLink"
         class="button-link primary-link offer-bar-main"
         data-test="prepare"
       >
-        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+        {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
       </RouterLink>
     </div>
 
@@ -1263,6 +1342,23 @@ watch(
       v-bind="layoutProps"
     >
       <template #main>
+        <section
+          v-if="expiredShown && expiredCard"
+          :class="['expired-card', { 'oc-card': columns, 'detail-card': !columns, 'grille-info': sub }]"
+          role="status"
+          data-test="expired"
+        >
+          <span class="expired-pill">Offre expirée</span>
+          <h3
+            v-if="expiredCard.title"
+            class="expired-title"
+          >
+            {{ expiredCard.title }}
+          </h3>
+          <p class="expired-text">
+            {{ expiredCard.text }}
+          </p>
+        </section>
         <section
           :class="['detail-card', 'match-card', { 'detail-section': columns, 'grille-info': sub }]"
           aria-labelledby="match-title"
@@ -1277,6 +1373,25 @@ watch(
               large
               bare
             />
+            <svg
+              v-else-if="unrated"
+              class="match-unrated"
+              viewBox="0 0 100 100"
+              aria-hidden="true"
+              focusable="false"
+              data-test="match-unrated"
+            ><circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke-width="9"
+              stroke-dasharray="12 9.99"
+            /><path
+              d="M38 50H62"
+              stroke-width="9"
+              stroke-linecap="round"
+            /></svg>
             <div>
               <div class="match-title-row">
                 <h3
@@ -1329,6 +1444,32 @@ watch(
                 Compléter mon profil<AppIcon name="chevron" />
               </button>
             </div>
+          </div>
+          <div
+            v-if="unrated"
+            class="match-now"
+            data-test="score-now-block"
+          >
+            <BusyButton
+              class="match-now-button"
+              :busy="scoringNow"
+              busy-label="Notation en cours"
+              data-test="score-now"
+              @click="scoreNow"
+            >
+              <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
+                Noter maintenant
+              </HoverNote>
+            </BusyButton>
+            <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+            <p
+              v-if="scoreNowError"
+              class="field-error"
+              role="alert"
+              data-test="score-now-error"
+            >
+              {{ scoreNowError }}
+            </p>
           </div>
           <ul
             v-if="matchLines.length && (sub ? provisional : !columns)"
@@ -1569,145 +1710,178 @@ watch(
             test-id="company-more"
           />
         </div>
-        <CopyField
-          label="Nom"
-          :value="offer.company ?? ''"
-        />
-        <div
-          class="block-field"
-          data-test="address"
-        >
-          <div class="block-field-text">
-            <div class="block-field-label">
-              Adresse
-            </div>
-            <form
-              v-if="editingAddress"
-              class="address-form"
-              @submit.prevent="saveAddress"
-            >
-              <textarea
-                v-model="addressDraft"
-                rows="2"
-                placeholder="Rue et numéro&#10;NPA localité"
-                aria-label="Adresse de l’entreprise"
-                data-test="address-input"
-              />
-              <div>
-                <button
-                  type="submit"
-                  class="secondary small"
-                  data-test="save-address"
-                >
-                  Enregistrer
-                </button>
-                <button
-                  type="button"
-                  class="link"
-                  @click="editingAddress = false"
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-            <template v-else-if="offer.company_address">
-              <div class="block-field-value">
-                {{ offer.company_address.split("\n").join(", ") }}
-              </div>
-              <div class="hint">
-                {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
-              </div>
-            </template>
-            <div
-              v-else
-              class="block-field-value block-field-none"
-            >
-              Non renseignée
-            </div>
-          </div>
-          <CopyButton
-            v-if="offer.company_address && !editingAddress"
-            :value="offer.company_address.split('\n').join(', ')"
-            label="Copier : adresse"
-            test-id="address-copy"
+        <!-- Planche OffreAdresseTrouvee (18.11) : le titre « L'entreprise » au-dessus d'une carte (Nom, Adresse,
+             « Modifier l’adresse »), puis la carte « Site de l’entreprise ». -->
+        <div class="company-card">
+          <CopyField
+            label="Nom"
+            :value="offer.company ?? ''"
           />
+          <div
+            class="block-field"
+            data-test="address"
+          >
+            <div class="block-field-text">
+              <div class="block-field-label">
+                Adresse
+              </div>
+              <form
+                v-if="editingAddress"
+                class="address-form"
+                @submit.prevent="saveAddress"
+              >
+                <textarea
+                  v-model="addressDraft"
+                  rows="2"
+                  placeholder="Rue et numéro&#10;NPA localité"
+                  aria-label="Adresse de l’entreprise"
+                  data-test="address-input"
+                />
+                <div>
+                  <button
+                    type="submit"
+                    class="secondary small"
+                    data-test="save-address"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    class="link"
+                    @click="editingAddress = false"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+              <p
+                v-else-if="searching"
+                class="block-field-value offer-busy address-busy"
+                role="status"
+                data-test="registry-busy"
+              >
+                <span
+                  class="offer-busy-ring"
+                  aria-hidden="true"
+                />Recherche de l’adresse…
+              </p>
+              <template v-else-if="offer.company_address">
+                <div class="block-field-value address-lines">
+                  {{ offer.company_address }}
+                </div>
+                <span
+                  v-if="offer.company_address_source === 'registry'"
+                  class="grey-pill address-pill"
+                  data-test="address-registry"
+                >Trouvée au registre du commerce</span>
+                <div
+                  v-else
+                  class="hint"
+                >
+                  {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
+                </div>
+              </template>
+              <template v-else>
+                <div class="block-field-value block-field-none">
+                  Non renseignée
+                </div>
+                <span
+                  v-if="notFound"
+                  class="grey-pill address-pill"
+                  data-test="address-not-found"
+                >Pas trouvée au registre</span>
+              </template>
+            </div>
+            <CopyButton
+              v-if="offer.company_address && !editingAddress && !searching"
+              :value="offer.company_address.split('\n').join(', ')"
+              label="Copier : adresse"
+              test-id="address-copy"
+            />
+          </div>
+          <!-- « Modifier l'adresse » ou « Ajouter l'adresse » : une ligne avec chevron sous l'adresse (planches
+             OffreAdresseTrouvee et OffreAdresseNonTrouvee du 18.11). -->
           <button
-            v-else-if="!editingAddress"
+            v-if="!editingAddress && !searching"
             type="button"
-            class="link offer-company-add"
+            class="address-row"
             data-test="add-address"
             @click="startAddress"
           >
-            Compléter
+            {{ offer.company_address ? "Modifier l’adresse" : "Ajouter l’adresse" }}<AppIcon name="chevron" />
           </button>
-        </div>
-        <p
-          v-if="searching"
-          class="hint offer-busy"
-          role="status"
-          data-test="registry-busy"
-        >
-          <span
-            class="offer-busy-ring"
-            aria-hidden="true"
-          />Recherche dans le registre IDE…
-        </p>
-        <div
-          v-if="registryMessage || proposals.length"
-          class="registry-proposals"
-          data-test="registry"
-        >
-          <p
-            v-if="registryMessage"
-            class="hint"
+          <div
+            v-if="registryMessage || proposals.length"
+            class="registry-proposals"
+            data-test="registry"
           >
-            {{ registryMessage }}
-          </p>
-          <ul v-if="proposals.length">
-            <li
-              v-for="proposal in proposals"
-              :key="proposal.uid"
+            <p
+              v-if="registryMessage"
+              class="hint"
             >
-              <span>
-                <strong>{{ proposal.name }}</strong><br>
-                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-              </span>
-              <button
-                type="button"
-                class="secondary small"
-                data-test="choose-registry"
-                @click="chooseRegistry(proposal.uid)"
+              {{ registryMessage }}
+            </p>
+            <ul v-if="proposals.length">
+              <li
+                v-for="proposal in proposals"
+                :key="proposal.uid"
               >
-                Choisir
-              </button>
-            </li>
-          </ul>
+                <span>
+                  <strong>{{ proposal.name }}</strong><br>
+                  <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="secondary small"
+                  data-test="choose-registry"
+                  @click="chooseRegistry(proposal.uid)"
+                >
+                  Choisir
+                </button>
+              </li>
+            </ul>
+          </div>
+          <p
+            v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
+            class="hint employer-line"
+            data-test="employer-line"
+          >
+            <span
+              v-if="employerBusy"
+              class="offer-busy"
+              role="status"
+            ><span
+              class="offer-busy-ring"
+              aria-hidden="true"
+            />Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
+            <span
+              v-else-if="offer.employer_url && offer.employer_checked_at"
+            >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+              {{ dateInSentence(offer.employer_checked_at) }}.</span>
+            <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
+            <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
+            <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
+            <span
+              v-if="employerMessage"
+              role="status"
+            >{{ employerMessage }}</span>
+          </p>
         </div>
-        <p
-          v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
-          class="hint employer-line"
-          data-test="employer-line"
+        <a
+          v-if="website"
+          class="company-card company-site"
+          :href="website.href"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-test="company-website"
         >
-          <span
-            v-if="employerBusy"
-            class="offer-busy"
-            role="status"
-          ><span
-            class="offer-busy-ring"
-            aria-hidden="true"
-          />Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
-          <span
-            v-else-if="offer.employer_url && offer.employer_checked_at"
-          >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
-            {{ dateInSentence(offer.employer_checked_at) }}.</span>
-          <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
-          <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
-          <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
-          <span
-            v-if="employerMessage"
-            role="status"
-          >{{ employerMessage }}</span>
-        </p>
+          <span>
+            <b>Site de l’entreprise</b>
+            <span class="company-site-host">{{ website.host }}</span>
+            <span class="visually-hidden"> (nouvel onglet)</span>
+          </span>
+          <AppIcon name="chevron" />
+        </a>
       </section>
       <div
         v-if="offer.company"
@@ -1761,7 +1935,7 @@ watch(
 .oc-title-text h2 { margin: 0; font-size: var(--oc-h2); line-height: var(--oc-h2-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
 .oc-sub { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
 .oc-title-actions { flex: none; display: flex; align-items: center; }
-.oc-head > .oc-status, .oc-head > .expired-notice { margin: var(--space-3) 0 0; }
+.oc-head > .oc-status { margin: var(--space-3) 0 0; }
 .oc-status { display: flex; align-items: center; gap: var(--space-3); }
 .oc-note-line { display: flex; align-items: center; gap: var(--oc-10); margin-top: var(--space-3); padding-top: var(--space-1); border-top: 1px solid var(--line); }
 .oc-note-line .match-title { margin: 0; font-size: var(--font-label); font-weight: var(--weight-bold); }
@@ -1775,6 +1949,29 @@ watch(
 .oc-note-link .icon { width: 18px; height: 18px; }
 /* Audit du 17.11, K8 : le bandeau « Note refaite » finit à 24 px du bord de la carte, comme sur les côtés (8 de la carte
    + 16 ici), au lieu de 8. */
+/* « Pas encore notée » (planche OffreNonNotee du 18.11) : l'anneau pointillé des cartes (60 px), puis sous un trait,
+   « Noter maintenant » tonal pleine largeur (52 px) et la pastille grise centrée, 10 px dessous. */
+.match-unrated { flex: none; width: 60px; height: 60px; }
+.match-unrated circle { stroke: var(--linked-line); }
+.match-unrated path { stroke: var(--unrated-dash); }
+.match-now { --now-gap: 10px; --now-top: 14px; display: flex; flex-direction: column; align-items: center; gap: var(--now-gap); margin: var(--space-4) calc(-1 * var(--space-4)) 0; padding: var(--now-top) var(--space-4) 0; border-top: 1px solid var(--line-soft); }
+.match-now-button { width: 100%; height: 52px; min-height: 52px; border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
+.oc-now { margin: var(--space-4) 0 0; padding-left: 0; padding-right: 0; }
+/* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
+   phrase 15/21 px grise 4 px dessous. */
+.expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }
+.expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
+.expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
+.expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
+.match-now .field-error { align-self: stretch; margin: 0; }
+/* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
+   « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
+.address-lines { white-space: pre-line; }
+.address-pill { --pill-gap: 10px; margin-top: var(--pill-gap); }
+.address-busy { display: flex; align-items: center; color: var(--text-secondary); }
+.address-row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--target-min); padding: var(--space-3) 0; border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; }
+.address-row .icon { flex: none; color: var(--text-secondary); }
 .oc-note-redone { margin: var(--space-2) 0 var(--space-4); }
 .oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
 .oc-row { margin: 0; padding: var(--space-3) var(--oc-x); border-top: 1px solid var(--line); }
@@ -1808,6 +2005,12 @@ watch(
 .offer-busy { display: flex; align-items: center; gap: var(--space-2); }
 .offer-busy-ring { flex: none; box-sizing: border-box; width: 1em; height: 1em; border: 2px solid var(--line-strong); border-right-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: offer-busy-turn 0.9s linear infinite; }
 @keyframes offer-busy-turn { to { transform: rotate(360deg); } }
+/* « L'entreprise » (planche OffreAdresseTrouvee du 18.11) : titre en casse normale, 18/800 ; la carte du site dessous. */
+.offer-company .offer-company-cap { font-size: var(--font-title); font-weight: var(--weight-heavy); letter-spacing: 0; text-transform: none; color: var(--text); }
+.company-site { --site-min: 56px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--site-min); padding: var(--space-3) 0; border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+.company-site b { display: block; font-size: var(--font-body); font-weight: var(--weight-semibold); }
+.company-site-host { display: block; margin-top: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
+.company-site .icon { flex: none; color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) { .offer-busy-ring { animation: none; } }
 /* Audit du 17.11, N27 : sur ordinateur, chaque lien seul de la fiche a une cible de 24 px de haut au moins (WCAG 2.5.8),
    sans rien déplacer : un lien dans le texte prend la marge en haut et en bas, un bouton-lien la reprend en négatif. */
@@ -1833,7 +2036,7 @@ watch(
   .offer-blocks .offer-subhead { --ob-8: 8px; --ob-4: 4px; margin: 0; padding: var(--ob-12) var(--ob-8) var(--ob-4); background: var(--bg); }
   .offer-blocks .offer-subhead .icon-button { width: var(--ob-48); height: var(--ob-48); color: var(--text); }
   .offer-blocks .offer-subhead .icon-button > .icon { width: var(--ob-24); height: var(--ob-24); }
-  .offer-blocks > .detail-offer, .offer-blocks .match-card {
+  .offer-blocks > .detail-offer, .offer-blocks .match-card, .offer-blocks .expired-card {
     margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--card-line);
     border-radius: var(--radius-card); box-shadow: none;
   }
@@ -1851,8 +2054,8 @@ watch(
   .offer-blocks .detail-title .detail-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
   .offer-blocks .offer-tags { gap: var(--space-2); margin-top: var(--ob-gap); }
   .offer-blocks .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface-muted); border: 0; border-radius: var(--radius-sm); font-size: var(--ob-13); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
-  .offer-blocks .detail-offer .status-line, .offer-blocks .detail-offer .expired-notice { margin-top: var(--ob-gap); }
-  .offer-blocks .match-card { display: block; }
+  .offer-blocks .detail-offer .status-line { margin-top: var(--ob-gap); }
+  .offer-blocks .match-card, .offer-blocks .expired-card { display: block; }
   .offer-blocks .match-head { gap: var(--ob-gap); padding: 0; }
   .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
   .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }
@@ -1899,5 +2102,13 @@ watch(
   .offer-blocks :is(.link, .more-direct) { display: inline-flex; align-items: center; min-height: var(--target-min); }
   .offer-blocks .section-more, .offer-blocks .disclosure-chevron { margin-left: 0; }
   .offer-blocks .disclosure-row { justify-content: space-between; }
+  /* « L'entreprise » sur téléphone (OffreAdresseTrouvee) : le titre hors de la carte, puis deux cartes (Nom et adresse ;
+     site), séparateurs intérieurs. */
+  .offer-blocks .detail-more-rows:has(.company-card) { --co-card-gap: 12px; padding-top: 0; border-top: 0; }
+  .offer-blocks .offer-company-head { min-height: 0; margin: 0 0 var(--space-3); border-bottom: 0; }
+  .offer-blocks .company-card { margin-bottom: var(--co-card-gap); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); overflow: hidden; }
+  .offer-blocks .company-card > :is(.block-field, .address-row, .registry-proposals, .employer-line) { padding-inline: var(--space-4); }
+  .offer-blocks .company-card > :first-child { border-top: 0; }
+  .offer-blocks .company-site { padding: var(--space-3) var(--space-4); }
 }
 </style>

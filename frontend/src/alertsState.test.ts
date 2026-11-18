@@ -48,6 +48,10 @@ describe("état des alertes (planche « 6. Alertes »)", () => {
     expect(silent).toEqual({ kind: "silent", label: "Rien reçu depuis la création", days: 3 });
   });
 
+  it("déclarée créée sans e-mail du site : à confirmer, jamais en attente ni orange (Kevin, 18.11)", () => {
+    expect(siteState({ status: "pending", received_at: null, created_at: ago(5) }, NOW)).toEqual({ kind: "pending", label: "À confirmer" });
+  });
+
   it("déjà reçu : la date à 13 jours, la mention grise à 14", () => {
     expect(siteState({ status: "received", received_at: ago(13), created_at: null }, NOW).kind).toBe("received");
     expect(siteState({ status: "received", received_at: "2026-10-22T07:12:00Z", created_at: null }, NOW).label).toBe("Reçue le 22 oct.");

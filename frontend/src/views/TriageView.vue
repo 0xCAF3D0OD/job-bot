@@ -154,7 +154,8 @@ onMounted(load);
       :heights="['2.5rem', '20rem']"
     />
     <!-- 0 offre à trier (LISEZMOI §12, Kevin 15.11) : l'état vide commun (§13), la mascotte de FinDuTriAucune, le titre
-         manuscrit, la pastille, deux boutons. Ni éventail vide, ni « Écarter » / « Garder ». -->
+         manuscrit, la pastille, deux boutons. Ni éventail vide, ni « Écarter » / « Garder ». Un seul bouton plein
+         (§72e, Kevin 18.11) : « Gérer mes alertes » en bouton texte. -->
     <EmptyState
       v-else-if="!total"
       title="Rien à trier pour l’instant"
@@ -182,7 +183,7 @@ onMounted(load);
         </RouterLink>
         <RouterLink
           to="/candidatures/alertes"
-          class="button-link secondary"
+          class="button-link tri-empty-text"
           data-test="triage-empty-alerts"
         >
           Gérer mes alertes
@@ -400,6 +401,8 @@ onMounted(load);
 <style>
 /* Le bandeau « Annuler » du tri remplace celui de l'application le temps qu'il est là. */
 :root:has(.tri-toast) .undo-toast { display: none; }
+/* « Gérer mes alertes » en bouton texte (§72e) : même place et même hauteur, sans fond ni contour, texte bleu. */
+.empty-state-actions > .tri-empty-text, .empty-state-actions > .tri-empty-text:hover { border: 0; background: transparent; box-shadow: none; color: var(--primary-text); }
 </style>
 
 <style scoped>

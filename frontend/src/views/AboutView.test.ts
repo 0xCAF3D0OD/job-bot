@@ -25,6 +25,9 @@ describe("À propos et le pied de page", () => {
     expect(text).toContain("Kevin Di Nocera");
     expect(wrapper.find("[data-test=about-contact]").text()).toBe("contact@joba1.ch");
     expect(wrapper.find("a[href='https://github.com/0xCAF3D0OD/job-bot']").exists()).toBe(true);
+    // L'attribution des numéros postaux (issue 468, Kevin 18.11).
+    expect(wrapper.find("[data-test=about-geonames]").text()).toContain("Données : GeoNames (geonames.org)");
+    expect(wrapper.find("[data-test=about-geonames]").text()).toContain("CC BY 4.0");
     expect(PUBLIC_ROUTES.has("about")).toBe(true);
     expect(pageTitle("about")).toBe("À propos · jobA1");
   });

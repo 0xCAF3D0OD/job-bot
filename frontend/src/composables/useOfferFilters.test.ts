@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activeChips, activeCount, basisChoices, DEFAULT_FILTERS, fromQuery, RATE_CHOICES, SCORE_CHOICES, scoreLabel, toQuery } from "./useOfferFilters";
+import { activeChips, activeCount, basisChoices, contractCount, DEFAULT_FILTERS, fromQuery, RATE_CHOICES, SCORE_CHOICES, scoreLabel, toggleContract, toQuery } from "./useOfferFilters";
 
 // Section 31 du 16.11 : des libellés compris sans connaître jobA1, mêmes seuils et mêmes clés qu'avant.
 describe("filtres des offres : libellés compréhensibles (section 31)", () => {
@@ -42,5 +42,44 @@ describe("filtres des offres : libellés compréhensibles (section 31)", () => {
     expect(filters).toMatchObject({ minScore: 75, maxScore: null, minRate: 80, basis: "sure", remote: "partial", sort: "score" });
     expect(toQuery(filters)).toEqual(query);
     expect(activeCount(filters)).toBe(4);
+  });
+});
+
+// Issue 468 (Kevin, 18.11) : le filtre Contrat, plusieurs choix, « Non précisé » compris.
+describe("filtre Contrat", () => {
+  it("l’adresse garde les contrats cochés, dans l’ordre des choix", () => {
+    const filters = fromQuery({ contrat: ["non_precise", "cdi"] });
+    expect(filters.contracts).toEqual(["cdi", "non_precise"]);
+    expect(toQuery(filters)).toEqual({ contrat: ["cdi", "non_precise"] });
+    expect(activeCount(filters)).toBe(2);
+    expect(activeChips(filters).map((c) => c.label)).toEqual(["Contrat : CDI", "Contrat : Non précisé"]);
+    expect(activeChips(filters)[0]?.patch).toEqual({ contracts: ["non_precise"] });
+  });
+
+  it("une valeur inconnue est ignorée : elle ne vide jamais la liste sans le dire", () => {
+    expect(fromQuery({ contrat: ["apprentissage", "xyz"] }).contracts).toEqual([]);
+    expect(fromQuery({ contrat: ["apprentissage", "cdd"] }).contracts).toEqual(["cdd"]);
+    expect(activeCount(fromQuery({ contrat: "apprentissage" }))).toBe(0);
+  });
+
+  it("cocher et décocher ; le nombre de chaque contrat vient du serveur, 0 s’il manque", () => {
+    expect(toggleContract([], "stage")).toEqual(["stage"]);
+    expect(toggleContract(["cdi", "stage"], "cdi")).toEqual(["stage"]);
+    expect(toggleContract(["stage"], "cdi")).toEqual(["cdi", "stage"]);
+    const facets = { contracts: [{ value: "cdi", count: 120 }, { value: "stage", count: 0 }] };
+    expect(contractCount(facets, "cdi")).toBe(120);
+    expect(contractCount(facets, "stage")).toBe(0);
+    expect(contractCount({}, "cdd")).toBe(0);
+    expect(DEFAULT_FILTERS.contracts).toEqual([]);
+  });
+});
+
+describe("Filtre « Distance » dans l’adresse (issue 468)", () => {
+  it("?distance=30 et ?distance=inconnu ; une valeur inconnue est ignorée, jamais une liste vidée sans le dire", () => {
+    expect(fromQuery({ distance: "30" }).distance).toBe("30");
+    expect(fromQuery({ distance: "inconnu" }).distance).toBe("unknown");
+    expect(fromQuery({ distance: "20" }).distance).toBeNull();
+    expect(toQuery({ ...DEFAULT_FILTERS, distance: "unknown" }).distance).toBe("inconnu");
+    expect(activeCount({ ...DEFAULT_FILTERS, distance: "15" })).toBe(1);
   });
 });

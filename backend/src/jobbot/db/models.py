@@ -12,6 +12,7 @@ from sqlalchemy import (
     ColumnElement,
     Date,
     DateTime,
+    Double,
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
@@ -28,6 +29,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from jobbot.core.contract import Contract, classify_contract
+from jobbot.core.geo import locate
 from jobbot.db.base import Base
 
 # Compte de la ligne (docs/65) : tiré du compte en cours ; la base ne montre que les siennes.
@@ -194,9 +197,18 @@ class Offer(Base):
     apply_kind: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     employment_type: Mapped[str | None] = mapped_column(Text)
+    # Filtre « Contrat » (issue #468) : la catégorie tirée d'`employment_type`, sans devinette
+    # (jobbot.core.contract) ; « non_precise » quand le site ne le dit pas clairement.
+    contract: Mapped[str] = mapped_column(
+        Text, default=Contract.UNSPECIFIED, server_default=Contract.UNSPECIFIED.value
+    )
     enrich_status: Mapped[str] = mapped_column(Text, default="pending")
     # Canton (« VD »), déduit du lieu ou appris des autres offres de la même ville.
     canton: Mapped[str | None] = mapped_column(Text, index=True)
+    # Filtre « Distance depuis… » (issue #468) : le point du lieu (jobbot.core.geo, numéros postaux
+    # GeoNames), vide quand le lieu n'est pas reconnu sans ambiguïté (« Lieu non précisé »).
+    latitude: Mapped[float | None] = mapped_column(Double)
+    longitude: Mapped[float | None] = mapped_column(Double)
     enrich_attempts: Mapped[int] = mapped_column(default=0)
     enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) : NULL à faire,
@@ -259,6 +271,21 @@ def _stamp_set_aside(offer: Offer, value: object, old: object, _initiator: objec
     if value == old:
         return
     offer.set_aside_at = datetime.now(UTC) if value in _SET_ASIDE_STATES else None
+
+
+@event.listens_for(Offer.employment_type, "set")
+def _classify_contract(offer: Offer, value: object, _old: object, _initiator: object) -> None:
+    """Filtre « Contrat » : une offre créée ou modifiée par l'ORM garde sa catégorie à jour. Une
+    mise à jour en masse (`update(Offer)`, enrich) passe `contract` elle-même."""
+    offer.contract = classify_contract(value if isinstance(value, str) else None)
+
+
+@event.listens_for(Offer.location, "set")
+def _locate(offer: Offer, value: object, _old: object, _initiator: object) -> None:
+    """Filtre « Distance » : une offre créée ou modifiée par l'ORM garde son point à jour. Un
+    `insert(Offer)` (la collecte) passe `latitude` et `longitude` lui-même."""
+    point = locate(value if isinstance(value, str) else None)
+    offer.latitude, offer.longitude = (point.lat, point.lon) if point else (None, None)
 
 
 class OfferLink(Base):
@@ -1385,7 +1412,7 @@ class Contact(Base):
     )
     name: Mapped[str | None] = mapped_column(Text)
     role: Mapped[str] = mapped_column(Text)  # recruiter | manager | team | alumni | other
-    # linkedin_invite | linkedin_message | email | phone | other
+    # linkedin_invite | linkedin_message | email | phone | in_person | other
     channel: Mapped[str] = mapped_column(Text)
     contacted_on: Mapped[date] = mapped_column(Date)
     answered_on: Mapped[date | None] = mapped_column(Date)

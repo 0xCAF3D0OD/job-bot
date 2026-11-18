@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -251,6 +251,79 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(POST).not.toHaveBeenCalled();
   });
 
+  describe("« Coller » lit le presse-papiers (Kevin, 18.11)", () => {
+    function clipboard(readText: () => Promise<string>): void {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: vi.fn(readText) } });
+    }
+    afterEach(() => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    });
+    async function openPasteSheet(): Promise<VueWrapper> {
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      return wrapper;
+    }
+    const area = (wrapper: VueWrapper) => wrapper.find<HTMLTextAreaElement>("[data-test=paste-text] [data-test=composer-input]");
+
+    it("le texte copié arrive dans la fenêtre de collage, prêt pour « Refaire la note »", async () => {
+      const copied = "Infirmier·ère diplômé·e HES, 80 à 100 %. ".repeat(6);
+      clipboard(async () => `  ${copied}\n`);
+      const wrapper = await openPasteSheet();
+      expect(navigator.clipboard.readText).toHaveBeenCalledTimes(1);
+      expect(area(wrapper).element.value).toBe(copied.trim());
+      expect(wrapper.find("[data-test=paste-text] [data-test=composer-send]").attributes("aria-disabled")).toBeUndefined();
+    });
+
+    it("téléphone : « Coller le texte de l’annonce » lit le presse-papiers, puis la fenêtre de collage s'ouvre remplie", async () => {
+      onPhone();
+      const copied = "Soins aigus, horaires irréguliers, équipe de 12 personnes. ".repeat(5);
+      clipboard(async () => copied);
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=give-sheet] [data-test=paste-offer-text]").trigger("click");
+      await new Promise((done) => setTimeout(done, 350));
+      await flushPromises();
+      expect(wrapper.find("dialog[data-test=give-sheet]").attributes("open")).toBeUndefined();
+      expect(wrapper.find("dialog[data-test=paste-sheet]").attributes("open")).toBeDefined();
+      expect(area(wrapper).element.value).toBe(copied.trim());
+    });
+
+    it("accès refusé : la fenêtre s'ouvre vide, on colle à la main", async () => {
+      clipboard(async () => {
+        throw new DOMException("refusé", "NotAllowedError");
+      });
+      const wrapper = await openPasteSheet();
+      expect(wrapper.find("[data-test=paste-sheet]").exists()).toBe(true);
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("sans presse-papiers lisible (navigateur ancien) : la fenêtre s'ouvre vide", async () => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+      const wrapper = await openPasteSheet();
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("un simple lien copié n'est pas pris pour le texte de l'annonce", async () => {
+      clipboard(async () => "https://www.linkedin.com/jobs/view/123/");
+      const wrapper = await openPasteSheet();
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("un texte déjà commencé n'est jamais remplacé", async () => {
+      clipboard(async () => "Autre texte copié ailleurs");
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      await area(wrapper).setValue("Mon début de texte");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      expect(area(wrapper).element.value).toBe("Mon début de texte");
+    });
+  });
+
   it("feuille de collage : compteur, « Refaire la note » `aria-disabled` sous 200 caractères, puis enregistré", async () => {
     PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 72, problem: null, paste: false } });
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
@@ -281,6 +354,50 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/offers/{offer_id}/description", { params: { path: { offer_id: 7 } }, body: { text: text } });
     expect(wrapper.emitted("changed")).toHaveLength(1);
+  });
+
+  it("Refaire la note avec un fichier (Q1 du 17.11) : PDF ou capture, texte repris dans le champ, puis relu", async () => {
+    const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+    await wrapper.find("[data-test=give-offer]").trigger("click");
+    await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+    const plus = wrapper.find("[data-test=paste-text] [data-test=composer-plus]");
+    expect(plus.attributes("aria-label")).toBe("Joindre un fichier");
+    await plus.trigger("click");
+    const menu = wrapper.find("[data-test=paste-text] [data-test=composer-menu]");
+    expect(menu.find("[data-test=composer-item-pdf]").text()).toBe("Importer le PDF de l’annoncePDF, 5 Mo maximum");
+    expect(menu.find("[data-test=composer-item-image]").text()).toBe("Importer une capture d’écranPNG ou JPG, 5 Mo maximum");
+
+    const input = wrapper.find<HTMLInputElement>("[data-test=paste-file]");
+    const choose = async (file: File) => {
+      Object.defineProperty(input.element, "files", { value: [file], configurable: true });
+      await input.trigger("change");
+      await vi.dynamicImportSettled();
+      await flushPromises();
+    };
+    const capture = new File(["png"], "annonce.png", { type: "image/png" });
+    POST.mockResolvedValueOnce({ data: { text: "Ingénieur DevOps\nSpeciTec, Lausanne", problem: null, limit: null } });
+    await choose(capture);
+    expect(POST.mock.calls[0]![0]).toBe("/api/offers/{offer_id}/file");
+    expect(POST.mock.calls[0]![1].params).toEqual({ path: { offer_id: 7 } });
+    const sent = POST.mock.calls[0]![1].bodySerializer() as FormData;
+    expect(sent.get("file")).toBe(capture);
+    // Rien n'est enregistré : le texte arrive dans le champ, la personne le relit, puis « Refaire la note ».
+    expect(wrapper.find<HTMLTextAreaElement>("[data-test=paste-text] [data-test=composer-input]").element.value).toBe("Ingénieur DevOps\nSpeciTec, Lausanne");
+    expect(wrapper.find("[data-test=paste-file-done]").text()).toBe("Texte du fichier repris. Relis-le, puis refais la note.");
+    expect(PUT).not.toHaveBeenCalled();
+
+    // Ce qui empêche la lecture : la phrase, et le texte du champ ne change pas.
+    POST.mockResolvedValueOnce({ data: { text: null, problem: "not-supported", limit: null } });
+    await choose(new File(["x"], "annonce.png", { type: "image/png" }));
+    expect(wrapper.find("[data-test=paste-error]").text()).toBe("Seuls les PDF, PNG et JPG sont acceptés. Colle le texte de l’annonce.");
+    POST.mockResolvedValueOnce({ data: { text: null, problem: null, limit: "Les 30 offres notées du mois sont utilisées : elles reviennent le 1er décembre." } });
+    await choose(new File(["x"], "annonce.pdf", { type: "application/pdf" }));
+    expect(wrapper.find("[data-test=paste-error]").text()).toContain("Les 30 offres notées du mois sont utilisées");
+    // Plus de 5 Mo : refusé avant l'envoi.
+    POST.mockClear();
+    await choose(new File([new Uint8Array(5 * 1024 * 1024 + 1)], "lourd.pdf", { type: "application/pdf" }));
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=paste-error]").text()).toBe("Ce fichier est trop lourd (5 Mo au plus). Colle le texte de l’annonce.");
   });
 
   it("done : la note recalculée, plus de « Provisoire », « Note refaite sur l’annonce complète. » (role=status)", async () => {

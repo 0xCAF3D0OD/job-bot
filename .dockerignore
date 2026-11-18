@@ -6,6 +6,9 @@
 !**/.env.example
 **/jobbot.env
 **/data
+# Exception : la table publique des numéros postaux (GeoNames, CC BY 4.0) fait
+# partie du code, sans aucune donnée de personne.
+!backend/src/jobbot/data
 **/node_modules
 **/.venv
 **/__pycache__

@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import type { Offer } from "../api/client";
 import { companyPlace, scoreWord, triageTags } from "../format";
 import { buildExcerpt, matchedPassages, offerText, triagePoints } from "../offerPassages";
+import { displayTitle } from "../offerTitle";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ScoreRing from "./ScoreRing.vue";
@@ -77,7 +78,7 @@ const cards = computed(() => {
         : [...triageTags(offer), ...(score == null ? [] : [scoreWord(score).word])].slice(0, 4),
       excerpt: text ? buildExcerpt(text, matchedPassages(offer), 160) : null,
       // Le nom du bouton qui retourne la carte : poste, entreprise, les notes entières (affichées sur 1 ligne).
-      label: [`${offer.title}, ${company}`, ...points.map((p) => p.text.replace(/[.\s]+$/, "")), "Retourner pour voir l’extrait"].join(". "),
+      label: [`${displayTitle(offer.title, offer)}, ${company}`, ...points.map((p) => p.text.replace(/[.\s]+$/, "")), "Retourner pour voir l’extrait"].join(". "),
       front: i === front,
       turned: flipped.value.includes(offer.id),
       kept: props.kept.includes(offer.id),
@@ -130,7 +131,7 @@ const cards = computed(() => {
             </p>
           </div>
           <div class="fan-names">
-            <b>{{ card.offer.title }}</b>
+            <b>{{ displayTitle(card.offer.title, card.offer) }}</b>
             <span>{{ card.place }}</span>
           </div>
           <div
@@ -150,7 +151,7 @@ const cards = computed(() => {
           data-test="fan-back"
         >
           <p class="fan-back-head">
-            <b>{{ card.offer.title }}</b><span>{{ card.company }}</span>
+            <b>{{ displayTitle(card.offer.title, card.offer) }}</b><span>{{ card.company }}</span>
           </p>
           <p
             v-if="card.excerpt"

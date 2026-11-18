@@ -2887,6 +2887,51 @@
         }
       }
     },
+    "/api/offers/manual/file": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read File",
+        "description": "« Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :\nun PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la\nfiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),\nune formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé\n(E-5, J-1) ; rien n'est créé ici.",
+        "operationId": "readManualOfferFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readManualOfferFile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualFileOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/manual/{offer_id}/unfill": {
       "post": {
         "tags": [
@@ -3184,6 +3229,55 @@
           },
           "409": {
             "description": "La note n'est pas en échec : rien à refaire"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/score-now": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Score Now",
+        "description": "« Noter maintenant » d'une offre « Pas encore notée » (Kevin, 17.11, Q2 ; planche\nOffreNonNotee du 18.11) : la note tout de suite, environ 10 secondes. Elle compte dans la\nformule ; épuisée, rien ne part à l'IA. Refusé sur une offre déjà notée.",
+        "operationId": "scoreOfferNow",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreNowOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "409": {
+            "description": "L'offre est déjà notée"
           },
           "422": {
             "description": "Validation Error",
@@ -3826,6 +3920,52 @@
               ],
               "title": "Basis"
             }
+          },
+          {
+            "name": "contracts",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Contract"
+              },
+              "maxItems": 5,
+              "default": [],
+              "title": "Contracts"
+            }
+          },
+          {
+            "name": "distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "15",
+                    "30",
+                    "50",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distance"
+            }
+          },
+          {
+            "name": "hide_far",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Far"
+            }
           }
         ],
         "responses": {
@@ -4318,6 +4458,65 @@
           },
           "404": {
             "description": "Offre inconnue"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/file": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read File",
+        "description": "Le texte du fichier d'une annonce, donné sur la fiche (Kevin, 17.11, Q1) : un PDF lu sans\nIA, ou une capture PNG ou JPG recopiée par l'IA. Un fichier à la fois ; il n'est ni rangé ni\njournalisé (E-5, J-1). Rien n'est enregistré ici : la personne relit le texte, puis\n« Refaire la note » l'enregistre et renote l'offre.",
+        "operationId": "readOfferFile",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readOfferFile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferFileOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
           },
           "422": {
             "description": "Validation Error",
@@ -11142,6 +11341,7 @@
             "enum": [
               "received",
               "created",
+              "pending",
               "todo"
             ],
             "title": "Status"
@@ -13348,6 +13548,20 @@
         "type": "object",
         "title": "Body_oauthCallbackForm"
       },
+      "Body_readManualOfferFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readManualOfferFile"
+      },
       "Body_readManualOfferPdf": {
         "properties": {
           "file": {
@@ -13361,6 +13575,20 @@
           "file"
         ],
         "title": "Body_readManualOfferPdf"
+      },
+      "Body_readOfferFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readOfferFile"
       },
       "Body_uploadDocument": {
         "properties": {
@@ -14382,6 +14610,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel",
@@ -14480,6 +14709,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel"
@@ -14567,6 +14797,17 @@
           "contacts"
         ],
         "title": "ContactsPage"
+      },
+      "Contract": {
+        "type": "string",
+        "enum": [
+          "cdi",
+          "cdd",
+          "stage",
+          "temporaire",
+          "non_precise"
+        ],
+        "title": "Contract"
       },
       "ContractType": {
         "type": "string",
@@ -20063,6 +20304,54 @@
         ],
         "title": "ManualDraft"
       },
+      "ManualFileOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-supported",
+                  "unreadable",
+                  "ai-off",
+                  "ai-down",
+                  "budget"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "ManualFileOut"
+      },
       "ManualPdfOut": {
         "properties": {
           "text": {
@@ -20927,6 +21216,57 @@
         ],
         "title": "MonthWeeksOut"
       },
+      "NearFacets": {
+        "properties": {
+          "views": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Views"
+          },
+          "sure": {
+            "type": "integer",
+            "title": "Sure"
+          },
+          "provisional": {
+            "type": "integer",
+            "title": "Provisional"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Rates"
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Contracts",
+            "default": []
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "views",
+          "sure",
+          "provisional",
+          "rates"
+        ],
+        "title": "NearFacets",
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors\n« Afficher n offres »."
+      },
       "NewsPreferences": {
         "properties": {
           "domain_keywords": {
@@ -21343,6 +21683,43 @@
             "type": "array",
             "title": "Rates",
             "default": []
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Contracts",
+            "default": []
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NearFacets"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distance_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance From"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
           }
         },
         "type": "object",
@@ -21352,6 +21729,54 @@
         ],
         "title": "OfferFacets",
         "description": "Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune."
+      },
+      "OfferFileOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-supported",
+                  "unreadable",
+                  "ai-off",
+                  "ai-down",
+                  "budget"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "OfferFileOut"
       },
       "OfferFiltersVisible": {
         "properties": {
@@ -21731,6 +22156,17 @@
               }
             ],
             "title": "Company Address Url"
+          },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
           },
           "employer_url": {
             "anyOf": [
@@ -24040,6 +24476,34 @@
         "title": "RhythmWeek",
         "description": "Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine."
       },
+      "ScoreNowOut": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "ScoreNowOut"
+      },
       "ScorePartOut": {
         "properties": {
           "key": {
@@ -24601,6 +25065,17 @@
               }
             ],
             "title": "Company Address Url"
+          },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
           },
           "employer_url": {
             "anyOf": [

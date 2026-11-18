@@ -6,7 +6,8 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
-from jobbot.db.models import ChunkKind, Evaluation, ProfileChunk, ScoreCorrection
+from jobbot import plans
+from jobbot.db.models import ChunkKind, Evaluation, Offer, ProfileChunk, ScoreCorrection
 from jobbot.runtime import Runtime
 from jobbot.scoring import corrections
 from jobbot.scoring import service as scoring_service
@@ -245,3 +246,41 @@ async def retry_score(request: Request, offer_id: int) -> RetryScoreOut:
     if row[0] not in (scoring_service.FINAL_EMPTY, scoring_service.FINAL_ERROR):
         raise HTTPException(status.HTTP_409_CONFLICT, "la note n'est pas en échec")
     return RetryScoreOut(score=await scoring_service.score_offer(runtime, offer_id))
+
+
+class ScoreNowOut(BaseModel):
+    # La note, ou None si elle n'a pas pu être calculée ; `limit` : la phrase de la formule
+    # épuisée (aucun appel à l'IA dans ce cas).
+    score: int | None = None
+    limit: str | None = None
+
+
+@router.post(
+    "/offers/{offer_id}/score-now",
+    operation_id="scoreOfferNow",
+    responses={
+        404: {"description": "Offre inconnue"},
+        409: {"description": "L'offre est déjà notée"},
+    },
+)
+async def score_now(request: Request, offer_id: int) -> ScoreNowOut:
+    """« Noter maintenant » d'une offre « Pas encore notée » (Kevin, 17.11, Q2 ; planche
+    OffreNonNotee du 18.11) : la note tout de suite, environ 10 secondes. Elle compte dans la
+    formule ; épuisée, rien ne part à l'IA. Refusé sur une offre déjà notée."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        # L'id vient du client : relu sous la RLS du compte (C-5).
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre inconnue")
+        score = await session.scalar(
+            select(Evaluation.score).where(Evaluation.offer_id == offer_id)
+        )
+        if score is not None:
+            raise HTTPException(status.HTTP_409_CONFLICT, "offre déjà notée")
+        if offer_id not in await plans.scored_this_month(session):
+            try:
+                await plans.check(session, plans.SCORE)
+            except plans.LimitReached as exc:
+                return ScoreNowOut(limit=str(exc))
+    return ScoreNowOut(score=await scoring_service.score_offer(runtime, offer_id))

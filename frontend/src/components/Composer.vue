@@ -118,7 +118,10 @@ async function toggleMenu(): Promise<void> {
   menu.toggle(plusButton.value);
   if (menu.open.value) {
     await nextTick();
-    document.getElementById(menuId)?.querySelector<HTMLElement>("[role=menuitem]")?.focus();
+    const opened = document.getElementById(menuId);
+    opened?.querySelector<HTMLElement>("[role=menuitem]")?.focus({ preventScroll: true });
+    // Le menu entier en vue, même dans une feuille qui défile (« Refaire la note », 17.11) : rien de caché.
+    opened?.scrollIntoView?.({ block: "nearest" });
   }
 }
 
@@ -303,6 +306,8 @@ defineExpose({ focus: () => area.value?.focus() });
         <AppIcon name="plus" />
       </button>
       <span class="composer-spacer" />
+      <!-- Des boutons de la page, à gauche de l'envoi (« Coller », « Capture ou PDF » : AjouterOffreTel, §72d). -->
+      <slot name="tools" />
       <button
         v-if="sendText"
         type="button"

@@ -8,14 +8,16 @@ nettoyé de la même façon. Dans les deux cas, l'offre est renotée tout de sui
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field, field_validator
 
-from jobbot import accounts, manual_offers
+from jobbot import accounts, manual_offers, plans
 from jobbot.auth.service import Window
+from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/offers", tags=["offers"])
+log = get_logger(__name__)
 
 NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"description": "Offre inconnue"}}
 READ_RESPONSES: dict[int | str, dict[str, Any]] = {
@@ -154,3 +156,49 @@ async def paste(request: Request, offer_id: int, body: OfferTextIn) -> OfferText
     except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
         raise _refused(exc) from None
     return OfferTextOut(saved=True, source="collé", score=score)
+
+
+class OfferFileOut(BaseModel):
+    # Le texte du fichier, à relire dans le champ avant « Refaire la note » ; sinon ce qui l'a
+    # empêché. « no-text » : rien à lire ; « too-big » : plus de 5 Mo ; « not-supported » : ni
+    # PDF, ni PNG, ni JPG ; « unreadable » ; « ai-off », « ai-down », « budget » : la capture ne
+    # peut pas être lue maintenant ; `limit` : la phrase de la formule épuisée.
+    text: str | None = None
+    problem: (
+        Literal["no-text", "too-big", "not-supported", "unreadable", "ai-off", "ai-down", "budget"]
+        | None
+    ) = None
+    limit: str | None = None
+
+
+# « Refaire la note » avec un fichier : 20 fichiers par heure et par compte (comme le PDF de
+# « Ajouter une offre »).
+file_per_account = Window(limit=20, period_s=3600)
+FILE_RESPONSES: dict[int | str, dict[str, Any]] = {
+    **NOT_FOUND,
+    429: {"description": "Trop de fichiers : « Réessaie dans n minutes »"},
+}
+
+
+@router.post("/{offer_id}/file", operation_id="readOfferFile", responses=FILE_RESPONSES)
+async def read_file(
+    request: Request, offer_id: int, file: Annotated[UploadFile, File()]
+) -> OfferFileOut:
+    """Le texte du fichier d'une annonce, donné sur la fiche (Kevin, 17.11, Q1) : un PDF lu sans
+    IA, ou une capture PNG ou JPG recopiée par l'IA. Un fichier à la fois ; il n'est ni rangé ni
+    journalisé (E-5, J-1). Rien n'est enregistré ici : la personne relit le texte, puis
+    « Refaire la note » l'enregistre et renote l'offre."""
+    if wait := file_per_account.take(f"compte-{accounts.current()}"):
+        raise _later(wait)
+    data = await file.read(manual_offers.MAX_PDF_BYTES + 1)
+    try:
+        text = await manual_offers.file_text(_runtime(request), offer_id, data)
+    except (manual_offers.OfferNotFound, manual_offers.NoAnnouncement) as exc:
+        raise _refused(exc) from None
+    except plans.LimitReached as exc:
+        return OfferFileOut(limit=str(exc))
+    except manual_offers.ReadProblem as exc:
+        log.info("offer_file_refused", offer_id=offer_id, reason=exc.reason, size=len(data))
+        return OfferFileOut(problem=exc.reason)
+    log.info("offer_file_read", offer_id=offer_id, size=len(data), chars=len(text))
+    return OfferFileOut(text=text)
