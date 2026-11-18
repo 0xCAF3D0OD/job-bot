@@ -10,6 +10,13 @@
     },
     {
       "ecran": "accueil",
+      "format": "ordinateur",
+      "regle": "d",
+      "element": "span.aj-hand",
+      "raison": "décision de Kevin du 18.11 (docs/decisions/2026-11-18-1048-titre-ordinateur.md) : « 1 candidature à envoyer » écrit à la main comme ses variantes, en Caveat Brush"
+    },
+    {
+      "ecran": "accueil",
       "format": "telephone",
       "regle": "d",
       "element": "span.home-hand-blue",
@@ -80,13 +87,6 @@
     },
     {
       "ecran": "envoyees",
-      "format": "telephone",
-      "regle": "a",
-      "element": "span.list-card-chips",
-      "raison": "les puces des Envoyées passent sur 2 lignes et sortent de la carte (le bug signalé par Kevin le 18.11) ; corrigé par la PR #869, qui retire cette ligne"
-    },
-    {
-      "ecran": "envoyees",
       "format": "ordinateur",
       "regle": "b",
       "element": "span.empty-state-pill",
@@ -147,6 +147,20 @@
       "regle": "f",
       "element": "input[switch-notify_orp]",
       "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (interrupteur de 35 × 21 px sans libellé cliquable autour)"
+    },
+    {
+      "ecran": "detail-envoyee",
+      "format": "telephone-clair",
+      "regle": "e",
+      "element": "a.sent-orp-todo.orange",
+      "raison": "voulu par Kevin le 18.11.2026 à 14 h 38 (docs/decisions/2026-11-18-1048-ligne-orp-trois-etats.md) : « À compléter pour l'ORP » garde l'orange #B4631F de la maquette, 4,43:1 sur la carte blanche. Le détail d'une envoyée n'est pas encore un des écrans du test : la ligne sert dès qu'il le devient."
+    },
+    {
+      "ecran": "detail-envoyee",
+      "format": "ordinateur-clair",
+      "regle": "e",
+      "element": "a.sent-orp-todo.orange",
+      "raison": "voulu par Kevin le 18.11.2026 à 14 h 38 (docs/decisions/2026-11-18-1048-ligne-orp-trois-etats.md) : « À compléter pour l'ORP » garde l'orange #B4631F de la maquette, 4,43:1 sur la carte blanche. Le détail d'une envoyée n'est pas encore un des écrans du test : la ligne sert dès qu'il le devient."
     }
   ]
 }

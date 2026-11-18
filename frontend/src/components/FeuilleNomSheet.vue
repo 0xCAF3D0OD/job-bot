@@ -9,10 +9,12 @@ import FieldSaveStatus from "./FieldSaveStatus.vue";
 // entière ouverte depuis « Préparer le rendez-vous », flèche « Retour » à gauche du titre. La pastille « Tout est
 // enregistré dès que tu quittes un champ », puis trois cartes : Prénom et nom, Ton conseiller ORP (pré-rempli par le
 // rendez-vous s'il est connu), Office régional. Chaque champ s'enregistre dans le compte quand on le quitte.
-const props = defineProps<{ open: boolean }>();
+// `identity` : celle de la page « Préparer le rendez-vous », qui montre le nom et l'office sous « Ton nom sur la
+// feuille » (planche PreparerRendezVous, §71) ; la même, pour que la ligne suive ce qu'on tape ici.
+const props = defineProps<{ open: boolean; identity?: ReturnType<typeof useSheetIdentity> }>();
 const emit = defineEmits<{ close: [] }>();
 
-const { values, states, load, save, edit } = useSheetIdentity();
+const { values, states, load, save, edit } = props.identity ?? useSheetIdentity();
 watch(
   () => props.open,
   (open) => {

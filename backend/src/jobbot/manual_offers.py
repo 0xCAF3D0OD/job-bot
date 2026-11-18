@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup, Tag
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import plans
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import (
     NormalizedOffer,
@@ -38,6 +39,7 @@ from jobbot.filtering.duplicates import _links, link_key
 from jobbot.filtering.service import run_filter
 from jobbot.letters.service import load_identity
 from jobbot.llm import alert as alert_llm
+from jobbot.llm import capture as capture_llm
 from jobbot.llm.client import Refused as LlmRefused
 from jobbot.llm.proposals import scrub
 from jobbot.llm.scoring import InvalidScore
@@ -696,6 +698,78 @@ def pdf_text(data: bytes) -> str:
     if len(clean) < 20:
         raise ReadProblem(PDF_NO_TEXT, paste=True, reason=PDF_NO_TEXT)
     return clean[:MAX_TEXT]
+
+
+# --- Le fichier de l'annonce sur la fiche (Kevin, 17.11, Q1) -----------------------------------
+# « Refaire la note » accepte un fichier : un PDF (lu sans IA, ci-dessus) ou une capture PNG ou JPG
+# (recopiée par l'IA, llm/capture.py). Un fichier à la fois, 5 Mo au plus ; il n'est ni rangé ni
+# journalisé (E-5, J-1). Le texte revient dans le champ ; la personne le relit, puis « Refaire la
+# note » enregistre et renote, ce qui compte l'offre dans la formule comme un texte collé.
+
+FILE_NOT_ONE = "not-supported"
+FILE_AI_OFF = "ai-off"
+FILE_AI_DOWN = "ai-down"
+FILE_BUDGET = "budget"
+CAPTURE_ESTIMATE_USD = Decimal("0.01")
+
+
+async def capture_text(
+    runtime: Runtime, offer_id: int, data: bytes, media_type: capture_llm.ImageType
+) -> str:
+    """Le texte d'une capture d'annonce, recopié par l'IA, nettoyé comme un texte collé."""
+    settings = runtime.settings
+    if not settings.llm_configured:
+        raise ReadProblem(FILE_AI_OFF, paste=True, reason=FILE_AI_OFF)
+    async with runtime.sessionmaker() as session:
+        await _load(session, offer_id)
+        # La formule : la note refaite comptera l'offre ; plus de notes ce mois, pas d'appel.
+        if offer_id not in await plans.scored_this_month(session):
+            await plans.check(session, plans.SCORE)
+        spend, budget, rate = await budget_state(session, datetime.now(UTC))
+    if spend + CAPTURE_ESTIMATE_USD * rate > budget:
+        raise ReadProblem(FILE_BUDGET, paste=True, reason=FILE_BUDGET)
+    client = scoring_service.make_client(settings)
+    try:
+        raw = await client.score(capture_llm.request_params(data, media_type))
+    except LlmRefused as exc:
+        raise ReadProblem(PDF_UNREADABLE, paste=True, reason=PDF_UNREADABLE) from exc
+    except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+        raise ReadProblem(FILE_AI_DOWN, paste=True, reason=FILE_AI_DOWN, transient=True) from exc
+    async with runtime.sessionmaker.begin() as session:
+        await record_call(session, raw, offer_id=offer_id, rate=rate, purpose="offer_capture")
+    try:
+        found = capture_llm.parse_output(raw.text)
+    except InvalidScore as exc:
+        raise ReadProblem(PDF_UNREADABLE, paste=True, reason=PDF_UNREADABLE) from exc
+    if not found.found or len(found.text.strip()) < 20:
+        raise ReadProblem(PDF_NO_TEXT, paste=True, reason=PDF_NO_TEXT)
+    async with runtime.sessionmaker() as session:
+        identity = await load_identity(session)
+    return clean_capture(found.text, identity.name)[:MAX_TEXT]
+
+
+def clean_capture(text: str, name: str | None) -> str:
+    """Le nom de la personne retiré du texte recopié, comme d'un texte collé ; lignes gardées."""
+    clean = text
+    for part in (name or "").split():
+        if len(part) > 2:
+            clean = re.sub(re.escape(part), "[nom retiré]", clean, flags=re.IGNORECASE)
+    lines = [" ".join(line.split()) for line in clean.splitlines()]
+    return "\n".join(line for line in lines if line).strip()
+
+
+async def file_text(runtime: Runtime, offer_id: int, data: bytes) -> str:
+    """Le texte d'un fichier d'annonce donné sur la fiche : PDF sans IA, PNG ou JPG par l'IA."""
+    if len(data) > MAX_PDF_BYTES:
+        raise ReadProblem(PDF_TOO_BIG, paste=True, reason=PDF_TOO_BIG)
+    if data.startswith(b"%PDF-"):
+        async with runtime.sessionmaker() as session:
+            await _load(session, offer_id)
+        return await asyncio.to_thread(pdf_text, data)
+    media_type = capture_llm.image_type(data)
+    if media_type is None:
+        raise ReadProblem(FILE_NOT_ONE, paste=True, reason=FILE_NOT_ONE)
+    return await capture_text(runtime, offer_id, data, media_type)
 
 
 ROBOTS_REFUSED = "Ce site interdit la lecture par un robot : colle le texte de l'annonce."

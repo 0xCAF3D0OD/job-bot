@@ -1,7 +1,7 @@
 // Le détail d'une candidature envoyée (§8 du 9 novembre) : mots de statut, Suivi en 5 étapes, Historique.
 import { describe, expect, it } from "vitest";
 
-import { phoneSteps, sentHistory, sentSteps, sentWords } from "./sentDetail";
+import { orpTodo, phoneSteps, sentHistory, sentSteps, sentWords } from "./sentDetail";
 import { sentWhen } from "./sentList";
 
 const now = new Date("2026-11-08T10:00:00");
@@ -108,5 +108,19 @@ describe("Téléphone : la ligne « entreprise · quand » d’une carte d’Env
     expect(sentWhen(a({ status: "refus", status_at: "2026-11-07T09:00:00Z" }), "earlier", now)).toBe("réponse hier");
     expect(sentWhen(a({ sent_at: "2026-11-03" }), "week", now)).toBe("mardi");
     expect(sentWhen(a({ sent_at: "2026-10-21" }), "earlier", now)).toBe("21 oct.");
+  });
+});
+
+describe("orpTodo : ce qui reste à faire pour l’ORP (Kevin, 18.11)", () => {
+  it("rien sans ligne ORP ni quand tout est déclaré ; sinon déclarer, puis compléter", () => {
+    expect(orpTodo(null)).toBeNull();
+    expect(orpTodo({ declared_at: "2026-10-05", missing: [] } as never)).toBeNull();
+    expect(orpTodo({ declared_at: null, missing: ["Adresse"] } as never)).toEqual({ text: "À déclarer à l’ORP", tone: "blue", test: "word-to-declare" });
+    expect(orpTodo({ declared_at: "2026-10-05", missing: ["Adresse"] } as never)).toEqual({ text: "À compléter pour l’ORP", tone: "orange", test: "word-to-complete" });
+  });
+  it("« Déclarée à l’ORP » seulement si la déclaration est complète", () => {
+    const words = (missing: string[]) => sentWords(base, { declared_at: "2026-10-05", missing } as never, now).map((w) => w.test);
+    expect(words([])).toContain("word-declared");
+    expect(words(["Adresse"])).not.toContain("word-declared");
   });
 });

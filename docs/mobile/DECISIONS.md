@@ -929,6 +929,15 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 - Un test couvre les deux cas : champ vide, adresse copiée ; champ rempli, adresse inchangée.
 - Origine : audit du 17.11, K6 (la fiche disait « Adresse trouvée » et restait « Non renseignée »).
 
+## Fichier dans « Refaire la note » et titres d'offres lisibles (Kevin, 17.11.2026, 22 h 49)
+
+- Q1 : « Refaire la note » accepte un fichier : un PDF, un PNG ou un JPG, un seul à la fois. L'usage compte dans la formule.
+  - Le PDF est lu par le serveur, sans IA. La capture PNG ou JPG est recopiée par l'IA. L'image n'est pas gardée.
+  - Le texte arrive dans le champ. La personne le relit, puis « Refaire la note » enregistre et renote, comme un texte collé.
+  - La planche OffreProvisoire dit « PDF ou Word, 10 Mo » : Kevin a choisi PDF, PNG ou JPG. La limite reste 5 Mo, celle du PDF de « Ajouter une offre ».
+- Q2 : « Noter maintenant » sur une offre « Pas encore notée » est accepté, mais attend sa planche.
+- Q3 : à l'affichage seulement, un titre tout en majuscules passe en casse normale, « | » devient « · », et les sigles connus restent intacts (AWS, DevOps, SRE, CI/CD…). Aucune donnée n'est modifiée.
+
 ## Nombres des filtres : graisse, ordinateur, choix à 0, Contrat et Distance (Kevin, 18.11.2026, 8 h 32)
 
 Réponses aux trois questions de #851 :
@@ -943,6 +952,16 @@ Réponses aux trois questions de #851 :
 
 Ordre choisi le 18.11 à 8 h 42 (issue #468) : le serveur de Contrat d'abord, puis celui de Distance, dans deux PR
 séparées.
+
+Précision de Kevin (18.11.2026, 9 h 31, choix a) : sur téléphone, les nombres sous les choix excluent les offres
+« Loin » tant que la liste les cache, comme « Afficher n offres ». Règle : le nombre du choix actif égale toujours
+celui de « Afficher n offres ». Un test compare les deux, avec et sans offres « Loin ».
+
+Contrôle avec la planche (règle de Kevin du 18.11.2026, 9 h 25 : planche à gauche, app à droite, écarts entourés) :
+la feuille Filtres du téléphone s'écartait de la planche sans décision écrite. Elle la reprend dans cette PR : titres
+de groupe en capitales 13 px gris (docs/design/regles.md §4), aide en pastille et plus courte (« À quel point l'offre
+correspond à ton profil », « Provisoire : notée sur l'extrait de l'alerte »), contour des puces à 1,5 px
+`--button-outline`. Le panneau de l'ordinateur garde l'aide longue, comme sa planche.
 
 ## « Ton nom sur la feuille » (Kevin, 18.11.2026, 8 h 39 et 8 h 50)
 
@@ -960,6 +979,28 @@ séparées.
 - « Top du jour » : jusqu'à 3 offres notées 75 et plus parmi les offres à trier, gardées ou en préparation (jamais envoyées) ; ces offres ne sont jamais dans « N offres à trier ».
 - Après le tri du jour, la feuille « N offres à trier » disparaît (aucune offre n'est plus « à trier ») ; les meilleures restent visibles dans « Top du jour ». Avant, les cartes « Offres » restaient après le tri : à Kevin de dire s'il veut une feuille pour ce cas, aucune planche ne le dessine.
 - « Relire ton CV » devient une ligne numérotée comme les autres (verbe « Relire », « ton CV ») ; l'ancienne icône document disparaît, la planche n'en dessine pas.
+
+## Filtres Contrat et Distance : les règles (Kevin, 18.11.2026, 8 h 47)
+
+Issue #468, choix A : Contrat d'abord, puis Distance, une PR chacun. La limite de 4 PR ouvertes s'applique.
+
+Contrat :
+- Une catégorie par offre : CDI, CDD, Stage, Temporaire ou Non précisé. Ni Apprentissage ni Autre.
+- Pas de devinette : si l'annonce ne le dit pas clairement, l'offre est « Non précisé ».
+- Une migration ajoute la catégorie et classe les offres existantes.
+- Une facette donne les nombres, comme Statut : « CDI · 120 ». « Non précisé » apparaît aussi, avec son nombre.
+- Un choix à 0 reste visible, grisé et sélectionnable.
+
+Distance :
+- Une table des communes tirée de la liste officielle des localités de swisstopo (open data, avec coordonnées). On
+  l'importe une seule fois, sans appel à un service externe.
+- La distance se mesure à vol d'oiseau depuis la commune de Kevin (Renens), avec `max_km`. Libellé : « Distance
+  depuis Renens », comme la maquette.
+- Une offre sans lieu reconnu va dans le choix « Lieu non précisé », avec son nombre. Elle n'est jamais exclue en
+  silence.
+- Un nombre sous chaque choix, comme Note et Taux.
+
+Tests : un filtre sur une valeur inconnue ne doit jamais faire disparaître d'offres sans le dire.
 
 ## Contrôle visuel avant toute PR d'interface (Kevin, 18.11.2026, 9 h 25)
 
@@ -990,3 +1031,38 @@ Suivre la planche EnvoyeeDetail (+Sombre) :
 - Écart 1 de la #858 : la version de la PR est gardée. Après le tri du jour, seulement « Top du jour » (75 et plus), en liste, comme AccueilV2. Le carrousel « Offres » de main disparaît.
 - Écart 2 de la #858 : une tâche bloquante ou en retard n'a pas de numéro. Elle a un rond orange vide (#B4631F, en sombre la couleur pêche), comme « Remettre les justificatifs » dans AccueilV2. « Relire ton CV » a donc ce rond, puis 2, 3, 4… pour les autres tâches. Son sous-titre reste en orange, « · 30 secondes » inclus.
 - Ordinateur (même règle, planche AujourdhuiOrdinateurV2, qui dessine le rond pour les justificatifs) : « Relire ton CV » perd son « 1 » sur fond orange et prend le même rond vide de 26 px, aligné au pixel avec le cercle à cocher des justificatifs.
+
+## Offres : pas de compteur au-dessus de la liste ; bandeau « Annuler » au-dessus du bouton central (Kevin, 18.11.2026, 10 h 48)
+
+- Point 6 : « 8 offres » au-dessus de la liste (ordinateur) est retiré. Remplace la décision du 15.11 sur ce compteur. Les nombres restent sur les groupes et dans « Afficher n offres ».
+- Point 7 : sur téléphone, le bandeau « Annuler » se place au-dessus de la barre du bas et du bouton central, 8 px au-dessus du bouton, sans jamais le couvrir. Précise §10.8 (12 px au-dessus de la barre), qui faisait recouvrir le haut du bouton.
+- Ordinateur (planche CandidaturesOrdinateurEcartee, appliquée dans la même PR) : le bandeau en bas à gauche, aligné sur le contenu, 400 × 56, couleurs inversées en sombre.
+
+## Ligne d'état ORP à trois états dans le détail d'une envoyée (Kevin, 18.11.2026, 10 h 48)
+
+Le bandeau « Il manque … / Compléter » quitte le détail d'une envoyée. La ligne ORP de la carte du haut (la ligne d'état de l'en-tête) a trois états :
+
+- « ✓ Déclarée à l'ORP » en vert, si la déclaration est faite et complète ;
+- « À déclarer à l'ORP › » en bleu, avec un lien vers la fiche ORP de la candidature ;
+- « À compléter pour l'ORP › » en orange, si la déclaration manque d'informations, avec un lien vers la même fiche.
+
+L'orange est celui de la maquette : #B4631F en clair, #F2B98E en sombre, le même orange partout (Kevin, 18.11.2026, 14 h 38, après qu'on lui a proposé #8A4A16). En clair, #B4631F n'atteint que 4,43:1 sur la carte blanche (mesuré par le script de contrôle), sous le minimum de 4,5:1 de la règle e du test d'affichage : c'est un écart connu et voulu, noté dans frontend/e2e/ecarts-connus.json avec cette décision comme raison.
+
+Même correction sur ordinateur : la carte « Pour l'ORP » disparaît, et la ligne d'état ORP va dans l'en-tête du détail.
+
+## Pause sur ordinateur : fenêtre centrée (§71, Kevin, 18.11.2026)
+
+- La planche ReglagesOrdinateurPause (§71, zip du 18.11) remplace les champs Du / Jusqu'au de la carte « Une pause » : un bouton ouvre une fenêtre centrée de 760 px avec le même calendrier de plage que le téléphone, deux mois côte à côte.
+- Rien n'est enregistré avant « Enregistrer » ; « Effacer » puis « Enregistrer » retire la pause. « Terminer la pause » reste sur la carte.
+- Ceci remplace le point « les champs Du / Jusqu'au restent » de la décision de 9 h 39.
+
+## Aujourd'hui ordinateur : « 1 candidature à envoyer » écrit à la main, sans point final (Kevin, 18.11.2026, 10 h 48)
+
+- Sur ordinateur, le titre d'un jour de rythme s'écrit comme ses variantes (« tes offres arrivent bientôt », « la suite est en plus ») : une seule ligne manuscrite, même style, sans point final. Pluriel : « 2 candidatures à envoyer ».
+- Le téléphone ne change pas.
+
+## Pause sur ordinateur : flèches de mois (Kevin, 18.11.2026, 14 h 38)
+
+- Sur ordinateur, la fenêtre de la pause montre deux mois et des flèches « < » et « > » de 44 × 44 px (« Mois précédent » / « Mois suivant ») de chaque côté des deux noms de mois, sans défilement.
+- Sur téléphone, les mois défilent verticalement, comme sur la planche ReglagesRythmePause.
+- La planche ReglagesOrdinateurPause sera mise à jour en ce sens.

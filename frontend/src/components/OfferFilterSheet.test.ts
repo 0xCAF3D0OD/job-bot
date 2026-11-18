@@ -7,7 +7,7 @@ import OfferFilterSheet from "./OfferFilterSheet.vue";
 // 20 tranches de 5 points : 10 offres de 0 à 49, 50 de 50 à 74, 13 de 75 à 84, 8 de 85 à 100 ; 3 sans note.
 const scores = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 10, 10, 10, 10, 6, 7, 2, 3, 3];
 const rates = [{ value: "all", count: 84 }, { value: "60", count: 72 }, { value: "80", count: 60 }, { value: "100", count: 33 }];
-const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates };
+const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates, contracts: [] };
 
 const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
 
@@ -26,7 +26,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.find("#sheet-score-title").text()).toBe("Note minimale, sur 100");
     expect(scores.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(scores.find("[data-test=sheet-score-all]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
+    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil");
     // Le taux d'activité, un seul choix : un groupe de radios, pas des puces (5e), titre relié.
     const rates = wrapper.find("[role=radiogroup][aria-labelledby=sheet-rate-title]");
     expect(wrapper.find("#sheet-rate-title").text()).toBe("Taux d’activité");
@@ -72,6 +72,76 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(active.attributes("aria-checked")).toBe("true");
     expect(active.find(".segmented-sub").text()).toBe("21");
     expect(close.find("[data-test=sheet-show]").text()).toBe("Afficher 21 offres");
+  });
+
+  it("Contrat : plusieurs choix, « CDI · 120 », « Non précisé » compris, un choix à 0 grisé mais cliquable", async () => {
+    const contracts = [
+      { value: "cdi", count: 120 },
+      { value: "cdd", count: 14 },
+      { value: "stage", count: 0 },
+      { value: "temporaire", count: 3 },
+      { value: "non_precise", count: 41 },
+    ];
+    const wrapper = mount(OfferFilterSheet, {
+      props: { open: true, filters: { ...DEFAULT_FILTERS, contracts: ["cdi"] }, facets: { ...facets, contracts }, total: 120, counts },
+      global: { stubs: { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } } },
+    });
+    const buttons = wrapper.findAll("[data-test^=sheet-contract-]");
+    expect(buttons.map((b) => b.text())).toEqual(["CDI · 120", "CDD · 14", "Stage · 0", "Temporaire · 3", "Non précisé · 41"]);
+    expect(wrapper.find("#sheet-contract-title").text()).toBe("Contrat");
+    expect(wrapper.find("[data-test=sheet-contract-cdi]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=sheet-contract-cdi] .icon-tick").exists()).toBe(true);
+    expect(wrapper.find("[data-test=sheet-contract-stage]").classes()).toContain("choice-empty");
+    expect(wrapper.find("[data-test=sheet-contract-stage]").attributes("disabled")).toBeUndefined();
+    // Le contrat coché égale « Afficher n offres ».
+    expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 120 offres");
+    await wrapper.find("[data-test=sheet-contract-non_precise]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: ["cdi", "non_precise"] }]);
+    await wrapper.find("[data-test=sheet-contract-cdi]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: [] }]);
+  });
+
+  it("offres « Loin » cachées ou non : le nombre du choix actif égale toujours « Afficher n offres » (Kevin, 18.11, choix a)", () => {
+    // 84 offres dont 10 « Loin » (sous 50) : la liste du téléphone les cache, le bouton dit 74.
+    const near = {
+      views: [{ value: "pending", count: 74 }, { value: "to_review", count: 9 }, { value: "later", count: 4 }, { value: "in_progress", count: 2 }],
+      sure: 70,
+      provisional: 1,
+      rates: [{ value: "all", count: 74 }, { value: "60", count: 63 }, { value: "80", count: 52 }, { value: "100", count: 30 }],
+      contracts: [{ value: "cdi", count: 60 }, { value: "cdd", count: 0 }, { value: "stage", count: 0 }, { value: "temporaire", count: 0 }, { value: "non_precise", count: 14 }],
+    };
+    const props = (far: number, total: number) => ({
+      open: true,
+      filters: DEFAULT_FILTERS,
+      facets: { ...facets, contracts: [{ value: "cdi", count: 64 }, { value: "non_precise", count: 20 }], near },
+      total,
+      counts: { ...counts, pending: 84 },
+      far,
+    });
+    const stubs = { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } };
+    const active = (wrapper: ReturnType<typeof mountSheet>) => ({
+      view: wrapper.find("[data-test=sheet-view-pending]").text(),
+      score: wrapper.find("[data-test=sheet-score-all] .segmented-sub").text(),
+      rate: wrapper.find("[data-test=sheet-rate-all] .segmented-sub").text(),
+      button: wrapper.find("[data-test=sheet-show]").text(),
+      contract: wrapper.find("[data-test=sheet-contract-non_precise]").text(),
+    });
+    // Cachées : 74 partout.
+    expect(active(mount(OfferFilterSheet, { props: props(10, 74), global: { stubs } }))).toEqual({
+      view: "Toutes · 74",
+      score: "74",
+      rate: "74",
+      button: "Afficher 74 offres",
+      contract: "Non précisé · 14",
+    });
+    // Montrées (ou aucune offre « Loin ») : 84 partout.
+    expect(active(mount(OfferFilterSheet, { props: props(0, 84), global: { stubs } }))).toEqual({
+      view: "Toutes · 84",
+      score: "84",
+      rate: "84",
+      button: "Afficher 84 offres",
+      contract: "Non précisé · 20",
+    });
   });
 
   it("un choix à 0 offre reste visible et cliquable, grisé (Kevin, 18.11)", async () => {
@@ -138,7 +208,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(group.find("[data-test=sheet-basis-all]").attributes("aria-checked")).toBe("true");
     expect(group.find("[data-test=sheet-basis-all] svg").exists()).toBe(true);
     expect(group.find("[data-test=sheet-basis-sure]").attributes("aria-checked")).toBe("false");
-    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.");
+    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte");
     await group.find("[data-test=sheet-basis-provisional]").trigger("click");
     expect(wrapper.emitted("update")).toEqual([[{ basis: "provisional" }]]);
     const chosen = mountSheet({ basis: "provisional" });

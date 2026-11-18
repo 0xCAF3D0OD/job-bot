@@ -18,7 +18,6 @@ import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
-import DateField from "../components/DateField.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsMore from "../components/SettingsMore.vue";
 import SettingsTools from "../components/SettingsTools.vue";
@@ -203,35 +202,6 @@ async function saveNumber(key: NumberKey): Promise<void> {
 
 async function saveDays(): Promise<void> {
   await persist("days", { rhythm_days: [...(form.value.rhythm_days ?? [])].sort() });
-}
-const pauseChanged = computed(
-  () =>
-    (form.value.rhythm_pause_from ?? null) !== (stored.value.rhythm_pause_from ?? null) ||
-    (form.value.rhythm_pause_until ?? null) !== (stored.value.rhythm_pause_until ?? null),
-);
-async function savePause(): Promise<void> {
-  const { rhythm_pause_from: from, rhythm_pause_until: until } = form.value;
-  if (from && until && until < from) {
-    rowErrors.value = { ...rowErrors.value, pause: "La fin vient après le début." };
-    return;
-  }
-  await persist("pause", { rhythm_pause_from: from, rhythm_pause_until: until });
-}
-// Un seul calendrier de pause ouvert (audit du 17.11, K41) : ouvrir « Du » pendant que « Jusqu’au » est ouvert referme
-// « Jusqu’au » (il est recréé, fermé), au lieu de serrer deux calendriers illisibles côte à côte.
-// Le calendrier ouvert dans la page entier sous l'en-tête collant (N20) : le focus sur le jour faisait défiler la page
-// et cachait « Retour au formulaire » sous l'en-tête. Ajusté avant l'affichage suivant, sans saut visible.
-const pauseKeys = ref({ from: 0, until: 0 });
-function onPauseClick(event: MouseEvent): void {
-  const target = event.target as HTMLElement;
-  const field = target.closest<HTMLElement>("[data-test=dt-date]")?.closest<HTMLElement>("[data-test^=pause-]");
-  if (!field) return;
-  pauseKeys.value[field.dataset.test === "pause-from" ? "until" : "from"] += 1;
-  requestAnimationFrame(() => {
-    const box = field.querySelector(".dt-panel:not(.dt-panel-full)")?.getBoundingClientRect();
-    const top = (document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0) + 8;
-    if (box?.height) scrollBy(0, box.top < top ? box.top - top : Math.min(Math.max(0, box.bottom + 8 - innerHeight), box.top - top));
-  });
 }
 async function endPause(): Promise<void> {
   form.value.rhythm_pause_from = null;
@@ -796,42 +766,35 @@ watch(
                 :error="rowErrors.pause"
                 stack
               >
+                <!-- La fenêtre centrée à calendrier de plage (ReglagesOrdinateurPause, §71 ; Kevin, 18.11, point 4) remplace les
+                     champs Du / Jusqu’au : rien n’est enregistré avant son « Enregistrer ». -->
                 <div
                   class="rhythm-pause"
                   role="group"
                   :aria-labelledby="c.labelledby"
                   :aria-describedby="c.describedby"
-                  @click.capture="onPauseClick"
                 >
-                  <DateField
-                    :key="`from-${pauseKeys.from}`"
-                    :model-value="form.rhythm_pause_from ?? null"
-                    label="Du"
-                    title="Pause à partir du"
-                    data-test="pause-from"
-                    @update:model-value="form.rhythm_pause_from = $event"
-                  />
-                  <DateField
-                    :key="`until-${pauseKeys.until}`"
-                    :model-value="form.rhythm_pause_until ?? null"
-                    label="Jusqu’au"
-                    title="Pause jusqu’au"
-                    :min="form.rhythm_pause_from ?? undefined"
-                    data-test="pause-until"
-                    @update:model-value="form.rhythm_pause_until = $event"
-                  />
-                  <!-- Enregistrée au clic d’« Enregistrer » seulement, comme la feuille du téléphone (Kevin, 18.11). -->
                   <button
-                    v-if="pauseChanged"
                     type="button"
-                    class="primary"
-                    data-test="pause-save"
-                    @click="savePause"
+                    class="secondary rhythm-pause-open"
+                    data-test="pause-open"
+                    aria-haspopup="dialog"
+                    @click="openPause"
                   >
-                    Enregistrer
+                    <svg
+                      viewBox="0 0 24 24"
+                      class="icon"
+                      aria-hidden="true"
+                    ><rect
+                      x="3"
+                      y="5"
+                      width="18"
+                      height="16"
+                      rx="2"
+                    /><path d="M3 10h18M8 3v4M16 3v4" /></svg>{{ pauseTitle }}
                   </button>
                   <button
-                    v-if="form.rhythm_pause_from && !pauseChanged"
+                    v-if="form.rhythm_pause_from"
                     type="button"
                     class="link"
                     data-test="pause-end"
@@ -1263,7 +1226,8 @@ watch(
     @close="hourSheet = false"
   />
   <PauseSheet
-    v-if="phone && active === 'rythme'"
+    v-if="active === 'rythme'"
+    :wide="!phone"
     :open="pauseSheet"
     :from="form.rhythm_pause_from ?? null"
     :until="form.rhythm_pause_until ?? null"
@@ -1277,10 +1241,9 @@ watch(
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .summary-rows > div + div { border-top: 1px solid var(--border); }
 .ai-spend { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-6) var(--space-6); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-.rhythm-pause > label input { width: min(100%, calc(var(--field-10) + var(--control-h))); }
-@media (max-width: 820px) {
-.rhythm-pause { grid-template-columns: minmax(0, 1fr); }
-}
+.rhythm-pause:has(.rhythm-pause-open) { display: flex; flex-wrap: wrap; align-items: center; }
+.rhythm-pause-open { display: inline-flex; align-items: center; gap: var(--space-2); }
+.rhythm-pause-open .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .plan-payments li { grid-template-columns: 1fr auto; }
 .setting-card-body .ai-spend { padding: var(--space-5) var(--space-6); }
 .setting-row.stack .setting-row-control .rhythm-week { flex: 1 1 100%; }
@@ -1374,9 +1337,6 @@ svg.rg-lead { fill: none; stroke: currentColor; stroke-width: 2; }
 /* Sur une rubrique seule au téléphone, l'interrupteur reste à droite du texte, comme dans Notifications (audit du
    17.11, N7) : la base de 16 rem du texte le faisait passer dessous, à gauche. */
 .settings-sub .setting-row:has(> .setting-row-control > [role="switch"]) { flex-wrap: nowrap; }
-/* Ce qui suit le calendrier ouvert passe devant l'ombre couleur de fond de son « Valider » collé (DateTimePanel, conteneur
-   étroit) : elle effaçait le libellé « Jusqu’au » sous le calendrier de « Du » (K41). */
-.rhythm-pause > .date-field:has(.dt-panel) ~ * { position: relative; z-index: 1; }
 /* Le menu d'Apparence et de « M’avertir dès » sort de sa carte : rogné par overflow: hidden, il s'ouvrait invisible
    (audit du 17.11, K40). La première et la dernière carte gardent alors l'arrondi de la section. */
 .settings-grouped :is(.setting-cards, .setting-card, .rg-list):has(.choice-menu) { overflow: visible; }

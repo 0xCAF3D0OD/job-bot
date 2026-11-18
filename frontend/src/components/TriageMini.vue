@@ -4,6 +4,7 @@ import { computed, nextTick, ref, toRef, watch } from "vue";
 import type { Offer } from "../api/client";
 import { useTriage } from "../composables/useTriage";
 import { plural } from "../format";
+import { displayTitle } from "../offerTitle";
 import AppIcon from "./AppIcon.vue";
 import OfferFan from "./OfferFan.vue";
 import TriageNone from "./TriageNone.vue";
@@ -30,7 +31,7 @@ const label = computed(() => {
   const o = current.value;
   if (!o) return "";
   const head = plural(total.value - index.value, "offre à trier", "offres à trier");
-  return `${head}, la première : ${o.title} chez ${o.company || "une entreprise non indiquée"}`;
+  return `${head}, la première : ${displayTitle(o.title, o)} chez ${o.company || "une entreprise non indiquée"}`;
 });
 </script>
 

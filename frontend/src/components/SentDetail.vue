@@ -5,11 +5,10 @@ import { api, type Application, type ApplicationStatus, type ContactsPage, type 
 import { followUpDue, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel, companyPlace } from "../format";
-import { phoneSteps as stepsOnPhone, sentHistory, sentSteps, sentWords } from "../sentDetail";
+import { orpTodo as orpTodoOf, phoneSteps as stepsOnPhone, sentHistory, sentSteps, sentWords } from "../sentDetail";
 import AppIcon from "./AppIcon.vue";
 import ApplicationInterviews from "./ApplicationInterviews.vue";
 import NewMeetingSheet from "./NewMeetingSheet.vue";
-import ApplicationOrp from "./ApplicationOrp.vue";
 import ContactQuickForm from "./ContactQuickForm.vue";
 import FollowUpCard from "./FollowUpCard.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -40,13 +39,14 @@ const followUp = computed(() => followUpDue(props.application));
 const hasInterviews = computed(
   () => props.application.status === "entretien" || !!props.application.interview_at || !!props.application.interviews?.length,
 );
-// « Pour l'ORP » reste une carte tant qu'il y a quelque chose à faire : déclarer, compléter, ou le rappel télétravail.
+// Plus de carte « Pour l'ORP » (Kevin, 18.11, points 9 et 10) : l'état ORP est sur la ligne d'état de l'en-tête, et le
+// rappel télétravail à l'étranger garde sa petite carte.
 const remoteAbroad = computed(
   () => props.application.remote_full && !/suisse|switzerland|schweiz/i.test(props.application.remote_region ?? ""),
 );
-const orpTodo = computed(() => !!props.orpRow && (!props.orpRow.declared_at || props.orpRow.missing.length > 0));
-// Téléphone (EnvoyeeDetail) : « À déclarer à l’ORP › » ouvre la fiche du mois de la candidature (« 02.11.2026 » donne
-// 2026-11), qui dit aussi ce qui manque. La frise de 4 étapes ; le trait vert va jusqu’à l’étape en cours.
+const orpTodo = computed(() => orpTodoOf(props.orpRow));
+// « À déclarer à l’ORP › » et « À compléter pour l’ORP › » ouvrent la fiche ORP de la candidature, au mois de sa date
+// (« 02.11.2026 » donne 2026-11), qui dit aussi ce qui manque. La frise de 4 étapes ; le trait vert va jusqu’à l’étape en cours.
 const ficheTo = computed(() => {
   const [, m, y] = (props.orpRow?.date ?? "").split(".");
   return { path: `/bilan/orp/candidature/${props.application.id}`, query: m && y ? { mois: `${y}-${m}` } : {} };
@@ -243,6 +243,14 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
             v-if="word.check"
             name="done"
           />{{ word.text }}</span>
+          <RouterLink
+            v-if="orpTodo"
+            :to="ficheTo"
+            :class="['sent-orp-todo', orpTodo.tone]"
+            :data-test="orpTodo.test"
+          >
+            {{ orpTodo.text }}<AppIcon name="chevron" />
+          </RouterLink>
         </p>
       </header>
       <div class="sent-card sd-steps-card">
@@ -303,14 +311,13 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
         @prepare="emit('prepare', application)"
         @practice="emit('practice', application)"
       />
-      <ApplicationOrp
-        v-if="orpTodo || remoteAbroad"
-        class="sent-card"
-        :application="application"
-        :orp-row="orpRow ?? null"
-        @edit="emit('edit', application)"
-        @changed="emit('changed')"
-      />
+      <p
+        v-if="remoteAbroad"
+        class="sent-card sd-remote"
+        data-test="remote-orp"
+      >
+        Employeur à l’étranger ? Vérifie le contrat et les assurances avec ton conseiller.
+      </p>
       <section
         class="sent-card sd-docs"
         aria-label="Documents et contacts"
@@ -433,12 +440,12 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
             name="done"
           />{{ word.text }}</span>
           <RouterLink
-            v-if="orpRow && !orpRow.declared_at"
+            v-if="orpTodo"
             :to="ficheTo"
-            class="sdt-declare"
-            data-test="word-to-declare"
+            :class="['sent-orp-todo', orpTodo.tone]"
+            :data-test="orpTodo.test"
           >
-            À déclarer à l’ORP<AppIcon name="chevron" />
+            {{ orpTodo.text }}<AppIcon name="chevron" />
           </RouterLink>
         </p>
         <ol
@@ -786,9 +793,13 @@ const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 .sdt-words .green { color: var(--success); }
 .sdt-words .grey { color: var(--text-tertiary); }
 .sdt-words .muted { color: var(--text-secondary); }
-/* « À déclarer à l’ORP › » : un lien bleu, cible de 24 px au moins dans la ligne. */
-.sdt-declare { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin: calc((var(--space-5) - var(--target-min)) / 2) 0; color: var(--primary-text); text-decoration: none; }
-.sdt-declare .icon { width: var(--sent-16); height: var(--sent-16); }
+/* La ligne d'état ORP qui reste à faire (Kevin, 18.11) : bleu « À déclarer », orange « À compléter » (#B4631F
+   de la maquette, sombre #F2B98E : --icon-peach, le même orange que l'Accueil) ; une cible de 44 px de haut sans agrandir la ligne de 20 px. */
+.sent-orp-todo { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); margin: calc((var(--space-5) - var(--target-min)) / 2) 0; text-decoration: none; }
+.sent-orp-todo.blue { color: var(--primary-text); }
+.sent-orp-todo.orange { color: var(--icon-peach); }
+.sent-orp-todo .icon { width: var(--sent-16); height: var(--sent-16); }
+.sd-remote { margin: 0; font-size: var(--font-label); line-height: var(--space-5); color: var(--text-secondary); }
 .sdt-steps { --sdt-24: 24px; position: relative; display: flex; margin: 0; padding: var(--space-4) 0 0; border-top: 1px solid var(--line); list-style: none; }
 .sdt-track { position: absolute; left: 12.5%; right: 12.5%; top: calc(var(--space-4) + var(--sdt-24) / 2 - 1px); height: var(--sent-2); background: var(--card-line); }
 .sdt-track.on { right: auto; background: var(--success); }
