@@ -223,6 +223,8 @@
   /* La barre « Postuler » du téléphone : la place qu'elle réserve sous le contenu (1.6.12). */
   --dock-h: 5.5rem;
   --weight-regular: 400;
+  /* Les nombres sous les choix des filtres (planche Filtres) : Figtree est chargée en variable, le 500 existe. */
+  --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
   /* Les chiffres des blocs date de Rendez-vous (maquette RendezVous, 6.11.2026). */

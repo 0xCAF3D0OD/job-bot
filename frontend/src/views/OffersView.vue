@@ -30,7 +30,7 @@ import EmptyState from "../components/EmptyState.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
-import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, viewPatch, type View } from "../composables/useOfferFilters";
 import { SCORE_DIG, collectWhen, dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -216,6 +216,17 @@ const pinnedId = ref<number | null>(null);
 // son statut change ensuite (écartée, gardée…), elle suit la règle commune.
 const outside = ref<Offer | null>(null);
 const outsideId = computed(() => (pinnedId.value === outside.value?.id ? pinnedId.value : null));
+// Une offre dont l'état change (gardée, écartée, remise dans Nouvelles) reste à sa place, avec son nouvel état,
+// jusqu'à ce qu'on quitte la liste : filtre changé ou page quittée (K5, réponse de Kevin à Q4 du 17.11). La liste
+// rechargée ne la rend plus : on la remet à sa position.
+const moved = new Map<number, { offer: Offer; index: number }>();
+function withMoved(listed: Offer[]): Offer[] {
+  const out = [...listed];
+  for (const [id, { offer, index }] of [...moved].sort((a, b) => a[1].index - b[1].index)) {
+    if (!out.some((o) => o.id === id)) out.splice(Math.min(index, out.length), 0, offer);
+  }
+  return out;
+}
 // « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
 const outsideNote = computed(() => {
   const offer = selected.value;
@@ -508,7 +519,7 @@ async function load(append = false): Promise<void> {
     if (!data) throw new Error("réponse vide");
     const kept = append ? null : await keptOutside(data.items);
     if (current !== requestId) return;
-    items.value = append ? [...items.value, ...data.items] : kept ? [kept, ...data.items] : data.items;
+    items.value = append ? [...items.value, ...data.items] : withMoved(kept ? [kept, ...data.items] : data.items);
     if (!append) pinnedId.value = kept ? kept.id : null;
     total.value = data.total;
     counts.value = data.counts;
@@ -550,13 +561,19 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
     notice.value = "Changement refusé.";
     return;
   }
-  // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge ; sa carte
-  // s'efface et les suivantes remontent (docs/60 §3), avec « Annuler » dans le message.
-  // Le signet de la sous-page (« Plus tard » et retour) laisse la fiche ouverte : l'offre reste dans « À traiter ».
+  // L'offre reste à sa place dans la liste, avec son nouvel état, jusqu'à ce qu'on la quitte (K5, Kevin le 17.11) ;
+  // « Voir » et « Annuler » dans le message. Le détail se referme comme avant (§36 du 16.11 sur ordinateur) ; le
+  // signet de la sous-page (« Plus tard » et retour) laisse la fiche ouverte.
   const stays = status === "preparing" || (phone.value && (status === "later" || status === "to_review"));
   if (!stays && selectedId.value === offer.id) selectedId.value = null;
   notice.value = "";
   const previous = offer.status;
+  const index = items.value.findIndex((o) => o.id === offer.id);
+  if (index >= 0 && status !== "preparing") {
+    const changed = { ...offer, status };
+    moved.set(offer.id, { offer: changed, index });
+    items.value = items.value.map((o) => (o.id === offer.id ? changed : o));
+  }
   // « Annuler » dans le bandeau commun à trait (§23 du 15.11, Kevin le 15.11 18 h 49) : le statut est déjà parti au
   // serveur, « Annuler » remet celui d'avant (docs/60 §3, 6 secondes, docs/108).
   // « Écarter » depuis « En préparation » a aussi son « Annuler » (§36 du 16.11 : la planche écarte une offre en préparation).
@@ -564,9 +581,12 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   if (status in STATUS_TEXT && previous !== status && undoable) {
     const discarded = phone.value ? "Offre écartée. Tu la retrouves dans Suivi." : "Offre écartée";
     void offerUndo({
-      message: status === "ignored" ? discarded : status === "later" ? "Offre gardée." : status === "to_review" ? "Remise dans Nouvelles." : `Passée en ${STATUS_TEXT[status]}.`,
+      message: status === "ignored" ? discarded : status === "later" ? "Déplacée dans Gardées" : status === "to_review" ? "Remise dans Nouvelles" : `Passée en ${STATUS_TEXT[status]}.`,
       commit: () => true,
+      // « Voir » : la liste où l'offre est partie (Gardées, Nouvelles) ; une offre écartée n'a pas de liste ici.
+      see: status === "later" || status === "to_review" ? () => update(viewPatch(status, filters.value.sort), true) : undefined,
       restore: async () => {
+        moved.delete(offer.id);
         await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
         await load();
         // Sur ordinateur, l'offre revient à sa place, choisie, son détail ouvert (§36, décision de Kevin du 16.11).
@@ -653,6 +673,7 @@ watch(
   () => JSON.stringify(toQuery(filters.value)),
   () => {
     outside.value = null;
+    moved.clear();
     void load();
   },
 );
