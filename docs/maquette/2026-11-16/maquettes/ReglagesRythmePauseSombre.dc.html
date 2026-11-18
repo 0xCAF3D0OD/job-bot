@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, réglages, pause</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>body{margin:0}a{cursor:pointer}</style>
+<style>/*jaBase*/body{font-family:Figtree,system-ui,sans-serif;color:#F3EEE6}button,input,textarea,select{font-family:inherit}button{color:inherit}</style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#221E1A;font-family:Figtree,system-ui,sans-serif;color:#F3EEE6}
+
+
+.ph{position:relative;width:390px;height:844px;background:#171411;border-radius:36px;overflow:hidden;box-shadow:0 0 0 1px #38322B}
+.sb{height:47px;display:flex;justify-content:space-between;align-items:center;padding:0 30px;font-weight:600;font-size:16px}
+.hdr{display:flex;align-items:center;gap:6px;height:52px;padding:0 8px}
+.ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.h1{font-size:22px;font-weight:800}
+h2{font-size:18px;font-weight:800;margin:22px 20px 10px}
+.card{margin:0 16px;background:#221E1A;border:1px solid #38322B;border-radius:20px;overflow:hidden}
+.li{display:flex;align-items:center;gap:14px;min-height:64px;padding:10px 16px}
+.li+.li{border-top:1px solid #2C2722}
+.li .t{flex:1;min-width:0}.li b{display:block;font-size:16px;font-weight:600}.li small{display:block;font-size:13px;color:#ABA398;margin-top:2px}
+.ic{width:24px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;color:#D9D2C7}
+.val{font-size:15px;color:#D9D2C7}
+.days{display:flex;justify-content:space-between;padding:16px}
+.d{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+.d.on{background:#7D95FF;color:#171411}.d.off{background:#221E1A;color:#ABA398;box-shadow:inset 0 0 0 1.5px #4E473E}
+.note{padding:0 16px 14px;font-size:13px;color:#ABA398}
+.scrim{position:absolute;inset:0;background:rgba(15,17,22,.42)}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;top:56px;background:#221E1A;border-radius:28px;box-shadow:0 12px 32px rgba(0,0,0,0.45);overflow:hidden;display:flex;flex-direction:column}
+.handle{width:36px;height:5px;border-radius:3px;background:#4E473E;margin:8px auto 0}
+.sh{display:flex;align-items:center;justify-content:center;position:relative;height:52px}
+.sh .x{position:absolute;right:20px;top:4px;width:44px;height:44px;border-radius:22px;border:1.5px solid #4E473E;background:#221E1A;display:flex;align-items:center;justify-content:center}
+.sum{margin:4px 16px 0;display:flex;align-items:center;gap:10px;height:52px;padding:0 18px;border:2px solid #F3EEE6;border-radius:26px;font-size:16px;font-weight:700}
+.sum span{margin-left:auto;font-size:14px;font-weight:600;color:#ABA398}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);padding:14px 8px 10px;border-bottom:1px solid #2C2722;font-size:13px;font-weight:700;color:#ABA398;text-align:center}
+.cal{flex:1;overflow:hidden;padding:0 8px}
+.m{text-align:center;font-size:16px;font-weight:700;margin:14px 0 8px}
+.g{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
+.c{position:relative;height:44px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600}
+.c i{position:relative;z-index:1;width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-style:normal}
+.c.past i{color:#B8B3A8;font-weight:500}
+.c.band{background:#232B45}.c.rl{border-radius:22px 0 0 22px}.c.rr{border-radius:0 22px 22px 0}
+.c.bl{background:linear-gradient(90deg,transparent 50%,#232B45 50%)}
+.c.br{background:linear-gradient(90deg,#232B45 50%,transparent 50%)}
+.c.end i{background:#7D95FF;color:#171411;font-weight:800}
+.c.today i{box-shadow:inset 0 0 0 1.5px #F3EEE6}
+.c.rdv::after{content:"";position:absolute;bottom:2px;width:6px;height:6px;border-radius:3px;background:#F2B98E;z-index:2}
+.c.band.rdv::after{bottom:3px}
+.leg{display:flex;gap:16px;justify-content:center;padding:10px 0 0;font-size:13px;color:#D9D2C7}
+.leg b{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.warn{margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#3A281E;font-size:14px;line-height:20px;color:#D9D2C7;display:flex;gap:10px}
+.ft{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 26px;border-top:1px solid #2C2722}
+.ft .lk{height:44px;display:flex;align-items:center;padding:0 8px;font-size:16px;font-weight:700;color:#F3EEE6}
+.ft .p{height:52px;padding:0 30px;border-radius:26px;background:#7D95FF;color:#171411;font-size:16px;font-weight:700;display:flex;align-items:center}
+.home{position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#F3EEE6}
+a{color:inherit;text-decoration:none}button{border:0;background:none;padding:0;cursor:pointer;font:inherit}</style>
+</helmet>
+<div class="ph" style="width:390px;height:844px;border-radius:0;box-shadow:none"><div class="hdr"><a class="ib" href="ReglagesSombre.dc.html" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a><span class="h1">Rythme</span></div><h2>Jours de recherche</h2><div class="card"><div class="days"><span class="d on">L</span><span class="d on">M</span><span class="d on">M</span><span class="d on">J</span><span class="d on">V</span><span class="d off">S</span><span class="d off">D</span></div><div class="note">jobA1 cherche des offres du lundi au vendredi.</div></div><h2>Message du jour</h2><div class="card"><a href="#" class="li"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="t"><b>Heure du message</b><small>Quand jobA1 t'envoie les nouvelles offres</small></span><span class="val">8 h 00</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></a></div><h2>Pause</h2><div class="card"><div class="li"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span><span class="t"><b>Du 22 déc. au 4 janv.</b><small>Ni recherche ni message, 14 jours</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></div></div><div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Pause"><div class="handle"></div><div class="sh"><b style="font-size:17px">Pause</b><a class="x" href="ReglagesRythmeSombre.dc.html" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F3EEE6" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div><div class="sum"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>22 déc. → 4 janv.<span>14 jours</span></div><div class="wk"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div><div class="cal"><div class="m">Décembre 2026</div><div class="g"><span class="c"></span><span class="c past" aria-disabled="true"><i>1</i></span><span class="c past" aria-disabled="true"><i>2</i></span><span class="c past" aria-disabled="true"><i>3</i></span><span class="c past" aria-disabled="true"><i>4</i></span><span class="c past" aria-disabled="true"><i>5</i></span><span class="c past" aria-disabled="true"><i>6</i></span><span class="c past" aria-disabled="true"><i>7</i></span><span class="c past" aria-disabled="true"><i>8</i></span><span class="c past" aria-disabled="true"><i>9</i></span><span class="c past" aria-disabled="true"><i>10</i></span><span class="c past" aria-disabled="true"><i>11</i></span><span class="c past" aria-disabled="true"><i>12</i></span><span class="c past" aria-disabled="true"><i>13</i></span><span class="c past" aria-disabled="true"><i>14</i></span><span class="c past" aria-disabled="true"><i>15</i></span><span class="c past" aria-disabled="true"><i>16</i></span><span class="c past" aria-disabled="true"><i>17</i></span><span class="c today"><i>18</i></span><span class="c "><i>19</i></span><span class="c "><i>20</i></span><span class="c "><i>21</i></span><span class="c end bl"><i>22</i></span><span class="c band"><i>23</i></span><span class="c band"><i>24</i></span><span class="c band"><i>25</i></span><span class="c band"><i>26</i></span><span class="c band rr"><i>27</i></span><span class="c band rl"><i>28</i></span><span class="c band rdv"><i>29</i></span><span class="c band"><i>30</i></span><span class="c band rr"><i>31</i></span></div><div class="m">Janvier 2027</div><div class="g"><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c band rl"><i>1</i></span><span class="c band"><i>2</i></span><span class="c band rr"><i>3</i></span><span class="c end"><i>4</i></span><span class="c "><i>5</i></span><span class="c "><i>6</i></span><span class="c "><i>7</i></span><span class="c "><i>8</i></span><span class="c "><i>9</i></span><span class="c "><i>10</i></span></div></div><div class="warn"><b style="flex:none;width:8px;height:8px;border-radius:4px;background:#F2B98E;margin-top:6px"></b><span>Ton rendez-vous ORP du 29 déc. tombe pendant la pause. Il reste dans ton agenda.</span></div><div class="ft"><a class="lk" href="ReglagesRythmeSombre.dc.html">Effacer</a><a class="p" href="ReglagesRythmeSombre.dc.html">Enregistrer</a></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

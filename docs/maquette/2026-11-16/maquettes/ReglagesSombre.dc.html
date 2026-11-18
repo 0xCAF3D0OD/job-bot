@@ -20,18 +20,19 @@ a{color:#7D95FF}a:hover{color:#AEBDFF}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
 </style>
+<style>/*jaBase*/body{font-family:Figtree,system-ui,sans-serif;color:#F3EEE6}button,input,textarea,select{font-family:inherit}button{color:inherit}</style>
 </helmet>
 <div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #171411; color: #F3EEE6; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
 
 <header style="flex: none; display: flex; align-items: center; gap: 4px; padding: 12px 8px 4px">
-<a href="Compte.dc.html" aria-label="Retour au compte" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #F3EEE6"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<a href="CompteSombre.dc.html" aria-label="Retour au compte" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #F3EEE6"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
 <h1 style="margin: 0; font-size: 22px; font-weight: 700">Réglages</h1>
 </header>
 
 <main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding: 10px 20px 28px">
 
 <section aria-labelledby="r-notif" style="display: flex; flex-direction: column; gap: 8px">
-<h2 id="r-notif" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #ABA398; text-transform: uppercase; letter-spacing: 0.6px">Notifications</h2>
+<h2 id="r-notif" style="margin: 0 4px; font-size: 18px; font-weight: 800; color: #F3EEE6">Notifications</h2>
 <ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden">
 <sc-for list="{{notifs}}" as="n" hint-placeholder-count="4">
 <li style="{{n.rowStyle}}">
@@ -39,33 +40,35 @@ a{color:#7D95FF}a:hover{color:#AEBDFF}
 <button type="button" role="switch" aria-checked="{{n.checked}}" aria-labelledby="{{n.id}}" onClick="{{n.toggle}}" style="{{n.switchStyle}}"><span style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.2)"></span></button>
 </li>
 </sc-for>
-<li style="display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #2C2722"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600">M’avertir dès</span><span style="font-size: 13px; line-height: 18px; color: #ABA398">Niveau de correspondance minimum</span></span><div role="group" aria-label="M’avertir dès" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #2C2722; border-radius: 14px"><sc-for list="{{niveaux}}" as="t" hint-placeholder-count="3"><button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for></div></li>
+<li style="border-bottom: 1px solid #2C2722"><a href="#" onClick="{{openNiv}}" aria-haspopup="dialog" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 10px 0"><span style="font-size: 16px; font-weight: 600">M’avertir dès</span><span style="font-size: 13px; line-height: 18px; color: #ABA398">Niveau de correspondance minimum</span></span><span style="font-size: 15px; color: #ABA398">{{niv}}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
 <li style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 14px"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 10px 0"><span style="font-size: 16px; font-weight: 600">Notification de test</span><span style="font-size: 13px; line-height: 18px; color: #ABA398">Un message sur ce téléphone, pour vérifier</span></span><button type="button" style="flex: none; height: 40px; padding: 0 16px; border: 1.5px solid #4E473E; border-radius: 20px; background: #221E1A; font-family: inherit; font-size: 15px; font-weight: 700; color: #F3EEE6">Envoyer</button></li>
 </ul>
 </section>
 
 <section aria-labelledby="r-aff" style="display: flex; flex-direction: column; gap: 8px">
-<h2 id="r-aff" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #ABA398; text-transform: uppercase; letter-spacing: 0.6px">Affichage</h2>
-<div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; background: #221E1A; border: 1px solid #38322B; border-radius: 18px">
-<span style="font-size: 16px; font-weight: 600">Apparence</span>
-<div role="group" aria-label="Apparence" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #2C2722; border-radius: 14px">
-<sc-for list="{{themes}}" as="t" hint-placeholder-count="3"><button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for>
-</div>
-</div>
-<ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden">
-<li style="border-bottom: 1px solid #2C2722"><a href="ReglagesLangue.dc.html" aria-haspopup="dialog" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; font-size: 16px; font-weight: 600">Langue</span><span style="font-size: 15px; color: #ABA398">Français</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<h2 id="r-aff" style="margin: 0 4px; font-size: 18px; font-weight: 800; color: #F3EEE6">Affichage</h2>
+<ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden"><li style="border-bottom: 1px solid #2C2722"><a href="#" onClick="{{openTheme}}" aria-haspopup="dialog" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; font-size: 16px; font-weight: 600">Apparence</span><span style="font-size: 15px; color: #ABA398">{{theme}}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<li style="border-bottom: 1px solid #2C2722"><a href="ReglagesLangueSombre.dc.html" aria-haspopup="dialog" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; font-size: 16px; font-weight: 600">Langue</span><span style="font-size: 15px; color: #ABA398">Français</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
 <li><a href="#texte" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; font-size: 16px; font-weight: 600">Taille du texte</span><span style="font-size: 15px; color: #ABA398">Selon le téléphone</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
 </ul>
 </section>
 
 <section aria-labelledby="r-ext" style="display: flex; flex-direction: column; gap: 8px">
-<h2 id="r-ext" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #ABA398; text-transform: uppercase; letter-spacing: 0.6px">Extension du navigateur</h2>
+<h2 id="r-ext" style="margin: 0 4px; font-size: 18px; font-weight: 800; color: #F3EEE6">Extension du navigateur</h2>
 <ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden"><li><a href="#navigateurs" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 10px 0"><span style="font-size: 16px; font-weight: 600">Navigateurs reliés · 2</span><span style="font-size: 13px; line-height: 18px; color: #ABA398">Firefox sur Mac, Firefox sur Windows</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li></ul>
 <span style="align-self: flex-start; margin: 2px 4px 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #232B45; color: #AEBDFF; font-size: 13px; line-height: 18px; font-weight: 600">L’extension s’installe depuis ton ordinateur</span>
 </section>
 
+<section aria-labelledby="r-rech" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="r-rech" style="margin: 0 4px; font-size: 18px; font-weight: 800; color: #F3EEE6">Recherche</h2>
+<ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden">
+<li style="border-bottom: 1px solid #2C2722"><a href="ReglagesRythmeSombre.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Rythme</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<li><a href="ReglagesOutilsSombre.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Recherche et outils</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+</ul>
+</section>
+
 <section aria-labelledby="r-data" style="display: flex; flex-direction: column; gap: 8px">
-<h2 id="r-data" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #ABA398; text-transform: uppercase; letter-spacing: 0.6px">Mes données</h2>
+<h2 id="r-data" style="margin: 0 4px; font-size: 18px; font-weight: 800; color: #F3EEE6">Mes données</h2>
 <ul style="margin: 0; padding: 0; list-style: none; background: #221E1A; border: 1px solid #38322B; border-radius: 18px; overflow: hidden">
 <li style="border-bottom: 1px solid #2C2722"><a href="#export" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Exporter mes données</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
 <li style="border-bottom: 1px solid #2C2722"><a href="#ia" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8Z"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Charte d'utilisation de l'IA</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li><li><a href="#etat" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #F3EEE6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7D95FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"></path></svg><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 8px 0"><span style="font-size: 16px; font-weight: 600">État du service</span><span style="font-size: 13px; line-height: 18px; color: #ABA398">Collecte des offres, IA et e-mails</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ABA398" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
@@ -87,7 +90,7 @@ a{color:#7D95FF}a:hover{color:#AEBDFF}
 </div>
 </sc-if>
 
-</div>
+<sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}"><button type="button" tabindex="-1" aria-hidden="true" onClick="{{closeSheet}}" style="position: absolute; inset: 0; border: 0; padding: 0; background: rgba(27,31,42,0.32); cursor: default"></button><div role="dialog" aria-modal="true" aria-labelledby="sh-t" class="sheet" style="position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 20px 20px 16px; background: #221E1A; border-radius: 28px; box-shadow: 0 12px 32px rgba(27,31,42,.2)"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><h2 id="sh-t" style="margin: 0; font-size: 20px; font-weight: 800">{{sheetTitle}}</h2><button type="button" aria-label="Fermer" onClick="{{closeSheet}}" style="flex: none; width: 44px; height: 44px; box-sizing: border-box; border: 1.5px solid #4E473E; border-radius: 22px; background: #221E1A; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F3EEE6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div><p style="margin: 4px 0 8px; font-size: 14px; line-height: 20px; color: #ABA398">{{sheetHint}}</p><div role="radiogroup" aria-labelledby="sh-t"><sc-for list="{{opts}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0; border: 0; border-top: 1px solid #2C2722; background: transparent; font-family: inherit; text-align: left; color: #F3EEE6; cursor: pointer"><span style="{{o.dot}}"><span style="{{o.inner}}"></span></span><span style="flex: 1; display: flex; flex-direction: column"><span style="{{o.lab}}">{{o.label}}</span><span style="font-size: 13px; color: #ABA398">{{o.hint}}</span></span></button></sc-for></div></div></sc-if></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
@@ -97,6 +100,10 @@ const on = s.on || { offres: true, relances: true, orp: true, mail: false };
 const theme = s.theme || 'Auto'; const niv = s.niv || 'Proche';
 const sw = (v) => 'flex: none; width: 52px; height: 32px; padding: 3px; border-radius: 16px; border: 0; cursor: pointer; display: flex; transition: background-color .2s; ' + (v ? 'background: #7D95FF; justify-content: flex-end' : 'background: #6B645A; justify-content: flex-start');
 const seg = (v) => 'height: 44px; border: 0; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; ' + (v ? 'background: #4E473E; font-weight: 700; color: #F3EEE6' : 'background: transparent; font-weight: 600; color: #C9C2B8');
+const opt = (cur, t, hint, set) => { const v = t === cur; return { label: t, hint: hint, checked: v ? 'true' : 'false', pick: set, dot: 'flex: none; width: 22px; height: 22px; box-sizing: border-box; border-radius: 11px; border: 2px solid ' + (v ? '#F3EEE6' : '#4E473E') + '; display: flex; align-items: center; justify-content: center', inner: v ? 'width: 10px; height: 10px; border-radius: 5px; background: #F3EEE6' : 'display: none', lab: 'font-size: 16px; font-weight: ' + (v ? 700 : 500) }; };
+const sheet = s.sheet || '';
+const nivs = [['Très proche', '85 et plus'], ['Proche', '75 et plus'], ['À creuser', '50 et plus']];
+const ths = [['Clair', ''], ['Sombre', ''], ['Auto', 'Comme le téléphone']];
 const rows = [
 ['offres', 'Nouvelles offres', 'Quand une offre atteint le niveau choisi'],
 ['relances', 'Relances', 'Une candidature attend une réponse depuis 7 jours'],
@@ -112,6 +119,11 @@ toggle: () => this.setState({ on: Object.assign({}, on, { [k]: !on[k] }) })
 })),
 niveaux: ['Très proche', 'Proche', 'À creuser'].map((t) => ({ label: t, pressed: t === niv ? 'true' : 'false', style: seg(t === niv).replace('height: 44px','height: 40px; padding: 0 6px; font-size: 13px'), pick: () => this.setState({ niv: t }) })),
 themes: ['Clair', 'Sombre', 'Auto'].map((t) => ({ label: t, pressed: t === theme ? 'true' : 'false', style: seg(t === theme), pick: () => this.setState({ theme: t }) })),
+niv: niv, theme: theme, sheet: !!sheet,
+sheetTitle: sheet === 'niv' ? 'M’avertir dès' : 'Apparence',
+sheetHint: sheet === 'niv' ? 'Niveau de correspondance minimum' : 'Le thème de jobA1 sur ce téléphone',
+opts: (sheet === 'niv' ? nivs : ths).map(([t, h]) => opt(sheet === 'niv' ? niv : theme, t, h, () => this.setState(sheet === 'niv' ? { niv: t, sheet: '' } : { theme: t, sheet: '' }))),
+openNiv: () => this.setState({ sheet: 'niv' }), openTheme: () => this.setState({ sheet: 'theme' }), closeSheet: () => this.setState({ sheet: '' }),
 dlg: !!s.dlg,
 openDelete: () => this.setState({ dlg: true }),
 closeDelete: () => this.setState({ dlg: false })

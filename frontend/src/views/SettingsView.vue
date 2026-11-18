@@ -21,6 +21,8 @@ import AppIcon from "../components/AppIcon.vue";
 import DateField from "../components/DateField.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsMore from "../components/SettingsMore.vue";
+import SettingsTools from "../components/SettingsTools.vue";
+import PauseSheet from "../components/PauseSheet.vue";
 import SettingsSection from "../components/SettingsSection.vue";
 import ChoiceMenu from "../components/ChoiceMenu.vue";
 import ChoiceSheet from "../components/ChoiceSheet.vue";
@@ -275,6 +277,65 @@ async function setThreshold(value: number): Promise<void> {
   form.value.notify_score_threshold = value;
   await persist("threshold", { notify_score_threshold: value });
 }
+// Rythme sur téléphone (planche ReglagesRythme du 18.11, §70). Les jours en ronds de 44 px (aria-pressed), avec une
+// phrase de résumé ; le dernier jour choisi ne se retire pas (règle de main, docs/110).
+function toggleDay(day: number): void {
+  const days = form.value.rhythm_days ?? [];
+  if (days.includes(day) && days.length === 1) return;
+  form.value.rhythm_days = days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
+  void saveDays();
+}
+const dayNote = computed(() => {
+  const days = [...(form.value.rhythm_days ?? [])].sort();
+  if (days.join() === "0,1,2,3,4") return "jobA1 cherche des offres du lundi au vendredi.";
+  return `jobA1 cherche des offres le ${days.map((d) => WEEK[d]!.label.toLowerCase()).join(", ")}.`;
+});
+// « Heure du message » : une feuille à choix unique. « Dès qu’elles arrivent » (fonction de main, absente de la
+// planche) y reste, en premier choix.
+const hourSheet = ref(false);
+const HOUR_CHOICES = [
+  { value: "instant", label: "Dès qu’elles arrivent", hint: "Un message par offre, dès qu’elle est notée", test: "hour-instant" },
+  ...HOURS.map((h) => ({ value: String(h), label: `${h} h 00`, test: `hour-${h}` })),
+];
+const hourChoice = computed({
+  get: () => (form.value.offers_notify_mode === "instant" ? "instant" : String(form.value.offers_notify_hour ?? 9)),
+  set: (value: string) => {
+    if (value === "instant") form.value.offers_notify_mode = "instant";
+    else {
+      form.value.offers_notify_mode = "daily";
+      form.value.offers_notify_hour = Number(value);
+    }
+    void saveMode();
+  },
+});
+const hourLabel = computed(() => HOUR_CHOICES.find((c) => c.value === hourChoice.value)?.label ?? "");
+// La pause (ReglagesRythmePause) : la feuille à calendrier de plage, enregistrée par « Enregistrer ». Le prochain
+// rendez-vous ORP y est marqué : lu à la première ouverture.
+const pauseSheet = ref(false);
+const meetingAt = ref<string | null>(null);
+let meetingAsked = false;
+function openPause(): void {
+  pauseSheet.value = true;
+  if (meetingAsked) return;
+  meetingAsked = true;
+  api
+    .GET("/api/orp-meeting")
+    .then(({ data }) => (meetingAt.value = data?.meeting?.starts_at ?? null))
+    .catch(() => undefined);
+}
+async function applyPause(from: string | null, until: string | null): Promise<void> {
+  pauseSheet.value = false;
+  form.value.rhythm_pause_from = from;
+  form.value.rhythm_pause_until = from ? until : null;
+  await persist("pause", { rhythm_pause_from: form.value.rhythm_pause_from, rhythm_pause_until: form.value.rhythm_pause_until });
+}
+const pauseShort = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+const pauseTitle = computed(() => {
+  const { rhythm_pause_from: from, rhythm_pause_until: until } = form.value;
+  if (!from) return "Aucune pause";
+  const day = (value: string) => pauseShort.format(new Date(`${value}T12:00:00`));
+  return until ? `Pause du ${day(from)} au ${day(until)}` : `Pause dès le ${day(from)}`;
+});
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
 const owner = computed(() => Boolean(me.value?.is_owner));
@@ -301,6 +362,8 @@ watch(
 const SECTIONS = [
   { id: "recherche", label: "Objectif ORP et sites" },
   { id: "rythme", label: "Rythme" },
+  // « Recherche et outils » (planche ReglagesOutils du 18.11, §70) : ouverte depuis la section Recherche des Réglages.
+  { id: "recherche-outils", label: "Recherche et outils" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
   { id: "affichage", label: "Affichage" },
@@ -333,6 +396,17 @@ const active = computed<SectionId>(() => {
 // revient au compte. Sans rubrique, l'adresse mène à la page Compte sur téléphone, aux notifications sur ordinateur
 // (router.ts).
 const grouped = computed(() => (phone.value || wide.value) && groupSet.value.has(active.value));
+// Rythme et « Recherche et outils » sur téléphone (§70) : des listes à la manière de la page Réglages.
+const listPage = computed(() => active.value === "recherche-outils" || (phone.value && active.value === "rythme"));
+// La flèche du téléphone : Rythme et « Recherche et outils » reviennent aux Réglages ; une rubrique ouverte depuis
+// « Recherche et outils » y revient ; les autres, au Compte.
+const phoneBack = computed(() => {
+  if (listPage.value) return "/reglages?rubrique=notifications";
+  void route.fullPath;
+  const back = (history.state as { back?: unknown } | null)?.back;
+  return typeof back === "string" && back.includes("rubrique=recherche-outils") ? back : "/compte";
+});
+const toolsReady = ref(false);
 const shows = (id: SectionId): boolean => (grouped.value ? groupSet.value.has(id) : active.value === id);
 const label = computed(() =>
   grouped.value ? "Réglages" : (sections.value.find((s) => s.id === active.value)?.label ?? "Réglages"),
@@ -394,7 +468,7 @@ function restoreRow(): void {
   });
 }
 watch(
-  () => grouped.value && allReady.value,
+  () => (grouped.value && allReady.value) || (active.value === "recherche-outils" && toolsReady.value),
   (ready) => ready && restoreRow(),
 );
 usePageReady("settings", () => allReady.value);
@@ -417,9 +491,9 @@ watch(
     class="rg-phone-head"
   >
     <RouterLink
-      to="/compte"
+      :to="phoneBack"
       class="rg-back"
-      aria-label="Retour au compte"
+      :aria-label="phoneBack === '/compte' ? 'Retour au compte' : 'Retour'"
       data-test="settings-back"
     >
       <AppIcon name="arrow-left" />
@@ -447,7 +521,7 @@ watch(
   </PageHero>
   <section class="band">
     <div
-      :class="['settings-layout', grouped ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && grouped }]"
+      :class="['settings-layout', grouped || listPage ? 'settings-grouped' : 'settings-sub', { 'settings-wide': wide && grouped, 'settings-phone': phone && (grouped || listPage) }]"
       @click.capture="rememberRow"
     >
       <h1
@@ -562,8 +636,112 @@ watch(
           />
         </SettingsSection>
 
+        <!-- Rythme sur téléphone (planche ReglagesRythme du 18.11, §70) : Jours de recherche, Message du jour, Pause. -->
+        <template v-if="active === 'rythme' && phone">
+          <SettingsSection
+            id="rythme"
+            title="Jours de recherche"
+            cards
+          >
+            <div
+              v-if="loaded"
+              class="setting-card rg-days-card"
+              data-test="rhythm-form"
+            >
+              <div
+                class="rg-days"
+                role="group"
+                aria-label="Jours de recherche"
+              >
+                <button
+                  v-for="day in WEEK"
+                  :key="day.value"
+                  type="button"
+                  :class="['rg-day', { 'rg-day-on': form.rhythm_days?.includes(day.value) }]"
+                  :aria-pressed="form.rhythm_days?.includes(day.value) ? 'true' : 'false'"
+                  :aria-label="day.label"
+                  :aria-disabled="form.rhythm_days?.length === 1 && form.rhythm_days.includes(day.value) ? 'true' : undefined"
+                  :data-test="`rhythm-day-${day.value}`"
+                  @click="toggleDay(day.value)"
+                >
+                  {{ day.label.charAt(0) }}
+                </button>
+              </div>
+              <p
+                class="rg-sub rg-days-note"
+                role="status"
+                data-test="rhythm-note"
+              >
+                {{ rowErrors.days || dayNote }}
+              </p>
+            </div>
+            <LoadingBlocks
+              v-else
+              :heights="['6.5rem']"
+            />
+          </SettingsSection>
+          <SettingsSection
+            id="rythme-message"
+            title="Message du jour"
+            cards
+          >
+            <div class="rg-list rg-tools">
+              <button
+                type="button"
+                class="rg-link-row rg-link-two"
+                aria-haspopup="dialog"
+                data-test="rhythm-hour-row"
+                @click="hourSheet = true"
+              >
+                <AppIcon
+                  name="clock"
+                  class="rg-lead"
+                />
+                <span class="rg-label">Heure du message<span class="rg-sub">Quand jobA1 t’envoie les nouvelles offres</span></span>
+                <span class="rg-value">{{ hourLabel }}</span>
+                <AppIcon name="chevron" />
+              </button>
+            </div>
+          </SettingsSection>
+          <SettingsSection
+            id="rythme-pause"
+            title="Pause"
+            cards
+          >
+            <div class="rg-list rg-tools">
+              <button
+                type="button"
+                class="rg-link-row rg-link-two"
+                aria-haspopup="dialog"
+                data-test="rhythm-pause-row"
+                @click="openPause"
+              >
+                <svg
+                  class="icon rg-lead"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                ><rect
+                  x="6"
+                  y="5"
+                  width="4"
+                  height="14"
+                  rx="1"
+                /><rect
+                  x="14"
+                  y="5"
+                  width="4"
+                  height="14"
+                  rx="1"
+                /></svg>
+                <span class="rg-label">{{ pauseTitle }}<span class="rg-sub">{{ rowErrors.pause || (form.rhythm_pause_from ? "Ni offres ni message pendant la pause" : "Arrête les recherches quelques jours") }}</span></span>
+                <AppIcon name="chevron" />
+              </button>
+            </div>
+          </SettingsSection>
+        </template>
+
         <SettingsSection
-          v-if="active === 'rythme'"
+          v-if="active === 'rythme' && !phone"
           id="rythme"
           title="Rythme"
           cards
@@ -951,6 +1129,47 @@ watch(
           />
         </SettingsSection>
 
+        <!-- Recherche (planche Reglages du 18.11, §70) : Rythme et « Recherche et outils », sur téléphone. -->
+        <SettingsSection
+          v-if="phone && grouped"
+          id="recherche-reglages"
+          title="Recherche"
+          cards
+        >
+          <div class="rg-list rg-tools">
+            <RouterLink
+              to="/reglages?rubrique=rythme"
+              class="rg-link-row"
+              data-test="account-rhythm"
+            >
+              <AppIcon
+                name="clock"
+                class="rg-lead"
+              />
+              <span class="rg-label">Rythme</span>
+              <AppIcon name="chevron" />
+            </RouterLink>
+            <RouterLink
+              to="/reglages?rubrique=recherche-outils"
+              class="rg-link-row"
+              data-test="account-research-tools"
+            >
+              <AppIcon
+                name="search"
+                class="rg-lead"
+              />
+              <span class="rg-label">Recherche et outils</span>
+              <AppIcon name="chevron" />
+            </RouterLink>
+          </div>
+        </SettingsSection>
+
+        <SettingsTools
+          v-if="active === 'recherche-outils'"
+          :orp-target="form.orp_monthly_target"
+          @ready="toolsReady = true"
+        />
+
         <SettingsSection
           v-if="active === 'formule'"
           id="formule"
@@ -1019,6 +1238,24 @@ watch(
     :choices="THRESHOLD_OPTIONS"
     @close="thresholdSheet = false"
   />
+  <ChoiceSheet
+    v-if="phone && active === 'rythme'"
+    v-model="hourChoice"
+    :open="hourSheet"
+    title="Heure du message"
+    hint="Quand jobA1 t’envoie les nouvelles offres"
+    :choices="HOUR_CHOICES"
+    @close="hourSheet = false"
+  />
+  <PauseSheet
+    v-if="phone && active === 'rythme'"
+    :open="pauseSheet"
+    :from="form.rhythm_pause_from ?? null"
+    :until="form.rhythm_pause_until ?? null"
+    :meeting="meetingAt"
+    @close="pauseSheet = false"
+    @save="applyPause"
+  />
 </template>
 
 <style>
@@ -1080,7 +1317,15 @@ button.account-delete-export { font-size: inherit; color: var(--primary-text); j
 .settings-grouped .rg-tap { cursor: pointer; }
 .rg-value-button { display: inline-flex; align-items: center; gap: var(--rg-6); min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-size: var(--rg-15); color: var(--text-secondary); cursor: pointer; }
 .rg-value-button .icon { width: 18px; height: 18px; }
-.settings-grouped .rg-lead { width: 20px; height: 20px; color: var(--primary-graphic); }
+.settings-grouped .rg-lead { flex: none; width: 20px; height: 20px; color: var(--primary-graphic); }
+/* Rythme (§70) : sept ronds de 44 px, plein bleu = choisi ; l’icône de pause dessinée en ligne. */
+.rg-days-card { padding: var(--space-4); }
+.rg-days { display: flex; justify-content: space-between; }
+.settings-grouped .rg-tools .rg-lead { color: var(--row-icon); }
+.rg-day { flex: none; display: grid; place-items: center; width: 44px; min-width: 0; height: 44px; padding: 0; border: 0; border-radius: var(--radius-pill); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line-strong); color: var(--text-secondary); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
+.rg-day-on { background: var(--action); box-shadow: none; color: var(--on-action); }
+.settings-grouped .rg-days-note { margin: var(--space-3) 0 0; }
+svg.rg-lead { fill: none; stroke: currentColor; stroke-width: 2; }
 .settings-grouped .rg-link-two { padding-block: var(--rg-12); }
 .settings-grouped .rg-sub { display: block; margin-top: var(--space-1); }
 .settings-grouped [data-test=delete-form] .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
