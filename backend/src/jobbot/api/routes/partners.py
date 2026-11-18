@@ -284,7 +284,7 @@ class GetemallApplication(BaseModel):
     id: int
     job_title: str
     company: str
-    # Tel quel : en_attente, relancee, entretien, refus, engagement, sans_reponse.
+    # Tel quel : en_attente, relancee, reponse, entretien, refus, engagement, sans_reponse.
     status: str
     interview_at: datetime | None
 

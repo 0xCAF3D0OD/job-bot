@@ -176,9 +176,8 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres", { followedSearches: ref(3), nextCollectAt: ref("2026-11-16T18:00:00Z") });
     const empty = wrapper.find("[data-test=offers-none-yet]");
     expect(empty.find("h2").text()).toBe("Tes premières offres arrivent bientôt");
-    expect(empty.find("[data-test=empty-text]").text()).toBe(
-      "jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.",
-    );
+    // Plus de phrase sous le titre (Kevin, 18.11, §72g) : le titre et la pastille suffisent.
+    expect(empty.find("[data-test=empty-text]").exists()).toBe(false);
     // L'heure vient du serveur (sa planification).
     expect(empty.find("[data-test=empty-pill]").text()).toBe("En attente des premières offres · prochaine vérification ce soir vers 19 h");
     expect(empty.find("[data-test=offers-none-add]").classes()).toContain("primary");
@@ -239,19 +238,12 @@ describe("OffersView", () => {
     vi.unstubAllGlobals();
   });
 
-  it("ordinateur large : le compteur au-dessus de la liste dit le nombre de cartes, « 2 sur 6 offres » avec un filtre (Kevin, 15.11)", async () => {
+  it("ordinateur large : pas de compteur au-dessus de la liste (Kevin, 18.11, point 6)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
     mockOffers(page([offer(1, "Une"), offer(2, "Deux"), offer(3, "Trois")]));
     const all = await mountAt("/offres");
-    const cards = all.findAll("[data-offer-row]").length;
-    expect(cards).toBe(3);
-    expect(all.get("[data-test=offers-count]").text()).toBe(`${cards} offres`);
-    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
-    const searched = await mountAt("/offres?q=devops");
-    const shown = searched.findAll("[data-offer-row]").length;
-    expect(shown).toBe(2);
-    // 6 : « À traiter » sans filtre (counts.pending).
-    expect(searched.get("[data-test=offers-count]").text()).toBe(`${shown} sur 6 offres`);
+    expect(all.findAll("[data-offer-row]").length).toBe(3);
+    expect(all.find("[data-test=offers-count]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
 
@@ -418,8 +410,8 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const dialog = wrapper.find("[data-test=filters-dialog]");
-    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Note minimale, sur 100", "Type de note", "Taux d’activité"]);
-    expect(dialog.findAll("[aria-pressed]").length).toBe(14);
+    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Note minimale, sur 100", "Type de note", "Taux d’activité", "Contrat"]);
+    expect(dialog.findAll("[aria-pressed]").length).toBe(19);
     expect(dialog.find(".filter-panel-body [data-test=filters-done]").exists()).toBe(false);
     expect(dialog.find(".filter-panel-foot [data-test=filters-done]").exists()).toBe(true);
     await wrapper.find("[data-test=pop-filtered-out]").trigger("change");
@@ -835,7 +827,8 @@ describe("détail allégé et adresse", () => {
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=status-pill]").text()).toBe("Gardée");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
+    // Planche OffreAdresseTrouvee (18.11) : l'adresse sur deux lignes, telle qu'enregistrée.
+    expect(wrapper.find("[data-test=address] .address-lines").text()).toBe("Chemin de l’Exemple 10\n1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
 
     await wrapper.find("[data-test=more]").trigger("click");

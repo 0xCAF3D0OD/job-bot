@@ -121,6 +121,11 @@ async def test_searches_contacts_and_follow_up(api: AsyncClient, runtime: Runtim
         json={**created, "answered_on": local_today().isoformat(), "note": "Appel jeudi"},
     )
     assert answered.json()["note"] == "Appel jeudi"
+    # « En personne » (Kevin, 18.11, §72).
+    met = await api.put(
+        f"/api/contacts/{created['id']}", json={**answered.json(), "channel": "in_person"}
+    )
+    assert met.status_code == 200 and met.json()["channel"] == "in_person"
     assert (await api.get("/api/today")).json()["contacts_to_follow_up"] == 0
     assert (await api.delete(f"/api/contacts/{created['id']}")).status_code == 204
     missing = await api.post(

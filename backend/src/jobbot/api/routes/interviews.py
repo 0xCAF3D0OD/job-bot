@@ -23,7 +23,7 @@ Duration = Literal["moins_30", "30_60", "plus_60"]
 Interviewer = Literal["rh", "manager", "equipe", "direction"]
 Score = Annotated[int, Field(ge=1, le=5)]
 NextStep = Literal["rien", "entretien", "reponse", "test", "refus"]
-# « Comment ça s'est passé ? » de « Faire le point » (planche FairePoint, 0096).
+# « Comment ça s'est passé ? » de « Faire le point » (planche FairePoint, 0097).
 Feeling = Literal["bien", "moyen", "pas_bien"]
 # La relance conseillée après « J'attends une réponse » : une semaine après l'entretien (planche :
 # entretien le 12 nov., relance le 19). Calculée ici, jamais saisie (Kevin, 18.11.2026).

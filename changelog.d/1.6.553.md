@@ -1,0 +1,1 @@
+Filtres des envoyées sur téléphone refaits d'après la planche FiltresEnvoyees : titres « Statut » et « Trier » en casse normale, pastilles au trait de la planche, bouton « Afficher » qui prend la place restante sans être coupé

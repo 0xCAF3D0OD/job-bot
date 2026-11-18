@@ -161,6 +161,116 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
   });
 
+  describe("« + Ajouter une question » (Kevin, 18.11)", () => {
+    const OWN = { key: "custom:1", text: "Combien de recherches en décembre ?", checked: false };
+    function serveWith(questions: object[]): void {
+      serve({ meeting: MEETING, preparation: { ...PREP, questions }, past: [], target: 10, trainings: [] });
+      PUT.mockImplementation((_path: string, { body }: { body: { questions: object[] } }) =>
+        Promise.resolve({ data: { meeting: MEETING, preparation: { ...PREP, questions: body.questions }, past: [], target: 10, trainings: [] } }),
+      );
+    }
+    async function openPrep() {
+      const opened = await open();
+      await opened.wrapper.get("[data-test=rdv-prep-open]").trigger("click");
+      return opened;
+    }
+    const sent = (): { key: string; text: string; checked: boolean }[] => PUT.mock.calls.at(-1)?.[1].body.questions;
+
+    it("un toucher ouvre un champ en bas ; Entrée l’enregistre non cochée, puis « Enregistré »", async () => {
+      serveWith(PREP.questions);
+      const { wrapper } = await openPrep();
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      expect(wrapper.find("[data-test=rdv-question-add]").exists()).toBe(false);
+      const field = wrapper.get("[data-test=rdv-question-field]");
+      await field.setValue("  Puis-je suivre un cours en janvier ?  ");
+      await field.trigger("keydown", { key: "Enter" });
+      await field.trigger("blur");
+      await flushPromises();
+      expect(sent()).toHaveLength(3);
+      expect(sent()[2]).toMatchObject({ text: "Puis-je suivre un cours en janvier ?", checked: false });
+      expect(sent()[2]!.key).toMatch(/^custom:/);
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain("Puis-je suivre un cours en janvier ?");
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain("Enregistré");
+      expect(wrapper.find("[data-test=rdv-question-add]").exists()).toBe(true);
+    });
+
+    it("vide, la ligne disparaît ; Échap annule ; rien ne part au serveur", async () => {
+      serveWith(PREP.questions);
+      const { wrapper } = await openPrep();
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      await wrapper.get("[data-test=rdv-question-field]").trigger("blur");
+      expect(wrapper.find("[data-test=rdv-question-field]").exists()).toBe(false);
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      const field = wrapper.get("[data-test=rdv-question-field]");
+      await field.setValue("Brouillon");
+      await field.trigger("keydown", { key: "Escape" });
+      await field.trigger("blur");
+      await flushPromises();
+      expect(wrapper.find("[data-test=rdv-question-field]").exists()).toBe(false);
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).not.toContain("Brouillon");
+      expect(PUT).not.toHaveBeenCalled();
+    });
+
+    it("« ⋯ › Modifier » ouvre le champ d’une question à toi ; toucher le texte la coche ; les proposées n’ont pas de ⋯", async () => {
+      serveWith([...PREP.questions, OWN]);
+      const { wrapper } = await openPrep();
+      expect(wrapper.find("[data-test=rdv-question-edit-intermediate]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=rdv-question-more-intermediate]").exists()).toBe(false);
+      await wrapper.get("[data-test='rdv-question-custom:1']").setValue(true);
+      expect(PUT).toHaveBeenCalledTimes(1);
+      expect(sent()[2]).toMatchObject({ key: "custom:1", checked: true });
+      await wrapper.get("[data-test='rdv-question-more-custom:1']").trigger("click");
+      await wrapper.get("[data-test='rdv-question-edit-custom:1']").trigger("click");
+      const field = wrapper.get("[data-test=rdv-question-field]");
+      expect((field.element as HTMLInputElement).value).toBe(OWN.text);
+      await field.setValue("Combien de recherches en janvier ?");
+      await field.trigger("blur");
+      await flushPromises();
+      expect(sent()).toEqual([...PREP.questions, { ...OWN, checked: true, text: "Combien de recherches en janvier ?" }]);
+    });
+
+    it("échec : « Pas enregistré · Réessayer », le texte reste dans le champ", async () => {
+      serveWith(PREP.questions);
+      PUT.mockResolvedValueOnce({ error: { detail: "nope" } });
+      const { wrapper } = await openPrep();
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      await wrapper.get("[data-test=rdv-question-field]").setValue("Ma question");
+      await wrapper.get("[data-test=rdv-question-field]").trigger("blur");
+      await flushPromises();
+      expect((wrapper.get("[data-test=rdv-question-field]").element as HTMLInputElement).value).toBe("Ma question");
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain("Pas enregistré");
+      await wrapper.get("[data-test=rdv-prep-questions] [data-test=field-save-retry]").trigger("click");
+      await flushPromises();
+      expect(PUT).toHaveBeenCalledTimes(2);
+      expect(wrapper.find("[data-test=rdv-question-field]").exists()).toBe(false);
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain("Enregistré");
+    });
+
+    it("« ⋯ › Supprimer » cache la ligne, « Annuler » la remet ; sans annuler, la liste part sans elle", async () => {
+      vi.useFakeTimers();
+      try {
+        serveWith([...PREP.questions, OWN]);
+        const { wrapper } = await openPrep();
+        await wrapper.get("[data-test='rdv-question-more-custom:1']").trigger("click");
+        await wrapper.get("[data-test='rdv-question-delete-custom:1']").trigger("click");
+        expect(wrapper.get("[data-test=rdv-prep-questions]").text()).not.toContain(OWN.text);
+        expect(wrapper.get("[data-test=triage-toast]").text()).toContain("Question supprimée");
+        await wrapper.get("[data-test=undo]").trigger("click");
+        await flushPromises();
+        expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain(OWN.text);
+        expect(PUT).not.toHaveBeenCalled();
+        await wrapper.get("[data-test='rdv-question-more-custom:1']").trigger("click");
+        await wrapper.get("[data-test='rdv-question-delete-custom:1']").trigger("click");
+        await vi.advanceTimersByTimeAsync(6000);
+        await flushPromises();
+        expect(sent()).toEqual(PREP.questions);
+        expect(wrapper.get("[data-test=rdv-prep-questions]").text()).not.toContain(OWN.text);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   it("« Ton nom sur la feuille » (§70) : ouverte depuis la préparation, trois champs gardés dans le compte, Retour y ramène", async () => {
     const page = { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] };
     GET.mockImplementation((path: string) =>
@@ -195,6 +305,30 @@ describe("Rendez-vous sur téléphone", () => {
     await flushPromises();
     expect(prep.props("open")).toBe(true);
     expect(name.props("open")).toBe(false);
+    // La ligne de la préparation suit ce qui est enregistré : nom · office.
+    expect(wrapper.get("[data-test=rdv-name-line]").text()).toBe("Camille Exemple · ORP Lausanne");
+  });
+
+  it("carte « La feuille » (planche PreparerRendezVous, §71) : nom · office, « Voir la feuille » remplace la préparation", async () => {
+    const page = { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/orp-meeting/nom"
+          ? { data: { name: "Camille Exemple", advisor: null, office: "ORP Renens" } }
+          : path === "/api/orp-meeting" ? { data: page } : { data: [] },
+      ),
+    );
+    const { wrapper, router } = await open();
+    await wrapper.get("[data-test=rdv-prep-open]").trigger("click");
+    const prep = wrapper.findComponent({ name: "MeetingPrepSheet" });
+    expect(prep.findAll(".prep-title").map((t) => t.text())).toContain("La feuille");
+    expect(wrapper.get("[data-test=rdv-name-line]").text()).toBe("Camille Exemple · ORP Renens");
+    expect(wrapper.get("[data-test=rdv-view-sheet]").text()).toContain("1 question");
+    const replace = vi.spyOn(router, "replace");
+    await wrapper.get("[data-test=rdv-view-sheet]").trigger("click");
+    await flushPromises();
+    expect(replace).toHaveBeenCalledWith({ query: { feuille: "1" } });
+    expect(router.currentRoute.value.query.feuille).toBe("1");
   });
 
   it("une seule action dans la carte : « Préparer le rendez-vous », plus de « Voir ma feuille » (PR 7)", async () => {

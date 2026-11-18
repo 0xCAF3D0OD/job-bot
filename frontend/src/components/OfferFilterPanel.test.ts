@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, type OfferFilters } from "../composables/useOfferFilters";
 import OfferFilterPanel from "./OfferFilterPanel.vue";
 
-const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [] };
+const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [], contracts: [], distances: [] };
 const counts = { pending: 404, to_review: 38, filtered_out: 0, later: 9, in_progress: 45, expired: 0, all: 0 };
 
 function mountPanel(patch: Partial<OfferFilters> = {}) {
@@ -24,8 +24,9 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
       "Note minimale, sur 100",
       "Type de note",
       "Taux d’activité",
+      "Contrat",
     ]);
-    for (const id of ["pop-view", "pop-sort", "pop-score", "pop-basis", "pop-rate"]) expect(wrapper.find(`[aria-labelledby=${id}]`).exists()).toBe(true);
+    for (const id of ["pop-view", "pop-sort", "pop-score", "pop-basis", "pop-rate", "pop-contract"]) expect(wrapper.find(`[aria-labelledby=${id}]`).exists()).toBe(true);
     expect(texts(wrapper, "pop-sort")).toEqual(["Par date", "Par note"]);
     expect(texts(wrapper, "pop-score")).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(texts(wrapper, "pop-basis")).toEqual(["Toutes", "Définitives · 104", "Provisoires · 312"]);
@@ -35,12 +36,11 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
     expect(wrapper.text()).toContain("Masquer les agences de placement");
   });
 
-  it("les textes d’aide, reliés par aria-describedby", () => {
+  it("pas de phrase d’aide sous la note ni sous le type de note (§72g du 18.11)", () => {
     const wrapper = mountPanel();
-    for (const button of wrapper.findAll("[data-test^=pop-score]"))
-      expect(wrapper.find(`#${button.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
-    const basis = wrapper.find("[role=radiogroup][aria-labelledby=pop-basis]");
-    expect(wrapper.find(`#${basis.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.");
+    expect(wrapper.find("[aria-describedby]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("correspond à ton profil");
+    expect(wrapper.text()).not.toContain("extrait de l’alerte");
   });
 
   it("mêmes seuils (50, 75, 85) et mêmes taux, un seul choix marqué", async () => {
@@ -73,5 +73,17 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
     expect(wrapper.find("[data-test=pop-rate-80]").classes()).toContain("choice-empty");
     expect(wrapper.find("[data-test=pop-rate-80]").attributes("disabled")).toBeUndefined();
     expect(wrapper.find("[data-test=pop-score-75]").classes()).not.toContain("choice-empty");
+  });
+
+  it("Contrat : « CDI · 120 », plusieurs choix, un choix à 0 grisé mais cliquable (issue 468)", async () => {
+    const contracts = [{ value: "cdi", count: 120 }, { value: "non_precise", count: 7 }];
+    const wrapper = mount(OfferFilterPanel, {
+      props: { filters: { ...DEFAULT_FILTERS, contracts: ["non_precise"] }, counts, facets: { ...facets, contracts }, total: 7 },
+    });
+    expect(texts(wrapper, "pop-contract")).toEqual(["CDI · 120", "CDD · 0", "Stage · 0", "Temporaire · 0", "Non précisé · 7"]);
+    expect(wrapper.find("[data-test=pop-contract-non_precise]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=pop-contract-cdd]").classes()).toContain("choice-empty");
+    await wrapper.find("[data-test=pop-contract-cdd]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: ["cdd", "non_precise"] }]);
   });
 });

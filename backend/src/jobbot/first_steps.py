@@ -7,9 +7,11 @@ qu'une offre gardée puis écartée laisse l'étape 3 faite. La fonction SQL
 règles pour le chiffre de l'équipe.
 
 L'étape des alertes fait exception (corrections du 13.11 au soir, §1, décision de Kevin du
-14.11) : elle n'est faite qu'avec une alerte créée (« J'ai créé l'alerte ») ou reçue, jamais par
-les offres de la recherche publique. Après « Plus tard », elle reste ouverte sur la carte même si
-une étape plus loin est faite, jusqu'à la première candidature envoyée.
+14.11) : elle n'est faite qu'avec une alerte créée ou reçue, jamais par les offres de la
+recherche publique. Depuis le 18.11 (Kevin), « J'ai créé l'alerte » ne suffit plus : il faut
+aussi un e-mail du site arrivé dans la boîte jobA1 (`alerts.service.site_heard`). Après « Plus
+tard », elle reste ouverte sur la carte même si une étape plus loin est faite, jusqu'à la
+première candidature envoyée.
 """
 
 from dataclasses import dataclass
@@ -21,7 +23,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import welcome
-from jobbot.alerts.service import is_canton
+from jobbot.alerts.service import is_canton, site_heard
 from jobbot.db.base import READ_ONLY
 from jobbot.db.models import (
     AlertSetup,
@@ -107,11 +109,16 @@ async def _found(session: AsyncSession, query: Select[Any]) -> bool:
 
 
 async def _alerts(session: AsyncSession) -> bool:
-    """Une alerte créée (« J'ai créé l'alerte ») ou reçue ; ni la recherche publique, ni un code
-    ou un message d'un site (docs/112), ni une offre."""
-    return await _found(session, select(AlertSetup.search_id)) or await _found(
-        session, select(Search.id).where(received_alert())
-    )
+    """Une alerte reçue, ou une alerte déclarée créée (« J'ai créé l'alerte ») dont le site a
+    écrit depuis (code, message ou alerte) ; ni la recherche publique, ni une offre."""
+    if await _found(session, select(Search.id).where(received_alert())):
+        return True
+    for site, created_at in await session.execute(
+        select(AlertSetup.site, func.min(AlertSetup.created_at)).group_by(AlertSetup.site)
+    ):
+        if await site_heard(session, site, created_at):
+            return True
+    return False
 
 
 async def _computed(session: AsyncSession) -> int:

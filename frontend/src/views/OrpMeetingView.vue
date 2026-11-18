@@ -248,15 +248,16 @@ async function removeMeeting(): Promise<void> {
   });
 }
 
-async function saveQuestions(questions: Question[]): Promise<void> {
+async function saveQuestions(questions: Question[]): Promise<boolean> {
   const { data, error } = await api.PUT("/api/orp-meeting/questions", { body: { questions } });
   if (data) {
     page.value = data;
     message.value = "";
     savedAt.value = Date.now();
-  } else {
-    message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
+    return true;
   }
+  message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
+  return false;
 }
 
 function toggle(question: Question, checked: boolean): void {
@@ -347,6 +348,11 @@ const searchEmpty = computed(() => {
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
+// « Voir la feuille » de « Préparer le rendez-vous » (planche PreparerRendezVous, §71) : la feuille remplace l'entrée
+// d'historique de la préparation, et Retour ramène aux rendez-vous (pas à une préparation déjà fermée).
+function viewSheetFromPrep(): void {
+  void router.replace({ query: { ...route?.query, feuille: "1" } });
+}
 // Le carnet ouvert depuis « Carnet ORP » : il descend jusqu'à lui.
 const logRow = ref<{ $el?: HTMLElement } | null>(null);
 watch(
@@ -434,16 +440,8 @@ onMounted(() => {
       @add="openAdd"
     />
     <template v-else>
-      <!-- Un rendez-vous passé à noter passe en premier, avant le formulaire (corrections du 9 novembre). -->
-      <RendezVousPhone
-        v-if="compact"
-        part="to-note"
-        :page="page"
-        :applications="applications"
-        :sheet-link="sheetLink"
-        :words="words"
-        @note="noting = $event"
-      />
+      <!-- Ordre de la planche RendezVous du 18.11 (Kevin, 18.11) : « À venir », puis « À noter », puis les derniers
+           rendez-vous ORP. Avant : « À noter » en premier (corrections du 9 novembre). -->
       <RendezVousPhone
         v-if="compact"
         part="upcoming"
@@ -452,8 +450,19 @@ onMounted(() => {
         :sheet-link="sheetLink"
         :meeting-items="editing ? [] : phoneMeetingItems"
         :words="words"
+        :save-questions="saveQuestions"
         @toggle="toggle"
+        @sheet="viewSheetFromPrep"
         @prepare="preparing = $event"
+      />
+      <RendezVousPhone
+        v-if="compact"
+        part="to-note"
+        :page="page"
+        :applications="applications"
+        :sheet-link="sheetLink"
+        :words="words"
+        @note="noting = $event"
       />
       <div
         v-if="searchEmpty"

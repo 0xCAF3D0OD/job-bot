@@ -8,13 +8,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.alerts import trades
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import (
+    IGNORED_KIND,
+    PUBLIC_SEARCH_PREFIX,
     AlertSearch,
     AlertSetup,
     Offer,
@@ -32,6 +34,10 @@ PROPOSED_KEY = "alert_searches_proposed"
 MAX_PROPOSED = 8
 # « Créée » depuis 24 heures sans alerte reçue : rappel sur Aujourd'hui (docs/121 §B.3).
 WAIT_BEFORE_REMINDER = timedelta(hours=24)
+# « J'ai créé l'alerte » n'est qu'une déclaration (Kevin, 18.11) : l'alerte n'est active qu'avec
+# un e-mail du site arrivé dans la boîte jobA1 (code de vérification, message ou alerte). Le code
+# arrive souvent juste avant le clic : on accepte un e-mail reçu jusqu'à un jour avant.
+PROOF_BEFORE_SETUP = timedelta(days=1)
 
 # Page de résultats déjà remplie, d'où l'on crée l'alerte (adresses vérifiées le 2026-10-07,
 # sauf Indeed, qui refuse les lectures automatiques).
@@ -168,7 +174,7 @@ async def propose(session: AsyncSession) -> None:
 class Cell:
     site: str
     url: str | None
-    status: str  # received | created | todo
+    status: str  # received | created | pending | todo
     received_at: datetime | None
     created_at: datetime | None
 
@@ -218,7 +224,12 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
     for site in sites:
         received = _received(journal, site.slug, search.terms)
         created = setups.get(site.slug)
-        status = "received" if received else "created" if created else "todo"
+        if received:
+            status = "received"
+        elif created:
+            status = "created" if await site_heard(session, site.slug, created) else "pending"
+        else:
+            status = "todo"
         found.append(
             Cell(
                 site.slug,
@@ -229,6 +240,18 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
             )
         )
     return found
+
+
+async def site_heard(session: AsyncSession, site: str, since: datetime) -> bool:
+    """Un e-mail de ce site est arrivé pour le compte depuis la déclaration (un jour de marge) :
+    un code, un message ou une alerte ; ni la recherche publique, ni un e-mail ignoré."""
+    query = select(Search.id).where(
+        Search.source == site,
+        Search.received_at >= since - PROOF_BEFORE_SETUP,
+        Search.message_id.not_like(f"{PUBLIC_SEARCH_PREFIX}%"),
+        or_(Search.kind.is_(None), Search.kind != IGNORED_KIND),
+    )
+    return bool(await session.scalar(select(query.exists())))
 
 
 class UnknownSite(Exception):
@@ -249,12 +272,17 @@ async def mark_created(session: AsyncSession, search_ids: list[int], site: str) 
 
 
 async def waiting(session: AsyncSession) -> int:
-    """Alertes créées depuis 24 heures ou plus qui n'ont encore rien envoyé (rappel)."""
+    """Alertes déclarées créées depuis 24 heures ou plus qui n'ont encore rien envoyé, à
+    confirmer ou non (rappel)."""
     sites = list(await session.scalars(select(Site).where(followed())))
     limit = datetime.now(UTC) - WAIT_BEFORE_REMINDER
     count = 0
     for search in await session.scalars(select(AlertSearch).where(AlertSearch.active.is_(True))):
         for cell in await cells(session, search, sites):
-            if cell.status == "created" and cell.created_at and cell.created_at <= limit:
+            if (
+                cell.status in ("created", "pending")
+                and cell.created_at
+                and cell.created_at <= limit
+            ):
                 count += 1
     return count

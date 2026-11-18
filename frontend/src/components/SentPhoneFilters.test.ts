@@ -5,7 +5,7 @@ import SentPhoneFilters from "./SentPhoneFilters.vue";
 
 // Envoyées sur téléphone (maquette du 14 novembre, §3 et §6 ; décisions de Kevin du 14.11) : la recherche « Poste,
 // entreprise, lieu » lue « Rechercher une candidature », statuts et tri dans la feuille Filtres.
-const counts = { toutes: 9, relancer: 2, "sans-reponse": 3, entretien: 0, refusees: 1 };
+const counts = { toutes: 9, relancer: 2, envoyee: 3, reponse: 2, entretien: 0, refusees: 1 };
 
 function mountIt(props: Record<string, unknown> = {}) {
   return mount(SentPhoneFilters, {

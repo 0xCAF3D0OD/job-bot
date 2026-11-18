@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import type { Offer } from "../api/client";
 import { usePhone } from "../composables/usePhone";
 import { companyPlace, plural } from "../format";
+import { displayTitle } from "../offerTitle";
 import CompanyLogo from "./CompanyLogo.vue";
 import MomentScreen from "./MomentScreen.vue";
 
@@ -60,13 +61,13 @@ defineExpose({ focus: () => root.value?.focus() });
             class="tri-done-logo"
           />
           <span class="tri-done-names">
-            <b>{{ offer.title }}</b>
+            <b>{{ displayTitle(offer.title, offer) }}</b>
             <span>{{ companyPlace(offer.company || "Entreprise non indiquée", offer.location) }}</span>
           </span>
           <RouterLink
             :to="prepare(offer)"
             class="tri-done-prepare"
-            :aria-label="`Préparer : ${offer.title}`"
+            :aria-label="`Préparer : ${displayTitle(offer.title, offer)}`"
           >
             Préparer
           </RouterLink>

@@ -12,3 +12,13 @@ Réponses aux trois questions de #851 :
 
 Ordre choisi le 18.11 à 8 h 42 (issue #468) : le serveur de Contrat d'abord, puis celui de Distance, dans deux PR
 séparées.
+
+Précision de Kevin (18.11.2026, 9 h 31, choix a) : sur téléphone, les nombres sous les choix excluent les offres
+« Loin » tant que la liste les cache, comme « Afficher n offres ». Règle : le nombre du choix actif égale toujours
+celui de « Afficher n offres ». Un test compare les deux, avec et sans offres « Loin ».
+
+Contrôle avec la planche (règle de Kevin du 18.11.2026, 9 h 25 : planche à gauche, app à droite, écarts entourés) :
+la feuille Filtres du téléphone s'écartait de la planche sans décision écrite. Elle la reprend dans cette PR : titres
+de groupe en capitales 13 px gris (docs/design/regles.md §4), aide en pastille et plus courte (« À quel point l'offre
+correspond à ton profil », « Provisoire : notée sur l'extrait de l'alerte »), contour des puces à 1,5 px
+`--button-outline`. Le panneau de l'ordinateur garde l'aide longue, comme sa planche.

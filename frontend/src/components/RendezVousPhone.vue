@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
@@ -19,14 +19,15 @@ import {
   meetingMatches,
 } from "../rendezVous";
 import { plural } from "../format";
+import { useSheetIdentity } from "../sheetIdentity";
 import CalendarDate from "./CalendarDate.vue";
 import MeetingPrepSheet from "./MeetingPrepSheet.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
-// Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6 et 7.11.2026). Trois parties,
-// posées par OrpMeetingView : « À noter » en premier (corrections du 9 novembre : un rendez-vous passé à noter passe
-// avant le formulaire), « À venir » (le prochain rendez-vous ORP et les entretiens, par date), puis le dernier rendez-vous
-// noté et le Carnet ORP ; « Noter » ouvre la feuille de la vue.
+// Candidatures › Rendez-vous sur téléphone (planches RendezVous et RendezVousSombre du 18.11). Trois parties, posées
+// par OrpMeetingView dans l'ordre de la planche : « À venir » (le prochain rendez-vous ORP et les entretiens, par date),
+// « À noter » (un rendez-vous passé à noter), puis « Derniers rendez-vous ORP » (le dernier noté et le Carnet ORP) ;
+// « Noter » ouvre la feuille de la vue.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
@@ -40,12 +41,15 @@ const props = defineProps<{
   meetingItems?: MoreMenuItem[];
   // Les mots de la recherche (maquette du 14 novembre, §6), déjà découpés par OrpMeetingView.
   words?: string[];
+  // Enregistre la liste entière des questions (« + Ajouter une question ») ; `false` si le serveur ne l'a pas prise.
+  saveQuestions?: (questions: Question[]) => Promise<boolean>;
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
   log: [];
   prepare: [application: Application];
   note: [id: number];
+  sheet: [];
 }>();
 
 const now = new Date();
@@ -55,6 +59,22 @@ const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
 const prepOpen = ref(false);
+// Les deux lignes grises de la carte « La feuille » (planche PreparerRendezVous, §71) : le nom et l'office enregistrés,
+// chargés avec la page pour qu'ils soient là dès l'ouverture ; puis « 6 recherches, 2 questions ».
+const identity = useSheetIdentity();
+onMounted(() => {
+  if (props.part === "upcoming" && props.page.meeting) void identity.load();
+});
+const nameLine = computed(() => [identity.values.name, identity.values.office].map((v) => v.trim()).filter(Boolean).join(" · "));
+const sheetLine = computed(() => {
+  const month = prep.value.months?.at(-1);
+  return [month ? plural(month.count, "recherche", "recherches") : "", plural(checked.value, "question", "questions")].filter(Boolean).join(", ");
+});
+// « Voir la feuille » : la feuille actuelle (?feuille=1) prend la place de la préparation dans l'historique ; Retour
+// ramène aux rendez-vous.
+function viewSheet(): void {
+  emit("sheet");
+}
 // « Ton nom sur la feuille » (§70, planche FeuilleNom) : une page ouverte depuis « Préparer le rendez-vous », chargée
 // à la première ouverture. Elle prend la place de la page de préparation (une seule feuille à la fois, avec son entrée
 // d'historique) ; Retour rouvre la préparation, qui reprend la place à son tour.
@@ -156,6 +176,7 @@ function cal(iso: string): { day: number; month: number } {
       <FeuilleNomSheet
         v-if="item.kind === 'orp' && nameShown"
         :open="nameOpen"
+        :identity="identity"
         class="rdv-prep-page"
         @close="nameClosed"
       />
@@ -168,7 +189,11 @@ function cal(iso: string): { day: number; month: number } {
         :questions="prep.questions"
         :checked="checked"
         :pdf="sheetLink"
+        :name-line="nameLine"
+        :sheet-line="sheetLine"
+        :save="saveQuestions"
         @close="prepOpen = false"
+        @sheet="viewSheet"
         @toggle="(question, value) => emit('toggle', question, value)"
         @name="openName"
       />
@@ -251,13 +276,19 @@ function cal(iso: string): { day: number; month: number } {
     </article>
   </section>
   <template v-else-if="part === 'past'">
-    <!-- Plus de titre « Derniers rendez-vous ORP » (corrections du 9 novembre) : la ligne « Carnet ORP » suffit. -->
+    <!-- Le titre « Derniers rendez-vous ORP » revient avec la planche RendezVous du 18.11 (Kevin, 18.11), sans nombre. -->
     <section
       v-if="last || page.past.length"
       class="rdv-part"
-      aria-label="Rendez-vous ORP passés"
+      aria-labelledby="rdv-derniers"
       data-test="rdv-past"
     >
+      <h2
+        id="rdv-derniers"
+        class="rdv-title"
+      >
+        Derniers rendez-vous ORP
+      </h2>
       <article
         v-if="last"
         class="rdv-card rdv-last"
@@ -379,10 +410,13 @@ function cal(iso: string): { day: number; month: number } {
 }
 .rdv-log-title { flex: 1; min-width: 0; white-space: normal; font-size: calc(var(--font-small) + 1px); font-weight: var(--weight-bold); }
 .rdv-log-count { flex: none; display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); color: var(--text-secondary); }
-/* « Préparer le rendez-vous » en page entière (RendezVousPreparer, §46 du 17.11) : fond de la plateforme, flèche sans
-   cercle à 12 px du bord, à gauche du titre. */
-.rdv-prep-page { inset: 0; height: auto; max-height: none; border: 0; border-radius: 0; background: var(--bg); }
-.rdv-prep-page :deep(.sheet-inner) { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
-.rdv-prep-page :deep(.sheet-head) { padding-left: var(--space-3); }
-.rdv-prep-page :deep(.sheet-close) { order: -1; border: 0; background: none; }
+/* « Préparer le rendez-vous » en page entière (RendezVousPreparer, §46 du 17.11 ; planche PreparerRendezVous, §71 du
+   18.11), et « Ton nom sur la feuille » : fond de la plateforme ; en haut, une barre de 52 px, la flèche (cible de 44 px,
+   sans cercle, 4 px du bord, grille de 4 ; 6 px sur la planche) juste à gauche du titre de 22 px, graisse 800. */
+.rdv-prep-page { --rp-nav-h: 52px; --rp-title: 22px; --rp-arrow: 22px; inset: 0; height: auto; max-height: none; border: 0; border-radius: 0; background: var(--bg); }
+.rdv-prep-page :deep(.sheet-inner) { padding-top: env(safe-area-inset-top); }
+.rdv-prep-page :deep(.sheet-head) { gap: 0; min-height: var(--rp-nav-h); padding: 0 var(--space-1); }
+.rdv-prep-page :deep(.sheet-close) { order: -1; width: var(--target-min); height: var(--target-min); border: 0; background: none; }
+.rdv-prep-page :deep(.sheet-close .icon) { width: var(--rp-arrow); height: var(--rp-arrow); }
+.rdv-prep-page :deep(.sheet-title) { font-size: var(--rp-title); font-weight: var(--weight-heavy); }
 </style>

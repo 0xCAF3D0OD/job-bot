@@ -37,6 +37,9 @@ export const LIMITS = {
   "js-accueil-ordinateur": 115_000,
   "js-trier": 106_000,
   "js-candidatures": 175_500,
+  "js-candidatures-fichier": 175_500,
+  "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
+  "js-candidatures-ajout": 175_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "js-preparer": 157_400,
   "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
@@ -79,6 +82,9 @@ export const LIMITS = {
   "css-accueil-ordinateur": 64_400,
   "css-trier": 65_000,
   "css-candidatures": 72_500,
+  "css-candidatures-fichier": 72_500,
+  "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
+  "css-candidatures-ajout": 72_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "css-preparer": 70_500,
   "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
@@ -136,6 +142,14 @@ export const PAGES = {
   "accueil-telephone-rappel": ["views/TodayView.vue", "components/HomePhone.vue", "components/FirstApplicationCard.vue", "components/OrpReminder.vue"],
   trier: ["views/TriageView.vue"],
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
+  // La fiche d'une offre qui lit un fichier pour « Refaire la note » (Q1 du 17.11), chargé au premier fichier.
+  "candidatures-fichier": ["views/JobsView.vue", "views/OffersView.vue", "offerFile.ts"],
+  // La feuille de la compatibilité de la fiche, chargée à la demande (décision de Kevin du 18.11, 13 h 37), mesurée
+  // avec la page sous les limites de Candidatures.
+  "candidatures-compatibilite": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferCompatSheet.vue"],
+  // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée), chargés à part et préchargés dès
+  // l'affichage de la page (même règle que la compatibilité), mesurés avec la page sous les limites de Candidatures.
+  "candidatures-ajout": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts"],
   preparer: ["views/PreparationView.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
@@ -265,6 +279,9 @@ const keyOf = (path) => {
   const key = keys.find((k) => k.endsWith(path)) ?? keys.find((k) => new RegExp(`^_${name}-[\\w-]{8}\\.js$`).test(k));
   if (key) return key;
   if (/^components\//.test(path) && existsSync(new URL(`../src/${path}`, import.meta.url))) return null;
+  // La base mesurée avec le script de la branche (--dist, poids-ci.sh) n'a pas encore les fichiers que la branche
+  // ajoute : la page s'y mesure sans eux, ce qui donne l'avant.
+  if (arg("--dist")) return null;
   throw new Error(`${path} absent du manifeste de vite`);
 };
 const entry = Object.keys(manifest).find((key) => manifest[key].isEntry);

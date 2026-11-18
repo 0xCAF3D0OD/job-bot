@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
+import type { ComposerItem } from "../composer";
 import { usePhone } from "../composables/usePhone";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
@@ -155,6 +156,51 @@ const text = ref("");
 const error = ref("");
 const saving = ref(false);
 const length = computed(() => text.value.trim().length);
+// « Refaire la note » avec un fichier (Kevin, 17.11, Q1 ; planche OffreProvisoire, menu « Joindre un fichier ») : un
+// PDF, lu par le serveur sans IA, ou une capture PNG ou JPG, recopiée par l'IA (elle compte dans la formule). Un
+// fichier à la fois, 5 Mo au plus ; il n'est pas gardé. Son texte arrive dans le champ : la personne le relit, puis
+// « Refaire la note ». La planche dit « PDF ou Word, 10 Mo » : Kevin a choisi PDF, PNG ou JPG, et la limite reste 5 Mo.
+const FILE_ITEMS: ComposerItem[] = [
+  { id: "pdf", label: "Importer le PDF de l’annonce", hint: "PDF, 5 Mo maximum", icon: "upload" },
+  { id: "image", label: "Importer une capture d’écran", hint: "PNG ou JPG, 5 Mo maximum", icon: "file" },
+];
+const FILE_ACCEPT = "application/pdf,.pdf,image/png,.png,image/jpeg,.jpg,.jpeg";
+const PICKER_ACCEPT: Record<string, string> = { pdf: "application/pdf,.pdf", image: "image/png,.png,image/jpeg,.jpg,.jpeg" };
+const picker = ref<HTMLInputElement | null>(null);
+const pickerAccept = ref(FILE_ACCEPT);
+const importing = ref(false);
+const fileDone = ref(false);
+async function attach(item: string | File): Promise<void> {
+  if (item instanceof File) return importFile(item);
+  pickerAccept.value = PICKER_ACCEPT[item] ?? FILE_ACCEPT;
+  await nextTick();
+  picker.value?.click();
+}
+function picked(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (file) void importFile(file);
+}
+async function importFile(file: File): Promise<void> {
+  if (importing.value) return;
+  error.value = "";
+  fileDone.value = false;
+  importing.value = true;
+  try {
+    // Chargé au premier fichier (poids de Préparer) : l'envoi et les phrases d'erreur.
+    const { readOfferFile } = await import("../offerFile");
+    const found = await readOfferFile(props.offer.id, file);
+    if (found.text) {
+      text.value = found.text;
+      fileDone.value = true;
+    } else error.value = found.error ?? "";
+  } catch {
+    error.value = "API injoignable : réessaie dans un moment.";
+  } finally {
+    importing.value = false;
+  }
+}
 // Sur téléphone, la fenêtre « Donner l'annonce » se ferme d'abord : elle rend son entrée d'historique (le bouton
 // retour), et la fenêtre de collage ne s'ouvre qu'après, sinon ce retour la refermerait aussitôt. Sur ordinateur, la
 // carte reste dépliée derrière le panneau.
@@ -164,8 +210,23 @@ function showPaste(): void {
   window.removeEventListener("popstate", showPaste);
   pasting.value = true;
 }
-function openPaste(): void {
+// « Coller » (Kevin, 18.11.2026, docs/decisions/2026-11-18-1413-coller-texte-offre.md) : le bouton lit d'abord le
+// presse-papiers ; le système demande l'autorisation (bulle « Coller » sur iPhone, menu sur Firefox). Le texte copié
+// arrive dans la fenêtre de collage, qu'il ne reste qu'à vérifier avant « Refaire la note ». Accès refusé, presse-papiers
+// vide ou simple lien : la fenêtre s'ouvre vide, et on colle à la main comme avant. Rien n'est lu sans ce toucher.
+async function fromClipboard(): Promise<string> {
+  try {
+    const copied = (await navigator.clipboard?.readText?.())?.trim() ?? "";
+    return /^https?:\/\/\S+$/.test(copied) ? "" : copied;
+  } catch {
+    return "";
+  }
+}
+async function openPaste(): Promise<void> {
   error.value = "";
+  // Un texte déjà commencé dans la fenêtre n'est jamais remplacé.
+  const copied = text.value.trim() ? "" : await fromClipboard();
+  if (copied) text.value = copied;
   if (!phone.value || !giving.value) {
     pasting.value = true;
     return;
@@ -189,6 +250,7 @@ async function save(): Promise<void> {
     }
     pasting.value = false;
     text.value = "";
+    fileDone.value = false;
     emit("changed", true);
   } catch {
     error.value = "API injoignable : réessaie dans un moment.";
@@ -207,6 +269,7 @@ watch(
     url.value = "";
     problem.value = "";
     text.value = "";
+    fileDone.value = false;
     start();
   },
 );
@@ -448,10 +511,40 @@ export function resetRequested(): void {
       :min-chars="MIN_TEXT"
       send-text="Refaire la note"
       enough="assez pour noter"
-      :busy="saving"
+      :busy="saving || importing"
+      :plus-items="FILE_ITEMS"
+      plus-direction="down"
+      :accept="FILE_ACCEPT"
       data-test="paste-text"
+      @attach="attach"
       @send="save"
     />
+    <input
+      ref="picker"
+      type="file"
+      :accept="pickerAccept"
+      class="visually-hidden"
+      tabindex="-1"
+      aria-hidden="true"
+      data-test="paste-file"
+      @change="picked"
+    >
+    <p
+      v-if="importing"
+      class="hint"
+      role="status"
+      data-test="paste-file-busy"
+    >
+      Lecture du fichier…
+    </p>
+    <p
+      v-else-if="fileDone"
+      class="hint"
+      role="status"
+      data-test="paste-file-done"
+    >
+      Texte du fichier repris. Relis-le, puis refais la note.
+    </p>
     <p
       v-if="error"
       class="field-error"

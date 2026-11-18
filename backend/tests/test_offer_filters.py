@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
+from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus, Setting
 from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -50,6 +50,7 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
         apply_kind="external",
         company="Acme SA",
         description="Linux et Ansible.",
+        employment_type="Durée indéterminée",
     )
     await add(
         runtime,
@@ -60,6 +61,7 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
         rate_min=60,
         rate_max=60,
         snippet="Kubernetes, Terraform",
+        employment_type="CDD 12 mois",
     )
     await add(
         runtime,
@@ -154,6 +156,117 @@ async def test_rate_counts_follow_the_other_filters(api: AsyncClient) -> None:
     assert rates(vaud) == {"all": 2, "60": 2, "80": 2, "100": 2}
 
 
+async def test_contract_filter_and_counts(api: AsyncClient) -> None:
+    """Filtre « Contrat » (issue #468) : plusieurs choix ; « Non précisé » est un choix avec son
+    nombre ; chaque catégorie est listée, même à 0 ; les nombres suivent les autres filtres, sans
+    celui du contrat, et la somme des choix cochés égale la liste."""
+
+    def contracts(body: dict[str, Any]) -> dict[str, int]:
+        return {f["value"]: f["count"] for f in body["facets"]["contracts"]}
+
+    everything = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    expected = {"cdi": 1, "cdd": 1, "stage": 0, "temporaire": 0, "non_precise": 1}
+    assert contracts(everything) == expected
+    assert await titles(api, contracts=["cdi"]) == ["Ingénieur système"]
+    assert await titles(api, contracts=["cdi", "cdd"]) == ["DevOps Engineer", "Ingénieur système"]
+    # L'offre sans contrat reste trouvable : « Non précisé » la montre.
+    assert await titles(api, contracts=["non_precise"]) == ["Administrateur réseau"]
+    both = await api.get("/api/offers", params={"view": "to_review", "contracts": ["cdi", "cdd"]})
+    assert contracts(both.json()) == expected
+    assert both.json()["total"] == expected["cdi"] + expected["cdd"]
+    # Une catégorie à 0 : choisie seule, la liste est vide, et le nombre le disait.
+    assert await titles(api, contracts=["stage"]) == []
+    vaud = (await api.get("/api/offers", params={"view": "to_review", "cantons": "VD"})).json()
+    assert contracts(vaud) == {"cdi": 1, "cdd": 0, "stage": 0, "temporaire": 0, "non_precise": 1}
+
+
+async def test_unknown_contract_is_refused_not_silently_empty(api: AsyncClient) -> None:
+    """Une valeur inconnue ne vide jamais la liste sans le dire : le serveur la refuse."""
+    response = await api.get("/api/offers", params={"contracts": "apprentissage"})
+    assert response.status_code == 422
+
+
+async def test_near_counts_match_the_phone_button(api: AsyncClient, runtime: Runtime) -> None:
+    """Téléphone (Kevin, 18.11, choix a) : la liste cache les offres « Loin » (sous 50) sans filtre
+    de note, et « Afficher n offres » vaut total moins ces offres. Avec `hide_far`, le nombre du
+    choix actif (Statut, Type de note, Taux, Contrat, Distance) égale toujours ce nombre ; sans
+    offre « Loin », rien ne change."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    rows = [
+        (42, 100, OfferStatus.TO_REVIEW, "1020 Renens VD"),
+        (30, 60, OfferStatus.LATER, "Morges, VD"),
+        (63, 100, OfferStatus.TO_REVIEW, "Morges, VD"),
+        (88, 80, OfferStatus.TO_REVIEW, None),
+        (None, None, OfferStatus.TO_REVIEW, "Fribourg"),
+    ]
+    async with runtime.sessionmaker.begin() as session:
+        session.add(Setting(key="identity_postcode", value="1020"))
+        for n, (score, rate, state, place) in enumerate(rows):
+            offer = Offer(
+                fingerprint=f"far{n}",
+                title=f"Offre {n}",
+                first_seen_at=NOW + timedelta(minutes=n),
+                last_seen_at=NOW,
+                status=state,
+                rate_max=rate,
+                location=place,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    score=score,
+                    scored_at=NOW if score is not None else None,
+                )
+            )
+
+    def facet(items: list[dict[str, Any]], value: str) -> int:
+        return next(f["count"] for f in items if f["value"] == value)
+
+    async def button(**params: Any) -> tuple[int, dict[str, Any]]:
+        body = (await api.get("/api/offers", params={"hide_far": True, **params})).json()
+        far = sum(body["facets"]["scores"][:10])
+        return body["total"] - far, body["facets"]["near"]
+
+    for view in ("pending", "to_review", "later"):
+        shown, near = await button(view=view)
+        assert facet(near["views"], view) == shown
+    for rate in (60, 80, 100):
+        shown, near = await button(view="pending", min_rate=rate)
+        assert facet(near["rates"], str(rate)) == shown
+    # Contrat (issue #468) : ces offres n'ont pas de contrat, « Non précisé » les compte.
+    shown, near = await button(view="pending", contracts=["non_precise"])
+    assert facet(near["contracts"], "non_precise") == shown
+    # Distance (issue #468) : un choix de km et « Lieu non précisé ».
+    for choice in ("15", "50", "unknown"):
+        shown, near = await button(view="pending", distance=choice)
+        assert facet(near["distances"], choice) == shown
+    shown, near = await button(view="pending")
+    assert facet(near["rates"], "all") == facet(near["distances"], "all") == shown == 3
+    shown, near = await button(view="pending", basis="provisional")
+    assert near["provisional"] == shown == 2
+    # Sans `hide_far`, ou avec un filtre de note, les nombres restent ceux de la liste.
+    plain = (await api.get("/api/offers", params={"view": "pending"})).json()
+    assert plain["facets"]["near"] is None
+    assert facet(plain["facets"]["rates"], "all") == plain["total"] == 5
+    scored = (await api.get("/api/offers", params={"hide_far": True, "min_score": 50})).json()
+    assert scored["facets"]["near"] is None
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'identity_postcode'"))
+
+
+async def test_near_counts_without_far_offers(api: AsyncClient) -> None:
+    """Aucune offre « Loin » : les nombres « near » égalent ceux de la liste."""
+    body = (await api.get("/api/offers", params={"view": "to_review", "hide_far": True})).json()
+    near = body["facets"]["near"]
+    assert near["rates"] == body["facets"]["rates"]
+    assert next(f["count"] for f in near["views"] if f["value"] == "to_review") == body["total"]
+
+
 async def test_invalid_parameters(api: AsyncClient) -> None:
     assert (await api.get("/api/offers", params={"sources": "Monster!"})).status_code == 422
     assert (await api.get("/api/offers", params={"min_rate": 0})).status_code == 422
@@ -213,7 +326,12 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
             ]
         )
     page = (await api.get("/api/offers", params={"view": "all", "sort": "activity"})).json()
-    mine = {"Lettre aujourd'hui", "Envoyée hier", "Envoyée il y a 5 jours", "Préparation sans document"}
+    mine = {
+        "Lettre aujourd'hui",
+        "Envoyée hier",
+        "Envoyée il y a 5 jours",
+        "Préparation sans document",
+    }
     assert [o["title"] for o in page["items"] if o["title"] in mine] == [
         "Lettre aujourd'hui",
         "Envoyée hier",
@@ -222,7 +340,10 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
     ]
     # En préparation : sans les envoyées, qui sont dans Envoyées (section 38 du 16.11).
     page = (await api.get("/api/offers", params={"view": "in_progress", "sort": "activity"})).json()
-    assert [o["title"] for o in page["items"]] == ["Lettre aujourd'hui", "Préparation sans document"]
+    assert [o["title"] for o in page["items"]] == [
+        "Lettre aujourd'hui",
+        "Préparation sans document",
+    ]
     assert page["counts"]["in_progress"] == 2
 
 
@@ -417,7 +538,9 @@ async def test_counts_pending_is_the_badge_and_total_is_the_list(
     assert searched["counts"]["pending_all"] == badge
     assert searched["counts"]["pending"] == searched["total"] == len(searched["items"]) == 1
     # Dans une autre vue, la puce « À traiter » compte aussi avec les filtres.
-    in_progress = (await api.get("/api/offers", params={"view": "in_progress", "q": "comptable"})).json()
+    in_progress = (
+        await api.get("/api/offers", params={"view": "in_progress", "q": "comptable"})
+    ).json()
     assert in_progress["counts"]["pending_all"] == badge
     assert in_progress["counts"]["pending"] == 1
     assert in_progress["total"] == len(in_progress["items"])
@@ -476,3 +599,45 @@ async def test_score_basis_filter(api: AsyncClient, runtime: Runtime) -> None:
     ]
     assert (narrowed["sure"], narrowed["provisional"]) == (2, 2)
     assert (await api.get("/api/offers", params={"basis": "autre"})).status_code == 422
+
+
+async def test_distance_filter_and_counts(api: AsyncClient, runtime: Runtime) -> None:
+    """Filtre « Distance depuis… » (issue #468) : à vol d'oiseau depuis la commune des
+    coordonnées ; une offre sans lieu reconnu va dans « Lieu non précisé », avec son nombre, et
+    n'est jamais exclue sans le dire. Le choix actif égale « Afficher n offres »."""
+    # Sans domicile : pas de groupe, et un choix de km ne retire rien.
+    alone = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    assert alone["facets"]["distances"] == [] and alone["facets"]["distance_from"] is None
+    assert len(await titles(api, distance="15")) == alone["total"]
+    for n, place in enumerate(
+        ("1020 Renens VD", "Morges, VD", "Yverdon-les-Bains", "Fribourg", "Neuchâtel / Berne"), 10
+    ):
+        await add(runtime, n, f"Offre {place}", ["jobup"], location=place)
+    async with runtime.sessionmaker.begin() as session:
+        session.add(Setting(key="identity_postcode", value="1020"))
+        session.add(Setting(key="identity_city", value="Renens"))
+
+    def distances(body: dict[str, Any]) -> dict[str, int]:
+        return {f["value"]: f["count"] for f in body["facets"]["distances"]}
+
+    body = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    assert body["facets"]["distance_from"] == "Renens"
+    # 3 offres du départ sans lieu, plus « Neuchâtel / Berne » (deux lieux : on ne choisit pas).
+    expected = {"all": 8, "15": 2, "30": 3, "50": 3, "unknown": 4}
+    assert distances(body) == expected
+    assert await titles(api, distance="15") == ["Offre Morges, VD", "Offre 1020 Renens VD"]
+    for choice, count in expected.items():
+        params = {"view": "to_review", **({} if choice == "all" else {"distance": choice})}
+        chosen = (await api.get("/api/offers", params=params)).json()
+        assert chosen["total"] == count
+        assert distances(chosen) == expected
+    unknown = await titles(api, distance="unknown")
+    assert "Offre Neuchâtel / Berne" in unknown and "Administrateur réseau" in unknown
+    # Les autres filtres comptent : en Vaud (canton posé sur les offres du départ seulement).
+    vaud = (await api.get("/api/offers", params={"view": "to_review", "cantons": "VD"})).json()
+    assert distances(vaud)["all"] == vaud["total"]
+
+
+async def test_unknown_distance_is_refused_not_silently_empty(api: AsyncClient) -> None:
+    """Une distance hors des choix ne vide jamais la liste sans le dire : le serveur la refuse."""
+    assert (await api.get("/api/offers", params={"distance": "20"})).status_code == 422

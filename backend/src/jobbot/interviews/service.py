@@ -77,7 +77,7 @@ async def insights(session: AsyncSession) -> Insights:
         done = await _prepared(session)
         result.to_prepare = [(t, normalize_text(t) in done) for t in await _extra(session)]
         return result
-    # La moyenne des notes sur 5 ; un point fait par « Faire le point » n'en a pas (0096).
+    # La moyenne des notes sur 5 ; un point fait par « Faire le point » n'en a pas (0097).
     ratings = [i.rating for i, _ in rows if i.rating is not None]
     result.average_rating = round(sum(ratings) / len(ratings), 1) if ratings else None
     stats: dict[str, QuestionStat] = {}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
+import { computed, defineAsyncComponent, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type GoogleJobs, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
@@ -16,8 +16,8 @@ import LinkedPin from "../components/LinkedPin.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
-import SpontaneousForm from "../components/SpontaneousForm.vue";
-import ManualOfferForm from "../components/ManualOfferForm.vue";
+import type SpontaneousFormType from "../components/SpontaneousForm.vue";
+import type ManualOfferFormType from "../components/ManualOfferForm.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
@@ -41,6 +41,13 @@ import { usePageReady } from "../composables/usePageTransition";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
+
+// Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée) se chargent à part de Candidatures,
+// comme la feuille de la compatibilité (décision de Kevin du 18.11, 13 h 37) : la page s'ouvre plus légère. Ils sont
+// préchargés dès que la page est affichée, pour que le panneau s'ouvre sans attente.
+const loadAddForms = () => import("../components/addForms");
+const ManualOfferForm = defineAsyncComponent(() => loadAddForms().then((m) => m.ManualOfferForm));
+const SpontaneousForm = defineAsyncComponent(() => loadAddForms().then((m) => m.SpontaneousForm));
 
 const PAGE_SIZE = 50;
 // Sur téléphone, « Afficher n offres de plus » charge 20 offres par appui (prompt du 10 novembre, fin de soirée, PR 35 ;
@@ -68,7 +75,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [] });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [], contracts: [], distances: [] });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
@@ -185,15 +192,6 @@ const hidesFar = computed(() => phone.value && filters.value.minScore === null &
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));
 // Le nombre que disent la phrase et « Afficher n offres » : la liste montrée, sans les offres « Loin » cachées.
 const shownTotal = computed(() => (hidesFar.value && !showFar.value ? Math.max(0, total.value - farCount.value) : total.value));
-// Le compteur au-dessus de la liste (ordinateur, décision de Kevin du 15.11). Seul « À traiter » a un total sans
-// filtre (counts.pending_all) : « 12 sur 38 offres » ; les autres vues disent le nombre seul.
-const countLabel = computed(() => {
-  const base = counts.value.pending_all;
-  if (filters.value.view === "pending" && activeCount(filters.value) && shownTotal.value < base) {
-    return `${shownTotal.value} sur ${plural(base, "offre", "offres")}`;
-  }
-  return shownTotal.value ? plural(shownTotal.value, "offre", "offres") : "Aucune offre";
-});
 const shown = computed(() =>
   hidesFar.value && !showFar.value
     ? items.value.filter((o) => o.score === null || o.score === undefined || o.score >= FAR_BELOW || o.id === pinnedId.value)
@@ -396,8 +394,8 @@ const addTab = computed<string>({
   },
 });
 // Le bouton du pied du panneau parle pour le formulaire affiché (libellé, attente).
-const manualForm = ref<InstanceType<typeof ManualOfferForm> | null>(null);
-const spontaneousForm = ref<InstanceType<typeof SpontaneousForm> | null>(null);
+const manualForm = ref<InstanceType<typeof ManualOfferFormType> | null>(null);
+const spontaneousForm = ref<InstanceType<typeof SpontaneousFormType> | null>(null);
 function closeAdd(): void {
   manualOpen.value = false;
   spontaneousOpen.value = false;
@@ -512,6 +510,10 @@ async function load(append = false): Promise<void> {
           with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,
+          contracts: f.contracts.length ? f.contracts : undefined,
+          distance: f.distance ?? undefined,
+          // Téléphone : les nombres des choix sans les offres « Loin » cachées (Kevin, 18.11, choix a).
+          hide_far: hidesFar.value || undefined,
         },
       },
     });
@@ -697,6 +699,7 @@ onMounted(() => {
   void load().then(openFromQuery);
   void openShared();
   void loadChunkTitles();
+  void loadAddForms();
 });
 useDataChanged(() => {
   void load();
@@ -793,6 +796,7 @@ onUnmounted(() => {
             :facets="facets"
             :total="shownTotal"
             :counts="counts"
+            :far="hidesFar && !showFar ? farCount : 0"
             @update="update"
             @reset="reset"
             @close="closeFilters"
@@ -870,15 +874,8 @@ onUnmounted(() => {
           :logo="selected.has_logo ? `/api/offers/${selected.id}/logo` : null"
         />
         <div class="linked-cards">
-          <!-- Le compteur (décision de Kevin du 15.11, au-dessus de la liste, ordinateur) : les offres de la liste montrée,
-               filtres compris ; avec un filtre qui en retire, « 12 sur 38 offres », 38 étant « Toutes » sans filtre. -->
-          <p
-            v-if="wide && !phone && !bare && !failed && shownTotal > 0"
-            class="offers-count"
-            data-test="offers-count"
-          >
-            {{ countLabel }}
-          </p>
+          <!-- Pas de compteur au-dessus de la liste (Kevin, 18.11, point 6) : les nombres restent sur les groupes et dans
+               « Afficher n offres ». -->
           <p
             v-if="notice"
             class="notice"
@@ -924,12 +921,12 @@ onUnmounted(() => {
           <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
           <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
           <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
-               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
+               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. Plus de phrase sous le
+               titre avec des alertes (CandidaturesVideAlertes, Kevin, 18.11, §72g). -->
           <EmptyState
             v-else-if="noneYet"
             scene="aucune-offre"
             :title="alertsReady ? 'Tes premières offres arrivent bientôt' : 'Pas encore d’offre'"
-            :text="alertsReady ? 'jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.' : undefined"
             :pill="nonePill"
             data-test="offers-none-yet"
           >
@@ -1379,7 +1376,6 @@ onUnmounted(() => {
     v-if="phone && manualOpen"
     open
     title="Ajouter une offre"
-    subtitle="Colle le lien ou le texte de l’annonce, ou importe son PDF. jobA1 la lit et la note."
     class="manual-sheet"
     @close="manualOpen = false"
   >
@@ -1446,7 +1442,6 @@ onUnmounted(() => {
 /* Rien encore (§13) : l'état vide occupe la hauteur sous l'en-tête. Téléphone (CandidaturesVide) : du haut de la liste
    (144 px sans le bandeau Démo) à 130 px du bas de l'écran, la marge basse de la page au-dessus de la barre d'onglets. */
 .offers-list-bare { display: flex; flex-direction: column; }
-.offers-count { margin: 0 0 var(--space-3); padding-inline: var(--space-1); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--text-secondary); }
 @media (max-width: 820px) {
   .offers-list-bare { --bare-chrome: 274px; min-height: calc(100dvh - var(--bare-chrome)); }
 }

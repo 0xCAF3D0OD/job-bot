@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
+import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 
 // La pause du Rythme (planche ReglagesRythmePause du 18.11, §70 ; Q7 de Kevin du 17.11) : une feuille en îlot avec un
@@ -8,20 +9,14 @@ import BottomSheet from "./BottomSheet.vue";
 // défilent sous les jours de la semaine, fixes en haut. Jours passés grisés, aujourd’hui entouré, le prochain
 // rendez-vous ORP marqué d’un point orange, et signalé s’il tombe pendant la pause. Rien n’est enregistré avant
 // « Enregistrer » ; « Effacer » vide la plage (enregistrée vide, elle retire la pause).
-const props = defineProps<{ open: boolean; from: string | null; until: string | null; meeting?: string | null }>();
+// `wide` : sur ordinateur (planche ReglagesOrdinateurPause du 18.11, §71), la même plage dans une fenêtre centrée de
+// 760 px, deux mois côte à côte (chacun avec ses jours de la semaine), flèches « Mois précédent » / « Mois suivant » de
+// 44 px de chaque côté des deux noms, sans défilement (Kevin, 18.11, 14 h 38). « Clic » au lieu de « toucher ».
+const props = defineProps<{ open: boolean; from: string | null; until: string | null; meeting?: string | null; wide?: boolean }>();
 const emit = defineEmits<{ close: []; save: [from: string | null, until: string | null] }>();
 
 const start = ref<string | null>(null);
 const end = ref<string | null>(null);
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
-    start.value = props.from;
-    end.value = props.until && props.from && props.until >= props.from ? props.until : null;
-  },
-  { immediate: true },
-);
 
 const iso = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -61,6 +56,23 @@ const months = computed(() => {
   });
 });
 
+// Ordinateur : les deux mois montrés (le premier est months[page]).
+const page = ref(0);
+const shown = computed(() => (props.wide ? months.value.slice(page.value, page.value + 2) : months.value));
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) return;
+    start.value = props.from;
+    end.value = props.until && props.from && props.until >= props.from ? props.until : null;
+    // Sur ordinateur, la fenêtre s’ouvre sur le mois du début de la pause (sinon le mois en cours).
+    const from = props.from;
+    const at = from ? months.value.findIndex((month) => month.key === `${from.slice(0, 7)}-01`) : -1;
+    page.value = Math.min(Math.max(at, 0), months.value.length - 2);
+  },
+  { immediate: true },
+);
+
 function pick(day: string): void {
   if (day < today) return;
   if (!start.value || end.value || day < start.value) {
@@ -76,8 +88,9 @@ const length = computed(() =>
   start.value && end.value ? Math.round((parse(end.value).getTime() - parse(start.value).getTime()) / DAY_MS) + 1 : 0,
 );
 const summary = computed(() => {
-  if (!start.value) return "Touche le premier jour";
-  if (!end.value) return `${short.format(parse(start.value))} → touche le dernier jour`;
+  const verb = props.wide ? "clique sur" : "touche";
+  if (!start.value) return `${verb.charAt(0).toUpperCase()}${verb.slice(1)} le premier jour`;
+  if (!end.value) return `${short.format(parse(start.value))} → ${verb} le dernier jour`;
   return `${short.format(parse(start.value))} → ${short.format(parse(end.value))}`;
 });
 const meetingInPause = computed(
@@ -115,7 +128,7 @@ function cellClass(date: Date): Record<string, boolean> {
     :open="open"
     title="Pause"
     size="large"
-    class="pause-sheet"
+    :class="['pause-sheet', { 'pause-wide': wide }]"
     data-test="pause-sheet"
     @close="emit('close')"
   >
@@ -140,6 +153,7 @@ function cellClass(date: Date): Record<string, boolean> {
         <small v-if="length">{{ length }} {{ length > 1 ? "jours" : "jour" }}</small>
       </p>
       <div
+        v-if="!wide"
         class="pause-week"
         aria-hidden="true"
       >
@@ -149,35 +163,69 @@ function cellClass(date: Date): Record<string, boolean> {
         >{{ letter }}</span>
       </div>
     </div>
-    <section
-      v-for="month in months"
-      :key="month.key"
-      class="pause-month"
-      :aria-label="month.title"
-    >
-      <h3>{{ month.title }}</h3>
-      <div class="pause-grid">
-        <span
-          v-if="month.offset"
-          :style="{ gridColumn: `span ${month.offset}` }"
-        />
-        <span
-          v-for="date in month.days"
-          :key="date.getDate()"
-          :class="['pc', cellClass(date)]"
+    <div class="pause-months">
+      <template v-if="wide">
+        <button
+          type="button"
+          class="pause-nav pause-prev"
+          aria-label="Mois précédent"
+          :aria-disabled="page === 0 ? 'true' : undefined"
+          data-test="pause-prev"
+          @click="page > 0 && (page -= 1)"
         >
-          <button
-            type="button"
-            :aria-label="dayName.format(date) + (iso(date) === meetingDay ? ', rendez-vous ORP' : '')"
-            :aria-pressed="!!start && iso(date) >= start && iso(date) <= (end ?? start) ? 'true' : 'false'"
-            :aria-disabled="iso(date) < today ? 'true' : undefined"
-            :aria-current="iso(date) === today ? 'date' : undefined"
-            :data-test="`pause-day-${iso(date)}`"
-            @click="pick(iso(date))"
-          >{{ date.getDate() }}</button>
-        </span>
-      </div>
-    </section>
+          <AppIcon name="chevron-left" />
+        </button>
+        <button
+          type="button"
+          class="pause-nav pause-next"
+          aria-label="Mois suivant"
+          :aria-disabled="page >= months.length - 2 ? 'true' : undefined"
+          data-test="pause-next"
+          @click="page < months.length - 2 && (page += 1)"
+        >
+          <AppIcon name="chevron" />
+        </button>
+      </template>
+      <section
+        v-for="month in shown"
+        :key="month.key"
+        class="pause-month"
+        :aria-label="month.title"
+      >
+        <h3>{{ month.title }}</h3>
+        <div
+          v-if="wide"
+          class="pause-week"
+          aria-hidden="true"
+        >
+          <span
+            v-for="([letter], i) in WEEK"
+            :key="i"
+          >{{ letter }}</span>
+        </div>
+        <div class="pause-grid">
+          <span
+            v-if="month.offset"
+            :style="{ gridColumn: `span ${month.offset}` }"
+          />
+          <span
+            v-for="date in month.days"
+            :key="date.getDate()"
+            :class="['pc', cellClass(date)]"
+          >
+            <button
+              type="button"
+              :aria-label="dayName.format(date) + (iso(date) === meetingDay ? ', rendez-vous ORP' : '')"
+              :aria-pressed="!!start && iso(date) >= start && iso(date) <= (end ?? start) ? 'true' : 'false'"
+              :aria-disabled="iso(date) < today ? 'true' : undefined"
+              :aria-current="iso(date) === today ? 'date' : undefined"
+              :data-test="`pause-day-${iso(date)}`"
+              @click="pick(iso(date))"
+            >{{ date.getDate() }}</button>
+          </span>
+        </div>
+      </section>
+    </div>
     <template #actions>
       <p
         v-if="meetingInPause && meetingDay"
@@ -221,7 +269,7 @@ function cellClass(date: Date): Record<string, boolean> {
 .pause-month h3 { margin: var(--space-4) 0 var(--space-2); font-size: var(--font-body); text-align: center; }
 .pause-grid { row-gap: var(--space-1); }
 .pc { position: relative; display: grid; place-items: center; height: 44px; }
-.pc button { width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; font-weight: var(--weight-semibold); cursor: pointer; }
+.pc button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; font-weight: var(--weight-semibold); cursor: pointer; }
 .pc-past button { color: var(--text-disabled); font-weight: var(--weight-regular); cursor: default; }
 .pc-today button { box-shadow: inset 0 0 0 1.5px var(--text); }
 .pc-band, .pc-l, .pc-r { background: var(--primary-soft); }
@@ -237,4 +285,32 @@ function cellClass(date: Date): Record<string, boolean> {
 .pause-foot { display: flex; align-items: center; justify-content: space-between; }
 .pause-foot .pause-clear { min-height: 44px; font-weight: var(--weight-bold); color: var(--text); }
 .pause-foot .primary { min-height: 52px; padding: 0 var(--space-8); border-radius: var(--radius-pill); }
+/* Ordinateur (ReglagesOrdinateurPause, §71) : fenêtre centrée de 760 px, rayon 28, deux mois de 7 × 44 px côte à côte ;
+   la zone des mois défile deux par deux (hauteur d’un mois de six semaines). Pied à droite, « Effacer » puis « Enregistrer ». */
+@media (min-width: 821px) {
+  .sheet.pause-wide { inset: 0; width: 760px; max-width: calc(100vw - 2 * var(--space-6)); height: fit-content; max-height: calc(100dvh - 2 * var(--space-6)); margin: auto; border-radius: var(--sheet-radius); background: var(--surface); }
+  .sheet.pause-wide[open] { animation: none; }
+  .pause-wide .sheet-head { min-height: 0; padding: var(--space-5) var(--space-5) 0 var(--space-6); }
+  .pause-wide .sheet-body { overflow: hidden; padding: 0; }
+  .pause-wide .pause-top { position: static; }
+  .pause-wide .pause-sum { margin: var(--space-3) var(--space-6) 0; padding: 0 var(--space-4); }
+  /* Hauteur d’un mois de six semaines : la fenêtre ne saute pas d’un mois à l’autre. */
+  .pause-wide .pause-months { position: relative; display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; align-content: start; column-gap: calc(var(--space-8) + var(--space-2)); box-sizing: content-box; min-height: 362px; padding: var(--space-5) var(--space-8) var(--space-2); }
+  /* Planche du §72 : flèches cerclées dans la ligne du nom du mois, « < » à gauche du premier, « > » à droite du second. */
+  .pause-nav { position: absolute; top: var(--space-5); display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; box-shadow: inset 0 0 0 1.5px var(--card-line); color: var(--text); cursor: pointer; }
+  .pause-nav:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+  .pause-nav[aria-disabled="true"] { color: var(--text-disabled); cursor: default; background: transparent; }
+  .pause-nav .icon { width: 20px; height: 20px; }
+  .pause-prev { left: var(--space-8); }
+  .pause-next { right: var(--space-8); }
+  .pause-wide .pause-month h3 { display: grid; place-items: center; min-height: 44px; margin: 0 0 var(--space-3); line-height: var(--space-6); }
+  .pause-wide .pause-week, .pause-wide .pause-grid { grid-template-columns: repeat(7, 44px); }
+  .pause-wide .pause-week { margin-bottom: var(--space-2); padding: 0; border: 0; }
+  .pause-wide .pc-rdv::after { bottom: var(--space-1); }
+  .pause-wide .sheet-actions { padding: var(--space-3) 0 0; border-top: 0; }
+  .pause-wide .pause-warn { margin: 0 var(--space-6); }
+  .pause-wide .pause-foot { justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-1); padding: var(--space-4) var(--space-5) var(--space-5); border-top: 1px solid var(--line-soft); }
+  .pause-wide .pause-foot .pause-clear { min-height: 48px; padding: 0 var(--space-5); font-size: var(--font-body); }
+  .pause-wide .pause-foot .primary { min-height: 48px; padding: 0 var(--space-6); }
+}
 </style>

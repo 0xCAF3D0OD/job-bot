@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import SettingsView from "./SettingsView.vue";
-import { pickDate } from "../components/DateField.testing";
 
 const GET = vi.fn();
 const POST = vi.fn();
@@ -104,16 +103,30 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     expect(desktop.find("[data-test=section-affichage]").exists()).toBe(false);
   });
 
-  it("Rythme : un seul calendrier de pause ouvert à la fois (K41)", async () => {
+  it("Rythme sur ordinateur : la pause dans la fenêtre centrée, deux mois côte à côte (ReglagesOrdinateurPause, §71)", async () => {
     mockGet(false);
     const { wrapper } = await mountSettings("rythme");
-    await wrapper.get("[data-test=pause-until] [data-test=dt-date]").trigger("click");
-    expect(wrapper.findAll("[data-test=date-time-panel]")).toHaveLength(1);
-    await wrapper.get("[data-test=pause-from] [data-test=dt-date]").trigger("click");
+    // Plus de champs Du / Jusqu’au (Kevin, 18.11, point 4).
+    expect(wrapper.find("[data-test=pause-from]").exists()).toBe(false);
+    expect(wrapper.get("[data-test=pause-open]").text()).toContain("Aucune pause");
+    await wrapper.get("[data-test=pause-open]").trigger("click");
     await flushPromises();
-    expect(wrapper.findAll("[data-test=date-time-panel]")).toHaveLength(1);
-    expect(wrapper.find("[data-test=pause-from] [data-test=date-time-panel]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=pause-until] [data-test=dt-date]").exists()).toBe(true);
+    const sheet = wrapper.get("[data-test=pause-sheet]");
+    expect(sheet.classes()).toContain("pause-wide");
+    // Chaque mois a ses jours de la semaine ; la consigne du clic dans le résumé.
+    expect(sheet.findAll(".pause-month .pause-week").length).toBeGreaterThan(1);
+    expect(sheet.get("[data-test=pause-summary]").text()).not.toContain("1er clic");
+    expect(sheet.get("[data-test=pause-summary]").text()).toContain("Clique sur le premier jour");
+    // Deux mois à la fois ; flèches de 44 px (Kevin, 18.11, point 3), pas de défilement.
+    const titles = () => sheet.findAll(".pause-month h3").map((h) => h.text());
+    expect(titles()).toHaveLength(2);
+    const first = titles();
+    expect(sheet.get("[data-test=pause-prev]").attributes("aria-label")).toBe("Mois précédent");
+    expect(sheet.get("[data-test=pause-prev]").attributes("aria-disabled")).toBe("true");
+    await sheet.get("[data-test=pause-next]").trigger("click");
+    expect(titles()[0]).toBe(first[1]);
+    await sheet.get("[data-test=pause-prev]").trigger("click");
+    expect(titles()).toEqual(first);
   });
 
   it("une rubrique seule a le même en-tête que la page Réglages : la flèche vers le compte, puis son nom (N6)", async () => {
@@ -389,14 +402,20 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
     await flushPromises();
     expect(last().offers_notify_hour).toBe(8);
     expect(last().offers_notify_mode).toBe("daily");
-    // Une pause, puis la terminer.
-    await pickDate(wrapper, "pause-from", "2099-10-26");
-    await pickDate(wrapper, "pause-until", "2099-11-01");
+    // Une pause dans la fenêtre (§71), puis la terminer.
+    await wrapper.get("[data-test=pause-open]").trigger("click");
+    await flushPromises();
+    const days = wrapper.findAll("[data-test^=pause-day-]:not([aria-disabled])");
+    const iso = (index: number) => days[index]!.attributes("data-test")!.slice("pause-day-".length);
+    const [from, until] = [iso(3), iso(9)];
+    await days[3]!.trigger("click");
+    await days[9]!.trigger("click");
     // Rien n’est enregistré avant « Enregistrer » (Kevin, 18.11).
     expect(last().rhythm_pause_from ?? null).toBeNull();
     await wrapper.get("[data-test=pause-save]").trigger("click");
     await flushPromises();
-    expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2099-10-26", "2099-11-01"]);
+    expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual([from, until]);
+    expect(wrapper.get("[data-test=pause-open]").text()).toContain("Pause du");
     await wrapper.find("[data-test=pause-end]").trigger("click");
     await flushPromises();
     expect(last().rhythm_pause_from).toBeNull();

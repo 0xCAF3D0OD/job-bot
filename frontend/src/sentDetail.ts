@@ -40,16 +40,30 @@ export function sentWords(a: Application, row: OrpRow | null | undefined, now: D
     words.push({ text: "Poste obtenu", tone: "green", test: "word-status" });
   } else if (a.status === "refus") {
     words.push({ text: "Refus", tone: "muted", test: "word-status" });
+  } else if (a.status === "reponse") {
+    words.push({ text: "Réponse reçue", tone: "grey", test: "word-status" });
   } else {
     words.push({ text: `Envoyée · il y a ${since(a.sent_at)}`, tone: "grey", test: "word-status" });
   }
-  if (row?.declared_at) words.push({ text: "Déclarée à l’ORP", tone: "green", check: true, test: "word-declared" });
+  if (row?.declared_at && !row.missing.length) words.push({ text: "Déclarée à l’ORP", tone: "green", check: true, test: "word-declared" });
   return words;
+}
+
+// La ligne d'état ORP de l'en-tête du détail (Kevin, 18.11, points 9 et 10) quand il reste à faire : « À déclarer à
+// l'ORP › » en bleu, ou « À compléter pour l'ORP › » en orange si la déclaration manque d'informations. Les deux mènent
+// à la fiche ORP de la candidature. Déclarée et complète : « ✓ Déclarée à l'ORP » en vert, dans sentWords.
+export type OrpTodo = { text: string; tone: "blue" | "orange"; test: string };
+export function orpTodo(row: OrpRow | null | undefined): OrpTodo | null {
+  if (!row) return null;
+  if (!row.declared_at) return { text: "À déclarer à l’ORP", tone: "blue", test: "word-to-declare" };
+  if (row.missing.length) return { text: "À compléter pour l’ORP", tone: "orange", test: "word-to-complete" };
+  return null;
 }
 
 export type SentStep = { label: string; sub: string; state: "done" | "current" | "todo" };
 
 const ANSWERS: Partial<Record<Application["status"], string>> = {
+  reponse: "Reçue",
   entretien: "Entretien",
   refus: "Refus",
   engagement: "Poste obtenu",
@@ -91,7 +105,7 @@ export function sentSteps(a: Application, row: OrpRow | null | undefined, now: D
 export function phoneSteps(a: Application): SentStep[] {
   const interviewed = a.status === "engagement" || !!a.interviews?.length;
   const decided = a.status === "refus" || a.status === "engagement";
-  const answered = decided || a.status === "entretien";
+  const answered = decided || a.status === "entretien" || a.status === "reponse";
   const done = [true, answered, interviewed, decided];
   const current = done.findIndex((d, i) => !d && !(i === 2 && decided));
   return ["Envoyée", "Réponse", "Entretien", "Décision"].map((label, i) => ({
@@ -127,7 +141,7 @@ export function sentHistory(a: Application, row: OrpRow | null | undefined, now:
   const add = (day: string | null | undefined, title: string, detail = "") => {
     if (day) events.push({ day: day.slice(0, 10), date: short(day, now), title, detail });
   };
-  if (a.status in ANSWERS && a.status !== "entretien") add(a.status_at, `Réponse : ${(ANSWERS[a.status] ?? "").toLowerCase()}`, a.status_reason ?? "");
+  if (a.status in ANSWERS && a.status !== "entretien") add(a.status_at, a.status === "reponse" ? "Réponse reçue" : `Réponse : ${(ANSWERS[a.status] ?? "").toLowerCase()}`, a.status_reason ?? "");
   for (const i of a.interviews ?? []) add(i.held_at, "Entretien", `Ressenti ${feelingText(i)}`);
   for (const c of a.contacts ?? []) {
     add(c.contacted_on, `Contact : ${c.name || ROLES[c.role]}`, CHANNELS[c.channel]);
