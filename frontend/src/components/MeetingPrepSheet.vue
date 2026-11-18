@@ -485,10 +485,11 @@ function cal(iso: string): { day: number; month: number } {
 .prep-edit > .prep-box { margin-top: var(--space-3); }
 .prep-edit-body { flex: 1; min-width: 0; }
 .prep-field { display: block; box-sizing: border-box; width: 100%; min-height: var(--pp-field-h); padding: var(--space-3); border: 2px solid var(--primary-graphic); border-radius: var(--space-3); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--pp-lh); resize: none; outline: 0; }
-.prep-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.prep-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-3); }
 .prep-actions-status { flex: 1 0 100%; min-width: 0; }
 .prep-cancel, .prep-submit { flex: none; min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--target-min); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); cursor: pointer; }
-.prep-cancel { border: 0; background: none; color: var(--primary-text); }
+.prep-cancel { border: 0; background: none; color: var(--text); }
+.prep-submit { padding-inline: var(--space-5); border: 0; }
 .prep-box { flex: none; box-sizing: border-box; width: var(--pp-check); height: var(--pp-check); border-radius: var(--pp-check-radius); box-shadow: inset 0 0 0 2px var(--field-border); }
 .prep-box.on { box-shadow: none; background: var(--primary-graphic); }
 .prep-status { margin: 0 var(--space-4) var(--space-3); }
