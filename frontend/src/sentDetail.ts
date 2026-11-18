@@ -42,8 +42,19 @@ export function sentWords(a: Application, row: OrpRow | null | undefined, now: D
   } else {
     words.push({ text: `Envoyée · il y a ${since(a.sent_at)}`, tone: "grey", test: "word-status" });
   }
-  if (row?.declared_at) words.push({ text: "Déclarée à l’ORP", tone: "green", check: true, test: "word-declared" });
+  if (row?.declared_at && !row.missing.length) words.push({ text: "Déclarée à l’ORP", tone: "green", check: true, test: "word-declared" });
   return words;
+}
+
+// La ligne d'état ORP de l'en-tête du détail (Kevin, 18.11, points 9 et 10) quand il reste à faire : « À déclarer à
+// l'ORP › » en bleu, ou « À compléter pour l'ORP › » en orange si la déclaration manque d'informations. Les deux mènent
+// à la fiche ORP de la candidature. Déclarée et complète : « ✓ Déclarée à l'ORP » en vert, dans sentWords.
+export type OrpTodo = { text: string; tone: "blue" | "orange"; test: string };
+export function orpTodo(row: OrpRow | null | undefined): OrpTodo | null {
+  if (!row) return null;
+  if (!row.declared_at) return { text: "À déclarer à l’ORP", tone: "blue", test: "word-to-declare" };
+  if (row.missing.length) return { text: "À compléter pour l’ORP", tone: "orange", test: "word-to-complete" };
+  return null;
 }
 
 export type SentStep = { label: string; sub: string; state: "done" | "current" | "todo" };

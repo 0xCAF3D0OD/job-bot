@@ -195,6 +195,30 @@ describe("Rendez-vous sur téléphone", () => {
     await flushPromises();
     expect(prep.props("open")).toBe(true);
     expect(name.props("open")).toBe(false);
+    // La ligne de la préparation suit ce qui est enregistré : nom · office.
+    expect(wrapper.get("[data-test=rdv-name-line]").text()).toBe("Camille Exemple · ORP Lausanne");
+  });
+
+  it("carte « La feuille » (planche PreparerRendezVous, §71) : nom · office, « Voir la feuille » remplace la préparation", async () => {
+    const page = { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/orp-meeting/nom"
+          ? { data: { name: "Camille Exemple", advisor: null, office: "ORP Renens" } }
+          : path === "/api/orp-meeting" ? { data: page } : { data: [] },
+      ),
+    );
+    const { wrapper, router } = await open();
+    await wrapper.get("[data-test=rdv-prep-open]").trigger("click");
+    const prep = wrapper.findComponent({ name: "MeetingPrepSheet" });
+    expect(prep.findAll(".prep-title").map((t) => t.text())).toContain("La feuille");
+    expect(wrapper.get("[data-test=rdv-name-line]").text()).toBe("Camille Exemple · ORP Renens");
+    expect(wrapper.get("[data-test=rdv-view-sheet]").text()).toContain("1 question");
+    const replace = vi.spyOn(router, "replace");
+    await wrapper.get("[data-test=rdv-view-sheet]").trigger("click");
+    await flushPromises();
+    expect(replace).toHaveBeenCalledWith({ query: { feuille: "1" } });
+    expect(router.currentRoute.value.query.feuille).toBe("1");
   });
 
   it("une seule action dans la carte : « Préparer le rendez-vous », plus de « Voir ma feuille » (PR 7)", async () => {

@@ -25,6 +25,7 @@ import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { companyPlace, rateText, remoteText, scoreWord } from "../format";
 import { whyLine } from "../whyLine";
+import { displayTitle } from "../offerTitle";
 
 // Une étape, un fichier chargé à part (allègement (b), issue #797) : seule l'étape affichée pèse sur l'ouverture des
 // premiers pas. Les autres sont préchargées quand le navigateur est au repos ; si l'une tarde plus de 300 ms, les blocs
@@ -1050,7 +1051,7 @@ async function finish(to: string): Promise<void> {
                   aria-hidden="true"
                 >{{ initials(offer.company) }}</span>
                 <span class="wdk-offer-text">
-                  <b>{{ offer.title }}</b>
+                  <b>{{ displayTitle(offer.title, offer) }}</b>
                   <span>{{ companyPlace(offer.company || "Entreprise non indiquée", offer.location) }}<template v-if="offer.score != null"> · <b :class="`tone-${scoreWord(offer.score).tone}`">{{ scoreWord(offer.score).word }} · {{ Math.round(offer.score) }}</b></template></span>
                 </span>
                 <template v-if="decided[offer.id]">
@@ -1071,7 +1072,7 @@ async function finish(to: string): Promise<void> {
                   <button
                     type="button"
                     class="secondary wdk-small"
-                    :aria-label="`Écarter ${offer.title}`"
+                    :aria-label="`Écarter ${displayTitle(offer.title, offer)}`"
                     data-test="welcome-dismiss"
                     @click="decideOffer(offer, 'dismiss')"
                   >
@@ -1080,7 +1081,7 @@ async function finish(to: string): Promise<void> {
                   <button
                     type="button"
                     class="secondary wdk-small"
-                    :aria-label="`Garder ${offer.title}`"
+                    :aria-label="`Garder ${displayTitle(offer.title, offer)}`"
                     data-test="welcome-keep"
                     @click="decideOffer(offer, 'keep')"
                   >
