@@ -257,6 +257,13 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
               class="home-num home-num-check"
               aria-hidden="true"
             />
+            <!-- Une tâche bloquante ou en retard n'a pas de numéro : un rond orange vide (Kevin, 18.11, comme le §61). -->
+            <span
+              v-else-if="task.tone === 'late'"
+              class="home-num home-num-late"
+              aria-hidden="true"
+              data-test="home-late-ring"
+            />
             <b
               v-else
               class="home-num"
@@ -415,6 +422,8 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
   --home-rule-sort: #F1D3C0;
   --home-mark: #FFE9A8;
   --home-hand-late: #8A4A12;
+  --home-ring-late: #B4631F;
+  --home-26: 1.625rem;
   /* Valeurs de la planche AccueilV2 hors échelle : nommées ici (garde-fou docs/135). */
   --home-10: 0.625rem;
   --home-14: 0.875rem;
@@ -431,9 +440,9 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
   --home-shadow: 0 -6px 16px rgb(27 31 42 / 6%);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .home { --home-sheet-sort: #2E231B; --home-rule-top: #2C4A39; --home-rule-sort: #4A3628; --home-mark: #5A4A1E; --home-hand-late: var(--peach-text); }
+  :root:not([data-theme="light"]) .home { --home-sheet-sort: #2E231B; --home-rule-top: #2C4A39; --home-rule-sort: #4A3628; --home-mark: #5A4A1E; --home-hand-late: var(--peach-text); --home-ring-late: var(--peach-text); }
 }
-:root[data-theme="dark"] .home { --home-sheet-sort: #2E231B; --home-rule-top: #2C4A39; --home-rule-sort: #4A3628; --home-mark: #5A4A1E; --home-hand-late: var(--peach-text); }
+:root[data-theme="dark"] .home { --home-sheet-sort: #2E231B; --home-rule-top: #2C4A39; --home-rule-sort: #4A3628; --home-mark: #5A4A1E; --home-hand-late: var(--peach-text); --home-ring-late: var(--peach-text); }
 
 .home h1, .home h2 { margin: 0; letter-spacing: -0.03em; line-height: var(--leading-none); }
 .home-hello { display: grid; gap: var(--home-10); padding: 0 var(--space-6) var(--home-40); }
@@ -501,6 +510,9 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
 /* Le numéro : rond de 32 px gris, 15 px gras. */
 .home-num { flex: none; display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .home-num-check { background: none; }
+/* Le rond orange vide d'une tâche bloquante ou en retard : 26 px, bord de 2 px, comme le cercle à cocher du §61. */
+.home-num-late { background: none; }
+.home-num-late::before { content: ""; box-sizing: border-box; width: var(--home-26); height: var(--home-26); border: 2px solid var(--home-ring-late); border-radius: 50%; }
 /* §61 : le cercle à cocher (26 px, zone de 44) posé sur la place du numéro ; le lien garde toute la ligne. */
 .home-checkable { position: relative; }
 .home-checkable > .task-check { position: absolute; z-index: 1; top: 50%; left: -0.375rem; transform: translateY(-50%); }
