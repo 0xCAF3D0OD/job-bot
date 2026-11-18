@@ -1,0 +1,1 @@
+Test d'affichage bloquant en CI (décision du 18.11) : captures de référence des 8 écrans principaux, téléphone et ordinateur, clair et sombre, et script de contrôle a à h, sur une démo à heure figée ; ordre fixe des formations (Bilan) et de la formation suivie de la démo

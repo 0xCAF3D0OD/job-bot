@@ -85,6 +85,21 @@ export function sentSteps(a: Application, row: OrpRow | null | undefined, now: D
   return raw.map((s, i) => ({ label: s.label, sub: s.sub, state: s.done ? "done" : i === current ? "current" : "todo" }));
 }
 
+// Téléphone (EnvoyeeDetail, §40) : la frise Envoyée → Réponse → Entretien → Décision. Faite, en cours (la première
+// qui ne l'est pas), à venir. Un refus sans entretien saute l'étape Entretien (grise) ; la décision est faite.
+export function phoneSteps(a: Application): SentStep[] {
+  const interviewed = a.status === "engagement" || !!a.interviews?.length;
+  const decided = a.status === "refus" || a.status === "engagement";
+  const answered = decided || a.status === "entretien";
+  const done = [true, answered, interviewed, decided];
+  const current = done.findIndex((d, i) => !d && !(i === 2 && decided));
+  return ["Envoyée", "Réponse", "Entretien", "Décision"].map((label, i) => ({
+    label,
+    sub: "",
+    state: done[i] ? "done" : i === current ? "current" : "todo",
+  }));
+}
+
 export type SentEvent = { day: string; date: string; title: string; detail: string };
 
 function sentChannel(a: Application): string {

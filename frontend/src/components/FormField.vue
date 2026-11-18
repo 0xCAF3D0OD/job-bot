@@ -34,12 +34,16 @@ const control = computed(() => ({
   describedby: [props.hint ? hintId : "", props.error ? errorId : ""].filter(Boolean).join(" ") || undefined,
   invalid: props.error ? true : undefined,
 }));
+// Un champ étroit (5 ou 10 caractères) s'élargit jusqu'à la longueur de son libellé : le libellé au repos n'est
+// jamais coupé (audit du 17.11, N30 : « Nombre de personnes » devenait « Nomb… »).
+const labelChars = computed(() => props.label.length + (props.optional ? " (facultatif)".length : 0) + (props.badge ? props.badge.length + 2 : 0));
 </script>
 
 <template>
   <div
     class="form-field"
     :class="width ? `field-w-${width}` : undefined"
+    :style="width === 5 || width === 10 ? { '--label-ch': labelChars } : undefined"
   >
     <div
       ref="box"
@@ -79,7 +83,7 @@ const control = computed(() => ({
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .form-field-box:has(:is(input, select, textarea):disabled) { --ff-bg: var(--field-disabled-bg); }
 .form-field-hint { margin: 0; padding-inline: var(--space-4); font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
-.form-field:is(.field-w-5, .field-w-10) > .form-field-box { width: min(100%, var(--field-w)); }
+.form-field:is(.field-w-5, .field-w-10) > .form-field-box { width: min(100%, max(var(--field-w), calc(var(--label-ch, 0) * 1ch + 2 * var(--ff-label-x) + 2 * var(--space-1)))); }
 @media (prefers-reduced-motion: reduce) {
 .form-field-label { transition: none; }
 }
