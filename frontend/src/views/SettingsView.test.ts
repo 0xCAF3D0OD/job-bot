@@ -115,7 +115,7 @@ describe("SettingsView, la page Réglages unique du téléphone (maquette Régla
     expect(sheet.classes()).toContain("pause-wide");
     // Chaque mois a ses jours de la semaine ; la consigne du clic dans le résumé.
     expect(sheet.findAll(".pause-month .pause-week").length).toBeGreaterThan(1);
-    expect(sheet.get("[data-test=pause-summary]").text()).toContain("1er clic : Du, 2e clic : Jusqu’au");
+    expect(sheet.get("[data-test=pause-summary]").text()).not.toContain("1er clic");
     expect(sheet.get("[data-test=pause-summary]").text()).toContain("Clique sur le premier jour");
     // Deux mois à la fois ; flèches de 44 px (Kevin, 18.11, point 3), pas de défilement.
     const titles = () => sheet.findAll(".pause-month h3").map((h) => h.text());

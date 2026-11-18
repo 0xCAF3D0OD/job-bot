@@ -13,17 +13,15 @@ const PROBLEMS: Record<string, string> = {
   budget: "La capture ne peut pas être lue pour l’instant. Colle le texte de l’annonce.",
 };
 
-export async function readOfferFile(offerId: number, file: File): Promise<{ text?: string; error?: string }> {
-  if (file.size > MAX_FILE) return { error: PROBLEMS["too-big"] };
-  const { data, error: refused } = await api.POST("/api/offers/{offer_id}/file", {
-    params: { path: { offer_id: offerId } },
-    body: { file: "" },
-    bodySerializer: () => {
-      const form = new FormData();
-      form.append("file", file);
-      return form;
-    },
-  });
+type FileAnswer = { text?: string | null; problem?: string | null; limit?: string | null } | undefined;
+function form(file: File): () => FormData {
+  return () => {
+    const body = new FormData();
+    body.append("file", file);
+    return body;
+  };
+}
+function answer(data: FileAnswer, refused: unknown): { text?: string; error?: string } {
   if (!data) {
     const detail = (refused as { detail?: unknown } | undefined)?.detail;
     return { error: typeof detail === "string" ? detail : "Import impossible pour l’instant : réessaie." };
@@ -31,4 +29,22 @@ export async function readOfferFile(offerId: number, file: File): Promise<{ text
   if (data.limit) return { error: data.limit };
   if (!data.text) return { error: PROBLEMS[data.problem ?? "unreadable"] ?? PROBLEMS.unreadable };
   return { text: data.text };
+}
+
+export async function readOfferFile(offerId: number, file: File): Promise<{ text?: string; error?: string }> {
+  if (file.size > MAX_FILE) return { error: PROBLEMS["too-big"] };
+  const { data, error: refused } = await api.POST("/api/offers/{offer_id}/file", {
+    params: { path: { offer_id: offerId } },
+    body: { file: "" },
+    bodySerializer: form(file),
+  });
+  return answer(data, refused);
+}
+
+// « Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) : la même lecture, pour une
+// offre pas encore ajoutée. Le texte arrive dans le champ, à relire avant « Ajouter l'offre ».
+export async function readManualFile(file: File): Promise<{ text?: string; error?: string }> {
+  if (file.size > MAX_FILE) return { error: PROBLEMS["too-big"] };
+  const { data, error: refused } = await api.POST("/api/offers/manual/file", { body: { file: "" }, bodySerializer: form(file) });
+  return answer(data, refused);
 }

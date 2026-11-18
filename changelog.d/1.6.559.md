@@ -1,0 +1,1 @@
+Filtres : nouveau filtre « Distance depuis Renens » (15, 30 ou 50 km à vol d'oiseau depuis la commune des coordonnées, et « Lieu non précisé » avec son nombre), sur téléphone et ordinateur ; chaque offre reçoit le point de son lieu à partir des numéros postaux GeoNames copiés dans le dépôt, sans appel externe (issue #468)

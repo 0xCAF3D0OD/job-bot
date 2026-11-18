@@ -764,3 +764,17 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.550 | Préparer le rendez-vous sur téléphone refait d'après la planche PreparerRendezVous (§71) : cartes, « Ton nom sur la feuille » avec le nom et l'office, « Voir la feuille » | livrée ; « + Ajouter une question » attend la décision de Kevin |
 | 1.6.551 | Réglages sur ordinateur, fenêtre de la pause : flèches « Mois précédent » / « Mois suivant » à la place du défilement des mois | livrée |
 | 1.6.552 | La ligne ORP « À compléter pour l'ORP » prend l'orange de la maquette (#B4631F, sombre #F2B98E) | livrée |
+| 1.6.553 | Filtres des envoyées sur téléphone refaits d'après la planche FiltresEnvoyees : titres « Statut » et « Trier » en casse normale, pastilles au trait de la planche, bouton « Afficher » qui prend la place restante sans être coupé | livrée |
+| 1.6.554 | Rendez-vous sur téléphone dans l'ordre de la planche RendezVous : « À venir », « À noter », puis « Derniers rendez-vous ORP », titre rétabli | livrée |
+| 1.6.555 | Rendez-vous sur téléphone : pas de bouton Filtres, sa place de 44 px est gardée pour que « Alertes » ne bouge pas d'un onglet à l'autre | livrée |
+| 1.6.556 | Une offre « Pas encore notée » propose « Noter maintenant » (compte dans la formule), et la recherche d'adresse montre son état sur la fiche : en cours, trouvée au registre, pas trouvée (planches du 18.11) | livrée |
+| 1.6.557 | « Coller le texte de l'annonce » lit le presse-papiers : le texte copié arrive dans la fenêtre de collage, prêt pour « Refaire la note » | livrée |
+| 1.6.558 | Alertes : une alerte déclarée créée reste « À confirmer » tant que le site n'a rien envoyé à l'adresse jobA1, et l'étape des premiers pas n'est faite qu'à ce moment | livrée |
+| 1.6.559 | Filtres : nouveau filtre « Distance depuis Renens » (15, 30 ou 50 km à vol d'oiseau depuis la commune des coordonnées, et « Lieu non précisé » avec son nombre), sur téléphone et ordinateur ; chaque offre reçoit le point de son lieu à partir des numéros postaux GeoNames copiés dans le dépôt, sans appel externe (issue #468) | livrée |
+| 1.6.560 | « Ajouter une offre » : boutons « Coller » et « Capture ou PDF » dans la barre du champ, sur téléphone et sur ordinateur (« Capture ou PDF » remplace « Importer le PDF »), d'après la planche AjouterOffreTel du 18.11 (§72d) | livrée |
+| 1.6.561 | Réglages sur ordinateur, fenêtre de la pause : flèches cerclées dans la ligne des noms de mois et résumé « 14 jours » seul, d'après la planche du §72 | livrée |
+| 1.6.562 | « J'ai contacté quelqu'un » : Rôle et Comment en pastilles (planche EnvoyeeDetailContacte), « En personne » ajouté, « Autre » ouvre un champ « Précise » | livrée |
+| 1.6.563 | « + Ajouter une question » sur la page Préparer le rendez-vous du téléphone (planches §72 PreparerRendezVous et PreparerRendezVousQuestion) : champ dans la carte, ⋯ Modifier et Supprimer avec « Annuler », retour « Enregistré » | livrée ; le ⋯ des questions proposées par jobA1 attend la décision de Kevin |
+| 1.6.564 | Fiche « Pour l'ORP » : plus de phrase « Elle passe dans « Recherches du mois » » sous « Marquer comme déclarée » (§72g) | livrée |
+| 1.6.565 | Candidatures vides avec alertes : plus de phrase « jobA1 récupère les nouvelles offres… » sous le titre (§72g) | livrée |
+| 1.6.566 | Trier, rien à trier : « Gérer mes alertes » devient un bouton texte, un seul bouton plein par écran (§72e). | livrée |

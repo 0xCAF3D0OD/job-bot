@@ -61,6 +61,59 @@ async def add_alert(runtime: Runtime, source: str, label: str, days_ago: int = 1
         )
 
 
+async def add_code(runtime: Runtime, source: str, days_ago: float = 0) -> None:
+    """Un code de vérification du site (docs/112), effacé comme au bout de 30 minutes."""
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            Search(
+                source=source,
+                message_id=f"<code-{source}-{days_ago}@test>",
+                received_at=datetime.now(UTC) - timedelta(days=days_ago),
+                subject="Votre code de vérification",
+                raw_key="emails/code.eml",
+                parse_status="parsed",
+                kind="code",
+            )
+        )
+
+
+async def test_declared_alert_needs_a_site_email(api: AsyncClient, runtime: Runtime) -> None:
+    """Kevin, 18.11 : une alerte déclarée créée reste à confirmer sans e-mail du site ; un
+    e-mail ignoré, un e-mail d'un autre site ou un code trop ancien ne comptent pas."""
+    page = (await api.get("/api/alert-searches")).json()
+    search = page["searches"][0]
+
+    def jobup(page: dict[str, Any]) -> str:
+        found = next(s for s in page["searches"] if s["id"] == search["id"])
+        return str(next(c for c in found["cells"] if c["site"] == "jobup")["status"])
+
+    await api.put(f"/api/alert-searches/{search['id']}/sites/jobup")
+    await add_code(runtime, "jobsch")
+    await add_code(runtime, "jobup", days_ago=3)
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            Search(
+                source="jobup",
+                message_id="<ignored@test>",
+                received_at=datetime.now(UTC),
+                raw_key="emails/ignored.eml",
+                parse_status="parsed",
+                kind="ignored",
+            )
+        )
+    assert jobup((await api.get("/api/alert-searches")).json()) == "pending"
+    assert (await api.get("/api/today")).json()["alerts_waiting"] == 0
+    # Un jour plus tard, toujours rien de jobup : rappel sur Aujourd'hui.
+    async with runtime.sessionmaker.begin() as session:
+        await session.execute(
+            update(AlertSetup).values(created_at=datetime.now(UTC) - timedelta(hours=25))
+        )
+    assert (await api.get("/api/today")).json()["alerts_waiting"] == 1
+    # Le code arrive un peu avant le clic : il compte.
+    await add_code(runtime, "jobup", days_ago=1.1)
+    assert jobup((await api.get("/api/alert-searches")).json()) == "created"
+
+
 async def test_proposed_once_with_links(api: AsyncClient) -> None:
     page = (await api.get("/api/alert-searches")).json()
     # Chaque mot-clé de « Mon domaine » avec chaque lieu (le canton « VD » est écarté).
@@ -96,9 +149,14 @@ async def test_status_and_crud(api: AsyncClient, runtime: Runtime) -> None:
         return next(c for c in page["searches"][0]["cells"] if c["site"] == site)
 
     assert cell(page, "jobup")["status"] == "todo"
-    created = (await api.put(f"/api/alert-searches/{devops['id']}/sites/jobup")).json()
-    assert cell(created, "jobup")["status"] == "created"
+    # « J'ai créé l'alerte » seul : à confirmer, tant que jobup n'a rien écrit (Kevin, 18.11).
+    declared = (await api.put(f"/api/alert-searches/{devops['id']}/sites/jobup")).json()
+    assert cell(declared, "jobup")["status"] == "pending"
     assert (await api.put(f"/api/alert-searches/{devops['id']}/sites/inconnu")).status_code == 404
+    # Le code de jobup est arrivé : l'alerte est créée, en attente du premier envoi.
+    await add_code(runtime, "jobup")
+    created = (await api.get("/api/alert-searches")).json()
+    assert cell(created, "jobup")["status"] == "created"
 
     # Rien reçu depuis 4 jours : rappel sur Aujourd'hui.
     async with runtime.sessionmaker.begin() as session:

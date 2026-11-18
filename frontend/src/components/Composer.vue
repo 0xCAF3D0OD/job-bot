@@ -306,6 +306,8 @@ defineExpose({ focus: () => area.value?.focus() });
         <AppIcon name="plus" />
       </button>
       <span class="composer-spacer" />
+      <!-- Des boutons de la page, à gauche de l'envoi (« Coller », « Capture ou PDF » : AjouterOffreTel, §72d). -->
+      <slot name="tools" />
       <button
         v-if="sendText"
         type="button"

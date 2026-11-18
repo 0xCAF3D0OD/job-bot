@@ -1190,6 +1190,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/manual/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read File
+         * @description « Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :
+         *     un PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la
+         *     fiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),
+         *     une formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé
+         *     (E-5, J-1) ; rien n'est créé ici.
+         */
+        post: operations["readManualOfferFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/manual/{offer_id}/unfill": {
         parameters: {
             query?: never;
@@ -1286,6 +1310,28 @@ export interface paths {
          *     jusqu'au 3e. Refusé hors de cet état, pour ne pas relancer l'IA sur une offre notée.
          */
         post: operations["retryScore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{offer_id}/score-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Score Now
+         * @description « Noter maintenant » d'une offre « Pas encore notée » (Kevin, 17.11, Q2 ; planche
+         *     OffreNonNotee du 18.11) : la note tout de suite, environ 10 secondes. Elle compte dans la
+         *     formule ; épuisée, rien ne part à l'IA. Refusé sur une offre déjà notée.
+         */
+        post: operations["scoreOfferNow"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4166,7 +4212,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "received" | "created" | "todo";
+            status: "received" | "created" | "pending" | "todo";
             /** Received At */
             received_at: string | null;
             /** Created At */
@@ -4764,6 +4810,11 @@ export interface components {
             /** User */
             user?: string | null;
         };
+        /** Body_readManualOfferFile */
+        Body_readManualOfferFile: {
+            /** File */
+            file: string;
+        };
         /** Body_readManualOfferPdf */
         Body_readManualOfferPdf: {
             /** File */
@@ -5127,7 +5178,7 @@ export interface components {
              * @default linkedin_invite
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date
@@ -5157,7 +5208,7 @@ export interface components {
              * Channel
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date
@@ -6970,6 +7021,15 @@ export interface components {
             /** Existing Added */
             existing_added?: string | null;
         };
+        /** ManualFileOut */
+        ManualFileOut: {
+            /** Text */
+            text?: string | null;
+            /** Problem */
+            problem?: ("no-text" | "too-big" | "not-supported" | "unreadable" | "ai-off" | "ai-down" | "budget") | null;
+            /** Limit */
+            limit?: string | null;
+        };
         /** ManualPdfOut */
         ManualPdfOut: {
             /** Text */
@@ -7237,8 +7297,8 @@ export interface components {
          * NearFacets
          * @description Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
          *     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
-         *     « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
-         *     offres ».
+         *     « in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors
+         *     « Afficher n offres ».
          */
         NearFacets: {
             /** Views */
@@ -7254,6 +7314,11 @@ export interface components {
              * @default []
              */
             contracts: components["schemas"]["Facet"][];
+            /**
+             * Distances
+             * @default []
+             */
+            distances: components["schemas"]["Facet"][];
         };
         /**
          * NewsPreferences
@@ -7412,6 +7477,13 @@ export interface components {
              */
             contracts: components["schemas"]["Facet"][];
             near?: components["schemas"]["NearFacets"] | null;
+            /** Distance From */
+            distance_from?: string | null;
+            /**
+             * Distances
+             * @default []
+             */
+            distances: components["schemas"]["Facet"][];
         };
         /** OfferFileOut */
         OfferFileOut: {
@@ -7524,6 +7596,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */
@@ -8348,6 +8422,13 @@ export interface components {
             /** Pause Until */
             pause_until?: string | null;
         };
+        /** ScoreNowOut */
+        ScoreNowOut: {
+            /** Score */
+            score?: number | null;
+            /** Limit */
+            limit?: string | null;
+        };
         /**
          * ScorePartOut
          * @description Une part de la note (PR 18) : `max` vient de PART_MAX, `points` de la notation.
@@ -8526,6 +8607,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */
@@ -12020,6 +12103,46 @@ export interface operations {
             };
         };
     };
+    readManualOfferFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_readManualOfferFile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualFileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop de fichiers : « Réessaie dans n minutes » */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     unfillManualOffer: {
         parameters: {
             query?: never;
@@ -12226,6 +12349,51 @@ export interface operations {
                 content?: never;
             };
             /** @description La note n'est pas en échec : rien à refaire */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scoreOfferNow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoreNowOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description L'offre est déjà notée */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -12496,6 +12664,7 @@ export interface operations {
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
                 contracts?: components["schemas"]["Contract"][];
+                distance?: ("15" | "30" | "50" | "unknown") | null;
                 hide_far?: boolean;
             };
             header?: never;

@@ -7,7 +7,7 @@ import OfferFilterSheet from "./OfferFilterSheet.vue";
 // 20 tranches de 5 points : 10 offres de 0 à 49, 50 de 50 à 74, 13 de 75 à 84, 8 de 85 à 100 ; 3 sans note.
 const scores = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 10, 10, 10, 10, 6, 7, 2, 3, 3];
 const rates = [{ value: "all", count: 84 }, { value: "60", count: 72 }, { value: "80", count: 60 }, { value: "100", count: 33 }];
-const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates, contracts: [] };
+const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates, contracts: [], distances: [] };
 
 const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
 
@@ -21,12 +21,14 @@ function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
 describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5c)", () => {
   it("note minimale sur 100, taux d’activité, tri, « Masquer les offres écartées », télétravail ; « Afficher 3 offres »", () => {
     const wrapper = mountSheet();
-    // Note minimale (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, titre et aide reliés.
+    // Note minimale (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, titre relié.
     const scores = wrapper.find("[role=radiogroup][aria-labelledby=sheet-score-title]");
     expect(wrapper.find("#sheet-score-title").text()).toBe("Note minimale, sur 100");
     expect(scores.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(scores.find("[data-test=sheet-score-all]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil");
+    // §72g du 18.11 : plus de phrase d'aide sous la note.
+    expect(scores.attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("correspond à ton profil");
     // Le taux d'activité, un seul choix : un groupe de radios, pas des puces (5e), titre relié.
     const rates = wrapper.find("[role=radiogroup][aria-labelledby=sheet-rate-title]");
     expect(wrapper.find("#sheet-rate-title").text()).toBe("Taux d’activité");
@@ -101,6 +103,37 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: [] }]);
   });
 
+  it("« Distance depuis Renens » : un seul choix, le nombre sous chaque choix, « Lieu non précisé » avec le sien (issue 468)", async () => {
+    const distances = [
+      { value: "all", count: 84 },
+      { value: "15", count: 12 },
+      { value: "30", count: 31 },
+      { value: "50", count: 0 },
+      { value: "unknown", count: 9 },
+    ];
+    // Sans commune connue, pas de groupe.
+    expect(mountSheet().find("#sheet-distance-title").exists()).toBe(false);
+    const wrapper = mount(OfferFilterSheet, {
+      props: { open: true, filters: { ...DEFAULT_FILTERS, distance: "30" }, facets: { ...facets, distances, distance_from: "Renens" }, total: 31, counts },
+      global: { stubs: { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } } },
+    });
+    expect(wrapper.find("#sheet-distance-title").text()).toBe("Distance depuis Renens");
+    const group = wrapper.find("[role=radiogroup][aria-labelledby=sheet-distance-title]");
+    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes84", "15 km12", "30 km31", "50 km0"]);
+    // Le choix actif égale « Afficher n offres ».
+    expect(group.find("[data-test=sheet-distance-30]").attributes("aria-checked")).toBe("true");
+    expect(group.find("[data-test=sheet-distance-30] .segmented-sub").text()).toBe("31");
+    expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 31 offres");
+    expect(group.find("[data-test=sheet-distance-50]").classes()).toContain("choice-empty");
+    const unknown = wrapper.find("[data-test=sheet-distance-unknown]");
+    expect(unknown.text()).toBe("Lieu non précisé · 9");
+    expect(unknown.attributes("aria-pressed")).toBe("false");
+    await unknown.trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: "unknown" }]);
+    await group.find("[data-test=sheet-distance-all]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: null }]);
+  });
+
   it("offres « Loin » cachées ou non : le nombre du choix actif égale toujours « Afficher n offres » (Kevin, 18.11, choix a)", () => {
     // 84 offres dont 10 « Loin » (sous 50) : la liste du téléphone les cache, le bouton dit 74.
     const near = {
@@ -109,11 +142,18 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
       provisional: 1,
       rates: [{ value: "all", count: 74 }, { value: "60", count: 63 }, { value: "80", count: 52 }, { value: "100", count: 30 }],
       contracts: [{ value: "cdi", count: 60 }, { value: "cdd", count: 0 }, { value: "stage", count: 0 }, { value: "temporaire", count: 0 }, { value: "non_precise", count: 14 }],
+      distances: [{ value: "all", count: 74 }, { value: "15", count: 20 }, { value: "30", count: 40 }, { value: "50", count: 60 }, { value: "unknown", count: 6 }],
     };
     const props = (far: number, total: number) => ({
       open: true,
       filters: DEFAULT_FILTERS,
-      facets: { ...facets, contracts: [{ value: "cdi", count: 64 }, { value: "non_precise", count: 20 }], near },
+      facets: {
+        ...facets,
+        contracts: [{ value: "cdi", count: 64 }, { value: "non_precise", count: 20 }],
+        distance_from: "Renens",
+        distances: [{ value: "all", count: 84 }, { value: "15", count: 22 }, { value: "30", count: 44 }, { value: "50", count: 66 }, { value: "unknown", count: 8 }],
+        near,
+      },
       total,
       counts: { ...counts, pending: 84 },
       far,
@@ -125,6 +165,8 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
       rate: wrapper.find("[data-test=sheet-rate-all] .segmented-sub").text(),
       button: wrapper.find("[data-test=sheet-show]").text(),
       contract: wrapper.find("[data-test=sheet-contract-non_precise]").text(),
+      distance: wrapper.find("[data-test=sheet-distance-all] .segmented-sub").text(),
+      unknown: wrapper.find("[data-test=sheet-distance-unknown]").text(),
     });
     // Cachées : 74 partout.
     expect(active(mount(OfferFilterSheet, { props: props(10, 74), global: { stubs } }))).toEqual({
@@ -133,6 +175,8 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
       rate: "74",
       button: "Afficher 74 offres",
       contract: "Non précisé · 14",
+      distance: "74",
+      unknown: "Lieu non précisé · 6",
     });
     // Montrées (ou aucune offre « Loin ») : 84 partout.
     expect(active(mount(OfferFilterSheet, { props: props(0, 84), global: { stubs } }))).toEqual({
@@ -141,6 +185,8 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
       rate: "84",
       button: "Afficher 84 offres",
       contract: "Non précisé · 20",
+      distance: "84",
+      unknown: "Lieu non précisé · 8",
     });
   });
 
@@ -208,7 +254,9 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(group.find("[data-test=sheet-basis-all]").attributes("aria-checked")).toBe("true");
     expect(group.find("[data-test=sheet-basis-all] svg").exists()).toBe(true);
     expect(group.find("[data-test=sheet-basis-sure]").attributes("aria-checked")).toBe("false");
-    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte");
+    // §72g du 18.11 : plus de phrase d'aide sous le type de note.
+    expect(group.attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("extrait de l’alerte");
     await group.find("[data-test=sheet-basis-provisional]").trigger("click");
     expect(wrapper.emitted("update")).toEqual([[{ basis: "provisional" }]]);
     const chosen = mountSheet({ basis: "provisional" });

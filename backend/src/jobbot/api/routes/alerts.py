@@ -33,7 +33,7 @@ class AlertCell(BaseModel):
     site: str
     # Recherche déjà remplie sur le site (page du site pour un site ajouté), ou rien.
     url: str | None
-    status: Literal["received", "created", "todo"]
+    status: Literal["received", "created", "pending", "todo"]
     received_at: datetime | None
     created_at: datetime | None
     # Même recherche en télétravail (docs/26 §5), si tu l'acceptes et si le site le permet.

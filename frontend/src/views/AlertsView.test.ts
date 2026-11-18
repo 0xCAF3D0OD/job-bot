@@ -278,6 +278,22 @@ describe("Alertes, la page (AlertesOrdinateur du 9 novembre, §2.8)", () => {
     expect(wrapper.find("[data-test=alert-card-1-jobup] .block-row-aside").text().replace(/^, /, "")).toBe("En attente du premier envoi");
   });
 
+  it("déclarée créée, rien reçu de jobup : « À confirmer », et « Coller le code » ouvre le panneau du site (Kevin, 18.11)", async () => {
+    const day = new Date(Date.now() - DAY).toISOString();
+    const wrapper = await mountView(page([search(1, [cell("jobup", { status: "pending", created_at: day })])]));
+    expect(wrapper.find("[data-test=alerts-family-confirm]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=alerts-family-active]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alert-card-1-jobup] .block-row-aside").text().replace(/^, /, "")).toBe("À confirmer");
+    await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=alert-sheet-state]").text()).toBe("À confirmer sur jobup");
+    expect(wrapper.find("[data-test=alert-pending-note]").text()).toContain("aucun e-mail de jobup");
+    expect(wrapper.find("[data-test=alert-finish]").text()).toBe("Coller le code");
+    await wrapper.find("[data-test=alert-finish]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=wizard-site-done]").exists()).toBe(true);
+  });
+
   it("des blocs de chargement tant que la page charge (règles §6)", async () => {
     GET.mockReturnValue(new Promise(() => undefined));
     const wrapper = mount(AlertsView);
