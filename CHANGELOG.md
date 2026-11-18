@@ -756,3 +756,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.542 | Test d'affichage : références des Envoyées sur téléphone reprises après la PR #869, écart connu des puces retiré | livrée |
 | 1.6.543 | Offres : plus de compteur « n offres » au-dessus de la liste sur ordinateur ; sur téléphone, le bandeau « Annuler » se place 8 px au-dessus du bouton central, sans jamais le couvrir (Kevin le 18.11, points 6 et 7) | livrée |
 | 1.6.544 | Réglages sur ordinateur, planche ReglagesOrdinateurPause (§71) : la pause se choisit dans une fenêtre centrée, un seul calendrier de plage sur deux mois, à la place des champs Du / Jusqu'au | livrée |
+| 1.6.545 | Détail d'une envoyée : la ligne d'état ORP a trois états (déclarée, à déclarer, à compléter), sur téléphone et sur ordinateur ; plus de carte « Pour l'ORP » sur ordinateur | livrée |
