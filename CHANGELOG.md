@@ -741,3 +741,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.527 | Offres : une offre gardée, écartée ou remise dans Nouvelles reste à sa place avec son nouvel état jusqu'à ce qu'on quitte la liste ; le toast « Déplacée dans Gardées » propose « Voir » et « Annuler » (audit K5, décision de Kevin du 17.11) | livrée |
 | 1.6.528 | Filtres : les nombres d'offres aussi sous les choix de Note et de Taux du panneau de l'ordinateur, le nombre en graisse 500, et un choix à 0 offre grisé mais toujours cliquable (suite de #851) | livrée |
 | 1.6.529 | L'Accueil du téléphone refait d'après AccueilV2 : titre à la main, À faire, barre ORP, Top du jour, offres à trier, feuilles empilées et cercle des justificatifs | livrée |
+| 1.6.530 | Listes : un chevron à la place du rond fléché (§49) ; Notifications : pastilles « Toutes / Non lues » et point bleu des non lues à gauche (§48) | livrée |
