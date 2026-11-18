@@ -11,8 +11,9 @@ import CountBadge from "./CountBadge.vue";
 // jamais coupé : le test téléphone de la CI le vérifie en 320 px (.segmented-label). `count` : une pastille de
 // nombre après le libellé (Candidatures sur ordinateur), absente à zéro. `name` : le nom accessible complet quand le
 // libellé visible est une abréviation (FR → « Français »). `sub` : un nombre sous le libellé (planche Filtres, §65 du
-// 17.11 : le nombre d'offres de chaque choix de Note et de Taux).
-export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string; name?: string; sub?: string };
+// 17.11 : le nombre d'offres de chaque choix de Note et de Taux). `empty` : un choix à 0 offre, grisé mais toujours
+// cliquable (Kevin, 18.11).
+export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string; name?: string; sub?: string; empty?: boolean };
 const props = withDefaults(defineProps<{ options: SegmentOption[]; label: string; full?: boolean }>(), { full: false });
 const model = defineModel<string>({ required: true });
 const asLinks = props.options.some((option) => option.to);
@@ -53,6 +54,7 @@ const asLinks = props.options.some((option) => option.to);
       role="radio"
       :aria-checked="model === option.value"
       :aria-label="option.name"
+      :class="{ 'choice-empty': option.empty }"
       :data-test="option.test ?? `segment-${option.value}`"
       @click="model = option.value"
     >

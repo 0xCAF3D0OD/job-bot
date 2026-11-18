@@ -228,9 +228,9 @@ onMounted(() => void load());
                 <span class="criteria-row-value">{{ sentence(row.value) }}</span>
               </span>
               <span
-                class="arrow-circle small"
+                class="list-chevron"
                 aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
+              ><AppIcon name="chevron" /></span>
             </button>
           </li>
         </ul>

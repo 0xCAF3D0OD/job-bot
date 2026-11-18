@@ -1361,7 +1361,6 @@ svg.rg-lead { fill: none; stroke: currentColor; stroke-width: 2; }
 .settings-wide .rg-link-row > .icon:last-child { width: 20px; height: 20px; }
 .settings-wide .account-data .rg-link-row { min-height: 56px; }
 .settings-wide .account-data .rg-label { font-weight: var(--weight-regular); line-height: var(--rg-21); }
-.settings-wide .account-data .arrow-circle { border-width: 2px; }
 .settings-wide .rg-danger-row { min-height: 56px; padding: 0 var(--rg-20); color: var(--danger); font-weight: var(--weight-bold); }
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }

@@ -11,7 +11,7 @@ import { useUndo } from "../composables/useUndo";
 // `bar` : le bandeau de la page Trier (paquet du 13 novembre) : la page le place et le dessine (classe tri-toast) ;
 // tant qu'il est là, celui d'App se cache.
 const props = withDefaults(defineProps<{ inline?: boolean; bar?: boolean }>(), { inline: false, bar: false });
-const { pending, undo, hold, release, flush } = useUndo();
+const { pending, undo, see, hold, release, flush } = useUndo();
 </script>
 
 <template>
@@ -29,6 +29,15 @@ const { pending, undo, hold, release, flush } = useUndo();
   >
     <span>{{ pending.message }}</span>
     <button
+      v-if="pending.see"
+      type="button"
+      :class="{ link: !bar }"
+      data-test="undo-see"
+      @click="see"
+    >
+      Voir
+    </button>
+    <button
       type="button"
       :class="{ link: !bar }"
       data-test="undo"
@@ -42,3 +51,8 @@ const { pending, undo, hold, release, flush } = useUndo();
     />
   </div>
 </template>
+
+<style>
+/* « Voir » puis « Annuler », serrés à droite : seul le premier bouton pousse vers la droite (K5, 17.11). */
+.undo-toast > button.link + button.link { margin-left: 0; }
+</style>

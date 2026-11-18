@@ -486,7 +486,7 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
 .identity-answer-value { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); font-size: var(--ia-15); line-height: var(--space-5); overflow-wrap: anywhere; }
 .identity-answer-lock { flex: none; width: var(--font-small); height: var(--font-small); color: var(--text-secondary); }
 .identity-answer-todo, .identity-answer-optional { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); }
-.identity-answer-todo { font-weight: var(--weight-bold); color: var(--orange-text); }
+.identity-answer-todo { font-weight: var(--weight-bold); color: var(--todo-text); }
 .identity-answer-optional { color: var(--text-secondary); }
 .identity-ai { margin: 0; font-size: 0.8125em; line-height: 1.3846em; color: var(--text-secondary); }
 .identity-actions { display: flex; justify-content: flex-end; gap: var(--space-3); }

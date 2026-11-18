@@ -6,8 +6,10 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import text
+from sqlalchemy import select, text
 
+from jobbot import accounts
+from jobbot.auth import passwords
 from jobbot.core.orp import LOCAL_TZ, shift_month
 from jobbot.db.models import (
     Application,
@@ -18,8 +20,9 @@ from jobbot.db.models import (
     Setting,
     Training,
     TrainingMark,
+    User,
 )
-from jobbot.orp import meeting
+from jobbot.orp import identity, meeting
 from jobbot.profiles.service import main_profile
 from jobbot.runtime import Runtime
 
@@ -346,3 +349,72 @@ async def test_the_eve_reminder_on_a_rest_day(rt: Runtime) -> None:
             text("select title from notifications where kind = 'orp_meeting'")
         )
         assert titles.all() == ["Demain à 09:30 : rendez-vous ORP"]
+
+
+SHEET_KEYS = ("orp_sheet_name", "orp_sheet_advisor", "orp_sheet_office")
+
+
+async def test_your_name_on_the_sheet(client: AsyncClient, rt: Runtime) -> None:
+    """« Ton nom sur la feuille » (§70) : trois champs gardés dans le compte, un à la fois ; le
+    conseiller pré-rempli par le rendez-vous ; un champ vidé est retiré ; la feuille les reprend."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(
+            text("DELETE FROM settings WHERE key = ANY(:keys)"), {"keys": list(SHEET_KEYS)}
+        )
+    try:
+        assert (await client.get("/api/orp-meeting/nom")).json() == {
+            "name": None,
+            "advisor": None,
+            "office": None,
+        }
+        starts = datetime.combine(TODAY + timedelta(days=2), datetime.min.time(), LOCAL_TZ)
+        await client.put(
+            "/api/orp-meeting", json={"starts_at": starts.isoformat(), "advisor": "M. Favre"}
+        )
+        assert (await client.get("/api/orp-meeting/nom")).json()["advisor"] == "M. Favre"
+        saved = await client.put("/api/orp-meeting/nom", json={"name": " Camille Exemple "})
+        assert saved.json() == {"name": "Camille Exemple", "advisor": "M. Favre", "office": None}
+        saved = await client.put("/api/orp-meeting/nom", json={"office": "ORP Lausanne"})
+        assert (
+            saved.json()["name"] == "Camille Exemple" and saved.json()["office"] == "ORP Lausanne"
+        )
+        # Vidé : l'office est retiré ; le conseiller vidé n'est plus pré-rempli par le rendez-vous.
+        saved = await client.put("/api/orp-meeting/nom", json={"office": "", "advisor": "  "})
+        assert saved.json() == {"name": "Camille Exemple", "advisor": None, "office": None}
+        async with rt.sessionmaker() as session:
+            keys = set(
+                await session.scalars(select(Setting.key).where(Setting.key.in_(SHEET_KEYS)))
+            )
+        assert keys == {"orp_sheet_name", "orp_sheet_advisor"}
+        too_long = await client.put("/api/orp-meeting/nom", json={"office": "x" * 121})
+        assert too_long.status_code == 422
+        sheet = await client.get("/api/orp-meeting/feuille.pdf")
+        assert sheet.status_code == 200 and sheet.content.startswith(b"%PDF")
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(
+                text("DELETE FROM settings WHERE key = ANY(:keys)"), {"keys": list(SHEET_KEYS)}
+            )
+
+
+async def test_your_name_on_the_sheet_stays_in_your_account(rt: Runtime) -> None:
+    """Un autre compte ne voit ni ton nom, ni ton conseiller, ni ton office (C-1, C-4)."""
+    owner = accounts.current()
+    async with rt.sessionmaker.begin() as session:
+        await identity.save(session, {"name": "Camille Exemple", "office": "ORP Lausanne"})
+        other = User(username="feuille-autre", password_hash=passwords.hash_password("x" * 12))
+        session.add(other)
+        await session.flush()
+        other_id = other.id
+    accounts.set_current(other_id)
+    try:
+        async with rt.sessionmaker() as session:
+            found = await identity.load(session)
+        assert (found.name, found.advisor, found.office) == (None, None, None)
+    finally:
+        accounts.set_current(owner)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": other_id})
+            await conn.execute(
+                text("DELETE FROM settings WHERE key = ANY(:keys)"), {"keys": list(SHEET_KEYS)}
+            )

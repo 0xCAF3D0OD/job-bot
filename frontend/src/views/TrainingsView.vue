@@ -266,9 +266,9 @@ onMounted(() => void load());
             <span>Avec l’accord de ta conseillère</span>
           </span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </button>
         <div
           v-else
@@ -427,9 +427,9 @@ onMounted(() => void load());
                   name="done"
                 />{{ keptStatus(training)!.label }}</span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </button>
             </li>
           </ul>
@@ -457,9 +457,9 @@ onMounted(() => void load());
           ><AppIcon name="tag" /></span>
           <span><strong>Financement possible par l’ORP</strong><span>{{ phone ? "Avec" : "Seulement avec" }} l’accord préalable de l’ORP</span></span>
           <span
-            class="arrow-circle small"
+            class="list-chevron"
             aria-hidden="true"
-          ><AppIcon name="arrow-right" /></span>
+          ><AppIcon name="chevron" /></span>
         </button>
         <!-- Les puces (B17) : le genre, un seul choix ; « Gratuites » et « En français » s'ajoutent. -->
         <div

@@ -7,7 +7,6 @@ import FaceTransform from "../components/FaceTransform.vue";
 import MoodAnimation from "../components/MoodAnimation.vue";
 import NotificationCard from "../components/NotificationCard.vue";
 import NotificationRow from "../components/NotificationRow.vue";
-import SegmentedControl from "../components/SegmentedControl.vue";
 import { useInbox } from "../composables/useInbox";
 import { usePhone } from "../composables/usePhone";
 import { dayFamily, dayGroup } from "../dates";
@@ -26,7 +25,9 @@ const { phone } = usePhone();
 const { phone: wideQuery } = usePhone("(min-width: 1024px)");
 const wide = computed(() => wideQuery.value && !phone.value);
 
-const options = computed(() => [
+// « Toutes » et « Non lues » : un filtre, pas une navigation (LISEZMOI du 17.11, §48) : deux pastilles de 44 px,
+// aria-pressed, comme les filtres du catalogue de formations.
+const options = computed<{ value: "all" | "unread"; label: string; test: string }[]>(() => [
   { value: "all", label: "Toutes", test: "filter-all" },
   {
     value: "unread",
@@ -60,11 +61,23 @@ onMounted(() => void refresh());
         class="notifications-head-wide"
       >
         <h1>Notifications</h1>
-        <SegmentedControl
-          v-model="filter"
-          :options="options"
-          label="Vue"
-        />
+        <div
+          class="notif-pills"
+          role="group"
+          aria-label="Filtre"
+        >
+          <button
+            v-for="option in options"
+            :key="option.value"
+            type="button"
+            class="notif-pill"
+            :aria-pressed="filter === option.value"
+            :data-test="option.test"
+            @click="filter = option.value"
+          >
+            {{ option.label }}
+          </button>
+        </div>
         <button
           type="button"
           class="notifications-read-all"
@@ -98,13 +111,24 @@ onMounted(() => void refresh());
           Tout lire
         </button>
       </header>
-      <SegmentedControl
+      <div
         v-if="!wide"
-        v-model="filter"
-        :options="options"
-        label="Afficher"
-        full
-      />
+        class="notif-pills"
+        role="group"
+        aria-label="Filtre"
+      >
+        <button
+          v-for="option in options"
+          :key="option.value"
+          type="button"
+          class="notif-pill"
+          :aria-pressed="filter === option.value"
+          :data-test="option.test"
+          @click="filter = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
       <template v-if="groups.length">
         <template v-if="wide">
           <section
@@ -224,6 +248,16 @@ onMounted(() => void refresh());
 
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+/* §48 : pastille active à l'encre, inactive blanche au trait #DDD8CC (sombre #221E1A, trait #38322B). */
+.notif-pills { --notif-pill-line: #DDD8CC; --notif-pill-pad: 14.5px; display: flex; gap: var(--space-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notif-pills { --notif-pill-line: var(--line); } }
+:root[data-theme="dark"] .notif-pills { --notif-pill-line: var(--line); }
+.notif-pill {
+  min-height: var(--target-min); padding: 0 var(--notif-pill-pad); border: 1.5px solid var(--notif-pill-line); border-radius: var(--radius-pill);
+  background: var(--surface); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-semibold); box-shadow: none;
+}
+.notif-pill:hover:not(:disabled) { background: var(--surface); box-shadow: none; }
+.notif-pill[aria-pressed="true"], .notif-pill[aria-pressed="true"]:hover { border-color: var(--text); background: var(--text); color: var(--bg); font-weight: var(--weight-bold); }
 .notifications-card li + li { border-top: 1px solid var(--line-soft); }
 .notifications-head-wide .notifications-read-all { align-self: stretch; padding: 0 var(--space-1); font-size: var(--font-label); }
 .notifications-wide .notifications-group { gap: var(--notif-10); }

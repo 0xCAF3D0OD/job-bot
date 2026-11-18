@@ -1,0 +1,1 @@
+Offres : une offre gardée, écartée ou remise dans Nouvelles reste à sa place avec son nouvel état jusqu'à ce qu'on quitte la liste ; le toast « Déplacée dans Gardées » propose « Voir » et « Annuler » (audit K5, décision de Kevin du 17.11)

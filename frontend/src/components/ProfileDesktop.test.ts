@@ -166,7 +166,7 @@ describe("Profil ordinateur, page unique (PR 9b, décision de Kevin du 10 novemb
       "/profil?onglet=documents",
       "/profil?onglet=coordonnees",
     ]);
-    expect(rows[0]!.find(".arrow-circle").attributes("aria-hidden")).toBe("true");
+    expect(rows[0]!.find(".list-chevron").attributes("aria-hidden")).toBe("true");
   });
 });
 

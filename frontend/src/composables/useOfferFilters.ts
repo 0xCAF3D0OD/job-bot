@@ -177,11 +177,13 @@ export function rateCount(facets: ChoiceFacets, value: number | null): number {
 }
 
 /** Les trois choix du groupe « Type de note », avec les nombres réels du serveur (hors « Toutes »). */
-export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null }[] {
+export function basisChoices(facets: { sure?: number; provisional?: number }): { label: string; value: Basis | null; count?: number }[] {
+  const sure = facets.sure ?? 0;
+  const provisional = facets.provisional ?? 0;
   return [
     { label: "Toutes", value: null },
-    { label: `Définitives · ${facets.sure ?? 0}`, value: "sure" },
-    { label: `Provisoires · ${facets.provisional ?? 0}`, value: "provisional" },
+    { label: `Définitives · ${sure}`, value: "sure", count: sure },
+    { label: `Provisoires · ${provisional}`, value: "provisional", count: provisional },
   ];
 }
 export const BASIS_HELP = "Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.";

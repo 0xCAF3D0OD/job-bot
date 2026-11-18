@@ -74,6 +74,23 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(close.find("[data-test=sheet-show]").text()).toBe("Afficher 21 offres");
   });
 
+  it("un choix à 0 offre reste visible et cliquable, grisé (Kevin, 18.11)", async () => {
+    const wrapper = mount(OfferFilterSheet, {
+      props: {
+        open: true,
+        filters: DEFAULT_FILTERS,
+        facets: { ...facets, sure: 0, rates: [{ value: "all", count: 84 }, { value: "60", count: 0 }, { value: "80", count: 0 }, { value: "100", count: 0 }] },
+        total: 84,
+        counts: { pending: 84, to_review: 0, filtered_out: 0, later: 3, in_progress: 1, expired: 0, all: 0 },
+      },
+      global: { stubs: { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } } },
+    });
+    for (const test of ["sheet-rate-60", "sheet-view-to_review", "sheet-basis-sure"]) expect(wrapper.find(`[data-test=${test}]`).classes()).toContain("choice-empty");
+    for (const test of ["sheet-rate-all", "sheet-view-later", "sheet-basis-provisional"]) expect(wrapper.find(`[data-test=${test}]`).classes()).not.toContain("choice-empty");
+    await wrapper.find("[data-test=sheet-rate-60]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minRate: 60 }]);
+  });
+
   it("chaque choix s’applique tout de suite", async () => {
     const wrapper = mountSheet();
     await wrapper.find("[data-test=sheet-view-to_review]").trigger("click");
