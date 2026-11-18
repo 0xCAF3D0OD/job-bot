@@ -14,7 +14,7 @@ def km(location: str) -> float | None:
 
 def test_home_from_postcode() -> None:
     assert RENENS is not None
-    assert RENENS == Point(46.5353, 6.5897)
+    assert Point(46.5353, 6.5897) == RENENS
     assert locate_zip("9999") is None and locate_zip(None) is None
 
 
