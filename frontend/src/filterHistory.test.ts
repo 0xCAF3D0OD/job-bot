@@ -9,7 +9,7 @@ import OfferFilterPanel from "./components/OfferFilterPanel.vue";
 import OfferFilterSheet from "./components/OfferFilterSheet.vue";
 import { activeChips, useOfferFilters } from "./composables/useOfferFilters";
 
-const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 1, provisional: 1, rates: [], contracts: [] };
+const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 1, provisional: 1, rates: [], contracts: [], distances: [] };
 const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
 // history.back() de jsdom part dans une tâche à part : on laisse passer l’événement popstate et la navigation.
 const settle = async () => {

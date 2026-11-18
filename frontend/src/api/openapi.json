@@ -3936,6 +3936,28 @@
             }
           },
           {
+            "name": "distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "15",
+                    "30",
+                    "50",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distance"
+            }
+          },
+          {
             "name": "hide_far",
             "in": "query",
             "required": false,
@@ -21222,6 +21244,14 @@
             "type": "array",
             "title": "Contracts",
             "default": []
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
           }
         },
         "type": "object",
@@ -21232,7 +21262,7 @@
           "rates"
         ],
         "title": "NearFacets",
-        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n\noffres »."
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors\n« Afficher n offres »."
       },
       "NewsPreferences": {
         "properties": {
@@ -21668,6 +21698,25 @@
                 "type": "null"
               }
             ]
+          },
+          "distance_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance From"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
           }
         },
         "type": "object",

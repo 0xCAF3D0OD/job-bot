@@ -68,7 +68,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [], contracts: [] });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [], contracts: [], distances: [] });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
@@ -504,6 +504,7 @@ async function load(append = false): Promise<void> {
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,
           contracts: f.contracts.length ? f.contracts : undefined,
+          distance: f.distance ?? undefined,
           // Téléphone : les nombres des choix sans les offres « Loin » cachées (Kevin, 18.11, choix a).
           hide_far: hidesFar.value || undefined,
         },
