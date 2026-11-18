@@ -776,3 +776,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.562 | « J'ai contacté quelqu'un » : Rôle et Comment en pastilles (planche EnvoyeeDetailContacte), « En personne » ajouté, « Autre » ouvre un champ « Précise » | livrée |
 | 1.6.563 | « + Ajouter une question » sur la page Préparer le rendez-vous du téléphone (planches §72 PreparerRendezVous et PreparerRendezVousQuestion) : champ dans la carte, ⋯ Modifier et Supprimer avec « Annuler », retour « Enregistré » | livrée ; le ⋯ des questions proposées par jobA1 attend la décision de Kevin |
 | 1.6.564 | Fiche « Pour l'ORP » : plus de phrase « Elle passe dans « Recherches du mois » » sous « Marquer comme déclarée » (§72g) | livrée |
+| 1.6.565 | Candidatures vides avec alertes : plus de phrase « jobA1 récupère les nouvelles offres… » sous le titre (§72g) | livrée |
