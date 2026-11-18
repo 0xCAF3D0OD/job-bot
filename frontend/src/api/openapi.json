@@ -4378,6 +4378,65 @@
         }
       }
     },
+    "/api/offers/{offer_id}/file": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read File",
+        "description": "Le texte du fichier d'une annonce, donné sur la fiche (Kevin, 17.11, Q1) : un PDF lu sans\nIA, ou une capture PNG ou JPG recopiée par l'IA. Un fichier à la fois ; il n'est ni rangé ni\njournalisé (E-5, J-1). Rien n'est enregistré ici : la personne relit le texte, puis\n« Refaire la note » l'enregistre et renote l'offre.",
+        "operationId": "readOfferFile",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readOfferFile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferFileOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offre inconnue"
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/criteria": {
       "get": {
         "tags": [
@@ -13407,6 +13466,20 @@
         ],
         "title": "Body_readManualOfferPdf"
       },
+      "Body_readOfferFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readOfferFile"
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -21496,6 +21569,54 @@
         ],
         "title": "OfferFacets",
         "description": "Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune."
+      },
+      "OfferFileOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-supported",
+                  "unreadable",
+                  "ai-off",
+                  "ai-down",
+                  "budget"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "OfferFileOut"
       },
       "OfferFiltersVisible": {
         "properties": {

@@ -283,6 +283,50 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
 
+  it("Refaire la note avec un fichier (Q1 du 17.11) : PDF ou capture, texte repris dans le champ, puis relu", async () => {
+    const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+    await wrapper.find("[data-test=give-offer]").trigger("click");
+    await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+    const plus = wrapper.find("[data-test=paste-text] [data-test=composer-plus]");
+    expect(plus.attributes("aria-label")).toBe("Joindre un fichier");
+    await plus.trigger("click");
+    const menu = wrapper.find("[data-test=paste-text] [data-test=composer-menu]");
+    expect(menu.find("[data-test=composer-item-pdf]").text()).toBe("Importer le PDF de l’annoncePDF, 5 Mo maximum");
+    expect(menu.find("[data-test=composer-item-image]").text()).toBe("Importer une capture d’écranPNG ou JPG, 5 Mo maximum");
+
+    const input = wrapper.find<HTMLInputElement>("[data-test=paste-file]");
+    const choose = async (file: File) => {
+      Object.defineProperty(input.element, "files", { value: [file], configurable: true });
+      await input.trigger("change");
+      await vi.dynamicImportSettled();
+      await flushPromises();
+    };
+    const capture = new File(["png"], "annonce.png", { type: "image/png" });
+    POST.mockResolvedValueOnce({ data: { text: "Ingénieur DevOps\nSpeciTec, Lausanne", problem: null, limit: null } });
+    await choose(capture);
+    expect(POST.mock.calls[0]![0]).toBe("/api/offers/{offer_id}/file");
+    expect(POST.mock.calls[0]![1].params).toEqual({ path: { offer_id: 7 } });
+    const sent = POST.mock.calls[0]![1].bodySerializer() as FormData;
+    expect(sent.get("file")).toBe(capture);
+    // Rien n'est enregistré : le texte arrive dans le champ, la personne le relit, puis « Refaire la note ».
+    expect(wrapper.find<HTMLTextAreaElement>("[data-test=paste-text] [data-test=composer-input]").element.value).toBe("Ingénieur DevOps\nSpeciTec, Lausanne");
+    expect(wrapper.find("[data-test=paste-file-done]").text()).toBe("Texte du fichier repris. Relis-le, puis refais la note.");
+    expect(PUT).not.toHaveBeenCalled();
+
+    // Ce qui empêche la lecture : la phrase, et le texte du champ ne change pas.
+    POST.mockResolvedValueOnce({ data: { text: null, problem: "not-supported", limit: null } });
+    await choose(new File(["x"], "annonce.png", { type: "image/png" }));
+    expect(wrapper.find("[data-test=paste-error]").text()).toBe("Seuls les PDF, PNG et JPG sont acceptés. Colle le texte de l’annonce.");
+    POST.mockResolvedValueOnce({ data: { text: null, problem: null, limit: "Les 30 offres notées du mois sont utilisées : elles reviennent le 1er décembre." } });
+    await choose(new File(["x"], "annonce.pdf", { type: "application/pdf" }));
+    expect(wrapper.find("[data-test=paste-error]").text()).toContain("Les 30 offres notées du mois sont utilisées");
+    // Plus de 5 Mo : refusé avant l'envoi.
+    POST.mockClear();
+    await choose(new File([new Uint8Array(5 * 1024 * 1024 + 1)], "lourd.pdf", { type: "application/pdf" }));
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=paste-error]").text()).toBe("Ce fichier est trop lourd (5 Mo au plus). Colle le texte de l’annonce.");
+  });
+
   it("done : la note recalculée, plus de « Provisoire », « Note refaite sur l’annonce complète. » (role=status)", async () => {
     const wrapper = await mountDetail(
       offer({ text_reading: "done", description: "Texte complet", summary_partial: false, score: 76, gaps: [{ text: "Azure demandé, tu connais surtout AWS", chunk_ids: [3] }] }),

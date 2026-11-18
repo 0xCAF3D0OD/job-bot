@@ -10,6 +10,7 @@ import ScoreRing from "./ScoreRing.vue";
 import { usePlan } from "../composables/usePlan";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import { usePhone } from "../composables/usePhone";
+import { displayTitle } from "../offerTitle";
 
 // Une offre dans À traiter (maquettes CandidaturesOrdinateur et Candidatures, 7.11.2026) : la carte de liste
 // commune, avec l'anneau et son mot à droite. Ce qui demande attention (écartée, à vérifier, retirée) et la note
@@ -117,7 +118,7 @@ watch([chips, phone], () => void fit());
 <template>
   <ListCard
     ref="card"
-    :title="offer.title"
+    :title="displayTitle(offer.title, offer)"
     :company="offer.company ?? 'Entreprise non indiquée'"
     :location="offer.location"
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
