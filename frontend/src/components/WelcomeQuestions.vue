@@ -474,7 +474,7 @@ defineExpose({
 .wq-lang:focus-within { outline: 2px solid var(--primary-graphic); outline-offset: -2px; }
 .wq input.wq-lang-name { flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: transparent; color: var(--text); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .wq-level { position: relative; display: flex; align-items: center; gap: var(--wq-6); min-height: 60px; font-size: var(--wq-15); color: var(--text); }
-.wq-level.unset { color: var(--unrated-dash); }
+.wq-level.unset { color: var(--unset-text); }
 .wq-level svg { width: 18px; height: 18px; fill: none; stroke: var(--field-border); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 /* Le choix du niveau du téléphone, invisible, posé sur le niveau et son chevron. */
 .wq-level select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
