@@ -762,3 +762,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.548 | Filtres : nouveau filtre « Contrat » (CDI, CDD, Stage, Temporaire, Non précisé), plusieurs choix avec leur nombre « CDI · 120 », sur téléphone et ordinateur ; chaque offre reçoit sa catégorie, sans devinette (issue #468) | livrée |
 | 1.6.549 | Aujourd'hui sur ordinateur : « 1 candidature à envoyer » écrit à la main, sans point final. | livrée |
 | 1.6.550 | Préparer le rendez-vous sur téléphone refait d'après la planche PreparerRendezVous (§71) : cartes, « Ton nom sur la feuille » avec le nom et l'office, « Voir la feuille » | livrée ; « + Ajouter une question » attend la décision de Kevin |
+| 1.6.551 | Réglages sur ordinateur, fenêtre de la pause : flèches « Mois précédent » / « Mois suivant » à la place du défilement des mois | livrée |
