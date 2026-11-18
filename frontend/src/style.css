@@ -540,6 +540,15 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
   font-size: var(--font-small);
 }
 
+/* Ordinateur (planche CandidaturesOrdinateurEcartee) : le bandeau en bas à gauche, aligné sur le contenu de la page,
+   à 24 px du bas, 400 px de large, 56 px de haut au moins, coins de 16 px. Le bouton Assistant reste seul à droite. */
+@media (min-width: 821px) {
+  .toast:not(.inline) { --toast-w: 400px; --toast-h: 56px; --toast-r: 16px; left: max(var(--space-6), calc((100vw - var(--page-wide)) / 2)); right: auto; bottom: var(--space-6); width: min(var(--toast-w), calc(100vw - 2 * var(--space-6))); max-width: none; box-sizing: border-box; min-height: var(--toast-h); }
+  /* Fond --text (inversé en sombre : #F3EEE6, texte #171411), texte 15/600, « Voir » et « Annuler » 15/800 en --inverse-link. */
+  .undo-toast:not(.inline) { gap: var(--space-3); padding: 0 var(--space-2) 0 var(--space-5); border-radius: var(--toast-r); background: var(--text); color: var(--bg); font-size: var(--font-label); font-weight: var(--weight-semibold); }
+  .undo-toast:not(.inline) > button.link { color: var(--inverse-link); font-size: var(--font-label); font-weight: var(--weight-heavy); text-decoration: none; }
+}
+
 /* --- Onglets en bascule --- */
 
 /* --- Pastilles --- */
