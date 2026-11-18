@@ -299,11 +299,10 @@ describe("Aujourd’hui sur ordinateur (maquette AujourdhuiOrdinateurV2 du 13 no
     expect(band.find("img").attributes("alt")).toBe("");
     // 17 candidatures en 22 jours ouvrables : 1 par jour.
     const title = band.find("h1");
-    expect(title.text().replace(/\s+/g, " ")).toBe("1 candidature à envoyer.");
+    // Écrit à la main comme ses variantes, sans point final (Kevin, 18.11).
+    expect(title.text().replace(/\s+/g, " ")).toBe("1 candidature à envoyer");
     expect(band.findAll("h1")).toHaveLength(1);
-    // Un seul accent manuscrit par écran.
-    expect(wrapper.findAll(".aj-title-hand")).toHaveLength(1);
-    expect(title.find(".aj-title-hand").text()).toBe("à envoyer.");
+    expect(title.findAll(".aj-hand")).toHaveLength(1);
     expect(band.find("[data-test=today-sub]").text()).toBe("C’est ton rythme pour rester dans l’objectif ORP. 1 offre est à trier.");
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } });
     // Plus de bande d'action ni de « À retenir » : le tri est une tâche.

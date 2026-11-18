@@ -1,0 +1,1 @@
+Filtres : nouveau filtre « Contrat » (CDI, CDD, Stage, Temporaire, Non précisé), plusieurs choix avec leur nombre « CDI · 120 », sur téléphone et ordinateur ; chaque offre reçoit sa catégorie, sans devinette (issue #468)

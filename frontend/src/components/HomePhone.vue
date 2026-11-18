@@ -11,6 +11,7 @@ import ScoreRing from "./ScoreRing.vue";
 import TaskCheck from "./TaskCheck.vue";
 import TroupeScene from "./TroupeScene.vue";
 import { HOME_SCENE } from "../troupe";
+import { displayTitle } from "../offerTitle";
 
 // L'Accueil du téléphone, refait d'après la planche AccueilV2 (LISEZMOI du 17.11, §40, §54 et §61 ; mêmes blocs sur
 // AccueilJustificatif, AccueilNouveau et AccueilPremiereCandidature) : la scène des 4 personnages (§59), le titre écrit à
@@ -343,7 +344,7 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
             data-test="home-top-offer"
           >
             <span class="home-row-main">
-              <b>{{ offer.title }}</b>
+              <b>{{ displayTitle(offer.title, offer) }}</b>
               <span class="home-row-sub">{{ where(offer) }}</span>
             </span>
             <ScoreRing
@@ -388,7 +389,7 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
               aria-label="Pas encore vue"
             />
             <span class="home-row-main">
-              <b>{{ offer.title }}</b>
+              <b>{{ displayTitle(offer.title, offer) }}</b>
               <span class="home-row-sub home-row-why"><span class="home-row-cut">{{ where(offer) }}{{ where(offer) && reason(offer) ? " ·" : "" }}</span><mark v-if="reason(offer)">{{ reason(offer) }}</mark></span>
             </span>
             <ScoreRing

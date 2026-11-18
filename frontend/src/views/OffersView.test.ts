@@ -411,8 +411,8 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const dialog = wrapper.find("[data-test=filters-dialog]");
-    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Note minimale, sur 100", "Type de note", "Taux d’activité"]);
-    expect(dialog.findAll("[aria-pressed]").length).toBe(14);
+    expect(dialog.findAll(".filter-panel-group > span").map((g) => g.text())).toEqual(["Statut", "Trier", "Note minimale, sur 100", "Type de note", "Taux d’activité", "Contrat"]);
+    expect(dialog.findAll("[aria-pressed]").length).toBe(19);
     expect(dialog.find(".filter-panel-body [data-test=filters-done]").exists()).toBe(false);
     expect(dialog.find(".filter-panel-foot [data-test=filters-done]").exists()).toBe(true);
     await wrapper.find("[data-test=pop-filtered-out]").trigger("change");

@@ -9,6 +9,7 @@ import ShowMore from "./ShowMore.vue";
 import StatusPill from "./StatusPill.vue";
 import { dateWithTime } from "../dates";
 import { frenchName, parseStatusLabel, plural, rateText, SITE_NAMES, sourceLabel } from "../format";
+import { displayTitle } from "../offerTitle";
 
 // Ouvert depuis « Alertes reçues » (ReceivedAlerts), le journal porte le seul bouton du bas (K20, audit du 17.11) :
 // « Afficher plus (n) » tant qu'il reste des alertes, puis « Afficher moins », qui replie le journal sur les 3 dernières.
@@ -230,7 +231,7 @@ onMounted(async () => {
                   :key="offer.id"
                   data-test="detail-offer"
                 >
-                  <strong>{{ offer.title }}</strong>
+                  <strong>{{ displayTitle(offer.title, offer) }}</strong>
                   <StatusPill
                     v-if="offer.is_first"
                     :dot="false"
