@@ -9,8 +9,8 @@ import FormField from "./FormField.vue";
 
 // « J'ai contacté quelqu'un » (prompt du 10 novembre au soir, PR 28 ; maquettes CandidaturesOrdinateurB état `ct` et
 // EnvoyeeDetailContacte) : Nom, Rôle (facultatif), Comment. Sur ordinateur, la carte dépliée sous l'historique, avec
-// « Annuler » et « Enregistrer » à contour ; sur téléphone (`sheet`), dans la fenêtre du bas, la phrase d'abord et
-// « Enregistrer » plein. Le contact est daté d'aujourd'hui ; il entre dans l'historique et la prochaine relance est
+// « Annuler » et « Enregistrer » à contour ; sur téléphone (`sheet`), dans la fenêtre du bas et
+// « Enregistrer » plein, sans phrase sous le titre (§72g). Le contact est daté d'aujourd'hui ; il entre dans l'historique et la prochaine relance est
 // proposée 7 jours après. Le rôle et le moyen restent des choix (ceux de docs/31), pour le journal et les rappels.
 const props = defineProps<{ applicationId: number; sheet?: boolean }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
@@ -107,12 +107,6 @@ async function save(): Promise<void> {
     data-test="contact-quick"
     @submit.prevent="save"
   >
-    <p
-      v-if="sheet"
-      class="contact-quick-lead"
-    >
-      jobA1 le note dans l’historique et adapte la prochaine relance.
-    </p>
     <div class="contact-quick-who">
       <FormField
         v-slot="{ id, describedby, invalid }"
@@ -262,7 +256,6 @@ async function save(): Promise<void> {
 .contact-quick-save[aria-disabled="true"] { opacity: 0.6; cursor: default; }
 .contact-quick.contact-quick-sheet { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
 .contact-quick-sheet .contact-quick-who { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
-.contact-quick-lead { margin: 0; font-size: calc(var(--font-small) + 1px); line-height: var(--cq-lead-lh, 22px); color: var(--text-tertiary); }
 .contact-quick-sheet .contact-quick-actions { display: grid; justify-content: stretch; }
 .contact-quick-sheet .contact-quick-actions button { width: 100%; height: var(--cq-save-h); min-height: var(--cq-save-h); justify-content: center; font-size: var(--font-body); }
 </style>

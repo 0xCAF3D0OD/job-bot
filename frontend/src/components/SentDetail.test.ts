@@ -269,7 +269,8 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     await open.trigger("click");
     const sheet = wrapper.find("[data-test=contacted-sheet]");
     expect(sheet.find(".sheet-title").text()).toBe("J’ai contacté quelqu’un");
-    expect(sheet.find(".contact-quick-lead").text()).toBe("jobA1 le note dans l’historique et adapte la prochaine relance.");
+    // Plus de phrase sous le titre (Kevin, 18.11, §72g).
+    expect(sheet.find(".contact-quick-lead").exists()).toBe(false);
     expect(sheet.findAll("label").map((l) => l.text())).toEqual(["Nom"]);
     expect(sheet.findAll("[role=radiogroup]").map((g) => g.findAll("[role=radio]").length)).toEqual([4, 5]);
     expect(sheet.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Enregistrer"]);
