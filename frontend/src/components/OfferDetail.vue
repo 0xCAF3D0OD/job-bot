@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, watch, type FunctionalComponent } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
@@ -19,7 +19,7 @@ import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
-import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
+import type { CompatPoint, TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
@@ -40,6 +40,10 @@ import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
 // `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
 // renotée reste dans la liste hors de ses filtres.
+// « Autres offres chez … » (planche Offre) : chargée à part, sous la ligne de flottaison du téléphone.
+const CompanyOffers = defineAsyncComponent(() => import("./CompanyOffers.vue"));
+// Feuille de la compatibilité, ouverte à la demande : chargée à part, comme dans PreparationView (limite de poids).
+const OfferCompatSheet = defineAsyncComponent(() => import("./OfferCompatSheet.vue"));
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
 
 // Les contacts dans le panneau latéral (docs/32 §2.2) ; l'entreprise a sa section (docs/45).
@@ -468,27 +472,6 @@ const markedParts = computed(() => {
   );
 });
 const markCount = computed(() => markedParts.value.flat().filter((part) => part.mark).length);
-// « Autres offres chez … » (planche Offre) : les offres de la même entreprise, lues avec la recherche de la liste ;
-// trois au plus, le nombre total dans le titre. Rien si l'entreprise n'est pas connue ou n'a pas d'autre offre.
-type Sibling = Pick<Offer, "id" | "title" | "company" | "location" | "rate_min" | "rate_max" | "score" | "status" | "first_seen_at">;
-const SIBLINGS_MAX = 3;
-const siblings = ref<Sibling[]>([]);
-const companyKey = (name: string | null | undefined) => (name ?? "").trim().toLocaleLowerCase("fr");
-async function loadSiblings() {
-  const offer = props.offer;
-  const key = companyKey(offer.company);
-  siblings.value = [];
-  // Téléphone seulement : la planche de l'ordinateur n'a pas cette carte.
-  if (!key || !sub.value) return;
-  const { data } = await api.GET("/api/offers", { params: { query: { q: offer.company!.trim(), view: "all", sort: "recent", limit: 50 } } });
-  if (props.offer.id !== offer.id) return;
-  siblings.value = (data?.items ?? []).filter((o) => o.id !== offer.id && companyKey(o.company) === key);
-}
-watch(() => [props.offer.id, props.offer.company, sub.value], () => void loadSiblings().catch(() => (siblings.value = [])), { immediate: true });
-// « Lausanne · 100 % · 16 nov. » : la date suit la règle des dates de l'app (la planche écrit « il y a 5 j »).
-function siblingLine(o: Sibling): string {
-  return [cityOnly(o.location), rateText(o.rate_min, o.rate_max), o.first_seen_at ? dateInList(o.first_seen_at) : ""].filter(Boolean).join(" · ");
-}
 // Note provisoire : l'offre n'a que l'extrait de l'alerte (pas de texte complet). Ses manques sont alors
 // génériques (« Exigences », « Données », « Conseil ») : la lecture de l'annonce complète les remplace.
 // « Donner l’annonce pour la noter » (tête à plat, §11 du 15 novembre) déplie « Donner l’annonce » de la carte Candidature.
@@ -1768,38 +1751,11 @@ watch(
             </li>
           </ul>
         </section>
-        <!-- « Autres offres chez … » (planche Offre du 18.11) : trois au plus, la note ou « Envoyée », vers leur fiche. -->
-        <section
-          v-if="siblings.length"
-          :class="['company-offers', { 'detail-section': columns }]"
-          aria-labelledby="company-offers-title"
-          data-test="company-offers"
-        >
-          <h3 id="company-offers-title">
-            Autres offres chez {{ offer.company }} · {{ siblings.length }}
-          </h3>
-          <RouterLink
-            v-for="other in siblings.slice(0, SIBLINGS_MAX)"
-            :key="other.id"
-            :to="`/candidatures/offres/${other.id}`"
-            class="company-offer"
-            data-test="company-offer"
-          >
-            <span class="company-offer-text">
-              <b>{{ displayTitle(other.title, other) }}</b>
-              <span>{{ siblingLine(other) }}</span>
-            </span>
-            <span
-              v-if="other.status === 'applied'"
-              class="company-offer-pill"
-            >Envoyée</span>
-            <span
-              v-else-if="other.score != null"
-              :class="['company-offer-pill', scoreWord(other.score).tone]"
-            ><span class="visually-hidden">Note </span>{{ other.score }}</span>
-            <AppIcon name="chevron" />
-          </RouterLink>
-        </section>
+        <!-- « Autres offres chez … » (planche Offre du 18.11) : téléphone seulement, chargée à part (poids de Candidatures). -->
+        <CompanyOffers
+          v-if="sub && offer.company"
+          :offer="offer"
+        />
       </template>
     </component>
     <!-- Entreprise et Contacts (O7, O9) : deux lignes repliables, hors de la maquette, gardées. -->
@@ -2129,7 +2085,7 @@ watch(
 .company-site-host { display: block; margin-top: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 .company-site .icon { flex: none; color: var(--text-secondary); }
 /* Planche Offre du 18.11 : la grille Taux · Contrat · Télétravail, les passages surlignés et « Autres offres chez … ». */
-.offer-grid { --grid-r: 12px; --grid-pad-y: 10px; --grid-pad-x: 4px; --grid-label: 12px; --grid-label-lh: 16px; --grid-value-lh: 20px; --grid-gap: 2px;
+.offer-grid { --grid-r: 12px; --grid-pad-y: 8px; --grid-pad-x: 4px; --grid-label: 12px; --grid-label-lh: 16px; --grid-value-lh: 20px; --grid-gap: 4px;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: var(--space-4) 0 0; border: 1px solid var(--line); border-radius: var(--grid-r); }
 .offer-grid > div { padding: var(--grid-pad-y) var(--grid-pad-x); text-align: center; }
 .offer-grid > div + div { border-left: 1px solid var(--line); }
@@ -2141,16 +2097,6 @@ watch(
 .post-legend > span { flex: none; width: var(--legend-w); height: var(--legend-h); border-radius: var(--mark-r); background: var(--mark-bg); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .detail-post { --mark-bg: #5C4A14; } }
 :root[data-theme="dark"] .detail-post { --mark-bg: #5C4A14; }
-.company-offers { --co-title: 17px; --co-title-lh: 22px; --co-line: 13px; --co-line-lh: 18px; --co-pill-y: 4px; --co-pill-x: 10px; --co-chevron: 20px; }
-.company-offers h3 { margin: 0 0 var(--space-1); font-size: var(--co-title); line-height: var(--co-title-lh); font-weight: var(--weight-bold); }
-.company-offer { display: flex; align-items: center; gap: var(--space-3); min-height: var(--target-min); padding: var(--space-3) 0; color: inherit; text-decoration: none; }
-.company-offer + .company-offer { border-top: 1px solid var(--line); }
-.company-offer-text { flex: 1; min-width: 0; }
-.company-offer-text b { display: block; overflow: hidden; font-size: var(--font-label); line-height: var(--co-title-lh); white-space: nowrap; text-overflow: ellipsis; }
-.company-offer-text > span { display: block; margin-top: var(--grid-gap, 2px); font-size: var(--co-line); line-height: var(--co-line-lh); color: var(--text-secondary); }
-.company-offer-pill { flex: none; padding: var(--co-pill-y) var(--co-pill-x); border-radius: var(--radius-pill); background: var(--surface-muted); color: var(--text-tertiary); font-size: var(--co-line); font-weight: var(--weight-bold); }
-.company-offer-pill:is(.very-close, .close) { background: var(--success-soft); color: var(--success); }
-.company-offer > .icon { flex: none; width: var(--co-chevron); height: var(--co-chevron); color: var(--primary-text); }
 @media (prefers-reduced-motion: reduce) { .offer-busy-ring { animation: none; } }
 /* Audit du 17.11, N27 : sur ordinateur, chaque lien seul de la fiche a une cible de 24 px de haut au moins (WCAG 2.5.8),
    sans rien déplacer : un lien dans le texte prend la marge en haut et en bas, un bouton-lien la reprend en négatif. */
@@ -2251,7 +2197,7 @@ watch(
   .offer-blocks .company-card > :first-child { border-top: 0; }
   .offer-blocks .company-site { padding: var(--space-3) var(--space-4); }
   /* « Autres offres chez … » en carte, comme l'en-tête et la compatibilité (planche Offre). */
-  .offer-blocks .company-offers { --co-pad-top: 14px; --co-pad-bottom: 6px; margin: var(--ob-12) var(--ob-margin) var(--space-6); padding: var(--co-pad-top) var(--ob-pad) var(--co-pad-bottom);
+  .offer-blocks .company-offers { --co-pad-top: 16px; --co-pad-bottom: 4px; margin: var(--ob-12) var(--ob-margin) var(--space-6); padding: var(--co-pad-top) var(--ob-pad) var(--co-pad-bottom);
     background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
   .offer-blocks .post-summary { font-size: var(--font-label); }
 }
