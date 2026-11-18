@@ -13,6 +13,7 @@ export const CHANNELS: Record<Contact["channel"], string> = {
   linkedin_message: "Message LinkedIn",
   email: "E-mail",
   phone: "Téléphone",
+  in_person: "En personne",
   other: "Autre",
 };
 // Relance proposée 7 jours après une prise de contact restée sans réponse (docs/31 §4).

@@ -139,8 +139,22 @@ describe("Le détail d’Envoyées en cartes (§8.1)", () => {
     await toggle.trigger("click");
     expect(toggle.attributes("aria-expanded")).toBe("true");
     const form = wrapper.find("[data-test=contacted-zone] [data-test=contact-quick]");
-    expect(form.findAll("label").map((l) => l.text())).toEqual(["Nom", "Rôle (facultatif)", "Comment"]);
-    expect(form.findAll("[data-test=contact-channel] option").map((o) => o.text())).toEqual(["LinkedIn", "E-mail", "Téléphone", "Autre"]);
+    // Rôle et Comment en pastilles (Kevin, 18.11, §72) : des boutons radio de 44 px, LinkedIn choisi d'office.
+    expect(form.findAll("label").map((l) => l.text())).toEqual(["Nom"]);
+    expect(form.findAll(".contact-quick-label").map((l) => l.text())).toEqual(["Son rôle · facultatif", "Comment"]);
+    const role = form.find("[data-test=contact-role]");
+    expect(role.attributes("role")).toBe("radiogroup");
+    expect(role.findAll("[role=radio]").map((o) => o.text())).toEqual(["Recrutement", "Responsable du poste", "Équipe", "Autre"]);
+    expect(role.findAll("[role=radio]").map((o) => o.attributes("aria-checked"))).toEqual(["false", "false", "false", "false"]);
+    const channel = form.find("[data-test=contact-channel]");
+    expect(channel.findAll("[role=radio]").map((o) => o.text())).toEqual(["LinkedIn", "E-mail", "Téléphone", "En personne", "Autre"]);
+    expect(channel.find("[aria-checked=true]").text()).toBe("LinkedIn");
+    // « Autre » ouvre « Précise » ; un nouveau clic sur la pastille choisie la désélectionne et ferme le champ.
+    await form.find("[data-test=contact-role-other]").trigger("click");
+    expect(form.find("[data-test=contact-role-precise]").attributes("aria-label")).toBe("Son rôle, autre");
+    await form.find("[data-test=contact-role-other]").trigger("click");
+    expect(form.find("[data-test=contact-role-precise]").exists()).toBe(false);
+    expect(role.find("[aria-checked=true]").exists()).toBe(false);
     expect(form.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Annuler", "Enregistrer"]);
     expect(form.find(".contact-quick-lead").exists()).toBe(false);
     // Sans nom, rien n'est envoyé et l'erreur vient sous le champ.
@@ -150,12 +164,13 @@ describe("Le détail d’Envoyées en cartes (§8.1)", () => {
     expect(form.find("[data-test=field-error]").text()).toBe("Indique le nom de la personne.");
     POST.mockResolvedValueOnce({ data: { id: 1 } });
     await form.find("[data-test=contact-name]").setValue("Mme Rochat");
-    await form.find("[data-test=contact-role]").setValue("recruiter");
-    await form.find("[data-test=contact-channel]").setValue("email");
+    await form.find("[data-test=contact-role-recruiter]").trigger("click");
+    await form.find("[data-test=contact-channel-other]").trigger("click");
+    await form.find("[data-test=contact-channel-precise]").setValue("Salon de l’emploi");
     await form.trigger("submit");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/contacts", {
-      body: { application_id: 15, name: "Mme Rochat", role: "recruiter", channel: "email", contacted_on: "2026-11-08" },
+      body: { application_id: 15, name: "Mme Rochat", role: "recruiter", channel: "other", contacted_on: "2026-11-08", note: "Moyen : Salon de l’emploi" },
     });
     expect(wrapper.emitted("changed")).toHaveLength(1);
     expect(toggle.attributes("aria-expanded")).toBe("false");
@@ -255,7 +270,8 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     const sheet = wrapper.find("[data-test=contacted-sheet]");
     expect(sheet.find(".sheet-title").text()).toBe("J’ai contacté quelqu’un");
     expect(sheet.find(".contact-quick-lead").text()).toBe("jobA1 le note dans l’historique et adapte la prochaine relance.");
-    expect(sheet.findAll("label").map((l) => l.text())).toEqual(["Nom", "Rôle (facultatif)", "Comment"]);
+    expect(sheet.findAll("label").map((l) => l.text())).toEqual(["Nom"]);
+    expect(sheet.findAll("[role=radiogroup]").map((g) => g.findAll("[role=radio]").length)).toEqual([4, 5]);
     expect(sheet.findAll(".contact-quick-actions button").map((b) => b.text())).toEqual(["Enregistrer"]);
     expect(sheet.find("[data-test=contact-save]").classes()).toContain("primary");
   });

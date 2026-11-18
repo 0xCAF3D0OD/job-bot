@@ -14478,6 +14478,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel",
@@ -14576,6 +14577,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel"

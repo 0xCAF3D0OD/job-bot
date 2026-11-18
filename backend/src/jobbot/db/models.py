@@ -1396,7 +1396,7 @@ class Contact(Base):
     )
     name: Mapped[str | None] = mapped_column(Text)
     role: Mapped[str] = mapped_column(Text)  # recruiter | manager | team | alumni | other
-    # linkedin_invite | linkedin_message | email | phone | other
+    # linkedin_invite | linkedin_message | email | phone | in_person | other
     channel: Mapped[str] = mapped_column(Text)
     contacted_on: Mapped[date] = mapped_column(Date)
     answered_on: Mapped[date | None] = mapped_column(Date)
