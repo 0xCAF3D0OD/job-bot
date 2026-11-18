@@ -1465,6 +1465,9 @@ onUnmounted(() => {
    « Tout effacer » en contour gris, texte foncé (planche : trait #C9C5BA, --button-outline). */
 @media (min-width: 1024px) {
 .offers-grid.offers-grid-empty .offers-list { --empty-tools: 472px; flex: 1; width: auto; }
+  /* K19 : sans offre, la grille ne garde pas la hauteur de l'écran et sa colonne ne défile pas seule ; la page défile. */
+  .offers-grid.offers-grid-empty { height: auto; }
+  .offers-grid-empty :deep(.linked-list > .linked-cards) { overflow-y: visible; }
   .offers-grid-empty .offers-list-tools { max-width: var(--empty-tools); }
   .offers-grid-empty .offers-list :deep(.character-state-wide) { margin-inline: auto; }
   .offers-empty-reset { border-color: var(--button-outline); background: var(--surface); color: var(--text); }
