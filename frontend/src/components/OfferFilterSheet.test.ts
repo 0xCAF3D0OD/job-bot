@@ -130,6 +130,8 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: "unknown" }]);
     await group.find("[data-test=sheet-distance-all]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: null }]);
+  });
+
   it("offres « Loin » cachées ou non : le nombre du choix actif égale toujours « Afficher n offres » (Kevin, 18.11, choix a)", () => {
     // 84 offres dont 10 « Loin » (sous 50) : la liste du téléphone les cache, le bouton dit 74.
     const near = {
