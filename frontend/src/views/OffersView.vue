@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
+import { computed, defineAsyncComponent, inject, nextTick, onMounted, onUnmounted, ref, Teleport, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type GoogleJobs, type Offer, type OfferFacets, type OrpMonth } from "../api/client";
@@ -16,8 +16,8 @@ import LinkedPin from "../components/LinkedPin.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
-import SpontaneousForm from "../components/SpontaneousForm.vue";
-import ManualOfferForm from "../components/ManualOfferForm.vue";
+import type SpontaneousFormType from "../components/SpontaneousForm.vue";
+import type ManualOfferFormType from "../components/ManualOfferForm.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
@@ -41,6 +41,13 @@ import { usePageReady } from "../composables/usePageTransition";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
+
+// Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée) se chargent à part de Candidatures,
+// comme la feuille de la compatibilité (décision de Kevin du 18.11, 13 h 37) : la page s'ouvre plus légère. Ils sont
+// préchargés dès que la page est affichée, pour que le panneau s'ouvre sans attente.
+const loadAddForms = () => import("../components/addForms");
+const ManualOfferForm = defineAsyncComponent(() => loadAddForms().then((m) => m.ManualOfferForm));
+const SpontaneousForm = defineAsyncComponent(() => loadAddForms().then((m) => m.SpontaneousForm));
 
 const PAGE_SIZE = 50;
 // Sur téléphone, « Afficher n offres de plus » charge 20 offres par appui (prompt du 10 novembre, fin de soirée, PR 35 ;
@@ -387,8 +394,8 @@ const addTab = computed<string>({
   },
 });
 // Le bouton du pied du panneau parle pour le formulaire affiché (libellé, attente).
-const manualForm = ref<InstanceType<typeof ManualOfferForm> | null>(null);
-const spontaneousForm = ref<InstanceType<typeof SpontaneousForm> | null>(null);
+const manualForm = ref<InstanceType<typeof ManualOfferFormType> | null>(null);
+const spontaneousForm = ref<InstanceType<typeof SpontaneousFormType> | null>(null);
 function closeAdd(): void {
   manualOpen.value = false;
   spontaneousOpen.value = false;
@@ -692,6 +699,7 @@ onMounted(() => {
   void load().then(openFromQuery);
   void openShared();
   void loadChunkTitles();
+  void loadAddForms();
 });
 useDataChanged(() => {
   void load();

@@ -1,7 +1,7 @@
 """Filtre « Distance depuis… » : le point de chaque offre (issue #468, Kevin, 18.11.2026)
 
-Revision ID: 0094
-Revises: 0093
+Revision ID: 0095
+Revises: 0094
 Create Date: 2026-11-18
 
 Nouvelles colonnes `offers.latitude` et `offers.longitude`, tirées du lieu de l'annonce par
@@ -25,8 +25,8 @@ from alembic import op
 
 from jobbot.core.geo import locate
 
-revision: str = "0094"
-down_revision: str | None = "0093"
+revision: str = "0095"
+down_revision: str | None = "0094"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
