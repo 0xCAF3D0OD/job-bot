@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
+import BilanPhoneHome from "../components/BilanPhoneHome.vue";
 import PageHero from "../components/PageHero.vue";
 import FolderTabs, { type FolderTab } from "../components/FolderTabs.vue";
 import { usePhone } from "../composables/usePhone";
@@ -14,8 +15,11 @@ const route = useRoute();
 const { phone } = usePhone();
 const tab = computed<BilanTab>(() => (route.meta.tab as BilanTab | undefined) ?? "orp");
 
+// Sur téléphone, /bilan est l'accueil en feuilles empilées (§52 du 17.11, planche BilanAccueil) ; le détail ORP,
+// ouvert par sa feuille, est /bilan?vue=orp (ou un mois, ?orp=…, ou le mois déplié, ?tout=1).
+const home = computed(() => phone.value && tab.value === "orp" && !route.query.vue && !route.query.orp && !route.query.tout);
 const segments = computed<FolderTab[]>(() => [
-  { value: "orp", label: "ORP", to: "/bilan", test: "bilan-tab-orp" },
+  { value: "orp", label: "ORP", to: phone.value ? { path: "/bilan", query: { vue: "orp" } } : "/bilan", test: "bilan-tab-orp" },
   // Le mois choisi dans les Résultats suit le lien de l'onglet.
   {
     value: "resultats",
@@ -56,6 +60,7 @@ const segments = computed<FolderTab[]>(() => [
     title="Bilan"
   >
     <FolderTabs
+      v-if="!home"
       :selected="tab"
       :tabs="segments"
       label="Bilan"
@@ -63,7 +68,8 @@ const segments = computed<FolderTab[]>(() => [
     />
   </PageHero>
   <!-- Résultats sur la bande grise, comme Candidatures (1.6.62, planche « 3 et 4. Bilan »). -->
-  <template v-if="phone">
+  <BilanPhoneHome v-if="home" />
+  <template v-else-if="phone">
     <section
       v-if="tab === 'resultats'"
       class="band jobs-band"

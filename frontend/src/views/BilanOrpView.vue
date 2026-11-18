@@ -44,11 +44,13 @@ const viewMonth = computed(() => {
   const asked = route.query.orp;
   return typeof asked === "string" && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth() ? asked : thisMonth();
 });
+// Sur téléphone, /bilan seul est l'accueil en feuilles (§52) : les liens du détail ORP gardent ?vue=orp.
+const phoneOrp = computed((): Record<string, string> => (phone.value ? { vue: "orp" } : {}));
 const viewingPast = computed(() => viewMonth.value !== thisMonth());
 const expanded = computed(() => route.query.tout === "1");
 const PAST_MONTHS = 6;
 const monthItems = computed<MoreMenuItem[]>(() => {
-  const go = (month: string) => () => void router.push({ path: "/bilan", query: month === thisMonth() ? {} : { orp: month } });
+  const go = (month: string) => () => void router.push({ path: "/bilan", query: { ...phoneOrp.value, ...(month === thisMonth() ? {} : { orp: month }) } });
   const items: MoreMenuItem[] = [];
   if (viewingPast.value) items.push({ label: `Revenir à ${formatMonth(thisMonth()).toLowerCase()}`, test: "orp-month-current", icon: "calendar", run: go(thisMonth()) });
   for (let i = 1; i <= PAST_MONTHS; i += 1) {
@@ -104,9 +106,9 @@ const pendingMonths = computed(() => {
 const declareAll = ref(false);
 const pendingShown = computed(() => (declareAll.value || expanded.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
 // « Voir tout le mois et les justificatifs » et le chevron de la carte : le mois déplié, sur place.
-const allTo = computed(() => ({ path: "/bilan", query: { ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
+const allTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
 // Planche BilanOrdinateurMois : le mois déplié se replie (« Replier le mois », la carte du mois), sans ?tout=1.
-const foldTo = computed(() => ({ path: "/bilan", query: viewingPast.value ? { orp: viewMonth.value } : {} }));
+const foldTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}) } }));
 const declared = computed(() => (shownMonth.value?.rows ?? []).filter((row) => row.declared_at));
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);

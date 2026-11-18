@@ -772,7 +772,7 @@ onUnmounted(() => assistant.setFocus(null));
             <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
             <header class="orp-page-head">
               <RouterLink
-                to="/bilan"
+                :to="{ path: '/bilan', query: { vue: 'orp' } }"
                 class="icon-button icon-only"
                 aria-label="Retour au Bilan"
                 data-test="orp-back"
