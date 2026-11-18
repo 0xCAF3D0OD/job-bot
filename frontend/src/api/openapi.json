@@ -3875,6 +3875,30 @@
               ],
               "title": "Basis"
             }
+          },
+          {
+            "name": "contracts",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Contract"
+              },
+              "maxItems": 5,
+              "default": [],
+              "title": "Contracts"
+            }
+          },
+          {
+            "name": "hide_far",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Far"
+            }
           }
         ],
         "responses": {
@@ -14689,6 +14713,17 @@
         ],
         "title": "ContactsPage"
       },
+      "Contract": {
+        "type": "string",
+        "enum": [
+          "cdi",
+          "cdd",
+          "stage",
+          "temporaire",
+          "non_precise"
+        ],
+        "title": "Contract"
+      },
       "ContractType": {
         "type": "string",
         "enum": [
@@ -21048,6 +21083,49 @@
         ],
         "title": "MonthWeeksOut"
       },
+      "NearFacets": {
+        "properties": {
+          "views": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Views"
+          },
+          "sure": {
+            "type": "integer",
+            "title": "Sure"
+          },
+          "provisional": {
+            "type": "integer",
+            "title": "Provisional"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Rates"
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Contracts",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "views",
+          "sure",
+          "provisional",
+          "rates"
+        ],
+        "title": "NearFacets",
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n\noffres »."
+      },
       "NewsPreferences": {
         "properties": {
           "domain_keywords": {
@@ -21464,6 +21542,24 @@
             "type": "array",
             "title": "Rates",
             "default": []
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Contracts",
+            "default": []
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NearFacets"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

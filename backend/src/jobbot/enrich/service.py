@@ -21,6 +21,7 @@ import httpx
 from sqlalchemy import and_, func, or_, select, update
 
 from jobbot.core.address import weaker_sources
+from jobbot.core.contract import classify_contract
 from jobbot.db.models import EnrichStatus, Offer, OfferLink, OfferStatus, Source
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -272,6 +273,7 @@ async def enrich(runtime: Runtime) -> EnrichResult:
             apply_kind=parsed.apply_kind,
             description=parsed.description,
             employment_type=parsed.employment_type,
+            contract=classify_contract(parsed.employment_type),
         )
         await _set_address(runtime, offer_id, parsed.address)
         await _set_logo(runtime, offer_id, parsed.logo, parsed.website)

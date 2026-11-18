@@ -39,6 +39,7 @@ export const LIMITS = {
   "js-candidatures": 175_500,
   "js-candidatures-fichier": 175_500,
   "js-candidatures-autres-offres": 175_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
+  "js-candidatures-menu": 175_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "js-preparer": 157_400,
   "js-preparer-panneaux": 157_400,
@@ -83,6 +84,7 @@ export const LIMITS = {
   "css-candidatures": 72_500,
   "css-candidatures-fichier": 72_500,
   "css-candidatures-autres-offres": 72_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
+  "css-candidatures-menu": 72_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "css-preparer": 70_500,
   "css-preparer-panneaux": 70_500,
@@ -146,6 +148,7 @@ export const PAGES = {
   // « Autres offres chez … » (téléphone, à l'ouverture de la fiche) et la feuille de la compatibilité (à la demande).
   "candidatures-autres-offres": ["views/JobsView.vue", "views/OffersView.vue", "components/CompanyOffers.vue"],
   "candidatures-compatibilite": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferCompatSheet.vue"],
+  "candidatures-menu": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferActionSheet.vue"],
   preparer: ["views/PreparationView.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
