@@ -5,11 +5,14 @@ import type { OfferFacets } from "../api/client";
 import {
   BASIS_HELP,
   basisChoices,
+  choiceCount,
   radioKey,
+  rateCount,
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
   SCORE_HELP,
+  scoreCount,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -44,14 +47,25 @@ const bases = computed(() => basisChoices(props.facets));
 
 // « Note minimale, sur 100 » (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, mêmes seuils que
 // l'ordinateur. Une adresse d'avant (?note=60-90) garde ses bornes, et aucune case n'est marquée.
-const SCORES: SegmentOption[] = SCORE_CHOICES.map((c) => ({ value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}` }));
+// Sous chaque choix, son nombre d'offres (§65 du 17.11).
+const SCORES = computed<SegmentOption[]>(() =>
+  SCORE_CHOICES.map((c) => {
+    const n = scoreCount(props.facets, c.min);
+    return { value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}`, sub: choiceCount(n), empty: n === 0 };
+  }),
+);
 const score = computed({
   get: () => (props.filters.maxScore !== null ? "" : String(props.filters.minScore ?? "all")),
   set: (value: string) => emit("update", { minScore: value === "all" ? null : Number(value), maxScore: null }),
 });
 // Le taux d'activité, un seul choix (5e) : le serveur garde une offre dont le taux maximum l'atteint, ou au
 // taux inconnu. Un contrôle segmenté, pas des puces qui ont l'air de se cumuler.
-const RATES: SegmentOption[] = RATE_CHOICES.map((c) => ({ value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}` }));
+const RATES = computed<SegmentOption[]>(() =>
+  RATE_CHOICES.map((c) => {
+    const n = rateCount(props.facets, c.value);
+    return { value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}`, sub: choiceCount(n), empty: n === 0 };
+  }),
+);
 const rate = computed({
   get: () => (props.filters.minRate === null ? "all" : String(props.filters.minRate)),
   set: (value: string) => emit("update", { minRate: value === "all" ? null : Number(value) }),
@@ -89,7 +103,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             v-for="choice in VIEWS"
             :key="choice.value"
             type="button"
-            class="filter-choice"
+            :class="['filter-choice', { 'choice-empty': counts[choice.value] === 0 }]"
             role="radio"
             :aria-checked="filters.view === choice.value"
             :tabindex="filters.view === choice.value ? 0 : -1"
@@ -139,7 +153,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             v-for="choice in bases"
             :key="choice.value ?? 'all'"
             type="button"
-            class="filter-choice"
+            :class="['filter-choice', { 'choice-empty': choice.count === 0 }]"
             role="radio"
             :aria-checked="filters.basis === choice.value"
             :tabindex="filters.basis === choice.value ? 0 : -1"
@@ -276,5 +290,11 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* Un nombre sous le libellé (planche Filtres, §65) : segment de 56 px, libellé et nombre l'un sous l'autre. Ici
+   plutôt que dans style.css : la feuille est seule à en montrer. */
+:deep(.segmented > button:has(.segmented-sub)) { flex-direction: column; gap: 1px; min-height: 3.5rem; line-height: var(--leading-tight); }
+:deep(.segmented-sub) { font-size: var(--font-caption); font-weight: var(--weight-medium); color: var(--text-secondary); }
+/* Un choix à 0 offre reste visible et cliquable, grisé sur le même fond (Kevin, 18.11) ; le choix actif garde son style. */
+:deep(.choice-empty:not([aria-checked="true"])) { color: var(--text-secondary); }
 .filters-show { min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>

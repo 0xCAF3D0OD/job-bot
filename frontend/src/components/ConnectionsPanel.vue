@@ -39,6 +39,9 @@ function label(provider: string): string {
   return PROVIDER_LABEL[provider as Provider] ?? provider;
 }
 
+// Prévient la page Réglages quand le premier chargement est fini : elle montre ses sections d’un coup (audit du 17.11, N23).
+const emit = defineEmits<{ ready: [] }>();
+
 async function load(): Promise<void> {
   const { data: found } = await api.GET("/api/account/connexions");
   data.value = found ?? null;
@@ -58,7 +61,13 @@ async function remove(id: number): Promise<void> {
   await load();
 }
 
-onMounted(load);
+onMounted(async () => {
+  try {
+    await load();
+  } finally {
+    emit("ready");
+  }
+});
 </script>
 
 <template>

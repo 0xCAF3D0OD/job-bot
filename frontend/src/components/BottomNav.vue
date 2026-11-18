@@ -99,3 +99,11 @@ onMounted(() => void refresh());
     </template>
   </nav>
 </template>
+
+<style>
+/* Le bouton rond de Candidatures dépasse de la barre du bas : il ne se masque pas au défilement, et un élément qui
+   reçoit le focus s'arrête au-dessus de lui, jamais dessous (Kevin, 17.11, point 7 ; WCAG 2.4.11). */
+@media (max-width: 820px) {
+  :root:has(.tab-bar) { scroll-padding-bottom: calc(var(--tabbar-h) + var(--nav-spacer) + var(--space-2) + env(safe-area-inset-bottom)); }
+}
+</style>

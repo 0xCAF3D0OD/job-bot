@@ -19,6 +19,10 @@ const spendRatio = computed(() => {
   return budget > 0 ? Math.min(1, Number(status.value.month_spend_chf) / budget) : 1;
 });
 
+// Les montants comme dans la rubrique IA (AiSpend) : virgule et deux décimales, « 12,18 CHF sur 20,00 » au lieu de
+// « 12.18 / 20.0 CHF » (audit du 17.11, N16).
+const chf = (value: string | number): string => Number(value).toFixed(2).replace(".", ",");
+
 async function load(): Promise<void> {
   try {
     const { data } = await api.GET("/api/scoring");
@@ -111,7 +115,7 @@ defineExpose({ load });
     <template v-if="status.configured">
       <SettingRow
         title="Dépense du mois"
-        :description="`${status.month_spend_chf} / ${status.budget_chf} CHF`"
+        :description="`${chf(status.month_spend_chf)} CHF sur ${chf(status.budget_chf)}`"
       >
         <div
           class="budget-bar"

@@ -112,4 +112,31 @@ describe("JournalView", () => {
     expect(POST).toHaveBeenCalledWith("/api/alerts/refresh");
     expect(useCollect().message.value).toContain(message);
   });
+
+  it("un seul bouton en bas : « Afficher plus (n) », puis « Afficher moins » qui replie le journal (K20)", async () => {
+    GET.mockResolvedValueOnce({ data: { items: Array.from({ length: 10 }, (_, i) => ({ ...search, id: i + 1 })), total: 12 } });
+    GET.mockResolvedValueOnce({ data: { items: [{ ...search, id: 11 }, { ...search, id: 12 }], total: 12 } });
+    const wrapper = mount(JournalView);
+    await flushPromises();
+    const more = () => wrapper.find("[data-test=journal-more]");
+    expect(wrapper.findAll("[data-test=journal-more]")).toHaveLength(1);
+    expect(more().text()).toBe("Afficher plus (2)");
+    await more().trigger("click");
+    await flushPromises();
+    expect(wrapper.findAll("[data-test=search]")).toHaveLength(12);
+    expect(more().text()).toBe("Afficher moins");
+    await more().trigger("click");
+    expect(wrapper.emitted("collapse")).toHaveLength(1);
+  });
+  it("le focus va sur la première alerte ajoutée : à l’ouverture (focusFrom) puis après « Afficher plus » (Kevin, 17.11)", async () => {
+    GET.mockResolvedValueOnce({ data: { items: Array.from({ length: 10 }, (_, i) => ({ ...search, id: i + 1 })), total: 12 } });
+    GET.mockResolvedValueOnce({ data: { items: [{ ...search, id: 11 }, { ...search, id: 12 }], total: 12 } });
+    const wrapper = mount(JournalView, { props: { focusFrom: 3 }, attachTo: document.body });
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.findAll("[data-test=search]")[3]?.element);
+    await wrapper.find("[data-test=journal-more]").trigger("click");
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.findAll("[data-test=search]")[10]?.element);
+    wrapper.unmount();
+  });
 });

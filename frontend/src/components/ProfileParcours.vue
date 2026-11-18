@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FormField from "./FormField.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import {
   api,
@@ -228,6 +229,31 @@ function editChunk(chunk: Chunk): void {
   };
 }
 
+// Fermer le bloc (croix, Échap, clic à côté, après l'enregistrement ; audit du 17.11, N26, WCAG 2.4.3) : ouvert depuis
+// le Profil (?bloc=, ?nouveau=), le bouton qui l'a ouvert n'est plus dans la page. Le focus va alors sur la carte du
+// bloc, ou sur « Ajouter », jamais sur le corps de la page ; l'adresse perd ?bloc= pour qu'un rechargement ne le
+// rouvre pas.
+// Sans routeur (composant monté seul, tests) : rien à retirer de l'adresse.
+const route = useRoute() as ReturnType<typeof useRoute> | undefined;
+const router = useRouter() as ReturnType<typeof useRouter> | undefined;
+function closeEditor(): void {
+  const id = editing.value?.id ?? null;
+  editing.value = null;
+  if (route && router && (route.query.bloc !== undefined || route.query.nouveau !== undefined)) {
+    const query = { ...route.query };
+    delete query.bloc;
+    delete query.nouveau;
+    void router.replace({ query });
+  }
+  void nextTick(() => {
+    const active = document.activeElement;
+    // Le panneau peut encore être là le temps de sa sortie animée : son bouton ne compte pas.
+    if (active && active !== document.body && active.isConnected && !active.closest("[data-test=side-panel]")) return;
+    const target = (id !== null && document.querySelector<HTMLElement>(`[data-test=open-chunk-${id}]`)) || document.querySelector<HTMLElement>("[data-test=new-chunk]");
+    target?.focus();
+  });
+}
+
 async function saveChunk(): Promise<void> {
   if (!editing.value) return;
   const { id, form } = editing.value;
@@ -235,7 +261,7 @@ async function saveChunk(): Promise<void> {
     ? await api.POST("/api/profile-chunks", { body: form })
     : await api.PUT("/api/profile-chunks/{chunk_id}", { params: { path: { chunk_id: id } }, body: form });
   if (result.data) {
-    editing.value = null;
+    closeEditor();
     await Promise.all([loadChunks(), loadDocuments()]);
   } else {
     message.value = "Refusé : le titre et le contenu sont obligatoires.";
@@ -285,9 +311,14 @@ const missingProfile = computed(() => {
   return "";
 });
 
+// Les certificats se chargent en même temps que le reste, dans une section encore cachée : la page s'affiche d'un coup,
+// sans que les certificats arrivent ensuite et poussent le parcours vers le bas (saut mesuré à 0,07 ; lot 4 de l'audit).
+let certificatesShown: () => void = () => undefined;
+const certificatesLoaded = new Promise<void>((resolve) => (certificatesShown = resolve));
+
 onMounted(() => {
   // Le temps du chargement : des blocs gris à la forme des documents et des blocs (règles §4).
-  void Promise.all([loadDocuments(), loadChunks(), reading.load()])
+  void Promise.all([loadDocuments(), loadChunks(), reading.load(), showDocuments.value ? certificatesLoaded : null])
     .catch(() => undefined)
     .finally(() => {
       ready.value = true;
@@ -317,7 +348,9 @@ const documentItems = computed<MoreMenuItem[]>(() => {
 </script>
 
 <template>
-  <div class="panel">
+  <!-- Pendant le chargement, la page garde la hauteur de l'écran : le pied de page n'apparaît pas au-dessus des blocs
+       gris pour redescendre ensuite (saut mesuré à 0,035). -->
+  <div :class="['panel', { 'parcours-wait': !ready && showDocuments }]">
     <p
       v-if="missingProfile"
       class="notice"
@@ -408,11 +441,16 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         </span>
       </label>
 
-      <CertificatesSection
-        v-if="ready"
-        :version="certificatesVersion"
-        :documents="documents.length"
-      />
+      <div
+        v-show="ready"
+        class="certificates-slot"
+      >
+        <CertificatesSection
+          :version="certificatesVersion"
+          :documents="documents.length"
+          @loaded="certificatesShown()"
+        />
+      </div>
     </template>
 
     <SidePanel
@@ -518,7 +556,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     v-if="editing"
     open
     :title="editing.id === null ? capital(`Ajouter ${formNoun.a}`) : (editedChunk?.title ?? capital(formNoun.one))"
-    @close="editing = null"
+    @close="closeEditor"
   >
     <form
       class="calm-panel chunk-form"
@@ -616,4 +654,9 @@ const documentItems = computed<MoreMenuItem[]>(() => {
    marge droite et aucun écart sous le bouton : tous les « Proposer à partir du CV » alignés et centrés. */
 .doc-list li:has(> .doc-read-state) { flex-wrap: wrap; row-gap: 0; }
 .doc-list .doc-read-state { flex-basis: calc(100% + var(--space-4)); margin-right: calc(-1 * var(--space-4)); }
+/* Sur un écran tactile, le survol reste collé à la ligne touchée : son nom restait bleu et les deux documents ne se
+   ressemblaient plus (N14 de l'audit). Le bleu du survol reste pour la souris. */
+.panel.parcours-wait { min-height: 100vh; }
+.certificates-slot { display: contents; }
+@media (hover: none) { .doc-list .calm-row:hover strong { color: var(--text); } }
 </style>

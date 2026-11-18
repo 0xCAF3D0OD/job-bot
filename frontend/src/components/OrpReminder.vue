@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import { dateInSentence } from "../dates";
@@ -39,6 +39,36 @@ onMounted(() => {
   open.value = true;
 });
 
+// Le rappel ne cache jamais un bandeau du haut, maintenance ou démo (K33 de l'audit du 17.11) : il se pose 8 px sous le
+// dernier, remonte avec lui quand la page défile, puis reste à sa place habituelle, 8 px sous le haut de l'écran. Un
+// bandeau qui arrive après le rappel (la maintenance se lit au démarrage) le déplace aussi.
+const top = ref<string | undefined>(undefined);
+let frame = 0;
+function place(): void {
+  cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(() => {
+    const bottoms = [...document.querySelectorAll<HTMLElement>(".maintenance-bypass, .demo-banner")].map((el) => el.getBoundingClientRect().bottom);
+    const bottom = Math.max(0, ...bottoms);
+    top.value = bottom > 0 ? `${Math.round(bottom) + 8}px` : undefined;
+  });
+}
+const banners = new MutationObserver(place);
+watch(open, async (isOpen) => {
+  globalThis.removeEventListener("scroll", place);
+  banners.disconnect();
+  if (!isOpen) return;
+  await nextTick();
+  place();
+  globalThis.addEventListener("scroll", place, { passive: true });
+  const root = document.getElementById("app");
+  if (root) banners.observe(root, { childList: true });
+});
+onUnmounted(() => {
+  globalThis.removeEventListener("scroll", place);
+  banners.disconnect();
+  cancelAnimationFrame(frame);
+});
+
 const dueDay = computed(() => dateInSentence(`${props.due}T12:00:00`));
 // « Échéance passée le 5 novembre » (planche) ; avant l'échéance, la phrase de la tâche n°1 (« À remettre avant le 5 décembre »).
 const detail = computed(() => {
@@ -51,6 +81,7 @@ const detail = computed(() => {
   <div
     v-if="open"
     class="orp-reminder"
+    :style="top ? { top } : undefined"
     role="status"
     data-test="orp-reminder"
   >

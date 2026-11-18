@@ -63,21 +63,25 @@ function reasonLine(reason: Reason): string {
       <h3 class="filter-outcome-head">
         Écartées surtout pour
       </h3>
+      <!-- Une simple liste (N22, choix (a) de Kevin du 17.11) : ces lignes ne mènent nulle part, elles n'ont donc ni
+           chevron, ni main, ni survol, ni allure de ligne à toucher ; une carte, des traits de 1 px entre les lignes (§65). -->
       <ul
-        class="criteria-rows filter-outcome-rows"
+        class="filter-reasons"
         data-test="filter-reasons"
       >
         <li
           v-for="reason in data.reasons.slice(0, 3)"
           :key="reason.rule"
         >
-          <div class="criteria-row">
-            <span class="criteria-row-text">
-              <span class="criteria-row-value">{{ reasonLine(reason) }}</span>
-            </span>
-          </div>
+          {{ reasonLine(reason) }}
         </li>
       </ul>
     </template>
   </section>
 </template>
+
+<style>
+.filter-reasons { margin: 0; padding: 0 var(--space-5); list-style: none; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+.filter-reasons li { padding: var(--space-3) 0; font-size: var(--font-body); line-height: var(--leading-normal); color: var(--text); cursor: default; }
+.filter-reasons li + li { border-top: 1px solid var(--row-sep); }
+</style>

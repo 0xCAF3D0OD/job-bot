@@ -63,6 +63,7 @@ export const LIMITS = {
   "js-getemall": 96_300,
   "js-assistant": 99_200, // la page Assistant du téléphone, mesure du 17.11 + 5 %
   "js-suivi-assistant": 176_800, // pire cas : les limites de Suivi d'avant l'allègement
+  "js-suivi-entretien": 176_800, // Suivi avec le formulaire d'entretien ouvert : les limites de Suivi d'avant
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
   "js-tes-donnees": 97_800,
@@ -109,6 +110,7 @@ export const LIMITS = {
   "css-introuvable": 60_000,
   "css-assistant": 53_600,
   "css-suivi-assistant": 73_600,
+  "css-suivi-entretien": 73_600,
   images: 4_893_100,
 };
 
@@ -202,6 +204,9 @@ export const PAGES = {
   // ouvrir l'Assistant ne coûte jamais plus qu'avant.
   assistant: ["components/AssistantPanel.vue"],
   "suivi-assistant": ["views/JobsView.vue", "views/ApplicationsView.vue", "components/AssistantPanel.vue"],
+  // Le formulaire d'entretien chargé à la demande (audit du 17.11) : Suivi avec le formulaire ouvert garde les limites
+  // de Suivi, ouvrir le formulaire ne coûte jamais plus qu'avant.
+  "suivi-entretien": ["views/JobsView.vue", "views/ApplicationsView.vue", "components/InterviewForm.vue"],
 };
 
 // Les dossiers d'illustrations : WebP (ou SVG) seulement. Les icônes de l'application (favicon, écran d'accueil)
