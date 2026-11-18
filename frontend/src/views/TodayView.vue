@@ -13,7 +13,7 @@ import { isNetworkError } from "../network";
 import OrpBar from "../components/OrpBar.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import TaskCheck from "../components/TaskCheck.vue";
-import type { HomeTodo } from "../components/HomePhone.vue";
+import type { HomeTask, HomeTitle } from "../components/HomePhone.vue";
 import TriageNone from "../components/TriageNone.vue";
 import TroupeScene from "../components/TroupeScene.vue";
 import { HOME_SCENE } from "../troupe";
@@ -59,6 +59,8 @@ const firstName = ref<string | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
+// Les offres en cours (gardées, en préparation) : la feuille « Top du jour » du téléphone les compte aussi (§40).
+const inProgress = ref<Offer[]>([]);
 // Le tri du jour fini sur cet appareil (l'écran de tri et l'éventail en petit le notent à la fin de la pile).
 const triageDone = ref(false);
 // L'éventail en petit reste ouvert jusqu'au prochain chargement de la page, même le tri fini : « Annuler » y remet l'offre.
@@ -109,60 +111,6 @@ const CV_TASK = { key: "cv", test: "cv-unread", icon: "file-alert", title: "Reli
 // Les tâches du téléphone (« À faire », A4) : icône, titre avec un verbe, une
 // ligne de détail, un bouton à contour) ; seulement ce qui a quelque chose à faire, le daté d'abord.
 type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw; check?: boolean };
-const tasks = computed<Task[]>(() => {
-  const t = today.value;
-  if (!t || starting.value) return [];
-  const list: Task[] = [];
-  if (cvUnread.value) list.push({ ...CV_TASK, detail: "Sans lui, tes offres ne sont pas notées" });
-  if (t.orp_meeting_at) {
-    list.push({ key: "meeting", test: "orp-meeting-soon", icon: "calendar", title: "Préparer le rendez-vous ORP", detail: `${dayAndTime(t.orp_meeting_at)} : ta feuille est prête.`, action: "Voir", to: "/candidatures/rendez-vous-orp" });
-  }
-  for (const item of t.upcoming_interviews ?? []) {
-    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "users", title: "Préparer l’entretien", detail: `${dayAndTime(item.at)} chez ${item.company}.`, action: "Préparer", to: "/candidatures/suivi" });
-  }
-  const orp = orpTask.value;
-  if (orp?.urgent) list.push(orp.task);
-  if (t.to_follow_up) {
-    const oldest = Math.max(0, ...(t.follow_ups ?? []).map((f) => daysBefore(f.sent_at)));
-    list.push({
-      key: "follow-ups",
-      test: "follow-ups",
-      icon: "message",
-      title: `Relancer ${plural(t.to_follow_up, "candidature", "candidatures")}`,
-      detail: oldest ? (t.to_follow_up === 1 ? `Elle attend depuis ${oldest} jours.` : `La plus ancienne attend depuis ${oldest} jours.`) : "Sans réponse depuis 10 jours.",
-      action: "Relancer",
-      to: "/candidatures/suivi",
-    });
-  }
-  if (preparing.value.length) {
-    const n = preparing.value.length;
-    list.push({
-      key: "preparing",
-      test: "preparing",
-      icon: "send",
-      title: `Préparer ${plural(n, "candidature", "candidatures")}`,
-      detail: n === 1 ? "Une offre gardée attend sa lettre." : `${n} offres gardées attendent leur lettre.`,
-      action: "Préparer",
-      to: n === 1 ? `/candidatures/offres/${preparing.value[0]!.id}/preparer` : { path: "/candidatures/offres", query: { statut: "in_progress" } },
-    });
-  }
-  if (orp && !orp.urgent) list.push(orp.task);
-  for (const item of t.interviews_to_review ?? []) {
-    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l’entretien", detail: `Chez ${item.company} : comment s’est-il passé ?`, action: "Faire le point", to: item.link });
-  }
-  if (t.alerts_waiting) {
-    list.push({
-      key: "alerts",
-      test: "alerts-waiting",
-      icon: "bell",
-      title: `Vérifier ${plural(t.alerts_waiting, "alerte", "alertes")}`,
-      detail: t.alerts_waiting === 1 ? "Créée hier, elle n’a encore rien envoyé." : "Créées depuis hier, elles n’ont encore rien envoyé.",
-      action: "Vérifier",
-      to: "/candidatures/alertes",
-    });
-  }
-  return list;
-});
 
 // « Remettre les justificatifs » se coche (§61 du 17.11, planches AccueilV2 et AujourdhuiOrdinateurV2) : le cercle orange
 // marque le mois comme remis (le même appel que « Déjà remis » du Bilan) ; coché, la tâche reste à sa place avec la
@@ -263,14 +211,16 @@ const heading = computed<Heading>(() => {
   const pause = t.rhythm?.pause_until;
   if (pause) return { lead: "En", hand: "pause.", sub: `Jusqu’au ${untilDay(pause)}. Pense à l’annoncer à ton conseiller.` };
   // « N choses t’attendent » : la liste « Si tu veux avancer » (état « repos » : 3 tâches, la relance reste à part).
-  const waiting = phone.value ? todos.value.length : deskTodo.value.length;
+  const waiting = phone.value ? phoneTasks.value.length : deskTodo.value.length;
   const more = waiting ? `Si tu veux avancer, ${waiting === 1 ? "une chose t’attend" : `${waiting} choses t’attendent`}.` : "Profite de ta journée.";
   if (restDay.value) {
     const weekDone = !!t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
     return { lead: "", hand: "Jour de repos.", sub: weekDone ? `Ta semaine est faite. ${more}` : more };
   }
   const perDay = dailyPace(t.month_count, t.month_target, t.month);
-  const offers = triagePending.value ? ` ${plural(dose.value.length, "offre est", "offres sont")} à trier.` : "";
+  // Le téléphone compte les offres de sa feuille « à trier », sans celles de « Top du jour » (§40).
+  const sorting = phone.value ? toSort.value.length : dose.value.length;
+  const offers = triagePending.value && sorting ? ` ${plural(sorting, "offre est", "offres sont")} à trier.` : "";
   if (perDay) {
     return { lead: plural(perDay, "candidature", "candidatures"), hand: "à envoyer.", sub: `C’est ton rythme pour rester dans l’objectif ORP.${offers}` };
   }
@@ -360,44 +310,46 @@ const weekCount = computed(() => {
 const deskTodo = computed(() => deskTasks.value.todo);
 const deskLater = computed(() => deskTasks.value.later);
 
-// « À faire » du téléphone (A4) : les mêmes tâches, un nombre et un libellé ; toute la ligne est le lien.
-const todos = computed<HomeTodo[]>(() => {
-  const t = today.value;
-  if (!t) return [];
-  const many = (n: number, one: string, more: string): string => (n === 1 ? one : more);
-  const list: HomeTodo[] = [];
-  for (const task of tasks.value) {
-    const group = task.key.split("-")[0]!;
-    const same = list.find((todo) => todo.key === group);
-    if (same) {
-      same.count += 1;
-      continue;
+
+// L'Accueil du téléphone refait d'après AccueilV2 (§40, §54, §61 du 17.11). Le titre écrit à la main suit les mêmes
+// états que l'ordinateur : justificatif en retard, nouveau compte, objectif atteint, jour de repos, sinon le rythme.
+const phoneTitle = computed<HomeTitle>(() => {
+  const late = lateCatch.value;
+  if (late) return { lines: [{ text: late.hand, tone: "late" }, ...(late.then ? [{ text: late.then, tone: "blue" as const }] : [])], lead: "", hand: "", sub: late.sub };
+  if (newcomer.value) return { lines: [{ text: "Bienvenue,", tone: "late" }, { text: "tes offres arrivent bientôt", tone: "blue" }], lead: "", hand: "", sub: newcomerSub.value };
+  if (goalReached.value) return { lines: [{ text: "Objectif du mois atteint,", tone: "reached" }, { text: "la suite est en plus", tone: "blue" }], lead: "", hand: "", sub: reachedSub.value };
+  const h = heading.value;
+  if (!h.lead && h.hand) return { lines: [{ text: h.hand, tone: "blue" }], lead: "", hand: "", sub: h.sub };
+  return { lines: [], lead: h.lead, hand: h.hand, sub: h.sub };
+});
+// « Top du jour » (§40) : jusqu'à 3 offres notées 75 et plus (« Proche »), pas encore envoyées (à trier, gardées ou en
+// préparation), la meilleure d'abord. Aucune : la feuille est absente.
+const TOP_MIN = 75;
+const topOffers = computed<Offer[]>(() => {
+  const seen = new Set<number>();
+  return [...best.value, ...inProgress.value]
+    .filter((o) => (o.score ?? 0) >= TOP_MIN && !seen.has(o.id) && Boolean(seen.add(o.id)))
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 3);
+});
+// « N offres à trier » (§40) : les offres de la dose du jour, jamais celles de « Top du jour » ; 3 lignes au plus, le
+// titre suit le nombre. Zéro : la feuille est absente.
+const toSort = computed<Offer[]>(() => {
+  const top = new Set(topOffers.value.map((o) => o.id));
+  return triagePending.value ? dose.value.filter((o) => !top.has(o.id)) : [];
+});
+// « À faire » du téléphone (AccueilV2) : les tâches de l'ordinateur, numérotées, avec leur ligne de détail ; « Trier »
+// compte les offres de la feuille « à trier » ; la relance garde sa place à la fin.
+const phoneTasks = computed<HomeTask[]>(() =>
+  [...deskTodo.value, ...deskLater.value].flatMap((task): HomeTask[] => {
+    if (task.key === "triage") {
+      const n = toSort.value.length;
+      return n ? [{ key: task.key, test: task.test, verb: "Trier", rest: plural(n, "offre", "offres"), detail: "Pas encore vues", to: task.to, tone: "normal" }] : [];
     }
-    const count =
-      group === "follow" ? t.to_follow_up : group === "preparing" ? preparing.value.length : group === "alerts" ? t.alerts_waiting : 1;
-    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to, ...(group === "cv" ? { icon: task.icon, detail: task.detail } : {}) });
-  }
-  for (const todo of list) {
-    const n = todo.count;
-    todo.label = {
-      meeting: "Rendez-vous ORP à préparer",
-      interview: many(n, "Entretien à préparer", "Entretiens à préparer"),
-      orp: t.orp_due_month ? `Justificatifs ${ofMonth(t.orp_due_month)} à remettre` : "Justificatifs à remettre",
-      follow: many(n, "Relance à envoyer", "Relances à envoyer"),
-      preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
-      review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),
-      alerts: many(n, "Alerte à vérifier", "Alertes à vérifier"),
-      cv: "Relire ton CV",
-    }[todo.key] ?? "";
-    if (todo.key === "interview" || todo.key === "review") todo.to = "/candidatures/suivi";
-  }
-  return list;
-});
-const homeEmpty = computed(() => {
-  if (rhythmPaused.value) return "En pause : rien à trier.";
-  if (restDay.value) return "Jour de repos : rien à trier.";
-  return triageDone.value ? "Tri terminé · À demain" : "Rien à trier · À demain";
-});
+    const [verb = "", ...rest] = task.title.split(" ");
+    return [{ key: task.key, test: task.test, verb, rest: rest.join(" "), detail: task.detail.replace(/\.$/, ""), to: task.to, tone: task.tone, ...(task.check ? { check: true } : {}) }];
+  }),
+);
 
 // Sans offre à trier, le bloc « Rien à trier pour l’instant » dit pourquoi quand il y a une raison.
 const emptyTitle = computed(() => {
@@ -459,7 +411,8 @@ async function fetchAll(): Promise<void> {
     void api.PUT("/api/first-steps", { body: { celebrated: true } });
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
-  preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
+  inProgress.value = current.data?.items ?? [];
+  preparing.value = inProgress.value.filter((o) => o.status === "preparing");
   // L'éventail en petit s'ouvre s'il y a un tri à faire ; ouvert, il le reste (le tri fini s'y lit, « Annuler » y revient).
   miniOpen.value ||= triagePending.value;
   if (firstName.value === null) {
@@ -517,11 +470,17 @@ const { me } = useAuth();
     :count="today.month_count"
     :target="today.month_target ?? null"
     :due="today.month_due_date ?? null"
-    :offers="dose"
-    :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
-    :todos="todos"
-    :rest-sub="restDay && !rhythmPaused && !starting ? heading.sub : null"
+    :pace="!starting"
+    :week="weekCount"
+    :title="phoneTitle"
+    :tasks="phoneTasks"
+    :rest="restDay && !rhythmPaused && !starting"
+    :top="topOffers"
+    :to-sort="toSort"
+    :orp-done="orpDone"
+    :orp-busy="orpBusy"
     :reminder="reminder"
+    @orp-check="markOrp"
   >
     <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
     <RouterLink
