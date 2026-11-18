@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 
 import { api, type OrpRow } from "../api/client";
 import { dateInSentence } from "../dates";
-import { ofMonth, plural } from "../format";
+import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CopyField from "./CopyField.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
@@ -63,17 +63,12 @@ const search = computed<Field[]>(() => {
   if (props.wide && link) fields.push({ label: "Lien de l’annonce", value: link });
   return fields;
 });
-// Ordinateur : « Ingénieur DevOps · envoyée le 22 octobre » ; le mois de la recherche pour la phrase du bas.
+// Ordinateur : « Ingénieur DevOps · envoyée le 22 octobre ».
 const wideLine = computed(() => {
   const r = row.value;
   const day = sentDay.value;
   return r ? [r.job_title, day ? `envoyée ${dateInSentence(day.toISOString())}` : ""].filter(Boolean).join(" · ") : "";
 });
-const rowMonth = computed(() => {
-  const day = sentDay.value;
-  return day ? `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}` : (props.month ?? "");
-});
-const noteText = computed(() => (props.wide && rowMonth.value ? `Elle passe dans « Recherches ${ofMonth(rowMonth.value)} ».` : "Elle passe dans « Recherches du mois »."));
 const addressMissing = computed(() => !!row.value?.missing.length);
 // Les champs vides de la fin se lisent sur une seule ligne « Non renseigné » (maquette : « Case postale · Personne
 // contactée »).
@@ -248,12 +243,6 @@ async function declare(): Promise<void> {
         >
           Marquer comme déclarée
         </button>
-        <p
-          class="orp-fiche-note"
-          data-test="orp-fiche-note"
-        >
-          {{ noteText }}
-        </p>
       </template>
     </div>
   </div>
@@ -270,7 +259,7 @@ async function declare(): Promise<void> {
 .orp-fiche-body { flex: 1; padding: var(--block-gap) var(--block-gutter) var(--space-6); }
 .orp-fiche-bar { position: sticky; bottom: 0; padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
 .orp-fiche-declare { justify-content: center; width: 100%; min-height: var(--fiche-52); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.orp-fiche-note, .orp-fiche-done { margin: var(--space-2) 0 0; font-size: var(--font-small); text-align: center; color: var(--text-secondary); }
+.orp-fiche-done { margin: var(--space-2) 0 0; font-size: var(--font-small); text-align: center; color: var(--text-secondary); }
 .orp-fiche-done { margin: 0; }
 /* Téléphone (§2.9, 9 novembre) : la barre aussi à 20 px des bords (maquette OrpFiche, padding 12 20 16). */
 @media (max-width: 820px) { .orp-fiche-bar { padding-left: var(--space-5); padding-right: var(--space-5); } }
