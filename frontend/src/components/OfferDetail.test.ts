@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import OfferDetail from "./OfferDetail.vue";
 
 // Chargé une fois d’avance : son import() se résout alors dans le même tour que dans le navigateur.
-await import("./OfferCompatSheet.vue");
+await Promise.all([import("./OfferCompatSheet.vue"), import("./OfferActionSheet.vue")]);
 
 const POST = vi.fn();
 vi.mock("../api/client", () => ({
