@@ -907,6 +907,15 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 - Téléphone : une candidature ouverte a sa propre adresse (`?candidature=ID`). Le retour du navigateur et le retour de l'app ferment la fiche et ramènent à la liste, à la même position de défilement (audit du 17.11, N25).
 - Bouton rond flottant (Candidatures sur téléphone, Assistant sur ordinateur) : il ne se masque pas au défilement. La page a un `scroll-padding-bottom` égal à la hauteur du bouton plus sa marge : un élément qui reçoit le focus ne passe jamais dessous (WCAG 2.4.11), et le dernier élément de la page reste entièrement visible au-dessus du bouton.
 
+## Choix Permis, Disponibilité et Préavis : motif « Radio Group » (Kevin, 17.11.2026, 21 h 47)
+
+- Les choix des feuilles Coordonnées sont dans un `role="radiogroup"` : chaque choix a `role="radio"` et
+  `aria-checked`, jamais `aria-pressed` (ARIA APG, motif « Radio Group »). Le `aria-pressed` de la maquette §66 était
+  une erreur ; Kevin corrige les deux planches Coordonnées (claire et sombre).
+- Clavier : Tab entre dans le groupe sur le choix actif (ou le premier) puis en sort ; les flèches passent d'un choix à
+  l'autre et le cochent, Début et Fin vont aux extrémités (FormAnswerSheet.vue, test FormAnswerSheet.test.ts).
+- Inchangé : la coche sur le choix actif, et un second appui qui retire le choix (la réponse peut redevenir vide).
+
 ## Une offre qui change d'état reste à sa place (Kevin, 17.11.2026, 21 h 50)
 
 - Réponse à Q4 de l'audit du 17.11 (K5) : quand une offre de la liste Offres change d'état (gardée, écartée, remise dans Nouvelles), elle reste à sa place avec son nouvel état (pastille « Gardée » ou « Écartée ») jusqu'à ce qu'on quitte la liste : changement de filtre ou de statut, ou départ de la page.
