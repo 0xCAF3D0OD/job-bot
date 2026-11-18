@@ -986,6 +986,7 @@ async def list_offers(
         pending_all = await count_pending(session)
         # « À traiter » avec les filtres : la pastille du panneau, le même nombre que la liste.
         pending_condition = _view_condition("pending", with_filtered_out, with_expired)
+        assert pending_condition is not None  # « pending » a toujours sa condition
         pending = int(
             await session.scalar(
                 select(func.count()).select_from(Offer).where(*conditions, pending_condition)
