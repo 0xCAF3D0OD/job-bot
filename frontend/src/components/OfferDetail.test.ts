@@ -71,6 +71,28 @@ describe("OfferDetail, annonce chez l’employeur (docs/20 §2)", () => {
   });
 });
 
+describe("OfferDetail, recherche d’adresse (audit du 17.11, K6)", () => {
+  it("en cours avec le cercle qui tourne ; « trouvée » seulement si l’adresse affichée change", async () => {
+    POST.mockResolvedValue({ data: { chosen_uid: "CHE-1", candidates: [] } });
+    const wrapper = await mountDetail(offer({ company_address: null, company_address_source: null }));
+    await wrapper.find("[data-test=company-more]").trigger("click");
+    await wrapper.find("[data-test=search-registry]").trigger("click");
+    await flushPromises();
+    expect(wrapper.emitted("changed")).toHaveLength(1);
+    // Jusqu'à la fiche relue, la recherche est encore en cours.
+    expect(wrapper.find("[data-test=registry-busy] .offer-busy-ring").exists()).toBe(true);
+    await wrapper.setProps({ offer: offer({ company_address: null, company_address_source: null }) as never });
+    expect(wrapper.find("[data-test=registry-busy]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=registry]").text()).toBe("Aucune nouvelle adresse trouvée.");
+
+    await wrapper.find("[data-test=company-more]").trigger("click");
+    await wrapper.find("[data-test=search-registry]").trigger("click");
+    await flushPromises();
+    await wrapper.setProps({ offer: offer({ company_address: "Rue du Lac 1\n1000 Lausanne", company_address_source: "registry" }) as never });
+    expect(wrapper.find("[data-test=registry]").text()).toBe("Adresse trouvée dans le registre IDE.");
+  });
+});
+
 describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
   it("tête : « Préparer » et « Écarter », le reste dans ⋯, le lien de l’annonce dans « Le poste » (étape 6b)", async () => {
     const wrapper = await mountDetail(offer());
