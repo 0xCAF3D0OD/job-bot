@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { companyPlace } from "../format";
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
@@ -61,8 +62,9 @@ const emit = defineEmits<{ "orp-check": [checked: boolean] }>();
 function reason(offer: Offer): string | null {
   return offer.keywords_asks.find((k) => k.covered)?.text ?? null;
 }
+// Comme avant : la ville seule, sans le canton (« Acme SA · Lausanne »).
 function where(offer: Offer): string {
-  return [offer.company, offer.location].filter(Boolean).join(" · ");
+  return companyPlace(offer.company, offer.location, true);
 }
 const sortTitle = computed(() => (props.toSort.length === 1 ? "1 offre à trier" : `${props.toSort.length} offres à trier`));
 const sortRows = computed(() => props.toSort.slice(0, 3));
@@ -413,6 +415,18 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
   --home-rule-sort: #F1D3C0;
   --home-mark: #FFE9A8;
   --home-hand-late: #8A4A12;
+  /* Valeurs de la planche AccueilV2 hors échelle : nommées ici (garde-fou docs/135). */
+  --home-10: 0.625rem;
+  --home-14: 0.875rem;
+  --home-40: 2.5rem;
+  --home-44: 2.75rem;
+  --home-hand-size: 1.5625rem;
+  --home-lap: 1.75rem; /* chevauchement des feuilles */
+  --home-lh-sub: 1.4667;
+  --home-lh-22: 1.375rem;
+  --home-lh-20: 1.25rem;
+  --home-2: 0.125rem;
+  --home-6: 0.375rem;
   --home-step: 3.5rem; /* 56 px : la place d'un titre empilé */
   --home-shadow: 0 -6px 16px rgb(27 31 42 / 6%);
 }
@@ -422,27 +436,27 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
 :root[data-theme="dark"] .home { --home-sheet-sort: #2E231B; --home-rule-top: #2C4A39; --home-rule-sort: #4A3628; --home-mark: #5A4A1E; --home-hand-late: var(--peach-text); }
 
 .home h1, .home h2 { margin: 0; letter-spacing: -0.03em; line-height: var(--leading-none); }
-.home-hello { display: grid; gap: 0.625rem; padding: 0 var(--space-6) 2.5rem; }
+.home-hello { display: grid; gap: var(--home-10); padding: 0 var(--space-6) var(--home-40); }
 .home-hello > .troupe { justify-self: center; }
 /* Le titre à la main : 25 px, penché de 2°. */
-.home-hand { font-size: 1.5625rem; font-weight: var(--weight-regular); letter-spacing: 0; }
+.home-hand { font-size: var(--home-hand-size); font-weight: var(--weight-regular); letter-spacing: 0; }
 .home-hand span { display: inline-block; font-family: var(--font-hand); line-height: var(--leading-none); transform: rotate(-2deg); }
 .home-hand-late { color: var(--home-hand-late); }
 .home-hand-reached { color: var(--success); }
 .home-hand-blue { color: var(--primary-text); }
 .home-lead { font-size: var(--title-hello); font-weight: var(--weight-bold); }
 .home-lead .home-hand-blue { font-family: var(--font-hand); font-weight: var(--weight-regular); letter-spacing: 0; }
-.home-sub { margin: var(--space-2) 0 0; font-size: 0.9375rem; line-height: 1.4667; color: var(--text-lead); }
+.home-sub { margin: var(--space-2) 0 0; font-size: var(--font-label); line-height: var(--home-lh-sub); color: var(--text-lead); }
 .home-tagline { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); color: var(--text-tertiary); }
 .home-tagline s { text-decoration: line-through wavy var(--scribble) 3px; }
 .home-tagline span { color: var(--primary-text); font-size: var(--font-page); }
 
 /* Les feuilles : rayon 32 en haut, 24 px au-dessus du titre, 48 dessous ; chacune remonte de 28 px sur la précédente. */
-.home-sheet { position: relative; z-index: calc(1 + var(--home-rank)); margin-top: -1.75rem; padding: var(--space-6) 0 var(--space-12); border-radius: 2rem 2rem 0 0; box-shadow: var(--home-shadow); }
+.home-sheet { position: relative; z-index: calc(1 + var(--home-rank)); margin-top: calc(-1 * var(--home-lap)); padding: var(--space-6) 0 var(--space-12); border-radius: var(--space-8) var(--space-8) 0 0; box-shadow: var(--home-shadow); }
 .home-sheet:first-of-type, .home-hello + .home-sheet { margin-top: 0; }
 .home-todo { --home-bg: var(--home-sheet-white); }
 .home-orp { --home-bg: var(--home-sheet-orp); }
-.home-top { --home-bg: var(--home-sheet-top); padding-bottom: 2.75rem; }
+.home-top { --home-bg: var(--home-sheet-top); padding-bottom: var(--home-44); }
 .home-sort { --home-bg: var(--home-sheet-sort); }
 .home-sheet { background: var(--home-bg); }
 /* La dernière feuille descend jusqu'à la barre du bas (la planche n'a pas de fond de page sous elle). */
@@ -450,12 +464,12 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
 /* §54 : collée sous la barre du logo, 56 px sous la précédente ; seulement si elle tient dans l'écran (.home-stick). */
 .home-sheet.home-stick { position: sticky; top: calc(var(--header-h) + var(--home-rank) * var(--home-step)); }
 .home-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: 0 var(--space-6) var(--space-3); }
-.home-top .home-head, .home-sort .home-head { padding-bottom: 0.375rem; }
-.home-head h2 { font-size: 1.625rem; font-weight: var(--weight-heavy); transition: font-size var(--t-standard, 0.2s) var(--ease-standard, ease); }
+.home-top .home-head, .home-sort .home-head { padding-bottom: var(--home-6); }
+.home-head h2 { font-size: var(--font-figure); font-weight: var(--weight-heavy); transition: font-size var(--t-standard, 0.2s) var(--ease-standard, ease); }
 /* Recouverte : le titre passe de 26 à 18 px pour garder de la place sur les petits écrans. */
-.home-covered .home-head h2 { font-size: 1.125rem; }
-.home-head a { display: flex; align-items: center; min-height: var(--target-min); margin: calc(-1 * var(--space-3)) 0; font-size: 0.9375rem; font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
-.home-head-note { font-size: 0.9375rem; color: var(--text-secondary); }
+.home-covered .home-head h2 { font-size: var(--font-title); }
+.home-head a { display: flex; align-items: center; min-height: var(--target-min); margin: calc(-1 * var(--space-3)) 0; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.home-head-note { font-size: var(--font-label); color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) { .home-head h2 { transition: none; } }
 
 .home-rows { margin: 0; padding: 0; list-style: none; }
@@ -464,24 +478,28 @@ const sheetStyle = (key: Sheet) => ({ "--home-rank": String(rank.value[key] ?? 0
 .home-top .home-rows li + li { border-top-color: var(--home-rule-top); }
 .home-sort .home-rows li + li { border-top-color: var(--home-rule-sort); }
 .home-row { display: flex; align-items: center; gap: var(--space-4); min-height: 4.5rem; color: var(--text); text-decoration: none; }
-.home-offer { gap: 0.875rem; min-height: 4.25rem; }
+.home-offer { gap: var(--home-14); min-height: 4.25rem; }
 .home-sort .home-offer { gap: var(--space-3); }
 .home-row-main { flex: 1; min-width: 0; }
-.home-row-main > b { display: block; font-size: var(--font-body); line-height: 1.375rem; font-weight: var(--weight-bold); }
+.home-row-main > b { display: block; font-size: var(--font-body); line-height: var(--home-lh-22); font-weight: var(--weight-bold); }
 .home-row-main > b > span { font-weight: var(--weight-semibold); }
 .home-offer .home-row-main > b, .home-row-cut { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* « entreprise · lieu · » se coupe, la raison surlignée reste entière. */
 .home-row-sub.home-row-why { display: flex; gap: var(--space-1); min-width: 0; }
 .home-row-why mark { flex: none; max-width: 60%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.home-row-sub { display: block; margin-top: 0.125rem; font-size: var(--font-small); line-height: 1.25rem; color: var(--text-lead); }
+.home-row-sub { display: block; margin-top: var(--home-2); font-size: var(--font-small); line-height: var(--home-lh-20); color: var(--text-lead); }
 .home-task .home-row-sub { margin-top: var(--space-1); color: var(--text-secondary); }
 .home-task .home-row-sub.home-row-late { color: var(--home-hand-late); }
 .home-sort .home-row-sub { color: var(--text-secondary); }
 .home-row-sub mark { padding: 0 var(--space-1); border-radius: var(--radius-sm); background: var(--home-mark); color: var(--text); }
 .home-row > .icon { flex: none; color: var(--text-lead); }
+/* La note : 44 px, toujours à la même place. Sans le « padding: 0 », la règle globale « .close » (bouton Fermer)
+   décalait de 8 px les notes « Proche ». */
+.home-offer .score-ring-wrap { flex: none; width: 2.75rem; padding: 0; }
 .home-offer .score-ring { width: 2.75rem; height: 2.75rem; }
+.home-top .home-row-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* Le numéro : rond de 32 px gris, 15 px gras. */
-.home-num { flex: none; display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: 0.9375rem; font-weight: var(--weight-bold); }
+.home-num { flex: none; display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: var(--font-label); font-weight: var(--weight-bold); }
 .home-num-check { background: none; }
 /* §61 : le cercle à cocher (26 px, zone de 44) posé sur la place du numéro ; le lien garde toute la ligne. */
 .home-checkable { position: relative; }
