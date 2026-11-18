@@ -906,3 +906,24 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 
 - Téléphone : une candidature ouverte a sa propre adresse (`?candidature=ID`). Le retour du navigateur et le retour de l'app ferment la fiche et ramènent à la liste, à la même position de défilement (audit du 17.11, N25).
 - Bouton rond flottant (Candidatures sur téléphone, Assistant sur ordinateur) : il ne se masque pas au défilement. La page a un `scroll-padding-bottom` égal à la hauteur du bouton plus sa marge : un élément qui reçoit le focus ne passe jamais dessous (WCAG 2.4.11), et le dernier élément de la page reste entièrement visible au-dessus du bouton.
+
+## Une offre qui change d'état reste à sa place (Kevin, 17.11.2026, 21 h 50)
+
+- Réponse à Q4 de l'audit du 17.11 (K5) : quand une offre de la liste Offres change d'état (gardée, écartée, remise dans Nouvelles), elle reste à sa place avec son nouvel état (pastille « Gardée » ou « Écartée ») jusqu'à ce qu'on quitte la liste : changement de filtre ou de statut, ou départ de la page.
+- Un toast l'accompagne : « Déplacée dans Gardées », avec « Voir » (ouvre la liste Gardées) et « Annuler » (choix de Kevin du 17.11 au soir, carte de décision : « Annuler » est gardé). « Remise dans Nouvelles » a aussi « Voir ». Une offre écartée garde son message actuel, sans « Voir » : elle n'a pas de liste dans Offres.
+- Le détail se referme comme avant (§36 du 16.11 sur ordinateur).
+
+## Nombres des filtres : graisse, ordinateur, choix à 0, Contrat et Distance (Kevin, 18.11.2026, 8 h 32)
+
+Réponses aux trois questions de #851 :
+
+- Le nombre sous un choix est en 12 px, graisse 500, #596070. Figtree est chargée en variable, donc le 500 existe
+  (jeton `--weight-medium`). Si ce n'était pas le cas, il faudrait prendre 400. On n'ajoute pas de fichier de police.
+- Le panneau Filtres de l'ordinateur montre aussi les nombres, avec le même calcul que le téléphone : les autres
+  filtres actifs sont pris en compte, et le choix actif égale « Afficher n offres ». Au-delà de 99 999 : « 100 k+ ».
+- Un choix à 0 offre reste visible et sélectionnable. Il est grisé (#596070, fond inchangé), jamais masqué.
+- Contrat (plusieurs choix) s'affichera « CDI · 120 », comme Statut. Distance (un seul choix) aura son nombre sous le
+  choix, comme Note et Taux.
+
+Ordre choisi le 18.11 à 8 h 42 (issue #468) : le serveur de Contrat d'abord, puis celui de Distance, dans deux PR
+séparées.
