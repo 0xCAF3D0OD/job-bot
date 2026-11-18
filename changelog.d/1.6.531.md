@@ -1,0 +1,1 @@
+Offres sur ordinateur : sans offre avec ces filtres, la colonne ne défile plus seule et n'affiche plus de barre de défilement ; c'est la page qui défile jusqu'à « Faire une candidature spontanée » (audit K19)

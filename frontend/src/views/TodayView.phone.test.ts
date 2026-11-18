@@ -42,19 +42,20 @@ async function mountView(today: unknown) {
   return wrapper;
 }
 
-describe("Accueil du téléphone : les cartes Offres (maquette AccueilSmile)", () => {
-  it("restent là après le tri du jour, tant qu’il reste des offres ; la ville sans canton", async () => {
+describe("Accueil du téléphone : les offres (planche AccueilV2, §40 du 17.11)", () => {
+  it("après le tri du jour, les meilleures restent dans « Top du jour » ; plus rien « à trier » ; la ville sans canton", async () => {
     localStorage.setItem(`jobA1.tri.${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}`, "1");
     const wrapper = await mountView(day());
-    expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);
-    expect(wrapper.find("[data-test=home-card]").text()).toContain("Acme SA · Lausanne");
-    expect(wrapper.find("[data-test=home-card]").text()).not.toContain("VD");
+    expect(wrapper.findAll("[data-test=home-top-offer]")).toHaveLength(2);
+    expect(wrapper.find("[data-test=home-top-offer]").text()).toContain("Acme SA · Lausanne");
+    expect(wrapper.find("[data-test=home-top-offer]").text()).not.toContain("VD");
+    expect(wrapper.find("[data-test=home-band-offers]").exists()).toBe(false);
     expect(wrapper.find("[data-test=home-triage]").exists()).toBe(false);
   });
 });
 
 describe("Accueil du téléphone un jour de repos (planche AccueilV2, état « repos », textes seulement)", () => {
-  it("« Jour de repos. » à la main, la phrase, « Si tu veux avancer » et les offres à trier", async () => {
+  it("« Jour de repos. » à la main, la phrase, « Si tu veux avancer » et les offres", async () => {
     const wrapper = await mountView(
       day({
         rhythm: { research_today: false, count: 3, target: 3, pause_until: null },
@@ -62,10 +63,10 @@ describe("Accueil du téléphone un jour de repos (planche AccueilV2, état « r
         follow_ups: [],
       }),
     );
-    expect(wrapper.find("[data-test=home-rest]").text()).toBe("Jour de repos.");
-    expect(wrapper.find(".home-rest-sub").text()).toBe("Ta semaine est faite. Si tu veux avancer, une chose t’attend.");
+    expect(wrapper.find("[data-test=home-title]").text()).toBe("Jour de repos.");
+    expect(wrapper.find("[data-test=home-sub]").text()).toBe("Ta semaine est faite. Si tu veux avancer, une chose t’attend.");
     expect(wrapper.find("#home-todo-title").text()).toBe("Si tu veux avancer");
-    expect(wrapper.findAll("[data-test=home-card]")).toHaveLength(2);
+    expect(wrapper.findAll("[data-test=home-top-offer]")).toHaveLength(2);
   });
 });
 

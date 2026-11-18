@@ -57,13 +57,12 @@ describe("« Relire ton CV » dans Aujourd’hui (PR 22)", () => {
     expect(first.attributes("href")).toBe("/profil");
   });
 
-  it("téléphone : première ligne, icône document à la place du nombre", async () => {
+  it("téléphone : première ligne de « À faire », numérotée comme les autres (AccueilV2)", async () => {
     phone.value = true;
     const wrapper = await mountView([CV]);
     const first = wrapper.findAll("[data-test=home-todo] li a")[0]!;
     expect(first.attributes("data-test")).toBe("todo-cv-unread");
-    expect(first.find(".home-todo-icon").exists()).toBe(true);
-    expect(first.find("strong").exists()).toBe(false);
+    expect(first.find(".home-num").text()).toBe("1");
     expect(first.text()).toContain("Relire ton CV");
     expect(first.text()).toContain("Sans lui, tes offres ne sont pas notées");
   });
