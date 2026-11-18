@@ -927,3 +927,12 @@ Réponses aux trois questions de #851 :
 
 Ordre choisi le 18.11 à 8 h 42 (issue #468) : le serveur de Contrat d'abord, puis celui de Distance, dans deux PR
 séparées.
+
+## Accueil téléphone d'après AccueilV2 (Kevin, 17.11.2026 et 18.11.2026, 8 h 44)
+
+- 17.11 : l'Accueil du téléphone est refait d'après AccueilV2 dans une seule PR : §40 (titre écrit à la main, ordre À faire → ORP → Top du jour → offres à trier, barre « Mois ORP », feuille « Top du jour », « N offres à trier »), §54 (feuilles empilées au défilement) et §61 (cercle orange sur « Remettre les justificatifs », les autres tâches gardent leur numéro). La colonne « offre ouverte » suit dans une PR serveur à part.
+- 18.11, 8 h 44 : visuels validés sur les captures côte à côte, à l'exception des notes mal alignées (corrigé : la règle globale `.close` décalait de 8 px les notes « Proche »).
+- Écarts gardés et montrés à Kevin : « Préparer 2 candidatures · 2 offres gardées attendent leur lettre » (texte de l'ordinateur) au lieu de « Envoyer · Lettres et CV déjà prêts » ; les relances restent dans « À faire » (fonction de main gardée) ; l'anneau de note garde ses graduations (composant commun) ; un jour sans retard reprend le titre de l'ordinateur (« 1 candidature à envoyer. ») ; « Pas encore vues » = pas encore triées jusqu'à la colonne « offre ouverte ».
+- « Top du jour » : jusqu'à 3 offres notées 75 et plus parmi les offres à trier, gardées ou en préparation (jamais envoyées) ; ces offres ne sont jamais dans « N offres à trier ».
+- Après le tri du jour, la feuille « N offres à trier » disparaît (aucune offre n'est plus « à trier ») ; les meilleures restent visibles dans « Top du jour ». Avant, les cartes « Offres » restaient après le tri : à Kevin de dire s'il veut une feuille pour ce cas, aucune planche ne le dessine.
+- « Relire ton CV » devient une ligne numérotée comme les autres (verbe « Relire », « ton CV ») ; l'ancienne icône document disparaît, la planche n'en dessine pas.
