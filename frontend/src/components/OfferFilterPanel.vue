@@ -6,6 +6,8 @@ import {
   BASIS_HELP,
   basisChoices,
   choiceCount,
+  CONTRACT_CHOICES,
+  contractCount,
   radioKey,
   rateCount,
   RATE_CHOICES,
@@ -13,6 +15,7 @@ import {
   SCORE_CHOICES,
   SCORE_HELP,
   scoreCount,
+  toggleContract,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -60,6 +63,8 @@ const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filt
 // reste cliquable, grisé.
 const scores = computed(() => SCORE_CHOICES.map((c) => ({ ...c, count: scoreCount(props.facets, c.min) })));
 const rates = computed(() => RATE_CHOICES.map((c) => ({ ...c, count: rateCount(props.facets, c.value) })));
+// Contrat (issue 468, Kevin 18.11) : plusieurs choix, « CDI · 120 » comme Statut.
+const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(props.facets, c.value) })));
 const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} offre` : `Afficher ${props.total} offres`));
 </script>
 
@@ -202,6 +207,27 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             @click="emit('update', { minRate: choice.value })"
           >
             <span class="filter-panel-label">{{ choice.label }}</span><span class="filter-panel-sub">{{ choiceCount(choice.count) }}</span>
+          </button>
+        </div>
+      </div>
+      <hr>
+      <div
+        class="filter-panel-group"
+        role="group"
+        aria-labelledby="pop-contract"
+      >
+        <span id="pop-contract">Contrat</span>
+        <div>
+          <button
+            v-for="choice in contracts"
+            :key="choice.value"
+            type="button"
+            :class="{ 'choice-empty': choice.count === 0 }"
+            :aria-pressed="filters.contracts.includes(choice.value)"
+            :data-test="`pop-contract-${choice.value}`"
+            @click="emit('update', { contracts: toggleContract(filters.contracts, choice.value) })"
+          >
+            {{ choice.label }} · {{ choiceCount(choice.count) }}
           </button>
         </div>
       </div>
