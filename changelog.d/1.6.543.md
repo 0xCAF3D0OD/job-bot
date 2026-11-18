@@ -1,0 +1,1 @@
+Offres : plus de compteur « n offres » au-dessus de la liste sur ordinateur ; sur téléphone, le bandeau « Annuler » se place 8 px au-dessus du bouton central, sans jamais le couvrir (Kevin le 18.11, points 6 et 7)

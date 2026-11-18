@@ -990,3 +990,27 @@ Suivre la planche EnvoyeeDetail (+Sombre) :
 - Écart 1 de la #858 : la version de la PR est gardée. Après le tri du jour, seulement « Top du jour » (75 et plus), en liste, comme AccueilV2. Le carrousel « Offres » de main disparaît.
 - Écart 2 de la #858 : une tâche bloquante ou en retard n'a pas de numéro. Elle a un rond orange vide (#B4631F, en sombre la couleur pêche), comme « Remettre les justificatifs » dans AccueilV2. « Relire ton CV » a donc ce rond, puis 2, 3, 4… pour les autres tâches. Son sous-titre reste en orange, « · 30 secondes » inclus.
 - Ordinateur (même règle, planche AujourdhuiOrdinateurV2, qui dessine le rond pour les justificatifs) : « Relire ton CV » perd son « 1 » sur fond orange et prend le même rond vide de 26 px, aligné au pixel avec le cercle à cocher des justificatifs.
+
+## Offres : pas de compteur au-dessus de la liste ; bandeau « Annuler » au-dessus du bouton central (Kevin, 18.11.2026, 10 h 48)
+
+- Point 6 : « 8 offres » au-dessus de la liste (ordinateur) est retiré. Remplace la décision du 15.11 sur ce compteur. Les nombres restent sur les groupes et dans « Afficher n offres ».
+- Point 7 : sur téléphone, le bandeau « Annuler » se place au-dessus de la barre du bas et du bouton central, 8 px au-dessus du bouton, sans jamais le couvrir. Précise §10.8 (12 px au-dessus de la barre), qui faisait recouvrir le haut du bouton.
+- Ordinateur (planche CandidaturesOrdinateurEcartee, appliquée dans la même PR) : le bandeau en bas à gauche, aligné sur le contenu, 400 × 56, couleurs inversées en sombre.
+
+## Ligne d'état ORP à trois états dans le détail d'une envoyée (Kevin, 18.11.2026, 10 h 48)
+
+Le bandeau « Il manque … / Compléter » quitte le détail d'une envoyée. La ligne ORP de la carte du haut (la ligne d'état de l'en-tête) a trois états :
+
+- « ✓ Déclarée à l'ORP » en vert, si la déclaration est faite et complète ;
+- « À déclarer à l'ORP › » en bleu, avec un lien vers la fiche ORP de la candidature ;
+- « À compléter pour l'ORP › » en orange, si la déclaration manque d'informations, avec un lien vers la même fiche.
+
+Kevin demande #B4631F pour l'orange en clair, et #F2B98E en sombre. #B4631F n'atteint que 4,2:1 sur le fond clair, sous le minimum de 4,5:1 de la règle e du test d'affichage. On prend donc --peach-text, la même teinte un peu plus foncée (#8A4A16, celle de « Sans réponse »). En sombre, la couleur reste #F2B98E. Le choix reste à confirmer par Kevin.
+
+Même correction sur ordinateur : la carte « Pour l'ORP » disparaît, et la ligne d'état ORP va dans l'en-tête du détail.
+
+## Pause sur ordinateur : fenêtre centrée (§71, Kevin, 18.11.2026)
+
+- La planche ReglagesOrdinateurPause (§71, zip du 18.11) remplace les champs Du / Jusqu'au de la carte « Une pause » : un bouton ouvre une fenêtre centrée de 760 px avec le même calendrier de plage que le téléphone, deux mois côte à côte.
+- Rien n'est enregistré avant « Enregistrer » ; « Effacer » puis « Enregistrer » retire la pause. « Terminer la pause » reste sur la carte.
+- Ceci remplace le point « les champs Du / Jusqu'au restent » de la décision de 9 h 39.

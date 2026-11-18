@@ -280,6 +280,39 @@ describe("Le détail d’Envoyées sur téléphone (§8.3)", () => {
     expect(todo.text()).not.toContain("Pour l’ORP");
   });
 
+  it("Kevin (18.11, points 9 et 10) : trois états de la ligne ORP, sur téléphone et sur ordinateur, sans carte", async () => {
+    const stubs = { teleport: true, ContactsPanel: true, RouterLink: { props: ["to"], template: "<a :data-to=\"JSON.stringify(to)\"><slot /></a>" } };
+    for (const phone of [true, false]) {
+      const incomplete = mount(SentDetail, {
+        props: { phone, application: { ...application, id: 27 } as never, orpRow: { declared_at: "2026-10-05", date: "02.10.2026", missing: ["Adresse"], job_room: [] } as never },
+        global: { stubs },
+      });
+      await flushPromises();
+      const link = incomplete.find("[data-test=word-to-complete]");
+      expect(link.text()).toBe("À compléter pour l’ORP");
+      expect(link.classes()).toContain("orange");
+      expect(JSON.parse(link.attributes("data-to")!)).toEqual({ path: "/bilan/orp/candidature/27", query: { mois: "2026-10" } });
+      expect(incomplete.find("[data-test=word-declared]").exists()).toBe(false);
+      expect(incomplete.find("[data-test=section-orp]").exists()).toBe(false);
+      expect(incomplete.text()).not.toContain("Pour l’ORP");
+
+      const todo = mount(SentDetail, {
+        props: { phone, application: { ...application, id: 28 } as never, orpRow: { declared_at: null, date: "02.11.2026", missing: [], job_room: [] } as never },
+        global: { stubs },
+      });
+      await flushPromises();
+      expect(todo.find("[data-test=word-to-declare]").classes()).toContain("blue");
+
+      const done = mount(SentDetail, {
+        props: { phone, application: { ...application, id: 29 } as never, orpRow: { declared_at: "2026-10-05", missing: [], job_room: [] } as never },
+        global: { stubs },
+      });
+      await flushPromises();
+      expect(done.find("[data-test=word-declared]").text()).toBe("Déclarée à l’ORP");
+      expect(done.find(".sent-orp-todo").exists()).toBe(false);
+    }
+  });
+
   it("Historique replié : titre en casse normale, résumé, chevron ; la liste s’ouvre au toucher", async () => {
     const wrapper = mountPhone({ id: 26 });
     await flushPromises();
