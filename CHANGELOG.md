@@ -748,3 +748,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.534 | Fiche d'une offre : calcul de la note visible, recherche d'adresse qui dit ce qu'elle trouve, choix « Écrire à » et « Canal » dans le menu de l'app, zone du message sans arrondi de pilule (audit du 17.11, lot 3) | livrée |
 | 1.6.535 | Réglages sur téléphone d'après les planches du 18.11 (§70) : section Recherche, page Recherche et outils, Rythme en ronds et pause en feuille avec un seul calendrier de plage | livrée |
 | 1.6.536 | « Ton nom sur la feuille » sur téléphone : la ligne « Enregistré » garde sa place dès le départ, rien ne bouge quand elle apparaît | livrée |
+| 1.6.537 | Aujourd'hui sur téléphone et ordinateur : « Relire ton CV » et toute tâche en retard ont un rond orange vide au lieu d'un numéro. | livrée |
+| 1.6.538 | Fenêtres : le voile passe au-dessus de la barre du haut, qui ne cache plus le titre ; un champ étroit s'élargit pour que son libellé ne soit jamais coupé (« Nombre de personnes ») ; sur ordinateur, le bandeau « Annuler » s'affiche en bas à gauche, 400 × 56, aux couleurs de la planche (audit N29 et N30) | livrée |
+| 1.6.539 | Table de correspondance planches → app (docs/maquette-map.md) et rapport de conformité à la maquette : Candidatures, fiche d'une offre et Accueil | livrée |
