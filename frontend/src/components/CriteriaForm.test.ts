@@ -190,7 +190,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
 
     // « Écartées surtout pour » : une ligne par raison.
     const outcome = wrapper.find("[data-test=filter-outcome]");
-    expect(outcome.findAll("[data-test=filter-reasons] .criteria-row-value").map((t) => t.text())).toEqual([
+    expect(outcome.findAll("[data-test=filter-reasons] li").map((t) => t.text())).toEqual([
       "1 offre pour : Type d’offre",
       "1 offre pour : Lieu",
       "1 offre pour : Taux d’activité",

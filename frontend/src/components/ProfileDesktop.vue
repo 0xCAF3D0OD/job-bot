@@ -443,6 +443,9 @@ async function onSaved(): Promise<void> {
 .profile-topbar h1 { margin: 0; font-size: var(--pt-22); font-weight: var(--weight-heavy); }
 .profile-topbar-back { display: grid; place-items: center; width: 48px; height: 48px; color: var(--text); }
 .profile-topbar-back .icon { width: 24px; height: 24px; }
+/* Les pages du Profil sur ordinateur (Mon parcours, Coordonnées…) : « ‹ Profil » et le titre sur la même largeur que le
+   corps de la page (.container), au lieu de 880 px centrés, 46 px plus à droite (K36 de l'audit du 17.11). */
+.jobs-head.profile-subhead:not(.profile-topbar) { max-width: var(--page-max); box-sizing: border-box; }
 .jobs-head.profile-subhead.profile-topbar { flex-direction: row; align-items: center; max-width: none; margin: 0; padding: 0 var(--space-2) 0 var(--space-1); }
 .profile-subhead.profile-topbar h1 { font-size: var(--pt-22); letter-spacing: 0; }
 .profile-cv-split { display: flex; border-top: 1px solid var(--line); }
