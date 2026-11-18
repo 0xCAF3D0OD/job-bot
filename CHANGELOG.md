@@ -742,3 +742,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.528 | Filtres : les nombres d'offres aussi sous les choix de Note et de Taux du panneau de l'ordinateur, le nombre en graisse 500, et un choix à 0 offre grisé mais toujours cliquable (suite de #851) | livrée |
 | 1.6.529 | L'Accueil du téléphone refait d'après AccueilV2 : titre à la main, À faire, barre ORP, Top du jour, offres à trier, feuilles empilées et cercle des justificatifs | livrée |
 | 1.6.530 | Listes : un chevron à la place du rond fléché (§49) ; Notifications : pastilles « Toutes / Non lues » et point bleu des non lues à gauche (§48) | livrée |
+| 1.6.531 | Offres sur ordinateur : sans offre avec ces filtres, la colonne ne défile plus seule et n'affiche plus de barre de défilement ; c'est la page qui défile jusqu'à « Faire une candidature spontanée » (audit K19) | livrée |
