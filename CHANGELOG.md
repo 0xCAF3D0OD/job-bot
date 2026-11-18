@@ -732,3 +732,8 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.518 | Suivi : le formulaire d'entretien est chargé à la demande, la page s'allège de 2,9 Ko et repasse sous sa limite de poids (audit du 17.11) | livrée |
 | 1.6.519 | Bilan sur téléphone : trois feuilles empilées (ORP, Résultats, Formations), chacune vers sa page de détail, qui restent collées en haut au défilement (§52, §54) | livrée |
 | 1.6.520 | Envoyées sur téléphone : fermer une candidature (retour du navigateur ou de l'app) ramène la liste à la même position de défilement ; le bouton rond de Candidatures et le bouton Assistant ne cachent plus l'élément qui reçoit le focus (décision de Kevin du 17.11) | livrée |
+| 1.6.521 | Rendez-vous : « Noter ce qui a été convenu » en pilule de 48 px au texte centré, carnet aéré, aucun trait sous la dernière ligne de la préparation | livrée |
+| 1.6.522 | Alertes : un seul « Afficher plus » sous les alertes reçues, titres de famille neutres, traits droits dans la feuille d'une alerte | livrée |
+| 1.6.523 | Mon parcours : titre aligné sur la page, nom des documents sans bleu collé au toucher, plus de saut au chargement | livrée |
+| 1.6.524 | Accueil : le rappel des justificatifs se pose sous le bandeau de maintenance ou de démo au lieu de le cacher | livrée |
+| 1.6.525 | Formations : les certifications du catalogue sur une ligne, « Payant » à côté de l'organisme, écart avant le marque-page | livrée |
