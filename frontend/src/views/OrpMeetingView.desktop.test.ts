@@ -187,6 +187,14 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(detail.find("[data-test=question-new]").exists()).toBe(false);
     await detail.get("[data-test=rdv-question-open]").trigger("click");
     await flushPromises();
+    // §72b : pas d'aide clavier, « Annuler » et « Ajouter » sous le champ, « + Ajouter une question » caché.
+    expect(detail.text()).not.toContain("Entrée pour");
+    expect(detail.get("[data-test=question-add]").text()).toBe("Ajouter");
+    expect(detail.get("[data-test=rdv-question-open]").isVisible()).toBe(false);
+    await detail.get("[data-test=question-cancel]").trigger("click");
+    expect(detail.find("[data-test=question-new]").exists()).toBe(false);
+    await detail.get("[data-test=rdv-question-open]").trigger("click");
+    await flushPromises();
     await detail.get("[data-test=question-new]").setValue("Refuser un poste à 2 h de trajet ?");
     const added = { ...PREP, questions: [...PREP.questions, { key: "custom:1", text: "Refuser un poste à 2 h de trajet ?", checked: false }] };
     PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: added, past: [NOTED], target: 10, trainings: [] } });
@@ -212,6 +220,8 @@ describe("Rendez-vous sur ordinateur", () => {
     const [, sent] = PUT.mock.calls[0] as [string, { body: { questions: { key: string }[] } }];
     expect(sent.body.questions.map((q) => q.key)).toEqual(["custom:1"]);
 
+    // Un seul « Voir la feuille » (§72b), en haut.
+    expect(wrapper.findAll("button").filter((b) => b.text().includes("Voir la feuille"))).toHaveLength(1);
     // « Ton nom sur la feuille » ouvre la feuille.
     await wrapper.get("[data-test=rdv-name]").trigger("click");
     await flushPromises();

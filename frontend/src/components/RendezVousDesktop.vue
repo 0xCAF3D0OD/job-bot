@@ -9,7 +9,6 @@ import "./ListCard.vue";
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import { dateInSentence, inDays, timeOfDay } from "../dates";
-import { plural } from "../format";
 import { offerUndo } from "../composables/useUndo";
 import {
   checkedCount,
@@ -137,8 +136,9 @@ function cal(iso: string): { day: number; month: number } {
 }
 
 // « Tes questions au conseiller » (planches RendezVousOrdinateurOuvert et PreparerRendezVousQuestion, §72 ; décision de
-// Kevin du 18.11) : « + Ajouter une question » ouvre un champ dans la carte, Entrée ajoute, Échap annule, un champ vide
-// se ferme sans rien ajouter ; « Enregistré » est annoncé. Le ⋯ de chaque question : Modifier (le même champ, sur la
+// Kevin du 18.11, §72b) : « + Ajouter une question » ouvre un champ dans la carte et se cache pendant la saisie ; sous le
+// champ, « Annuler » (texte) et « Ajouter » (plein), 44 px ; Entrée ajoute aussi, Échap annule, un champ vide se ferme
+// sans rien ajouter ; « Enregistré » est annoncé. Le ⋯ de chaque question : Modifier (le même champ, sur la
 // ligne) ou Supprimer, avec le bandeau « Annuler » (la liste n'est envoyée qu'à la fin du bandeau).
 const adding = ref(false);
 const custom = ref("");
@@ -148,10 +148,6 @@ const draft = ref("");
 const hidden = ref<Set<string>>(new Set());
 const savedNote = ref("");
 const shownQuestions = computed(() => prep.value.questions.filter((q) => !hidden.value.has(q.key)));
-const sheetLine = computed(() => {
-  const month = prep.value.months?.at(-1);
-  return [month ? plural(month.count, "recherche", "recherches") : "", plural(checked.value, "question", "questions")].filter(Boolean).join(", ");
-});
 function saved(ok: boolean): void {
   savedNote.value = ok ? "Enregistré" : "";
 }
@@ -378,7 +374,7 @@ const list = ref<HTMLElement | null>(null);
       data-test="rdv-detail"
     >
       <!-- Le rendez-vous ORP prévu, refait d'après la planche RendezVousOrdinateurOuvert (§72, 18.11) : la tuile date, le
-           titre, « Voir la feuille » ; « Où tu en es » ; « Tes questions au conseiller » (⋯ par question) ; « La feuille ».
+           titre, « Voir la feuille » (le seul, §72b) ; « Où tu en es » ; « Tes questions au conseiller » (⋯ par question) ; « La feuille ».
            Gardés de main (absents de la planche) : le ⋯ du rendez-vous (Modifier, Supprimer) et « Convenu la dernière fois ». -->
       <article
         v-if="selected === 'orp' && nextOrp?.kind === 'orp' && !editing"
@@ -475,8 +471,22 @@ const list = ref<HTMLElement | null>(null);
                     @keydown.enter.exact.prevent="saveEdit(question)"
                     @keydown.esc.prevent.stop="cancelField"
                   />
-                  <p class="rdv-open-help">
-                    <span>Entrée pour enregistrer · Échap pour annuler</span>
+                  <p class="rdv-open-actions">
+                    <button
+                      type="button"
+                      class="link"
+                      data-test="question-cancel"
+                      @click="cancelField"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      class="primary"
+                      data-test="question-save"
+                    >
+                      Enregistrer
+                    </button>
                   </p>
                 </div>
               </form>
@@ -531,13 +541,30 @@ const list = ref<HTMLElement | null>(null);
                     @keydown.enter.exact.prevent="addQuestion"
                     @keydown.esc.prevent.stop="cancelField"
                   />
-                  <p class="rdv-open-help">
-                    <span>Entrée pour ajouter · Échap pour annuler</span>
+                  <p class="rdv-open-actions">
+                    <button
+                      type="button"
+                      class="link"
+                      data-test="question-cancel"
+                      @click="cancelField"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      class="primary"
+                      data-test="question-add"
+                    >
+                      Ajouter
+                    </button>
                   </p>
                 </div>
               </form>
             </li>
-            <li class="rdv-open-add-row">
+            <li
+              v-show="!adding && !editingKey"
+              class="rdv-open-add-row"
+            >
               <button
                 type="button"
                 class="rdv-open-add"
@@ -574,19 +601,6 @@ const list = ref<HTMLElement | null>(null);
                   class="rdv-open-sub"
                   data-test="rdv-name-line"
                 >{{ nameLine }}</span></span><AppIcon name="chevron" />
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                class="rdv-open-link"
-                data-test="rdv-view-sheet"
-                @click="emit('sheet')"
-              >
-                <span><b>Voir la feuille</b><span
-                  v-if="sheetLine"
-                  class="rdv-open-sub"
-                >{{ sheetLine }}</span></span><AppIcon name="chevron" />
               </button>
             </li>
             <li>
@@ -806,8 +820,9 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-open-field > .rdv-open-box { margin-top: var(--ro-14); }
 .rdv-open-field > div { flex: 1; min-width: 0; }
 .rdv-open .rdv-open-field textarea { display: block; box-sizing: border-box; width: 100%; min-height: var(--ro-52); padding: var(--space-3) var(--ro-14); border: var(--ro-2) solid var(--primary-graphic); border-radius: var(--ro-14); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--ro-22); resize: none; outline: 0; }
-.rdv-open-help { display: flex; justify-content: space-between; gap: var(--space-2); margin: var(--space-2) 0 0; font-size: var(--label-caps); color: var(--text-secondary); }
-.rdv-open-add-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-right: var(--ro-18); }
+.rdv-open-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-2); margin: var(--space-2) 0 0; }
+.rdv-open .rdv-open-actions button { min-height: var(--target-min); height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--ro-22); font-size: var(--ro-15); font-weight: var(--weight-bold); }
+.rdv-open-add-row { display: flex; min-height: var(--ro-52); box-sizing: border-box; align-items: center; justify-content: space-between; gap: var(--space-2); padding-right: var(--ro-18); }
 .rdv-open .rdv-open-add { display: flex; align-items: center; min-height: var(--ro-52); padding: 0 var(--ro-18); border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--primary-text); font-size: var(--ro-15); font-weight: var(--weight-bold); cursor: pointer; }
 .rdv-open-saved { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--success); }
 .rdv-open .rdv-open-link { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--ro-60); padding: var(--ro-10) var(--ro-18); border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
