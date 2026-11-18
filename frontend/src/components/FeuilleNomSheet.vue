@@ -75,6 +75,7 @@ function leave(event: Event): void {
         <FieldSaveStatus
           :id="`${base}-${item.field}-status`"
           :state="states[item.field]"
+          reserve
           @retry="save(item.field)"
         />
       </div>

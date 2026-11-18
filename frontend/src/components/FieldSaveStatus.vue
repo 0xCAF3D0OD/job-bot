@@ -5,7 +5,7 @@ import AppIcon from "./AppIcon.vue";
 // Sous un champ qui s'enregistre quand on le quitte (planche FeuilleNom, §70 ; K31 de l'audit) : roue et
 // « Enregistrement… », puis coche verte et « Enregistré » ; en cas d'échec, « Pas enregistré · Réessayer ». La zone
 // role="status" est toujours là, pour que chaque changement soit annoncé (WCAG 4.1.3) ; vide, elle ne prend pas de place.
-// `reserve` : la ligne garde sa place même vide (case de l'ordinateur, sans planche) : rien ne bouge quand elle parle.
+// `reserve` : la ligne garde sa place même vide : rien ne bouge quand elle parle (fluidité, Kevin 18.11).
 defineProps<{ state: SaveState; reserve?: boolean }>();
 const emit = defineEmits<{ retry: [] }>();
 </script>
@@ -49,7 +49,7 @@ const emit = defineEmits<{ retry: [] }>();
 
 <style scoped>
 /* Planche FeuilleNom : 14 px, 10 px sous le champ ; gris pendant l'enregistrement, vert gras une fois enregistré. */
-.field-save { --fs-top: 10px; --fs-check-gap: 6px; display: flex; align-items: center; gap: var(--space-2); min-height: var(--space-5); margin-top: var(--fs-top); font-size: var(--font-small); color: var(--text-secondary); }
+.field-save { --fs-top: 10px; --fs-check-gap: 6px; display: flex; align-items: center; gap: var(--space-2); height: var(--space-5); line-height: var(--space-5); white-space: nowrap; margin-top: var(--fs-top); font-size: var(--font-small); color: var(--text-secondary); }
 .field-save-idle:not(.field-save-reserve) { display: none; }
 .field-save-saved { gap: var(--fs-check-gap); color: var(--success); font-weight: var(--weight-bold); }
 .field-save-saved :deep(.icon) { width: 16px; height: 16px; }
