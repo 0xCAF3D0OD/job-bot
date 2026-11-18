@@ -912,12 +912,12 @@ onUnmounted(() => {
           <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
           <!-- En attente de la première collecte : les 4 personnages du logo (scène « aucune-offre », §15). -->
           <!-- Un compte neuf, sans offre ni filtre (§13 du 15 novembre, CandidaturesVide / CandidaturesOrdinateurVide) :
-               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. -->
+               l’état vide commun, centré sur toute la largeur ; la phrase devient la pastille. Plus de phrase sous le
+               titre avec des alertes (CandidaturesVideAlertes, Kevin, 18.11, §72g). -->
           <EmptyState
             v-else-if="noneYet"
             scene="aucune-offre"
             :title="alertsReady ? 'Tes premières offres arrivent bientôt' : 'Pas encore d’offre'"
-            :text="alertsReady ? 'jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.' : undefined"
             :pill="nonePill"
             data-test="offers-none-yet"
           >
