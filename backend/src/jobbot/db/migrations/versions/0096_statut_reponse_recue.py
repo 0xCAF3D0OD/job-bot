@@ -1,7 +1,7 @@
 """Statut de candidature « Réponse reçue » (Kevin, 18.11.2026, 13 h 39)
 
-Revision ID: 0095
-Revises: 0094
+Revision ID: 0096
+Revises: 0095
 Create Date: 2026-11-18
 
 Nouveau statut `reponse` : l'employeur a répondu, sans entretien ni refus. Il se choisit à la main
@@ -18,8 +18,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = "0095"
-down_revision: str | None = "0094"
+revision: str = "0096"
+down_revision: str | None = "0095"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
