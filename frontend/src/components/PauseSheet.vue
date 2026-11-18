@@ -150,7 +150,7 @@ function cellClass(date: Date): Record<string, boolean> {
           rx="2"
         /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
         <span>{{ summary }}</span>
-        <small v-if="length || wide">{{ [length ? `${length} ${length > 1 ? "jours" : "jour"}` : "", wide ? "1er clic : Du, 2e clic : Jusqu’au" : ""].filter(Boolean).join(" · ") }}</small>
+        <small v-if="length">{{ length }} {{ length > 1 ? "jours" : "jour" }}</small>
       </p>
       <div
         v-if="!wide"
@@ -295,14 +295,15 @@ function cellClass(date: Date): Record<string, boolean> {
   .pause-wide .pause-top { position: static; }
   .pause-wide .pause-sum { margin: var(--space-3) var(--space-6) 0; padding: 0 var(--space-4); }
   /* Hauteur d’un mois de six semaines : la fenêtre ne saute pas d’un mois à l’autre. */
-  .pause-wide .pause-months { position: relative; display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; align-content: start; column-gap: calc(var(--space-8) + var(--space-2)); box-sizing: content-box; min-height: 342px; padding: var(--space-5) var(--space-8) var(--space-2); }
-  .pause-nav { position: absolute; top: calc(var(--space-5) - var(--space-3)); display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); cursor: pointer; }
+  .pause-wide .pause-months { position: relative; display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; align-content: start; column-gap: calc(var(--space-8) + var(--space-2)); box-sizing: content-box; min-height: 362px; padding: var(--space-5) var(--space-8) var(--space-2); }
+  /* Planche du §72 : flèches cerclées dans la ligne du nom du mois, « < » à gauche du premier, « > » à droite du second. */
+  .pause-nav { position: absolute; top: var(--space-5); display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; box-shadow: inset 0 0 0 1.5px var(--card-line); color: var(--text); cursor: pointer; }
   .pause-nav:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
   .pause-nav[aria-disabled="true"] { color: var(--text-disabled); cursor: default; background: transparent; }
   .pause-nav .icon { width: 20px; height: 20px; }
-  .pause-prev { left: var(--space-4); }
-  .pause-next { right: var(--space-4); }
-  .pause-wide .pause-month h3 { margin: 0 0 var(--space-3); line-height: var(--space-6); }
+  .pause-prev { left: var(--space-8); }
+  .pause-next { right: var(--space-8); }
+  .pause-wide .pause-month h3 { display: grid; place-items: center; min-height: 44px; margin: 0 0 var(--space-3); line-height: var(--space-6); }
   .pause-wide .pause-week, .pause-wide .pause-grid { grid-template-columns: repeat(7, 44px); }
   .pause-wide .pause-week { margin-bottom: var(--space-2); padding: 0; border: 0; }
   .pause-wide .pc-rdv::after { bottom: var(--space-1); }

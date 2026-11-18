@@ -4,6 +4,9 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import OfferDetail from "./OfferDetail.vue";
 
+// Chargé une fois d’avance : son import() se résout alors dans le même tour que dans le navigateur.
+await import("./OfferCompatSheet.vue");
+
 const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: vi.fn(() => Promise.resolve({ data: undefined })), POST: (...a: unknown[]) => POST(...a) },
@@ -83,13 +86,43 @@ describe("OfferDetail, recherche d’adresse (audit du 17.11, K6)", () => {
     expect(wrapper.find("[data-test=registry-busy] .offer-busy-ring").exists()).toBe(true);
     await wrapper.setProps({ offer: offer({ company_address: null, company_address_source: null }) as never });
     expect(wrapper.find("[data-test=registry-busy]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=registry]").text()).toBe("Aucune nouvelle adresse trouvée.");
+    // Planche OffreAdresseNonTrouvee (18.11) : « Non renseignée », la pastille grise, « Ajouter l'adresse ».
+    expect(wrapper.find("[data-test=address] .block-field-value").text()).toBe("Non renseignée");
+    expect(wrapper.find("[data-test=address-not-found]").text()).toBe("Pas trouvée au registre");
+    expect(wrapper.find("[data-test=registry]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=add-address]").text()).toBe("Ajouter l’adresse");
 
     await wrapper.find("[data-test=company-more]").trigger("click");
     await wrapper.find("[data-test=search-registry]").trigger("click");
     await flushPromises();
     await wrapper.setProps({ offer: offer({ company_address: "Rue du Lac 1\n1000 Lausanne", company_address_source: "registry" }) as never });
-    expect(wrapper.find("[data-test=registry]").text()).toBe("Adresse trouvée dans le registre IDE.");
+    // Planche OffreAdresseTrouvee : l'adresse sur deux lignes, la pastille, « Modifier l'adresse », pas de phrase.
+    expect(wrapper.find("[data-test=address-not-found]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=address-registry]").text()).toBe("Trouvée au registre du commerce");
+    expect(wrapper.find("[data-test=registry]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=add-address]").text()).toBe("Modifier l’adresse");
+    expect(wrapper.find("#offer-company-title").text()).toBe("L’entreprise");
+
+    // « Site de l'entreprise » : le site relevé sur l'annonce, sans « www. » ; rien pour une adresse qui n'est pas http(s).
+    expect(wrapper.find("[data-test=company-website]").exists()).toBe(false);
+    await wrapper.setProps({ offer: offer({ company_website: "https://www.alpstack.ch/" }) as never });
+    const site = wrapper.find("[data-test=company-website]");
+    expect(site.text()).toContain("Site de l’entreprise");
+    expect(site.find(".company-site-host").text()).toBe("alpstack.ch");
+    expect(site.attributes("href")).toBe("https://www.alpstack.ch/");
+    expect(site.attributes("rel")).toBe("noopener noreferrer");
+    await wrapper.setProps({ offer: offer({ company_website: "javascript:alert(1)" }) as never });
+    expect(wrapper.find("[data-test=company-website]").exists()).toBe(false);
+
+    // Une adresse trouvée sur Internet que le registre ne change pas : la phrase le dit, sans pastille « pas trouvée ».
+    const manual = { company_address: "Rue du Lac 1\n1000 Lausanne", company_address_source: "web" };
+    await wrapper.setProps({ offer: offer(manual) as never });
+    await wrapper.find("[data-test=company-more]").trigger("click");
+    await wrapper.find("[data-test=search-registry]").trigger("click");
+    await flushPromises();
+    await wrapper.setProps({ offer: offer(manual) as never });
+    expect(wrapper.find("[data-test=registry]").text()).toBe("Aucune nouvelle adresse trouvée.");
+    expect(wrapper.find("[data-test=address-not-found]").exists()).toBe(false);
   });
 });
 
@@ -196,15 +229,17 @@ describe("OfferDetail, l’essentiel en haut (docs/21 §5)", () => {
 });
 
 describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
-  it("l’adresse dans la partie Entreprise, les actions dans son « ⋯ », « Non renseignée » et « Compléter »", async () => {
+  it("l’adresse dans la partie Entreprise, les actions dans son « ⋯ », « Non renseignée » et « Ajouter l’adresse »", async () => {
     const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
     // PR 33 (4) : le libellé au-dessus, la valeur en gras dessous, copier à droite ; ni bandeau ni ligne repliable.
     expect(known.find("[data-test=company-section] .disclosure-row").exists()).toBe(false);
     expect(known.find("[data-test=company-section] h3").text()).toBe("L’entreprise");
     expect(known.find("[data-test=address] .block-field-label").text()).toBe("Adresse");
-    expect(known.find("[data-test=address] .block-field-value").text()).toBe("Rue 1, 1201 Genève");
+    // Planche OffreAdresseTrouvee (18.11) : l'adresse telle qu'enregistrée, sur deux lignes.
+    expect(known.find("[data-test=address] .block-field-value").text()).toBe("Rue 1\n1201 Genève");
+    expect(known.find("[data-test=address] .address-lines").exists()).toBe(true);
     expect(known.find("[data-test=address] [data-test=address-copy]").exists()).toBe(true);
-    expect(known.find("[data-test=add-address]").exists()).toBe(false);
+    expect(known.find("[data-test=add-address]").text()).toBe("Modifier l’adresse");
     const section = known.find("[data-test=company-section]");
     await section.find("[data-test=company-more]").trigger("click");
     const labels = section.findAll("[role=menuitem]").map((item) => item.text());
@@ -212,7 +247,7 @@ describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
 
     const missing = await mountDetail(offer());
     expect(missing.find("[data-test=address] .block-field-value").text()).toBe("Non renseignée");
-    expect(missing.find("[data-test=add-address]").text()).toBe("Compléter");
+    expect(missing.find("[data-test=add-address]").text()).toBe("Ajouter l’adresse");
     await missing.find("[data-test=add-address]").trigger("click");
     expect(missing.find("[data-test=address-input]").exists()).toBe(true);
   });
@@ -350,11 +385,31 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("une offre expirée mène aux offres proches ; en préparation, « Reprendre la lettre »", async () => {
+  it("offre expirée (planche OffreExpiree, 18.11) : la carte, « Écrire quand même », les offres proches dans ⋯", async () => {
     phone();
-    const expired = await mountDetail(offer({ expired_at: "2026-10-30T10:00:00Z" }));
-    expect(expired.find("[data-test=nearby]").text()).toBe("Voir des offres proches");
-    expect(expired.find("[data-test=prepare]").exists()).toBe(false);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-20T09:00:00Z"));
+    const expired = await mountDetail(
+      offer({ expired_at: "2026-11-17T10:00:00Z", expiry_source: "page", links: [{ source: "jobup", url: "https://www.alpstack.ch/jobs/1" }] }),
+    );
+    const card = expired.get("[data-test=expired]");
+    expect(card.get(".expired-pill").text()).toBe("Offre expirée");
+    expect(card.get(".expired-title").text()).toBe("L’annonce n’est plus en ligne");
+    expect(card.get(".expired-text").text()).toBe("Vérifiée le 17 nov. sur alpstack.ch. Tu peux encore écrire à l’entreprise.");
+    const bar = expired.get("[data-test=offer-bar]");
+    expect(bar.get("[data-test=offer-discard]").text()).toBe("Écarter");
+    expect(bar.get("[data-test=prepare]").text()).toBe("Écrire quand même");
+    expect(bar.get("[data-test=prepare]").attributes("href")).toMatch(/\/preparer\?ecrire=1$/);
+    // Kevin, 18.11 : « Voir des offres proches » reste, dans le « ⋯ ».
+    await expired.find("[data-test=detail-more]").trigger("click");
+    await flushPromises();
+    const titles = expired.get("[data-test=offer-actions]").findAll(".offer-action").map((t) => t.text());
+    expect(titles).toContain("Voir des offres proches");
+    vi.useRealTimers();
+    // Une expiration supposée garde sa phrase, sans le titre de la planche.
+    const guessed = await mountDetail(offer({ expired_at: "2026-11-17T10:00:00Z", expiry_source: "age" }));
+    expect(guessed.find("[data-test=expired] .expired-title").exists()).toBe(false);
+    expect(guessed.get("[data-test=expired] .expired-text").text()).toMatch(/^Probablement expirée.*Tu peux encore écrire à l’entreprise\.$/);
     const preparing = await mountDetail(offer({ status: "preparing" }));
     expect(preparing.find("[data-test=prepare]").text()).toBe("Reprendre la lettre");
     expect(preparing.find("[data-test=prepare]").attributes("href")).toMatch(/\/preparer$/);
@@ -453,6 +508,43 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect(line.text()).toContain("Pas encore notée");
     expect(line.find("[data-test=compat-open]").exists()).toBe(false);
     expect(line.get("[data-test=give-to-score]").attributes("aria-controls")).toBe("offer-give-zone");
+  });
+
+  it("K2 (planche OffreNonNotee, 18.11) : cercle pointillé, « Noter maintenant », temps et formule ; limite du mois dite", async () => {
+    // Téléphone : la planche n'a pas de version ordinateur (question posée à Kevin).
+    const wrapper = await mountDetail(offer({ score: null }));
+    expect(wrapper.find("[data-test=match-unrated]").exists()).toBe(true);
+    expect(wrapper.get("[data-test=match-sub]").text()).toBe("jobA1 n’a pas encore comparé cette offre à ton profil.");
+    const block = wrapper.get("[data-test=score-now-block]");
+    expect(block.get("[data-test=score-now]").text()).toContain("Noter maintenant");
+    expect(block.text()).toContain("Environ 10 secondes · compte dans ta formule");
+    POST.mockResolvedValue({ data: { score: 81, limit: null } });
+    await block.get("[data-test=score-now]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/score-now", { params: { path: { offer_id: 4 } } });
+    expect(wrapper.emitted("changed")).toBeTruthy();
+    expect(wrapper.find("[data-test=score-now-error]").exists()).toBe(false);
+
+    POST.mockResolvedValue({ data: { score: null, limit: "Les 30 offres notées du mois sont atteintes." } });
+    await wrapper.get("[data-test=score-now]").trigger("click");
+    await flushPromises();
+    expect(wrapper.get("[data-test=score-now-error]").text()).toBe("Les 30 offres notées du mois sont atteintes.");
+
+    // Jamais sur une offre notée, écartée ou dont la note est impossible.
+    expect((await mountDetail(offer({ score: 70 }))).find("[data-test=score-now-block]").exists()).toBe(false);
+    expect((await mountDetail(offer({ score: null, status: "filtered_out" }))).find("[data-test=score-now-block]").exists()).toBe(false);
+    expect((await mountDetail(offer({ score: null, score_final: "erreur" }))).find("[data-test=score-now-block]").exists()).toBe(false);
+  });
+
+  it("Kevin, 18.11 : sur ordinateur, les mêmes cartes dans le panneau (pas encore notée, expirée)", async () => {
+    desktop();
+    const unrated = await mountDetail(offer({ score: null }));
+    expect(unrated.get("[data-test=match-sub]").text()).toBe("jobA1 n’a pas encore comparé cette offre à ton profil.");
+    expect(unrated.get("[data-test=score-now-block] [data-test=score-now]").text()).toContain("Noter maintenant");
+    const expired = await mountDetail(offer({ score: 70, expired_at: "2026-11-10T10:00:00Z", expiry_source: "manual" }));
+    expect(expired.get("[data-test=expired]").classes()).toContain("oc-card");
+    expect(expired.get("[data-test=expired] .expired-pill").text()).toBe("Offre expirée");
+    expect(expired.get("[data-test=triage] [data-test=prepare]").text()).toBe("Écrire quand même");
   });
 
   it("A2 : note impossible, une ligne selon la cause ; « Réessayer » après un échec de l’IA (Kevin, 16.11)", async () => {

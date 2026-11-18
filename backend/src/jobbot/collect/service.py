@@ -20,6 +20,7 @@ from jobbot import accounts
 from jobbot.alerts import service as alert_service
 from jobbot.collect import topic
 from jobbot.core.filter import canton_of
+from jobbot.core.geo import locate
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
     IGNORED_KIND,
@@ -190,6 +191,7 @@ async def ingest_offers(
                     rate_max=norm.rate_max,
                     logo_url=raw.logo_url,
                     canton=canton_of(raw.location),
+                    **_point(raw.location),
                     snippet=raw.snippet,
                     first_seen_at=seen_at,
                     seen_since=seen_at,
@@ -595,3 +597,9 @@ async def reparse(
         missing_raw=result.missing_raw,
     )
     return result
+
+
+def _point(location: str | None) -> dict[str, float | None]:
+    """Le point du lieu pour un `insert(Offer)`, qui ne passe pas par l'événement de l'ORM."""
+    point = locate(location)
+    return {"latitude": point.lat if point else None, "longitude": point.lon if point else None}

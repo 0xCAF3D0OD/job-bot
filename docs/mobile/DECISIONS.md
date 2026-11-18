@@ -938,6 +938,31 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 - Q2 : « Noter maintenant » sur une offre « Pas encore notée » est accepté, mais attend sa planche.
 - Q3 : à l'affichage seulement, un titre tout en majuscules passe en casse normale, « | » devient « · », et les sigles connus restent intacts (AWS, DevOps, SRE, CI/CD…). Aucune donnée n'est modifiée.
 
+## Filtre Distance : numéros postaux GeoNames au lieu de swisstopo (Kevin, 18.11.2026)
+
+Remplace la source de la partie « Distance » de 2026-11-18-0847-filtre-contrat-distance.md (swisstopo) :
+- Source : les numéros postaux suisses avec coordonnées du dépôt GitHub zauberware/postal-codes-json-xml-csv (données
+  GeoNames, licence CC BY 4.0). Une seule copie, commitée dans le dépôt, avec un README : source (URL du dépôt et
+  commit exact), date, licence et l'attribution « Données : GeoNames (geonames.org), CC BY 4.0 ».
+- L'attribution figure aussi dans « À propos ».
+- Aucun appel externe depuis l'application, ni au démarrage ni plus tard. Mise à jour : une commande manuelle
+  documentée (`make geonames-maj COMMIT=…`).
+- La demande d'accès à swisstopo est annulée (aucun réglage d'environnement n'avait été changé).
+
+Les autres règles de Distance restent : vol d'oiseau, libellé « Distance depuis Renens », choix 15, 30 et 50 km,
+« Lieu non précisé » avec son nombre, jamais d'offre exclue en silence, nombre sous chaque choix.
+
+Mise en œuvre (à valider par Kevin dans la PR) :
+- La copie vit dans `backend/src/jobbot/data/geonames/` : le dossier `data/` de la racine est ignoré par git (données
+  des personnes).
+- « Renens » vient des coordonnées de la personne (numéro postal, sinon commune) : le libellé suit la commune saisie.
+  Sans commune reconnue, le groupe ne s'affiche pas.
+- Un lieu d'annonce n'a un point que s'il est sans ambiguïté : numéro postal connu, ou nom de localité dans un seul
+  endroit (le canton cité tranche). « Buchs » sans canton, « Neuchâtel / Berne » ou « Suisse romande » vont dans
+  « Lieu non précisé ».
+- Choix par défaut « Toutes » (la planche s'ouvre sur 30 km et « Tout effacer » y revient à 50 km) : un défaut en km
+  retirerait des offres de la liste de main.
+
 ## Nombres des filtres : graisse, ordinateur, choix à 0, Contrat et Distance (Kevin, 18.11.2026, 8 h 32)
 
 Réponses aux trois questions de #851 :
@@ -962,6 +987,14 @@ la feuille Filtres du téléphone s'écartait de la planche sans décision écri
 de groupe en capitales 13 px gris (docs/design/regles.md §4), aide en pastille et plus courte (« À quel point l'offre
 correspond à ton profil », « Provisoire : notée sur l'extrait de l'alerte »), contour des puces à 1,5 px
 `--button-outline`. Le panneau de l'ordinateur garde l'aide longue, comme sa planche.
+
+## Planches de la fiche d'une offre du 18.11 (Kevin, 18.11.2026, 8 h 05)
+
+- Le paquet jobA1_maquettes_2026-11-18.zip remplace celui du 17.11. Son §70 dessine les écrans de la section 6 de l'audit du 17.11.
+- K2, planche OffreNonNotee : une offre « Pas encore notée » montre l'anneau pointillé, « Noter maintenant » et la pastille « Environ 10 secondes · compte dans ta formule ». Elle n'apparaît ni sur une offre écartée, ni sur une note impossible, ni quand le profil est vide. La note compte dans la formule ; le coût de l'appel n'est visible que pour Kevin (Q2 du 17.11).
+- K6, planches OffreAdresseRecherche, OffreAdresseTrouvee et OffreAdresseNonTrouvee : la recherche d'adresse s'affiche à la place de l'adresse, l'adresse trouvée tient sur deux lignes avec « Trouvée au registre du commerce », une recherche vaine garde « Non renseignée » avec « Pas trouvée au registre ». « Modifier l'adresse » ou « Ajouter l'adresse » est une ligne sous l'adresse.
+- K9, planche OffreExpiree : attend la réponse de Kevin sur « Voir des offres proches ».
+- Restent sans planche, à ne pas inventer : Alertes reçues (K20, K21), Préparer le rendez-vous (K26, K30), Faire le point (K27), la page Aide.
 
 ## « Ton nom sur la feuille » (Kevin, 18.11.2026, 8 h 39 et 8 h 50)
 
@@ -1061,8 +1094,96 @@ Même correction sur ordinateur : la carte « Pour l'ORP » disparaît, et la li
 - Sur ordinateur, le titre d'un jour de rythme s'écrit comme ses variantes (« tes offres arrivent bientôt », « la suite est en plus ») : une seule ligne manuscrite, même style, sans point final. Pluriel : « 2 candidatures à envoyer ».
 - Le téléphone ne change pas.
 
+## Poids de la fiche d'une offre : blocs chargés à part, mesurés un à un (Kevin, 18.11.2026, 13 h 37)
+
+- « Autres offres chez … » (planche Offre) et la feuille de la compatibilité se chargent à part de Candidatures.
+- Chaque bloc est mesuré avec la page, sous les limites de Candidatures (175 500 o en JS, 72 500 o en CSS) : pages candidatures-autres-offres et candidatures-compatibilite de frontend/scripts/poids.mjs. Aucune limite n'est relevée.
+- Les deux blocs ouverts ensemble dépassent la limite de la page (176 727 o mesurés le 18.11) : accepté, parce que la page s'ouvre plus légère et que le surplus ne se charge qu'après un geste sur la fiche.
+
+## Texte d'une offre sur téléphone : « Coller » d'abord, puis « Importer une capture ou un PDF », pas de raccourci iPhone (Kevin, 18.11.2026, 14 h 13)
+
+Fil « Simplifier l'ajout du texte d'une offre ». Options proposées : A (captures lues par l'IA), B (raccourci iPhone
+depuis Safari), C (bouton « Coller »). Kevin choisit **C puis A, pas B**.
+
+- **« Coller » en premier** : le bouton qui ouvre le collage (« Coller le texte de l'annonce » sur téléphone,
+  « Pas de lien ? Colle le texte » sur ordinateur) lit le presse-papiers (`navigator.clipboard.readText`), avec la
+  demande d'autorisation du système. Le texte copié arrive dans la fenêtre de collage existante, à vérifier avant
+  « Refaire la note ». Si l'accès est refusé (ou le presse-papiers vide, ou un simple lien) : la fenêtre s'ouvre vide,
+  et on colle à la main. Un texte déjà commencé n'est jamais remplacé. Aucun élément ajouté : les libellés et la
+  fenêtre restent ceux de la planche OffreProvisoire (paquet du 16.11).
+- **Ensuite « Importer une capture ou un PDF »** : PNG, JPG ou PDF, un fichier à la fois, compté dans la formule
+  (comme Q1). Le menu « + » de la planche OffreProvisoire (« Importer le PDF de l'annonce », « Importer une capture
+  d'écran ») sert de dessin. PR à part.
+- **Pas de raccourci iPhone.**
+
+## Alertes : « J'ai créé l'alerte » ne suffit plus, il faut un e-mail du site (Kevin, 18.11.2026, 15 h 13)
+
+- Constat de Kevin (compte factice d'infirmier, 18.11) : l'alerte jobup s'affichait « Active · en attente du premier envoi » et l'étape « Ta première alerte est créée » était cochée, alors que l'alerte n'avait jamais été créée sur jobup. Le bouton « J'ai créé l'alerte » suffisait à tout cocher.
+- Règle : une alerte n'est active qu'avec un e-mail du site arrivé dans la boîte jobA1 du compte (code de vérification, message ou alerte), au plus un jour avant la déclaration. Sinon, elle est « À confirmer », dans la famille « À confirmer » de la planche AlertesTel (et AlertesOrdinateur), avec « Coller le code » pour jobup, qui ouvre le panneau du site où le code s'affiche.
+- Premiers pas : l'étape 3 n'est faite qu'avec cette preuve, ou une alerte reçue. Remplace la règle du 14.11 (« J'ai créé l'alerte » ou reçue). La fonction de l'exploitant `first_steps_progress` suit (migration 0094).
+- Rappel : 24 h après la déclaration sans alerte reçue, « Vérifier 1 alerte » sur Aujourd'hui, que l'alerte soit à confirmer ou non.
+- Le reste du plan de Kevin du 18.11 (bouton unique « Créer ma première alerte », parcours en 3 étapes hors des premiers pas, valeurs à copier, une action par état, bandeau au premier e-mail, rappel « Vérifier mon filtre Gmail ») vient dans une PR à part.
+
+## « Ajouter une offre » : « Coller » et « Capture ou PDF » dans la barre du champ, téléphone et ordinateur (Kevin, 18.11.2026, 14 h 38, corrigé à 15 h 21)
+
+§72 du LISEZMOI (paquet jobA1_maquettes_2026-11-18), planche AjouterOffreTel, corrigée par §72d (15 h 20) et la
+réponse de 15 h 21 :
+
+- Pas de boutons tonals au-dessus du champ. « Coller » et « Capture ou PDF » vont dans la barre du bas du champ, à
+  gauche de la flèche d'envoi : boutons texte bleus (#1A3496), 44 px de haut, sans fond, icône + texte. Le + est retiré.
+- Indication du champ : « Lien ou texte de l'annonce ». Pas de phrase d'intro. Pastille « Capture ou PDF : compte
+  dans ta formule ».
+- Ordinateur : « Capture ou PDF » remplace « Importer le PDF », même libellé et même place que sur téléphone. Même
+  contenu partout, seule la taille change.
+- « Coller » lit le presse-papiers sur ce toucher, avec la demande d'autorisation du système ; refusé : le curseur va
+  dans le champ, où l'on colle à la main (décision du 18.11, 14 h 13).
+- « Capture ou PDF » suit la règle de « Refaire la note » (Q1 du 17.11, #873) : PDF lu sans IA, capture PNG ou JPG
+  recopiée par l'IA, un fichier, 5 Mo au plus, 20 par heure, formule épuisée = capture refusée avant tout appel.
+  Route `POST /api/offers/manual/file`.
+
+## « J'ai contacté quelqu'un » : Rôle et Comment en pastilles (Kevin, 18.11.2026, 14 h 38, §72)
+
+- « Son rôle · facultatif » : Recrutement, Responsable du poste, Équipe, Autre. « Comment » : LinkedIn, E-mail, Téléphone, En personne, Autre.
+- Ce sont des pastilles `role="radio"` dans un `role="radiogroup"`, avec `aria-checked` et une hauteur d'au moins 44 px. Cliquer de nouveau sur la pastille choisie la désélectionne.
+- « Autre » ouvre un champ « Précise ». Son texte est gardé dans la note du contact (« Rôle : … », « Moyen : … »).
+- « En personne » est un nouveau moyen de contact (`in_person`). La colonne n'a pas de contrainte : aucune migration n'est nécessaire.
+- Cette décision remplace le point 2 du 18.11 à 10 h 48 (listes de choix de l'app, avec « Autre » et un champ libre).
+- 16 h 20 : « Ancien de ton école » est retiré des choix, validé par Kevin ; ce cas passe par « Autre ». La phrase sous le titre de la fenêtre (« jobA1 le note dans l'historique… ») est retirée (§72g).
+
 ## Pause sur ordinateur : flèches de mois (Kevin, 18.11.2026, 14 h 38)
 
 - Sur ordinateur, la fenêtre de la pause montre deux mois et des flèches « < » et « > » de 44 × 44 px (« Mois précédent » / « Mois suivant ») de chaque côté des deux noms de mois, sans défilement.
 - Sur téléphone, les mois défilent verticalement, comme sur la planche ReglagesRythmePause.
 - La planche ReglagesOrdinateurPause sera mise à jour en ce sens.
+
+## Rendez-vous sur téléphone sans bouton Filtres (Kevin, 18.11.2026, 14 h 38, §72)
+
+- L'onglet Rendez-vous n'a pas de bouton Filtres. Les rendez-vous sont seulement regroupés en « À venir » et « Passés ».
+- La place du bouton (44 px) reste à droite de l'en-tête pour l'alignement du titre. « Alertes » est ainsi au même endroit sur les trois onglets (planches RendezVous et RendezVousPreparer, clair et sombre).
+
+## Filtre Distance : « Toutes » par défaut (Kevin, 18.11.2026, 14 h 39)
+
+Le groupe « Distance depuis Renens » s'ouvre sur « Toutes », et « Tout effacer » y revient. La planche, qui s'ouvre
+sur 30 km et revient à 50 km, sera corrigée. Raison : un défaut en km retirerait des offres de la liste de main.
+
+## Filtres : plus de phrase d'aide sous la note ni sous le type de note (Kevin, 18.11.2026, 16 h 20, §72g)
+
+Sur téléphone et sur ordinateur, en clair et en sombre, on retire « À quel point l'offre correspond à ton profil »
+(sous « Note minimale, sur 100 ») et « Provisoire : notée sur l'extrait de l'alerte » (sous « Type de note »).
+Règle générale du même message : on comprend l'écran en 3 secondes, un seul bouton plein, aucune phrase qui répète
+le titre ou l'image ; un texte que la planche n'a pas se retire. Le switch « Télétravail possible » reste en place
+(filtres en direct, pas de bouton « Appliquer »).
+
+## Textes retirés partout, §72g (Kevin, 18.11.2026, 16 h 20)
+
+Règle pour toutes les PR : on comprend l'écran en 3 secondes, il n'y a qu'un seul bouton plein, et aucune phrase ne répète le titre ou l'image. Un texte que la planche n'a pas est retiré.
+
+Ces textes sont retirés au téléphone et à l'ordinateur, en clair comme en sombre :
+- Alertes : les pastilles « Ouvre l'alerte pour la confirmer sur Indeed », « Les offres arrivent dans « Nouvelles » » et « Pas encore créée sur le site ».
+- Filtres : « À quel point l'offre correspond à ton profil » et « Provisoire : notée sur l'extrait de l'alerte ».
+- Alertes reçues : « Les plus récentes d'abord ».
+- FeuilleNom : « Tout est enregistré dès que tu quittes un champ ».
+- OrpFiche : « Elle passe dans « Recherches du mois » ».
+- CandidaturesVideAlertes : la phrase « jobA1 récupère les nouvelles offres… ».
+- « J'ai contacté quelqu'un » : la phrase sous le titre.
+- Onboarding alerte : le paragraphe devient « Une alerte jobup, et tes offres arrivent toutes seules. Environ 2 minutes. »

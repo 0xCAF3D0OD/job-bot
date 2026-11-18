@@ -1,5 +1,7 @@
 # Données personnelles : jamais dans git (dépôt public)
 data/
+# Exception : les données figées livrées avec le code (numéros postaux GeoNames, voir leur README).
+!backend/src/jobbot/data/
 # Sauvegardes (docs/82), quand leur dossier est celui du dépôt.
 sauvegardes/
 .env

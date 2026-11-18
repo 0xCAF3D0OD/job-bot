@@ -84,6 +84,12 @@ describe("Candidatures sur téléphone (docs/139 étape 5a, maquette Candidature
     expect(wrapper.find("#jobs-tools").element.children).toHaveLength(0);
     expect(wrapper.find("[data-test=filters-toggle]").exists()).toBe(false);
     expect(wrapper.find("[data-test=header-tools] [data-test=jobs-alerts]").exists()).toBe(true);
+
+    // Sur Rendez-vous, pas de bouton Filtres (Kevin, 18.11) ; sa place de 44 px reste, « Alertes » ne bouge pas (§72).
+    await router.push("/candidatures/rendez-vous-orp");
+    await flushPromises();
+    expect(wrapper.find("[data-test=header-tools] [data-test=filters-toggle]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=header-tools] .jobs-filter-slot").exists()).toBe(true);
     wrapper.unmount();
   });
 });

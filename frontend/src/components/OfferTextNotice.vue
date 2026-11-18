@@ -210,8 +210,23 @@ function showPaste(): void {
   window.removeEventListener("popstate", showPaste);
   pasting.value = true;
 }
-function openPaste(): void {
+// « Coller » (Kevin, 18.11.2026, docs/decisions/2026-11-18-1413-coller-texte-offre.md) : le bouton lit d'abord le
+// presse-papiers ; le système demande l'autorisation (bulle « Coller » sur iPhone, menu sur Firefox). Le texte copié
+// arrive dans la fenêtre de collage, qu'il ne reste qu'à vérifier avant « Refaire la note ». Accès refusé, presse-papiers
+// vide ou simple lien : la fenêtre s'ouvre vide, et on colle à la main comme avant. Rien n'est lu sans ce toucher.
+async function fromClipboard(): Promise<string> {
+  try {
+    const copied = (await navigator.clipboard?.readText?.())?.trim() ?? "";
+    return /^https?:\/\/\S+$/.test(copied) ? "" : copied;
+  } catch {
+    return "";
+  }
+}
+async function openPaste(): Promise<void> {
   error.value = "";
+  // Un texte déjà commencé dans la fenêtre n'est jamais remplacé.
+  const copied = text.value.trim() ? "" : await fromClipboard();
+  if (copied) text.value = copied;
   if (!phone.value || !giving.value) {
     pasting.value = true;
     return;

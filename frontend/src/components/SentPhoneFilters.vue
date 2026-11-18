@@ -15,8 +15,8 @@ import { SENT_FILTERS, type SentFilter, type SentSort } from "../sentFilters";
 // - l'icône Filtres dans l'en-tête, à côté d'« Alertes », qui ouvre la feuille Filtres ;
 // - dans la feuille : les statuts (avant en puces sous la recherche) et le tri, « À relancer d'abord » par défaut ou
 //   « Plus récentes d'abord » (décision de Kevin du 14.11) ; « Tout effacer » et « Afficher N candidatures » en bas.
-// Alignée sur la planche FiltresEnvoyees (§10, paquet du 15 novembre ; décision de Kevin du 15.11) : titre « Filtres des
-// envoyées », statut choisi coché. Le tri a trois choix (décision de Kevin du 15.11) : en contrôle segmenté, « Plus anciennes
+// Alignée sur la planche FiltresEnvoyees (§10, paquet du 15 novembre ; décision de Kevin du 15.11 ; visuel refait d'après
+// la planche du 18.11) : titre « Filtres des envoyées », statut choisi coché. Le tri a trois choix (décision de Kevin du 15.11) : en contrôle segmenté, « Plus anciennes
 // d’abord » était coupé en 390 px ; il prend donc les mêmes choix cochés que le statut, qui passent à la ligne.
 // La logique (mots, statut et tri gardés dans l'adresse) reste dans ApplicationsView.
 const props = defineProps<{ words: string; filter: SentFilter; sort: SentSort; counts: Record<SentFilter, number>; total: number }>();
@@ -156,11 +156,17 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
 </template>
 
 <style scoped>
-/* §4 du 14 novembre (feuilles) : libellés de section en capitales 13/700 gris, espacement .05em ; en bas, « Tout effacer »
-   et le bouton alignés à droite, 24 px entre eux, le bouton en pilule de 52 px à la largeur de son texte. */
-.filter-sheet .filter-choices h3 { font-size: var(--panel-caps-size, 13px); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
-.filters-dialog :deep(.sheet-actions) { justify-content: flex-end; gap: var(--space-6); margin: 0 calc(var(--sheet-pad) * -1); padding: var(--space-3) var(--space-5) 0 var(--sheet-pad); border-top: 1px solid var(--line); }
-.filters-dialog :deep(.sheet-actions > .primary) { flex: none; }
-.filters-clear { min-height: var(--target-min); padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.filters-show { --sent-52: 52px; min-height: var(--sent-52); padding: 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* Visuel refait d'après la planche FiltresEnvoyees du 18.11 (Kevin, 18.11, 10 h 48) :
+   - « Statut » et « Trier » en 15/700 couleur du texte, comme sur Filtres (règle commune de .filter-choices h3) ;
+   - 22 px entre les groupes, 10 px entre un titre et ses pastilles ;
+   - pastilles de 44 px, trait de 1,5 px (--card-line, la choisie en bleu), 14/600 ;
+   - en bas, « Tout effacer » à gauche et « Afficher N candidatures » qui prend la place qui reste, 52 px, en pilule,
+     sous un trait, comme sur Filtres. */
+.filter-sheet { gap: var(--sent-filters-gap, 22px); }
+.filter-sheet .filter-choices { gap: var(--sent-filters-label-gap, 10px); }
+.filter-sheet .filter-choice { border-width: 1.5px; font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.filter-sheet .filter-choice:not([aria-checked="true"]) { border-color: var(--card-line); }
+.filters-dialog :deep(.sheet-actions) { gap: var(--space-3); margin: 0; padding: var(--sent-actions-top, 14px) var(--space-5) 0; border-top: 1px solid var(--line); }
+.filters-clear { min-height: var(--sent-52, 52px); padding: 0 var(--space-5); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.filters-show { flex: 1 1 0; min-width: 0; padding: 0 var(--space-2); white-space: nowrap; min-height: var(--sent-52, 52px); justify-content: center; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>

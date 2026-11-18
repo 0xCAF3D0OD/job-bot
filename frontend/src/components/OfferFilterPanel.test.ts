@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, type OfferFilters } from "../composables/useOfferFilters";
 import OfferFilterPanel from "./OfferFilterPanel.vue";
 
-const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [], contracts: [] };
+const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [], contracts: [], distances: [] };
 const counts = { pending: 404, to_review: 38, filtered_out: 0, later: 9, in_progress: 45, expired: 0, all: 0 };
 
 function mountPanel(patch: Partial<OfferFilters> = {}) {
@@ -36,12 +36,11 @@ describe("Le panneau Filtres de l’ordinateur (section 31)", () => {
     expect(wrapper.text()).toContain("Masquer les agences de placement");
   });
 
-  it("les textes d’aide, reliés par aria-describedby", () => {
+  it("pas de phrase d’aide sous la note ni sous le type de note (§72g du 18.11)", () => {
     const wrapper = mountPanel();
-    for (const button of wrapper.findAll("[data-test^=pop-score]"))
-      expect(wrapper.find(`#${button.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
-    const basis = wrapper.find("[role=radiogroup][aria-labelledby=pop-basis]");
-    expect(wrapper.find(`#${basis.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.");
+    expect(wrapper.find("[aria-describedby]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("correspond à ton profil");
+    expect(wrapper.text()).not.toContain("extrait de l’alerte");
   });
 
   it("mêmes seuils (50, 75, 85) et mêmes taux, un seul choix marqué", async () => {

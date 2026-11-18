@@ -98,12 +98,14 @@ async def test_the_five_steps(client: AsyncClient, fresh: Runtime) -> None:
     assert done(page) == ["cv", "criteria"]
     assert page["first_steps_summary"]["skills"] == 2
 
-    # Les alertes créées, aucune offre encore : on attend les premières.
+    # Les alertes créées (le code de jobup est arrivé), aucune offre encore : on attend les
+    # premières.
     async with fresh.sessionmaker.begin() as session:
         search = AlertSearch(terms="DevOps")
         session.add(search)
         await session.flush()
         session.add(AlertSetup(search_id=search.id, site="jobup"))
+        session.add(_search("<code-pp@jobup.ch>", kind="code"))
     page = (await client.get("/api/today")).json()
     assert done(page) == ["cv", "criteria", "alerts"] and page["has_offers"] is False
 
@@ -335,6 +337,10 @@ async def test_alerts_need_an_alert_created_or_received(
         session.add(search)
         await session.flush()
         session.add(AlertSetup(search_id=search.id, site="jobup"))
+    # « J'ai créé l'alerte » seul ne suffit plus (Kevin, 18.11) : il faut un e-mail de jobup.
+    assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "keep"]
+    async with fresh.sessionmaker.begin() as session:
+        session.add(_search("<code2@jobup.ch>", kind="code"))
     assert done((await client.get("/api/today")).json()) == ["cv", "criteria", "alerts", "keep"]
 
 

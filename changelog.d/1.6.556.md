@@ -1,0 +1,1 @@
+Une offre « Pas encore notée » propose « Noter maintenant » (compte dans la formule), et la recherche d'adresse montre son état sur la fiche : en cours, trouvée au registre, pas trouvée (planches du 18.11)

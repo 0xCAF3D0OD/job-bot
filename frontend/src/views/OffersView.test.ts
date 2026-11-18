@@ -176,9 +176,8 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres", { followedSearches: ref(3), nextCollectAt: ref("2026-11-16T18:00:00Z") });
     const empty = wrapper.find("[data-test=offers-none-yet]");
     expect(empty.find("h2").text()).toBe("Tes premières offres arrivent bientôt");
-    expect(empty.find("[data-test=empty-text]").text()).toBe(
-      "jobA1 récupère les nouvelles offres de tes alertes et les ajoute ici, sans que tu aies rien à faire.",
-    );
+    // Plus de phrase sous le titre (Kevin, 18.11, §72g) : le titre et la pastille suffisent.
+    expect(empty.find("[data-test=empty-text]").exists()).toBe(false);
     // L'heure vient du serveur (sa planification).
     expect(empty.find("[data-test=empty-pill]").text()).toBe("En attente des premières offres · prochaine vérification ce soir vers 19 h");
     expect(empty.find("[data-test=offers-none-add]").classes()).toContain("primary");
@@ -828,7 +827,8 @@ describe("détail allégé et adresse", () => {
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=status-pill]").text()).toBe("Gardée");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
+    // Planche OffreAdresseTrouvee (18.11) : l'adresse sur deux lignes, telle qu'enregistrée.
+    expect(wrapper.find("[data-test=address] .address-lines").text()).toBe("Chemin de l’Exemple 10\n1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
 
     await wrapper.find("[data-test=more]").trigger("click");
