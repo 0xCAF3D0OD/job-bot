@@ -192,8 +192,44 @@ describe("Rendez-vous ORP (docs/83)", () => {
     const added = (PUT.mock.calls[1] as [string, { body: { questions: { text: string; checked: boolean }[] } }])[1];
     expect(added.body.questions.at(-1)).toMatchObject({ text: "Puis-je travailler à 80 % ?", checked: true });
     expect(wrapper.find("[data-test=sheet-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
-    await wrapper.find("[data-test=sheet-download] input").setValue("Camille Exemple");
+    // Le nom est gardé dans le compte quand on quitte la case (§70) : « Enregistrement… », puis « Enregistré ».
+    PUT.mockReset();
+    let answer: (value: unknown) => void = () => {};
+    PUT.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    const field = wrapper.find("[data-test=sheet-name]");
+    await field.setValue("Camille Exemple ");
+    await field.trigger("change");
+    expect(wrapper.find("[data-test=sheet-download] [data-test=field-save]").text()).toBe("Enregistrement…");
+    answer({ data: { name: "Camille Exemple", advisor: null, office: null } });
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledTimes(1);
+    expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/nom", { body: { name: "Camille Exemple" } });
+    expect(wrapper.find("[data-test=sheet-download] [data-test=field-save]").text()).toBe("Enregistré");
     expect(wrapper.find("[data-test=sheet-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf?name=Camille%20Exemple");
+  });
+
+  it("le nom sur la feuille : un échec le dit et garde la saisie, « Réessayer » renvoie", async () => {
+    GET.mockImplementation(async (path: string) =>
+      path === "/api/orp-meeting/nom"
+        ? { data: { name: "Camille Exemple", advisor: null, office: null } }
+        : { data: { meeting: MEETING, preparation: PREP, ...MORE } },
+    );
+    PUT.mockResolvedValueOnce({ error: { detail: "x" } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    const field = wrapper.find("[data-test=sheet-name]");
+    expect((field.element as HTMLInputElement).value).toBe("Camille Exemple");
+    await field.setValue("Camille Autre");
+    await field.trigger("change");
+    await flushPromises();
+    const status = () => wrapper.find("[data-test=sheet-download] [data-test=field-save]");
+    expect(status().text()).toContain("Pas enregistré");
+    expect((field.element as HTMLInputElement).value).toBe("Camille Autre");
+    PUT.mockResolvedValueOnce({ data: { name: "Camille Autre", advisor: null, office: null } });
+    await wrapper.find("[data-test=field-save-retry]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenLastCalledWith("/api/orp-meeting/nom", { body: { name: "Camille Autre" } });
+    expect(status().text()).toBe("Enregistré");
   });
 
   it("après le rendez-vous : noter ce qui a été convenu", async () => {

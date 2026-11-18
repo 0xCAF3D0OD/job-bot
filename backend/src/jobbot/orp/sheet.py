@@ -16,7 +16,14 @@ from jobbot.letters.pdf import ACCENT, MUTED, _build, _text
 from jobbot.orp.meeting import Preparation
 
 
-def sheet_pdf(prep: Preparation, *, starts_at: datetime | None, name: str | None) -> bytes:
+def sheet_pdf(
+    prep: Preparation,
+    *,
+    starts_at: datetime | None,
+    name: str | None,
+    advisor: str | None = None,
+    office: str | None = None,
+) -> bytes:
     base = ParagraphStyle("base", fontName="Helvetica", fontSize=10.5, leading=14)
     title = ParagraphStyle("title", parent=base, fontSize=16, leading=20, textColor=ACCENT)
     head = ParagraphStyle(
@@ -30,8 +37,10 @@ def sheet_pdf(prep: Preparation, *, starts_at: datetime | None, name: str | None
         when = starts_at.astimezone(LOCAL_TZ)
         heading += f" du {when.day} {MONTHS['fr'][when.month - 1]} {when.year}"
     story.append(Paragraph(_text(heading), title))
-    if name:
-        story.append(Paragraph(_text(name), muted))
+    # Sous le titre : ton nom, puis ton conseiller et ton office régional (§70), ce qui est connu.
+    who = [part for part in (name, f"Conseiller : {advisor}" if advisor else None, office) if part]
+    if who:
+        story.append(Paragraph(_text(" · ".join(who)), muted))
     story.append(Spacer(1, 8))
 
     def section(label: str, lines: list[str]) -> None:

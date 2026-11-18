@@ -109,7 +109,7 @@ const isSelected = (tab: FolderTab) => props.selected === tab.value;
 @media (max-width: 359px) { .folder-tabs { --tab-pad: var(--space-2); --tab-pad-on: 6.5px; --tab-in: var(--space-1); --tab-edge: var(--space-2); } }
 .folder-tabs > a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .folder-tabs .count-badge { min-width: 20px; height: 20px; background: var(--tab-new); color: #FFFFFF; font-size: var(--font-caption); font-weight: var(--weight-heavy); box-shadow: none; }
-.folder-tabs .count-badge.orange { background: #B4631F; }
+.folder-tabs .count-badge.orange { background: #A95A1A; } /* §66 : 5,0:1 avec le blanc. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) :is(.folder-tabs, .folder-head) { --tab-line: var(--line); --tab-idle: #25201B; --tab-new: #3A5BD9; }
 }
