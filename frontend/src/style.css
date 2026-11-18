@@ -593,7 +593,6 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 }
 .filter-choice[role="radio"] { display: inline-flex; align-items: center; gap: var(--space-2); }
 .filter-choice[role="radio"] .icon { width: 16px; height: 16px; }
-.filter-choices-help { margin: 0; font-size: var(--label-caps); line-height: var(--filter-help-lh, 18px); color: var(--text-secondary); }
 .filter-choice:is([aria-pressed="true"], [aria-checked="true"]) { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .logo {
   display: grid;

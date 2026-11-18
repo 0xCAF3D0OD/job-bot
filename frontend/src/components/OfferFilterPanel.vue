@@ -3,7 +3,6 @@ import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
 import {
-  BASIS_HELP,
   basisChoices,
   choiceCount,
   CONTRACT_CHOICES,
@@ -15,7 +14,6 @@ import {
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
-  SCORE_HELP,
   scoreCount,
   toggleContract,
   UNKNOWN_PLACE_LABEL,
@@ -153,7 +151,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             :key="choice.label"
             type="button"
             :class="['filter-panel-counted', { 'choice-empty': choice.count === 0 }]"
-            aria-describedby="pop-score-help"
             :aria-pressed="scoreChoice === choice.min"
             :data-test="`pop-score-${choice.min ?? 'all'}`"
             @click="emit('update', { minScore: choice.min, maxScore: null })"
@@ -161,12 +158,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             <span class="filter-panel-label">{{ choice.label }}</span><span class="filter-panel-sub">{{ choiceCount(choice.count) }}</span>
           </button>
         </div>
-        <p
-          id="pop-score-help"
-          class="filter-choices-help"
-        >
-          {{ SCORE_HELP }}
-        </p>
       </div>
       <hr>
       <div class="filter-panel-group">
@@ -174,7 +165,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         <div
           role="radiogroup"
           aria-labelledby="pop-basis"
-          aria-describedby="pop-basis-help"
           @keydown="radioKey"
         >
           <button
@@ -191,12 +181,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             {{ choice.label }}
           </button>
         </div>
-        <p
-          id="pop-basis-help"
-          class="filter-choices-help"
-        >
-          {{ BASIS_HELP }}
-        </p>
       </div>
       <hr>
       <div

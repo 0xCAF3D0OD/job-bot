@@ -21,12 +21,14 @@ function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
 describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5c)", () => {
   it("note minimale sur 100, taux d’activité, tri, « Masquer les offres écartées », télétravail ; « Afficher 3 offres »", () => {
     const wrapper = mountSheet();
-    // Note minimale (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, titre et aide reliés.
+    // Note minimale (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, titre relié.
     const scores = wrapper.find("[role=radiogroup][aria-labelledby=sheet-score-title]");
     expect(wrapper.find("#sheet-score-title").text()).toBe("Note minimale, sur 100");
     expect(scores.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(scores.find("[data-test=sheet-score-all]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil");
+    // §72g du 18.11 : plus de phrase d'aide sous la note.
+    expect(scores.attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("correspond à ton profil");
     // Le taux d'activité, un seul choix : un groupe de radios, pas des puces (5e), titre relié.
     const rates = wrapper.find("[role=radiogroup][aria-labelledby=sheet-rate-title]");
     expect(wrapper.find("#sheet-rate-title").text()).toBe("Taux d’activité");
@@ -252,7 +254,9 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(group.find("[data-test=sheet-basis-all]").attributes("aria-checked")).toBe("true");
     expect(group.find("[data-test=sheet-basis-all] svg").exists()).toBe(true);
     expect(group.find("[data-test=sheet-basis-sure]").attributes("aria-checked")).toBe("false");
-    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte");
+    // §72g du 18.11 : plus de phrase d'aide sous le type de note.
+    expect(group.attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("extrait de l’alerte");
     await group.find("[data-test=sheet-basis-provisional]").trigger("click");
     expect(wrapper.emitted("update")).toEqual([[{ basis: "provisional" }]]);
     const chosen = mountSheet({ basis: "provisional" });

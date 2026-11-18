@@ -3,7 +3,6 @@ import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
 import {
-  BASIS_HELP_PHONE,
   basisChoices,
   choiceCount,
   CONTRACT_CHOICES,
@@ -15,7 +14,6 @@ import {
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
-  SCORE_HELP_PHONE,
   scoreCount,
   toggleContract,
   UNKNOWN_PLACE_LABEL,
@@ -171,15 +169,8 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           :options="SCORES"
           label="Note minimale, sur 100"
           aria-labelledby="sheet-score-title"
-          aria-describedby="sheet-score-help"
           full
         />
-        <p
-          id="sheet-score-help"
-          class="filter-choices-help"
-        >
-          {{ SCORE_HELP_PHONE }}
-        </p>
       </div>
 
       <div class="filter-choices">
@@ -190,7 +181,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           class="filter-choices-row"
           role="radiogroup"
           aria-labelledby="sheet-basis-title"
-          aria-describedby="sheet-basis-help"
           @keydown="radioKey"
         >
           <button
@@ -210,12 +200,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             />{{ choice.label }}
           </button>
         </div>
-        <p
-          id="sheet-basis-help"
-          class="filter-choices-help"
-        >
-          {{ BASIS_HELP_PHONE }}
-        </p>
       </div>
 
       <div class="filter-choices">
@@ -389,8 +373,6 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 /* Le contour des puces non choisies : 1,5 px, gris des boutons secondaires (planche Filtres, --button-outline). */
 .filter-choice { border-width: 1.5px; }
 .filter-choice:not([aria-checked="true"], [aria-pressed="true"]) { border-color: var(--button-outline); }
-.filter-sheet { --help-pill-x: 10px; }
-.filter-choices-help { justify-self: start; padding: var(--space-1) var(--help-pill-x); border-radius: var(--radius-pill); background: var(--line-soft); color: var(--text-lead); font-size: var(--panel-caps-size); font-weight: var(--weight-semibold); }
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
