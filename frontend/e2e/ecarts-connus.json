@@ -10,6 +10,13 @@
     },
     {
       "ecran": "accueil",
+      "format": "ordinateur",
+      "regle": "d",
+      "element": "span.aj-hand",
+      "raison": "décision de Kevin du 18.11 (docs/decisions/2026-11-18-1048-titre-ordinateur.md) : « 1 candidature à envoyer » écrit à la main comme ses variantes, en Caveat Brush"
+    },
+    {
+      "ecran": "accueil",
       "format": "telephone",
       "regle": "d",
       "element": "span.home-hand-blue",

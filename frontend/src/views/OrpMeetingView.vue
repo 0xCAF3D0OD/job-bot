@@ -347,6 +347,11 @@ const searchEmpty = computed(() => {
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
+// « Voir la feuille » de « Préparer le rendez-vous » (planche PreparerRendezVous, §71) : la feuille remplace l'entrée
+// d'historique de la préparation, et Retour ramène aux rendez-vous (pas à une préparation déjà fermée).
+function viewSheetFromPrep(): void {
+  void router.replace({ query: { ...route?.query, feuille: "1" } });
+}
 // Le carnet ouvert depuis « Carnet ORP » : il descend jusqu'à lui.
 const logRow = ref<{ $el?: HTMLElement } | null>(null);
 watch(
@@ -453,6 +458,7 @@ onMounted(() => {
         :meeting-items="editing ? [] : phoneMeetingItems"
         :words="words"
         @toggle="toggle"
+        @sheet="viewSheetFromPrep"
         @prepare="preparing = $event"
       />
       <div
