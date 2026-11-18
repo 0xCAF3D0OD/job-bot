@@ -938,6 +938,31 @@ Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, R
 - Q2 : « Noter maintenant » sur une offre « Pas encore notée » est accepté, mais attend sa planche.
 - Q3 : à l'affichage seulement, un titre tout en majuscules passe en casse normale, « | » devient « · », et les sigles connus restent intacts (AWS, DevOps, SRE, CI/CD…). Aucune donnée n'est modifiée.
 
+## Filtre Distance : numéros postaux GeoNames au lieu de swisstopo (Kevin, 18.11.2026)
+
+Remplace la source de la partie « Distance » de 2026-11-18-0847-filtre-contrat-distance.md (swisstopo) :
+- Source : les numéros postaux suisses avec coordonnées du dépôt GitHub zauberware/postal-codes-json-xml-csv (données
+  GeoNames, licence CC BY 4.0). Une seule copie, commitée dans le dépôt, avec un README : source (URL du dépôt et
+  commit exact), date, licence et l'attribution « Données : GeoNames (geonames.org), CC BY 4.0 ».
+- L'attribution figure aussi dans « À propos ».
+- Aucun appel externe depuis l'application, ni au démarrage ni plus tard. Mise à jour : une commande manuelle
+  documentée (`make geonames-maj COMMIT=…`).
+- La demande d'accès à swisstopo est annulée (aucun réglage d'environnement n'avait été changé).
+
+Les autres règles de Distance restent : vol d'oiseau, libellé « Distance depuis Renens », choix 15, 30 et 50 km,
+« Lieu non précisé » avec son nombre, jamais d'offre exclue en silence, nombre sous chaque choix.
+
+Mise en œuvre (à valider par Kevin dans la PR) :
+- La copie vit dans `backend/src/jobbot/data/geonames/` : le dossier `data/` de la racine est ignoré par git (données
+  des personnes).
+- « Renens » vient des coordonnées de la personne (numéro postal, sinon commune) : le libellé suit la commune saisie.
+  Sans commune reconnue, le groupe ne s'affiche pas.
+- Un lieu d'annonce n'a un point que s'il est sans ambiguïté : numéro postal connu, ou nom de localité dans un seul
+  endroit (le canton cité tranche). « Buchs » sans canton, « Neuchâtel / Berne » ou « Suisse romande » vont dans
+  « Lieu non précisé ».
+- Choix par défaut « Toutes » (la planche s'ouvre sur 30 km et « Tout effacer » y revient à 50 km) : un défaut en km
+  retirerait des offres de la liste de main.
+
 ## Nombres des filtres : graisse, ordinateur, choix à 0, Contrat et Distance (Kevin, 18.11.2026, 8 h 32)
 
 Réponses aux trois questions de #851 :
@@ -1099,6 +1124,23 @@ depuis Safari), C (bouton « Coller »). Kevin choisit **C puis A, pas B**.
 - Rappel : 24 h après la déclaration sans alerte reçue, « Vérifier 1 alerte » sur Aujourd'hui, que l'alerte soit à confirmer ou non.
 - Le reste du plan de Kevin du 18.11 (bouton unique « Créer ma première alerte », parcours en 3 étapes hors des premiers pas, valeurs à copier, une action par état, bandeau au premier e-mail, rappel « Vérifier mon filtre Gmail ») vient dans une PR à part.
 
+## « Ajouter une offre » : « Coller » et « Capture ou PDF » dans la barre du champ, téléphone et ordinateur (Kevin, 18.11.2026, 14 h 38, corrigé à 15 h 21)
+
+§72 du LISEZMOI (paquet jobA1_maquettes_2026-11-18), planche AjouterOffreTel, corrigée par §72d (15 h 20) et la
+réponse de 15 h 21 :
+
+- Pas de boutons tonals au-dessus du champ. « Coller » et « Capture ou PDF » vont dans la barre du bas du champ, à
+  gauche de la flèche d'envoi : boutons texte bleus (#1A3496), 44 px de haut, sans fond, icône + texte. Le + est retiré.
+- Indication du champ : « Lien ou texte de l'annonce ». Pas de phrase d'intro. Pastille « Capture ou PDF : compte
+  dans ta formule ».
+- Ordinateur : « Capture ou PDF » remplace « Importer le PDF », même libellé et même place que sur téléphone. Même
+  contenu partout, seule la taille change.
+- « Coller » lit le presse-papiers sur ce toucher, avec la demande d'autorisation du système ; refusé : le curseur va
+  dans le champ, où l'on colle à la main (décision du 18.11, 14 h 13).
+- « Capture ou PDF » suit la règle de « Refaire la note » (Q1 du 17.11, #873) : PDF lu sans IA, capture PNG ou JPG
+  recopiée par l'IA, un fichier, 5 Mo au plus, 20 par heure, formule épuisée = capture refusée avant tout appel.
+  Route `POST /api/offers/manual/file`.
+
 ## Pause sur ordinateur : flèches de mois (Kevin, 18.11.2026, 14 h 38)
 
 - Sur ordinateur, la fenêtre de la pause montre deux mois et des flèches « < » et « > » de 44 × 44 px (« Mois précédent » / « Mois suivant ») de chaque côté des deux noms de mois, sans défilement.
@@ -1109,3 +1151,16 @@ depuis Safari), C (bouton « Coller »). Kevin choisit **C puis A, pas B**.
 
 - L'onglet Rendez-vous n'a pas de bouton Filtres. Les rendez-vous sont seulement regroupés en « À venir » et « Passés ».
 - La place du bouton (44 px) reste à droite de l'en-tête pour l'alignement du titre. « Alertes » est ainsi au même endroit sur les trois onglets (planches RendezVous et RendezVousPreparer, clair et sombre).
+
+## Filtre Distance : « Toutes » par défaut (Kevin, 18.11.2026, 14 h 39)
+
+Le groupe « Distance depuis Renens » s'ouvre sur « Toutes », et « Tout effacer » y revient. La planche, qui s'ouvre
+sur 30 km et revient à 50 km, sera corrigée. Raison : un défaut en km retirerait des offres de la liste de main.
+
+## Filtres : plus de phrase d'aide sous la note ni sous le type de note (Kevin, 18.11.2026, 16 h 20, §72g)
+
+Sur téléphone et sur ordinateur, en clair et en sombre, on retire « À quel point l'offre correspond à ton profil »
+(sous « Note minimale, sur 100 ») et « Provisoire : notée sur l'extrait de l'alerte » (sous « Type de note »).
+Règle générale du même message : on comprend l'écran en 3 secondes, un seul bouton plein, aucune phrase qui répète
+le titre ou l'image ; un texte que la planche n'a pas se retire. Le switch « Télétravail possible » reste en place
+(filtres en direct, pas de bouton « Appliquer »).
