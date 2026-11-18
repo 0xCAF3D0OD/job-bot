@@ -1,0 +1,1 @@
+Fenêtres (retour d'entretien, candidature, préparation, propositions) : le voile passe au-dessus de la barre du haut, qui ne cache plus le titre ; un champ étroit s'élargit pour que son libellé ne soit jamais coupé, comme « Nombre de personnes » (audit N29 et N30)

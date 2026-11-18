@@ -829,7 +829,8 @@ button.link { border-radius: var(--radius-sm); transition: color 0.15s, backgrou
 .chunk-card .job-title { font-weight: var(--weight-semibold); }
 .chunk-content { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 .chunk-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; min-height: 2.6rem; border-top: 1px solid var(--divider); font-size: var(--font-small); color: var(--muted); }
-.overlay { position: fixed; inset: 0; z-index: 30; background: rgb(17 17 31 / 35%); display: grid; place-items: center; padding: var(--space-4); overflow: auto; }
+/* Au-dessus de la barre du haut (38), d'une candidature ouverte en plein écran (44) et des panneaux (46) ; sous le voile de page (50) (audit du 17.11, N29). */
+.overlay { position: fixed; inset: 0; z-index: 47; background: rgb(17 17 31 / 35%); display: grid; place-items: center; padding: var(--space-4); overflow: auto; }
 .editor { width: min(40rem, 100%); padding-top: var(--space-6); }
 .editor h3 { font-size: var(--font-section); }
 .editor input[type="text"] { width: 100%; }
