@@ -963,6 +963,14 @@ de groupe en capitales 13 px gris (docs/design/regles.md §4), aide en pastille 
 correspond à ton profil », « Provisoire : notée sur l'extrait de l'alerte »), contour des puces à 1,5 px
 `--button-outline`. Le panneau de l'ordinateur garde l'aide longue, comme sa planche.
 
+## Planches de la fiche d'une offre du 18.11 (Kevin, 18.11.2026, 8 h 05)
+
+- Le paquet jobA1_maquettes_2026-11-18.zip remplace celui du 17.11. Son §70 dessine les écrans de la section 6 de l'audit du 17.11.
+- K2, planche OffreNonNotee : une offre « Pas encore notée » montre l'anneau pointillé, « Noter maintenant » et la pastille « Environ 10 secondes · compte dans ta formule ». Elle n'apparaît ni sur une offre écartée, ni sur une note impossible, ni quand le profil est vide. La note compte dans la formule ; le coût de l'appel n'est visible que pour Kevin (Q2 du 17.11).
+- K6, planches OffreAdresseRecherche, OffreAdresseTrouvee et OffreAdresseNonTrouvee : la recherche d'adresse s'affiche à la place de l'adresse, l'adresse trouvée tient sur deux lignes avec « Trouvée au registre du commerce », une recherche vaine garde « Non renseignée » avec « Pas trouvée au registre ». « Modifier l'adresse » ou « Ajouter l'adresse » est une ligne sous l'adresse.
+- K9, planche OffreExpiree : attend la réponse de Kevin sur « Voir des offres proches ».
+- Restent sans planche, à ne pas inventer : Alertes reçues (K20, K21), Préparer le rendez-vous (K26, K30), Faire le point (K27), la page Aide.
+
 ## « Ton nom sur la feuille » (Kevin, 18.11.2026, 8 h 39 et 8 h 50)
 
 - Une page à part, « Ton nom sur la feuille » (planches FeuilleNom et FeuilleNomSombre, §70), avec trois champs enregistrés dans le compte : le nom ; le conseiller ORP, pré-rempli depuis le rendez-vous s'il est connu ; l'office régional, nouvelle donnée.
@@ -1060,6 +1068,36 @@ Même correction sur ordinateur : la carte « Pour l'ORP » disparaît, et la li
 
 - Sur ordinateur, le titre d'un jour de rythme s'écrit comme ses variantes (« tes offres arrivent bientôt », « la suite est en plus ») : une seule ligne manuscrite, même style, sans point final. Pluriel : « 2 candidatures à envoyer ».
 - Le téléphone ne change pas.
+
+## Poids de la fiche d'une offre : blocs chargés à part, mesurés un à un (Kevin, 18.11.2026, 13 h 37)
+
+- « Autres offres chez … » (planche Offre) et la feuille de la compatibilité se chargent à part de Candidatures.
+- Chaque bloc est mesuré avec la page, sous les limites de Candidatures (175 500 o en JS, 72 500 o en CSS) : pages candidatures-autres-offres et candidatures-compatibilite de frontend/scripts/poids.mjs. Aucune limite n'est relevée.
+- Les deux blocs ouverts ensemble dépassent la limite de la page (176 727 o mesurés le 18.11) : accepté, parce que la page s'ouvre plus légère et que le surplus ne se charge qu'après un geste sur la fiche.
+
+## Texte d'une offre sur téléphone : « Coller » d'abord, puis « Importer une capture ou un PDF », pas de raccourci iPhone (Kevin, 18.11.2026, 14 h 13)
+
+Fil « Simplifier l'ajout du texte d'une offre ». Options proposées : A (captures lues par l'IA), B (raccourci iPhone
+depuis Safari), C (bouton « Coller »). Kevin choisit **C puis A, pas B**.
+
+- **« Coller » en premier** : le bouton qui ouvre le collage (« Coller le texte de l'annonce » sur téléphone,
+  « Pas de lien ? Colle le texte » sur ordinateur) lit le presse-papiers (`navigator.clipboard.readText`), avec la
+  demande d'autorisation du système. Le texte copié arrive dans la fenêtre de collage existante, à vérifier avant
+  « Refaire la note ». Si l'accès est refusé (ou le presse-papiers vide, ou un simple lien) : la fenêtre s'ouvre vide,
+  et on colle à la main. Un texte déjà commencé n'est jamais remplacé. Aucun élément ajouté : les libellés et la
+  fenêtre restent ceux de la planche OffreProvisoire (paquet du 16.11).
+- **Ensuite « Importer une capture ou un PDF »** : PNG, JPG ou PDF, un fichier à la fois, compté dans la formule
+  (comme Q1). Le menu « + » de la planche OffreProvisoire (« Importer le PDF de l'annonce », « Importer une capture
+  d'écran ») sert de dessin. PR à part.
+- **Pas de raccourci iPhone.**
+
+## Alertes : « J'ai créé l'alerte » ne suffit plus, il faut un e-mail du site (Kevin, 18.11.2026, 15 h 13)
+
+- Constat de Kevin (compte factice d'infirmier, 18.11) : l'alerte jobup s'affichait « Active · en attente du premier envoi » et l'étape « Ta première alerte est créée » était cochée, alors que l'alerte n'avait jamais été créée sur jobup. Le bouton « J'ai créé l'alerte » suffisait à tout cocher.
+- Règle : une alerte n'est active qu'avec un e-mail du site arrivé dans la boîte jobA1 du compte (code de vérification, message ou alerte), au plus un jour avant la déclaration. Sinon, elle est « À confirmer », dans la famille « À confirmer » de la planche AlertesTel (et AlertesOrdinateur), avec « Coller le code » pour jobup, qui ouvre le panneau du site où le code s'affiche.
+- Premiers pas : l'étape 3 n'est faite qu'avec cette preuve, ou une alerte reçue. Remplace la règle du 14.11 (« J'ai créé l'alerte » ou reçue). La fonction de l'exploitant `first_steps_progress` suit (migration 0094).
+- Rappel : 24 h après la déclaration sans alerte reçue, « Vérifier 1 alerte » sur Aujourd'hui, que l'alerte soit à confirmer ou non.
+- Le reste du plan de Kevin du 18.11 (bouton unique « Créer ma première alerte », parcours en 3 étapes hors des premiers pas, valeurs à copier, une action par état, bandeau au premier e-mail, rappel « Vérifier mon filtre Gmail ») vient dans une PR à part.
 
 ## Pause sur ordinateur : flèches de mois (Kevin, 18.11.2026, 14 h 38)
 
