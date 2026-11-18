@@ -4188,7 +4188,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "received" | "created" | "todo";
+            status: "received" | "created" | "pending" | "todo";
             /** Received At */
             received_at: string | null;
             /** Created At */

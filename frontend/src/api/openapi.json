@@ -11274,6 +11274,7 @@
             "enum": [
               "received",
               "created",
+              "pending",
               "todo"
             ],
             "title": "Status"
