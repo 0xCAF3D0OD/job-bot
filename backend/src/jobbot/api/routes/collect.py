@@ -24,6 +24,7 @@ from jobbot.agency import (
     load_corrections,
     recent_applications,
 )
+from jobbot.core.contract import Contract
 from jobbot.core.filter import Criteria, Language, languages_to_check, remote_location
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
@@ -524,6 +525,9 @@ class OfferFacets(BaseModel):
     # Filtre « Taux d'activité » (§65 du 17.11) : le nombre d'offres de chaque choix (« all »,
     # « 60 », « 80 », « 100 »), avec tous les autres filtres actifs mais sans celui du taux.
     rates: list[Facet] = []
+    # Filtre « Contrat » (issue #468, Kevin, 18.11) : le nombre d'offres de chaque catégorie, « Non
+    # précisé » compris et les catégories à 0 aussi, avec les autres filtres mais sans celui-ci.
+    contracts: list[Facet] = []
     # Téléphone (Kevin, 18.11, choix a) : avec `hide_far`, les mêmes nombres sans les offres
     # « Loin » que la liste cache ; absent sinon.
     near: "NearFacets | None" = None
@@ -532,12 +536,14 @@ class OfferFacets(BaseModel):
 class NearFacets(BaseModel):
     """Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
-    « in_progress »), Type de note et Taux. Le choix actif égale alors « Afficher n offres »."""
+    « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
+    offres »."""
 
     views: list[Facet]
     sure: int
     provisional: int
     rates: list[Facet]
+    contracts: list[Facet] = []
 
 
 # Les choix du filtre « Taux d'activité » (section 31 du 16.11) : dès 60, dès 80, 100 %.
@@ -612,6 +618,7 @@ def _filters(
     hide_doubtful: bool = False,
     hide_agencies: bool = False,
     corrections: Corrections = NO_CORRECTIONS,
+    contracts: Sequence[str] = (),
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
     Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
@@ -635,6 +642,10 @@ def _filters(
         conditions.append(Offer.canton.in_([c.upper() for c in cantons]))
     if min_rate is not None:
         conditions.append(_rate_condition(min_rate))
+    if contracts:
+        # Plusieurs choix : l'une des catégories. « Non précisé » est un choix comme les autres,
+        # jamais une offre écartée en silence.
+        conditions.append(Offer.contract.in_(contracts))
     if external_only:
         conditions.append(Offer.apply_kind == "external")
     return conditions
@@ -729,6 +740,7 @@ async def list_offers(
     with_filtered_out: bool = False,
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
+    contracts: Annotated[list[Contract], Query(max_length=5)] = [],  # noqa: B006
     hide_far: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
@@ -778,6 +790,7 @@ async def list_offers(
         hide_doubtful,
         hide_agencies,
         corrections,
+        contracts,
     )
     filtered = len(conditions)
     # Sans le filtre de note : base de la courbe des notes.
@@ -810,10 +823,28 @@ async def list_offers(
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(
-        q, [], cantons, min_rate, external_only, remote, hide_doubtful, hide_agencies, corrections
+        q,
+        [],
+        cantons,
+        min_rate,
+        external_only,
+        remote,
+        hide_doubtful,
+        hide_agencies,
+        corrections,
+        contracts,
     )
     without_cantons = _filters(
-        q, sources, [], min_rate, external_only, remote, hide_doubtful, hide_agencies, corrections
+        q,
+        sources,
+        [],
+        min_rate,
+        external_only,
+        remote,
+        hide_doubtful,
+        hide_agencies,
+        corrections,
+        contracts,
     )
     for bound in (
         *([score >= min_score] if min_score is not None else []),
@@ -837,6 +868,24 @@ async def list_offers(
             sources,
             cantons,
             None,
+            external_only,
+            remote,
+            hide_doubtful,
+            hide_agencies,
+            corrections,
+            contracts,
+        ),
+        *conditions[filtered:],
+        *([view_condition] if view_condition is not None else []),
+    ]
+    # Sans le filtre du contrat, de la même façon : « CDI · 120 », le total des choix cochés
+    # donnant « Afficher n offres ».
+    without_contract = [
+        *_filters(
+            q,
+            sources,
+            cantons,
+            min_rate,
             external_only,
             remote,
             hide_doubtful,
@@ -914,6 +963,15 @@ async def list_offers(
                 ).where(*without_rate)
             )
         ).one()
+        contract_rows = dict(
+            (
+                await session.execute(
+                    select(Offer.contract, func.count())
+                    .where(*without_contract)
+                    .group_by(Offer.contract)
+                )
+            ).all()
+        )
         near_facets: NearFacets | None = None
         if near:
             near_rows = (
@@ -946,6 +1004,15 @@ async def list_offers(
                     ).where(*without_rate, *near)
                 )
             ).one()
+            near_contracts = dict(
+                (
+                    await session.execute(
+                        select(Offer.contract, func.count())
+                        .where(*without_contract, *near)
+                        .group_by(Offer.contract)
+                    )
+                ).all()
+            )
             near_live: dict[str, int] = {}
             for offer_status, expired, count in near_rows:
                 if not expired or offer_status in IN_PROGRESS:
@@ -964,6 +1031,10 @@ async def list_offers(
                     for value, count in zip(
                         ("all", *map(str, RATE_CHOICES)), near_rate, strict=True
                     )
+                ],
+                contracts=[
+                    Facet(value=contract.value, count=int(near_contracts.get(contract.value, 0)))
+                    for contract in Contract
                 ],
             )
 
@@ -996,6 +1067,10 @@ async def list_offers(
         rates=[
             Facet(value=str(value), count=int(count))
             for value, count in zip(("all", *map(str, RATE_CHOICES)), rate_row, strict=True)
+        ],
+        contracts=[
+            Facet(value=contract.value, count=int(contract_rows.get(contract.value, 0)))
+            for contract in Contract
         ],
         near=near_facets,
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],

@@ -28,6 +28,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from jobbot.core.contract import Contract, classify_contract
 from jobbot.db.base import Base
 
 # Compte de la ligne (docs/65) : tiré du compte en cours ; la base ne montre que les siennes.
@@ -194,6 +195,11 @@ class Offer(Base):
     apply_kind: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     employment_type: Mapped[str | None] = mapped_column(Text)
+    # Filtre « Contrat » (issue #468) : la catégorie tirée d'`employment_type`, sans devinette
+    # (jobbot.core.contract) ; « non_precise » quand le site ne le dit pas clairement.
+    contract: Mapped[str] = mapped_column(
+        Text, default=Contract.UNSPECIFIED, server_default=Contract.UNSPECIFIED.value
+    )
     enrich_status: Mapped[str] = mapped_column(Text, default="pending")
     # Canton (« VD »), déduit du lieu ou appris des autres offres de la même ville.
     canton: Mapped[str | None] = mapped_column(Text, index=True)
@@ -259,6 +265,13 @@ def _stamp_set_aside(offer: Offer, value: object, old: object, _initiator: objec
     if value == old:
         return
     offer.set_aside_at = datetime.now(UTC) if value in _SET_ASIDE_STATES else None
+
+
+@event.listens_for(Offer.employment_type, "set")
+def _classify_contract(offer: Offer, value: object, _old: object, _initiator: object) -> None:
+    """Filtre « Contrat » : une offre créée ou modifiée par l'ORM garde sa catégorie à jour. Une
+    mise à jour en masse (`update(Offer)`, enrich) passe `contract` elle-même."""
+    offer.contract = classify_contract(value if isinstance(value, str) else None)
 
 
 class OfferLink(Base):

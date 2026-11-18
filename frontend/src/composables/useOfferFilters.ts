@@ -16,6 +16,18 @@ export type Remote = "partial" | "full";
 // de l'alerte seulement (provisoire). La valeur reste "sure" dans le code et l'adresse (?base=sure).
 export type Basis = "sure" | "provisional";
 
+// Filtre « Contrat » (issue #468, Kevin, 18.11) : plusieurs choix ; « Non précisé » en est un, avec son nombre. Les
+// valeurs restent celles du serveur dans le code et l'adresse (?contrat=cdi&contrat=non_precise).
+export type Contract = "cdi" | "cdd" | "stage" | "temporaire" | "non_precise";
+export const CONTRACT_CHOICES: { label: string; value: Contract }[] = [
+  { label: "CDI", value: "cdi" },
+  { label: "CDD", value: "cdd" },
+  { label: "Stage", value: "stage" },
+  { label: "Temporaire", value: "temporaire" },
+  { label: "Non précisé", value: "non_precise" },
+];
+const CONTRACTS = CONTRACT_CHOICES.map((c) => c.value);
+
 export interface OfferFilters {
   view: View;
   sort: Sort;
@@ -39,6 +51,8 @@ export interface OfferFilters {
   showExpired: boolean;
   // Notes définitives ou provisoires seulement, ?base=sure ou ?base=provisoire ; null : toutes.
   basis: Basis | null;
+  // Les contrats cochés, ?contrat=cdi ; vide : tous.
+  contracts: Contract[];
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -59,6 +73,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   showFilteredOut: false,
   showExpired: false,
   basis: null,
+  contracts: [],
 };
 
 const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -97,6 +112,8 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     showFilteredOut: one(query.ecartees) === "montrer",
     showExpired: one(query.expirees) === "montrer",
     basis: one(query.base) === "sure" ? "sure" : one(query.base) === "provisoire" ? "provisional" : null,
+    // Une valeur inconnue est ignorée : elle ne vide jamais la liste sans le dire (Kevin, 18.11).
+    contracts: CONTRACTS.filter((c) => list(query.contrat).includes(c)),
   };
 }
 
@@ -118,6 +135,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.showFilteredOut) query.ecartees = "montrer";
   if (filters.showExpired) query.expirees = "montrer";
   if (filters.basis) query.base = filters.basis === "sure" ? "sure" : "provisoire";
+  if (filters.contracts.length) query.contrat = [...filters.contracts];
   return query;
 }
 
@@ -135,7 +153,8 @@ export function activeCount(filters: OfferFilters): number {
     (filters.hideAgencies ? 1 : 0) +
     (filters.showFilteredOut ? 1 : 0) +
     (filters.showExpired ? 1 : 0) +
-    (filters.basis ? 1 : 0)
+    (filters.basis ? 1 : 0) +
+    filters.contracts.length
   );
 }
 
@@ -176,6 +195,18 @@ export function scoreCount(facets: ChoiceFacets, min: number | null): number {
 /** Taux : la facette du serveur (« all », « 60 », « 80 », « 100 »), sans le filtre du taux. */
 export function rateCount(facets: ChoiceFacets, value: number | null): number {
   return (facets.rates ?? []).find((f) => f.value === String(value ?? "all"))?.count ?? 0;
+}
+
+/** Contrat : la facette du serveur, une ligne par catégorie (même à 0), sans le filtre du contrat. */
+export function contractCount(facets: { contracts?: { value: string; count: number }[] }, value: Contract): number {
+  return facets.contracts?.find((f) => f.value === value)?.count ?? 0;
+}
+export function contractLabel(value: Contract): string {
+  return CONTRACT_CHOICES.find((c) => c.value === value)?.label ?? value;
+}
+/** Cocher ou décocher un contrat, dans l'ordre des choix. */
+export function toggleContract(current: Contract[], value: Contract): Contract[] {
+  return CONTRACTS.filter((c) => (c === value ? !current.includes(c) : current.includes(c)));
 }
 
 /** Les trois choix du groupe « Type de note », avec les nombres réels du serveur (hors « Toutes »). */
@@ -238,6 +269,12 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
       label: `Canton : ${canton}`,
       patch: { cantons: filters.cantons.filter((c) => c !== canton) },
     });
+  for (const contract of filters.contracts)
+    chips.push({
+      key: `contract-${contract}`,
+      label: t("Contrat : {contrat}", { contrat: contractLabel(contract) }),
+      patch: { contracts: filters.contracts.filter((c) => c !== contract) },
+    });
   if (filters.minRate !== null)
     chips.push({ key: "rate", label: filters.minRate === 100 ? t("Taux 100 %") : t("Taux dès {taux} %", { taux: filters.minRate }), patch: { minRate: null } });
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l’employeur", patch: { externalOnly: false } });
@@ -256,7 +293,7 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
 // revenir sur Offres par un lien sans filtre (« Retour aux offres », onglet Offres) les remet ; un lien qui en porte
 // un (« Tout voir » de Top du jour) l'emporte. Effacés à la déconnexion (useAuth).
 const KEPT_KEY = "jobA1.offres-filtres";
-const FILTER_KEYS = ["statut", "tri", "q", "site", "canton", "taux", "note", "externe", "teletravail", "verifier", "agences", "ecartees", "expirees", "base"];
+const FILTER_KEYS = ["statut", "tri", "q", "site", "canton", "taux", "note", "externe", "teletravail", "verifier", "agences", "ecartees", "expirees", "base", "contrat"];
 const hasFilters = (query: LocationQuery): boolean => FILTER_KEYS.some((key) => query[key] != null);
 
 function keptFilters(): LocationQuery | null {

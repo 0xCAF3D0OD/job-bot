@@ -6,6 +6,8 @@ import {
   BASIS_HELP_PHONE,
   basisChoices,
   choiceCount,
+  CONTRACT_CHOICES,
+  contractCount,
   radioKey,
   rateCount,
   RATE_CHOICES,
@@ -13,6 +15,7 @@ import {
   SCORE_CHOICES,
   SCORE_HELP_PHONE,
   scoreCount,
+  toggleContract,
   viewPatch,
   type OfferFilters,
   type Sort,
@@ -27,7 +30,7 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 // La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02 ;
 // décisions de Kevin du 2026-11-06 ; section 31 du 16.11) : la note minimale sur 100, le taux d'activité (un seul choix, 5e),
 // le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
-// Contrat et Distance attendent le serveur (issue 468). Chaque choix s'applique tout de suite ;
+// Contrat (issue 468, Kevin 18.11) ; Distance attend le serveur. Chaque choix s'applique tout de suite ;
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
 // `far` : les offres « Loin » que la liste cache (0 si elles se voient). Tant qu'elles sont cachées, les nombres des
 // choix les retirent aussi (`facets.near` du serveur) : le choix actif égale toujours « Afficher n offres » (Kevin,
@@ -35,7 +38,9 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number; counts: Record<View, number>; far?: number }>();
 const near = computed(() => ((props.far ?? 0) > 0 ? props.facets.near ?? null : null));
 const shownFacets = computed<OfferFacets>(() =>
-  near.value ? { ...props.facets, sure: near.value.sure, provisional: near.value.provisional, rates: near.value.rates } : props.facets,
+  near.value
+    ? { ...props.facets, sure: near.value.sure, provisional: near.value.provisional, rates: near.value.rates, contracts: near.value.contracts }
+    : props.facets,
 );
 const shownCounts = computed<Record<View, number>>(() => {
   if (!near.value) return props.counts;
@@ -83,6 +88,9 @@ const rate = computed({
   get: () => (props.filters.minRate === null ? "all" : String(props.filters.minRate)),
   set: (value: string) => emit("update", { minRate: value === "all" ? null : Number(value) }),
 });
+// « Contrat » (issue 468, Kevin 18.11) : plusieurs choix, « CDI · 120 » comme Statut, « Non précisé » compris ; un
+// choix à 0 reste visible et cliquable, grisé.
+const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(shownFacets.value, c.value) })));
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par date", value: "day" },
   { label: "Note", value: "score" },
@@ -200,6 +208,28 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
         />
       </div>
 
+      <fieldset class="filter-choices filter-status">
+        <legend id="sheet-contract-title">
+          Contrat
+        </legend>
+        <div class="filter-choices-row">
+          <button
+            v-for="choice in contracts"
+            :key="choice.value"
+            type="button"
+            :class="['filter-choice', { 'choice-empty': choice.count === 0 }]"
+            :aria-pressed="filters.contracts.includes(choice.value)"
+            :data-test="`sheet-contract-${choice.value}`"
+            @click="emit('update', { contracts: toggleContract(filters.contracts, choice.value) })"
+          >
+            <AppIcon
+              v-if="filters.contracts.includes(choice.value)"
+              name="tick"
+            />{{ choice.label }} · {{ choiceCount(choice.count) }}
+          </button>
+        </div>
+      </fieldset>
+
       <div
         class="filter-choices"
         role="group"
@@ -316,6 +346,9 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 :deep(.segmented > button:has(.segmented-sub)) { flex-direction: column; gap: 1px; min-height: 3.5rem; line-height: var(--leading-tight); }
 :deep(.segmented-sub) { font-size: var(--font-caption); font-weight: var(--weight-medium); color: var(--text-secondary); }
 /* Un choix à 0 offre reste visible et cliquable, grisé sur le même fond (Kevin, 18.11) ; le choix actif garde son style. */
-:deep(.choice-empty:not([aria-checked="true"])) { color: var(--text-secondary); }
+:deep(.choice-empty:not([aria-checked="true"], [aria-pressed="true"])) { color: var(--text-secondary); }
+/* Contrat : la coche devant un contrat choisi, comme Statut. */
+.filter-choice[aria-pressed] { display: inline-flex; align-items: center; gap: var(--space-2); }
+.filter-choice[aria-pressed] .icon { width: 16px; height: 16px; }
 .filters-show { min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>
