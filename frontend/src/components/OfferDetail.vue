@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type FunctionalComponent } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, watch, type FunctionalComponent } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
@@ -19,7 +19,7 @@ import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OfferActionSheet from "./OfferActionSheet.vue";
-import OfferCompatSheet, { type CompatPoint, type TipAction } from "./OfferCompatSheet.vue";
+import type { CompatPoint, TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
 import GapFill from "./GapFill.vue";
@@ -38,6 +38,9 @@ import { languageLabel } from "./ProfileCompletionForm.vue";
 import BusyButton from "./BusyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
+// Feuille de la compatibilité, ouverte à la demande : chargée à part, comme dans PreparationView (limite de poids,
+// décision de Kevin du 18.11, 13 h 37).
+const OfferCompatSheet = defineAsyncComponent(() => import("./OfferCompatSheet.vue"));
 // `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
 // renotée reste dans la liste hors de ses filtres.
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
