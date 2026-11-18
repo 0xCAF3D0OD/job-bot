@@ -1,7 +1,7 @@
 """Les premiers pas : une alerte déclarée créée ne compte qu'avec un e-mail du site
 
-Revision ID: 0093
-Revises: 0092
+Revision ID: 0094
+Revises: 0093
 Create Date: 2026-11-18
 
 Décision de Kevin du 18.11 (docs/decisions/2026-11-18-1415-alerte-prouvee.md) :
@@ -16,8 +16,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = "0093"
-down_revision: str | None = "0092"
+revision: str = "0094"
+down_revision: str | None = "0093"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
