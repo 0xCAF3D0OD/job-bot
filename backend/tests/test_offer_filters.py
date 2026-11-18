@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
+from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus, Setting
 from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -508,3 +508,45 @@ async def test_score_basis_filter(api: AsyncClient, runtime: Runtime) -> None:
     ]
     assert (narrowed["sure"], narrowed["provisional"]) == (2, 2)
     assert (await api.get("/api/offers", params={"basis": "autre"})).status_code == 422
+
+
+async def test_distance_filter_and_counts(api: AsyncClient, runtime: Runtime) -> None:
+    """Filtre « Distance depuis… » (issue #468) : à vol d'oiseau depuis la commune des
+    coordonnées ; une offre sans lieu reconnu va dans « Lieu non précisé », avec son nombre, et
+    n'est jamais exclue sans le dire. Le choix actif égale « Afficher n offres »."""
+    # Sans domicile : pas de groupe, et un choix de km ne retire rien.
+    alone = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    assert alone["facets"]["distances"] == [] and alone["facets"]["distance_from"] is None
+    assert len(await titles(api, distance="15")) == alone["total"]
+    for n, place in enumerate(
+        ("1020 Renens VD", "Morges, VD", "Yverdon-les-Bains", "Fribourg", "Neuchâtel / Berne"), 10
+    ):
+        await add(runtime, n, f"Offre {place}", ["jobup"], location=place)
+    async with runtime.sessionmaker.begin() as session:
+        session.add(Setting(key="identity_postcode", value="1020"))
+        session.add(Setting(key="identity_city", value="Renens"))
+
+    def distances(body: dict[str, Any]) -> dict[str, int]:
+        return {f["value"]: f["count"] for f in body["facets"]["distances"]}
+
+    body = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    assert body["facets"]["distance_from"] == "Renens"
+    # 3 offres du départ sans lieu, plus « Neuchâtel / Berne » (deux lieux : on ne choisit pas).
+    expected = {"all": 8, "15": 2, "30": 3, "50": 3, "unknown": 4}
+    assert distances(body) == expected
+    assert await titles(api, distance="15") == ["Offre Morges, VD", "Offre 1020 Renens VD"]
+    for choice, count in expected.items():
+        params = {"view": "to_review", **({} if choice == "all" else {"distance": choice})}
+        chosen = (await api.get("/api/offers", params=params)).json()
+        assert chosen["total"] == count
+        assert distances(chosen) == expected
+    unknown = await titles(api, distance="unknown")
+    assert "Offre Neuchâtel / Berne" in unknown and "Administrateur réseau" in unknown
+    # Les autres filtres comptent : en Vaud (canton posé sur les offres du départ seulement).
+    vaud = (await api.get("/api/offers", params={"view": "to_review", "cantons": "VD"})).json()
+    assert distances(vaud)["all"] == vaud["total"]
+
+
+async def test_unknown_distance_is_refused_not_silently_empty(api: AsyncClient) -> None:
+    """Une distance hors des choix ne vide jamais la liste sans le dire : le serveur la refuse."""
+    assert (await api.get("/api/offers", params={"distance": "20"})).status_code == 422

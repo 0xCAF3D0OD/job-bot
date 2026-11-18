@@ -7,7 +7,7 @@ import OfferFilterSheet from "./OfferFilterSheet.vue";
 // 20 tranches de 5 points : 10 offres de 0 à 49, 50 de 50 à 74, 13 de 75 à 84, 8 de 85 à 100 ; 3 sans note.
 const scores = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 10, 10, 10, 10, 6, 7, 2, 3, 3];
 const rates = [{ value: "all", count: 84 }, { value: "60", count: 72 }, { value: "80", count: 60 }, { value: "100", count: 33 }];
-const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates, contracts: [] };
+const facets = { sources: [{ value: "jobup", count: 3 }], cantons: [{ value: "VD", count: 2 }], scores, unscored: 3, sure: 104, provisional: 312, rates, contracts: [], distances: [] };
 
 const counts = { pending: 38, to_review: 12, later: 4, in_progress: 2, filtered_out: 3, expired: 1, all: 50 };
 
@@ -99,6 +99,37 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: ["cdi", "non_precise"] }]);
     await wrapper.find("[data-test=sheet-contract-cdi]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ contracts: [] }]);
+  });
+
+  it("« Distance depuis Renens » : un seul choix, le nombre sous chaque choix, « Lieu non précisé » avec le sien (issue 468)", async () => {
+    const distances = [
+      { value: "all", count: 84 },
+      { value: "15", count: 12 },
+      { value: "30", count: 31 },
+      { value: "50", count: 0 },
+      { value: "unknown", count: 9 },
+    ];
+    // Sans commune connue, pas de groupe.
+    expect(mountSheet().find("#sheet-distance-title").exists()).toBe(false);
+    const wrapper = mount(OfferFilterSheet, {
+      props: { open: true, filters: { ...DEFAULT_FILTERS, distance: "30" }, facets: { ...facets, distances, distance_from: "Renens" }, total: 31, counts },
+      global: { stubs: { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } } },
+    });
+    expect(wrapper.find("#sheet-distance-title").text()).toBe("Distance depuis Renens");
+    const group = wrapper.find("[role=radiogroup][aria-labelledby=sheet-distance-title]");
+    expect(group.findAll("[role=radio]").map((b) => b.text())).toEqual(["Toutes84", "15 km12", "30 km31", "50 km0"]);
+    // Le choix actif égale « Afficher n offres ».
+    expect(group.find("[data-test=sheet-distance-30]").attributes("aria-checked")).toBe("true");
+    expect(group.find("[data-test=sheet-distance-30] .segmented-sub").text()).toBe("31");
+    expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 31 offres");
+    expect(group.find("[data-test=sheet-distance-50]").classes()).toContain("choice-empty");
+    const unknown = wrapper.find("[data-test=sheet-distance-unknown]");
+    expect(unknown.text()).toBe("Lieu non précisé · 9");
+    expect(unknown.attributes("aria-pressed")).toBe("false");
+    await unknown.trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: "unknown" }]);
+    await group.find("[data-test=sheet-distance-all]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ distance: null }]);
   });
 
   it("un choix à 0 offre reste visible et cliquable, grisé (Kevin, 18.11)", async () => {

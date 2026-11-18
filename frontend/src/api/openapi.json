@@ -3840,6 +3840,28 @@
               "default": [],
               "title": "Contracts"
             }
+          },
+          {
+            "name": "distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "15",
+                    "30",
+                    "50",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distance"
+            }
           }
         ],
         "responses": {
@@ -21313,6 +21335,25 @@
             },
             "type": "array",
             "title": "Contracts",
+            "default": []
+          },
+          "distance_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance From"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
             "default": []
           }
         },

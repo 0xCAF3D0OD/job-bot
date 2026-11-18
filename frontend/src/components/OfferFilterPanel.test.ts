@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, type OfferFilters } from "../composables/useOfferFilters";
 import OfferFilterPanel from "./OfferFilterPanel.vue";
 
-const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [], contracts: [] };
+const facets = { sources: [], cantons: [], scores: [], unscored: 0, sure: 104, provisional: 312, rates: [], contracts: [], distances: [] };
 const counts = { pending: 404, to_review: 38, filtered_out: 0, later: 9, in_progress: 45, expired: 0, all: 0 };
 
 function mountPanel(patch: Partial<OfferFilters> = {}) {

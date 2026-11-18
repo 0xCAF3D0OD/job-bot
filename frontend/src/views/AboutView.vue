@@ -58,6 +58,18 @@ onMounted(async () => {
           rel="noopener noreferrer"
         ><span class="with-icon">Voir le code<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
       </p>
+      <p data-test="about-geonames">
+        La distance des offres se calcule avec les numéros postaux suisses de GeoNames, copiés une fois dans le code : aucun appel externe.
+        Données : <a
+          href="https://www.geonames.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+        ><span class="with-icon">GeoNames (geonames.org)<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>, <a
+          href="https://creativecommons.org/licenses/by/4.0/deed.fr"
+          target="_blank"
+          rel="noopener noreferrer"
+        ><span class="with-icon">CC BY 4.0<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>.
+      </p>
     </div>
   </section>
 </template>

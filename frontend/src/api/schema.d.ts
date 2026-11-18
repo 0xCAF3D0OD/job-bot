@@ -7339,6 +7339,13 @@ export interface components {
              * @default []
              */
             contracts: components["schemas"]["Facet"][];
+            /** Distance From */
+            distance_from?: string | null;
+            /**
+             * Distances
+             * @default []
+             */
+            distances: components["schemas"]["Facet"][];
         };
         /**
          * OfferFiltersVisible
@@ -12388,6 +12395,7 @@ export interface operations {
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
                 contracts?: components["schemas"]["Contract"][];
+                distance?: ("15" | "30" | "50" | "unknown") | null;
             };
             header?: never;
             path?: never;
