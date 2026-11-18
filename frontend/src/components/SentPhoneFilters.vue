@@ -166,7 +166,7 @@ const showLabel = computed(() => `Afficher ${plural(props.total, "candidature", 
 .filter-sheet .filter-choices { gap: var(--sent-filters-label-gap, 10px); }
 .filter-sheet .filter-choice { border-width: 1.5px; font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .filter-sheet .filter-choice:not([aria-checked="true"]) { border-color: var(--card-line); }
-.filters-dialog :deep(.sheet-actions) { gap: var(--space-3); margin: 0; padding: 14px var(--space-5) 0; border-top: 1px solid var(--line); }
+.filters-dialog :deep(.sheet-actions) { gap: var(--space-3); margin: 0; padding: var(--sent-actions-top, 14px) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--sent-52, 52px); padding: 0 var(--space-5); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .filters-show { flex: 1 1 0; min-width: 0; padding: 0 var(--space-2); white-space: nowrap; min-height: var(--sent-52, 52px); justify-content: center; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 </style>
