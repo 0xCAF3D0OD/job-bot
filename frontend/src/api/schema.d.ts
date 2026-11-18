@@ -7209,8 +7209,8 @@ export interface components {
          * NearFacets
          * @description Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
          *     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
-         *     « in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors « Afficher n
-         *     offres ».
+         *     « in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors
+         *     « Afficher n offres ».
          */
         NearFacets: {
             /** Views */

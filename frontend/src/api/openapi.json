@@ -21032,7 +21032,7 @@
           "rates"
         ],
         "title": "NearFacets",
-        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors « Afficher n\noffres »."
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors\n« Afficher n offres »."
       },
       "NewsPreferences": {
         "properties": {
