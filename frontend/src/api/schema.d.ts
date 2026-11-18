@@ -7184,6 +7184,28 @@ export interface components {
             weeks: components["schemas"]["MonthWeekOut"][];
         };
         /**
+         * NearFacets
+         * @description Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
+         *     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
+         *     « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
+         *     offres ».
+         */
+        NearFacets: {
+            /** Views */
+            views: components["schemas"]["Facet"][];
+            /** Sure */
+            sure: number;
+            /** Provisional */
+            provisional: number;
+            /** Rates */
+            rates: components["schemas"]["Facet"][];
+            /**
+             * Contracts
+             * @default []
+             */
+            contracts: components["schemas"]["Facet"][];
+        };
+        /**
          * NewsPreferences
          * @description « Mon domaine » et filtres, retenus d'une visite à l'autre (docs/16 §2-3).
          */
@@ -7339,6 +7361,7 @@ export interface components {
              * @default []
              */
             contracts: components["schemas"]["Facet"][];
+            near?: components["schemas"]["NearFacets"] | null;
         };
         /**
          * OfferFiltersVisible
@@ -12388,6 +12411,7 @@ export interface operations {
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
                 contracts?: components["schemas"]["Contract"][];
+                hide_far?: boolean;
             };
             header?: never;
             path?: never;

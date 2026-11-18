@@ -502,6 +502,8 @@ async function load(append = false): Promise<void> {
           with_expired: (f.view === "pending" && f.showExpired) || undefined,
           basis: f.basis ?? undefined,
           contracts: f.contracts.length ? f.contracts : undefined,
+          // Téléphone : les nombres des choix sans les offres « Loin » cachées (Kevin, 18.11, choix a).
+          hide_far: hidesFar.value || undefined,
         },
       },
     });
@@ -773,6 +775,7 @@ onUnmounted(() => {
             :facets="facets"
             :total="shownTotal"
             :counts="counts"
+            :far="hidesFar && !showFar ? farCount : 0"
             @update="update"
             @reset="reset"
             @close="closeFilters"

@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 import type { OfferFacets } from "../api/client";
 import {
-  BASIS_HELP,
+  BASIS_HELP_PHONE,
   basisChoices,
   choiceCount,
   CONTRACT_CHOICES,
@@ -13,7 +13,7 @@ import {
   RATE_CHOICES,
   REMOTE_LABEL,
   SCORE_CHOICES,
-  SCORE_HELP,
+  SCORE_HELP_PHONE,
   scoreCount,
   toggleContract,
   viewPatch,
@@ -32,7 +32,21 @@ import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 // le tri (C8), « Masquer les offres écartées », le télétravail. Sites et cantons se règlent dans Compte ;
 // Contrat (issue 468, Kevin 18.11) ; Distance attend le serveur. Chaque choix s'applique tout de suite ;
 // « Afficher N offres » referme. La feuille s'arrête sous les onglets (690 px sur 844 dans la maquette).
-const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number; counts: Record<View, number> }>();
+// `far` : les offres « Loin » que la liste cache (0 si elles se voient). Tant qu'elles sont cachées, les nombres des
+// choix les retirent aussi (`facets.near` du serveur) : le choix actif égale toujours « Afficher n offres » (Kevin,
+// 18.11, choix a).
+const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number; counts: Record<View, number>; far?: number }>();
+const near = computed(() => ((props.far ?? 0) > 0 ? props.facets.near ?? null : null));
+const shownFacets = computed<OfferFacets>(() =>
+  near.value
+    ? { ...props.facets, sure: near.value.sure, provisional: near.value.provisional, rates: near.value.rates, contracts: near.value.contracts }
+    : props.facets,
+);
+const shownCounts = computed<Record<View, number>>(() => {
+  if (!near.value) return props.counts;
+  const views = Object.fromEntries(near.value.views.map((f) => [f.value, f.count]));
+  return { ...props.counts, ...views };
+});
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
 // « Statut » en tête (Kevin, 17.11 0 h 33, docs/decisions/2026-11-16-1644-filtres-gardes.md) : un seul choix, les mêmes
@@ -46,14 +60,15 @@ const VIEWS: { label: string; value: View }[] = [
 
 // « Type de note » (PR 26 ; section 31 du 16.11) : Toutes, Définitives · n, Provisoires · n, un seul
 // choix (role="radio"), les nombres du serveur, et la phrase qui dit ce qu'est une note provisoire.
-const bases = computed(() => basisChoices(props.facets));
+const bases = computed(() => basisChoices(shownFacets.value));
 
 // « Note minimale, sur 100 » (section 31 du 16.11) : un contrôle segmenté à 4 cases, un seul choix, mêmes seuils que
 // l'ordinateur. Une adresse d'avant (?note=60-90) garde ses bornes, et aucune case n'est marquée.
 // Sous chaque choix, son nombre d'offres (§65 du 17.11).
 const SCORES = computed<SegmentOption[]>(() =>
   SCORE_CHOICES.map((c) => {
-    const n = scoreCount(props.facets, c.min);
+    // « Toutes » : sans les offres « Loin » tant qu'elles sont cachées ; les autres seuils les excluent déjà.
+    const n = scoreCount(props.facets, c.min) - (c.min === null ? (props.far ?? 0) : 0);
     return { value: String(c.min ?? "all"), label: c.label, test: `sheet-score-${c.min ?? "all"}`, sub: choiceCount(n), empty: n === 0 };
   }),
 );
@@ -65,7 +80,7 @@ const score = computed({
 // taux inconnu. Un contrôle segmenté, pas des puces qui ont l'air de se cumuler.
 const RATES = computed<SegmentOption[]>(() =>
   RATE_CHOICES.map((c) => {
-    const n = rateCount(props.facets, c.value);
+    const n = rateCount(shownFacets.value, c.value);
     return { value: String(c.value ?? "all"), label: c.label, test: `sheet-rate-${c.value ?? "all"}`, sub: choiceCount(n), empty: n === 0 };
   }),
 );
@@ -75,7 +90,7 @@ const rate = computed({
 });
 // « Contrat » (issue 468, Kevin 18.11) : plusieurs choix, « CDI · 120 » comme Statut, « Non précisé » compris ; un
 // choix à 0 reste visible et cliquable, grisé.
-const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(props.facets, c.value) })));
+const contracts = computed(() => CONTRACT_CHOICES.map((c) => ({ ...c, count: contractCount(shownFacets.value, c.value) })));
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par date", value: "day" },
   { label: "Note", value: "score" },
@@ -109,7 +124,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             v-for="choice in VIEWS"
             :key="choice.value"
             type="button"
-            :class="['filter-choice', { 'choice-empty': counts[choice.value] === 0 }]"
+            :class="['filter-choice', { 'choice-empty': shownCounts[choice.value] === 0 }]"
             role="radio"
             :aria-checked="filters.view === choice.value"
             :tabindex="filters.view === choice.value ? 0 : -1"
@@ -119,7 +134,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
             <AppIcon
               v-if="filters.view === choice.value"
               name="tick"
-            />{{ choice.label }} · {{ counts[choice.value] }}
+            />{{ choice.label }} · {{ shownCounts[choice.value] }}
           </button>
         </div>
       </fieldset>
@@ -140,7 +155,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           id="sheet-score-help"
           class="filter-choices-help"
         >
-          {{ SCORE_HELP }}
+          {{ SCORE_HELP_PHONE }}
         </p>
       </div>
 
@@ -176,7 +191,7 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
           id="sheet-basis-help"
           class="filter-choices-help"
         >
-          {{ BASIS_HELP }}
+          {{ BASIS_HELP_PHONE }}
         </p>
       </div>
 
@@ -314,7 +329,14 @@ const showLabel = computed(() => (props.total <= 1 ? `Afficher ${props.total} of
 <style scoped>
 /* « Statut » : un fieldset sans cadre, sa légende comme le titre des autres groupes. */
 .filter-status { min-width: 0; margin: 0; padding: 0; border: 0; }
-.filter-status > legend { float: left; width: 100%; padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); color: var(--text); }
+.filter-status > legend { float: left; width: 100%; padding: 0; }
+/* Titres de groupe et aide (planche Filtres du 17.11, docs/design/regles.md §4) : libellés en capitales, 13 px,
+   graisse 700, gris ; l'aide en pastille douce, comme sur la planche. */
+.filter-status > legend, .filter-choices > h3 { font-size: var(--panel-caps-size); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+/* Le contour des puces non choisies : 1,5 px, gris des boutons secondaires (planche Filtres, --button-outline). */
+.filter-choice { border-width: 1.5px; }
+.filter-choice:not([aria-checked="true"], [aria-pressed="true"]) { border-color: var(--button-outline); }
+.filter-choices-help { justify-self: start; padding: var(--space-1) 10px; border-radius: var(--radius-pill); background: var(--line-soft); color: var(--text-lead); font-size: var(--panel-caps-size); line-height: 18px; font-weight: var(--weight-semibold); }
 /* Le pied (maquette Filtres) : un trait au-dessus, « Afficher N offres » en pilule de 54 px. */
 .filters-dialog :deep(.sheet-actions) { margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-5) 0; border-top: 1px solid var(--line); }
 .filters-clear { min-height: var(--btn-secondary); padding: 0 var(--space-4); font-size: var(--font-body); font-weight: var(--weight-bold); }
