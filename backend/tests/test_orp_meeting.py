@@ -159,6 +159,23 @@ async def test_meeting_questions_and_sheet(client: AsyncClient, rt: Runtime) -> 
         "Si je prends un emploi temporaire, comment déclarer un gain intermédiaire ?",
         "Puis-je travailler à 80 % ?",
     ]
+    # Menu ⋯, « Retirer » (Kevin, 18.11) : une question proposée retirée ne revient plus,
+    # même quand la page renvoie ensuite la liste sans elle.
+    shown = page["preparation"]["questions"]
+    removed = next(q for q in shown if q["key"] == "intermediate")
+    rest = [q for q in shown if q["key"] != "intermediate"]
+    page = (
+        await client.put(
+            "/api/orp-meeting/questions",
+            json={"questions": [*rest, {**removed, "removed": True}]},
+        )
+    ).json()
+    keys = [q["key"] for q in page["preparation"]["questions"]]
+    assert "intermediate" not in keys and "custom:1" in keys
+    assert all(not q.get("removed") for q in page["preparation"]["questions"])
+    assert page["meeting"]["asked"] == ["Puis-je travailler à 80 % ?"]
+    page = (await client.put("/api/orp-meeting/questions", json={"questions": rest})).json()
+    assert "intermediate" not in [q["key"] for q in page["preparation"]["questions"]]
     assert any(o["text"].startswith("Rendez-vous le ") for o in page["preparation"]["obligations"])
     # Demain : la page Aujourd'hui le rappelle.
     today = (await client.get("/api/today")).json()

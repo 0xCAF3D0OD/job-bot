@@ -57,7 +57,7 @@ const field = ref<HTMLTextAreaElement | null>(null);
 let cancelled = false;
 const isOwn = (q: Question): boolean => q.key.startsWith("custom:");
 const shown = computed(() => {
-  const list = props.questions.filter((q) => !hidden.has(q.key));
+  const list = props.questions.filter((q) => !hidden.has(q.key) && !q.removed);
   const extra = added.value;
   return extra && !list.some((q) => q.key === extra.key) ? [...list, extra] : list;
 });
@@ -161,6 +161,28 @@ function remove(question: Question): void {
     },
   });
 }
+// « ⋯ › Retirer » une question proposée par jobA1 (Kevin, 18.11, option A) : le serveur la garde comme retirée
+// et ne la propose plus pour ce rendez-vous ; « Annuler » pendant 5 s.
+function retire(question: Question): void {
+  hidden.add(question.key);
+  void offerUndo({
+    message: "Question retirée",
+    ms: 5000,
+    commit: async () => {
+      const list = props.questions.map((q) => (q.key === question.key ? { ...q, checked: false, removed: true } : q));
+      const ok = props.save ? await props.save(list) : false;
+      if (ok) hidden.delete(question.key);
+      return ok;
+    },
+    restore: () => {
+      hidden.delete(question.key);
+    },
+  });
+}
+// « Annuler » sous le champ : touché, il ne doit pas d'abord enregistrer en faisant perdre le focus au champ.
+function holdCancel(): void {
+  cancelled = true;
+}
 function onKey(event: KeyboardEvent): void {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -262,13 +284,32 @@ function cal(iso: string): { day: number; month: number } {
                 @keydown="onKey"
                 @blur="leave"
               />
-              <div class="prep-help">
-                <span>Entrée pour {{ question.key === added?.key ? "ajouter" : "enregistrer" }} · Échap pour annuler</span>
+              <div class="prep-actions">
                 <FieldSaveStatus
                   v-if="states[question.key] && states[question.key] !== 'idle'"
+                  class="prep-actions-status"
                   :state="states[question.key]!"
                   @retry="retry"
                 />
+                <button
+                  type="button"
+                  class="prep-cancel"
+                  data-test="rdv-question-cancel"
+                  @pointerdown="holdCancel"
+                  @mousedown.prevent
+                  @click="cancel"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  class="primary prep-submit"
+                  data-test="rdv-question-submit"
+                  @mousedown.prevent
+                  @click="leave"
+                >
+                  {{ question.key === added?.key ? "Ajouter" : "Enregistrer" }}
+                </button>
               </div>
             </div>
           </div>
@@ -286,7 +327,15 @@ function cal(iso: string): { day: number; month: number } {
               <span>{{ question.text }}</span>
             </label>
             <MoreMenu
-              v-if="isOwn(question)"
+              v-if="!isOwn(question)"
+              class="prep-more"
+              :items="[{ label: 'Retirer', test: `rdv-question-retire-${question.key}`, run: () => retire(question) }]"
+              :inline="false"
+              label="Actions sur la question"
+              :test-id="`rdv-question-more-${question.key}`"
+            />
+            <MoreMenu
+              v-else
               class="prep-more"
               :items="[
                 { label: 'Modifier', test: `rdv-question-edit-${question.key}`, run: () => startEdit(question), icon: 'pencil' },
@@ -323,13 +372,31 @@ function cal(iso: string): { day: number; month: number } {
                 @keydown="onKey"
                 @blur="leave"
               />
-              <div class="prep-help">
-                <span>Entrée pour ajouter · Échap pour annuler</span>
+              <div class="prep-actions">
+                <button
+                  type="button"
+                  class="prep-cancel"
+                  data-test="rdv-question-cancel"
+                  @pointerdown="holdCancel"
+                  @mousedown.prevent
+                  @click="cancel"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  class="primary prep-submit"
+                  data-test="rdv-question-submit"
+                  @mousedown.prevent
+                  @click="leave"
+                >
+                  Ajouter
+                </button>
               </div>
             </div>
           </div>
         </li>
-        <li v-else>
+        <li v-else-if="!editing">
           <button
             type="button"
             class="prep-add"
@@ -418,9 +485,10 @@ function cal(iso: string): { day: number; month: number } {
 .prep-edit > .prep-box { margin-top: var(--space-3); }
 .prep-edit-body { flex: 1; min-width: 0; }
 .prep-field { display: block; box-sizing: border-box; width: 100%; min-height: var(--pp-field-h); padding: var(--space-3); border: 2px solid var(--primary-graphic); border-radius: var(--space-3); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--pp-lh); resize: none; outline: 0; }
-.prep-help { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-2); font-size: var(--font-small); color: var(--text-secondary); }
-.prep-help > span:first-child { flex: 1 1 auto; min-width: 0; }
-.prep-help > :deep(*:not(:first-child)) { flex: none; white-space: nowrap; }
+.prep-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.prep-actions-status { flex: 1 0 100%; min-width: 0; }
+.prep-cancel, .prep-submit { flex: none; min-height: var(--target-min); padding: 0 var(--space-4); border-radius: var(--target-min); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); cursor: pointer; }
+.prep-cancel { border: 0; background: none; color: var(--primary-text); }
 .prep-box { flex: none; box-sizing: border-box; width: var(--pp-check); height: var(--pp-check); border-radius: var(--pp-check-radius); box-shadow: inset 0 0 0 2px var(--field-border); }
 .prep-box.on { box-shadow: none; background: var(--primary-graphic); }
 .prep-status { margin: 0 var(--space-4) var(--space-3); }

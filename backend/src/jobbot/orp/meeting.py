@@ -260,15 +260,21 @@ async def _suggested(
 
 
 def merge(suggested: list[Question], saved: list[dict[str, Any]]) -> list[Question]:
-    """Les questions proposées, avec ce que tu as coché ou décoché, puis les tiennes."""
+    """Les questions proposées (sauf celles retirées), cochées ou non, puis les tiennes."""
     kept = {str(q.get("key")): q for q in saved if isinstance(q, dict)}
     merged = []
     for question in suggested:
+        if kept.get(question.key, {}).get("removed"):
+            continue
         if question.key in kept:
             question.checked = bool(kept[question.key].get("checked"))
         merged.append(question)
     for key, entry in kept.items():
-        if key.startswith("custom:") and str(entry.get("text", "")).strip():
+        if (
+            key.startswith("custom:")
+            and str(entry.get("text", "")).strip()
+            and not entry.get("removed")
+        ):
             merged.append(Question(key, str(entry["text"]).strip(), bool(entry.get("checked"))))
     return merged
 

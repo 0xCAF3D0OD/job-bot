@@ -24178,6 +24178,17 @@
             "type": "boolean",
             "title": "Checked",
             "default": false
+          },
+          "removed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed"
           }
         },
         "type": "object",

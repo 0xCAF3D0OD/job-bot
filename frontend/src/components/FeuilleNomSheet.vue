@@ -46,9 +46,6 @@ function leave(event: Event): void {
     data-test="feuille-nom"
     @close="emit('close')"
   >
-    <p class="feuille-nom-note">
-      Tout est enregistré dès que tu quittes un champ
-    </p>
     <form
       class="feuille-nom-fields"
       @submit.prevent
@@ -86,15 +83,10 @@ function leave(event: Event): void {
 </template>
 
 <style scoped>
-/* Planche FeuilleNom : pastille neutre de 30 px (13 px, graisse 600) ; cartes blanches, trait 1 px, rayon 20, 16 px de
+/* Planche FeuilleNom (sans la phrase « Tout est enregistré… », §72g) : cartes blanches, trait 1 px, rayon 20, 16 px de
    marge intérieure, 12 px entre elles ; libellé 13 px gris au-dessus d'un champ de 52 px, rayon 14, texte 17 px. */
-.feuille-nom { --fn-note-top: 6px; --fn-note-bottom: 14px; --fn-note-pad: 5px; --fn-card-radius: 20px; --fn-field-h: 52px; --fn-field-pad: 14px; --fn-field-radius: 14px; }
+.feuille-nom { --fn-card-radius: 20px; --fn-field-h: 52px; --fn-field-pad: 14px; --fn-field-radius: 14px; }
 .feuille-nom :deep(.sheet-body) { gap: 0; padding-inline: var(--space-4); }
-.feuille-nom-note {
-  justify-self: start; display: inline-flex; align-items: center; min-height: 30px; margin: var(--fn-note-top) 0 var(--fn-note-bottom); padding: var(--fn-note-pad) var(--space-3);
-  border-radius: var(--radius-pill); background: var(--surface-muted); color: var(--text-lead);
-  font-size: calc(var(--font-small) - 1px); font-weight: var(--weight-semibold);
-}
 .feuille-nom-fields { display: grid; gap: var(--space-3); margin: 0; }
 .feuille-nom-card { padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--fn-card-radius); background: var(--surface); }
 .feuille-nom-label { display: block; font-size: calc(var(--font-small) - 1px); color: var(--text-secondary); }
