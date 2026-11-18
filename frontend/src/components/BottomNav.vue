@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
 
-import { api } from "../api/client";
 import { useAssistant } from "../composables/useAssistant";
 import { useFocusMode } from "../composables/useFocusMode";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
-import CountBadge from "./CountBadge.vue";
 
 // La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02) : cinq onglets, Accueil, Candidatures, Assistant,
 // Bilan, Compte, libellés toujours visibles. L'onglet actif est un rond plein posé dans un creux de la barre,
 // à l'encre (crème en sombre ; LISEZMOI du 17.11, §55), seule exception à la pastille teintée ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
-// rond loin du texte. Candidatures porte le nombre d'offres à examiner. Les écrans de travail (Préparer, le tri,
+// rond loin du texte. Aucun onglet ne porte de pastille (planches du 18.11, Kevin le 18.11 : pas de nombre sur Candidatures). Les écrans de travail (Préparer, le tri,
 // l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50), comme les Réglages et les Notifications (Kevin, 6.11).
 // Assistant mène à sa page (étape 11a), seulement quand l'IA est branchée ; la barre attend de le savoir pour se
 // dessiner (AS8). Compte mène à la page Compte (étape 10a) et reste actif sur le Profil et les Réglages.
@@ -21,12 +19,11 @@ const HIDDEN = new Set(["preparation", "welcome", "triage", "settings", "notific
 const route = useRoute();
 const { menuLink } = useJobsMemory();
 const { available: assistantAvailable, known: assistantKnown } = useAssistant();
-const toReview = ref(0);
 
 const { focus } = useFocusMode();
 const visible = computed(() => assistantKnown.value && !HIDDEN.has(String(route.name)) && !route.meta.bare && !focus.value);
 
-type Tab = { name: string; label: string; icon: "home" | "briefcase" | "assistant" | "trend" | "user"; to: string; active: boolean };
+type Tab = { name: string; label: string; icon: "home" | "briefcase" | "assistant" | "growth" | "user"; to: string; active: boolean };
 const tabs = computed<Tab[]>(() => {
   const list: Tab[] = [
     { name: "today", label: "Accueil", icon: "home", to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
@@ -34,7 +31,7 @@ const tabs = computed<Tab[]>(() => {
   ];
   if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", icon: "assistant", to: "/assistant", active: route.name === "assistant" });
   list.push(
-    { name: "bilan", label: "Bilan", icon: "trend", to: "/bilan", active: route.path.startsWith("/bilan") },
+    { name: "bilan", label: "Bilan", icon: "growth", to: "/bilan", active: route.path.startsWith("/bilan") },
     {
       name: "account",
       label: "Compte",
@@ -51,18 +48,6 @@ const notch = computed(() => {
   return index < 0 ? null : `${((index + 0.5) * 100) / tabs.value.length}%`;
 });
 
-async function refresh(): Promise<void> {
-  try {
-    const { data } = await api.GET("/api/today");
-    // Le nombre du segment « À traiter » (docs/139, C2), sans les offres « Loin » que la liste du téléphone cache.
-    toReview.value = data?.pending_near ?? 0;
-  } catch {
-    // Silencieux : le nombre n'est qu'un repère.
-  }
-}
-
-watch(() => route.name, () => void refresh());
-onMounted(() => void refresh());
 </script>
 
 <template>
@@ -87,11 +72,6 @@ onMounted(() => void refresh());
         <span class="tab-bar-icon">
           <AppIcon
             :name="tab.icon"
-          />
-          <CountBadge
-            v-if="tab.name === 'jobs' && toReview"
-            class="tab-bar-count"
-            :count="toReview > 9 ? '9+' : toReview"
           />
         </span>
         <span class="tab-bar-label">{{ tab.label }}</span>
