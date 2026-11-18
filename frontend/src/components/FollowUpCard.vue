@@ -380,7 +380,8 @@ function draftCache(): Map<number, { subject: string; text: string }> {
 /* Valeurs de CandidaturesOrdinateurB (onglet Envoyées) : libellé 13/16 700 capitales #8A4A16, titre 18/24 à 8 px du libellé, aide 14/20 à 4 px
    grise, citation 15/22 à trait gauche de 3 px, ligne « À : » 14/20, bouton plein de 48 px, « Modifier » en lien. */
 .follow-card { --follow-17: 17px; --follow-18: 18px; --follow-18-5: 18.5px; --follow-13: 13px; --follow-16: 16px; --follow-22: 22px; --follow-3: 3px; }
-.follow-card-cap { margin: 0 0 var(--space-2); font-size: var(--follow-13); line-height: var(--follow-16); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--peach-text); }
+/* Planche EnvoyeeDetail (18.11) et §67 : titre en casse normale, 15/16 gras, couleur du texte. */
+.follow-card-cap { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--follow-16); font-weight: var(--weight-bold); color: var(--text); }
 .follow-card-title { display: block; font-size: var(--follow-18); line-height: var(--space-6); }
 .follow-card-help { display: block; margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .follow-card-quote { margin: var(--space-4) 0 0; padding: 0 0 0 var(--space-4); border-left: var(--follow-3) solid var(--card-line); font-size: var(--font-label); line-height: var(--follow-22); color: var(--text-secondary); white-space: pre-line; }
