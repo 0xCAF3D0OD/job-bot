@@ -210,6 +210,20 @@ describe("Mon parcours, panneaux (docs/49)", () => {
     expect(PUT).toHaveBeenCalledWith("/api/profile-chunks/{chunk_id}", expect.objectContaining({ params: { path: { chunk_id: 9 } } }));
   });
 
+  it("ouvert depuis le Profil, Échap ferme le bloc et rend le focus à sa carte (audit du 17.11, N26)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/documents" ? [] : path === "/api/profile-chunks" ? [chunk] : null }),
+    );
+    const wrapper = mount(ProfileView, { props: { openChunk: 9 }, attachTo: document.body, global: { stubs: { teleport: true } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=chunk-form]").exists()).toBe(true);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await flushPromises();
+    expect(wrapper.find("[data-test=chunk-form]").exists()).toBe(false);
+    expect(document.activeElement?.getAttribute("data-test")).toBe("open-chunk-9");
+    wrapper.unmount();
+  });
+
   it("marquer un document comme certificat de travail (docs/87)", async () => {
     mockApi();
     PUT.mockResolvedValue({ data: { certificates: [], summary: null } });

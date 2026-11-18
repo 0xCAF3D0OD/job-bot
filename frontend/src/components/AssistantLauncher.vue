@@ -40,3 +40,11 @@ onMounted(() => void check());
     />
   </template>
 </template>
+
+<style>
+/* Le bouton Assistant reste affiché : un élément qui reçoit le focus s'arrête au-dessus de lui, jamais dessous (Kevin,
+   17.11, point 7 ; WCAG 2.4.11). Sa hauteur et sa marge, comme le pied de page qui le laisse libre (style.css). */
+@media (min-width: 821px) {
+  :root:has(.assistant-fab) { scroll-padding-bottom: calc(1.25rem + 3.25rem + var(--space-4)); }
+}
+</style>

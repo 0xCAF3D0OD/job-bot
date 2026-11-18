@@ -98,12 +98,6 @@ const conclusion = computed<Part[]>(() => {
   for (const o of lateObligations.value) parts.push({ text: parts.length ? lateLine(o.text) : lateLine(o.text).trimStart(), late: true });
   return parts;
 });
-// « Préparer », à droite de la conclusion : descend à la préparation.
-const prepareTitle = ref<HTMLElement | null>(null);
-function goPrepare(): void {
-  const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-  prepareTitle.value?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
 // Le résumé de chaque ligne du mois (règles §3.4).
 const monthValue = computed(() => {
   const last = prep.value?.months?.at(-1);
@@ -463,8 +457,9 @@ onMounted(() => void load());
           Effacer la recherche
         </button>
       </div>
-      <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
-           en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
+      <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu, et le « ⋯ » du rendez-vous à
+           droite (dessous sur téléphone). Plus de lien « Préparer » : il menait à la section juste en dessous (K30,
+           décision de Kevin du 17.11). -->
       <div
         v-if="conclusion.length && !compact"
         class="orp-conclusion"
@@ -483,15 +478,6 @@ onMounted(() => void load());
           </component>
         </p>
         <div class="orp-conclusion-actions">
-          <button
-            v-if="prep && !noApplications"
-            type="button"
-            class="link"
-            data-test="go-prepare"
-            @click="goPrepare"
-          >
-            Préparer
-          </button>
           <MoreMenu
             v-if="meeting && !editing"
             :items="meetingItems"
@@ -505,7 +491,6 @@ onMounted(() => void load());
       <!-- Sans candidature, seul le formulaire du rendez-vous reste : pas de titre (1.6.24, comme Figma). -->
       <h2
         v-if="prep && !noApplications && !compact"
-        ref="prepareTitle"
         class="section-title orp-section"
       >
         Préparer
@@ -880,7 +865,7 @@ onMounted(() => void load());
                 <button
                   v-if="!item.outcome_at"
                   type="button"
-                  class="secondary small"
+                  class="orp-log-note"
                   :data-test="`log-outcome-${item.id}`"
                   @click="noting = item.id"
                 >
@@ -921,3 +906,13 @@ onMounted(() => void load());
     />
   </section>
 </template>
+
+<style>
+/* « Noter ce qui a été convenu » dans le carnet (K28 de l'audit du 17.11) : la pilule bleu pâle de 48 px des planches
+   BilanResultats et RendezVousPreparer, texte centré, 12 px sous la ligne du rendez-vous ; à sa largeur sur ordinateur. */
+.orp-log .orp-log-note {
+  display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); margin-top: var(--space-3);
+  padding: 0 var(--space-6); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text);
+  font-size: var(--font-label); font-weight: var(--weight-bold);
+}
+</style>
