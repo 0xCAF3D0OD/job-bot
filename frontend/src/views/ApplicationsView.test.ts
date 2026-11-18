@@ -315,6 +315,8 @@ describe("Suivi en calendrier (docs/22)", () => {
     const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=day-2026-10-02]").trigger("click");
     await wrapper.find("[data-test=day-panel] [data-test=application-card] [data-test=offer-line-open]").trigger("click");
+    // La candidature ouverte prend son adresse (?candidature=, audit N25) : on laisse la navigation finir.
+    await flushPromises();
     await wrapper.find("[data-test=application-panel] [data-test=panel-status]").setValue("refus");
     await flushPromises();
     const moment = wrapper.find("[data-test=refusal-moment]");
@@ -388,6 +390,30 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
   });
 
+  it("sur téléphone, ouvrir une candidature lui donne son adresse : le retour la ferme sans quitter la page, à la même position (audit N25)", async () => {
+    mockApi(() => month(), [application]);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    const { wrapper, router } = await mountView("/candidatures/suivi");
+    vi.unstubAllGlobals();
+    // Le retour ramène la liste à sa position de défilement (Kevin, 17.11, point 1).
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(window, "scrollY", { value: 600, configurable: true });
+    await wrapper.find("[data-test=application]").trigger("click");
+    await flushPromises();
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 0);
+    expect(router.currentRoute.value.query.candidature).toBe(String(application.id));
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(true);
+    router.back();
+    await flushPromises();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi");
+    expect(wrapper.find("[data-test=sent-screen]").exists()).toBe(false);
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 600);
+    scrollTo.mockRestore();
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+  });
+
   it("la notification « Comment s’est passé ton entretien ? » ouvre la candidature et « Faire le point » (16.11)", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-21T08:00:00Z"));
@@ -395,6 +421,9 @@ describe("Suivi, l’essentiel d’abord (1.6.20, annexe de l’audit : Suivi tr
     mockApi(() => month(), [held]);
     const { wrapper, router } = await mountView(`/candidatures/suivi?candidature=${held.id}&retour=1`);
     vi.useRealTimers();
+    // Le formulaire est chargé à la demande.
+    await vi.dynamicImportSettled();
+    await flushPromises();
     const form = wrapper.findComponent({ name: "InterviewForm" });
     expect(form.exists()).toBe(true);
     expect(form.props("company")).toBe("Acme SA");
