@@ -3826,6 +3826,16 @@
               ],
               "title": "Basis"
             }
+          },
+          {
+            "name": "hide_far",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Far"
+            }
           }
         ],
         "responses": {
@@ -20865,6 +20875,41 @@
         ],
         "title": "MonthWeeksOut"
       },
+      "NearFacets": {
+        "properties": {
+          "views": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Views"
+          },
+          "sure": {
+            "type": "integer",
+            "title": "Sure"
+          },
+          "provisional": {
+            "type": "integer",
+            "title": "Provisional"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "views",
+          "sure",
+          "provisional",
+          "rates"
+        ],
+        "title": "NearFacets",
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note et Taux. Le choix actif égale alors « Afficher n offres »."
+      },
       "NewsPreferences": {
         "properties": {
           "domain_keywords": {
@@ -21281,6 +21326,16 @@
             "type": "array",
             "title": "Rates",
             "default": []
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NearFacets"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -25318,7 +25373,7 @@
             "maximum": 100.0,
             "minimum": 0.0,
             "title": "Notify Score Threshold",
-            "default": 70
+            "default": 75
           },
           "llm_monthly_budget_chf": {
             "type": "number",

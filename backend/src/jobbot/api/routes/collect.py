@@ -524,6 +524,20 @@ class OfferFacets(BaseModel):
     # Filtre « Taux d'activité » (§65 du 17.11) : le nombre d'offres de chaque choix (« all »,
     # « 60 », « 80 », « 100 »), avec tous les autres filtres actifs mais sans celui du taux.
     rates: list[Facet] = []
+    # Téléphone (Kevin, 18.11, choix a) : avec `hide_far`, les mêmes nombres sans les offres
+    # « Loin » que la liste cache ; absent sinon.
+    near: "NearFacets | None" = None
+
+
+class NearFacets(BaseModel):
+    """Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
+    cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
+    « in_progress »), Type de note et Taux. Le choix actif égale alors « Afficher n offres »."""
+
+    views: list[Facet]
+    sure: int
+    provisional: int
+    rates: list[Facet]
 
 
 # Les choix du filtre « Taux d'activité » (section 31 du 16.11) : dès 60, dès 80, 100 %.
@@ -715,6 +729,7 @@ async def list_offers(
     with_filtered_out: bool = False,
     with_expired: bool = False,
     basis: Literal["sure", "provisional"] | None = None,
+    hide_far: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -780,6 +795,15 @@ async def list_offers(
         Offer.spontaneous.is_(False),
     )
     sure = and_(score.is_not(None), not_(provisional))
+    # Téléphone (Kevin, 18.11, choix a) : sans filtre de note, la liste cache les offres « Loin »
+    # (note sous FAR_BELOW) et « Afficher n offres » ne les compte pas. Les nombres sous les choix
+    # (Statut, Type de note, Taux) les retirent aussi : le choix actif égale toujours le bouton.
+    # Une offre pas encore notée reste visible. La liste et son total ne changent pas.
+    near: list[ColumnElement[bool]] = (
+        [or_(score.is_(None), score >= FAR_BELOW)]
+        if hide_far and min_score is None and max_score is None
+        else []
+    )
     without_basis = [*conditions, *([view_condition] if view_condition is not None else [])]
     if basis is not None:
         conditions.append(provisional if basis == "provisional" else sure)
@@ -889,6 +913,58 @@ async def list_offers(
                 ).where(*without_rate)
             )
         ).one()
+        near_facets: NearFacets | None = None
+        if near:
+            near_rows = (
+                await session.execute(
+                    select(Offer.status, expired_flag, func.count())
+                    .where(*conditions, *near)
+                    .group_by(Offer.status, expired_flag)
+                )
+            ).all()
+            near_pending = int(
+                await session.scalar(
+                    select(func.count())
+                    .select_from(Offer)
+                    .where(*conditions, *near, pending_condition)
+                )
+                or 0
+            )
+            near_basis = (
+                await session.execute(
+                    select(func.count().filter(sure), func.count().filter(provisional)).where(
+                        *without_basis, *near
+                    )
+                )
+            ).one()
+            near_rate = (
+                await session.execute(
+                    select(
+                        func.count(),
+                        *(func.count().filter(_rate_condition(rate)) for rate in RATE_CHOICES),
+                    ).where(*without_rate, *near)
+                )
+            ).one()
+            near_live: dict[str, int] = {}
+            for offer_status, expired, count in near_rows:
+                if not expired or offer_status in IN_PROGRESS:
+                    near_live[offer_status] = near_live.get(offer_status, 0) + count
+            near_facets = NearFacets(
+                views=[
+                    Facet(value="pending", count=near_pending),
+                    Facet(value="to_review", count=sum(near_live.get(s, 0) for s in TO_REVIEW)),
+                    Facet(value="later", count=near_live.get(OfferStatus.LATER, 0)),
+                    Facet(value="in_progress", count=near_live.get(OfferStatus.PREPARING, 0)),
+                ],
+                sure=int(near_basis[0]),
+                provisional=int(near_basis[1]),
+                rates=[
+                    Facet(value=str(value), count=int(count))
+                    for value, count in zip(
+                        ("all", *map(str, RATE_CHOICES)), near_rate, strict=True
+                    )
+                ],
+            )
 
     live: dict[str, int] = {}
     for offer_status, expired, count in grouped:
@@ -920,6 +996,7 @@ async def list_offers(
             Facet(value=str(value), count=int(count))
             for value, count in zip(("all", *map(str, RATE_CHOICES)), rate_row, strict=True)
         ],
+        near=near_facets,
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[
             Facet(value=str(v), count=c)

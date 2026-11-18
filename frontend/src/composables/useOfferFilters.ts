@@ -148,6 +148,8 @@ export const SCORE_CHOICES: { label: string; min: number | null }[] = [
   { label: `${SCORE_VERY_CLOSE} et +`, min: SCORE_VERY_CLOSE },
 ];
 export const SCORE_HELP = "À quel point l’offre correspond à ton profil.";
+// La feuille du téléphone écrit l’aide en pastille, plus courte et sans point (planche Filtres du 17.11).
+export const SCORE_HELP_PHONE = "À quel point l’offre correspond à ton profil";
 // « Taux d'activité » (section 31 du 16.11) : un seul choix, mêmes valeurs qu'avant.
 export const RATE_CHOICES: { label: string; value: number | null }[] = [
   { label: "Tous", value: null },
@@ -187,6 +189,7 @@ export function basisChoices(facets: { sure?: number; provisional?: number }): {
   ];
 }
 export const BASIS_HELP = "Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.";
+export const BASIS_HELP_PHONE = "Provisoire : notée sur l’extrait de l’alerte";
 
 /** La note filtrée en mots ; une adresse d'avant (?note=60-90) garde ses bornes. */
 export function scoreLabel(filters: Pick<OfferFilters, "minScore" | "maxScore">): string {

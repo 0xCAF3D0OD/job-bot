@@ -26,7 +26,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.find("#sheet-score-title").text()).toBe("Note minimale, sur 100");
     expect(scores.findAll("[role=radio] .segmented-label").map((b) => b.text())).toEqual(["Toutes", "50 et +", "75 et +", "85 et +"]);
     expect(scores.find("[data-test=sheet-score-all]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil.");
+    expect(wrapper.find(`#${scores.attributes("aria-describedby")}`).text()).toBe("À quel point l’offre correspond à ton profil");
     // Le taux d'activité, un seul choix : un groupe de radios, pas des puces (5e), titre relié.
     const rates = wrapper.find("[role=radiogroup][aria-labelledby=sheet-rate-title]");
     expect(wrapper.find("#sheet-rate-title").text()).toBe("Taux d’activité");
@@ -72,6 +72,45 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(active.attributes("aria-checked")).toBe("true");
     expect(active.find(".segmented-sub").text()).toBe("21");
     expect(close.find("[data-test=sheet-show]").text()).toBe("Afficher 21 offres");
+  });
+
+  it("offres « Loin » cachées ou non : le nombre du choix actif égale toujours « Afficher n offres » (Kevin, 18.11, choix a)", () => {
+    // 84 offres dont 10 « Loin » (sous 50) : la liste du téléphone les cache, le bouton dit 74.
+    const near = {
+      views: [{ value: "pending", count: 74 }, { value: "to_review", count: 9 }, { value: "later", count: 4 }, { value: "in_progress", count: 2 }],
+      sure: 70,
+      provisional: 1,
+      rates: [{ value: "all", count: 74 }, { value: "60", count: 63 }, { value: "80", count: 52 }, { value: "100", count: 30 }],
+    };
+    const props = (far: number, total: number) => ({
+      open: true,
+      filters: DEFAULT_FILTERS,
+      facets: { ...facets, near },
+      total,
+      counts: { ...counts, pending: 84 },
+      far,
+    });
+    const stubs = { BottomSheet: { template: "<div><slot /><slot name='actions' /></div>" } };
+    const active = (wrapper: ReturnType<typeof mountSheet>) => ({
+      view: wrapper.find("[data-test=sheet-view-pending]").text(),
+      score: wrapper.find("[data-test=sheet-score-all] .segmented-sub").text(),
+      rate: wrapper.find("[data-test=sheet-rate-all] .segmented-sub").text(),
+      button: wrapper.find("[data-test=sheet-show]").text(),
+    });
+    // Cachées : 74 partout.
+    expect(active(mount(OfferFilterSheet, { props: props(10, 74), global: { stubs } }))).toEqual({
+      view: "Toutes · 74",
+      score: "74",
+      rate: "74",
+      button: "Afficher 74 offres",
+    });
+    // Montrées (ou aucune offre « Loin ») : 84 partout.
+    expect(active(mount(OfferFilterSheet, { props: props(0, 84), global: { stubs } }))).toEqual({
+      view: "Toutes · 84",
+      score: "84",
+      rate: "84",
+      button: "Afficher 84 offres",
+    });
   });
 
   it("un choix à 0 offre reste visible et cliquable, grisé (Kevin, 18.11)", async () => {
@@ -138,7 +177,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(group.find("[data-test=sheet-basis-all]").attributes("aria-checked")).toBe("true");
     expect(group.find("[data-test=sheet-basis-all] svg").exists()).toBe(true);
     expect(group.find("[data-test=sheet-basis-sure]").attributes("aria-checked")).toBe("false");
-    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte, sans l’annonce complète.");
+    expect(wrapper.find(`#${group.attributes("aria-describedby")}`).text()).toBe("Provisoire : notée sur l’extrait de l’alerte");
     await group.find("[data-test=sheet-basis-provisional]").trigger("click");
     expect(wrapper.emitted("update")).toEqual([[{ basis: "provisional" }]]);
     const chosen = mountSheet({ basis: "provisional" });
