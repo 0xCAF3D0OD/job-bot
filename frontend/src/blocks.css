@@ -32,7 +32,7 @@
 .block-row-title { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-2); min-width: 0; }
 .block-row-name { min-width: 0; overflow-wrap: anywhere; }
 .block-row-title .block-status { flex: none; margin-left: 0; }
-.block-row > .arrow-circle { flex: none; }
+.block-row > .list-chevron { flex: none; }
 /* L'icône de la ligne (maquettes Compte du 10 novembre, PR 34) : 24 px, contour de 2 px, --row-icon ; 16 px avant le
    texte, qui reste aligné d'une ligne à l'autre. */
 .block-row-icon { flex: none; width: var(--space-6); height: var(--space-6); stroke-width: 2; color: var(--row-icon); }

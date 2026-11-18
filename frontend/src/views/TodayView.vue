@@ -749,9 +749,9 @@ const { me } = useAuth();
                 <span>{{ task.detail }}</span>
               </span>
               <span class="aj-action">{{ task.action }}<span
-                class="arrow-circle aj-arrow"
+                class="list-chevron aj-arrow"
                 aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span></span>
+              ><AppIcon name="chevron" /></span></span>
             </RouterLink>
           </li>
         </component>
@@ -849,7 +849,7 @@ const { me } = useAuth();
    tailles hors échelle sont nommées ici. Sous 1100 px de large, la colonne de droite passe sous celle de gauche. */
 .aj {
   --aj-w: 1280px; --aj-side: 440px; --aj-40: 40px; --aj-r: 32px; --aj-28: 28px; --aj-44: 2.75rem; --aj-17: 1.0625rem; --aj-26: 1.625rem; --aj-22: 1.375rem; --aj-18: 1.125rem; --aj-16: 1rem; --aj-15: 0.9375rem;
-  --aj-row: 88px; --aj-num: 36px; --aj-circle: 44px; --aj-lh-title: 1.25;
+  --aj-row: 88px; --aj-num: 36px; --aj-lh-title: 1.25;
   display: grid; grid-template-columns: minmax(0, 1fr) var(--aj-side); gap: var(--aj-40); box-sizing: border-box; max-width: calc(var(--aj-w) + 2 * var(--space-6)); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12);
 }
 .aj-main { display: flex; flex-direction: column; min-width: 0; }
@@ -889,7 +889,6 @@ const { me } = useAuth();
 .aj-task-main > span { display: block; margin-top: var(--space-1); font-size: var(--aj-15); line-height: var(--aj-22); color: var(--text-secondary); overflow-wrap: anywhere; }
 .tone-late .aj-task-main > span { color: var(--peach-text); font-weight: var(--weight-semibold); }
 .aj-action { flex: none; display: flex; align-items: center; gap: var(--space-4); font-size: var(--aj-16); font-weight: var(--weight-bold); color: var(--tone-text); white-space: nowrap; }
-.aj-arrow { --circle: var(--aj-circle); }
 
 /* Carte Google Emplois (§22 du 15.11) : une ligne des premiers pas sur le fond de la carte ORP. */
 .aj-google { margin-top: var(--space-8); padding-right: var(--space-3); background: var(--primary-soft); }

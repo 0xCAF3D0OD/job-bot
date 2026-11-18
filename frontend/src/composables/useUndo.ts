@@ -11,6 +11,8 @@ export interface UndoOffer {
   commit: (keepalive: boolean) => Promise<boolean | void> | boolean | void;
   // Remet ce qui avait disparu de l'écran (rien n'est parti au serveur).
   restore: () => Promise<void> | void;
+  // « Voir » à côté d'« Annuler » (K5, Kevin le 17.11) : valide l'action, puis mène là où l'élément est parti.
+  see?: () => void;
 }
 
 const pending = ref<(UndoOffer & { id: number }) | null>(null);
@@ -51,6 +53,12 @@ async function undo(): Promise<void> {
   await offer.restore();
 }
 
+async function see(): Promise<void> {
+  const go = pending.value?.see;
+  await flush();
+  go?.();
+}
+
 // Le compte s'arrête tant que la souris ou le focus est sur le bandeau.
 function hold(): void {
   clearTimeout(timer);
@@ -63,5 +71,5 @@ function release(): void {
 globalThis.addEventListener?.("pagehide", () => void flush(true));
 
 export function useUndo() {
-  return { pending, undo, hold, release, flush };
+  return { pending, undo, see, hold, release, flush };
 }

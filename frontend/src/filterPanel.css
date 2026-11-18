@@ -25,6 +25,12 @@
   border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold);
 }
 .filter-panel-group button:is([aria-pressed="true"], [aria-checked="true"]) { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
+/* Note et Taux : le nombre d'offres sous le libellé (Kevin, 18.11, comme la feuille Filtres du téléphone) ; la pastille
+   passe à deux lignes (56 px, comme le segment du téléphone). */
+.filter-panel-group .filter-panel-counted { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: auto; min-height: 3.5rem; line-height: var(--leading-tight); }
+.filter-panel-sub { font-size: var(--font-caption); font-weight: var(--weight-medium); color: var(--text-secondary); }
+/* Un choix à 0 offre reste visible et cliquable, grisé sur le même fond ; le choix actif garde son style. */
+.filter-panel-group .choice-empty:not([aria-pressed="true"], [aria-checked="true"]) { color: var(--text-secondary); }
 .filter-panel-switch {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--btn-tertiary);
   font-size: var(--pop-15); font-weight: var(--weight-semibold);
