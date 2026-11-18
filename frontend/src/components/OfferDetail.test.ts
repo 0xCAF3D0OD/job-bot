@@ -98,6 +98,18 @@ describe("OfferDetail, recherche d’adresse (audit du 17.11, K6)", () => {
     expect(wrapper.find("[data-test=address-registry]").text()).toBe("Trouvée au registre du commerce");
     expect(wrapper.find("[data-test=registry]").exists()).toBe(false);
     expect(wrapper.find("[data-test=add-address]").text()).toBe("Modifier l’adresse");
+    expect(wrapper.find("#offer-company-title").text()).toBe("L’entreprise");
+
+    // « Site de l'entreprise » : le site relevé sur l'annonce, sans « www. » ; rien pour une adresse qui n'est pas http(s).
+    expect(wrapper.find("[data-test=company-website]").exists()).toBe(false);
+    await wrapper.setProps({ offer: offer({ company_website: "https://www.alpstack.ch/" }) as never });
+    const site = wrapper.find("[data-test=company-website]");
+    expect(site.text()).toContain("Site de l’entreprise");
+    expect(site.find(".company-site-host").text()).toBe("alpstack.ch");
+    expect(site.attributes("href")).toBe("https://www.alpstack.ch/");
+    expect(site.attributes("rel")).toBe("noopener noreferrer");
+    await wrapper.setProps({ offer: offer({ company_website: "javascript:alert(1)" }) as never });
+    expect(wrapper.find("[data-test=company-website]").exists()).toBe(false);
 
     // Une adresse trouvée sur Internet que le registre ne change pas : la phrase le dit, sans pastille « pas trouvée ».
     const manual = { company_address: "Rue du Lac 1\n1000 Lausanne", company_address_source: "web" };

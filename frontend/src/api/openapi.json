@@ -21901,6 +21901,17 @@
             ],
             "title": "Company Address Url"
           },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
+          },
           "employer_url": {
             "anyOf": [
               {
@@ -24798,6 +24809,17 @@
               }
             ],
             "title": "Company Address Url"
+          },
+          "company_website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Website"
           },
           "employer_url": {
             "anyOf": [

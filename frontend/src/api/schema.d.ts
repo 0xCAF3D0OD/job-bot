@@ -7513,6 +7513,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */
@@ -8522,6 +8524,8 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Company Website */
+            company_website?: string | null;
             /** Employer Url */
             employer_url?: string | null;
             /** Employer Url Source */

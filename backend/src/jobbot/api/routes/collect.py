@@ -124,6 +124,9 @@ class OfferOut(BaseModel):
     company_address: str | None = None
     company_address_source: Literal["page", "registry", "web", "letter", "manual"] | None = None
     company_address_url: str | None = None
+    # Site de l'entreprise, relevé sur la page de l'annonce (enrich) : « Site de l'entreprise » de la fiche
+    # (planche OffreAdresseTrouvee du 18.11).
+    company_website: str | None = None
     # Annonce chez l'employeur (docs/20 §2) : adresse vérifiée et sa source
     # (site, outil de recrutement, Internet) ; résultat de la recherche.
     employer_url: str | None = None

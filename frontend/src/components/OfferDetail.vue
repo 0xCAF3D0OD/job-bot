@@ -659,6 +659,18 @@ const canSearchEmployer = computed(
     props.offer.employer_status !== "agency" &&
     !(props.offer.employer_url && props.offer.employer_checked_at),
 );
+// « Site de l'entreprise » (planche OffreAdresseTrouvee) : seulement une adresse http(s) ; le nom du site sans « www. ».
+const website = computed(() => {
+  const raw = props.offer.company_website;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return { href: url.href, host: url.hostname.replace(/^www\./, "") };
+  } catch {
+    return null;
+  }
+});
 const companyItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
@@ -1695,159 +1707,177 @@ watch(
             test-id="company-more"
           />
         </div>
-        <CopyField
-          label="Nom"
-          :value="offer.company ?? ''"
-        />
-        <div
-          class="block-field"
-          data-test="address"
-        >
-          <div class="block-field-text">
-            <div class="block-field-label">
-              Adresse
-            </div>
-            <form
-              v-if="editingAddress"
-              class="address-form"
-              @submit.prevent="saveAddress"
-            >
-              <textarea
-                v-model="addressDraft"
-                rows="2"
-                placeholder="Rue et numéro&#10;NPA localité"
-                aria-label="Adresse de l’entreprise"
-                data-test="address-input"
-              />
-              <div>
-                <button
-                  type="submit"
-                  class="secondary small"
-                  data-test="save-address"
+        <!-- Planche OffreAdresseTrouvee (18.11) : le titre « L'entreprise » au-dessus d'une carte (Nom, Adresse,
+             « Modifier l'adresse »), puis la carte « Site de l'entreprise ». -->
+        <div class="company-card">
+          <CopyField
+            label="Nom"
+            :value="offer.company ?? ''"
+          />
+          <div
+            class="block-field"
+            data-test="address"
+          >
+            <div class="block-field-text">
+              <div class="block-field-label">
+                Adresse
+              </div>
+              <form
+                v-if="editingAddress"
+                class="address-form"
+                @submit.prevent="saveAddress"
+              >
+                <textarea
+                  v-model="addressDraft"
+                  rows="2"
+                  placeholder="Rue et numéro&#10;NPA localité"
+                  aria-label="Adresse de l’entreprise"
+                  data-test="address-input"
+                />
+                <div>
+                  <button
+                    type="submit"
+                    class="secondary small"
+                    data-test="save-address"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    class="link"
+                    @click="editingAddress = false"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+              <p
+                v-else-if="searching"
+                class="block-field-value offer-busy address-busy"
+                role="status"
+                data-test="registry-busy"
+              >
+                <span
+                  class="offer-busy-ring"
+                  aria-hidden="true"
+                />Recherche de l’adresse…
+              </p>
+              <template v-else-if="offer.company_address">
+                <div class="block-field-value address-lines">
+                  {{ offer.company_address }}
+                </div>
+                <span
+                  v-if="offer.company_address_source === 'registry'"
+                  class="grey-pill address-pill"
+                  data-test="address-registry"
+                >Trouvée au registre du commerce</span>
+                <div
+                  v-else
+                  class="hint"
                 >
-                  Enregistrer
-                </button>
+                  {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
+                </div>
+              </template>
+              <template v-else>
+                <div class="block-field-value block-field-none">
+                  Non renseignée
+                </div>
+                <span
+                  v-if="notFound"
+                  class="grey-pill address-pill"
+                  data-test="address-not-found"
+                >Pas trouvée au registre</span>
+              </template>
+            </div>
+            <CopyButton
+              v-if="offer.company_address && !editingAddress && !searching"
+              :value="offer.company_address.split('\n').join(', ')"
+              label="Copier : adresse"
+              test-id="address-copy"
+            />
+          </div>
+          <!-- « Modifier l'adresse » ou « Ajouter l'adresse » : une ligne avec chevron sous l'adresse (planches
+             OffreAdresseTrouvee et OffreAdresseNonTrouvee du 18.11). -->
+          <button
+            v-if="!editingAddress && !searching"
+            type="button"
+            class="address-row"
+            data-test="add-address"
+            @click="startAddress"
+          >
+            {{ offer.company_address ? "Modifier l’adresse" : "Ajouter l’adresse" }}<AppIcon name="chevron" />
+          </button>
+          <div
+            v-if="registryMessage || proposals.length"
+            class="registry-proposals"
+            data-test="registry"
+          >
+            <p
+              v-if="registryMessage"
+              class="hint"
+            >
+              {{ registryMessage }}
+            </p>
+            <ul v-if="proposals.length">
+              <li
+                v-for="proposal in proposals"
+                :key="proposal.uid"
+              >
+                <span>
+                  <strong>{{ proposal.name }}</strong><br>
+                  <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+                </span>
                 <button
                   type="button"
-                  class="link"
-                  @click="editingAddress = false"
+                  class="secondary small"
+                  data-test="choose-registry"
+                  @click="chooseRegistry(proposal.uid)"
                 >
-                  Annuler
+                  Choisir
                 </button>
-              </div>
-            </form>
-            <p
-              v-else-if="searching"
-              class="block-field-value offer-busy address-busy"
-              role="status"
-              data-test="registry-busy"
-            >
-              <span
-                class="offer-busy-ring"
-                aria-hidden="true"
-              />Recherche de l’adresse…
-            </p>
-            <template v-else-if="offer.company_address">
-              <div class="block-field-value address-lines">
-                {{ offer.company_address }}
-              </div>
-              <span
-                v-if="offer.company_address_source === 'registry'"
-                class="grey-pill address-pill"
-                data-test="address-registry"
-              >Trouvée au registre du commerce</span>
-              <div
-                v-else
-                class="hint"
-              >
-                {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}
-              </div>
-            </template>
-            <template v-else>
-              <div class="block-field-value block-field-none">
-                Non renseignée
-              </div>
-              <span
-                v-if="notFound"
-                class="grey-pill address-pill"
-                data-test="address-not-found"
-              >Pas trouvée au registre</span>
-            </template>
+              </li>
+            </ul>
           </div>
-          <CopyButton
-            v-if="offer.company_address && !editingAddress && !searching"
-            :value="offer.company_address.split('\n').join(', ')"
-            label="Copier : adresse"
-            test-id="address-copy"
-          />
-        </div>
-        <!-- « Modifier l'adresse » ou « Ajouter l'adresse » : une ligne avec chevron sous l'adresse (planches
-             OffreAdresseTrouvee et OffreAdresseNonTrouvee du 18.11). -->
-        <button
-          v-if="!editingAddress && !searching"
-          type="button"
-          class="address-row"
-          data-test="add-address"
-          @click="startAddress"
-        >
-          {{ offer.company_address ? "Modifier l’adresse" : "Ajouter l’adresse" }}<AppIcon name="chevron" />
-        </button>
-        <div
-          v-if="registryMessage || proposals.length"
-          class="registry-proposals"
-          data-test="registry"
-        >
           <p
-            v-if="registryMessage"
-            class="hint"
+            v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
+            class="hint employer-line"
+            data-test="employer-line"
           >
-            {{ registryMessage }}
+            <span
+              v-if="employerBusy"
+              class="offer-busy"
+              role="status"
+            ><span
+              class="offer-busy-ring"
+              aria-hidden="true"
+            />Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
+            <span
+              v-else-if="offer.employer_url && offer.employer_checked_at"
+            >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+              {{ dateInSentence(offer.employer_checked_at) }}.</span>
+            <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
+            <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
+            <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
+            <span
+              v-if="employerMessage"
+              role="status"
+            >{{ employerMessage }}</span>
           </p>
-          <ul v-if="proposals.length">
-            <li
-              v-for="proposal in proposals"
-              :key="proposal.uid"
-            >
-              <span>
-                <strong>{{ proposal.name }}</strong><br>
-                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-              </span>
-              <button
-                type="button"
-                class="secondary small"
-                data-test="choose-registry"
-                @click="chooseRegistry(proposal.uid)"
-              >
-                Choisir
-              </button>
-            </li>
-          </ul>
         </div>
-        <p
-          v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
-          class="hint employer-line"
-          data-test="employer-line"
+        <a
+          v-if="website"
+          class="company-card company-site"
+          :href="website.href"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-test="company-website"
         >
-          <span
-            v-if="employerBusy"
-            class="offer-busy"
-            role="status"
-          ><span
-            class="offer-busy-ring"
-            aria-hidden="true"
-          />Recherche chez l’employeur en cours (jusqu’à 30 s)…</span>
-          <span
-            v-else-if="offer.employer_url && offer.employer_checked_at"
-          >Trouvée chez l’employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
-            {{ dateInSentence(offer.employer_checked_at) }}.</span>
-          <span v-else-if="offer.employer_status === 'agency'">Annonce d’agence : employeur non indiqué.</span>
-          <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l’employeur.</span>
-          <span v-else-if="offer.employer_status === 'gone'">L’annonce a disparu du site de l’employeur.</span>
-          <span
-            v-if="employerMessage"
-            role="status"
-          >{{ employerMessage }}</span>
-        </p>
+          <span>
+            <b>Site de l’entreprise</b>
+            <span class="company-site-host">{{ website.host }}</span>
+          </span>
+          <AppIcon name="chevron" />
+        </a>
       </section>
       <div
         v-if="offer.company"
@@ -1971,6 +2001,12 @@ watch(
 .offer-busy { display: flex; align-items: center; gap: var(--space-2); }
 .offer-busy-ring { flex: none; box-sizing: border-box; width: 1em; height: 1em; border: 2px solid var(--line-strong); border-right-color: var(--primary-graphic); border-radius: var(--radius-pill); animation: offer-busy-turn 0.9s linear infinite; }
 @keyframes offer-busy-turn { to { transform: rotate(360deg); } }
+/* « L'entreprise » (planche OffreAdresseTrouvee du 18.11) : titre en casse normale, 18/800 ; la carte du site dessous. */
+.offer-company .offer-company-cap { font-size: var(--font-title); font-weight: var(--weight-heavy); letter-spacing: 0; text-transform: none; color: var(--text); }
+.company-site { --site-min: 56px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--site-min); padding: var(--space-3) 0; border-top: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+.company-site b { display: block; font-size: var(--font-body); font-weight: var(--weight-semibold); }
+.company-site-host { display: block; margin-top: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
+.company-site .icon { flex: none; color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) { .offer-busy-ring { animation: none; } }
 /* Audit du 17.11, N27 : sur ordinateur, chaque lien seul de la fiche a une cible de 24 px de haut au moins (WCAG 2.5.8),
    sans rien déplacer : un lien dans le texte prend la marge en haut et en bas, un bouton-lien la reprend en négatif. */
@@ -2062,5 +2098,13 @@ watch(
   .offer-blocks :is(.link, .more-direct) { display: inline-flex; align-items: center; min-height: var(--target-min); }
   .offer-blocks .section-more, .offer-blocks .disclosure-chevron { margin-left: 0; }
   .offer-blocks .disclosure-row { justify-content: space-between; }
+  /* « L'entreprise » sur téléphone (OffreAdresseTrouvee) : le titre hors de la carte, puis deux cartes (Nom et adresse ;
+     site), séparateurs intérieurs. */
+  .offer-blocks .detail-more-rows:has(.company-card) { --co-card-gap: 12px; padding-top: 0; border-top: 0; }
+  .offer-blocks .offer-company-head { min-height: 0; margin: 0 0 var(--space-3); border-bottom: 0; }
+  .offer-blocks .company-card { margin-bottom: var(--co-card-gap); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); overflow: hidden; }
+  .offer-blocks .company-card > :is(.block-field, .address-row, .registry-proposals, .employer-line) { padding-inline: var(--space-4); }
+  .offer-blocks .company-card > :first-child { border-top: 0; }
+  .offer-blocks .company-site { padding: var(--space-3) var(--space-4); }
 }
 </style>
