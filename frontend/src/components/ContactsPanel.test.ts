@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { isoDay } from "../contactLabels";
 import ContactsPanel from "./ContactsPanel.vue";
@@ -16,6 +16,10 @@ vi.mock("../api/client", () => ({
     DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
+// Les choix sont chargés avec les contacts (import à part) : le fichier est prêt avant les tests.
+beforeAll(async () => {
+  await import("./ChoiceField.vue");
+});
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
@@ -105,14 +109,18 @@ describe("ContactsPanel", () => {
     POST.mockResolvedValueOnce({ data: { text: "Bonjour [Prénom], ".repeat(20), limit: 300 } });
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
     await flushPromises();
-    await wrapper.find("[data-test=contact-writer] select").setValue("team");
+    // « Écrire à » : un bouton qui ouvre le menu de l’app, plus de menu du système (audit du 17.11, K13).
+    expect(wrapper.find("[data-test=contact-writer] select").exists()).toBe(false);
+    await wrapper.find("[data-test=contact-write-role]").trigger("click");
+    await wrapper.find("[data-test=choice-team]").trigger("click");
+    expect(wrapper.find("[data-test=contact-write-role]").attributes("aria-label")).toBe("Écrire à : Membre de l’équipe");
     await wrapper.find("[data-test=contact-writer] form").trigger("submit");
     await flushPromises();
     expect(POST.mock.calls[0]![0]).toBe("/api/contacts/message");
     expect(POST.mock.calls[0]![1].body).toMatchObject({ offer_id: 7, role: "team", channel: "linkedin_invite" });
     expect(wrapper.find("[data-test=contact-count]").text()).toContain("trop long");
     await wrapper.find("[data-test=contact-add]").trigger("click");
-    expect((wrapper.find("[data-test=contact-form] select").element as HTMLSelectElement).value).toBe("team");
+    expect(wrapper.find("[data-test=contact-role]").attributes("aria-label")).toBe("Rôle : Membre de l’équipe");
   });
 
   it("explique pourquoi le message n’a pas pu être rédigé", async () => {

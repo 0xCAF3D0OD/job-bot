@@ -3,7 +3,9 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import type { Application } from "../api/client";
-import { sentChips, sentStatus, type SentSectionKey } from "../sentList";
+import { usePhone } from "../composables/usePhone";
+import { initials } from "../format";
+import { sentChips, sentStatus, sentWhen, type SentSectionKey } from "../sentList";
 import AppIcon from "./AppIcon.vue";
 import ListCard from "./ListCard.vue";
 
@@ -11,7 +13,6 @@ import ListCard from "./ListCard.vue";
 // d'envoi (et le canal dans la semaine) ou l'entretien en puce, et le statut à droite (icône dans un rond, un mot).
 // Un clic ouvre le panneau de la candidature (?candidature=).
 const props = defineProps<{ application: Application; section: SentSectionKey; selected?: boolean }>();
-defineEmits<{ select: [] }>();
 const route = useRoute();
 
 const to = computed(() => ({ path: route.path, query: { ...route.query, candidature: String(props.application.id) } }));
@@ -39,10 +40,59 @@ onMounted(() => {
 onUnmounted(() => watcher?.disconnect());
 watch(chips, () => void fit());
 const status = computed(() => sentStatus(props.application, props.section));
+
+// Téléphone (planche Envoyees du 13.11, §27) : deux lignes, le poste et sa pastille d'état, puis « entreprise · quand ».
+// Ni colonne de statut ni puce : chaque information n'apparaît qu'une fois dans la carte.
+const { phone } = usePhone();
+const when = computed(() => sentWhen(props.application, props.section));
+const line = computed(() => [props.application.company, when.value].filter(Boolean).join(" · "));
+const label = computed(() => [props.application.job_title, props.application.company, status.value.word, when.value].filter(Boolean).join(", "));
+const pillTone = computed(() => (status.value.tone === "peach" || status.value.tone === "green" ? status.value.tone : "neutral"));
+const href = computed(() => {
+  const query = new URLSearchParams(to.value.query as Record<string, string>).toString();
+  return `${to.value.path}?${query}`;
+});
+const emit = defineEmits<{ select: [] }>();
+function onClick(event: MouseEvent): void {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+  event.preventDefault();
+  emit("select");
+}
 </script>
 
 <template>
+  <a
+    v-if="phone"
+    :href="href"
+    class="sent-tel"
+    :aria-label="label"
+    :aria-current="selected ? 'true' : undefined"
+    data-test="application"
+    @click="onClick"
+  >
+    <span
+      class="sent-tel-logo"
+      aria-hidden="true"
+    >{{ initials(application.company || application.job_title) }}</span>
+    <span class="sent-tel-text">
+      <span class="sent-tel-top">
+        <span
+          class="sent-tel-title"
+          data-test="list-card-title"
+        >{{ application.job_title }}</span>
+        <span
+          :class="['sent-tel-pill', pillTone]"
+          data-test="sent-status"
+        >{{ status.word }}</span>
+      </span>
+      <span
+        class="sent-tel-sub"
+        data-test="sent-line"
+      >{{ line }}</span>
+    </span>
+  </a>
   <ListCard
+    v-else
     ref="card"
     :title="application.job_title"
     :company="application.company"
@@ -79,6 +129,30 @@ const status = computed(() => sentStatus(props.application, props.section));
 </template>
 
 <style>
+/* Téléphone, planche Envoyees (HTML) : carte 20 px de marge, trait 1 px, rayon 18, écart 14 ; logo neutre 44 aux coins
+   de 12 (§40 : initiales sur fond neutre) ; titre 16/22 gras coupé par « … », pastille 12/18 gras, 2 px 8 px, jamais
+   coupée ; ligne 2 en 14/20 grise coupée par « … ». */
+.sent-tel {
+  --sent-tel-2: 2px; --sent-tel-3: 3px; --sent-tel-8: 8px; --sent-tel-12: 12px; --sent-tel-14: 14px; --sent-tel-18: 18px; --sent-tel-22: 22px;
+  display: flex; align-items: center; gap: var(--sent-tel-14); padding: var(--space-5); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none;
+}
+.sent-tel[aria-current="true"] { padding: calc(var(--space-5) - 1px); border: 2px solid var(--primary-graphic); background: var(--selected-bg); }
+.sent-tel-logo {
+  flex: none; display: grid; place-items: center; width: var(--target-min); height: var(--target-min); border-radius: var(--sent-tel-12);
+  background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead); font-size: var(--font-label); font-weight: var(--weight-bold);
+}
+.sent-tel-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sent-tel-3); }
+.sent-tel-top { display: flex; align-items: center; gap: var(--sent-tel-8); min-width: 0; }
+.sent-tel-title { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-body); line-height: var(--sent-tel-22); font-weight: var(--weight-bold); }
+.sent-tel-pill {
+  flex: none; padding: var(--sent-tel-2) var(--sent-tel-8); border-radius: var(--radius-pill); white-space: nowrap; font-size: var(--font-caption);
+  line-height: var(--sent-tel-18); font-weight: var(--weight-bold);
+  background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface)); color: var(--text-lead);
+}
+.sent-tel-pill.peach { background: var(--peach-soft); color: var(--peach-text); }
+.sent-tel-pill.green { background: var(--success-soft); color: var(--success); }
+.sent-tel-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 /* « +N » : les puces qui ne tiennent pas sur la ligne (§26), en gras comme sur la carte d'une offre. */
 [data-test="application"] > .list-card-chips > .more { font-weight: var(--weight-bold); }
 /* Une puce trop longue pour un écran étroit (360 px), seule ou avant « +N » : elle finit par « … » au lieu d’être coupée net. */

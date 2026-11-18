@@ -35,3 +35,7 @@ coverage/
 
 # Extension signée par Mozilla (docs/25, 0.18.1)
 extension/web-ext-artifacts/
+
+# Test d'affichage (frontend/e2e) : résultats et rapport d'un passage, jamais dans git ; les références, si.
+frontend/e2e/resultats/
+frontend/e2e/rapport/

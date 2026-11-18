@@ -12,7 +12,7 @@ REMOTE_DIR ?= joba1
 PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
 
 .PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
-.PHONY: geonames-maj setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check mesure-pourquoi extension changelog changelog-check decisions audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-libelle audit-menu audit-tri poids css-inutilise test-journal-caddy
+.PHONY: geonames-maj setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check mesure-pourquoi extension changelog changelog-check decisions audit-telephone audit-controles audit-grille audit-panneaux audit-rendez-vous audit-libelle audit-menu audit-tri test-affichage poids css-inutilise test-journal-caddy
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -87,15 +87,17 @@ test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, 
 test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au bord, débordement et cibles sur téléphone (navigateur requis)
 	cd backend && uv run --with playwright --with pytest --with fonttools --with brotli pytest -q ../frontend/scripts/test_regles.py ../frontend/scripts/test_telephone.py ../frontend/scripts/test_controles.py
 
-# Les mêmes contrôles que la CI (tests.yml, audit-telephone.yml), à lancer avant chaque push : interface, historique,
+# Les mêmes contrôles que la CI (tests.yml, audit-telephone.yml, affichage.yml), à lancer avant chaque push : interface, historique,
 # puis les audits ordinateur et téléphone sur la démo déjà lancée (make demo ; DEMO_URL). Tout est lancé même après
-# un échec, comme dans la CI, et la commande échoue à la fin s'il y en a eu un.
+# un échec, comme dans la CI, et la commande échoue à la fin s'il y en a eu un. Le test d'affichage lance sa propre démo
+# à heure figée (base jobbot_e2e, ports 8300 et 5300 ; E2E_DATABASE_URL).
 audits-ci: ## avant chaque push : tests, types, lint, poids (et son écart avec main), historique, puis tous les audits CI ordinateur et téléphone (DEMO_URL)
 	@echec=0; \
 	for etape in "cd frontend && npm run -s test" "cd frontend && npm run -s typecheck" "cd frontend && npm run -s lint" \
 		"cd frontend && npm run -s poids:ci" "sh frontend/scripts/poids-delta.sh" "$(MAKE) -s changelog-check" "$(MAKE) -s i18n-check" "$(MAKE) -s test-audit" \
 		"AUDIT_FORMAT=telephone $(MAKE) -s -k audit-telephone audit-grille audit-controles audit-rendez-vous audit-menu audit-libelle audit-tri" \
-		"AUDIT_FORMAT=ordinateur $(MAKE) -s -k audit-grille audit-controles audit-panneaux audit-rendez-vous audit-menu audit-libelle audit-tri"; do \
+		"AUDIT_FORMAT=ordinateur $(MAKE) -s -k audit-grille audit-controles audit-panneaux audit-rendez-vous audit-menu audit-libelle audit-tri" \
+		"$(MAKE) -s test-affichage"; do \
 		echo "== $$etape"; sh -c "$$etape" || { echo "ÉCHEC : $$etape"; echec=1; }; \
 	done; exit $$echec
 
@@ -119,6 +121,9 @@ audit-menu: ## menu « Candidatures » depuis Mes alertes, Préparer et Relances
 
 audit-libelle: ## libellé flottant des champs : bordure interrompue, aucun trait derrière les lettres (repos, focus, erreur ; clair et sombre ; DEMO_URL)
 	cd backend && uv run --with playwright --with pillow python ../frontend/scripts/libelle.py $(or $(DEMO_URL),http://localhost:5200)
+
+test-affichage: ## test d'affichage (frontend/e2e) : 8 écrans × 4 formats, captures de référence et contrôles a à h, démo à heure figée ; ARGS=--update-snapshots pour reprendre les références
+	sh scripts/affichage.sh $(ARGS)
 
 audit-tri: ## trier 3 offres (garder, écarter, garder) : boutons, clavier, « Annuler », « C’est trié ! » (390 et 1440 px ; DEMO_URL)
 	cd backend && uv run --with playwright python ../frontend/scripts/tri.py $(or $(DEMO_URL),http://localhost:5200)

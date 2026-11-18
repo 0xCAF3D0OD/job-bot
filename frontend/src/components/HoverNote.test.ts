@@ -89,4 +89,33 @@ describe("HoverNote (docs/53)", () => {
     expect(wrapper.find("[data-test=hover-note]").exists()).toBe(false);
     expect(wrapper.text()).toBe("Langues");
   });
+
+  it("un clic sur le bouton ferme la bulle, qui ne revient pas tant que la souris reste (audit du 17.11, K12)", async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(
+      { components: { HoverNote }, props: { text: { type: String, default: "Environ 0,002 $." } }, template: `<button type="button"><HoverNote :text="text">Rédiger</HoverNote></button>` },
+      { attachTo: document.body },
+    );
+    const note = () => wrapper.find("[data-test=hover-note]");
+    note().element.dispatchEvent(pointer("pointerenter", "mouse"));
+    vi.advanceTimersByTime(3100);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find("[data-test=hover-note-text]").exists()).toBe(true);
+    await wrapper.find("button").trigger("click");
+    expect(wrapper.find("[data-test=hover-note-text]").exists()).toBe(false);
+    // « Rédaction… » : le texte s'efface puis revient, la bulle ne revient pas seule.
+    await wrapper.setProps({ text: "" });
+    await wrapper.setProps({ text: "Environ 0,002 $." });
+    note().element.dispatchEvent(pointer("pointerenter", "mouse"));
+    vi.advanceTimersByTime(3100);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find("[data-test=hover-note-text]").exists()).toBe(false);
+    // La souris sort puis revient : la bulle revient.
+    note().element.dispatchEvent(pointer("pointerleave", "mouse"));
+    note().element.dispatchEvent(pointer("pointerenter", "mouse"));
+    vi.advanceTimersByTime(3100);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find("[data-test=hover-note-text]").exists()).toBe(true);
+    wrapper.unmount();
+  });
 });

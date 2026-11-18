@@ -209,3 +209,37 @@ async def test_guest_lookup_stays_in_its_offers(
     assert response.json()["company_address"] == chosen.address
     async with fresh.sessionmaker() as session:
         assert await session.scalar(select(Company)) is None
+
+
+async def test_known_company_fills_only_an_empty_address(
+    api: AsyncClient,
+    fresh: Runtime,
+    monkeypatch: pytest.MonkeyPatch,
+    no_registry_network: list[str],
+) -> None:
+    """L'entreprise déjà dans le cache du registre : son adresse est copiée dans l'offre dont le
+    champ est vide, jamais par-dessus une adresse saisie (décision de Kevin du 17.11, audit K6)."""
+
+    async def fake(name: str) -> list[RegistryCompany]:
+        no_registry_network.append(name)
+        return [company("Exemple SA")]
+
+    monkeypatch.setattr(uid, "search", fake)
+    await add(fresh, 1, "Exemple SA")
+    await lookup_addresses(fresh)  # le cache connaît l'entreprise
+    empty = await add(fresh, 2, "Exemple SA")
+    typed = await add(
+        fresh, 3, "Exemple SA", company_address="Rue saisie 1", company_address_source="manual"
+    )
+    no_registry_network.clear()
+
+    for offer_id in (empty, typed):
+        found = (await api.post(f"/api/offers/{offer_id}/address-candidates")).json()
+        assert found["chosen_uid"]
+    assert no_registry_network == []  # réponse du cache, sans nouvelle recherche
+    async with fresh.sessionmaker() as session:
+        filled = await session.get_one(Offer, empty)
+        kept = await session.get_one(Offer, typed)
+    assert filled.company_address == "Chemin de l'Exemple 10\n1206 Genève"
+    assert filled.company_address_source == "registry"
+    assert (kept.company_address, kept.company_address_source) == ("Rue saisie 1", "manual")

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, defineAsyncComponent, ref } from "vue";
 
 import { api, type Application, type ApplicationStatus, type Interview, type OrpRow } from "../api/client";
 import { noAnswerText, followUpDue, noAnswerDue } from "../applicationState";
@@ -9,7 +9,6 @@ import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
 import AppIcon from "./AppIcon.vue";
 import DateField from "./DateField.vue";
-import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
@@ -115,6 +114,9 @@ const menuItems = computed<MoreMenuItem[]>(() => [
 
 const onStatus = (event: Event): void =>
   emit("status", props.application, (event.target as HTMLSelectElement).value as ApplicationStatus);
+// Les contacts (et leurs choix « Écrire à », « Canal ») chargés à l’ouverture, pas avec Suivi (règle du poids, audit
+// du 17.11) : le panneau attend déjà sa liste du serveur avant de s’afficher.
+const ContactsPanel = defineAsyncComponent(() => import("./ContactsPanel.vue"));
 </script>
 
 <template>

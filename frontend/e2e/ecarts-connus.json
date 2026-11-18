@@ -1,0 +1,152 @@
+{
+  "_lisezmoi": "Les écarts déjà connus du test d'affichage (e2e/affichage.e2e.ts). Chaque ligne : l'écran, le format (préfixe : telephone, ordinateur-sombre…, absent = tous), la règle (a à h), un morceau de la description de l'élément, et la raison. Une ligne ne s'ajoute qu'avec sa raison : écart dessiné sur la planche, ou défaut relevé à corriger dans sa propre PR. On ne relève jamais un seuil.",
+  "ecarts": [
+    {
+      "ecran": "accueil",
+      "format": "ordinateur",
+      "regle": "d",
+      "element": "span.aj-title-hand",
+      "raison": "dessiné ainsi sur la planche du 18.11 : titre manuscrit en Caveat Brush (LISEZMOI_CORRECTIONS)"
+    },
+    {
+      "ecran": "accueil",
+      "format": "telephone",
+      "regle": "d",
+      "element": "span.home-hand-blue",
+      "raison": "dessiné ainsi sur la planche du 18.11 : titre manuscrit en Caveat Brush (LISEZMOI_CORRECTIONS)"
+    },
+    {
+      "ecran": "bilan",
+      "format": "ordinateur",
+      "regle": "d",
+      "element": "h2[orp-proof-title]",
+      "raison": "dessiné ainsi sur la planche du 18.11 : titre manuscrit en Caveat Brush (LISEZMOI_CORRECTIONS)"
+    },
+    {
+      "ecran": "accueil",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "offres",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "envoyees",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "rendez-vous",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "fiche-offre",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "bilan",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "reglages",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "profil",
+      "format": "telephone-sombre",
+      "regle": "h",
+      "element": "span.tab-bar-icon",
+      "raison": "dessiné ainsi sur la planche du 18.11 : le rond crème (#F3EEE6) de l'onglet actif de la barre du bas, en sombre aussi"
+    },
+    {
+      "ecran": "envoyees",
+      "format": "telephone",
+      "regle": "a",
+      "element": "span.list-card-chips",
+      "raison": "les puces des Envoyées passent sur 2 lignes et sortent de la carte (le bug signalé par Kevin le 18.11) ; corrigé par la PR #869, qui retire cette ligne"
+    },
+    {
+      "ecran": "envoyees",
+      "format": "ordinateur",
+      "regle": "b",
+      "element": "span.empty-state-pill",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (pastille de l'état vide, 36 px de haut)"
+    },
+    {
+      "ecran": "offres",
+      "format": "ordinateur",
+      "regle": "b",
+      "element": "span.empty-state-pill",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (pastille de l'état vide, 36 px de haut)"
+    },
+    {
+      "ecran": "rendez-vous",
+      "format": "ordinateur",
+      "regle": "b",
+      "element": "span.empty-state-pill",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (pastille de l'état vide, 36 px de haut)"
+    },
+    {
+      "ecran": "fiche-offre",
+      "format": "telephone",
+      "regle": "b",
+      "element": "[offer-discard]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (« Écarter » étiré à 52 px à côté d'un bouton de 48 px)"
+    },
+    {
+      "ecran": "fiche-offre",
+      "format": "ordinateur",
+      "regle": "f",
+      "element": "[edit-address]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (« Modifier l'adresse » : 21 px de haut)"
+    },
+    {
+      "ecran": "reglages",
+      "format": "ordinateur",
+      "regle": "f",
+      "element": "input[phone-switch]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (interrupteur de 35 × 21 px sans libellé cliquable autour)"
+    },
+    {
+      "ecran": "reglages",
+      "format": "ordinateur",
+      "regle": "f",
+      "element": "input[switch-notify_follow_ups]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (interrupteur de 35 × 21 px sans libellé cliquable autour)"
+    },
+    {
+      "ecran": "reglages",
+      "format": "ordinateur",
+      "regle": "f",
+      "element": "input[switch-notify_offers]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (interrupteur de 35 × 21 px sans libellé cliquable autour)"
+    },
+    {
+      "ecran": "reglages",
+      "format": "ordinateur",
+      "regle": "f",
+      "element": "input[switch-notify_orp]",
+      "raison": "relevé sur main le 18.11 par le premier passage du test : à corriger dans sa propre PR (interrupteur de 35 × 21 px sans libellé cliquable autour)"
+    }
+  ]
+}

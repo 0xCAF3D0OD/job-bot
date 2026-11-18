@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 
 import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
@@ -73,6 +73,20 @@ const strongId = useId();
 const gapId = useId();
 const howId = useId();
 const howOpen = ref(false);
+const howPanel = ref<HTMLElement | null>(null);
+const howButton = ref<HTMLButtonElement | null>(null);
+// Le panneau s'ouvre sous le bas visible de la feuille (audit du 17.11, K4) : la feuille défile jusqu'à lui, le bouton en
+// haut s'il tient, sans bouger si tout est déjà visible ; d'un coup si le mouvement est réduit.
+async function toggleHow(): Promise<void> {
+  howOpen.value = !howOpen.value;
+  if (!howOpen.value) return;
+  await nextTick();
+  const panel = howPanel.value;
+  const body = panel?.closest<HTMLElement>(".sheet-body");
+  if (!panel || !body || panel.getBoundingClientRect().bottom <= body.getBoundingClientRect().bottom) return;
+  const reduced = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  howButton.value?.scrollIntoView?.({ block: "start", behavior: reduced ? "auto" : "smooth" });
+}
 const parts = computed(() => props.parts ?? []);
 // Barre : verte si pleine, orange si la part dépend d'un point à vérifier, bleue sinon. Le chiffre est
 // toujours écrit à côté (WCAG 1.4.1).
@@ -153,12 +167,13 @@ const families = computed(() =>
     </section>
     <template v-if="hasHow">
       <button
+        ref="howButton"
         type="button"
         class="compat-how"
         :aria-expanded="howOpen"
         :aria-controls="howId"
         data-test="compat-how"
-        @click="howOpen = !howOpen"
+        @click="toggleHow"
       >
         Comment la note est calculée
         <AppIcon :name="howOpen ? 'chevron-up' : 'chevron-down'" />
@@ -166,6 +181,7 @@ const families = computed(() =>
       <div
         v-show="howOpen"
         :id="howId"
+        ref="howPanel"
         class="compat-how-panel"
       >
         <template v-if="parts.length">
