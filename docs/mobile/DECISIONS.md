@@ -1173,3 +1173,17 @@ Sur téléphone et sur ordinateur, en clair et en sombre, on retire « À quel p
 Règle générale du même message : on comprend l'écran en 3 secondes, un seul bouton plein, aucune phrase qui répète
 le titre ou l'image ; un texte que la planche n'a pas se retire. Le switch « Télétravail possible » reste en place
 (filtres en direct, pas de bouton « Appliquer »).
+
+## Textes retirés partout, §72g (Kevin, 18.11.2026, 16 h 20)
+
+Règle pour toutes les PR : on comprend l'écran en 3 secondes, il n'y a qu'un seul bouton plein, et aucune phrase ne répète le titre ou l'image. Un texte que la planche n'a pas est retiré.
+
+Ces textes sont retirés au téléphone et à l'ordinateur, en clair comme en sombre :
+- Alertes : les pastilles « Ouvre l'alerte pour la confirmer sur Indeed », « Les offres arrivent dans « Nouvelles » » et « Pas encore créée sur le site ».
+- Filtres : « À quel point l'offre correspond à ton profil » et « Provisoire : notée sur l'extrait de l'alerte ».
+- Alertes reçues : « Les plus récentes d'abord ».
+- FeuilleNom : « Tout est enregistré dès que tu quittes un champ ».
+- OrpFiche : « Elle passe dans « Recherches du mois » ».
+- CandidaturesVideAlertes : la phrase « jobA1 récupère les nouvelles offres… ».
+- « J'ai contacté quelqu'un » : la phrase sous le titre.
+- Onboarding alerte : le paragraphe devient « Une alerte jobup, et tes offres arrivent toutes seules. Environ 2 minutes. »
