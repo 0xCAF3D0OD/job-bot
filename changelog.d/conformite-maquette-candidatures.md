@@ -1,1 +1,1 @@
-Table de correspondance planches → app (docs/maquette-map.md) et premier rapport de conformité à la maquette : Candidatures
+Table de correspondance planches → app (docs/maquette-map.md) et rapport de conformité à la maquette : Candidatures, fiche d'une offre et Accueil

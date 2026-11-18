@@ -9,7 +9,7 @@ Ce rapport ne corrige rien. Chaque écran est classé :
 
 ## Comment les images sont faites
 
-- **Planches** : paquet `jobA1_maquettes_2026-11-18.zip`, ouvertes dans Chromium à la taille de la planche (390 × 844 ou 1440 × 900). Le moteur des planches (`support.js`) n'est pas dans le paquet : la copie gardée dans les fichiers du projet (comparaison du 5.11) a servi, avec le gabarit lu tel qu'écrit.
+- **Planches** : paquet `jobA1_maquettes_2026-11-18.zip`, ouvertes dans Chromium à la taille de la planche (390 × 844 ou 1440 × 900). Le moteur des planches (`support.js`) n'est pas dans le paquet : la copie gardée dans les fichiers du projet (comparaison du 5.11) a servi, avec le gabarit lu tel qu'écrit. La police manuscrite Caveat Brush n'est pas chargée par les planches : celle de l'app (`frontend/src/assets/fonts/caveat-brush-titres.woff2`) leur est ajoutée, sinon les titres manuscrits s'affichent dans une police à empattements.
 - **App** : `main` au commit `9f93964`, démo locale (`jobbot demo-seed`), Playwright à la même taille, en clair et en sombre, animations réduites.
   - Le bandeau « Démo » est masqué : il n'existe pas en production.
   - L'Assistant est déclaré disponible, comme en production. La démo locale n'a pas de clé IA, et sans cela l'onglet Assistant disparaît de la barre du bas.
@@ -59,7 +59,7 @@ Sur ordinateur : la ligne « 8 offres » au-dessus de la liste n'est sur aucune 
 
 Total : 5 conformes, 13 avec écarts mineurs, 4 à refaire.
 
-**Pas comparés, état absent de la démo** (à ajouter à `demo-seed` ou à simuler) : `CandidaturesAgence` et `CandidaturesOrdinateurAgence` (aucune offre d'agence), `CandidaturesGlisser` (geste en cours), `CandidaturesVide`, `CandidaturesVideAlertes` et leurs versions ordinateur (compte sans offre), `EnvoyeesStatut` et `CandidaturesOrdinateurStatut` (toast après un e-mail reçu), `RendezVousFeuilleV2` et `RendezVousFeuilleOrdinateurV2` (rendez-vous ORP le lendemain ; celui de la démo est dans 6 jours).
+**Pas comparés, état absent de la démo** (à ajouter à `demo-seed` ou à simuler) : `CandidaturesAgence` (aucune offre d'agence ; la version ordinateur est simulée plus bas, n° 33), `CandidaturesGlisser` (geste en cours), `CandidaturesVide`, `CandidaturesVideAlertes` et leurs versions ordinateur (compte sans offre), `EnvoyeesStatut` et `CandidaturesOrdinateurStatut` (toast après un e-mail reçu), `RendezVousFeuilleV2` et `RendezVousFeuilleOrdinateurV2` (rendez-vous ORP le lendemain ; celui de la démo est dans 6 jours).
 
 **Écran de l'app sans planche** : sur ordinateur, Rendez-vous avec un rendez-vous ouvert (colonne de droite « Voir ma feuille », « Ce que tu apportes », questions). `RendezVousFeuilleOrdinateurV2` est un autre écran : le volet de veille ouvert depuis Aujourd'hui. Il faut la planche avant de toucher cette colonne.
 
@@ -176,7 +176,108 @@ Total : 5 conformes, 13 avec écarts mineurs, 4 à refaire.
 ### 22. Rendez-vous, vide · conforme
 ![Rendez-vous vide](maquette/2026-11-18/conformite/candidatures/ordi-rdv-vide.png)
 
+## Fiche d'une offre : bilan
+
+Offre 28 de la démo (Senior Platform Engineer), 34 (écartée), 37 (pas encore notée), 32 (gardée). Les états agence, expirée et adresse trouvée sont simulés en modifiant la réponse de l'API dans le navigateur.
+
+| # | Écran | Planche | Taille | Classement |
+|---|---|---|---|---|
+| 23 | Fiche d'une offre | Offre | 390 | **à refaire** |
+| 24 | Compatibilité | OffreCompatibilite | 390 | écarts mineurs |
+| 25 | Offre écartée | OffreEcartee | 390 | écarts mineurs |
+| 26 | Offre pas encore notée | OffreNonNotee | 390 | **à refaire** |
+| 27 | Offre d'agence | OffreAgence | 390 | écarts mineurs (en-tête commun) |
+| 28 | Offre expirée | OffreExpiree | 390 | **à refaire** |
+| 29 | Adresse trouvée | OffreAdresseTrouvee | 390 | **à refaire** |
+| 30 | Actions d'une offre | ActionsOffre | 390 | écarts mineurs |
+| 31 | Actions d'une offre gardée | ActionsOffreGardee | 390 | écarts mineurs |
+| 32 | Écartées (ordinateur) | CandidaturesOrdinateurEcartee | 1440 | écarts mineurs |
+| 33 | Offre d'agence (ordinateur) | CandidaturesOrdinateurAgence | 1440 | écarts mineurs |
+
+Total : 0 conforme, 7 avec écarts mineurs, 4 à refaire. Les n° 26, 28 et 29 sont en partie traités par la PR en cours sur la fiche d'une offre (lot 3 de l'audit, #863 : K2 « Noter maintenant », K9 offre expirée, K6 adresse) ; à recomparer après sa fusion.
+
+**Pas comparés, état absent de la démo** : `OffreProvisoire` (note provisoire), `OffreAdresseRecherche` et `OffreAdresseNonTrouvee` (recherche d'adresse en cours ou sans résultat).
+
+### 23. Fiche d'une offre · à refaire
+![Fiche d'une offre](maquette/2026-11-18/conformite/fiche-offre/tel-offre.png)
+- En-tête : la planche montre une grille Taux · Contrat · Télétravail avec des icônes bleues ; l'app montre des pastilles.
+- « Le poste » : la planche surligne des passages de l'annonce ; l'app montre un « RÉSUMÉ PAR JOBA1 » en capitales.
+- La carte « Autres offres chez … » de la planche manque.
+- « L'ENTREPRISE » en capitales dans l'app (titre en casse normale sur la planche).
+- Deux liens vers l'annonce dans l'app, un seul sur la planche.
+
+### 24. Compatibilité · écarts mineurs
+![Compatibilité](maquette/2026-11-18/conformite/fiche-offre/tel-offre-compat.png)
+- « POINTS FORTS » en capitales.
+- Pas de bloc « À vérifier » : l'offre de la démo n'a pas de point à vérifier (données).
+
+### 25. Offre écartée · écarts mineurs
+![Offre écartée](maquette/2026-11-18/conformite/fiche-offre/tel-offre-ecartee.png)
+- Pas d'anneau pointillé autour de la note ; pas de signet.
+- La raison du filtre qui a écarté l'offre est en plus : fonction de `main`, gardée.
+- Plus l'en-tête commun de la fiche (n° 23).
+
+### 26. Offre pas encore notée · à refaire
+![Offre pas encore notée](maquette/2026-11-18/conformite/fiche-offre/tel-offre-nonnotee.png)
+- Pas d'anneau pointillé ; le bouton « Noter maintenant » et sa pastille manquent (K2, PR #863).
+
+### 27. Offre d'agence · écarts mineurs
+![Offre d'agence](maquette/2026-11-18/conformite/fiche-offre/tel-offre-agence.png)
+- Le bloc « Agence » est celui de la planche. Restent les écarts de l'en-tête commun (n° 23).
+
+### 28. Offre expirée · à refaire
+![Offre expirée](maquette/2026-11-18/conformite/fiche-offre/tel-offre-expiree.png)
+- La planche montre une carte « Offre expirée » avec « Vérifiée le … » et le bouton « Écrire quand même ».
+- L'app montre un cadre orange et « Voir des offres proches » (K9, PR #863).
+
+### 29. Adresse trouvée · à refaire
+![Adresse trouvée](maquette/2026-11-18/conformite/fiche-offre/tel-offre-adresse.png)
+- La planche : carte « L'entreprise », adresse sur deux lignes, pastille « Trouvée au registre du commerce », ligne « Modifier l'adresse », carte « Site de l'entreprise ».
+- L'app : titre en capitales, boutons copier, texte « registre IDE », ligne « Contacts » (fonction de `main`, gardée). En partie traité par K6 (PR #863).
+
+### 30. Actions d'une offre · écarts mineurs
+![Actions](maquette/2026-11-18/conformite/fiche-offre/tel-actions.png)
+- Ordre des lignes différent de la planche.
+- Icônes : agence = immeuble sur la planche, drapeau dans l'app ; Assistant = bulle sur la planche, carré dans l'app.
+
+### 31. Actions d'une offre gardée · écarts mineurs
+![Actions, offre gardée](maquette/2026-11-18/conformite/fiche-offre/tel-actions-gardee.png)
+- Mêmes écarts qu'en 30 ; icône de « Remettre » (flèche) différente.
+
+### 32. Écartées (ordinateur) · écarts mineurs
+![Écartées, ordinateur](maquette/2026-11-18/conformite/fiche-offre/ordi-ecartee.png)
+- Titre de section « Écartées 45 » sur la planche, ligne « 8 offres » dans l'app.
+- La raison du filtre est une pastille de plus sur la carte (fonction de `main`, gardée).
+- « Annonce illisible » de la planche : pas dans les données de la démo.
+
+### 33. Offre d'agence (ordinateur) · écarts mineurs
+![Agence, ordinateur](maquette/2026-11-18/conformite/fiche-offre/ordi-agence.png)
+- Le bloc « Agence » est celui de la planche ; la pastille « Agence » est en plus sur la carte de la liste.
+- Ligne « 8 offres » (écart commun) ; l'offre choisie est plus bas dans la liste (ordre des données).
+
+## Accueil : bilan
+
+| # | Écran | Planche | Taille | Classement |
+|---|---|---|---|---|
+| 34 | Accueil | AccueilV2 | 390 | écarts mineurs |
+| 35 | Aujourd'hui | AujourdhuiOrdinateurV2 | 1440 | écarts mineurs |
+
+**Pas comparés, état absent de la démo** : `AccueilJustificatif` (justificatifs ORP en retard, avec le bandeau « Exporter »), `AccueilNouveau` et `AccueilPremiereCandidature` (compte neuf) et leurs versions ordinateur.
+
+### 34. Accueil · écarts mineurs
+![Accueil](maquette/2026-11-18/conformite/accueil/tel-accueil.png)
+- Titre : la démo n'a pas de justificatif en retard, l'app montre donc « 1 candidature à envoyer. » (Figtree et une partie manuscrite, plus grand). C'est l'écart validé par Kevin le 18.11 (docs/decisions/2026-11-18-0844-accueil-telephone.md), pas un nouvel écart.
+- Texte des tâches (« Préparer 2 candidatures », relances dans « À faire ») : écarts gardés par la même décision.
+- Plus les écarts communs (pastille du disque, icône Bilan, encoche).
+
+### 35. Aujourd'hui (ordinateur) · écarts mineurs
+![Aujourd'hui, ordinateur](maquette/2026-11-18/conformite/accueil/ordi-aujourdhui.png)
+- Titre : toutes les variantes de la planche sont entièrement manuscrites (44 px, deux couleurs, penchées). Le titre d'un jour ordinaire « 1 candidature à envoyer. » (Figtree et manuscrit) n'est dessiné sur aucune planche V2. **Question** : le garder ou l'écrire tout à la main comme les autres variantes ?
+- « Préparer » de la tâche entretien est en vert ; tous les liens d'action sont bleus sur la planche.
+- Bouton flottant « Assistant » en plus (fonction de `main`, gardée).
+- Le texte des cartes à trier diffère (notes de la démo) ; le style est le même.
+
 ## Suite
 
-- Audit suivant : la fiche d'une offre (`Offre`, `OffreAgence`, `OffreCompatibilite`, `OffreEcartee`, `OffreExpiree`, `OffreNonNotee`, `OffreProvisoire`, `OffreAdresse*`, `ActionsOffre*`, `CandidaturesOrdinateurEcartee`), puis l'Accueil (`AccueilV2`, `AccueilJustificatif`, `AccueilNouveau`, `AccueilPremiereCandidature`, `AujourdhuiOrdinateur*`).
-- Corrections : une PR par écran « à refaire », après le feu vert de Kevin. Les écarts communs (barre du bas) en une PR à part.
+- Corrections : une PR par écran « à refaire », après le feu vert de Kevin. Les écarts communs (barre du bas, en-tête de la fiche d'une offre) en une PR à part. Les n° 26, 28 et 29 se recomparent après la fusion de #863.
+- États à ajouter à la démo pour finir l'audit : offre d'agence et offre expirée dans la liste, compte sans offre, justificatif en retard, rendez-vous ORP le lendemain, note provisoire, recherche d'adresse.
