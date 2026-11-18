@@ -599,6 +599,15 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     }
   });
 
+  it("l’alerte ouverte depuis la page Alertes vide (AlertesVide, §72c) : les mêmes boutons ramènent aux Alertes", async () => {
+    for (const test of ["welcome-back", "welcome-alert-later", "welcome-alert-done"]) {
+      const { wrapper, router } = await mountWelcome({ status: "done", step: 9, goal: "job", trade: null }, { path: "/bienvenue?etape=alerte&retour=alertes" });
+      await click(wrapper, test);
+      expect(router.currentRoute.value.path).toBe("/candidatures/alertes");
+      wrapper.unmount();
+    }
+  });
+
   it("« Passer » remet à plus tard ; un accueil repris revient à son étape", async () => {
     const { wrapper, router } = await mountWelcome({ status: "postponed", step: 9, goal: null, trade: null });
     expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 4 sur 5");

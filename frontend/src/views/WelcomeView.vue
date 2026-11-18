@@ -179,7 +179,7 @@ function nextQuestion(): void {
 }
 function back(): void {
   if (fromToday && step.value === 3) {
-    void router.replace("/aujourdhui");
+    void router.replace(backTo);
     return;
   }
   if (step.value === 2 && question.value > 1) {
@@ -211,6 +211,8 @@ const alerts = ref<AlertsPage | null>(null);
 const alertBusy = ref(false);
 // Rouverte depuis la carte Premiers pas d'Aujourd'hui : « Retour », « Plus tard » et « J'ai créé l'alerte » y ramènent.
 const fromToday = route?.query.etape === "alerte";
+// Ouverte depuis « Créer une alerte » de la page Alertes vide (AlertesVide, §72c) : les mêmes boutons ramènent aux Alertes.
+const backTo = route?.query.retour === "alertes" ? "/candidatures/alertes" : "/aujourdhui";
 const alertSearch = computed(() => alerts.value?.searches.find((s) => s.active) ?? null);
 const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.url ?? null);
 const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
@@ -541,7 +543,7 @@ async function alertDone(): Promise<void> {
 }
 async function afterAlert(): Promise<void> {
   if (fromToday) {
-    await router.replace("/aujourdhui");
+    await router.replace(backTo);
     return;
   }
   step.value = 4;
@@ -1004,7 +1006,7 @@ async function finish(to: string): Promise<void> {
                 type="button"
                 class="secondary wdk-back"
                 data-test="welcome-back"
-                @click="fromToday ? router.replace('/aujourdhui') : go(2)"
+                @click="fromToday ? router.replace(backTo) : go(2)"
               >
                 Retour
               </button>
