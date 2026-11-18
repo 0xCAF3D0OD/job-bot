@@ -375,7 +375,9 @@ describe("SettingsView, comptes (docs/65)", () => {
 describe("SettingsView, le bon rythme (docs/86)", () => {
   it("les jours, la pause et le message des offres s’appliquent tout de suite", async () => {
     mockGet(false);
-    const PUT = vi.mocked((await import("../api/client")).api.PUT).mockResolvedValue({ data: null } as never);
+    const PUT = vi
+      .mocked((await import("../api/client")).api.PUT)
+      .mockImplementation((_path, init) => Promise.resolve({ data: { ...(init as { body: object }).body } } as never));
     const { wrapper } = await mountSettings("rythme");
     const last = () => (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
     expect((wrapper.find("[data-test=rhythm-day-0]").element as HTMLInputElement).checked).toBe(true);
@@ -390,6 +392,9 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
     // Une pause, puis la terminer.
     await pickDate(wrapper, "pause-from", "2099-10-26");
     await pickDate(wrapper, "pause-until", "2099-11-01");
+    // Rien n’est enregistré avant « Enregistrer » (Kevin, 18.11).
+    expect(last().rhythm_pause_from ?? null).toBeNull();
+    await wrapper.get("[data-test=pause-save]").trigger("click");
     await flushPromises();
     expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2099-10-26", "2099-11-01"]);
     await wrapper.find("[data-test=pause-end]").trigger("click");

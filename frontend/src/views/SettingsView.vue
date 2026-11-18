@@ -204,6 +204,11 @@ async function saveNumber(key: NumberKey): Promise<void> {
 async function saveDays(): Promise<void> {
   await persist("days", { rhythm_days: [...(form.value.rhythm_days ?? [])].sort() });
 }
+const pauseChanged = computed(
+  () =>
+    (form.value.rhythm_pause_from ?? null) !== (stored.value.rhythm_pause_from ?? null) ||
+    (form.value.rhythm_pause_until ?? null) !== (stored.value.rhythm_pause_until ?? null),
+);
 async function savePause(): Promise<void> {
   const { rhythm_pause_from: from, rhythm_pause_until: until } = form.value;
   if (from && until && until < from) {
@@ -804,7 +809,7 @@ watch(
                     label="Du"
                     title="Pause à partir du"
                     data-test="pause-from"
-                    @update:model-value="form.rhythm_pause_from = $event; void savePause()"
+                    @update:model-value="form.rhythm_pause_from = $event"
                   />
                   <DateField
                     :key="`until-${pauseKeys.until}`"
@@ -813,10 +818,20 @@ watch(
                     title="Pause jusqu’au"
                     :min="form.rhythm_pause_from ?? undefined"
                     data-test="pause-until"
-                    @update:model-value="form.rhythm_pause_until = $event; void savePause()"
+                    @update:model-value="form.rhythm_pause_until = $event"
                   />
+                  <!-- Enregistrée au clic d’« Enregistrer » seulement, comme la feuille du téléphone (Kevin, 18.11). -->
                   <button
-                    v-if="form.rhythm_pause_from"
+                    v-if="pauseChanged"
+                    type="button"
+                    class="primary"
+                    data-test="pause-save"
+                    @click="savePause"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    v-if="form.rhythm_pause_from && !pauseChanged"
                     type="button"
                     class="link"
                     data-test="pause-end"
