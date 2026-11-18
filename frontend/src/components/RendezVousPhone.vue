@@ -41,6 +41,8 @@ const props = defineProps<{
   meetingItems?: MoreMenuItem[];
   // Les mots de la recherche (maquette du 14 novembre, §6), déjà découpés par OrpMeetingView.
   words?: string[];
+  // Enregistre la liste entière des questions (« + Ajouter une question ») ; `false` si le serveur ne l'a pas prise.
+  saveQuestions?: (questions: Question[]) => Promise<boolean>;
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
@@ -189,6 +191,7 @@ function cal(iso: string): { day: number; month: number } {
         :pdf="sheetLink"
         :name-line="nameLine"
         :sheet-line="sheetLine"
+        :save="saveQuestions"
         @close="prepOpen = false"
         @sheet="viewSheet"
         @toggle="(question, value) => emit('toggle', question, value)"

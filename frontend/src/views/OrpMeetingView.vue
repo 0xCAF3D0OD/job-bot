@@ -248,15 +248,16 @@ async function removeMeeting(): Promise<void> {
   });
 }
 
-async function saveQuestions(questions: Question[]): Promise<void> {
+async function saveQuestions(questions: Question[]): Promise<boolean> {
   const { data, error } = await api.PUT("/api/orp-meeting/questions", { body: { questions } });
   if (data) {
     page.value = data;
     message.value = "";
     savedAt.value = Date.now();
-  } else {
-    message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
+    return true;
   }
+  message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d’enregistrer pour l’instant.";
+  return false;
 }
 
 function toggle(question: Question, checked: boolean): void {
@@ -457,6 +458,7 @@ onMounted(() => {
         :sheet-link="sheetLink"
         :meeting-items="editing ? [] : phoneMeetingItems"
         :words="words"
+        :save-questions="saveQuestions"
         @toggle="toggle"
         @sheet="viewSheetFromPrep"
         @prepare="preparing = $event"
