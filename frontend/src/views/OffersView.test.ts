@@ -239,19 +239,12 @@ describe("OffersView", () => {
     vi.unstubAllGlobals();
   });
 
-  it("ordinateur large : le compteur au-dessus de la liste dit le nombre de cartes, « 2 sur 6 offres » avec un filtre (Kevin, 15.11)", async () => {
+  it("ordinateur large : pas de compteur au-dessus de la liste (Kevin, 18.11, point 6)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
     mockOffers(page([offer(1, "Une"), offer(2, "Deux"), offer(3, "Trois")]));
     const all = await mountAt("/offres");
-    const cards = all.findAll("[data-offer-row]").length;
-    expect(cards).toBe(3);
-    expect(all.get("[data-test=offers-count]").text()).toBe(`${cards} offres`);
-    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
-    const searched = await mountAt("/offres?q=devops");
-    const shown = searched.findAll("[data-offer-row]").length;
-    expect(shown).toBe(2);
-    // 6 : « À traiter » sans filtre (counts.pending).
-    expect(searched.get("[data-test=offers-count]").text()).toBe(`${shown} sur 6 offres`);
+    expect(all.findAll("[data-offer-row]").length).toBe(3);
+    expect(all.find("[data-test=offers-count]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
 
