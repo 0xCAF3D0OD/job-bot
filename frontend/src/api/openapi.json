@@ -2887,6 +2887,51 @@
         }
       }
     },
+    "/api/offers/manual/file": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read File",
+        "description": "« Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :\nun PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la\nfiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),\nune formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé\n(E-5, J-1) ; rien n'est créé ici.",
+        "operationId": "readManualOfferFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readManualOfferFile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualFileOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/manual/{offer_id}/unfill": {
       "post": {
         "tags": [
@@ -13480,6 +13525,20 @@
         "type": "object",
         "title": "Body_oauthCallbackForm"
       },
+      "Body_readManualOfferFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readManualOfferFile"
+      },
       "Body_readManualOfferPdf": {
         "properties": {
           "file": {
@@ -20219,6 +20278,54 @@
           "existing_offer_id"
         ],
         "title": "ManualDraft"
+      },
+      "ManualFileOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-supported",
+                  "unreadable",
+                  "ai-off",
+                  "ai-down",
+                  "budget"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "ManualFileOut"
       },
       "ManualPdfOut": {
         "properties": {
