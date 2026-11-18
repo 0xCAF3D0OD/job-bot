@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, defineAsyncComponent, ref } from "vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
@@ -55,6 +55,20 @@ const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
 const prepOpen = ref(false);
+// « Ton nom sur la feuille » (§70, planche FeuilleNom) : une page ouverte depuis « Préparer le rendez-vous », chargée
+// à la première ouverture. Elle prend la place de la page de préparation (une seule feuille à la fois, avec son entrée
+// d'historique) ; Retour rouvre la préparation, qui reprend la place à son tour.
+const FeuilleNomSheet = defineAsyncComponent(() => import("./FeuilleNomSheet.vue"));
+const nameShown = ref(false);
+const nameOpen = ref(false);
+function openName(): void {
+  nameShown.value = true;
+  nameOpen.value = true;
+}
+function nameClosed(): void {
+  if (!prepOpen.value) prepOpen.value = true;
+  else nameOpen.value = false;
+}
 
 // À noter, puis le dernier rendez-vous ORP noté.
 const toNote = computed(() => meetingsToNote(props.page, now).filter((m) => meetingMatches(m, words.value)));
@@ -139,6 +153,12 @@ function cal(iso: string): { day: number; month: number } {
           @click="prepOpen = true"
         />
       </article>
+      <FeuilleNomSheet
+        v-if="item.kind === 'orp' && nameShown"
+        :open="nameOpen"
+        class="rdv-prep-page"
+        @close="nameClosed"
+      />
       <MeetingPrepSheet
         v-if="item.kind === 'orp'"
         :open="prepOpen"
@@ -150,6 +170,7 @@ function cal(iso: string): { day: number; month: number } {
         :pdf="sheetLink"
         @close="prepOpen = false"
         @toggle="(question, value) => emit('toggle', question, value)"
+        @name="openName"
       />
       <article
         v-else
