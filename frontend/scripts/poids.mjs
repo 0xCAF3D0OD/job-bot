@@ -50,6 +50,7 @@ export const LIMITS = {
   "js-formations": 117_500,
   "js-fiche-orp": 98_200,
   "js-entrainement": 99_900,
+  "js-faire-le-point": 84_100, // nouvelle page (18.11) : sa mesure + 5 %, même règle que les autres
   "js-notifications": 98_500,
   "js-compte": 97_500,
   "js-profil": 135_800,
@@ -91,6 +92,7 @@ export const LIMITS = {
   "css-formations": 60_900,
   "css-fiche-orp": 61_500,
   "css-entrainement": 61_000,
+  "css-faire-le-point": 54_300,
   "css-notifications": 62_200,
   "css-compte": 60_300,
   "css-profil": 64_300,
@@ -163,6 +165,8 @@ export const PAGES = {
   formations: ["views/BilanView.vue", "views/TrainingsView.vue"],
   "fiche-orp": ["views/OrpFicheView.vue"],
   entrainement: ["views/PracticeView.vue"],
+  // « Faire le point » en page entière (planche FairePoint, accord de Kevin du 18.11.2026).
+  "faire-le-point": ["views/FairePointView.vue"],
   notifications: ["views/NotificationsView.vue"],
   compte: ["views/AccountView.vue"],
   // Profil avec la lecture du CV en cours (§53) : les étapes de ChargementCV, chargées seulement pendant la lecture.
