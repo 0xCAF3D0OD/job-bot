@@ -121,3 +121,7 @@ function cal(iso: string): { day: number; month: number } {
   </BottomSheet>
 </template>
 
+<style scoped>
+/* Aucun trait sous la dernière ligne d'une liste (§65 du 17.11 ; K46 de l'audit). */
+.sheet-items > li:last-child > .sheet-item, .sheet-items > .sheet-item:last-child { border-bottom: 0; }
+</style>

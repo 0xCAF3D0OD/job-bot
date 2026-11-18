@@ -16,6 +16,7 @@ import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpFiche from "../components/OrpFiche.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SidePanel from "../components/SidePanel.vue";
+import TaskCheck from "../components/TaskCheck.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import { formatMonth, ofMonth, orpChannel, orpLeftLine, plural, shiftMonth } from "../format";
@@ -43,11 +44,13 @@ const viewMonth = computed(() => {
   const asked = route.query.orp;
   return typeof asked === "string" && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth() ? asked : thisMonth();
 });
+// Sur téléphone, /bilan seul est l'accueil en feuilles (§52) : les liens du détail ORP gardent ?vue=orp.
+const phoneOrp = computed((): Record<string, string> => (phone.value ? { vue: "orp" } : {}));
 const viewingPast = computed(() => viewMonth.value !== thisMonth());
 const expanded = computed(() => route.query.tout === "1");
 const PAST_MONTHS = 6;
 const monthItems = computed<MoreMenuItem[]>(() => {
-  const go = (month: string) => () => void router.push({ path: "/bilan", query: month === thisMonth() ? {} : { orp: month } });
+  const go = (month: string) => () => void router.push({ path: "/bilan", query: { ...phoneOrp.value, ...(month === thisMonth() ? {} : { orp: month }) } });
   const items: MoreMenuItem[] = [];
   if (viewingPast.value) items.push({ label: `Revenir à ${formatMonth(thisMonth()).toLowerCase()}`, test: "orp-month-current", icon: "calendar", run: go(thisMonth()) });
   for (let i = 1; i <= PAST_MONTHS; i += 1) {
@@ -103,9 +106,9 @@ const pendingMonths = computed(() => {
 const declareAll = ref(false);
 const pendingShown = computed(() => (declareAll.value || expanded.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
 // « Voir tout le mois et les justificatifs » et le chevron de la carte : le mois déplié, sur place.
-const allTo = computed(() => ({ path: "/bilan", query: { ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
+const allTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
 // Planche BilanOrdinateurMois : le mois déplié se replie (« Replier le mois », la carte du mois), sans ?tout=1.
-const foldTo = computed(() => ({ path: "/bilan", query: viewingPast.value ? { orp: viewMonth.value } : {} }));
+const foldTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}) } }));
 const declared = computed(() => (shownMonth.value?.rows ?? []).filter((row) => row.declared_at));
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);
@@ -144,7 +147,40 @@ const phoneLine = computed(() => {
   if (!o) return "";
   return o.target ? orpLeftLine(o.count, o.target, o.month, o.due_date) : "Indique l’objectif fixé avec ton ORP dans les Réglages";
 });
-const phonePending = computed(() => (expanded.value ? pending.value : pending.value.slice(0, PHONE_DECLARE)));
+// « À déclarer à l'ORP » sur téléphone (§61 du 17.11, planche Orp) : un cercle à cocher par ligne. Cochée, la ligne
+// reste en place avec la coche verte et « Déclarée · 17 nov. », et le compteur du titre baisse ; « Annuler » est le
+// cercle lui-même. Même marque que la fiche « Pour l'ORP » (PUT / DELETE …/job-room).
+const checked = ref(new Map<number, string>());
+const busyRows = ref(new Set<number>());
+const phoneRows = computed<Pending[]>(() =>
+  [previous.value, current.value]
+    .filter((m, index, list): m is OrpMonth => !!m && m.state !== "remis" && list.findIndex((x) => x?.month === m.month) === index)
+    .flatMap((m) => m.rows.filter((row) => !row.declared_at || checked.value.has(row.application_id)).map((row) => ({ ...row, month: m.month }))),
+);
+const phonePending = computed(() => (expanded.value ? phoneRows.value : phoneRows.value.slice(0, PHONE_DECLARE)));
+async function declare(row: Pending, on: boolean): Promise<void> {
+  const id = row.application_id;
+  if (busyRows.value.has(id)) return;
+  busyRows.value = new Set([...busyRows.value, id]);
+  try {
+    const params = { params: { path: { application_id: id } } };
+    const { error } = on ? await api.PUT("/api/applications/{application_id}/job-room", params) : await api.DELETE("/api/applications/{application_id}/job-room", params);
+    if (error !== undefined) return;
+    const today = new Date().toISOString().slice(0, 10);
+    for (const month of [previous.value, current.value]) {
+      const found = month?.rows.find((r) => r.application_id === id);
+      if (found) found.declared_at = on ? today : null;
+    }
+    const next = new Map(checked.value);
+    if (on) next.set(id, SHORT_DAY.format(new Date()));
+    else next.delete(id);
+    checked.value = next;
+  } finally {
+    const left = new Set(busyRows.value);
+    left.delete(id);
+    busyRows.value = left;
+  }
+}
 const SHORT_DAY = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 function shortDay(row: OrpRow): string {
   const [d, m, y] = row.date.split(".").map(Number);
@@ -515,6 +551,8 @@ watch(viewMonth, () => void load());
           class="orp-phone"
           data-test="orp-phone"
         >
+          <!-- Les justificatifs du mois passé, en tâche à cocher (§58 du 17.11, planche Orp). -->
+          <OrpProofCard @changed="load()" />
           <RouterLink
             :to="expanded ? foldTo : shownMonth.target ? allTo : { path: '/reglages', query: { rubrique: 'recherche' } }"
             class="today-orp-card bilan-orp-card"
@@ -548,25 +586,36 @@ watch(viewMonth, () => void load());
                 À déclarer à l’ORP · {{ pending.length }}
               </h2>
             </div>
-            <RouterLink
+            <div
               v-for="row in phonePending"
               :key="row.application_id"
-              :to="ficheTo(row)"
-              class="bilan-card"
-              :data-test="`orp-declare-${row.application_id}`"
+              class="bilan-card orp-declare-row"
             >
-              <span class="bilan-card-what">
-                <strong class="orp-phone-top"><span>{{ row.company }}</span><span
-                  v-if="row.missing.length"
-                  class="orp-phone-chip todo"
-                >Infos à compléter</span></strong>
-                <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
-              </span>
-              <span
-                class="arrow-circle small"
-                aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
-            </RouterLink>
+              <TaskCheck
+                :checked="checked.has(row.application_id)"
+                :label="checked.has(row.application_id) ? `Annuler : ${row.company} pas encore déclarée` : `Marquer ${row.company} comme déclarée`"
+                :busy="busyRows.has(row.application_id)"
+                :data-test="`orp-declare-check-${row.application_id}`"
+                @toggle="(on) => declare(row, on)"
+              />
+              <RouterLink
+                :to="ficheTo(row)"
+                class="orp-declare-link"
+                :data-test="`orp-declare-${row.application_id}`"
+              >
+                <span class="bilan-card-what">
+                  <strong class="orp-phone-top"><span>{{ row.company }}</span><span
+                    v-if="row.missing.length && !checked.has(row.application_id)"
+                    class="orp-phone-chip todo"
+                  >Infos à compléter</span></strong>
+                  <span>{{ checked.has(row.application_id) ? `Déclarée · ${checked.get(row.application_id)}` : `${row.job_title} · ${shortDay(row)}` }}</span>
+                </span>
+                <span
+                  class="arrow-circle small"
+                  aria-hidden="true"
+                ><AppIcon name="arrow-right" /></span>
+              </RouterLink>
+            </div>
           </section>
 
           <section
@@ -712,6 +761,10 @@ watch(viewMonth, () => void load());
 .orp-phone .bilan-card-what { font-size: var(--font-body); }
 .orp-phone-top { display: flex; gap: var(--space-2); align-items: center; }
 .orp-phone-top > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* « À déclarer à l'ORP » (§61 du 17.11, planche Orp) : le cercle à cocher (zone de 44 px) à gauche, dans la marge de la
+   carte ; le reste de la ligne ouvre la fiche. Cercle à 40 px du bord (42 sur la planche), texte à 74 (76). */
+.orp-phone .orp-declare-row { cursor: default; }
+.orp-declare-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); align-self: stretch; color: inherit; text-decoration: none; }
 .orp-phone-chip { flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--orp-chip-r); font-size: var(--font-caption); white-space: nowrap; }
 .orp-phone-chip.todo { background: var(--peach-soft); color: var(--peach-text); }
 .orp-phone-chip.ok { background: var(--success-soft); color: var(--success); }

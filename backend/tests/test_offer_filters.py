@@ -133,6 +133,27 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
     ]
 
 
+async def test_rate_counts_follow_the_other_filters(api: AsyncClient) -> None:
+    """Le nombre sous chaque choix de taux (§65) : tous les autres filtres, sans celui du taux ;
+    le choix actif donne le même nombre que la liste (« Afficher n offres »)."""
+
+    def rates(body: dict[str, Any]) -> dict[str, int]:
+        return {f["value"]: f["count"] for f in body["facets"]["rates"]}
+
+    everything = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    # 100 % (80-100), 60 % (60), taux inconnu (toujours visible).
+    assert rates(everything) == {"all": 3, "60": 3, "80": 2, "100": 2}
+    for value in (60, 80, 100):
+        chosen = (
+            await api.get("/api/offers", params={"view": "to_review", "min_rate": value})
+        ).json()
+        assert rates(chosen) == rates(everything)
+        assert chosen["total"] == rates(everything)[str(value)]
+    # Un autre filtre actif (le canton) change les nombres.
+    vaud = (await api.get("/api/offers", params={"view": "to_review", "cantons": "VD"})).json()
+    assert rates(vaud) == {"all": 2, "60": 2, "80": 2, "100": 2}
+
+
 async def test_invalid_parameters(api: AsyncClient) -> None:
     assert (await api.get("/api/offers", params={"sources": "Monster!"})).status_code == 422
     assert (await api.get("/api/offers", params={"min_rate": 0})).status_code == 422

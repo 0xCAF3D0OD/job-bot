@@ -31,7 +31,7 @@ import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { activeChips, activeCount, scoreLabel, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
-import { collectWhen, dayKey, dayName, plural } from "../format";
+import { SCORE_DIG, collectWhen, dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
@@ -68,7 +68,7 @@ const sentMoment = ref<{ title: string; company: string; count: number | null; t
 const goalMoment = ref<OrpMonth | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0 });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0, sure: 0, provisional: 0, rates: [] });
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres nouvelles. », « 1 offre écartée. » (section 38 du 16.11).
 const VIEW_END: Record<string, [string, string]> = {
@@ -109,7 +109,7 @@ const chips = computed(() => activeChips(filters.value));
 // Aucune offre avec ces filtres, sur téléphone (AucuneOffre, §13 et §17 du 15 novembre) : les filtres actifs passent en
 // pastilles sous le titre, sans la rangée du haut ni le bloc « Autres offres ».
 const phoneEmptyFiltered = computed(() => phone.value && !loading.value && items.value.length === 0 && activeCount(filters.value) > 0);
-// « Note minimale : 75 et +, Taux d’activité : dès 80 %. Élargis un critère pour voir plus d'offres. »
+// « Note 75 et +, Taux dès 80 %. Élargis un critère pour voir plus d'offres. » (pastilles nommées, §65)
 const emptyFiltersLine = computed(() => {
   const q = filters.value.q.trim();
   const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];
@@ -179,7 +179,7 @@ const selected = computed(() => items.value.find((o) => o.id === selectedId.valu
 // Les offres « Loin » (note sous 50) cachées sur téléphone (maquette Candidatures, Kevin 2026-11-06) : un lien en
 // bas de liste les montre, avec leur nombre (les tranches de note du serveur, toute la liste). Pas quand un
 // filtre de note est posé : il dit déjà quoi montrer. Une offre sans note reste visible.
-const FAR_BELOW = 50;
+const FAR_BELOW = SCORE_DIG;
 const showFar = ref(false);
 const hidesFar = computed(() => phone.value && filters.value.minScore === null && filters.value.maxScore === null);
 const farCount = computed(() => facets.value.scores.slice(0, FAR_BELOW / 5).reduce((sum, n) => sum + n, 0));

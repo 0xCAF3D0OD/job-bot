@@ -40,7 +40,7 @@ from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due
 from jobbot.log import get_logger
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
-from jobbot.scoring.compare import word
+from jobbot.scoring.scale import NOTIFY_DEFAULT, word
 from jobbot.scoring.service import budget_state
 from jobbot.settings import Settings
 
@@ -223,7 +223,7 @@ async def _threshold(runtime: Runtime) -> int:
         value = await session.scalar(
             select(Setting.value).where(Setting.key == "notify_score_threshold")
         )
-    return int(value) if value is not None else 70
+    return int(value) if value is not None else NOTIFY_DEFAULT
 
 
 async def _digest_due(runtime: Runtime, now: datetime) -> bool:

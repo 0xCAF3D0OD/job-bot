@@ -794,6 +794,13 @@ Réponses de Kevin (17.11, 14 h 07) :
 - Le code d'une page et son catalogue le plus lourd restent ensemble sous le budget public de 365 Kio gzip (téléphone moyen en 4G, The Performance Inequality Gap 2024).
 - `poids.mjs` mesure les catalogues à partir de la PR 1 ; chaque PR d'écran affiche le poids avant et après de la page et de ses catalogues.
 
+## Tâches à cocher et bandeau des justificatifs du Bilan (Kevin, 17.11.2026, 13 h 39)
+
+- Bilan sur ordinateur (§63, nouveau, remplace « ordinateur inchangé » du §58) : la carte « Justificatifs d’octobre à remettre » devient un bandeau pêche sans bordure, « Exporter le PDF » en bouton plein, « Déjà remis » en lien.
+- Jamais de texte barré pour une tâche finie, nulle part (§61 remplace ce que disait le §58) : cercle vert, sous-titre « Remis / Déclarée le … » et « Annuler ».
+- Accueil et Aujourd’hui : seule la tâche « Remettre les justificatifs » a un cercle à cocher ; les autres gardent leur numéro.
+- En attente de sa décision, pas codé : l’icône de « À déclarer à l’ORP » sur le Bilan ordinateur (calendrier actuel ou cercle à cocher).
+
 ## « Ta recherche » des Alertes : l'écran de la planche, une seule source, les critères du Profil (Kevin, 17.11.2026, 13 h 39 à 13 h 43)
 
 - Option A (13 h 39) : sur ordinateur, Alertes vides avec au moins une recherche = l'écran des planches AlertesOrdinateurVide et AlertesOrdinateurSite. Carte « Ta recherche » (postes · lieux), puis « À créer » avec une ligne par site (jobup, LinkedIn, jobs.ch, Indeed, Job-Room), chaque ligne ouvre le volet du site.
@@ -870,3 +877,32 @@ Remplace 2026-11-17-1330-poids-catalogues-langues.md (limite propre à chaque ca
 - À la collecte, une alerte dont le libellé ou l'objet contient les mots d'une recherche retirée ou en pause (« Ne plus suivre »), et ceux d'aucune recherche suivie, reste au journal mais ne donne aucune offre ; elle ne compte ni comme alerte reçue ni comme preuve ORP.
 - Un e-mail qu'on ne peut rattacher à aucune recherche est gardé, par prudence.
 - Option écartée : ignorer tout e-mail qui ne correspond à aucune recherche active, sans migration (risque d'ignorer à tort un libellé flou).
+
+## Échelle de note unique 50 / 75 / 85 (Kevin, 17.11.2026, 16 h 36)
+
+- Couleur de la note : vert (#17734A) dès 75, « Proche », et 85 et + « Très proche » ; orange (#A8540E, sombre
+  #F2A766) de 50 à 74, « À creuser » ; gris en dessous de 50, « Loin » (LISEZMOI §65, planche Système).
+- Une seule constante de seuils (`SCORE_SCALE`, frontend/src/format.ts), partagée par le cercle de score, les mots,
+  Réglages « M'avertir dès » et le filtre Note. Test aux limites : 49, 50, 74, 75, 84, 85.
+- Remplace D5 pour la note : « À creuser » n'est plus en gris chaud. L'orange reste aussi à ce qui demande d'agir.
+
+Précision de Kevin (17.11.2026, 16 h 46) :
+- Migration ciblée de « M'avertir dès » (0092) : 50, 75 et 85 ne bougent pas ; toute autre valeur va au niveau le
+  plus proche, le plus haut à égalité (70 → 75, 55 → 50, 80 → 85). Nouveau défaut : 75. Pas de message à la
+  personne. Compter les valeurs enregistrées avant la migration.
+- Bilan › Résultats : tranches « Proches » dès 75, « À creuser » de 50 à 74, « Loin » en dessous de 50, même
+  constante (`jobbot.scoring.scale`).
+- La recherche employeurs (70) reste hors périmètre : ce seuil n'est affiché qu'en chiffre, jamais avec un mot.
+
+## Réglages : retour sur la ligne d'origine, retour aux réglages, Formule sans limite (Kevin, 17.11.2026, 21 h 05)
+
+Réponses de Kevin aux changements de comportement de l'audit du 17.11 (lot 2, Réglages) :
+
+- Ordinateur : « Retour au compte » (État du service) devient « Retour aux réglages » et mène à la page Réglages (K43).
+- Réglages : en quittant une rubrique, on revient sur la ligne d'origine ; le focus clavier est posé sur cette ligne et la position de défilement est restaurée (K39).
+- Formule sans limite : afficher « Sans limite » et l'utilisation du mois (ex. « 42 utilisés ce mois »), sans barre de progression (K38, N2).
+
+## Retour d'une candidature et bouton rond flottant (Kevin, 17.11.2026, 21 h 05)
+
+- Téléphone : une candidature ouverte a sa propre adresse (`?candidature=ID`). Le retour du navigateur et le retour de l'app ferment la fiche et ramènent à la liste, à la même position de défilement (audit du 17.11, N25).
+- Bouton rond flottant (Candidatures sur téléphone, Assistant sur ordinateur) : il ne se masque pas au défilement. La page a un `scroll-padding-bottom` égal à la hauteur du bouton plus sa marge : un élément qui reçoit le focus ne passe jamais dessous (WCAG 2.4.11), et le dernier élément de la page reste entièrement visible au-dessus du bouton.
