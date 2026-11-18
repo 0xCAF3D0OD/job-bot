@@ -26,7 +26,15 @@ export const NEXT_STEPS: Record<string, string> = {
   entretien: "Un autre entretien",
   reponse: "Une réponse attendue",
   test: "Un test à rendre",
+  refus: "On m’a dit non",
 };
+// « Comment ça s'est passé ? » de la page « Faire le point » (maquette FairePoint).
+export const FEELINGS: Record<string, string> = { bien: "Bien", moyen: "Moyen", pas_bien: "Pas bien" };
+/** Le ressenti d'un retour : sa note sur 5, sinon le mot de « Faire le point » (« bien », « pas bien »). */
+export function feelingText(i: { rating?: number | null; feeling?: string | null }): string {
+  if (i.rating) return `${i.rating}/5`;
+  return (FEELINGS[i.feeling ?? ""] ?? "").toLowerCase();
+}
 export const THANKS: Record<string, string> = { sent: "Envoyé", no: "Non", todo: "À faire" };
 export const SUGGESTED_QUESTIONS = [
   "Présentez-vous",

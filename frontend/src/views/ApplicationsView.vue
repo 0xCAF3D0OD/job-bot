@@ -435,6 +435,10 @@ watch(
       openId.value = null;
       delete query.candidature;
     } else if (needsFeedback(application)) {
+      if (phone.value) {
+        void router.replace(debriefPage(application));
+        return;
+      }
       if (!twoColumns.value) openId.value = null;
       openInterview(application, null);
     }
@@ -489,7 +493,17 @@ const interviewing = ref<{ application: Application; interview: Interview | null
 const preparing = ref<Application | null>(null);
 const interviewError = ref("");
 
+// « Faire le point » sur téléphone : une page entière (planche FairePoint, accord de Kevin du 18.11.2026). Sur ordinateur,
+// pas de planche : la fenêtre du retour complet reste. Rouvrir un retour fait (« Voir le retour ») garde la fenêtre.
+function debriefPage(application: Application): string {
+  return `/entretien/${application.id}/faire-le-point`;
+}
+
 function openInterview(application: Application, interview: Interview | null): void {
+  if (phone.value && !interview && needsFeedback(application)) {
+    void router.push(debriefPage(application));
+    return;
+  }
   interviewError.value = "";
   interviewing.value = { application, interview };
 }

@@ -14,7 +14,7 @@ from sqlalchemy import text
 from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.auth import passwords
-from jobbot.db.models import Document, Offer, Search, User
+from jobbot.db.models import Application, Document, Offer, Search, User
 from jobbot.runtime import Runtime
 
 from .conftest import make_settings
@@ -198,3 +198,44 @@ async def test_privacy_text_public_and_set_by_owner(runtime: Runtime, secured: R
         assert (await api.get("/api/privacy")).json()["contact"].startswith("Kevin")
         await login(api)
         assert (await api.put("/api/privacy", json={"contact": "autre"})).status_code == 403
+
+
+async def test_debrief_in_export_and_gone_with_the_account(secured: Runtime, account: int) -> None:
+    """« Faire le point » (0093) : ressenti, suite et notes sont dans l'export du compte, et partent
+    avec lui (règles V-2, V-3 de docs/regles-securite-donnees.md)."""
+    camille = await guest(secured)
+    with accounts.use(camille):
+        async with secured.sessionmaker.begin() as session:
+            application = Application(
+                company="Alpstack",
+                job_title="DevOps Engineer",
+                sent_at=NOW.date(),
+                method="electronique",
+                orp_month="2026-10",
+                status="entretien",
+                interview_at=NOW,
+            )
+            session.add(application)
+            await session.flush()
+            app_id = application.id
+    async with client(secured) as api:
+        await login(api)
+        saved = await api.put(
+            f"/api/applications/{app_id}/debrief",
+            json={"feeling": "moyen", "next_step": "reponse", "notes": "NOTE-PRIVEE-CAMILLE"},
+        )
+        assert saved.status_code == 200
+        exported = await api.post("/api/account/export", json={"password": PASSWORD})
+        archive = zipfile.ZipFile(io.BytesIO(exported.content))
+        interviews = json.loads(archive.read("data/interviews.json"))
+        assert [(i["feeling"], i["next_step"], i["notes"]) for i in interviews] == [
+            ("moyen", "reponse", "NOTE-PRIVEE-CAMILLE")
+        ]
+        assert (
+            await api.post("/api/account/delete", json={"password": PASSWORD})
+        ).status_code == 204
+    async with secured.engine.begin() as conn:
+        left = await conn.execute(
+            text("select count(*) from interviews where user_id = :c"), {"c": camille}
+        )
+        assert left.scalar() == 0

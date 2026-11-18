@@ -73,7 +73,8 @@ function toggleInterviewer(key: string): void {
 const ratingMissing = ref(false);
 
 function submit(): void {
-  if (!form.value.rating) {
+  // Un point fait par la page « Faire le point » n'a que le ressenti en mots : sa note sur 5 reste facultative.
+  if (!form.value.rating && !props.initial?.feeling) {
     ratingMissing.value = true;
     document.querySelector<HTMLElement>("[data-test=rating-1]")?.focus();
     return;
@@ -82,7 +83,7 @@ function submit(): void {
   const f = form.value;
   emit("submit", {
     ...f,
-    rating: f.rating,
+    rating: f.rating || null,
     to_prepare: f.to_prepare.split("\n").map((l) => l.trim()).filter(Boolean),
     salary_answer: f.salary_asked ? f.salary_answer || null : null,
     went_well: f.went_well || null,

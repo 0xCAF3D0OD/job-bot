@@ -232,6 +232,16 @@ export const routes: RouteRecordRaw[] = [
   // un entretien type ; `?seance=` rouvre un entraînement.
   { path: "/entrainement/:candidatureId(\\d+)?", name: "practice", component: () => import("./views/PracticeView.vue") },
   // « Pour l'ORP », une candidature à déclarer (MODIFICATIONS du 8 novembre au soir, lot 18, §10.3) : plein écran.
+  // « Faire le point » sur un entretien passé (planche FairePoint, accord de Kevin du 18.11.2026) : plein écran.
+  // Pas de planche sur ordinateur : la candidature s'ouvre dans Envoyées avec la fenêtre du retour, comme avant.
+  {
+    path: "/entretien/:id(\\d+)/faire-le-point",
+    name: "faire-le-point",
+    component: () => import("./views/FairePointView.vue"),
+    meta: { bare: true },
+    beforeEnter: (to) =>
+      globalThis.matchMedia?.(PHONE_QUERY).matches !== false ? true : { path: "/candidatures/suivi", query: { candidature: String(to.params.id), retour: "1" } },
+  },
   { path: "/bilan/orp/candidature/:id", name: "orp-fiche", component: () => import("./views/OrpFicheView.vue"), meta: { bare: true } },
   {
     // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations.
@@ -365,6 +375,7 @@ const PAGE_TITLES: Record<string, string> = {
   insights: "Bilan",
   "orp-meeting": "Rendez-vous ORP",
   "orp-fiche": "Pour l’ORP",
+  "faire-le-point": "Faire le point",
   preparation: "Préparer",
   trainings: "Formations",
   profile: "Profil",

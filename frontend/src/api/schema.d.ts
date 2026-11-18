@@ -3716,6 +3716,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/debrief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Debrief */
+        get: operations["getDebrief"];
+        /**
+         * Save Debrief
+         * @description Enregistre le point sur l'entretien du jour prévu : crée le retour, ou complète celui de ce
+         *     jour (sa note sur 5 et ses autres réponses restent). Aucune IA, le statut ne change pas.
+         */
+        put: operations["saveDebrief"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interviews/insights": {
         parameters: {
             query?: never;
@@ -4617,7 +4639,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -4645,13 +4667,17 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
             thanks?: ("sent" | "no" | "todo") | null;
             /** Employer Feedback */
             employer_feedback?: string | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
+            /** Notes */
+            notes?: string | null;
             /** Id */
             id: number;
             /** Application Id */
@@ -4705,7 +4731,7 @@ export interface components {
             /** Outlook */
             outlook: ("positive" | "unsure" | "negative") | null;
             /** Next Step */
-            next_step: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at: string | null;
             /** Thanks Sent */
@@ -5507,6 +5533,49 @@ export interface components {
             /** Applications */
             applications: number;
         };
+        /**
+         * DebriefIn
+         * @description Les trois réponses de la page : le ressenti (obligatoire), la suite et les notes.
+         */
+        DebriefIn: {
+            /**
+             * Feeling
+             * @enum {string}
+             */
+            feeling: "bien" | "moyen" | "pas_bien";
+            /** Next Step */
+            next_step?: ("reponse" | "entretien" | "refus") | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /**
+         * DebriefOut
+         * @description L'entretien (carte du haut), les réponses déjà données et la relance calculée.
+         */
+        DebriefOut: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /**
+             * Interview At
+             * Format: date-time
+             */
+            interview_at: string;
+            /** Feeling */
+            feeling: ("bien" | "moyen" | "pas_bien") | null;
+            /** Next Step */
+            next_step: string | null;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Follow Up On
+             * Format: date
+             */
+            follow_up_on: string;
+        };
         /** DelayOut */
         DelayOut: {
             /** Typical */
@@ -6304,7 +6373,8 @@ export interface components {
         };
         /**
          * InterviewIn
-         * @description Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2).
+         * @description Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2). Un retour fait
+         *     par « Faire le point » n'a qu'un ressenti en trois mots : il peut garder sa note vide.
          */
         InterviewIn: {
             /** Kind */
@@ -6320,7 +6390,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -6348,7 +6418,7 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
@@ -6376,6 +6446,8 @@ export interface components {
             state: "upcoming" | "rejected" | "rated" | "done";
             /** Rating */
             rating?: number | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
         };
         /** InterviewOut */
         InterviewOut: {
@@ -6392,7 +6464,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -6420,13 +6492,17 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
             thanks?: ("sent" | "no" | "todo") | null;
             /** Employer Feedback */
             employer_feedback?: string | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
+            /** Notes */
+            notes?: string | null;
             /** Id */
             id: number;
             /** Application Id */
@@ -17286,6 +17362,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saveDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebriefIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -2,6 +2,7 @@ import type { Application, OrpRow } from "./api/client";
 import { followUpDue, noAnswerDue } from "./applicationState";
 import { CHANNELS, ROLES } from "./contactLabels";
 import { dateInList, daysSince } from "./dates";
+import { feelingText } from "./interviewLabels";
 
 // Le détail d'une candidature envoyée (MODIFICATIONS du 9 novembre, §8 ; maquettes CandidaturesOrdinateurB onglet
 // Envoyées, EnvoyeeDetail) : les mots de statut, le Suivi en 5 étapes (ordinateur) et l'Historique.
@@ -127,7 +128,7 @@ export function sentHistory(a: Application, row: OrpRow | null | undefined, now:
     if (day) events.push({ day: day.slice(0, 10), date: short(day, now), title, detail });
   };
   if (a.status in ANSWERS && a.status !== "entretien") add(a.status_at, `Réponse : ${(ANSWERS[a.status] ?? "").toLowerCase()}`, a.status_reason ?? "");
-  for (const i of a.interviews ?? []) add(i.held_at, "Entretien", `Ressenti ${i.rating}/5`);
+  for (const i of a.interviews ?? []) add(i.held_at, "Entretien", `Ressenti ${feelingText(i)}`);
   for (const c of a.contacts ?? []) {
     add(c.contacted_on, `Contact : ${c.name || ROLES[c.role]}`, CHANNELS[c.channel]);
     add(c.answered_on, `Réponse de ${c.name || ROLES[c.role].toLowerCase()}`, c.note ?? "");

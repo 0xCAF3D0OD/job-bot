@@ -10040,6 +10040,99 @@
         }
       }
     },
+    "/api/applications/{application_id}/debrief": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Get Debrief",
+        "operationId": "getDebrief",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Save Debrief",
+        "description": "Enregistre le point sur l'entretien du jour prévu : crée le retour, ou complète celui de ce\njour (sa note sur 5 et ses autres réponses restent). Aucune IA, le statut ne change pas.",
+        "operationId": "saveDebrief",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebriefIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/interviews/insights": {
       "get": {
         "tags": [
@@ -12823,9 +12916,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -12994,7 +13094,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -13043,6 +13144,33 @@
             ],
             "title": "Employer Feedback"
           },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -13090,7 +13218,6 @@
         },
         "type": "object",
         "required": [
-          "rating",
           "id",
           "application_id",
           "created_at",
@@ -13197,7 +13324,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -15608,6 +15736,130 @@
         ],
         "title": "DayActivity",
         "description": "Un jour de la semaine en tableau de bord (docs/54 §5)."
+      },
+      "DebriefIn": {
+        "properties": {
+          "feeling": {
+            "type": "string",
+            "enum": [
+              "bien",
+              "moyen",
+              "pas_bien"
+            ],
+            "title": "Feeling"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reponse",
+                  "entretien",
+                  "refus"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feeling"
+        ],
+        "title": "DebriefIn",
+        "description": "Les trois réponses de la page : le ressenti (obligatoire), la suite et les notes."
+      },
+      "DebriefOut": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "interview_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Interview At"
+          },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "follow_up_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Follow Up On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "job_title",
+          "interview_at",
+          "feeling",
+          "next_step",
+          "notes",
+          "follow_up_on"
+        ],
+        "title": "DebriefOut",
+        "description": "L'entretien (carte du haut), les réponses déjà données et la relance calculée."
       },
       "DelayOut": {
         "properties": {
@@ -18031,9 +18283,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -18202,7 +18461,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -18253,11 +18513,8 @@
           }
         },
         "type": "object",
-        "required": [
-          "rating"
-        ],
         "title": "InterviewIn",
-        "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2)."
+        "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2). Un retour fait\npar « Faire le point » n'a qu'un ressenti en trois mots : il peut garder sa note vide."
       },
       "InterviewLineOut": {
         "properties": {
@@ -18305,6 +18562,22 @@
               }
             ],
             "title": "Rating"
+          },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
           }
         },
         "type": "object",
@@ -18410,9 +18683,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -18581,7 +18861,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -18630,6 +18911,33 @@
             ],
             "title": "Employer Feedback"
           },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -18651,7 +18959,6 @@
         },
         "type": "object",
         "required": [
-          "rating",
           "id",
           "application_id",
           "created_at",

@@ -511,6 +511,8 @@ class InterviewLine:
     # « upcoming » à venir, « rejected » pas retenu, « rated » ressenti noté, « done » passé.
     state: str
     rating: int | None = None
+    # Le ressenti de « Faire le point » (bien, moyen, pas_bien), quand il n'y a pas de note (0093).
+    feeling: str | None = None
 
 
 async def interview_lines(
@@ -553,6 +555,7 @@ async def interview_lines(
                 kind=review.kind if review else None,
                 state=state,
                 rating=review.rating if review and state == "rated" else None,
+                feeling=review.feeling if review and state == "rated" else None,
             )
         )
     return lines
