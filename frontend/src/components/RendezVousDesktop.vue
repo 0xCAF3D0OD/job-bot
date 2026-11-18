@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import LinkedArrow from "./LinkedArrow.vue";
 import LinkedPin from "./LinkedPin.vue";
@@ -8,8 +8,11 @@ import "./ListCard.vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
-import { dateInSentence, timeOfDay } from "../dates";
+import { dateInSentence, inDays, timeOfDay } from "../dates";
+import { plural } from "../format";
+import { offerUndo } from "../composables/useUndo";
 import {
+  checkedCount,
   countdown,
   dateText,
   interviewFormat,
@@ -20,7 +23,6 @@ import {
   notedSummary,
   pastTitle,
   sheetLines,
-  splitLine,
   timeAndPlace,
   upcomingAppointments,
   upcomingLabel,
@@ -51,11 +53,16 @@ const props = defineProps<{
   sheetLink: string;
   meetingItems: MoreMenuItem[];
   editing: boolean;
+  // Enregistre la liste entière des questions (ajout, modification, suppression) ; vrai si le serveur l'a gardée.
+  saveQuestions: (questions: Question[]) => Promise<boolean>;
+  // Sous « Ton nom sur la feuille » : le nom et l'office enregistrés (vide : la ligne n'a que son titre).
+  nameLine?: string;
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
-  question: [text: string];
   sheet: [];
+  // « Ton nom sur la feuille » : la feuille s'ouvre sur la case du nom (pas de planche FeuilleNom sur ordinateur).
+  name: [];
   prepare: [application: Application];
   note: [id: number];
   saved: [page: Page];
@@ -129,14 +136,93 @@ function cal(iso: string): { day: number; month: number } {
   return { day: d.getDate(), month: d.getMonth() + 1 };
 }
 
-// « + Ajouter une question » ouvre un champ sur place.
+// « Tes questions au conseiller » (planches RendezVousOrdinateurOuvert et PreparerRendezVousQuestion, §72 ; décision de
+// Kevin du 18.11) : « + Ajouter une question » ouvre un champ dans la carte, Entrée ajoute, Échap annule, un champ vide
+// se ferme sans rien ajouter ; « Enregistré » est annoncé. Le ⋯ de chaque question : Modifier (le même champ, sur la
+// ligne) ou Supprimer, avec le bandeau « Annuler » (la liste n'est envoyée qu'à la fin du bandeau).
 const adding = ref(false);
 const custom = ref("");
-function addQuestion(): void {
-  const text = custom.value.trim();
-  if (!text) return;
-  emit("question", text);
+const newField = ref<HTMLTextAreaElement | null>(null);
+const editingKey = ref<string | null>(null);
+const draft = ref("");
+const hidden = ref<Set<string>>(new Set());
+const savedNote = ref("");
+const shownQuestions = computed(() => prep.value.questions.filter((q) => !hidden.value.has(q.key)));
+const sheetLine = computed(() => {
+  const month = prep.value.months?.at(-1);
+  return [month ? plural(month.count, "recherche", "recherches") : "", plural(checked.value, "question", "questions")].filter(Boolean).join(", ");
+});
+function saved(ok: boolean): void {
+  savedNote.value = ok ? "Enregistré" : "";
+}
+async function openField(): Promise<void> {
+  editingKey.value = null;
+  adding.value = true;
+  await nextTick();
+  newField.value?.focus();
+}
+function cancelField(): void {
+  adding.value = false;
   custom.value = "";
+  editingKey.value = null;
+  draft.value = "";
+}
+async function addQuestion(): Promise<void> {
+  const text = custom.value.trim();
+  if (!text) {
+    cancelField();
+    return;
+  }
+  const ok = await props.saveQuestions([...prep.value.questions, { key: `custom:${Date.now()}`, text, checked: false }]);
+  saved(ok);
+  if (ok) cancelField();
+}
+async function saveEdit(question: Question): Promise<void> {
+  const text = draft.value.trim();
+  if (!text || text === question.text) {
+    cancelField();
+    return;
+  }
+  const ok = await props.saveQuestions(prep.value.questions.map((q) => (q.key === question.key ? { ...q, text } : q)));
+  saved(ok);
+  if (ok) cancelField();
+}
+function removeQuestion(question: Question): void {
+  hidden.value = new Set([...hidden.value, question.key]);
+  const unhide = (): void => {
+    const next = new Set(hidden.value);
+    next.delete(question.key);
+    hidden.value = next;
+  };
+  void offerUndo({
+    message: "Question supprimée",
+    commit: async () => {
+      const ok = await props.saveQuestions(prep.value.questions.filter((q) => q.key !== question.key));
+      if (ok) unhide();
+      return ok;
+    },
+    restore: unhide,
+  });
+}
+// Pas de « ? » ni de « » » seul en début de ligne : l'espace qui les précède devient insécable.
+function tidy(text: string): string {
+  return text.replace(/ ([?!:;»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+}
+function questionItems(question: Question): MoreMenuItem[] {
+  return [
+    {
+      label: "Modifier",
+      test: `rdv-question-edit-${question.key}`,
+      icon: "pencil",
+      run: () => {
+        adding.value = false;
+        editingKey.value = question.key;
+        draft.value = question.text;
+        void nextTick(() => document.querySelector<HTMLTextAreaElement>("[data-test=question-edit]")?.focus());
+      },
+    },
+    { label: "Supprimer", test: `rdv-question-delete-${question.key}`, icon: "trash", danger: true, run: () => removeQuestion(question) },
+  ];
 }
 
 // La liste reliée au détail (§14 du 15 novembre) : la hauteur des colonnes (--linked-top) et l'encoche sont
@@ -291,26 +377,37 @@ const list = ref<HTMLElement | null>(null);
       :list="list"
       data-test="rdv-detail"
     >
-      <!-- Le rendez-vous ORP prévu : la feuille, ce que tu apportes, tes questions, ce qui a été convenu la dernière fois. -->
+      <!-- Le rendez-vous ORP prévu, refait d'après la planche RendezVousOrdinateurOuvert (§72, 18.11) : la tuile date, le
+           titre, « Voir la feuille » ; « Où tu en es » ; « Tes questions au conseiller » (⋯ par question) ; « La feuille ».
+           Gardés de main (absents de la planche) : le ⋯ du rendez-vous (Modifier, Supprimer) et « Convenu la dernière fois ». -->
       <article
         v-if="selected === 'orp' && nextOrp?.kind === 'orp' && !editing"
         aria-labelledby="rdv-detail-title"
-        class="rdv-detail-body"
+        class="rdv-open"
         data-test="rdv-detail-orp"
       >
-        <div class="rdv-detail-head rdv-card">
+        <div class="rdv-open-head">
           <CalendarDate
             v-bind="cal(nextOrp.at)"
             tone="orp"
             :size="56"
           />
-          <div>
-            <span class="rdv-detail-kicker">{{ countdown(nextOrp.at, now) }}</span>
-            <h1 id="rdv-detail-title">
+          <div class="rdv-open-head-text">
+            <h2 id="rdv-detail-title">
               Rendez-vous ORP
-            </h1>
-            <p>{{ [`${dateText(nextOrp.at)}, ${timeOfDay(nextOrp.at)}`, nextOrp.meeting.place].filter(Boolean).join(" · ") }}</p>
+            </h2>
+            <p data-test="rdv-open-when">
+              {{ [`${dateText(nextOrp.at)}, ${timeOfDay(nextOrp.at)}`, nextOrp.meeting.place, inDays(nextOrp.at, now).replace(/ /g, "\u00a0")].filter(Boolean).join(" · ") }}
+            </p>
           </div>
+          <button
+            type="button"
+            class="primary rdv-open-sheet"
+            data-test="rdv-sheet"
+            @click="emit('sheet')"
+          >
+            Voir la feuille
+          </button>
           <MoreMenu
             v-if="meetingItems.length"
             :items="meetingItems"
@@ -318,114 +415,204 @@ const list = ref<HTMLElement | null>(null);
             test-id="rdv-more"
           />
         </div>
-        <div class="rdv-detail-actions rdv-card">
-          <button
-            type="button"
-            class="primary"
-            data-test="rdv-sheet"
-            @click="emit('sheet')"
-          >
-            Voir ma feuille
-          </button>
-          <a
-            class="button-link secondary"
-            :href="sheetLink"
-            download
-            data-test="rdv-pdf"
-          >Télécharger en PDF</a>
-          <span
-            v-if="lines.length"
-            class="rdv-detail-ready"
-          ><AppIcon name="done" />Ta feuille est prête</span>
-        </div>
         <section
           v-if="lines.length"
           aria-labelledby="rdv-brings"
-          class="rdv-detail-section rdv-card"
         >
-          <h2 id="rdv-brings">
-            Ce que tu apportes
-          </h2>
-          <div class="rdv-brings">
-            <div
+          <h3
+            id="rdv-brings"
+            class="rdv-open-title"
+          >
+            Où tu en es
+          </h3>
+          <ul
+            class="rdv-open-card"
+            data-test="rdv-open-lines"
+          >
+            <li
               v-for="line in lines"
               :key="line.label"
+              class="rdv-open-line"
             >
-              <span>{{ line.label }}</span>
-              <strong>{{ splitLine(line.text).main }}</strong>
-              <small v-if="splitLine(line.text).sub">{{ splitLine(line.text).sub }}</small>
-            </div>
-          </div>
+              <span class="rdv-open-key">{{ line.label }}</span>
+              <span class="rdv-open-value">{{ line.text }}</span>
+            </li>
+          </ul>
         </section>
         <section
           aria-labelledby="rdv-questions"
-          class="rdv-questions-box rdv-card"
           data-test="rdv-questions"
         >
-          <div>
-            <span
-              id="rdv-questions"
-              class="rdv-questions-title"
-            >
-              Tes questions au conseiller
-            </span>
-            <span v-if="prep.questions.length">{{ checked }} {{ checked > 1 ? "cochées" : "cochée" }} sur {{ prep.questions.length }}</span>
-          </div>
-          <ul>
+          <h3
+            id="rdv-questions"
+            class="rdv-open-title"
+          >
+            Tes questions au conseiller · {{ checkedCount(checked) }}
+          </h3>
+          <ul class="rdv-open-card">
             <li
-              v-for="question in prep.questions"
+              v-for="question in shownQuestions"
               :key="question.key"
+              class="rdv-open-question"
             >
-              <label>
-                <input
-                  type="checkbox"
-                  :checked="question.checked"
+              <form
+                v-if="editingKey === question.key"
+                class="rdv-open-field"
+                @submit.prevent="saveEdit(question)"
+              >
+                <span
+                  class="rdv-open-box"
+                  :class="{ on: question.checked }"
+                  aria-hidden="true"
+                />
+                <div>
+                  <textarea
+                    v-model="draft"
+                    rows="2"
+                    maxlength="300"
+                    aria-label="Modifier la question"
+                    data-test="question-edit"
+                    @keydown.enter.exact.prevent="saveEdit(question)"
+                    @keydown.esc.prevent.stop="cancelField"
+                  />
+                  <p class="rdv-open-help">
+                    <span>Entrée pour enregistrer · Échap pour annuler</span>
+                  </p>
+                </div>
+              </form>
+              <template v-else>
+                <button
+                  type="button"
+                  role="checkbox"
+                  class="rdv-open-check"
+                  :aria-checked="question.checked ? 'true' : 'false'"
                   :data-test="`rdv-question-${question.key}`"
-                  @change="emit('toggle', question, ($event.target as HTMLInputElement).checked)"
+                  @click="emit('toggle', question, !question.checked)"
                 >
-                <span>{{ question.text }}</span>
-              </label>
+                  <span
+                    class="rdv-open-box"
+                    :class="{ on: question.checked }"
+                    aria-hidden="true"
+                  ><AppIcon
+                    v-if="question.checked"
+                    name="done"
+                  /></span>
+                  <span class="rdv-open-question-text">{{ tidy(question.text) }}</span>
+                </button>
+                <MoreMenu
+                  :items="questionItems(question)"
+                  :inline="false"
+                  label="Actions sur la question"
+                  :test-id="`rdv-question-more-${question.key}`"
+                />
+              </template>
+            </li>
+            <li
+              v-if="adding"
+              class="rdv-open-question"
+            >
+              <form
+                class="rdv-open-field"
+                @submit.prevent="addQuestion"
+              >
+                <span
+                  class="rdv-open-box"
+                  aria-hidden="true"
+                />
+                <div>
+                  <textarea
+                    ref="newField"
+                    v-model="custom"
+                    rows="2"
+                    maxlength="300"
+                    placeholder="Ta question"
+                    aria-label="Nouvelle question"
+                    data-test="question-new"
+                    @keydown.enter.exact.prevent="addQuestion"
+                    @keydown.esc.prevent.stop="cancelField"
+                  />
+                  <p class="rdv-open-help">
+                    <span>Entrée pour ajouter · Échap pour annuler</span>
+                  </p>
+                </div>
+              </form>
+            </li>
+            <li class="rdv-open-add-row">
+              <button
+                type="button"
+                class="rdv-open-add"
+                data-test="rdv-question-open"
+                @click="openField"
+              >
+                + Ajouter une question
+              </button>
+              <span
+                class="rdv-open-saved"
+                role="status"
+                data-test="rdv-question-saved"
+              >{{ savedNote }}</span>
             </li>
           </ul>
-          <form
-            v-if="adding"
-            class="rdv-question-new"
-            @submit.prevent="addQuestion"
+        </section>
+        <section aria-labelledby="rdv-sheet-title">
+          <h3
+            id="rdv-sheet-title"
+            class="rdv-open-title"
           >
-            <input
-              v-model="custom"
-              type="text"
-              maxlength="300"
-              aria-label="Une autre question"
-              data-test="question-new"
-            >
-            <button
-              type="submit"
-              class="secondary"
-              data-test="question-add"
-            >
-              Ajouter
-            </button>
-          </form>
-          <button
-            v-else
-            type="button"
-            class="link"
-            data-test="rdv-question-open"
-            @click="adding = true"
-          >
-            + Ajouter une question
-          </button>
+            La feuille
+          </h3>
+          <ul class="rdv-open-card">
+            <li>
+              <button
+                type="button"
+                class="rdv-open-link"
+                data-test="rdv-name"
+                @click="emit('name')"
+              >
+                <span><b>Ton nom sur la feuille</b><span
+                  v-if="nameLine"
+                  class="rdv-open-sub"
+                  data-test="rdv-name-line"
+                >{{ nameLine }}</span></span><AppIcon name="chevron" />
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                class="rdv-open-link"
+                data-test="rdv-view-sheet"
+                @click="emit('sheet')"
+              >
+                <span><b>Voir la feuille</b><span
+                  v-if="sheetLine"
+                  class="rdv-open-sub"
+                >{{ sheetLine }}</span></span><AppIcon name="chevron" />
+              </button>
+            </li>
+            <li>
+              <a
+                class="rdv-open-link"
+                :href="sheetLink"
+                download
+                data-test="rdv-pdf"
+              ><span><b>Imprimer ou télécharger en PDF</b></span><AppIcon name="chevron" /></a>
+            </li>
+          </ul>
         </section>
         <section
           v-if="lastNoted"
           aria-labelledby="rdv-last"
-          class="rdv-detail-section rdv-card"
         >
-          <h2 id="rdv-last">
+          <h3
+            id="rdv-last"
+            class="rdv-open-title"
+          >
             Convenu la dernière fois
-          </h2>
-          <p data-test="rdv-last-agreed">
+          </h3>
+          <p
+            class="rdv-open-card rdv-open-line rdv-open-value"
+            data-test="rdv-last-agreed"
+          >
             {{ lastAgreed(lastNoted, now) }}
           </p>
         </section>
@@ -584,24 +771,50 @@ button.rdv-item:hover { border-color: var(--field-border); }
 .rdv-detail-head p { margin: var(--space-1) 0 0; font-size: var(--font-label); color: var(--text-secondary); overflow-wrap: anywhere; }
 .rdv-detail-actions { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .rdv-detail-actions :is(button, a) { min-height: var(--btn-secondary); padding: 0 var(--space-5); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.rdv-detail-ready { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--success); }
-.rdv-detail-section { flex: none; display: flex; flex-direction: column; gap: var(--space-3); }
-.rdv-detail-section h2, .rdv-questions-box .rdv-questions-title { margin: 0; font-size: var(--rdv-18); font-weight: var(--weight-bold); }
-.rdv-detail-section p { margin: 0; font-size: var(--rdv-15); line-height: var(--rdv-lh-text); color: var(--text-tertiary); }
-.rdv-brings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
-.rdv-brings > div { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--space-4); }
-.rdv-brings span { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--text-secondary); }
-.rdv-brings strong { font-size: var(--rdv-17); line-height: var(--leading-tight); }
-.rdv-brings small { font-size: var(--font-small); color: var(--text-secondary); }
-.rdv-questions-box { flex: none; display: flex; flex-direction: column; gap: var(--space-1); }
-.rdv-questions-box > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.rdv-questions-box > div > span { font-size: var(--font-small); color: var(--text-secondary); }
-.rdv-questions-box ul { margin: 0; padding: 0; list-style: none; }
-.rdv-questions-box label { display: flex; align-items: flex-start; gap: var(--space-3); min-height: var(--target-min); padding: var(--space-2) 0; cursor: pointer; font-size: var(--rdv-15); }
-.rdv-questions-box input[type="checkbox"] { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--primary); }
-.rdv-questions-box > .link { align-self: flex-start; min-height: var(--target-min); padding: 0 var(--space-1); font-weight: var(--weight-bold); }
-.rdv-question-new { display: flex; gap: var(--space-2); }
-.rdv-question-new input { flex: 1; min-width: 0; }
+/* Le rendez-vous ORP ouvert : valeurs du HTML de la planche RendezVousOrdinateurOuvert (§72, 18.11). Contenu de 680 au
+   plus (8 px après le début de la zone), 24 entre les blocs ; en tête, la tuile date de 56, le titre 24/30/800, la ligne
+   15 grise, « Voir la feuille » plein de 44 ; titres de bloc 18/24/800 à 4 px du bord ; cartes blanches au trait 1,5
+   (--card-line), coins de 18 ; lignes 12/18, libellé 13 gris sur une valeur 16/22 ; questions de 56 avec une case de 24
+   (coins de 6) et un ⋯ de 44 ; « + Ajouter une question » 15/700 sur 52 ; lignes de « La feuille » de 60, 16/700. Le
+   champ d'ajout (planche PreparerRendezVousQuestion) : trait 2 bleu, coins de 14, aide 13 grise, « Enregistré » vert. */
+.rdv-open {
+  --ro-2: 2px; --ro-6: 6px; --ro-10: 10px; --ro-14: 14px; --ro-15: 15px; --ro-18: 18px; --ro-22: 22px; --ro-24: 24px; --ro-30: 30px;
+  --ro-52: 52px; --ro-56: 56px; --ro-60: 60px; --ro-680: 680px;
+  flex: none; display: flex; flex-direction: column; gap: var(--space-6); max-width: var(--ro-680); padding: var(--space-6) var(--space-6) var(--space-12) var(--space-2);
+}
+.rdv-open-head { display: flex; align-items: center; gap: var(--space-4); }
+.rdv-open-head-text { flex: 1; min-width: 0; }
+.rdv-open-head h2 { margin: 0; font-size: var(--ro-24); line-height: var(--ro-30); font-weight: var(--weight-heavy); color: var(--text); }
+.rdv-open-head p { margin: var(--ro-2) 0 0; font-size: var(--ro-15); color: var(--text-secondary); overflow-wrap: anywhere; }
+.rdv-open-head .rdv-open-sheet { flex: none; min-height: var(--target-min); height: var(--target-min); padding: 0 var(--space-5); border-radius: var(--ro-22); font-size: var(--ro-15); font-weight: var(--weight-bold); }
+.rdv-open-head .more-button { min-width: var(--target-min); min-height: var(--target-min); }
+.rdv-open-title { margin: 0 0 var(--ro-10) var(--space-1); font-size: var(--font-title); line-height: var(--ro-24); font-weight: var(--weight-heavy); color: var(--text); }
+.rdv-open-card { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--ro-18); overflow: hidden; }
+.rdv-open-card > li + li { border-top: 1px solid var(--line); }
+.rdv-open-line { display: flex; flex-direction: column; gap: var(--ro-2); padding: var(--space-3) var(--ro-18); }
+.rdv-open-key { font-size: var(--label-caps); color: var(--text-secondary); }
+.rdv-open-value { font-size: var(--font-body); line-height: var(--ro-22); color: var(--text); overflow-wrap: anywhere; }
+.rdv-open-question { display: flex; align-items: center; }
+.rdv-open .rdv-open-check { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ro-14); min-height: var(--ro-56); padding: var(--ro-10) 0 var(--ro-10) var(--ro-18); border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; font-size: var(--font-body); font-weight: var(--weight-regular); line-height: var(--ro-22); text-align: left; cursor: pointer; }
+.rdv-open-question-text { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.rdv-open-box { flex: none; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--ro-24); height: var(--ro-24); border-radius: var(--ro-6); border: var(--ro-2) solid var(--field-border); color: var(--surface); }
+.rdv-open-box.on { border: 0; background: var(--primary-graphic); }
+.rdv-open-box .icon { width: var(--space-4); height: var(--space-4); stroke-width: 3; }
+.rdv-open-question > .more-menu { flex: none; margin-right: var(--space-2); }
+.rdv-open-question .more-button { width: var(--target-min); height: var(--target-min); color: var(--text-secondary); }
+.rdv-open-field { flex: 1; display: flex; align-items: flex-start; gap: var(--ro-14); padding: var(--space-3) var(--ro-18); }
+.rdv-open-field > .rdv-open-box { margin-top: var(--ro-14); }
+.rdv-open-field > div { flex: 1; min-width: 0; }
+.rdv-open .rdv-open-field textarea { display: block; box-sizing: border-box; width: 100%; min-height: var(--ro-52); padding: var(--space-3) var(--ro-14); border: var(--ro-2) solid var(--primary-graphic); border-radius: var(--ro-14); background: var(--surface); color: var(--text); font: inherit; font-size: var(--font-body); line-height: var(--ro-22); resize: none; outline: 0; }
+.rdv-open-help { display: flex; justify-content: space-between; gap: var(--space-2); margin: var(--space-2) 0 0; font-size: var(--label-caps); color: var(--text-secondary); }
+.rdv-open-add-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-right: var(--ro-18); }
+.rdv-open .rdv-open-add { display: flex; align-items: center; min-height: var(--ro-52); padding: 0 var(--ro-18); border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--primary-text); font-size: var(--ro-15); font-weight: var(--weight-bold); cursor: pointer; }
+.rdv-open-saved { font-size: var(--label-caps); font-weight: var(--weight-bold); color: var(--success); }
+.rdv-open .rdv-open-link { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: var(--ro-60); padding: var(--ro-10) var(--ro-18); border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.rdv-open-link > span { flex: 1; min-width: 0; }
+.rdv-open-link b { display: block; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.rdv-open-sub { display: block; margin-top: var(--ro-2); font-size: var(--font-small); color: var(--text-secondary); }
+.rdv-open-link > .icon { flex: none; width: var(--space-5); height: var(--space-5); color: var(--text-secondary); }
 /* « Ce qui a été convenu » : la carte de contenu (4/32/0), sans le trait qui l'ouvrait ; « Enregistrer » collé en bas. */
 .outcome-inline.rdv-card { flex: none; margin: 0; padding: var(--space-1) var(--space-8) 0; border: 1px solid var(--line); }
 .outcome-inline.rdv-card > .detail-overline { padding-top: var(--space-6); }

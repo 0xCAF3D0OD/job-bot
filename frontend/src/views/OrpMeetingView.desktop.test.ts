@@ -158,4 +158,64 @@ describe("Rendez-vous sur ordinateur", () => {
     expect(panel.find("[role=radiogroup][aria-label='Avec qui ?']").exists()).toBe(true);
     expect(panel.find("input[type=date], input[type=time]").exists()).toBe(false);
   });
+
+  it("rendez-vous ORP ouvert (planche RendezVousOrdinateurOuvert, §72) : en-tête, Où tu en es, questions avec ⋯, La feuille", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    serve({ meeting: MEETING, preparation: PREP, past: [NOTED], target: 10, trainings: [] });
+    const { wrapper, router } = await open("?rdv=orp");
+    const detail = wrapper.get("[data-test=rdv-detail-orp]");
+    expect(detail.get("h2").text()).toBe("Rendez-vous ORP");
+    expect(detail.get("[data-test=rdv-open-when]").text()).toContain("ORP Renens");
+    expect(detail.get("[data-test=rdv-sheet]").text()).toBe("Voir la feuille");
+    expect(detail.findAll("h3").map((h) => h.text())).toEqual([
+      "Où tu en es",
+      "Tes questions au conseiller · aucune cochée",
+      "La feuille",
+      "Convenu la dernière fois",
+    ]);
+    expect(detail.get("[data-test=rdv-open-lines]").text()).toContain("Ce qui bloque");
+    // Une case par question (role="checkbox"), son ⋯ à part, 44 × 44.
+    const box = detail.get("[data-test=rdv-question-intermediate]");
+    expect(box.attributes("role")).toBe("checkbox");
+    expect(box.attributes("aria-checked")).toBe("false");
+    expect(detail.get("[aria-label='Actions sur la question']").element.tagName).toBe("BUTTON");
+
+    // « + Ajouter une question » : champ dans la carte ; Échap annule ; Entrée ajoute, « Enregistré » annoncé.
+    await detail.get("[data-test=rdv-question-open]").trigger("click");
+    await flushPromises();
+    await detail.get("[data-test=question-new]").trigger("keydown", { key: "Escape" });
+    expect(detail.find("[data-test=question-new]").exists()).toBe(false);
+    await detail.get("[data-test=rdv-question-open]").trigger("click");
+    await flushPromises();
+    await detail.get("[data-test=question-new]").setValue("Refuser un poste à 2 h de trajet ?");
+    const added = { ...PREP, questions: [...PREP.questions, { key: "custom:1", text: "Refuser un poste à 2 h de trajet ?", checked: false }] };
+    PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: added, past: [NOTED], target: 10, trainings: [] } });
+    await detail.get("[data-test=question-new]").trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    const [path, options] = PUT.mock.calls[0] as [string, { body: { questions: { text: string; checked: boolean }[] } }];
+    expect(path).toBe("/api/orp-meeting/questions");
+    expect(options.body.questions.at(-1)).toMatchObject({ text: "Refuser un poste à 2 h de trajet ?", checked: false });
+    expect(wrapper.get("[data-test=rdv-question-saved]").text()).toBe("Enregistré");
+    expect(wrapper.find("[data-test=question-new]").exists()).toBe(false);
+
+    // ⋯ › Supprimer : la question disparaît tout de suite, la liste part à la fin du bandeau « Annuler ».
+    PUT.mockClear();
+    await wrapper.get("[data-test=rdv-question-more-intermediate]").trigger("click");
+    await flushPromises();
+    await wrapper.get("[data-test=rdv-question-delete-intermediate]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=rdv-question-intermediate]").exists()).toBe(false);
+    expect(PUT).not.toHaveBeenCalled();
+    PUT.mockResolvedValue({ data: { meeting: MEETING, preparation: { ...added, questions: added.questions.slice(1) }, past: [NOTED], target: 10, trainings: [] } });
+    await vi.advanceTimersByTimeAsync(6100);
+    await flushPromises();
+    const [, sent] = PUT.mock.calls[0] as [string, { body: { questions: { key: string }[] } }];
+    expect(sent.body.questions.map((q) => q.key)).toEqual(["custom:1"]);
+
+    // « Ton nom sur la feuille » ouvre la feuille.
+    await wrapper.get("[data-test=rdv-name]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.feuille).toBe("1");
+    vi.useRealTimers();
+  });
 });
