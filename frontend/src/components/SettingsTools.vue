@@ -48,7 +48,11 @@ const planLine = computed(() => {
   return used === undefined ? name : `${name} · ${used} note${used > 1 ? "s" : ""} ce mois`;
 });
 
-type Row = { id: string; title: string; sub: string; icon: IconName; value?: string; rubrique: string };
+type Row = { id: string; title: string; sub: string; icon: IconName; value?: string; rubrique: string; svg?: string };
+// Les deux icônes de la planche absentes du jeu commun (IA en rayons, Formule en carte) : dessinées ici, pour ne pas
+// alourdir toutes les pages avec icons.ts.
+const RAYS = '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>';
+const CARD = '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>';
 const research = computed<Row[]>(() => [
   {
     id: "account-orp",
@@ -68,7 +72,7 @@ const research = computed<Row[]>(() => [
   },
 ]);
 const tools = computed<Row[]>(() => [
-  { id: "account-ai", title: "IA", sub: "Ce qu’elle lit et ce qu’elle écrit", icon: "spark", rubrique: "ia" },
+  { id: "account-ai", title: "IA", sub: "Ce qu’elle lit et ce qu’elle écrit", icon: "spark", rubrique: "ia", svg: RAYS },
   {
     id: "account-tools",
     title: "Agenda",
@@ -77,7 +81,7 @@ const tools = computed<Row[]>(() => [
     value: agendaLinked.value ? "Connecté" : "",
     rubrique: "outils",
   },
-  { id: "account-plan", title: "Formule", sub: planLine.value, icon: "banknote", rubrique: "formule" },
+  { id: "account-plan", title: "Formule", sub: planLine.value, icon: "banknote", rubrique: "formule", svg: CARD },
   ...(me.value?.is_owner
     ? [{ id: "account-admin", title: "Administration", sub: "Comptes invités, état du service", icon: "shield" as const, rubrique: "plateforme" }]
     : []),
@@ -156,7 +160,17 @@ const go = (rubrique: string) => void router.push({ path: "/reglages", query: { 
         :data-test="row.id"
         @click="go(row.rubrique)"
       >
+        <!-- eslint-disable vue/no-v-html -- tracé fixe, écrit ici -->
+        <svg
+          v-if="row.svg"
+          class="icon rg-lead"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          v-html="row.svg"
+        />
+        <!-- eslint-enable vue/no-v-html -->
         <AppIcon
+          v-else
           :name="row.icon"
           class="rg-lead"
         />

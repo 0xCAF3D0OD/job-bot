@@ -1151,7 +1151,7 @@ watch(
           title="Recherche"
           cards
         >
-          <div class="rg-list rg-tools">
+          <div class="rg-list">
             <RouterLink
               to="/reglages?rubrique=rythme"
               class="rg-link-row"
@@ -1170,7 +1170,7 @@ watch(
               data-test="account-research-tools"
             >
               <AppIcon
-                name="search"
+                name="target"
                 class="rg-lead"
               />
               <span class="rg-label">Recherche et outils</span>
