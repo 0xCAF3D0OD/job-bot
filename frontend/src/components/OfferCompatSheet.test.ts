@@ -1,5 +1,5 @@
-import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { flushPromises, mount } from "@vue/test-utils";
+import { describe, expect, it, vi } from "vitest";
 
 import OfferCompatSheet from "./OfferCompatSheet.vue";
 
@@ -43,6 +43,30 @@ describe("OfferCompatSheet (§10.1, maquette OffreCompatibilite)", () => {
     expect(how.attributes("aria-expanded")).toBe("true");
     expect(wrapper.find(`#${how.attributes("aria-controls")}`).text()).toContain("La note compare");
     expect(wrapper.findAll("dialog")).toHaveLength(1);
+    wrapper.unmount();
+  });
+});
+
+describe("OfferCompatSheet, le calcul hors de vue (audit du 17.11, K4)", () => {
+  it("la feuille défile jusqu’au bouton quand le panneau ouvert dépasse le bas ; rien si tout est visible", async () => {
+    const wrapper = mount(OfferCompatSheet, { attachTo: document.body, props: { ...base, strengths: [], gaps: [] } });
+    const how = wrapper.find("[data-test=compat-how]");
+    const scroll = vi.fn();
+    (how.element as HTMLElement).scrollIntoView = scroll;
+    const body = wrapper.find(".sheet-body").element as HTMLElement;
+    const panel = wrapper.find(`#${how.attributes("aria-controls")}`).element as HTMLElement;
+    const rect = (bottom: number) => ({ bottom, top: bottom - 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: 0, toJSON: () => ({}) });
+    body.getBoundingClientRect = () => rect(844);
+    panel.getBoundingClientRect = () => rect(1100);
+    await how.trigger("click");
+    await flushPromises();
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: "start" }));
+    await how.trigger("click");
+    panel.getBoundingClientRect = () => rect(600);
+    scroll.mockClear();
+    await how.trigger("click");
+    await flushPromises();
+    expect(scroll).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 });

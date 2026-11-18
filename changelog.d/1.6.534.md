@@ -1,0 +1,1 @@
+Fiche d'une offre : calcul de la note visible, recherche d'adresse qui dit ce qu'elle trouve, choix « Écrire à » et « Canal » dans le menu de l'app, zone du message sans arrondi de pilule (audit du 17.11, lot 3)

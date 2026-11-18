@@ -7,7 +7,7 @@ let seq = 0;
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { usePhone } from "../composables/usePhone";
 
@@ -17,7 +17,7 @@ import { usePhone } from "../composables/usePhone";
 // Échap la ferme sans bouger la souris ni le focus ; la souris peut passer sur la bulle sans
 // qu'elle disparaisse ; elle reste tant que la souris ou le focus sont là. Les lecteurs d'écran
 // la lisent avec le libellé (aria-description), sans qu'elle s'ajoute au texte d'un titre.
-defineProps<{ text: string }>();
+const props = defineProps<{ text: string }>();
 
 // Au doigt (docs/108 §2) : sur téléphone, un petit « i » à droite du titre ouvre la description
 // en une ligne grise sous lui ; un second appui la referme. Une seule ouverte à la fois. Pas de
@@ -37,6 +37,7 @@ onMounted(() => {
   inControl.value = Boolean(control);
   control?.addEventListener("focusin", focusIn);
   control?.addEventListener("focusout", focusOut);
+  control?.addEventListener("click", hideAfterClick);
   document.addEventListener("keydown", onKeydown);
 });
 
@@ -48,6 +49,8 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 let hovered = false;
 let focused = false;
+// Après un clic : pas de nouvelle bulle tant que la souris n'est pas sortie.
+let quiet = false;
 
 function clearTimers(): void {
   if (timer) clearTimeout(timer);
@@ -58,6 +61,7 @@ function clearTimers(): void {
 function enter(event: PointerEvent): void {
   if (event.pointerType !== "mouse") return;
   hovered = true;
+  if (quiet) return;
   if (hideTimer) clearTimeout(hideTimer);
   hideTimer = null;
   if (shown.value || timer) return;
@@ -69,6 +73,7 @@ function enter(event: PointerEvent): void {
 
 function leave(): void {
   hovered = false;
+  quiet = false;
   if (timer) clearTimeout(timer);
   timer = null;
   if (focused) return;
@@ -96,6 +101,34 @@ function focusOut(): void {
   if (!hovered) shown.value = false;
 }
 
+// Un clic sur le bouton ferme la bulle : l'action est lancée, la description a servi (audit du 17.11, K12 : « Environ
+// 0,002 $ » restait sous « Rédiger à nouveau »). Elle ne revient qu'après que la souris est sortie puis revenue.
+function hide(): void {
+  clearTimers();
+  shown.value = false;
+  focused = false;
+}
+function hideAfterClick(): void {
+  hide();
+  quiet = true;
+}
+
+// Sans texte (« Rédaction… »), le libellé reste simple et la bulle disparaît avec lui : on oublie tout, sinon elle
+// reviendrait seule avec le texte, souris partie entre-temps (la sortie n'a pas pu être vue).
+watch(
+  () => props.text,
+  async (text) => {
+    if (!text) {
+      hide();
+      hovered = false;
+      return;
+    }
+    // Le texte revient : la souris est peut-être partie pendant ce temps.
+    await nextTick();
+    if (!root.value?.matches(":hover")) quiet = false;
+  },
+);
+
 // Échap ferme la bulle, sans bouger la souris ni le focus (WCAG 1.4.13).
 function onKeydown(event: KeyboardEvent): void {
   if (event.key === "Escape" && shown.value) {
@@ -108,6 +141,7 @@ onBeforeUnmount(() => {
   clearTimers();
   control?.removeEventListener("focusin", focusIn);
   control?.removeEventListener("focusout", focusOut);
+  control?.removeEventListener("click", hideAfterClick);
   document.removeEventListener("keydown", onKeydown);
   if (open.value) openNote.value = null;
 });
@@ -129,6 +163,7 @@ onBeforeUnmount(() => {
     @pointerleave="leave"
     @focusin="!inControl && focusIn($event)"
     @focusout="!inControl && focusOut()"
+    @click="!inControl && hideAfterClick()"
   >
     <slot />
     <button

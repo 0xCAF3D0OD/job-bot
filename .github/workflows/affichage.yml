@@ -1,0 +1,134 @@
+# Le test d'affichage, bloquant (décision de Kevin du 18.11.2026, 9 h 25, point 3 ;
+# docs/decisions/2026-11-18-0925-controle-visuel-pr.md). Sur chaque PR et sur main, sans tri par format :
+# les 8 écrans principaux (Accueil, Offres, Envoyées, Rendez-vous, fiche d'une offre, Bilan, Réglages, Profil),
+# en 390 × 844 et 1440 × 900, en clair et en sombre :
+# - chaque capture est comparée à sa référence (frontend/e2e/references) ;
+# - le script de contrôle (frontend/e2e/controles.ts) ne trouve aucun défaut des règles a à h, hors des écarts
+#   connus de frontend/e2e/ecarts-connus.json, chacun avec sa raison.
+# La démo tourne à heure figée (scripts/affichage.sh) : les dates ne bougent pas d'un jour à l'autre.
+# En cas d'échec, le rapport (captures attendue, obtenue et différence) est joint au passage : « affichage-rapport ».
+# Nouvelles références : `make test-affichage ARGS=--update-snapshots` en local (même Chromium), ou un commit de la PR
+# dont le message contient « [maj-captures] » : le job « Références » les reprend ici et les pousse sur la branche.
+name: Affichage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: affichage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  affichage:
+    name: Captures et contrôles a à h
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: jobbot_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      E2E_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/jobbot_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dépendances
+        run: |
+          (cd backend && uv sync --frozen)
+          (cd frontend && npm ci)
+      # La version de Chromium est celle de @playwright/test (package.json, version exacte) : les références ont été
+      # prises avec elle.
+      - name: Navigateur de Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Test d'affichage
+        run: sh scripts/affichage.sh
+      - name: Journaux de la démo en cas d'échec
+        if: failure()
+        run: tail -n 80 /tmp/e2e-api.log /tmp/e2e-web.log || true
+      - name: Rapport (captures attendue, obtenue, différence ; défauts trouvés)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: affichage-rapport
+          path: |
+            frontend/e2e/rapport/
+            frontend/e2e/resultats/
+          retention-days: 14
+
+  # Les références reprises par la CI elle-même, sur demande (« [maj-captures] » dans le message du dernier commit de la
+  # PR) : seulement pour une branche de ce dépôt, et seulement les fichiers de frontend/e2e/references.
+  references:
+    name: Références
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: jobbot_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      E2E_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/jobbot_e2e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Demandées ?
+        id: demande
+        run: |
+          if git log -1 --format=%B | grep -qF '[maj-captures]'; then echo "oui=true" >> "$GITHUB_OUTPUT"
+          else echo "Pas de « [maj-captures] » dans le dernier commit : rien à faire."; fi
+      - uses: astral-sh/setup-uv@v6
+        if: steps.demande.outputs.oui
+      - uses: actions/setup-node@v4
+        if: steps.demande.outputs.oui
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Nouvelles références
+        if: steps.demande.outputs.oui
+        run: |
+          (cd backend && uv sync --frozen)
+          (cd frontend && npm ci && npx playwright install --with-deps chromium)
+          sh scripts/affichage.sh --update-snapshots -g "capture de référence"
+      - name: Pousser les références
+        if: steps.demande.outputs.oui
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/e2e/references
+          git diff --cached --quiet && { echo "Références inchangées."; exit 0; }
+          git commit -m "Test d'affichage : références reprises par la CI"
+          git push

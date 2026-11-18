@@ -114,6 +114,15 @@ async def get_address_candidates(request: Request, offer_id: int) -> AddressCand
                 address=chosen.address if chosen else None,
                 candidates=[c.as_dict() for c in proposals(offer.company, found)],
             )
+    # L'entreprise déjà connue du registre (cache) : son adresse va dans cette offre, seulement si
+    # le champ est vide ; une adresse saisie ou trouvée ailleurs n'est jamais écrasée (décision de
+    # Kevin du 17.11, audit K6 : la fiche disait « trouvée » et restait « Non renseignée »).
+    if known.uid and known.address and known.chosen_by != "web" and not offer.company_address:
+        async with runtime.sessionmaker.begin() as session:
+            mine = await session.get(Offer, offer_id)
+            if mine is not None and not mine.company_address:
+                mine.company_address, mine.company_address_source = known.address, "registry"
+                mine.company_address_url = None
     web_unavailable = None
     if known.uid is None and known.address is None and not known.web_searched:
         try:

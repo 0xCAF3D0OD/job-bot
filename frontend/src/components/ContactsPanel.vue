@@ -7,11 +7,13 @@ import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
 import CopyButton from "./CopyButton.vue";
+import ChoiceField from "./ChoiceField.vue";
 import FormField from "./FormField.vue";
 import DateField from "./DateField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
+import { usePhone } from "../composables/usePhone";
 import { usePlan } from "../composables/usePlan";
 
 const { aiNote } = usePlan();
@@ -191,6 +193,9 @@ async function remove(contact: Contact): Promise<void> {
 }
 
 onMounted(() => void load());
+// Ordinateur : les choix comme sur la planche CandidaturesOrdinateurAjouter (libellé au-dessus), dans la fiche à une ou
+// deux colonnes ; téléphone : le libellé sur le trait, comme les autres champs.
+const { phone } = usePhone();
 </script>
 
 <template>
@@ -263,44 +268,20 @@ onMounted(() => void load());
           :class="['contact-writer-form', { 'contact-writer-stacked': columns }]"
           @submit.prevent="write"
         >
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+          <ChoiceField
+            v-model="writer.role"
             label="Écrire à"
-          >
-            <select
-              :id="id"
-              v-model="writer.role"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-              <option
-                v-for="(text, value) in ROLES"
-                :key="value"
-                :value="value"
-              >
-                {{ text }}
-              </option>
-            </select>
-          </FormField>
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+            :choices="ROLES"
+            :stacked="columns || !phone"
+            test-id="contact-write-role"
+          />
+          <ChoiceField
+            v-model="writer.channel"
             label="Canal"
-          >
-            <select
-              :id="id"
-              v-model="writer.channel"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-              <option
-                v-for="(text, value) in MESSAGE_CHANNELS"
-                :key="value"
-                :value="value"
-              >
-                {{ text }}
-              </option>
-            </select>
-          </FormField>
+            :choices="MESSAGE_CHANNELS"
+            :stacked="columns || !phone"
+            test-id="contact-write-channel"
+          />
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"
@@ -325,6 +306,7 @@ onMounted(() => void load());
         <template v-if="written">
           <textarea
             v-model="written"
+            class="contact-message"
             rows="5"
             aria-label="Message à envoyer"
             data-test="contact-message"
@@ -493,44 +475,20 @@ onMounted(() => void load());
               data-test="contact-name"
             >
           </FormField>
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+          <ChoiceField
+            v-model="draft.role"
             label="Rôle"
-          >
-            <select
-              :id="id"
-              v-model="draft.role"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-              <option
-                v-for="(text, value) in ROLES"
-                :key="value"
-                :value="value"
-              >
-                {{ text }}
-              </option>
-            </select>
-          </FormField>
-          <FormField
-            v-slot="{ id, describedby, invalid }"
+            :choices="ROLES"
+            :stacked="columns || !phone"
+            test-id="contact-role"
+          />
+          <ChoiceField
+            v-model="draft.channel"
             label="Canal"
-          >
-            <select
-              :id="id"
-              v-model="draft.channel"
-              :aria-describedby="describedby"
-              :aria-invalid="invalid"
-            >
-              <option
-                v-for="(text, value) in CHANNELS"
-                :key="value"
-                :value="value"
-              >
-                {{ text }}
-              </option>
-            </select>
-          </FormField>
+            :choices="CHANNELS"
+            :stacked="columns || !phone"
+            test-id="contact-channel"
+          />
           <DateField
             :model-value="draft.contacted_on"
             label="Date"
@@ -581,4 +539,13 @@ onMounted(() => void load());
 .contacts-columns .contact-write-wide .icon { width: 18px; height: 18px; }
 .contacts-columns .contacts-empty { margin: 0 0 var(--space-3); font-size: var(--font-label); color: var(--text-secondary); }
 .contacts-columns .contacts-list { margin-bottom: var(--space-3); }
+/* Le message rédigé (audit du 17.11, K11) : une zone de texte, pas une pilule. La règle commune des champs (rayon 999,
+   sans marge en hauteur) l’emportait hors d’un formulaire et coupait le texte dans les arrondis. Planche
+   CandidaturesOrdinateurAjouter : rayon 12, 16 px en haut et en bas, 14,5 sur les côtés, texte 16/24. */
+/* Téléphone (audit du 17.11) : « Écrire à » et « Canal » l’un sous l’autre, comme sur la planche ; côte à côte, « Invitation
+   LinkedIn » était coupé dans 84 px à 390 px de large. */
+@media (max-width: 820px) {
+  .contacts-section .contact-writer-form { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-5); }
+}
+.contact-writer textarea.contact-message { padding: var(--space-4) var(--ff-pad-x); border-radius: var(--ff-radius); font-size: var(--font-body); line-height: var(--space-6); }
 </style>

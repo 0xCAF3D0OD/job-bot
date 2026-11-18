@@ -734,6 +734,13 @@ const { me } = useAuth();
                 class="aj-num aj-num-check"
                 aria-hidden="true"
               />
+              <!-- Une tâche bloquante ou en retard n'a pas de numéro : un rond orange vide (Kevin, 18.11, comme le §61). -->
+              <span
+                v-else-if="group.numbered && task.tone === 'late'"
+                class="aj-num aj-num-late"
+                aria-hidden="true"
+                data-test="aj-late-ring"
+              />
               <b
                 v-else-if="group.numbered"
                 class="aj-num"
@@ -883,6 +890,12 @@ const { me } = useAuth();
 .aj-checkable { position: relative; }
 .aj-checkable > .task-check { position: absolute; z-index: 1; top: 50%; left: var(--space-4); transform: translateY(-50%); }
 .today-task .aj-num-check { background: none; }
+/* Le rond orange vide d'une tâche bloquante ou en retard : 26 px, bord de 2 px, comme le cercle à cocher du §61. */
+.aj { --aj-ring: 1.625rem; --aj-ring-late: #B4631F; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aj { --aj-ring-late: var(--peach-text); } }
+:root[data-theme="dark"] .aj { --aj-ring-late: var(--peach-text); }
+.today-task .aj-num-late { background: none; }
+.aj-num-late::before { content: ""; box-sizing: border-box; width: var(--aj-ring); height: var(--aj-ring); border: 2px solid var(--aj-ring-late); border-radius: 50%; }
 .aj-icon { flex: none; width: var(--space-6); height: var(--space-6); color: var(--tone-text); }
 .aj-task-main { flex: 1; min-width: 0; }
 .aj-task-main strong { display: block; font-size: var(--aj-18); line-height: var(--space-6); font-weight: var(--weight-bold); overflow-wrap: anywhere; }

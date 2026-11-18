@@ -55,14 +55,21 @@ describe("« Relire ton CV » dans Aujourd’hui (PR 22)", () => {
     expect(first.text()).toContain("Relire ton CV");
     expect(first.text()).toContain("Sans lui, tes offres ne sont pas notées · 30 secondes");
     expect(first.attributes("href")).toBe("/profil");
+    // Tâche en retard : un rond orange vide, pas de numéro (Kevin, 18.11).
+    expect(first.find("[data-test=aj-late-ring]").exists()).toBe(true);
+    expect(first.find(".aj-num").text()).toBe("");
   });
 
-  it("téléphone : première ligne de « À faire », numérotée comme les autres (AccueilV2)", async () => {
+  it("téléphone : première ligne de « À faire », rond orange vide à la place du numéro, puis 2, 3… (Kevin, 18.11)", async () => {
     phone.value = true;
     const wrapper = await mountView([CV]);
     const first = wrapper.findAll("[data-test=home-todo] li a")[0]!;
     expect(first.attributes("data-test")).toBe("todo-cv-unread");
-    expect(first.find(".home-num").text()).toBe("1");
+    expect(first.find("[data-test=home-late-ring]").exists()).toBe(true);
+    expect(first.find(".home-num").text()).toBe("");
+    expect(first.find(".home-row-late").text()).toContain("30 secondes");
+    const second = wrapper.findAll("[data-test=home-todo] li a")[1];
+    if (second) expect(second.find(".home-num").text()).toBe("2");
     expect(first.text()).toContain("Relire ton CV");
     expect(first.text()).toContain("Sans lui, tes offres ne sont pas notées");
   });
