@@ -44,11 +44,13 @@ const viewMonth = computed(() => {
   const asked = route.query.orp;
   return typeof asked === "string" && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth() ? asked : thisMonth();
 });
+// Sur téléphone, /bilan seul est l'accueil en feuilles (§52) : les liens du détail ORP gardent ?vue=orp.
+const phoneOrp = computed((): Record<string, string> => (phone.value ? { vue: "orp" } : {}));
 const viewingPast = computed(() => viewMonth.value !== thisMonth());
 const expanded = computed(() => route.query.tout === "1");
 const PAST_MONTHS = 6;
 const monthItems = computed<MoreMenuItem[]>(() => {
-  const go = (month: string) => () => void router.push({ path: "/bilan", query: month === thisMonth() ? {} : { orp: month } });
+  const go = (month: string) => () => void router.push({ path: "/bilan", query: { ...phoneOrp.value, ...(month === thisMonth() ? {} : { orp: month }) } });
   const items: MoreMenuItem[] = [];
   if (viewingPast.value) items.push({ label: `Revenir à ${formatMonth(thisMonth()).toLowerCase()}`, test: "orp-month-current", icon: "calendar", run: go(thisMonth()) });
   for (let i = 1; i <= PAST_MONTHS; i += 1) {
@@ -104,9 +106,9 @@ const pendingMonths = computed(() => {
 const declareAll = ref(false);
 const pendingShown = computed(() => (declareAll.value || expanded.value ? pending.value : pending.value.slice(0, DECLARE_SHOWN)));
 // « Voir tout le mois et les justificatifs » et le chevron de la carte : le mois déplié, sur place.
-const allTo = computed(() => ({ path: "/bilan", query: { ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
+const allTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}), tout: "1" } }));
 // Planche BilanOrdinateurMois : le mois déplié se replie (« Replier le mois », la carte du mois), sans ?tout=1.
-const foldTo = computed(() => ({ path: "/bilan", query: viewingPast.value ? { orp: viewMonth.value } : {} }));
+const foldTo = computed(() => ({ path: "/bilan", query: { ...phoneOrp.value, ...(viewingPast.value ? { orp: viewMonth.value } : {}) } }));
 const declared = computed(() => (shownMonth.value?.rows ?? []).filter((row) => row.declared_at));
 function cal(iso: string): { day: number; month: number } {
   const d = new Date(iso);
@@ -337,9 +339,9 @@ watch(viewMonth, () => void load());
             <span class="bilan-card-what"><strong>{{ row.company }}</strong><span>{{ row.job_title }} · {{ orpChannel(row.method) }}</span></span>
             <span :class="['bilan-card-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Infos à compléter" : "Prête" }}</span>
             <span
-              class="arrow-circle small"
+              class="list-chevron"
               aria-hidden="true"
-            ><AppIcon name="arrow-right" /></span>
+            ><AppIcon name="chevron" /></span>
           </button>
           <button
             v-if="!declareAll && !expanded && pending.length > DECLARE_SHOWN"
@@ -442,9 +444,9 @@ watch(viewMonth, () => void load());
                 <span class="bilan-card-what"><strong>{{ pastTitle(item.starts_at).replace(" ORP", "") }}</strong><span>{{ [item.place, `${dateText(item.starts_at).toLowerCase()}, ${timeAndPlace(item.starts_at, null)}`].filter(Boolean).join(" · ") }}</span></span>
                 <span class="bilan-card-state todo">À noter</span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </li>
             <li>
@@ -489,9 +491,9 @@ watch(viewMonth, () => void load());
                 <span class="bilan-card-what"><strong>Prochain rendez-vous</strong></span>
                 <span class="bilan-card-state">{{ nextMeeting ? `${dateText(nextMeeting.starts_at)}, ${timeAndPlace(nextMeeting.starts_at, null)}` : "Pas encore fixé" }}</span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </li>
           </ul>
@@ -609,9 +611,9 @@ watch(viewMonth, () => void load());
                   <span>{{ checked.has(row.application_id) ? `Déclarée · ${checked.get(row.application_id)}` : `${row.job_title} · ${shortDay(row)}` }}</span>
                 </span>
                 <span
-                  class="arrow-circle small"
+                  class="list-chevron"
                   aria-hidden="true"
-                ><AppIcon name="arrow-right" /></span>
+                ><AppIcon name="chevron" /></span>
               </RouterLink>
             </div>
           </section>
@@ -641,9 +643,9 @@ watch(viewMonth, () => void load());
                 <span>{{ row.job_title }} · {{ shortDay(row) }}</span>
               </span>
               <span
-                class="arrow-circle small"
+                class="list-chevron"
                 aria-hidden="true"
-              ><AppIcon name="arrow-right" /></span>
+              ><AppIcon name="chevron" /></span>
             </button>
             <RouterLink
               :to="foldTo"

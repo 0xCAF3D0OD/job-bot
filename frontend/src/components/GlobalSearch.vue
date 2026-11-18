@@ -211,7 +211,7 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
       v-if="compact"
       type="button"
       class="header-round"
-      aria-label="Rechercher"
+      aria-label="Ouvrir la recherche"
       data-label="Rechercher"
       data-test="search-open"
       @click="show"
@@ -225,6 +225,8 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
       <div
         v-if="!compact || open"
         :class="['global-search-box', { sheet: compact, expanded: !compact && expanded }]"
+        role="search"
+        aria-label="Recherche"
       >
         <div class="global-search-field">
           <button
@@ -232,7 +234,7 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
             ref="opener"
             type="button"
             class="header-round gs-open"
-            aria-label="Rechercher"
+            aria-label="Ouvrir la recherche"
             data-label="Rechercher"
             data-test="search-open"
             @click="expand"

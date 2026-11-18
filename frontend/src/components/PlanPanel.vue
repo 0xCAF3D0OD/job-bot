@@ -12,7 +12,7 @@ import SettingRow from "./SettingRow.vue";
 // carte avec une ligne d'en-tête (son nom, ce qu'elle limite, quand les compteurs repartent) puis
 // une ligne par usage (« 37 sur 150 ») avec sa jauge ; une carte pour Plus (ce qu'il ajoute, ou
 // la date de fin et « Résilier »), les conditions acceptées sous « Passer à Plus » ; une carte
-// des paiements reçus. L'exploitant n'a pas de formule : les cartes ne s'affichent pas.
+// des paiements reçus. L'exploitant n'a pas de formule : « Sans limite » et l'utilisation du mois.
 const { plan, refresh } = usePlan();
 const route = useRoute();
 const router = useRouter();
@@ -50,6 +50,12 @@ const message = ref<{ text: string; kind: "ok" | "hint" | "error" } | null>(null
 
 function capitalized(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// « 42 utilisées ce mois » : accordé avec l’usage (offres notées et lettres au féminin), au singulier jusqu’à 1.
+function usedText(usage: { key: string; used: number }): string {
+  const word = `utilisé${["score", "letter"].includes(usage.key) ? "e" : ""}${usage.used > 1 ? "s" : ""}`;
+  return `${usage.used} ${word} ce mois`;
 }
 
 function detail(error: unknown, fallback: string): string {
@@ -117,7 +123,27 @@ onMounted(async () => {
 </script>
 
 <template>
-  <template v-if="plan && !plan.unlimited">
+  <!-- Sans limite (l’exploitant, accord de Kevin du 17.11, K38) : « Sans limite » et ce que l’IA a fait ce mois, sans
+       jauge ; plus de page vide. -->
+  <SettingCard
+    v-if="plan?.unlimited"
+    data-test="plan-unlimited"
+  >
+    <SettingRow
+      title="Sans limite"
+      :description="`Compteurs remis à zéro le ${resets}.`"
+      data-test="plan-name"
+    />
+    <SettingRow
+      v-for="usage in plan.usage"
+      :key="usage.key"
+      :title="capitalized(usage.label)"
+      :data-test="`plan-${usage.key}`"
+    >
+      <span class="plan-usage-count">{{ usedText(usage) }}</span>
+    </SettingRow>
+  </SettingCard>
+  <template v-else-if="plan">
     <SettingCard data-test="plan-panel">
       <SettingRow
         :title="`Formule ${plan.plan === 'plus' ? 'Plus' : 'Essentiel'}`"

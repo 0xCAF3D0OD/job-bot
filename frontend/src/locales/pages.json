@@ -1,3 +1,4 @@
 {
-  "commun": { "routes": ["*"], "files": [] }
+  "commun": { "routes": ["*"], "files": [] },
+  "candidatures": { "routes": ["offers"], "files": ["composables/useOfferFilters.ts"] }
 }

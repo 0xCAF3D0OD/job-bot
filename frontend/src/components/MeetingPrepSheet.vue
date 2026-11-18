@@ -24,7 +24,7 @@ defineProps<{
   checked: number;
   pdf: string;
 }>();
-const emit = defineEmits<{ close: []; toggle: [question: Question, checked: boolean] }>();
+const emit = defineEmits<{ close: []; toggle: [question: Question, checked: boolean]; name: [] }>();
 
 const whereId = useId();
 const askId = useId();
@@ -112,6 +112,16 @@ function cal(iso: string): { day: number; month: number } {
         </li>
       </ul>
     </section>
+    <!-- « Ton nom sur la feuille › » (Kevin, 18.11 : la ligne de la carte « La feuille », planche à venir) : ouvre la
+         page FeuilleNom, qui prend la place de celle-ci. -->
+    <button
+      type="button"
+      class="sheet-link"
+      data-test="rdv-name"
+      @click="emit('name')"
+    >
+      Ton nom sur la feuille<AppIcon name="chevron" />
+    </button>
     <a
       class="sheet-link"
       :href="pdf"
@@ -121,3 +131,8 @@ function cal(iso: string): { day: number; month: number } {
   </BottomSheet>
 </template>
 
+<style scoped>
+/* Aucun trait sous la dernière ligne d'une liste (§65 du 17.11 ; K46 de l'audit). */
+.sheet-items > li:last-child > .sheet-item, .sheet-items > .sheet-item:last-child { border-bottom: 0; }
+button.sheet-link { width: 100%; padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
+</style>

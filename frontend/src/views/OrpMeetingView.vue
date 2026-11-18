@@ -27,6 +27,8 @@ import { dateInSentence, meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
+import FieldSaveStatus from "../components/FieldSaveStatus.vue";
+import { useSheetIdentity } from "../sheetIdentity";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import RendezVousPhone from "../components/RendezVousPhone.vue";
 import OfferSearch from "../components/OfferSearch.vue";
@@ -49,7 +51,16 @@ usePageReady("orp-meeting", () => !!page.value);
 const failed = ref(false);
 const editing = ref(false);
 const custom = ref("");
-const name = ref("");
+// « Ton nom sur la feuille » (§70, Kevin 18.11) : gardé dans le compte, enregistré quand on quitte la case (la page
+// FeuilleNom sur téléphone ; ici, la case de la carte « La feuille », avec le même retour).
+const identity = useSheetIdentity();
+const name = computed({
+  get: () => identity.values.name,
+  set: (value: string) => {
+    identity.values.name = value;
+    identity.edit("name");
+  },
+});
 const message = ref("");
 // Le rendez-vous dont on note ce qui a été convenu (0.67.2).
 const noting = ref<number | null>(null);
@@ -98,12 +109,6 @@ const conclusion = computed<Part[]>(() => {
   for (const o of lateObligations.value) parts.push({ text: parts.length ? lateLine(o.text) : lateLine(o.text).trimStart(), late: true });
   return parts;
 });
-// « Préparer », à droite de la conclusion : descend à la préparation.
-const prepareTitle = ref<HTMLElement | null>(null);
-function goPrepare(): void {
-  const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-  prepareTitle.value?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
 // Le résumé de chaque ligne du mois (règles §3.4).
 const monthValue = computed(() => {
   const last = prep.value?.months?.at(-1);
@@ -354,7 +359,10 @@ watch(
   { immediate: true },
 );
 
-onMounted(() => void load());
+onMounted(() => {
+  void load();
+  void identity.load();
+});
 </script>
 
 <template>
@@ -463,8 +471,9 @@ onMounted(() => void load());
           Effacer la recherche
         </button>
       </div>
-      <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
-           en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
+      <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu, et le « ⋯ » du rendez-vous à
+           droite (dessous sur téléphone). Plus de lien « Préparer » : il menait à la section juste en dessous (K30,
+           décision de Kevin du 17.11). -->
       <div
         v-if="conclusion.length && !compact"
         class="orp-conclusion"
@@ -483,15 +492,6 @@ onMounted(() => void load());
           </component>
         </p>
         <div class="orp-conclusion-actions">
-          <button
-            v-if="prep && !noApplications"
-            type="button"
-            class="link"
-            data-test="go-prepare"
-            @click="goPrepare"
-          >
-            Préparer
-          </button>
           <MoreMenu
             v-if="meeting && !editing"
             :items="meetingItems"
@@ -505,7 +505,6 @@ onMounted(() => void load());
       <!-- Sans candidature, seul le formulaire du rendez-vous reste : pas de titre (1.6.24, comme Figma). -->
       <h2
         v-if="prep && !noApplications && !compact"
-        ref="prepareTitle"
         class="section-title orp-section"
       >
         Préparer
@@ -646,9 +645,17 @@ onMounted(() => void load());
                 type="text"
                 maxlength="120"
                 autocomplete="name"
-                :aria-describedby="describedby"
+                :aria-describedby="`${describedby ?? ''} ${id}-save`.trim()"
                 :aria-invalid="invalid"
+                data-test="sheet-name"
+                @change="identity.save('name')"
               >
+              <FieldSaveStatus
+                :id="`${id}-save`"
+                :state="identity.states.name"
+                reserve
+                @retry="identity.save('name')"
+              />
             </FormField>
             <!-- Une colonne (décision du 25/10) : la seule action principale, puis l'IA en contour. -->
             <div class="form-actions orp-sheet-actions">
@@ -880,7 +887,7 @@ onMounted(() => void load());
                 <button
                   v-if="!item.outcome_at"
                   type="button"
-                  class="secondary small"
+                  class="orp-log-note"
                   :data-test="`log-outcome-${item.id}`"
                   @click="noting = item.id"
                 >
@@ -921,3 +928,13 @@ onMounted(() => void load());
     />
   </section>
 </template>
+
+<style>
+/* « Noter ce qui a été convenu » dans le carnet (K28 de l'audit du 17.11) : la pilule bleu pâle de 48 px des planches
+   BilanResultats et RendezVousPreparer, texte centré, 12 px sous la ligne du rendez-vous ; à sa largeur sur ordinateur. */
+.orp-log .orp-log-note {
+  display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); margin-top: var(--space-3);
+  padding: 0 var(--space-6); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text);
+  font-size: var(--font-label); font-weight: var(--weight-bold);
+}
+</style>

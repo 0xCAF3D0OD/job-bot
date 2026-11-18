@@ -44,6 +44,7 @@ export const LIMITS = {
   "js-alertes": 124_800,
   "js-alertes-ta-recherche": 124_800,
   "js-rendez-vous-orp": 134_700,
+  "js-rendez-vous-nom": 134_700, // « Ton nom sur la feuille » (§70, 18.11), chargée à la demande : la limite de Rendez-vous
   "js-relances": 106_100,
   "js-bilan": 114_900,
   "js-resultats": 111_000,
@@ -64,6 +65,7 @@ export const LIMITS = {
   "js-getemall": 96_300,
   "js-assistant": 99_200, // la page Assistant du téléphone, mesure du 17.11 + 5 %
   "js-suivi-assistant": 176_800, // pire cas : les limites de Suivi d'avant l'allègement
+  "js-suivi-entretien": 176_800, // Suivi avec le formulaire d'entretien ouvert : les limites de Suivi d'avant
   "js-extension": 95_600,
   "js-la-plateforme": 98_700,
   "js-tes-donnees": 97_800,
@@ -84,6 +86,7 @@ export const LIMITS = {
   "css-alertes": 63_000,
   "css-alertes-ta-recherche": 63_000,
   "css-rendez-vous-orp": 66_300,
+  "css-rendez-vous-nom": 66_300, // « Ton nom sur la feuille » (§70, 18.11) : la limite de Rendez-vous
   "css-relances": 60_300,
   "css-bilan": 62_100,
   "css-resultats": 60_000,
@@ -111,6 +114,7 @@ export const LIMITS = {
   "css-introuvable": 60_000,
   "css-assistant": 53_600,
   "css-suivi-assistant": 73_600,
+  "css-suivi-entretien": 73_600,
   images: 4_893_100,
 };
 
@@ -156,6 +160,7 @@ export const PAGES = {
   // pire cas garde les limites des Alertes, pour qu'ouvrir le volet ne coûte jamais plus que la page.
   "alertes-ta-recherche": ["views/JobsView.vue", "views/AlertsView.vue", "components/AlertsDeskStart.vue", "components/AlertsSearchPanel.vue"],
   "rendez-vous-orp": ["views/JobsView.vue", "views/OrpMeetingView.vue"],
+  "rendez-vous-nom": ["views/JobsView.vue", "views/OrpMeetingView.vue", "components/FeuilleNomSheet.vue"],
   relances: ["views/FollowUpsView.vue"],
   bilan: ["views/BilanView.vue", "views/BilanOrpView.vue"], // Bilan › ORP
   resultats: ["views/BilanView.vue", "views/InsightsView.vue"],
@@ -206,6 +211,9 @@ export const PAGES = {
   // ouvrir l'Assistant ne coûte jamais plus qu'avant.
   assistant: ["components/AssistantPanel.vue"],
   "suivi-assistant": ["views/JobsView.vue", "views/ApplicationsView.vue", "components/AssistantPanel.vue"],
+  // Le formulaire d'entretien chargé à la demande (audit du 17.11) : Suivi avec le formulaire ouvert garde les limites
+  // de Suivi, ouvrir le formulaire ne coûte jamais plus qu'avant.
+  "suivi-entretien": ["views/JobsView.vue", "views/ApplicationsView.vue", "components/InterviewForm.vue"],
 };
 
 // Les dossiers d'illustrations : WebP (ou SVG) seulement. Les icônes de l'application (favicon, écran d'accueil)

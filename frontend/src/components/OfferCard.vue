@@ -59,7 +59,8 @@ const chips = computed<Chip[]>(() => {
   const doubts = agency ? o.doubts?.filter((d) => d.kind !== "hidden_employer") : o.doubts;
   // §21 du 15 novembre (ordinateur ; téléphone, Kevin 15.11) : sans note, la pastille neutre « Pas encore notée » en
   // tête (le cercle vide est à droite). Sans profil, « Profil à compléter » le dit à sa place.
-  if (setAside.value) out.push({ text: "Écartée" });
+  // Une offre écartée pendant la visite reste à sa place avec cette pastille (K5, Kevin le 17.11).
+  if (setAside.value || o.status === "ignored") out.push({ text: "Écartée" });
   else if (noScore.value) out.push({ text: "Pas de note" });
   else if (unscored.value && !profileEmpty.value) out.push({ text: "Pas encore notée" });
   // « Gardée » (décision de Kevin du 11 novembre : le libellé de l'état `later`, partout), en tête, avec le

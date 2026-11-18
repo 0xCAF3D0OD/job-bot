@@ -106,11 +106,19 @@ describe("la formule", () => {
     expect(line.find("a").attributes("href")).toBe("/reglages?rubrique=formule");
   });
 
-  it("l’exploitant n’a pas de carte Formule", async () => {
-    GET.mockResolvedValue({ data: plan({ unlimited: true }) });
+  it("l’exploitant : « Sans limite » et l’utilisation du mois, sans jauge ni Plus (accord de Kevin du 17.11, K38)", async () => {
+    const usage = plan({}, 1).usage.map((u) => ({ ...u, limit: null, limit_text: null }));
+    GET.mockResolvedValue({ data: plan({ unlimited: true, usage }, 1) });
     await usePlan().refresh();
     const wrapper = mount(PlanPanel, { global: { plugins: [router()] } });
     expect(wrapper.find("[data-test=plan-panel]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=plan-name]").text()).toContain("Sans limite");
+    expect(wrapper.find("[data-test=plan-score]").text()).toContain("37 utilisées ce mois");
+    expect(wrapper.find("[data-test=plan-letter]").text()).toContain("1 utilisée ce mois");
+    expect(wrapper.find("[data-test=plan-chat]").text()).toContain("3 utilisés ce mois");
+    expect(wrapper.find("[data-test=plan-cv]").text()).toContain("0 utilisé ce mois");
+    expect(wrapper.find(".plan-usage-gauge").exists()).toBe(false);
+    expect(wrapper.find("[data-test=plan-plus]").exists()).toBe(false);
   });
 });
 

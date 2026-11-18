@@ -161,6 +161,42 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.get("[data-test=rdv-pdf]").attributes("href")).toBe("/api/orp-meeting/feuille.pdf");
   });
 
+  it("« Ton nom sur la feuille » (§70) : ouverte depuis la préparation, trois champs gardés dans le compte, Retour y ramène", async () => {
+    const page = { meeting: MEETING, preparation: PREP, past: [], target: 10, trainings: [] };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/orp-meeting/nom"
+          ? { data: { name: "Camille Exemple", advisor: "M. Favre", office: null } }
+          : path === "/api/orp-meeting" ? { data: page } : { data: [] },
+      ),
+    );
+    PUT.mockResolvedValue({ data: { name: "Camille Exemple", advisor: "M. Favre", office: "ORP Lausanne" } });
+    const { wrapper } = await open();
+    await wrapper.get("[data-test=rdv-prep-open]").trigger("click");
+    await wrapper.get("[data-test=rdv-name]").trigger("click");
+    // La page est chargée à la première ouverture.
+    await vi.waitFor(() => expect(wrapper.find("[data-test=feuille-nom]").exists()).toBe(true));
+    await flushPromises();
+    const prep = wrapper.findComponent({ name: "MeetingPrepSheet" });
+    const name = wrapper.findComponent({ name: "FeuilleNomSheet" });
+    expect(name.props("open")).toBe(true);
+    // Une seule page à la fois : la préparation laisse la place.
+    expect(prep.props("open")).toBe(false);
+    expect(name.text()).toContain("Tout est enregistré dès que tu quittes un champ");
+    expect(name.findAll("label").map((l) => l.text())).toEqual(["Prénom et nom", "Ton conseiller ORP", "Office régional"]);
+    expect((name.get("[data-test=feuille-nom-name]").element as HTMLInputElement).value).toBe("Camille Exemple");
+    expect((name.get("[data-test=feuille-nom-advisor]").element as HTMLInputElement).value).toBe("M. Favre");
+    await name.get("[data-test=feuille-nom-office]").setValue("ORP Lausanne");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/orp-meeting/nom", { body: { office: "ORP Lausanne" } });
+    expect(name.findAll("[data-test=field-save]").map((s) => s.text())).toEqual(["", "", "Enregistré"]);
+    // Retour : la préparation revient.
+    await name.get(".sheet-close").trigger("click");
+    await flushPromises();
+    expect(prep.props("open")).toBe(true);
+    expect(name.props("open")).toBe(false);
+  });
+
   it("une seule action dans la carte : « Préparer le rendez-vous », plus de « Voir ma feuille » (PR 7)", async () => {
     serve({ meeting: MEETING, preparation: PREP, past: [PAST], target: 10, trainings: [] });
     const { wrapper } = await open();

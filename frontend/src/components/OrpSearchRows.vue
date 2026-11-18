@@ -56,9 +56,9 @@ const how = (method: string) => (/^[ée]lectronique$/i.test(method.trim()) ? "En
         <span class="bilan-card-what"><strong>{{ row.company }}</strong><span>{{ row.job_title }} · {{ orpChannel(row.method) }}</span></span>
         <span :class="['bilan-card-state', row.missing.length ? 'todo' : 'ok']">{{ row.missing.length ? "Justificatif à joindre" : "Justificatif joint" }}</span>
         <span
-          class="arrow-circle small"
+          class="list-chevron"
           aria-hidden="true"
-        ><AppIcon name="arrow-right" /></span>
+        ><AppIcon name="chevron" /></span>
       </RouterLink>
     </li>
     <slot name="last" />

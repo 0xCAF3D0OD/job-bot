@@ -130,12 +130,21 @@ onMounted(() => void refresh());
             :count="counts.alertes"
           />
         </RouterLink>
+        <!-- La place du bouton Filtres d'Offres et d'Envoyées, le temps que la vue le pose : « Alertes » ne glisse
+             plus de 44 px sous le doigt (audit du 17.11, N19). Masquée dès que le bouton est là. -->
+        <span
+          v-if="phone && (tab === 'offres' || tab === 'suivi')"
+          class="jobs-filter-slot"
+          aria-hidden="true"
+        />
       </Teleport>
     </div>
     <!-- Les outils de la vue ouverte, au-dessus des vues (téléphone). -->
+    <!-- Sur téléphone, sa place est gardée pendant que la vue se charge : sinon les onglets montent de 60 px, puis
+         redescendent quand la recherche arrive (audit du 17.11, K16). -->
     <div
       id="jobs-tools"
-      class="jobs-tools"
+      :class="['jobs-tools', { 'jobs-tools-reserve': phone }]"
     />
     <!-- Les trois vues en onglets « dossier » (§47 du 17.11), sur téléphone et sur ordinateur ; sur ordinateur, à
          droite du titre, la ligne traversant tout l’en-tête. -->
@@ -180,6 +189,10 @@ onMounted(() => void refresh());
 
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
+/* La hauteur de la recherche (48 px) et son écart, gardés vides le temps du chargement (audit K16). */
+.jobs-head .jobs-tools.jobs-tools-reserve:empty { display: block; min-height: var(--field-h); margin: 0 0 var(--space-3); }
+.jobs-filter-slot { flex: none; width: var(--target-min); height: var(--target-min); }
+.topbar-page-tools:has([data-test=filters-toggle], [data-test=sent-filters-toggle]) .jobs-filter-slot { display: none; }
 @media (min-width: 1024px) {
 /* Onglets dossier (§47 du 17.11) : la ligne traverse l'en-tête sous le titre, les onglets et les actions ; le titre
    est remonté de 8 px, « Mes alertes e-mail » et « Ajouter » de 12 px (6 et 10 sur la planche, mis sur la grille de 4). */

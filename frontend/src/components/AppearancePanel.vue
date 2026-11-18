@@ -74,7 +74,7 @@ const panel = ref<"" | "language" | "size" | "theme">("");
       </button>
       <div
         v-else
-        class="appearance-row"
+        class="appearance-row choice-menu-row"
         data-test="appearance-row"
       >
         <span

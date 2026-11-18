@@ -309,9 +309,9 @@ function remove(): void {
 .alerts-families { display: flex; flex-direction: column; gap: var(--space-4); }
 .alerts-family { display: flex; flex-direction: column; gap: var(--space-2); }
 .alerts-family + .alerts-family { margin-top: var(--space-4); }
-.alerts-family-title { margin: 0; font-size: var(--label-caps); line-height: var(--space-4); font-weight: var(--weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
-.alerts-family.confirm .alerts-family-title { color: var(--peach-text); }
-.alerts-family.active .alerts-family-title { color: var(--success); }
+/* Titres de famille neutres (§65 du 17.11, AlertesTel et AlertesOrdinateur ; N9 de l'audit) : encre, 17/24, 800, sans
+   capitales ni couleur d'état. */
+.alerts-family-title { --alerts-17: 17px; margin: 0; font-size: var(--alerts-17); line-height: var(--space-6); font-weight: var(--weight-heavy); color: var(--text); }
 .alerts-family-help { margin: 0 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .alerts-families .block-row { margin: 0; background: var(--surface); border: 1.5px solid var(--card-line); }
 /* Les lieux sont coupés avec « … » (§10.8) ; la ligne « site · état » passe à la ligne sur les écrans étroits (§2.8). */
@@ -336,7 +336,10 @@ function remove(): void {
 .alerts-families.desk .block-row { gap: var(--space-4); min-height: var(--row-72); padding: var(--alerts-pad-y) var(--alerts-pad-x); border-radius: var(--radius-card); }
 .alerts-families.desk .block-row:hover { border-color: var(--primary-graphic); }
 .alerts-families .block-row.highlighted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.alerts-families.desk .block-row .arrow-circle { --circle: 36px; }
+/* Traits droits entre les lignes de la feuille, aucun sous la dernière (§65 ; K46 de l'audit) : un lien ne prend pas
+   l'arrondi des liens, que son trait suivrait. */
+.alert-sheet .sheet-items > .sheet-link { border-radius: 0; }
+.alert-sheet .sheet-items > :last-child { border-bottom: 0; }
 button.sheet-link, button.sheet-cta { width: 100%; padding: 0; border: 0; border-radius: 0; background: none; font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
 button.sheet-cta { border-radius: var(--radius-pill); background: var(--action); color: var(--on-action); font-size: var(--font-body); justify-content: center; }
 </style>
