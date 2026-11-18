@@ -3826,6 +3826,20 @@
               ],
               "title": "Basis"
             }
+          },
+          {
+            "name": "contracts",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Contract"
+              },
+              "maxItems": 5,
+              "default": [],
+              "title": "Contracts"
+            }
           }
         ],
         "responses": {
@@ -14506,6 +14520,17 @@
         ],
         "title": "ContactsPage"
       },
+      "Contract": {
+        "type": "string",
+        "enum": [
+          "cdi",
+          "cdd",
+          "stage",
+          "temporaire",
+          "non_precise"
+        ],
+        "title": "Contract"
+      },
       "ContractType": {
         "type": "string",
         "enum": [
@@ -21281,6 +21306,14 @@
             "type": "array",
             "title": "Rates",
             "default": []
+          },
+          "contracts": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Contracts",
+            "default": []
           }
         },
         "type": "object",
@@ -25318,7 +25351,7 @@
             "maximum": 100.0,
             "minimum": 0.0,
             "title": "Notify Score Threshold",
-            "default": 70
+            "default": 75
           },
           "llm_monthly_budget_chf": {
             "type": "number",

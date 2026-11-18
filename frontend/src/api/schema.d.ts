@@ -5130,6 +5130,11 @@ export interface components {
             contacts: components["schemas"]["ContactOut"][];
         };
         /**
+         * Contract
+         * @enum {string}
+         */
+        Contract: "cdi" | "cdd" | "stage" | "temporaire" | "non_precise";
+        /**
          * ContractType
          * @enum {string}
          */
@@ -7329,6 +7334,11 @@ export interface components {
              * @default []
              */
             rates: components["schemas"]["Facet"][];
+            /**
+             * Contracts
+             * @default []
+             */
+            contracts: components["schemas"]["Facet"][];
         };
         /**
          * OfferFiltersVisible
@@ -8689,7 +8699,7 @@ export interface components {
             orp_monthly_target?: number | null;
             /**
              * Notify Score Threshold
-             * @default 70
+             * @default 75
              */
             notify_score_threshold: number;
             /**
@@ -12377,6 +12387,7 @@ export interface operations {
                 with_filtered_out?: boolean;
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
+                contracts?: components["schemas"]["Contract"][];
             };
             header?: never;
             path?: never;
