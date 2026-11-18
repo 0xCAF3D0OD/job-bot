@@ -6,7 +6,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { MATCH_TITLE, pointParts } from "../compat";
 import { dateInList, dateInSentence } from "../dates";
-import { cityOnly, expiredText, frenchName, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { cityOnly, expiredText, frenchName, gapSkill, onDay, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import AgencyNote from "./AgencyNote.vue";
@@ -544,12 +544,14 @@ const desktopItems = computed<MoreMenuItem[]>(() => {
     );
   }
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  items.unshift(...nearbyItem.value);
   return items;
 });
 const menuItems = computed<MoreMenuItem[]>(() => {
   if (wide.value) return desktopItems.value;
   const o = props.offer;
   const items: MoreMenuItem[] = [];
+  items.push(...nearbyItem.value);
   if (o.status !== "applied") {
     items.push({ label: "J’ai déjà postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
@@ -581,7 +583,7 @@ const menuItems = computed<MoreMenuItem[]>(() => {
 const sheetOpen = ref(false);
 const sheetExtra = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
-  const items: MoreMenuItem[] = [];
+  const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
     items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
@@ -626,8 +628,29 @@ async function share(): Promise<void> {
     saidAloud.value = "Copie impossible.";
   }
 }
-// Offre expirée (O7) : le bouton principal mène aux offres proches, par le titre du poste.
+// Offre expirée (O7) : « Voir des offres proches », par le titre du poste, dans le « ⋯ » ; la barre dit « Écrire
+// quand même » (planche OffreExpiree du 18.11, Kevin le 18.11 : le lien reste dans le menu).
 const nearbyLink = computed(() => ({ path: "/candidatures/offres", query: { q: props.offer.title } }));
+const expiredShown = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
+const expiredWrite = computed(() => expiredShown.value && props.offer.status !== "preparing");
+const nearbyItem = computed<MoreMenuItem[]>(() =>
+  expiredWrite.value ? [{ label: "Voir des offres proches", test: "nearby", icon: "search", run: () => void router.push(nearbyLink.value) }] : [],
+);
+// La carte « Offre expirée » : le titre et la phrase de la planche quand la page de l'annonce a été vérifiée ; une
+// expiration supposée (30 jours sans alerte) ou signalée par toi garde sa phrase, la planche ne la dessine pas.
+const expiredCard = computed(() => {
+  const o = props.offer;
+  if (!o.expired_at) return null;
+  const tail = "Tu peux encore écrire à l’entreprise.";
+  if (o.expiry_source !== "page") return { title: "", text: `${expiredText(o)} ${tail}` };
+  let host = "";
+  try {
+    host = new URL(o.links.find((l) => l.url)?.url ?? "").hostname.replace(/^www\./, "");
+  } catch {
+    host = "";
+  }
+  return { title: "L’annonce n’est plus en ligne", text: `Vérifiée ${onDay(o.expired_at)}${host ? ` sur ${host}` : ""}. ${tail}` };
+});
 
 // Partie « Entreprise » (docs/74) : l'adresse visible, les actions dans son « ⋯ ».
 const canSearchEmployer = computed(
@@ -812,13 +835,6 @@ watch(
             Voir le suivi
           </RouterLink>
         </div>
-        <p
-          v-if="offer.expired_at && offer.status !== 'applied'"
-          class="notice expired-notice"
-          data-test="expired"
-        >
-          {{ expiredText(offer) }}
-        </p>
         <div
           class="oc-note-line"
           data-test="section-for-you"
@@ -891,12 +907,39 @@ watch(
           </button>
         </div>
         <p
-          v-if="!scored && (needsProfile || finalCause)"
+          v-if="!scored && (needsProfile || finalCause || unrated)"
           class="oc-note-sub"
           data-test="match-sub"
         >
           {{ matchSub }}
         </p>
+        <!-- Kevin, 18.11 : sur ordinateur, la carte « Pas encore notée » de la planche OffreNonNotee, dans le panneau. -->
+        <div
+          v-if="unrated"
+          class="match-now oc-now"
+          data-test="score-now-block"
+        >
+          <BusyButton
+            class="match-now-button"
+            :busy="scoringNow"
+            busy-label="Notation en cours"
+            data-test="score-now"
+            @click="scoreNow"
+          >
+            <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
+              Noter maintenant
+            </HoverNote>
+          </BusyButton>
+          <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
+          <p
+            v-if="scoreNowError"
+            class="field-error"
+            role="alert"
+            data-test="score-now-error"
+          >
+            {{ scoreNowError }}
+          </p>
+        </div>
         <p
           v-if="outsideNote"
           class="oc-note-sub"
@@ -915,6 +958,23 @@ watch(
           <AppIcon name="done" />Note refaite sur l’annonce complète.
         </p>
       </header>
+      <section
+        v-if="expiredShown && expiredCard"
+        :class="['expired-card', { 'oc-card': columns, 'detail-card': !columns, 'grille-info': sub }]"
+        role="status"
+        data-test="expired"
+      >
+        <span class="expired-pill">Offre expirée</span>
+        <h3
+          v-if="expiredCard.title"
+          class="expired-title"
+        >
+          {{ expiredCard.title }}
+        </h3>
+        <p class="expired-text">
+          {{ expiredCard.text }}
+        </p>
+      </section>
 
       <section
         class="oc-card oc-apply"
@@ -1013,20 +1073,11 @@ watch(
           data-test="triage"
         >
           <RouterLink
-            v-if="offer.expired_at && offer.status !== 'preparing'"
-            :to="nearbyLink"
-            class="button-link primary-link"
-            data-test="nearby"
-          >
-            Voir des offres proches
-          </RouterLink>
-          <RouterLink
-            v-else
             :to="prepareLink"
             class="button-link primary-link"
             data-test="prepare"
           >
-            {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+            {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
           </RouterLink>
           <button
             v-if="!discarded"
@@ -1147,13 +1198,6 @@ watch(
           Voir le suivi
         </RouterLink>
       </div>
-      <p
-        v-if="offer.expired_at && offer.status !== 'applied'"
-        class="notice expired-notice"
-        data-test="expired"
-      >
-        {{ expiredText(offer) }}
-      </p>
       <ul
         class="offer-tags"
         data-test="offer-tags"
@@ -1180,20 +1224,11 @@ watch(
         data-test="triage"
       >
         <RouterLink
-          v-if="offer.expired_at && offer.status !== 'preparing'"
-          :to="nearbyLink"
-          class="button-link primary-link"
-          data-test="nearby"
-        >
-          Voir des offres proches
-        </RouterLink>
-        <RouterLink
-          v-else
           :to="prepareLink"
           class="button-link primary-link"
           data-test="prepare"
         >
-          {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+          {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
         </RouterLink>
         <button
           v-if="!discarded"
@@ -1275,20 +1310,11 @@ watch(
         Écarter
       </button>
       <RouterLink
-        v-if="offer.expired_at && offer.status !== 'preparing'"
-        :to="nearbyLink"
-        class="button-link primary-link offer-bar-main"
-        data-test="nearby"
-      >
-        Voir des offres proches
-      </RouterLink>
-      <RouterLink
-        v-else
         :to="prepareLink"
         class="button-link primary-link offer-bar-main"
         data-test="prepare"
       >
-        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+        {{ expiredWrite ? "Écrire quand même" : offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
       </RouterLink>
     </div>
 
@@ -1301,6 +1327,23 @@ watch(
       v-bind="layoutProps"
     >
       <template #main>
+        <section
+          v-if="expiredShown && expiredCard"
+          :class="['expired-card', { 'oc-card': columns, 'detail-card': !columns, 'grille-info': sub }]"
+          role="status"
+          data-test="expired"
+        >
+          <span class="expired-pill">Offre expirée</span>
+          <h3
+            v-if="expiredCard.title"
+            class="expired-title"
+          >
+            {{ expiredCard.title }}
+          </h3>
+          <p class="expired-text">
+            {{ expiredCard.text }}
+          </p>
+        </section>
         <section
           :class="['detail-card', 'match-card', { 'detail-section': columns, 'grille-info': sub }]"
           aria-labelledby="match-title"
@@ -1858,7 +1901,7 @@ watch(
 .oc-title-text h2 { margin: 0; font-size: var(--oc-h2); line-height: var(--oc-h2-lh); font-weight: var(--weight-heavy); letter-spacing: 0; }
 .oc-sub { margin: var(--space-1) 0 0; font-size: var(--font-label); line-height: normal; color: var(--text-secondary); }
 .oc-title-actions { flex: none; display: flex; align-items: center; }
-.oc-head > .oc-status, .oc-head > .expired-notice { margin: var(--space-3) 0 0; }
+.oc-head > .oc-status { margin: var(--space-3) 0 0; }
 .oc-status { display: flex; align-items: center; gap: var(--space-3); }
 .oc-note-line { display: flex; align-items: center; gap: var(--oc-10); margin-top: var(--space-3); padding-top: var(--space-1); border-top: 1px solid var(--line); }
 .oc-note-line .match-title { margin: 0; font-size: var(--font-label); font-weight: var(--weight-bold); }
@@ -1877,16 +1920,23 @@ watch(
 .match-unrated { flex: none; width: 60px; height: 60px; }
 .match-unrated circle { stroke: var(--linked-line); }
 .match-unrated path { stroke: var(--unrated-dash); }
-.match-now { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-2) + 2px); margin: var(--space-4) calc(-1 * var(--space-4)) 0; padding: calc(var(--space-3) + 2px) var(--space-4) 0; border-top: 1px solid var(--line-soft); }
+.match-now { --now-gap: 10px; --now-top: 14px; display: flex; flex-direction: column; align-items: center; gap: var(--now-gap); margin: var(--space-4) calc(-1 * var(--space-4)) 0; padding: var(--now-top) var(--space-4) 0; border-top: 1px solid var(--line-soft); }
 .match-now-button { width: 100%; height: 52px; min-height: 52px; border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.grey-pill { display: inline-flex; align-items: center; min-height: 30px; padding: 5px var(--space-3); border-radius: 15px; background: var(--line-soft); color: var(--text-lead); font-size: 13px; font-weight: var(--weight-semibold); text-align: center; }
+.grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
+.oc-now { margin: var(--space-4) 0 0; padding-left: 0; padding-right: 0; }
+/* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
+   phrase 15/21 px grise 4 px dessous. */
+.expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }
+.expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
+.expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
+.expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
 .match-now .field-error { align-self: stretch; margin: 0; }
 /* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
    « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
 .address-lines { white-space: pre-line; }
-.address-pill { margin-top: calc(var(--space-2) + 2px); }
+.address-pill { --pill-gap: 10px; margin-top: var(--pill-gap); }
 .address-busy { display: flex; align-items: center; color: var(--text-secondary); }
-.address-row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--target-min); padding: var(--space-3) 0; border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--primary-text); font-size: 15px; font-weight: var(--weight-bold); text-align: left; }
+.address-row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--target-min); padding: var(--space-3) 0; border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--primary-text); font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; }
 .address-row .icon { flex: none; color: var(--text-secondary); }
 .oc-note-redone { margin: var(--space-2) 0 var(--space-4); }
 .oc-card-title { margin: 0; padding: var(--oc-head-top) var(--oc-x) var(--oc-14); font-size: var(--oc-card-title); line-height: var(--oc-card-lh); font-weight: var(--weight-bold); }
@@ -1946,7 +1996,7 @@ watch(
   .offer-blocks .offer-subhead { --ob-8: 8px; --ob-4: 4px; margin: 0; padding: var(--ob-12) var(--ob-8) var(--ob-4); background: var(--bg); }
   .offer-blocks .offer-subhead .icon-button { width: var(--ob-48); height: var(--ob-48); color: var(--text); }
   .offer-blocks .offer-subhead .icon-button > .icon { width: var(--ob-24); height: var(--ob-24); }
-  .offer-blocks > .detail-offer, .offer-blocks .match-card {
+  .offer-blocks > .detail-offer, .offer-blocks .match-card, .offer-blocks .expired-card {
     margin: var(--ob-12) var(--ob-margin) 0; padding: var(--ob-pad); background: var(--surface); border: 1.5px solid var(--card-line);
     border-radius: var(--radius-card); box-shadow: none;
   }
@@ -1964,8 +2014,8 @@ watch(
   .offer-blocks .detail-title .detail-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); line-height: var(--ob-21); color: var(--text-secondary); }
   .offer-blocks .offer-tags { gap: var(--space-2); margin-top: var(--ob-gap); }
   .offer-blocks .offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface-muted); border: 0; border-radius: var(--radius-sm); font-size: var(--ob-13); font-weight: var(--weight-semibold); color: var(--text-tertiary); }
-  .offer-blocks .detail-offer .status-line, .offer-blocks .detail-offer .expired-notice { margin-top: var(--ob-gap); }
-  .offer-blocks .match-card { display: block; }
+  .offer-blocks .detail-offer .status-line { margin-top: var(--ob-gap); }
+  .offer-blocks .match-card, .offer-blocks .expired-card { display: block; }
   .offer-blocks .match-head { gap: var(--ob-gap); padding: 0; }
   .offer-blocks .match-head .score-ring.large { width: var(--ob-56); height: var(--ob-56); }
   .offer-blocks .match-title { font-size: var(--font-title); line-height: var(--ob-24); font-weight: var(--weight-bold); }

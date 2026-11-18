@@ -370,11 +370,31 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
-  it("une offre expirée mène aux offres proches ; en préparation, « Reprendre la lettre »", async () => {
+  it("offre expirée (planche OffreExpiree, 18.11) : la carte, « Écrire quand même », les offres proches dans ⋯", async () => {
     phone();
-    const expired = await mountDetail(offer({ expired_at: "2026-10-30T10:00:00Z" }));
-    expect(expired.find("[data-test=nearby]").text()).toBe("Voir des offres proches");
-    expect(expired.find("[data-test=prepare]").exists()).toBe(false);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-20T09:00:00Z"));
+    const expired = await mountDetail(
+      offer({ expired_at: "2026-11-17T10:00:00Z", expiry_source: "page", links: [{ source: "jobup", url: "https://www.alpstack.ch/jobs/1" }] }),
+    );
+    const card = expired.get("[data-test=expired]");
+    expect(card.get(".expired-pill").text()).toBe("Offre expirée");
+    expect(card.get(".expired-title").text()).toBe("L’annonce n’est plus en ligne");
+    expect(card.get(".expired-text").text()).toBe("Vérifiée le 17 nov. sur alpstack.ch. Tu peux encore écrire à l’entreprise.");
+    const bar = expired.get("[data-test=offer-bar]");
+    expect(bar.get("[data-test=offer-discard]").text()).toBe("Écarter");
+    expect(bar.get("[data-test=prepare]").text()).toBe("Écrire quand même");
+    expect(bar.get("[data-test=prepare]").attributes("href")).toMatch(/\/preparer\?ecrire=1$/);
+    // Kevin, 18.11 : « Voir des offres proches » reste, dans le « ⋯ ».
+    await expired.find("[data-test=detail-more]").trigger("click");
+    await flushPromises();
+    const titles = expired.get("[data-test=offer-actions]").findAll(".offer-action").map((t) => t.text());
+    expect(titles).toContain("Voir des offres proches");
+    vi.useRealTimers();
+    // Une expiration supposée garde sa phrase, sans le titre de la planche.
+    const guessed = await mountDetail(offer({ expired_at: "2026-11-17T10:00:00Z", expiry_source: "age" }));
+    expect(guessed.find("[data-test=expired] .expired-title").exists()).toBe(false);
+    expect(guessed.get("[data-test=expired] .expired-text").text()).toMatch(/^Probablement expirée.*Tu peux encore écrire à l’entreprise\.$/);
     const preparing = await mountDetail(offer({ status: "preparing" }));
     expect(preparing.find("[data-test=prepare]").text()).toBe("Reprendre la lettre");
     expect(preparing.find("[data-test=prepare]").attributes("href")).toMatch(/\/preparer$/);
@@ -499,6 +519,17 @@ describe("OfferDetail sur ordinateur, deux colonnes (lot 13.1)", () => {
     expect((await mountDetail(offer({ score: 70 }))).find("[data-test=score-now-block]").exists()).toBe(false);
     expect((await mountDetail(offer({ score: null, status: "filtered_out" }))).find("[data-test=score-now-block]").exists()).toBe(false);
     expect((await mountDetail(offer({ score: null, score_final: "erreur" }))).find("[data-test=score-now-block]").exists()).toBe(false);
+  });
+
+  it("Kevin, 18.11 : sur ordinateur, les mêmes cartes dans le panneau (pas encore notée, expirée)", async () => {
+    desktop();
+    const unrated = await mountDetail(offer({ score: null }));
+    expect(unrated.get("[data-test=match-sub]").text()).toBe("jobA1 n’a pas encore comparé cette offre à ton profil.");
+    expect(unrated.get("[data-test=score-now-block] [data-test=score-now]").text()).toContain("Noter maintenant");
+    const expired = await mountDetail(offer({ score: 70, expired_at: "2026-11-10T10:00:00Z", expiry_source: "manual" }));
+    expect(expired.get("[data-test=expired]").classes()).toContain("oc-card");
+    expect(expired.get("[data-test=expired] .expired-pill").text()).toBe("Offre expirée");
+    expect(expired.get("[data-test=triage] [data-test=prepare]").text()).toBe("Écrire quand même");
   });
 
   it("A2 : note impossible, une ligne selon la cause ; « Réessayer » après un échec de l’IA (Kevin, 16.11)", async () => {

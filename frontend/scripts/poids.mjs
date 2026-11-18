@@ -257,6 +257,9 @@ const keyOf = (path) => {
   const key = keys.find((k) => k.endsWith(path)) ?? keys.find((k) => new RegExp(`^_${name}-[\\w-]{8}\\.js$`).test(k));
   if (key) return key;
   if (/^components\//.test(path) && existsSync(new URL(`../src/${path}`, import.meta.url))) return null;
+  // La base mesurée avec le script de la branche (--dist, poids-ci.sh) n'a pas encore les fichiers que la branche
+  // ajoute : la page s'y mesure sans eux, ce qui donne l'avant.
+  if (arg("--dist")) return null;
   throw new Error(`${path} absent du manifeste de vite`);
 };
 const entry = Object.keys(manifest).find((key) => manifest[key].isEntry);

@@ -812,7 +812,8 @@ describe("détail allégé et adresse", () => {
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=status-pill]").text()).toBe("Gardée");
     expect(wrapper.find("[data-test=later]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l’Exemple 10, 1206 Genève");
+    // Planche OffreAdresseTrouvee (18.11) : l'adresse sur deux lignes, telle qu'enregistrée.
+    expect(wrapper.find("[data-test=address] .address-lines").text()).toBe("Chemin de l’Exemple 10\n1206 Genève");
     expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
 
     await wrapper.find("[data-test=more]").trigger("click");
