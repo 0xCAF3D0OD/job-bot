@@ -43,6 +43,8 @@ const MAQUETTE = new Set([
   "./components/AlertsSearchPanel.vue : Ta recherche",
   // Planche FairePoint du 18.11 (accord de Kevin du 18.11.2026 pour la page entière).
   "./views/FairePointView.vue : Tes notes",
+  // Planche FairePointOrdinateur du 19.11 (§72m ; accord de Kevin du 19.11.2026).
+  "./components/FairePointPanel.vue : Tes notes",
 ]);
 
 function template(source: string): string {

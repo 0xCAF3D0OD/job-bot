@@ -87,6 +87,8 @@ export const ICONS = {
   lock: '<rect x="5" y="10.5" width="14" height="10" rx="2"/>' + path("M8 10.5V8a4 4 0 0 1 8 0v2.5"),
   // Actions
   send: path("M20 4L3.5 11l6.5 2.5L12.5 20z") + path("M20 4l-10 9.5"),
+  // Flèche de retour arrière (planche ActionsOffreGardee, §72l) : « Remettre dans Nouvelles » dans la feuille ⋯.
+  undo: path("M9 14 4 9l5-5") + path("M4 9h10.5a5.5 5.5 0 0 1 0 11H11"),
   refresh: path("M19 12a7 7 0 1 1-2.1-5") + path("M19 4.5V9h-4.5"),
   download: path("M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"),
   upload: path("M12 15.5V4.5M7.5 9L12 4.5 16.5 9M5 19.5h14"),
