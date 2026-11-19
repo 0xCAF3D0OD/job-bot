@@ -825,3 +825,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.611 | Téléphone : Lettre et CV de Ma candidature passent sur la barre du bas commune (BottomBar) ; la page Préparer repasse sous sa limite de poids | livrée |
 | 1.6.612 | Rendez-vous sur téléphone : « À noter » montre aussi les entretiens passés sans point fait, qui ouvrent Faire le point, et le badge de l'onglet compte tout ce qui est à noter, rendez-vous ORP compris (§72u) | livrée |
 | 1.6.613 | Téléphone, écriture de la lettre en écran entier comme ChargementLettre : sans la tête de page ni la barre du bas, qui reviennent avec la lettre | livrée |
+| 1.6.614 | Réglages (ordinateur) : lignes des cartes de section à 4 px des côtés dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
+| 1.6.615 | Candidatures, liste Offres : sélection multiple, « Toutes les expirées » et « Écarter N offres » en un seul appel, avec « Annuler » (§72q) | livrée |
