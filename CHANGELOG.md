@@ -784,3 +784,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.570 | Candidatures plus légère : les formulaires du panneau « Ajouter » se chargent à part, préchargés dès l'affichage de la page (la page repasse sous sa limite après Distance). | livrée |
 | 1.6.571 | « Faire le point » devient une page entière sur téléphone (planche FairePoint) : ressenti, suite et notes, relance calculée à 7 jours. | livrée |
 | 1.6.572 | Rendez-vous sur ordinateur : le rendez-vous ORP ouvert refait d'après la planche RendezVousOrdinateurOuvert (§72), avec ⋯ par question, ajout dans la carte et « La feuille ». | livrée |
+| 1.6.573 | Recherche et outils : « Lancer » passe du bouton tonal pâle au bouton à contour bleu (§72f, un seul bouton plein par écran) | livrée |
