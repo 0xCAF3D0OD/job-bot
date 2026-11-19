@@ -71,6 +71,8 @@ export const ICONS = {
   "x-circle": circle(12, 12, 8.5) + path("M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"),
   star: path("M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"),
   trend: path("M7 17L17 7M9 7h8v8"),
+  // La courbe montante du Bilan dans la barre du bas (planches du 18.11).
+  growth: path("M3 17l6-6 4 4 8-8M15 7h6v6"),
   reply: path("M4 5h16v11H9l-5 4z") + path("M8 9.5h8M8 12.5h5"),
   message: path("M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5H5A1.5 1.5 0 0 1 3.5 16V6A1.5 1.5 0 0 1 5 4.5z"),
   // Get'emAll (maquettes de la connexion, 2026-11-06) : sa bulle, les deux flèches entre les apps, et « jamais ».
