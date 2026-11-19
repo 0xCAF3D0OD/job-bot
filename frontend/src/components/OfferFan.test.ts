@@ -54,3 +54,44 @@ describe("Notes de l’éventail : forme courte, sinon texte complet", () => {
     expect(notes("a".repeat(29)).notes[0]).toBe(FULL);
   });
 });
+
+// La citation du dos (Kevin, 19.11) : autant de lignes entières que la carte en laisse (382 px de haut, 16 px entre les
+// blocs), de 1 à 5 ; jamais une ligne tranchée. La mise en page est simulée : jsdom ne calcule pas les hauteurs.
+describe("Citation du dos : des lignes entières", () => {
+  const LONG = "Operating within the First Line of Defence, the Fraud Software Engineer serves as the core technical builder for the Anti-Fraud team.";
+  const lines = async (verdicts: number) => {
+    const sizes: Record<string, number> = { "fan-back": 382, "fan-back-head": 48, "fan-verdicts": verdicts, "fan-read": 23 };
+    const size = (el: Element) => sizes[[...el.classList].find((c) => c in sizes) ?? ""] ?? 0;
+    const saved = (["clientHeight", "offsetHeight"] as const).map((k) => [k, Object.getOwnPropertyDescriptor(HTMLElement.prototype, k)] as const);
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, get() { return size(this); } });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get() { return size(this); } });
+    const computed = window.getComputedStyle;
+    window.getComputedStyle = ((el: Element) =>
+      ({ ...computed(el), rowGap: "16px", lineHeight: "22px", paddingTop: "12px", paddingBottom: "12px" }) as unknown as CSSStyleDeclaration) as typeof computed;
+    try {
+      const view = mount(OfferFan, {
+        props: { offers: [{ ...offer("SRE"), description: LONG }] },
+        global: { stubs: { RouterLink: RouterLinkStub } },
+        attachTo: document.body,
+      });
+      const quote = () => view.find("[data-test=fan-quote]");
+      await view.find("[data-test=fan-flip]").trigger("click");
+      await new Promise((r) => setTimeout(r));
+      return { lines: quote().attributes("data-lines"), text: quote().find(".fan-quote-text").exists() };
+    } finally {
+      window.getComputedStyle = computed;
+      for (const [k, d] of saved) {
+        if (d) Object.defineProperty(HTMLElement.prototype, k, d);
+        else delete (HTMLElement.prototype as Partial<Record<typeof k, number>>)[k];
+      }
+    }
+  };
+
+  it("verdicts courts : la place pour 3 lignes", async () => {
+    expect(await lines(156)).toEqual({ lines: "3", text: true });
+  });
+
+  it("verdicts longs : 2 lignes seulement, pas une ligne et demie", async () => {
+    expect(await lines(178)).toEqual({ lines: "2", text: true });
+  });
+});
