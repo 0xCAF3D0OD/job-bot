@@ -126,6 +126,10 @@ const { me } = useAuth();
 const assistant = useAssistant();
 
 const step = ref<Step>(0);
+// L'étape affichée (docs/mouvement.md) : au changement d'étape, l'ancien contenu sort d'abord ; le fond bleu de la
+// première étape ne change qu'à l'entrée du nouveau, pour que l'ancien texte ne passe jamais sur le mauvais fond.
+const shownStep = ref<Step | null>(null);
+const blue = computed(() => (shownStep.value ?? step.value) === 0);
 const loaded = ref(false);
 const criteria = ref<CriteriaIn | null>(null);
 const settings = ref<SettingsModel | null>(null);
@@ -301,6 +305,7 @@ onMounted(async () => {
   if (desk.value && step.value === 0) step.value = 1;
   if (fromToday) step.value = 3;
   if (step.value === 3) await loadAlerts();
+  shownStep.value = step.value;
   loaded.value = true;
 });
 
@@ -717,13 +722,13 @@ async function finish(to: string): Promise<void> {
     </header>
     <div class="wdk-grid">
       <Transition
-        name="welcome-step"
+        name="motion-step"
         mode="out-in"
         @after-enter="focusTitle"
       >
         <div
           :key="step"
-          class="wdk-col"
+          class="wdk-col motion-cascade"
           :data-test="`welcome-step-${step + 1}`"
         >
           <p class="wdk-cap">
@@ -1168,7 +1173,7 @@ async function finish(to: string): Promise<void> {
   </LoadingSteps>
   <section
     v-else-if="loaded"
-    :class="['welcome', { 'welcome-blue': step === 0 }]"
+    :class="['welcome', { 'welcome-blue': blue }]"
     data-test="welcome"
   >
     <div class="welcome-column">
@@ -1208,13 +1213,14 @@ async function finish(to: string): Promise<void> {
       </div>
 
       <Transition
-        name="welcome-step"
+        name="motion-step"
         mode="out-in"
+        @before-enter="shownStep = step"
         @after-enter="focusTitle"
       >
         <div
           :key="step"
-          :class="['welcome-screen', { 'welcome-questions': step === 2 }]"
+          :class="['welcome-screen', 'motion-cascade', { 'welcome-questions': step === 2 }]"
           :data-test="`welcome-step-${step + 1}`"
         >
           <h1
@@ -1386,40 +1392,45 @@ async function finish(to: string): Promise<void> {
               <p class="welcome-lead">
                 Garde ou écarte. Celles que tu gardes t’attendent dans Candidatures.
               </p>
-              <article
-                :key="current.id"
-                class="welcome-offer"
-                data-test="welcome-offer"
+              <Transition
+                name="motion-step"
+                mode="out-in"
               >
-                <div class="welcome-offer-head">
-                  <CompanyLogo :offer="current" />
-                  <ScoreRing
-                    :score="current.score ?? null"
-                    worded
-                  />
-                </div>
-                <p class="welcome-offer-title">
-                  <strong>{{ current.title }}</strong>
-                  <span>{{ companyPlace(current.company || "Entreprise non indiquée", current.location) }}</span>
-                </p>
-                <ul
-                  v-if="tags.length"
-                  class="pick-tags"
+                <article
+                  :key="current.id"
+                  class="welcome-offer"
+                  data-test="welcome-offer"
                 >
-                  <li
-                    v-for="tag in tags"
-                    :key="tag"
+                  <div class="welcome-offer-head">
+                    <CompanyLogo :offer="current" />
+                    <ScoreRing
+                      :score="current.score ?? null"
+                      worded
+                    />
+                  </div>
+                  <p class="welcome-offer-title">
+                    <strong>{{ current.title }}</strong>
+                    <span>{{ companyPlace(current.company || "Entreprise non indiquée", current.location) }}</span>
+                  </p>
+                  <ul
+                    v-if="tags.length"
+                    class="pick-tags"
                   >
-                    {{ tag }}
-                  </li>
-                </ul>
-                <p
-                  v-if="current.why"
-                  class="welcome-offer-why"
-                >
-                  <strong>D’après ton CV :</strong> {{ whyLine(current.why) }}
-                </p>
-              </article>
+                    <li
+                      v-for="tag in tags"
+                      :key="tag"
+                    >
+                      {{ tag }}
+                    </li>
+                  </ul>
+                  <p
+                    v-if="current.why"
+                    class="welcome-offer-why"
+                  >
+                    <strong>D’après ton CV :</strong> {{ whyLine(current.why) }}
+                  </p>
+                </article>
+              </Transition>
               <p
                 class="welcome-count"
                 aria-live="polite"
@@ -1429,7 +1440,7 @@ async function finish(to: string): Promise<void> {
             </template>
             <div
               v-else
-              class="welcome-ready"
+              class="welcome-ready motion-cascade"
               role="status"
               data-test="welcome-ready"
             >
@@ -1481,93 +1492,101 @@ async function finish(to: string): Promise<void> {
         </div>
       </Transition>
 
-      <footer class="welcome-actions">
-        <button
-          v-if="step === 0"
-          type="button"
-          class="welcome-cta welcome-start"
-          data-test="welcome-start"
-          @click="go(1)"
-        >
-          C’est parti<AppIcon name="arrow-right" />
-        </button>
-        <button
-          v-else-if="step === 1"
-          type="button"
-          class="primary welcome-cta"
-          :disabled="uploading || reading"
-          data-test="welcome-continue"
-          @click="confirmCv"
-        >
-          {{ cvName ? "Continuer" : "Continuer sans CV" }}<AppIcon name="arrow-right" />
-        </button>
-        <button
-          v-else-if="step === 2"
-          type="button"
-          class="welcome-cta welcome-ink"
-          data-test="welcome-continue"
-          @click="nextQuestion"
-        >
-          Continuer<span
-            class="welcome-guillemet"
-            aria-hidden="true"
-          >»</span>
-        </button>
-        <div
-          v-else-if="step === 3"
-          class="welcome-alert-actions"
+      <Transition
+        name="motion-step"
+        mode="out-in"
+      >
+        <footer
+          :key="step"
+          class="welcome-actions"
         >
           <button
+            v-if="step === 0"
+            type="button"
+            class="welcome-cta welcome-start"
+            data-test="welcome-start"
+            @click="go(1)"
+          >
+            C’est parti<AppIcon name="arrow-right" />
+          </button>
+          <button
+            v-else-if="step === 1"
             type="button"
             class="primary welcome-cta"
-            :disabled="alertBusy"
-            data-test="welcome-alert-done"
-            @click="alertDone"
+            :disabled="uploading || reading"
+            data-test="welcome-continue"
+            @click="confirmCv"
           >
-            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
+            {{ cvName ? "Continuer" : "Continuer sans CV" }}<AppIcon name="arrow-right" />
           </button>
           <button
+            v-else-if="step === 2"
             type="button"
-            class="link welcome-alert-later"
-            data-test="welcome-alert-later"
-            @click="afterAlert"
+            class="welcome-cta welcome-ink"
+            data-test="welcome-continue"
+            @click="nextQuestion"
           >
-            Plus tard
+            Continuer<span
+              class="welcome-guillemet"
+              aria-hidden="true"
+            >»</span>
           </button>
-        </div>
-        <div
-          v-else-if="sorting"
-          class="welcome-sort"
-        >
+          <div
+            v-else-if="step === 3"
+            class="welcome-alert-actions"
+          >
+            <button
+              type="button"
+              class="primary welcome-cta"
+              :disabled="alertBusy"
+              data-test="welcome-alert-done"
+              @click="alertDone"
+            >
+              {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
+            </button>
+            <button
+              type="button"
+              class="link welcome-alert-later"
+              data-test="welcome-alert-later"
+              @click="afterAlert"
+            >
+              Plus tard
+            </button>
+          </div>
+          <div
+            v-else-if="sorting"
+            class="welcome-sort"
+          >
+            <button
+              type="button"
+              class="secondary"
+              :aria-disabled="deciding ? 'true' : undefined"
+              data-test="welcome-dismiss"
+              @click="decide('dismiss')"
+            >
+              <AppIcon name="x-circle" />Écarter
+            </button>
+            <button
+              type="button"
+              class="primary"
+              :aria-disabled="deciding ? 'true' : undefined"
+              data-test="welcome-keep"
+              @click="decide('keep')"
+            >
+              <AppIcon name="done" />Garder
+            </button>
+          </div>
           <button
+            v-else
             type="button"
-            class="secondary"
-            :aria-disabled="deciding ? 'true' : undefined"
-            data-test="welcome-dismiss"
-            @click="decide('dismiss')"
+            class="primary welcome-cta"
+            data-test="welcome-finish"
+            @click="finish('/aujourdhui')"
           >
-            <AppIcon name="x-circle" />Écarter
+            Voir mes offres<AppIcon name="arrow-right" />
           </button>
-          <button
-            type="button"
-            class="primary"
-            :aria-disabled="deciding ? 'true' : undefined"
-            data-test="welcome-keep"
-            @click="decide('keep')"
-          >
-            <AppIcon name="done" />Garder
-          </button>
-        </div>
-        <button
-          v-else
-          type="button"
-          class="primary welcome-cta"
-          data-test="welcome-finish"
-          @click="finish('/aujourdhui')"
-        >
-          Voir mes offres<AppIcon name="arrow-right" />
-        </button>
-      </footer>
+        </footer>
+      </Transition>
     </div>
   </section>
 </template>
@@ -1585,10 +1604,12 @@ async function finish(to: string): Promise<void> {
 .welcome-later { min-height: var(--target-min); padding: 0 var(--space-2); font-size: var(--font-body); color: inherit; }
 .welcome-blue .welcome-later { color: var(--on-primary); }
 .welcome-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-1); padding-top: var(--space-2); }
-.welcome-progress span { height: 5px; border-radius: var(--radius-pill); background: var(--line); transition: background-color 0.4s; }
-.welcome-progress span.done { background: var(--primary-graphic); }
+/* La barre glisse (docs/mouvement.md) : le segment se remplit de gauche à droite, en transformation seulement. */
+.welcome-progress span { position: relative; overflow: hidden; height: 5px; border-radius: var(--radius-pill); background: var(--line); }
+.welcome-progress span::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--primary-graphic); transform: scaleX(0); transform-origin: left; transition: transform var(--motion-progress); }
+.welcome-progress span.done::after { transform: none; }
 .welcome-blue .welcome-progress span { background: color-mix(in srgb, var(--on-primary) 32%, transparent); }
-.welcome-blue .welcome-progress span.done { background: var(--on-primary); }
+.welcome-blue .welcome-progress span::after { background: var(--on-primary); }
 .welcome-screen { flex: 1; display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-6); }
 .welcome-title { margin: 0; font-size: var(--title-block); line-height: var(--leading-tight); font-weight: var(--weight-bold); letter-spacing: -1px; }
 .welcome-title:focus { outline: none; }
@@ -1661,7 +1682,6 @@ async function finish(to: string): Promise<void> {
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 @media (prefers-reduced-motion: reduce) {
-  .welcome-progress span { transition: none; }
   .welcome-struck path, .welcome-hand { animation: none; }
 }
 
@@ -1676,7 +1696,7 @@ async function finish(to: string): Promise<void> {
 .wdk-top .welcome-brand { flex: 1; font-size: var(--font-section); font-weight: var(--weight-heavy); }
 .wdk-step { font-size: var(--font-small); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .wdk-bars { display: flex; align-items: center; gap: var(--space-2); }
-.wdk-bars span { width: var(--wdk-bar); height: var(--wdk-bar); border-radius: var(--radius-pill); background: var(--line-strong); transition: width 0.3s; }
+.wdk-bars span { width: var(--wdk-bar); height: var(--wdk-bar); border-radius: var(--radius-pill); background: var(--line-strong); transition: width var(--motion-progress); }
 .wdk-bars span.on { background: var(--primary-graphic); }
 .wdk-bars span.current { width: var(--wdk-bar-on); }
 .wdk-grid { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, var(--wdk-col)) var(--wdk-scene); column-gap: var(--wdk-gap); justify-content: space-between; width: min(var(--wdk-w), 100% - 2 * var(--space-6)); margin: 0 auto; padding-top: var(--wdk-40); }
@@ -1752,4 +1772,14 @@ async function finish(to: string): Promise<void> {
 .wdk-scene .illu img { width: 100%; height: auto; }
 .wdk-toast { position: fixed; left: 50%; bottom: var(--space-8); z-index: 20; display: flex; align-items: center; gap: var(--space-4); min-height: var(--wdk-56); padding: 0 var(--space-2) 0 var(--space-5); transform: translateX(-50%); background: var(--snackbar-bg); color: var(--snackbar-text); border-radius: var(--space-4); box-shadow: var(--shadow-band-card); font-size: var(--font-label); font-weight: var(--weight-semibold); }
 .wdk-toast button { min-height: var(--wdk-44); padding: 0 var(--space-3); border: 0; background: none; color: var(--snackbar-action); font: inherit; font-weight: var(--weight-heavy); }
+/* Le mouvement des premiers pas (Kevin, 19.11.2026, docs/mouvement.md) : ce qui apparaît dans une étape entre avec
+   l'entrée partagée ; le code de jobup arrive case par case. */
+.wa :is(.wa-open-row, .wa-link, .wa-address, .wa-received, .wa-status, .wa-late), .wdk-offer-done, .wq-places .wq-chip, .wdk-mailbox {
+  animation: motion-in var(--motion-enter) backwards;
+}
+.wa-code.got > span { animation: motion-in var(--motion-enter) backwards; animation-delay: calc(min(var(--motion-i, 0), 4) * var(--motion-stagger)); }
+.wa-code.got > :nth-child(2) { --motion-i: 1; }
+.wa-code.got > :nth-child(3) { --motion-i: 2; }
+.wa-code.got > :nth-child(4) { --motion-i: 3; }
+.wa-code.got > :nth-child(n + 5) { --motion-i: 4; }
 </style>

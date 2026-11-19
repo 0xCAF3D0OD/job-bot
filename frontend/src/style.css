@@ -2130,12 +2130,11 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Chaque usage fixe sa largeur (pages vides, moments, accueil, La plateforme, voile). */
 .illu { display: block; flex: none; width: 300px; max-width: 100%; margin: 0 auto; line-height: 0; container-type: inline-size; }
 .illu img { display: block; width: 100%; height: auto; max-height: 82cqw; object-fit: contain; opacity: 0; }
-.illu.loaded img { animation: illu-in 500ms var(--ease-out) both; }
-@keyframes illu-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* L'illustration entre quand son image est chargée, avec l'entrée partagée (motion.css ; fondu seul en mouvement réduit). */
+.illu.loaded img { opacity: 1; animation: motion-in var(--motion-enter) backwards; }
 /* Sans série sombre, l'image claire est assombrie pour que ses blancs ne fassent pas des taches. */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .illu.no-dark img { filter: brightness(0.85); } }
 :root[data-theme="dark"] .illu.no-dark img { filter: brightness(0.85); }
-@media (prefers-reduced-motion: reduce) { .illu.loaded img { animation: none; opacity: 1; } }
 /* Illustration d'état (1.6.73, règle §4) : environ 200 px de haut sur ordinateur, 120 px sur téléphone ;
    à 85 % en sombre, pour ne pas ressortir. Une par écran, décorative. */
 /* Pastille d'état (1.6.74, règle §4) : point et mot ; quatre tons ; sans point, une étiquette. */
