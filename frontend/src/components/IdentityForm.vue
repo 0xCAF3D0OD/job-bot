@@ -368,7 +368,10 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
         <p class="identity-answers-lead">
           jobA1 te les donne prêtes à copier quand un formulaire les demande.
         </p>
-        <ul class="identity-answers-list">
+        <ul
+          class="identity-answers-list"
+          data-test="identity-answers-card"
+        >
           <li
             v-for="row in ANSWERS"
             :key="row.key"
@@ -472,11 +475,14 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
 .identity-answers-bar { display: flex; gap: var(--space-1); margin-top: var(--space-2); }
 .identity-answers-bar span { flex: 1; height: var(--ia-seg); border-radius: var(--ia-seg); background: var(--line-strong); }
 .identity-answers-bar span.on { background: var(--ok-text); }
-.identity-answers-lead { margin: var(--space-2) 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.identity-answers-list { list-style: none; margin: 0; padding: 0; }
+.identity-answers-lead { margin: var(--space-2) 0 var(--space-3); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+/* La liste dans sa propre carte (§72o et son correctif, Kevin 19.11) : 12 px de marge à gauche et à droite ; chaque ligne
+   à 100 %, border-box, padding 12px 4px, sans marge négative. La flèche est ainsi à 16 px du bord, comme dans les
+   autres listes. */
+.identity-answers-list { list-style: none; margin: 0; padding: 0 var(--space-3); background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
 .identity-answers-list li + li { border-top: 1px solid var(--surface-muted); }
 .identity-answers-list button {
-  display: flex; align-items: center; gap: var(--space-4); width: calc(100% + 2 * var(--space-3)); min-height: var(--ia-row); box-sizing: border-box; margin: 0 calc(-1 * var(--space-3)); padding: var(--space-3);
+  display: flex; align-items: center; gap: var(--space-4); width: 100%; min-height: var(--ia-row); box-sizing: border-box; margin: 0; padding: var(--space-3) var(--space-1);
   border: 0; border-radius: var(--space-3); background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer;
 }
 .identity-answers-list button > svg { flex: none; width: var(--space-6); height: var(--space-6); color: var(--row-icon); }
