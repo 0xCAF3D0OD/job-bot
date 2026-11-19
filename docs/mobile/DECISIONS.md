@@ -1193,6 +1193,18 @@ réponse de 15 h 21 :
 Le groupe « Distance depuis Renens » s'ouvre sur « Toutes », et « Tout effacer » y revient. La planche, qui s'ouvre
 sur 30 km et revient à 50 km, sera corrigée. Raison : un défaut en km retirerait des offres de la liste de main.
 
+## « Noter maintenant » en ligne lien (Kevin, 18.11.2026, 15 h 20, §72e)
+
+- Un seul bouton plein par écran. Sur OffreNonNotee, « Noter maintenant » devient une ligne lien avec chevron, comme « Voir la compatibilité » : pleine largeur sous un trait, texte bleu gras, chevron à droite, en bas de la carte de la note.
+- La pastille « Environ 10 secondes · compte dans ta formule » reste dans la carte, au-dessus de la ligne.
+- Même ligne sur ordinateur, dans le panneau de droite.
+- Règle générale du même message : on comprend l'écran en 3 secondes, aucune phrase qui répète le titre ou l'image, aucun texte que la planche n'a pas.
+
+## Un seul bouton plein par écran : tonals pâles en contour (§72f, Kevin, 18.11.2026)
+
+- Les boutons tonals pâles (#E8ECFB) passent en contour : 1,5 px #2445C2, fond blanc, texte #1A3496 ; en sombre #7D95FF, #221E1A, #AEBDFF. Concerne « Lancer » (ReglagesOutils) et « Copier le code » (OnboardingAlerteCodeRecu).
+- Les boutons à contour existants (CandidaturesVide, CandidaturesVideAlertes, BilanFormations, OrpFiche) restent tels quels.
+
 ## Filtres : plus de phrase d'aide sous la note ni sous le type de note (Kevin, 18.11.2026, 16 h 20, §72g)
 
 Sur téléphone et sur ordinateur, en clair et en sombre, on retire « À quel point l'offre correspond à ton profil »
