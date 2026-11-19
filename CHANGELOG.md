@@ -818,3 +818,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.604 | Réglages (téléphone) : listes en carte en lignes à 4 px des côtés dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
 | 1.6.605 | Préparer repasse sous sa limite de poids : la barre du bas commune devient une feuille de style, sans composant | livrée |
 | 1.6.606 | « Adapté pour cette offre » (#930) retiré en attendant qu'il compense son poids sur Préparer | livrée |
+| 1.6.607 | CV adapté sur ordinateur : « Pourquoi » sous chaque changement quand le serveur la donne, « Annuler » aussi sur Profil, titre « Expérience chez … » ; Préparer allégé (contacts de l'étape Postuler chargés à part, −12 Ko à l'étape CV) | livrée |

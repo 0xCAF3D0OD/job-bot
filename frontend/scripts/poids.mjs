@@ -161,7 +161,8 @@ export const PAGES = {
   // La sélection multiple (§72q, 19.11) : son en-tête et sa barre, chargés au premier « Sélectionner », avec les
   // formulaires d'« Ajouter » déjà préchargés : le pire cas, sous les limites de Candidatures.
   "candidatures-selection": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts", "components/offerSelect.ts"],
-  preparer: ["views/PreparationView.vue"],
+  // Préparer avec les contacts de l'entreprise (étape Postuler, ordinateur), chargés à part depuis le 19.11.
+  preparer: ["views/PreparationView.vue", "components/ContactsPanel.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
   "preparer-panneaux": [
