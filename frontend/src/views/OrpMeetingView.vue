@@ -248,6 +248,7 @@ async function removeMeeting(): Promise<void> {
   });
 }
 
+// Vrai si le serveur a gardé la liste (le panneau de l'ordinateur annonce alors « Enregistré »).
 async function saveQuestions(questions: Question[]): Promise<boolean> {
   const { data, error } = await api.PUT("/api/orp-meeting/questions", { body: { questions } });
   if (data) {
@@ -348,6 +349,16 @@ const searchEmpty = computed(() => {
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
 }
+// « Ton nom sur la feuille » sur ordinateur (planche RendezVousOrdinateurOuvert, §72) : pas de planche FeuilleNom
+// ordinateur, donc la feuille s'ouvre et le curseur va dans la case du nom de sa carte « La feuille ».
+const nameLine = computed(() => [identity.values.name, identity.values.office].map((v) => v.trim()).filter(Boolean).join(" · "));
+async function openName(): Promise<void> {
+  await router.push({ query: { ...route?.query, feuille: "1" } });
+  await nextTick();
+  const field = document.querySelector<HTMLInputElement>("[data-test=sheet-name]");
+  field?.scrollIntoView?.({ block: "center" });
+  field?.focus();
+}
 // « Voir la feuille » de « Préparer le rendez-vous » (planche PreparerRendezVous, §71) : la feuille remplace l'entrée
 // d'historique de la préparation, et Retour ramène aux rendez-vous (pas à une préparation déjà fermée).
 function viewSheetFromPrep(): void {
@@ -430,9 +441,11 @@ onMounted(() => {
       :sheet-link="sheetLink"
       :meeting-items="editing ? [] : meetingItems"
       :editing="editing"
+      :save-questions="saveQuestions"
+      :name-line="nameLine"
       @toggle="toggle"
-      @question="addQuestion"
       @sheet="openSheet()"
+      @name="openName"
       @prepare="preparing = $event"
       @note="noting = $event"
       @saved="meetingSaved"
