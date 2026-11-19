@@ -555,7 +555,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");
     const alert = wrapper.get("[data-test=welcome-alert]");
     // Section 41 du paquet du 16.11 : la phrase sous le titre, puis 4 étapes ; une seule recherche, la première.
-    expect(wrapper.text()).toContain("Pour recevoir les nouvelles offres, crée une alerte sur jobup.");
+    expect(wrapper.text()).toContain("Une alerte jobup, et tes offres arrivent toutes seules.");
     expect(alert.findAll("li.wa-step")).toHaveLength(4);
     expect(alert.get("[data-test=welcome-alert-step-1]").attributes("aria-current")).toBe("step");
     expect(alert.text()).toContain("jobA1 a préparé ta recherche : DevOps · Lausanne et 30 km.");
@@ -563,7 +563,9 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const open = alert.get("[data-test=wizard-open]");
     expect(open.attributes("href")).toBe("https://www.jobup.ch/fr/emplois/?term=DevOps");
     expect(open.attributes("target")).toBe("_blank");
-    expect(open.text()).toContain("Ouvrir jobup avec ma recherche");
+    expect(open.text()).toContain("Ouvrir jobup");
+    expect(open.text()).not.toContain("avec ma recherche");
+    expect(open.classes()).not.toContain("primary-link");
     expect(alert.get("[data-test=wizard-address]").text()).toBe("lea+0mwdr89t@alertes.joba1.ch");
     expect(alert.get("[data-test=alert-site-copy]").attributes("aria-label")).toBe("Copier l’adresse");
     // Le code se lit dans 6 cases, jamais dans un champ de saisie.
@@ -571,6 +573,9 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(alert.find("input").exists()).toBe(false);
     expect(alert.text()).toContain("Termine l’alerte sur jobup");
     expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
+    // Bouton noir avec le double chevron (OnboardingAlerteDebut, planches_72_a_72k).
+    expect(wrapper.get("[data-test=welcome-alert-done]").classes()).toEqual(expect.arrayContaining(["welcome-cta", "welcome-ink"]));
+    expect(wrapper.get("[data-test=welcome-alert-done]").classes()).not.toContain("primary");
 
     await click(wrapper, "welcome-alert-done");
     expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: 5, site: "jobup" } } });
@@ -594,6 +599,15 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
       await click(wrapper, test);
       expect(router.currentRoute.value.path).toBe("/aujourdhui");
       expect(calls("/api/welcome")).toEqual([]);
+      wrapper.unmount();
+    }
+  });
+
+  it("l’alerte ouverte depuis la page Alertes vide (AlertesVide, §72c) : les mêmes boutons ramènent aux Alertes", async () => {
+    for (const test of ["welcome-back", "welcome-alert-later", "welcome-alert-done"]) {
+      const { wrapper, router } = await mountWelcome({ status: "done", step: 9, goal: "job", trade: null }, { path: "/bienvenue?etape=alerte&retour=alertes" });
+      await click(wrapper, test);
+      expect(router.currentRoute.value.path).toBe("/candidatures/alertes");
       wrapper.unmount();
     }
   });
@@ -745,7 +759,7 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
     expect(wrapper.get("h1").text()).toBe("Crée ton alerte sur jobup");
     // Section 41 du paquet du 16.11 : la phrase sous le titre, sans durée, puis une carte de 4 étapes.
-    expect(wrapper.get(".wdk-lead").text()).toBe("Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.");
+    expect(wrapper.get(".wdk-lead").text()).toBe("Une alerte jobup, et tes offres arrivent toutes seules.");
     const card = wrapper.get("[data-test=welcome-alert]");
     expect(card.classes()).toContain("wa-desk");
     expect(card.findAll("li.wa-step")).toHaveLength(4);

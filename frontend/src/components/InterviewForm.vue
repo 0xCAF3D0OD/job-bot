@@ -603,4 +603,8 @@ function submit(): void {
 <style>
 /* Sorti de style.css (allègement du 16.11, issue #797) : ces règles ne servent qu'ici, chargées avec ce composant. */
 .score-chip { min-width: 2.2rem; justify-content: center; }
+/* Les boutons ronds (retirer une question, ajouter la question, supprimer) sont au bord droit de la fenêtre :
+   leur infobulle, même cachée, débordait de 60 px et donnait une barre de défilement horizontale sur
+   ordinateur (retour de Kevin du 19.11). Elle s'aligne sur le bord droit du bouton et ne dépasse plus. */
+.interview-form button.icon-only::after { left: auto; right: 0; transform: none; }
 </style>
