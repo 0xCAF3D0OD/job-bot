@@ -571,11 +571,8 @@ describe("OffersView", () => {
     expect(reason?.classes()).toContain("warn");
 
     await cards[0]?.trigger("click");
-    const apply = wrapper.find("[data-test=apply]");
-    // L’annonce elle-même (jobup), pas l’adresse pour postuler, qui reste dans Préparer (PR 25).
-    expect(apply.text()).toContain("Voir l’annonce sur jobup");
-    expect(apply.attributes("href")).toBe("https://www.jobup.ch/fr/emplois/detail/7/");
-    expect(apply.attributes("rel")).toBe("noopener noreferrer");
+    // Plus de lien vers le site dans « Le poste » : il est dans « ⋯ › Ouvrir l’annonce sur le site » (Kevin, 19.11).
+    expect(wrapper.find("[data-test=apply]").exists()).toBe(false);
     expect(wrapper.find("[data-test=description]").text()).toBe("Notre client recherche un ingénieur.");
     expect(wrapper.text()).toContain("Temporaire");
 
