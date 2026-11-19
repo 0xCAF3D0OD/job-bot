@@ -164,6 +164,29 @@ describe("CvPanel", () => {
     expect(open.attributes("aria-expanded")).toBe("false");
   });
 
+  it("« Pourquoi » sous chaque changement qui a une raison du serveur, mots de l’annonce surlignés ; rien sans raison", async () => {
+    GET.mockResolvedValue({
+      data: [
+        cv(21, [2, 3], {
+          origin_ids: [1, 2, 3],
+          reasons: [
+            { target: "summary", origin: "ai", text: "l’annonce cite AWS, déjà dans tes expériences.", quotes: ["aws"] },
+            { target: 1, origin: "user", text: null, quotes: [] },
+          ],
+        }),
+      ],
+    });
+    const wrapper = await mountPanel();
+    const items = wrapper.findAll("[data-test=cv-change]");
+    const profile = items.find((li) => li.find("b").text() === "Profil")!;
+    const why = profile.get("[data-test=cv-change-why]");
+    expect(why.text()).toBe("Pourquoi : l’annonce cite AWS, déjà dans tes expériences.");
+    expect(why.findAll("mark").map((m) => m.text())).toEqual(["AWS"]);
+    const removed = items.find((li) => li.find("b").text() === "Stage DevOps")!;
+    expect(removed.get("[data-test=cv-change-why]").text()).toBe("Pourquoi : Demandé par toi.");
+    expect(removed.text()).toContain("Avant : dans ta rubrique Expériences.");
+  });
+
   it("un bloc retiré revient à sa place d’origine", async () => {
     GET.mockResolvedValue({ data: [cv(21, [2, 3], { origin_ids: [1, 2, 3] })] });
     PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3] }) });
