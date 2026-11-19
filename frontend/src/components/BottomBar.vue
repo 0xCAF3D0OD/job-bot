@@ -2,8 +2,8 @@
      seule ligne, 12 px 16 px plus la zone de sécurité du bas, fond de la page, trait de 1 px en haut. Une action
      principale pleine, qui prend le reste de la largeur ; au plus une secondaire à contour, à sa gauche (quel que soit
      l'ordre du code), large comme son texte ; 48 px de haut, 12 px entre elles (comme la planche : 10 px sortait de la grille de 4,
-     choix de Kevin du 19.11). Les enfants portent `bottom-bar-primary` et `bottom-bar-secondary` ;
-     `bottom-bar-note` est une ligne au-dessus (une erreur), sur toute la largeur. La page garde sous son contenu la
+     choix de Kevin du 19.11). Les enfants portent `bb-main` et `bb-alt` ;
+     `bb-note` est une ligne au-dessus (une erreur), sur toute la largeur. La page garde sous son contenu la
      hauteur de la barre. Sans script, pour le poids. Rendue seulement sur téléphone par l'appelant. -->
 
 <template>
@@ -24,20 +24,21 @@
   background: var(--bg); border-top: 1px solid var(--line);
 }
 html:root:has(.bottom-bar) main { padding-bottom: calc(var(--space-12) + var(--space-12) + env(safe-area-inset-bottom)); }
-.bottom-bar > .bottom-bar-note { flex: 1 0 100%; margin: 0; }
-.bottom-bar > :is(.bottom-bar-primary, .bottom-bar-secondary) {
+html:root:has(.bottom-bar) .toast { bottom: calc(var(--space-12) + var(--space-8) + env(safe-area-inset-bottom)); }
+.bottom-bar > .bb-note { flex: 1 0 100%; margin: 0; }
+.bottom-bar > :is(.bb-main, .bb-alt) {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
   min-height: var(--bb-h); margin: 0; border-radius: var(--radius-pill); font-weight: var(--weight-bold);
   line-height: var(--leading-tight); text-align: center; text-decoration: none;
 }
-.bottom-bar > .bottom-bar-secondary {
+.bottom-bar > .bb-alt {
   flex: none; white-space: nowrap; order: -1; padding: 0 var(--space-5); border: var(--bb-line) solid var(--action);
   background: var(--surface); color: var(--primary-text); font-size: var(--font-label);
 }
-.bottom-bar > .bottom-bar-primary {
+.bottom-bar > .bb-main {
   flex: 1; min-width: 0; padding: 0 var(--space-4); border: 0; white-space: normal;
   background: var(--action); color: var(--on-action); font-size: var(--font-body);
 }
 .bottom-bar > .busy-button { display: inline-grid; justify-items: center; }
-.bottom-bar > .bottom-bar-primary .icon { width: 1.125rem; height: 1.125rem; }
+.bottom-bar > .bb-main .icon { width: 1.125rem; height: 1.125rem; }
 </style>

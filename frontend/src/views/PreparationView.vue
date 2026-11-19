@@ -12,7 +12,6 @@ import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
-import ActionBar from "../components/ActionBar.vue";
 import BottomBar from "../components/BottomBar.vue";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
@@ -1987,14 +1986,15 @@ onMounted(() => void load());
             J’ai relu, continuer
           </button>
         </aside>
-        <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
+        <!-- La barre du bas du téléphone (C6), commune (BottomBar) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
-        <ActionBar
+        <BottomBar
           v-if="phone"
           class="prep-bar"
         >
           <InlineConfirm
             v-if="choosingWrite"
+            class="bb-note"
             message="Tu as des modifications non enregistrées dans cette version."
             confirm-label="Enregistrer, puis rédiger"
             alt-label="Rédiger sans enregistrer"
@@ -2007,38 +2007,37 @@ onMounted(() => void load());
           />
           <PlanLimit
             v-if="writeLabel"
+            class="bb-note"
             usage="letter"
           />
           <template v-if="claim">
             <p
-              class="action-bar-note false-claim-chosen"
+              class="bb-note false-claim-chosen"
               data-test="false-claim-chosen"
             >
               « {{ claim.sentence }} »
             </p>
-            <div class="action-bar-row">
-              <button
-                type="button"
-                class="secondary"
-                data-test="false-claim-cancel"
-                @click="clearClaim"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                class="primary"
-                data-test="false-claim-open"
-                @click="claimOpen = true"
-              >
-                Pas vrai
-              </button>
-            </div>
+            <button
+              type="button"
+              class="secondary bb-alt"
+              data-test="false-claim-cancel"
+              @click="clearClaim"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="primary bb-main"
+              data-test="false-claim-open"
+              @click="claimOpen = true"
+            >
+              Pas vrai
+            </button>
           </template>
           <button
             v-else-if="noProfile && !selected"
             type="button"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             data-test="no-profile-link"
             @click="completion = 'profile'"
           >
@@ -2046,7 +2045,7 @@ onMounted(() => void load());
           </button>
           <BusyButton
             v-else-if="writeLabel || writing"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             :busy="writing"
             :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
             :disabled="reached('letter')"
@@ -2059,14 +2058,14 @@ onMounted(() => void load());
           <button
             v-else-if="selected"
             type="button"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             :disabled="readBusy"
             data-test="next-step"
             @click="readThenNext"
           >
             J’ai relu, continuer
           </button>
-        </ActionBar>
+        </BottomBar>
         <BottomSheet
           v-if="selected"
           :open="versionsOpen"
@@ -2500,5 +2499,4 @@ onMounted(() => void load());
 .apl-contact > .icon { flex: none; color: var(--text-secondary); }
 /* « Postuler sur … » en bas sur téléphone (PreparerMiseEnPage du 14.11) : pilule de 52 ; ici plutôt que dans style.css,
    qui est chargé au premier écran. */
-@media (max-width: 820px) { .prep-bar > a.prep-bar-main { min-height: var(--btn-secondary); } }
 </style>
