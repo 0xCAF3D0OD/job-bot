@@ -1308,6 +1308,13 @@ svg.rg-lead { fill: none; stroke: currentColor; stroke-width: 2; }
 .settings-grouped .rg-sub { display: block; margin-top: var(--space-1); }
 .settings-grouped [data-test=delete-form] .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
 .settings-grouped .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-14); }
+/* Listes en carte du téléphone (Kevin 19.11) : 12 px de marge dans la carte, lignes à 100 % en border-box, padding
+   vertical inchangé et 4 px sur les côtés, sans marge négative ; la flèche › est à 16 px du bord, comme partout. */
+.settings-phone :is(.setting-card, .rg-list):not(.rg-days-card) { padding: 0 var(--space-3); }
+.settings-phone .setting-row { padding: var(--rg-10) var(--space-1); }
+.settings-phone .appearance-row { padding: var(--rg-12) var(--space-1); }
+.settings-phone :is(.rg-link-row, .rg-danger-row) { box-sizing: border-box; padding: var(--space-3) var(--space-1); }
+.settings-phone .rg-list > .setting-row-form { padding: var(--space-4) var(--space-1); }
 .settings-phone .rg-danger-button { min-height: 52px; margin-top: var(--rg-6); justify-content: center; border: 1.5px solid var(--danger-line); border-radius: var(--rg-16); background: var(--surface); color: var(--danger); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
 /* Ordinateur : la carte par section vient de style.css (.settings-wide .setting-cards). */
 .settings-wide .settings-sections { display: flex; flex-direction: column; gap: var(--space-8); }
