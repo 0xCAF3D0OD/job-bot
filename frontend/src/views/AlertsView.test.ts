@@ -316,7 +316,7 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
     POST.mockResolvedValue({ data: { ...data, to_confirm: [] } });
     const wrapper = await mountView(data);
     expect(wrapper.find("[data-test=alerts-family-confirm] .alerts-family-title").text()).toBe("À confirmer · 1");
-    expect(wrapper.find("[data-test=alerts-family-confirm] .alerts-family-help").text()).toContain("jobup attend ta confirmation");
+    expect(wrapper.find("[data-test=alerts-family-confirm] .alerts-family-help").exists()).toBe(false);
     expect(wrapper.find("[data-test=alert-card-1-jobup] .block-row-aside").text().replace(/^, /, "")).toBe("Confirmation demandée");
     expect(wrapper.find("[data-test=alerts-note]").text()).toContain("reçus sur ton adresse jobA1");
     await wrapper.find("[data-test=alert-card-1-jobup]").trigger("click");

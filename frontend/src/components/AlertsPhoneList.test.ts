@@ -42,7 +42,7 @@ describe("AlertsPhoneList (§10.8, maquettes AlertesTel, AlertesTelConfirmer, Al
     const wrapper = mountList();
     const titles = wrapper.findAll(".alerts-family-title").map((t) => t.text());
     expect(titles).toEqual(["À confirmer · 1", "Actives · 1", "À créer · 2"]);
-    expect(wrapper.get("[data-test=alerts-family-confirm]").text()).toContain("Indeed attend ta confirmation avant d’envoyer les offres.");
+    expect(wrapper.find(".alerts-family-help").exists()).toBe(false);
     const confirm = wrapper.get("[data-test=alert-card-1-indeed]");
     expect(confirm.text()).toContain("Kubernetes");
     expect(confirm.text()).toContain("Lausanne");
