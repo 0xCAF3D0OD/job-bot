@@ -2048,14 +2048,10 @@ button, .button-link { max-width: 100%; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lift: 0 6px 18px rgb(0 0 0 / 35%); } }
 :root[data-theme="dark"] { --lift: 0 6px 18px rgb(0 0 0 / 35%); }
 
-/* Les pages et le contenu chargé arrivent en fondu (2026-11-05, Kevin) : une page qui s'ouvre (et un onglet de
-   Candidatures ou du Bilan) monte de 6 px en s'éclaircissant ; les cartes et les lignes qui remplacent les blocs
-   gris du chargement aussi. `backwards` : une fois fini, l'animation ne tient plus la transformation (l'appui et
-   le survol gardent la leur). Rien quand l'appareil demande moins d'animations (les durées passent à 0). */
-@keyframes content-in { from { opacity: 0; transform: translateY(6px); } }
-#contenu > *, .jobs-band > *, :is(.grouped, .dash-card, .form-card, .settings-card, .offer-line) {
-  animation: content-in var(--t-standard) var(--ease-standard) backwards;
-}
+/* Changer de page reste instantané (Kevin, 19.11.2026, docs/mouvement.md) : la page et ses onglets ne glissent plus.
+   Seules les cartes et les lignes qui remplacent les blocs gris du chargement entrent, avec l'entrée partagée
+   (motion.css). */
+:is(.grouped, .dash-card, .form-card, .settings-card, .offer-line) { animation: motion-in var(--motion-enter) backwards; }
 
 /* Appui (maquettes de docs/mobile, 2026-11-05 Kevin) : tout ce qui se touche, bouton, lien, onglet, segment, s'enfonce
    légèrement et ses couleurs passent en fondu ; au toucher, pas le rectangle bleu du navigateur. Un lien dans une
