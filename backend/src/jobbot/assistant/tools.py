@@ -376,7 +376,7 @@ async def _application(session: AsyncSession, _profile: int, params: dict[str, A
         return {"erreur": f"aucune candidature {application_id}"}
     interviews = await session.scalars(
         select(Interview)
-        .where(Interview.application_id == a.id)
+        .where(Interview.application_id == a.id, Interview.reviewed())
         .order_by(Interview.held_at.nulls_last(), Interview.id)
     )
     today = _today()
@@ -469,6 +469,7 @@ async def _interviews(session: AsyncSession, _profile: int, _params: dict[str, A
         await session.execute(
             select(Interview, Application.company, Application.job_title)
             .join(Application, Application.id == Interview.application_id)
+            .where(Interview.reviewed())
             .order_by(Interview.held_at.desc().nulls_last(), Interview.id.desc())
             .limit(5)
         )

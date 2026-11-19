@@ -528,7 +528,7 @@ async def interview_lines(
     latest: dict[int, Interview] = {}
     for found in await session.scalars(
         select(Interview)
-        .where(Interview.application_id.in_([a.id for a in applications]))
+        .where(Interview.application_id.in_([a.id for a in applications]), Interview.reviewed())
         .order_by(Interview.held_at, Interview.id)
     ):
         latest[found.application_id] = found

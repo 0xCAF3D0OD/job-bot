@@ -24,6 +24,7 @@ from sqlalchemy import (
     event,
     false,
     func,
+    or_,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -616,7 +617,12 @@ class Application(Base):
     """Une candidature envoyée par Kevin : suivi et données du formulaire ORP (docs/08)."""
 
     __tablename__ = "applications"
-    __table_args__ = (UniqueConstraint("user_id", "offer_id"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "offer_id"),
+        CheckConstraint(
+            "interview_round in ('1', '2', 'final')", name="applications_interview_round_values"
+        ),
+    )
 
     user_id: Mapped[int] = account_column()
 
@@ -657,6 +663,8 @@ class Application(Base):
     interview_place: Mapped[str | None] = mapped_column(Text)
     # Format de l'entretien (PR 41) : « telephone », « visio », « sur_place » ; vide : non indiqué.
     interview_format: Mapped[str | None] = mapped_column(Text)
+    # « Quel entretien ? » de l'entretien prévu (§72p, 0098) : « 1 », « 2 » ou « final ».
+    interview_round: Mapped[str | None] = mapped_column(Text)
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # La dernière réponse de l'entreprise transférée par la personne (docs/146) : son type
     # (« entretien », « refus », « autre ») et sa date ; ni texte ni expéditeur. Le statut ne
@@ -1168,8 +1176,11 @@ class Interview(Base):
             "feeling in ('bien', 'moyen', 'pas_bien')", name="interviews_feeling_values"
         ),
         CheckConstraint(
-            "feeling is not null or rating is not null", name="interviews_feeling_or_rating"
+            "feeling is not null or rating is not null"
+            " or (held_at is null and scheduled_at is not null)",
+            name="interviews_feeling_or_rating",
         ),
+        CheckConstraint("round in ('1', '2', 'final')", name="interviews_round_values"),
     )
 
     user_id: Mapped[int] = account_column()
@@ -1180,6 +1191,11 @@ class Interview(Base):
     )
     kind: Mapped[str | None] = mapped_column(Text)
     held_at: Mapped[date | None] = mapped_column(Date)
+    # Un entretien prévu gardé à côté d'un suivant (§72p, 0098) : sa date et son heure, son lieu et
+    # son tour, sans `held_at` tant que son point n'est pas fait. Voir `Interview.reviewed`.
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    place: Mapped[str | None] = mapped_column(Text)
+    round: Mapped[str | None] = mapped_column(Text)
     format: Mapped[str | None] = mapped_column(Text)
     duration: Mapped[str | None] = mapped_column(Text)
     interviewers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
@@ -1211,6 +1227,12 @@ class Interview(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    @classmethod
+    def reviewed(cls) -> ColumnElement[bool]:
+        """Un retour d'entretien, pas un entretien prévu encore sans point (§72p, 0098) : les
+        listes de retours, les enseignements et l'assistant ne lisent que ces lignes."""
+        return or_(cls.held_at.is_not(None), cls.scheduled_at.is_(None))
 
 
 class InterviewPractice(Base):

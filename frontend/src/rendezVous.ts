@@ -12,7 +12,15 @@ type Preparation = components["schemas"]["PreparationOut"];
 
 export type Upcoming =
   | { kind: "orp"; key: string; at: string; meeting: Meeting }
-  | { kind: "entretien"; key: string; at: string; application: Application };
+  | { kind: "entretien"; key: string; at: string; application: Application; planned?: Planned };
+
+type Planned = Application["planned"][number];
+
+/** Un entretien prévu gardé à côté d'un suivant (§72p) vu comme la candidature de ce jour-là : sa date, son lieu et
+ * son tour remplacent ceux de l'entretien prévu, pour que les cartes le montrent tel qu'il a été saisi. */
+function asPlanned(application: Application, planned: Planned): Application {
+  return { ...application, interview_at: planned.scheduled_at, interview_place: planned.place ?? null, interview_format: null, interview_round: planned.round ?? null };
+}
 
 /** Le prochain rendez-vous ORP (s'il n'a pas commencé) et les entretiens à venir, du plus proche au plus lointain. */
 export function upcomingAppointments(meeting: Meeting | null, applications: Application[], now: Date = new Date()): Upcoming[] {
@@ -21,7 +29,14 @@ export function upcomingAppointments(meeting: Meeting | null, applications: Appl
   if (meeting && after(meeting.starts_at)) items.push({ kind: "orp", key: `orp-${meeting.id}`, at: meeting.starts_at, meeting });
   for (const application of applications) {
     // Un refus annule l'entretien prévu.
-    if (!application.interview_at || application.status === "refus" || !after(application.interview_at)) continue;
+    if (application.status === "refus") continue;
+    // Deux entretiens sont deux éléments séparés (§72p, Kevin 19.11) : le prévu, et ceux gardés à côté.
+    for (const planned of application.planned ?? []) {
+      if (after(planned.scheduled_at)) {
+        items.push({ kind: "entretien", key: `entretien-r${planned.id}`, at: planned.scheduled_at, application: asPlanned(application, planned), planned });
+      }
+    }
+    if (!application.interview_at || !after(application.interview_at)) continue;
     items.push({ kind: "entretien", key: `entretien-${application.id}`, at: application.interview_at, application });
   }
   // À la même heure, l'ORP d'abord, puis l'ordre des candidatures (stable).
@@ -201,7 +216,7 @@ export function appointmentMatches(item: Upcoming, words: string[]): boolean {
 // « Faire le point » sur ordinateur (planche FairePointOrdinateur, §72m ; accord de Kevin du 19.11.2026) : les entretiens
 // passés vont dans Rendez-vous. « À noter » tant que le point n'est pas fait, puis « Passés », pour garder tout
 // l'historique au même endroit.
-export type InterviewToNote = { key: string; at: string; application: Application };
+export type InterviewToNote = { key: string; at: string; application: Application; planned?: Planned };
 export type NotedInterview = { key: string; at: string; application: Application; interview: Interview };
 
 /** Les entretiens passés dont le point n'est pas fait (aucun retour ce jour-là), du plus récent au plus ancien. */
@@ -216,6 +231,16 @@ export function interviewsToNote(applications: Application[], now: Date = new Da
     if (day >= today || day < addDays(today, -14)) continue;
     if (application.interviews?.some((i) => i.held_at === day)) continue;
     items.push({ key: `point-${application.id}`, at, application });
+  }
+  // Les entretiens prévus gardés à côté d'un suivant (§72p) : à noter jusqu'à leur point, même règle.
+  for (const application of applications) {
+    if (application.status !== "entretien") continue;
+    for (const planned of application.planned ?? []) {
+      const day = todayDay(new Date(planned.scheduled_at));
+      const today = todayDay(now);
+      if (day >= today || day < addDays(today, -14)) continue;
+      items.push({ key: `point-r${planned.id}`, at: planned.scheduled_at, application: asPlanned(application, planned), planned });
+    }
   }
   return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }

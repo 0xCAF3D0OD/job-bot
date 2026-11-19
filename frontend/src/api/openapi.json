@@ -10239,6 +10239,52 @@
         }
       }
     },
+    "/api/applications/{application_id}/interview-plan": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Plan Interview",
+        "description": "Ajoute un entretien : il devient l'entretien prévu de la candidature (« À venir »). Deux\nentretiens sont deux éléments séparés (Kevin, 19.11) : si le point du précédent n'est pas\nfait, le précédent est gardé comme entretien prévu (`interviews.scheduled_at`) et reste dans\n« À venir » ou « À noter » jusqu'à son point. Aucune IA ; la candidature passe en entretien.",
+        "operationId": "planInterview",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/debrief": {
       "get": {
         "tags": [
@@ -12465,12 +12511,36 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "interview_round": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "1",
+                  "2",
+                  "final"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview Round"
+          },
           "interviews": {
             "items": {
               "$ref": "#/components/schemas/InterviewOut"
             },
             "type": "array",
             "title": "Interviews",
+            "default": []
+          },
+          "planned": {
+            "items": {
+              "$ref": "#/components/schemas/PlannedOut"
+            },
+            "type": "array",
+            "title": "Planned",
             "default": []
           },
           "remote_full": {
@@ -23566,6 +23636,43 @@
         ],
         "title": "PhoneIn"
       },
+      "PlanIn": {
+        "properties": {
+          "round": {
+            "type": "string",
+            "enum": [
+              "1",
+              "2",
+              "final"
+            ],
+            "title": "Round"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          }
+        },
+        "type": "object",
+        "required": [
+          "round",
+          "at"
+        ],
+        "title": "PlanIn",
+        "description": "Les trois réponses du panneau : le tour, la date et l'heure, le lieu ou le lien visio."
+      },
       "PlanOut": {
         "properties": {
           "plan": {
@@ -23648,6 +23755,53 @@
           "payments"
         ],
         "title": "PlanOut"
+      },
+      "PlannedOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled At"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "round": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "1",
+                  "2",
+                  "final"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scheduled_at"
+        ],
+        "title": "PlannedOut",
+        "description": "Un entretien prévu gardé à côté d'un suivant, dont le point n'est pas encore fait (0098)."
       },
       "PlatformOut": {
         "properties": {

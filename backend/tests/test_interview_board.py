@@ -189,6 +189,10 @@ async def test_another_account_sees_nothing(client: AsyncClient, runtime: Runtim
             assert (await api.get(f"/api/interviews/{review}/debrief")).status_code == 404
             put = await api.put(f"/api/interviews/{review}/debrief", json={"feeling": "bien"})
             assert put.status_code == 404
+            # « Ajouter un entretien » (§72p) : rien d'ajouté chez un autre compte.
+            plan = {"round": "2", "at": "2026-12-01T13:00:00Z", "place": "Lausanne"}
+            added = await api.post(f"/api/applications/{application_id}/interview-plan", json=plan)
+            assert added.status_code == 404
             assert (await api.get("/api/interviews")).json() == {"items": [], "total": 0}
     finally:
         async with secured.engine.begin() as conn:

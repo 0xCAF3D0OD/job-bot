@@ -3785,6 +3785,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/interview-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan Interview
+         * @description Ajoute un entretien : il devient l'entretien prévu de la candidature (« À venir »). Deux
+         *     entretiens sont deux éléments séparés (Kevin, 19.11) : si le point du précédent n'est pas
+         *     fait, le précédent est gardé comme entretien prévu (`interviews.scheduled_at`) et reste dans
+         *     « À venir » ou « À noter » jusqu'à son point. Aucune IA ; la candidature passe en entretien.
+         */
+        post: operations["planInterview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/debrief": {
         parameters: {
             query?: never;
@@ -4521,11 +4544,18 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Interview Round */
+            interview_round?: ("1" | "2" | "final") | null;
             /**
              * Interviews
              * @default []
              */
             interviews: components["schemas"]["InterviewOut"][];
+            /**
+             * Planned
+             * @default []
+             */
+            planned: components["schemas"]["PlannedOut"][];
             /**
              * Remote Full
              * @default false
@@ -8020,6 +8050,24 @@ export interface components {
             /** Enabled */
             enabled: boolean;
         };
+        /**
+         * PlanIn
+         * @description Les trois réponses du panneau : le tour, la date et l'heure, le lieu ou le lien visio.
+         */
+        PlanIn: {
+            /**
+             * Round
+             * @enum {string}
+             */
+            round: "1" | "2" | "final";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Place */
+            place?: string | null;
+        };
         /** PlanOut */
         PlanOut: {
             /**
@@ -8052,6 +8100,23 @@ export interface components {
             cancelled: boolean;
             /** Payments */
             payments: components["schemas"]["PaymentOut"][];
+        };
+        /**
+         * PlannedOut
+         * @description Un entretien prévu gardé à côté d'un suivant, dont le point n'est pas encore fait (0098).
+         */
+        PlannedOut: {
+            /** Id */
+            id: number;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at: string;
+            /** Place */
+            place?: string | null;
+            /** Round */
+            round?: ("1" | "2" | "final") | null;
         };
         /** PlatformOut */
         PlatformOut: {
@@ -17674,6 +17739,39 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    planInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

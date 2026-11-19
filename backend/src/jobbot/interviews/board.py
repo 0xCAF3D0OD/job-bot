@@ -103,7 +103,9 @@ async def lines(session: AsyncSession, now: datetime | None = None) -> list[Line
     """Toutes les lignes du compte, de la plus récente à la plus ancienne."""
     now = now or datetime.now(UTC)
     reviews: dict[int, list[Interview]] = {}
-    for review in await session.scalars(select(Interview).order_by(Interview.id)):
+    for review in await session.scalars(
+        select(Interview).where(Interview.reviewed()).order_by(Interview.id)
+    ):
         reviews.setdefault(review.application_id, []).append(review)
     applications = await session.scalars(
         select(Application).where(

@@ -32,6 +32,7 @@ import {
   upcomingWhen,
   upcomingWhere,
 } from "../rendezVous";
+import AjouterEntretienPanel from "./AjouterEntretienPanel.vue";
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 import EmptyState from "./EmptyState.vue";
@@ -88,7 +89,9 @@ const noted = computed(() => notedMeetings(props.page, now));
 // « Point fait · Moyen »), mêlés aux rendez-vous ORP par date. Adresse : ?rdv=point-<candidature> ou retour-<retour>.
 const pointsToNote = computed(() => interviewsToNote(props.applications, now));
 const pointsNoted = computed(() => notedInterviews(props.applications, now));
-type ToNoteRow = { kind: "orp"; key: string; at: string; meeting: Meeting } | { kind: "point"; key: string; at: string; application: Application };
+type ToNoteRow =
+  | { kind: "orp"; key: string; at: string; meeting: Meeting }
+  | { kind: "point"; key: string; at: string; application: Application; planned?: Application["planned"][number] };
 type NotedRow =
   | { kind: "orp"; key: string; at: string; meeting: Meeting }
   | { kind: "retour"; key: string; at: string; application: Application; interview: NonNullable<Application["interviews"]>[number] };
@@ -96,7 +99,7 @@ const byDateDesc = (a: { at: string }, b: { at: string }) => Date.parse(b.at) - 
 const toNoteRows = computed<ToNoteRow[]>(() =>
   [
     ...toNote.value.map((m) => ({ kind: "orp" as const, key: pastKey(m), at: m.starts_at, meeting: m })),
-    ...pointsToNote.value.map((p) => ({ kind: "point" as const, key: p.key, at: p.at, application: p.application })),
+    ...pointsToNote.value.map((p) => ({ kind: "point" as const, key: p.key, at: p.at, application: p.application, planned: p.planned })),
   ].sort(byDateDesc),
 );
 const notedRows = computed<NotedRow[]>(() =>
@@ -114,23 +117,38 @@ function pastKey(m: Meeting): string {
   return `passe-${m.id}`;
 }
 const keys = computed(() => [
-  ...upcoming.value.map((u) => (u.kind === "orp" ? "orp" : `entretien-${u.application.id}`)),
+  ...upcoming.value.map((u) => (u.kind === "orp" ? "orp" : u.key)),
   ...toNoteRows.value.map((r) => r.key),
   ...notedRows.value.map((r) => r.key),
 ]);
 // Le rendez-vous de l'adresse (?rdv=). Rien d'ouvert à l'arrivée (§36 du 16 novembre, décision de Kevin du 16.11) :
 // « Choisis un rendez-vous » à droite. PR 41 : un nouveau rendez-vous se saisit dans le panneau « Nouveau rendez-vous ».
+// « Ajouter un entretien » (§72p) : ?rdv=ajouter-<candidature>, hors de la liste ; la candidature doit être connue.
+const addingFor = computed(() => {
+  const asked = route.query.rdv;
+  const id = typeof asked === "string" && asked.startsWith("ajouter-") ? Number(asked.slice(8)) : NaN;
+  return props.applications.find((a) => a.id === id) ?? null;
+});
 const selected = computed(() => {
   const asked = route.query.rdv;
+  if (addingFor.value && typeof asked === "string") return asked;
   return typeof asked === "string" && keys.value.includes(asked) ? asked : "";
 });
+// L'entretien ajouté : les candidatures sont relues, puis il s'ouvre dans « À venir ».
+async function interviewAdded(application: Application): Promise<void> {
+  await props.reloadApplications?.();
+  await nextTick();
+  const at = props.applications.find((a) => a.id === application.id)?.interview_at;
+  const row = upcoming.value.find((u) => u.kind === "entretien" && u.application.id === application.id && u.at === at);
+  select(row?.key ?? `entretien-${application.id}`);
+}
 function select(key: string): void {
   void router.replace({ query: { ...route.query, rdv: key } });
 }
 const selectedInterview = computed(() => {
   const key = selected.value;
   if (!key.startsWith("entretien-")) return null;
-  const found = upcoming.value.find((u) => u.kind === "entretien" && `entretien-${u.application.id}` === key);
+  const found = upcoming.value.find((u) => u.kind === "entretien" && u.key === key);
   return found?.kind === "entretien" ? found : null;
 });
 // Un rendez-vous passé, à noter ou noté : son détail est le formulaire de ce qui a été convenu (lot 14).
@@ -140,6 +158,10 @@ const selectedPoint = computed(() => {
   const row = [...toNoteRows.value, ...notedRows.value].find((r) => r.key === selected.value);
   if (!row || row.kind === "orp") return null;
   const withTime = row.kind === "point" || row.at === row.application.interview_at;
+  // Un entretien prévu gardé à côté d'un suivant (§72p) : son point se fait sur sa propre ligne.
+  if (row.kind === "point" && row.planned) {
+    return { key: row.key, at: row.at, application: row.application, source: { kind: "interview" as const, id: row.planned.id }, done: false, withTime: true };
+  }
   return row.kind === "point"
     ? { key: row.key, at: row.at, application: row.application, source: { kind: "application" as const, id: row.application.id }, done: false, withTime }
     : { key: row.key, at: row.at, application: row.application, source: { kind: "interview" as const, id: row.interview.id }, done: true, withTime };
@@ -152,6 +174,11 @@ async function pointSaved(): Promise<void> {
   // Les candidatures relues n'arrivent dans les props qu'au rendu suivant.
   await nextTick();
   if (point.done) return;
+  // Le point d'un entretien prévu gardé à côté (§72p) en fait un retour, sur la même ligne.
+  if (point.source.kind === "interview") {
+    select(`retour-${point.source.id}`);
+    return;
+  }
   const day = todayDay(new Date(point.at));
   const fresh = props.applications.find((a) => a.id === point.application.id);
   const interview = fresh?.interviews?.find((i) => i.held_at === day);
@@ -328,10 +355,10 @@ const list = ref<HTMLElement | null>(null);
             :key="item.key"
             type="button"
             class="rdv-item list-card"
-            :aria-current="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`) ? 'true' : undefined"
-            :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-entretien-${item.application.id}`"
+            :aria-current="selected === (item.kind === 'orp' ? 'orp' : item.key) ? 'true' : undefined"
+            :data-test="item.kind === 'orp' ? 'rdv-item-orp' : `rdv-item-${item.key}`"
             :aria-label="upcomingLabel(item, item.kind === 'orp' ? (lines.length ? 'Feuille prête' : 'Feuille à compléter') : 'À préparer', now)"
-            @click="select(item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)"
+            @click="select(item.kind === 'orp' ? 'orp' : item.key)"
           >
             <CalendarDate
               v-bind="cal(item.at)"
@@ -354,7 +381,7 @@ const list = ref<HTMLElement | null>(null);
               </span>
               <span class="rdv-item-sub rdv-when"><span>{{ upcomingWhen(item, now) }}</span><span v-if="upcomingWhere(item)">&nbsp;· {{ upcomingWhere(item) }}</span></span>
             </span>
-            <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
+            <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : item.key)" />
           </button>
         </template>
         <template v-if="toNoteRows.length">
@@ -367,7 +394,7 @@ const list = ref<HTMLElement | null>(null);
             type="button"
             class="rdv-item list-card"
             :aria-current="selected === item.key ? 'true' : undefined"
-            :data-test="item.kind === 'orp' ? `rdv-to-note-${item.meeting.id}` : `rdv-to-note-point-${item.application.id}`"
+            :data-test="item.kind === 'orp' ? `rdv-to-note-${item.meeting.id}` : `rdv-to-note-${item.key}`"
             @click="select(item.key)"
           >
             <CalendarDate
@@ -768,6 +795,14 @@ const list = ref<HTMLElement | null>(null);
           @add="emit('add', 'orp')"
         />
       </article>
+
+      <!-- Ajouter un entretien à une candidature (planche AjouterEntretienOrdinateur, §72p). -->
+      <AjouterEntretienPanel
+        v-else-if="addingFor"
+        :key="`ajouter-${addingFor.id}`"
+        :application="addingFor"
+        @added="interviewAdded(addingFor)"
+      />
 
       <!-- Faire le point sur un entretien passé, ou rouvrir un retour fait (planche FairePointOrdinateur, §72m). -->
       <FairePointPanel

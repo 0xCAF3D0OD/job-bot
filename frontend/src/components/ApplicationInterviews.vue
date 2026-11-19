@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 
 import type { Application, Interview } from "../api/client";
 import { interviewUpcoming, needsFeedback } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
+import { usePhone } from "../composables/usePhone";
 import { dateInSentence, meetingDate } from "../dates";
 import { feelingText, KINDS, NEXT_STEPS } from "../interviewLabels";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -15,6 +17,11 @@ const emit = defineEmits<{ interview: [application: Application, interview: Inte
 
 const origin = globalThis.location?.origin ?? "";
 const assistant = useAssistant();
+const router = useRouter();
+const { phone: wide } = usePhone("(min-width: 1024px)");
+const { phone } = usePhone();
+// Ordinateur (§72p, Kevin 19.11) : « Ajouter un autre entretien » toujours là ; il ouvre le panneau de Rendez-vous.
+const desktop = computed(() => wide.value && !phone.value);
 const upcoming = computed(() => interviewUpcoming(props.application));
 const feedback = computed(() => needsFeedback(props.application));
 const latest = computed<Interview | null>(() => props.application.interviews?.at(-1) ?? null);
@@ -50,9 +57,12 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
   const last = latest.value;
   if (last) {
     items.push({ label: "Voir le retour", test: "interview-open", icon: "eye", run: () => emit("interview", a, last) });
-    if (!feedback.value) {
-      items.push({ label: "Ajouter un autre entretien", test: "interview-add", icon: "plus", run: () => emit("interview", a, null) });
-    }
+  }
+  if (desktop.value) {
+    const to = `/candidatures/rendez-vous-orp?rdv=ajouter-${a.id}`;
+    items.push({ label: "Ajouter un autre entretien", test: "interview-add", icon: "plus", run: () => void router.push(to) });
+  } else if (last && !feedback.value) {
+    items.push({ label: "Ajouter un autre entretien", test: "interview-add", icon: "plus", run: () => emit("interview", a, null) });
   }
   return items;
 });

@@ -22,9 +22,13 @@ class PendingFeedback:
     application_id: int
     company: str
     interview_on: date
+    # Un entretien prévu gardé à côté d'un suivant (§72p) : son point se fait dans Rendez-vous.
+    interview_id: int | None = None
 
     @property
     def link(self) -> str:
+        if self.interview_id is not None:
+            return f"/candidatures/rendez-vous-orp?rdv=point-r{self.interview_id}"
         # La candidature elle-même, le formulaire « Faire le point » ouvert (Kevin, 16.11) : le
         # lien d'un jour menait au Suivi ORP, et sur ordinateur à Bilan, sans l'entretien.
         return f"/candidatures/suivi?candidature={self.application_id}&retour=1"
@@ -56,9 +60,39 @@ async def pending(session: AsyncSession, today: date) -> list[tuple[Application,
     return found
 
 
+async def planned_pending(
+    session: AsyncSession, today: date
+) -> list[tuple[Interview, Application, date]]:
+    """Les entretiens prévus gardés à côté d'un suivant (§72p), passés depuis 14 jours au plus,
+    sans point fait : comme `pending`, chacun reste à noter jusqu'à son point."""
+    found: list[tuple[Interview, Application, date]] = []
+    for interview, application in (
+        await session.execute(
+            select(Interview, Application)
+            .join(Application, Application.id == Interview.application_id)
+            .where(
+                Application.status == ApplicationStatus.ENTRETIEN,
+                Interview.held_at.is_(None),
+                Interview.scheduled_at.is_not(None),
+            )
+        )
+    ).all():
+        assert interview.scheduled_at is not None
+        day = interview.scheduled_at.astimezone(LOCAL_TZ).date()
+        if today - LOOK_BACK <= day < today:
+            found.append((interview, application, day))
+    return found
+
+
 async def to_review(session: AsyncSession, today: date | None = None) -> list[PendingFeedback]:
     today = today or datetime.now(UTC).astimezone(LOCAL_TZ).date()
-    return [PendingFeedback(a.id, a.company, day) for a, day in await pending(session, today)]
+    planned = [
+        PendingFeedback(a.id, a.company, day, i.id)
+        for i, a, day in await planned_pending(session, today)
+    ]
+    return [
+        PendingFeedback(a.id, a.company, day) for a, day in await pending(session, today)
+    ] + planned
 
 
 async def notify_interviews(runtime: Runtime, today: date | None = None) -> int:

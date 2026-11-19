@@ -1,6 +1,6 @@
 """Retour d'entretien (docs/23) : formulaire, liste avec la candidature, rappel du lendemain."""
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -8,7 +8,7 @@ from httpx import AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.db.models import Application, Notification
-from jobbot.notify.interviews import notify_interviews
+from jobbot.notify.interviews import LOCAL_TZ, notify_interviews
 from jobbot.runtime import Runtime
 
 from .conftest import admin_engine
@@ -269,7 +269,9 @@ async def test_debrief_keeps_the_full_form(client: AsyncClient, runtime: Runtime
     assert insights["average_rating"] == 4
 
 
-async def test_interview_debrief_reopens_a_past_point(client: AsyncClient, runtime: Runtime) -> None:
+async def test_interview_debrief_reopens_a_past_point(
+    client: AsyncClient, runtime: Runtime
+) -> None:
     """« Voir le retour » sur ordinateur (accord de Kevin du 19.11.2026) : le panneau de Rendez-vous
     rouvre le point d'un retour précis, même après un autre entretien, et le met à jour sans toucher
     au reste du retour."""
@@ -297,3 +299,65 @@ async def test_interview_debrief_reopens_a_past_point(client: AsyncClient, runti
     assert planned["feeling"] is None and planned["interview_at"].startswith("2026-11-12T13:00")
     assert (await client.get("/api/interviews/999999/debrief")).status_code == 404
     assert (await client.put(f"/api/interviews/{first['id']}/debrief", json={})).status_code == 422
+
+
+async def test_two_interviews_stay_separate(runtime: Runtime, client: AsyncClient) -> None:
+    """« Ajouter un entretien » (§72p, Kevin 19.11) : le 2e ne retire jamais le 1er de « À noter »,
+    qui en sort seulement quand son point est fait."""
+    await reset(runtime)
+    app_id = await add_application(runtime)
+    first = datetime.now(UTC) - timedelta(days=3)
+    async with runtime.sessionmaker.begin() as session:
+        application = await session.get(Application, app_id)
+        assert application is not None
+        application.interview_at = first
+        application.interview_place = "Genève"
+    second = {"round": "2", "at": "2099-12-01T13:00:00Z", "place": " Alpstack, Lausanne "}
+    added = await client.post(f"/api/applications/{app_id}/interview-plan", json=second)
+    assert added.status_code == 204
+
+    listed = (await client.get("/api/applications")).json()[0]
+    assert listed["interview_at"].startswith("2099-12-01")
+    assert listed["interview_place"] == "Alpstack, Lausanne"
+    assert listed["interview_round"] == "2"
+    assert listed["status"] == "entretien"
+    # Le 1er reste un élément à part, pas un retour : à noter jusqu'à son point.
+    assert listed["interviews"] == []
+    [planned] = listed["planned"]
+    assert planned["place"] == "Genève" and planned["round"] is None
+    pending = (await client.get("/api/today")).json()["interviews_to_review"]
+    assert [p["link"] for p in pending] == [
+        f"/candidatures/rendez-vous-orp?rdv=point-r{planned['id']}"
+    ]
+
+    # Son point : le même entretien devient un retour, daté du jour prévu, et sort de « À noter ».
+    debrief = (await client.get(f"/api/interviews/{planned['id']}/debrief")).json()
+    # L'heure prévue est connue : la carte du haut la montre.
+    assert abs(datetime.fromisoformat(debrief["interview_at"]) - first) < timedelta(seconds=1)
+    saved = await client.put(f"/api/interviews/{planned['id']}/debrief", json={"feeling": "moyen"})
+    assert saved.status_code == 200
+    listed = (await client.get("/api/applications")).json()[0]
+    assert listed["planned"] == []
+    [review] = listed["interviews"]
+    assert review["held_at"] == first.astimezone(LOCAL_TZ).date().isoformat()
+    assert review["feeling"] == "moyen"
+    assert (await client.get("/api/today")).json()["interviews_to_review"] == []
+
+    # Un 3e alors que le point du 2e est fait : rien n'est gardé deux fois.
+    async with runtime.sessionmaker.begin() as session:
+        application = await session.get(Application, app_id)
+        assert application is not None
+        application.interview_at = datetime.now(UTC) - timedelta(days=1)
+    day = (datetime.now(UTC) - timedelta(days=1)).astimezone(LOCAL_TZ).date()
+    assert (
+        await client.put(f"/api/applications/{app_id}/debrief", json={"feeling": "bien"})
+    ).status_code == 200
+    third = {"round": "final", "at": "2099-12-10T09:00:00Z"}
+    assert (
+        await client.post(f"/api/applications/{app_id}/interview-plan", json=third)
+    ).status_code == 204
+    listed = (await client.get("/api/applications")).json()[0]
+    assert listed["planned"] == []
+    assert [i["held_at"] for i in listed["interviews"]][-1] == day.isoformat()
+    assert listed["interview_place"] is None and listed["interview_round"] == "final"
+    await reset(runtime)

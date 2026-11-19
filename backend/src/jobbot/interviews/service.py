@@ -69,6 +69,7 @@ async def insights(session: AsyncSession) -> Insights:
         await session.execute(
             select(Interview, Application.company)
             .join(Application, Application.id == Interview.application_id)
+            .where(Interview.reviewed())
             .order_by(Interview.held_at.desc().nulls_last(), Interview.id.desc())
         )
     ).all()
@@ -209,6 +210,7 @@ async def _context(session: AsyncSession, application_id: int | None) -> tuple[s
         await session.execute(
             select(Interview, Application.job_title)
             .join(Application, Application.id == Interview.application_id)
+            .where(Interview.reviewed())
             .order_by(Interview.held_at.desc().nulls_last())
             .limit(15)
         )

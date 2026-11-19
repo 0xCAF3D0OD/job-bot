@@ -8,7 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Application, Interview, InterviewPractice, Offer
+from jobbot.db.models import Application, ApplicationStatus, Interview, InterviewPractice, Offer
+from jobbot.followups import service as followups
 from jobbot.interviews import board, practice, service
 from jobbot.notify.interviews import LOCAL_TZ
 from jobbot.runtime import Runtime
@@ -25,6 +26,8 @@ Score = Annotated[int, Field(ge=1, le=5)]
 NextStep = Literal["rien", "entretien", "reponse", "test", "refus"]
 # « Comment ça s'est passé ? » de « Faire le point » (planche FairePoint, 0097).
 Feeling = Literal["bien", "moyen", "pas_bien"]
+# « Quel entretien ? » (planche AjouterEntretienOrdinateur, §72p) : 1er, 2e ou Final.
+Round = Literal["1", "2", "final"]
 # La relance conseillée après « J'attends une réponse » : une semaine après l'entretien (planche :
 # entretien le 12 nov., relance le 19). Calculée ici, jamais saisie (Kevin, 18.11.2026).
 FOLLOW_UP_AFTER = timedelta(days=7)
@@ -113,7 +116,7 @@ async def list_interviews(request: Request, application_id: int) -> list[Intervi
     async with _runtime(request).sessionmaker() as session:
         rows = await session.scalars(
             select(Interview)
-            .where(Interview.application_id == application_id)
+            .where(Interview.application_id == application_id, Interview.reviewed())
             .order_by(Interview.held_at.nulls_last(), Interview.id)
         )
         return [InterviewOut.model_validate(r) for r in rows]
@@ -162,6 +165,74 @@ async def delete_interview(request: Request, interview_id: int) -> None:
         interview = await session.get(Interview, interview_id)
         if interview is not None:
             await session.delete(interview)
+
+
+# --- Ajouter un entretien (planche AjouterEntretienOrdinateur, §72p ; Kevin, 19.11.2026) ------
+
+
+class PlannedOut(BaseModel):
+    """Un entretien prévu gardé à côté d'un suivant, dont le point n'est pas encore fait (0098)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    scheduled_at: datetime
+    place: str | None = None
+    round: Round | None = None
+
+
+class PlanIn(BaseModel):
+    """Les trois réponses du panneau : le tour, la date et l'heure, le lieu ou le lien visio."""
+
+    round: Round
+    at: datetime
+    place: Annotated[str, Field(max_length=1000)] | None = None
+
+    @field_validator("place")
+    @classmethod
+    def _strip(cls, value: str | None) -> str | None:
+        return (value or "").strip() or None
+
+
+@router.post(
+    "/applications/{application_id}/interview-plan",
+    operation_id="planInterview",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def plan_interview(request: Request, application_id: int, body: PlanIn) -> None:
+    """Ajoute un entretien : il devient l'entretien prévu de la candidature (« À venir »). Deux
+    entretiens sont deux éléments séparés (Kevin, 19.11) : si le point du précédent n'est pas
+    fait, le précédent est gardé comme entretien prévu (`interviews.scheduled_at`) et reste dans
+    « À venir » ou « À noter » jusqu'à son point. Aucune IA ; la candidature passe en entretien."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        application = await session.get(Application, application_id)
+        if application is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        previous = application.interview_at
+        if previous is not None and previous != body.at:
+            day = previous.astimezone(LOCAL_TZ).date()
+            done = await session.scalar(
+                select(Interview.id)
+                .where(Interview.application_id == application_id, Interview.held_at == day)
+                .limit(1)
+            )
+            if done is None:
+                session.add(
+                    Interview(
+                        application_id=application_id,
+                        scheduled_at=previous,
+                        place=application.interview_place,
+                        round=application.interview_round,
+                    )
+                )
+        application.interview_at = body.at
+        application.interview_place = body.place
+        application.interview_round = body.round
+        # Le format était celui de l'entretien d'avant ; le panneau ne le demande plus.
+        application.interview_format = None
+        if application.status != ApplicationStatus.ENTRETIEN:
+            application.status = ApplicationStatus.ENTRETIEN
+            application.status_at = followups.local_today()
 
 
 # --- Faire le point (planche FairePoint, accord de Kevin du 18.11.2026) ------------------------
@@ -213,22 +284,28 @@ async def _debrief(
 async def _debrief_of_interview(
     session: AsyncSession, interview_id: int
 ) -> tuple[Application, date, Interview]:
-    """Un point déjà fait, rouvert depuis « Passés » de Rendez-vous sur ordinateur (« Voir le retour »,
-    accord de Kevin du 19.11.2026) : le retour de ce jour-là, même si un autre entretien a suivi."""
+    """Un point déjà fait, rouvert depuis « Passés » de Rendez-vous sur ordinateur (« Voir le
+    retour », accord de Kevin du 19.11.2026) : le retour de ce jour-là, même si un autre entretien a
+    suivi. Ou le point à faire d'un entretien prévu gardé à côté d'un suivant (§72p)."""
     interview = await session.get(Interview, interview_id)
-    if interview is None or interview.held_at is None:
+    if interview is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
+    # Un entretien prévu gardé à côté d'un suivant (§72p) : son jour est celui de sa date prévue.
+    day = interview.held_at or (
+        interview.scheduled_at.astimezone(LOCAL_TZ).date() if interview.scheduled_at else None
+    )
     application = await session.get(Application, interview.application_id)
-    if application is None:
+    if application is None or day is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
-    return application, interview.held_at, interview
+    return application, day, interview
 
 
-def _interview_at(application: Application, day: date) -> datetime:
-    """L'heure de l'entretien prévu si c'est ce jour-là ; sinon minuit du jour (l'heure n'est pas connue)."""
-    planned = application.interview_at
-    if planned is not None and planned.astimezone(LOCAL_TZ).date() == day:
-        return planned
+def _interview_at(application: Application, day: date, interview: Interview | None) -> datetime:
+    """L'heure de l'entretien prévu si c'est ce jour-là ; sinon minuit du jour (l'heure n'est
+    pas connue)."""
+    for planned in (interview.scheduled_at if interview else None, application.interview_at):
+        if planned is not None and planned.astimezone(LOCAL_TZ).date() == day:
+            return planned
     return datetime.combine(day, datetime.min.time(), LOCAL_TZ)
 
 
@@ -237,7 +314,7 @@ def _debrief_out(application: Application, day: date, interview: Interview | Non
         application_id=application.id,
         company=application.company,
         job_title=application.job_title,
-        interview_at=_interview_at(application, day),
+        interview_at=_interview_at(application, day, interview),
         feeling=interview.feeling if interview else None,
         next_step=interview.next_step if interview else None,
         notes=interview.notes if interview else None,
@@ -258,14 +335,22 @@ async def save_debrief(request: Request, application_id: int, body: DebriefIn) -
     async with _runtime(request).sessionmaker.begin() as session:
         application, day, interview = await _debrief(session, application_id)
         if interview is None:
-            interview = Interview(application_id=application_id, held_at=day)
+            interview = Interview(
+                application_id=application_id, held_at=day, round=application.interview_round
+            )
             session.add(interview)
         return await _save_debrief(session, application, day, interview, body)
 
 
 async def _save_debrief(
-    session: AsyncSession, application: Application, day: date, interview: Interview, body: DebriefIn
+    session: AsyncSession,
+    application: Application,
+    day: date,
+    interview: Interview,
+    body: DebriefIn,
 ) -> DebriefOut:
+    # Le point d'un entretien prévu (§72p) en fait un retour, sur la même ligne.
+    interview.held_at = interview.held_at or day
     interview.feeling = body.feeling
     interview.next_step = body.next_step
     interview.next_step_at = day + FOLLOW_UP_AFTER if body.next_step == "reponse" else None
@@ -281,7 +366,9 @@ async def get_interview_debrief(request: Request, interview_id: int) -> DebriefO
 
 
 @router.put("/interviews/{interview_id}/debrief", operation_id="saveInterviewDebrief")
-async def save_interview_debrief(request: Request, interview_id: int, body: DebriefIn) -> DebriefOut:
+async def save_interview_debrief(
+    request: Request, interview_id: int, body: DebriefIn
+) -> DebriefOut:
     """Met à jour le point d'un retour déjà fait : le ressenti, la suite et les notes ; ses autres
     réponses (note sur 5, questions…) restent. Aucune IA, le statut ne change pas."""
     async with _runtime(request).sessionmaker.begin() as session:
@@ -535,7 +622,7 @@ async def practice_defaults(
         if application_id is not None:
             last = await session.scalar(
                 select(Interview.kind)
-                .where(Interview.application_id == application_id)
+                .where(Interview.application_id == application_id, Interview.reviewed())
                 .order_by(Interview.id.desc())
                 .limit(1)
             )

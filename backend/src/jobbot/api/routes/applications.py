@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.api.routes.contacts import ContactOut
-from jobbot.api.routes.interviews import InterviewOut
+from jobbot.api.routes.interviews import InterviewOut, PlannedOut, Round
 from jobbot.api.routes.orp import mark_changed
 from jobbot.db.models import (
     Application,
@@ -241,8 +241,12 @@ class ApplicationOut(ApplicationUpdate):
     # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
     follow_up_on: date | None = None
     created_at: datetime
+    # « Quel entretien ? » de l'entretien prévu (§72p) ; rempli par « Ajouter un entretien ».
+    interview_round: Round | None = None
     # Retours d'entretien (docs/23), dans l'ordre des entretiens ; remplis par la liste.
     interviews: list["InterviewOut"] = []
+    # Entretiens prévus gardés à côté du suivant, sans point fait (§72p) ; remplis par la liste.
+    planned: list[PlannedOut] = []
     # Poste entièrement à distance (docs/26 §6), d'après la note de l'offre ; rempli par la liste.
     remote_full: bool = False
     remote_region: str | None = None
@@ -351,12 +355,18 @@ async def list_applications(
     async with _runtime(request).sessionmaker() as session:
         applications = list(await session.scalars(query))
         interviews: dict[int, list[InterviewOut]] = {}
+        planned: dict[int, list[PlannedOut]] = {}
         for row in await session.scalars(
             select(Interview)
             .where(Interview.application_id.in_([a.id for a in applications]))
-            .order_by(Interview.held_at.nulls_last(), Interview.id)
+            .order_by(Interview.held_at.nulls_last(), Interview.scheduled_at, Interview.id)
         ):
-            interviews.setdefault(row.application_id, []).append(InterviewOut.model_validate(row))
+            if row.held_at is None and row.scheduled_at is not None:
+                planned.setdefault(row.application_id, []).append(PlannedOut.model_validate(row))
+            else:
+                interviews.setdefault(row.application_id, []).append(
+                    InterviewOut.model_validate(row)
+                )
         contacts: dict[int, list[ContactOut]] = {}
         by_offer = {a.offer_id: a.id for a in applications if a.offer_id}
         for contact in await session.scalars(
@@ -395,6 +405,7 @@ async def list_applications(
         ApplicationOut.model_validate(a).model_copy(
             update={
                 "interviews": interviews.get(a.id, []),
+                "planned": planned.get(a.id, []),
                 "remote_full": a.offer_id in remote,
                 "remote_region": remote.get(a.offer_id) if a.offer_id else None,
                 "contacts": contacts.get(a.id, []),
@@ -476,6 +487,7 @@ async def update_application(
         values = body.model_dump()
         if values["interview_at"] is None:
             values["interview_format"] = None
+            application.interview_round = None
         elif "interview_format" not in body.model_fields_set:
             del values["interview_format"]
         if values["status"] != application.status and values["status_at"] is None:
