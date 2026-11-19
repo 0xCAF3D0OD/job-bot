@@ -300,7 +300,11 @@ const marks = computed<Mark[]>(() => {
 .wa-copy { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--wa-6); width: var(--target-min); height: var(--target-min); min-height: var(--target-min); padding: 0; border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-size: var(--wa-15); font-weight: var(--weight-bold); }
 .wa-desk .wa-copy { width: auto; height: var(--wa-copy-h); min-height: var(--wa-copy-h); padding: 0 var(--space-4); }
 .wa-copy .icon { width: 16px; height: 16px; }
+/* §72f (18.11, OnboardingAlerteCodeRecu) : « Copier le code » en bouton à contour, 1,5 px --primary-graphic, fond --surface, texte --primary-text
+   (clair #2445C2, #FFFFFF, #1A3496 ; sombre #7D95FF, #221E1A, #AEBDFF). */
 .wa-copy.wa-copy-code { width: auto; height: var(--target-min); min-height: var(--target-min); margin-top: var(--space-3); padding: 0 var(--space-4); }
+/* Téléphone seulement : la planche ordinateur (OnboardingOrdinateurAlerteCodeRecu) garde le bouton tonal. */
+.wa:not(.wa-desk) .wa-copy.wa-copy-code { border: 1.5px solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); }
 .wa-code-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-3); }
 .wa-code { display: flex; gap: var(--wa-box-gap); margin-top: var(--space-3); }
 .wa-code > span { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--wa-box-w); height: var(--wa-box-h); border: 1.5px solid var(--card-line); border-radius: var(--wa-box-r); background: var(--surface); font-size: var(--wa-box-font); font-weight: var(--weight-heavy); font-variant-numeric: tabular-nums; }
