@@ -56,6 +56,19 @@ async function poser(page: Page) {
   await page.waitForLoadState("networkidle");
   await page.locator(".page-veil").waitFor({ state: "detached", timeout: 15_000 });
   await page.evaluate(() => document.fonts.ready);
+  // Les entrées des éléments (docs/mouvement.md) : finies avant les contrôles, pour lire les couleurs à opacité pleine.
+  // Une animation en pause ou sans fin n'est pas attendue, et l'attente ne dépasse jamais 2 s.
+  await page.evaluate(() =>
+    Promise.race([
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((a) => a.playState === "running" && a.effect?.getComputedTiming().iterations !== Infinity)
+          .map((a) => a.finished.catch(() => undefined)),
+      ),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]),
+  );
   await page.evaluate(async () => {
     let calme = 0;
     for (let i = 0; i < 100 && calme < 6; i++) {

@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
@@ -695,6 +695,43 @@ describe("tri et candidature", () => {
     await flushPromises();
     expect(router.currentRoute.value.query.statut).toBe("later");
     expect(wrapper.findAll("[data-test=offer]").some((c) => c.text().includes("Deux"))).toBe(false);
+  });
+
+  // K5 amendée le 19.11 (Kevin) : « Écarter » fait exception, l'offre sort tout de suite de la liste, dans chaque
+  // groupe ; « Annuler » la remet à sa place exacte.
+  it.each([
+    ["Nouvelles", "/offres?statut=to_review", "to_review"],
+    ["Gardées", "/offres?statut=later", "later"],
+    ["En préparation", "/offres?statut=in_progress", "preparing"],
+    ["Toutes", "/offres", "to_review"],
+  ])("K5 amendée (19.11) : dans %s, l'offre écartée sort tout de suite ; « Annuler » la remet à sa place", async (_group, path, status) => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("1024px"), addEventListener() {}, removeEventListener() {} }));
+    const three = () => [offer(1, "Une", { status }), offer(2, "Deux", { status }), offer(3, "Trois", { status })];
+    mockOffers(page(three()));
+    const wrapper = await mountAt(path);
+    await wrapper.findAll("[data-test=offer]")[1]!.trigger("click");
+    await flushPromises();
+    PATCH.mockResolvedValue({ data: { id: 2, status: "ignored" } });
+    mockOffers(page([offer(1, "Une", { status }), offer(3, "Trois", { status })]));
+    await wrapper.get("[data-test=offer-discard]").trigger("click");
+    await flushPromises();
+    const titles = () => wrapper.findAll("[data-test=offer]").map((c) => c.text());
+    expect(titles().some((t) => t.includes("Deux"))).toBe(false);
+    expect(titles().some((t) => t.includes("Écartée"))).toBe(false);
+    expect(useUndo().pending.value?.message).toBe("Offre écartée");
+    // « Annuler » : la carte revient à son index, avant même la réponse du serveur.
+    let answer: (v: unknown) => void = () => {};
+    PATCH.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    const undone = useUndo().undo();
+    await nextTick();
+    expect(titles().map((t) => ["Une", "Deux", "Trois"].find((n) => t.includes(n)))).toEqual(["Une", "Deux", "Trois"]);
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 2 } }, body: { status } });
+    mockOffers(page(three()));
+    answer({ data: { id: 2, status } });
+    await undone;
+    await flushPromises();
+    expect(titles().map((t) => ["Une", "Deux", "Trois"].find((n) => t.includes(n)))).toEqual(["Une", "Deux", "Trois"]);
+    vi.unstubAllGlobals();
   });
 
   it("« Marquer comme envoyée » pré-remplit puis enregistre la candidature", async () => {

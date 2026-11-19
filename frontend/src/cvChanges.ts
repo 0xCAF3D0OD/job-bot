@@ -3,12 +3,38 @@ import type { Cv } from "./api/client";
 // Le panneau « Adapté pour cette offre » (MODIFICATIONS du 9 novembre, §14 ; maquette PreparerOrdinateurCVChangements) :
 // ce que la version adaptée change par rapport au CV d'origine, un point par changement. L'IA ne réécrit pas les blocs
 // (llm/cv.py) : elle écrit le titre et le résumé, choisit les blocs et leur ordre. Chaque retrait et chaque nouvel ordre
-// peut s'annuler (`undo` : la liste de blocs à enregistrer) ; le résumé n'a pas d'« avant » gardé, il ne s'annule pas.
+// peut s'annuler (`undo` : la liste de blocs à enregistrer). Le résumé aussi (Kevin, 19.11) : `summaryUndo` est le
+// résumé de la version de départ (`origin_summary`, vide pour une première version), qu'« Annuler » remet.
 
 // `mark` : ce que « Voir les changements » surligne dans l'aperçu (§34 du 16.11), le résumé ou le bloc déplacé ; un
 // bloc retiré n'est plus dans l'aperçu, il n'a rien à surligner.
 // `target` : ce que vise la ligne « Pourquoi » du serveur (`reasons`, §37 du 16.11), le résumé ou le bloc déplacé ou retiré.
-export type CvChange = { key: string; title: string; before: string; now: string; undo: number[] | null; mark?: number | "summary"; target: number | "summary" };
+export type CvChange = {
+  key: string;
+  title: string;
+  before: string;
+  now: string;
+  undo: number[] | null;
+  summaryUndo?: string;
+  mark?: number | "summary";
+  target: number | "summary";
+};
+
+export function canUndo(change: CvChange): boolean {
+  return change.undo !== null || change.summaryUndo !== undefined;
+}
+
+// « Expérience chez Nordwind Cloud » (planche PreparerOrdinateurCVChangements, Kevin 19.11) : l'entreprise est ce qui
+// suit le dernier « — », « · », « | » ou « , » du titre du bloc, sans la période entre parenthèses ; introuvable, la
+// ligne garde le nom de la rubrique.
+export function employerOf(title: string): { role: string; company: string } | null {
+  const bare = title.replace(/\s*\([^()]*\)\s*$/, "").trim();
+  const match = /^(.+?)\s*(?:\s[—–·|-]\s|,\s)\s*([^—–·|,]+)$/.exec(bare);
+  if (!match) return null;
+  const role = match[1]!.trim();
+  const company = match[2]!.trim();
+  return role && company ? { role, company } : null;
+}
 
 const SECTIONS: Record<string, string> = {
   experience: "Expériences",
@@ -46,13 +72,15 @@ export function cvChanges(cv: Cv): CvChange[] {
   const origin = cv.origin_ids ?? [];
   const changes: CvChange[] = [];
   const summary = (cv.summary ?? "").trim();
-  if (summary) {
+  const originSummary = (cv.origin_summary ?? "").trim();
+  if (summary !== originSummary) {
     changes.push({
       key: "summary",
       title: "Profil",
-      before: "Avant : pas de résumé ; jobA1 l’écrit à partir de tes blocs, sans rien ajouter.",
-      now: `Maintenant : « ${summary} »`,
+      before: originSummary ? `Avant : « ${originSummary} »` : "Avant : pas de résumé ; jobA1 l’écrit à partir de tes blocs, sans rien ajouter.",
+      now: summary ? `Maintenant : « ${summary} »` : "Maintenant : pas de résumé.",
       undo: null,
+      summaryUndo: originSummary,
       mark: "summary",
       target: "summary",
     });
@@ -65,11 +93,12 @@ export function cvChanges(cv: Cv): CvChange[] {
     const moved = kept.findIndex((id, i) => id !== before[i]);
     if (moved >= 0) {
       const id = kept[moved]!;
+      const employer = key === "experience" ? employerOf(title(id)) : null;
       changes.push({
         key: `order-${key}`,
-        title: SECTIONS[key]!,
-        before: `Avant : « ${title(id)} » venait en ${rank(before.indexOf(id) + 1)}.`,
-        now: `Maintenant : il vient en ${rank(moved + 1)}, pour cette offre.`,
+        title: employer ? `Expérience chez ${employer.company}` : SECTIONS[key]!,
+        before: `Avant : « ${employer ? employer.role : title(id)} » venait en ${rank(before.indexOf(id) + 1)}.`,
+        now: `Maintenant : il vient ${moved === 0 ? "en premier" : `en ${rank(moved + 1)}`}.`,
         undo: reorder(cv, origin, kept),
         mark: id,
         target: id,
@@ -83,7 +112,7 @@ export function cvChanges(cv: Cv): CvChange[] {
     changes.push({
       key: `removed-${id}`,
       title: block.title,
-      before: `Avant : dans ton CV, rubrique ${SECTIONS[block.section] ?? block.section}.`,
+      before: `Avant : dans ta rubrique ${SECTIONS[block.section] ?? block.section}.`,
       now: "Maintenant : retiré pour cette offre.",
       undo: restore(cv, origin, id),
       target: id,

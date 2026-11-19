@@ -125,6 +125,9 @@ class CvOut(BaseModel):
     # « Adapté pour cette offre » compare la version à cet ordre pour dire ce qui a changé et
     # pouvoir l'annuler.
     origin_ids: list[int] = []
+    # Le résumé de la version dont celle-ci part (vide pour une première version ou une version
+    # antérieure au 19.11) : « Avant » le cite, « Annuler ce changement » le remet (Kevin, 19.11).
+    origin_summary: str = ""
     reasons: list[CvReasonOut] = []
     user_requests: list[CvUserRequestOut] = []
 
@@ -223,6 +226,7 @@ async def _render(session: AsyncSession, draft: Draft) -> CvOut:
         document=CvDocumentOut.model_validate(asdict(_document(draft, chunks, identity))),
         read_at=draft.content.get("read_at"),
         origin_ids=list(chunks),
+        origin_summary=draft.content.get("origin_summary", ""),
         reasons=_reasons(draft.content),
         user_requests=_requests(draft.content),
     )
@@ -284,6 +288,9 @@ async def write_cv(request: Request, offer_id: int, body: CvRequest) -> CvOut:
         raise writing.unusable() from None
 
     content = output.model_dump(exclude={"language"})
+    # Le résumé d'avant l'adaptation, pour « Annuler ce changement » sur Profil (Kevin, 19.11) ;
+    # une retouche le garde (edit_cv ne le retire pas).
+    content["origin_summary"] = (ctx.previous or {}).get("summary", "")
     if instruction and ctx.previous is not None:
         # « Demander une modification du CV » : ce qui change est demandé par l'utilisateur.
         content |= cv_reasons.carry_over(ctx.previous, content)

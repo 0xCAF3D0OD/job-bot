@@ -629,8 +629,13 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
-    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "undo", run: () => emit("status", "to_review") });
   }
+  // Ordre de la planche ActionsOffre (et ActionsOffreGardee) du §72l : Demander à l'assistant, agence, expirée, note,
+  // puis « Ouvrir l'annonce sur le site » et « Partager ».
+  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  // Icône de la planche : l'immeuble (le drapeau reste dans le menu de l'ordinateur).
+  items.push(...markAgency.value.map((item) => ({ ...item, icon: "building" as const })));
   if (o.status !== "applied") {
     items.push(
       o.expired_at
@@ -639,14 +644,12 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     );
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
-  items.push(...markAgency.value);
   // Planches ActionsOffre et ActionsOffreGardee (§72l, Kevin, 19.11.2026) : « Ouvrir l'annonce sur le site », juste
   // avant « Partager », ouvre le site d'origine dans un nouvel onglet (le lien n'est plus dans « Le poste »).
   const url = shareUrl.value;
   if (url) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", run: () => void window.open(url, "_blank", "noopener,noreferrer") });
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
   if (url) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
-  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
 // Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
@@ -2085,6 +2088,10 @@ watch(
 .expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
 .expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
+/* Ordinateur (Kevin, 19.11) : la carte « Offre expirée » a les marges des autres cartes de la fiche (18,5 / 24 px, comme
+   « .oc-company ») ; sans titre, la phrase garde les 10 px de la planche sous la pastille. */
+.oc-card.expired-card { padding: var(--oc-head-top) var(--oc-x); }
+.expired-card .expired-pill + .expired-text { margin-top: var(--exp-gap); }
 /* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
    « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
 .address-lines { white-space: pre-line; }
