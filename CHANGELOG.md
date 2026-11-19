@@ -822,3 +822,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.608 | Bandeaux « Annuler » : une seule durée de 6 s partout (« Question retirée » passe de 5 à 6 s) | livrée |
 | 1.6.609 | Le poids de chaque PR ouverte est mesuré de nouveau à chaque fusion sur main, et une PR qui ferait dépasser passe au rouge avant d'être fusionnée | livrée |
 | 1.6.610 | Premiers pas : entrées et sorties douces (étapes en cascade, ancien contenu qui sort avant le nouveau, barre qui glisse, code de jobup case par case), téléphone et ordinateur | livrée |
+| 1.6.611 | Téléphone : Lettre et CV de Ma candidature passent sur la barre du bas commune (BottomBar) ; la page Préparer repasse sous sa limite de poids | livrée |
