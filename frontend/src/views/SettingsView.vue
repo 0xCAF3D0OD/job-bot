@@ -1334,6 +1334,16 @@ svg.rg-lead { fill: none; stroke: currentColor; stroke-width: 2; }
 .settings-wide .rg-danger-row { min-height: 56px; padding: 0 var(--rg-20); color: var(--danger); font-weight: var(--weight-bold); }
 .settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--rg-185); }
 .settings-wide #connexions .setting-row-control :is(button, a):not(.link) { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--rg-22); font-size: var(--rg-15); }
+/* Listes en carte de l'ordinateur (Kevin 19.11) : 12 px de marge dans la carte de section, lignes à 100 % en
+   border-box, padding 12px 4px, sans marge négative ; la flèche › est à 16 px du bord, comme partout. */
+.settings-wide .setting-cards { padding: 0 var(--space-3); }
+.settings-wide :is(.setting-row, .appearance-row, .rg-link-row, .settings-more-group > .block-row) { box-sizing: border-box; padding: var(--space-3) var(--space-1); }
+.settings-wide .rg-danger-row { padding: 0 var(--space-1); }
+.settings-wide .rg-list > .setting-row-form { padding: var(--space-4) var(--space-1); }
+.settings-wide .list-chevron { place-items: center end; }
+/* « Recherche et outils » ouverte seule sur ordinateur : la même liste que sur téléphone. */
+.settings-grouped:not(.settings-phone, .settings-wide) .rg-list { padding: 0 var(--space-3); }
+.settings-grouped:not(.settings-phone, .settings-wide) .rg-link-row { box-sizing: border-box; padding: var(--space-3) var(--space-1); }
 /* Objectif ORP et sites (consigne de Kevin du 16.11, points 2 et 3) : champ 72 × 44 px au rayon des champs de saisie,
    chiffre centré, unité de 120 px (assez pour « du mois suivant »), écart 12 px. Le bloc champ + unité a une largeur
    fixe : les champs forment une colonne d'une carte à l'autre. « Enregistré » s'affiche dessous, sans rien décaler. */
