@@ -1071,6 +1071,17 @@ Suivre la planche EnvoyeeDetail (+Sombre) :
 - Point 7 : sur téléphone, le bandeau « Annuler » se place au-dessus de la barre du bas et du bouton central, 8 px au-dessus du bouton, sans jamais le couvrir. Précise §10.8 (12 px au-dessus de la barre), qui faisait recouvrir le haut du bouton.
 - Ordinateur (planche CandidaturesOrdinateurEcartee, appliquée dans la même PR) : le bandeau en bas à gauche, aligné sur le contenu, 400 × 56, couleurs inversées en sombre.
 
+## Conformité de Candidatures à la maquette, réponses à l'audit (Kevin, 18.11.2026, 10 h 48)
+
+Réponses de Kevin au rapport `docs/conformite.md` (PR #867) :
+
+- Les quatre écrans « à refaire » de Candidatures (liste des Envoyées, filtres des Envoyées, détail d'une candidature, liste des Rendez-vous) sont refaits d'après leur planche, une PR par écran, avec les captures planche | app.
+- « J'ai contacté quelqu'un » : « Rôle » et « Comment » gardent les listes de choix de l'app, avec un choix « Autre » qui ouvre un champ libre. Kevin met la planche à jour.
+- Ordinateur : la candidature ouverte reste épinglée en bas de la liste, comme sur la planche CandidaturesOrdinateurEpinglee.
+- Rendez-vous sur ordinateur avec un rendez-vous ouvert : la planche arrive. Cet état ne s'invente pas en attendant.
+- Écarts communs du téléphone : suivre la planche. Pas de pastille de nombre sur l'onglet Candidatures, icône en courbe montante pour Bilan, rien de visible à travers l'encoche de la barre du bas.
+- Captures : animations désactivées (prefers-reduced-motion ou animation: none). Dans les PR, les captures peuvent être en liens.
+
 ## Ligne d'état ORP à trois états dans le détail d'une envoyée (Kevin, 18.11.2026, 10 h 48)
 
 Le bandeau « Il manque … / Compléter » quitte le détail d'une envoyée. La ligne ORP de la carte du haut (la ligne d'état de l'en-tête) a trois états :
@@ -1099,6 +1110,14 @@ Même correction sur ordinateur : la carte « Pour l'ORP » disparaît, et la li
 - « Autres offres chez … » (planche Offre) et la feuille de la compatibilité se chargent à part de Candidatures.
 - Chaque bloc est mesuré avec la page, sous les limites de Candidatures (175 500 o en JS, 72 500 o en CSS) : pages candidatures-autres-offres et candidatures-compatibilite de frontend/scripts/poids.mjs. Aucune limite n'est relevée.
 - Les deux blocs ouverts ensemble dépassent la limite de la page (176 727 o mesurés le 18.11) : accepté, parce que la page s'ouvre plus légère et que le surplus ne se charge qu'après un geste sur la fiche.
+
+## Statuts des Envoyées et statut « Réponse reçue » (Kevin, 18.11.2026, 13 h 38 et 13 h 39)
+
+- Les filtres des Envoyées sont : Toutes, À relancer, Envoyée, Réponse reçue, Entretien, Refusée.
+- « Envoyée » regroupe les candidatures restées sans réponse de l'employeur (en attente, relancées, sans réponse).
+- « Réponse reçue » est un nouveau statut de candidature (`reponse`) : l'employeur a répondu, sans entretien ni refus. Il se choisit à la main dans le menu de statut. Migration 0095.
+- Pas de filtre « Vue » : l'app ne sait pas si l'employeur a ouvert la candidature, et un suivi d'ouverture n'est pas voulu.
+- Onglet Rendez-vous : pas de bouton Filtres, seulement les groupes « À venir » et « Passés ». Kevin retire le bouton de la planche.
 
 ## Texte d'une offre sur téléphone : « Coller » d'abord, puis « Importer une capture ou un PDF », pas de raccourci iPhone (Kevin, 18.11.2026, 14 h 13)
 
@@ -1149,6 +1168,14 @@ réponse de 15 h 21 :
 - « En personne » est un nouveau moyen de contact (`in_person`). La colonne n'a pas de contrainte : aucune migration n'est nécessaire.
 - Cette décision remplace le point 2 du 18.11 à 10 h 48 (listes de choix de l'app, avec « Autre » et un champ libre).
 - 16 h 20 : « Ancien de ton école » est retiré des choix, validé par Kevin ; ce cas passe par « Autre ». La phrase sous le titre de la fenêtre (« jobA1 le note dans l'historique… ») est retirée (§72g).
+
+## « Faire le point » en page entière sur téléphone (Kevin, 18.11.2026, 14 h 38)
+
+- La planche FairePoint (et FairePointSombre) devient une page : `/entretien/<candidature>/faire-le-point`, avec une nouvelle route serveur et une migration (0096).
+- Trois réponses, liées à l'entretien : « Comment ça s'est passé ? » (Bien, Moyen, Pas bien, obligatoire), « La suite » (J'attends une réponse, Un 2e entretien est prévu, On m'a dit non) et « Tes notes ».
+- La date de relance est calculée, pas saisie : le jour de l'entretien plus 7 jours (planche : entretien le 12 nov., relance le 19). Elle ne s'affiche qu'avec « J'attends une réponse » et va dans l'agenda comme les autres suites.
+- Données privées : rangées dans `interviews`, cloisonnées par compte, comprises dans l'export et effacées avec le compte.
+- La note sur 5 du formulaire complet devient facultative : on n'en invente pas une à partir du ressenti. Le formulaire complet reste pour « Voir le retour » et « Ajouter un autre entretien », et sur ordinateur, qui n'a pas de planche.
 
 ## Pause sur ordinateur : flèches de mois (Kevin, 18.11.2026, 14 h 38)
 
