@@ -267,3 +267,33 @@ async def test_debrief_keeps_the_full_form(client: AsyncClient, runtime: Runtime
     # La moyenne des notes ignore les points sans note.
     insights = (await client.get("/api/interviews/insights")).json()
     assert insights["average_rating"] == 4
+
+
+async def test_interview_debrief_reopens_a_past_point(client: AsyncClient, runtime: Runtime) -> None:
+    """« Voir le retour » sur ordinateur (accord de Kevin du 19.11.2026) : le panneau de Rendez-vous
+    rouvre le point d'un retour précis, même après un autre entretien, et le met à jour sans toucher
+    au reste du retour."""
+    await reset(runtime)
+    app_id = await add_application(runtime, interview_at=datetime(2026, 11, 12, 13, 0, tzinfo=UTC))
+    first = (
+        await client.post(
+            f"/api/applications/{app_id}/interviews",
+            json={"held_at": "2026-10-06", "rating": 4, "went_well": "Démo"},
+        )
+    ).json()
+    opened = (await client.get(f"/api/interviews/{first['id']}/debrief")).json()
+    # Pas l'entretien prévu ce jour-là : la date du retour, sans heure inventée.
+    assert opened["interview_at"].startswith("2026-10-06T00:00:00")
+    assert opened["follow_up_on"] == "2026-10-13" and opened["feeling"] is None
+    body = {"feeling": "moyen", "next_step": "reponse", "notes": "Relancer Anna"}
+    saved = (await client.put(f"/api/interviews/{first['id']}/debrief", json=body)).json()
+    assert (saved["feeling"], saved["notes"]) == ("moyen", "Relancer Anna")
+    interviews = (await client.get(f"/api/applications/{app_id}/interviews")).json()
+    [kept] = [i for i in interviews if i["id"] == first["id"]]
+    assert (kept["rating"], kept["went_well"], kept["next_step_at"]) == (4, "Démo", "2026-10-13")
+    # Le point de l'entretien prévu reste un autre retour.
+    assert len(interviews) == 1
+    planned = (await client.get(f"/api/applications/{app_id}/debrief")).json()
+    assert planned["feeling"] is None and planned["interview_at"].startswith("2026-11-12T13:00")
+    assert (await client.get("/api/interviews/999999/debrief")).status_code == 404
+    assert (await client.put(f"/api/interviews/{first['id']}/debrief", json={})).status_code == 422

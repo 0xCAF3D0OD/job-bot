@@ -844,6 +844,17 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(note.text()).toBe("Modèle Moderne, en allemand.");
   });
 
+  it("Postuler, sur téléphone : la barre du bas commune, « J'ai déjà postulé » à contour et l'annonce en plein (Kevin, 19.11)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView("/offres/7/preparer?doc=postuler");
+    const bar = wrapper.get("[data-test=bottom-bar]");
+    expect(wrapper.find("[data-test=action-bar]").exists()).toBe(false);
+    expect(bar.get("[data-test=apply]").classes()).toContain("bottom-bar-primary");
+    expect(bar.get("[data-test=already-applied]").classes()).toContain("bottom-bar-secondary");
+    expect(bar.get("[data-test=already-applied]").text()).toContain("J’ai déjà postulé");
+  });
+
   it("sans lettre : l’aperçu vide du modèle à la place de « Aucune lettre »", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([]);

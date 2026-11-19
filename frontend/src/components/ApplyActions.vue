@@ -4,7 +4,8 @@ import BusyButton from "./BusyButton.vue";
 
 // Les actions de Postuler (C6, C8) : d'abord le formulaire, puis « J'ai postulé » une fois ouvert. Sur téléphone
 // dans la barre du bas, sur ordinateur au pied de la carte « Où postuler » (MODIFICATIONS du 9 novembre, §2.4).
-// Plusieurs racines : les règles de la barre du bas (`.action-bar > a`) s'appliquent toujours à ces éléments.
+// Plusieurs racines : sur téléphone, la barre du bas (BottomBar) les range sur une ligne, « J'ai déjà postulé » (ou
+// « Rouvrir … ») à contour à gauche, l'action principale pleine à droite (Kevin, 19.11.2026).
 defineProps<{
   link: { url: string; label: string; reopen: string } | null;
   opened: boolean;
@@ -17,7 +18,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
 <template>
   <p
     v-if="error"
-    class="notice error"
+    class="notice error bottom-bar-note"
     role="alert"
   >
     {{ error }}
@@ -27,14 +28,14 @@ const emit = defineEmits<{ open: []; mark: [] }>();
     :href="link.url"
     target="_blank"
     rel="noopener noreferrer"
-    class="button-link primary-link prep-bar-main"
+    class="button-link primary-link prep-bar-main bottom-bar-primary"
     data-test="apply"
     @click="emit('open')"
   ><span class="with-icon">{{ link.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
   <!-- Déjà fait ailleurs (page rechargée, e-mail, téléphone) : sans rouvrir le formulaire. -->
   <BusyButton
     v-if="link && !opened"
-    class="link apply-already"
+    class="link apply-already bottom-bar-secondary"
     :busy="busy"
     busy-label="Enregistrement…"
     data-test="already-applied"
@@ -44,7 +45,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
   </BusyButton>
   <template v-else>
     <BusyButton
-      class="primary prep-bar-main"
+      class="primary prep-bar-main bottom-bar-primary"
       :busy="busy"
       busy-label="Enregistrement…"
       data-test="mark-applied"
@@ -57,7 +58,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
       :href="link.url"
       target="_blank"
       rel="noopener noreferrer"
-      class="link apply-reopen"
+      class="link apply-reopen bottom-bar-secondary"
       data-test="apply"
     >{{ link.reopen }}<span class="visually-hidden"> (nouvel onglet)</span></a>
   </template>
