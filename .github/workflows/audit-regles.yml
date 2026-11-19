@@ -33,6 +33,6 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Navigateur de Playwright
         working-directory: backend
-        run: uv run --with playwright playwright install --with-deps chromium
+        run: sh ../scripts/installer-chromium.sh uv run --with playwright playwright install --with-deps chromium
       - name: Test de l'audit
         run: make test-audit
