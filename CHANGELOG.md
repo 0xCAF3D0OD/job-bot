@@ -794,3 +794,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.580 | Premiers pas, étape alerte : la phrase devient « Une alerte jobup, et tes offres arrivent toutes seules. » (et « Environ 2 minutes. » sur téléphone, §72g et §72h) | livrée |
 | 1.6.581 | Premiers pas, code jobup reçu sur téléphone : « Copier le code » devient un bouton à contour (§72f) | livrée |
 | 1.6.582 | Premiers pas, alerte sur téléphone : « J’ai créé l’alerte » et « J’ai validé l’alerte » en bouton noir avec le double chevron, et le pied ne laisse plus voir la carte derrière lui | livrée |
+| 1.6.583 | Premiers pas, alerte : « Ouvrir jobup avec ma recherche » devient « Ouvrir jobup », bouton à contour de 44 px aligné à gauche (§72h) | livrée |
+| 1.6.584 | Premiers pas sur ordinateur : le surtitre (« Tes prochaines offres »…) en 15 px gras, à l’encre, sans capitales, comme les planches | livrée |
