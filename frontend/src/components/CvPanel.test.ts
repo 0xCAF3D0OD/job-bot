@@ -134,8 +134,8 @@ describe("CvPanel", () => {
     const items = changes.findAll("[data-test=cv-change]");
     expect(items.map((li) => li.find("b").text())).toEqual(["Profil", "Expériences"]);
     expect(items[1]!.text()).toContain("Avant : « Stage web » venait en 2e position.");
-    // Le résumé n'a pas d'« avant » gardé : il ne s'annule pas.
-    expect(items[0]!.find("[data-test=cv-change-undo]").exists()).toBe(false);
+    // Le résumé s'annule aussi (Kevin, 19.11) : sans résumé de départ, « Annuler » le retire.
+    expect(items[0]!.find("[data-test=cv-change-undo]").exists()).toBe(true);
     await items[1]!.find("[data-test=cv-change-undo]").trigger("click");
     await flushPromises();
     expect((PUT.mock.calls[0]![1] as { body: { chunk_ids: number[] } }).body.chunk_ids).toEqual([1, 2, 3]);
@@ -162,6 +162,41 @@ describe("CvPanel", () => {
     await wrapper.get("[data-test=doc-search]").trigger("keydown", { key: "Escape" });
     expect(wrapper.find("[data-test=doc-search]").exists()).toBe(false);
     expect(open.attributes("aria-expanded")).toBe("false");
+  });
+
+  it("« Pourquoi » sous chaque changement qui a une raison du serveur, mots de l’annonce surlignés ; rien sans raison", async () => {
+    GET.mockResolvedValue({
+      data: [
+        cv(21, [2, 3], {
+          origin_ids: [1, 2, 3],
+          reasons: [
+            { target: "summary", origin: "ai", text: "l’annonce cite AWS, déjà dans tes expériences.", quotes: ["aws"] },
+            { target: 1, origin: "user", text: null, quotes: [] },
+          ],
+        }),
+      ],
+    });
+    const wrapper = await mountPanel();
+    const items = wrapper.findAll("[data-test=cv-change]");
+    const profile = items.find((li) => li.find("b").text() === "Profil")!;
+    const why = profile.get("[data-test=cv-change-why]");
+    expect(why.text()).toBe("Pourquoi : l’annonce cite AWS, déjà dans tes expériences.");
+    expect(why.findAll("mark").map((m) => m.text())).toEqual(["AWS"]);
+    const removed = items.find((li) => li.find("b").text() === "Stage DevOps")!;
+    expect(removed.get("[data-test=cv-change-why]").text()).toBe("Pourquoi : Demandé par toi.");
+    expect(removed.text()).toContain("Avant : dans ta rubrique Expériences.");
+  });
+
+  it("« Annuler ce changement » sur Profil remet le résumé de la version de départ", async () => {
+    GET.mockResolvedValue({ data: [cv(21, [1, 2, 3], { origin_ids: [1, 2, 3], origin_summary: "Stage DevOps." })] });
+    PUT.mockResolvedValue({ data: cv(21, [1, 2, 3], { origin_ids: [1, 2, 3], summary: "Stage DevOps.", origin_summary: "Stage DevOps." }) });
+    const wrapper = await mountPanel();
+    const profile = wrapper.findAll("[data-test=cv-change]").find((li) => li.find("b").text() === "Profil")!;
+    expect(profile.text()).toContain("Avant : « Stage DevOps. »");
+    await profile.get("[data-test=cv-change-undo]").trigger("click");
+    await flushPromises();
+    expect((PUT.mock.calls[0]![1] as { body: { summary: string; chunk_ids: number[] } }).body).toMatchObject({ summary: "Stage DevOps.", chunk_ids: [1, 2, 3] });
+    expect(wrapper.findAll("[data-test=cv-change]")).toHaveLength(0);
   });
 
   it("un bloc retiré revient à sa place d’origine", async () => {

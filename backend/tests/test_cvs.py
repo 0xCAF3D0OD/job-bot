@@ -211,6 +211,15 @@ async def test_new_version_and_errors(api: AsyncClient, rt: Runtime, fake: FakeC
     assert "<version_precedente>" in fake.params[1]["messages"][0]["content"]
     assert second["document"]["missing_identity"] == ["nom", "rue", "NPA", "localité"]
     assert [c["version"] for c in (await api.get(f"/api/offers/{offer_id}/cvs")).json()] == [2, 1]
+    # Le résumé d'avant l'adaptation (Kevin, 19.11) : vide pour la première version, celui de la
+    # version de départ ensuite ; une retouche le garde.
+    assert first["origin_summary"] == ""
+    assert second["origin_summary"] == first["summary"] != ""
+    edited = await api.put(
+        f"/api/cvs/{second['id']}",
+        json={"headline": "x", "summary": "autre", "chunk_ids": second["chunk_ids"]},
+    )
+    assert edited.json()["origin_summary"] == first["summary"]
 
     fake.response = answer([ids["pref"]])  # aucun bloc de CV
     assert (await api.post(f"/api/offers/{offer_id}/cvs", json={})).status_code == 502
