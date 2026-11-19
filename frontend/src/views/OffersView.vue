@@ -429,9 +429,7 @@ function discardSelected(): void {
     },
     // Rien n'est parti au serveur : les cartes reviennent à leur place exacte.
     restore: () => {
-      const next = [...items.value];
-      for (const { offer, index } of taken) if (!next.some((o) => o.id === offer.id)) next.splice(Math.min(index, next.length), 0, offer);
-      items.value = next;
+      for (const { offer, index } of taken) items.value = withOffer(offer, index);
       total.value += ids.length;
     },
   });
