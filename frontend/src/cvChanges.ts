@@ -69,7 +69,7 @@ export function cvChanges(cv: Cv): CvChange[] {
         key: `order-${key}`,
         title: SECTIONS[key]!,
         before: `Avant : « ${title(id)} » venait en ${rank(before.indexOf(id) + 1)}.`,
-        now: `Maintenant : il vient en ${rank(moved + 1)}, pour cette offre.`,
+        now: `Maintenant : il vient ${moved === 0 ? "en premier" : `en ${rank(moved + 1)}`}.`,
         undo: reorder(cv, origin, kept),
         mark: id,
         target: id,
@@ -83,7 +83,7 @@ export function cvChanges(cv: Cv): CvChange[] {
     changes.push({
       key: `removed-${id}`,
       title: block.title,
-      before: `Avant : dans ton CV, rubrique ${SECTIONS[block.section] ?? block.section}.`,
+      before: `Avant : dans ta rubrique ${SECTIONS[block.section] ?? block.section}.`,
       now: "Maintenant : retiré pour cette offre.",
       undo: restore(cv, origin, id),
       target: id,

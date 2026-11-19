@@ -350,14 +350,16 @@ async function undoShown(): Promise<void> {
 // « Pourquoi » : le texte du serveur, les mots de l'annonce qu'il renvoie avec la raison (`quotes`) surlignés comme
 // dans « Le poste », sans dépendre des guillemets (Kevin, 16.11) ; « Demandé par toi » pour un changement demandé
 // par l'utilisateur ; rien sans raison.
-const why = computed<Segment[]>(() => {
-  const change = changeOf.value;
+// Même ligne sous chaque changement du panneau « Adapté pour cette offre » sur ordinateur (§32 du 16.11).
+function whyOf(change: CvChange | null): Segment[] {
   const reason = change ? selected.value?.reasons?.find((r) => r.target === change.target) : null;
   if (!reason) return [];
   if (reason.origin === "user") return [{ text: "Demandé par toi.", hit: false }];
   const text = reason.text?.trim() ?? "";
   return text ? highlight(text, (reason.quotes ?? []).filter(Boolean)) : [];
-});
+}
+const why = computed<Segment[]>(() => whyOf(changeOf.value));
+const whys = computed(() => new Map(changes.value.map((c) => [c.key, whyOf(c)])));
 function pickVersion(cv: Cv): void {
   show(cv);
   versionsOpen.value = false;
@@ -1177,8 +1179,8 @@ onMounted(() => void load());
         </div>
       </div>
     </BottomSheet>
-    <!-- Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : un bloc par changement, « Avant »,
-         « Maintenant » et « Annuler ce changement ». -->
+    <!-- Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements, paquet §72 du 18.11) : un bloc par
+         changement, « Avant », « Maintenant », « Pourquoi » quand le serveur en donne une, et « Annuler ce changement ». -->
     <BottomSheet
       v-if="deskReady"
       :open="changesOpen"
@@ -1198,6 +1200,20 @@ onMounted(() => void load());
           <b>{{ change.title }}</b>
           <span class="cv-change-before">{{ change.before }}</span>
           <span class="cv-change-now">{{ change.now }}</span>
+          <span
+            v-if="whys.get(change.key)?.length"
+            class="cv-why cv-change-why"
+            data-test="cv-change-why"
+          >
+            <AppIcon name="target" />
+            <span><b>Pourquoi :</b> <template
+              v-for="(part, i) in whys.get(change.key)"
+              :key="i"
+            ><mark
+              v-if="part.hit"
+              class="cv-why-quote"
+            >{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+          </span>
           <button
             v-if="change.undo"
             type="button"

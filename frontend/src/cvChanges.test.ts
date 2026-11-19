@@ -27,7 +27,7 @@ describe("cvChanges", () => {
   it("un nouvel ordre dans une rubrique : annuler remet l’ordre d’origine aux mêmes places", () => {
     const [change] = cvChanges(cv([3, 1, 2, 4]));
     expect(change).toMatchObject({ title: "Expériences", before: "Avant : « Projet perso » venait en 3e position." });
-    expect(change!.now).toBe("Maintenant : il vient en première position, pour cette offre.");
+    expect(change!.now).toBe("Maintenant : il vient en premier.");
     expect(change!.undo).toEqual([1, 2, 3, 4]);
   });
 
