@@ -268,7 +268,9 @@ const cards = computed(() => {
 .fan-verdicts i { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-pill); background: rgb(0 0 0 / 14%); font-style: normal; font-weight: var(--weight-heavy); font-size: var(--font-caption); }
 .fan-verdicts i.ok { background: var(--fan-ink); color: var(--fan-bg); }
 .fan-verdicts :deep(svg) { width: var(--font-caption); height: var(--font-caption); stroke-width: 3; }
-.fan-read { position: relative; z-index: 2; margin-top: auto; align-self: flex-start; font-size: var(--font-label); font-weight: var(--weight-bold); color: inherit; text-decoration: none; }
+/* Le lien, centré sous les verdicts comme sur la planche (TrierOffresOrdinateurV2, état « dos ») ; sa zone reste celle
+   du texte, le reste du bas de la carte retourne toujours la carte. */
+.fan-read { position: relative; z-index: 2; margin-top: auto; align-self: center; font-size: var(--font-label); font-weight: var(--weight-bold); color: inherit; text-decoration: none; }
 .fan-read:hover { color: inherit; text-decoration: underline; }
 /* La flèche du lien (Kevin, 15.11) : une icône, pas le caractère « ↗ » absent de la police ; 0,8 em, 2 px après le texte. */
 .fan-arrow { width: 0.8em; height: 0.8em; margin-left: calc(var(--space-1) / 2); }
