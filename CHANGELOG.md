@@ -804,3 +804,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.590 | Faire le point sur téléphone : le ressenti et les notes posés sur le fond, sans carte (§72n) | livrée |
 | 1.6.591 | Coordonnées : la liste « Pour les formulaires » dans sa propre carte, lignes sans marge négative, flèche à 16 px du bord (§72o) | livrée |
 | 1.6.592 | Trier sur ordinateur : « Voir l'annonce complète » centré au dos d'une carte, comme sur la planche | livrée |
+| 1.6.593 | Mouvement des éléments : variables partagées --motion-enter, --motion-exit et --motion-stagger, utilitaires d'entrée et de sortie, mouvement réduit en fondu de 150 ms | livrée (variables et utilitaires) ; appliquée zone par zone dans les PR suivantes, en commençant par les premiers pas |
