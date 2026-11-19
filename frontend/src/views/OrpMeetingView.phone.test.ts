@@ -270,7 +270,7 @@ describe("Rendez-vous sur téléphone", () => {
       expect(sent()[2]).toMatchObject({ text: "Ma question", checked: false });
     });
 
-    it("« ⋯ › Retirer » une question proposée : « Question retirée » 5 s, puis le serveur la garde comme retirée", async () => {
+    it("« ⋯ › Retirer » une question proposée : « Question retirée » 6 s (une seule durée, Kevin le 19.11), puis le serveur la garde comme retirée", async () => {
       vi.useFakeTimers();
       try {
         serveWith(PREP.questions);
@@ -279,7 +279,7 @@ describe("Rendez-vous sur téléphone", () => {
         await wrapper.get("[data-test=rdv-question-retire-intermediate]").trigger("click");
         expect(wrapper.find("[data-test=rdv-question-intermediate]").exists()).toBe(false);
         expect(wrapper.get("[data-test=triage-toast]").text()).toContain("Question retirée");
-        await vi.advanceTimersByTimeAsync(4900);
+        await vi.advanceTimersByTimeAsync(5900);
         expect(PUT).not.toHaveBeenCalled();
         await vi.advanceTimersByTimeAsync(200);
         await flushPromises();
