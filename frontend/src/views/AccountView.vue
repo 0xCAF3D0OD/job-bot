@@ -447,13 +447,16 @@ onMounted(() => {
 .account-v2 .account-page { display: grid; gap: 0; max-width: 40rem; }
 .account-v2 .account-cap { margin: var(--space-5) var(--space-1) var(--space-2); font-size: var(--acc-cap); line-height: var(--acc-cap-lh); font-weight: var(--weight-bold); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
 .account-v2 :is(.account-profile, .account-group) { background: var(--surface); border: 1px solid var(--row-sep); border-radius: var(--radius-card); overflow: hidden; }
+/* Listes en carte (Kevin 19.11) : 12 px de marge dans la carte, lignes à 100 % en border-box, padding 12px 4px, sans
+   marge négative ; la flèche › est à 16 px du bord, comme dans toutes les listes. */
+.account-v2 .account-group { padding: 0 var(--space-3); }
 .account-v2 .account-profile { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); color: var(--text); text-decoration: none; }
 .account-v2 .account-image { flex: none; display: inline-flex; }
 .account-v2 .account-image .profile-image { color: var(--avatar-initials); box-shadow: none; }
 .account-v2 .account-profile-text { display: grid; flex: 1; min-width: 0; }
 .account-v2 .account-profile-name { font-size: var(--acc-name); line-height: var(--acc-name-lh); overflow-wrap: anywhere; }
 .account-v2 .account-profile-line { font-size: var(--font-small); line-height: var(--acc-line-lh); color: var(--text-secondary); }
-.account-line { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; margin: 0; padding: 0 var(--space-4); border: 0; background: transparent; font: inherit; text-align: left; color: var(--text); text-decoration: none; cursor: pointer; }
+.account-line { display: flex; align-items: center; gap: var(--space-4); box-sizing: border-box; width: 100%; min-height: 56px; margin: 0; padding: var(--space-3) var(--space-1); border: 0; background: transparent; font: inherit; text-align: left; color: var(--text); text-decoration: none; cursor: pointer; }
 .account-line + .account-line { border-top: 1px solid var(--line-soft); }
 .account-line-icon { flex: none; width: 22px; height: 22px; stroke-width: 2; color: var(--row-icon); }
 .account-line-icon.violet { color: var(--agency-text); }
@@ -463,7 +466,7 @@ onMounted(() => {
 .account-line-title { flex: 1; min-width: 0; font-size: var(--font-body); line-height: var(--acc-title-lh); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-line-value { flex: none; font-size: var(--acc-value); color: var(--text-secondary); }
 /* Le chevron des listes (LISEZMOI §49) : 20 px, trait 2,4, --chevron, dans une zone de 24 px. */
-.account-v2 .account-line-chevron { flex: none; display: grid; place-items: center; width: var(--acc-chevron); height: var(--acc-chevron); margin-left: calc(var(--space-2) * -1); color: var(--chevron); }
+.account-v2 .account-line-chevron { flex: none; display: grid; place-items: center end; width: var(--acc-chevron); height: var(--acc-chevron); margin-left: calc(var(--space-2) * -1); color: var(--chevron); }
 .account-v2 .account-line-chevron .icon { width: var(--acc-chevron-icon); height: var(--acc-chevron-icon); stroke-width: 2.4; }
 .account-line[aria-disabled="true"] { cursor: progress; }
 .account-v2 .account-switch { margin-top: var(--space-4); }
