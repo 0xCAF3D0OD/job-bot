@@ -75,16 +75,12 @@ function aside(card: Card): { text: string; tone: "todo" | "plain" | "muted" } {
 const status = (card: Card) =>
   `${card.site.name} · ${card.kind === "confirm" && card.confirm ? "confirmation demandée" : STATE_WORD[card.site.state.kind](card.site.state.label)}`;
 
-const confirmNames = computed(() => [...new Set(cards.value.filter((c) => c.kind === "confirm").map((c) => c.site.name))]);
+// Plus d'aide sous le titre des familles (§72g, Kevin 18.11) : le titre et les cartes suffisent.
 const families = computed(() =>
   [
-    {
-      kind: "confirm" as const,
-      title: "À confirmer",
-      help: `${confirmNames.value.join(" et ")} ${confirmNames.value.length > 1 ? "attendent" : "attend"} ta confirmation avant d’envoyer les offres. Ouvre l’alerte pour confirmer.`,
-    },
-    { kind: "active" as const, title: "Actives", help: "Les offres reçues par e-mail arrivent dans « Nouvelles »." },
-    { kind: "todo" as const, title: "À créer", help: "La recherche existe dans jobA1, pas encore sur le site." },
+    { kind: "confirm" as const, title: "À confirmer" },
+    { kind: "active" as const, title: "Actives" },
+    { kind: "todo" as const, title: "À créer" },
   ]
     .map((family) => ({ ...family, id: `alerts-fam-${family.kind}`, cards: cards.value.filter((c) => c.kind === family.kind) }))
     .filter((family) => family.cards.length),
@@ -144,9 +140,6 @@ function remove(): void {
       >
         {{ family.title }} · {{ family.cards.length }}
       </h2>
-      <p class="alerts-family-help">
-        {{ family.help }}
-      </p>
       <BlockRow
         v-for="card in family.cards"
         :key="card.key"
@@ -332,7 +325,6 @@ function remove(): void {
 /* Titres de famille neutres (§65 du 17.11, AlertesTel et AlertesOrdinateur ; N9 de l'audit) : encre, 17/24, 800, sans
    capitales ni couleur d'état. */
 .alerts-family-title { --alerts-17: 17px; margin: 0; font-size: var(--alerts-17); line-height: var(--space-6); font-weight: var(--weight-heavy); color: var(--text); }
-.alerts-family-help { margin: 0 0 var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .alerts-families .block-row { margin: 0; background: var(--surface); border: 1.5px solid var(--card-line); }
 /* Les lieux sont coupés avec « … » (§10.8) ; la ligne « site · état » passe à la ligne sur les écrans étroits (§2.8). */
 .alerts-families .block-row-line:last-child { white-space: normal; }
@@ -352,7 +344,7 @@ function remove(): void {
    marge trait compris, rayon 18, 16 px entre le texte, le mot et le cercle de 36 px. */
 .alerts-families.desk { --alerts-pad-y: 14.5px; --alerts-pad-x: 18.5px; gap: var(--space-8); }
 .alerts-families.desk .alerts-family + .alerts-family { margin-top: 0; }
-.alerts-families.desk :is(.alerts-family-title, .alerts-family-help) { margin-left: var(--space-1); margin-right: var(--space-1); }
+.alerts-families.desk .alerts-family-title { margin-left: var(--space-1); margin-right: var(--space-1); }
 .alerts-families.desk .block-row { gap: var(--space-4); min-height: var(--row-72); padding: var(--alerts-pad-y) var(--alerts-pad-x); border-radius: var(--radius-card); }
 .alerts-families.desk .block-row:hover { border-color: var(--primary-graphic); }
 .alerts-families .block-row.highlighted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
