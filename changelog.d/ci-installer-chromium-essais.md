@@ -1,1 +1,1 @@
-La CI réessaie trois fois l'installation du navigateur quand le miroir apt de GitHub ne répond pas
+La CI installe le navigateur puis ses dépendances avec plusieurs essais, et continue si le miroir apt de GitHub ne répond pas

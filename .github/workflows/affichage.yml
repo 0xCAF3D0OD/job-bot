@@ -60,7 +60,7 @@ jobs:
       # prises avec elle.
       - name: Navigateur de Playwright
         working-directory: frontend
-        run: sh ../scripts/installer-chromium.sh npx playwright install --with-deps chromium
+        run: sh ../scripts/installer-chromium.sh npx playwright
       - name: Test d'affichage
         run: sh scripts/affichage.sh
       - name: Journaux de la démo en cas d'échec
@@ -121,7 +121,7 @@ jobs:
         if: steps.demande.outputs.oui
         run: |
           (cd backend && uv sync --frozen)
-          (cd frontend && npm ci && sh ../scripts/installer-chromium.sh npx playwright install --with-deps chromium)
+          (cd frontend && npm ci && sh ../scripts/installer-chromium.sh npx playwright)
           sh scripts/affichage.sh --update-snapshots -g "capture de référence"
       - name: Pousser les références
         if: steps.demande.outputs.oui
