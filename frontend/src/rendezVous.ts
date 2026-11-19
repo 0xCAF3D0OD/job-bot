@@ -3,7 +3,7 @@
 // entretiens d'embauche à venir (applications.interview_at), triés par date.
 import type { Application, Interview } from "./api/client";
 import type { components } from "./api/schema";
-import { dateInSentence, inDays, meetingDate, timeOfDay, todayDay } from "./dates";
+import { dateInSentence, addDays, inDays, meetingDate, timeOfDay, todayDay } from "./dates";
 import { FEELINGS } from "./interviewLabels";
 import { plural } from "./format";
 
@@ -209,8 +209,11 @@ export function interviewsToNote(applications: Application[], now: Date = new Da
   const items: InterviewToNote[] = [];
   for (const application of applications) {
     const at = application.interview_at;
-    if (!at || application.status !== "entretien" || Date.parse(at) > now.getTime()) continue;
+    if (!at || application.status !== "entretien") continue;
+    // Même règle que le badge de l'onglet (serveur, notify/interviews.py pending) : un jour passé, 14 jours au plus.
     const day = todayDay(new Date(at));
+    const today = todayDay(now);
+    if (day >= today || day < addDays(today, -14)) continue;
     if (application.interviews?.some((i) => i.held_at === day)) continue;
     items.push({ key: `point-${application.id}`, at, application });
   }

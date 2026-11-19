@@ -196,10 +196,14 @@ describe("Faire le point sur ordinateur (planche FairePointOrdinateur, accord de
         withInterviews(3, "2026-11-04T13:00:00Z", [{ id: 9, held_at: "2026-11-04" }]),
         withInterviews(4, "2026-11-10T13:00:00Z", []),
         withInterviews(5, "2026-11-03T13:00:00Z", [], "refus"),
+        // Comme le badge de l'onglet : pas le jour même, et 14 jours au plus.
+        withInterviews(6, "2026-11-06T07:00:00Z", []),
+        withInterviews(7, "2026-10-22T13:00:00Z", []),
+        withInterviews(8, "2026-10-23T13:00:00Z", []),
       ],
       NOW,
     );
-    expect(items.map((i) => i.key)).toEqual(["point-2", "point-1"]);
+    expect(items.map((i) => i.key)).toEqual(["point-2", "point-1", "point-8"]);
   });
 
   it("« Passés » : chaque retour fait, avec l'heure seulement pour l'entretien prévu", () => {
