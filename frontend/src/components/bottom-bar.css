@@ -1,21 +1,11 @@
-<!-- La barre du bas du téléphone, la même partout (Kevin, 19.11.2026, d'après la barre de la planche Offre) : une
+/* La barre du bas du téléphone, la même partout (Kevin, 19.11.2026, d'après la barre de la planche Offre) : une
      seule ligne, 12 px 16 px plus la zone de sécurité du bas, fond de la page, trait de 1 px en haut. Une action
      principale pleine, qui prend le reste de la largeur ; au plus une secondaire à contour, à sa gauche (quel que soit
      l'ordre du code), large comme son texte ; 48 px de haut, 12 px entre elles (comme la planche : 10 px sortait de la grille de 4,
-     choix de Kevin du 19.11). Les enfants portent `bb-main` et `bb-alt` ;
+     choix de Kevin du 19.11). Le conteneur est un simple `<div class="bottom-bar" data-test="bottom-bar">` (plus de composant Vue :
+     son module coûtait 56 o gzip à Préparer, qui dépassait sa limite, 19.11.2026). Les enfants portent `bb-main` et `bb-alt` ;
      `bb-note` est une ligne au-dessus (une erreur), sur toute la largeur. La page garde sous son contenu la
-     hauteur de la barre. Sans script, pour le poids. Rendue seulement sur téléphone par l'appelant. -->
-
-<template>
-  <div
-    class="bottom-bar"
-    data-test="bottom-bar"
-  >
-    <slot />
-  </div>
-</template>
-
-<style>
+     hauteur de la barre. Rendue seulement sur téléphone par l'appelant, qui importe ce fichier. */
 .bottom-bar {
   --bb-gap: var(--space-3); --bb-h: 48px; --bb-line: 1.5px;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; box-sizing: border-box;
@@ -41,4 +31,3 @@ html:root:has(.bottom-bar) .toast { bottom: calc(var(--space-12) + var(--space-8
 }
 .bottom-bar > .busy-button { display: inline-grid; justify-items: center; }
 .bottom-bar > .bb-main .icon { width: 1.125rem; height: 1.125rem; }
-</style>

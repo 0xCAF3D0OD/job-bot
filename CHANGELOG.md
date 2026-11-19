@@ -816,3 +816,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.602 | Offres : « Autres offres » (Loin de ton profil, Expirées, Postuler spontanément) en lignes padding 12px 4px dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
 | 1.6.603 | Fiche d'une offre, ordinateur : la carte « Offre expirée » retrouve ses marges intérieures, le texte ne touche plus le bord | livrée |
 | 1.6.604 | Réglages (téléphone) : listes en carte en lignes à 4 px des côtés dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
+| 1.6.605 | Préparer repasse sous sa limite de poids : la barre du bas commune devient une feuille de style, sans composant | livrée |
+| 1.6.606 | « Adapté pour cette offre » (#930) retiré en attendant qu'il compense son poids sur Préparer | livrée |

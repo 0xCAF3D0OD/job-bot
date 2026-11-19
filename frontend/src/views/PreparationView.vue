@@ -12,7 +12,7 @@ import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
-import BottomBar from "../components/BottomBar.vue";
+import "../components/bottom-bar.css";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -1247,9 +1247,10 @@ onMounted(() => void load());
           </section>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
                secondaire à contour à gauche (Kevin, 19.11.2026). -->
-          <BottomBar
+          <div
             v-if="phone"
-            class="apply-actions"
+            class="bottom-bar apply-actions"
+            data-test="bottom-bar"
           >
             <ApplyActions
               :link="applyLink"
@@ -1259,7 +1260,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </BottomBar>
+          </div>
         </div>
         <aside
           v-if="!phone"
@@ -1986,11 +1987,12 @@ onMounted(() => void load());
             J’ai relu, continuer
           </button>
         </aside>
-        <!-- La barre du bas du téléphone (C6), commune (BottomBar) : un seul bouton plein, la prochaine chose à faire. Une langue
+        <!-- La barre du bas du téléphone (C6), commune (bottom-bar.css) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
-        <BottomBar
+        <div
           v-if="phone"
-          class="prep-bar"
+          class="bottom-bar prep-bar"
+          data-test="bottom-bar"
         >
           <InlineConfirm
             v-if="choosingWrite"
@@ -2065,7 +2067,7 @@ onMounted(() => void load());
           >
             J’ai relu, continuer
           </button>
-        </BottomBar>
+        </div>
         <BottomSheet
           v-if="selected"
           :open="versionsOpen"
@@ -2301,24 +2303,16 @@ onMounted(() => void load());
 .cv-why-actions > .cv-why-step:first-child { margin-left: auto; }
 .cv-why-step.next { border: 0; background: var(--primary); color: var(--on-primary, #fff); }
 /* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
-   (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris à 4 px, « Maintenant » 14/20 à 4 px (6 et 2 sur la planche, grille de 4),
-   « Pourquoi » 14/20 à 8 px (cible 18 px, mots de l'annonce sur #FFE9A8, sombre #5C4A14), le lien 44 px à 4 px. */
-/* Les marges de la planche (8 sous la phrase, 16 au-dessus de la note) remplacent l'écart de 16 du corps du panneau. */
-.sheet-body:has(> .cv-changes) { gap: 0; }
+   (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
 .cv-changes-intro, .cv-changes { --cv-22: 22px; }
-.cv-changes-intro { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--cv-22); color: var(--text-lead); }
+.cv-changes-intro { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--cv-22); color: var(--text-secondary); }
 .cv-changes { list-style: none; margin: 0; padding: 0; }
 .cv-changes > li { display: flex; flex-direction: column; align-items: flex-start; padding: var(--space-4) 0; border-top: 1px solid var(--line-soft); }
-.cv-changes > li > b { font-size: var(--font-body); line-height: var(--cv-22); }
+.cv-changes b { font-size: var(--font-body); line-height: var(--cv-22); }
 .cv-change-before { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.cv-change-now { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
+.cv-change-now { font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
 .cv-change-undo { min-height: var(--target-min); margin-top: var(--space-1); padding: 0; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
-.cv-changes .cv-change-why { margin-top: var(--space-2); font-size: var(--font-small); line-height: var(--space-5); }
-.cv-change-why > .icon { margin-top: 1px; }
-.cv-change-why .cv-why-quote { color: inherit; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cv-change-why .cv-why-quote { background: #5C4A14; } }
-:root[data-theme="dark"] .cv-change-why .cv-why-quote { background: #5C4A14; }
-.cv-changes-note { margin: var(--space-4) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.cv-changes-note { margin: var(--space-6) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .prep-ai-link:hover { text-decoration: underline; }
 .prep-ai-link .icon { width: 14px; height: 14px; }

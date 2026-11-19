@@ -4,7 +4,7 @@ import BusyButton from "./BusyButton.vue";
 
 // Les actions de Postuler (C6, C8) : d'abord le formulaire, puis « J'ai postulé » une fois ouvert. Sur téléphone
 // dans la barre du bas, sur ordinateur au pied de la carte « Où postuler » (MODIFICATIONS du 9 novembre, §2.4).
-// Plusieurs racines : sur téléphone, la barre du bas (BottomBar) les range sur une ligne, « J'ai déjà postulé » (ou
+// Plusieurs racines : sur téléphone, la barre du bas (bottom-bar.css) les range sur une ligne, « J'ai déjà postulé » (ou
 // « Rouvrir … ») à contour à gauche, l'action principale pleine à droite (Kevin, 19.11.2026).
 defineProps<{
   link: { url: string; label: string; reopen: string } | null;
