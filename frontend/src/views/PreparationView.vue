@@ -13,7 +13,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import ActionBar from "../components/ActionBar.vue";
-import BottomBar from "../components/BottomBar.vue";
+import "../components/bottom-bar.css";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -1248,9 +1248,10 @@ onMounted(() => void load());
           </section>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
                secondaire à contour à gauche (Kevin, 19.11.2026). -->
-          <BottomBar
+          <div
             v-if="phone"
-            class="apply-actions"
+            class="bottom-bar apply-actions"
+            data-test="bottom-bar"
           >
             <ApplyActions
               :link="applyLink"
@@ -1260,7 +1261,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </BottomBar>
+          </div>
         </div>
         <aside
           v-if="!phone"
